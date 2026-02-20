@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Laso Admin</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Login Screen -->
+  <div id="login-screen">
+    <div class="login-card">
+      <h1>Laso Admin</h1>
+      <p>Remote Config Management</p>
+      <input type="email" id="login-email" placeholder="Email" autocomplete="email" />
+      <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" />
+      <button id="login-btn">Sign In</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard">
+    <div class="header">
+      <h1>Laso Remote Config</h1>
+      <div class="header-actions">
+        <span class="user-email" id="user-email"></span>
+        <button class="btn btn-primary" id="save-btn" disabled>Save &amp; Publish</button>
+        <button class="btn btn-secondary" id="logout-btn">Sign Out</button>
+      </div>
+    </div>
+
+    <!-- Feature Access -->
+    <div class="config-section" id="section-features">
+      <h2>Feature Access</h2>
+      <!-- Rows injected by JS -->
+    </div>
+
+    <!-- Limits -->
+    <div class="config-section" id="section-limits">
+      <h2>Free Tier Limits</h2>
+    </div>
+
+    <!-- Pricing -->
+    <div class="config-section" id="section-pricing">
+      <h2>Pricing</h2>
+    </div>
+
+    <!-- Feedback & Analytics -->
+    <div class="config-section" id="section-system">
+      <h2>Feedback &amp; Analytics</h2>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Loading -->
+  <div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Firebase SDK (compat for simplicity) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

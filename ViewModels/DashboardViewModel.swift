@@ -1,0 +1,335 @@
+import Foundation
+import Observation
+
+/// ViewModel for the main dashboard showing overall score, top insights, and category cards
+@Observable
+final class DashboardViewModel {
+    let healthKitManager: HealthKitManager
+    let analysisEngine: AnalysisEngine
+
+    var isLoading = false
+    var errorMessage: String?
+
+    /// Selected time period — shared across all Home screen sections
+    var selectedPeriod: TimePeriod = .sevenDays
+
+    /// Previous trend directions — used for trend reversal detection
+    private var previousTrends: [HealthMetric: TrendDirection] = [:]
+
+    var overallScore: HealthScore {
+        analysisEngine.overallScore
+    }
+
+    var categoryScores: [HealthScore] {
+        analysisEngine.categoryScores
+    }
+
+    var topInsights: [Insight] {
+        analysisEngine.topInsights(3)
+    }
+
+    var allInsights: [Insight] {
+        analysisEngine.insights
+    }
+
+    /// Health risks sorted by level (highest risk first)
+    var healthRisks: [HealthRisk] {
+        analysisEngine.healthRisks
+    }
+
+    /// Top risks that need attention (moderate or higher)
+    var topHealthRisks: [HealthRisk] {
+        analysisEngine.healthRisks.filter { $0.riskGrade != .low }
+    }
+
+    /// Top 3 actionable insights for the compact card display, filtered by selected period
+    var topActionableInsights: [Insight] {
+        topActionableInsights(for: selectedPeriod)
+    }
+
+    /// Period-aware insights: only include metrics that have data in the selected period
+    func topActionableInsights(for period: TimePeriod) -> [Insight] {
+        let days = period.days
+        let metricsWithData = Set(
+            healthKitManager.timeSeries
+                .filter { !$0.value.samples(lastDays: days).isEmpty }
+                .map(\.key)
+        )
+
+        let filtered = analysisEngine.insights.filter { metricsWithData.contains($0.metric) }
+        let sorted = filtered.sorted { a, b in
+            if a.severity != b.severity {
+                return a.severity > b.severity
+            }
+            return a.priorityScore > b.priorityScore
+        }
+        return Array(sorted.prefix(3))
+    }
+
+    var lastRefresh: Date? {
+        healthKitManager.lastRefresh
+    }
+
+    // MARK: - Key Metrics Snapshots
+
+    /// Featured metrics shown as visual number cards on the home screen
+    static let featuredMetrics: [HealthMetric] = [
+        .steps, .sleepDuration, .restingHeartRate, .activeCalories, .exerciseMinutes, .bloodOxygen
+    ]
+
+    struct MetricSnapshot: Identifiable {
+        var id: String { metric.rawValue }
+        let metric: HealthMetric
+        let currentValue: Double
+        let trend: TrendDirection
+        let changePercent: Double
+    }
+
+    var keyMetricSnapshots: [MetricSnapshot] {
+        keyMetricSnapshots(for: selectedPeriod)
+    }
+
+    /// Period-aware key metric snapshots: shows period average and period-over-period change
+    func keyMetricSnapshots(for period: TimePeriod) -> [MetricSnapshot] {
+        let days = period.days
+        return Self.featuredMetrics.compactMap { metric in
+            guard let series = healthKitManager.timeSeries[metric] else { return nil }
+
+            // Use period average instead of just latest value
+            let periodSamples = series.samples(lastDays: days)
+            guard !periodSamples.isEmpty else { return nil }
+            let periodAvg = periodSamples.map(\.value).mean
+
+            // Compare with previous equivalent period
+            let previousSamples = series.sortedSamples.filter { sample in
+                let daysAgo = Calendar.current.dateComponents([.day], from: sample.date, to: Date()).day ?? 0
+                return daysAgo >= days && daysAgo < days * 2
+            }
+            let previousAvg = previousSamples.isEmpty ? 0.0 : previousSamples.map(\.value).mean
+            let changePercent: Double
+            if previousAvg != 0 {
+                changePercent = ((periodAvg - previousAvg) / previousAvg) * 100
+            } else {
+                changePercent = 0
+            }
+
+            // Determine trend direction for this period
+            let trend: TrendDirection
+            let effectiveChange = metric.higherIsBetter ? changePercent : -changePercent
+            if effectiveChange > 2 {
+                trend = .improving
+            } else if effectiveChange < -2 {
+                trend = .declining
+            } else {
+                trend = .stable
+            }
+
+            return MetricSnapshot(
+                metric: metric,
+                currentValue: periodAvg,
+                trend: trend,
+                changePercent: changePercent
+            )
+        }
+    }
+
+    // MARK: - Period Summaries
+
+    enum TimePeriod: String, CaseIterable, Identifiable {
+        case sevenDays = "7D"
+        case thirtyDays = "30D"
+        case threeMonths = "3M"
+        case sixMonths = "6M"
+
+        var id: String { rawValue }
+
+        var days: Int {
+            switch self {
+            case .sevenDays: return 7
+            case .thirtyDays: return 30
+            case .threeMonths: return 90
+            case .sixMonths: return 180
+            }
+        }
+
+        var displayName: String {
+            switch self {
+            case .sevenDays: return "Last 7 Days"
+            case .thirtyDays: return "Last 30 Days"
+            case .threeMonths: return "Last 3 Months"
+            case .sixMonths: return "Last 6 Months"
+            }
+        }
+    }
+
+    struct MetricChange: Identifiable {
+        var id: String { metric.rawValue }
+        let metric: HealthMetric
+        let periodAvg: Double
+        let previousPeriodAvg: Double
+        let changePercent: Double
+        let improved: Bool
+    }
+
+    struct PeriodSummary {
+        let topImproved: [MetricChange]
+        let topDeclined: [MetricChange]
+        let stableMetrics: [MetricChange]
+
+        var improvedCount: Int { topImproved.count }
+        var declinedCount: Int { topDeclined.count }
+        var stableCount: Int { stableMetrics.count }
+    }
+
+    func periodSummary(for period: TimePeriod) -> PeriodSummary {
+        let days = period.days
+        var improved: [MetricChange] = []
+        var declined: [MetricChange] = []
+        var stable: [MetricChange] = []
+
+        for (metric, series) in healthKitManager.timeSeries {
+            let currentSamples = series.samples(lastDays: days)
+            let previousSamples = series.sortedSamples.filter { sample in
+                let daysAgo = Calendar.current.dateComponents([.day], from: sample.date, to: Date()).day ?? 0
+                return daysAgo >= days && daysAgo < days * 2
+            }
+
+            guard !currentSamples.isEmpty, !previousSamples.isEmpty else { continue }
+
+            let currentAvg = currentSamples.map(\.value).mean
+            let previousAvg = previousSamples.map(\.value).mean
+
+            guard previousAvg != 0 else { continue }
+
+            let change = ((currentAvg - previousAvg) / previousAvg) * 100
+            let isImproved = metric.higherIsBetter ? change > 2 : change < -2
+            let isDeclined = metric.higherIsBetter ? change < -2 : change > 2
+
+            let mc = MetricChange(
+                metric: metric,
+                periodAvg: currentAvg,
+                previousPeriodAvg: previousAvg,
+                changePercent: change,
+                improved: isImproved
+            )
+
+            if isImproved {
+                improved.append(mc)
+            } else if isDeclined {
+                declined.append(mc)
+            } else {
+                stable.append(mc)
+            }
+        }
+
+        improved.sort { abs($0.changePercent) > abs($1.changePercent) }
+        declined.sort { abs($0.changePercent) > abs($1.changePercent) }
+        stable.sort { $0.metric.displayName < $1.metric.displayName }
+
+        return PeriodSummary(
+            topImproved: improved,
+            topDeclined: declined,
+            stableMetrics: stable
+        )
+    }
+
+    init(healthKitManager: HealthKitManager, analysisEngine: AnalysisEngine) {
+        self.healthKitManager = healthKitManager
+        self.analysisEngine = analysisEngine
+    }
+
+    /// Initial load: authorize, fetch, analyze
+    func load() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        guard healthKitManager.isHealthKitAvailable else {
+            errorMessage = "HealthKit is not available on this device. Please run on a real iPhone paired with Apple Watch."
+            return
+        }
+
+        await healthKitManager.requestAuthorization()
+
+        guard healthKitManager.isAuthorized else {
+            errorMessage = healthKitManager.error ?? "HealthKit authorization required"
+            return
+        }
+
+        await refresh()
+    }
+
+    /// Refresh data from HealthKit and re-run analysis
+    func refresh() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        // Capture previous trends before re-analysis
+        let prevTrends = previousTrends
+
+        await healthKitManager.fetchAllMetrics(days: 365)
+        analysisEngine.runFullAnalysis(timeSeries: healthKitManager.timeSeries)
+
+        // Store current trends for next refresh comparison
+        previousTrends = analysisEngine.trends.mapValues { $0.direction }
+
+        // Schedule notifications
+        let prefs = PersistenceManager().loadPreferences()
+
+        // Daily summary with richer data
+        let anomalyCount = analysisEngine.anomalies.filter { $0.severity >= .warning }.count
+        let categoryBreakdown = categoryScores.compactMap { score -> String? in
+            guard let cat = score.category else { return nil }
+            return "\(cat.shortName): \(score.score)"
+        }.joined(separator: " | ")
+
+        DailySummaryScheduler.schedule(
+            score: overallScore.score,
+            anomalyCount: anomalyCount,
+            topInsights: Array(topInsights.prefix(3)),
+            categoryBreakdown: categoryBreakdown,
+            preferences: prefs
+        )
+
+        // Weekly summary with full details
+        let periodSummary7d = periodSummary(for: .sevenDays)
+        let topTrends: [(metric: String, direction: String, change: Double)] = analysisEngine.trends
+            .sorted { abs($0.value.weekOverWeekChange) > abs($1.value.weekOverWeekChange) }
+            .prefix(5)
+            .map { (metric: $0.key.displayName, direction: $0.value.direction.symbol, change: $0.value.weekOverWeekChange) }
+
+        WeeklySummaryScheduler.schedule(
+            score: overallScore.score,
+            scoreChange: 0, // Would need persistence for previous week score
+            improvedCount: periodSummary7d.improvedCount,
+            declinedCount: periodSummary7d.declinedCount,
+            topTrends: topTrends,
+            preferences: prefs
+        )
+
+        // Full alert evaluation with spike detection and trend reversals
+        AlertEvaluator.evaluate(
+            anomalies: analysisEngine.anomalies,
+            trends: analysisEngine.trends,
+            timeSeries: healthKitManager.timeSeries,
+            previousTrends: prevTrends,
+            preferences: prefs
+        )
+    }
+
+    // MARK: - Computed Analytics for Views
+
+    /// All anomalous metrics across all categories
+    var anomalousMetrics: [AnomalyDetector.AnomalyResult] {
+        analysisEngine.anomalies.filter { $0.severity >= .warning }
+    }
+
+    /// Number of critical alerts currently active
+    var criticalAlertCount: Int {
+        analysisEngine.anomalies.filter { $0.severity == .critical }.count
+    }
+
+    /// Number of warning alerts currently active
+    var warningAlertCount: Int {
+        analysisEngine.anomalies.filter { $0.severity == .warning }.count
+    }
+}
