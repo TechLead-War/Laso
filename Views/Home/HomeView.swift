@@ -4,8 +4,7 @@ import SwiftUI
 struct HomeView: View {
     let viewModel: DashboardViewModel
     let liveViewModel: LiveViewModel
-    let featureGate: FeatureGate
-    let subscriptionManager: SubscriptionManager
+    let deviceSourceManager: DeviceSourceManager
     @Binding var navigationPath: NavigationPath
     @Binding var showSettings: Bool
 
@@ -23,12 +22,8 @@ struct HomeView: View {
         .toolbar(.hidden, for: .navigationBar)
         .refreshable {
             await viewModel.refresh()
-            AnalyticsManager.shared.track(.pullToRefresh)
         }
         .sensoryFeedback(.success, trigger: viewModel.lastRefresh)
-        .onAppear {
-            AnalyticsManager.shared.track(.screenView(screen: "home"))
-        }
     }
 
     private var hasData: Bool {
@@ -48,27 +43,21 @@ struct HomeView: View {
 
                     // 3. Insights — what needs your attention right now
                     ActionCardsSection(
-                        insights: viewModel.topActionableInsights,
-                        featureGate: featureGate,
-                        subscriptionManager: subscriptionManager
+                        insights: viewModel.topActionableInsights
                     ) { metric in
                         navigationPath.append(metric)
                     }
 
                     // 4. Focus Areas — where to improve
                     FocusAreasSection(
-                        risks: viewModel.healthRisks,
-                        featureGate: featureGate,
-                        subscriptionManager: subscriptionManager
+                        risks: viewModel.healthRisks
                     ) { risk in
                         navigationPath.append(risk.riskType)
                     }
 
                     // 5. Period selector — 7D / 30D / 3M / 6M
                     PeriodSummarySection(
-                        viewModel: viewModel,
-                        featureGate: featureGate,
-                        subscriptionManager: subscriptionManager
+                        viewModel: viewModel
                     ) { metric in
                         navigationPath.append(metric)
                     }
@@ -109,18 +98,22 @@ struct HomeView: View {
                     .padding(.horizontal, 24)
             }
 
-            // Supported devices
+            // Supported devices — dynamic from SupportedDevice
             VStack(alignment: .leading, spacing: 14) {
                 Text("Works with")
                     .font(.subheadline.weight(.semibold))
                     .padding(.horizontal)
 
-                deviceRow(icon: "applewatch", name: "Apple Watch", detail: "Syncs automatically")
-                deviceRow(icon: "watchface.applewatch.case", name: "Garmin", detail: "Via Garmin Connect app")
-                deviceRow(icon: "watchface.applewatch.case", name: "Fitbit", detail: "Via Fitbit app")
-                deviceRow(icon: "watchface.applewatch.case", name: "Whoop", detail: "Via Whoop app")
-                deviceRow(icon: "watchface.applewatch.case", name: "Oura", detail: "Via Oura app")
-                deviceRow(icon: "iphone", name: "iPhone Sensors", detail: "Steps, distance, flights — built in")
+                ForEach(SupportedDevice.discoverableDevices.prefix(6)) { device in
+                    deviceRow(
+                        icon: device.systemImageName,
+                        name: device.displayName,
+                        detail: device == .appleWatch
+                            ? "Syncs automatically"
+                            : "Via \(device.companionAppName) app",
+                        color: device.iconColor
+                    )
+                }
             }
             .padding()
             .background(.background, in: RoundedRectangle(cornerRadius: 16))
@@ -141,6 +134,20 @@ struct HomeView: View {
             .background(.background, in: RoundedRectangle(cornerRadius: 16))
             .padding(.horizontal)
 
+            // Manage Devices link
+            NavigationLink {
+                ConnectedDevicesView(
+                    viewModel: ConnectedDevicesViewModel(
+                        deviceSourceManager: deviceSourceManager,
+                        healthKitManager: viewModel.healthKitManager
+                    )
+                )
+            } label: {
+                Label("Manage Devices", systemImage: "gear")
+                    .font(.subheadline.weight(.medium))
+            }
+            .buttonStyle(.bordered)
+
             Button {
                 Task { await viewModel.refresh() }
             } label: {
@@ -154,11 +161,11 @@ struct HomeView: View {
         }
     }
 
-    private func deviceRow(icon: String, name: String, detail: String) -> some View {
+    private func deviceRow(icon: String, name: String, detail: String, color: Color = .blue) -> some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.body)
-                .foregroundStyle(.blue)
+                .foregroundStyle(color)
                 .frame(width: 28)
             VStack(alignment: .leading, spacing: 1) {
                 Text(name)
@@ -425,15 +432,15 @@ struct HomeView: View {
 }
 
 #Preview {
+    let hkManager = HealthKitManager()
     NavigationStack {
         HomeView(
             viewModel: DashboardViewModel(
-                healthKitManager: HealthKitManager(),
+                healthKitManager: hkManager,
                 analysisEngine: AnalysisEngine()
             ),
-            liveViewModel: LiveViewModel(healthKitManager: HealthKitManager()),
-            featureGate: FeatureGate(),
-            subscriptionManager: SubscriptionManager(),
+            liveViewModel: LiveViewModel(healthKitManager: hkManager),
+            deviceSourceManager: DeviceSourceManager(healthStore: hkManager.healthStore),
             navigationPath: .constant(NavigationPath()),
             showSettings: .constant(false)
         )

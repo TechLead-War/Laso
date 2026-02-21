@@ -1,0 +1,44 @@
+{
+  "/Users/primetrace/Desktop/RnD/HealthPulse/Models/MetricSample.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/MetricSample.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/MetricSample.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/MetricSample.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/MetricSample.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/MetricSample.swiftdeps"
+  },
+  "/Users/primetrace/Desktop/RnD/HealthPulse/ViewModels/LiveViewModel.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/LiveViewModel.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/LiveViewModel.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/LiveViewModel.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/LiveViewModel.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/LiveViewModel.swiftdeps"
+  },
+  "/Users/primetrace/Desktop/RnD/HealthPulse/ViewModels/MetricDetailViewModel.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/MetricDetailViewModel.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/MetricDetailViewModel.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/MetricDetailViewModel.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/MetricDetailViewModel.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/MetricDetailViewModel.swiftdeps"
+  },
+  "/Users/primetrace/Desktop/RnD/HealthPulse/Views/Components/LoadingView.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/LoadingView.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/LoadingView.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/LoadingView.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/LoadingView.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/LoadingView.swiftdeps"
+  },
+  "/Users/primetrace/Desktop/RnD/HealthPulse/Views/Components/MetricChartView.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/MetricChartView.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/MetricChartView.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/MetricChartView.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/MetricChartView.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/MetricChartView.swiftdeps"
+  },
+  "/Users/primetrace/Desktop/RnD/HealthPulse/Views/MetricDetail/MetricDetailView.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/MetricDetailView.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/MetricDetailView.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/MetricDetailView.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/MetricDetailView.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/MetricDetailView.swiftdeps"
+  }
+}

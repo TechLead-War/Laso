@@ -3,8 +3,6 @@ import SwiftUI
 /// "Your Focus Areas" section on the Home tab — shows top health risks with actionable recommendations
 struct FocusAreasSection: View {
     let risks: [HealthRisk]
-    let featureGate: FeatureGate
-    let subscriptionManager: SubscriptionManager
     let onTapRisk: (HealthRisk) -> Void
 
     var body: some View {
@@ -163,8 +161,6 @@ struct RiskGradeBadge: View {
     ScrollView {
         FocusAreasSection(
             risks: SampleDataProvider.generateSampleRisks(),
-            featureGate: FeatureGate(),
-            subscriptionManager: SubscriptionManager(),
             onTapRisk: { _ in }
         )
         .padding(.vertical)

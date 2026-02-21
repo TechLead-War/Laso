@@ -5,37 +5,23 @@ import SwiftUI
 struct HealthPulseApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
-    @State private var healthKitManager = HealthKitManager()
+    @State private var healthKitManager: HealthKitManager
     @State private var analysisEngine = AnalysisEngine()
-    @State private var featureGate = FeatureGate()
-    @State private var subscriptionManager = SubscriptionManager()
+    @State private var deviceSourceManager: DeviceSourceManager
 
-    @Environment(\.scenePhase) private var scenePhase
+    init() {
+        let hkManager = HealthKitManager()
+        _healthKitManager = State(wrappedValue: hkManager)
+        _deviceSourceManager = State(wrappedValue: DeviceSourceManager(healthStore: hkManager.healthStore))
+    }
 
     var body: some Scene {
         WindowGroup {
             ContentView(
                 healthKitManager: healthKitManager,
                 analysisEngine: analysisEngine,
-                featureGate: featureGate,
-                subscriptionManager: subscriptionManager
+                deviceSourceManager: deviceSourceManager
             )
-            .onChange(of: scenePhase) { _, newPhase in
-                switch newPhase {
-                case .active:
-                    AnalyticsManager.shared.startSession()
-
-                    // Set Firebase user properties
-                    FirebaseAnalyticsService.shared.setUserProperties()
-
-                    // Re-fetch remote config on foreground
-                    Task { await RemoteConfigManager.shared.fetchAndActivate() }
-                case .background:
-                    AnalyticsManager.shared.endSession()
-                default:
-                    break
-                }
-            }
         }
     }
 }

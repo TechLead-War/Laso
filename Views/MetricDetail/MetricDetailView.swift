@@ -4,6 +4,7 @@ import Charts
 /// Deep-dive view for a single metric with charts, stats, moving averages, baselines, and insights
 struct MetricDetailView: View {
     let viewModel: MetricDetailViewModel
+    var deviceSourceManager: DeviceSourceManager? = nil
 
     var body: some View {
         ScrollView {
@@ -78,6 +79,12 @@ struct MetricDetailView: View {
                 Text("Baseline deviation: \(viewModel.deviationFromBaseline)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+
+            // Data source attribution
+            if let sourceManager = deviceSourceManager,
+               let sourceDevice = sourceManager.sourceDevice(for: viewModel.metric) {
+                DataSourceBadge(device: sourceDevice.device, sourceName: sourceDevice.sourceName)
             }
         }
         .padding(.top)
@@ -206,7 +213,8 @@ struct MetricDetailView: View {
                 metric: .restingHeartRate,
                 healthKitManager: hkManager,
                 analysisEngine: engine
-            )
+            ),
+            deviceSourceManager: DeviceSourceManager(healthStore: hkManager.healthStore)
         )
     }
 }

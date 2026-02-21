@@ -1,0 +1,56 @@
+{
+  "source": "/Users/primetrace/Desktop/RnD/HealthPulse/Views/Home/FocusAreasSection.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Your Focus Areas",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 17
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld need attention",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 22
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@, %@ risk",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 135
+        }
+      },
+      {
+        "comment": "",
+        "key": "View risk details and recommendations",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 137
+        }
+      },
+      {
+        "comment": "",
+        "key": "Focus: %@",
+        "location": {
+          "startingColumn": 57,
+          "startingLine": 136
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 83,
+          "startingLine": 136
+        }
+      }
+    ]
+  },
+  "version": 1
+}

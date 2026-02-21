@@ -3,8 +3,6 @@ import SwiftUI
 /// Section wrapper for the compact actionable recommendation cards (max 3)
 struct ActionCardsSection: View {
     let insights: [Insight]
-    let featureGate: FeatureGate
-    let subscriptionManager: SubscriptionManager
     let onTapInsight: (HealthMetric) -> Void
 
     var body: some View {
@@ -50,8 +48,6 @@ struct ActionCardsSection: View {
 #Preview {
     ActionCardsSection(
         insights: SampleDataProvider.generateSampleInsights(),
-        featureGate: FeatureGate(),
-        subscriptionManager: SubscriptionManager(),
         onTapInsight: { _ in }
     )
 }

@@ -93,8 +93,6 @@ struct FeedbackSheet: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Skip") {
-                    AnalyticsManager.shared.track(.feedbackDismissed)
-                    AnalyticsManager.shared.recordFeedbackInteraction()
                     dismiss()
                 }
                 .font(.subheadline)
@@ -135,14 +133,7 @@ struct FeedbackSheet: View {
         let trimmed = feedbackText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
-        // Store locally via analytics
-        AnalyticsManager.shared.track(.feedbackSubmitted(
-            category: selectedCategory.rawValue,
-            hasText: true
-        ))
-        AnalyticsManager.shared.recordFeedbackInteraction()
-
-        // Also store the actual text in UserDefaults for retrieval
+        // Store the actual text in UserDefaults for retrieval
         var allFeedback = UserDefaults.standard.stringArray(forKey: "laso.feedback.entries") ?? []
         let entry = "[\(selectedCategory.rawValue)] \(trimmed) — \(Date().formatted(.dateTime.month().day().year()))"
         allFeedback.append(entry)

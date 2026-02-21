@@ -1,0 +1,16 @@
+{
+  "source": "/Users/primetrace/Desktop/RnD/HealthPulse/Views/Home/CoachGreetingView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Settings",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 27
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -3,8 +3,6 @@ import SwiftUI
 /// Time-range comparison section: 7D/30D/3M/6M tabs with improved/declined metric counts and top movers
 struct PeriodSummarySection: View {
     let viewModel: DashboardViewModel
-    let featureGate: FeatureGate
-    let subscriptionManager: SubscriptionManager
     let onTapMetric: (HealthMetric) -> Void
 
     enum MetricFilter: String {
@@ -292,8 +290,6 @@ struct MetricChangeRow: View {
             healthKitManager: HealthKitManager(),
             analysisEngine: AnalysisEngine()
         ),
-        featureGate: FeatureGate(),
-        subscriptionManager: SubscriptionManager(),
         onTapMetric: { _ in }
     )
 }

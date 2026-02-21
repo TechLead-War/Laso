@@ -1,0 +1,16 @@
+{
+  "source": "/Users/primetrace/Desktop/RnD/HealthPulse/Views/Components/TimeRangeSelector.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Time Range",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 15
+        }
+      }
+    ]
+  },
+  "version": 1
+}

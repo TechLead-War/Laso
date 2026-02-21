@@ -1,0 +1,40 @@
+{
+  "source": "/Users/primetrace/Desktop/RnD/HealthPulse/Views/Components/HealthScoreRing.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Score %lld",
+        "location": {
+          "startingColumn": 45,
+          "startingLine": 57
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ score %lld out of 100",
+        "location": {
+          "startingColumn": 64,
+          "startingLine": 57
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld percent",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 58
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 72
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -9,19 +9,44 @@ struct SettingsView: View {
 
     private let persistence = PersistenceManager()
     let webExportViewModel: WebExportViewModel
-    let featureGate: FeatureGate
-    let subscriptionManager: SubscriptionManager
+    let deviceSourceManager: DeviceSourceManager
+    let healthKitManager: HealthKitManager
 
-    init(webExportViewModel: WebExportViewModel, featureGate: FeatureGate, subscriptionManager: SubscriptionManager) {
+    init(webExportViewModel: WebExportViewModel, deviceSourceManager: DeviceSourceManager, healthKitManager: HealthKitManager) {
         self.webExportViewModel = webExportViewModel
-        self.featureGate = featureGate
-        self.subscriptionManager = subscriptionManager
+        self.deviceSourceManager = deviceSourceManager
+        self.healthKitManager = healthKitManager
         self._preferences = State(initialValue: PersistenceManager().loadPreferences())
     }
 
     var body: some View {
         NavigationStack {
             Form {
+                // Connected Devices
+                Section("Connected Devices") {
+                    NavigationLink {
+                        ConnectedDevicesView(
+                            viewModel: ConnectedDevicesViewModel(
+                                deviceSourceManager: deviceSourceManager,
+                                healthKitManager: healthKitManager
+                            )
+                        )
+                    } label: {
+                        HStack {
+                            Label {
+                                Text("Manage Devices")
+                            } icon: {
+                                Image(systemName: "applewatch")
+                                    .foregroundStyle(.blue)
+                            }
+                            Spacer()
+                            Text(deviceSourceManager.connectedDevices.isEmpty ? "Set up a device" : "\(deviceSourceManager.connectedDevices.count) connected")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+
                 // Notifications
                 Section("Daily Summary") {
                     Toggle("Enable Daily Summary", isOn: $preferences.dailySummaryEnabled)
@@ -238,7 +263,7 @@ struct ShareSheet: UIViewControllerRepresentable {
             healthKitManager: hkManager,
             analysisEngine: engine
         ),
-        featureGate: FeatureGate(),
-        subscriptionManager: SubscriptionManager()
+        deviceSourceManager: DeviceSourceManager(healthStore: hkManager.healthStore),
+        healthKitManager: hkManager
     )
 }

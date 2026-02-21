@@ -1,7 +1,6 @@
 import UIKit
 import HealthKit
 import UserNotifications
-import FirebaseCore
 
 /// AppDelegate for background delivery registration and notification setup
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
@@ -10,14 +9,6 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        // Configure Firebase (must be first, guard against double-configure)
-        if FirebaseApp.app() == nil {
-            FirebaseApp.configure()
-        }
-
-        // Kick off remote config fetch (fire-and-forget)
-        Task { await RemoteConfigManager.shared.fetchAndActivate() }
-
         // Set up notification delegate
         UNUserNotificationCenter.current().delegate = self
 

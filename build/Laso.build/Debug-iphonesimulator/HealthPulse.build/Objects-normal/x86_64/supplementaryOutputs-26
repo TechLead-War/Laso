@@ -1,0 +1,44 @@
+{
+  "/Users/primetrace/Desktop/RnD/HealthPulse/Analysis/SleepPerformanceAnalyzer.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/SleepPerformanceAnalyzer.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/SleepPerformanceAnalyzer.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/SleepPerformanceAnalyzer.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/SleepPerformanceAnalyzer.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/SleepPerformanceAnalyzer.swiftdeps"
+  },
+  "/Users/primetrace/Desktop/RnD/HealthPulse/Models/SupportedDevice.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/SupportedDevice.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/SupportedDevice.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/SupportedDevice.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/SupportedDevice.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/SupportedDevice.swiftdeps"
+  },
+  "/Users/primetrace/Desktop/RnD/HealthPulse/Test.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/Test.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/Test.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/Test.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/Test.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/Test.swiftdeps"
+  },
+  "/Users/primetrace/Desktop/RnD/HealthPulse/Views/Components/SeverityBadge.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/SeverityBadge.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/SeverityBadge.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/SeverityBadge.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/SeverityBadge.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/SeverityBadge.swiftdeps"
+  },
+  "/Users/primetrace/Desktop/RnD/HealthPulse/Views/Components/StatisticsGrid.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/StatisticsGrid.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/StatisticsGrid.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/StatisticsGrid.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/StatisticsGrid.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/StatisticsGrid.swiftdeps"
+  },
+  "/Users/primetrace/Desktop/RnD/HealthPulse/Views/Components/TimeRangeSelector.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/TimeRangeSelector.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/TimeRangeSelector.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/TimeRangeSelector.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/TimeRangeSelector.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/x86_64/TimeRangeSelector.swiftdeps"
+  }
+}

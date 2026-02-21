@@ -5,7 +5,7 @@ import Observation
 /// Manages all HealthKit interactions: authorization, queries, and background delivery
 @Observable
 final class HealthKitManager {
-    private let healthStore = HKHealthStore()
+    let healthStore = HKHealthStore()
 
     var isAuthorized = false
     var isLoading = false

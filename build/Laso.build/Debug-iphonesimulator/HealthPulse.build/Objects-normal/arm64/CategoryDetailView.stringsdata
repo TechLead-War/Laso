@@ -1,0 +1,80 @@
+{
+  "source": "/Users/primetrace/Desktop/RnD/HealthPulse/Views/Category/CategoryDetailView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Insights",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 34
+        }
+      },
+      {
+        "comment": "",
+        "key": "Metrics",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 48
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld active",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 53
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@, %@ %@",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 187
+        }
+      },
+      {
+        "comment": "",
+        "key": "View %@ details",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 188
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld metrics %@",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 138
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld metric%@ need%@ attention",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 111
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 129
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ %@",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 162
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -4,12 +4,10 @@ import SwiftUI
 struct ContentView: View {
     let healthKitManager: HealthKitManager
     let analysisEngine: AnalysisEngine
-    let featureGate: FeatureGate
-    let subscriptionManager: SubscriptionManager
+    let deviceSourceManager: DeviceSourceManager
 
     @State private var selectedTab: AppTab = .home
     @State private var showSettings = false
-    @State private var showFeedback = false
     @State private var navigationPath = NavigationPath()
 
     @State private var dashboardViewModel: DashboardViewModel
@@ -19,13 +17,11 @@ struct ContentView: View {
     init(
         healthKitManager: HealthKitManager,
         analysisEngine: AnalysisEngine,
-        featureGate: FeatureGate,
-        subscriptionManager: SubscriptionManager
+        deviceSourceManager: DeviceSourceManager
     ) {
         self.healthKitManager = healthKitManager
         self.analysisEngine = analysisEngine
-        self.featureGate = featureGate
-        self.subscriptionManager = subscriptionManager
+        self.deviceSourceManager = deviceSourceManager
         _dashboardViewModel = State(wrappedValue: DashboardViewModel(healthKitManager: healthKitManager, analysisEngine: analysisEngine))
         _liveViewModel = State(wrappedValue: LiveViewModel(healthKitManager: healthKitManager))
         _webExportViewModel = State(wrappedValue: WebExportViewModel(healthKitManager: healthKitManager, analysisEngine: analysisEngine))
@@ -56,7 +52,8 @@ struct ContentView: View {
                             metric: metric,
                             healthKitManager: healthKitManager,
                             analysisEngine: analysisEngine
-                        )
+                        ),
+                        deviceSourceManager: deviceSourceManager
                     )
                 }
                 .navigationDestination(for: HealthRiskType.self) { riskType in
@@ -70,24 +67,13 @@ struct ContentView: View {
         .sheet(isPresented: $showSettings) {
             SettingsView(
                 webExportViewModel: webExportViewModel,
-                featureGate: featureGate,
-                subscriptionManager: subscriptionManager
+                deviceSourceManager: deviceSourceManager,
+                healthKitManager: healthKitManager
             )
-        }
-        .sheet(isPresented: $showFeedback) {
-            FeedbackSheet()
         }
         .task {
             await dashboardViewModel.load()
             liveViewModel.fetchHomeData()
-        }
-        .onChange(of: selectedTab) { _, newTab in
-            AnalyticsManager.shared.track(.screenView(screen: newTab.rawValue))
-            // Show feedback at the right moment (not on first use)
-            if AnalyticsManager.shared.shouldShowFeedbackPrompt && !showFeedback {
-                AnalyticsManager.shared.track(.feedbackPromptShown)
-                showFeedback = true
-            }
         }
     }
 
@@ -98,8 +84,7 @@ struct ContentView: View {
             HomeView(
                 viewModel: dashboardViewModel,
                 liveViewModel: liveViewModel,
-                featureGate: featureGate,
-                subscriptionManager: subscriptionManager,
+                deviceSourceManager: deviceSourceManager,
                 navigationPath: $navigationPath,
                 showSettings: $showSettings
             )
@@ -115,10 +100,10 @@ struct ContentView: View {
 }
 
 #Preview {
+    let hkManager = HealthKitManager()
     ContentView(
-        healthKitManager: HealthKitManager(),
+        healthKitManager: hkManager,
         analysisEngine: AnalysisEngine(),
-        featureGate: FeatureGate(),
-        subscriptionManager: SubscriptionManager()
+        deviceSourceManager: DeviceSourceManager(healthStore: hkManager.healthStore)
     )
 }

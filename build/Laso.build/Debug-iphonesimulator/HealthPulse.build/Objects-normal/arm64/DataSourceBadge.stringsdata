@@ -1,0 +1,16 @@
+{
+  "source": "/Users/primetrace/Desktop/RnD/HealthPulse/Views/Components/DataSourceBadge.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "via %@",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 19
+        }
+      }
+    ]
+  },
+  "version": 1
+}

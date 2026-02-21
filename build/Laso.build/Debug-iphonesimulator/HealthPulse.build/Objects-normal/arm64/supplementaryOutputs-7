@@ -1,0 +1,44 @@
+{
+  "/Users/primetrace/Desktop/RnD/HealthPulse/Analysis/HealthRiskEngine.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthRiskEngine.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthRiskEngine.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthRiskEngine.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthRiskEngine.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthRiskEngine.swiftdeps"
+  },
+  "/Users/primetrace/Desktop/RnD/HealthPulse/App/HealthPulseApp.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthPulseApp.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthPulseApp.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthPulseApp.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthPulseApp.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthPulseApp.swiftdeps"
+  },
+  "/Users/primetrace/Desktop/RnD/HealthPulse/Models/HealthRisk.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthRisk.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthRisk.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthRisk.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthRisk.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthRisk.swiftdeps"
+  },
+  "/Users/primetrace/Desktop/RnD/HealthPulse/Models/HealthScore.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthScore.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthScore.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthScore.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthScore.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthScore.swiftdeps"
+  },
+  "/Users/primetrace/Desktop/RnD/HealthPulse/Views/Components/HealthScoreRing.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthScoreRing.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthScoreRing.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthScoreRing.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthScoreRing.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthScoreRing.swiftdeps"
+  },
+  "/Users/primetrace/Desktop/RnD/HealthPulse/Views/Risk/HealthRiskDetailView.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthRiskDetailView.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthRiskDetailView.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthRiskDetailView.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthRiskDetailView.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/HealthRiskDetailView.swiftdeps"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "/Users/primetrace/Desktop/RnD/HealthPulse/Analysis/WeeklyPatternAnalyzer.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/WeeklyPatternAnalyzer.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/WeeklyPatternAnalyzer.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/WeeklyPatternAnalyzer.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/WeeklyPatternAnalyzer.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/WeeklyPatternAnalyzer.swiftdeps"
+  },
+  "/Users/primetrace/Desktop/RnD/HealthPulse/Analysis/WorkoutEffectivenessAnalyzer.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/WorkoutEffectivenessAnalyzer.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/WorkoutEffectivenessAnalyzer.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/WorkoutEffectivenessAnalyzer.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/WorkoutEffectivenessAnalyzer.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/WorkoutEffectivenessAnalyzer.swiftdeps"
+  },
+  "/Users/primetrace/Desktop/RnD/HealthPulse/Notifications/WeeklySummaryScheduler.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/WeeklySummaryScheduler.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/WeeklySummaryScheduler.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/WeeklySummaryScheduler.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/WeeklySummaryScheduler.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/WeeklySummaryScheduler.swiftdeps"
+  },
+  "/Users/primetrace/Desktop/RnD/HealthPulse/ViewModels/WebExportViewModel.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/WebExportViewModel.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/WebExportViewModel.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/WebExportViewModel.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/WebExportViewModel.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/WebExportViewModel.swiftdeps"
+  },
+  "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/GeneratedAssetSymbols.dia",
+    "object" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/primetrace/Desktop/RnD/HealthPulse/build/Laso.build/Debug-iphonesimulator/HealthPulse.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftdeps"
+  }
+}

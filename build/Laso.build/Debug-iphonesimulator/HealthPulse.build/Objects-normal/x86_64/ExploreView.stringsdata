@@ -1,0 +1,56 @@
+{
+  "source": "/Users/primetrace/Desktop/RnD/HealthPulse/Views/Explore/ExploreView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Explore",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 43
+        }
+      },
+      {
+        "comment": "",
+        "key": "Health score %lld out of 100, grade %@, %@",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 96
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@, score %lld, %lld insights",
+        "location": {
+          "startingColumn": 45,
+          "startingLine": 29
+        }
+      },
+      {
+        "comment": "",
+        "key": "View %@ details",
+        "location": {
+          "startingColumn": 44,
+          "startingLine": 30
+        }
+      },
+      {
+        "comment": "",
+        "key": "Health Score",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 62
+        }
+      },
+      {
+        "comment": "",
+        "key": "Focus on %@ to improve your score",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 84
+        }
+      }
+    ]
+  },
+  "version": 1
+}

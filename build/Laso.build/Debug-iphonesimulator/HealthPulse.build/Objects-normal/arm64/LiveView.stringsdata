@@ -1,0 +1,224 @@
+{
+  "source": "/Users/primetrace/Desktop/RnD/HealthPulse/Views/Live/LiveView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Waiting for live data from Apple Watch. Make sure your watch is paired and worn.",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 71
+        }
+      },
+      {
+        "comment": "",
+        "key": "Waiting for Live Data",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 47
+        }
+      },
+      {
+        "comment": "",
+        "key": "Make sure your Apple Watch is paired and worn. Heart rate and other vitals will appear here automatically.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 50
+        }
+      },
+      {
+        "comment": "",
+        "key": "Live",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 91
+        }
+      },
+      {
+        "comment": "",
+        "key": "Streaming",
+        "location": {
+          "startingColumn": 50,
+          "startingLine": 100
+        }
+      },
+      {
+        "comment": "",
+        "key": "Connecting...",
+        "location": {
+          "startingColumn": 64,
+          "startingLine": 100
+        }
+      },
+      {
+        "comment": "",
+        "key": "bpm",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 153
+        }
+      },
+      {
+        "comment": "",
+        "key": "Today: %lld–%lld bpm",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 200
+        }
+      },
+      {
+        "comment": "",
+        "key": "Time",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 304
+        }
+      },
+      {
+        "comment": "",
+        "key": "BPM",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 305
+        }
+      },
+      {
+        "comment": "",
+        "key": "Time",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 312
+        }
+      },
+      {
+        "comment": "",
+        "key": "BPM",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 313
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 340
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@, %@ %@, %@",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 433
+        }
+      },
+      {
+        "comment": "",
+        "key": "Activity Rings",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 440
+        }
+      },
+      {
+        "comment": "",
+        "key": "Activity rings. Move: %lld of %lld calories, %lld percent. Exercise: %lld of %lld minutes, %lld percent. Stand: %lld of %lld hours, %lld percent.",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 484
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@: %@",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 551
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld%%",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 526
+        }
+      },
+      {
+        "comment": "",
+        "key": "Blood Pressure",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 570
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld/%lld",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 576
+        }
+      },
+      {
+        "comment": "",
+        "key": "mmHg",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 578
+        }
+      },
+      {
+        "comment": "",
+        "key": "Temperature",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 604
+        }
+      },
+      {
+        "comment": "",
+        "key": "°C",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 612
+        }
+      },
+      {
+        "comment": "",
+        "key": "Last Workout",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 638
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld min",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 659
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld kcal",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 669
+        }
+      },
+      {
+        "comment": "",
+        "key": "Last signal %@ ago",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 700
+        }
+      }
+    ]
+  },
+  "version": 1
+}

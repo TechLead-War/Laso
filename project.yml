@@ -11,11 +11,6 @@ settings:
     SWIFT_VERSION: "5.9"
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
 
-packages:
-  FirebaseSDK:
-    url: https://github.com/firebase/firebase-ios-sdk
-    majorVersion: 12.9.0
-
 targets:
   HealthPulse:
     type: application
@@ -32,13 +27,19 @@ targets:
           - ".claude"
           - "node_modules"
           - "*.md"
-    dependencies:
-      - package: FirebaseSDK
-        product: FirebaseCore
-      - package: FirebaseSDK
-        product: FirebaseRemoteConfig
-      - package: FirebaseSDK
-        product: FirebaseAnalytics
+          - "Test.swift"
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: Laso
+        NSHealthShareUsageDescription: "Laso reads your health data from Apple Watch and iPhone to provide real-time vitals, personalized health scores, trend analysis, and actionable insights."
+        NSHealthUpdateUsageDescription: "Laso requests write access to Apple Health to allow future features like logging workouts and health entries directly from the app."
+        UIBackgroundModes: [processing]
+        BGTaskSchedulerPermittedIdentifiers: ["com.lasohealth.com.background-refresh"]
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+          UIImageName: LaunchIcon
     settings:
       base:
         INFOPLIST_FILE: Info.plist
