@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -124,7 +124,7 @@
 		5827B420D1FD0325FE028282 /* ConnectedDeviceInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectedDeviceInfo.swift; sourceTree = "<group>"; };
 		59AFB7BF706251B5AA4B10B3 /* MetricDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricDetailView.swift; sourceTree = "<group>"; };
 		644B807CD403736D1B4418D5 /* package.xcworkspace */ = {isa = PBXFileReference; lastKnownFileType = wrapper.workspace; path = package.xcworkspace; sourceTree = "<group>"; };
-		65E5978C39EAFBDCEECA6DA6 /* HealthPulse.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HealthPulse.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		65E5978C39EAFBDCEECA6DA6 /* HealthPulse.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HealthPulse.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		664681EF36E9FD6861C8B5D7 /* Insight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Insight.swift; sourceTree = "<group>"; };
 		665F4B99E035582C345F6F71 /* DeviceDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceDetailView.swift; sourceTree = "<group>"; };
 		691FD589D26D1E8E16222836 /* ChartJSBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartJSBundle.swift; sourceTree = "<group>"; };
@@ -156,7 +156,7 @@
 		C14C4080D8F86D1D9FE887E9 /* TrendBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendBadge.swift; sourceTree = "<group>"; };
 		C1D0D6E696648B66D83CA0F6 /* LiveViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveViewModel.swift; sourceTree = "<group>"; };
 		C4CE7C2FDBCFFE781B01B4B9 /* PersonalRecordAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalRecordAnalyzer.swift; sourceTree = "<group>"; };
-		C78750704CE766C4F10D4F3F /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		C78750704CE766C4F10D4F3F /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		CC25CC97AEB047A42CFD2FA7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CCC8EDD113328305A89EFB85 /* StatisticsGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsGrid.swift; sourceTree = "<group>"; };
 		CD50AAE154719090048DF3E2 /* RecoveryAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryAnalyzer.swift; sourceTree = "<group>"; };
@@ -441,19 +441,6 @@
 				FDE2244C45612F29EA8A8234 /* HealthPulse.entitlements */,
 				DB2701A38C5F2B5C84724997 /* Info.plist */,
 				C78750704CE766C4F10D4F3F /* PrivacyInfo.xcprivacy */,
-				0A6D8094D827D9D0F1D5E923 /* .swiftpm */,
-				1EF321925F552EBE46811614 /* Analysis */,
-				245B633267003874872B05C6 /* App */,
-				F4F842DF9AF1A93301E1012D /* Config */,
-				F5E116967F91A190505F0397 /* Data */,
-				4DF76B0EA2E2F3B29CA0952B /* Extensions */,
-				46EC9F33A83E250CF50CEB66 /* Models */,
-				FB27FC419922167688397BBA /* Notifications */,
-				E1B4BA327CF50355E5EF00C0 /* Subscriptions */,
-				C936DC718B142DC99A17A3FF /* Tracking */,
-				A30B0BC7B45583E8517D4D6E /* ViewModels */,
-				68AF4E9026CA755E4C880B94 /* Views */,
-				A1CB447EE663113B316BE5A6 /* WebExport */,
 			);
 			name = HealthPulse;
 			path = .;
@@ -564,7 +551,6 @@
 			);
 			mainGroup = F3DDC9B586E57614CABF0418;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -804,6 +790,7 @@
 				CODE_SIGN_ENTITLEMENTS = HealthPulse.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -826,6 +813,7 @@
 				CODE_SIGN_ENTITLEMENTS = HealthPulse.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
