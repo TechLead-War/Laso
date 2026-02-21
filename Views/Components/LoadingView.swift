@@ -1,33 +1,123 @@
 import SwiftUI
 
-/// Full-screen loading state with pulsing animation
+/// Full-screen loading state with animated syncing phases
 struct LoadingView: View {
-    @State private var isAnimating = false
+    @State private var currentPhase = 0
+    @State private var dotCount = 0
+    @State private var iconScale: CGFloat = 0.8
+    @State private var iconOpacity: Double = 0.6
+    @State private var waveOffset: CGFloat = 0
+    @State private var appeared = false
+
     let message: String
+
+    private let phases: [(icon: String, text: String, color: Color)] = [
+        ("antenna.radiowaves.left.and.right", "Connecting to Apple Health", .blue),
+        ("heart.fill", "Syncing heart data", .red),
+        ("bed.double.fill", "Reading sleep patterns", .indigo),
+        ("figure.run", "Loading activity data", .orange),
+        ("brain.head.profile", "Analyzing recovery", .purple),
+        ("sparkles", "Almost ready", .green),
+    ]
 
     init(_ message: String = "Loading health data...") {
         self.message = message
     }
 
     var body: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "heart.text.clipboard")
-                .font(.system(size: 48))
-                .foregroundStyle(.tint)
-                .scaleEffect(isAnimating ? 1.1 : 0.9)
-                .animation(.easeInOut(duration: 0.8).repeatForever(), value: isAnimating)
+        VStack(spacing: 32) {
+            Spacer()
 
-            Text(message)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            // Animated icon with glow
+            ZStack {
+                // Glow ring
+                Circle()
+                    .fill(currentColor.opacity(0.1))
+                    .frame(width: 120, height: 120)
+                    .scaleEffect(iconScale == 1.0 ? 1.3 : 0.9)
+                    .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: iconScale)
 
-            ProgressView()
+                Circle()
+                    .fill(currentColor.opacity(0.05))
+                    .frame(width: 160, height: 160)
+                    .scaleEffect(iconScale == 1.0 ? 1.5 : 1.0)
+                    .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: iconScale)
+
+                // Icon
+                Image(systemName: phases[currentPhase].icon)
+                    .font(.system(size: 40, weight: .medium))
+                    .foregroundStyle(currentColor)
+                    .frame(width: 80, height: 80)
+                    .background(currentColor.opacity(0.12), in: Circle())
+                    .scaleEffect(iconScale)
+                    .opacity(iconOpacity)
+                    .contentTransition(.symbolEffect(.replace))
+            }
+
+            // Phase text with animated dots
+            VStack(spacing: 8) {
+                Text(phases[currentPhase].text + animatedDots)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.primary)
+                    .contentTransition(.numericText())
+                    .animation(.easeInOut(duration: 0.3), value: currentPhase)
+
+                Text(message)
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+
+            // Progress dots
+            HStack(spacing: 6) {
+                ForEach(0..<phases.count, id: \.self) { index in
+                    Circle()
+                        .fill(index <= currentPhase ? currentColor : Color.secondary.opacity(0.2))
+                        .frame(width: index == currentPhase ? 8 : 6, height: index == currentPhase ? 8 : 6)
+                        .animation(.spring(response: 0.4), value: currentPhase)
+                }
+            }
+
+            Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onAppear { isAnimating = true }
+        .onAppear {
+            appeared = true
+            iconScale = 1.0
+            iconOpacity = 1.0
+            startPhaseTimer()
+            startDotTimer()
+        }
+    }
+
+    private var currentColor: Color {
+        phases[currentPhase].color
+    }
+
+    private var animatedDots: String {
+        String(repeating: ".", count: dotCount)
+    }
+
+    private func startPhaseTimer() {
+        Timer.scheduledTimer(withTimeInterval: 1.8, repeats: true) { timer in
+            guard appeared else { timer.invalidate(); return }
+            withAnimation(.easeInOut(duration: 0.4)) {
+                if currentPhase < phases.count - 1 {
+                    currentPhase += 1
+                } else {
+                    currentPhase = 0
+                }
+            }
+        }
+    }
+
+    private func startDotTimer() {
+        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
+            guard appeared else { timer.invalidate(); return }
+            dotCount = (dotCount % 3) + 1
+        }
     }
 }
 
 #Preview {
-    LoadingView()
+    LoadingView("Analyzing your health data...")
 }
