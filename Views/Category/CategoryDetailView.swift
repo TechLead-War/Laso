@@ -61,6 +61,9 @@ struct CategoryDetailView: View {
                             metricRow(metric)
                         }
                         .buttonStyle(.plain)
+                        .simultaneousGesture(TapGesture().onEnded {
+                            AppAnalytics.shared.trackBlockTap(title: metric.displayName, type: .metricRow, screen: .categoryDetail)
+                        })
                     }
                 }
             }
@@ -68,6 +71,8 @@ struct CategoryDetailView: View {
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle(viewModel.category.displayName)
+        .onAppear { AppAnalytics.shared.trackFeatureOpen(.categoryDetail, metadata: ["category": viewModel.category.displayName]) }
+        .onDisappear { AppAnalytics.shared.trackFeatureClose(.categoryDetail, metadata: ["category": viewModel.category.displayName]) }
     }
 
     // MARK: - Category Analytics

@@ -1,6 +1,6 @@
 import Foundation
 
-/// Enforces maximum notification frequency (5 per day by default)
+/// Enforces maximum notification frequency per day
 final class FrequencyCapManager {
     private let defaults = UserDefaults.standard
     private let key = "healthpulse.notificationLog"

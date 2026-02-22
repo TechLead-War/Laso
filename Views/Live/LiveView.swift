@@ -27,8 +27,14 @@ struct LiveView: View {
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
-        .onAppear { viewModel.startStreaming() }
-        .onDisappear { viewModel.stopStreaming() }
+        .onAppear {
+            viewModel.startStreaming()
+            AppAnalytics.shared.trackFeatureOpen(.live)
+        }
+        .onDisappear {
+            viewModel.stopStreaming()
+            AppAnalytics.shared.trackFeatureClose(.live)
+        }
         .sensoryFeedback(.success, trigger: viewModel.hasAnyLiveData)
     }
 

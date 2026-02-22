@@ -1,5 +1,9 @@
 import SwiftUI
 
+#if canImport(FirebaseFirestore)
+import FirebaseFirestore
+#endif
+
 /// Non-annoying feedback form — feels collaborative, not like a survey.
 /// "Help us build what you need next."
 struct FeedbackSheet: View {
@@ -8,6 +12,7 @@ struct FeedbackSheet: View {
     @State private var feedbackText = ""
     @State private var selectedCategory: FeedbackCategory = .feature
     @State private var submitted = false
+    @State private var isSending = false
 
     var body: some View {
         NavigationStack {
@@ -42,6 +47,7 @@ struct FeedbackSheet: View {
                     HStack(spacing: 8) {
                         ForEach(FeedbackCategory.allCases) { category in
                             Button {
+                                AppAnalytics.shared.trackBlockTap(title: category.displayName, type: .feedbackCategory, screen: .feedback)
                                 selectedCategory = category
                             } label: {
                                 HStack(spacing: 4) {
@@ -79,13 +85,19 @@ struct FeedbackSheet: View {
                 Button {
                     submitFeedback()
                 } label: {
-                    Text("Send Feedback")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 44)
+                    if isSending {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 44)
+                    } else {
+                        Text("Send Feedback")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 44)
+                    }
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(feedbackText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .disabled(feedbackText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSending)
             }
             .padding()
         }
@@ -93,6 +105,7 @@ struct FeedbackSheet: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Skip") {
+                    AppAnalytics.shared.trackBlockTap(title: "Skip", type: .feedbackSkip, screen: .feedback)
                     dismiss()
                 }
                 .font(.subheadline)
@@ -133,12 +146,42 @@ struct FeedbackSheet: View {
         let trimmed = feedbackText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
-        // Store the actual text in UserDefaults for retrieval
+        isSending = true
+
+        // 1. Save locally as backup
         var allFeedback = UserDefaults.standard.stringArray(forKey: "laso.feedback.entries") ?? []
         let entry = "[\(selectedCategory.rawValue)] \(trimmed) — \(Date().formatted(.dateTime.month().day().year()))"
         allFeedback.append(entry)
         UserDefaults.standard.set(allFeedback, forKey: "laso.feedback.entries")
 
+        // 2. Send to Firebase Firestore (collective feedback)
+        let feedbackData: [String: Any] = [
+            "category": selectedCategory.rawValue,
+            "text": trimmed,
+            "timestamp": Date().timeIntervalSince1970,
+            "days_since_install": FeedbackPromptManager.shared.daysSinceInstall,
+            "app_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
+        ]
+
+#if canImport(FirebaseFirestore)
+        Firestore.firestore().collection("feedback").addDocument(data: feedbackData) { _ in
+            finishSubmission(trimmed: trimmed)
+        }
+#else
+        print("[Feedback] Would send to Firestore: \(feedbackData)")
+        finishSubmission(trimmed: trimmed)
+#endif
+    }
+
+    private func finishSubmission(trimmed: String) {
+        // 3. Fire analytics event
+        AppAnalytics.shared.trackFeedbackSubmitted(
+            category: selectedCategory.rawValue,
+            textLength: trimmed.count
+        )
+        FeedbackPromptManager.shared.markFeedbackSubmitted()
+
+        isSending = false
         withAnimation {
             submitted = true
         }

@@ -45,6 +45,9 @@ struct SettingsView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
+                    .simultaneousGesture(TapGesture().onEnded {
+                        AppAnalytics.shared.trackBlockTap(title: "Manage Devices", type: .manageDevices, screen: .settings)
+                    })
                 }
 
                 // Notifications
@@ -142,6 +145,7 @@ struct SettingsView: View {
                 // Export
                 Section("Data Export") {
                     Button {
+                        AppAnalytics.shared.trackBlockTap(title: "Generate Web Report", type: .exportReport, screen: .settings)
                         webExportViewModel.exportReport()
                         showExportSheet = true
                     } label: {
@@ -171,6 +175,8 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            .onAppear { AppAnalytics.shared.trackFeatureOpen(.settings) }
+            .onDisappear { AppAnalytics.shared.trackFeatureClose(.settings) }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }

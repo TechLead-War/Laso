@@ -64,6 +64,28 @@ final class LiveViewModel {
     var exerciseGoal: Double = 30  // minutes
     var standGoal: Double = 12     // hours
 
+    // MARK: - Last Night's Sleep
+
+    var lastNightSleepDuration: TimeInterval = 0   // total seconds
+    var lastNightDeepSleep: TimeInterval = 0
+    var lastNightREMSleep: TimeInterval = 0
+    var lastNightCoreSleep: TimeInterval = 0
+    var lastNightAwakeTime: TimeInterval = 0
+
+    var hasSleepData: Bool { lastNightSleepDuration > 0 }
+
+    var hasSleepStageBreakdown: Bool {
+        lastNightDeepSleep > 0 || lastNightREMSleep > 0 || lastNightCoreSleep > 0
+    }
+
+    var sleepQualityLabel: String {
+        let hours = lastNightSleepDuration / 3600
+        if hours >= 7.5 { return "Great" }
+        if hours >= 6.5 { return "Good" }
+        if hours >= 5.5 { return "Fair" }
+        return "Poor"
+    }
+
     // MARK: - Mindfulness
 
     var todayMindfulMinutes: Double = 0
@@ -226,6 +248,7 @@ final class LiveViewModel {
         fetchActivityGoals()
         fetchTodayMindfulMinutes()
         fetchLatestWorkout()
+        fetchLastNightSleep()
     }
 
     // MARK: - Start / Stop
@@ -245,6 +268,7 @@ final class LiveViewModel {
         fetchTodayHeartRateRange()
         fetchActivityGoals()
         fetchTodayMindfulMinutes()
+        fetchLastNightSleep()
         computeReadinessScore()
 
         // After 2 seconds, fill in any gaps the anchored queries didn't cover
@@ -652,6 +676,69 @@ final class LiveViewModel {
         case 60..<80: return "orange"
         default: return "red"
         }
+    }
+
+    // MARK: - Last Night's Sleep Fetch
+
+    func fetchLastNightSleep() {
+        let sleepType = HKCategoryType(.sleepAnalysis)
+        let calendar = Calendar.current
+
+        // Window: yesterday 6 PM → today noon (covers most sleep schedules)
+        let now = Date()
+        let startOfToday = calendar.startOfDay(for: now)
+        guard let yesterdayEvening = calendar.date(bySettingHour: 18, minute: 0, second: 0, of: calendar.date(byAdding: .day, value: -1, to: startOfToday)!),
+              let todayNoon = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: startOfToday) else { return }
+
+        let predicate = HKQuery.predicateForSamples(withStart: yesterdayEvening, end: todayNoon, options: .strictStartDate)
+
+        let query = HKSampleQuery(
+            sampleType: sleepType,
+            predicate: predicate,
+            limit: HKObjectQueryNoLimit,
+            sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)]
+        ) { [weak self] _, results, _ in
+            guard let samples = results as? [HKCategorySample] else { return }
+
+            var deep: TimeInterval = 0
+            var rem: TimeInterval = 0
+            var core: TimeInterval = 0
+            var awake: TimeInterval = 0
+            var total: TimeInterval = 0
+
+            for sample in samples {
+                let duration = sample.endDate.timeIntervalSince(sample.startDate)
+                guard let value = HKCategoryValueSleepAnalysis(rawValue: sample.value) else { continue }
+                switch value {
+                case .asleepDeep:
+                    deep += duration
+                    total += duration
+                case .asleepREM:
+                    rem += duration
+                    total += duration
+                case .asleepCore:
+                    core += duration
+                    total += duration
+                case .awake:
+                    awake += duration
+                case .asleepUnspecified, .inBed:
+                    // inBed or unspecified — count as total if no stage breakdown
+                    total += duration
+                @unknown default:
+                    break
+                }
+            }
+
+            Task { @MainActor in
+                self?.lastNightSleepDuration = total
+                self?.lastNightDeepSleep = deep
+                self?.lastNightREMSleep = rem
+                self?.lastNightCoreSleep = core
+                self?.lastNightAwakeTime = awake
+            }
+        }
+
+        healthStore.execute(query)
     }
 
     // MARK: - Today's Mindful Minutes

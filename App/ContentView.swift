@@ -6,8 +6,10 @@ struct ContentView: View {
     let analysisEngine: AnalysisEngine
     let deviceSourceManager: DeviceSourceManager
 
+    @Environment(\.scenePhase) private var scenePhase
     @State private var selectedTab: AppTab = .home
     @State private var showSettings = false
+    @State private var showFeedback = false
     @State private var navigationPath = NavigationPath()
 
     @State private var dashboardViewModel: DashboardViewModel
@@ -63,6 +65,16 @@ struct ContentView: View {
                         }
                     }
                 }
+                .navigationDestination(for: String.self) { route in
+                    if route == "insightsDetail" {
+                        InsightsDetailView(
+                            insightsByCategory: dashboardViewModel.insightsByCategory,
+                            onTapMetric: { metric in
+                                navigationPath.append(metric)
+                            }
+                        )
+                    }
+                }
         }
         .sheet(isPresented: $showSettings) {
             SettingsView(
@@ -71,9 +83,33 @@ struct ContentView: View {
                 healthKitManager: healthKitManager
             )
         }
+        .sheet(isPresented: $showFeedback) {
+            FeedbackSheet()
+        }
         .task {
             await dashboardViewModel.load()
             liveViewModel.fetchHomeData()
+        }
+        .onAppear {
+            FeedbackPromptManager.shared.recordAppOpen()
+            AppAnalytics.shared.trackSessionStart()
+            if FeedbackPromptManager.shared.shouldShowFeedbackPrompt() {
+                showFeedback = true
+                FeedbackPromptManager.shared.markPromptShown()
+            }
+        }
+        .onChange(of: scenePhase) { oldPhase, newPhase in
+            if newPhase == .active && oldPhase != .active {
+                AppAnalytics.shared.trackSessionStart()
+            } else if newPhase == .background {
+                AppAnalytics.shared.trackSessionEnd()
+            }
+        }
+        .onChange(of: selectedTab) { oldTab, newTab in
+            AppAnalytics.shared.trackTabSwitch(to: newTab.rawValue, from: oldTab.rawValue)
+        }
+        .onChange(of: navigationPath.count) { _, newCount in
+            AppAnalytics.shared.updateNavigationDepth(newCount)
         }
     }
 

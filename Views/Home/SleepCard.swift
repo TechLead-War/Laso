@@ -1,0 +1,161 @@
+import SwiftUI
+
+/// Card showing last night's sleep duration, stage breakdown bar, and comparison to baseline
+struct SleepCard: View {
+    let liveVM: LiveViewModel
+    let sleepBaseline: Double? // baseline hours from AnalysisEngine
+    let sleepInsight: Insight? // top sleep performance insight, if any
+
+    private var hours: Double { liveVM.lastNightSleepDuration / 3600 }
+
+    var body: some View {
+        if liveVM.hasSleepData {
+            VStack(spacing: 0) {
+                HStack(spacing: 0) {
+                    // Left accent bar — indigo
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(.indigo)
+                        .frame(width: 4)
+                        .padding(.vertical, 6)
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        // Header
+                        HStack {
+                            Image(systemName: "moon.fill")
+                                .font(.body.weight(.semibold))
+                                .foregroundStyle(.white)
+                                .frame(width: 32, height: 32)
+                                .background(.indigo, in: Circle())
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Last Night's Sleep")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                                    .textCase(.uppercase)
+
+                                HStack(spacing: 6) {
+                                    Text(formatDuration(hours))
+                                        .font(.title3.weight(.bold).monospacedDigit())
+
+                                    if let baseline = sleepBaseline, baseline > 0 {
+                                        deltaLabel(current: hours, baseline: baseline)
+                                    }
+                                }
+                            }
+
+                            Spacer()
+
+                            Text(liveVM.sleepQualityLabel)
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(qualityColor)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(qualityColor.opacity(0.12), in: Capsule())
+                        }
+
+                        // Stage breakdown bar
+                        if liveVM.hasSleepStageBreakdown {
+                            stageBar
+                        }
+
+                        // Sleep impact insight
+                        if let insight = sleepInsight {
+                            Text(insight.summary)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(2)
+                        }
+                    }
+                    .padding(.leading, 10)
+                    .padding(.trailing, 14)
+                    .padding(.vertical, 12)
+                }
+                .background(
+                    Color.indigo.opacity(0.04),
+                    in: RoundedRectangle(cornerRadius: 14)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .strokeBorder(Color.indigo.opacity(0.1), lineWidth: 0.5)
+                )
+                .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
+            }
+        }
+    }
+
+    // MARK: - Stage Breakdown Bar
+
+    private var stageBar: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            GeometryReader { geo in
+                let total = liveVM.lastNightDeepSleep + liveVM.lastNightREMSleep + liveVM.lastNightCoreSleep + liveVM.lastNightAwakeTime
+                if total > 0 {
+                    HStack(spacing: 1.5) {
+                        stageSegment(duration: liveVM.lastNightDeepSleep, total: total, color: .purple, width: geo.size.width)
+                        stageSegment(duration: liveVM.lastNightREMSleep, total: total, color: .blue, width: geo.size.width)
+                        stageSegment(duration: liveVM.lastNightCoreSleep, total: total, color: .cyan, width: geo.size.width)
+                        stageSegment(duration: liveVM.lastNightAwakeTime, total: total, color: Color(.systemGray4), width: geo.size.width)
+                    }
+                }
+            }
+            .frame(height: 8)
+            .clipShape(Capsule())
+
+            // Legend
+            HStack(spacing: 12) {
+                stageLegend(label: "Deep", duration: liveVM.lastNightDeepSleep, color: .purple)
+                stageLegend(label: "REM", duration: liveVM.lastNightREMSleep, color: .blue)
+                stageLegend(label: "Core", duration: liveVM.lastNightCoreSleep, color: .cyan)
+                stageLegend(label: "Awake", duration: liveVM.lastNightAwakeTime, color: Color(.systemGray4))
+            }
+        }
+    }
+
+    private func stageSegment(duration: TimeInterval, total: TimeInterval, color: Color, width: CGFloat) -> some View {
+        let fraction = total > 0 ? duration / total : 0
+        return RoundedRectangle(cornerRadius: 2)
+            .fill(color)
+            .frame(width: max(width * fraction - 1.5, 0), height: 8)
+    }
+
+    private func stageLegend(label: String, duration: TimeInterval, color: Color) -> some View {
+        HStack(spacing: 3) {
+            Circle()
+                .fill(color)
+                .frame(width: 6, height: 6)
+            Text("\(label) \(formatDuration(duration / 3600))")
+                .font(.system(size: 9, weight: .medium))
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    // MARK: - Helpers
+
+    private func deltaLabel(current: Double, baseline: Double) -> some View {
+        let diff = current - baseline
+        let percent = baseline > 0 ? (diff / baseline) * 100 : 0
+        let arrow = diff >= 0 ? "+" : ""
+        return Text("\(arrow)\(Int(percent))% vs avg")
+            .font(.caption2.weight(.medium))
+            .foregroundStyle(diff >= 0 ? .green : .orange)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background((diff >= 0 ? Color.green : Color.orange).opacity(0.1), in: Capsule())
+    }
+
+    private var qualityColor: Color {
+        switch liveVM.sleepQualityLabel {
+        case "Great": return .green
+        case "Good": return .blue
+        case "Fair": return .orange
+        default: return .red
+        }
+    }
+
+    private func formatDuration(_ hours: Double) -> String {
+        let h = Int(hours)
+        let m = Int((hours - Double(h)) * 60)
+        if h == 0 { return "\(m)m" }
+        return "\(h)h \(String(format: "%02d", m))m"
+    }
+}

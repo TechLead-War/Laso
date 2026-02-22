@@ -34,6 +34,8 @@ struct HealthRiskDetailView: View {
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle(risk.riskType.displayName)
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear { AppAnalytics.shared.trackFeatureOpen(.riskDetail, metadata: ["risk": risk.riskType.rawValue]) }
+        .onDisappear { AppAnalytics.shared.trackFeatureClose(.riskDetail, metadata: ["risk": risk.riskType.rawValue]) }
     }
 
     // MARK: - Risk Gauge
@@ -97,6 +99,7 @@ struct HealthRiskDetailView: View {
 
             ForEach(risk.focusAreas) { area in
                 FocusAreaCard(area: area) {
+                    AppAnalytics.shared.trackBlockTap(title: area.title, type: .focusAreaCard, screen: .riskDetail)
                     onTapMetric(area.metric)
                 }
             }
@@ -114,6 +117,7 @@ struct HealthRiskDetailView: View {
             ForEach(risk.factors) { factor in
                 Button {
                     if factor.status != .unmeasured {
+                        AppAnalytics.shared.trackBlockTap(title: factor.metric.displayName, type: .riskFactor, screen: .riskDetail)
                         onTapMetric(factor.metric)
                     }
                 } label: {

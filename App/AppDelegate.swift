@@ -2,6 +2,10 @@ import UIKit
 import HealthKit
 import UserNotifications
 
+#if canImport(FirebaseCore)
+import FirebaseCore
+#endif
+
 /// AppDelegate for background delivery registration and notification setup
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
 
@@ -9,6 +13,11 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        // Configure Firebase (Analytics + Firestore)
+#if canImport(FirebaseCore)
+        FirebaseApp.configure()
+#endif
+
         // Set up notification delegate
         UNUserNotificationCenter.current().delegate = self
 

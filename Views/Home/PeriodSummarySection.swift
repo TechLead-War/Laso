@@ -31,7 +31,8 @@ struct PeriodSummarySection: View {
             .padding(.horizontal)
             .sensoryFeedback(.selection, trigger: viewModel.selectedPeriod)
             .accessibilityLabel("Time period selector")
-            .onChange(of: viewModel.selectedPeriod) {
+            .onChange(of: viewModel.selectedPeriod) { _, newPeriod in
+                AppAnalytics.shared.trackBlockTap(title: newPeriod.rawValue, type: .periodSelector, screen: .home)
                 isExpanded = false
                 activeFilter = nil
             }
@@ -47,6 +48,7 @@ struct PeriodSummarySection: View {
                     color: .green,
                     isSelected: activeFilter == .improved
                 ) {
+                    AppAnalytics.shared.trackBlockTap(title: "Improved", type: .trendFilter, screen: .home)
                     withAnimation(.easeInOut(duration: 0.25)) {
                         activeFilter = activeFilter == .improved ? nil : .improved
                         isExpanded = false
@@ -62,6 +64,7 @@ struct PeriodSummarySection: View {
                     color: .secondary,
                     isSelected: activeFilter == .stable
                 ) {
+                    AppAnalytics.shared.trackBlockTap(title: "Stable", type: .trendFilter, screen: .home)
                     withAnimation(.easeInOut(duration: 0.25)) {
                         activeFilter = activeFilter == .stable ? nil : .stable
                         isExpanded = false
@@ -77,6 +80,7 @@ struct PeriodSummarySection: View {
                     color: .red,
                     isSelected: activeFilter == .declined
                 ) {
+                    AppAnalytics.shared.trackBlockTap(title: "Declined", type: .trendFilter, screen: .home)
                     withAnimation(.easeInOut(duration: 0.25)) {
                         activeFilter = activeFilter == .declined ? nil : .declined
                         isExpanded = false
@@ -113,6 +117,7 @@ struct PeriodSummarySection: View {
                             ? MetricChangeRow.nudgeFor(change.metric)
                             : nil
                         MetricChangeRow(change: change, actionNudge: nudge) {
+                            AppAnalytics.shared.trackBlockTap(title: change.metric.displayName, type: .metricRow, screen: .home)
                             onTapMetric(change.metric)
                         }
                     }

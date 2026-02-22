@@ -45,6 +45,8 @@ struct MetricDetailView: View {
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle(viewModel.metric.displayName)
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear { AppAnalytics.shared.trackFeatureOpen(.metricDetail, metadata: ["metric": viewModel.metric.rawValue]) }
+        .onDisappear { AppAnalytics.shared.trackFeatureClose(.metricDetail, metadata: ["metric": viewModel.metric.rawValue]) }
     }
 
     private var headerSection: some View {

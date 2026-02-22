@@ -16,6 +16,7 @@ struct ExploreView: View {
                 VStack(spacing: 0) {
                     ForEach(HealthCategory.allCases) { category in
                         Button {
+                            AppAnalytics.shared.trackBlockTap(title: category.displayName, type: .categoryRow, screen: .explore)
                             navigationPath.append(category)
                         } label: {
                             ExploreCategoryRow(
@@ -43,6 +44,8 @@ struct ExploreView: View {
         .navigationTitle("Explore")
         .navigationBarTitleDisplayMode(.large)
         .toolbar(.visible, for: .navigationBar)
+        .onAppear { AppAnalytics.shared.trackFeatureOpen(.explore) }
+        .onDisappear { AppAnalytics.shared.trackFeatureClose(.explore) }
         .refreshable {
             await viewModel.refresh()
         }

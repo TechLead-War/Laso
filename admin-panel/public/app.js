@@ -1,17 +1,19 @@
 // ─── Firebase Config ─────────────────────────────────────────────────────────
 // Replace with your Firebase project config from the Firebase Console.
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyDK3Xe2fVHxXg_UuKm0OBC6dVNbAmSn19o",
+  authDomain: "laso-health-v1.firebaseapp.com",
+  projectId: "laso-health-v1",
+  storageBucket: "laso-health-v1.firebasestorage.app",
+  messagingSenderId: "422856769623",
+  appId: "1:422856769623:web:4f9f640ac757590204e312",
+  measurementId: "G-JQYL4TRHLQ"
 };
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const functions = firebase.functions();
+const db = firebase.firestore();
 
 // ─── Config Schema ───────────────────────────────────────────────────────────
 // Defines all 26 keys, their section, display name, input type, and tiers list.
@@ -227,4 +229,89 @@ function showToast(message, isError = false) {
   toastTimer = setTimeout(() => {
     toastEl.className = "toast";
   }, 3000);
+}
+
+// ─── Feedback Dashboard ───────────────────────────────────────────────────────
+
+const loadFeedbackBtn = document.getElementById("load-feedback-btn");
+const feedbackCountEl = document.getElementById("feedback-count");
+const feedbackSummaryEl = document.getElementById("feedback-summary");
+const feedbackListEl = document.getElementById("feedback-list");
+
+loadFeedbackBtn.addEventListener("click", loadFeedback);
+
+async function loadFeedback() {
+  loadFeedbackBtn.disabled = true;
+  loadFeedbackBtn.textContent = "Loading...";
+
+  try {
+    const snapshot = await db
+      .collection("feedback")
+      .orderBy("timestamp", "desc")
+      .limit(200)
+      .get();
+
+    const entries = [];
+    snapshot.forEach((doc) => entries.push({ id: doc.id, ...doc.data() }));
+
+    feedbackCountEl.textContent = `${entries.length} entries`;
+
+    // Build category summary
+    const categoryCounts = {};
+    entries.forEach((e) => {
+      const cat = e.category || "unknown";
+      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+    });
+
+    feedbackSummaryEl.innerHTML = `
+      <div class="feedback-summary-grid">
+        ${Object.entries(categoryCounts)
+          .sort((a, b) => b[1] - a[1])
+          .map(
+            ([cat, count]) => `
+          <div class="summary-pill">
+            <span class="summary-label">${cat}</span>
+            <span class="summary-count">${count}</span>
+          </div>`
+          )
+          .join("")}
+      </div>
+    `;
+
+    // Build feedback list
+    feedbackListEl.innerHTML = entries
+      .map((e) => {
+        const date = e.timestamp
+          ? new Date(e.timestamp * 1000).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })
+          : "—";
+        return `
+        <div class="feedback-entry">
+          <div class="feedback-meta">
+            <span class="feedback-category-badge">${e.category || "?"}</span>
+            <span class="feedback-date">${date}</span>
+            ${e.days_since_install != null ? `<span class="feedback-days">Day ${e.days_since_install}</span>` : ""}
+            ${e.app_version ? `<span class="feedback-version">v${e.app_version}</span>` : ""}
+          </div>
+          <div class="feedback-text">${escapeHtml(e.text || "")}</div>
+        </div>`;
+      })
+      .join("");
+
+    showToast(`Loaded ${entries.length} feedback entries`);
+  } catch (err) {
+    showToast("Failed to load feedback: " + err.message, true);
+  } finally {
+    loadFeedbackBtn.disabled = false;
+    loadFeedbackBtn.textContent = "Load Feedback";
+  }
+}
+
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
 }

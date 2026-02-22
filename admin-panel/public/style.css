@@ -297,3 +297,83 @@ body {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ── Feedback Dashboard ──────────────────────────────── */
+
+.feedback-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.feedback-count {
+  font-size: 13px;
+  color: #86868b;
+}
+
+.feedback-summary-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.summary-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f5f5f7;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.summary-label {
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.summary-count {
+  font-weight: 700;
+  color: #0071e3;
+}
+
+.feedback-entry {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.feedback-entry:last-child {
+  border-bottom: none;
+}
+
+.feedback-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.feedback-category-badge {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: #0071e3;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.feedback-date,
+.feedback-days,
+.feedback-version {
+  font-size: 12px;
+  color: #86868b;
+}
+
+.feedback-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1d1d1f;
+}

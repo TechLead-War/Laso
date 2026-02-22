@@ -273,7 +273,8 @@ final class DashboardViewModel {
         previousTrends = analysisEngine.trends.mapValues { $0.direction }
 
         // Schedule notifications
-        let prefs = PersistenceManager().loadPreferences()
+        let persistence = PersistenceManager()
+        let prefs = persistence.loadPreferences()
 
         // Daily summary with richer data
         let anomalyCount = analysisEngine.anomalies.filter { $0.severity >= .warning }.count
@@ -297,9 +298,13 @@ final class DashboardViewModel {
             .prefix(5)
             .map { (metric: $0.key.displayName, direction: $0.value.direction.symbol, change: $0.value.weekOverWeekChange) }
 
+        let previousScore = persistence.loadPreviousWeekScore()
+        let scoreChange = previousScore.map { overallScore.score - $0 } ?? 0
+        persistence.recordWeeklyScore(overallScore.score)
+
         WeeklySummaryScheduler.schedule(
             score: overallScore.score,
-            scoreChange: 0, // Would need persistence for previous week score
+            scoreChange: scoreChange,
             improvedCount: periodSummary7d.improvedCount,
             declinedCount: periodSummary7d.declinedCount,
             topTrends: topTrends,
@@ -331,5 +336,101 @@ final class DashboardViewModel {
     /// Number of warning alerts currently active
     var warningAlertCount: Int {
         analysisEngine.anomalies.filter { $0.severity == .warning }.count
+    }
+
+    // MARK: - Body Insights
+
+    /// Insights grouped by InsightCategory, excluding empty categories
+    var insightsByCategory: [(category: InsightCategory, insights: [Insight])] {
+        InsightCategory.allCases.compactMap { category in
+            let matching = analysisEngine.insights.filter { $0.category == category }
+            guard !matching.isEmpty else { return nil }
+            return (category: category, insights: matching)
+        }
+    }
+
+    /// Context-aware daily action based on recovery, stress, sleep, exercise, time of day
+    func smartDailyAction(liveVM: LiveViewModel) -> SmartAction {
+        let hour = Calendar.current.component(.hour, from: Date())
+        let stress = liveVM.stressLevel
+        let readiness = liveVM.readinessScore
+        let sleepHours = liveVM.lastNightSleepDuration / 3600
+        let exerciseMin = liveVM.todayExerciseMinutes
+        let exerciseGoal = liveVM.exerciseGoal
+
+        // Priority 1: High stress
+        if let s = stress, s >= 60 {
+            return SmartAction(
+                icon: "wind",
+                title: "Take 5 min to breathe",
+                subtitle: "Stress is elevated — box breathing (4-4-4-4) can lower it fast"
+            )
+        }
+
+        // Priority 2: Poor sleep
+        if liveVM.hasSleepData && sleepHours < 5.5 {
+            return SmartAction(
+                icon: "moon.zzz.fill",
+                title: "Go easy today",
+                subtitle: "Only \(formatHoursMinutes(sleepHours)) of sleep — skip intense workouts"
+            )
+        }
+
+        // Priority 3: Low recovery
+        if let r = readiness, r < 40 {
+            return SmartAction(
+                icon: "figure.mind.and.body",
+                title: "Prioritize recovery",
+                subtitle: "Readiness is \(r)% — stretching or yoga only today"
+            )
+        }
+
+        // Priority 4: Exercise goal already met
+        if exerciseMin >= exerciseGoal {
+            return SmartAction(
+                icon: "checkmark.seal.fill",
+                title: "Exercise goal reached!",
+                subtitle: "\(Int(exerciseMin)) min today — stay active and hydrate"
+            )
+        }
+
+        // Priority 5: Good recovery + exercise remaining
+        if let r = readiness, r >= 60 {
+            let remaining = Int(exerciseGoal - exerciseMin)
+            return SmartAction(
+                icon: "bolt.heart.fill",
+                title: "You have \(remaining) min to go",
+                subtitle: "Recovery is strong — a run or workout would be great"
+            )
+        }
+
+        // Priority 6: Evening wind-down
+        if hour >= 20 {
+            return SmartAction(
+                icon: "moon.fill",
+                title: "Wind down for sleep",
+                subtitle: "Dim screens and skip caffeine for better rest"
+            )
+        }
+
+        // Default: walk
+        return SmartAction(
+            icon: "figure.walk",
+            title: "Take a 15 min walk",
+            subtitle: "A short walk boosts mood and energy"
+        )
+    }
+
+    struct SmartAction {
+        let icon: String
+        let title: String
+        let subtitle: String
+    }
+
+    func formatHoursMinutes(_ hours: Double) -> String {
+        let h = Int(hours)
+        let m = Int((hours - Double(h)) * 60)
+        if h == 0 { return "\(m)m" }
+        return "\(h)h \(String(format: "%02d", m))m"
     }
 }

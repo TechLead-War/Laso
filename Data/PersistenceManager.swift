@@ -60,4 +60,38 @@ final class PersistenceManager {
         guard interval > 0 else { return nil }
         return Date(timeIntervalSince1970: interval)
     }
+
+    // MARK: - Weekly Score Tracking
+
+    private let previousWeekScoreKey = "healthpulse.previousWeekScore"
+    private let currentScoreKey = "healthpulse.currentScore"
+    private let scoreDateKey = "healthpulse.scoreDate"
+
+    /// Record the current health score. Rotates current → previous when a new calendar week begins.
+    func recordWeeklyScore(_ score: Int) {
+        let calendar = Calendar.current
+        let now = Date()
+
+        if let savedDate = scoreDate(),
+           !calendar.isDate(savedDate, equalTo: now, toGranularity: .weekOfYear) {
+            let oldScore = defaults.integer(forKey: currentScoreKey)
+            if oldScore > 0 {
+                defaults.set(oldScore, forKey: previousWeekScoreKey)
+            }
+        }
+
+        defaults.set(score, forKey: currentScoreKey)
+        defaults.set(now.timeIntervalSince1970, forKey: scoreDateKey)
+    }
+
+    /// Load the score from the previous calendar week, if available
+    func loadPreviousWeekScore() -> Int? {
+        let val = defaults.integer(forKey: previousWeekScoreKey)
+        return val > 0 ? val : nil
+    }
+
+    private func scoreDate() -> Date? {
+        let interval = defaults.double(forKey: scoreDateKey)
+        return interval > 0 ? Date(timeIntervalSince1970: interval) : nil
+    }
 }

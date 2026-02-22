@@ -32,10 +32,12 @@ struct HomeView: View {
         .onAppear {
             livePulse = true
             startHomeRefresh()
+            AppAnalytics.shared.trackFeatureOpen(.home)
         }
         .onDisappear {
             homeRefreshTimer?.invalidate()
             homeRefreshTimer = nil
+            AppAnalytics.shared.trackFeatureClose(.home)
         }
     }
 
@@ -63,24 +65,38 @@ struct HomeView: View {
                     // 2. Today: Recovery + Body State
                     todaySection
 
-                    // 3. Insights — what needs your attention right now
+                    // 3. Body Insights — sleep, patterns, actions, anomalies
+                    BodyInsightsSection(
+                        viewModel: viewModel,
+                        liveVM: liveViewModel,
+                        onTapMetric: { metric in
+                            AppAnalytics.shared.trackBlockTap(title: metric.displayName, type: .metricRow, screen: .home)
+                            navigationPath.append(metric)
+                        },
+                        onTapSeeAll: {
+                            navigationPath.append("insightsDetail")
+                        }
+                    )
+
+                    // 4. Insights — what needs your attention right now
                     ActionCardsSection(
                         insights: viewModel.topActionableInsights
                     ) { metric in
                         navigationPath.append(metric)
                     }
 
-                    // 4. Focus Areas — where to improve
+                    // 5. Focus Areas — where to improve
                     FocusAreasSection(
                         risks: viewModel.healthRisks
                     ) { risk in
                         navigationPath.append(risk.riskType)
                     }
 
-                    // 5. Period selector — 7D / 30D / 3M / 6M
+                    // 6. Period selector — 7D / 30D / 3M / 6M
                     PeriodSummarySection(
                         viewModel: viewModel
                     ) { metric in
+                        AppAnalytics.shared.trackBlockTap(title: metric.displayName, type: .metricRow, screen: .home)
                         navigationPath.append(metric)
                     }
 
@@ -247,49 +263,6 @@ struct HomeView: View {
         }
     }
 
-    private var stressIconColor: Color {
-        switch liveViewModel.stressColor {
-        case "green": return .green
-        case "yellow": return .yellow
-        case "orange": return .orange
-        case "red": return .red
-        default: return .secondary
-        }
-    }
-
-    private var stressNudge: String {
-        guard let level = liveViewModel.stressLevel else { return "" }
-        if level >= 60 {
-            return dayPeriod == "night" ? "Breathe before bed" : "Try 5 min breathing"
-        }
-        if level >= 40 {
-            return dayPeriod == "afternoon" ? "Afternoon reset" : "Take a short break"
-        }
-        return "Looking good"
-    }
-
-    private var activeNudge: String {
-        let minutes = liveViewModel.todayExerciseMinutes
-        let goal = liveViewModel.exerciseGoal
-        if minutes >= goal { return "Goal reached!" }
-        let remaining = Int(goal - minutes)
-        if dayPeriod == "evening" || dayPeriod == "night" {
-            return remaining <= 10 ? "Quick finish!" : "\(remaining) min left"
-        }
-        return "\(remaining) min to goal"
-    }
-
-    private var mindfulNudge: String {
-        if liveViewModel.todayMindfulMinutes > 0 {
-            return liveViewModel.todayMindfulMinutes >= 10 ? "Great work" : "Keep it up"
-        }
-        switch dayPeriod {
-        case "morning": return "Morning calm?"
-        case "evening", "night": return "Wind down"
-        default: return "Start a session"
-        }
-    }
-
     private func recoveryCard(score: Int) -> some View {
         VStack(spacing: 16) {
             // Live header: time-aware label + live indicator
@@ -339,149 +312,14 @@ struct HomeView: View {
                         .foregroundStyle(recoveryColor(score))
                         .contentTransition(.numericText())
                         .animation(.easeInOut, value: score)
-
-                    Text(recoveryDescription(score))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
                 }
 
                 Spacer()
-            }
-
-            // Workout Recommendation — time-aware
-            HStack(spacing: 8) {
-                Image(systemName: workoutRecommendation(score).icon)
-                    .font(.caption)
-                    .foregroundStyle(recoveryColor(score))
-                    .contentTransition(.symbolEffect(.replace))
-                Text("\(dayPeriod == "night" ? "Tomorrow" : "Today"): \(workoutRecommendation(score).text)")
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(.primary)
-                Spacer()
-            }
-            .padding(10)
-            .background(recoveryColor(score).opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
-
-            // Vitals row: RHR + HRV with animated values
-            HStack(spacing: 0) {
-                if let rhr = liveViewModel.latestRestingHeartRate {
-                    HStack(spacing: 6) {
-                        Image(systemName: "heart.fill")
-                            .font(.caption)
-                            .foregroundStyle(.red)
-                            .symbolEffect(.pulse, options: .repeating.speed(0.5))
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text("Resting HR")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                            Text("\(Int(rhr)) bpm")
-                                .font(.subheadline.weight(.medium).monospacedDigit())
-                                .contentTransition(.numericText())
-                                .animation(.easeInOut, value: Int(rhr))
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
-                if let hrv = liveViewModel.latestHRV {
-                    HStack(spacing: 6) {
-                        Image(systemName: "waveform.path")
-                            .font(.caption)
-                            .foregroundStyle(.purple)
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text("HRV")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                            Text("\(Int(hrv)) ms")
-                                .font(.subheadline.weight(.medium).monospacedDigit())
-                                .contentTransition(.numericText())
-                                .animation(.easeInOut, value: Int(hrv))
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-
-            Divider()
-
-            // Action nudges: Stress, Active (with progress), Mindful (with progress)
-            HStack(spacing: 0) {
-                recoveryNudgeItem(
-                    icon: "brain.head.profile",
-                    iconColor: stressIconColor,
-                    title: liveViewModel.stressLabel,
-                    nudge: stressNudge,
-                    progress: nil
-                )
-
-                Divider().frame(height: 44)
-
-                recoveryNudgeItem(
-                    icon: "flame.fill",
-                    iconColor: .orange,
-                    title: liveViewModel.todayExerciseMinutes > 0
-                        ? "\(Int(liveViewModel.todayExerciseMinutes)) min"
-                        : "0 min",
-                    nudge: activeNudge,
-                    progress: liveViewModel.exerciseProgress
-                )
-
-                Divider().frame(height: 44)
-
-                recoveryNudgeItem(
-                    icon: "leaf.fill",
-                    iconColor: .mint,
-                    title: liveViewModel.todayMindfulMinutes > 0
-                        ? "\(Int(liveViewModel.todayMindfulMinutes)) min"
-                        : "0 min",
-                    nudge: mindfulNudge,
-                    progress: liveViewModel.todayMindfulMinutes > 0
-                        ? min(liveViewModel.todayMindfulMinutes / 10.0, 1.0) // 10 min daily goal
-                        : 0
-                )
             }
         }
         .padding()
         .background(.background, in: RoundedRectangle(cornerRadius: 16))
         .padding(.horizontal)
-    }
-
-    private func recoveryNudgeItem(icon: String, iconColor: Color, title: String, nudge: String, progress: Double?) -> some View {
-        VStack(spacing: 4) {
-            HStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.caption2)
-                    .foregroundStyle(iconColor)
-                Text(title)
-                    .font(.caption.weight(.semibold))
-                    .contentTransition(.numericText())
-                    .animation(.easeInOut, value: title)
-            }
-            if let progress {
-                // Mini progress bar
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Capsule()
-                            .fill(iconColor.opacity(0.15))
-                            .frame(height: 3)
-                        Capsule()
-                            .fill(progress >= 1.0 ? .green : iconColor)
-                            .frame(width: geo.size.width * min(progress, 1.0), height: 3)
-                            .animation(.easeInOut(duration: 0.8), value: progress)
-                    }
-                }
-                .frame(width: 40, height: 3)
-            }
-            if !nudge.isEmpty {
-                Text(nudge)
-                    .font(.system(size: 9, weight: .medium))
-                    .foregroundStyle(progress != nil && progress! >= 1.0 ? .green : iconColor)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-            }
-        }
-        .frame(maxWidth: .infinity)
     }
 
     private func recoveryLabel(_ score: Int) -> String {
@@ -491,39 +329,6 @@ struct HomeView: View {
         case 40..<60: return "Moderate"
         case 20..<40: return "Fatigued"
         default: return "Strained"
-        }
-    }
-
-    private func recoveryDescription(_ score: Int) -> String {
-        let period = dayPeriod
-        switch (score, period) {
-        case (80...100, "morning"): return "Well-rested start. Great morning for intense training."
-        case (80...100, "afternoon"): return "Strong recovery holding. Push through the afternoon."
-        case (80...100, "evening"): return "Great day of recovery. Wind down and maintain gains."
-        case (80...100, _): return "Excellent recovery. Get quality sleep to stay sharp."
-        case (60..<80, "morning"): return "Good start. You can handle moderate to high effort."
-        case (60..<80, "afternoon"): return "Solid recovery. Stay active but listen to your body."
-        case (60..<80, "evening"): return "Good day. Stretch and prep for quality sleep tonight."
-        case (60..<80, _): return "Decent recovery. Rest well for a stronger tomorrow."
-        case (40..<60, "morning"): return "Partial recovery. Ease into the day with lighter activity."
-        case (40..<60, "afternoon"): return "Take it easy this afternoon. A walk could help."
-        case (40..<60, "evening"): return "Recovery still building. Prioritize sleep tonight."
-        case (40..<60, _): return "Recovery in progress. Sleep is your best tool right now."
-        case (20..<40, "morning"): return "Your body needs rest. Gentle movement only today."
-        case (20..<40, _): return "Focus on recovery. Hydrate and rest."
-        default:
-            if period == "morning" { return "High strain. Start slow — breathing and stretching only." }
-            return "High strain. Prioritize sleep and hydration."
-        }
-    }
-
-    private func workoutRecommendation(_ score: Int) -> (icon: String, text: String) {
-        switch score {
-        case 80...100: return ("bolt.heart.fill", "HIIT, Strength, or Long Run")
-        case 60..<80: return ("figure.run", "Moderate Run, Cycling, or Swim")
-        case 40..<60: return ("figure.walk", "Light Cardio, Yoga, or Walking")
-        case 20..<40: return ("figure.mind.and.body", "Stretching, Breathing, or Rest")
-        default: return ("bed.double.fill", "Rest Day — Sleep & Hydrate")
         }
     }
 

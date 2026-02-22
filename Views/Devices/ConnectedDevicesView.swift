@@ -32,6 +32,9 @@ struct ConnectedDevicesView: View {
                         } label: {
                             deviceRow(info: info)
                         }
+                        .simultaneousGesture(TapGesture().onEnded {
+                            AppAnalytics.shared.trackBlockTap(title: info.device.displayName, type: .deviceRow, screen: .connectedDevices)
+                        })
                     }
                 }
             }
@@ -45,6 +48,9 @@ struct ConnectedDevicesView: View {
                         } label: {
                             deviceRow(info: info)
                         }
+                        .simultaneousGesture(TapGesture().onEnded {
+                            AppAnalytics.shared.trackBlockTap(title: info.device.displayName, type: .deviceRow, screen: .connectedDevices)
+                        })
                     }
                 } header: {
                     Text("Inactive Devices")
@@ -85,6 +91,8 @@ struct ConnectedDevicesView: View {
         }
         .navigationTitle("Connected Devices")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear { AppAnalytics.shared.trackFeatureOpen(.connectedDevices) }
+        .onDisappear { AppAnalytics.shared.trackFeatureClose(.connectedDevices) }
         .refreshable {
             await viewModel.scan()
         }

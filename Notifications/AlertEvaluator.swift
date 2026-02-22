@@ -13,15 +13,18 @@ struct AlertEvaluator {
         previousTrends: [HealthMetric: TrendDirection],
         preferences: NotificationPreferences
     ) {
+        let maxPerDay = preferences.maxNotificationsPerDay
+
         // 1. Anomaly-based alerts (critical + warning for ALL configured metrics)
-        evaluateAnomalies(anomalies: anomalies, preferences: preferences)
+        evaluateAnomalies(anomalies: anomalies, preferences: preferences, maxPerDay: maxPerDay)
 
         // 2. Heart rate spike/drop detection
         if preferences.heartRateSpikeAlertsEnabled {
             evaluateHeartRateSpikes(
                 timeSeries: timeSeries,
                 spikeThreshold: preferences.heartRateSpikeThreshold,
-                dropThreshold: preferences.heartRateDropThreshold
+                dropThreshold: preferences.heartRateDropThreshold,
+                maxPerDay: maxPerDay
             )
         }
 
@@ -29,13 +32,14 @@ struct AlertEvaluator {
         if preferences.trendReversalAlertsEnabled {
             evaluateTrendReversals(
                 currentTrends: trends,
-                previousTrends: previousTrends
+                previousTrends: previousTrends,
+                maxPerDay: maxPerDay
             )
         }
 
         // 4. Improvement celebration alerts
         if preferences.improvementAlertsEnabled {
-            evaluateImprovements(trends: trends)
+            evaluateImprovements(trends: trends, maxPerDay: maxPerDay)
         }
     }
 
@@ -44,25 +48,26 @@ struct AlertEvaluator {
         anomalies: [AnomalyDetector.AnomalyResult],
         preferences: NotificationPreferences
     ) {
-        evaluateAnomalies(anomalies: anomalies, preferences: preferences)
+        evaluateAnomalies(anomalies: anomalies, preferences: preferences, maxPerDay: preferences.maxNotificationsPerDay)
     }
 
     // MARK: - Anomaly Alerts
 
     private static func evaluateAnomalies(
         anomalies: [AnomalyDetector.AnomalyResult],
-        preferences: NotificationPreferences
+        preferences: NotificationPreferences,
+        maxPerDay: Int
     ) {
         for anomaly in anomalies {
             switch anomaly.severity {
             case .critical:
                 if preferences.criticalAlertsEnabled {
-                    sendCriticalAlert(anomaly: anomaly)
+                    sendCriticalAlert(anomaly: anomaly, maxPerDay: maxPerDay)
                 }
             case .warning:
                 if preferences.warningAlertsEnabled,
                    preferences.warningAlertMetrics.contains(anomaly.metric) {
-                    sendWarningAlert(anomaly: anomaly)
+                    sendWarningAlert(anomaly: anomaly, maxPerDay: maxPerDay)
                 }
             case .info:
                 break
@@ -75,7 +80,8 @@ struct AlertEvaluator {
     private static func evaluateHeartRateSpikes(
         timeSeries: [HealthMetric: MetricTimeSeries],
         spikeThreshold: Double,
-        dropThreshold: Double
+        dropThreshold: Double,
+        maxPerDay: Int
     ) {
         // Check resting heart rate for sustained elevation
         if let rhrSeries = timeSeries[.restingHeartRate],
@@ -86,7 +92,8 @@ struct AlertEvaluator {
                 sendHeartRateAlert(
                     title: "Resting Heart Rate Elevated",
                     body: "Your resting heart rate (\(Int(latestRHR)) bpm) is significantly above your recent average (\(Int(avg7d)) bpm). Consider rest or consult your doctor if persistent.",
-                    identifier: "healthpulse.spike.rhr.elevated"
+                    identifier: "healthpulse.spike.rhr.elevated",
+                    maxPerDay: maxPerDay
                 )
             }
         }
@@ -98,14 +105,16 @@ struct AlertEvaluator {
                 sendHeartRateAlert(
                     title: "High Heart Rate Detected",
                     body: "Your heart rate reached \(Int(latestHR)) bpm (threshold: \(Int(spikeThreshold)) bpm). If you weren't exercising, consider medical attention.",
-                    identifier: "healthpulse.spike.hr.high"
+                    identifier: "healthpulse.spike.hr.high",
+                    maxPerDay: maxPerDay
                 )
             }
             if latestHR <= dropThreshold {
                 sendHeartRateAlert(
                     title: "Low Heart Rate Detected",
                     body: "Your heart rate dropped to \(Int(latestHR)) bpm (threshold: \(Int(dropThreshold)) bpm). Seek medical attention if you feel dizzy or faint.",
-                    identifier: "healthpulse.spike.hr.low"
+                    identifier: "healthpulse.spike.hr.low",
+                    maxPerDay: maxPerDay
                 )
             }
         }
@@ -119,7 +128,8 @@ struct AlertEvaluator {
                 sendHeartRateAlert(
                     title: "HRV Significantly Low",
                     body: "Your heart rate variability (\(Int(latestHRV)) ms) dropped \(Int(((avg7d - latestHRV) / avg7d) * 100))% below your recent average. This may indicate stress or overtraining.",
-                    identifier: "healthpulse.spike.hrv.low"
+                    identifier: "healthpulse.spike.hrv.low",
+                    maxPerDay: maxPerDay
                 )
             }
         }
@@ -131,13 +141,15 @@ struct AlertEvaluator {
                 sendHeartRateAlert(
                     title: "Blood Oxygen Critically Low",
                     body: "Your blood oxygen is \(String(format: "%.1f", latestSpO2))%. Values below 92% may require immediate medical attention.",
-                    identifier: "healthpulse.spike.spo2.critical"
+                    identifier: "healthpulse.spike.spo2.critical",
+                    maxPerDay: maxPerDay
                 )
             } else if latestSpO2 < 95 {
                 sendHeartRateAlert(
                     title: "Blood Oxygen Below Normal",
                     body: "Your blood oxygen is \(String(format: "%.1f", latestSpO2))%. Normal range is 95-100%. Monitor closely.",
-                    identifier: "healthpulse.spike.spo2.warning"
+                    identifier: "healthpulse.spike.spo2.warning",
+                    maxPerDay: maxPerDay
                 )
             }
         }
@@ -150,7 +162,8 @@ struct AlertEvaluator {
                 sendHeartRateAlert(
                     title: "Respiratory Rate Elevated",
                     body: "Your respiratory rate (\(String(format: "%.1f", latestRR)) br/min) is elevated compared to your average (\(String(format: "%.1f", avg7d)) br/min).",
-                    identifier: "healthpulse.spike.rr.elevated"
+                    identifier: "healthpulse.spike.rr.elevated",
+                    maxPerDay: maxPerDay
                 )
             }
         }
@@ -160,7 +173,8 @@ struct AlertEvaluator {
 
     private static func evaluateTrendReversals(
         currentTrends: [HealthMetric: TrendAnalyzer.TrendResult],
-        previousTrends: [HealthMetric: TrendDirection]
+        previousTrends: [HealthMetric: TrendDirection],
+        maxPerDay: Int
     ) {
         for (metric, currentTrend) in currentTrends {
             guard let previousDirection = previousTrends[metric] else { continue }
@@ -171,13 +185,15 @@ struct AlertEvaluator {
                 NotificationManager.shared.scheduleNotification(
                     title: "\(metric.displayName) Recovering",
                     body: "Good news! Your \(metric.displayName.lowercased()) was declining but is now trending upward.",
-                    identifier: "healthpulse.reversal.\(metric.rawValue).recovering"
+                    identifier: "healthpulse.reversal.\(metric.rawValue).recovering",
+                    maxPerDay: maxPerDay
                 )
             } else if previousDirection == .improving && currentDirection == .declining {
                 NotificationManager.shared.scheduleNotification(
                     title: "\(metric.displayName) Needs Attention",
                     body: "Your \(metric.displayName.lowercased()) was improving but has started declining. Check your recent habits.",
-                    identifier: "healthpulse.reversal.\(metric.rawValue).declining"
+                    identifier: "healthpulse.reversal.\(metric.rawValue).declining",
+                    maxPerDay: maxPerDay
                 )
             }
         }
@@ -186,7 +202,8 @@ struct AlertEvaluator {
     // MARK: - Improvement Celebration
 
     private static func evaluateImprovements(
-        trends: [HealthMetric: TrendAnalyzer.TrendResult]
+        trends: [HealthMetric: TrendAnalyzer.TrendResult],
+        maxPerDay: Int
     ) {
         let strongImprovements = trends.filter { _, trend in
             trend.direction == .improving && abs(trend.weekOverWeekChange) > 10
@@ -197,14 +214,15 @@ struct AlertEvaluator {
             NotificationManager.shared.scheduleNotification(
                 title: "\(metric.displayName) Up \(String(format: "%.0f", abs(trend.weekOverWeekChange)))%!",
                 body: "Your \(metric.displayName.lowercased()) improved significantly this week. Keep up the great work!",
-                identifier: "healthpulse.celebration.\(metric.rawValue)"
+                identifier: "healthpulse.celebration.\(metric.rawValue)",
+                maxPerDay: maxPerDay
             )
         }
     }
 
     // MARK: - Alert Senders
 
-    private static func sendCriticalAlert(anomaly: AnomalyDetector.AnomalyResult) {
+    private static func sendCriticalAlert(anomaly: AnomalyDetector.AnomalyResult, maxPerDay: Int) {
         let title = "Critical: \(anomaly.metric.displayName)"
         let direction = anomaly.isAboveBaseline ? "above" : "below"
         let body = "Your \(anomaly.metric.displayName.lowercased()) is \(String(format: "%.0f", abs(anomaly.deviationPercent)))% \(direction) your baseline. Current: \(String(format: "%.1f", anomaly.currentValue)) \(anomaly.metric.unit)"
@@ -212,11 +230,12 @@ struct AlertEvaluator {
         NotificationManager.shared.scheduleNotification(
             title: title,
             body: body,
-            identifier: "healthpulse.alert.\(anomaly.metric.rawValue).critical"
+            identifier: "healthpulse.alert.\(anomaly.metric.rawValue).critical",
+            maxPerDay: maxPerDay
         )
     }
 
-    private static func sendWarningAlert(anomaly: AnomalyDetector.AnomalyResult) {
+    private static func sendWarningAlert(anomaly: AnomalyDetector.AnomalyResult, maxPerDay: Int) {
         let title = "Warning: \(anomaly.metric.displayName)"
         let direction = anomaly.isAboveBaseline ? "above" : "below"
         let body = "Your \(anomaly.metric.displayName.lowercased()) is \(String(format: "%.0f", abs(anomaly.deviationPercent)))% \(direction) your baseline."
@@ -224,16 +243,17 @@ struct AlertEvaluator {
         NotificationManager.shared.scheduleNotification(
             title: title,
             body: body,
-            identifier: "healthpulse.alert.\(anomaly.metric.rawValue).warning"
+            identifier: "healthpulse.alert.\(anomaly.metric.rawValue).warning",
+            maxPerDay: maxPerDay
         )
     }
 
-    private static func sendHeartRateAlert(title: String, body: String, identifier: String) {
+    private static func sendHeartRateAlert(title: String, body: String, identifier: String, maxPerDay: Int) {
         NotificationManager.shared.scheduleNotification(
             title: title,
             body: body,
             identifier: identifier,
-            maxPerDay: 3  // Heart alerts are high-priority but capped
+            maxPerDay: min(3, maxPerDay)  // Heart alerts capped at 3, but respect user's lower cap
         )
     }
 }

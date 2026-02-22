@@ -61,7 +61,8 @@ struct WeeklySummaryScheduler {
             title: title,
             body: body,
             identifier: identifier,
-            trigger: trigger
+            trigger: trigger,
+            maxPerDay: preferences.maxNotificationsPerDay
         )
     }
 

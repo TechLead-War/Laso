@@ -1,0 +1,4 @@
+Firebase App: laso-health-v1
+App Bundle: com.lasohealth.app
+
+/var/folders/v3/dzfc_vcd5bqf618x5xmqg0s00000gn/T/TemporaryItems/NSIRD_screencaptureui_LnzXIK/Screenshot 2026-02-22 at 12.00.41 PM.png
