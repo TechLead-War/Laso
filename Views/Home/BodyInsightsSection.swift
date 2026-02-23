@@ -20,7 +20,7 @@ struct BodyInsightsSection: View {
     }
 
     private var totalInsightCount: Int {
-        viewModel.analysisEngine.insights.count
+        viewModel.focusedInsights.count
     }
 
     /// Section shows if any sub-component has data
@@ -34,11 +34,11 @@ struct BodyInsightsSection: View {
             VStack(alignment: .leading, spacing: 10) {
                 // Section header
                 HStack(spacing: 8) {
-                    Image(systemName: "brain.head.profile.fill")
+                    Image(systemName: "text.badge.star")
                         .font(.headline)
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(.tint)
 
-                    Text("Body Insights")
+                    Text("Today's Briefing")
                         .font(.headline)
 
                     if totalInsightCount > 0 {
@@ -53,6 +53,11 @@ struct BodyInsightsSection: View {
                     Spacer()
                 }
                 .padding(.horizontal)
+
+                // 0. Headline insight — the coach speaking to you
+                if let headline = viewModel.headlineInsight {
+                    headlineInsightCard(headline)
+                }
 
                 // 1. Sleep card
                 SleepCard(
@@ -87,6 +92,25 @@ struct BodyInsightsSection: View {
                 }
             }
         }
+    }
+
+    // MARK: - Headline Insight Card
+
+    private func headlineInsightCard(_ insight: Insight) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "lightbulb.fill")
+                .font(.title3)
+                .foregroundStyle(.white)
+
+            Text(insight.title)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.white)
+                .lineLimit(3)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.tint, in: RoundedRectangle(cornerRadius: 14))
+        .padding(.horizontal)
     }
 
     // MARK: - Smart Action Card

@@ -22,22 +22,19 @@ struct NotificationPreferences: Codable {
     var heartRateDropThreshold: Double = 45   // bpm — alert if below
 
     /// Trend reversal alerts (metric was declining, now improving — or vice versa)
-    var trendReversalAlertsEnabled: Bool = true
+    var trendReversalAlertsEnabled: Bool = false
 
     /// Improvement celebration alerts
-    var improvementAlertsEnabled: Bool = true
+    var improvementAlertsEnabled: Bool = false
 
-    var maxNotificationsPerDay: Int = 8
+    var maxNotificationsPerDay: Int = 4
 
-    /// Metrics for which warning alerts are enabled — all health-critical metrics by default
+    /// Metrics for which warning alerts are enabled — only the most safety-critical metrics by default
     var warningAlertMetrics: Set<HealthMetric> = [
-        .restingHeartRate, .heartRate, .heartRateVariability, .heartRateRecovery,
-        .bloodOxygen, .bloodPressureSystolic, .bloodPressureDiastolic,
-        .respiratoryRate, .vo2Max,
-        .bodyTemperature, .appleSleepingWristTemperature,
-        .sleepDuration,
-        .walkingAsymmetry,
-        .atrialFibrillationBurden, .peripheralPerfusionIndex
+        .restingHeartRate, .heartRate, .heartRateVariability,
+        .bloodOxygen,
+        .bloodPressureSystolic, .bloodPressureDiastolic,
+        .sleepDuration
     ]
 
     static let `default` = NotificationPreferences()

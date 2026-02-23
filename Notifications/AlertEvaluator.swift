@@ -3,6 +3,24 @@ import Foundation
 /// Evaluates real-time health data and triggers critical/warning/spike/trend alerts
 struct AlertEvaluator {
 
+    /// Minimum hours between repeated alerts for the same identifier
+    private static let cooldownHours: Double = 4
+
+    /// Check if an alert was recently sent (within cooldown window)
+    private static func isOnCooldown(identifier: String) -> Bool {
+        let key = "healthpulse.alertCooldown.\(identifier)"
+        let lastFired = UserDefaults.standard.double(forKey: key)
+        guard lastFired > 0 else { return false }
+        let elapsed = Date().timeIntervalSince1970 - lastFired
+        return elapsed < cooldownHours * 3600
+    }
+
+    /// Record that an alert was sent
+    private static func recordAlert(identifier: String) {
+        let key = "healthpulse.alertCooldown.\(identifier)"
+        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: key)
+    }
+
     // MARK: - Main Evaluation Entry Point
 
     /// Full evaluation: anomalies + heart rate spikes + trend reversals + improvements
@@ -223,6 +241,9 @@ struct AlertEvaluator {
     // MARK: - Alert Senders
 
     private static func sendCriticalAlert(anomaly: AnomalyDetector.AnomalyResult, maxPerDay: Int) {
+        let identifier = "healthpulse.alert.\(anomaly.metric.rawValue).critical"
+        guard !isOnCooldown(identifier: identifier) else { return }
+
         let title = "Critical: \(anomaly.metric.displayName)"
         let direction = anomaly.isAboveBaseline ? "above" : "below"
         let body = "Your \(anomaly.metric.displayName.lowercased()) is \(String(format: "%.0f", abs(anomaly.deviationPercent)))% \(direction) your baseline. Current: \(String(format: "%.1f", anomaly.currentValue)) \(anomaly.metric.unit)"
@@ -230,12 +251,16 @@ struct AlertEvaluator {
         NotificationManager.shared.scheduleNotification(
             title: title,
             body: body,
-            identifier: "healthpulse.alert.\(anomaly.metric.rawValue).critical",
+            identifier: identifier,
             maxPerDay: maxPerDay
         )
+        recordAlert(identifier: identifier)
     }
 
     private static func sendWarningAlert(anomaly: AnomalyDetector.AnomalyResult, maxPerDay: Int) {
+        let identifier = "healthpulse.alert.\(anomaly.metric.rawValue).warning"
+        guard !isOnCooldown(identifier: identifier) else { return }
+
         let title = "Warning: \(anomaly.metric.displayName)"
         let direction = anomaly.isAboveBaseline ? "above" : "below"
         let body = "Your \(anomaly.metric.displayName.lowercased()) is \(String(format: "%.0f", abs(anomaly.deviationPercent)))% \(direction) your baseline."
@@ -243,17 +268,21 @@ struct AlertEvaluator {
         NotificationManager.shared.scheduleNotification(
             title: title,
             body: body,
-            identifier: "healthpulse.alert.\(anomaly.metric.rawValue).warning",
+            identifier: identifier,
             maxPerDay: maxPerDay
         )
+        recordAlert(identifier: identifier)
     }
 
     private static func sendHeartRateAlert(title: String, body: String, identifier: String, maxPerDay: Int) {
+        guard !isOnCooldown(identifier: identifier) else { return }
+
         NotificationManager.shared.scheduleNotification(
             title: title,
             body: body,
             identifier: identifier,
             maxPerDay: min(3, maxPerDay)  // Heart alerts capped at 3, but respect user's lower cap
         )
+        recordAlert(identifier: identifier)
     }
 }

@@ -5,6 +5,8 @@ import SwiftUI
 struct HealthPulseApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
+    @AppStorage("healthpulse.onboardingCompleted") private var onboardingCompleted = false
+
     @State private var healthKitManager: HealthKitManager
     @State private var analysisEngine = AnalysisEngine()
     @State private var deviceSourceManager: DeviceSourceManager
@@ -22,6 +24,16 @@ struct HealthPulseApp: App {
                 analysisEngine: analysisEngine,
                 deviceSourceManager: deviceSourceManager
             )
+            .fullScreenCover(isPresented: Binding(
+                get: { !onboardingCompleted },
+                set: { if !$0 { onboardingCompleted = true } }
+            )) {
+                OnboardingView(healthKitManager: healthKitManager) {
+                    onboardingCompleted = true
+                    // Sync onboarding flag to iCloud for other devices
+                    NSUbiquitousKeyValueStore.default.set(true, forKey: "healthpulse.onboardingCompleted")
+                }
+            }
         }
     }
 }

@@ -1,16 +1,9 @@
 import SwiftUI
 
-/// Time-range comparison section: 7D/30D/3M/6M tabs with improved/declined metric counts and top movers
+/// Time-range comparison section: 7D/30D/3M/6M tabs with focus-filtered metric rows
 struct PeriodSummarySection: View {
     let viewModel: DashboardViewModel
     let onTapMetric: (HealthMetric) -> Void
-
-    enum MetricFilter: String {
-        case improved, stable, declined
-    }
-
-    @State private var isExpanded = false
-    @State private var activeFilter: MetricFilter?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -33,84 +26,16 @@ struct PeriodSummarySection: View {
             .accessibilityLabel("Time period selector")
             .onChange(of: viewModel.selectedPeriod) { _, newPeriod in
                 AppAnalytics.shared.trackBlockTap(title: newPeriod.rawValue, type: .periodSelector, screen: .home)
-                isExpanded = false
-                activeFilter = nil
             }
 
-            let summary = viewModel.periodSummary(for: viewModel.selectedPeriod)
+            let summary = viewModel.focusFilteredPeriodSummary(for: viewModel.selectedPeriod)
 
-            // Summary counters — tappable to filter
-            HStack(spacing: 0) {
-                PeriodCounter(
-                    count: summary.improvedCount,
-                    label: "Improved",
-                    icon: "arrow.up.right",
-                    color: .green,
-                    isSelected: activeFilter == .improved
-                ) {
-                    AppAnalytics.shared.trackBlockTap(title: "Improved", type: .trendFilter, screen: .home)
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        activeFilter = activeFilter == .improved ? nil : .improved
-                        isExpanded = false
-                    }
-                }
+            // Metric rows — declined first, then improved, capped at 4
+            let allChanges = (summary.topDeclined + summary.topImproved)
+                .sorted { abs($0.changePercent) > abs($1.changePercent) }
+            let visibleChanges = Array(allChanges.prefix(4))
 
-                Divider().frame(height: 40)
-
-                PeriodCounter(
-                    count: summary.stableCount,
-                    label: "Stable",
-                    icon: "arrow.right",
-                    color: .secondary,
-                    isSelected: activeFilter == .stable
-                ) {
-                    AppAnalytics.shared.trackBlockTap(title: "Stable", type: .trendFilter, screen: .home)
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        activeFilter = activeFilter == .stable ? nil : .stable
-                        isExpanded = false
-                    }
-                }
-
-                Divider().frame(height: 40)
-
-                PeriodCounter(
-                    count: summary.declinedCount,
-                    label: "Declined",
-                    icon: "arrow.down.right",
-                    color: .red,
-                    isSelected: activeFilter == .declined
-                ) {
-                    AppAnalytics.shared.trackBlockTap(title: "Declined", type: .trendFilter, screen: .home)
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        activeFilter = activeFilter == .declined ? nil : .declined
-                        isExpanded = false
-                    }
-                }
-            }
-            .padding(.vertical, 12)
-            .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 14))
-            .padding(.horizontal)
-
-            // Metric rows based on filter
-            let filteredChanges: [DashboardViewModel.MetricChange] = {
-                switch activeFilter {
-                case .improved:
-                    return summary.topImproved
-                case .declined:
-                    return summary.topDeclined
-                case .stable:
-                    return summary.stableMetrics
-                case nil:
-                    // Default: declined first, then improved, sorted by |change| desc
-                    return (summary.topDeclined + summary.topImproved)
-                        .sorted { abs($0.changePercent) > abs($1.changePercent) }
-                }
-            }()
-
-            if !filteredChanges.isEmpty {
-                let maxCollapsed = 5
-                let visibleChanges = isExpanded ? filteredChanges : Array(filteredChanges.prefix(maxCollapsed))
-
+            if !visibleChanges.isEmpty {
                 VStack(spacing: 8) {
                     ForEach(visibleChanges) { change in
                         let nudge: String? = (!change.improved && abs(change.changePercent) > 2)
@@ -120,26 +45,6 @@ struct PeriodSummarySection: View {
                             AppAnalytics.shared.trackBlockTap(title: change.metric.displayName, type: .metricRow, screen: .home)
                             onTapMetric(change.metric)
                         }
-                    }
-
-                    if filteredChanges.count > maxCollapsed {
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.25)) {
-                                isExpanded.toggle()
-                            }
-                        } label: {
-                            HStack(spacing: 4) {
-                                Text(isExpanded ? "Show Less" : "Show All \(filteredChanges.count) Changes")
-                                    .font(.subheadline.weight(.medium))
-                                Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                                    .font(.caption2.weight(.bold))
-                            }
-                            .foregroundStyle(.blue)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(isExpanded ? "Show fewer changes" : "Show all \(filteredChanges.count) changes")
                     }
                 }
                 .padding(.horizontal)

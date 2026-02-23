@@ -1,21 +1,79 @@
 import Foundation
 import Observation
 
-/// Manages persistent storage for baselines and user preferences via UserDefaults
+/// Manages persistent storage for baselines and user preferences via UserDefaults,
+/// with iCloud Key-Value Store sync for cross-device consistency.
 @Observable
 final class PersistenceManager {
     private let defaults = UserDefaults.standard
+    private let cloud = NSUbiquitousKeyValueStore.default
 
     private let baselinesKey = "healthpulse.baselines"
     private let preferencesKey = "healthpulse.preferences"
     private let lastAnalysisKey = "healthpulse.lastAnalysis"
+
+    /// Keys that should sync to iCloud KVS for cross-device consistency
+    private static let syncKeys: Set<String> = [
+        "healthpulse.baselines",
+        "healthpulse.preferences",
+        "healthpulse.healthFocuses",
+        "healthpulse.previousWeekScore",
+        "healthpulse.currentScore",
+        "healthpulse.scoreDate",
+        "healthpulse.onboardingCompleted"
+    ]
+
+    init() {
+        startCloudSync()
+    }
+
+    // MARK: - iCloud Sync
+
+    /// Start observing iCloud KVS changes from other devices
+    private func startCloudSync() {
+        NotificationCenter.default.addObserver(
+            forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
+            object: cloud,
+            queue: .main
+        ) { [weak self] notification in
+            self?.handleCloudChange(notification)
+        }
+        cloud.synchronize()
+    }
+
+    /// Pull cloud values into local defaults when changed externally
+    private func handleCloudChange(_ notification: Notification) {
+        guard let changedKeys = notification.userInfo?[NSUbiquitousKeyValueStoreChangedKeysKey] as? [String] else { return }
+
+        for key in changedKeys where Self.syncKeys.contains(key) {
+            if let cloudValue = cloud.object(forKey: key) {
+                defaults.set(cloudValue, forKey: key)
+            }
+        }
+    }
+
+    /// Write to both local defaults and iCloud KVS
+    private func save(_ value: Any, forKey key: String) {
+        defaults.set(value, forKey: key)
+        if Self.syncKeys.contains(key) {
+            cloud.set(value, forKey: key)
+        }
+    }
+
+    /// Write Data to both stores
+    private func saveData(_ data: Data, forKey key: String) {
+        defaults.set(data, forKey: key)
+        if Self.syncKeys.contains(key) {
+            cloud.set(data, forKey: key)
+        }
+    }
 
     // MARK: - Baselines
 
     func saveBaselines(_ baselines: [HealthMetric: UserBaseline]) {
         let dict = Dictionary(uniqueKeysWithValues: baselines.map { ($0.key.rawValue, $0.value) })
         if let data = try? JSONEncoder().encode(dict) {
-            defaults.set(data, forKey: baselinesKey)
+            saveData(data, forKey: baselinesKey)
         }
     }
 
@@ -37,7 +95,7 @@ final class PersistenceManager {
 
     func savePreferences(_ preferences: NotificationPreferences) {
         if let data = try? JSONEncoder().encode(preferences) {
-            defaults.set(data, forKey: preferencesKey)
+            saveData(data, forKey: preferencesKey)
         }
     }
 
@@ -76,12 +134,12 @@ final class PersistenceManager {
            !calendar.isDate(savedDate, equalTo: now, toGranularity: .weekOfYear) {
             let oldScore = defaults.integer(forKey: currentScoreKey)
             if oldScore > 0 {
-                defaults.set(oldScore, forKey: previousWeekScoreKey)
+                save(oldScore, forKey: previousWeekScoreKey)
             }
         }
 
-        defaults.set(score, forKey: currentScoreKey)
-        defaults.set(now.timeIntervalSince1970, forKey: scoreDateKey)
+        save(score, forKey: currentScoreKey)
+        save(now.timeIntervalSince1970, forKey: scoreDateKey)
     }
 
     /// Load the score from the previous calendar week, if available
@@ -93,5 +151,23 @@ final class PersistenceManager {
     private func scoreDate() -> Date? {
         let interval = defaults.double(forKey: scoreDateKey)
         return interval > 0 ? Date(timeIntervalSince1970: interval) : nil
+    }
+
+    // MARK: - Health Focuses
+
+    private let healthFocusesKey = "healthpulse.healthFocuses"
+
+    func saveHealthFocuses(_ focuses: Set<HealthFocus>) {
+        if let data = try? JSONEncoder().encode(Array(focuses)) {
+            saveData(data, forKey: healthFocusesKey)
+        }
+    }
+
+    func loadHealthFocuses() -> Set<HealthFocus> {
+        guard let data = defaults.data(forKey: healthFocusesKey),
+              let array = try? JSONDecoder().decode([HealthFocus].self, from: data) else {
+            return Set(HealthFocus.allCases)
+        }
+        return Set(array)
     }
 }

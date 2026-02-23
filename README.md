@@ -1,208 +1,197 @@
-# HealthPulse
+# Laso
 
-A SwiftUI app that reads Apple Watch and iPhone health data via HealthKit to provide personalized health scores, trend analysis, anomaly detection, and actionable insights.
+iOS health app. Reads HealthKit, scores metrics, surfaces insights, tracks risks, streams live vitals.
 
----
-
-## What You Need Before Starting
-
-| Requirement | Why |
-|---|---|
-| **A Mac** | Xcode only runs on macOS |
-| **Xcode 15 or newer** | Apple's IDE — the only way to build and install iOS apps |
-| **An iPhone** running iOS 17+ | The app must run on a real device (HealthKit does not work in the Simulator) |
-| **An Apple Watch** paired to that iPhone | This is where your health data comes from |
-| **An Apple ID** | Required to sign the app so it can be installed on your phone. A free Apple ID works — no paid developer account needed |
-| **A USB cable** (Lightning or USB-C) | To connect your iPhone to your Mac for the first build |
+**Bundle ID:** `com.lasohealth.com` | **iOS 17+** | **Swift 5.9** | **Firebase:** `laso-health-v1`
 
 ---
 
-## Step-by-Step: Install Xcode
+## Prerequisites
 
-If you already have Xcode installed, skip to the next section.
-
-1. Open the **App Store** on your Mac (click the Apple logo in the top-left > App Store).
-2. Search for **Xcode**.
-3. Click **Get / Install**. It's a large download (~7 GB) — this will take a while.
-4. Once installed, **open Xcode** from your Applications folder or Launchpad.
-5. Xcode will prompt you to install **additional components** — click **Install** and wait for it to finish.
-6. You may be asked to agree to a license — click **Agree**.
-
-> **Tip:** You can check your Xcode version by opening Xcode and going to **Xcode > About Xcode** in the menu bar.
+- Xcode 15+
+- Node.js 18+
+- `npm install -g firebase-tools`
+- iPhone with Apple Watch (HealthKit needs a real device)
+- Firebase Blaze plan (for Cloud Functions)
 
 ---
 
-## Step-by-Step: Open the Project
+## iOS App Setup
 
-1. In Finder, navigate to this folder: `HealthPulse/`
-2. **Double-click** the file called **`HealthPulse.xcodeproj`** — it has a blue blueprint icon.
-3. Xcode will open and load the project. You'll see a file navigator on the left and the editor on the right.
+### 1. Open project
 
-> **First time opening Xcode?** It may ask you to sign in with your Apple ID — do it now (see next section).
-
----
-
-## Step-by-Step: Set Up Code Signing
-
-Code signing tells Apple "I built this app" so your iPhone will allow it to be installed. Here's how:
-
-1. In Xcode, look at the **left sidebar** (the file navigator). Click on the **blue `HealthPulse` icon** at the very top of the file list — this is the project file.
-2. In the center panel, you'll see a list of targets. Click on the **`HealthPulse`** target (it should already be selected).
-3. Click the **Signing & Capabilities** tab at the top of the center panel.
-4. Check the box that says **"Automatically manage signing"** (if it isn't already checked).
-5. Next to **Team**, click the dropdown:
-   - If your Apple ID is already listed, select it.
-   - If not, click **"Add an Account..."**, sign in with your Apple ID, then select it from the dropdown.
-6. If you see a red error about the **Bundle Identifier** being taken, change it to something unique:
-   - Find the field labeled **Bundle Identifier** (it says `com.lasohealth.com`).
-   - Change it to something like `com.YOURNAME.healthpulse` (replace `YOURNAME` with your name, no spaces).
-7. The error should disappear. You should see a message like **"Signing Certificate: Apple Development: your@email.com"** with a green checkmark.
-
----
-
-## Step-by-Step: Connect Your iPhone & Build
-
-1. **Plug your iPhone** into your Mac using a USB cable.
-2. If your iPhone asks **"Trust This Computer?"** — tap **Trust** and enter your passcode.
-3. In Xcode, look at the **top toolbar** — you'll see something like `HealthPulse > iPhone 15 Pro`. Click the device name on the right side.
-4. A dropdown appears listing simulators and devices. Under **"iOS Devices"**, select **your iPhone** (it will show your phone's name).
-   > If your phone doesn't appear, make sure it's unlocked, plugged in, and you tapped "Trust".
-5. Press **`Cmd + R`** (or click the **Play button** ▶ in the top-left).
-6. Xcode will compile the code. This takes 1–2 minutes the first time.
-
-### First-time build errors you may see
-
-**"Could not launch HealthPulse — Untrusted Developer"**
-
-This is normal the first time. On your **iPhone**:
-1. Open **Settings**
-2. Go to **General > VPN & Device Management** (on older iOS: **Profiles & Device Management**)
-3. Under "Developer App", tap on your Apple ID email
-4. Tap **"Trust [your email]"**
-5. Tap **Trust** again to confirm
-6. Go back to Xcode and press **`Cmd + R`** again
-
-**"Device is busy: Preparing debugger"**
-
-Wait 30–60 seconds and try again. This happens the first time Xcode connects to your phone.
-
-**"Developer Mode is not enabled"**
-
-On your **iPhone**: Go to **Settings > Privacy & Security > Developer Mode**, toggle it **on**, then restart your phone. Then try building again.
-
----
-
-## Step-by-Step: Approve HealthKit Permissions
-
-When HealthPulse launches on your iPhone for the first time:
-
-1. A HealthKit authorization screen appears showing all the health data categories the app wants to read.
-2. Tap **"Turn On All"** at the top to select everything.
-3. Tap **"Allow"** in the top-right corner.
-
-> **Important:** If you skip or deny permissions, the app won't have data to show. You can change this later in **Settings > Privacy & Security > Health > HealthPulse**.
-
-The app will then fetch up to 90 days of health data from your Apple Watch and display your dashboard.
-
----
-
-## What the App Does
-
-HealthPulse analyzes 90 days of health data across four categories:
-
-| Category | Metrics |
-|---|---|
-| **Activity** | Steps, active energy, exercise minutes, stand hours, VO2 max, workouts |
-| **Heart** | Resting heart rate, heart rate, walking HR average, HRV, blood oxygen |
-| **Sleep** | Total sleep, REM, deep, core, and awake stages |
-| **Body** | Weight, body fat %, BMI |
-
-The app generates:
-- An **overall health score** (0–100) with per-category breakdowns
-- **Trend analysis** — is each metric improving, stable, or declining?
-- **Anomaly detection** — flags unusual readings (e.g. sudden spike in resting heart rate)
-- **Actionable insights** — personalized recommendations based on your data
-- **Exportable HTML reports** — shareable web pages with interactive Chart.js charts
-
----
-
-## Project Architecture
-
-```
-HealthPulse/
-├── App/                  # App entry point, ContentView, AppDelegate
-├── Models/               # Data types (HealthMetric, HealthScore, Insight, etc.)
-├── Data/                 # HealthKitManager, PersistenceManager, SampleDataProvider
-├── Analysis/             # AnalysisEngine, scorers, trend/anomaly detectors
-├── Notifications/        # Daily/weekly summaries, alert evaluator
-├── ViewModels/           # Dashboard, CategoryDetail, MetricDetail, WebExport
-├── Views/
-│   ├── Components/       # Reusable UI (score rings, charts, badges, cards)
-│   ├── Dashboard/        # Main dashboard screen
-│   ├── Category/         # Category detail drill-down
-│   ├── MetricDetail/     # Individual metric charts & stats
-│   ├── Insights/         # Full insights list
-│   └── Settings/         # Notification preferences
-└── WebExport/            # HTML report generation with Chart.js
+```bash
+open Laso.xcodeproj
 ```
 
-**Key concepts if you're new to Swift/SwiftUI:**
-- **SwiftUI** is Apple's declarative UI framework. Views are defined as structs that describe what the UI should look like. The `body` property returns the view hierarchy.
-- **`@Observable`** is a macro that makes a class's properties automatically update the UI when they change. The ViewModels use this.
-- **`async/await`** is Swift's way of handling asynchronous work (like fetching health data). When you see `await`, it means "wait for this to finish without blocking the UI".
-- **HealthKit** is Apple's framework for reading/writing health data. It requires explicit user permission and only works on real devices.
+### 2. Add Firebase SPM
+
+1. File > Add Package Dependencies
+2. URL: `https://github.com/firebase/firebase-ios-sdk`
+3. Version: Up to Next Major, minimum `11.0.0`
+4. Select: **FirebaseAnalytics**, **FirebaseFirestore**
+5. Add to `Laso` target
+6. `Cmd+B` to verify build
+
+### 3. Add GoogleService-Info.plist
+
+1. [Firebase Console](https://console.firebase.google.com) > `laso-health-v1` > Project Settings > iOS app
+2. Download `GoogleService-Info.plist`
+3. Drag into Xcode project root > check "Copy items if needed" + `Laso` target
+
+This file is gitignored. Every dev adds it manually.
+
+### 4. Code signing
+
+1. Click `Laso` project in sidebar > `Laso` target > Signing & Capabilities
+2. Check "Automatically manage signing"
+3. Select your Team (add Apple ID if needed)
+4. If bundle ID conflict: change to `com.yourname.laso`
+
+### 5. Build and run
+
+1. Plug in iPhone via USB, trust the computer
+2. Select your iPhone in the device dropdown
+3. `Cmd+R`
+
+First-time: approve HealthKit permissions when prompted (Turn On All > Allow).
+
+---
+
+## Firebase Setup
+
+### 6. Enable Firestore
+
+1. Firebase Console > Firestore Database > Create database
+2. Location: `us-central1`
+3. Production mode
+
+### 7. Enable Authentication
+
+1. Firebase Console > Authentication > Sign-in method > Enable **Email/Password**
+2. Users tab > Add user (your admin email + password)
+
+### 8. Get service account key
+
+1. Firebase Console > Project Settings > Service accounts
+2. Generate new private key
+3. Save as `admin-panel/functions/serviceAccount.json`
+
+This file is gitignored. Never commit it.
+
+### 9. Set admin claim
+
+```bash
+cd admin-panel/functions && npm install
+node -e "
+const admin = require('firebase-admin');
+const { initializeApp, cert } = require('firebase-admin/app');
+initializeApp({ credential: cert(require('./serviceAccount.json')) });
+admin.auth().getUserByEmail('YOUR_ADMIN_EMAIL')
+  .then(u => admin.auth().setCustomUserClaims(u.uid, { admin: true }))
+  .then(() => { console.log('Done'); process.exit(0); })
+  .catch(e => { console.error(e); process.exit(1); });
+"
+```
+
+Replace `YOUR_ADMIN_EMAIL` with the email from step 7.
+
+### 10. Deploy admin panel + functions + rules
+
+```bash
+cd admin-panel
+firebase login
+firebase deploy
+```
+
+Deploys three things (`firebase.json`):
+- **Hosting** - admin web dashboard at the printed URL
+- **Cloud Functions** - `getRemoteConfig` + `updateRemoteConfig`
+- **Firestore rules** - feedback: public write, admin-only read
+
+Open the hosting URL, log in with admin email.
+
+---
+
+## Analytics Setup
+
+### 11. Register custom dimensions
+
+Firebase Console > Analytics > Custom Definitions > Create:
+
+**Dimensions** (Event scope):
+
+| Name | Parameter |
+|---|---|
+| screen | screen |
+| tab | tab |
+| block_title | block_title |
+| block_type | block_type |
+| feature | feature |
+| category | category |
+| from_screen | from_screen |
+| to_screen | to_screen |
+| from_tab | from_tab |
+| session_id | session_id |
+| day_of_week | day_of_week |
+
+**Metrics** (Event scope):
+
+| Name | Parameter | Unit |
+|---|---|---|
+| duration_sec | duration_sec | Seconds |
+| streak_days | streak_days | Standard |
+| screens_visited | screens_visited | Standard |
+| max_depth | max_depth | Standard |
+| hour_of_day | hour_of_day | Standard |
+
+### 12. Enable DebugView
+
+1. Xcode > Product > Scheme > Edit Scheme > Run > Arguments
+2. Add: `-FIRDebugEnabled`
+3. Run app, navigate around
+4. Firebase Console > Analytics > DebugView
+
+Remove `-FIRDebugEnabled` before App Store submission.
+
+---
+
+## Events Reference
+
+| Event | Params | Answers |
+|---|---|---|
+| `session_start` | `session_id`, `hour_of_day`, `day_of_week`, `streak_days` | DAU, sessions, time-of-use |
+| `session_end` | `duration_sec`, `screens_visited`, `max_depth` | Session depth, duration |
+| `streak_updated` | `streak_days`, `is_longest` | Daily streak |
+| `tab_switched` | `tab`, `from_tab` | Tab usage |
+| `screen_viewed` | `screen`, `tab`, `depth` | Feature usage, frequency, retention |
+| `screen_exited` | `screen`, `tab`, `duration_sec` | Time per section |
+| `block_tapped` | `block_title`, `block_type`, `screen`, `tab` | What users tap |
+| `nav_transition` | `from_screen`, `to_screen` | User flow |
+| `feature_used` | `feature`, `duration_sec` | Engagement (30s+) |
+| `feature_stuck` | `feature`, `short_sessions_15m` | Struggle points |
+| `feedback_submitted` | `category`, `text_length` | User feedback |
+
+---
+
+## Secrets (gitignored, never commit)
+
+| File | Source |
+|---|---|
+| `GoogleService-Info.plist` | Firebase Console > Project Settings > iOS app |
+| `admin-panel/functions/serviceAccount.json` | Firebase Console > Project Settings > Service accounts |
+
 
 ---
 
 ## Troubleshooting
 
-### "HealthKit is not available on this device"
-You're running on the iOS Simulator. HealthPulse **must** run on a real iPhone. Connect your phone via USB and select it as the build target (see build steps above).
-
-### Signing errors / "No signing certificate"
-1. Make sure you selected a Team in Signing & Capabilities.
-2. Make sure "Automatically manage signing" is checked.
-3. Try changing the Bundle Identifier to something unique.
-4. If none of that works: go to **Xcode > Settings > Accounts**, remove your Apple ID, re-add it, and try again.
-
-### No data showing up / empty dashboard
-- Make sure your **Apple Watch** is paired and has been syncing health data to your iPhone.
-- HealthPulse reads the last **90 days**. If you just set up your Watch, there may not be much data yet.
-- Open the **Health** app on your iPhone and verify data is there (e.g. check Steps under Browse > Activity).
-
-### HealthKit permission denied
-Go to **Settings > Privacy & Security > Health > HealthPulse** on your iPhone. Toggle on all the data categories.
-
-### App expires after 7 days (free Apple ID)
-With a free Apple ID (no paid Developer Program), apps you install expire after 7 days. To fix:
-- Just open the project in Xcode again and press **`Cmd + R`** to reinstall.
-- Or enroll in the [Apple Developer Program](https://developer.apple.com/programs/) ($99/year) for apps that don't expire.
-
-### Build fails with "No such module 'HealthKit'"
-Make sure the build target is your **real iPhone**, not a simulator. Select your phone from the device dropdown in the Xcode toolbar.
-
-### Xcode says "Failed to prepare device for development"
-1. Make sure your iPhone is updated to iOS 17 or newer.
-2. Restart both your Mac and iPhone.
-3. Try a different USB cable.
-4. Try: Xcode menu bar > **Product > Clean Build Folder** (`Cmd + Shift + K`), then build again.
-
----
-
-## Re-running After Code Changes
-
-If you (or Claude) modify any Swift files:
-1. Open `HealthPulse.xcodeproj` in Xcode (if not already open).
-2. Connect your iPhone.
-3. Press **`Cmd + R`** — Xcode will recompile only the changed files and reinstall.
-
-## Regenerating the Xcode Project
-
-If you add or remove files/folders from the project directory, you need to regenerate the `.xcodeproj` so Xcode knows about them:
-
-```bash
-cd /Users/primetrace/Desktop/RnD/HealthPulse
-xcodegen generate
-```
-
-> `xcodegen` is already installed via Homebrew. If you need to reinstall: `brew install xcodegen`
+| Problem | Fix |
+|---|---|
+| No data / empty dashboard | Apple Watch must be paired and syncing. Check Health app on iPhone for data. |
+| "Untrusted Developer" | iPhone > Settings > General > VPN & Device Management > Trust your Apple ID |
+| "Developer Mode not enabled" | iPhone > Settings > Privacy & Security > Developer Mode > On > Restart |
+| HealthKit permissions denied | iPhone > Settings > Privacy & Security > Health > Laso > enable all |
+| App expires after 7 days | Free Apple ID limitation. Re-run `Cmd+R` from Xcode, or join Apple Developer Program ($99/yr). |
+| Build fails "No such module" | Make sure target is your real iPhone, not simulator. |
+| Admin panel login fails | Verify admin claim was set (step 9). User must exist in Authentication (step 7). |

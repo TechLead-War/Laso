@@ -65,6 +65,14 @@ struct HomeView: View {
                     // 2. Today: Recovery + Body State
                     todaySection
 
+                    // 2a. Weekly Review entry point
+                    WeeklyReviewEntryCard(
+                        viewModel: WeeklyReviewViewModel(dashboardViewModel: viewModel)
+                    ) {
+                        AppAnalytics.shared.trackBlockTap(title: "Weekly Review", type: .weeklyReviewCard, screen: .home)
+                        navigationPath.append("weeklyReview")
+                    }
+
                     // 3. Body Insights — sleep, patterns, actions, anomalies
                     BodyInsightsSection(
                         viewModel: viewModel,
@@ -85,14 +93,7 @@ struct HomeView: View {
                         navigationPath.append(metric)
                     }
 
-                    // 5. Focus Areas — where to improve
-                    FocusAreasSection(
-                        risks: viewModel.healthRisks
-                    ) { risk in
-                        navigationPath.append(risk.riskType)
-                    }
-
-                    // 6. Period selector — 7D / 30D / 3M / 6M
+                    // 5. Period selector — 7D / 30D / 3M / 6M
                     PeriodSummarySection(
                         viewModel: viewModel
                     ) { metric in

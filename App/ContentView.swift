@@ -73,6 +73,17 @@ struct ContentView: View {
                                 navigationPath.append(metric)
                             }
                         )
+                    } else if route == "weeklyReview" {
+                        WeeklyReviewView(
+                            viewModel: WeeklyReviewViewModel(dashboardViewModel: dashboardViewModel)
+                        )
+                    } else if route == "correlationsDetail" {
+                        CorrelationsView(
+                            correlations: dashboardViewModel.correlations,
+                            onTapMetric: { metric in
+                                navigationPath.append(metric)
+                            }
+                        )
                     }
                 }
         }

@@ -13,6 +13,7 @@ final class AnalysisEngine {
     var healthRisks: [HealthRisk] = []
     var overallScore: HealthScore = HealthScore(score: 100)
     var categoryScores: [HealthScore] = []
+    var correlations: [HealthCorrelation] = []
     var isAnalyzing = false
     var lastAnalysis: Date?
 
@@ -92,8 +93,9 @@ final class AnalysisEngine {
             baselines: baselines
         )
 
-        // Step 7a: Correlation insights
-        let correlationInsights = CorrelationAnalyzer.generateInsights(timeSeries: timeSeries)
+        // Step 7a: Correlation analysis + insights
+        correlations = CorrelationAnalyzer.analyzeAll(timeSeries: timeSeries)
+        let correlationInsights = CorrelationAnalyzer.generateInsights(from: correlations)
         insights.append(contentsOf: correlationInsights)
 
         // Step 7b: Recovery insights

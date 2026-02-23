@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Xcode user data
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+IDEFindNavigatorScopes.plist
+
+# Firebase secrets
+GoogleService-Info.plist
+**/serviceAccount.json
+
+# Dependencies
+node_modules/
+
+# Personal notes
+values.txt

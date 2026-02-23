@@ -1,8 +1,5 @@
 import Foundation
-
-#if canImport(FirebaseAnalytics)
 import FirebaseAnalytics
-#endif
 
 /// All trackable screens in the app.
 enum AppFeature: String, Hashable {
@@ -15,7 +12,10 @@ enum AppFeature: String, Hashable {
     case settings
     case connectedDevices = "connected_devices"
     case insightsDetail = "insights_detail"
+    case correlations
     case feedback
+    case onboarding
+    case weeklyReview = "weekly_review"
 }
 
 /// Types of tappable blocks/cards in the app.
@@ -38,9 +38,11 @@ enum BlockType: String {
     case riskFactor = "risk_factor"
     case focusAreaCard = "focus_area_card"
     case deviceRow = "device_row"
+    case correlationCard = "correlation_card"
     case feedbackCategory = "feedback_category"
     case feedbackSubmit = "feedback_submit"
     case feedbackSkip = "feedback_skip"
+    case weeklyReviewCard = "weekly_review_card"
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -299,19 +301,10 @@ final class AppAnalytics {
     fileprivate func logEvent(_ name: String, parameters: [String: Any]) {
         let eventName = sanitizeEventName(name)
         let params = sanitizeParameters(parameters)
-
-#if canImport(FirebaseAnalytics)
         Analytics.logEvent(eventName, parameters: params)
-#else
-        print("[Analytics] \(eventName): \(params)")
-#endif
     }
 
     private func setUserProperty(_ name: String, value: String) {
-#if canImport(FirebaseAnalytics)
         Analytics.setUserProperty(value, forName: name)
-#else
-        print("[Analytics] UserProperty \(name) = \(value)")
-#endif
     }
 }

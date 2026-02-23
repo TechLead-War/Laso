@@ -24,12 +24,41 @@ final class DashboardViewModel {
         analysisEngine.categoryScores
     }
 
+    /// User's selected health focuses — used to filter insights
+    private var focusCategories: Set<HealthCategory> {
+        let focuses = PersistenceManager().loadHealthFocuses()
+        return HealthFocus.categories(for: focuses)
+    }
+
+    /// Insights filtered to user's focus areas + any critical/warning severity
+    var focusedInsights: [Insight] {
+        let categories = focusCategories
+        return analysisEngine.insights.filter { insight in
+            insight.severity >= .warning || categories.contains(insight.metric.category)
+        }
+    }
+
+    /// The single most important insight for today's briefing headline
+    var headlineInsight: Insight? {
+        focusedInsights.first
+    }
+
     var topInsights: [Insight] {
-        analysisEngine.topInsights(3)
+        Array(focusedInsights.prefix(3))
     }
 
     var allInsights: [Insight] {
-        analysisEngine.insights
+        focusedInsights
+    }
+
+    /// All significant correlations discovered across metrics
+    var correlations: [HealthCorrelation] {
+        analysisEngine.correlations
+    }
+
+    /// Top correlations for the home screen section
+    var topCorrelations: [HealthCorrelation] {
+        Array(analysisEngine.correlations.prefix(5))
     }
 
     /// Health risks sorted by level (highest risk first)
@@ -47,23 +76,28 @@ final class DashboardViewModel {
         topActionableInsights(for: selectedPeriod)
     }
 
-    /// Period-aware insights: only include metrics that have data in the selected period
+    /// Period-aware insights: only include metrics that have data in the selected period, filtered by focus areas
     func topActionableInsights(for period: TimePeriod) -> [Insight] {
         let days = period.days
+        let categories = focusCategories
         let metricsWithData = Set(
             healthKitManager.timeSeries
                 .filter { !$0.value.samples(lastDays: days).isEmpty }
                 .map(\.key)
         )
 
-        let filtered = analysisEngine.insights.filter { metricsWithData.contains($0.metric) }
+        let filtered = analysisEngine.insights.filter { insight in
+            metricsWithData.contains(insight.metric) &&
+            insight.severity >= .warning &&
+            (categories.isEmpty || categories.contains(insight.metric.category))
+        }
         let sorted = filtered.sorted { a, b in
             if a.severity != b.severity {
                 return a.severity > b.severity
             }
             return a.priorityScore > b.priorityScore
         }
-        return Array(sorted.prefix(3))
+        return Array(sorted.prefix(2))
     }
 
     var lastRefresh: Date? {
@@ -179,6 +213,18 @@ final class DashboardViewModel {
         var improvedCount: Int { topImproved.count }
         var declinedCount: Int { topDeclined.count }
         var stableCount: Int { stableMetrics.count }
+    }
+
+    /// Period summary filtered to only metrics matching user's health focuses
+    func focusFilteredPeriodSummary(for period: TimePeriod) -> PeriodSummary {
+        let base = periodSummary(for: period)
+        let categories = focusCategories
+        guard !categories.isEmpty else { return base }
+        return PeriodSummary(
+            topImproved: base.topImproved.filter { categories.contains($0.metric.category) },
+            topDeclined: base.topDeclined.filter { categories.contains($0.metric.category) },
+            stableMetrics: base.stableMetrics.filter { categories.contains($0.metric.category) }
+        )
     }
 
     func periodSummary(for period: TimePeriod) -> PeriodSummary {
@@ -340,10 +386,11 @@ final class DashboardViewModel {
 
     // MARK: - Body Insights
 
-    /// Insights grouped by InsightCategory, excluding empty categories
+    /// Insights grouped by InsightCategory, filtered by focus areas, excluding empty categories
     var insightsByCategory: [(category: InsightCategory, insights: [Insight])] {
-        InsightCategory.allCases.compactMap { category in
-            let matching = analysisEngine.insights.filter { $0.category == category }
+        let focused = focusedInsights
+        return InsightCategory.allCases.compactMap { category in
+            let matching = focused.filter { $0.category == category }
             guard !matching.isEmpty else { return nil }
             return (category: category, insights: matching)
         }

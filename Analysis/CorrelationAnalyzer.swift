@@ -7,42 +7,104 @@ struct CorrelationAnalyzer {
     private struct MetricPair {
         let metricA: HealthMetric
         let metricB: HealthMetric
-        let dayOffset: Int  // 0 = same day, 1 = A day N → B day N+1
-        let label: String   // Human-readable description of the relationship
+        let dayOffset: Int          // 0 = same day, 1 = A day N -> B day N+1
+        let causeLabel: String      // "More deep sleep"
+        let effectLabel: String     // "Higher HRV next day"
     }
 
-    /// Result of a correlation analysis
-    struct CorrelationResult {
-        let metricA: HealthMetric
-        let metricB: HealthMetric
-        let correlation: Double     // Pearson r (-1 to 1)
-        let sampleCount: Int
-        let label: String
-        let effectSummary: String   // e.g. "HRV drops 18% after <6hr sleep"
-    }
+    // MARK: - Comprehensive Pair Registry (~35 physiologically-plausible pairs)
 
     private static let pairs: [MetricPair] = [
+        // Sleep -> Recovery (next-day offsets)
         MetricPair(metricA: .sleepDuration, metricB: .restingHeartRate, dayOffset: 1,
-                   label: "Sleep Duration → Next-Day Resting HR"),
+                   causeLabel: "More sleep", effectLabel: "Lower resting HR next day"),
         MetricPair(metricA: .sleepDuration, metricB: .heartRateVariability, dayOffset: 1,
-                   label: "Sleep Duration → Next-Day HRV"),
-        MetricPair(metricA: .exerciseMinutes, metricB: .heartRateVariability, dayOffset: 1,
-                   label: "Exercise → Next-Day HRV"),
-        MetricPair(metricA: .steps, metricB: .sleepDuration, dayOffset: 0,
-                   label: "Steps → Sleep Duration"),
-        MetricPair(metricA: .activeCalories, metricB: .restingHeartRate, dayOffset: 1,
-                   label: "Active Calories → Next-Day Resting HR"),
+                   causeLabel: "More sleep", effectLabel: "Higher HRV next day"),
         MetricPair(metricA: .sleepDeep, metricB: .heartRateVariability, dayOffset: 1,
-                   label: "Deep Sleep → Next-Day HRV"),
+                   causeLabel: "More deep sleep", effectLabel: "Higher HRV next day"),
+        MetricPair(metricA: .sleepREM, metricB: .heartRateVariability, dayOffset: 1,
+                   causeLabel: "More REM sleep", effectLabel: "Higher HRV next day"),
+        MetricPair(metricA: .sleepDuration, metricB: .bloodOxygen, dayOffset: 1,
+                   causeLabel: "More sleep", effectLabel: "Better blood oxygen next day"),
+
+        // Exercise -> Recovery
+        MetricPair(metricA: .exerciseMinutes, metricB: .heartRateVariability, dayOffset: 1,
+                   causeLabel: "More exercise", effectLabel: "Higher HRV next day"),
+        MetricPair(metricA: .activeCalories, metricB: .restingHeartRate, dayOffset: 1,
+                   causeLabel: "More active calories", effectLabel: "Lower resting HR next day"),
         MetricPair(metricA: .activeCalories, metricB: .sleepDeep, dayOffset: 0,
-                   label: "Active Calories → Deep Sleep"),
+                   causeLabel: "More active calories", effectLabel: "More deep sleep"),
+        MetricPair(metricA: .exerciseMinutes, metricB: .sleepDuration, dayOffset: 0,
+                   causeLabel: "More exercise", effectLabel: "Longer sleep"),
+        MetricPair(metricA: .steps, metricB: .sleepDuration, dayOffset: 0,
+                   causeLabel: "More steps", effectLabel: "Longer sleep"),
+        MetricPair(metricA: .vo2Max, metricB: .restingHeartRate, dayOffset: 0,
+                   causeLabel: "Higher VO2 Max", effectLabel: "Lower resting HR"),
+
+        // Activity -> Body
+        MetricPair(metricA: .steps, metricB: .activeCalories, dayOffset: 0,
+                   causeLabel: "More steps", effectLabel: "More calories burned"),
+        MetricPair(metricA: .standHours, metricB: .activeCalories, dayOffset: 0,
+                   causeLabel: "More stand hours", effectLabel: "More calories burned"),
+        MetricPair(metricA: .exerciseMinutes, metricB: .bodyFatPercentage, dayOffset: 0,
+                   causeLabel: "More exercise", effectLabel: "Lower body fat"),
+        MetricPair(metricA: .steps, metricB: .weight, dayOffset: 0,
+                   causeLabel: "More steps", effectLabel: "Lower weight"),
+
+        // Heart -> Stress / Mindfulness
         MetricPair(metricA: .mindfulMinutes, metricB: .heartRateVariability, dayOffset: 0,
-                   label: "Mindfulness → HRV"),
+                   causeLabel: "More mindfulness", effectLabel: "Higher HRV"),
+        MetricPair(metricA: .mindfulMinutes, metricB: .restingHeartRate, dayOffset: 0,
+                   causeLabel: "More mindfulness", effectLabel: "Lower resting HR"),
+        MetricPair(metricA: .respiratoryRate, metricB: .heartRateVariability, dayOffset: 0,
+                   causeLabel: "Lower respiratory rate", effectLabel: "Higher HRV"),
+
+        // Sleep -> Activity (next-day)
+        MetricPair(metricA: .sleepDuration, metricB: .steps, dayOffset: 1,
+                   causeLabel: "More sleep", effectLabel: "More steps next day"),
+        MetricPair(metricA: .sleepDuration, metricB: .exerciseMinutes, dayOffset: 1,
+                   causeLabel: "More sleep", effectLabel: "More exercise next day"),
+        MetricPair(metricA: .sleepDeep, metricB: .activeCalories, dayOffset: 1,
+                   causeLabel: "More deep sleep", effectLabel: "More calories burned next day"),
+
+        // Body -> Activity
+        MetricPair(metricA: .weight, metricB: .restingHeartRate, dayOffset: 0,
+                   causeLabel: "Higher weight", effectLabel: "Higher resting HR"),
+        MetricPair(metricA: .bmi, metricB: .bloodPressureSystolic, dayOffset: 0,
+                   causeLabel: "Higher BMI", effectLabel: "Higher blood pressure"),
+        MetricPair(metricA: .bodyFatPercentage, metricB: .vo2Max, dayOffset: 0,
+                   causeLabel: "Lower body fat", effectLabel: "Higher VO2 Max"),
+
+        // Respiratory -> Sleep
+        MetricPair(metricA: .respiratoryRate, metricB: .sleepDeep, dayOffset: 0,
+                   causeLabel: "Lower respiratory rate", effectLabel: "More deep sleep"),
+        MetricPair(metricA: .bloodOxygen, metricB: .sleepDeep, dayOffset: 0,
+                   causeLabel: "Better blood oxygen", effectLabel: "More deep sleep"),
+
+        // Additional cross-domain pairs
+        MetricPair(metricA: .sleepDuration, metricB: .restingHeartRate, dayOffset: 0,
+                   causeLabel: "More sleep", effectLabel: "Lower resting HR"),
+        MetricPair(metricA: .sleepDeep, metricB: .restingHeartRate, dayOffset: 1,
+                   causeLabel: "More deep sleep", effectLabel: "Lower resting HR next day"),
+        MetricPair(metricA: .exerciseMinutes, metricB: .sleepDeep, dayOffset: 0,
+                   causeLabel: "More exercise", effectLabel: "More deep sleep"),
+        MetricPair(metricA: .steps, metricB: .heartRateVariability, dayOffset: 0,
+                   causeLabel: "More steps", effectLabel: "Higher HRV"),
+        MetricPair(metricA: .activeCalories, metricB: .heartRateVariability, dayOffset: 1,
+                   causeLabel: "More active calories", effectLabel: "Higher HRV next day"),
+        MetricPair(metricA: .sleepREM, metricB: .restingHeartRate, dayOffset: 1,
+                   causeLabel: "More REM sleep", effectLabel: "Lower resting HR next day"),
+        MetricPair(metricA: .vo2Max, metricB: .heartRateVariability, dayOffset: 0,
+                   causeLabel: "Higher VO2 Max", effectLabel: "Higher HRV"),
+        MetricPair(metricA: .exerciseMinutes, metricB: .restingHeartRate, dayOffset: 1,
+                   causeLabel: "More exercise", effectLabel: "Lower resting HR next day"),
     ]
 
-    /// Analyze correlations across all pre-defined metric pairs
-    static func analyze(timeSeries: [HealthMetric: MetricTimeSeries]) -> [CorrelationResult] {
-        var results: [CorrelationResult] = []
+    // MARK: - Public API
+
+    /// Analyze all metric pairs and return significant correlations as HealthCorrelation objects
+    static func analyzeAll(timeSeries: [HealthMetric: MetricTimeSeries]) -> [HealthCorrelation] {
+        var results: [HealthCorrelation] = []
 
         for pair in pairs {
             guard let seriesA = timeSeries[pair.metricA],
@@ -63,40 +125,53 @@ struct CorrelationAnalyzer {
             guard let r = [Double].pearsonCorrelation(xValues, yValues),
                   abs(r) >= 0.2 else { continue }
 
-            let effectSummary = computeConditionalEffect(
+            // t-statistic significance test: t = r * sqrt((n-2) / (1-r^2))
+            let n = Double(aligned.count)
+            let rSquared = r * r
+            guard rSquared < 1.0 else { continue }
+            let t = abs(r) * sqrt((n - 2) / (1 - rSquared))
+            guard t >= 2.0 else { continue }
+
+            // Effect size: require >= 8% difference between above/below baseline groups
+            let effectResult = computeConditionalEffect(
                 aligned: aligned,
                 metricA: pair.metricA,
                 metricB: pair.metricB
             )
+            guard effectResult.percentDiff >= 8.0 else { continue }
 
-            results.append(CorrelationResult(
+            let strengthLabel = Self.strengthLabel(for: abs(r))
+
+            results.append(HealthCorrelation(
                 metricA: pair.metricA,
                 metricB: pair.metricB,
                 correlation: r,
                 sampleCount: aligned.count,
-                label: pair.label,
-                effectSummary: effectSummary
+                strengthLabel: strengthLabel,
+                causeLabel: pair.causeLabel,
+                effectLabel: pair.effectLabel,
+                effectSummary: effectResult.summary,
+                isPositive: r > 0,
+                dayOffset: pair.dayOffset
             ))
         }
 
-        // Sort by absolute correlation strength
         return results.sorted { abs($0.correlation) > abs($1.correlation) }
     }
 
-    /// Generate insights from the top correlations
-    static func generateInsights(timeSeries: [HealthMetric: MetricTimeSeries]) -> [Insight] {
-        let results = analyze(timeSeries: timeSeries)
-        let topResults = Array(results.prefix(3))
+    /// Generate top correlation insights (for the Insights list)
+    static func generateInsights(from correlations: [HealthCorrelation]) -> [Insight] {
+        let topResults = Array(correlations.prefix(3))
 
         return topResults.map { result in
             let severity: Severity = abs(result.correlation) >= 0.5 ? .warning : .info
-            let direction: String = result.correlation > 0 ? "positive" : "inverse"
+            let direction: String = result.isPositive ? "positive" : "inverse"
 
             return Insight(
                 metric: result.metricA,
-                title: result.label,
+                title: "\(result.causeLabel) \u{2192} \(result.effectLabel)",
                 summary: result.effectSummary,
-                recommendation: "Pay attention to your \(result.metricA.displayName.lowercased()) — it has a \(direction) correlation with your \(result.metricB.displayName.lowercased()).",
+                recommendation: "Pay attention to your \(result.metricA.displayName.lowercased()) \u{2014} it has a \(direction) correlation with your \(result.metricB.displayName.lowercased()).",
                 severity: severity,
                 trend: .stable,
                 currentValue: result.correlation,
@@ -108,14 +183,32 @@ struct CorrelationAnalyzer {
         }
     }
 
+    /// Legacy entry point — kept for backward compatibility
+    static func generateInsights(timeSeries: [HealthMetric: MetricTimeSeries]) -> [Insight] {
+        let correlations = analyzeAll(timeSeries: timeSeries)
+        return generateInsights(from: correlations)
+    }
+
     // MARK: - Private
+
+    /// Strength label based on |r|
+    private static func strengthLabel(for absR: Double) -> String {
+        if absR >= 0.6 { return "Strong" }
+        if absR >= 0.4 { return "Moderate" }
+        return "Mild"
+    }
+
+    private struct EffectResult {
+        let percentDiff: Double
+        let summary: String
+    }
 
     /// Partition by above/below baseline of metric A, compute average difference in metric B
     private static func computeConditionalEffect(
         aligned: [TimeSeriesAligner.AlignedPair],
         metricA: HealthMetric,
         metricB: HealthMetric
-    ) -> String {
+    ) -> EffectResult {
         let aValues = aligned.map(\.valueA)
         let baseline = aValues.mean
 
@@ -123,20 +216,28 @@ struct CorrelationAnalyzer {
         let belowBaseline = aligned.filter { $0.valueA < baseline }
 
         guard !aboveBaseline.isEmpty, !belowBaseline.isEmpty else {
-            return "\(metricA.displayName) correlates with \(metricB.displayName)."
+            return EffectResult(
+                percentDiff: 0,
+                summary: "\(metricA.displayName) correlates with \(metricB.displayName)."
+            )
         }
 
         let avgBAbove = aboveBaseline.map(\.valueB).mean
         let avgBBelow = belowBaseline.map(\.valueB).mean
 
         guard avgBBelow != 0 else {
-            return "\(metricA.displayName) correlates with \(metricB.displayName)."
+            return EffectResult(
+                percentDiff: 0,
+                summary: "\(metricA.displayName) correlates with \(metricB.displayName)."
+            )
         }
 
         let percentDiff = ((avgBAbove - avgBBelow) / abs(avgBBelow)) * 100
         let direction = percentDiff > 0 ? "higher" : "lower"
         let absPercent = String(format: "%.0f", abs(percentDiff))
 
-        return "When your \(metricA.displayName.lowercased()) is above average, your \(metricB.displayName.lowercased()) is \(absPercent)% \(direction)."
+        let summary = "When your \(metricA.displayName.lowercased()) is above average, your \(metricB.displayName.lowercased()) is \(absPercent)% \(direction)."
+
+        return EffectResult(percentDiff: abs(percentDiff), summary: summary)
     }
 }

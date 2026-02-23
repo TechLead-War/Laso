@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Section wrapper for the compact actionable recommendation cards (max 3)
+/// Section wrapper for the compact actionable recommendation cards (max 2)
 struct ActionCardsSection: View {
     let insights: [Insight]
     let onTapInsight: (HealthMetric) -> Void
@@ -9,7 +9,7 @@ struct ActionCardsSection: View {
         if !insights.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text("Needs Attention")
+                    Text("What To Do")
                         .font(.headline)
 
                     Spacer()
@@ -25,7 +25,7 @@ struct ActionCardsSection: View {
                 }
                 .padding(.horizontal)
 
-                ForEach(Array(insights.prefix(3)), id: \.id) { insight in
+                ForEach(Array(insights.prefix(2)), id: \.id) { insight in
                     ActionCard(insight: insight) {
                         AppAnalytics.shared.trackBlockTap(title: insight.title, type: .actionCard, screen: .home)
                         onTapInsight(insight.metric)
