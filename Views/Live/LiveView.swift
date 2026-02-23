@@ -99,11 +99,11 @@ struct LiveView: View {
 
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(viewModel.isStreaming ? .green : .gray)
+                        .fill(viewModel.hasAnyLiveData ? .green : .gray)
                         .frame(width: 8, height: 8)
-                        .shadow(color: viewModel.isStreaming ? .green.opacity(0.6) : .clear, radius: 4)
+                        .shadow(color: viewModel.hasAnyLiveData ? .green.opacity(0.6) : .clear, radius: 4)
 
-                    Text(viewModel.isStreaming ? "Streaming" : "Connecting...")
+                    Text(liveStatusLabel)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -114,10 +114,20 @@ struct LiveView: View {
             Image(systemName: "applewatch.radiowaves.left.and.right")
                 .font(.title2)
                 .foregroundStyle(.secondary)
-                .symbolEffect(.pulse, isActive: viewModel.isStreaming)
+                .symbolEffect(.pulse, isActive: viewModel.hasAnyLiveData)
         }
         .padding(.horizontal)
         .padding(.top, 16)
+    }
+
+    private var liveStatusLabel: String {
+        if viewModel.hasAnyLiveData {
+            return "Streaming"
+        } else if viewModel.isStreaming {
+            return "Waiting for watch"
+        } else {
+            return "Not connected"
+        }
     }
 
     // MARK: - Heart Rate Hero

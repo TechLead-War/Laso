@@ -17,6 +17,12 @@ final class WeeklyReviewViewModel {
         isLoading = true
         defer { isLoading = false }
 
+        // Don't show a review if there's no real scored data
+        guard !dashboardViewModel.analysisEngine.categoryScores.isEmpty else {
+            review = nil
+            return
+        }
+
         let score = dashboardViewModel.overallScore.score
         let previousScore = persistence.loadPreviousWeekScore()
 

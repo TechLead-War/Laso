@@ -7,62 +7,60 @@ struct WeeklyReviewEntryCard: View {
     let onTap: () -> Void
 
     var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 12) {
-                Image(systemName: "calendar.badge.clock")
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(.blue)
+        Group {
+            if let review = viewModel.review {
+                Button(action: onTap) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "calendar.badge.clock")
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(.blue)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Your Weekly Review")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.primary)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Your Weekly Review")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(.primary)
 
-                    HStack(spacing: 6) {
-                        if let review = viewModel.review {
-                            Text("Score \(review.currentScore)")
-                                .font(.caption.weight(.medium).monospacedDigit())
-                                .foregroundStyle(.secondary)
-
-                            if let delta = viewModel.scoreDelta {
-                                Text(delta >= 0 ? "(+\(delta))" : "(\(delta))")
-                                    .font(.caption.weight(.semibold).monospacedDigit())
-                                    .foregroundStyle(delta >= 0 ? .green : .red)
-                            }
-
-                            if viewModel.winsCount > 0 {
-                                Text("·")
-                                    .foregroundStyle(.tertiary)
-
-                                Text("\(viewModel.winsCount) win\(viewModel.winsCount == 1 ? "" : "s")")
-                                    .font(.caption)
+                            HStack(spacing: 6) {
+                                Text("Score \(review.currentScore)")
+                                    .font(.caption.weight(.medium).monospacedDigit())
                                     .foregroundStyle(.secondary)
+
+                                if let delta = viewModel.scoreDelta {
+                                    Text(delta >= 0 ? "(+\(delta))" : "(\(delta))")
+                                        .font(.caption.weight(.semibold).monospacedDigit())
+                                        .foregroundStyle(delta >= 0 ? .green : .red)
+                                }
+
+                                if viewModel.winsCount > 0 {
+                                    Text("·")
+                                        .foregroundStyle(.tertiary)
+
+                                    Text("\(viewModel.winsCount) win\(viewModel.winsCount == 1 ? "" : "s")")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
                             }
-                        } else {
-                            Text("Tap to see your week")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
                         }
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.tertiary)
                     }
+                    .padding()
+                    .background(.background, in: RoundedRectangle(cornerRadius: 16))
                 }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary)
+                .buttonStyle(.plain)
+                .padding(.horizontal)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Weekly Review. Score \(review.currentScore). \(viewModel.winsCount) wins.")
+                .accessibilityHint("Opens your weekly review")
             }
-            .padding()
-            .background(.background, in: RoundedRectangle(cornerRadius: 16))
         }
-        .buttonStyle(.plain)
-        .padding(.horizontal)
         .onAppear {
             viewModel.load()
         }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Weekly Review. Score \(viewModel.review?.currentScore ?? 0). \(viewModel.winsCount) wins.")
-        .accessibilityHint("Opens your weekly review")
     }
 }
 
@@ -78,9 +76,23 @@ struct WeeklyReviewView: View {
                     scoreSection(review)
                     winsSection(review)
                     watchOutSection(review)
-                } else {
+                } else if viewModel.isLoading {
                     ProgressView()
                         .padding(.top, 40)
+                } else {
+                    VStack(spacing: 16) {
+                        Spacer().frame(height: 40)
+                        Image(systemName: "calendar.badge.exclamationmark")
+                            .font(.system(size: 48))
+                            .foregroundStyle(.secondary)
+                        Text("Not enough data yet")
+                            .font(.title3.weight(.semibold))
+                        Text("Wear your watch for a few days and check back.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 32)
+                    }
                 }
             }
             .padding(.vertical, 16)

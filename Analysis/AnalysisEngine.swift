@@ -74,16 +74,17 @@ final class AnalysisEngine {
             )
         }
 
-        // Step 5: Category scores
+        // Step 5: Category scores — only for categories that have actual data
         var newCategoryScores: [HealthScore] = []
         for category in HealthCategory.allCases {
             let metricScores = metricScoresByCategory[category] ?? []
+            guard !metricScores.isEmpty else { continue }
             let categoryScore = HealthScorer.scoreCategory(category: category, metricScores: metricScores)
             newCategoryScores.append(categoryScore)
         }
         categoryScores = newCategoryScores
 
-        // Step 6: Overall score
+        // Step 6: Overall score — only from categories with data
         overallScore = HealthScorer.overallScore(categoryScores: categoryScores)
 
         // Step 7: Generate insights

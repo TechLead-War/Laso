@@ -39,7 +39,6 @@ targets:
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         UILaunchScreen:
           UIColorName: LaunchBackground
-          UIImageName: LaunchIcon
     settings:
       base:
         INFOPLIST_FILE: Info.plist

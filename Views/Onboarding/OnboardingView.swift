@@ -72,28 +72,20 @@ struct OnboardingView: View {
     let healthKitManager: HealthKitManager
     let onComplete: () -> Void
 
-    private let totalPages = 6
+    private let totalPages = 2
 
     var body: some View {
         ZStack(alignment: .bottom) {
             TabView(selection: $currentPage) {
-                WelcomePage { currentPage = 1 }
-                    .tag(0)
+                ConnectHealthPage(healthKitManager: healthKitManager) {
+                    currentPage = 1
+                }
+                .tag(0)
 
-                FeatureHighlightsPage { currentPage = 2 }
-                    .tag(1)
-
-                HealthFocusPage(selectedFocuses: $selectedFocuses) { currentPage = 3 }
-                    .tag(2)
-
-                HealthKitPermissionPage(healthKitManager: healthKitManager) { currentPage = 4 }
-                    .tag(3)
-
-                NotificationsPage { currentPage = 5 }
-                    .tag(4)
-
-                AllSetPage { finishOnboarding() }
-                    .tag(5)
+                FocusPage(selectedFocuses: $selectedFocuses) {
+                    finishOnboarding()
+                }
+                .tag(1)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
 
@@ -133,173 +125,11 @@ struct OnboardingView: View {
     }
 }
 
-// MARK: - Page 0: Welcome
+// MARK: - Page 0: Connect Health
 
-private struct WelcomePage: View {
-    let onContinue: () -> Void
-
-    var body: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            GlowIcon(systemName: "heart.text.clipboard", color: .accentColor)
-
-            VStack(spacing: 12) {
-                Text("Your health, understood.")
-                    .font(.title3.weight(.semibold))
-
-                Text("HealthPulse turns your Apple Watch data into actionable health insights — all on your device.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
-            }
-
-            Spacer()
-
-            Button("Get Started") { onContinue() }
-                .buttonStyle(.borderedProminent)
-                .font(.subheadline.weight(.medium))
-                .padding(.bottom, 48)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-}
-
-// MARK: - Page 1: Feature Highlights
-
-private struct FeatureHighlightsPage: View {
-    let onContinue: () -> Void
-
-    private let features: [(icon: String, title: String, subtitle: String)] = [
-        ("chart.bar.xaxis", "Health Score", "One number for your overall health"),
-        ("waveform.path.ecg", "Live Vitals", "Real-time heart rate and recovery"),
-        ("sparkles", "Smart Insights", "Personalized trends and anomaly alerts"),
-        ("shield.lefthalf.filled", "Risk Assessment", "Early warnings for health issues"),
-    ]
-
-    var body: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            Text("What you'll get")
-                .font(.title3.weight(.semibold))
-
-            VStack(spacing: 0) {
-                ForEach(features, id: \.title) { feature in
-                    HStack(spacing: 14) {
-                        Image(systemName: feature.icon)
-                            .font(.system(size: 20))
-                            .foregroundStyle(.tint)
-                            .frame(width: 36, height: 36)
-                            .background(Color.accentColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(feature.title)
-                                .font(.subheadline.weight(.medium))
-                            Text(feature.subtitle)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-
-                        Spacer()
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-
-                    if feature.title != features.last?.title {
-                        Divider().padding(.leading, 66)
-                    }
-                }
-            }
-            .background(.background, in: RoundedRectangle(cornerRadius: 16))
-            .padding(.horizontal)
-
-            Spacer()
-
-            Button("Continue") { onContinue() }
-                .buttonStyle(.borderedProminent)
-                .font(.subheadline.weight(.medium))
-                .padding(.bottom, 48)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-}
-
-// MARK: - Page 2: Health Focus
-
-private struct HealthFocusPage: View {
-    @Binding var selectedFocuses: Set<HealthFocus>
-    let onContinue: () -> Void
-
-    var body: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            VStack(spacing: 12) {
-                Text("What matters most to you?")
-                    .font(.title3.weight(.semibold))
-
-                Text("We'll prioritize insights for these areas.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
-            }
-
-            // Multi-select pills
-            FlowLayout(spacing: 10) {
-                ForEach(HealthFocus.allCases) { focus in
-                    let isSelected = selectedFocuses.contains(focus)
-                    Button {
-                        if isSelected {
-                            selectedFocuses.remove(focus)
-                        } else {
-                            selectedFocuses.insert(focus)
-                        }
-                    } label: {
-                        Label(focus.displayName, systemImage: focus.systemImageName)
-                            .font(.subheadline.weight(.medium))
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .background(
-                                isSelected ? focus.color.opacity(0.15) : Color.secondary.opacity(0.08),
-                                in: Capsule()
-                            )
-                            .foregroundStyle(isSelected ? focus.color : .secondary)
-                            .overlay(
-                                Capsule()
-                                    .strokeBorder(isSelected ? focus.color.opacity(0.4) : .clear, lineWidth: 1.5)
-                            )
-                    }
-                    .sensoryFeedback(.selection, trigger: isSelected)
-                }
-            }
-            .padding(.horizontal)
-
-            Spacer()
-
-            Button("Continue") { onContinue() }
-                .buttonStyle(.borderedProminent)
-                .font(.subheadline.weight(.medium))
-                .padding(.bottom, 48)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-}
-
-// MARK: - Page 3: HealthKit Permission
-
-private struct HealthKitPermissionPage: View {
+private struct ConnectHealthPage: View {
     let healthKitManager: HealthKitManager
     let onContinue: () -> Void
-
-    private let benefits: [(icon: String, text: String)] = [
-        ("checkmark.circle.fill", "See trends in sleep, heart rate, and activity"),
-        ("checkmark.circle.fill", "Get personalized health insights"),
-        ("checkmark.circle.fill", "Track your recovery and readiness"),
-        ("lock.fill", "100% on-device — your data never leaves"),
-    ]
 
     var body: some View {
         VStack(spacing: 24) {
@@ -308,10 +138,10 @@ private struct HealthKitPermissionPage: View {
             GlowIcon(systemName: "heart.text.clipboard", color: .red)
 
             VStack(spacing: 12) {
-                Text("Connect Apple Health")
+                Text("Your health, understood.")
                     .font(.title3.weight(.semibold))
 
-                Text("We read your health data to generate insights. Nothing is uploaded — everything stays on your device.")
+                Text("Laso turns your Apple Watch data into clear health scores and insights — privately, on your device.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -319,26 +149,11 @@ private struct HealthKitPermissionPage: View {
             }
 
             VStack(spacing: 0) {
-                ForEach(benefits, id: \.text) { benefit in
-                    HStack(spacing: 12) {
-                        Image(systemName: benefit.icon)
-                            .font(.system(size: 16))
-                            .foregroundStyle(benefit.icon == "lock.fill" ? .orange : .green)
-                            .frame(width: 24)
-
-                        Text(benefit.text)
-                            .font(.subheadline)
-                            .foregroundStyle(.primary)
-
-                        Spacer()
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-
-                    if benefit.text != benefits.last?.text {
-                        Divider().padding(.leading, 52)
-                    }
-                }
+                benefitRow(icon: "waveform.path.ecg", color: .red, text: "Scores, trends, and live vitals")
+                Divider().padding(.leading, 52)
+                benefitRow(icon: "sparkles", color: .blue, text: "Personalized insights and alerts")
+                Divider().padding(.leading, 52)
+                benefitRow(icon: "lock.fill", color: .orange, text: "100% on-device — nothing uploaded")
             }
             .background(.background, in: RoundedRectangle(cornerRadius: 16))
             .padding(.horizontal)
@@ -370,108 +185,78 @@ private struct HealthKitPermissionPage: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-}
 
-// MARK: - Page 4: Notifications
+    private func benefitRow(icon: String, color: Color, text: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 16))
+                .foregroundStyle(color)
+                .frame(width: 24)
 
-private struct NotificationsPage: View {
-    let onContinue: () -> Void
-
-    private let notificationTypes: [(icon: String, text: String)] = [
-        ("sun.max.fill", "Daily health summary every morning"),
-        ("exclamationmark.triangle.fill", "Alerts when metrics need attention"),
-        ("trophy.fill", "Celebrations when you hit milestones"),
-    ]
-
-    var body: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            GlowIcon(systemName: "bell.badge.fill", color: .blue)
-
-            VStack(spacing: 12) {
-                Text("Stay in the Loop")
-                    .font(.title3.weight(.semibold))
-
-                Text("Choose what to be notified about.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
-            }
-
-            VStack(spacing: 0) {
-                ForEach(notificationTypes, id: \.text) { type in
-                    HStack(spacing: 12) {
-                        Image(systemName: type.icon)
-                            .font(.system(size: 16))
-                            .foregroundStyle(.tint)
-                            .frame(width: 24)
-
-                        Text(type.text)
-                            .font(.subheadline)
-                            .foregroundStyle(.primary)
-
-                        Spacer()
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-
-                    if type.text != notificationTypes.last?.text {
-                        Divider().padding(.leading, 52)
-                    }
-                }
-            }
-            .background(.background, in: RoundedRectangle(cornerRadius: 16))
-            .padding(.horizontal)
+            Text(text)
+                .font(.subheadline)
+                .foregroundStyle(.primary)
 
             Spacer()
-
-            VStack(spacing: 12) {
-                Button("Enable Notifications") {
-                    Task {
-                        await NotificationManager.shared.requestAuthorization()
-                        onContinue()
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .font(.subheadline.weight(.medium))
-
-                Button("Not Now") { onContinue() }
-                    .buttonStyle(.bordered)
-                    .font(.subheadline.weight(.medium))
-            }
-            .padding(.bottom, 48)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
     }
 }
 
-// MARK: - Page 5: All Set
+// MARK: - Page 1: Focus + Finish
 
-private struct AllSetPage: View {
+private struct FocusPage: View {
+    @Binding var selectedFocuses: Set<HealthFocus>
     let onComplete: () -> Void
 
     var body: some View {
         VStack(spacing: 24) {
             Spacer()
 
-            GlowIcon(systemName: "checkmark.circle.fill", color: .green)
-
             VStack(spacing: 12) {
-                Text("You're All Set!")
+                Text("What matters most to you?")
                     .font(.title3.weight(.semibold))
 
-                Text("HealthPulse is ready to analyze your health data.")
+                Text("Pick your areas — we'll prioritize those insights.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
             }
 
+            FlowLayout(spacing: 10) {
+                ForEach(HealthFocus.allCases) { focus in
+                    let isSelected = selectedFocuses.contains(focus)
+                    Button {
+                        if isSelected {
+                            selectedFocuses.remove(focus)
+                        } else {
+                            selectedFocuses.insert(focus)
+                        }
+                    } label: {
+                        Label(focus.displayName, systemImage: focus.systemImageName)
+                            .font(.subheadline.weight(.medium))
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(
+                                isSelected ? focus.color.opacity(0.15) : Color.secondary.opacity(0.08),
+                                in: Capsule()
+                            )
+                            .foregroundStyle(isSelected ? focus.color : .secondary)
+                            .overlay(
+                                Capsule()
+                                    .strokeBorder(isSelected ? focus.color.opacity(0.4) : .clear, lineWidth: 1.5)
+                            )
+                    }
+                    .sensoryFeedback(.selection, trigger: isSelected)
+                }
+            }
+            .padding(.horizontal)
+
             Spacer()
 
-            Button("Let's Go") { onComplete() }
+            Button("Get Started") { onComplete() }
                 .buttonStyle(.borderedProminent)
                 .font(.subheadline.weight(.medium))
                 .padding(.bottom, 48)
@@ -511,4 +296,3 @@ private struct GlowIcon: View {
         .onAppear { animate = true }
     }
 }
-
