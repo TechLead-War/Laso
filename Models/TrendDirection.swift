@@ -9,9 +9,9 @@ enum TrendDirection: String, Codable {
 
     var displayName: String {
         switch self {
-        case .improving: return "Improving"
-        case .stable: return "Stable"
-        case .declining: return "Declining"
+        case .improving: return "Getting better"
+        case .stable: return "Steady"
+        case .declining: return "Dropping"
         }
     }
 

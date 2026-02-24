@@ -27,6 +27,35 @@ struct MetricChartView: View {
         metric.category.color
     }
 
+    /// Focused Y-axis domain based on actual data, not the full normal range.
+    /// Prevents small-variation metrics (e.g. walking asymmetry 2-5%) from looking
+    /// flat when the normal range is much wider (0-15%).
+    private var yDomain: ClosedRange<Double> {
+        guard !samples.isEmpty else { return 0...1 }
+
+        var minVal = samples.map(\.value).min()!
+        var maxVal = samples.map(\.value).max()!
+
+        // Include baseline in the visible range if present
+        if let baseline {
+            minVal = min(minVal, baseline)
+            maxVal = max(maxVal, baseline)
+        }
+
+        let span = maxVal - minVal
+        // Add 20% padding so the line doesn't hug the edges
+        let padding = max(span * 0.2, maxVal * 0.05)
+
+        let low = max(0, minVal - padding) // don't go below zero for most metrics
+        let high = maxVal + padding
+
+        // Ensure the domain isn't degenerate (all same values)
+        if low >= high {
+            return max(0, low - 1)...(high + 1)
+        }
+        return low...high
+    }
+
     /// Find the closest sample to the selected date
     private var selectedSample: MetricSample? {
         guard let selectedDate else { return nil }
@@ -108,6 +137,7 @@ struct MetricChartView: View {
                 .symbolSize(30)
             }
         }
+        .chartYScale(domain: yDomain)
         .chartXSelection(value: $selectedDate)
         .chartXAxis {
             AxisMarks(values: .stride(by: .day, count: 7)) { _ in

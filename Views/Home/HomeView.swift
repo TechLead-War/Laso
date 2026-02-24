@@ -62,18 +62,10 @@ struct HomeView: View {
                     .padding(.top, 12)
 
                 if hasData {
-                    // 2. Today: Recovery + Body State
+                    // 2. Recovery
                     todaySection
 
-                    // 2a. Weekly Review entry point
-                    WeeklyReviewEntryCard(
-                        viewModel: WeeklyReviewViewModel(dashboardViewModel: viewModel)
-                    ) {
-                        AppAnalytics.shared.trackBlockTap(title: "Weekly Review", type: .weeklyReviewCard, screen: .home)
-                        navigationPath.append("weeklyReview")
-                    }
-
-                    // 3. Body Insights — sleep, patterns, actions, anomalies
+                    // 3. Today's Briefing — headline insight + smart action
                     BodyInsightsSection(
                         viewModel: viewModel,
                         liveVM: liveViewModel,
@@ -86,19 +78,28 @@ struct HomeView: View {
                         }
                     )
 
-                    // 4. Insights — what needs your attention right now
-                    ActionCardsSection(
-                        insights: viewModel.topActionableInsights
-                    ) { metric in
-                        navigationPath.append(metric)
-                    }
+                    // 4. Needs Attention — top 2 actionable items
+                    needsAttentionSection
 
-                    // 5. Period selector — 7D / 30D / 3M / 6M
-                    PeriodSummarySection(
-                        viewModel: viewModel
-                    ) { metric in
-                        AppAnalytics.shared.trackBlockTap(title: metric.displayName, type: .metricRow, screen: .home)
-                        navigationPath.append(metric)
+                    // 5. From Your Data — top 2 correlations
+                    CorrelationsSection(
+                        correlations: Array(viewModel.topCorrelations.prefix(2)),
+                        onTapSeeAll: {
+                            AppAnalytics.shared.trackBlockTap(title: "See All Correlations", type: .correlationCard, screen: .home)
+                            navigationPath.append("correlationsDetail")
+                        },
+                        onTapMetric: { metric in
+                            AppAnalytics.shared.trackBlockTap(title: metric.displayName, type: .correlationCard, screen: .home)
+                            navigationPath.append(metric)
+                        }
+                    )
+
+                    // 6. Weekly Review
+                    WeeklyReviewEntryCard(
+                        viewModel: WeeklyReviewViewModel(dashboardViewModel: viewModel)
+                    ) {
+                        AppAnalytics.shared.trackBlockTap(title: "Weekly Review", type: .weeklyReviewCard, screen: .home)
+                        navigationPath.append("weeklyReview")
                     }
 
                     // Last updated footer
@@ -228,6 +229,90 @@ struct HomeView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
+    }
+
+    // MARK: - Needs Attention (top 2 actionable insights)
+
+    private var topAttentionInsights: [Insight] {
+        Array(
+            viewModel.topActionableInsights
+                .filter { $0.severity == .critical || $0.severity == .warning }
+                .prefix(2)
+        )
+    }
+
+    @ViewBuilder
+    private var needsAttentionSection: some View {
+        let items = topAttentionInsights
+        if !items.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("Needs Attention")
+                        .font(.headline)
+
+                    Spacer()
+
+                    Button {
+                        navigationPath.append("insightsDetail")
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("See all")
+                                .font(.subheadline.weight(.medium))
+                            Image(systemName: "chevron.right")
+                                .font(.caption2.weight(.semibold))
+                        }
+                        .foregroundStyle(.tint)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal)
+
+                ForEach(items) { insight in
+                    Button {
+                        AppAnalytics.shared.trackBlockTap(title: insight.metric.displayName, type: .actionCard, screen: .home)
+                        navigationPath.append(insight.metric)
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: insight.metric.systemImageName)
+                                .font(.body.weight(.semibold))
+                                .foregroundStyle(.white)
+                                .frame(width: 34, height: 34)
+                                .background(insight.metric.category.color, in: Circle())
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(insightActionText(insight))
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(.primary)
+                                    .lineLimit(2)
+
+                                Text(insight.metric.displayName)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .padding(12)
+                        .background(.background, in: RoundedRectangle(cornerRadius: 14))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal)
+                }
+            }
+        }
+    }
+
+    /// First sentence of the recommendation
+    private func insightActionText(_ insight: Insight) -> String {
+        let rec = insight.recommendation
+        if let dotIndex = rec.firstIndex(of: ".") {
+            return String(rec[rec.startIndex...dotIndex])
+        }
+        return rec
     }
 
     // MARK: - Today Section

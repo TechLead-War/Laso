@@ -8,34 +8,29 @@ struct CorrelationsSection: View {
 
     var body: some View {
         Group {
-            if correlations.count >= 2 {
+            if !correlations.isEmpty {
                 VStack(alignment: .leading, spacing: 12) {
                     // Header
                     HStack {
-                        Image(systemName: "arrow.triangle.branch")
-                            .font(.headline)
-                            .foregroundStyle(.purple)
-
-                        Text("Your Body's Connections")
+                        Text("From Your Data")
                             .font(.headline)
 
                         Spacer()
 
-                        Button(action: {
-                            AppAnalytics.shared.trackBlockTap(title: "See All Correlations", type: .correlationCard, screen: .home)
-                            onTapSeeAll()
-                        }) {
-                            Text("See All")
-                                .font(.subheadline.weight(.medium))
-                                .foregroundStyle(.purple)
+                        Button(action: onTapSeeAll) {
+                            HStack(spacing: 4) {
+                                Text("See all")
+                                    .font(.subheadline.weight(.medium))
+                                Image(systemName: "chevron.right")
+                                    .font(.caption2.weight(.semibold))
+                            }
+                            .foregroundStyle(.tint)
                         }
                     }
                     .padding(.horizontal)
 
-                    // Correlation cards (max 5)
-                    ForEach(Array(correlations.prefix(5))) { correlation in
+                    ForEach(correlations) { correlation in
                         CorrelationCard(correlation: correlation) {
-                            AppAnalytics.shared.trackBlockTap(title: "\(correlation.causeLabel) → \(correlation.effectLabel)", type: .correlationCard, screen: .home)
                             onTapMetric(correlation.metricA)
                         }
                         .padding(.horizontal)

@@ -62,7 +62,7 @@ struct ExploreView: View {
                 )
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Health Score")
+                    Text("Your Health Score")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
 

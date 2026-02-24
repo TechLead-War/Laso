@@ -9,9 +9,9 @@ enum Severity: String, Codable, Comparable {
 
     var displayName: String {
         switch self {
-        case .info: return "Info"
-        case .warning: return "Warning"
-        case .critical: return "Critical"
+        case .info: return "Tip"
+        case .warning: return "Check this"
+        case .critical: return "Needs attention"
         }
     }
 

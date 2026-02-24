@@ -29,7 +29,7 @@ struct ActionCard: View {
 
                     // Content
                     VStack(alignment: .leading, spacing: 4) {
-                        // Metric name + severity
+                        // Metric name + current value
                         HStack {
                             Text(insight.metric.displayName)
                                 .font(.subheadline.weight(.semibold))
@@ -37,29 +37,22 @@ struct ActionCard: View {
 
                             Spacer()
 
-                            // Deviation badge
-                            if abs(insight.deviationPercent) > 0.1 {
-                                DeviationBadge(percent: insight.deviationPercent)
-                            }
+                            Text(formattedCurrent)
+                                .font(.caption.weight(.semibold).monospacedDigit())
+                                .foregroundStyle(.primary)
                         }
 
-                        // Short action text — truncated to 1 line
+                        // Short action text
                         Text(shortAction)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .lineLimit(2)
 
-                        // Compact badges
+                        // Single status line
                         HStack(spacing: 6) {
                             SeverityBadge(severity: insight.severity)
-                            TrendBadge(direction: insight.trend)
 
                             Spacer()
-
-                            // Current value
-                            Text(formattedCurrent)
-                                .font(.caption.weight(.semibold).monospacedDigit())
-                                .foregroundStyle(.primary)
 
                             Image(systemName: "chevron.right")
                                 .font(.caption2.weight(.semibold))

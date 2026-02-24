@@ -34,62 +34,36 @@ struct BodyInsightsSection: View {
             VStack(alignment: .leading, spacing: 10) {
                 // Section header
                 HStack(spacing: 8) {
-                    Image(systemName: "text.badge.star")
-                        .font(.headline)
-                        .foregroundStyle(.tint)
-
                     Text("Today's Briefing")
                         .font(.headline)
 
-                    if totalInsightCount > 0 {
-                        Text("\(totalInsightCount)")
-                            .font(.caption.weight(.bold).monospacedDigit())
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 2)
-                            .background(.purple, in: Capsule())
-                    }
-
                     Spacer()
+
+                    if totalInsightCount > 0 {
+                        Button(action: {
+                            AppAnalytics.shared.trackBlockTap(title: "See All Insights", type: .seeAllInsights, screen: .home)
+                            onTapSeeAll()
+                        }) {
+                            HStack(spacing: 4) {
+                                Text("See all")
+                                    .font(.subheadline.weight(.medium))
+                                Image(systemName: "chevron.right")
+                                    .font(.caption2.weight(.semibold))
+                            }
+                            .foregroundStyle(.tint)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
                 .padding(.horizontal)
 
-                // 0. Headline insight — the coach speaking to you
+                // 1. Headline insight — the coach speaking to you
                 if let headline = viewModel.headlineInsight {
                     headlineInsightCard(headline)
                 }
 
-                // 1. Sleep card
-                SleepCard(
-                    liveVM: liveVM,
-                    sleepBaseline: sleepBaseline,
-                    sleepInsight: sleepInsight
-                )
-                .padding(.horizontal)
-
                 // 2. Smart daily action
                 smartActionCard
-
-                // 3. See all button
-                if totalInsightCount > 0 {
-                    Button(action: {
-                        AppAnalytics.shared.trackBlockTap(title: "See All Insights", type: .seeAllInsights, screen: .home)
-                        onTapSeeAll()
-                    }) {
-                        HStack {
-                            Text("See All Insights")
-                                .font(.subheadline.weight(.semibold))
-                            Image(systemName: "chevron.right")
-                                .font(.caption.weight(.semibold))
-                        }
-                        .foregroundStyle(.purple)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(.purple.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal)
-                }
             }
         }
     }

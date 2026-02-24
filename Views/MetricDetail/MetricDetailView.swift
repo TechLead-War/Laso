@@ -9,35 +9,39 @@ struct MetricDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Current Value Header
-                headerSection
+                if viewModel.chartSamples.isEmpty {
+                    noDataView
+                } else {
+                    // Current Value Header
+                    headerSection
 
-                // Action Banner — show recommendation if insight exists
-                if let recommendation = viewModel.insights.first?.recommendation {
-                    actionBanner(recommendation)
-                }
+                    // Action Banner — show recommendation if insight exists
+                    if let recommendation = viewModel.insights.first?.recommendation {
+                        actionBanner(recommendation)
+                    }
 
-                // Time Range Selector
-                TimeRangeSelector(selectedDays: Binding(
-                    get: { viewModel.selectedTimeRange },
-                    set: { viewModel.selectedTimeRange = $0 }
-                ))
-                .padding(.horizontal)
+                    // Time Range Selector
+                    TimeRangeSelector(selectedDays: Binding(
+                        get: { viewModel.selectedTimeRange },
+                        set: { viewModel.selectedTimeRange = $0 }
+                    ))
+                    .padding(.horizontal)
 
-                // Chart
-                chartSection
+                    // Chart
+                    chartSection
 
-                // Contextual Summary (replaces raw stats grid)
-                contextualSummary
+                    // Contextual Summary (replaces raw stats grid)
+                    contextualSummary
 
-                // Score Breakdown
-                if !viewModel.scoreBreakdown.isEmpty {
-                    scoreBreakdownSection
-                }
+                    // Score Breakdown
+                    if !viewModel.scoreBreakdown.isEmpty {
+                        scoreBreakdownSection
+                    }
 
-                // Insights
-                if !viewModel.insights.isEmpty {
-                    insightsSection
+                    // Insights
+                    if !viewModel.insights.isEmpty {
+                        insightsSection
+                    }
                 }
             }
             .padding(.bottom)
@@ -45,8 +49,52 @@ struct MetricDetailView: View {
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle(viewModel.metric.displayName)
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { AppAnalytics.shared.trackFeatureOpen(.metricDetail, metadata: ["metric": viewModel.metric.rawValue]) }
+        .onAppear {
+            // If default 30-day range is empty, try broader ranges
+            if viewModel.chartSamples.isEmpty {
+                for range in [90, 180, 365] {
+                    viewModel.selectedTimeRange = range
+                    if !viewModel.chartSamples.isEmpty { break }
+                }
+            }
+            AppAnalytics.shared.trackFeatureOpen(.metricDetail, metadata: ["metric": viewModel.metric.rawValue])
+        }
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.metricDetail, metadata: ["metric": viewModel.metric.rawValue]) }
+    }
+
+    private var noDataView: some View {
+        VStack(spacing: 16) {
+            Spacer().frame(height: 40)
+
+            Image(systemName: viewModel.metric.systemImageName)
+                .font(.system(size: 44))
+                .foregroundStyle(viewModel.metric.category.color.opacity(0.6))
+
+            Text("No Data Yet")
+                .font(.title3.weight(.semibold))
+
+            Text("We don't have enough \(viewModel.metric.displayName.lowercased()) data to show trends. Make sure your device is syncing to Apple Health.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+
+            // Still show insights if they exist (they come from analysis, not chart data)
+            if !viewModel.insights.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Insights")
+                        .font(.headline)
+                        .padding(.horizontal)
+
+                    ForEach(viewModel.insights) { insight in
+                        InsightCard(insight: insight)
+                            .padding(.horizontal)
+                    }
+                }
+                .padding(.top, 8)
+            }
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private var headerSection: some View {
