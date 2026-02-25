@@ -162,6 +162,7 @@ private struct ConnectHealthPage: View {
 
             if HKHealthStore.isHealthDataAvailable() {
                 Button("Connect Apple Health") {
+                    AppAnalytics.shared.trackBlockTap(title: "Connect Apple Health", type: .onboardingConnectHealth, screen: .onboarding)
                     Task {
                         await healthKitManager.requestAuthorization()
                         onContinue()
@@ -176,7 +177,10 @@ private struct ConnectHealthPage: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
-                    Button("Continue Anyway") { onContinue() }
+                    Button("Continue Anyway") {
+                        AppAnalytics.shared.trackBlockTap(title: "Continue Anyway", type: .onboardingContinueAnyway, screen: .onboarding)
+                        onContinue()
+                    }
                         .buttonStyle(.borderedProminent)
                         .font(.subheadline.weight(.medium))
                 }
@@ -234,6 +238,15 @@ private struct FocusPage: View {
                         } else {
                             selectedFocuses.insert(focus)
                         }
+                        AppAnalytics.shared.trackBlockTap(
+                            title: focus.displayName,
+                            type: .onboardingFocusChip,
+                            screen: .onboarding
+                        )
+                        AppAnalytics.shared.trackSettingChanged(
+                            name: "onboarding_focus_\(focus.rawValue)",
+                            value: !isSelected
+                        )
                     } label: {
                         Label(focus.displayName, systemImage: focus.systemImageName)
                             .font(.subheadline.weight(.medium))
@@ -256,7 +269,10 @@ private struct FocusPage: View {
 
             Spacer()
 
-            Button("Get Started") { onComplete() }
+            Button("Get Started") {
+                AppAnalytics.shared.trackBlockTap(title: "Get Started", type: .onboardingGetStarted, screen: .onboarding)
+                onComplete()
+            }
                 .buttonStyle(.borderedProminent)
                 .font(.subheadline.weight(.medium))
                 .padding(.bottom, 48)

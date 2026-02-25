@@ -93,6 +93,9 @@ struct WeeklyReviewView: View {
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 32)
                     }
+                    .onAppear {
+                        AppAnalytics.shared.trackEmptyStateShown(screen: .weeklyReview, stateType: "not_enough_data")
+                    }
                 }
             }
             .padding(.vertical, 16)

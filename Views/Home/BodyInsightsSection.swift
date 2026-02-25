@@ -85,6 +85,9 @@ struct BodyInsightsSection: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.tint, in: RoundedRectangle(cornerRadius: 14))
         .padding(.horizontal)
+        .onAppear {
+            AppAnalytics.shared.trackCardImpression(cardType: .headlineInsight, screen: .home)
+        }
     }
 
     // MARK: - Smart Action Card
@@ -132,6 +135,9 @@ struct BodyInsightsSection: View {
         )
         .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
         .padding(.horizontal)
+        .onAppear {
+            AppAnalytics.shared.trackCardImpression(cardType: .smartAction, screen: .home)
+        }
     }
 
 }

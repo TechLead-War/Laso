@@ -24,7 +24,18 @@ struct CategoryDetailView: View {
                 // Time Range Selector
                 TimeRangeSelector(selectedDays: Binding(
                     get: { viewModel.selectedTimeRange },
-                    set: { viewModel.selectedTimeRange = $0 }
+                    set: { newRange in
+                        let oldRange = viewModel.selectedTimeRange
+                        viewModel.selectedTimeRange = newRange
+                        if oldRange != newRange {
+                            AppAnalytics.shared.trackTimeRangeChanged(
+                                screen: .categoryDetail,
+                                context: viewModel.category.displayName,
+                                fromDays: oldRange,
+                                toDays: newRange
+                            )
+                        }
+                    }
                 ))
                 .padding(.horizontal)
 

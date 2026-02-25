@@ -30,8 +30,17 @@ struct CorrelationsView: View {
                                 isSelected: selectedFilter == filter,
                                 count: filteredCount(for: filter)
                             ) {
+                                let oldFilter = selectedFilter
                                 withAnimation(.easeInOut(duration: 0.2)) {
                                     selectedFilter = filter
+                                }
+                                if oldFilter != filter {
+                                    AppAnalytics.shared.trackFilterChanged(
+                                        screen: .correlations,
+                                        filterType: "correlation_strength",
+                                        from: oldFilter.rawValue,
+                                        to: filter.rawValue
+                                    )
                                 }
                             }
                         }
@@ -61,7 +70,7 @@ struct CorrelationsView: View {
             .padding(.vertical)
         }
         .background(Color(.systemGroupedBackground))
-        .navigationTitle("Correlations")
+        .navigationTitle("What Affects What")
         .navigationBarTitleDisplayMode(.large)
         .onAppear { AppAnalytics.shared.trackFeatureOpen(.correlations) }
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.correlations) }
@@ -117,6 +126,12 @@ struct CorrelationsView: View {
                 .multilineTextAlignment(.center)
         }
         .padding(.vertical, 40)
+        .onAppear {
+            AppAnalytics.shared.trackEmptyStateShown(
+                screen: .correlations,
+                stateType: selectedFilter == .all ? "no_correlations" : "filter_empty_\(selectedFilter.rawValue.lowercased())"
+            )
+        }
     }
 }
 
@@ -150,99 +165,69 @@ private struct FilterChip: View {
 
 // MARK: - Detail Card
 
-/// Expanded correlation card for the full-screen view
+/// Actionable correlation card — leads with "do this → get this"
 private struct CorrelationDetailCard: View {
     let correlation: HealthCorrelation
     let onTap: () -> Void
 
     var body: some View {
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 12) {
-                // Metric A → Metric B header
-                HStack(spacing: 10) {
-                    metricLabel(
-                        icon: correlation.metricA.systemImageName,
-                        name: correlation.metricA.displayName,
-                        color: correlation.metricA.category.color
-                    )
+            VStack(alignment: .leading, spacing: 10) {
+                // Action: what to do → what happens
+                HStack(spacing: 8) {
+                    Image(systemName: correlation.metricA.systemImageName)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(correlation.metricA.category.color)
+                        .frame(width: 24)
+
+                    Text(correlation.causeLabel)
+                        .font(.subheadline.weight(.medium))
 
                     Image(systemName: "arrow.right")
                         .font(.caption.weight(.bold))
                         .foregroundStyle(.purple)
 
-                    metricLabel(
-                        icon: correlation.metricB.systemImageName,
-                        name: correlation.metricB.displayName,
-                        color: correlation.metricB.category.color
-                    )
-
-                    Spacer()
-
-                    StrengthBadge(label: correlation.strengthLabel)
-                }
-
-                // Cause → Effect labels
-                HStack(spacing: 6) {
-                    Text(correlation.causeLabel)
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.primary)
-
-                    Image(systemName: "arrow.right")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(.tertiary)
+                    Image(systemName: correlation.metricB.systemImageName)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(correlation.metricB.category.color)
+                        .frame(width: 24)
 
                     Text(correlation.effectLabel)
                         .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+
+                    Spacer()
                 }
 
-                // Effect summary
+                // What your data shows
                 Text(correlation.effectSummary)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                // Bottom row: offset label + correlation value + chevron
-                HStack {
-                    Label(
-                        correlation.dayOffset == 0 ? "Same day" : "Next day effect",
-                        systemImage: correlation.dayOffset == 0 ? "calendar" : "calendar.badge.clock"
-                    )
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                // Bottom: strength + timing + chevron
+                HStack(spacing: 8) {
+                    StrengthBadge(label: correlation.strengthLabel)
+
+                    Text(correlation.dayOffset == 0 ? "Same day" : "Next day effect")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
 
                     Spacer()
-
-                    Text("r = \(String(format: "%.2f", correlation.correlation))")
-                        .font(.caption2.weight(.medium).monospacedDigit())
-                        .foregroundStyle(.tertiary)
 
                     Image(systemName: "chevron.right")
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(.tertiary)
                 }
             }
-            .padding()
+            .padding(14)
             .background(.background, in: RoundedRectangle(cornerRadius: 14))
-            .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(correlation.causeLabel) leads to \(correlation.effectLabel)")
-        .accessibilityValue("\(correlation.strengthLabel) correlation, \(correlation.effectSummary)")
+        .accessibilityValue("\(correlation.strengthLabel) link, \(correlation.effectSummary)")
         .accessibilityHint("View \(correlation.metricA.displayName) details")
         .accessibilityAddTraits(.isButton)
-    }
-
-    private func metricLabel(icon: String, name: String, color: Color) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(color)
-            Text(name)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-        }
     }
 }

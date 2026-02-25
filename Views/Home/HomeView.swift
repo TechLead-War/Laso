@@ -25,6 +25,7 @@ struct HomeView: View {
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .refreshable {
+            AppAnalytics.shared.trackPullToRefresh(screen: .home)
             await viewModel.refresh()
             liveViewModel.fetchHomeData()
         }
@@ -112,6 +113,9 @@ struct HomeView: View {
                     }
                 } else {
                     connectHealthView
+                        .onAppear {
+                            AppAnalytics.shared.trackEmptyStateShown(screen: .home, stateType: "no_health_data")
+                        }
                 }
             }
         }
@@ -187,8 +191,12 @@ struct HomeView: View {
                     .font(.subheadline.weight(.medium))
             }
             .buttonStyle(.bordered)
+            .simultaneousGesture(TapGesture().onEnded {
+                AppAnalytics.shared.trackBlockTap(title: "Manage Devices", type: .emptyStateManageDevices, screen: .home)
+            })
 
             Button {
+                AppAnalytics.shared.trackBlockTap(title: "Refresh", type: .emptyStateRefresh, screen: .home)
                 Task { await viewModel.refresh() }
             } label: {
                 Label("Refresh", systemImage: "arrow.clockwise")
@@ -253,6 +261,7 @@ struct HomeView: View {
                     Spacer()
 
                     Button {
+                        AppAnalytics.shared.trackBlockTap(title: "See All Needs Attention", type: .seeAllNeedsAttention, screen: .home)
                         navigationPath.append("insightsDetail")
                     } label: {
                         HStack(spacing: 4) {
@@ -444,6 +453,7 @@ struct HomeView: View {
                 .multilineTextAlignment(.center)
 
             Button("Try Again") {
+                AppAnalytics.shared.trackBlockTap(title: "Try Again", type: .errorRetry, screen: .home)
                 Task { await viewModel.load() }
             }
             .buttonStyle(.borderedProminent)

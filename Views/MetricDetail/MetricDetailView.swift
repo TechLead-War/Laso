@@ -23,7 +23,18 @@ struct MetricDetailView: View {
                     // Time Range Selector
                     TimeRangeSelector(selectedDays: Binding(
                         get: { viewModel.selectedTimeRange },
-                        set: { viewModel.selectedTimeRange = $0 }
+                        set: { newRange in
+                            let oldRange = viewModel.selectedTimeRange
+                            viewModel.selectedTimeRange = newRange
+                            if oldRange != newRange {
+                                AppAnalytics.shared.trackTimeRangeChanged(
+                                    screen: .metricDetail,
+                                    context: viewModel.metric.rawValue,
+                                    fromDays: oldRange,
+                                    toDays: newRange
+                                )
+                            }
+                        }
                     ))
                     .padding(.horizontal)
 
@@ -95,6 +106,9 @@ struct MetricDetailView: View {
             }
         }
         .frame(maxWidth: .infinity)
+        .onAppear {
+            AppAnalytics.shared.trackEmptyStateShown(screen: .metricDetail, stateType: "no_metric_data")
+        }
     }
 
     private var headerSection: some View {
@@ -137,7 +151,10 @@ struct MetricDetailView: View {
                 DataSourceBadge(device: sourceDevice.device, sourceName: sourceDevice.sourceName)
             }
         }
-        .padding(.top)
+        .padding(.vertical, 16)
+        .frame(maxWidth: .infinity)
+        .background(.background, in: RoundedRectangle(cornerRadius: 14))
+        .padding(.horizontal)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(viewModel.metric.displayName), current value \(viewModel.currentValue) \(viewModel.metric.unit), \(viewModel.trendDirection == .improving ? "improving" : viewModel.trendDirection == .declining ? "declining" : "stable")\(viewModel.isOutsideNormalRange ? ", outside normal range" : "")")
     }
@@ -215,24 +232,26 @@ struct MetricDetailView: View {
                 .font(.headline)
                 .padding(.horizontal)
 
-            ForEach(viewModel.scoreBreakdown) { component in
-                HStack {
-                    Image(systemName: component.points >= 0 ? "plus.circle.fill" : "minus.circle.fill")
-                        .foregroundStyle(component.points >= 0 ? .green : .red)
-                        .font(.body)
+            VStack(spacing: 0) {
+                ForEach(viewModel.scoreBreakdown) { component in
+                    HStack {
+                        Image(systemName: component.points >= 0 ? "plus.circle.fill" : "minus.circle.fill")
+                            .foregroundStyle(component.points >= 0 ? .green : .red)
+                            .font(.body)
 
-                    Text(component.reason)
-                        .font(.subheadline)
-                        .foregroundStyle(.primary)
+                        Text(component.reason)
+                            .font(.subheadline)
+                            .foregroundStyle(.primary)
 
-                    Spacer()
+                        Spacer()
 
-                    Text("\(component.points > 0 ? "+" : "")\(component.points) pts")
-                        .font(.subheadline.weight(.semibold).monospacedDigit())
-                        .foregroundStyle(component.points >= 0 ? .green : .red)
+                        Text("\(component.points > 0 ? "+" : "")\(component.points) pts")
+                            .font(.subheadline.weight(.semibold).monospacedDigit())
+                            .foregroundStyle(component.points >= 0 ? .green : .red)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
                 }
-                .padding(.horizontal)
-                .padding(.vertical, 6)
             }
             .background(.background, in: RoundedRectangle(cornerRadius: 14))
             .padding(.horizontal)
@@ -245,10 +264,12 @@ struct MetricDetailView: View {
                 .font(.headline)
                 .padding(.horizontal)
 
-            ForEach(viewModel.insights) { insight in
-                InsightCard(insight: insight)
-                    .padding(.horizontal)
+            VStack(spacing: 8) {
+                ForEach(viewModel.insights) { insight in
+                    InsightCard(insight: insight)
+                }
             }
+            .padding(.horizontal)
         }
     }
 }

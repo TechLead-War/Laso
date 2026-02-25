@@ -6,6 +6,8 @@ struct LiveView: View {
     let viewModel: LiveViewModel
 
     @State private var pulseScale: CGFloat = 1.0
+    @State private var previousZone: LiveViewModel.HeartRateZone?
+    @State private var hasTrackedFirstData = false
 
     var body: some View {
         ScrollView {
@@ -14,10 +16,15 @@ struct LiveView: View {
 
                 if !viewModel.hasAnyLiveData && !viewModel.hasAnyActivityData && viewModel.lastUpdate == nil {
                     waitingForDataView
+                        .onAppear {
+                            AppAnalytics.shared.trackEmptyStateShown(screen: .live, stateType: "waiting_for_watch")
+                        }
                 } else {
                     heartRateHeroCard
+                        .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .heartRateHeroCard, screen: .live) }
                     vitalSignsRow
                     activityRingsSection
+                        .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .activityRingsSection, screen: .live) }
                     bloodPressureAndTempRow
                     lastWorkoutCard
                     statusFooter
@@ -30,10 +37,28 @@ struct LiveView: View {
         .onAppear {
             viewModel.startStreaming()
             AppAnalytics.shared.trackFeatureOpen(.live)
+            AppAnalytics.shared.trackStreamingStarted()
         }
         .onDisappear {
             viewModel.stopStreaming()
             AppAnalytics.shared.trackFeatureClose(.live)
+            AppAnalytics.shared.trackStreamingStopped()
+        }
+        .onChange(of: viewModel.hasAnyLiveData) { _, hasData in
+            if hasData && !hasTrackedFirstData {
+                hasTrackedFirstData = true
+                AppAnalytics.shared.trackLiveFirstDataReceived()
+            }
+        }
+        .onChange(of: viewModel.currentHeartRateZone) { oldZone, newZone in
+            if let prev = previousZone, prev != newZone {
+                AppAnalytics.shared.trackHeartRateZoneChanged(
+                    fromZone: prev.rawValue,
+                    toZone: newZone.rawValue,
+                    bpm: Int(viewModel.currentHeartRate ?? 0)
+                )
+            }
+            previousZone = newZone
         }
         .sensoryFeedback(.success, trigger: viewModel.hasAnyLiveData)
     }
@@ -160,15 +185,21 @@ struct LiveView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     // BPM
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(viewModel.currentHeartRate.map { String(format: "%.0f", $0) } ?? "--")
-                            .font(.system(size: 52, weight: .bold, design: .rounded))
-                            .foregroundStyle(.primary)
-                            .contentTransition(.numericText())
-                            .animation(.easeInOut(duration: 0.3), value: viewModel.currentHeartRate)
+                        if let hr = viewModel.currentHeartRate {
+                            Text(String(format: "%.0f", hr))
+                                .font(.system(size: 52, weight: .bold, design: .rounded))
+                                .foregroundStyle(.primary)
+                                .contentTransition(.numericText())
+                                .animation(.easeInOut(duration: 0.3), value: hr)
 
-                        Text("bpm")
-                            .font(.title3)
-                            .foregroundStyle(.secondary)
+                            Text("bpm")
+                                .font(.title3)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text("Syncing")
+                                .font(.title2.weight(.medium))
+                                .foregroundStyle(.tertiary)
+                        }
                     }
 
                     // Zone badge
@@ -298,13 +329,19 @@ struct LiveView: View {
 
     private func sessionStatCell(label: String, value: Double?, unit: String, color: Color) -> some View {
         VStack(spacing: 2) {
-            HStack(alignment: .firstTextBaseline, spacing: 1) {
-                Text(value.map { String(format: "%.0f", $0) } ?? "--")
-                    .font(.subheadline.weight(.bold).monospacedDigit())
-                    .foregroundStyle(color)
-                Text(unit)
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+            if let value {
+                HStack(alignment: .firstTextBaseline, spacing: 1) {
+                    Text(String(format: "%.0f", value))
+                        .font(.subheadline.weight(.bold).monospacedDigit())
+                        .foregroundStyle(color)
+                    Text(unit)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+            } else {
+                Text("···")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(.quaternary)
             }
             Text(label)
                 .font(.caption2)
@@ -376,6 +413,7 @@ struct LiveView: View {
                 timestamp: viewModel.bloodOxygenTimestamp,
                 status: viewModel.bloodOxygenStatus
             )
+            .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .vitalCardSpo2, screen: .live) }
 
             vitalCard(
                 icon: "wind",
@@ -386,6 +424,7 @@ struct LiveView: View {
                 timestamp: viewModel.respiratoryRateTimestamp,
                 status: viewModel.respiratoryRateStatus
             )
+            .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .vitalCardRespRate, screen: .live) }
         }
         .padding(.horizontal)
     }
@@ -412,15 +451,21 @@ struct LiveView: View {
                 Spacer()
             }
 
-            HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text(value ?? "--")
-                    .font(.title2.weight(.bold).monospacedDigit())
-                    .foregroundStyle(value != nil ? .primary : .tertiary)
-                    .contentTransition(.numericText())
+            if let value {
+                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                    Text(value)
+                        .font(.title2.weight(.bold).monospacedDigit())
+                        .foregroundStyle(.primary)
+                        .contentTransition(.numericText())
 
-                Text(unit)
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(.secondary)
+                    Text(unit)
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                Text("Syncing")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.tertiary)
             }
 
             HStack(spacing: 4) {
@@ -608,6 +653,7 @@ struct LiveView: View {
                     .padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(.background, in: RoundedRectangle(cornerRadius: 14))
+                    .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .bloodPressureCard, screen: .live) }
                 }
 
                 if let temp = viewModel.latestBodyTemp {
@@ -639,6 +685,7 @@ struct LiveView: View {
                     .padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(.background, in: RoundedRectangle(cornerRadius: 14))
+                    .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .temperatureCard, screen: .live) }
                 }
             }
             .padding(.horizontal)
@@ -702,6 +749,7 @@ struct LiveView: View {
                 .background(.background, in: RoundedRectangle(cornerRadius: 14))
                 .padding(.horizontal)
             }
+            .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .lastWorkoutCard, screen: .live) }
         }
     }
 

@@ -47,6 +47,7 @@ struct ExploreView: View {
         .onAppear { AppAnalytics.shared.trackFeatureOpen(.explore) }
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.explore) }
         .refreshable {
+            AppAnalytics.shared.trackPullToRefresh(screen: .explore)
             await viewModel.refresh()
         }
     }
@@ -95,6 +96,7 @@ struct ExploreView: View {
         }
         .padding(16)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .healthScoreHero, screen: .explore) }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Health score \(viewModel.overallScore.score) out of 100, grade \(grade), \(scoreLabel)")
     }

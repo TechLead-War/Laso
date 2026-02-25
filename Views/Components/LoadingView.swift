@@ -4,9 +4,9 @@ import SwiftUI
 struct LoadingView: View {
     @State private var currentPhase = 0
     @State private var dotCount = 0
+    @State private var activeDots = 0
     @State private var iconScale: CGFloat = 0.8
     @State private var iconOpacity: Double = 0.6
-    @State private var waveOffset: CGFloat = 0
     @State private var appeared = false
 
     let message: String
@@ -67,13 +67,15 @@ struct LoadingView: View {
                     .foregroundStyle(.tertiary)
             }
 
-            // Progress dots
+            // Progress dots — fills up 1→2→3→4→5→6 then resets
             HStack(spacing: 6) {
                 ForEach(0..<phases.count, id: \.self) { index in
+                    let isActive = index < activeDots
                     Circle()
-                        .fill(index <= currentPhase ? currentColor : Color.secondary.opacity(0.2))
-                        .frame(width: index == currentPhase ? 8 : 6, height: index == currentPhase ? 8 : 6)
-                        .animation(.spring(response: 0.4), value: currentPhase)
+                        .fill(isActive ? currentColor : Color.secondary.opacity(0.2))
+                        .frame(width: isActive && index == activeDots - 1 ? 8 : 6,
+                               height: isActive && index == activeDots - 1 ? 8 : 6)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: activeDots)
                 }
             }
 
@@ -86,6 +88,7 @@ struct LoadingView: View {
             iconOpacity = 1.0
             startPhaseTimer()
             startDotTimer()
+            startDotLoader()
         }
     }
 
@@ -114,6 +117,19 @@ struct LoadingView: View {
         Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
             guard appeared else { timer.invalidate(); return }
             dotCount = (dotCount % 3) + 1
+        }
+    }
+
+    private func startDotLoader() {
+        Timer.scheduledTimer(withTimeInterval: 0.35, repeats: true) { timer in
+            guard appeared else { timer.invalidate(); return }
+            withAnimation {
+                if activeDots >= phases.count {
+                    activeDots = 0
+                } else {
+                    activeDots += 1
+                }
+            }
         }
     }
 }

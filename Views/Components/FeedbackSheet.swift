@@ -102,6 +102,8 @@ struct FeedbackSheet: View {
             .padding()
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .onAppear { AppAnalytics.shared.trackFeatureOpen(.feedback) }
+        .onDisappear { AppAnalytics.shared.trackFeatureClose(.feedback) }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Skip") {
@@ -134,9 +136,15 @@ struct FeedbackSheet: View {
 
             Spacer()
 
-            Button("Done") { dismiss() }
+            Button("Done") {
+                AppAnalytics.shared.trackBlockTap(title: "Done After Submit", type: .feedbackDoneAfterSubmit, screen: .feedback)
+                dismiss()
+            }
                 .buttonStyle(.borderedProminent)
                 .padding(.bottom, 32)
+        }
+        .onAppear {
+            AppAnalytics.shared.trackAction("feedback_thank_you_shown")
         }
     }
 

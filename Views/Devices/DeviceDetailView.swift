@@ -24,6 +24,17 @@ struct DeviceDetailView: View {
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle(device.displayName)
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.deviceDetail, metadata: [
+                "device": device.displayName,
+                "is_connected": deviceInfo != nil ? "true" : "false"
+            ])
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.deviceDetail, metadata: [
+                "device": device.displayName
+            ])
+        }
     }
 
     private var deviceHeader: some View {

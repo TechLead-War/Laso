@@ -81,6 +81,9 @@ struct ConnectedDevicesView: View {
                                 }
                             }
                         }
+                        .simultaneousGesture(TapGesture().onEnded {
+                            AppAnalytics.shared.trackBlockTap(title: device.displayName, type: .unconnectedDeviceRow, screen: .connectedDevices)
+                        })
                     }
                 } header: {
                     Text("Add More Devices")
@@ -94,6 +97,7 @@ struct ConnectedDevicesView: View {
         .onAppear { AppAnalytics.shared.trackFeatureOpen(.connectedDevices) }
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.connectedDevices) }
         .refreshable {
+            AppAnalytics.shared.trackPullToRefresh(screen: .connectedDevices)
             await viewModel.scan()
         }
         .task {

@@ -3,6 +3,7 @@ import SwiftUI
 /// Settings view for notification preferences, heart rate alerts, per-metric toggles, and export
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @AppStorage("healthpulse.appTheme") private var appTheme: String = "system"
     @State private var preferences: NotificationPreferences
     @State private var showExportSheet = false
     @State private var showMetricAlertPicker = false
@@ -64,6 +65,12 @@ struct SettingsView: View {
                                 set: { newDate in
                                     let components = Calendar.current.dateComponents([.hour, .minute], from: newDate)
                                     preferences.dailySummaryTime = components
+                                    let hour = components.hour ?? 0
+                                    let minute = components.minute ?? 0
+                                    AppAnalytics.shared.trackSettingChanged(
+                                        name: "daily_summary_time",
+                                        value: String(format: "%02d:%02d", hour, minute)
+                                    )
                                 }
                             ),
                             displayedComponents: .hourAndMinute
@@ -136,6 +143,9 @@ struct SettingsView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
+                    .simultaneousGesture(TapGesture().onEnded {
+                        AppAnalytics.shared.trackBlockTap(title: "Warning Alert Metrics", type: .metricAlertsPicker, screen: .settings)
+                    })
                 } header: {
                     Text("Metric Alerts")
                 } footer: {
@@ -154,6 +164,21 @@ struct SettingsView: View {
 
                     if webExportViewModel.isExporting {
                         ProgressView("Generating report...")
+                    }
+                }
+
+                // Appearance
+                Section("Appearance") {
+                    Picker("Theme", selection: $appTheme) {
+                        Label("System", systemImage: "gearshape")
+                            .tag("system")
+                        Label("Light", systemImage: "sun.max.fill")
+                            .tag("light")
+                        Label("Dark", systemImage: "moon.fill")
+                            .tag("dark")
+                    }
+                    .onChange(of: appTheme) { oldTheme, newTheme in
+                        AppAnalytics.shared.trackThemeChanged(from: oldTheme, to: newTheme)
                     }
                 }
 
@@ -179,23 +204,62 @@ struct SettingsView: View {
             .onDisappear { AppAnalytics.shared.trackFeatureClose(.settings) }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button("Done") {
+                        AppAnalytics.shared.trackBlockTap(title: "Done", type: .settingsDoneButton, screen: .settings)
+                        dismiss()
+                    }
                 }
             }
-            .onChange(of: preferences.dailySummaryEnabled) { _, _ in savePreferences() }
-            .onChange(of: preferences.weeklySummaryEnabled) { _, _ in savePreferences() }
-            .onChange(of: preferences.criticalAlertsEnabled) { _, _ in savePreferences() }
-            .onChange(of: preferences.warningAlertsEnabled) { _, _ in savePreferences() }
-            .onChange(of: preferences.maxNotificationsPerDay) { _, _ in savePreferences() }
-            .onChange(of: preferences.heartRateSpikeAlertsEnabled) { _, _ in savePreferences() }
-            .onChange(of: preferences.heartRateSpikeThreshold) { _, _ in savePreferences() }
-            .onChange(of: preferences.heartRateDropThreshold) { _, _ in savePreferences() }
-            .onChange(of: preferences.trendReversalAlertsEnabled) { _, _ in savePreferences() }
-            .onChange(of: preferences.improvementAlertsEnabled) { _, _ in savePreferences() }
-            .onChange(of: preferences.warningAlertMetrics) { _, _ in savePreferences() }
+            .onChange(of: preferences.dailySummaryEnabled) { _, newValue in
+                savePreferences()
+                AppAnalytics.shared.trackSettingChanged(name: "daily_summary_enabled", value: newValue)
+            }
+            .onChange(of: preferences.weeklySummaryEnabled) { _, newValue in
+                savePreferences()
+                AppAnalytics.shared.trackSettingChanged(name: "weekly_summary_enabled", value: newValue)
+            }
+            .onChange(of: preferences.criticalAlertsEnabled) { _, newValue in
+                savePreferences()
+                AppAnalytics.shared.trackSettingChanged(name: "critical_alerts_enabled", value: newValue)
+            }
+            .onChange(of: preferences.warningAlertsEnabled) { _, newValue in
+                savePreferences()
+                AppAnalytics.shared.trackSettingChanged(name: "warning_alerts_enabled", value: newValue)
+            }
+            .onChange(of: preferences.maxNotificationsPerDay) { _, newValue in
+                savePreferences()
+                AppAnalytics.shared.trackSettingChanged(name: "max_notifications_per_day", value: newValue)
+            }
+            .onChange(of: preferences.heartRateSpikeAlertsEnabled) { _, newValue in
+                savePreferences()
+                AppAnalytics.shared.trackSettingChanged(name: "heart_rate_spike_alerts_enabled", value: newValue)
+            }
+            .onChange(of: preferences.heartRateSpikeThreshold) { _, newValue in
+                savePreferences()
+                AppAnalytics.shared.trackSettingChanged(name: "heart_rate_spike_threshold_bpm", value: newValue)
+            }
+            .onChange(of: preferences.heartRateDropThreshold) { _, newValue in
+                savePreferences()
+                AppAnalytics.shared.trackSettingChanged(name: "heart_rate_drop_threshold_bpm", value: newValue)
+            }
+            .onChange(of: preferences.trendReversalAlertsEnabled) { _, newValue in
+                savePreferences()
+                AppAnalytics.shared.trackSettingChanged(name: "trend_reversal_alerts_enabled", value: newValue)
+            }
+            .onChange(of: preferences.improvementAlertsEnabled) { _, newValue in
+                savePreferences()
+                AppAnalytics.shared.trackSettingChanged(name: "improvement_alerts_enabled", value: newValue)
+            }
+            .onChange(of: preferences.warningAlertMetrics) { _, newValue in
+                savePreferences()
+                AppAnalytics.shared.trackSettingChanged(name: "warning_alert_metrics_count", value: newValue.count)
+            }
             .sheet(isPresented: $showExportSheet) {
                 if let url = webExportViewModel.exportedURL {
                     ShareSheet(items: [url])
+                        .onAppear {
+                            AppAnalytics.shared.trackShareSheetPresented(contentType: "web_report")
+                        }
                 }
             }
         }
@@ -223,6 +287,10 @@ struct MetricAlertPickerView: View {
                                 } else {
                                     selectedMetrics.warningAlertMetrics.remove(metric)
                                 }
+                                AppAnalytics.shared.trackSettingChanged(
+                                    name: "metric_alert_\(metric.rawValue)",
+                                    value: isOn
+                                )
                             }
                         )) {
                             HStack(spacing: 10) {
@@ -247,6 +315,8 @@ struct MetricAlertPickerView: View {
         }
         .navigationTitle("Alert Metrics")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear { AppAnalytics.shared.trackFeatureOpen(.metricAlertPicker) }
+        .onDisappear { AppAnalytics.shared.trackFeatureClose(.metricAlertPicker) }
     }
 }
 

@@ -6,10 +6,19 @@ struct HealthPulseApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     @AppStorage("healthpulse.onboardingCompleted") private var onboardingCompleted = false
+    @AppStorage("healthpulse.appTheme") private var appTheme: String = "system"
 
     @State private var healthKitManager: HealthKitManager
     @State private var analysisEngine = AnalysisEngine()
     @State private var deviceSourceManager: DeviceSourceManager
+
+    private var colorScheme: ColorScheme? {
+        switch appTheme {
+        case "dark": return .dark
+        case "light": return .light
+        default: return nil
+        }
+    }
 
     init() {
         let hkManager = HealthKitManager()
@@ -24,6 +33,7 @@ struct HealthPulseApp: App {
                 analysisEngine: analysisEngine,
                 deviceSourceManager: deviceSourceManager
             )
+            .preferredColorScheme(colorScheme)
             .fullScreenCover(isPresented: Binding(
                 get: { !onboardingCompleted },
                 set: { if !$0 { onboardingCompleted = true } }
