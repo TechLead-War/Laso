@@ -14,6 +14,7 @@ struct AnomalyDetector {
         let baselineValue: Double
         let isAboveBaseline: Bool
         let outsideNormalRange: Bool
+        let allTimePercentile: Double   // 0-100: where this value sits in all-time data
     }
 
     /// Z-score thresholds (adaptive to each metric's variability)
@@ -59,7 +60,8 @@ struct AnomalyDetector {
             currentValue: currentValue,
             baselineValue: baseline.mean,
             isAboveBaseline: currentValue > baseline.mean,
-            outsideNormalRange: outsideNormal
+            outsideNormalRange: outsideNormal,
+            allTimePercentile: 50  // Default; enriched in detectAll with full series data
         )
     }
 
@@ -78,7 +80,19 @@ struct AnomalyDetector {
             }
             let currentValue = recentSamples.map(\.value).mean
 
-            let result = detect(metric: metric, currentValue: currentValue, baseline: baseline)
+            var result = detect(metric: metric, currentValue: currentValue, baseline: baseline)
+            // Enrich with all-time percentile from full historical data
+            result = AnomalyResult(
+                metric: result.metric,
+                severity: result.severity,
+                deviationPercent: result.deviationPercent,
+                zScore: result.zScore,
+                currentValue: result.currentValue,
+                baselineValue: result.baselineValue,
+                isAboveBaseline: result.isAboveBaseline,
+                outsideNormalRange: result.outsideNormalRange,
+                allTimePercentile: series.percentile(of: currentValue)
+            )
             results.append(result)
         }
 

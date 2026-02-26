@@ -31,42 +31,62 @@ struct BaselineDriftDetector {
         // Need at least 30 days of baseline history
         guard history.count >= 30 else { return nil }
 
-        // Compare current baseline to baseline 30 days ago
-        let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
-        let olderBaselines = history.filter { $0.date <= thirtyDaysAgo }
+        // Compare across multiple time horizons — pick the most significant
+        let calendar = Calendar.current
+        let now = Date()
+        let comparisons: [(days: Int, label: String)] = [
+            (30, "month"),
+            (90, "3 months"),
+            (180, "6 months"),
+            (365, "year")
+        ]
 
-        guard let oldBaseline = olderBaselines.last else { return nil }
-        guard abs(oldBaseline.baseline.mean) > 0.001 else { return nil }
+        var bestDrift: (percent: Double, label: String, oldMean: Double)? = nil
 
-        let driftPercent = ((current.mean - oldBaseline.baseline.mean) / abs(oldBaseline.baseline.mean)) * 100
+        for (days, label) in comparisons {
+            let cutoff = calendar.date(byAdding: .day, value: -days, to: now) ?? now
+            let olderBaselines = history.filter { $0.date <= cutoff }
+            guard let oldBaseline = olderBaselines.last,
+                  abs(oldBaseline.baseline.mean) > 0.001 else { continue }
 
-        // Only report significant baseline drift (>8%)
-        guard abs(driftPercent) > 8 else { return nil }
+            let drift = ((current.mean - oldBaseline.baseline.mean) / abs(oldBaseline.baseline.mean)) * 100
+
+            // Longer periods need larger drift to be significant
+            let threshold: Double = days <= 30 ? 8 : (days <= 90 ? 6 : 5)
+            guard abs(drift) > threshold else { continue }
+
+            // Prefer longer-term drift (more meaningful) if significant
+            if bestDrift == nil || abs(drift) > abs(bestDrift!.percent) * 0.8 {
+                bestDrift = (drift, label, oldBaseline.baseline.mean)
+            }
+        }
+
+        guard let drift = bestDrift else { return nil }
 
         let improving: Bool
         if metric.higherIsBetter {
-            improving = driftPercent > 0
+            improving = drift.percent > 0
         } else {
-            improving = driftPercent < 0
+            improving = drift.percent < 0
         }
 
-        let absDrift = String(format: "%.1f", abs(driftPercent))
-        let direction = driftPercent > 0 ? "increased" : "decreased"
-        let oldFormatted = metric.formatValue(oldBaseline.baseline.mean)
+        let absDrift = String(format: "%.1f", abs(drift.percent))
+        let direction = drift.percent > 0 ? "increased" : "decreased"
+        let oldFormatted = metric.formatValue(drift.oldMean)
         let newFormatted = metric.formatValue(current.mean)
 
         return Insight(
             metric: metric,
-            title: "\(metric.displayName) Baseline Shifted",
-            summary: "Your \(metric.displayName.lowercased()) baseline has \(direction) \(absDrift)% over the last 30 days (\(oldFormatted) → \(newFormatted) \(metric.unit)).",
+            title: "\(metric.displayName) Baseline Shifted Over \(drift.label.capitalized)",
+            summary: "Your \(metric.displayName.lowercased()) baseline has \(direction) \(absDrift)% over the last \(drift.label) (\(oldFormatted) → \(newFormatted) \(metric.unit)).",
             recommendation: improving
-                ? "Your new normal is better than before. This baseline shift reflects genuine improvement in your \(metric.displayName.lowercased())."
-                : "Your \(metric.displayName.lowercased()) has been gradually worsening. Small daily changes compound — focus on reversing this trend now.",
+                ? "Your new normal is better than before. This baseline shift over \(drift.label) reflects genuine long-term improvement."
+                : "Your \(metric.displayName.lowercased()) has been gradually worsening over \(drift.label). Small daily changes compound — focus on reversing this trend.",
             severity: improving ? .info : .warning,
             trend: improving ? .improving : .declining,
             currentValue: current.mean,
-            baselineValue: oldBaseline.baseline.mean,
-            deviationPercent: driftPercent,
+            baselineValue: drift.oldMean,
+            deviationPercent: drift.percent,
             category: .baselineDrift
         )
     }

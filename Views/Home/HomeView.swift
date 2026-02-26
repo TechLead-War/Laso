@@ -69,7 +69,10 @@ struct HomeView: View {
                     // 2. Recovery
                     todaySection
 
-                    // 3. Today's Briefing — headline insight + smart action
+                    // 3. Illness Warning (only when active)
+                    illnessWarningCard
+
+                    // 4. Today's Briefing — actionable insights only
                     BodyInsightsSection(
                         viewModel: viewModel,
                         liveVM: liveViewModel,
@@ -82,33 +85,13 @@ struct HomeView: View {
                         }
                     )
 
-                    // 4. Needs Attention — top 2 actionable items
-                    needsAttentionSection
-                        .onAppear {
-                            AppAnalytics.shared.trackSectionImpression(section: .needsAttentionSection, screen: .home, metadata: ["item_count": topAttentionInsights.count])
-                        }
+                    // 5. Your Trends — improving/stable/declining + top movers
+                    todayTrendsSection
 
-                    // 5. From Your Data — top 2 correlations (pro feature)
-                    if FeatureGate.canAccess(.advancedAnalytics) {
-                        CorrelationsSection(
-                            correlations: Array(viewModel.topCorrelations.prefix(2)),
-                            onTapSeeAll: {
-                                AppAnalytics.shared.trackBlockTap(title: "See All Correlations", type: .correlationCard, screen: .home)
-                                navigationPath.append("correlationsDetail")
-                            },
-                            onTapMetric: { metric in
-                                AppAnalytics.shared.trackBlockTap(title: metric.displayName, type: .correlationCard, screen: .home)
-                                navigationPath.append(metric)
-                            }
-                        )
-                        .onAppear {
-                            AppAnalytics.shared.trackSectionImpression(section: .correlationsSection, screen: .home, metadata: ["correlation_count": viewModel.topCorrelations.prefix(2).count])
-                        }
-                    } else if !viewModel.topCorrelations.isEmpty {
-                        proTeaser(title: "Your Correlations", subtitle: "See how your metrics affect each other", icon: "arrow.triangle.branch")
-                    }
+                    // 6. Health Risks — moderate+ only
+                    todayRisksSection
 
-                    // 6. Weekly Review
+                    // 7. Weekly Review
                     WeeklyReviewEntryCard(
                         viewModel: WeeklyReviewViewModel(dashboardViewModel: viewModel)
                     ) {
@@ -295,80 +278,203 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Needs Attention (top 2 actionable insights)
-
-    private var topAttentionInsights: [Insight] {
-        Array(
-            viewModel.topActionableInsights
-                .filter { $0.severity == .critical || $0.severity == .warning }
-                .prefix(2)
-        )
-    }
+    // MARK: - Illness Warning Card
 
     @ViewBuilder
-    private var needsAttentionSection: some View {
-        let items = topAttentionInsights
-        if !items.isEmpty {
+    private var illnessWarningCard: some View {
+        if let warning = viewModel.topIllnessWarning {
             VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Text("Needs Attention")
-                        .font(.headline)
-
+                HStack(spacing: 8) {
+                    Image(systemName: "shield.lefthalf.filled.badge.checkmark")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(.red)
+                    Text("Early Warning")
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(.red)
                     Spacer()
-
-                    Button {
-                        AppAnalytics.shared.trackBlockTap(title: "See All Needs Attention", type: .seeAllNeedsAttention, screen: .home)
-                        navigationPath.append("insightsDetail")
-                    } label: {
-                        HStack(spacing: 4) {
-                            Text("See all")
-                                .font(.subheadline.weight(.medium))
-                            Image(systemName: "chevron.right")
-                                .font(.caption2.weight(.semibold))
-                        }
-                        .foregroundStyle(.tint)
-                    }
-                    .buttonStyle(.plain)
+                    // severity badge
+                    Text(warning.severity == .critical ? "High" : warning.severity == .warning ? "Moderate" : "Low")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(warning.severity == .critical ? .red : warning.severity == .warning ? .orange : .yellow, in: Capsule())
                 }
+
+                Text(warning.narrative)
+                    .font(.subheadline)
+                    .foregroundStyle(.primary)
+                    .lineLimit(4)
+
+                // Show active signals as pills
+                HStack(spacing: 6) {
+                    ForEach(warning.activeSignals, id: \.metric) { signal in
+                        HStack(spacing: 3) {
+                            Image(systemName: signal.metric.systemImageName)
+                                .font(.caption2)
+                            Text(signal.metric.displayName)
+                                .font(.caption2.weight(.medium))
+                        }
+                        .foregroundStyle(.red)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(.red.opacity(0.1), in: Capsule())
+                    }
+                }
+            }
+            .padding(14)
+            .background(.background, in: RoundedRectangle(cornerRadius: 16))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .strokeBorder(.red.opacity(0.2), lineWidth: 1)
+            )
+            .padding(.horizontal)
+        }
+    }
+
+    // MARK: - Today Trends Section
+
+    @ViewBuilder
+    private var todayTrendsSection: some View {
+        let summary = viewModel.trendsSummary
+        if summary.improving + summary.declining > 0 {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Your Trends")
+                    .font(.headline)
+                    .padding(.horizontal)
+
+                // Counters row
+                HStack(spacing: 0) {
+                    trendCounter(count: summary.improving, label: "Improving", icon: "arrow.up.right", color: .green)
+                    Divider().frame(height: 36)
+                    trendCounter(count: summary.stable, label: "Stable", icon: "arrow.right", color: .secondary)
+                    Divider().frame(height: 36)
+                    trendCounter(count: summary.declining, label: "Declining", icon: "arrow.down.right", color: .red)
+                }
+                .padding(.vertical, 10)
+                .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 14))
                 .padding(.horizontal)
 
-                ForEach(items) { insight in
-                    Button {
-                        AppAnalytics.shared.trackBlockTap(title: insight.metric.displayName, type: .actionCard, screen: .home)
-                        navigationPath.append(insight.metric)
-                    } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: insight.metric.systemImageName)
-                                .font(.body.weight(.semibold))
-                                .foregroundStyle(.white)
-                                .frame(width: 34, height: 34)
-                                .background(insight.metric.category.color, in: Circle())
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(insight.actionSummary)
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundStyle(.primary)
-                                    .lineLimit(2)
-
-                                Text(insight.metric.displayName)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                // Top movers (max 3)
+                if !summary.topMovers.isEmpty {
+                    VStack(spacing: 0) {
+                        ForEach(Array(summary.topMovers.prefix(3))) { mover in
+                            Button {
+                                navigationPath.append(mover.metric)
+                            } label: {
+                                moverRow(mover)
                             }
-
-                            Spacer()
-
-                            Image(systemName: "chevron.right")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.tertiary)
+                            .buttonStyle(.plain)
                         }
-                        .padding(12)
-                        .background(.background, in: RoundedRectangle(cornerRadius: 14))
+                    }
+                    .background(.background, in: RoundedRectangle(cornerRadius: 14))
+                    .padding(.horizontal)
+                }
+            }
+        }
+    }
+
+    private func trendCounter(count: Int, label: String, icon: String, color: Color) -> some View {
+        VStack(spacing: 3) {
+            HStack(spacing: 3) {
+                Image(systemName: icon)
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(color)
+                Text("\(count)")
+                    .font(.title3.weight(.bold).monospacedDigit())
+            }
+            Text(label)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func moverRow(_ mover: DashboardViewModel.MetricMover) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: mover.metric.systemImageName)
+                .font(.body)
+                .foregroundStyle(mover.metric.category.color)
+                .frame(width: 28)
+            Text(mover.metric.displayName)
+                .font(.subheadline)
+                .foregroundStyle(.primary)
+            Spacer()
+            Text("\(mover.changePercent > 0 ? "+" : "")\(String(format: "%.1f", mover.changePercent))%")
+                .font(.subheadline.weight(.semibold).monospacedDigit())
+                .foregroundStyle(mover.improving ? .green : .red)
+            Image(systemName: "chevron.right")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+    }
+
+    // MARK: - Today Health Risks Section
+
+    @ViewBuilder
+    private var todayRisksSection: some View {
+        let risks = viewModel.todayHealthRisks
+        if !risks.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Health Risks")
+                    .font(.headline)
+                    .padding(.horizontal)
+
+                ForEach(risks.prefix(3)) { risk in
+                    Button {
+                        navigationPath.append(risk.riskType)
+                    } label: {
+                        riskRow(risk)
                     }
                     .buttonStyle(.plain)
                     .padding(.horizontal)
                 }
             }
         }
+    }
+
+    private func riskRow(_ risk: HealthRisk) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: risk.riskType.systemImageName)
+                .font(.title3)
+                .foregroundStyle(risk.riskGrade.color)
+                .frame(width: 36, height: 36)
+                .background(risk.riskGrade.color.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(risk.riskType.displayName)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.primary)
+
+                Text(risk.riskGrade.displayName)
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(risk.riskGrade.color)
+            }
+
+            Spacer()
+
+            // Mini gauge
+            ZStack {
+                Circle()
+                    .stroke(Color(.systemGray5), lineWidth: 3)
+                    .frame(width: 32, height: 32)
+                Circle()
+                    .trim(from: 0, to: Double(risk.level) / 100.0)
+                    .stroke(risk.riskGrade.color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                    .frame(width: 32, height: 32)
+                Text("\(risk.level)")
+                    .font(.system(size: 10, weight: .bold, design: .rounded).monospacedDigit())
+            }
+
+            Image(systemName: "chevron.right")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+        }
+        .padding(12)
+        .background(.background, in: RoundedRectangle(cornerRadius: 14))
     }
 
     // MARK: - Today Section

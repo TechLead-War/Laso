@@ -62,6 +62,13 @@ enum AppKeys {
         static let lowBatteryAlertShown     = "healthpulse.watchMonitor.lowBatteryAlertShown"
     }
 
+    // MARK: - Billing Grace
+
+    enum Billing {
+        static let graceStartDate = "laso.billing.grace_start_date"
+        static let lastSubscribedDate = "laso.billing.last_subscribed_date"
+    }
+
     // MARK: - Notifications
 
     enum Notifications {

@@ -241,19 +241,35 @@ final class LiveViewModel {
         currentHeartRate != nil || currentBloodOxygen != nil || currentRespiratoryRate != nil
     }
 
-    /// True only if we have live vitals AND they were recorded recently (within 10 minutes)
+    /// True only if we have live vitals AND they were recorded recently (within 30 minutes).
+    /// Apple Watch measures HR periodically (not continuously), so 30 min accommodates normal gaps.
     var hasFreshLiveData: Bool {
-        let tenMinutes: TimeInterval = 10 * 60
+        let thirtyMinutes: TimeInterval = 30 * 60
         let now = Date()
-        if let ts = heartRateTimestamp, now.timeIntervalSince(ts) < tenMinutes { return true }
-        if let ts = bloodOxygenTimestamp, now.timeIntervalSince(ts) < tenMinutes { return true }
-        if let ts = respiratoryRateTimestamp, now.timeIntervalSince(ts) < tenMinutes { return true }
+        if let ts = heartRateTimestamp, now.timeIntervalSince(ts) < thirtyMinutes { return true }
+        if let ts = bloodOxygenTimestamp, now.timeIntervalSince(ts) < thirtyMinutes { return true }
+        if let ts = respiratoryRateTimestamp, now.timeIntervalSince(ts) < thirtyMinutes { return true }
         return false
     }
 
-    /// True if vital data exists but is older than 10 minutes
+    /// True if we have vital data recorded within the last 2 hours — watch is likely still being worn
+    var hasRecentLiveData: Bool {
+        let twoHours: TimeInterval = 2 * 3600
+        let now = Date()
+        if let ts = heartRateTimestamp, now.timeIntervalSince(ts) < twoHours { return true }
+        if let ts = bloodOxygenTimestamp, now.timeIntervalSince(ts) < twoHours { return true }
+        if let ts = respiratoryRateTimestamp, now.timeIntervalSince(ts) < twoHours { return true }
+        return false
+    }
+
+    /// True if vital data exists but is older than 2 hours — watch is probably not being worn
     var isVitalDataStale: Bool {
-        hasAnyLiveData && !hasFreshLiveData
+        hasAnyLiveData && !hasRecentLiveData
+    }
+
+    /// True if data exists but is aging (30 min – 2 hr old) — show subtle "last reading X min ago" banner
+    var isLiveDataAging: Bool {
+        hasAnyLiveData && !hasFreshLiveData && hasRecentLiveData
     }
 
     /// The most recent vital timestamp across all vitals

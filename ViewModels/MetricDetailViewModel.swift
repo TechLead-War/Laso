@@ -83,6 +83,86 @@ final class MetricDetailViewModel {
         anomaly?.outsideNormalRange ?? false
     }
 
+    // MARK: - Historical Context
+
+    var historicalContext: HistoricalAnalyzer.HistoricalContext? {
+        analysisEngine.historicalContext[metric]
+    }
+
+    /// Formatted historical facts for display (non-empty only when history is meaningful)
+    var historicalFacts: [HistoricalFact] {
+        guard let ctx = historicalContext else { return [] }
+        var facts: [HistoricalFact] = []
+        let monthName = Calendar.current.monthSymbols[Calendar.current.component(.month, from: Date()) - 1]
+
+        // All-time percentile
+        if ctx.totalDataPoints >= 90 {
+            let pct = Int(ctx.allTimePercentile.rounded())
+            let label: String
+            if pct >= 90 { label = "Top \(100 - pct)% of your \(ctx.yearsOfData > 1 ? "\(ctx.yearsOfData)-year" : "") history" }
+            else if pct <= 10 { label = "Bottom \(pct)% of your \(ctx.yearsOfData > 1 ? "\(ctx.yearsOfData)-year" : "") history" }
+            else { label = "\(ordinal(pct)) percentile in your history" }
+            facts.append(HistoricalFact(icon: "chart.bar.fill", text: label))
+        }
+
+        // Year-over-year
+        if let yoy = ctx.yearOverYearChange, abs(yoy) > 3 {
+            let direction = yoy > 0 ? "up" : "down"
+            facts.append(HistoricalFact(
+                icon: "calendar.badge.clock",
+                text: "\(String(format: "%.0f", abs(yoy)))% \(direction) vs \(monthName) last year"
+            ))
+        }
+
+        // Seasonal
+        if let seasonalDev = ctx.seasonalDeviation, abs(seasonalDev) > 8, ctx.yearsOfData >= 2 {
+            let direction = seasonalDev > 0 ? "above" : "below"
+            facts.append(HistoricalFact(
+                icon: "leaf.fill",
+                text: "\(String(format: "%.0f", abs(seasonalDev)))% \(direction) your typical \(monthName)"
+            ))
+        }
+
+        // Long-term trajectory
+        if let change = ctx.longTermChangePercent, abs(change) > 5, ctx.totalDataPoints >= 180 {
+            let direction = change > 0 ? "up" : "down"
+            let period = ctx.yearsOfData >= 2 ? "\(ctx.yearsOfData) years" : "the past year"
+            facts.append(HistoricalFact(
+                icon: "chart.line.uptrend.xyaxis",
+                text: "\(String(format: "%.0f", abs(change)))% \(direction) over \(period)"
+            ))
+        }
+
+        // All-time extreme
+        if ctx.isAllTimeExtreme, ctx.totalDataPoints >= 180 {
+            let isHigh = ctx.allTimePercentile >= 95
+            facts.append(HistoricalFact(
+                icon: "trophy.fill",
+                text: "Near \(ctx.yearsOfData > 1 ? "\(ctx.yearsOfData)-year" : "all-time") \(isHigh ? "high" : "low")"
+            ))
+        }
+
+        return facts
+    }
+
+    struct HistoricalFact: Identifiable {
+        let id = UUID()
+        let icon: String
+        let text: String
+    }
+
+    private func ordinal(_ n: Int) -> String {
+        let suffix: String
+        let ones = n % 10
+        let tens = n % 100
+        if tens >= 11 && tens <= 13 { suffix = "th" }
+        else if ones == 1 { suffix = "st" }
+        else if ones == 2 { suffix = "nd" }
+        else if ones == 3 { suffix = "rd" }
+        else { suffix = "th" }
+        return "\(n)\(suffix)"
+    }
+
     // MARK: - Score Breakdown
 
     var scoreBreakdown: [ScoreComponent] {

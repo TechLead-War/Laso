@@ -79,6 +79,11 @@ struct MetricDetailView: View {
                             AppAnalytics.shared.trackSectionImpression(section: .contextualSummary, screen: .metricDetail, metadata: ["metric": viewModel.metric.rawValue])
                         }
 
+                    // Historical Context
+                    if !viewModel.historicalFacts.isEmpty {
+                        historicalContextSection
+                    }
+
                     // Score Breakdown
                     if !viewModel.scoreBreakdown.isEmpty {
                         scoreBreakdownSection
@@ -308,6 +313,48 @@ struct MetricDetailView: View {
             }
             .background(.background, in: RoundedRectangle(cornerRadius: 14))
             .padding(.horizontal)
+        }
+    }
+
+    private var historicalContextSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "clock.arrow.circlepath")
+                    .font(.subheadline)
+                    .foregroundStyle(.tint)
+                Text("Historical Context")
+                    .font(.headline)
+            }
+            .padding(.horizontal)
+
+            VStack(spacing: 0) {
+                ForEach(viewModel.historicalFacts) { fact in
+                    HStack(spacing: 10) {
+                        Image(systemName: fact.icon)
+                            .font(.caption)
+                            .foregroundStyle(.tint)
+                            .frame(width: 20)
+
+                        Text(fact.text)
+                            .font(.subheadline)
+                            .foregroundStyle(.primary)
+
+                        Spacer()
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 9)
+                }
+            }
+            .background(.background, in: RoundedRectangle(cornerRadius: 14))
+            .padding(.horizontal)
+
+            // Data depth footnote
+            if let ctx = viewModel.historicalContext {
+                Text("Based on \(ctx.totalDataPoints) data points over \(ctx.yearsOfData) \(ctx.yearsOfData == 1 ? "year" : "years")")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .padding(.horizontal)
+            }
         }
     }
 

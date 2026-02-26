@@ -22,21 +22,35 @@ final class SubscriptionManager {
         case unknown
         case trial(daysRemaining: Int)
         case subscribed(expirationDate: Date)
+        /// Apple is retrying the payment — user keeps full access silently
+        case billingGrace(daysSinceExpiry: Int)
         case expired
     }
 
     /// Whether the user can access the app right now.
     var hasAccess: Bool {
         switch status {
-        case .trial, .subscribed: return true
+        case .trial, .subscribed, .billingGrace: return true
         case .unknown, .expired: return false
         }
+    }
+
+    /// True when we're in a silent billing retry grace period.
+    var isBillingGrace: Bool {
+        if case .billingGrace = status { return true }
+        return false
     }
 
     /// Formatted trial text for UI (e.g., "5 days left").
     var trialText: String? {
         guard case .trial(let days) = status else { return nil }
         return days == 1 ? "1 day left in trial" : "\(days) days left in trial"
+    }
+
+    /// Days into the billing grace period, if applicable.
+    var billingGraceDays: Int? {
+        if case .billingGrace(let days) = status { return days }
+        return nil
     }
 
     /// Yearly product (primary offering).
@@ -49,6 +63,9 @@ final class SubscriptionManager {
         products.first { $0.id == SubscriptionConfig.monthlyProductID }
     }
 
+    /// Maximum days to silently grant access during billing retry (covers a salary cycle).
+    static let billingGraceDays = 30
+
     // MARK: - Private
 
     private var transactionListener: Task<Void, Error>?
@@ -56,6 +73,8 @@ final class SubscriptionManager {
 
     private enum Key {
         static let installDate = AppKeys.Lifecycle.installDate
+        static let graceStartDate = AppKeys.Billing.graceStartDate
+        static let lastSubscribedDate = AppKeys.Billing.lastSubscribedDate
     }
 
     // MARK: - Init
@@ -72,6 +91,7 @@ final class SubscriptionManager {
     func configure() async {
         await loadProducts()
         await refreshStatus()
+        AppAnalytics.shared.updateSubscriptionProperties(status: status)
     }
 
     // MARK: - Products
@@ -100,8 +120,9 @@ final class SubscriptionManager {
             case .success(let verification):
                 let transaction = try checkVerified(verification)
                 await transaction.finish()
+                let wasTrialBefore = { if case .trial = self.status { return true }; return false }()
                 await refreshStatus()
-                trackPurchase(product: product)
+                trackPurchase(product: product, isTrialConversion: wasTrialBefore)
 
             case .userCancelled:
                 break
@@ -131,20 +152,90 @@ final class SubscriptionManager {
     // MARK: - Status Check
 
     func refreshStatus() async {
-        // Check for an active subscription entitlement first
+        // 1. Check for an active subscription entitlement
         for await result in Transaction.currentEntitlements {
             guard case .verified(let transaction) = result else { continue }
 
             if SubscriptionConfig.allProductIDs.contains(transaction.productID) {
                 if let expiration = transaction.expirationDate, expiration > Date() {
                     status = .subscribed(expirationDate: expiration)
+                    // Record that we were subscribed — used for grace period tracking
+                    defaults.set(Date(), forKey: Key.lastSubscribedDate)
+                    clearGraceState()
                     return
                 }
             }
         }
 
-        // No active subscription — check trial
+        // 2. No active entitlement — check if Apple is retrying the payment
+        if await isInBillingRetry() {
+            let graceDays = startOrContinueGrace()
+            if graceDays <= Self.billingGraceDays {
+                status = .billingGrace(daysSinceExpiry: graceDays)
+                return
+            }
+            // Grace period exhausted — fall through to trial/expired
+            clearGraceState()
+        }
+
+        // 3. Check our own extended grace (Apple stopped retrying but < 30 days since grace started)
+        if let graceStart = defaults.object(forKey: Key.graceStartDate) as? Date {
+            let daysSinceGrace = Calendar.current.dateComponents([.day], from: graceStart, to: Date()).day ?? 0
+            if daysSinceGrace <= Self.billingGraceDays {
+                status = .billingGrace(daysSinceExpiry: daysSinceGrace)
+                return
+            }
+            // Grace exhausted
+            clearGraceState()
+        }
+
+        // 4. No subscription and no grace — check trial
         resolveTrialStatus()
+    }
+
+    /// Checks StoreKit 2 subscription status for billing retry or grace period states.
+    private func isInBillingRetry() async -> Bool {
+        for productID in SubscriptionConfig.allProductIDs {
+            guard let product = products.first(where: { $0.id == productID }),
+                  let subscription = product.subscription else { continue }
+
+            do {
+                let statuses = try await subscription.status
+                for status in statuses {
+                    switch status.state {
+                    case .inBillingRetryPeriod, .inGracePeriod:
+                        return true
+                    default:
+                        continue
+                    }
+                }
+            } catch {
+                continue
+            }
+        }
+        return false
+    }
+
+    /// Starts the grace period timer if not already started, returns days since grace began.
+    private func startOrContinueGrace() -> Int {
+        if let existing = defaults.object(forKey: Key.graceStartDate) as? Date {
+            return Calendar.current.dateComponents([.day], from: existing, to: Date()).day ?? 0
+        }
+        // First time entering grace — record the start
+        defaults.set(Date(), forKey: Key.graceStartDate)
+        AppAnalytics.shared.trackAction("billing_grace_started")
+        return 0
+    }
+
+    /// Clears grace period state when subscription is restored or grace expires.
+    private func clearGraceState() {
+        if defaults.object(forKey: Key.graceStartDate) != nil {
+            let wasActive = isBillingGrace
+            defaults.removeObject(forKey: Key.graceStartDate)
+            if wasActive {
+                AppAnalytics.shared.trackAction("billing_grace_resolved")
+            }
+        }
     }
 
     private func resolveTrialStatus() {
@@ -168,7 +259,15 @@ final class SubscriptionManager {
             for await result in Transaction.updates {
                 guard case .verified(let transaction) = result else { continue }
                 await transaction.finish()
+                let previousStatus = self?.status
                 await self?.refreshStatus()
+                if let newStatus = self?.status {
+                    AppAnalytics.shared.updateSubscriptionProperties(status: newStatus)
+                }
+                // Detect renewals: was subscribed before, still subscribed after
+                if case .subscribed = previousStatus, case .subscribed = self?.status {
+                    AppAnalytics.shared.trackSubscriptionRenewed()
+                }
             }
         }
     }
@@ -184,15 +283,13 @@ final class SubscriptionManager {
 
     // MARK: - Analytics
 
-    private func trackPurchase(product: Product) {
-        let region = Locale.current.region?.identifier ?? "unknown"
-        let tier = SubscriptionConfig.currentTier.rawValue
-        AppAnalytics.shared.trackAction("subscription_purchased", metadata: [
-            "product_id": product.id,
-            "price": product.displayPrice,
-            "region": region,
-            "price_tier": tier,
-        ])
+    private func trackPurchase(product: Product, isTrialConversion: Bool) {
+        AppAnalytics.shared.trackSubscriptionPurchased(
+            productID: product.id,
+            price: product.displayPrice,
+            isTrialConversion: isTrialConversion
+        )
+        AppAnalytics.shared.updateSubscriptionProperties(status: status)
     }
 
     // MARK: - Error

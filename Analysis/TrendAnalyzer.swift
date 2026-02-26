@@ -10,6 +10,8 @@ struct TrendAnalyzer {
         let movingAverage7d: Double
         let movingAverage30d: Double
         let movingAverage90d: Double
+        let movingAverage180d: Double   // 6-month average
+        let movingAverage365d: Double   // 1-year average
         let inflection: Inflection      // Whether the trend is accelerating, decelerating, or reversing
 
         /// Rate-of-change classification: how fast is the metric changing?
@@ -19,6 +21,15 @@ struct TrendAnalyzer {
             if absWoW > 8 { return .moderate }
             if absWoW > 2 { return .gradual }
             return .negligible
+        }
+
+        /// Whether the current value is above or below the long-term (1-year) average
+        var longTermTrend: TrendDirection {
+            guard movingAverage365d > 0 else { return .stable }
+            let diff = (movingAverage30d - movingAverage365d) / movingAverage365d * 100
+            if diff > 3 { return .improving }
+            if diff < -3 { return .declining }
+            return .stable
         }
     }
 
@@ -72,7 +83,7 @@ struct TrendAnalyzer {
         }
 
         guard !periodSamples.isEmpty else {
-            return TrendResult(direction: .stable, slope: 0, weekOverWeekChange: 0, movingAverage7d: 0, movingAverage30d: 0, movingAverage90d: 0, inflection: .steady)
+            return TrendResult(direction: .stable, slope: 0, weekOverWeekChange: 0, movingAverage7d: 0, movingAverage30d: 0, movingAverage90d: 0, movingAverage180d: 0, movingAverage365d: 0, inflection: .steady)
         }
 
         // Linear regression on the period's data (use last 1/3 of period for slope)
@@ -84,6 +95,8 @@ struct TrendAnalyzer {
         let ma7 = series.mean(lastDays: 7)
         let ma30 = series.mean(lastDays: 30)
         let ma90 = series.mean(lastDays: 90)
+        let ma180 = series.mean(lastDays: 180)
+        let ma365 = series.mean(lastDays: 365)
 
         // Period-over-period comparison (this period vs previous same-length period)
         let periodDays = days ?? 30
@@ -118,6 +131,8 @@ struct TrendAnalyzer {
             movingAverage7d: ma7,
             movingAverage30d: ma30,
             movingAverage90d: ma90,
+            movingAverage180d: ma180,
+            movingAverage365d: ma365,
             inflection: inflection
         )
     }

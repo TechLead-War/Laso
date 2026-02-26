@@ -28,6 +28,9 @@ struct LiveView: View {
                     lastWorkoutCard
                     statusFooter
                 } else {
+                    if viewModel.isLiveDataAging {
+                        agingDataBanner
+                    }
                     heartRateHeroCard
                         .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .heartRateHeroCard, screen: .live) }
                     vitalSignsRow
@@ -156,6 +159,43 @@ struct LiveView: View {
         }
     }
 
+    // MARK: - Aging Data Banner
+
+    /// Subtle banner shown when live data exists but is 30 min – 2 hr old
+    private var agingDataBanner: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "clock")
+                .font(.caption2.weight(.medium))
+                .foregroundStyle(.secondary)
+
+            if let ts = viewModel.mostRecentVitalTimestamp {
+                Text("Last reading ")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                + Text(ts, style: .relative)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                + Text(" ago")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("Waiting for new readings")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Image(systemName: "applewatch")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(.orange.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
+        .padding(.horizontal)
+    }
+
     private func staleReadingPill(icon: String, color: Color, value: String, unit: String, timestamp: Date?) -> some View {
         VStack(spacing: 4) {
             HStack(spacing: 4) {
@@ -241,7 +281,7 @@ struct LiveView: View {
 
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(viewModel.hasFreshLiveData ? .green : (viewModel.isVitalDataStale ? .orange : .gray))
+                        .fill(viewModel.hasFreshLiveData ? .green : (viewModel.isLiveDataAging ? .yellow : (viewModel.isVitalDataStale ? .orange : .gray)))
                         .frame(width: 8, height: 8)
                         .shadow(color: viewModel.hasFreshLiveData ? .green.opacity(0.6) : .clear, radius: 4)
 
@@ -265,6 +305,8 @@ struct LiveView: View {
     private var liveStatusLabel: String {
         if viewModel.hasFreshLiveData {
             return "Streaming"
+        } else if viewModel.isLiveDataAging {
+            return "Last reading aging"
         } else if viewModel.isVitalDataStale {
             return "Data is stale — wear your watch"
         } else if viewModel.isStreaming {

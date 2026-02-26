@@ -10,8 +10,8 @@ struct FeatureGate {
     /// The current user's tier string for feature flag lookup.
     static var currentTier: String {
         switch subscription.status {
-        case .trial, .subscribed: return "pro"
-        case .unknown, .expired:  return "free"
+        case .trial, .subscribed, .billingGrace: return "pro"
+        case .unknown, .expired: return "free"
         }
     }
 

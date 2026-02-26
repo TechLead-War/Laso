@@ -18,6 +18,9 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
     case scoreTrajectory
     case baselineDrift
     case multiMetricCluster
+    case illnessWarning      // "Early Warning"
+    case causalChain         // "Cause & Effect"
+    case crossMetricAnomaly  // "Cross-Metric"
 
     var displayName: String {
         switch self {
@@ -32,6 +35,9 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .scoreTrajectory: return "Trajectory"
         case .baselineDrift: return "Drift"
         case .multiMetricCluster: return "Cluster"
+        case .illnessWarning: return "Early Warning"
+        case .causalChain: return "Cause & Effect"
+        case .crossMetricAnomaly: return "Cross-Metric"
         }
     }
 
@@ -48,6 +54,9 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .scoreTrajectory: return "chart.line.uptrend.xyaxis.circle.fill"
         case .baselineDrift: return "arrow.up.and.down.circle.fill"
         case .multiMetricCluster: return "exclamationmark.3"
+        case .illnessWarning: return "shield.lefthalf.filled.badge.checkmark"
+        case .causalChain: return "arrow.triangle.turn.up.right.diamond.fill"
+        case .crossMetricAnomaly: return "circle.grid.cross.fill"
         }
     }
 
@@ -64,6 +73,9 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .scoreTrajectory: return .mint
         case .baselineDrift: return .cyan
         case .multiMetricCluster: return .pink
+        case .illnessWarning: return .red
+        case .causalChain: return .indigo
+        case .crossMetricAnomaly: return .purple
         }
     }
 }

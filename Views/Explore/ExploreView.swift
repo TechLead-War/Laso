@@ -1,7 +1,8 @@
 import SwiftUI
 import SwiftData
 
-/// Data exploration tab with overall score and category drill-down list
+/// Data exploration tab — deep-dive dashboard surfacing score breakdown,
+/// historical context, correlations, and category scores from the analysis engine.
 struct ExploreView: View {
     let viewModel: DashboardViewModel
     @Binding var navigationPath: NavigationPath
@@ -9,42 +10,38 @@ struct ExploreView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-                // Health Score hero
-                healthScoreHero
-                    .padding(.horizontal)
+                if hasScoreData {
+                    // 1. Score Hero with trend
+                    scoreHeroSection
+                        .padding(.horizontal)
 
-                // Category rows
-                VStack(spacing: 0) {
-                    ForEach(HealthCategory.allCases) { category in
-                        Button {
-                            AppAnalytics.shared.trackBlockTap(title: category.displayName, type: .categoryRow, screen: .explore)
-                            navigationPath.append(category)
-                        } label: {
-                            ExploreCategoryRow(
-                                category: category,
-                                score: viewModel.analysisEngine.score(for: category)?.score,
-                                insightCount: viewModel.analysisEngine.insights(for: category).count
-                            )
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityElement(children: .combine)
-                        .accessibilityLabel("\(category.displayName), \(viewModel.analysisEngine.score(for: category).map { "score \($0.score)" } ?? "no data"), \(viewModel.analysisEngine.insights(for: category).count) insights")
-                        .accessibilityHint("View \(category.displayName) details")
+                    // 2. Data depth bar
+                    dataSummaryBar
+                        .padding(.horizontal)
 
-                        if category != HealthCategory.allCases.last {
-                            Divider()
-                                .padding(.leading, 56)
-                        }
+                    // 3. Score Breakdown — what's driving the score
+                    scoreBreakdownSection
+                        .padding(.horizontal)
+
+                    // 4. From Your History
+                    if !viewModel.historicalHighlights.isEmpty {
+                        historicalSection
                     }
-                }
-                .background(.background, in: RoundedRectangle(cornerRadius: 14))
-                .padding(.horizontal)
-                .onAppear {
-                    AppAnalytics.shared.trackSectionImpression(section: .categoryList, screen: .explore, metadata: [
-                        "category_count": HealthCategory.allCases.count
-                    ])
+
+                    // 5. Correlations preview
+                    if FeatureGate.canAccess(.advancedAnalytics), !viewModel.topCorrelations.isEmpty {
+                        correlationsPreview
+                    }
+
+                    // 6. Categories drill-down
+                    categoriesSection
+                        .padding(.horizontal)
+                } else {
+                    emptyState
+                        .padding(.horizontal)
                 }
             }
+            .padding(.bottom, 16)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("Explore")
@@ -54,100 +51,364 @@ struct ExploreView: View {
             AppAnalytics.shared.trackFeatureOpen(.explore)
             AppAnalytics.shared.trackActivationMilestone(.firstScoreSeen)
             AppAnalytics.shared.trackCoreAction(.viewedScore, screen: .explore)
-            AppAnalytics.shared.trackLastMeaningfulAction(action: "viewed_score", screen: .explore)
         }
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.explore) }
         .refreshable {
             AppAnalytics.shared.trackPullToRefresh(screen: .explore)
-            AppAnalytics.shared.trackActivationMilestone(.firstPullToRefresh)
-            AppAnalytics.shared.trackCoreAction(.pulledToRefresh, screen: .explore)
             await viewModel.refresh()
         }
     }
+
+    // MARK: - Data
 
     private var hasScoreData: Bool {
         !viewModel.analysisEngine.categoryScores.isEmpty
     }
 
-    private var healthScoreHero: some View {
-        VStack(spacing: 12) {
-            if hasScoreData {
-                HStack(spacing: 20) {
-                    HealthScoreRing(
-                        score: viewModel.overallScore.score,
-                        label: "",
-                        size: 100,
-                        lineWidth: 10
-                    )
+    // MARK: - 1. Score Hero
 
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Your Health Score")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+    private var scoreHeroSection: some View {
+        VStack(spacing: 14) {
+            HStack(spacing: 20) {
+                HealthScoreRing(
+                    score: viewModel.overallScore.score,
+                    label: "",
+                    size: 100,
+                    lineWidth: 10
+                )
 
-                        Text(grade)
-                            .font(.system(size: 44, weight: .bold, design: .rounded))
-                            .foregroundStyle(gradeColor)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Health Score")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
 
+                    Text(grade)
+                        .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .foregroundStyle(gradeColor)
+
+                    // Score trend from last week
+                    if let delta = viewModel.scoreChangeFromLastWeek {
+                        HStack(spacing: 4) {
+                            Image(systemName: delta > 0 ? "arrow.up.right" : "arrow.down.right")
+                                .font(.caption2.weight(.bold))
+                            Text("\(delta > 0 ? "+" : "")\(delta) pts this week")
+                                .font(.caption.weight(.medium))
+                        }
+                        .foregroundStyle(delta > 0 ? .green : .red)
+                    } else {
                         Text(scoreLabel)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
-
-                    Spacer()
                 }
 
-                // Show weakest category to guide improvement
-                if let weakest = weakestCategory {
-                    HStack(spacing: 6) {
-                        Image(systemName: weakest.category.systemImageName)
-                            .font(.caption)
-                            .foregroundStyle(weakest.category.color)
-                        Text("Focus on \(weakest.category.displayName) to improve your score")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                    }
-                    .padding(10)
-                    .background(weakest.category.color.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
-                    .onAppear {
-                        AppAnalytics.shared.trackSectionImpression(section: .weakestCategoryBanner, screen: .explore, metadata: [
-                            "weakest_category": weakest.category.rawValue,
-                            "weakest_score": weakest.score
-                        ])
-                    }
-                }
-            } else {
-                // No analysis data yet
-                HStack(spacing: 16) {
-                    Image(systemName: "heart.text.clipboard")
-                        .font(.system(size: 40))
+                Spacer()
+            }
+
+            // Weakest category suggestion
+            if let weakest = weakestCategory {
+                HStack(spacing: 6) {
+                    Image(systemName: weakest.category.systemImageName)
+                        .font(.caption)
+                        .foregroundStyle(weakest.category.color)
+                    Text("Focus on \(weakest.category.displayName) to improve your score")
+                        .font(.caption)
                         .foregroundStyle(.secondary)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Your Health Score")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-
-                        Text("Collecting data...")
-                            .font(.title3.weight(.medium))
-                            .foregroundStyle(.primary)
-
-                        Text("Wear your watch and sync health data to see your score")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
                     Spacer()
                 }
+                .padding(10)
+                .background(weakest.category.color.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
             }
         }
         .padding(16)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
-        .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .healthScoreHero, screen: .explore) }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(hasScoreData ? "Health score \(viewModel.overallScore.score) out of 100, grade \(grade), \(scoreLabel)" : "Health score not yet available")
     }
+
+    // MARK: - 2. Data Summary Bar
+
+    private var dataSummaryBar: some View {
+        let depth = viewModel.dataDepth
+        let insightCount = viewModel.focusedInsights.count
+
+        return HStack(spacing: 0) {
+            dataStat(value: "\(depth.metricsTracked)", label: "Metrics")
+            Divider().frame(height: 28)
+            dataStat(value: formatDataPoints(depth.totalDataPoints), label: "Data Points")
+            if depth.daysOfData > 0 {
+                Divider().frame(height: 28)
+                dataStat(value: "\(depth.daysOfData)", label: depth.daysOfData == 1 ? "Day" : "Days")
+            }
+            Divider().frame(height: 28)
+            dataStat(value: "\(insightCount)", label: "Insights")
+        }
+        .padding(.vertical, 10)
+        .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    private func dataStat(value: String, label: String) -> some View {
+        VStack(spacing: 2) {
+            Text(value)
+                .font(.subheadline.weight(.bold).monospacedDigit())
+            Text(label)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func formatDataPoints(_ count: Int) -> String {
+        if count >= 10_000 { return "\(count / 1000)k" }
+        if count >= 1_000 { return String(format: "%.1fk", Double(count) / 1000) }
+        return "\(count)"
+    }
+
+    // MARK: - 3. Score Breakdown
+
+    @ViewBuilder
+    private var scoreBreakdownSection: some View {
+        if let explanation = viewModel.scoreExplanation {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("What's Driving Your Score")
+                    .font(.headline)
+
+                // Top factors
+                ForEach(Array(explanation.topFactors.prefix(4).enumerated()), id: \.offset) { _, factor in
+                    HStack(spacing: 10) {
+                        Image(systemName: factor.metric.systemImageName)
+                            .font(.caption)
+                            .foregroundStyle(factor.metric.category.color)
+                            .frame(width: 24)
+
+                        Text(factor.reason)
+                            .font(.caption)
+                            .foregroundStyle(.primary)
+                            .lineLimit(2)
+
+                        Spacer()
+
+                        Text("\(factor.impact > 0 ? "+" : "")\(factor.impact)")
+                            .font(.subheadline.weight(.bold).monospacedDigit())
+                            .foregroundStyle(factor.isPositive ? .green : .red)
+                    }
+                    .padding(.vertical, 4)
+                }
+
+                // Category weights
+                if !explanation.categoryContributions.isEmpty {
+                    Divider()
+                        .padding(.vertical, 4)
+
+                    HStack(spacing: 0) {
+                        ForEach(explanation.categoryContributions.sorted(by: { $0.weight > $1.weight }).prefix(4), id: \.category) { contrib in
+                            VStack(spacing: 2) {
+                                Image(systemName: contrib.category.systemImageName)
+                                    .font(.caption2)
+                                    .foregroundStyle(contrib.category.color)
+                                Text("\(contrib.score)")
+                                    .font(.caption.weight(.bold).monospacedDigit())
+                                Text("\(Int(contrib.weight * 100))%")
+                                    .font(.system(size: 8))
+                                    .foregroundStyle(.secondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                    }
+                }
+            }
+            .padding(16)
+            .background(.background, in: RoundedRectangle(cornerRadius: 16))
+        }
+    }
+
+    // MARK: - 4. From Your History
+
+    private var historicalSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("From Your History")
+                .font(.headline)
+                .padding(.horizontal)
+
+            ForEach(viewModel.historicalHighlights) { highlight in
+                Button {
+                    navigationPath.append(highlight.metric)
+                } label: {
+                    historicalCard(highlight)
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal)
+            }
+        }
+    }
+
+    private func historicalCard(_ highlight: DashboardViewModel.HistoricalHighlight) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: highlight.icon)
+                .font(.body)
+                .foregroundStyle(highlight.isPositive ? .green : .orange)
+                .frame(width: 32, height: 32)
+                .background(
+                    (highlight.isPositive ? Color.green : Color.orange).opacity(0.12),
+                    in: RoundedRectangle(cornerRadius: 8)
+                )
+
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Text(highlight.metric.displayName)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    Text(highlight.typeLabel)
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(highlight.isPositive ? .green : .orange)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 1)
+                        .background(
+                            (highlight.isPositive ? Color.green : Color.orange).opacity(0.12),
+                            in: Capsule()
+                        )
+                }
+
+                Text(highlight.title)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.primary)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+        }
+        .padding(12)
+        .background(.background, in: RoundedRectangle(cornerRadius: 14))
+    }
+
+    // MARK: - 5. Correlations Preview
+
+    private var correlationsPreview: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Connections")
+                    .font(.headline)
+
+                Spacer()
+
+                Button {
+                    navigationPath.append("correlationsDetail")
+                } label: {
+                    HStack(spacing: 4) {
+                        Text("See all")
+                            .font(.subheadline.weight(.medium))
+                        Image(systemName: "chevron.right")
+                            .font(.caption2.weight(.semibold))
+                    }
+                    .foregroundStyle(.tint)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal)
+
+            ForEach(Array(viewModel.topCorrelations.prefix(2))) { correlation in
+                correlationCard(correlation)
+                    .padding(.horizontal)
+            }
+        }
+    }
+
+    private func correlationCard(_ c: HealthCorrelation) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: c.metricA.systemImageName)
+                .font(.caption)
+                .foregroundStyle(c.metricA.category.color)
+                .frame(width: 24, height: 24)
+                .background(c.metricA.category.color.opacity(0.12), in: Circle())
+
+            Image(systemName: "arrow.right")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+
+            Image(systemName: c.metricB.systemImageName)
+                .font(.caption)
+                .foregroundStyle(c.metricB.category.color)
+                .frame(width: 24, height: 24)
+                .background(c.metricB.category.color.opacity(0.12), in: Circle())
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(c.effectSummary)
+                    .font(.caption)
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+
+                Text(c.strengthLabel)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.purple)
+            }
+
+            Spacer()
+        }
+        .padding(10)
+        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    // MARK: - 6. Categories
+
+    private var categoriesSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Categories")
+                .font(.headline)
+
+            VStack(spacing: 0) {
+                ForEach(HealthCategory.allCases) { category in
+                    Button {
+                        navigationPath.append(category)
+                    } label: {
+                        ExploreCategoryRow(
+                            category: category,
+                            score: viewModel.analysisEngine.score(for: category)?.score,
+                            insightCount: viewModel.analysisEngine.insights(for: category).count
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    if category != HealthCategory.allCases.last {
+                        Divider()
+                            .padding(.leading, 56)
+                    }
+                }
+            }
+            .background(.background, in: RoundedRectangle(cornerRadius: 14))
+        }
+    }
+
+    // MARK: - Empty State
+
+    private var emptyState: some View {
+        HStack(spacing: 16) {
+            Image(systemName: "heart.text.clipboard")
+                .font(.system(size: 40))
+                .foregroundStyle(.secondary)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Your Health Score")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                Text("Collecting data...")
+                    .font(.title3.weight(.medium))
+                    .foregroundStyle(.primary)
+
+                Text("Wear your watch and sync health data to see your analysis")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+        }
+        .padding(16)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+    }
+
+    // MARK: - Computed Helpers
 
     private var weakestCategory: (category: HealthCategory, score: Int)? {
         let scored = HealthCategory.allCases.compactMap { cat -> (category: HealthCategory, score: Int)? in
@@ -203,9 +464,17 @@ private struct ExploreCategoryRow: View {
                 Text(category.displayName)
                     .font(.body.weight(.medium))
 
-                Text(scoreStatus)
-                    .font(.caption)
-                    .foregroundStyle(scoreStatusColor)
+                HStack(spacing: 8) {
+                    Text(scoreStatus)
+                        .font(.caption)
+                        .foregroundStyle(scoreStatusColor)
+
+                    if insightCount > 0 {
+                        Text("\(insightCount) insight\(insightCount == 1 ? "" : "s")")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
             }
 
             Spacer()
@@ -218,7 +487,7 @@ private struct ExploreCategoryRow: View {
                     lineWidth: 4
                 )
             } else {
-                Text("—")
+                Text("--")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(.tertiary)
                     .frame(width: 36, height: 36)

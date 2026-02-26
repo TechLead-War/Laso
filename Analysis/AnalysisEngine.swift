@@ -14,6 +14,11 @@ final class AnalysisEngine {
     var overallScore: HealthScore = HealthScore(score: 100)
     var categoryScores: [HealthScore] = []
     var correlations: [HealthCorrelation] = []
+    var historicalContext: [HealthMetric: HistoricalAnalyzer.HistoricalContext] = [:]
+    var illnessWarnings: [IllnessEarlyWarning.Warning] = []
+    var crossMetricAnomalies: [CrossMetricAnomalyDetector.CrossMetricAnomaly] = []
+    var causalChains: [CausalChain] = []
+    var scoreExplanation: HealthScorer.ScoreExplanation?
     var isAnalyzing = false
     var lastAnalysis: Date?
 
@@ -84,14 +89,35 @@ final class AnalysisEngine {
         }
         categoryScores = newCategoryScores
 
-        // Step 6: Overall score — only from categories with data
-        overallScore = HealthScorer.overallScore(categoryScores: categoryScores)
+        // Step 6: Overall score with adaptive weights
+        let adaptiveWeights = HealthScorer.adaptiveCategoryWeights(
+            categoryScores: categoryScores,
+            anomalies: anomalies,
+            baselines: baselines
+        )
+        overallScore = HealthScorer.overallScore(categoryScores: categoryScores, weights: adaptiveWeights)
 
-        // Step 7: Generate insights
+        // Score explanation for transparency
+        scoreExplanation = HealthScorer.explainOverallScore(
+            categoryScores: categoryScores,
+            weights: adaptiveWeights,
+            anomalies: anomalies,
+            trends: trends
+        )
+
+        // Step 7: Generate insights (with historical context when available)
+        // Historical context is computed in step 7h but needs to be available here.
+        // Compute it early for the insight generator to use.
+        historicalContext = HistoricalAnalyzer.analyzeAll(
+            timeSeries: timeSeries,
+            baselines: baselines
+        )
+
         insights = InsightGenerator.generate(
             anomalies: anomalies,
             trends: trends,
-            baselines: baselines
+            baselines: baselines,
+            historicalContext: historicalContext
         )
 
         // Step 7a: Correlation analysis + insights
@@ -130,8 +156,13 @@ final class AnalysisEngine {
         )
         insights.append(contentsOf: clusterInsights)
 
-        // Re-sort combined insights by priority
-        insights.sort { $0.priorityScore > $1.priorityScore }
+        // Step 7h: Deep historical insights (leverages ALL available data — years, not days)
+        // historicalContext was already computed in Step 7 for enriching base insights.
+        let historicalInsights = HistoricalAnalyzer.generateInsights(
+            historicalContext: historicalContext,
+            baselines: baselines
+        )
+        insights.append(contentsOf: historicalInsights)
 
         // Step 8: Assess health risks
         healthRisks = HealthRiskEngine.assessAllRisks(
@@ -140,6 +171,36 @@ final class AnalysisEngine {
             trends: trends,
             anomalies: anomalies
         )
+
+        // Step 9: Illness early warning
+        illnessWarnings = IllnessEarlyWarning.evaluate(
+            timeSeries: timeSeries,
+            baselines: baselines
+        )
+        let illnessInsights = IllnessEarlyWarning.generateInsights(from: illnessWarnings)
+        insights.append(contentsOf: illnessInsights)
+
+        // Step 10: Cross-metric anomaly detection
+        crossMetricAnomalies = CrossMetricAnomalyDetector.detect(
+            timeSeries: timeSeries,
+            baselines: baselines
+        )
+        let crossMetricInsights = CrossMetricAnomalyDetector.generateInsights(from: crossMetricAnomalies)
+        insights.append(contentsOf: crossMetricInsights)
+
+        // Step 11: Causal chain narratives
+        causalChains = CausalChainEngine.buildChains(
+            correlations: correlations,
+            anomalies: anomalies,
+            trends: trends,
+            timeSeries: timeSeries,
+            baselines: baselines
+        )
+        let causalInsights = CausalChainEngine.generateInsights(from: causalChains)
+        insights.append(contentsOf: causalInsights)
+
+        // Final: deduplicate and re-sort all insights
+        insights.sort { $0.priorityScore > $1.priorityScore }
     }
 
     /// Get the top N insights

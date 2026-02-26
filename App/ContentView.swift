@@ -37,9 +37,14 @@ struct ContentView: View {
         mainApp
     }
 
+    private var subscriptionManager: SubscriptionManager { .shared }
+
     private var mainApp: some View {
         NavigationStack(path: $navigationPath) {
             tabContent
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    billingGraceBanner
+                }
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     CustomTabBar(selectedTab: $selectedTab)
                 }
@@ -78,7 +83,7 @@ struct ContentView: View {
                 .navigationDestination(for: String.self) { route in
                     if route == "insightsDetail" {
                         InsightsDetailView(
-                            insightsByCategory: dashboardViewModel.insightsByCategory,
+                            insightsByCategory: dashboardViewModel.actionableInsightsByCategory,
                             onTapMetric: { metric in
                                 navigationPath.append(metric)
                             }
@@ -111,6 +116,7 @@ struct ContentView: View {
         .task {
             await dashboardViewModel.load()
             liveViewModel.fetchHomeData()
+            AppAnalytics.shared.setDemographics(from: healthKitManager.healthStore)
         }
         .onAppear {
             FeedbackPromptManager.shared.recordAppOpen()
@@ -166,6 +172,34 @@ struct ContentView: View {
                 viewModel: dashboardViewModel,
                 navigationPath: $navigationPath
             )
+        }
+    }
+
+    // MARK: - Billing Grace Banner (subtle, non-blocking, only after 16 days)
+
+    @ViewBuilder
+    private var billingGraceBanner: some View {
+        if let days = subscriptionManager.billingGraceDays, days >= 16 {
+            HStack(spacing: 8) {
+                Image(systemName: "creditcard.trianglebadge.exclamationmark")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+
+                Text("Update your payment method to keep your subscription active.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+
+                Spacer(minLength: 0)
+
+                if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+                    Link("Update", destination: url)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.orange)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(.orange.opacity(0.08))
         }
     }
 }

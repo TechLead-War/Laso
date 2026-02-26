@@ -424,6 +424,214 @@ final class DashboardViewModel {
         analysisEngine.anomalies.filter { $0.severity == .warning }.count
     }
 
+    // MARK: - Explore Tab Data
+
+    /// Score delta from stored history (comparing to 7 days ago)
+    var scoreChangeFromLastWeek: Int? {
+        let history = store.loadScoreHistory(days: 14)
+        guard history.count >= 2 else { return nil }
+        let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+        let oldEntries = history.filter { $0.date <= weekAgo }
+        guard let oldScore = oldEntries.last?.score else { return nil }
+        let delta = overallScore.score - oldScore
+        return delta == 0 ? nil : delta
+    }
+
+    /// Global trends summary across all tracked metrics
+    struct TrendsSummary {
+        let improving: Int
+        let stable: Int
+        let declining: Int
+        let topMovers: [MetricMover]
+    }
+
+    struct MetricMover: Identifiable {
+        var id: String { metric.rawValue }
+        let metric: HealthMetric
+        let changePercent: Double
+        let improving: Bool
+    }
+
+    var trendsSummary: TrendsSummary {
+        var improving = 0, stable = 0, declining = 0
+        var movers: [MetricMover] = []
+
+        for (metric, trend) in analysisEngine.trends {
+            switch trend.direction {
+            case .improving: improving += 1
+            case .stable: stable += 1
+            case .declining: declining += 1
+            }
+            if abs(trend.weekOverWeekChange) > 3 {
+                movers.append(MetricMover(
+                    metric: metric,
+                    changePercent: trend.weekOverWeekChange,
+                    improving: trend.direction == .improving
+                ))
+            }
+        }
+        movers.sort { abs($0.changePercent) > abs($1.changePercent) }
+        return TrendsSummary(
+            improving: improving,
+            stable: stable,
+            declining: declining,
+            topMovers: Array(movers.prefix(5))
+        )
+    }
+
+    /// Historical highlights computed from deep analysis context
+    struct HistoricalHighlight: Identifiable {
+        let id = UUID()
+        let metric: HealthMetric
+        let type: HighlightType
+        let title: String
+        let isPositive: Bool
+        let significance: Double
+
+        enum HighlightType {
+            case yearOverYear
+            case allTimeExtreme
+            case seasonal
+            case longTermTrajectory
+        }
+
+        var icon: String {
+            switch type {
+            case .yearOverYear: return "calendar.badge.clock"
+            case .allTimeExtreme: return "trophy.fill"
+            case .seasonal: return "leaf.fill"
+            case .longTermTrajectory: return "chart.line.uptrend.xyaxis"
+            }
+        }
+
+        var typeLabel: String {
+            switch type {
+            case .yearOverYear: return "Year-over-Year"
+            case .allTimeExtreme: return "All-Time"
+            case .seasonal: return "Seasonal"
+            case .longTermTrajectory: return "Long-Term"
+            }
+        }
+    }
+
+    var historicalHighlights: [HistoricalHighlight] {
+        let ctx = analysisEngine.historicalContext
+        var highlights: [HistoricalHighlight] = []
+        let monthName = Calendar.current.monthSymbols[Calendar.current.component(.month, from: Date()) - 1]
+
+        for (metric, context) in ctx {
+            if let yoy = context.yearOverYearChange, abs(yoy) > 5 {
+                let improving = metric.higherIsBetter ? yoy > 0 : yoy < 0
+                highlights.append(HistoricalHighlight(
+                    metric: metric,
+                    type: .yearOverYear,
+                    title: "\(String(format: "%.0f", abs(yoy)))% \(improving ? "better" : "worse") than last \(monthName)",
+                    isPositive: improving,
+                    significance: abs(yoy)
+                ))
+            }
+
+            if context.isAllTimeExtreme, context.totalDataPoints >= 180 {
+                let isHigh = context.allTimePercentile >= 95
+                let good = isHigh == metric.higherIsBetter
+                highlights.append(HistoricalHighlight(
+                    metric: metric,
+                    type: .allTimeExtreme,
+                    title: "Near \(context.yearsOfData)-year \(isHigh ? "high" : "low")",
+                    isPositive: good,
+                    significance: 90
+                ))
+            }
+
+            if let seasonalDev = context.seasonalDeviation, abs(seasonalDev) > 10, context.yearsOfData >= 2 {
+                let improving = metric.higherIsBetter ? seasonalDev > 0 : seasonalDev < 0
+                highlights.append(HistoricalHighlight(
+                    metric: metric,
+                    type: .seasonal,
+                    title: "\(String(format: "%.0f", abs(seasonalDev)))% \(seasonalDev > 0 ? "above" : "below") \(monthName) norm",
+                    isPositive: improving,
+                    significance: abs(seasonalDev)
+                ))
+            }
+
+            if let change = context.longTermChangePercent, abs(change) > 10, context.yearsOfData >= 1 {
+                let improving = metric.higherIsBetter ? change > 0 : change < 0
+                let periodLabel = context.yearsOfData >= 2 ? "\(context.yearsOfData) years" : "1 year"
+                highlights.append(HistoricalHighlight(
+                    metric: metric,
+                    type: .longTermTrajectory,
+                    title: "\(improving ? "Up" : "Down") \(String(format: "%.0f", abs(change)))% over \(periodLabel)",
+                    isPositive: improving,
+                    significance: abs(change)
+                ))
+            }
+        }
+
+        highlights.sort { $0.significance > $1.significance }
+        return Array(highlights.prefix(5))
+    }
+
+    /// Data depth summary — how much data powers the analysis
+    var dataDepth: (metricsTracked: Int, totalDataPoints: Int, daysOfData: Int) {
+        let series = healthKitManager.timeSeries
+        let metrics = series.count
+        let points = series.values.reduce(0) { $0 + $1.totalDataPoints }
+        let maxDays = series.values.map(\.daysOfData).max() ?? 0
+        return (metrics, points, maxDays)
+    }
+
+    // MARK: - New Intelligence Features
+
+    /// Active illness early warnings
+    var illnessWarnings: [IllnessEarlyWarning.Warning] {
+        analysisEngine.illnessWarnings
+    }
+
+    /// Whether there's an active illness early warning
+    var hasIllnessWarning: Bool {
+        !analysisEngine.illnessWarnings.isEmpty
+    }
+
+    /// The most severe illness warning (for Today section hero)
+    var topIllnessWarning: IllnessEarlyWarning.Warning? {
+        analysisEngine.illnessWarnings.first
+    }
+
+    /// Cross-metric anomalies detected
+    var crossMetricAnomalies: [CrossMetricAnomalyDetector.CrossMetricAnomaly] {
+        analysisEngine.crossMetricAnomalies
+    }
+
+    /// Causal chains explaining metric changes
+    var causalChains: [CausalChain] {
+        analysisEngine.causalChains
+    }
+
+    /// Top causal chain for the today section
+    var topCausalChain: CausalChain? {
+        analysisEngine.causalChains.first
+    }
+
+    /// Score explanation for transparency
+    var scoreExplanation: HealthScorer.ScoreExplanation? {
+        analysisEngine.scoreExplanation
+    }
+
+    /// High-quality actionable insights only (for Today section)
+    var actionableInsights: [Insight] {
+        InsightGenerator.filterToActionable(focusedInsights, maxCount: 3)
+    }
+
+    /// Trends summary for Today section (moved from Explore)
+    var todayTrendsSummary: TrendsSummary {
+        trendsSummary
+    }
+
+    /// Health risks for Today section (moved from Explore)
+    var todayHealthRisks: [HealthRisk] {
+        analysisEngine.healthRisks.filter { $0.riskGrade != .low }
+    }
+
     // MARK: - Body Insights
 
     /// Insights grouped by InsightCategory, filtered by focus areas, excluding empty categories
@@ -431,6 +639,16 @@ final class DashboardViewModel {
         let focused = focusedInsights
         return InsightCategory.allCases.compactMap { category in
             let matching = focused.filter { $0.category == category }
+            guard !matching.isEmpty else { return nil }
+            return (category: category, insights: matching)
+        }
+    }
+
+    /// High-quality actionable insights grouped by category, pre-filtered via InsightGenerator
+    var actionableInsightsByCategory: [(category: InsightCategory, insights: [Insight])] {
+        let filtered = InsightGenerator.filterToActionable(analysisEngine.insights, maxCount: 10)
+        return InsightCategory.allCases.compactMap { category in
+            let matching = filtered.filter { $0.category == category }
             guard !matching.isEmpty else { return nil }
             return (category: category, insights: matching)
         }

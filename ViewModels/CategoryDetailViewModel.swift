@@ -78,6 +78,50 @@ final class CategoryDetailViewModel {
         return "\(sign)\(String(format: "%.1f", change))%"
     }
 
+    /// Historical highlights for metrics in this category
+    var historicalHighlights: [(metric: HealthMetric, text: String, icon: String)] {
+        var results: [(metric: HealthMetric, text: String, icon: String, significance: Double)] = []
+        let monthName = Calendar.current.monthSymbols[Calendar.current.component(.month, from: Date()) - 1]
+
+        for metric in metrics {
+            guard let ctx = analysisEngine.historicalContext[metric] else { continue }
+
+            if let yoy = ctx.yearOverYearChange, abs(yoy) > 5 {
+                let improving = metric.higherIsBetter ? yoy > 0 : yoy < 0
+                results.append((
+                    metric: metric,
+                    text: "\(String(format: "%.0f", abs(yoy)))% \(improving ? "better" : "worse") than last \(monthName)",
+                    icon: "calendar.badge.clock",
+                    significance: abs(yoy)
+                ))
+            }
+
+            if ctx.isAllTimeExtreme, ctx.totalDataPoints >= 180 {
+                let isHigh = ctx.allTimePercentile >= 95
+                results.append((
+                    metric: metric,
+                    text: "Near \(ctx.yearsOfData > 1 ? "\(ctx.yearsOfData)-year" : "all-time") \(isHigh ? "high" : "low")",
+                    icon: "trophy.fill",
+                    significance: 90
+                ))
+            }
+
+            if let change = ctx.longTermChangePercent, abs(change) > 10, ctx.yearsOfData >= 1 {
+                let improving = metric.higherIsBetter ? change > 0 : change < 0
+                let period = ctx.yearsOfData >= 2 ? "\(ctx.yearsOfData) years" : "1 year"
+                results.append((
+                    metric: metric,
+                    text: "\(improving ? "Up" : "Down") \(String(format: "%.0f", abs(change)))% over \(period)",
+                    icon: "chart.line.uptrend.xyaxis",
+                    significance: abs(change)
+                ))
+            }
+        }
+
+        results.sort { $0.significance > $1.significance }
+        return Array(results.prefix(3)).map { ($0.metric, $0.text, $0.icon) }
+    }
+
     init(category: HealthCategory, healthKitManager: HealthKitManager, analysisEngine: AnalysisEngine) {
         self.category = category
         self.healthKitManager = healthKitManager

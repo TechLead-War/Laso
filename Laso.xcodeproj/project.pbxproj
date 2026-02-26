@@ -118,6 +118,10 @@
 		ANL00100000000000000004 /* ScoreTrajectoryAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = ANL00100000000000000001 /* ScoreTrajectoryAnalyzer.swift */; };
 		ANL00100000000000000005 /* BaselineDriftDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = ANL00100000000000000002 /* BaselineDriftDetector.swift */; };
 		ANL00100000000000000006 /* MultiMetricClusterAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = ANL00100000000000000003 /* MultiMetricClusterAnalyzer.swift */; };
+		HST00100000000000000002 /* HistoricalAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = HST00100000000000000001 /* HistoricalAnalyzer.swift */; };
+		IEW00100000000000000002 /* IllnessEarlyWarning.swift in Sources */ = {isa = PBXBuildFile; fileRef = IEW00100000000000000001 /* IllnessEarlyWarning.swift */; };
+		CMA00100000000000000002 /* CrossMetricAnomalyDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = CMA00100000000000000001 /* CrossMetricAnomalyDetector.swift */; };
+		CCE00100000000000000002 /* CausalChainEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCE00100000000000000001 /* CausalChainEngine.swift */; };
 		FDDD14EED24B7DFA348D415B /* TrendBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C14C4080D8F86D1D9FE887E9 /* TrendBadge.swift */; };
 		FFCF2BEF13D3B81A68D9EF3B /* InsightCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA30AD19F71C6BA2C98C876C /* InsightCard.swift */; };
 		PRO00100000000000000002 /* ProFeatureOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = PRO00100000000000000001 /* ProFeatureOverlay.swift */; };
@@ -239,7 +243,11 @@
 		ANL00100000000000000001 /* ScoreTrajectoryAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreTrajectoryAnalyzer.swift; sourceTree = "<group>"; };
 		ANL00100000000000000002 /* BaselineDriftDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaselineDriftDetector.swift; sourceTree = "<group>"; };
 		ANL00100000000000000003 /* MultiMetricClusterAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiMetricClusterAnalyzer.swift; sourceTree = "<group>"; };
+		HST00100000000000000001 /* HistoricalAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoricalAnalyzer.swift; sourceTree = "<group>"; };
 		PRO00100000000000000001 /* ProFeatureOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProFeatureOverlay.swift; sourceTree = "<group>"; };
+		IEW00100000000000000001 /* IllnessEarlyWarning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IllnessEarlyWarning.swift; sourceTree = "<group>"; };
+		CMA00100000000000000001 /* CrossMetricAnomalyDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrossMetricAnomalyDetector.swift; sourceTree = "<group>"; };
+		CCE00100000000000000001 /* CausalChainEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CausalChainEngine.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -276,6 +284,7 @@
 				1D16F5DEFE599901E791BDB5 /* HealthScorer.swift */,
 				AA6AA95BCF0971B533299AD2 /* InsightGenerator.swift */,
 				ANL00100000000000000003 /* MultiMetricClusterAnalyzer.swift */,
+				HST00100000000000000001 /* HistoricalAnalyzer.swift */,
 				C4CE7C2FDBCFFE781B01B4B9 /* PersonalRecordAnalyzer.swift */,
 				CD50AAE154719090048DF3E2 /* RecoveryAnalyzer.swift */,
 				A85183A8FD623ED661195C1D /* RulesConfiguration.swift */,
@@ -285,6 +294,9 @@
 				D831542D1DF88ADF75D61259 /* TrendAnalyzer.swift */,
 				84920AA0B0BAD65B323468E0 /* WeeklyPatternAnalyzer.swift */,
 				DD947BF688F7B5F398D7E9FD /* WorkoutEffectivenessAnalyzer.swift */,
+				IEW00100000000000000001 /* IllnessEarlyWarning.swift */,
+				CMA00100000000000000001 /* CrossMetricAnomalyDetector.swift */,
+				CCE00100000000000000001 /* CausalChainEngine.swift */,
 			);
 			path = Analysis;
 			sourceTree = "<group>";
@@ -784,6 +796,10 @@
 				23946B348164F26310BFDC6A /* LiveViewModel.swift in Sources */,
 				B2E9DCA1991FB5FB0A1BD8B6 /* LoadingView.swift in Sources */,
 				ANL00100000000000000006 /* MultiMetricClusterAnalyzer.swift in Sources */,
+				HST00100000000000000002 /* HistoricalAnalyzer.swift in Sources */,
+				IEW00100000000000000002 /* IllnessEarlyWarning.swift in Sources */,
+				CMA00100000000000000002 /* CrossMetricAnomalyDetector.swift in Sources */,
+				CCE00100000000000000002 /* CausalChainEngine.swift in Sources */,
 				92BC085F0F66295F8221BE88 /* MetricChartView.swift in Sources */,
 				A7CB64E2140A793DD0258993 /* MetricDetailView.swift in Sources */,
 				202D80E10EC59F9CFC4DAEA0 /* MetricDetailViewModel.swift in Sources */,

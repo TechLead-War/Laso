@@ -49,4 +49,47 @@ struct MetricTimeSeries: Identifiable {
     func mean(lastDays days: Int) -> Double {
         samples(lastDays: days).map(\.value).mean
     }
+
+    // MARK: - Historical Data Access
+
+    /// Samples from a specific calendar month across all years (for seasonal analysis)
+    func samples(forMonth month: Int) -> [MetricSample] {
+        sortedSamples.filter { Calendar.current.component(.month, from: $0.date) == month }
+    }
+
+    /// Samples from the same calendar month in a specific year
+    func samples(forMonth month: Int, year: Int) -> [MetricSample] {
+        sortedSamples.filter {
+            let c = Calendar.current
+            return c.component(.month, from: $0.date) == month && c.component(.year, from: $0.date) == year
+        }
+    }
+
+    /// Samples from a date range (inclusive)
+    func samples(from start: Date, to end: Date) -> [MetricSample] {
+        sortedSamples.filter { $0.date >= start && $0.date <= end }
+    }
+
+    /// Percentile rank of a value in all-time data (0-100)
+    func percentile(of value: Double) -> Double {
+        let allValues = values
+        guard !allValues.isEmpty else { return 50 }
+        let below = allValues.filter { $0 < value }.count
+        return (Double(below) / Double(allValues.count)) * 100.0
+    }
+
+    /// Number of years of data available
+    var yearsOfData: Int {
+        guard let earliest = sortedSamples.first?.date else { return 0 }
+        return Swift.max(1, Calendar.current.dateComponents([.year], from: earliest, to: Date()).year ?? 0)
+    }
+
+    /// Number of days of data available
+    var daysOfData: Int {
+        guard let earliest = sortedSamples.first?.date else { return 0 }
+        return Swift.max(1, Calendar.current.dateComponents([.day], from: earliest, to: Date()).day ?? 0)
+    }
+
+    /// Total number of data points
+    var totalDataPoints: Int { samples.count }
 }

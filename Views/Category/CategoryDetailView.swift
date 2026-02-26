@@ -56,6 +56,53 @@ struct CategoryDetailView: View {
                 ))
                 .padding(.horizontal)
 
+                // Historical highlights for this category
+                if !viewModel.historicalHighlights.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .font(.subheadline)
+                                .foregroundStyle(.tint)
+                            Text("From Your History")
+                                .font(.headline)
+                        }
+                        .padding(.horizontal)
+
+                        VStack(spacing: 0) {
+                            ForEach(viewModel.historicalHighlights, id: \.metric) { item in
+                                NavigationLink(value: item.metric) {
+                                    HStack(spacing: 10) {
+                                        Image(systemName: item.icon)
+                                            .font(.caption)
+                                            .foregroundStyle(.tint)
+                                            .frame(width: 20)
+
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(item.metric.displayName)
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                            Text(item.text)
+                                                .font(.subheadline.weight(.medium))
+                                                .foregroundStyle(.primary)
+                                        }
+
+                                        Spacer()
+
+                                        Image(systemName: "chevron.right")
+                                            .font(.caption2)
+                                            .foregroundStyle(.tertiary)
+                                    }
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 9)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .background(.background, in: RoundedRectangle(cornerRadius: 14))
+                        .padding(.horizontal)
+                    }
+                }
+
                 // Insights for this category
                 if !viewModel.insights.isEmpty {
                     VStack(alignment: .leading, spacing: 10) {
