@@ -5,7 +5,7 @@ import '../styles/globals.css'
 
 <Base
   title="Laso — Your Health, Understood"
-  description="One intelligent score from 50+ health metrics. Laso turns your Apple Watch data into clear, personal insights — all on device, all private."
+  description="Apple Health shows your metrics one at a time. Laso reads them together — your heart rate, sleep, HRV, activity, and 50 others — so you can see what's actually going on. All on your iPhone."
 >
   <div class="min-h-screen bg-white">
 
@@ -14,9 +14,9 @@ import '../styles/globals.css'
       <div class="max-w-6xl mx-auto px-5 h-12 flex items-center justify-between">
         <a href="#" class="text-[17px] font-semibold tracking-tight text-apple-dark">Laso</a>
         <div class="hidden md:flex items-center gap-7">
+          <a href="#problem" class="text-xs font-medium text-apple-secondary hover:text-apple-dark transition-colors">Why</a>
           <a href="#features" class="text-xs font-medium text-apple-secondary hover:text-apple-dark transition-colors">Features</a>
-          <a href="#journey" class="text-xs font-medium text-apple-secondary hover:text-apple-dark transition-colors">How It Works</a>
-          <a href="#devices" class="text-xs font-medium text-apple-secondary hover:text-apple-dark transition-colors">Devices</a>
+          <a href="#who" class="text-xs font-medium text-apple-secondary hover:text-apple-dark transition-colors">Who It's For</a>
           <a href="#pricing" class="text-xs font-medium text-apple-secondary hover:text-apple-dark transition-colors">Pricing</a>
         </div>
         <button data-download="nav" class="bg-apple-dark text-white text-xs font-medium rounded-full px-4 py-1.5 hover:bg-black transition-colors cursor-pointer">
@@ -26,12 +26,14 @@ import '../styles/globals.css'
     </nav>
 
     <!-- ════════ HERO ════════ -->
-    <section data-section="hero" class="hero-gradient pt-32 pb-20 md:pt-44 md:pb-32 px-5 text-center">
+    <section data-section="hero" class="hero-gradient pt-32 pb-16 md:pt-44 md:pb-24 px-5 text-center">
+      <p class="text-sm font-medium text-apple-blue mb-4 tracking-wide">For Apple Watch owners</p>
       <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-apple-dark text-balance max-w-3xl mx-auto leading-[1.08]">
-        Your health, <span class="gradient-text">understood.</span>
+        Your watch collects the data.<br/>
+        <span class="gradient-text">We connect the dots.</span>
       </h1>
       <p class="mt-5 text-lg md:text-xl text-apple-secondary max-w-xl mx-auto text-balance leading-relaxed">
-        One intelligent score from 50+ metrics. Not 43 numbers you'll never read.
+        Apple Health shows you each metric alone. Laso reads them together so you actually know if you're doing okay or not.
       </p>
       <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
         <button data-download="hero" class="inline-flex items-center gap-2.5 bg-apple-dark text-white font-medium rounded-full px-7 py-3.5 text-[15px] hover:bg-black transition-colors active:scale-[0.97] cursor-pointer">
@@ -42,208 +44,345 @@ import '../styles/globals.css'
         </button>
         <span class="text-sm text-apple-secondary">Free &middot; No account needed</span>
       </div>
+    </section>
 
-      <!-- Score hero -->
-      <div class="mt-14 md:mt-20 flex justify-center">
-        <div class="score-showcase">
-          <!-- Ambient glow -->
-          <div class="score-glow" aria-hidden="true"></div>
-
-          <!-- Main ring -->
-          <div class="relative w-52 h-52 sm:w-64 sm:h-64 md:w-72 md:h-72 mx-auto">
-            <svg viewBox="0 0 280 280" class="w-full h-full" aria-hidden="true">
-              <defs>
-                <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#0071e3"/>
-                  <stop offset="40%" stop-color="#34d399"/>
-                  <stop offset="100%" stop-color="#06b6d4"/>
-                </linearGradient>
-                <filter id="ring-glow">
-                  <feGaussianBlur stdDeviation="6" result="blur"/>
-                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                </filter>
-              </defs>
-              <!-- Track -->
-              <circle cx="140" cy="140" r="120" fill="none" stroke="#e8e8ed" stroke-width="12"/>
-              <!-- Progress arc: 87% of 2πr = 87% of 753.98 ≈ 656 filled, offset = 753.98 - 656 = 98 -->
-              <circle cx="140" cy="140" r="120" fill="none" stroke="url(#ring-grad)" stroke-width="12"
-                stroke-linecap="round"
-                stroke-dasharray="753.98"
-                stroke-dashoffset="98"
-                filter="url(#ring-glow)"
-                class="origin-center -rotate-90 score-ring-animate"/>
-            </svg>
-            <!-- Number overlay -->
-            <div class="absolute inset-0 flex flex-col items-center justify-center">
-              <span class="score-counter text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight text-apple-dark" data-target="87">0</span>
-              <span class="text-xs sm:text-sm font-medium text-apple-secondary mt-1">out of 100</span>
-            </div>
+    <!-- ════════ THE PROBLEM ════════ -->
+    <section id="problem" data-section="problem" class="bg-apple-gray py-20 md:py-28 px-5">
+      <div class="max-w-3xl mx-auto text-center">
+        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-balance">
+          Your watch tracks everything.<br/>But what does it actually mean?
+        </h2>
+        <p class="section-reveal mt-6 text-[15px] md:text-base text-apple-secondary leading-relaxed max-w-2xl mx-auto">
+          You wear your Apple Watch every day. It records your heart rate, sleep stages, steps, HRV, respiratory rate, blood oxygen, and dozens more. But Apple Health shows you each metric in isolation a number here, a chart there. You're left wondering: am I doing okay? Is this trend normal for me? Should I be worried?
+        </p>
+        <div class="mt-12 grid sm:grid-cols-3 gap-5 max-w-2xl mx-auto">
+          <div class="section-reveal bg-white rounded-2xl p-6 text-center">
+            <p class="text-3xl font-semibold text-apple-dark">50+</p>
+            <p class="mt-1 text-sm text-apple-secondary">metrics your watch collects</p>
           </div>
-
-          <!-- Grade badge -->
-          <div class="mt-5 flex justify-center">
-            <div class="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200/60 rounded-full px-5 py-2">
-              <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-              <span class="text-sm font-semibold text-emerald-700">Grade A</span>
-              <span class="text-sm text-emerald-600/70">&middot;</span>
-              <span class="text-sm text-emerald-600">Very Good</span>
-            </div>
+          <div class="section-reveal bg-white rounded-2xl p-6 text-center" style="transition-delay:80ms">
+            <p class="text-3xl font-semibold text-apple-dark">0</p>
+            <p class="mt-1 text-sm text-apple-secondary">that connect them together</p>
           </div>
-
-          <!-- Category mini-scores -->
-          <div class="mt-8 flex flex-wrap justify-center gap-3 max-w-md mx-auto">
-            <div class="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm border border-gray-100 rounded-full px-3 py-1.5">
-              <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-              <span class="text-[11px] font-medium text-apple-dark">Heart 91</span>
-            </div>
-            <div class="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm border border-gray-100 rounded-full px-3 py-1.5">
-              <div class="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
-              <span class="text-[11px] font-medium text-apple-dark">Sleep 84</span>
-            </div>
-            <div class="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm border border-gray-100 rounded-full px-3 py-1.5">
-              <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-              <span class="text-[11px] font-medium text-apple-dark">Activity 88</span>
-            </div>
-            <div class="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm border border-gray-100 rounded-full px-3 py-1.5">
-              <div class="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
-              <span class="text-[11px] font-medium text-apple-dark">Body 82</span>
-            </div>
-            <div class="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm border border-gray-100 rounded-full px-3 py-1.5">
-              <div class="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
-              <span class="text-[11px] font-medium text-apple-dark">Respiratory 90</span>
-            </div>
-            <div class="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm border border-gray-100 rounded-full px-3 py-1.5">
-              <div class="w-1.5 h-1.5 rounded-full bg-purple-500"></div>
-              <span class="text-[11px] font-medium text-apple-dark">Mindfulness 79</span>
-            </div>
-            <div class="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm border border-gray-100 rounded-full px-3 py-1.5">
-              <div class="w-1.5 h-1.5 rounded-full bg-teal-500"></div>
-              <span class="text-[11px] font-medium text-apple-dark">Mobility 85</span>
-            </div>
+          <div class="section-reveal bg-white rounded-2xl p-6 text-center" style="transition-delay:160ms">
+            <p class="text-3xl font-semibold text-apple-dark">?</p>
+            <p class="mt-1 text-sm text-apple-secondary">"Am I actually healthy?"</p>
           </div>
-
-          <p class="mt-6 text-xs text-apple-secondary/60">Sample data &mdash; your score is calculated from your own metrics</p>
         </div>
       </div>
     </section>
 
-    <!-- ════════ VALUES ════════ -->
-    <section data-section="values" class="bg-apple-gray py-20 md:py-28 px-5">
-      <div class="max-w-5xl mx-auto grid md:grid-cols-3 gap-6 md:gap-8">
+    <!-- ════════ WHAT LASO DOES ════════ -->
+    <section data-section="what-laso-does" class="py-20 md:py-28 px-5">
+      <div class="max-w-5xl mx-auto">
+        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
+          One app. Three ways to understand your health.
+        </h2>
+        <p class="section-reveal mt-4 text-center text-apple-secondary text-[15px] md:text-base max-w-lg mx-auto">
+          Laso reads your HealthKit data and turns it into something useful.
+        </p>
 
-        <div class="section-reveal bg-white rounded-2xl p-7 md:p-8">
-          <div class="w-11 h-11 rounded-xl bg-apple-gray flex items-center justify-center text-apple-dark mb-4">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/>
-            </svg>
+        <div class="mt-14 grid md:grid-cols-3 gap-6">
+
+          <!-- Today Tab -->
+          <div class="section-reveal rounded-2xl border border-gray-100 p-7 md:p-8">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center mb-5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7 text-white">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/>
+              </svg>
+            </div>
+            <span class="text-xs font-semibold text-apple-blue uppercase tracking-wider">Today</span>
+            <h3 class="mt-2 text-lg font-semibold text-apple-dark">Your daily health check-in</h3>
+            <ul class="mt-4 space-y-2.5 text-[14px] text-apple-secondary leading-relaxed">
+              <li class="flex items-start gap-2">
+                <span class="text-apple-blue mt-0.5 shrink-0">&bull;</span>
+                <span><strong class="text-apple-dark">Recovery Score</strong> &mdash; are you rested and ready, or running on fumes?</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-apple-blue mt-0.5 shrink-0">&bull;</span>
+                <span><strong class="text-apple-dark">Body Insights</strong> &mdash; what your body is telling you today, in plain language</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-apple-blue mt-0.5 shrink-0">&bull;</span>
+                <span><strong class="text-apple-dark">Trends</strong> &mdash; what's improving, what's declining, what's stable</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-apple-blue mt-0.5 shrink-0">&bull;</span>
+                <span><strong class="text-apple-dark">Health Risks</strong> &mdash; early flags when multiple signals shift together</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-apple-blue mt-0.5 shrink-0">&bull;</span>
+                <span><strong class="text-apple-dark">Weekly Review</strong> &mdash; summary of your past week in 10 seconds</span>
+              </li>
+            </ul>
           </div>
-          <h3 class="text-lg font-semibold text-apple-dark">Private by Design</h3>
-          <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">Every calculation runs on your iPhone. Your health data never leaves your device. We can't see it even if we wanted to.</p>
-        </div>
 
-        <div class="section-reveal bg-white rounded-2xl p-7 md:p-8" style="transition-delay:100ms">
-          <div class="w-11 h-11 rounded-xl bg-apple-gray flex items-center justify-center text-apple-dark mb-4">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
-            </svg>
+          <!-- Live Tab -->
+          <div class="section-reveal rounded-2xl border border-gray-100 p-7 md:p-8" style="transition-delay:100ms">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-500 to-pink-400 flex items-center justify-center mb-5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7 text-white">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/>
+              </svg>
+            </div>
+            <span class="text-xs font-semibold text-red-500 uppercase tracking-wider">Live</span>
+            <h3 class="mt-2 text-lg font-semibold text-apple-dark">Real-time vitals from your watch</h3>
+            <ul class="mt-4 space-y-2.5 text-[14px] text-apple-secondary leading-relaxed">
+              <li class="flex items-start gap-2">
+                <span class="text-red-400 mt-0.5 shrink-0">&bull;</span>
+                <span><strong class="text-apple-dark">Live Heart Rate</strong> &mdash; current BPM with heart rate zone and 30-min session stats</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-red-400 mt-0.5 shrink-0">&bull;</span>
+                <span><strong class="text-apple-dark">Blood Oxygen &amp; Respiratory Rate</strong> &mdash; latest readings with freshness indicators</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-red-400 mt-0.5 shrink-0">&bull;</span>
+                <span><strong class="text-apple-dark">Activity Rings</strong> &mdash; Move, Exercise, Stand progress with steps and distance</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-red-400 mt-0.5 shrink-0">&bull;</span>
+                <span><strong class="text-apple-dark">Last Workout</strong> &mdash; type, duration, calories at a glance</span>
+              </li>
+            </ul>
+            <p class="mt-4 text-[12px] text-apple-secondary/70">Requires Apple Watch. Pro feature.</p>
           </div>
-          <h3 class="text-lg font-semibold text-apple-dark">Personal, Not Generic</h3>
-          <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">Your baselines. Your patterns. Insights come from your body's data &mdash; not population averages from a textbook.</p>
-        </div>
 
-        <div class="section-reveal bg-white rounded-2xl p-7 md:p-8" style="transition-delay:200ms">
-          <div class="w-11 h-11 rounded-xl bg-apple-gray flex items-center justify-center text-apple-dark mb-4">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-            </svg>
+          <!-- Explore Tab -->
+          <div class="section-reveal rounded-2xl border border-gray-100 p-7 md:p-8" style="transition-delay:200ms">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-400 flex items-center justify-center mb-5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7 text-white">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5"/>
+              </svg>
+            </div>
+            <span class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Explore</span>
+            <h3 class="mt-2 text-lg font-semibold text-apple-dark">Deep dive into your data</h3>
+            <ul class="mt-4 space-y-2.5 text-[14px] text-apple-secondary leading-relaxed">
+              <li class="flex items-start gap-2">
+                <span class="text-emerald-500 mt-0.5 shrink-0">&bull;</span>
+                <span><strong class="text-apple-dark">Health Score</strong> &mdash; one number (0-100) from all your metrics, with letter grade</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-emerald-500 mt-0.5 shrink-0">&bull;</span>
+                <span><strong class="text-apple-dark">Score Breakdown</strong> &mdash; see exactly which metrics push your score up or down</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-emerald-500 mt-0.5 shrink-0">&bull;</span>
+                <span><strong class="text-apple-dark">Correlations</strong> &mdash; discover what affects what (e.g. sleep quality vs next-day HRV)</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-emerald-500 mt-0.5 shrink-0">&bull;</span>
+                <span><strong class="text-apple-dark">Historical Context</strong> &mdash; year-over-year, seasonal patterns, all-time records</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-emerald-500 mt-0.5 shrink-0">&bull;</span>
+                <span><strong class="text-apple-dark">7 Categories</strong> &mdash; Heart, Sleep, Activity, Body, Respiratory, Mindfulness, Mobility</span>
+              </li>
+            </ul>
           </div>
-          <h3 class="text-lg font-semibold text-apple-dark">Respects Your Time</h3>
-          <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">Glance in the morning, understand your day. Weekly reviews take ten seconds. No streaks. No guilt. Just clarity.</p>
-        </div>
 
+        </div>
       </div>
     </section>
 
-    <!-- ════════ FEATURES ════════ -->
+    <!-- ════════ SCORE SHOWCASE ════════ -->
+    <section data-section="score" class="bg-apple-gray py-20 md:py-28 px-5">
+      <div class="max-w-5xl mx-auto text-center">
+        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-balance">
+          One score. Seven categories. Your baselines.
+        </h2>
+        <p class="section-reveal mt-4 text-apple-secondary text-[15px] md:text-base max-w-lg mx-auto">
+          Not a generic formula. The score adapts to your body &mdash; stable metrics get amplified, volatile ones get dampened. And you can see exactly what's driving it.
+        </p>
+
+        <!-- Score ring -->
+        <div class="mt-14 flex justify-center">
+          <div class="score-showcase">
+            <div class="score-glow" aria-hidden="true"></div>
+            <div class="relative w-44 h-44 sm:w-56 sm:h-56 md:w-64 md:h-64 mx-auto">
+              <svg viewBox="0 0 280 280" class="w-full h-full" aria-hidden="true">
+                <defs>
+                  <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#0071e3"/>
+                    <stop offset="40%" stop-color="#34d399"/>
+                    <stop offset="100%" stop-color="#06b6d4"/>
+                  </linearGradient>
+                  <filter id="ring-glow">
+                    <feGaussianBlur stdDeviation="6" result="blur"/>
+                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                  </filter>
+                </defs>
+                <circle cx="140" cy="140" r="120" fill="none" stroke="#e8e8ed" stroke-width="12"/>
+                <circle cx="140" cy="140" r="120" fill="none" stroke="url(#ring-grad)" stroke-width="12"
+                  stroke-linecap="round"
+                  stroke-dasharray="753.98"
+                  stroke-dashoffset="98"
+                  filter="url(#ring-glow)"
+                  class="origin-center -rotate-90 score-ring-animate"/>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span class="score-counter text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight text-apple-dark" data-target="87">0</span>
+                <span class="text-xs sm:text-sm font-medium text-apple-secondary mt-1">out of 100</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category pills -->
+        <div class="mt-10 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 max-w-4xl mx-auto">
+          <div class="section-reveal rounded-2xl bg-white p-4 text-center">
+            <div class="w-7 h-7 bg-red-500 rounded-full mx-auto opacity-80"></div>
+            <p class="mt-2 text-sm font-semibold text-apple-dark">Heart</p>
+            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">RHR &middot; HRV &middot; Recovery</p>
+          </div>
+          <div class="section-reveal rounded-2xl bg-white p-4 text-center" style="transition-delay:50ms">
+            <div class="w-7 h-7 bg-indigo-500 rounded-full mx-auto opacity-80"></div>
+            <p class="mt-2 text-sm font-semibold text-apple-dark">Sleep</p>
+            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">Duration &middot; Deep &middot; REM</p>
+          </div>
+          <div class="section-reveal rounded-2xl bg-white p-4 text-center" style="transition-delay:100ms">
+            <div class="w-7 h-7 bg-green-500 rounded-full mx-auto opacity-80"></div>
+            <p class="mt-2 text-sm font-semibold text-apple-dark">Activity</p>
+            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">Steps &middot; Calories &middot; Exercise</p>
+          </div>
+          <div class="section-reveal rounded-2xl bg-white p-4 text-center" style="transition-delay:150ms">
+            <div class="w-7 h-7 bg-orange-500 rounded-full mx-auto opacity-80"></div>
+            <p class="mt-2 text-sm font-semibold text-apple-dark">Body</p>
+            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">Weight &middot; BMI &middot; Temp</p>
+          </div>
+          <div class="section-reveal rounded-2xl bg-white p-4 text-center" style="transition-delay:200ms">
+            <div class="w-7 h-7 bg-cyan-500 rounded-full mx-auto opacity-80"></div>
+            <p class="mt-2 text-sm font-semibold text-apple-dark">Respiratory</p>
+            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">VO2 &middot; SpO2 &middot; Resp Rate</p>
+          </div>
+          <div class="section-reveal rounded-2xl bg-white p-4 text-center" style="transition-delay:250ms">
+            <div class="w-7 h-7 bg-purple-500 rounded-full mx-auto opacity-80"></div>
+            <p class="mt-2 text-sm font-semibold text-apple-dark">Mindfulness</p>
+            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">Minutes &middot; Daylight</p>
+          </div>
+          <div class="section-reveal rounded-2xl bg-white p-4 text-center" style="transition-delay:300ms">
+            <div class="w-7 h-7 bg-teal-500 rounded-full mx-auto opacity-80"></div>
+            <p class="mt-2 text-sm font-semibold text-apple-dark">Mobility</p>
+            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">Speed &middot; Symmetry</p>
+          </div>
+        </div>
+
+        <p class="section-reveal mt-8 text-xs text-apple-secondary/60">Sample data &mdash; your score is calculated from your own metrics</p>
+      </div>
+    </section>
+
+    <!-- ════════ WHAT MAKES IT DIFFERENT ════════ -->
     <section id="features" data-section="features" class="py-20 md:py-28 px-5">
       <div class="max-w-5xl mx-auto">
         <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
-          Your body is talking.<br class="hidden sm:block"/> Nobody else is listening like this.
+          What you actually get.
         </h2>
+        <p class="section-reveal mt-4 text-center text-apple-secondary text-[15px] md:text-base max-w-lg mx-auto">
+          Not buzzwords. Here's what the app does every day.
+        </p>
         <div class="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
 
           <div class="section-reveal feature-card border border-gray-100">
-            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-500 to-orange-400 flex items-center justify-center mb-5">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7 text-white">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
-              </svg>
-            </div>
-            <h3 class="text-[17px] font-semibold text-apple-dark">Illness Early Warning</h3>
-            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">&ldquo;Your HRV, sleep quality, and respiratory rate have shifted together for 3 days &mdash; this pattern preceded your last illness.&rdquo; Detects sickness signals 2&ndash;3 days before you feel it.</p>
-          </div>
-
-          <div class="section-reveal feature-card border border-gray-100" style="transition-delay:80ms">
-            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-400 flex items-center justify-center mb-5">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7 text-white">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"/>
-              </svg>
-            </div>
-            <h3 class="text-[17px] font-semibold text-apple-dark">Causal Chain Narratives</h3>
-            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">&ldquo;Your HRV dropped 18% &rarr; likely because deep sleep fell 25% &rarr; which appears connected to exercising after 8&thinsp;pm three nights in a row.&rdquo; Not just what changed &mdash; why.</p>
-          </div>
-
-          <div class="section-reveal feature-card border border-gray-100" style="transition-delay:160ms">
-            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-400 flex items-center justify-center mb-5">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7 text-white">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.121a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.807-3.808-9.98 0-13.788m13.788 0c3.808 3.807 3.808 9.98 0 13.788M12 12h.008v.008H12V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
-              </svg>
-            </div>
-            <h3 class="text-[17px] font-semibold text-apple-dark">Invisible Pattern Detection</h3>
-            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">&ldquo;Your heart rate, sleep, and activity are each within range &mdash; but this combination is unusual for you.&rdquo; Catches what looks normal individually but isn't when seen together.</p>
-          </div>
-
-          <div class="section-reveal feature-card border border-gray-100" style="transition-delay:240ms">
-            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center mb-5">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7 text-white">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"/>
-              </svg>
-            </div>
-            <h3 class="text-[17px] font-semibold text-apple-dark">Adaptive Scoring</h3>
-            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">If your HRV barely moves, a small shift means something big. If your steps vary wildly, a big swing means less. The score formula adapts to YOUR body &mdash; not a one-size-fits-all algorithm.</p>
-          </div>
-
-          <div class="section-reveal feature-card border border-gray-100" style="transition-delay:320ms">
-            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-400 flex items-center justify-center mb-5">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7 text-white">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-              </svg>
-            </div>
-            <h3 class="text-[17px] font-semibold text-apple-dark">Score Transparency</h3>
-            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">&ldquo;Heart rate recovery added +8 points. Sleep consistency cost you &minus;12.&rdquo; See exactly what's pulling your score up or down. No black box. No mystery number.</p>
-          </div>
-
-          <div class="section-reveal feature-card border border-gray-100" style="transition-delay:400ms">
-            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-400 flex items-center justify-center mb-5">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7 text-white">
+            <div class="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 mb-4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-6 h-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
               </svg>
             </div>
             <h3 class="text-[17px] font-semibold text-apple-dark">Personal Baselines</h3>
-            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">&ldquo;62&thinsp;bpm is high for you &mdash; even though it's textbook normal.&rdquo; Every insight compares against YOUR history, not population averages. Because what's normal for you is unique to you.</p>
+            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">62 bpm might be textbook normal, but high for you. Every insight compares against your own history, not population averages.</p>
+          </div>
+
+          <div class="section-reveal feature-card border border-gray-100" style="transition-delay:80ms">
+            <div class="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center text-red-500 mb-4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
+              </svg>
+            </div>
+            <h3 class="text-[17px] font-semibold text-apple-dark">Multi-Metric Alerts</h3>
+            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">When your HRV, sleep quality, and respiratory rate shift together, Laso flags it. Individual metrics might look fine &mdash; the combination is what matters.</p>
+          </div>
+
+          <div class="section-reveal feature-card border border-gray-100" style="transition-delay:160ms">
+            <div class="w-11 h-11 rounded-xl bg-violet-50 flex items-center justify-center text-violet-600 mb-4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"/>
+              </svg>
+            </div>
+            <h3 class="text-[17px] font-semibold text-apple-dark">Correlations</h3>
+            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">Finds connections between your metrics automatically. "When your deep sleep drops, your HRV tends to follow 2 days later." 35 metric pairs analyzed.</p>
+          </div>
+
+          <div class="section-reveal feature-card border border-gray-100" style="transition-delay:240ms">
+            <div class="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 mb-4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+              </svg>
+            </div>
+            <h3 class="text-[17px] font-semibold text-apple-dark">Transparent Scoring</h3>
+            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">"Heart rate recovery added +8 points. Sleep consistency cost you -12." See exactly what's pulling your score up or down. No black box.</p>
+          </div>
+
+          <div class="section-reveal feature-card border border-gray-100" style="transition-delay:320ms">
+            <div class="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 mb-4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+              </svg>
+            </div>
+            <h3 class="text-[17px] font-semibold text-apple-dark">Historical Context</h3>
+            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">Year-over-year comparisons, seasonal patterns, all-time percentiles. "Your HRV is better than 80% of your own readings this year."</p>
+          </div>
+
+          <div class="section-reveal feature-card border border-gray-100" style="transition-delay:400ms">
+            <div class="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 mb-4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/>
+              </svg>
+            </div>
+            <h3 class="text-[17px] font-semibold text-apple-dark">Smart Notifications</h3>
+            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">Daily summaries, weekly reports, heart rate spike/drop alerts. Configurable thresholds &mdash; you decide what's worth a notification.</p>
+          </div>
+
+          <div class="section-reveal feature-card border border-gray-100" style="transition-delay:480ms">
+            <div class="w-11 h-11 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600 mb-4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
+              </svg>
+            </div>
+            <h3 class="text-[17px] font-semibold text-apple-dark">Metric Deep Dives</h3>
+            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">Tap any metric for interactive charts, trend lines, baseline bands, anomaly markers, and device attribution. Up to 1 year of history.</p>
+          </div>
+
+          <div class="section-reveal feature-card border border-gray-100" style="transition-delay:560ms">
+            <div class="w-11 h-11 rounded-xl bg-pink-50 flex items-center justify-center text-pink-600 mb-4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"/>
+              </svg>
+            </div>
+            <h3 class="text-[17px] font-semibold text-apple-dark">Health Reports</h3>
+            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">Export a shareable HTML report with charts. Useful for doctor visits or personal tracking. Data stays on device until you choose to share.</p>
+          </div>
+
+          <div class="section-reveal feature-card border border-gray-100" style="transition-delay:640ms">
+            <div class="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-apple-dark mb-4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"/>
+              </svg>
+            </div>
+            <h3 class="text-[17px] font-semibold text-apple-dark">Baseline Drift Detection</h3>
+            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">Catches gradual shifts you'd never notice day-to-day. "Your resting heart rate has drifted up 4 bpm over the last 6 weeks."</p>
           </div>
 
         </div>
       </div>
     </section>
 
-    <!-- ════════ JOURNEY ════════ -->
-    <section id="journey" data-section="journey" class="bg-apple-gray py-20 md:py-28 px-5">
+    <!-- ════════ A TYPICAL MORNING ════════ -->
+    <section data-section="typical-day" class="bg-apple-gray py-20 md:py-28 px-5">
       <div class="max-w-3xl mx-auto">
         <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
-          30 days from data to understanding.
+          What a morning with Laso looks like.
         </h2>
         <p class="section-reveal mt-4 text-center text-apple-secondary text-[15px] md:text-base max-w-lg mx-auto">
-          You won't change your routine. You'll just start seeing what was always there.
+          No routine change required. Open the app, glance, understand.
         </p>
         <div class="mt-14 space-y-0">
 
@@ -252,10 +391,10 @@ import '../styles/globals.css'
               <div class="w-3 h-3 rounded-full bg-apple-blue shrink-0 mt-1.5"></div>
               <div class="w-px flex-1 bg-gray-200 my-1"></div>
             </div>
-            <div class="pb-10">
-              <span class="text-xs font-semibold text-apple-blue uppercase tracking-wider">Day 0</span>
-              <h3 class="mt-1 text-lg font-semibold text-apple-dark">See yourself clearly</h3>
-              <p class="mt-1.5 text-[15px] text-apple-secondary leading-relaxed max-w-md">Download Laso. For the first time your health has a shape &mdash; one number, and where it comes from.</p>
+            <div class="pb-8">
+              <span class="text-xs font-semibold text-apple-blue uppercase tracking-wider">7:15 AM</span>
+              <h3 class="mt-1 text-lg font-semibold text-apple-dark">Recovery check</h3>
+              <p class="mt-1.5 text-[15px] text-apple-secondary leading-relaxed max-w-md">You open Laso. Your recovery score is 74 &mdash; "Well Recovered." Your HRV is slightly below baseline but sleep was solid. Good day for a moderate workout.</p>
             </div>
           </div>
 
@@ -264,10 +403,10 @@ import '../styles/globals.css'
               <div class="w-3 h-3 rounded-full bg-apple-blue shrink-0 mt-1.5"></div>
               <div class="w-px flex-1 bg-gray-200 my-1"></div>
             </div>
-            <div class="pb-10">
-              <span class="text-xs font-semibold text-apple-blue uppercase tracking-wider">Day 7</span>
-              <h3 class="mt-1 text-lg font-semibold text-apple-dark">Cause and effect</h3>
-              <p class="mt-1.5 text-[15px] text-apple-secondary leading-relaxed max-w-md">Your first weekly review: what improved, what slipped. You start seeing the connection between your choices and your score.</p>
+            <div class="pb-8">
+              <span class="text-xs font-semibold text-apple-blue uppercase tracking-wider">7:16 AM</span>
+              <h3 class="mt-1 text-lg font-semibold text-apple-dark">Today's insights</h3>
+              <p class="mt-1.5 text-[15px] text-apple-secondary leading-relaxed max-w-md">Two insights surfaced: your resting heart rate has trended down 3 bpm this week (good sign), and your deep sleep percentage is declining. An action item suggests consistent bedtime.</p>
             </div>
           </div>
 
@@ -276,21 +415,21 @@ import '../styles/globals.css'
               <div class="w-3 h-3 rounded-full bg-apple-blue shrink-0 mt-1.5"></div>
               <div class="w-px flex-1 bg-gray-200 my-1"></div>
             </div>
-            <div class="pb-10">
-              <span class="text-xs font-semibold text-apple-blue uppercase tracking-wider">Day 14</span>
-              <h3 class="mt-1 text-lg font-semibold text-apple-dark">A personal discovery</h3>
-              <p class="mt-1.5 text-[15px] text-apple-secondary leading-relaxed max-w-md">An insight surfaces that no article could have told you. A pattern unique to your body, revealed by your own data.</p>
+            <div class="pb-8">
+              <span class="text-xs font-semibold text-apple-blue uppercase tracking-wider">7:17 AM</span>
+              <h3 class="mt-1 text-lg font-semibold text-apple-dark">Done</h3>
+              <p class="mt-1.5 text-[15px] text-apple-secondary leading-relaxed max-w-md">Two minutes. You know how you slept, how recovered you are, and what's worth paying attention to. Close the app, start your day.</p>
             </div>
           </div>
 
           <div class="section-reveal flex gap-5 md:gap-7" style="transition-delay:300ms">
             <div class="flex flex-col items-center">
-              <div class="w-3 h-3 rounded-full bg-apple-blue shrink-0 mt-1.5"></div>
+              <div class="w-3 h-3 rounded-full bg-gray-300 shrink-0 mt-1.5"></div>
             </div>
-            <div class="pb-10">
-              <span class="text-xs font-semibold text-apple-blue uppercase tracking-wider">Day 30</span>
-              <h3 class="mt-1 text-lg font-semibold text-apple-dark">Quiet confidence</h3>
-              <p class="mt-1.5 text-[15px] text-apple-secondary leading-relaxed max-w-md">You know what's normal. You know what's changing. You know what works for you. The vague anxiety of &ldquo;am I healthy?&rdquo; is gone.</p>
+            <div class="pb-8">
+              <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sunday</span>
+              <h3 class="mt-1 text-lg font-semibold text-apple-dark">Weekly review</h3>
+              <p class="mt-1.5 text-[15px] text-apple-secondary leading-relaxed max-w-md">Your weekly summary shows 4 metrics improving, 2 declining. Your score went up 5 points. The correlation engine found that your workout timing affects your sleep quality. 10 seconds to read.</p>
             </div>
           </div>
 
@@ -298,110 +437,117 @@ import '../styles/globals.css'
       </div>
     </section>
 
-    <!-- ════════ SCORING ════════ -->
-    <section id="score" data-section="score" class="py-20 md:py-28 px-5">
+    <!-- ════════ WHO IT'S FOR ════════ -->
+    <section id="who" data-section="who" class="py-20 md:py-28 px-5">
       <div class="max-w-5xl mx-auto">
         <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
-          One score. Seven pillars.
+          Who this is for.
         </h2>
         <p class="section-reveal mt-4 text-center text-apple-secondary text-[15px] md:text-base max-w-lg mx-auto">
-          Your health score combines 50+ metrics across seven categories. Weights adapt to your body &mdash; stable metrics get amplified, volatile ones get dampened. And you can see exactly which metric pushed your score in which direction.
+          Laso isn't for everyone. It works best if you already wear a health tracker and want more from your data.
         </p>
-        <div class="mt-14 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
-          <div class="section-reveal rounded-2xl bg-apple-gray p-4 text-center">
-            <div class="w-8 h-8 bg-red-500 rounded-full mx-auto opacity-80"></div>
-            <p class="mt-3 text-sm font-semibold text-apple-dark">Heart</p>
-            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">HR &middot; RHR &middot; HRV &middot; Recovery</p>
+        <div class="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+          <div class="section-reveal rounded-2xl bg-apple-gray p-7">
+            <h3 class="text-[17px] font-semibold text-apple-dark">"I wear my Apple Watch daily but never look at Health app"</h3>
+            <p class="mt-3 text-[15px] text-apple-secondary leading-relaxed">You know the data is there. You just don't know what to do with it. Laso turns it into a 2-minute morning check-in.</p>
           </div>
-          <div class="section-reveal rounded-2xl bg-apple-gray p-4 text-center" style="transition-delay:60ms">
-            <div class="w-8 h-8 bg-indigo-500 rounded-full mx-auto opacity-80"></div>
-            <p class="mt-3 text-sm font-semibold text-apple-dark">Sleep</p>
-            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">Duration &middot; Deep &middot; REM &middot; Core</p>
+
+          <div class="section-reveal rounded-2xl bg-apple-gray p-7" style="transition-delay:80ms">
+            <h3 class="text-[17px] font-semibold text-apple-dark">"I want to understand my recovery and readiness"</h3>
+            <p class="mt-3 text-[15px] text-apple-secondary leading-relaxed">You exercise regularly and want to know when to push and when to rest. The recovery score and trend analysis help with that.</p>
           </div>
-          <div class="section-reveal rounded-2xl bg-apple-gray p-4 text-center" style="transition-delay:120ms">
-            <div class="w-8 h-8 bg-green-500 rounded-full mx-auto opacity-80"></div>
-            <p class="mt-3 text-sm font-semibold text-apple-dark">Activity</p>
-            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">Steps &middot; Calories &middot; Exercise &middot; Distance</p>
+
+          <div class="section-reveal rounded-2xl bg-apple-gray p-7" style="transition-delay:160ms">
+            <h3 class="text-[17px] font-semibold text-apple-dark">"I track health data but can't see the big picture"</h3>
+            <p class="mt-3 text-[15px] text-apple-secondary leading-relaxed">You check your HRV, sleep, and steps separately. But you've never seen how they connect or what they mean together.</p>
           </div>
-          <div class="section-reveal rounded-2xl bg-apple-gray p-4 text-center" style="transition-delay:180ms">
-            <div class="w-8 h-8 bg-orange-500 rounded-full mx-auto opacity-80"></div>
-            <p class="mt-3 text-sm font-semibold text-apple-dark">Body</p>
-            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">Weight &middot; BMI &middot; BP &middot; Temperature</p>
+
+          <div class="section-reveal rounded-2xl bg-apple-gray p-7" style="transition-delay:240ms">
+            <h3 class="text-[17px] font-semibold text-apple-dark">"I want early signals, not just data"</h3>
+            <p class="mt-3 text-[15px] text-apple-secondary leading-relaxed">You don't need another dashboard. You want something that flags when patterns shift &mdash; before it becomes obvious.</p>
           </div>
-          <div class="section-reveal rounded-2xl bg-apple-gray p-4 text-center" style="transition-delay:240ms">
-            <div class="w-8 h-8 bg-cyan-500 rounded-full mx-auto opacity-80"></div>
-            <p class="mt-3 text-sm font-semibold text-apple-dark">Respiratory</p>
-            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">VO2 Max &middot; SpO2 &middot; Resp Rate</p>
+
+          <div class="section-reveal rounded-2xl bg-apple-gray p-7" style="transition-delay:320ms">
+            <h3 class="text-[17px] font-semibold text-apple-dark">"I care about privacy"</h3>
+            <p class="mt-3 text-[15px] text-apple-secondary leading-relaxed">Your health data is sensitive. Laso runs entirely on your device. No accounts, no cloud sync, no data collection. We literally cannot see your data.</p>
           </div>
-          <div class="section-reveal rounded-2xl bg-apple-gray p-4 text-center" style="transition-delay:300ms">
-            <div class="w-8 h-8 bg-purple-500 rounded-full mx-auto opacity-80"></div>
-            <p class="mt-3 text-sm font-semibold text-apple-dark">Mindfulness</p>
-            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">Mindful Min &middot; Daylight &middot; EDA</p>
+
+          <div class="section-reveal rounded-2xl bg-apple-gray p-7" style="transition-delay:400ms">
+            <h3 class="text-[17px] font-semibold text-apple-dark">"I want data to share with my doctor"</h3>
+            <p class="mt-3 text-[15px] text-apple-secondary leading-relaxed">Export a clean health report with trends and charts. More useful than showing raw Apple Health screenshots.</p>
           </div>
-          <div class="section-reveal rounded-2xl bg-apple-gray p-4 text-center" style="transition-delay:360ms">
-            <div class="w-8 h-8 bg-teal-500 rounded-full mx-auto opacity-80"></div>
-            <p class="mt-3 text-sm font-semibold text-apple-dark">Mobility</p>
-            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">Speed &middot; Symmetry &middot; Balance</p>
-          </div>
+
         </div>
-        <div class="section-reveal mt-12 max-w-2xl mx-auto text-center">
-          <p class="text-[15px] text-apple-secondary leading-relaxed">
-            Every metric is weighted to YOUR variability &mdash; a 3&thinsp;bpm resting HR shift matters more for someone rock-steady than someone who swings 10&thinsp;bpm daily.
-            Tap any category to see the exact point contribution: &ldquo;Deep sleep added +6. Respiratory rate cost &minus;4.&rdquo;
-            No black box. No generic formula. A score that actually knows your body.
+      </div>
+    </section>
+
+    <!-- ════════ PRIVACY ════════ -->
+    <section data-section="privacy" class="bg-apple-gray py-20 md:py-28 px-5">
+      <div class="max-w-5xl mx-auto">
+        <div class="max-w-2xl mx-auto text-center">
+          <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-balance">
+            Your data stays on your phone. Period.
+          </h2>
+          <p class="section-reveal mt-6 text-[15px] md:text-base text-apple-secondary leading-relaxed">
+            This isn't a marketing line. It's the architecture. Every analysis, every score calculation, every insight &mdash; it all runs on your iPhone. Your health data never touches our servers. We don't have servers for health data. There's no account to create, no cloud to sync to, nothing to leak.
           </p>
+        </div>
+        <div class="mt-12 grid sm:grid-cols-3 gap-5 max-w-3xl mx-auto">
+          <div class="section-reveal bg-white rounded-2xl p-6 text-center">
+            <div class="w-10 h-10 rounded-xl bg-apple-gray flex items-center justify-center text-apple-dark mx-auto mb-3">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/>
+              </svg>
+            </div>
+            <p class="text-sm font-semibold text-apple-dark">AES-256 Encrypted</p>
+            <p class="mt-1 text-[13px] text-apple-secondary">On-device storage with hardware-backed encryption</p>
+          </div>
+          <div class="section-reveal bg-white rounded-2xl p-6 text-center" style="transition-delay:80ms">
+            <div class="w-10 h-10 rounded-xl bg-apple-gray flex items-center justify-center text-apple-dark mx-auto mb-3">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"/>
+              </svg>
+            </div>
+            <p class="text-sm font-semibold text-apple-dark">No Account Required</p>
+            <p class="mt-1 text-[13px] text-apple-secondary">No sign-up, no email, no personal info collected</p>
+          </div>
+          <div class="section-reveal bg-white rounded-2xl p-6 text-center" style="transition-delay:160ms">
+            <div class="w-10 h-10 rounded-xl bg-apple-gray flex items-center justify-center text-apple-dark mx-auto mb-3">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3"/>
+              </svg>
+            </div>
+            <p class="text-sm font-semibold text-apple-dark">100% On-Device</p>
+            <p class="mt-1 text-[13px] text-apple-secondary">All processing happens locally on your iPhone</p>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- ════════ DEVICES ════════ -->
-    <section id="devices" data-section="devices" class="bg-apple-gray py-20 md:py-28 px-5">
+    <section id="devices" data-section="devices" class="py-20 md:py-28 px-5">
       <div class="max-w-5xl mx-auto">
         <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
-          Works with your watch.
+          Works with what you already wear.
         </h2>
         <p class="section-reveal mt-4 text-center text-apple-secondary text-[15px] md:text-base max-w-md mx-auto">
-          If your device syncs to Apple Health, it works with Laso. 18 devices supported.
+          If it syncs to Apple Health, it works with Laso. Best experience with Apple Watch.
         </p>
-        <div class="mt-14 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Apple Watch</p><p class="mt-1 text-[11px] text-apple-secondary">via Native</p></div>
-          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">iPhone</p><p class="mt-1 text-[11px] text-apple-secondary">via Built-in sensors</p></div>
-          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Garmin</p><p class="mt-1 text-[11px] text-apple-secondary">via Garmin Connect</p></div>
-          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Fitbit</p><p class="mt-1 text-[11px] text-apple-secondary">via Fitbit</p></div>
+        <div class="mt-14 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 max-w-3xl mx-auto">
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Apple Watch</p><p class="mt-1 text-[11px] text-apple-secondary">Native</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">iPhone</p><p class="mt-1 text-[11px] text-apple-secondary">Built-in</p></div>
           <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Oura Ring</p><p class="mt-1 text-[11px] text-apple-secondary">via Oura</p></div>
           <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Whoop</p><p class="mt-1 text-[11px] text-apple-secondary">via Whoop</p></div>
-          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Samsung Galaxy Watch</p><p class="mt-1 text-[11px] text-apple-secondary">via Samsung Health</p></div>
-          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Amazfit</p><p class="mt-1 text-[11px] text-apple-secondary">via Zepp</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Garmin</p><p class="mt-1 text-[11px] text-apple-secondary">via Connect</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Fitbit</p><p class="mt-1 text-[11px] text-apple-secondary">via Fitbit</p></div>
           <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Withings</p><p class="mt-1 text-[11px] text-apple-secondary">via Health Mate</p></div>
           <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Polar</p><p class="mt-1 text-[11px] text-apple-secondary">via Polar Flow</p></div>
-          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Xiaomi Smart Band</p><p class="mt-1 text-[11px] text-apple-secondary">via Mi Fitness</p></div>
-          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Google Pixel Watch</p><p class="mt-1 text-[11px] text-apple-secondary">via Google Fit</p></div>
-          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Huawei Watch</p><p class="mt-1 text-[11px] text-apple-secondary">via Huawei Health</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Samsung</p><p class="mt-1 text-[11px] text-apple-secondary">via Samsung Health</p></div>
           <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">COROS</p><p class="mt-1 text-[11px] text-apple-secondary">via COROS</p></div>
-          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Suunto</p><p class="mt-1 text-[11px] text-apple-secondary">via Suunto</p></div>
-          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Noise</p><p class="mt-1 text-[11px] text-apple-secondary">via NoiseFit</p></div>
-          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">boAt</p><p class="mt-1 text-[11px] text-apple-secondary">via boAt Wearables</p></div>
-          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Fire-Boltt</p><p class="mt-1 text-[11px] text-apple-secondary">via FireBoltt</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Amazfit</p><p class="mt-1 text-[11px] text-apple-secondary">via Zepp</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">+ More</p><p class="mt-1 text-[11px] text-apple-secondary">via HealthKit</p></div>
         </div>
-      </div>
-    </section>
-
-    <!-- ════════ WHY LASO ════════ -->
-    <section data-section="why-laso" class="py-20 md:py-28 px-5">
-      <div class="max-w-2xl mx-auto text-center">
-        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-balance">
-          Why &ldquo;Laso&rdquo;?
-        </h2>
-        <p class="section-reveal mt-6 text-[15px] md:text-base text-apple-secondary leading-relaxed">
-          Your health data is scattered across sensors, apps, and metrics that never connect.
-          Laso brings it all together &mdash; one clear picture from the noise.
-          The name reflects what we do: gather what matters, let go of what doesn't.
-        </p>
-        <p class="section-reveal mt-4 text-[15px] md:text-base text-apple-secondary leading-relaxed">
-          We built Laso because we believe your watch should make you healthier, not just more measured.
-          It finds things in your data that you genuinely cannot see &mdash; cross-metric patterns, slow drifts over months, and early signals buried in the noise between five different metrics.
-          Every screen answers a question you already had. Nothing more. Nothing less.
-        </p>
       </div>
     </section>
 
@@ -409,10 +555,10 @@ import '../styles/globals.css'
     <section id="pricing" data-section="pricing" class="bg-apple-gray py-20 md:py-28 px-5">
       <div class="max-w-4xl mx-auto">
         <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
-          Start free. Upgrade when you're ready.
+          Try everything free for 7 days.
         </h2>
         <p class="section-reveal mt-4 text-center text-apple-secondary text-[15px] md:text-base">
-          No account. No credit card. Just open and go.
+          No credit card to start. Keep the free tier forever if you prefer.
         </p>
         <div class="mt-14 grid md:grid-cols-2 gap-5 max-w-2xl mx-auto">
 
@@ -424,27 +570,27 @@ import '../styles/globals.css'
             <ul class="mt-6 space-y-3">
               <li class="flex items-start gap-2.5 text-[15px] text-apple-dark">
                 <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
-                Health Score
+                Health Score &amp; Category Scores
               </li>
               <li class="flex items-start gap-2.5 text-[15px] text-apple-dark">
                 <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
-                Category Scores
+                Heart Rate, Steps, Sleep basics
               </li>
               <li class="flex items-start gap-2.5 text-[15px] text-apple-dark">
                 <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
-                Heart Rate, Steps, Sleep
-              </li>
-              <li class="flex items-start gap-2.5 text-[15px] text-apple-dark">
-                <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
-                7-Day Trends
+                7-Day &amp; 30-Day Trends
               </li>
               <li class="flex items-start gap-2.5 text-[15px] text-apple-dark">
                 <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
                 2 Daily Insights
               </li>
+              <li class="flex items-start gap-2.5 text-[15px] text-apple-dark">
+                <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
+                Recovery Score
+              </li>
             </ul>
             <button data-download="pricing-free" class="mt-8 w-full rounded-full border-2 border-apple-dark text-apple-dark font-medium text-[15px] py-3 hover:bg-apple-dark hover:text-white transition-colors cursor-pointer">
-              Get Started
+              Get Started Free
             </button>
           </div>
 
@@ -466,27 +612,27 @@ import '../styles/globals.css'
               </li>
               <li class="flex items-start gap-2.5 text-[15px]">
                 <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-400 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
-                Illness Early Warning System
+                Live Vitals (Heart Rate, SpO2, Respiratory)
               </li>
               <li class="flex items-start gap-2.5 text-[15px]">
                 <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-400 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
-                Causal Chain Analysis
+                All 50+ Metrics &amp; 1-Year History
               </li>
               <li class="flex items-start gap-2.5 text-[15px]">
                 <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-400 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
-                Cross-Metric Pattern Detection
+                Correlations &amp; Pattern Detection
               </li>
               <li class="flex items-start gap-2.5 text-[15px]">
                 <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-400 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
-                Live Vitals Streaming
+                Health Risk Alerts
               </li>
               <li class="flex items-start gap-2.5 text-[15px]">
                 <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-400 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
-                50+ Metrics &amp; 1-Year History
+                Unlimited Insights &amp; Metric Deep Dives
               </li>
               <li class="flex items-start gap-2.5 text-[15px]">
                 <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-400 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
-                Health Reports Export
+                Exportable Health Reports
               </li>
             </ul>
             <button data-download="pricing-pro" class="mt-8 w-full rounded-full bg-white text-apple-dark font-medium text-[15px] py-3 hover:bg-gray-100 transition-colors cursor-pointer">
@@ -498,14 +644,59 @@ import '../styles/globals.css'
       </div>
     </section>
 
+    <!-- ════════ HELP US BUILD ════════ -->
+    <section id="feedback" data-section="feedback" class="py-20 md:py-28 px-5">
+      <div class="max-w-2xl mx-auto text-center">
+        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-balance">
+          We're building this with you.
+        </h2>
+        <p class="section-reveal mt-4 text-apple-secondary text-[15px] md:text-base leading-relaxed max-w-lg mx-auto">
+          Laso is early. We're figuring out what matters most &mdash; which features change your daily routine, which don't, and what's missing. Your feedback directly shapes what we build next.
+        </p>
+        <div class="section-reveal mt-10 max-w-md mx-auto">
+          <form id="feedback-form" class="flex flex-col sm:flex-row gap-3">
+            <input
+              type="email"
+              id="feedback-email"
+              placeholder="your@email.com"
+              required
+              class="flex-1 rounded-full border border-gray-200 px-5 py-3 text-[15px] text-apple-dark placeholder:text-apple-secondary/50 focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue/30 transition-colors"
+            />
+            <button
+              type="submit"
+              class="bg-apple-dark text-white font-medium rounded-full px-7 py-3 text-[15px] hover:bg-black transition-colors active:scale-[0.97] cursor-pointer shrink-0"
+            >
+              Join Early Access
+            </button>
+          </form>
+          <p id="feedback-success" class="mt-3 text-sm text-emerald-600 font-medium hidden">Thanks! We'll be in touch.</p>
+          <p class="mt-3 text-[13px] text-apple-secondary/60">We'll send occasional updates and ask what you'd like to see next. No spam. Unsubscribe anytime.</p>
+        </div>
+        <div class="section-reveal mt-12 flex flex-wrap justify-center gap-3">
+          <a href="mailto:feedback@lasohealth.com" class="inline-flex items-center gap-2 bg-apple-gray rounded-full px-5 py-2.5 text-sm font-medium text-apple-dark hover:bg-gray-200 transition-colors">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/>
+            </svg>
+            Send Feedback
+          </a>
+          <a href="https://twitter.com/lasohealth" target="_blank" rel="noopener" class="inline-flex items-center gap-2 bg-apple-gray rounded-full px-5 py-2.5 text-sm font-medium text-apple-dark hover:bg-gray-200 transition-colors">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+            Follow Updates
+          </a>
+        </div>
+      </div>
+    </section>
+
     <!-- ════════ FINAL CTA ════════ -->
-    <section data-section="final-cta" class="py-20 md:py-28 px-5 text-center">
+    <section data-section="final-cta" class="bg-apple-gray py-20 md:py-28 px-5 text-center">
       <div class="max-w-2xl mx-auto">
         <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-balance">
-          Your watch already knows.<br/>Now you will too.
+          Your watch already knows. Now you will too.
         </h2>
         <p class="section-reveal mt-4 text-apple-secondary text-[15px] md:text-base max-w-md mx-auto">
-          In 30 days, you'll understand your body better than you ever have. No effort. Just awareness.
+          Download Laso, connect your health data, and see what your metrics have been trying to tell you.
         </p>
         <button data-download="footer-cta" class="section-reveal mt-8 inline-flex items-center gap-2.5 bg-apple-dark text-white font-medium rounded-full px-7 py-3.5 text-[15px] hover:bg-black transition-colors active:scale-[0.97] cursor-pointer">
           <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
@@ -573,6 +764,49 @@ import '../styles/globals.css'
         }
         window.open(APP_STORE_URL, '_blank', 'noopener')
       })
+    })
+
+    // ── Feedback form ──
+    const feedbackForm = document.getElementById('feedback-form') as HTMLFormElement | null
+    const feedbackEmail = document.getElementById('feedback-email') as HTMLInputElement | null
+    const feedbackSuccess = document.getElementById('feedback-success')
+
+    feedbackForm?.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const email = feedbackEmail?.value?.trim()
+      if (!email) return
+
+      trackEvent('early_access_signup', { email_domain: email.split('@')[1] ?? 'unknown' })
+
+      // Store in localStorage as fallback
+      const signups = JSON.parse(localStorage.getItem('laso_signups') || '[]')
+      signups.push({ email, timestamp: new Date().toISOString() })
+      localStorage.setItem('laso_signups', JSON.stringify(signups))
+
+      // Try sending to Firestore via REST (optional — works if Firebase is configured)
+      try {
+        await fetch('https://firestore.googleapis.com/v1/projects/laso-health-v1/databases/(default)/documents/early_access', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fields: {
+              email: { stringValue: email },
+              timestamp: { timestampValue: new Date().toISOString() },
+              source: { stringValue: 'website' },
+              country: { stringValue: country ?? 'unknown' },
+            }
+          })
+        })
+      } catch {
+        // Silent fail — we have the localStorage backup
+      }
+
+      if (feedbackSuccess) feedbackSuccess.classList.remove('hidden')
+      if (feedbackEmail) feedbackEmail.value = ''
+      if (feedbackForm) {
+        const btn = feedbackForm.querySelector('button[type="submit"]')
+        if (btn) btn.textContent = 'Joined!'
+      }
     })
 
     // ── Security: disable right-click & view-source shortcuts ──
