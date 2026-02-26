@@ -713,7 +713,8 @@ final class LiveViewModel {
         // Window: yesterday 6 PM → today noon (covers most sleep schedules)
         let now = Date()
         let startOfToday = calendar.startOfDay(for: now)
-        guard let yesterdayEvening = calendar.date(bySettingHour: 18, minute: 0, second: 0, of: calendar.date(byAdding: .day, value: -1, to: startOfToday)!),
+        guard let yesterday = calendar.date(byAdding: .day, value: -1, to: startOfToday),
+              let yesterdayEvening = calendar.date(bySettingHour: 18, minute: 0, second: 0, of: yesterday),
               let todayNoon = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: startOfToday) else { return }
 
         let predicate = HKQuery.predicateForSamples(withStart: yesterdayEvening, end: todayNoon, options: .strictStartDate)

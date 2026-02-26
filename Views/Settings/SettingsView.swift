@@ -214,16 +214,33 @@ struct SettingsView: View {
 
                 // Export
                 Section("Data Export") {
-                    Button {
-                        AppAnalytics.shared.trackBlockTap(title: "Generate Web Report", type: .exportReport, screen: .settings)
-                        webExportViewModel.exportReport()
-                        showExportSheet = true
-                    } label: {
-                        Label("Generate Web Report", systemImage: "globe")
-                    }
+                    if FeatureGate.canAccess(.exportReport) {
+                        Button {
+                            AppAnalytics.shared.trackBlockTap(title: "Generate Web Report", type: .exportReport, screen: .settings)
+                            webExportViewModel.exportReport()
+                            // Only show sheet after export completes with a valid URL
+                            if webExportViewModel.exportedURL != nil {
+                                showExportSheet = true
+                            }
+                        } label: {
+                            Label("Generate Web Report", systemImage: "globe")
+                        }
 
-                    if webExportViewModel.isExporting {
-                        ProgressView("Generating report...")
+                        if webExportViewModel.isExporting {
+                            ProgressView("Generating report...")
+                        }
+                    } else {
+                        HStack {
+                            Label("Generate Web Report", systemImage: "globe")
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text("PRO")
+                                .font(.caption2.weight(.bold))
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(.tint, in: Capsule())
+                                .foregroundStyle(.white)
+                        }
                     }
                 }
 
@@ -306,7 +323,9 @@ struct SettingsView: View {
             .onChange(of: preferences) { _, _ in
                 savePreferences()
             }
-            .sheet(isPresented: $showExportSheet) {
+            .sheet(isPresented: $showExportSheet, onDismiss: {
+                webExportViewModel.cleanupExport()
+            }) {
                 if let url = webExportViewModel.exportedURL {
                     ShareSheet(items: [url])
                         .onAppear {

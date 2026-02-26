@@ -248,7 +248,6 @@ final class AppAnalytics {
         ])
 
         setUserProperty("streak_days", value: "\(session.streakDays)")
-        setUserProperty("country", value: Locale.current.region?.identifier ?? "unknown")
         setUserProperty("price_tier", value: SubscriptionConfig.currentTier.rawValue)
     }
 
@@ -302,7 +301,7 @@ final class AppAnalytics {
     func trackFeatureOpen(_ feature: AppFeature, metadata: [String: Any] = [:]) {
         let now = Date()
 
-        queue.async {
+        queue.sync {
             self.openTimestamps[feature] = now
         }
 

@@ -67,6 +67,12 @@ struct ContentView: View {
                         HealthRiskDetailView(risk: risk) { metric in
                             navigationPath.append(metric)
                         }
+                    } else {
+                        ContentUnavailableView(
+                            "Risk Data Unavailable",
+                            systemImage: "heart.text.clipboard",
+                            description: Text("This health risk assessment is no longer available. Pull to refresh your data.")
+                        )
                     }
                 }
                 .navigationDestination(for: String.self) { route in
@@ -146,7 +152,15 @@ struct ContentView: View {
                 showSettings: $showSettings
             )
         case .live:
-            LiveView(viewModel: liveViewModel)
+            if FeatureGate.canAccess(.liveTab) {
+                LiveView(viewModel: liveViewModel)
+            } else {
+                ProFeatureOverlay(
+                    feature: "Live Vitals",
+                    icon: "waveform.path.ecg",
+                    description: "Monitor your heart rate, SpO2, activity rings, and readiness in real time."
+                )
+            }
         case .explore:
             ExploreView(
                 viewModel: dashboardViewModel,

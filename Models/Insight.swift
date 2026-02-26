@@ -15,6 +15,9 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
     case sleepPerformance
     case weeklyPattern
     case personalRecord
+    case scoreTrajectory
+    case baselineDrift
+    case multiMetricCluster
 
     var displayName: String {
         switch self {
@@ -26,6 +29,9 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .sleepPerformance: return "Sleep"
         case .weeklyPattern: return "Weekly"
         case .personalRecord: return "Record"
+        case .scoreTrajectory: return "Trajectory"
+        case .baselineDrift: return "Drift"
+        case .multiMetricCluster: return "Cluster"
         }
     }
 
@@ -39,6 +45,9 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .sleepPerformance: return "bed.double.circle.fill"
         case .weeklyPattern: return "calendar.circle.fill"
         case .personalRecord: return "trophy.fill"
+        case .scoreTrajectory: return "chart.line.uptrend.xyaxis.circle.fill"
+        case .baselineDrift: return "arrow.up.and.down.circle.fill"
+        case .multiMetricCluster: return "exclamationmark.3"
         }
     }
 
@@ -52,6 +61,9 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .sleepPerformance: return .indigo
         case .weeklyPattern: return .teal
         case .personalRecord: return .yellow
+        case .scoreTrajectory: return .mint
+        case .baselineDrift: return .cyan
+        case .multiMetricCluster: return .pink
         }
     }
 }

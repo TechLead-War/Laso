@@ -1,31 +1,48 @@
 import Foundation
 
-/// Detects anomalies by comparing current values to personal baselines
+/// Detects anomalies using z-score analysis against personal baselines.
+/// Z-scores adapt to each metric's natural variability — a 10% deviation
+/// matters more when σ is small (stable metric) than when σ is large (volatile metric).
 struct AnomalyDetector {
 
     struct AnomalyResult {
         let metric: HealthMetric
         let severity: Severity
         let deviationPercent: Double
+        let zScore: Double
         let currentValue: Double
         let baselineValue: Double
         let isAboveBaseline: Bool
         let outsideNormalRange: Bool
     }
 
-    /// Check a metric's current value against its baseline
+    /// Z-score thresholds (adaptive to each metric's variability)
+    private static let warningZScore: Double = 1.5
+    private static let criticalZScore: Double = 2.5
+
+    /// Check a metric's current value against its baseline using z-score
     static func detect(
         metric: HealthMetric,
         currentValue: Double,
         baseline: UserBaseline
     ) -> AnomalyResult {
         let deviation = baseline.deviationPercent(for: currentValue)
-        let absDeviation = abs(deviation) / 100.0
+
+        // Z-score: how many standard deviations from baseline mean
+        let zScore: Double
+        if baseline.standardDeviation > 0 && baseline.sampleCount >= 7 {
+            zScore = (currentValue - baseline.mean) / baseline.standardDeviation
+        } else {
+            // Fall back to percentage-based when we lack enough data for reliable σ
+            zScore = abs(deviation) / 100.0 * 2.0  // map 10%→0.2, 50%→1.0
+        }
+
+        let absZ = abs(zScore)
 
         let severity: Severity
-        if absDeviation >= RulesConfiguration.criticalDeviationThreshold {
+        if absZ >= criticalZScore {
             severity = .critical
-        } else if absDeviation >= RulesConfiguration.warningDeviationThreshold {
+        } else if absZ >= warningZScore {
             severity = .warning
         } else {
             severity = .info
@@ -38,6 +55,7 @@ struct AnomalyDetector {
             metric: metric,
             severity: severity,
             deviationPercent: deviation,
+            zScore: zScore,
             currentValue: currentValue,
             baselineValue: baseline.mean,
             isAboveBaseline: currentValue > baseline.mean,
@@ -53,11 +71,12 @@ struct AnomalyDetector {
         var results: [AnomalyResult] = []
 
         for (metric, series) in timeSeries {
+            let recentSamples = series.samples(lastDays: 3)
             guard let baseline = baselines[metric],
-                  let currentValue = series.mean(lastDays: 3) as Double?,
-                  currentValue > 0 else {
+                  !recentSamples.isEmpty else {
                 continue
             }
+            let currentValue = recentSamples.map(\.value).mean
 
             let result = detect(metric: metric, currentValue: currentValue, baseline: baseline)
             results.append(result)

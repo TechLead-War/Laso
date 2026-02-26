@@ -88,20 +88,24 @@ struct HomeView: View {
                             AppAnalytics.shared.trackSectionImpression(section: .needsAttentionSection, screen: .home, metadata: ["item_count": topAttentionInsights.count])
                         }
 
-                    // 5. From Your Data — top 2 correlations
-                    CorrelationsSection(
-                        correlations: Array(viewModel.topCorrelations.prefix(2)),
-                        onTapSeeAll: {
-                            AppAnalytics.shared.trackBlockTap(title: "See All Correlations", type: .correlationCard, screen: .home)
-                            navigationPath.append("correlationsDetail")
-                        },
-                        onTapMetric: { metric in
-                            AppAnalytics.shared.trackBlockTap(title: metric.displayName, type: .correlationCard, screen: .home)
-                            navigationPath.append(metric)
+                    // 5. From Your Data — top 2 correlations (pro feature)
+                    if FeatureGate.canAccess(.advancedAnalytics) {
+                        CorrelationsSection(
+                            correlations: Array(viewModel.topCorrelations.prefix(2)),
+                            onTapSeeAll: {
+                                AppAnalytics.shared.trackBlockTap(title: "See All Correlations", type: .correlationCard, screen: .home)
+                                navigationPath.append("correlationsDetail")
+                            },
+                            onTapMetric: { metric in
+                                AppAnalytics.shared.trackBlockTap(title: metric.displayName, type: .correlationCard, screen: .home)
+                                navigationPath.append(metric)
+                            }
+                        )
+                        .onAppear {
+                            AppAnalytics.shared.trackSectionImpression(section: .correlationsSection, screen: .home, metadata: ["correlation_count": viewModel.topCorrelations.prefix(2).count])
                         }
-                    )
-                    .onAppear {
-                        AppAnalytics.shared.trackSectionImpression(section: .correlationsSection, screen: .home, metadata: ["correlation_count": viewModel.topCorrelations.prefix(2).count])
+                    } else if !viewModel.topCorrelations.isEmpty {
+                        proTeaser(title: "Your Correlations", subtitle: "See how your metrics affect each other", icon: "arrow.triangle.branch")
                     }
 
                     // 6. Weekly Review
@@ -255,6 +259,42 @@ struct HomeView: View {
         }
     }
 
+    // MARK: - Pro Feature Teaser
+
+    private func proTeaser(title: String, subtitle: String, icon: String) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundStyle(.tint)
+                .frame(width: 36)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 4) {
+                    Text(title)
+                        .font(.subheadline.weight(.semibold))
+                    Text("PRO")
+                        .font(.caption2.weight(.bold))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(.tint, in: Capsule())
+                        .foregroundStyle(.white)
+                }
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Image(systemName: "lock.fill")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+        }
+        .padding()
+        .background(.background, in: RoundedRectangle(cornerRadius: 14))
+        .padding(.horizontal)
+        .onTapGesture {
+            AppAnalytics.shared.trackPremiumFeatureAttempted(feature: title, screen: .home)
+        }
+    }
+
     // MARK: - Needs Attention (top 2 actionable insights)
 
     private var topAttentionInsights: [Insight] {
@@ -381,6 +421,18 @@ struct HomeView: View {
         .padding(.horizontal)
     }
 
+    // MARK: - Timestamp Helpers
+
+    /// Shows whichever is more recent: last sync time or latest data timestamp.
+    /// After pull-to-refresh, this ensures the timestamp updates even if no new RHR data arrived.
+    private var mostRecentTimestamp: Date? {
+        let candidates = [
+            liveViewModel.latestRestingHeartRateTimestamp,
+            viewModel.lastRefresh,
+        ].compactMap { $0 }
+        return candidates.max()
+    }
+
     // MARK: - Time-of-Day Helpers
 
     private var currentHour: Int {
@@ -424,12 +476,8 @@ struct HomeView: View {
                         .opacity(liveViewModel.hasFreshLiveData && livePulse ? 1.0 : 0.4)
                         .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: livePulse)
 
-                    if let rhrTs = liveViewModel.latestRestingHeartRateTimestamp {
-                        Text(rhrTs, style: .relative)
-                            .font(.system(size: 9, weight: .medium).monospacedDigit())
-                            .foregroundStyle(.tertiary)
-                    } else if let lastRefresh = viewModel.lastRefresh {
-                        Text(lastRefresh, style: .relative)
+                    if let displayTs = mostRecentTimestamp {
+                        Text(displayTs, style: .relative)
                             .font(.system(size: 9, weight: .medium).monospacedDigit())
                             .foregroundStyle(.tertiary)
                     } else {

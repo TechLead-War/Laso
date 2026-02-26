@@ -1,0 +1,680 @@
+---
+import Base from '../layouts/Base.astro'
+import '../styles/globals.css'
+---
+
+<Base
+  title="Laso — Your Health, Understood"
+  description="One intelligent score from 50+ health metrics. Laso turns your Apple Watch data into clear, personal insights — all on device, all private."
+>
+  <div class="min-h-screen bg-white">
+
+    <!-- ════════ NAV ════════ -->
+    <nav aria-label="Main navigation" class="nav-blur fixed top-0 inset-x-0 z-50 border-b border-gray-100/60">
+      <div class="max-w-6xl mx-auto px-5 h-12 flex items-center justify-between">
+        <a href="#" class="text-[17px] font-semibold tracking-tight text-apple-dark">Laso</a>
+        <div class="hidden md:flex items-center gap-7">
+          <a href="#features" class="text-xs font-medium text-apple-secondary hover:text-apple-dark transition-colors">Features</a>
+          <a href="#journey" class="text-xs font-medium text-apple-secondary hover:text-apple-dark transition-colors">How It Works</a>
+          <a href="#devices" class="text-xs font-medium text-apple-secondary hover:text-apple-dark transition-colors">Devices</a>
+          <a href="#pricing" class="text-xs font-medium text-apple-secondary hover:text-apple-dark transition-colors">Pricing</a>
+        </div>
+        <button data-download="nav" class="bg-apple-dark text-white text-xs font-medium rounded-full px-4 py-1.5 hover:bg-black transition-colors cursor-pointer">
+          Download
+        </button>
+      </div>
+    </nav>
+
+    <!-- ════════ HERO ════════ -->
+    <section data-section="hero" class="hero-gradient pt-32 pb-20 md:pt-44 md:pb-32 px-5 text-center">
+      <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-apple-dark text-balance max-w-3xl mx-auto leading-[1.08]">
+        Your health, <span class="gradient-text">understood.</span>
+      </h1>
+      <p class="mt-5 text-lg md:text-xl text-apple-secondary max-w-xl mx-auto text-balance leading-relaxed">
+        One intelligent score from 50+ metrics. Not 43 numbers you'll never read.
+      </p>
+      <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <button data-download="hero" class="inline-flex items-center gap-2.5 bg-apple-dark text-white font-medium rounded-full px-7 py-3.5 text-[15px] hover:bg-black transition-colors active:scale-[0.97] cursor-pointer">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11Z"/>
+          </svg>
+          Download for iOS
+        </button>
+        <span class="text-sm text-apple-secondary">Free &middot; No account needed</span>
+      </div>
+
+      <!-- Score hero -->
+      <div class="mt-14 md:mt-20 flex justify-center">
+        <div class="score-showcase">
+          <!-- Ambient glow -->
+          <div class="score-glow" aria-hidden="true"></div>
+
+          <!-- Main ring -->
+          <div class="relative w-52 h-52 sm:w-64 sm:h-64 md:w-72 md:h-72 mx-auto">
+            <svg viewBox="0 0 280 280" class="w-full h-full" aria-hidden="true">
+              <defs>
+                <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#0071e3"/>
+                  <stop offset="40%" stop-color="#34d399"/>
+                  <stop offset="100%" stop-color="#06b6d4"/>
+                </linearGradient>
+                <filter id="ring-glow">
+                  <feGaussianBlur stdDeviation="6" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              <!-- Track -->
+              <circle cx="140" cy="140" r="120" fill="none" stroke="#e8e8ed" stroke-width="12"/>
+              <!-- Progress arc: 87% of 2πr = 87% of 753.98 ≈ 656 filled, offset = 753.98 - 656 = 98 -->
+              <circle cx="140" cy="140" r="120" fill="none" stroke="url(#ring-grad)" stroke-width="12"
+                stroke-linecap="round"
+                stroke-dasharray="753.98"
+                stroke-dashoffset="98"
+                filter="url(#ring-glow)"
+                class="origin-center -rotate-90 score-ring-animate"/>
+            </svg>
+            <!-- Number overlay -->
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <span class="score-counter text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight text-apple-dark" data-target="87">0</span>
+              <span class="text-xs sm:text-sm font-medium text-apple-secondary mt-1">out of 100</span>
+            </div>
+          </div>
+
+          <!-- Grade badge -->
+          <div class="mt-5 flex justify-center">
+            <div class="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200/60 rounded-full px-5 py-2">
+              <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+              <span class="text-sm font-semibold text-emerald-700">Grade A</span>
+              <span class="text-sm text-emerald-600/70">&middot;</span>
+              <span class="text-sm text-emerald-600">Very Good</span>
+            </div>
+          </div>
+
+          <!-- Category mini-scores -->
+          <div class="mt-8 flex flex-wrap justify-center gap-3 max-w-md mx-auto">
+            <div class="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm border border-gray-100 rounded-full px-3 py-1.5">
+              <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+              <span class="text-[11px] font-medium text-apple-dark">Heart 91</span>
+            </div>
+            <div class="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm border border-gray-100 rounded-full px-3 py-1.5">
+              <div class="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
+              <span class="text-[11px] font-medium text-apple-dark">Sleep 84</span>
+            </div>
+            <div class="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm border border-gray-100 rounded-full px-3 py-1.5">
+              <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+              <span class="text-[11px] font-medium text-apple-dark">Activity 88</span>
+            </div>
+            <div class="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm border border-gray-100 rounded-full px-3 py-1.5">
+              <div class="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
+              <span class="text-[11px] font-medium text-apple-dark">Body 82</span>
+            </div>
+            <div class="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm border border-gray-100 rounded-full px-3 py-1.5">
+              <div class="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
+              <span class="text-[11px] font-medium text-apple-dark">Respiratory 90</span>
+            </div>
+            <div class="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm border border-gray-100 rounded-full px-3 py-1.5">
+              <div class="w-1.5 h-1.5 rounded-full bg-purple-500"></div>
+              <span class="text-[11px] font-medium text-apple-dark">Mindfulness 79</span>
+            </div>
+            <div class="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm border border-gray-100 rounded-full px-3 py-1.5">
+              <div class="w-1.5 h-1.5 rounded-full bg-teal-500"></div>
+              <span class="text-[11px] font-medium text-apple-dark">Mobility 85</span>
+            </div>
+          </div>
+
+          <p class="mt-6 text-xs text-apple-secondary/60">Sample data &mdash; your score is calculated from your own metrics</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ VALUES ════════ -->
+    <section data-section="values" class="bg-apple-gray py-20 md:py-28 px-5">
+      <div class="max-w-5xl mx-auto grid md:grid-cols-3 gap-6 md:gap-8">
+
+        <div class="section-reveal bg-white rounded-2xl p-7 md:p-8">
+          <div class="w-11 h-11 rounded-xl bg-apple-gray flex items-center justify-center text-apple-dark mb-4">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-apple-dark">Private by Design</h3>
+          <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">Every calculation runs on your iPhone. Your health data never leaves your device. We can't see it even if we wanted to.</p>
+        </div>
+
+        <div class="section-reveal bg-white rounded-2xl p-7 md:p-8" style="transition-delay:100ms">
+          <div class="w-11 h-11 rounded-xl bg-apple-gray flex items-center justify-center text-apple-dark mb-4">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-apple-dark">Personal, Not Generic</h3>
+          <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">Your baselines. Your patterns. Insights come from your body's data &mdash; not population averages from a textbook.</p>
+        </div>
+
+        <div class="section-reveal bg-white rounded-2xl p-7 md:p-8" style="transition-delay:200ms">
+          <div class="w-11 h-11 rounded-xl bg-apple-gray flex items-center justify-center text-apple-dark mb-4">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-apple-dark">Respects Your Time</h3>
+          <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">Glance in the morning, understand your day. Weekly reviews take ten seconds. No streaks. No guilt. Just clarity.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ════════ FEATURES ════════ -->
+    <section id="features" data-section="features" class="py-20 md:py-28 px-5">
+      <div class="max-w-5xl mx-auto">
+        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
+          Everything your watch measures.<br class="hidden sm:block"/> Finally made useful.
+        </h2>
+        <div class="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+          <div class="section-reveal feature-card border border-gray-100">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center mb-5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7 text-white">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
+              </svg>
+            </div>
+            <h3 class="text-[17px] font-semibold text-apple-dark">Health Score</h3>
+            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">One number that tells you how you're doing. Not 43 metrics and a guessing game.</p>
+          </div>
+
+          <div class="section-reveal feature-card border border-gray-100" style="transition-delay:80ms">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-400 flex items-center justify-center mb-5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7 text-white">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
+              </svg>
+            </div>
+            <h3 class="text-[17px] font-semibold text-apple-dark">Personal Insights</h3>
+            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">&ldquo;Your resting heart rate is 6&thinsp;bpm lower on days you walk 8,000+ steps.&rdquo; Only your data reveals this.</p>
+          </div>
+
+          <div class="section-reveal feature-card border border-gray-100" style="transition-delay:160ms">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-400 flex items-center justify-center mb-5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7 text-white">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/>
+              </svg>
+            </div>
+            <h3 class="text-[17px] font-semibold text-apple-dark">Sleep Analysis</h3>
+            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">Deep, REM, Core, Awake &mdash; see exactly what happened while you slept and what moves the needle.</p>
+          </div>
+
+          <div class="section-reveal feature-card border border-gray-100" style="transition-delay:240ms">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-500 to-rose-400 flex items-center justify-center mb-5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7 text-white">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/>
+              </svg>
+            </div>
+            <h3 class="text-[17px] font-semibold text-apple-dark">Live Vitals</h3>
+            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">Real-time heart rate, blood oxygen, respiratory rate &mdash; streaming from your wrist as it happens.</p>
+          </div>
+
+          <div class="section-reveal feature-card border border-gray-100" style="transition-delay:320ms">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-400 flex items-center justify-center mb-5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7 text-white">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/>
+              </svg>
+            </div>
+            <h3 class="text-[17px] font-semibold text-apple-dark">Risk Detection</h3>
+            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">Early warnings based on your trends. See what's shifting before it becomes a problem.</p>
+          </div>
+
+          <div class="section-reveal feature-card border border-gray-100" style="transition-delay:400ms">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-400 flex items-center justify-center mb-5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7 text-white">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
+              </svg>
+            </div>
+            <h3 class="text-[17px] font-semibold text-apple-dark">Weekly Reviews</h3>
+            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">Score up? Down? One win. One thing to watch. Ten seconds and you know exactly where you stand.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ JOURNEY ════════ -->
+    <section id="journey" data-section="journey" class="bg-apple-gray py-20 md:py-28 px-5">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
+          30 days from data to understanding.
+        </h2>
+        <p class="section-reveal mt-4 text-center text-apple-secondary text-[15px] md:text-base max-w-lg mx-auto">
+          You won't change your routine. You'll just start seeing what was always there.
+        </p>
+        <div class="mt-14 space-y-0">
+
+          <div class="section-reveal flex gap-5 md:gap-7">
+            <div class="flex flex-col items-center">
+              <div class="w-3 h-3 rounded-full bg-apple-blue shrink-0 mt-1.5"></div>
+              <div class="w-px flex-1 bg-gray-200 my-1"></div>
+            </div>
+            <div class="pb-10">
+              <span class="text-xs font-semibold text-apple-blue uppercase tracking-wider">Day 0</span>
+              <h3 class="mt-1 text-lg font-semibold text-apple-dark">See yourself clearly</h3>
+              <p class="mt-1.5 text-[15px] text-apple-secondary leading-relaxed max-w-md">Download Laso. For the first time your health has a shape &mdash; one number, and where it comes from.</p>
+            </div>
+          </div>
+
+          <div class="section-reveal flex gap-5 md:gap-7" style="transition-delay:100ms">
+            <div class="flex flex-col items-center">
+              <div class="w-3 h-3 rounded-full bg-apple-blue shrink-0 mt-1.5"></div>
+              <div class="w-px flex-1 bg-gray-200 my-1"></div>
+            </div>
+            <div class="pb-10">
+              <span class="text-xs font-semibold text-apple-blue uppercase tracking-wider">Day 7</span>
+              <h3 class="mt-1 text-lg font-semibold text-apple-dark">Cause and effect</h3>
+              <p class="mt-1.5 text-[15px] text-apple-secondary leading-relaxed max-w-md">Your first weekly review: what improved, what slipped. You start seeing the connection between your choices and your score.</p>
+            </div>
+          </div>
+
+          <div class="section-reveal flex gap-5 md:gap-7" style="transition-delay:200ms">
+            <div class="flex flex-col items-center">
+              <div class="w-3 h-3 rounded-full bg-apple-blue shrink-0 mt-1.5"></div>
+              <div class="w-px flex-1 bg-gray-200 my-1"></div>
+            </div>
+            <div class="pb-10">
+              <span class="text-xs font-semibold text-apple-blue uppercase tracking-wider">Day 14</span>
+              <h3 class="mt-1 text-lg font-semibold text-apple-dark">A personal discovery</h3>
+              <p class="mt-1.5 text-[15px] text-apple-secondary leading-relaxed max-w-md">An insight surfaces that no article could have told you. A pattern unique to your body, revealed by your own data.</p>
+            </div>
+          </div>
+
+          <div class="section-reveal flex gap-5 md:gap-7" style="transition-delay:300ms">
+            <div class="flex flex-col items-center">
+              <div class="w-3 h-3 rounded-full bg-apple-blue shrink-0 mt-1.5"></div>
+            </div>
+            <div class="pb-10">
+              <span class="text-xs font-semibold text-apple-blue uppercase tracking-wider">Day 30</span>
+              <h3 class="mt-1 text-lg font-semibold text-apple-dark">Quiet confidence</h3>
+              <p class="mt-1.5 text-[15px] text-apple-secondary leading-relaxed max-w-md">You know what's normal. You know what's changing. You know what works for you. The vague anxiety of &ldquo;am I healthy?&rdquo; is gone.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ SCORING ════════ -->
+    <section id="score" data-section="score" class="py-20 md:py-28 px-5">
+      <div class="max-w-5xl mx-auto">
+        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
+          One score. Seven pillars.
+        </h2>
+        <p class="section-reveal mt-4 text-center text-apple-secondary text-[15px] md:text-base max-w-lg mx-auto">
+          Your health score combines 50+ metrics across seven categories. Each compared against clinical ranges and your personal baselines.
+        </p>
+        <div class="mt-14 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+          <div class="section-reveal rounded-2xl bg-apple-gray p-4 text-center">
+            <div class="w-8 h-8 bg-red-500 rounded-full mx-auto opacity-80"></div>
+            <p class="mt-3 text-sm font-semibold text-apple-dark">Heart</p>
+            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">HR &middot; RHR &middot; HRV &middot; Recovery</p>
+          </div>
+          <div class="section-reveal rounded-2xl bg-apple-gray p-4 text-center" style="transition-delay:60ms">
+            <div class="w-8 h-8 bg-indigo-500 rounded-full mx-auto opacity-80"></div>
+            <p class="mt-3 text-sm font-semibold text-apple-dark">Sleep</p>
+            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">Duration &middot; Deep &middot; REM &middot; Core</p>
+          </div>
+          <div class="section-reveal rounded-2xl bg-apple-gray p-4 text-center" style="transition-delay:120ms">
+            <div class="w-8 h-8 bg-green-500 rounded-full mx-auto opacity-80"></div>
+            <p class="mt-3 text-sm font-semibold text-apple-dark">Activity</p>
+            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">Steps &middot; Calories &middot; Exercise &middot; Distance</p>
+          </div>
+          <div class="section-reveal rounded-2xl bg-apple-gray p-4 text-center" style="transition-delay:180ms">
+            <div class="w-8 h-8 bg-orange-500 rounded-full mx-auto opacity-80"></div>
+            <p class="mt-3 text-sm font-semibold text-apple-dark">Body</p>
+            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">Weight &middot; BMI &middot; BP &middot; Temperature</p>
+          </div>
+          <div class="section-reveal rounded-2xl bg-apple-gray p-4 text-center" style="transition-delay:240ms">
+            <div class="w-8 h-8 bg-cyan-500 rounded-full mx-auto opacity-80"></div>
+            <p class="mt-3 text-sm font-semibold text-apple-dark">Respiratory</p>
+            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">VO2 Max &middot; SpO2 &middot; Resp Rate</p>
+          </div>
+          <div class="section-reveal rounded-2xl bg-apple-gray p-4 text-center" style="transition-delay:300ms">
+            <div class="w-8 h-8 bg-purple-500 rounded-full mx-auto opacity-80"></div>
+            <p class="mt-3 text-sm font-semibold text-apple-dark">Mindfulness</p>
+            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">Mindful Min &middot; Daylight &middot; EDA</p>
+          </div>
+          <div class="section-reveal rounded-2xl bg-apple-gray p-4 text-center" style="transition-delay:360ms">
+            <div class="w-8 h-8 bg-teal-500 rounded-full mx-auto opacity-80"></div>
+            <p class="mt-3 text-sm font-semibold text-apple-dark">Mobility</p>
+            <p class="mt-1 text-[11px] text-apple-secondary leading-snug">Speed &middot; Symmetry &middot; Balance</p>
+          </div>
+        </div>
+        <div class="section-reveal mt-12 max-w-2xl mx-auto text-center">
+          <p class="text-[15px] text-apple-secondary leading-relaxed">
+            We detect trends, anomalies, and correlations unique to your body.
+            When your resting heart rate creeps up for a week, you'll know before it becomes a concern.
+            When a small habit change improves your sleep, you'll see exactly how much.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ DEVICES ════════ -->
+    <section id="devices" data-section="devices" class="bg-apple-gray py-20 md:py-28 px-5">
+      <div class="max-w-5xl mx-auto">
+        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
+          Works with your watch.
+        </h2>
+        <p class="section-reveal mt-4 text-center text-apple-secondary text-[15px] md:text-base max-w-md mx-auto">
+          If your device syncs to Apple Health, it works with Laso. 18 devices supported.
+        </p>
+        <div class="mt-14 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Apple Watch</p><p class="mt-1 text-[11px] text-apple-secondary">via Native</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">iPhone</p><p class="mt-1 text-[11px] text-apple-secondary">via Built-in sensors</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Garmin</p><p class="mt-1 text-[11px] text-apple-secondary">via Garmin Connect</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Fitbit</p><p class="mt-1 text-[11px] text-apple-secondary">via Fitbit</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Oura Ring</p><p class="mt-1 text-[11px] text-apple-secondary">via Oura</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Whoop</p><p class="mt-1 text-[11px] text-apple-secondary">via Whoop</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Samsung Galaxy Watch</p><p class="mt-1 text-[11px] text-apple-secondary">via Samsung Health</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Amazfit</p><p class="mt-1 text-[11px] text-apple-secondary">via Zepp</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Withings</p><p class="mt-1 text-[11px] text-apple-secondary">via Health Mate</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Polar</p><p class="mt-1 text-[11px] text-apple-secondary">via Polar Flow</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Xiaomi Smart Band</p><p class="mt-1 text-[11px] text-apple-secondary">via Mi Fitness</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Google Pixel Watch</p><p class="mt-1 text-[11px] text-apple-secondary">via Google Fit</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Huawei Watch</p><p class="mt-1 text-[11px] text-apple-secondary">via Huawei Health</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">COROS</p><p class="mt-1 text-[11px] text-apple-secondary">via COROS</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Suunto</p><p class="mt-1 text-[11px] text-apple-secondary">via Suunto</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Noise</p><p class="mt-1 text-[11px] text-apple-secondary">via NoiseFit</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">boAt</p><p class="mt-1 text-[11px] text-apple-secondary">via boAt Wearables</p></div>
+          <div class="section-reveal device-card text-center"><p class="text-sm font-semibold text-apple-dark">Fire-Boltt</p><p class="mt-1 text-[11px] text-apple-secondary">via FireBoltt</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ WHY LASO ════════ -->
+    <section data-section="why-laso" class="py-20 md:py-28 px-5">
+      <div class="max-w-2xl mx-auto text-center">
+        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-balance">
+          Why &ldquo;Laso&rdquo;?
+        </h2>
+        <p class="section-reveal mt-6 text-[15px] md:text-base text-apple-secondary leading-relaxed">
+          Your health data is scattered across sensors, apps, and metrics that never connect.
+          Laso brings it all together &mdash; one clear picture from the noise.
+          The name reflects what we do: gather what matters, let go of what doesn't.
+        </p>
+        <p class="section-reveal mt-4 text-[15px] md:text-base text-apple-secondary leading-relaxed">
+          We built Laso because we believe your watch should make you healthier, not just more measured.
+          Every screen answers a question you already had. Nothing more. Nothing less.
+        </p>
+      </div>
+    </section>
+
+    <!-- ════════ PRICING ════════ -->
+    <section id="pricing" data-section="pricing" class="bg-apple-gray py-20 md:py-28 px-5">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
+          Start free. Upgrade when you're ready.
+        </h2>
+        <p class="section-reveal mt-4 text-center text-apple-secondary text-[15px] md:text-base">
+          No account. No credit card. Just open and go.
+        </p>
+        <div class="mt-14 grid md:grid-cols-2 gap-5 max-w-2xl mx-auto">
+
+          <!-- Free -->
+          <div class="section-reveal rounded-2xl bg-white border border-gray-100 p-7 md:p-8">
+            <p class="text-sm font-semibold text-apple-secondary uppercase tracking-wider">Free</p>
+            <p class="mt-2 text-3xl font-semibold text-apple-dark">$0</p>
+            <p class="mt-1 text-sm text-apple-secondary">Forever</p>
+            <ul class="mt-6 space-y-3">
+              <li class="flex items-start gap-2.5 text-[15px] text-apple-dark">
+                <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
+                Health Score
+              </li>
+              <li class="flex items-start gap-2.5 text-[15px] text-apple-dark">
+                <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
+                Category Scores
+              </li>
+              <li class="flex items-start gap-2.5 text-[15px] text-apple-dark">
+                <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
+                Heart Rate, Steps, Sleep
+              </li>
+              <li class="flex items-start gap-2.5 text-[15px] text-apple-dark">
+                <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
+                7-Day Trends
+              </li>
+              <li class="flex items-start gap-2.5 text-[15px] text-apple-dark">
+                <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
+                2 Daily Insights
+              </li>
+            </ul>
+            <button data-download="pricing-free" class="mt-8 w-full rounded-full border-2 border-apple-dark text-apple-dark font-medium text-[15px] py-3 hover:bg-apple-dark hover:text-white transition-colors cursor-pointer">
+              Get Started
+            </button>
+          </div>
+
+          <!-- Pro -->
+          <div class="section-reveal rounded-2xl bg-apple-dark text-white p-7 md:p-8" style="transition-delay:100ms">
+            <div class="flex items-center gap-2">
+              <p class="text-sm font-semibold uppercase tracking-wider opacity-70">Pro</p>
+              <span id="pro-trial-badge" class="text-[11px] font-medium bg-white/15 rounded-full px-2.5 py-0.5">7-day free trial</span>
+            </div>
+            <div class="mt-2 flex items-baseline gap-1">
+              <span id="pro-price" class="text-3xl font-semibold">$29.99</span>
+              <span class="text-sm opacity-60">/year</span>
+            </div>
+            <p class="mt-1 text-sm opacity-60">Just <span id="pro-monthly">$2.49</span>/month</p>
+            <ul class="mt-6 space-y-3">
+              <li class="flex items-start gap-2.5 text-[15px]">
+                <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-400 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
+                Everything in Free
+              </li>
+              <li class="flex items-start gap-2.5 text-[15px]">
+                <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-400 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
+                50+ Health Metrics
+              </li>
+              <li class="flex items-start gap-2.5 text-[15px]">
+                <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-400 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
+                Extended History (up to 1 year)
+              </li>
+              <li class="flex items-start gap-2.5 text-[15px]">
+                <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-400 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
+                All Insights &amp; Correlations
+              </li>
+              <li class="flex items-start gap-2.5 text-[15px]">
+                <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-400 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
+                Live Vitals Streaming
+              </li>
+              <li class="flex items-start gap-2.5 text-[15px]">
+                <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-400 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
+                Risk Predictions &amp; Focus Areas
+              </li>
+              <li class="flex items-start gap-2.5 text-[15px]">
+                <svg viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-400 shrink-0 mt-0.5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg>
+                Health Reports Export
+              </li>
+            </ul>
+            <button data-download="pricing-pro" class="mt-8 w-full rounded-full bg-white text-apple-dark font-medium text-[15px] py-3 hover:bg-gray-100 transition-colors cursor-pointer">
+              Try Free for 7 Days
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ FINAL CTA ════════ -->
+    <section data-section="final-cta" class="py-20 md:py-28 px-5 text-center">
+      <div class="max-w-2xl mx-auto">
+        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-balance">
+          Your watch already knows.<br/>Now you will too.
+        </h2>
+        <p class="section-reveal mt-4 text-apple-secondary text-[15px] md:text-base max-w-md mx-auto">
+          In 30 days, you'll understand your body better than you ever have. No effort. Just awareness.
+        </p>
+        <button data-download="footer-cta" class="section-reveal mt-8 inline-flex items-center gap-2.5 bg-apple-dark text-white font-medium rounded-full px-7 py-3.5 text-[15px] hover:bg-black transition-colors active:scale-[0.97] cursor-pointer">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11Z"/>
+          </svg>
+          Download for iOS
+        </button>
+      </div>
+    </section>
+
+    <!-- ════════ FOOTER ════════ -->
+    <footer class="border-t border-gray-100 py-8 px-5">
+      <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-apple-secondary">
+        <p>&copy; <span id="copy-year">2026</span> Laso Health. All rights reserved.</p>
+        <div class="flex items-center gap-5">
+          <a href="/privacy" class="hover:text-apple-dark transition-colors">Privacy Policy</a>
+          <a href="/terms" class="hover:text-apple-dark transition-colors">Terms of Use</a>
+          <a href="mailto:support@lasohealth.com" class="hover:text-apple-dark transition-colors">Contact</a>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- ════════ CLIENT-SIDE SCRIPT ════════ -->
+  <script>
+    import { detectCountry, getPricing } from '../config/pricing'
+
+    const APP_STORE_URL = 'https://apps.apple.com/app/laso/id0000000000' // ← replace
+
+    // ── GA4 helper ──
+    function trackEvent(name: string, params?: Record<string, string | number>) {
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', name, params)
+      }
+    }
+
+    // ── Dynamic pricing ──
+    const country = detectCountry()
+    const pricing = getPricing(country)
+
+    const priceEl = document.getElementById('pro-price')
+    const monthlyEl = document.getElementById('pro-monthly')
+    if (priceEl) priceEl.textContent = pricing.yearlyDisplay
+    if (monthlyEl) monthlyEl.textContent = pricing.monthlyEquivalent
+
+    trackEvent('pricing_region_detected', {
+      country: country ?? 'unknown',
+      tier: pricing.tier,
+      yearly_price: pricing.yearly,
+    })
+
+    // ── Download buttons ──
+    document.querySelectorAll<HTMLElement>('[data-download]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const location = btn.dataset.download ?? 'unknown'
+        trackEvent('download_click', { location })
+        if (location.startsWith('pricing')) {
+          const isPro = location.includes('pro')
+          trackEvent('pricing_click', {
+            plan: isPro ? 'pro_annual' : 'free',
+            tier: isPro ? pricing.tier : 'free',
+            price: isPro ? pricing.yearly : 0,
+          })
+        }
+        window.open(APP_STORE_URL, '_blank', 'noopener')
+      })
+    })
+
+    // ── Security: disable right-click & view-source shortcuts ──
+    document.addEventListener('contextmenu', (e) => e.preventDefault())
+    document.addEventListener('keydown', (e) => {
+      const mod = e.ctrlKey || e.metaKey
+      if (
+        (mod && e.key === 'u') ||
+        (mod && e.shiftKey && (e.key === 'I' || e.key === 'i')) ||
+        (mod && e.shiftKey && (e.key === 'J' || e.key === 'j')) ||
+        (mod && e.shiftKey && (e.key === 'C' || e.key === 'c')) ||
+        (mod && e.key === 'Option') ||
+        e.key === 'F12'
+      ) {
+        e.preventDefault()
+      }
+    })
+
+    // ── Section reveal + visibility tracking ──
+    const viewedSections = new Set<string>()
+    const sectionObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const section = entry.target.getAttribute('data-section')
+            if (section && !viewedSections.has(section)) {
+              viewedSections.add(section)
+              trackEvent('section_view', { section })
+            }
+          }
+        })
+      },
+      { threshold: 0.15 },
+    )
+
+    const revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible')
+            revealObserver.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.15 },
+    )
+
+    document.querySelectorAll('[data-section]').forEach((s) => sectionObserver.observe(s))
+    document.querySelectorAll('.section-reveal').forEach((el) => revealObserver.observe(el))
+
+    // ── Score counter animation ──
+    const counter = document.querySelector('.score-counter') as HTMLElement | null
+    if (counter) {
+      const target = parseInt(counter.dataset.target ?? '0', 10)
+      let started = false
+      const counterObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !started) {
+            started = true
+            const duration = 1600
+            const start = performance.now()
+            const step = (now: number) => {
+              const elapsed = now - start
+              const progress = Math.min(elapsed / duration, 1)
+              const eased = 1 - Math.pow(1 - progress, 3)
+              counter.textContent = String(Math.round(eased * target))
+              if (progress < 1) requestAnimationFrame(step)
+            }
+            requestAnimationFrame(step)
+            counterObserver.disconnect()
+          }
+        })
+      }, { threshold: 0.5 })
+      counterObserver.observe(counter)
+    }
+
+    // ── Scroll depth (25/50/75/100) ──
+    const scrollFired = new Set<number>()
+    window.addEventListener('scroll', () => {
+      const pct = Math.round(((window.scrollY + window.innerHeight) / document.body.scrollHeight) * 100)
+      for (const t of [25, 50, 75, 100]) {
+        if (pct >= t && !scrollFired.has(t)) {
+          scrollFired.add(t)
+          trackEvent('scroll_depth', { depth: t })
+        }
+      }
+    }, { passive: true })
+
+    // ── Time on page ──
+    const startTime = Date.now()
+    window.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        const duration = Math.round((Date.now() - startTime) / 1000)
+        if (typeof navigator.sendBeacon === 'function' && typeof window.gtag === 'function') {
+          const params = new URLSearchParams({
+            v: '2', tid: 'G-XXXXXXXXXX',
+            en: 'time_on_page',
+            'ep.duration_sec': String(duration),
+          })
+          navigator.sendBeacon(`https://www.google-analytics.com/g/collect?${params}`)
+        }
+        trackEvent('time_on_page', { duration_sec: duration })
+      }
+    })
+  </script>
+</Base>

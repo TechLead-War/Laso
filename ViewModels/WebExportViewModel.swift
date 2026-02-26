@@ -36,9 +36,18 @@ final class WebExportViewModel {
 
         do {
             try html.write(to: fileURL, atomically: true, encoding: .utf8)
+            // Apply complete file protection so the file is encrypted at rest
+            try (fileURL as NSURL).setResourceValue(URLFileProtection.complete, forKey: .fileProtectionKey)
             exportedURL = fileURL
         } catch {
             self.error = "Failed to save report: \(error.localizedDescription)"
         }
+    }
+
+    /// Clean up exported file after sharing is complete
+    func cleanupExport() {
+        guard let url = exportedURL else { return }
+        try? FileManager.default.removeItem(at: url)
+        exportedURL = nil
     }
 }

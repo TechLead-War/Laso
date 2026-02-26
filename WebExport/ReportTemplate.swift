@@ -23,16 +23,73 @@ struct ReportTemplate {
     }
     .header h1 { font-size: 28px; margin-bottom: 8px; }
     .header .date { opacity: 0.8; font-size: 14px; }
-    .score-ring {
-        width: 160px; height: 160px;
-        margin: 20px auto;
+    .score-hero {
+        background: linear-gradient(160deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+        border-radius: 24px;
+        margin-bottom: 24px;
+        overflow: hidden;
         position: relative;
     }
-    .score-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-    .score-ring .score-text {
-        position: absolute; top: 50%; left: 50%;
+    .score-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle at 60% 40%, rgba(102, 126, 234, 0.15) 0%, transparent 60%);
+        pointer-events: none;
+    }
+    .score-hero-inner {
+        position: relative;
+        padding: 48px 20px 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .score-label-top {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2.5px;
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 24px;
+    }
+    .score-ring-large {
+        width: 220px;
+        height: 220px;
+        position: relative;
+        margin-bottom: 24px;
+    }
+    .score-ring-large svg {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+    }
+    .score-ring-progress {
+        animation: scoreReveal 1.5s ease-out forwards;
+    }
+    @keyframes scoreReveal {
+        from { stroke-dashoffset: 565.5; }
+    }
+    .score-number {
+        position: absolute;
+        top: 50%;
+        left: 50%;
         transform: translate(-50%, -50%);
-        font-size: 42px; font-weight: 700;
+        font-size: 64px;
+        font-weight: 800;
+        color: white;
+        letter-spacing: -2px;
+        line-height: 1;
+    }
+    .score-grade-badge {
+        display: inline-block;
+        padding: 8px 24px;
+        border-radius: 100px;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        backdrop-filter: blur(10px);
     }
     .card {
         background: white;
@@ -125,6 +182,13 @@ struct ReportTemplate {
         body { background: #1c1c1e; color: #f5f5f7; }
         .card, .category-card, .insight-card { background: #2c2c2e; }
         .insight-recommendation { background: #3a3a3c; }
+        .insight-summary { color: #aaa; }
+        .card h3, .stat-label { color: #999; }
+    }
+    @media (max-width: 480px) {
+        .score-ring-large { width: 180px; height: 180px; }
+        .score-number { font-size: 52px; }
+        .score-hero-inner { padding: 36px 16px 32px; }
     }
     """
 

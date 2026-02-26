@@ -64,22 +64,44 @@ struct HTMLReportGenerator {
 
     private static func generateScoreSection(score: HealthScore) -> String {
         let color = scoreColor(score.score)
-        let circumference = 2.0 * Double.pi * 65
+        let glowColor = scoreGlowColor(score.score)
+        let circumference = 2.0 * Double.pi * 90
         let offset = circumference * (1.0 - Double(score.score) / 100.0)
+        let label = scoreLabel(score.score)
 
         return """
-        <div class="card" style="text-align: center;">
-            <div class="score-ring">
-                <svg viewBox="0 0 160 160">
-                    <circle cx="80" cy="80" r="65" fill="none" stroke="#e0e0e0" stroke-width="12"/>
-                    <circle cx="80" cy="80" r="65" fill="none" stroke="\(color)" stroke-width="12"
-                        stroke-dasharray="\(String(format: "%.1f", circumference))"
-                        stroke-dashoffset="\(String(format: "%.1f", offset))"
-                        stroke-linecap="round"/>
-                </svg>
-                <div class="score-text" style="color: \(color)">\(score.score)</div>
+        <div class="score-hero">
+            <div class="score-hero-inner">
+                <div class="score-label-top">YOUR HEALTH SCORE</div>
+                <div class="score-ring-large">
+                    <svg viewBox="0 0 220 220">
+                        <defs>
+                            <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:\(color);stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:\(glowColor);stop-opacity:1" />
+                            </linearGradient>
+                            <filter id="ringGlow">
+                                <feGaussianBlur stdDeviation="4" result="blur"/>
+                                <feMerge>
+                                    <feMergeNode in="blur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        <circle cx="110" cy="110" r="90" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="14"/>
+                        <circle cx="110" cy="110" r="90" fill="none" stroke="url(#ringGrad)" stroke-width="14"
+                            stroke-dasharray="\(String(format: "%.1f", circumference))"
+                            stroke-dashoffset="\(String(format: "%.1f", offset))"
+                            stroke-linecap="round"
+                            filter="url(#ringGlow)"
+                            class="score-ring-progress"/>
+                    </svg>
+                    <div class="score-number">\(score.score)</div>
+                </div>
+                <div class="score-grade-badge" style="background: \(color)22; color: \(color); border: 1.5px solid \(color)44;">
+                    Grade \(score.grade) &middot; \(label)
+                </div>
             </div>
-            <p style="font-size: 14px; color: #666;">Overall Health Score &middot; Grade: \(score.grade)</p>
         </div>
         """
     }
@@ -190,6 +212,27 @@ struct HTMLReportGenerator {
         case 60..<80: return "#ffcc00"
         case 40..<60: return "#ff9500"
         default: return "#ff3b30"
+        }
+    }
+
+    private static func scoreGlowColor(_ score: Int) -> String {
+        switch score {
+        case 80...100: return "#30d158"
+        case 60..<80: return "#ffd60a"
+        case 40..<60: return "#ff9f0a"
+        default: return "#ff453a"
+        }
+    }
+
+    private static func scoreLabel(_ score: Int) -> String {
+        switch score {
+        case 90...100: return "Excellent"
+        case 80..<90: return "Very Good"
+        case 70..<80: return "Good"
+        case 60..<70: return "Fair"
+        case 50..<60: return "Needs Work"
+        case 40..<50: return "Below Average"
+        default: return "Needs Attention"
         }
     }
 

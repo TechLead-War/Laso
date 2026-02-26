@@ -88,22 +88,32 @@ struct RecoveryAnalyzer {
             ))
         }
 
-        // Overtraining detection: declining HRV + elevated RHR + declining sleep (all 3)
+        // Overtraining detection: require 2 of 3 key signals (HRV + RHR is already very strong)
         let hrvDeclining = trends[.heartRateVariability]?.direction == .declining
         let rhrElevated = trends[.restingHeartRate]?.direction == .declining  // declining for RHR means getting worse (higher)
         let sleepDeclining = trends[.sleepDuration]?.direction == .declining
 
-        if hrvDeclining && rhrElevated && sleepDeclining {
+        var signals: [String] = []
+        if hrvDeclining { signals.append("HRV is declining") }
+        if rhrElevated { signals.append("resting heart rate is elevated") }
+        if sleepDeclining { signals.append("sleep duration is dropping") }
+
+        if signals.count >= 2 {
+            let isAllThree = signals.count == 3
+            let signalText = signals.joined(separator: ", ")
+
             insights.append(Insight(
                 metric: .heartRateVariability,
-                title: "Overtraining Warning",
-                summary: "Multiple signals suggest overtraining: HRV is declining, resting heart rate is elevated, and sleep duration is dropping.",
-                recommendation: "Take 2-3 complete rest days. Focus on sleep, hydration, and light movement like walking. Resume training at reduced intensity.",
-                severity: .critical,
+                title: isAllThree ? "Overtraining Warning" : "Early Overtraining Signal",
+                summary: "\(signals.count) of 3 overtraining indicators present: \(signalText).\(isAllThree ? "" : " A third declining signal would confirm overtraining.")",
+                recommendation: isAllThree
+                    ? "Take 2-3 complete rest days. Focus on sleep, hydration, and light movement like walking. Resume training at reduced intensity."
+                    : "Consider a deload week — reduce training volume by 40-50%. Prioritize sleep and monitor whether the trend reverses.",
+                severity: isAllThree ? .critical : .warning,
                 trend: .declining,
-                currentValue: 0,
+                currentValue: Double(signals.count),
                 baselineValue: 0,
-                deviationPercent: 25,
+                deviationPercent: Double(signals.count) * 12,
                 category: .recovery,
                 relatedMetrics: [.heartRateVariability, .restingHeartRate, .sleepDuration]
             ))

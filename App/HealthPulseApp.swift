@@ -34,14 +34,33 @@ struct HealthPulseApp: App {
         _healthKitManager = State(wrappedValue: hkManager)
         _deviceSourceManager = State(wrappedValue: DeviceSourceManager(healthStore: hkManager.healthStore))
 
+        let container: ModelContainer
         do {
-            let container = try ModelContainer(
-                for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self
+            let storeURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+                .appendingPathComponent("HealthData", isDirectory: true)
+            try? FileManager.default.createDirectory(at: storeURL, withIntermediateDirectories: true)
+            try? (storeURL as NSURL).setResourceValue(URLFileProtection.complete, forKey: .fileProtectionKey)
+            let config = ModelConfiguration(url: storeURL.appendingPathComponent("health.store"))
+            container = try ModelContainer(
+                for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self,
+                configurations: config
             )
-            _healthDataStore = State(wrappedValue: HealthDataStore(modelContainer: container))
         } catch {
-            fatalError("Failed to create health data ModelContainer: \(error)")
+            // Fallback to in-memory store if disk-based container fails (corrupted DB, etc.)
+            let fallback = ModelConfiguration(isStoredInMemoryOnly: true)
+            do {
+                container = try ModelContainer(
+                    for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self,
+                    configurations: fallback
+                )
+            } catch {
+                // Last resort: empty container with default configuration
+                container = try! ModelContainer(
+                    for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self
+                )
+            }
         }
+        _healthDataStore = State(wrappedValue: HealthDataStore(modelContainer: container))
     }
 
     var body: some Scene {
@@ -56,7 +75,10 @@ struct HealthPulseApp: App {
             // 1. Onboarding (first launch)
             .fullScreenCover(isPresented: Binding(
                 get: { !onboardingCompleted },
-                set: { if !$0 { onboardingCompleted = true } }
+                set: { if !$0 {
+                    onboardingCompleted = true
+                    NSUbiquitousKeyValueStore.default.set(true, forKey: AppKeys.App.onboardingCompleted)
+                }}
             )) {
                 OnboardingView(healthKitManager: healthKitManager) {
                     onboardingCompleted = true

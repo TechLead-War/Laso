@@ -76,6 +76,7 @@ final class SubscriptionManager {
 
     // MARK: - Products
 
+    @MainActor
     func loadProducts() async {
         do {
             let loaded = try await Product.products(for: SubscriptionConfig.allProductIDs)

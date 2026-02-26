@@ -15,5 +15,11 @@ GoogleService-Info.plist
 # Dependencies
 node_modules/
 
+# Build artifacts
+build/
+
+# SPM cache
+.swiftpm/
+
 # Personal notes
 values.txt

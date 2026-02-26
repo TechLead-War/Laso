@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    color: #1d1d1f;
+    background: #ffffff;
+  }
+  ::selection {
+    background: #0071e3;
+    color: #ffffff;
+  }
+}
+
+@layer components {
+  .section-reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+  .section-reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, #0071e3 0%, #34d399 50%, #06b6d4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-gradient {
+    background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0, 113, 227, 0.08) 0%, transparent 70%);
+  }
+  .device-card {
+    @apply rounded-2xl bg-white border border-gray-100 p-5 transition-all duration-200;
+  }
+  .device-card:hover {
+    @apply border-gray-200 shadow-sm;
+  }
+  .feature-card {
+    @apply rounded-2xl bg-white p-6 md:p-8 transition-all duration-200;
+  }
+  .nav-blur {
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    background: rgba(255, 255, 255, 0.72);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Score showcase */
+.score-showcase {
+  position: relative;
+  text-align: center;
+  padding: 0 16px;
+}
+
+.score-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -55%);
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(0, 113, 227, 0.10) 0%, rgba(52, 211, 153, 0.06) 40%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.7; transform: translate(-50%, -55%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -55%) scale(1.08); }
+}
+
+.score-ring-animate {
+  animation: ringDraw 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  stroke-dashoffset: 753.98;
+}
+
+@keyframes ringDraw {
+  to { stroke-dashoffset: 98; }
+}
+
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}

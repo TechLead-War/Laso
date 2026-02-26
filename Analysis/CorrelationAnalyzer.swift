@@ -102,7 +102,8 @@ struct CorrelationAnalyzer {
 
     // MARK: - Public API
 
-    /// Analyze all metric pairs and return significant correlations as HealthCorrelation objects
+    /// Analyze all metric pairs with automatic lag discovery (tests lags 0-3 for each pair)
+    /// and return significant correlations as HealthCorrelation objects
     static func analyzeAll(timeSeries: [HealthMetric: MetricTimeSeries]) -> [HealthCorrelation] {
         var results: [HealthCorrelation] = []
 
@@ -110,49 +111,70 @@ struct CorrelationAnalyzer {
             guard let seriesA = timeSeries[pair.metricA],
                   let seriesB = timeSeries[pair.metricB] else { continue }
 
-            let aligned: [TimeSeriesAligner.AlignedPair]
-            if pair.dayOffset == 0 {
-                aligned = TimeSeriesAligner.alignByDate(seriesA, seriesB)
-            } else {
-                aligned = TimeSeriesAligner.alignWithOffset(seriesA, seriesB, dayOffset: pair.dayOffset)
+            // Test the predefined lag AND nearby lags to find the strongest correlation
+            let lagsToTest = Set([pair.dayOffset, 0, 1, 2, 3])
+
+            var bestResult: (r: Double, t: Double, lag: Int, aligned: [TimeSeriesAligner.AlignedPair])?
+
+            for lag in lagsToTest {
+                let aligned: [TimeSeriesAligner.AlignedPair]
+                if lag == 0 {
+                    aligned = TimeSeriesAligner.alignByDate(seriesA, seriesB)
+                } else {
+                    aligned = TimeSeriesAligner.alignWithOffset(seriesA, seriesB, dayOffset: lag)
+                }
+
+                guard aligned.count >= 14 else { continue }
+
+                let xValues = aligned.map(\.valueA)
+                let yValues = aligned.map(\.valueB)
+
+                guard let r = [Double].pearsonCorrelation(xValues, yValues),
+                      abs(r) >= 0.2 else { continue }
+
+                let n = Double(aligned.count)
+                let rSquared = r * r
+                guard rSquared < 1.0 else { continue }
+                let t = abs(r) * sqrt((n - 2) / (1 - rSquared))
+                guard t >= 2.0 else { continue }
+
+                if bestResult == nil || abs(r) > abs(bestResult!.r) {
+                    bestResult = (r: r, t: t, lag: lag, aligned: aligned)
+                }
             }
 
-            guard aligned.count >= 14 else { continue }
-
-            let xValues = aligned.map(\.valueA)
-            let yValues = aligned.map(\.valueB)
-
-            guard let r = [Double].pearsonCorrelation(xValues, yValues),
-                  abs(r) >= 0.2 else { continue }
-
-            // t-statistic significance test: t = r * sqrt((n-2) / (1-r^2))
-            let n = Double(aligned.count)
-            let rSquared = r * r
-            guard rSquared < 1.0 else { continue }
-            let t = abs(r) * sqrt((n - 2) / (1 - rSquared))
-            guard t >= 2.0 else { continue }
+            guard let best = bestResult else { continue }
 
             // Effect size: require >= 8% difference between above/below baseline groups
             let effectResult = computeConditionalEffect(
-                aligned: aligned,
+                aligned: best.aligned,
                 metricA: pair.metricA,
                 metricB: pair.metricB
             )
             guard effectResult.percentDiff >= 8.0 else { continue }
 
-            let strengthLabel = Self.strengthLabel(for: abs(r))
+            // Update labels if the discovered lag differs from the predefined one
+            let effectLabel: String
+            if best.lag != pair.dayOffset && best.lag > 0 {
+                let baseName = pair.effectLabel.replacingOccurrences(of: " next day", with: "")
+                effectLabel = best.lag == 1 ? "\(baseName) next day" : "\(baseName) after \(best.lag) days"
+            } else {
+                effectLabel = pair.effectLabel
+            }
+
+            let strengthLabel = Self.strengthLabel(for: abs(best.r))
 
             results.append(HealthCorrelation(
                 metricA: pair.metricA,
                 metricB: pair.metricB,
-                correlation: r,
-                sampleCount: aligned.count,
+                correlation: best.r,
+                sampleCount: best.aligned.count,
                 strengthLabel: strengthLabel,
                 causeLabel: pair.causeLabel,
-                effectLabel: pair.effectLabel,
+                effectLabel: effectLabel,
                 effectSummary: effectResult.summary,
-                isPositive: r > 0,
-                dayOffset: pair.dayOffset
+                isPositive: best.r > 0,
+                dayOffset: best.lag
             ))
         }
 

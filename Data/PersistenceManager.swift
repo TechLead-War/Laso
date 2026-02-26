@@ -1,35 +1,49 @@
 import Foundation
 import Observation
 
-/// Manages persistent storage for baselines and user preferences via UserDefaults,
-/// with iCloud Key-Value Store sync for cross-device consistency.
+/// Manages persistent storage for baselines and user preferences.
+/// Sensitive health data is encrypted via EncryptedStore (AES-GCM + Keychain key).
+/// Only non-sensitive preferences sync to iCloud KVS.
 @Observable
 final class PersistenceManager {
     private let defaults = UserDefaults.standard
+    private let encrypted = EncryptedStore.shared
     private let cloud = NSUbiquitousKeyValueStore.default
 
     private let baselinesKey = AppKeys.Data.baselines
     private let preferencesKey = AppKeys.Data.preferences
     private let lastAnalysisKey = AppKeys.Data.lastAnalysis
 
-    /// Keys that should sync to iCloud KVS for cross-device consistency
+    /// Only non-sensitive keys sync to iCloud
     private static let syncKeys: Set<String> = [
+        AppKeys.App.onboardingCompleted
+    ]
+
+    /// Sensitive keys that use encrypted storage
+    private static let encryptedKeys: Set<String> = [
         AppKeys.Data.baselines,
         AppKeys.Data.preferences,
         AppKeys.Data.healthFocuses,
         AppKeys.Data.previousWeekScore,
-        AppKeys.Data.currentScore,
-        AppKeys.Data.scoreDate,
-        AppKeys.App.onboardingCompleted
+        AppKeys.Data.currentScore
     ]
 
     init() {
         startCloudSync()
+        migratePlaintextData()
     }
 
-    // MARK: - iCloud Sync
+    // MARK: - Migration
 
-    /// Start observing iCloud KVS changes from other devices
+    /// One-time migration of any existing plaintext health data to encrypted storage
+    private func migratePlaintextData() {
+        for key in Self.encryptedKeys {
+            encrypted.migrateIfNeeded(forKey: key)
+        }
+    }
+
+    // MARK: - iCloud Sync (non-sensitive only)
+
     private func startCloudSync() {
         NotificationCenter.default.addObserver(
             forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
@@ -41,7 +55,6 @@ final class PersistenceManager {
         cloud.synchronize()
     }
 
-    /// Pull cloud values into local defaults when changed externally
     private func handleCloudChange(_ notification: Notification) {
         guard let changedKeys = notification.userInfo?[NSUbiquitousKeyValueStoreChangedKeysKey] as? [String] else { return }
 
@@ -52,7 +65,7 @@ final class PersistenceManager {
         }
     }
 
-    /// Write to both local defaults and iCloud KVS
+    /// Write non-sensitive value to UserDefaults + iCloud if applicable
     private func save(_ value: Any, forKey key: String) {
         defaults.set(value, forKey: key)
         if Self.syncKeys.contains(key) {
@@ -60,25 +73,27 @@ final class PersistenceManager {
         }
     }
 
-    /// Write Data to both stores
-    private func saveData(_ data: Data, forKey key: String) {
-        defaults.set(data, forKey: key)
-        if Self.syncKeys.contains(key) {
-            cloud.set(data, forKey: key)
-        }
+    /// Write sensitive Data — encrypts before storing, never syncs to iCloud
+    private func saveEncrypted(_ data: Data, forKey key: String) {
+        encrypted.save(data, forKey: key)
     }
 
-    // MARK: - Baselines
+    /// Load sensitive Data — decrypts from storage
+    private func loadEncrypted(forKey key: String) -> Data? {
+        encrypted.load(forKey: key)
+    }
+
+    // MARK: - Baselines (Encrypted)
 
     func saveBaselines(_ baselines: [HealthMetric: UserBaseline]) {
         let dict = Dictionary(uniqueKeysWithValues: baselines.map { ($0.key.rawValue, $0.value) })
         if let data = try? JSONEncoder().encode(dict) {
-            saveData(data, forKey: baselinesKey)
+            saveEncrypted(data, forKey: baselinesKey)
         }
     }
 
     func loadBaselines() -> [HealthMetric: UserBaseline] {
-        guard let data = defaults.data(forKey: baselinesKey),
+        guard let data = loadEncrypted(forKey: baselinesKey),
               let dict = try? JSONDecoder().decode([String: UserBaseline].self, from: data) else {
             return [:]
         }
@@ -91,23 +106,23 @@ final class PersistenceManager {
         return result
     }
 
-    // MARK: - Preferences
+    // MARK: - Preferences (Encrypted)
 
     func savePreferences(_ preferences: NotificationPreferences) {
         if let data = try? JSONEncoder().encode(preferences) {
-            saveData(data, forKey: preferencesKey)
+            saveEncrypted(data, forKey: preferencesKey)
         }
     }
 
     func loadPreferences() -> NotificationPreferences {
-        guard let data = defaults.data(forKey: preferencesKey),
+        guard let data = loadEncrypted(forKey: preferencesKey),
               let prefs = try? JSONDecoder().decode(NotificationPreferences.self, from: data) else {
             return .default
         }
         return prefs
     }
 
-    // MARK: - Last Analysis Date
+    // MARK: - Last Analysis Date (Non-sensitive)
 
     func saveLastAnalysisDate(_ date: Date) {
         defaults.set(date.timeIntervalSince1970, forKey: lastAnalysisKey)
@@ -119,32 +134,36 @@ final class PersistenceManager {
         return Date(timeIntervalSince1970: interval)
     }
 
-    // MARK: - Weekly Score Tracking
+    // MARK: - Weekly Score Tracking (Encrypted)
 
     private let previousWeekScoreKey = AppKeys.Data.previousWeekScore
     private let currentScoreKey = AppKeys.Data.currentScore
     private let scoreDateKey = AppKeys.Data.scoreDate
 
-    /// Record the current health score. Rotates current → previous when a new calendar week begins.
     func recordWeeklyScore(_ score: Int) {
         let calendar = Calendar.current
         let now = Date()
 
         if let savedDate = scoreDate(),
            !calendar.isDate(savedDate, equalTo: now, toGranularity: .weekOfYear) {
-            let oldScore = defaults.integer(forKey: currentScoreKey)
-            if oldScore > 0 {
-                save(oldScore, forKey: previousWeekScoreKey)
+            if let currentData = loadEncrypted(forKey: currentScoreKey),
+               let oldScore = try? JSONDecoder().decode(Int.self, from: currentData),
+               oldScore > 0 {
+                if let data = try? JSONEncoder().encode(oldScore) {
+                    saveEncrypted(data, forKey: previousWeekScoreKey)
+                }
             }
         }
 
-        save(score, forKey: currentScoreKey)
-        save(now.timeIntervalSince1970, forKey: scoreDateKey)
+        if let data = try? JSONEncoder().encode(score) {
+            saveEncrypted(data, forKey: currentScoreKey)
+        }
+        defaults.set(now.timeIntervalSince1970, forKey: scoreDateKey)
     }
 
-    /// Load the score from the previous calendar week, if available
     func loadPreviousWeekScore() -> Int? {
-        let val = defaults.integer(forKey: previousWeekScoreKey)
+        guard let data = loadEncrypted(forKey: previousWeekScoreKey),
+              let val = try? JSONDecoder().decode(Int.self, from: data) else { return nil }
         return val > 0 ? val : nil
     }
 
@@ -153,18 +172,18 @@ final class PersistenceManager {
         return interval > 0 ? Date(timeIntervalSince1970: interval) : nil
     }
 
-    // MARK: - Health Focuses
+    // MARK: - Health Focuses (Encrypted)
 
     private let healthFocusesKey = AppKeys.Data.healthFocuses
 
     func saveHealthFocuses(_ focuses: Set<HealthFocus>) {
         if let data = try? JSONEncoder().encode(Array(focuses)) {
-            saveData(data, forKey: healthFocusesKey)
+            saveEncrypted(data, forKey: healthFocusesKey)
         }
     }
 
     func loadHealthFocuses() -> Set<HealthFocus> {
-        guard let data = defaults.data(forKey: healthFocusesKey),
+        guard let data = loadEncrypted(forKey: healthFocusesKey),
               let array = try? JSONDecoder().decode([HealthFocus].self, from: data) else {
             return Set(HealthFocus.allCases)
         }

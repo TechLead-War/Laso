@@ -114,8 +114,13 @@
 		FA12345678ABCDEF12345612 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = FA12345678ABCDEF12345611 /* FirebaseRemoteConfig */; };
 		FD40DB932CA77AD50E94E81D /* HealthKitMetricRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E5897F9E01DF1DD783F450C /* HealthKitMetricRegistry.swift */; };
 		FD5174EF7814834BE4FDB853 /* NotificationPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A5C28150EA681F904CAAB60 /* NotificationPreferences.swift */; };
+		SEC00100000000000000002 /* EncryptedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = SEC00100000000000000001 /* EncryptedStore.swift */; };
+		ANL00100000000000000004 /* ScoreTrajectoryAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = ANL00100000000000000001 /* ScoreTrajectoryAnalyzer.swift */; };
+		ANL00100000000000000005 /* BaselineDriftDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = ANL00100000000000000002 /* BaselineDriftDetector.swift */; };
+		ANL00100000000000000006 /* MultiMetricClusterAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = ANL00100000000000000003 /* MultiMetricClusterAnalyzer.swift */; };
 		FDDD14EED24B7DFA348D415B /* TrendBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C14C4080D8F86D1D9FE887E9 /* TrendBadge.swift */; };
 		FFCF2BEF13D3B81A68D9EF3B /* InsightCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA30AD19F71C6BA2C98C876C /* InsightCard.swift */; };
+		PRO00100000000000000002 /* ProFeatureOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = PRO00100000000000000001 /* ProFeatureOverlay.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -230,6 +235,11 @@
 		FE3EE68580AA36C641A7393A /* ConnectedDevicesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectedDevicesViewModel.swift; sourceTree = "<group>"; };
 		FF1B95F7225327D77ECBD985 /* TimeSeriesAligner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeSeriesAligner.swift; sourceTree = "<group>"; };
 		FF35C1AEF3CC68D59F22FB41 /* SeverityBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeverityBadge.swift; sourceTree = "<group>"; };
+		SEC00100000000000000001 /* EncryptedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptedStore.swift; sourceTree = "<group>"; };
+		ANL00100000000000000001 /* ScoreTrajectoryAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreTrajectoryAnalyzer.swift; sourceTree = "<group>"; };
+		ANL00100000000000000002 /* BaselineDriftDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaselineDriftDetector.swift; sourceTree = "<group>"; };
+		ANL00100000000000000003 /* MultiMetricClusterAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiMetricClusterAnalyzer.swift; sourceTree = "<group>"; };
+		PRO00100000000000000001 /* ProFeatureOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProFeatureOverlay.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -260,13 +270,16 @@
 				7C147C71560B1AD4933882E5 /* AnalysisEngine.swift */,
 				36DFE311801B14F79285B6BE /* AnomalyDetector.swift */,
 				EBDE9B00704B16D8F8D55649 /* BaselineCalculator.swift */,
+				ANL00100000000000000002 /* BaselineDriftDetector.swift */,
 				FBEF954BF9638721771548FD /* CorrelationAnalyzer.swift */,
 				52C5FA0AC1DF45B09601C7C0 /* HealthRiskEngine.swift */,
 				1D16F5DEFE599901E791BDB5 /* HealthScorer.swift */,
 				AA6AA95BCF0971B533299AD2 /* InsightGenerator.swift */,
+				ANL00100000000000000003 /* MultiMetricClusterAnalyzer.swift */,
 				C4CE7C2FDBCFFE781B01B4B9 /* PersonalRecordAnalyzer.swift */,
 				CD50AAE154719090048DF3E2 /* RecoveryAnalyzer.swift */,
 				A85183A8FD623ED661195C1D /* RulesConfiguration.swift */,
+				ANL00100000000000000001 /* ScoreTrajectoryAnalyzer.swift */,
 				53D06050FC363373F86388B7 /* SleepPerformanceAnalyzer.swift */,
 				FF1B95F7225327D77ECBD985 /* TimeSeriesAligner.swift */,
 				D831542D1DF88ADF75D61259 /* TrendAnalyzer.swift */,
@@ -440,6 +453,7 @@
 				AA30AD19F71C6BA2C98C876C /* InsightCard.swift */,
 				9D418CA7C1389DB583EEE75D /* LoadingView.swift */,
 				386D956FFA31A24C5784E847 /* MetricChartView.swift */,
+				PRO00100000000000000001 /* ProFeatureOverlay.swift */,
 				FF35C1AEF3CC68D59F22FB41 /* SeverityBadge.swift */,
 				CCC8EDD113328305A89EFB85 /* StatisticsGrid.swift */,
 				7CF183D68C3977E2436A2CE4 /* TimeRangeSelector.swift */,
@@ -519,6 +533,14 @@
 			path = Onboarding;
 			sourceTree = "<group>";
 		};
+		SEC00100000000000000003 /* Security */ = {
+			isa = PBXGroup;
+			children = (
+				SEC00100000000000000001 /* EncryptedStore.swift */,
+			);
+			path = Security;
+			sourceTree = "<group>";
+		};
 		C936DC718B142DC99A17A3FF /* Tracking */ = {
 			isa = PBXGroup;
 			children = (
@@ -565,6 +587,7 @@
 				E539D755BFE39275A3539FF3 /* HealthPulse */,
 				46EC9F33A83E250CF50CEB66 /* Models */,
 				FB27FC419922167688397BBA /* Notifications */,
+				SEC00100000000000000003 /* Security */,
 				E1B4BA327CF50355E5EF00C0 /* Subscriptions */,
 				C936DC718B142DC99A17A3FF /* Tracking */,
 				A30B0BC7B45583E8517D4D6E /* ViewModels */,
@@ -709,6 +732,7 @@
 				A83908D9EE2AE59D575C250C /* AppDelegate.swift in Sources */,
 				ED365DC524595A3E75820B9B /* AppTab.swift in Sources */,
 				7898769248ED9E10E011A532 /* BaselineCalculator.swift in Sources */,
+				ANL00100000000000000005 /* BaselineDriftDetector.swift in Sources */,
 				CD96EC9A0B58F0BAE56675FD /* BodyInsightsSection.swift in Sources */,
 				4DF5FD88DB54D5B9C4A211D6 /* CategoryDetailView.swift in Sources */,
 				6DCB867FBD31DCCBDECF9C52 /* CategoryDetailViewModel.swift in Sources */,
@@ -730,6 +754,7 @@
 				F3ADAAE50EB935144DD0AED0 /* DeviceDetailView.swift in Sources */,
 				44668A325618FCCEEAD03601 /* DeviceSetupGuideView.swift in Sources */,
 				C611E934A36A23C81BBDDD8B /* DeviceSourceManager.swift in Sources */,
+				SEC00100000000000000002 /* EncryptedStore.swift in Sources */,
 				42878B22DB80B2F30672FE3E /* ExploreView.swift in Sources */,
 				571C07FA430DAA198FC73588 /* FeedbackPromptManager.swift in Sources */,
 				052004385F335A3BC351DDC0 /* FeedbackSheet.swift in Sources */,
@@ -758,6 +783,7 @@
 				5C297BDDFF5374E7525051EC /* LiveView.swift in Sources */,
 				23946B348164F26310BFDC6A /* LiveViewModel.swift in Sources */,
 				B2E9DCA1991FB5FB0A1BD8B6 /* LoadingView.swift in Sources */,
+				ANL00100000000000000006 /* MultiMetricClusterAnalyzer.swift in Sources */,
 				92BC085F0F66295F8221BE88 /* MetricChartView.swift in Sources */,
 				A7CB64E2140A793DD0258993 /* MetricDetailView.swift in Sources */,
 				202D80E10EC59F9CFC4DAEA0 /* MetricDetailViewModel.swift in Sources */,
@@ -769,10 +795,12 @@
 				A3EE20518D6FA4A81069FC5D /* PeriodSummarySection.swift in Sources */,
 				5BBF461D49DC29339CA792EE /* PersistenceManager.swift in Sources */,
 				C09FBA6AB73AE7FF59FAA9A6 /* PersonalRecordAnalyzer.swift in Sources */,
+				PRO00100000000000000002 /* ProFeatureOverlay.swift in Sources */,
 				642B207288AEA3FFD5B0BC63 /* RecoveryAnalyzer.swift in Sources */,
 				0825D70B8EA6433B2925AB1B /* ReportTemplate.swift in Sources */,
 				1EEEA8E3541DF51EE16406F7 /* RulesConfiguration.swift in Sources */,
 				2AC136549CE3925D58832F4B /* SampleDataProvider.swift in Sources */,
+				ANL00100000000000000004 /* ScoreTrajectoryAnalyzer.swift in Sources */,
 				2E52654793C791C7D17290E1 /* SessionTracker.swift in Sources */,
 				0ABED1C74BED10F14598826D /* SettingsView.swift in Sources */,
 				2241B5EFAC0AF4DE9F2720B5 /* Severity.swift in Sources */,

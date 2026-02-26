@@ -7,6 +7,7 @@ final class DashboardViewModel {
     let healthKitManager: HealthKitManager
     let analysisEngine: AnalysisEngine
     let store: HealthDataStore
+    private let persistence = PersistenceManager()
 
     var isLoading = false
     var errorMessage: String?
@@ -27,7 +28,7 @@ final class DashboardViewModel {
 
     /// User's selected health focuses — used to filter insights
     private var focusCategories: Set<HealthCategory> {
-        let focuses = PersistenceManager().loadHealthFocuses()
+        let focuses = persistence.loadHealthFocuses()
         return HealthFocus.categories(for: focuses)
     }
 
@@ -331,11 +332,34 @@ final class DashboardViewModel {
             baselines: analysisEngine.baselines
         )
 
+        // Step 8: Score trajectory insights (uses stored score history)
+        let scoreHistory = store.loadScoreHistory(days: 60)
+        let trajectoryInsights = ScoreTrajectoryAnalyzer.generateInsights(scoreHistory: scoreHistory)
+        analysisEngine.insights.append(contentsOf: trajectoryInsights)
+
+        // Step 9: Baseline drift insights (uses stored baseline history)
+        var baselineHistory: [HealthMetric: [(date: Date, baseline: UserBaseline)]] = [:]
+        for metric in analysisEngine.baselines.keys {
+            let history = store.loadBaselineHistory(for: metric)
+            if history.count >= 30 {
+                baselineHistory[metric] = history
+            }
+        }
+        if !baselineHistory.isEmpty {
+            let driftInsights = BaselineDriftDetector.generateInsights(
+                currentBaselines: analysisEngine.baselines,
+                baselineHistory: baselineHistory
+            )
+            analysisEngine.insights.append(contentsOf: driftInsights)
+        }
+
+        // Re-sort after adding trajectory and drift insights
+        analysisEngine.insights.sort { $0.priorityScore > $1.priorityScore }
+
         // Store current trends for next refresh comparison
         previousTrends = analysisEngine.trends.mapValues { $0.direction }
 
         // Schedule notifications
-        let persistence = PersistenceManager()
         let prefs = persistence.loadPreferences()
 
         // Daily summary with richer data

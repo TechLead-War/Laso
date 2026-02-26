@@ -1,0 +1,57 @@
+---
+interface Props {
+  title: string
+  description: string
+}
+const { title, description } = Astro.props
+const GA_ID = 'G-XXXXXXXXXX' // ← replace with your GA4 Measurement ID
+const canonicalURL = new URL(Astro.url.pathname, 'https://lasohealth.com')
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <meta name="keywords" content="health app,apple watch,health score,heart rate,sleep tracking,HRV,health insights,iOS health,fitness tracker,HealthKit,wellness,Laso" />
+  <meta name="author" content="Laso Health" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href={canonicalURL.href} />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:site_name" content="Laso" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonicalURL.href} />
+  <meta property="og:image" content="https://lasohealth.com/og-image.png" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content="https://lasohealth.com/og-image.png" />
+
+  <!-- Apple -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Laso" />
+  <meta name="apple-itunes-app" content="app-id=YOUR_APP_ID" />
+
+  <!-- GA4 -->
+  <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
+  <script is:inline define:vars={{ GA_ID }}>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', GA_ID, { send_page_view: true });
+  </script>
+</head>
+<body class="font-sans antialiased">
+  <slot />
+</body>
+</html>

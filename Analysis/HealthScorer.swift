@@ -3,7 +3,7 @@ import Foundation
 /// Computes health scores (0-100) based on anomalies, trends, and normal ranges
 struct HealthScorer {
 
-    /// Compute score for a single metric
+    /// Compute score for a single metric using proportional deductions scaled by z-score magnitude
     static func scoreMetric(
         metric: HealthMetric,
         anomaly: AnomalyDetector.AnomalyResult?,
@@ -12,24 +12,28 @@ struct HealthScorer {
         var score = 100
         var components: [ScoreComponent] = []
 
-        // Anomaly deductions
+        // Anomaly deductions — proportional to z-score magnitude
         if let anomaly {
+            let absZ = abs(anomaly.zScore)
+
             switch anomaly.severity {
             case .critical:
-                let deduction = RulesConfiguration.anomalyCriticalDeduction
+                // Scale: z=2.5 → -30, z=3.0 → -36, z=4.0 → -48 (capped at -50)
+                let deduction = -min(50, Int(absZ * 12))
                 score += deduction
                 components.append(ScoreComponent(
                     metric: metric,
                     points: deduction,
-                    reason: "Critical deviation (\(String(format: "%.1f", anomaly.deviationPercent))%) from baseline"
+                    reason: "Critical deviation (z=\(String(format: "%.1f", absZ)), \(String(format: "%.1f", anomaly.deviationPercent))% from baseline)"
                 ))
             case .warning:
-                let deduction = RulesConfiguration.anomalyWarningDeduction
+                // Scale: z=1.5 → -12, z=2.0 → -16, z=2.4 → -19
+                let deduction = -min(25, Int(absZ * 8))
                 score += deduction
                 components.append(ScoreComponent(
                     metric: metric,
                     points: deduction,
-                    reason: "Warning deviation (\(String(format: "%.1f", anomaly.deviationPercent))%) from baseline"
+                    reason: "Warning deviation (z=\(String(format: "%.1f", absZ)), \(String(format: "%.1f", anomaly.deviationPercent))% from baseline)"
                 ))
             case .info:
                 break
@@ -46,26 +50,28 @@ struct HealthScorer {
             }
         }
 
-        // Trend adjustments
+        // Trend adjustments — proportional to rate of change
         if let trend {
             switch trend.direction {
             case .declining:
-                let deduction = abs(trend.weekOverWeekChange) > 10
-                    ? RulesConfiguration.strongDecliningTrendDeduction
-                    : RulesConfiguration.decliningTrendDeduction
+                let absWoW = abs(trend.weekOverWeekChange)
+                // Scale: 2% → -5, 5% → -8, 10% → -15, 20% → -25 (capped at -30)
+                let deduction = -min(30, Int(absWoW * 1.3 + 2))
                 score += deduction
                 components.append(ScoreComponent(
                     metric: metric,
                     points: deduction,
-                    reason: "Declining trend (week-over-week: \(String(format: "%.1f", trend.weekOverWeekChange))%)"
+                    reason: "\(trend.rateOfChange.displayLabel.capitalized) declining (\(String(format: "%.1f", trend.weekOverWeekChange))% week-over-week)"
                 ))
             case .improving:
-                let bonus = RulesConfiguration.improvingTrendBonus
+                let absWoW = abs(trend.weekOverWeekChange)
+                // Improving bonus scales too: 2% → +3, 5% → +5, 10%+ → +8
+                let bonus = min(8, Int(absWoW * 0.6 + 2))
                 score += bonus
                 components.append(ScoreComponent(
                     metric: metric,
                     points: bonus,
-                    reason: "Improving trend"
+                    reason: "\(trend.rateOfChange.displayLabel.capitalized) improving"
                 ))
             case .stable:
                 break
@@ -85,7 +91,7 @@ struct HealthScorer {
         }
 
         let totalScore = metricScores.map(\.score).reduce(0, +)
-        let avgScore = totalScore / metricScores.count
+        let avgScore = Int((Double(totalScore) / Double(metricScores.count)).rounded())
         let allComponents = metricScores.flatMap(\.components)
 
         return HealthScore(category: category, score: avgScore, breakdown: allComponents)
@@ -98,7 +104,7 @@ struct HealthScorer {
         }
 
         let totalScore = categoryScores.map(\.score).reduce(0, +)
-        let avgScore = totalScore / categoryScores.count
+        let avgScore = Int((Double(totalScore) / Double(categoryScores.count)).rounded())
         let allComponents = categoryScores.flatMap(\.breakdown)
 
         return HealthScore(score: avgScore, breakdown: allComponents)

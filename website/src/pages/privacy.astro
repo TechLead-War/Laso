@@ -1,0 +1,372 @@
+---
+import Base from '../layouts/Base.astro'
+---
+
+<Base title="Privacy Policy — Laso" description="Privacy Policy for Laso — learn how we protect your health data with on-device processing and transparent data practices.">
+
+  <!-- Nav Bar -->
+  <nav aria-label="Page navigation" class="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-black/[0.06]">
+    <div class="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
+      <a href="/" class="text-[17px] font-semibold text-[#1d1d1f] tracking-tight hover:opacity-70 transition-opacity">
+        Laso
+      </a>
+      <a href="/" class="text-[14px] text-[#0071e3] hover:underline">
+        Back to Home
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="max-w-3xl mx-auto px-6 py-16">
+
+    <!-- Title -->
+    <div class="mb-12">
+      <h1 class="text-[34px] font-bold text-[#1d1d1f] tracking-tight mb-3">Privacy Policy</h1>
+      <p class="text-[15px] text-[#6e6e73]">Effective Date: February 26, 2026</p>
+    </div>
+
+    <!-- Intro -->
+    <div class="mb-10">
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-4">
+        <strong class="text-[#1d1d1f]">Laso Health</strong> ("we," "us," or "our") operates the Laso mobile application (the "App"). This Privacy Policy explains what information we collect, how we use it, and your rights regarding your data.
+      </p>
+      <p class="text-[15px] text-[#424245] leading-relaxed">
+        <strong class="text-[#1d1d1f]">Our fundamental principle:</strong> Your health data stays on your device. Laso is built around on-device processing — your health metrics, scores, insights, and analyses are computed locally on your iPhone and are never transmitted to our servers or any third party.
+      </p>
+    </div>
+
+    <!-- Section 1: Health Data -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">1. Health Data (Apple HealthKit)</h2>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-4">
+        Laso requests access to your Apple HealthKit data to provide health insights and analysis. The types of health data we may access include:
+      </p>
+      <ul class="list-disc list-inside text-[15px] text-[#424245] leading-relaxed space-y-1 mb-6 pl-2">
+        <li>Heart rate and resting heart rate</li>
+        <li>Heart rate variability (HRV)</li>
+        <li>Sleep analysis and sleep stages</li>
+        <li>Activity data (steps, active energy, exercise minutes, stand hours)</li>
+        <li>Body measurements (weight, BMI, body fat percentage)</li>
+        <li>Blood pressure (systolic and diastolic)</li>
+        <li>VO2 Max (cardiorespiratory fitness)</li>
+        <li>Mobility metrics (walking speed, step length, double support time)</li>
+        <li>Mindfulness minutes</li>
+        <li>Workout sessions and types</li>
+        <li>Atrial fibrillation (AFib) history</li>
+        <li>Peripheral perfusion index</li>
+      </ul>
+
+      <!-- Highlighted box -->
+      <div class="bg-[#f5f5f7] rounded-2xl p-6 mb-6">
+        <p class="text-[14px] font-semibold text-[#1d1d1f] mb-4 uppercase tracking-wide">How We Handle Your Health Data</p>
+        <ul class="space-y-3">
+          <li class="flex items-start gap-3 text-[15px] text-[#424245]">
+            <span class="text-green-600 font-bold mt-0.5">✓</span>
+            <span><strong class="text-[#1d1d1f]">Processed entirely on your device</strong> — all analysis, scoring, and insights are computed locally on your iPhone.</span>
+          </li>
+          <li class="flex items-start gap-3 text-[15px] text-[#424245]">
+            <span class="text-red-500 font-bold mt-0.5">✗</span>
+            <span><strong class="text-[#1d1d1f]">Never transmitted</strong> — your health data is never sent to Laso's servers or any external service.</span>
+          </li>
+          <li class="flex items-start gap-3 text-[15px] text-[#424245]">
+            <span class="text-red-500 font-bold mt-0.5">✗</span>
+            <span><strong class="text-[#1d1d1f]">Never sold</strong> — we do not sell, license, or trade your health data under any circumstances.</span>
+          </li>
+          <li class="flex items-start gap-3 text-[15px] text-[#424245]">
+            <span class="text-red-500 font-bold mt-0.5">✗</span>
+            <span><strong class="text-[#1d1d1f]">Never used for tracking</strong> — your health data is not used for advertising, profiling, or cross-app tracking.</span>
+          </li>
+          <li class="flex items-start gap-3 text-[15px] text-[#424245]">
+            <span class="text-red-500 font-bold mt-0.5">✗</span>
+            <span><strong class="text-[#1d1d1f]">No ability to access</strong> — because health data never leaves your device, Laso Health has no technical ability to access your health information.</span>
+          </li>
+        </ul>
+      </div>
+
+      <p class="text-[15px] text-[#424245] leading-relaxed">
+        Laso complies fully with Apple's HealthKit guidelines. Health data obtained from HealthKit is used solely to provide and improve the App's health analysis features. We do not use HealthKit data for advertising or other data mining purposes.
+      </p>
+    </section>
+
+    <!-- Section 2: On-Device Data Storage -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">2. On-Device Data Storage</h2>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-4">
+        Laso uses Apple's SwiftData framework to store data locally on your device. This local storage includes:
+      </p>
+      <ul class="list-disc list-inside text-[15px] text-[#424245] leading-relaxed space-y-1 mb-4 pl-2">
+        <li><strong class="text-[#1d1d1f]">Daily aggregated metric values</strong> — summarized health data computed from HealthKit samples (e.g., daily average heart rate, total steps).</li>
+        <li><strong class="text-[#1d1d1f]">Personal baselines</strong> — your individual baseline scores used to contextualize your health trends.</li>
+        <li><strong class="text-[#1d1d1f]">Sync metadata</strong> — timestamps recording the last time each metric was fetched from HealthKit, enabling incremental updates.</li>
+        <li><strong class="text-[#1d1d1f]">App preferences</strong> — your in-app settings and notification preferences.</li>
+      </ul>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-3">
+        All locally stored data is protected by your device's hardware encryption and is accessible only through Laso with proper device authentication.
+      </p>
+      <p class="text-[15px] text-[#424245] leading-relaxed">
+        <strong class="text-[#1d1d1f]">Deleting the App:</strong> Uninstalling Laso from your device permanently deletes all locally stored data. This action cannot be undone.
+      </p>
+    </section>
+
+    <!-- Section 3: iCloud Key-Value Storage -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">3. iCloud Key-Value Storage</h2>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-4">
+        Laso may use Apple's iCloud Key-Value Storage to sync certain non-sensitive preferences across your devices.
+      </p>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-3">
+        <strong class="text-[#1d1d1f]">What is synced:</strong> App preferences and settings only (e.g., notification preferences, display preferences).
+      </p>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-3">
+        <strong class="text-[#1d1d1f]">What is not synced:</strong> Raw health data, computed scores, insights, baselines, or any HealthKit-derived information is never stored in or synced through iCloud.
+      </p>
+      <p class="text-[15px] text-[#424245] leading-relaxed">
+        iCloud data is encrypted by Apple both in transit and at rest. Apple's iCloud privacy policy governs this storage. Laso does not have direct access to your iCloud storage; data is read and written only through Apple's CloudKit APIs.
+      </p>
+    </section>
+
+    <!-- Section 4: Analytics Data -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">4. Analytics Data</h2>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-4">
+        Laso uses Firebase Analytics (provided by Google) to collect anonymous usage data to help us understand how the App is used and to improve the user experience.
+      </p>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-4">
+        <strong class="text-[#1d1d1f]">What analytics data we collect:</strong>
+      </p>
+      <ul class="list-disc list-inside text-[15px] text-[#424245] leading-relaxed space-y-1 mb-6 pl-2">
+        <li>Screens visited and features used within the App</li>
+        <li>Session duration and frequency of use</li>
+        <li>Device type and iOS version (aggregated)</li>
+        <li>App crashes and performance events</li>
+      </ul>
+
+      <!-- Highlighted box -->
+      <div class="bg-[#f5f5f7] rounded-2xl p-6 mb-6">
+        <p class="text-[14px] font-semibold text-[#1d1d1f] mb-4 uppercase tracking-wide">Analytics Does NOT Include</p>
+        <ul class="space-y-3">
+          <li class="flex items-start gap-3 text-[15px] text-[#424245]">
+            <span class="text-red-500 font-bold mt-0.5">✗</span>
+            <span>Any health metric values (heart rate, HRV, steps, sleep, etc.)</span>
+          </li>
+          <li class="flex items-start gap-3 text-[15px] text-[#424245]">
+            <span class="text-red-500 font-bold mt-0.5">✗</span>
+            <span>Health scores, readiness scores, risk assessments, or insights</span>
+          </li>
+          <li class="flex items-start gap-3 text-[15px] text-[#424245]">
+            <span class="text-red-500 font-bold mt-0.5">✗</span>
+            <span>Any personally identifiable information (PII) such as name, email, or location</span>
+          </li>
+          <li class="flex items-start gap-3 text-[15px] text-[#424245]">
+            <span class="text-red-500 font-bold mt-0.5">✗</span>
+            <span>Your Apple ID or any account information</span>
+          </li>
+        </ul>
+      </div>
+
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-4">
+        Firebase Analytics uses a random instance ID that is not linked to your identity. This ID can be reset at any time through your device's privacy settings. Analytics data is processed by Google in accordance with Google's Privacy Policy.
+      </p>
+      <p class="text-[15px] text-[#424245] leading-relaxed">
+        <strong class="text-[#1d1d1f]">Website analytics:</strong> Our website (lasohealth.com) uses Google Analytics 4 (GA4) to collect anonymous usage data such as page views, scroll depth, and button clicks. No personally identifiable information is collected through the website. This data helps us understand how visitors interact with our website and improve its content.
+      </p>
+    </section>
+
+    <!-- Section 5: Remote Configuration -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">5. Remote Configuration</h2>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-4">
+        Laso uses Firebase Remote Config (provided by Google) to allow us to update certain App behaviors and feature flags without requiring an App Store update. This helps us respond quickly to issues and roll out improvements gradually.
+      </p>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-3">
+        When Laso fetches remote configuration, it downloads a small configuration payload (approximately 2 KB) from Google's servers. This request includes:
+      </p>
+      <ul class="list-disc list-inside text-[15px] text-[#424245] leading-relaxed space-y-1 mb-4 pl-2">
+        <li>The App's bundle identifier</li>
+        <li>The App version number</li>
+        <li>The device's iOS version</li>
+        <li>A random Firebase instance ID</li>
+      </ul>
+      <p class="text-[15px] text-[#424245] leading-relaxed">
+        No personal data, health data, or user-identifiable information is transmitted during remote configuration fetches. Configuration data is cached locally on your device.
+      </p>
+    </section>
+
+    <!-- Section 6: Subscriptions & Payments -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">6. Subscriptions &amp; Payments</h2>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-4">
+        Laso offers optional in-app subscriptions to unlock premium features. All subscription purchases are handled entirely by Apple through the App Store and StoreKit framework.
+      </p>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-3">
+        <strong class="text-[#1d1d1f]">What we do not collect:</strong> Laso does not collect, store, or process any payment information, credit card numbers, billing addresses, or financial data. All payment processing is handled exclusively by Apple.
+      </p>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-3">
+        <strong class="text-[#1d1d1f]">What we receive:</strong> Laso only receives a cryptographically signed receipt from Apple confirming your subscription status (active, expired, or not subscribed). This receipt is verified on-device using Apple's StoreKit APIs.
+      </p>
+      <p class="text-[15px] text-[#424245] leading-relaxed">
+        For questions about billing, refunds, or subscription management, please refer to Apple's App Store support. Apple's privacy policy governs all payment-related data.
+      </p>
+    </section>
+
+    <!-- Section 7: Third-Party Services -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">7. Third-Party Services</h2>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-6">
+        Laso integrates with a limited number of third-party services. The table below summarizes each service, its provider, and its purpose:
+      </p>
+
+      <div class="overflow-x-auto mb-6">
+        <table class="w-full text-[14px] text-[#424245] border-collapse">
+          <thead>
+            <tr class="bg-[#f5f5f7]">
+              <th class="text-left px-4 py-3 text-[#1d1d1f] font-semibold border-b border-gray-200">Service</th>
+              <th class="text-left px-4 py-3 text-[#1d1d1f] font-semibold border-b border-gray-200">Provider</th>
+              <th class="text-left px-4 py-3 text-[#1d1d1f] font-semibold border-b border-gray-200">Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b border-gray-100">
+              <td class="px-4 py-3 font-medium text-[#1d1d1f]">Firebase Analytics</td>
+              <td class="px-4 py-3">Google LLC</td>
+              <td class="px-4 py-3">Anonymous usage analytics to improve the App</td>
+            </tr>
+            <tr class="border-b border-gray-100 bg-[#fafafa]">
+              <td class="px-4 py-3 font-medium text-[#1d1d1f]">Firebase Remote Config</td>
+              <td class="px-4 py-3">Google LLC</td>
+              <td class="px-4 py-3">Feature flags and remote configuration</td>
+            </tr>
+            <tr class="border-b border-gray-100">
+              <td class="px-4 py-3 font-medium text-[#1d1d1f]">Apple HealthKit</td>
+              <td class="px-4 py-3">Apple Inc.</td>
+              <td class="px-4 py-3">On-device health data access (read-only)</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 font-medium text-[#1d1d1f]">Apple StoreKit</td>
+              <td class="px-4 py-3">Apple Inc.</td>
+              <td class="px-4 py-3">Subscription management and payment processing</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="text-[15px] text-[#424245] leading-relaxed">
+        <strong class="text-[#1d1d1f]">Important:</strong> No third-party service receives your health data. Firebase Analytics and Remote Config receive only anonymous usage and configuration data as described in Sections 4 and 5. Apple HealthKit data never leaves your device.
+      </p>
+    </section>
+
+    <!-- Section 8: Data Retention & Deletion -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">8. Data Retention &amp; Deletion</h2>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-4">
+        <strong class="text-[#1d1d1f]">Health and app data:</strong> All health data, scores, baselines, and preferences are stored exclusively on your device. This data persists until you uninstall the App or manually clear App data through iOS Settings.
+      </p>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-4">
+        <strong class="text-[#1d1d1f]">Analytics data:</strong> Anonymous usage data collected through Firebase Analytics is retained for 14 months, after which it is automatically deleted by Google in accordance with Google's data retention policies.
+      </p>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-4">
+        <strong class="text-[#1d1d1f]">Deleting all your data:</strong> Uninstalling Laso from your device permanently and irrecoverably deletes all locally stored app data, including aggregated health metrics, baselines, and preferences. Because we have no access to your on-device data, we are unable to assist with recovering deleted data.
+      </p>
+      <p class="text-[15px] text-[#424245] leading-relaxed">
+        <strong class="text-[#1d1d1f]">HealthKit access:</strong> Laso only reads data from HealthKit — it never writes health data back to HealthKit. You can revoke Laso's HealthKit permissions at any time through iOS Settings &rarr; Privacy &amp; Security &rarr; Health &rarr; Laso.
+      </p>
+    </section>
+
+    <!-- Section 9: Children's Privacy -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">9. Children's Privacy</h2>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-4">
+        Laso is not directed to children under the age of 13. We do not knowingly collect personal information from children under 13. If you are a parent or guardian and believe that your child has provided us with personal information, please contact us at <a href="mailto:privacy@lasohealth.com" class="text-[#0071e3] hover:underline">privacy@lasohealth.com</a> and we will take steps to delete such information.
+      </p>
+      <p class="text-[15px] text-[#424245] leading-relaxed">
+        Given the nature of the App — which involves HealthKit data and is designed for adults managing their personal health — users are expected to be 13 years of age or older.
+      </p>
+    </section>
+
+    <!-- Section 10: International Users -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">10. International Users</h2>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-4">
+        <strong class="text-[#1d1d1f]">Health data:</strong> Because all health data is processed on-device and never transmitted, your health data is not transferred to any country or jurisdiction.
+      </p>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-4">
+        <strong class="text-[#1d1d1f]">For users in the European Economic Area (EEA) — GDPR:</strong> The anonymous analytics data collected through Firebase Analytics may be transferred to and processed in the United States by Google LLC. We rely on legitimate interests as our lawful basis for processing this anonymous usage data, as it is necessary to maintain and improve the App. This anonymous data does not constitute personal data under GDPR as it cannot be used to identify you. You have the right to object to this processing by contacting us.
+      </p>
+      <p class="text-[15px] text-[#424245] leading-relaxed">
+        <strong class="text-[#1d1d1f]">For California residents — CCPA:</strong> Laso does not sell personal information. We do not share personal information with third parties for cross-context behavioral advertising. The anonymous analytics data we collect does not constitute "personal information" as defined under the CCPA because it cannot reasonably be linked to you as an individual.
+      </p>
+    </section>
+
+    <!-- Section 11: Security -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">11. Security</h2>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-4">
+        We take the security of your data seriously and implement appropriate technical safeguards:
+      </p>
+      <ul class="list-disc list-inside text-[15px] text-[#424245] leading-relaxed space-y-2 mb-4 pl-2">
+        <li><strong class="text-[#1d1d1f]">Device-level encryption:</strong> All on-device data benefits from iPhone's hardware-level encryption (AES-256). Data is protected by your device passcode and Face ID / Touch ID.</li>
+        <li><strong class="text-[#1d1d1f]">Transport security:</strong> All network communications (analytics and remote config fetches) use TLS (Transport Layer Security) encryption to protect data in transit.</li>
+        <li><strong class="text-[#1d1d1f]">Minimal data collection:</strong> Our most effective security measure is collecting as little data as possible. Because health data never leaves your device, it is protected from network-based threats.</li>
+      </ul>
+      <p class="text-[15px] text-[#424245] leading-relaxed">
+        No method of transmission over the internet or method of electronic storage is 100% secure. However, the on-device architecture of Laso significantly limits the attack surface compared to cloud-based health apps.
+      </p>
+    </section>
+
+    <!-- Section 12: Changes to This Policy -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">12. Changes to This Policy</h2>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-4">
+        We may update this Privacy Policy from time to time to reflect changes in our practices, technology, legal requirements, or for other operational reasons. When we make changes, we will:
+      </p>
+      <ul class="list-disc list-inside text-[15px] text-[#424245] leading-relaxed space-y-1 mb-4 pl-2">
+        <li>Update the "Effective Date" at the top of this page</li>
+        <li>Post the revised policy at this URL</li>
+        <li>For material changes, provide notice within the App</li>
+      </ul>
+      <p class="text-[15px] text-[#424245] leading-relaxed">
+        Your continued use of Laso after the effective date of a revised policy constitutes your acceptance of the changes. We encourage you to review this policy periodically.
+      </p>
+    </section>
+
+    <!-- Section 13: Contact -->
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">13. Contact Us</h2>
+      <p class="text-[15px] text-[#424245] leading-relaxed mb-4">
+        If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:
+      </p>
+      <div class="bg-[#f5f5f7] rounded-2xl p-6">
+        <p class="text-[15px] text-[#1d1d1f] font-semibold mb-1">Laso Health</p>
+        <p class="text-[15px] text-[#424245] mb-2">Privacy Inquiries</p>
+        <a href="mailto:privacy@lasohealth.com" class="text-[15px] text-[#0071e3] hover:underline">
+          privacy@lasohealth.com
+        </a>
+      </div>
+      <p class="text-[14px] text-[#6e6e73] mt-4 leading-relaxed">
+        We are committed to resolving any privacy concerns promptly. For general support, you may also contact us through the App Store listing.
+      </p>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-black/[0.06]">
+    <div class="max-w-3xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p class="text-[13px] text-[#6e6e73]">
+        &copy; {new Date().getFullYear()} Laso Health. All rights reserved.
+      </p>
+      <nav class="flex items-center gap-6">
+        <a href="/privacy" class="text-[13px] font-semibold text-[#1d1d1f]">
+          Privacy
+        </a>
+        <a href="/terms" class="text-[13px] text-[#6e6e73] hover:text-[#1d1d1f] transition-colors">
+          Terms
+        </a>
+        <a href="mailto:privacy@lasohealth.com" class="text-[13px] text-[#6e6e73] hover:text-[#1d1d1f] transition-colors">
+          Contact
+        </a>
+      </nav>
+    </div>
+  </footer>
+
+</Base>

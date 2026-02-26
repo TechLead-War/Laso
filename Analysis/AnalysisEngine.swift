@@ -123,6 +123,13 @@ final class AnalysisEngine {
         let prInsights = PersonalRecordAnalyzer.generateInsights(timeSeries: timeSeries)
         insights.append(contentsOf: prInsights)
 
+        // Step 7g: Multi-metric cluster insights
+        let clusterInsights = MultiMetricClusterAnalyzer.generateInsights(
+            anomalies: anomalies,
+            trends: trends
+        )
+        insights.append(contentsOf: clusterInsights)
+
         // Re-sort combined insights by priority
         insights.sort { $0.priorityScore > $1.priorityScore }
 
