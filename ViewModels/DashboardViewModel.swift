@@ -6,6 +6,7 @@ import Observation
 final class DashboardViewModel {
     let healthKitManager: HealthKitManager
     let analysisEngine: AnalysisEngine
+    let store: HealthDataStore
 
     var isLoading = false
     var errorMessage: String?
@@ -174,6 +175,8 @@ final class DashboardViewModel {
         case thirtyDays = "30D"
         case threeMonths = "3M"
         case sixMonths = "6M"
+        case oneYear = "1Y"
+        case allTime = "All"
 
         var id: String { rawValue }
 
@@ -183,6 +186,8 @@ final class DashboardViewModel {
             case .thirtyDays: return 30
             case .threeMonths: return 90
             case .sixMonths: return 180
+            case .oneYear: return 365
+            case .allTime: return 3650
             }
         }
 
@@ -192,6 +197,8 @@ final class DashboardViewModel {
             case .thirtyDays: return "Last 30 Days"
             case .threeMonths: return "Last 3 Months"
             case .sixMonths: return "Last 6 Months"
+            case .oneYear: return "Last Year"
+            case .allTime: return "All Time"
             }
         }
     }
@@ -279,9 +286,10 @@ final class DashboardViewModel {
         )
     }
 
-    init(healthKitManager: HealthKitManager, analysisEngine: AnalysisEngine) {
+    init(healthKitManager: HealthKitManager, analysisEngine: AnalysisEngine, store: HealthDataStore) {
         self.healthKitManager = healthKitManager
         self.analysisEngine = analysisEngine
+        self.store = store
     }
 
     /// Initial load: authorize, fetch, analyze
@@ -304,7 +312,7 @@ final class DashboardViewModel {
         await refresh()
     }
 
-    /// Refresh data from HealthKit and re-run analysis
+    /// Refresh data from HealthKit, sync to on-device store, and re-run analysis
     func refresh() async {
         isLoading = true
         defer { isLoading = false }
@@ -312,8 +320,16 @@ final class DashboardViewModel {
         // Capture previous trends before re-analysis
         let prevTrends = previousTrends
 
-        await healthKitManager.fetchAllMetrics(days: 365)
+        // Load stored data + incrementally sync new data from HealthKit
+        await healthKitManager.loadAndSync(store: store)
         analysisEngine.runFullAnalysis(timeSeries: healthKitManager.timeSeries)
+
+        // Persist today's analysis snapshot for historical score tracking
+        store.saveAnalysisSnapshot(
+            overallScore: overallScore.score,
+            categoryScores: analysisEngine.categoryScores,
+            baselines: analysisEngine.baselines
+        )
 
         // Store current trends for next refresh comparison
         previousTrends = analysisEngine.trends.mapValues { $0.direction }

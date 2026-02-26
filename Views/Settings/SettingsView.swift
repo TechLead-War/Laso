@@ -1,9 +1,10 @@
 import SwiftUI
+import SwiftData
 
 /// Settings view for notification preferences, heart rate alerts, per-metric toggles, and export
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("healthpulse.appTheme") private var appTheme: String = "system"
+    @AppStorage(AppKeys.App.appTheme) private var appTheme: String = "system"
     @State private var preferences: NotificationPreferences
     @State private var showExportSheet = false
     @State private var showMetricAlertPicker = false
@@ -12,11 +13,13 @@ struct SettingsView: View {
     let webExportViewModel: WebExportViewModel
     let deviceSourceManager: DeviceSourceManager
     let healthKitManager: HealthKitManager
+    let healthDataStore: HealthDataStore
 
-    init(webExportViewModel: WebExportViewModel, deviceSourceManager: DeviceSourceManager, healthKitManager: HealthKitManager) {
+    init(webExportViewModel: WebExportViewModel, deviceSourceManager: DeviceSourceManager, healthKitManager: HealthKitManager, healthDataStore: HealthDataStore) {
         self.webExportViewModel = webExportViewModel
         self.deviceSourceManager = deviceSourceManager
         self.healthKitManager = healthKitManager
+        self.healthDataStore = healthDataStore
         self._preferences = State(initialValue: PersistenceManager().loadPreferences())
     }
 
@@ -54,6 +57,9 @@ struct SettingsView: View {
                 // Notifications
                 Section("Daily Summary") {
                     Toggle("Enable Daily Summary", isOn: $preferences.dailySummaryEnabled)
+                        .onChange(of: preferences.dailySummaryEnabled) { _, newValue in
+                            AppAnalytics.shared.trackSettingChanged(name: "daily_summary_enabled", value: newValue)
+                        }
 
                     if preferences.dailySummaryEnabled {
                         DatePicker(
@@ -80,11 +86,17 @@ struct SettingsView: View {
 
                 Section("Weekly Summary") {
                     Toggle("Enable Weekly Report", isOn: $preferences.weeklySummaryEnabled)
+                        .onChange(of: preferences.weeklySummaryEnabled) { _, newValue in
+                            AppAnalytics.shared.trackSettingChanged(name: "weekly_summary_enabled", value: newValue)
+                        }
                 }
 
                 // Heart Rate Spike/Drop Alerts
                 Section {
                     Toggle("Heart Rate Spike Alerts", isOn: $preferences.heartRateSpikeAlertsEnabled)
+                        .onChange(of: preferences.heartRateSpikeAlertsEnabled) { _, newValue in
+                            AppAnalytics.shared.trackSettingChanged(name: "heart_rate_spike_alerts", value: newValue)
+                        }
 
                     if preferences.heartRateSpikeAlertsEnabled {
                         HStack {
@@ -98,6 +110,9 @@ struct SettingsView: View {
                             in: 100...180,
                             step: 5
                         )
+                        .onChange(of: preferences.heartRateSpikeThreshold) { _, newValue in
+                            AppAnalytics.shared.trackSettingChanged(name: "hr_spike_threshold", value: newValue)
+                        }
 
                         HStack {
                             Text("Low HR Threshold")
@@ -110,6 +125,9 @@ struct SettingsView: View {
                             in: 30...60,
                             step: 5
                         )
+                        .onChange(of: preferences.heartRateDropThreshold) { _, newValue in
+                            AppAnalytics.shared.trackSettingChanged(name: "hr_drop_threshold", value: newValue)
+                        }
                     }
                 } header: {
                     Text("Heart Rate Alerts")
@@ -120,6 +138,9 @@ struct SettingsView: View {
                 // Apple Watch Reminders
                 Section {
                     Toggle("Watch Not Worn Reminder", isOn: $preferences.watchNotWornReminderEnabled)
+                        .onChange(of: preferences.watchNotWornReminderEnabled) { _, newValue in
+                            AppAnalytics.shared.trackSettingChanged(name: "watch_not_worn_reminder", value: newValue)
+                        }
                     if preferences.watchNotWornReminderEnabled {
                         Text("Get notified if your Apple Watch hasn't recorded data for over 1 hour.")
                             .font(.caption)
@@ -127,6 +148,9 @@ struct SettingsView: View {
                     }
 
                     Toggle("Low Battery Reminder", isOn: $preferences.lowBatteryReminderEnabled)
+                        .onChange(of: preferences.lowBatteryReminderEnabled) { _, newValue in
+                            AppAnalytics.shared.trackSettingChanged(name: "low_battery_reminder", value: newValue)
+                        }
                     if preferences.lowBatteryReminderEnabled {
                         Text("Get a one-time alert when your watch battery drops below 10%.")
                             .font(.caption)
@@ -141,15 +165,30 @@ struct SettingsView: View {
                 // General Alerts
                 Section("Alerts") {
                     Toggle("Critical Alerts", isOn: $preferences.criticalAlertsEnabled)
+                        .onChange(of: preferences.criticalAlertsEnabled) { _, newValue in
+                            AppAnalytics.shared.trackSettingChanged(name: "critical_alerts", value: newValue)
+                        }
                     Toggle("Warning Alerts", isOn: $preferences.warningAlertsEnabled)
+                        .onChange(of: preferences.warningAlertsEnabled) { _, newValue in
+                            AppAnalytics.shared.trackSettingChanged(name: "warning_alerts", value: newValue)
+                        }
                     Toggle("Trend Reversal Alerts", isOn: $preferences.trendReversalAlertsEnabled)
+                        .onChange(of: preferences.trendReversalAlertsEnabled) { _, newValue in
+                            AppAnalytics.shared.trackSettingChanged(name: "trend_reversal_alerts", value: newValue)
+                        }
                     Toggle("Improvement Celebrations", isOn: $preferences.improvementAlertsEnabled)
+                        .onChange(of: preferences.improvementAlertsEnabled) { _, newValue in
+                            AppAnalytics.shared.trackSettingChanged(name: "improvement_alerts", value: newValue)
+                        }
 
                     Stepper(
                         "Max \(preferences.maxNotificationsPerDay)/day",
                         value: $preferences.maxNotificationsPerDay,
                         in: 1...15
                     )
+                    .onChange(of: preferences.maxNotificationsPerDay) { _, newValue in
+                        AppAnalytics.shared.trackSettingChanged(name: "max_notifications_per_day", value: newValue)
+                    }
                 }
 
                 // Per-Metric Alert Configuration
@@ -203,6 +242,36 @@ struct SettingsView: View {
                     }
                 }
 
+                // Data Storage
+                Section {
+                    HStack {
+                        Label("Stored Samples", systemImage: "internaldrive")
+                        Spacer()
+                        Text("\(healthDataStore.totalStoredSamples)")
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+
+                    HStack {
+                        Label("Data History", systemImage: "calendar.badge.clock")
+                        Spacer()
+                        Text(healthDataStore.dataSpanDescription)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    HStack {
+                        Label("Metrics Tracked", systemImage: "chart.bar.xaxis")
+                        Spacer()
+                        Text("\(healthDataStore.metricsWithData)")
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+                } header: {
+                    Text("On-Device Data")
+                } footer: {
+                    Text("All your health data is stored securely on this device. The longer you use the app, the better your insights become.")
+                }
+
                 // About
                 Section("About") {
                     HStack {
@@ -221,7 +290,10 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
-            .onAppear { AppAnalytics.shared.trackFeatureOpen(.settings) }
+            .onAppear {
+                AppAnalytics.shared.trackFeatureOpen(.settings)
+                AppAnalytics.shared.trackActivationMilestone(.firstSettingsVisit)
+            }
             .onDisappear { AppAnalytics.shared.trackFeatureClose(.settings) }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -231,57 +303,8 @@ struct SettingsView: View {
                     }
                 }
             }
-            .onChange(of: preferences.dailySummaryEnabled) { _, newValue in
+            .onChange(of: preferences) { _, _ in
                 savePreferences()
-                AppAnalytics.shared.trackSettingChanged(name: "daily_summary_enabled", value: newValue)
-            }
-            .onChange(of: preferences.weeklySummaryEnabled) { _, newValue in
-                savePreferences()
-                AppAnalytics.shared.trackSettingChanged(name: "weekly_summary_enabled", value: newValue)
-            }
-            .onChange(of: preferences.criticalAlertsEnabled) { _, newValue in
-                savePreferences()
-                AppAnalytics.shared.trackSettingChanged(name: "critical_alerts_enabled", value: newValue)
-            }
-            .onChange(of: preferences.warningAlertsEnabled) { _, newValue in
-                savePreferences()
-                AppAnalytics.shared.trackSettingChanged(name: "warning_alerts_enabled", value: newValue)
-            }
-            .onChange(of: preferences.maxNotificationsPerDay) { _, newValue in
-                savePreferences()
-                AppAnalytics.shared.trackSettingChanged(name: "max_notifications_per_day", value: newValue)
-            }
-            .onChange(of: preferences.heartRateSpikeAlertsEnabled) { _, newValue in
-                savePreferences()
-                AppAnalytics.shared.trackSettingChanged(name: "heart_rate_spike_alerts_enabled", value: newValue)
-            }
-            .onChange(of: preferences.heartRateSpikeThreshold) { _, newValue in
-                savePreferences()
-                AppAnalytics.shared.trackSettingChanged(name: "heart_rate_spike_threshold_bpm", value: newValue)
-            }
-            .onChange(of: preferences.heartRateDropThreshold) { _, newValue in
-                savePreferences()
-                AppAnalytics.shared.trackSettingChanged(name: "heart_rate_drop_threshold_bpm", value: newValue)
-            }
-            .onChange(of: preferences.trendReversalAlertsEnabled) { _, newValue in
-                savePreferences()
-                AppAnalytics.shared.trackSettingChanged(name: "trend_reversal_alerts_enabled", value: newValue)
-            }
-            .onChange(of: preferences.improvementAlertsEnabled) { _, newValue in
-                savePreferences()
-                AppAnalytics.shared.trackSettingChanged(name: "improvement_alerts_enabled", value: newValue)
-            }
-            .onChange(of: preferences.watchNotWornReminderEnabled) { _, newValue in
-                savePreferences()
-                AppAnalytics.shared.trackSettingChanged(name: "watch_not_worn_reminder_enabled", value: newValue)
-            }
-            .onChange(of: preferences.lowBatteryReminderEnabled) { _, newValue in
-                savePreferences()
-                AppAnalytics.shared.trackSettingChanged(name: "low_battery_reminder_enabled", value: newValue)
-            }
-            .onChange(of: preferences.warningAlertMetrics) { _, newValue in
-                savePreferences()
-                AppAnalytics.shared.trackSettingChanged(name: "warning_alert_metrics_count", value: newValue.count)
             }
             .sheet(isPresented: $showExportSheet) {
                 if let url = webExportViewModel.exportedURL {
@@ -363,12 +386,17 @@ struct ShareSheet: UIViewControllerRepresentable {
 #Preview {
     let hkManager = HealthKitManager()
     let engine = AnalysisEngine()
+    let container = try! ModelContainer(
+        for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self,
+        configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+    )
     SettingsView(
         webExportViewModel: WebExportViewModel(
             healthKitManager: hkManager,
             analysisEngine: engine
         ),
         deviceSourceManager: DeviceSourceManager(healthStore: hkManager.healthStore),
-        healthKitManager: hkManager
+        healthKitManager: hkManager,
+        healthDataStore: HealthDataStore(modelContainer: container)
     )
 }

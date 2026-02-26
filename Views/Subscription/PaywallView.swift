@@ -44,6 +44,10 @@ struct PaywallView: View {
                 "region": Locale.current.region?.identifier ?? "unknown",
                 "price_tier": SubscriptionConfig.currentTier.rawValue,
             ])
+            AppAnalytics.shared.trackPrePurchaseBehavior(action: "paywall_viewed", metadata: [
+                "source": "trial_expired",
+                "price_tier": SubscriptionConfig.currentTier.rawValue
+            ])
         }
     }
 
@@ -200,6 +204,10 @@ struct PaywallView: View {
 
             Button {
                 guard let product = selectedProduct else { return }
+                AppAnalytics.shared.trackPrePurchaseBehavior(action: "subscribe_tapped", metadata: [
+                    "product_id": product.id,
+                    "price": product.displayPrice
+                ])
                 Task { await subscriptionManager.purchase(product) }
             } label: {
                 Group {

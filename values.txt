@@ -317,3 +317,420 @@ Critical metrics and their fallback:
   - Heart Rate Zone: requires HR. No HR → defaults to "Rest" zone.
   - Activity Rings: always shown (defaults to 0/goal), since Apple Health
     always has step/calorie data even from iPhone alone.
+
+
+================================================================================
+ANALYTICS EVENT KEYS — Complete Reference
+================================================================================
+
+All events are logged via Firebase Analytics (Analytics.logEvent).
+Parameter values are sanitized: strings ≤100 chars, event names ≤40 chars lowercase.
+
+─── SESSION & LIFECYCLE ────────────────────────────────────────────────────────
+
+  session_start
+    session_id, hour_of_day, day_of_week, streak_days, app_version
+
+  session_end
+    session_id, duration_sec, screens_visited, max_depth
+
+  streak_updated
+    streak_days, is_longest (0|1)
+
+─── NAVIGATION ─────────────────────────────────────────────────────────────────
+
+  tab_switched
+    tab, from_tab
+
+  screen_viewed
+    screen, tab, depth, (+ metadata)
+
+  screen_exited
+    screen, tab, duration_sec
+
+  nav_transition
+    from_screen, to_screen
+
+  feature_used
+    feature, duration_sec                  (fires when screen duration ≥30s)
+
+  feature_stuck
+    feature, short_sessions_15m            (fires on 3+ sessions ≤20s within 15min)
+
+─── BLOCK / TAP EVENTS ────────────────────────────────────────────────────────
+
+  block_tapped
+    block_title, block_type, screen, tab
+
+  BlockType values (74 total):
+    Home:           recovery_card, sleep_card, smart_action, action_card,
+                    headline_insight, see_all_insights, see_all_needs_attention,
+                    see_all_correlations, weekly_review_card, settings_gear,
+                    empty_state_manage_devices, empty_state_refresh, error_retry
+    Live:           heart_rate_hero_card, vital_card_spo2, vital_card_resp_rate,
+                    activity_rings_section, quick_stat_steps, quick_stat_distance,
+                    quick_stat_flights, blood_pressure_card, temperature_card,
+                    last_workout_card
+    Explore:        category_row, health_score_hero, focus_banner
+    Category:       metric_row, insight_card, pattern_card
+    Correlations:   correlation_card
+    Risk:           focus_area, focus_area_card, risk_factor
+    Devices:        manage_devices, device_row, unconnected_device_row, app_store_link
+    Settings:       export_report, settings_done_button, metric_alerts_picker
+    Filters:        trend_filter, period_selector
+    Feedback:       feedback_category, feedback_submit, feedback_skip,
+                    feedback_done_after_submit
+    Onboarding:     onboarding_connect_health, onboarding_continue_anyway,
+                    onboarding_focus_chip, onboarding_get_started
+
+─── SECTION IMPRESSIONS ────────────────────────────────────────────────────────
+
+  section_impressed
+    section, screen, tab, (+ metadata)
+
+  card_impressed
+    card_type, screen, tab
+
+  Section types by screen:
+    Home:          todays_briefing_section, needs_attention_section,
+                   correlations_section, correlation_card_impression,
+                   weekly_review_section, stale_recovery_card,
+                   connect_health_section, coach_greeting,
+                   last_updated_footer, period_summary_section
+    Live:          stale_vitals_prompt, quick_stats_row, blood_pressure_temp_row,
+                   live_header_section, heart_rate_mini_chart, vital_signs_row
+    MetricDetail:  metric_detail_header, chart_section, contextual_summary,
+                   score_breakdown_section, insights_section, action_banner_card
+    Risk:          risk_gauge_section, focus_areas_section,
+                   contributing_factors_section, disclaimer_section
+    Explore:       category_list, weakest_category_banner
+    Category:      category_score_ring, category_trend_summary,
+                   category_insights_section, category_metric_list
+    WeeklyReview:  weekly_score_section, weekly_wins_section,
+                   weekly_watch_out_section
+    Insights:      insights_filter_chips, actionable_insight_card
+    Correlations:  correlations_filter_chips, correlation_detail_card
+    Settings:      settings_connected_devices, settings_daily_summary,
+                   settings_weekly_summary, settings_heart_rate_alerts,
+                   settings_apple_watch, settings_alerts, settings_metric_alerts,
+                   settings_data_export, settings_appearance,
+                   settings_on_device_data, settings_about
+
+─── CHART INTERACTIONS ─────────────────────────────────────────────────────────
+
+  chart_interaction
+    metric, interaction_type, screen, tab, (+ metadata)
+    interaction_type: drag_start | drag_end | tap_select | tap_deselect
+
+─── DATA SYNC ──────────────────────────────────────────────────────────────────
+
+  data_sync_completed
+    metrics_count, new_samples_count, duration_sec, is_first_sync (0|1)
+
+─── SCROLL & ENGAGEMENT ────────────────────────────────────────────────────────
+
+  scroll_depth
+    screen, max_depth_percent, tab
+
+  pull_to_refresh
+    screen, tab
+
+  time_range_changed
+    screen, context, from_days, to_days
+
+  filter_changed
+    screen, filter_type, from_filter, to_filter
+
+  setting_changed
+    setting_name, new_value, screen
+
+  theme_changed
+    from_theme, to_theme
+
+─── LIVE TAB ───────────────────────────────────────────────────────────────────
+
+  streaming_started
+    screen
+
+  streaming_stopped
+    screen, duration_sec
+
+  live_first_data_received
+    screen
+
+  heart_rate_zone_changed
+    from_zone, to_zone, bpm
+
+─── EMPTY STATES ───────────────────────────────────────────────────────────────
+
+  empty_state_shown
+    screen, state_type, tab
+
+─── SHARE & EXPORT ─────────────────────────────────────────────────────────────
+
+  share_sheet_presented
+    content_type, screen
+
+─── FEEDBACK ───────────────────────────────────────────────────────────────────
+
+  feedback_prompt_shown
+    days_since_install
+
+  feedback_submitted
+    category, text_length
+
+
+================================================================================
+FOUR-PILLAR ANALYTICS KEYS — Activation, Retention, Monetization, Churn
+================================================================================
+
+─── PILLAR 1: ACTIVATION DISCOVERY ────────────────────────────────────────────
+
+  activation_milestone
+    milestone, session_number, time_since_install_sec,
+    session_elapsed_sec, milestones_completed, is_first_session
+
+    Milestone values (tracked once each, first occurrence only):
+      first_data_load           HealthKit data loaded successfully
+      first_score_seen          Visited Explore tab (saw health score)
+      first_insight_viewed      Opened Insights Detail
+      first_metric_detail       Drilled into a metric
+      first_chart_interaction   Touched/dragged a chart
+      first_weekly_review       Opened weekly review
+      first_correlation         Viewed correlations
+      first_live_session        Used Live tab
+      first_settings_visit      Opened settings
+      first_pull_to_refresh     Pulled to refresh
+
+  first_session_profile         (fires once, end of first session)
+    screens_visited, max_depth, milestones_completed,
+    core_actions (comma-separated), duration_sec
+
+─── PILLAR 2: BEHAVIOR → RETENTION CAUSALITY ─────────────────────────────────
+
+  core_action_completed
+    action, screen, session_number, session_elapsed_sec,
+    core_actions_this_session, days_since_install
+
+    Action values:
+      viewed_score              Saw health score on Explore
+      viewed_insight            Opened insights detail
+      viewed_metric_detail      Drilled into a metric
+      viewed_correlation        Viewed correlations
+      viewed_weekly_review      Opened weekly review
+      interacted_with_chart     Dragged/tapped a chart
+      used_live_tab             Visited Live tab
+      changed_time_range        Changed time range selector
+      pulled_to_refresh         Pulled to refresh
+      viewed_risk_detail        Viewed a health risk detail
+
+  time_to_first_value
+    seconds, session_number
+
+  return_session                (fires on 2nd+ session)
+    session_number, days_since_last_session, days_since_install, streak_days
+
+─── PILLAR 3: BEHAVIOR → MONETIZATION SIGNAL ─────────────────────────────────
+
+  premium_feature_attempted
+    feature, screen, session_number, days_since_install,
+    core_actions_this_session
+
+  high_engagement_signal
+    signal, session_number, days_since_install, (+ metadata)
+    Signal values:
+      high_session_quality      engagement_score ≥ 70
+      power_session             5+ core actions in one session
+
+  pre_purchase_behavior
+    action, session_number, days_since_install, (+ metadata)
+    Action values:
+      paywall_viewed            Saw the paywall screen
+      subscribe_tapped          Tapped the subscribe button
+
+─── PILLAR 4: CHURN FORENSICS ─────────────────────────────────────────────────
+
+  session_quality               (fires end of every session)
+    session_number, duration_sec, screens_visited, max_depth,
+    core_actions_count, core_actions (comma-separated, max 10),
+    engagement_score, days_since_install, streak_days, is_first_session
+
+    engagement_score formula:
+      min(100, (screens_visited × 10) + (max_depth × 15) + min(duration_sec / 6, 50))
+
+
+================================================================================
+USER PROPERTIES — Firebase Analytics
+================================================================================
+
+  streak_days                   Current daily streak count
+  country                       ISO country code (Locale.current)
+  price_tier                    standard | reduced | premium
+  subscription_status           trial | pro | expired | unknown
+  user_tier                     free | pro
+  activation_milestones         Count of completed milestones (0-10)
+  activation_status             "activated" when milestones ≥ 3
+  session_core_actions          Count of core actions this session
+  first_value_time_sec          Seconds to first meaningful data load
+  total_sessions                Lifetime session count
+  days_since_install            Days since first launch
+  last_engagement_score         Engagement score of last session (0-100)
+  last_session_depth            Max nav depth of last session
+  last_core_action              Last core action performed
+  last_meaningful_action        Last significant action name
+  last_active_screen            Screen where last meaningful action happened
+
+
+================================================================================
+FIREBASE REMOTE CONFIG KEYS — Feature Flags & A/B Testing
+================================================================================
+
+─── FEATURE ACCESS FLAGS (13 keys) ────────────────────────────────────────────
+
+  Each key stores a comma-separated tier list: "free,pro" or "pro"
+  Used by: RemoteConfigManager.isFeatureEnabled(_:for:)
+
+  Key                                    Default         Description
+  ─────────────────────────────────────────────────────────────────────
+  feature_access_healthScore             "free,pro"      Overall health score
+  feature_access_categoryScores          "free,pro"      Category breakdown scores
+  feature_access_basicMetrics            "free,pro"      HR, steps, sleep basics
+  feature_access_allMetrics              "pro"           All 20+ metrics
+  feature_access_sevenDayTrends          "free,pro"      7-day trend view
+  feature_access_extendedHistory         "pro"           30D/3M/6M/1Y history
+  feature_access_riskPredictions         "pro"           Health risk predictions
+  feature_access_focusAreas              "pro"           Focus area recommendations
+  feature_access_basicInsights           "free,pro"      Top 2 insights
+  feature_access_allInsights             "pro"           All insights unlocked
+  feature_access_liveTab                 "pro"           Live vitals tab
+  feature_access_exportReport            "pro"           Web/PDF export
+  feature_access_advancedAnalytics       "pro"           Correlations, deep analysis
+
+  A/B testing: Change any "pro" to "free,pro" to unlock for free users.
+  Example: Set feature_access_liveTab = "free,pro" to test if free Live
+  tab access improves Day 7 retention.
+
+─── FREE TIER LIMITS ──────────────────────────────────────────────────────────
+
+  Key                            Default     Description
+  ────────────────────────────────────────────────────────────────
+  free_metric_detail_limit       3           Max metric detail views/day (free)
+  free_metrics                   "heartRate,steps,sleepAnalysis"
+                                             Comma-separated free metric IDs
+  free_insight_limit             2           Max insights shown (free)
+  free_periods                   "7d,30d"    Allowed time ranges (free)
+
+─── PRICING CONFIG ────────────────────────────────────────────────────────────
+
+  Key                                    Default                  Description
+  ─────────────────────────────────────────────────────────────────────
+  pricing_pro_monthly_product_id         "com.lasohealth.monthly" StoreKit product ID
+  pricing_pro_yearly_product_id          "com.lasohealth.yearly"  StoreKit product ID
+  pricing_pro_trial_days                 7                        Free trial length
+  pricing_pro_monthly_display_price      "$5.99"                  Fallback display price
+  pricing_pro_yearly_display_price       "$29.99"                 Fallback display price
+
+─── SYSTEM CONFIG ─────────────────────────────────────────────────────────────
+
+  Key                            Default     Description
+  ────────────────────────────────────────────────────────────────
+  feedback_prompt_after_sessions 5           Show feedback prompt after N sessions
+  feedback_cooldown_days         30          Minimum days between prompts
+  max_local_analytics_events     500         Max queued analytics events
+  session_timeout_seconds        1800        Session timeout (30 min)
+
+
+================================================================================
+PRICING TIERS — Bucket-Based Regional Pricing
+================================================================================
+
+  Tier       | Yearly  | Monthly | Countries
+  ─────────────────────────────────────────────────────────────────────────────
+  standard   | $29.99  | $5.99   | US, CA, GB, DE, FR, AU, JP, KR, IT, ES, NL,
+             |         |         | AT, BE, FI, IE, PT, NZ, TW, HK, IL, AE, SA,
+             |         |         | QA, KW (22 countries)
+  reduced    | $14.99  | $2.99   | IN, BR, MX, TR, ID, PH, TH, VN, PK, NG, EG,
+             |         |         | ZA, AR, CL, CO, PE, BD, LK, KE, GH, UA, RO,
+             |         |         | BG, MY (24 countries)
+  premium    | $34.99  | $6.99   | CH, NO, DK, SE, SG, LU (6 countries)
+  (default)  | $29.99  | $5.99   | All unlisted countries → standard tier
+
+  Product IDs:
+    com.lasohealth.yearly    Annual subscription
+    com.lasohealth.monthly   Monthly subscription
+
+  Trial: 7 days (configurable via Remote Config)
+
+  Pricing can be A/B tested by updating Remote Config:
+    - Change pricing_pro_trial_days to test 3 vs 7 vs 14 day trials
+    - Change display prices to test price sensitivity
+    - Regional tier mapping is hardcoded (SubscriptionConfig.regionPricing)
+
+
+================================================================================
+A/B TEST PLAYBOOK — What to Test with Remote Config
+================================================================================
+
+  Test                        Config Keys to Change            Metric to Watch
+  ────────────────────────────────────────────────────────────────────────────────
+  Free Live Tab               feature_access_liveTab →         Day 7 retention,
+                              "free,pro"                       activation_milestone count
+
+  Free Extended History       feature_access_extendedHistory   core_action_completed count,
+                              → "free,pro"                     time_range_changed events
+
+  Longer Trial                pricing_pro_trial_days → 14     trial → paid conversion,
+                                                              session_quality scores
+
+  Shorter Trial               pricing_pro_trial_days → 3      urgency → conversion rate
+
+  Free Risk Predictions       feature_access_riskPredictions   return_session frequency,
+                              → "free,pro"                     high_engagement_signal count
+
+  More Free Insights          free_insight_limit → 5           viewed_insight count,
+                                                              activation_status rate
+
+  All Metrics Free            feature_access_allMetrics →      premium_feature_attempted
+                              "free,pro"                       (should drop), retention
+
+  Earlier Feedback            feedback_prompt_after_sessions   feedback_submitted rate,
+                              → 3                              NPS trend
+
+  Cohort segmentation keys for analysis:
+    - price_tier (standard | reduced | premium)
+    - activation_status (activated | not set)
+    - total_sessions (bucket: 1, 2-5, 6-10, 11-20, 21+)
+    - days_since_install (bucket: 0, 1-3, 4-7, 8-14, 15-30, 31+)
+    - last_engagement_score (bucket: 0-30 low, 31-60 medium, 61-100 high)
+    - subscription_status (trial | pro | expired | unknown)
+    - user_tier (free | pro)
+    - streak_days (bucket: 0, 1-3, 4-7, 8-14, 15+)
+
+
+================================================================================
+ACTIVATION FORMULA — Derived from Analytics
+================================================================================
+
+  An "activated" user has completed 3+ of 10 milestones:
+    first_data_load, first_score_seen, first_insight_viewed,
+    first_metric_detail, first_chart_interaction, first_weekly_review,
+    first_correlation, first_live_session, first_settings_visit,
+    first_pull_to_refresh
+
+  Query: Firebase user property activation_status = "activated"
+
+  Key questions to answer with this data:
+    1. Which single milestone best predicts Day 7 return?
+    2. What's the minimum milestone count for 50%+ Day 7 retention?
+    3. What % of users reach activation within first session?
+    4. What's the median time_since_install_sec for each milestone?
+
+  Session quality scoring:
+    engagement_score = min(100, (screens × 10) + (depth × 15) + min(duration/6, 50))
+    Buckets: Low (0-30), Medium (31-60), High (61-100)
+
+  Churn signals:
+    - engagement_score < 30 for 3+ consecutive sessions
+    - days_since_last_session > 7
+    - core_actions_count = 0 in a session
+    - last_meaningful_action = "none"

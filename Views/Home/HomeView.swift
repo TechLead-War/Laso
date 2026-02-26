@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 /// Main home screen composing visual hero, key metrics, period trends, categories, and compact alerts
 struct HomeView: View {
@@ -26,6 +27,8 @@ struct HomeView: View {
         .toolbar(.hidden, for: .navigationBar)
         .refreshable {
             AppAnalytics.shared.trackPullToRefresh(screen: .home)
+            AppAnalytics.shared.trackActivationMilestone(.firstPullToRefresh)
+            AppAnalytics.shared.trackCoreAction(.pulledToRefresh, screen: .home)
             await viewModel.refresh()
             liveViewModel.fetchHomeData()
         }
@@ -45,7 +48,7 @@ struct HomeView: View {
     /// Periodically refresh home data every 60s so the Recovery card stays fresh
     private func startHomeRefresh() {
         homeRefreshTimer?.invalidate()
-        homeRefreshTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { _ in
+        homeRefreshTimer = Timer.scheduledTimer(withTimeInterval: TimeInterval(RemoteConfigManager.shared.homeRefreshIntervalSeconds), repeats: true) { _ in
             liveViewModel.fetchHomeData()
             refreshTick += 1
         }
@@ -81,6 +84,9 @@ struct HomeView: View {
 
                     // 4. Needs Attention — top 2 actionable items
                     needsAttentionSection
+                        .onAppear {
+                            AppAnalytics.shared.trackSectionImpression(section: .needsAttentionSection, screen: .home, metadata: ["item_count": topAttentionInsights.count])
+                        }
 
                     // 5. From Your Data — top 2 correlations
                     CorrelationsSection(
@@ -94,6 +100,9 @@ struct HomeView: View {
                             navigationPath.append(metric)
                         }
                     )
+                    .onAppear {
+                        AppAnalytics.shared.trackSectionImpression(section: .correlationsSection, screen: .home, metadata: ["correlation_count": viewModel.topCorrelations.prefix(2).count])
+                    }
 
                     // 6. Weekly Review
                     WeeklyReviewEntryCard(
@@ -101,6 +110,9 @@ struct HomeView: View {
                     ) {
                         AppAnalytics.shared.trackBlockTap(title: "Weekly Review", type: .weeklyReviewCard, screen: .home)
                         navigationPath.append("weeklyReview")
+                    }
+                    .onAppear {
+                        AppAnalytics.shared.trackSectionImpression(section: .weeklyReviewSection, screen: .home)
                     }
 
                     // Last updated footer
@@ -110,11 +122,15 @@ struct HomeView: View {
                             .foregroundStyle(.tertiary)
                             .padding(.bottom, 8)
                             .accessibilityLabel("Last updated \(lastRefresh, style: .relative) ago")
+                            .onAppear {
+                                AppAnalytics.shared.trackSectionImpression(section: .lastUpdatedFooter, screen: .home)
+                            }
                     }
                 } else {
                     connectHealthView
                         .onAppear {
                             AppAnalytics.shared.trackEmptyStateShown(screen: .home, stateType: "no_health_data")
+                            AppAnalytics.shared.trackSectionImpression(section: .connectHealthSection, screen: .home)
                         }
                 }
             }
@@ -289,7 +305,7 @@ struct HomeView: View {
                                 .background(insight.metric.category.color, in: Circle())
 
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(insightActionText(insight))
+                                Text(insight.actionSummary)
                                     .font(.subheadline.weight(.medium))
                                     .foregroundStyle(.primary)
                                     .lineLimit(2)
@@ -315,15 +331,6 @@ struct HomeView: View {
         }
     }
 
-    /// First sentence of the recommendation
-    private func insightActionText(_ insight: Insight) -> String {
-        let rec = insight.recommendation
-        if let dotIndex = rec.firstIndex(of: ".") {
-            return String(rec[rec.startIndex...dotIndex])
-        }
-        return rec
-    }
-
     // MARK: - Today Section
 
     private var todaySection: some View {
@@ -331,8 +338,15 @@ struct HomeView: View {
             if let score = liveViewModel.readinessScore {
                 if liveViewModel.isReadinessDataFresh {
                     recoveryCard(score: score)
+                        .onAppear {
+                            AppAnalytics.shared.trackCardImpression(cardType: .recoveryCard, screen: .home)
+                            AppAnalytics.shared.trackSectionImpression(section: .recoveryCard, screen: .home, metadata: ["score": score])
+                        }
                 } else {
                     staleRecoveryCard
+                        .onAppear {
+                            AppAnalytics.shared.trackSectionImpression(section: .staleRecoveryCard, screen: .home)
+                        }
                 }
             }
         }
@@ -439,9 +453,9 @@ struct HomeView: View {
                     Text("Recovery")
                         .font(.title3.weight(.semibold))
 
-                    Text(recoveryLabel(score))
+                    Text(Self.recoveryLabel(score))
                         .font(.subheadline.weight(.medium))
-                        .foregroundStyle(recoveryColor(score))
+                        .foregroundStyle(Self.recoveryColor(score))
                         .contentTransition(.numericText())
                         .animation(.easeInOut, value: score)
                 }
@@ -454,7 +468,7 @@ struct HomeView: View {
         .padding(.horizontal)
     }
 
-    private func recoveryLabel(_ score: Int) -> String {
+    static func recoveryLabel(_ score: Int) -> String {
         switch score {
         case 80...100: return "Fully Recovered"
         case 60..<80: return "Well Recovered"
@@ -464,7 +478,7 @@ struct HomeView: View {
         }
     }
 
-    private func recoveryColor(_ score: Int) -> Color {
+    static func recoveryColor(_ score: Int) -> Color {
         switch score {
         case 80...100: return .green
         case 60..<80: return .green.opacity(0.8)
@@ -503,11 +517,16 @@ struct HomeView: View {
 
 #Preview {
     let hkManager = HealthKitManager()
+    let container = try! ModelContainer(
+        for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self,
+        configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+    )
     NavigationStack {
         HomeView(
             viewModel: DashboardViewModel(
                 healthKitManager: hkManager,
-                analysisEngine: AnalysisEngine()
+                analysisEngine: AnalysisEngine(),
+                store: HealthDataStore(modelContainer: container)
             ),
             liveViewModel: LiveViewModel(healthKitManager: hkManager),
             deviceSourceManager: DeviceSourceManager(healthStore: hkManager.healthStore),

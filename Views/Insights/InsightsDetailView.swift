@@ -89,17 +89,40 @@ struct InsightsDetailView: View {
                     }
                     .padding(.horizontal)
                 }
+                .onAppear {
+                    AppAnalytics.shared.trackSectionImpression(
+                        section: .insightsFilterChips,
+                        screen: .insightsDetail,
+                        metadata: [
+                            "visible_filter_count": FocusFilter.allCases.filter { $0 == .all || count(for: $0) > 0 }.count,
+                            "selected_filter": selectedFilter.rawValue
+                        ]
+                    )
+                }
 
                 if !filteredItems.isEmpty {
                     ForEach(filteredItems) { insight in
                         Button {
-                            AppAnalytics.shared.trackBlockTap(title: insight.title, type: .insightCard, screen: .insightsDetail)
+                            AppAnalytics.shared.trackBlockTap(title: insight.title, type: .actionableInsightCard, screen: .insightsDetail)
                             onTapMetric(insight.metric)
                         } label: {
                             ActionableInsightCard(insight: insight)
                         }
                         .buttonStyle(.plain)
                         .padding(.horizontal)
+                        .onAppear {
+                            AppAnalytics.shared.trackSectionImpression(
+                                section: .actionableInsightCard,
+                                screen: .insightsDetail,
+                                metadata: [
+                                    "insight_title": insight.title,
+                                    "metric": insight.metric.displayName,
+                                    "severity": insight.severity.rawValue,
+                                    "category": insight.metric.category.rawValue,
+                                    "filter": selectedFilter.rawValue
+                                ]
+                            )
+                        }
                     }
                 } else {
                     VStack(spacing: 12) {
@@ -129,7 +152,12 @@ struct InsightsDetailView: View {
         .background(Color(.systemGroupedBackground))
         .navigationTitle("What To Focus On")
         .navigationBarTitleDisplayMode(.large)
-        .onAppear { AppAnalytics.shared.trackFeatureOpen(.insightsDetail) }
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.insightsDetail)
+            AppAnalytics.shared.trackActivationMilestone(.firstInsightViewed)
+            AppAnalytics.shared.trackCoreAction(.viewedInsight, screen: .insightsDetail)
+            AppAnalytics.shared.trackLastMeaningfulAction(action: "viewed_insight", screen: .insightsDetail)
+        }
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.insightsDetail) }
     }
 

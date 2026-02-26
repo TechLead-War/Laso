@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		000401FF0AADED40B01657D4 /* ActionCardsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F978F22FCAD104AFEB5A79DB /* ActionCardsSection.swift */; };
+		B4A1C2D3E4F5061728394A5B /* HealthDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B2D3E4F5061728394A5B6C /* HealthDataStore.swift */; };
 		02088209531D7F8203143BBE /* SleepCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EE3D24D56D4FF0A64BA0321 /* SleepCard.swift */; };
 		04EE4360E3E7921F23FE58C9 /* WebExportViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BC756F69A9FE2C7DE1C298 /* WebExportViewModel.swift */; };
 		052004385F335A3BC351DDC0 /* FeedbackSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875E5644CBFE4833921C057E /* FeedbackSheet.swift */; };
@@ -71,6 +72,8 @@
 		A1B2C3D4E5F6071812345004 /* SubscriptionConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071812345003 /* SubscriptionConfig.swift */; };
 		A1B2C3D4E5F6071812345006 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071812345005 /* PaywallView.swift */; };
 		A1B2C3D4E5F6071812345009 /* RemoteConfigManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071812345008 /* RemoteConfigManager.swift */; };
+		A1B2C3D4E5F6A1B2C3D40002 /* AppKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A1B2C3D40001 /* AppKeys.swift */; };
+		A1B2C3D4E5F6A1B2C3D40004 /* FeatureGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A1B2C3D40003 /* FeatureGate.swift */; };
 		A1D93F47B8E62C10D4F5A7B2 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7B42A19F3D18C05A92E6D4F /* OnboardingView.swift */; };
 		A2EBB41C493BD4BCF809BA7A /* WorkoutEffectivenessAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD947BF688F7B5F398D7E9FD /* WorkoutEffectivenessAnalyzer.swift */; };
 		A3D387E5C8702DB2CEDB690D /* AlertEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D5096C22B6F3AB852F5E2EF /* AlertEvaluator.swift */; };
@@ -117,6 +120,7 @@
 
 /* Begin PBXFileReference section */
 		02889FC7AED277F3E00C8B52 /* HealthScoreRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthScoreRing.swift; sourceTree = "<group>"; };
+		C5B2D3E4F5061728394A5B6C /* HealthDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthDataStore.swift; sourceTree = "<group>"; };
 		090582BC4080434BB854B76C /* SessionTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTracker.swift; sourceTree = "<group>"; };
 		0A5C28150EA681F904CAAB60 /* NotificationPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPreferences.swift; sourceTree = "<group>"; };
 		0E5897F9E01DF1DD783F450C /* HealthKitMetricRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitMetricRegistry.swift; sourceTree = "<group>"; };
@@ -178,6 +182,8 @@
 		A1B2C3D4E5F6071812345003 /* SubscriptionConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionConfig.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6071812345005 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6071812345008 /* RemoteConfigManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteConfigManager.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A1B2C3D40001 /* AppKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppKeys.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A1B2C3D40003 /* FeatureGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGate.swift; sourceTree = "<group>"; };
 		A260467379612091A6B0F24B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A38F981323AA745B14093958 /* UserBaseline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserBaseline.swift; sourceTree = "<group>"; };
 		A81D7BD7EBC7DA97F93A3F66 /* HealthRiskDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthRiskDetailView.swift; sourceTree = "<group>"; };
@@ -571,6 +577,8 @@
 		F4F842DF9AF1A93301E1012D /* Config */ = {
 			isa = PBXGroup;
 			children = (
+				A1B2C3D4E5F6A1B2C3D40001 /* AppKeys.swift */,
+				A1B2C3D4E5F6A1B2C3D40003 /* FeatureGate.swift */,
 				A1B2C3D4E5F6071812345008 /* RemoteConfigManager.swift */,
 			);
 			path = Config;
@@ -580,6 +588,7 @@
 			isa = PBXGroup;
 			children = (
 				82AE14799DFE089F5E8F874C /* DeviceSourceManager.swift */,
+				C5B2D3E4F5061728394A5B6C /* HealthDataStore.swift */,
 				A0FEFA8B2E9C3EAD5191FC58 /* HealthKitManager.swift */,
 				0E5897F9E01DF1DD783F450C /* HealthKitMetricRegistry.swift */,
 				187345F5C9D8A3E6D1B6FCB8 /* HealthKitQueryBuilder.swift */,
@@ -728,6 +737,7 @@
 				11973D668784A8CF7FDAE2B2 /* FrequencyCapManager.swift in Sources */,
 				A4B2B919FB3D1957C58AF899 /* HTMLReportGenerator.swift in Sources */,
 				F50F037FBB87C39594B74063 /* HealthCategory.swift in Sources */,
+				B4A1C2D3E4F5061728394A5B /* HealthDataStore.swift in Sources */,
 				BB7EEBB01BA59E9241710A96 /* HealthKitManager.swift in Sources */,
 				FD40DB932CA77AD50E94E81D /* HealthKitMetricRegistry.swift in Sources */,
 				1978792F2C4D3FD0F8E045F8 /* HealthKitQueryBuilder.swift in Sources */,
@@ -787,6 +797,8 @@
 				A2EBB41C493BD4BCF809BA7A /* WorkoutEffectivenessAnalyzer.swift in Sources */,
 				A1D93F47B8E62C10D4F5A7B2 /* OnboardingView.swift in Sources */,
 				A1B2C3D4E5F6071812345006 /* PaywallView.swift in Sources */,
+				A1B2C3D4E5F6A1B2C3D40002 /* AppKeys.swift in Sources */,
+				A1B2C3D4E5F6A1B2C3D40004 /* FeatureGate.swift in Sources */,
 				A1B2C3D4E5F6071812345009 /* RemoteConfigManager.swift in Sources */,
 				A1B2C3D4E5F6071812345004 /* SubscriptionConfig.swift in Sources */,
 				A1B2C3D4E5F6071812345002 /* SubscriptionManager.swift in Sources */,

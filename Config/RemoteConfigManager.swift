@@ -124,6 +124,99 @@ final class RemoteConfigManager {
         remoteConfig.configValue(forKey: "session_timeout_seconds").numberValue.intValue
     }
 
+    // MARK: - Alert Thresholds
+
+    /// Cooldown hours between repeated alerts for same identifier
+    var alertCooldownHours: Double {
+        remoteConfig.configValue(forKey: "alert_cooldown_hours").numberValue.doubleValue
+    }
+
+    /// Multiplier above 7-day avg RHR that triggers spike alert (e.g. 1.15 = 15% above)
+    var heartRateSpikeMultiplier: Double {
+        remoteConfig.configValue(forKey: "alert_hr_spike_multiplier").numberValue.doubleValue
+    }
+
+    /// Percentage below 7-day avg HRV that triggers drop alert (e.g. 0.7 = 30% drop)
+    var hrvDropMultiplier: Double {
+        remoteConfig.configValue(forKey: "alert_hrv_drop_multiplier").numberValue.doubleValue
+    }
+
+    /// Blood oxygen critical threshold (below this = critical alert)
+    var spo2CriticalThreshold: Double {
+        remoteConfig.configValue(forKey: "alert_spo2_critical").numberValue.doubleValue
+    }
+
+    /// Blood oxygen warning threshold (below this = warning alert)
+    var spo2WarningThreshold: Double {
+        remoteConfig.configValue(forKey: "alert_spo2_warning").numberValue.doubleValue
+    }
+
+    /// Respiratory rate spike multiplier (e.g. 1.25 = 25% above avg)
+    var respiratoryRateSpikeMultiplier: Double {
+        remoteConfig.configValue(forKey: "alert_rr_spike_multiplier").numberValue.doubleValue
+    }
+
+    /// Max heart-related alerts per day (capped separately from total)
+    var heartAlertCap: Int {
+        remoteConfig.configValue(forKey: "alert_heart_cap_per_day").numberValue.intValue
+    }
+
+    // MARK: - Watch Monitor
+
+    /// Interval in seconds between periodic watch status checks
+    var watchMonitorCheckInterval: Int {
+        remoteConfig.configValue(forKey: "watch_monitor_check_seconds").numberValue.intValue
+    }
+
+    /// Hours of data lookback for checking if watch is being worn
+    var watchDataFreshnessHours: Double {
+        remoteConfig.configValue(forKey: "watch_data_freshness_hours").numberValue.doubleValue
+    }
+
+    /// Cooldown hours between "watch not worn" notifications
+    var watchNotWornCooldownHours: Double {
+        remoteConfig.configValue(forKey: "watch_not_worn_cooldown_hours").numberValue.doubleValue
+    }
+
+    /// Hours without data before "not worn" alert fires
+    var watchNotWornThresholdHours: Double {
+        remoteConfig.configValue(forKey: "watch_not_worn_threshold_hours").numberValue.doubleValue
+    }
+
+    /// Battery percentage below which low battery alert fires (0.0-1.0)
+    var watchBatteryLowThreshold: Double {
+        remoteConfig.configValue(forKey: "watch_battery_low_threshold").numberValue.doubleValue
+    }
+
+    // MARK: - Analysis Thresholds
+
+    /// Warning deviation from baseline (proportion, e.g. 0.10 = 10%)
+    var analysisWarningDeviation: Double {
+        remoteConfig.configValue(forKey: "analysis_warning_deviation").numberValue.doubleValue
+    }
+
+    /// Critical deviation from baseline (proportion, e.g. 0.20 = 20%)
+    var analysisCriticalDeviation: Double {
+        remoteConfig.configValue(forKey: "analysis_critical_deviation").numberValue.doubleValue
+    }
+
+    /// Trend slope threshold for significance
+    var analysisTrendSlopeThreshold: Double {
+        remoteConfig.configValue(forKey: "analysis_trend_slope_threshold").numberValue.doubleValue
+    }
+
+    // MARK: - UI Intervals
+
+    /// Home screen auto-refresh interval in seconds
+    var homeRefreshIntervalSeconds: Int {
+        remoteConfig.configValue(forKey: "home_refresh_interval_seconds").numberValue.intValue
+    }
+
+    /// Days before first feedback prompt
+    var feedbackDaysBeforeFirstPrompt: Int {
+        remoteConfig.configValue(forKey: "feedback_days_before_first_prompt").numberValue.intValue
+    }
+
     // MARK: - Generic Access
 
     /// Read any string value by key (for future keys added via admin panel).
@@ -207,5 +300,30 @@ extension RemoteConfigManager {
         "feedback_cooldown_days":         30 as NSNumber,
         "max_local_analytics_events":     500 as NSNumber,
         "session_timeout_seconds":        1800 as NSNumber,
+
+        // Alert thresholds
+        "alert_cooldown_hours":        4 as NSNumber,
+        "alert_hr_spike_multiplier":   1.15 as NSNumber,
+        "alert_hrv_drop_multiplier":   0.7 as NSNumber,
+        "alert_spo2_critical":         92 as NSNumber,
+        "alert_spo2_warning":          95 as NSNumber,
+        "alert_rr_spike_multiplier":   1.25 as NSNumber,
+        "alert_heart_cap_per_day":     3 as NSNumber,
+
+        // Watch monitor
+        "watch_monitor_check_seconds":     900 as NSNumber,
+        "watch_data_freshness_hours":      2 as NSNumber,
+        "watch_not_worn_cooldown_hours":   4 as NSNumber,
+        "watch_not_worn_threshold_hours":  1 as NSNumber,
+        "watch_battery_low_threshold":     0.10 as NSNumber,
+
+        // Analysis thresholds
+        "analysis_warning_deviation":       0.10 as NSNumber,
+        "analysis_critical_deviation":      0.20 as NSNumber,
+        "analysis_trend_slope_threshold":   0.02 as NSNumber,
+
+        // UI intervals
+        "home_refresh_interval_seconds":       60 as NSNumber,
+        "feedback_days_before_first_prompt":   5 as NSNumber,
     ]
 }

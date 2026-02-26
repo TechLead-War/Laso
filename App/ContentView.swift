@@ -1,10 +1,12 @@
 import SwiftUI
+import SwiftData
 
 /// Root view with custom three-tab navigation and NavigationStack
 struct ContentView: View {
     let healthKitManager: HealthKitManager
     let analysisEngine: AnalysisEngine
     let deviceSourceManager: DeviceSourceManager
+    let healthDataStore: HealthDataStore
 
     @Environment(\.scenePhase) private var scenePhase
     @State private var selectedTab: AppTab = .home
@@ -19,12 +21,14 @@ struct ContentView: View {
     init(
         healthKitManager: HealthKitManager,
         analysisEngine: AnalysisEngine,
-        deviceSourceManager: DeviceSourceManager
+        deviceSourceManager: DeviceSourceManager,
+        healthDataStore: HealthDataStore
     ) {
         self.healthKitManager = healthKitManager
         self.analysisEngine = analysisEngine
         self.deviceSourceManager = deviceSourceManager
-        _dashboardViewModel = State(wrappedValue: DashboardViewModel(healthKitManager: healthKitManager, analysisEngine: analysisEngine))
+        self.healthDataStore = healthDataStore
+        _dashboardViewModel = State(wrappedValue: DashboardViewModel(healthKitManager: healthKitManager, analysisEngine: analysisEngine, store: healthDataStore))
         _liveViewModel = State(wrappedValue: LiveViewModel(healthKitManager: healthKitManager))
         _webExportViewModel = State(wrappedValue: WebExportViewModel(healthKitManager: healthKitManager, analysisEngine: analysisEngine))
     }
@@ -91,7 +95,8 @@ struct ContentView: View {
             SettingsView(
                 webExportViewModel: webExportViewModel,
                 deviceSourceManager: deviceSourceManager,
-                healthKitManager: healthKitManager
+                healthKitManager: healthKitManager,
+                healthDataStore: healthDataStore
             )
         }
         .sheet(isPresented: $showFeedback) {
@@ -104,6 +109,7 @@ struct ContentView: View {
         .onAppear {
             FeedbackPromptManager.shared.recordAppOpen()
             AppAnalytics.shared.trackSessionStart()
+            AppAnalytics.shared.trackReturnSession()
             if FeedbackPromptManager.shared.shouldShowFeedbackPrompt() {
                 showFeedback = true
                 FeedbackPromptManager.shared.markPromptShown()
@@ -112,8 +118,11 @@ struct ContentView: View {
         .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .active && oldPhase != .active {
                 AppAnalytics.shared.trackSessionStart()
+                AppAnalytics.shared.trackReturnSession()
                 WatchMonitor.shared.evaluateWatchStatus()
             } else if newPhase == .background {
+                AppAnalytics.shared.trackFirstSessionProfile()
+                AppAnalytics.shared.trackSessionQuality()
                 AppAnalytics.shared.trackSessionEnd()
             }
         }
@@ -149,9 +158,14 @@ struct ContentView: View {
 
 #Preview {
     let hkManager = HealthKitManager()
+    let container = try! ModelContainer(
+        for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self,
+        configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+    )
     ContentView(
         healthKitManager: hkManager,
         analysisEngine: AnalysisEngine(),
-        deviceSourceManager: DeviceSourceManager(healthStore: hkManager.healthStore)
+        deviceSourceManager: DeviceSourceManager(healthStore: hkManager.healthStore),
+        healthDataStore: HealthDataStore(modelContainer: container)
     )
 }

@@ -12,12 +12,12 @@ final class WatchMonitor {
 
     // MARK: - UserDefaults Keys
 
-    private let lastWatchDataKey = "healthpulse.watchMonitor.lastWatchDataTime"
-    private let lastNotWornNotificationKey = "healthpulse.watchMonitor.lastNotWornNotification"
-    private let lowBatteryAlertShownKey = "healthpulse.watchMonitor.lowBatteryAlertShown"
+    private let lastWatchDataKey = AppKeys.Watch.lastWatchDataTime
+    private let lastNotWornNotificationKey = AppKeys.Watch.lastNotWornNotification
+    private let lowBatteryAlertShownKey = AppKeys.Watch.lowBatteryAlertShown
 
     /// Minimum hours between repeated "not worn" notifications
-    private let notWornCooldownHours: Double = 4
+    private var notWornCooldownHours: Double { RemoteConfigManager.shared.watchNotWornCooldownHours }
 
     private init() {}
 
@@ -69,7 +69,7 @@ final class WatchMonitor {
         guard let heartRateType = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return }
 
         // Only look at samples from the last 2 hours
-        let twHoursAgo = Date().addingTimeInterval(-2 * 3600)
+        let twHoursAgo = Date().addingTimeInterval(-RemoteConfigManager.shared.watchDataFreshnessHours * 3600)
         let predicate = HKQuery.predicateForSamples(withStart: twHoursAgo, end: Date(), options: .strictStartDate)
         let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
 
@@ -132,7 +132,7 @@ final class WatchMonitor {
     private func startPeriodicCheck() {
         checkTimer?.invalidate()
         // Check every 15 minutes
-        checkTimer = Timer.scheduledTimer(withTimeInterval: 15 * 60, repeats: true) { [weak self] _ in
+        checkTimer = Timer.scheduledTimer(withTimeInterval: TimeInterval(RemoteConfigManager.shared.watchMonitorCheckInterval), repeats: true) { [weak self] _ in
             self?.evaluateWatchStatus()
         }
         // Run immediately
@@ -158,10 +158,10 @@ final class WatchMonitor {
         guard lastDataTime > 0 else { return }
 
         let elapsed = Date().timeIntervalSince1970 - lastDataTime
-        let oneHour: TimeInterval = 3600
+        let threshold: TimeInterval = RemoteConfigManager.shared.watchNotWornThresholdHours * 3600
 
-        // Only alert if more than 1 hour without data
-        guard elapsed > oneHour else { return }
+        // Only alert if more than threshold without data
+        guard elapsed > threshold else { return }
 
         // Enforce cooldown between repeated notifications
         let lastNotification = defaults.double(forKey: lastNotWornNotificationKey)
@@ -200,7 +200,7 @@ final class WatchMonitor {
 
         let defaults = UserDefaults.standard
 
-        if level < 0.10 {
+        if level < RemoteConfigManager.shared.watchBatteryLowThreshold {
             // Only show once per low-battery cycle
             guard !defaults.bool(forKey: lowBatteryAlertShownKey) else { return }
 

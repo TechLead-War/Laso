@@ -68,13 +68,13 @@ struct RulesConfiguration {
     }
 
     /// Warning threshold: deviation from baseline (proportion)
-    static let warningDeviationThreshold: Double = 0.10 // 10%
+    static var warningDeviationThreshold: Double { RemoteConfigManager.shared.analysisWarningDeviation }
 
     /// Critical threshold: deviation from baseline (proportion)
-    static let criticalDeviationThreshold: Double = 0.20 // 20%
+    static var criticalDeviationThreshold: Double { RemoteConfigManager.shared.analysisCriticalDeviation }
 
     /// Trend significance: minimum absolute slope to be considered non-stable
-    static let trendSlopeThreshold: Double = 0.02
+    static var trendSlopeThreshold: Double { RemoteConfigManager.shared.analysisTrendSlopeThreshold }
 
     /// Score deductions
     static let anomalyWarningDeduction: Int = -20

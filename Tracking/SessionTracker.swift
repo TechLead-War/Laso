@@ -1,6 +1,7 @@
 import Foundation
 
-/// Manages session lifecycle, navigation depth, screen transitions, and daily streak.
+/// Manages session lifecycle, navigation depth, screen transitions, daily streak,
+/// activation milestones, and retention signals.
 final class SessionTracker {
     static let shared = SessionTracker()
 
@@ -20,14 +21,28 @@ final class SessionTracker {
 
     private(set) var streakDays: Int = 0
 
+    // MARK: - Lifecycle State
+
+    private(set) var totalSessions: Int = 0
+    private(set) var daysSinceInstall: Int = 0
+    private(set) var isFirstSession: Bool = false
+    private(set) var completedMilestones: Set<String> = []
+    private(set) var coreActionsThisSession: [String] = []
+
     private enum Key {
-        static let lastActiveDate = "laso.session.last_active_date"
-        static let streakDays = "laso.session.streak_days"
-        static let longestStreak = "laso.session.longest_streak"
+        static let lastActiveDate = AppKeys.Session.lastActiveDate
+        static let streakDays = AppKeys.Session.streakDays
+        static let longestStreak = AppKeys.Session.longestStreak
+        static let installDate = AppKeys.Lifecycle.installDate
+        static let totalSessions = AppKeys.Session.totalSessions
+        static let completedMilestones = AppKeys.Session.milestones
+        static let lastSessionDate = AppKeys.Session.lastSessionDate
+        static let firstValueTimeSec = AppKeys.Session.firstValueTimeSec
     }
 
     private init() {
         loadStreak()
+        loadLifecycleState()
     }
 
     // MARK: - Session Lifecycle
@@ -39,12 +54,20 @@ final class SessionTracker {
         maxDepth = 0
         currentDepth = 0
         lastScreen = nil
+        coreActionsThisSession = []
         updateStreak()
+        updateLifecycleOnStart()
     }
 
     func endSession() -> (durationSec: Int, screensVisited: Int, maxDepth: Int) {
         let duration = Int(Date().timeIntervalSince(sessionStartDate))
+        defaults.set(Date(), forKey: Key.lastSessionDate)
         return (duration, screensVisited.count, maxDepth)
+    }
+
+    /// Seconds since this session started.
+    var sessionElapsedSeconds: Int {
+        Int(Date().timeIntervalSince(sessionStartDate))
     }
 
     // MARK: - Screen Tracking
@@ -97,5 +120,64 @@ final class SessionTracker {
         if streakDays > longest {
             defaults.set(streakDays, forKey: Key.longestStreak)
         }
+    }
+
+    // MARK: - Lifecycle / Activation / Retention
+
+    private func loadLifecycleState() {
+        totalSessions = defaults.integer(forKey: Key.totalSessions)
+        if let milestones = defaults.stringArray(forKey: Key.completedMilestones) {
+            completedMilestones = Set(milestones)
+        }
+
+        // Set install date on first launch
+        if defaults.object(forKey: Key.installDate) == nil {
+            defaults.set(Date(), forKey: Key.installDate)
+        }
+
+        let installDate = defaults.object(forKey: Key.installDate) as? Date ?? Date()
+        daysSinceInstall = Calendar.current.dateComponents([.day], from: installDate, to: Date()).day ?? 0
+    }
+
+    private func updateLifecycleOnStart() {
+        totalSessions += 1
+        isFirstSession = totalSessions == 1
+        defaults.set(totalSessions, forKey: Key.totalSessions)
+    }
+
+    /// Days since last session (for return session tracking). Returns nil for first session.
+    var daysSinceLastSession: Int? {
+        guard let lastDate = defaults.object(forKey: Key.lastSessionDate) as? Date else { return nil }
+        return Calendar.current.dateComponents([.day], from: lastDate, to: Date()).day
+    }
+
+    /// Record an activation milestone. Returns true if this is the FIRST time it's recorded.
+    func recordMilestone(_ milestone: String) -> Bool {
+        if completedMilestones.contains(milestone) { return false }
+        completedMilestones.insert(milestone)
+        defaults.set(Array(completedMilestones), forKey: Key.completedMilestones)
+        return true
+    }
+
+    /// Record a core action in this session (for session quality scoring).
+    func recordCoreAction(_ action: String) {
+        if !coreActionsThisSession.contains(action) {
+            coreActionsThisSession.append(action)
+        }
+    }
+
+    /// Record time-to-first-value (only once, on first meaningful data load).
+    func recordFirstValueTime() {
+        guard defaults.integer(forKey: Key.firstValueTimeSec) == 0 else { return }
+        let elapsed = sessionElapsedSeconds
+        defaults.set(elapsed, forKey: Key.firstValueTimeSec)
+    }
+
+    var firstValueTimeSec: Int {
+        defaults.integer(forKey: Key.firstValueTimeSec)
+    }
+
+    var installDate: Date {
+        defaults.object(forKey: Key.installDate) as? Date ?? Date()
     }
 }

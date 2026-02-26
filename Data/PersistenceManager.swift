@@ -8,19 +8,19 @@ final class PersistenceManager {
     private let defaults = UserDefaults.standard
     private let cloud = NSUbiquitousKeyValueStore.default
 
-    private let baselinesKey = "healthpulse.baselines"
-    private let preferencesKey = "healthpulse.preferences"
-    private let lastAnalysisKey = "healthpulse.lastAnalysis"
+    private let baselinesKey = AppKeys.Data.baselines
+    private let preferencesKey = AppKeys.Data.preferences
+    private let lastAnalysisKey = AppKeys.Data.lastAnalysis
 
     /// Keys that should sync to iCloud KVS for cross-device consistency
     private static let syncKeys: Set<String> = [
-        "healthpulse.baselines",
-        "healthpulse.preferences",
-        "healthpulse.healthFocuses",
-        "healthpulse.previousWeekScore",
-        "healthpulse.currentScore",
-        "healthpulse.scoreDate",
-        "healthpulse.onboardingCompleted"
+        AppKeys.Data.baselines,
+        AppKeys.Data.preferences,
+        AppKeys.Data.healthFocuses,
+        AppKeys.Data.previousWeekScore,
+        AppKeys.Data.currentScore,
+        AppKeys.Data.scoreDate,
+        AppKeys.App.onboardingCompleted
     ]
 
     init() {
@@ -121,9 +121,9 @@ final class PersistenceManager {
 
     // MARK: - Weekly Score Tracking
 
-    private let previousWeekScoreKey = "healthpulse.previousWeekScore"
-    private let currentScoreKey = "healthpulse.currentScore"
-    private let scoreDateKey = "healthpulse.scoreDate"
+    private let previousWeekScoreKey = AppKeys.Data.previousWeekScore
+    private let currentScoreKey = AppKeys.Data.currentScore
+    private let scoreDateKey = AppKeys.Data.scoreDate
 
     /// Record the current health score. Rotates current → previous when a new calendar week begins.
     func recordWeeklyScore(_ score: Int) {
@@ -155,7 +155,7 @@ final class PersistenceManager {
 
     // MARK: - Health Focuses
 
-    private let healthFocusesKey = "healthpulse.healthFocuses"
+    private let healthFocusesKey = AppKeys.Data.healthFocuses
 
     func saveHealthFocuses(_ focuses: Set<HealthFocus>) {
         if let data = try? JSONEncoder().encode(Array(focuses)) {

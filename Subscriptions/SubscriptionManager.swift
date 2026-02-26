@@ -55,7 +55,7 @@ final class SubscriptionManager {
     private let defaults = UserDefaults.standard
 
     private enum Key {
-        static let installDate = "laso.install_date"
+        static let installDate = AppKeys.Lifecycle.installDate
     }
 
     // MARK: - Init

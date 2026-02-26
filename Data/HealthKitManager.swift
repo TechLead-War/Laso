@@ -35,7 +35,7 @@ final class HealthKitManager {
         }
     }
 
-    /// Fetch all metrics for the given number of days
+    /// Fetch all metrics for the given number of days (legacy, in-memory only)
     func fetchAllMetrics(days: Int = 90) async {
         isLoading = true
         defer { isLoading = false }
@@ -59,6 +59,77 @@ final class HealthKitManager {
         }
 
         lastRefresh = Date()
+    }
+
+    /// Load stored data from SwiftData, then incrementally sync new data from HealthKit.
+    /// - First launch: fetches ALL available HealthKit history (up to 10 years)
+    /// - Subsequent launches: fetches only data since last sync (with 1-day overlap)
+    @MainActor
+    func loadAndSync(store: HealthDataStore) async {
+        isLoading = true
+        let syncStartTime = Date()
+
+        // Phase 1: Instantly load stored data so the UI has something to show
+        timeSeries = store.loadAllTimeSeries()
+
+        // Phase 2: Gather sync dates before entering the task group (ModelContext is not thread-safe)
+        let syncDates = store.allSyncDates()
+        let isFirstSync = syncDates.isEmpty
+        let endDate = Date()
+
+        // Phase 3: Fetch new data from HealthKit in parallel
+        var newData: [(HealthMetric, MetricTimeSeries)] = []
+
+        await withTaskGroup(of: (HealthMetric, MetricTimeSeries?).self) { group in
+            for metric in HealthMetric.allCases {
+                let lastSync = syncDates[metric]
+                group.addTask { [self] in
+                    let startDate: Date
+                    if let lastSync {
+                        // Incremental: fetch from last sync minus 1 day for overlap safety
+                        startDate = Calendar.current.date(byAdding: .day, value: -1, to: lastSync) ?? lastSync
+                    } else {
+                        // First sync: fetch all available HealthKit history
+                        startDate = Calendar.current.date(byAdding: .year, value: -10, to: endDate) ?? endDate
+                    }
+                    let series = await self.fetchMetric(metric, from: startDate, to: endDate)
+                    return (metric, series)
+                }
+            }
+
+            for await (metric, series) in group {
+                if let series, !series.samples.isEmpty {
+                    newData.append((metric, series))
+                }
+            }
+        }
+
+        // Phase 4: Save new data to SwiftData (sequential, main actor)
+        for (metric, series) in newData {
+            store.saveSamples(series.samples, for: metric)
+        }
+
+        // Phase 5: Reload complete stored data (includes both old + new)
+        timeSeries = store.loadAllTimeSeries()
+
+        lastRefresh = Date()
+        isLoading = false
+
+        // Track sync completion
+        let totalNewSamples = newData.reduce(0) { $0 + $1.1.samples.count }
+        let syncDuration = Int(Date().timeIntervalSince(syncStartTime))
+        AppAnalytics.shared.trackDataSync(
+            metricsCount: newData.count,
+            newSamplesCount: totalNewSamples,
+            durationSec: syncDuration,
+            isFirstSync: isFirstSync
+        )
+
+        // Activation: first data load + time-to-first-value
+        if !newData.isEmpty {
+            AppAnalytics.shared.trackActivationMilestone(.firstDataLoad)
+            AppAnalytics.shared.trackTimeToFirstValue()
+        }
     }
 
     /// Fetch a single metric's time series

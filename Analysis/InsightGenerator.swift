@@ -141,13 +141,6 @@ struct InsightGenerator {
     }
 
     private static func formatValue(_ value: Double, metric: HealthMetric) -> String {
-        switch metric {
-        case .steps, .activeCalories, .basalCalories:
-            return String(format: "%.0f", value)
-        case .bloodOxygen, .bodyFatPercentage, .walkingAsymmetry:
-            return String(format: "%.1f", value)
-        default:
-            return String(format: "%.1f", value)
-        }
+        metric.formatValue(value)
     }
 }

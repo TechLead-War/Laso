@@ -161,6 +161,15 @@ struct MetricChartView: View {
                     .gesture(
                         DragGesture(minimumDistance: 0)
                             .onChanged { value in
+                                if !isDragging {
+                                    AppAnalytics.shared.trackChartInteraction(
+                                        metric: metric.rawValue,
+                                        interactionType: "drag_start",
+                                        screen: .metricDetail
+                                    )
+                                    AppAnalytics.shared.trackActivationMilestone(.firstChartInteraction)
+                                    AppAnalytics.shared.trackCoreAction(.interactedWithChart, screen: .metricDetail)
+                                }
                                 isDragging = true
                                 let origin = geometry[proxy.plotFrame!].origin
                                 let locationX = value.location.x - origin.x
@@ -170,7 +179,12 @@ struct MetricChartView: View {
                             }
                             .onEnded { _ in
                                 isDragging = false
-                                // Keep selection visible after drag ends
+                                AppAnalytics.shared.trackChartInteraction(
+                                    metric: metric.rawValue,
+                                    interactionType: "drag_end",
+                                    screen: .metricDetail,
+                                    metadata: ["selected_value": selectedSample?.value ?? 0]
+                                )
                             }
                     )
                     .onTapGesture { location in
@@ -179,8 +193,19 @@ struct MetricChartView: View {
                         if let date: Date = proxy.value(atX: locationX) {
                             if selectedDate == date {
                                 selectedDate = nil // Deselect on second tap
+                                AppAnalytics.shared.trackChartInteraction(
+                                    metric: metric.rawValue,
+                                    interactionType: "tap_deselect",
+                                    screen: .metricDetail
+                                )
                             } else {
                                 selectedDate = date
+                                AppAnalytics.shared.trackChartInteraction(
+                                    metric: metric.rawValue,
+                                    interactionType: "tap_select",
+                                    screen: .metricDetail,
+                                    metadata: ["selected_value": selectedSample?.value ?? 0]
+                                )
                             }
                         }
                     }

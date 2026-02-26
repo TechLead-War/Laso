@@ -1,16 +1,18 @@
 import SwiftUI
+import SwiftData
 
 /// Main entry point for the Laso app
 @main
 struct HealthPulseApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
-    @AppStorage("healthpulse.onboardingCompleted") private var onboardingCompleted = false
-    @AppStorage("healthpulse.appTheme") private var appTheme: String = "system"
+    @AppStorage(AppKeys.App.onboardingCompleted) private var onboardingCompleted = false
+    @AppStorage(AppKeys.App.appTheme) private var appTheme: String = "system"
 
     @State private var healthKitManager: HealthKitManager
     @State private var analysisEngine = AnalysisEngine()
     @State private var deviceSourceManager: DeviceSourceManager
+    @State private var healthDataStore: HealthDataStore
 
     private let subscriptionManager = SubscriptionManager.shared
 
@@ -24,13 +26,22 @@ struct HealthPulseApp: App {
 
     /// Show paywall when onboarding is done but user has no access (trial expired, not subscribed).
     private var shouldShowPaywall: Bool {
-        onboardingCompleted && !subscriptionManager.hasAccess
+        onboardingCompleted && !FeatureGate.hasFullAccess
     }
 
     init() {
         let hkManager = HealthKitManager()
         _healthKitManager = State(wrappedValue: hkManager)
         _deviceSourceManager = State(wrappedValue: DeviceSourceManager(healthStore: hkManager.healthStore))
+
+        do {
+            let container = try ModelContainer(
+                for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self
+            )
+            _healthDataStore = State(wrappedValue: HealthDataStore(modelContainer: container))
+        } catch {
+            fatalError("Failed to create health data ModelContainer: \(error)")
+        }
     }
 
     var body: some Scene {
@@ -38,7 +49,8 @@ struct HealthPulseApp: App {
             ContentView(
                 healthKitManager: healthKitManager,
                 analysisEngine: analysisEngine,
-                deviceSourceManager: deviceSourceManager
+                deviceSourceManager: deviceSourceManager,
+                healthDataStore: healthDataStore
             )
             .preferredColorScheme(colorScheme)
             // 1. Onboarding (first launch)
@@ -48,7 +60,7 @@ struct HealthPulseApp: App {
             )) {
                 OnboardingView(healthKitManager: healthKitManager) {
                     onboardingCompleted = true
-                    NSUbiquitousKeyValueStore.default.set(true, forKey: "healthpulse.onboardingCompleted")
+                    NSUbiquitousKeyValueStore.default.set(true, forKey: AppKeys.App.onboardingCompleted)
                 }
             }
             // 2. Paywall (trial expired + not subscribed)

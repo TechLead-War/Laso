@@ -22,6 +22,7 @@ struct LiveView: View {
                 } else if viewModel.isVitalDataStale {
                     // Stale vitals — show wear-your-watch prompt with last known readings
                     staleVitalsPrompt
+                        .onAppear { AppAnalytics.shared.trackSectionImpression(section: .staleVitalsPrompt, screen: .live) }
                     activityRingsSection
                         .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .activityRingsSection, screen: .live) }
                     lastWorkoutCard
@@ -30,9 +31,11 @@ struct LiveView: View {
                     heartRateHeroCard
                         .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .heartRateHeroCard, screen: .live) }
                     vitalSignsRow
+                        .onAppear { AppAnalytics.shared.trackSectionImpression(section: .vitalSignsRow, screen: .live) }
                     activityRingsSection
                         .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .activityRingsSection, screen: .live) }
                     bloodPressureAndTempRow
+                        .onAppear { AppAnalytics.shared.trackSectionImpression(section: .bloodPressureTempRow, screen: .live) }
                     lastWorkoutCard
                     statusFooter
                 }
@@ -45,6 +48,9 @@ struct LiveView: View {
             viewModel.startStreaming()
             AppAnalytics.shared.trackFeatureOpen(.live)
             AppAnalytics.shared.trackStreamingStarted()
+            AppAnalytics.shared.trackActivationMilestone(.firstLiveSession)
+            AppAnalytics.shared.trackCoreAction(.usedLiveTab, screen: .live)
+            AppAnalytics.shared.trackLastMeaningfulAction(action: "used_live_tab", screen: .live)
         }
         .onDisappear {
             viewModel.stopStreaming()
@@ -322,7 +328,7 @@ struct LiveView: View {
                             .foregroundStyle(.white)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
-                            .background(zoneColor, in: Capsule())
+                            .background(viewModel.currentHeartRateZone.color, in: Capsule())
 
                         if let ts = viewModel.heartRateTimestamp {
                             Text(ts, style: .relative)
@@ -369,6 +375,11 @@ struct LiveView: View {
                 heartRateMiniChart
                     .padding(.horizontal)
                     .padding(.bottom, 12)
+                    .onAppear {
+                        AppAnalytics.shared.trackSectionImpression(section: .heartRateMiniChart, screen: .live, metadata: [
+                            "data_points": viewModel.recentHeartRates.count
+                        ])
+                    }
             }
         }
         .background(.background, in: RoundedRectangle(cornerRadius: 16))
@@ -411,7 +422,7 @@ struct LiveView: View {
                 Capsule()
                     .fill(
                         LinearGradient(
-                            colors: [.blue, zoneColor],
+                            colors: [.blue, viewModel.currentHeartRateZone.color],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
@@ -422,22 +433,11 @@ struct LiveView: View {
                 Circle()
                     .fill(.white)
                     .frame(width: 10, height: 10)
-                    .shadow(color: zoneColor.opacity(0.5), radius: 3)
+                    .shadow(color: viewModel.currentHeartRateZone.color.opacity(0.5), radius: 3)
                     .offset(x: max(0, geo.size.width * viewModel.heartRateZonePercent - 5))
             }
         }
         .frame(height: 8)
-    }
-
-    private var zoneColor: Color {
-        switch viewModel.currentHeartRateZone {
-        case .rest: return .gray
-        case .warmUp: return .blue
-        case .fatBurn: return .green
-        case .cardio: return .yellow
-        case .peak: return .orange
-        case .extreme: return .red
-        }
     }
 
     private func sessionStatCell(label: String, value: Double?, unit: String, color: Color) -> some View {
@@ -584,11 +584,11 @@ struct LiveView: View {
             HStack(spacing: 4) {
                 if status != .unknown {
                     Circle()
-                        .fill(statusColor(for: status))
+                        .fill(status.color)
                         .frame(width: 6, height: 6)
                     Text(status.label)
                         .font(.caption2.weight(.medium))
-                        .foregroundStyle(statusColor(for: status))
+                        .foregroundStyle(status.color)
                 }
 
                 Spacer()
@@ -689,6 +689,12 @@ struct LiveView: View {
                 quickStatPill(icon: "figure.stairs", value: "\(Int(viewModel.todayFlightsClimbed))", label: "Flights", color: .purple)
             }
             .padding(.horizontal)
+            .onAppear {
+                AppAnalytics.shared.trackSectionImpression(section: .quickStatsRow, screen: .live, metadata: [
+                    "steps": Int(viewModel.todaySteps),
+                    "distance_km": viewModel.todayDistance
+                ])
+            }
 
             } // end else (has activity)
         }
@@ -783,11 +789,11 @@ struct LiveView: View {
 
                         HStack(spacing: 4) {
                             Circle()
-                                .fill(statusColor(for: viewModel.bloodPressureStatus))
+                                .fill(viewModel.bloodPressureStatus.color)
                                 .frame(width: 6, height: 6)
                             Text(viewModel.bloodPressureStatus.label)
                                 .font(.caption2.weight(.medium))
-                                .foregroundStyle(statusColor(for: viewModel.bloodPressureStatus))
+                                .foregroundStyle(viewModel.bloodPressureStatus.color)
                         }
                     }
                     .padding(12)
@@ -911,16 +917,6 @@ struct LiveView: View {
     }
 
     // MARK: - Helpers
-
-    private func statusColor(for status: LiveViewModel.VitalStatus) -> Color {
-        switch status {
-        case .normal: return .green
-        case .elevated: return .orange
-        case .low: return .yellow
-        case .critical: return .red
-        case .unknown: return .gray
-        }
-    }
 
     private func formatLargeNumber(_ value: Double) -> String {
         if value >= 10000 {

@@ -39,13 +39,13 @@ final class MetricDetailViewModel {
 
     var currentValue: String {
         guard let series = timeSeries, let value = series.latestValue else { return "--" }
-        return formatValue(value)
+        return metric.formatValue(value)
     }
 
     var averageValue: String {
         guard let series = timeSeries else { return "--" }
         let avg = series.mean(lastDays: selectedTimeRange)
-        return formatValue(avg)
+        return metric.formatValue(avg)
     }
 
     var trendDirection: TrendDirection {
@@ -94,17 +94,5 @@ final class MetricDetailViewModel {
         self.metric = metric
         self.healthKitManager = healthKitManager
         self.analysisEngine = analysisEngine
-    }
-
-    func formatValue(_ value: Double) -> String {
-        switch metric {
-        case .steps, .activeCalories, .basalCalories, .flightsClimbed:
-            return String(format: "%.0f", value)
-        case .heartRate, .restingHeartRate, .walkingHeartRateAverage, .heartRateRecovery,
-             .bloodPressureSystolic, .bloodPressureDiastolic:
-            return String(format: "%.0f", value)
-        default:
-            return String(format: "%.1f", value)
-        }
     }
 }

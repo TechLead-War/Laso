@@ -47,6 +47,13 @@ struct CorrelationsView: View {
                     }
                     .padding(.horizontal)
                 }
+                .onAppear {
+                    AppAnalytics.shared.trackSectionImpression(
+                        section: .correlationsFilterChips,
+                        screen: .correlations,
+                        metadata: ["filter_count": CorrelationFilter.allCases.count]
+                    )
+                }
 
                 if filteredCorrelations.isEmpty {
                     emptyState
@@ -63,6 +70,18 @@ struct CorrelationsView: View {
                                 onTapMetric(correlation.metricA)
                             }
                             .padding(.horizontal)
+                            .onAppear {
+                                AppAnalytics.shared.trackSectionImpression(
+                                    section: .correlationDetailCard,
+                                    screen: .correlations,
+                                    metadata: [
+                                        "cause": correlation.causeLabel,
+                                        "effect": correlation.effectLabel,
+                                        "strength": correlation.strengthLabel,
+                                        "filter": selectedFilter.rawValue
+                                    ]
+                                )
+                            }
                         }
                     }
                 }
@@ -72,7 +91,12 @@ struct CorrelationsView: View {
         .background(Color(.systemGroupedBackground))
         .navigationTitle("What Affects What")
         .navigationBarTitleDisplayMode(.large)
-        .onAppear { AppAnalytics.shared.trackFeatureOpen(.correlations) }
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.correlations)
+            AppAnalytics.shared.trackActivationMilestone(.firstCorrelation)
+            AppAnalytics.shared.trackCoreAction(.viewedCorrelation, screen: .correlations)
+            AppAnalytics.shared.trackLastMeaningfulAction(action: "viewed_correlation", screen: .correlations)
+        }
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.correlations) }
     }
 

@@ -34,6 +34,13 @@ struct CorrelationsSection: View {
                             onTapMetric(correlation.metricA)
                         }
                         .padding(.horizontal)
+                        .onAppear {
+                            AppAnalytics.shared.trackSectionImpression(section: .correlationCardImpression, screen: .home, metadata: [
+                                "cause_metric": correlation.metricA.rawValue,
+                                "effect_metric": correlation.metricB.rawValue,
+                                "strength": correlation.strengthLabel
+                            ])
+                        }
                     }
                 }
             }

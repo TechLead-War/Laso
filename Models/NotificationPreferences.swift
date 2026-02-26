@@ -1,7 +1,7 @@
 import Foundation
 
 /// User preferences for notifications
-struct NotificationPreferences: Codable {
+struct NotificationPreferences: Codable, Equatable {
     var dailySummaryEnabled: Bool = true
     var dailySummaryTime: DateComponents = {
         var c = DateComponents()

@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 // MARK: - Entry Card (compact, for Home tab)
 
@@ -74,8 +75,23 @@ struct WeeklyReviewView: View {
             VStack(spacing: 24) {
                 if let review = viewModel.review {
                     scoreSection(review)
+                        .onAppear {
+                            AppAnalytics.shared.trackSectionImpression(section: .weeklyScoreSection, screen: .weeklyReview, metadata: [
+                                "score": review.currentScore
+                            ])
+                        }
                     winsSection(review)
+                        .onAppear {
+                            AppAnalytics.shared.trackSectionImpression(section: .weeklyWinsSection, screen: .weeklyReview, metadata: [
+                                "wins_count": review.wins.count
+                            ])
+                        }
                     watchOutSection(review)
+                        .onAppear {
+                            AppAnalytics.shared.trackSectionImpression(section: .weeklyWatchOutSection, screen: .weeklyReview, metadata: [
+                                "watch_out_count": review.watchOuts.count
+                            ])
+                        }
                 } else if viewModel.isLoading {
                     ProgressView()
                         .padding(.top, 40)
@@ -106,6 +122,9 @@ struct WeeklyReviewView: View {
         .onAppear {
             viewModel.load()
             AppAnalytics.shared.trackFeatureOpen(.weeklyReview)
+            AppAnalytics.shared.trackActivationMilestone(.firstWeeklyReview)
+            AppAnalytics.shared.trackCoreAction(.viewedWeeklyReview, screen: .weeklyReview)
+            AppAnalytics.shared.trackLastMeaningfulAction(action: "viewed_weekly_review", screen: .weeklyReview)
         }
         .onDisappear {
             AppAnalytics.shared.trackFeatureClose(.weeklyReview)
@@ -257,12 +276,17 @@ struct WeeklyReviewView: View {
 }
 
 #Preview {
+    let container = try! ModelContainer(
+        for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self,
+        configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+    )
     NavigationStack {
         WeeklyReviewView(
             viewModel: WeeklyReviewViewModel(
                 dashboardViewModel: DashboardViewModel(
                     healthKitManager: HealthKitManager(),
-                    analysisEngine: AnalysisEngine()
+                    analysisEngine: AnalysisEngine(),
+                    store: HealthDataStore(modelContainer: container)
                 )
             )
         )

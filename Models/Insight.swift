@@ -74,6 +74,15 @@ struct Insight: Identifiable {
     let category: InsightCategory
     let relatedMetrics: [HealthMetric]
 
+    /// First sentence of the recommendation — used as a concise action summary
+    var actionSummary: String {
+        let rec = recommendation
+        if let dotIndex = rec.firstIndex(of: ".") {
+            return String(rec[rec.startIndex...dotIndex])
+        }
+        return rec
+    }
+
     /// Priority score for sorting (higher = more important)
     var priorityScore: Double {
         let severityWeight: Double = switch severity {

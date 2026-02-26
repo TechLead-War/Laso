@@ -4,11 +4,11 @@ import Foundation
 struct AlertEvaluator {
 
     /// Minimum hours between repeated alerts for the same identifier
-    private static let cooldownHours: Double = 4
+    private static var cooldownHours: Double { RemoteConfigManager.shared.alertCooldownHours }
 
     /// Check if an alert was recently sent (within cooldown window)
     private static func isOnCooldown(identifier: String) -> Bool {
-        let key = "healthpulse.alertCooldown.\(identifier)"
+        let key = AppKeys.Notifications.alertCooldownPrefix + identifier
         let lastFired = UserDefaults.standard.double(forKey: key)
         guard lastFired > 0 else { return false }
         let elapsed = Date().timeIntervalSince1970 - lastFired
@@ -17,7 +17,7 @@ struct AlertEvaluator {
 
     /// Record that an alert was sent
     private static func recordAlert(identifier: String) {
-        let key = "healthpulse.alertCooldown.\(identifier)"
+        let key = AppKeys.Notifications.alertCooldownPrefix + identifier
         UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: key)
     }
 
@@ -106,7 +106,7 @@ struct AlertEvaluator {
            let latestRHR = rhrSeries.latestValue {
             let avg7d = rhrSeries.mean(lastDays: 7)
             // Alert if RHR suddenly jumped 15%+ above 7-day average
-            if avg7d > 0 && latestRHR > avg7d * 1.15 {
+            if avg7d > 0 && latestRHR > avg7d * RemoteConfigManager.shared.heartRateSpikeMultiplier {
                 sendHeartRateAlert(
                     title: "Resting Heart Rate Elevated",
                     body: "Your resting heart rate (\(Int(latestRHR)) bpm) is significantly above your recent average (\(Int(avg7d)) bpm). Consider rest or consult your doctor if persistent.",
@@ -142,7 +142,7 @@ struct AlertEvaluator {
            let latestHRV = hrvSeries.latestValue {
             let avg7d = hrvSeries.mean(lastDays: 7)
             // Alert if HRV dropped 30%+ below 7-day average
-            if avg7d > 0 && latestHRV < avg7d * 0.7 {
+            if avg7d > 0 && latestHRV < avg7d * RemoteConfigManager.shared.hrvDropMultiplier {
                 sendHeartRateAlert(
                     title: "HRV Significantly Low",
                     body: "Your heart rate variability (\(Int(latestHRV)) ms) dropped \(Int(((avg7d - latestHRV) / avg7d) * 100))% below your recent average. This may indicate stress or overtraining.",
@@ -155,14 +155,14 @@ struct AlertEvaluator {
         // Check blood oxygen for dangerous drops
         if let spo2Series = timeSeries[.bloodOxygen],
            let latestSpO2 = spo2Series.latestValue {
-            if latestSpO2 < 92 {
+            if latestSpO2 < RemoteConfigManager.shared.spo2CriticalThreshold {
                 sendHeartRateAlert(
                     title: "Blood Oxygen Critically Low",
                     body: "Your blood oxygen is \(String(format: "%.1f", latestSpO2))%. Values below 92% may require immediate medical attention.",
                     identifier: "healthpulse.spike.spo2.critical",
                     maxPerDay: maxPerDay
                 )
-            } else if latestSpO2 < 95 {
+            } else if latestSpO2 < RemoteConfigManager.shared.spo2WarningThreshold {
                 sendHeartRateAlert(
                     title: "Blood Oxygen Below Normal",
                     body: "Your blood oxygen is \(String(format: "%.1f", latestSpO2))%. Normal range is 95-100%. Monitor closely.",
@@ -176,7 +176,7 @@ struct AlertEvaluator {
         if let rrSeries = timeSeries[.respiratoryRate],
            let latestRR = rrSeries.latestValue {
             let avg7d = rrSeries.mean(lastDays: 7)
-            if avg7d > 0 && latestRR > avg7d * 1.25 {
+            if avg7d > 0 && latestRR > avg7d * RemoteConfigManager.shared.respiratoryRateSpikeMultiplier {
                 sendHeartRateAlert(
                     title: "Respiratory Rate Elevated",
                     body: "Your respiratory rate (\(String(format: "%.1f", latestRR)) br/min) is elevated compared to your average (\(String(format: "%.1f", avg7d)) br/min).",
@@ -281,7 +281,7 @@ struct AlertEvaluator {
             title: title,
             body: body,
             identifier: identifier,
-            maxPerDay: min(3, maxPerDay)  // Heart alerts capped at 3, but respect user's lower cap
+            maxPerDay: min(RemoteConfigManager.shared.heartAlertCap, maxPerDay)  // Heart alerts capped, but respect user's lower cap
         )
         recordAlert(identifier: identifier)
     }

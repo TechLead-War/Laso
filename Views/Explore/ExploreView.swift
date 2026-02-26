@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 /// Data exploration tab with overall score and category drill-down list
 struct ExploreView: View {
@@ -38,16 +39,28 @@ struct ExploreView: View {
                 }
                 .background(.background, in: RoundedRectangle(cornerRadius: 14))
                 .padding(.horizontal)
+                .onAppear {
+                    AppAnalytics.shared.trackSectionImpression(section: .categoryList, screen: .explore, metadata: [
+                        "category_count": HealthCategory.allCases.count
+                    ])
+                }
             }
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("Explore")
         .navigationBarTitleDisplayMode(.large)
         .toolbar(.visible, for: .navigationBar)
-        .onAppear { AppAnalytics.shared.trackFeatureOpen(.explore) }
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.explore)
+            AppAnalytics.shared.trackActivationMilestone(.firstScoreSeen)
+            AppAnalytics.shared.trackCoreAction(.viewedScore, screen: .explore)
+            AppAnalytics.shared.trackLastMeaningfulAction(action: "viewed_score", screen: .explore)
+        }
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.explore) }
         .refreshable {
             AppAnalytics.shared.trackPullToRefresh(screen: .explore)
+            AppAnalytics.shared.trackActivationMilestone(.firstPullToRefresh)
+            AppAnalytics.shared.trackCoreAction(.pulledToRefresh, screen: .explore)
             await viewModel.refresh()
         }
     }
@@ -97,6 +110,12 @@ struct ExploreView: View {
                     }
                     .padding(10)
                     .background(weakest.category.color.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+                    .onAppear {
+                        AppAnalytics.shared.trackSectionImpression(section: .weakestCategoryBanner, screen: .explore, metadata: [
+                            "weakest_category": weakest.category.rawValue,
+                            "weakest_score": weakest.score
+                        ])
+                    }
                 }
             } else {
                 // No analysis data yet
@@ -236,11 +255,16 @@ private struct ExploreCategoryRow: View {
 }
 
 #Preview {
+    let container = try! ModelContainer(
+        for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self,
+        configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+    )
     NavigationStack {
         ExploreView(
             viewModel: DashboardViewModel(
                 healthKitManager: HealthKitManager(),
-                analysisEngine: AnalysisEngine()
+                analysisEngine: AnalysisEngine(),
+                store: HealthDataStore(modelContainer: container)
             ),
             navigationPath: .constant(NavigationPath())
         )

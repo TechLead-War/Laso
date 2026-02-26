@@ -82,6 +82,83 @@ enum BlockType: String {
     case trendFilter = "trend_filter"
     case periodSelector = "period_selector"
 
+    // Section Impressions (Home)
+    case todaysBriefingSection = "todays_briefing_section"
+    case needsAttentionSection = "needs_attention_section"
+    case correlationsSection = "correlations_section"
+    case correlationCardImpression = "correlation_card_impression"
+    case weeklyReviewSection = "weekly_review_section"
+    case staleRecoveryCard = "stale_recovery_card"
+    case connectHealthSection = "connect_health_section"
+    case coachGreeting = "coach_greeting"
+    case lastUpdatedFooter = "last_updated_footer"
+    case periodSummarySection = "period_summary_section"
+
+    // Section Impressions (MetricDetail)
+    case metricDetailHeader = "metric_detail_header"
+    case chartSection = "chart_section"
+    case contextualSummary = "contextual_summary"
+    case scoreBreakdownSection = "score_breakdown_section"
+    case insightsSection = "insights_section"
+    case actionBannerCard = "action_banner_card"
+
+    // Section Impressions (Risk)
+    case riskGaugeSection = "risk_gauge_section"
+    case focusAreasSection = "focus_areas_section"
+    case contributingFactorsSection = "contributing_factors_section"
+    case disclaimerSection = "disclaimer_section"
+
+    // Section Impressions (Live)
+    case staleVitalsPrompt = "stale_vitals_prompt"
+    case quickStatsRow = "quick_stats_row"
+    case bloodPressureTempRow = "blood_pressure_temp_row"
+    case liveHeaderSection = "live_header_section"
+    case heartRateMiniChart = "heart_rate_mini_chart"
+    case vitalSignsRow = "vital_signs_row"
+
+    // Section Impressions (Explore)
+    case categoryList = "category_list"
+    case weakestCategoryBanner = "weakest_category_banner"
+
+    // Section Impressions (Category Detail)
+    case categoryScoreRing = "category_score_ring"
+    case categoryTrendSummary = "category_trend_summary"
+    case categoryInsightsSection = "category_insights_section"
+    case categoryMetricList = "category_metric_list"
+
+    // Section Impressions (Weekly Review)
+    case weeklyScoreSection = "weekly_score_section"
+    case weeklyWinsSection = "weekly_wins_section"
+    case weeklyWatchOutSection = "weekly_watch_out_section"
+
+    // Section Impressions (Insights Detail)
+    case insightsFilterChips = "insights_filter_chips"
+    case actionableInsightCard = "actionable_insight_card"
+
+    // Section Impressions (Correlations View)
+    case correlationsFilterChips = "correlations_filter_chips"
+    case correlationDetailCard = "correlation_detail_card"
+
+    // Section Impressions (Settings)
+    case settingsConnectedDevices = "settings_connected_devices"
+    case settingsDailySummary = "settings_daily_summary"
+    case settingsWeeklySummary = "settings_weekly_summary"
+    case settingsHeartRateAlerts = "settings_heart_rate_alerts"
+    case settingsAppleWatch = "settings_apple_watch"
+    case settingsAlerts = "settings_alerts"
+    case settingsMetricAlerts = "settings_metric_alerts"
+    case settingsDataExport = "settings_data_export"
+    case settingsAppearance = "settings_appearance"
+    case settingsOnDeviceData = "settings_on_device_data"
+    case settingsAbout = "settings_about"
+
+    // Chart Interactions
+    case chartTouch = "chart_touch"
+    case chartDrag = "chart_drag"
+
+    // Data Sync
+    case dataSyncEvent = "data_sync_event"
+
     // Feedback
     case feedbackCategory = "feedback_category"
     case feedbackSubmit = "feedback_submit"
@@ -465,6 +542,272 @@ final class AppAnalytics {
             "category": category,
             "text_length": textLength
         ])
+    }
+
+    // MARK: - Section Impression with Context
+
+    /// Tracks when a section/block becomes visible with optional metadata.
+    func trackSectionImpression(section: BlockType, screen: AppFeature, metadata: [String: Any] = [:]) {
+        var params: [String: Any] = [
+            "section": section.rawValue,
+            "screen": screen.rawValue,
+            "tab": session.currentTab
+        ]
+        for (k, v) in metadata { params[k] = v }
+        logEvent("section_impressed", parameters: params)
+    }
+
+    // MARK: - Chart Interaction Events
+
+    /// Tracks when user touches/selects a point on a chart.
+    func trackChartInteraction(metric: String, interactionType: String, screen: AppFeature, metadata: [String: Any] = [:]) {
+        var params: [String: Any] = [
+            "metric": metric,
+            "interaction_type": interactionType,
+            "screen": screen.rawValue,
+            "tab": session.currentTab
+        ]
+        for (k, v) in metadata { params[k] = v }
+        logEvent("chart_interaction", parameters: params)
+    }
+
+    // MARK: - Data Sync Events
+
+    /// Tracks a HealthKit data sync completion.
+    func trackDataSync(metricsCount: Int, newSamplesCount: Int, durationSec: Int, isFirstSync: Bool) {
+        logEvent("data_sync_completed", parameters: [
+            "metrics_count": metricsCount,
+            "new_samples_count": newSamplesCount,
+            "duration_sec": durationSec,
+            "is_first_sync": isFirstSync ? 1 : 0
+        ])
+    }
+
+    // MARK: - Scroll Depth
+
+    /// Tracks how far down the user scrolled on a screen (0.0 to 1.0).
+    func trackScrollDepth(screen: AppFeature, maxDepthPercent: Int) {
+        logEvent("scroll_depth", parameters: [
+            "screen": screen.rawValue,
+            "max_depth_percent": maxDepthPercent,
+            "tab": session.currentTab
+        ])
+    }
+
+    // MARK: - Subscription Events
+
+    /// Tracks when user views the subscription/paywall screen.
+    func trackPaywallViewed(source: String) {
+        logEvent("paywall_viewed", parameters: [
+            "source": source,
+            "tab": session.currentTab
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 1. Activation Discovery
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Standard activation milestones. Track each the FIRST time it happens.
+    enum ActivationMilestone: String {
+        case firstDataLoad = "first_data_load"              // HealthKit data loaded
+        case firstScoreSeen = "first_score_seen"            // Saw health score
+        case firstInsightViewed = "first_insight_viewed"    // Opened an insight
+        case firstMetricDetail = "first_metric_detail"      // Drilled into a metric
+        case firstChartInteraction = "first_chart_interaction" // Touched a chart
+        case firstWeeklyReview = "first_weekly_review"      // Opened weekly review
+        case firstCorrelation = "first_correlation"         // Viewed a correlation
+        case firstLiveSession = "first_live_session"        // Used Live tab 30s+
+        case firstSettingsVisit = "first_settings_visit"    // Opened settings
+        case firstPullToRefresh = "first_pull_to_refresh"   // Pulled to refresh
+    }
+
+    /// Fire once per milestone. Tracks activation funnel + time-to-milestone.
+    func trackActivationMilestone(_ milestone: ActivationMilestone) {
+        let isNew = session.recordMilestone(milestone.rawValue)
+        guard isNew else { return }
+
+        let timeSinceInstall = Int(Date().timeIntervalSince(session.installDate))
+        let sessionNumber = session.totalSessions
+
+        logEvent("activation_milestone", parameters: [
+            "milestone": milestone.rawValue,
+            "session_number": sessionNumber,
+            "time_since_install_sec": timeSinceInstall,
+            "session_elapsed_sec": session.sessionElapsedSeconds,
+            "milestones_completed": session.completedMilestones.count,
+            "is_first_session": session.isFirstSession ? 1 : 0
+        ])
+
+        // Update user property with milestone count
+        setUserProperty("activation_milestones", value: "\(session.completedMilestones.count)")
+
+        // If user hit 3+ milestones → activated
+        if session.completedMilestones.count >= 3 {
+            setUserProperty("activation_status", value: "activated")
+        }
+    }
+
+    /// Fires at end of first session with a profile of what the user did.
+    func trackFirstSessionProfile() {
+        guard session.isFirstSession else { return }
+
+        logEvent("first_session_profile", parameters: [
+            "screens_visited": session.screensVisited.count,
+            "max_depth": session.maxDepth,
+            "milestones_completed": session.completedMilestones.count,
+            "core_actions": session.coreActionsThisSession.joined(separator: ","),
+            "duration_sec": session.sessionElapsedSeconds
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 2. Behavior → Retention Causality
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Core actions that predict retention. Call each time one is performed.
+    enum CoreAction: String {
+        case viewedScore = "viewed_score"
+        case viewedInsight = "viewed_insight"
+        case viewedMetricDetail = "viewed_metric_detail"
+        case viewedCorrelation = "viewed_correlation"
+        case viewedWeeklyReview = "viewed_weekly_review"
+        case interactedWithChart = "interacted_with_chart"
+        case usedLiveTab = "used_live_tab"
+        case changedTimeRange = "changed_time_range"
+        case pulledToRefresh = "pulled_to_refresh"
+        case viewedRiskDetail = "viewed_risk_detail"
+    }
+
+    /// Track a core action completion for retention analysis.
+    func trackCoreAction(_ action: CoreAction, screen: AppFeature) {
+        session.recordCoreAction(action.rawValue)
+
+        logEvent("core_action_completed", parameters: [
+            "action": action.rawValue,
+            "screen": screen.rawValue,
+            "session_number": session.totalSessions,
+            "session_elapsed_sec": session.sessionElapsedSeconds,
+            "core_actions_this_session": session.coreActionsThisSession.count,
+            "days_since_install": session.daysSinceInstall
+        ])
+
+        // Update user property with total core actions this session
+        setUserProperty("session_core_actions", value: "\(session.coreActionsThisSession.count)")
+    }
+
+    /// Record time-to-first-value: how long until user first saw their health score.
+    func trackTimeToFirstValue() {
+        session.recordFirstValueTime()
+        let ttfv = session.firstValueTimeSec
+        if ttfv > 0 {
+            logEvent("time_to_first_value", parameters: [
+                "seconds": ttfv,
+                "session_number": session.totalSessions
+            ])
+            setUserProperty("first_value_time_sec", value: "\(ttfv)")
+        }
+    }
+
+    /// Fires on 2nd+ session to track return behavior.
+    func trackReturnSession() {
+        guard session.totalSessions > 1 else { return }
+
+        logEvent("return_session", parameters: [
+            "session_number": session.totalSessions,
+            "days_since_last_session": session.daysSinceLastSession ?? -1,
+            "days_since_install": session.daysSinceInstall,
+            "streak_days": session.streakDays
+        ])
+
+        setUserProperty("total_sessions", value: "\(session.totalSessions)")
+        setUserProperty("days_since_install", value: "\(session.daysSinceInstall)")
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 3. Behavior → Monetization Signal
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Track when a free user attempts a premium feature (hits paywall).
+    func trackPremiumFeatureAttempted(feature: String, screen: AppFeature) {
+        logEvent("premium_feature_attempted", parameters: [
+            "feature": feature,
+            "screen": screen.rawValue,
+            "session_number": session.totalSessions,
+            "days_since_install": session.daysSinceInstall,
+            "core_actions_this_session": session.coreActionsThisSession.count
+        ])
+    }
+
+    /// Track high-engagement signal — user crossed an engagement threshold.
+    func trackHighEngagementSignal(signal: String, metadata: [String: Any] = [:]) {
+        var params: [String: Any] = [
+            "signal": signal,
+            "session_number": session.totalSessions,
+            "days_since_install": session.daysSinceInstall
+        ]
+        for (k, v) in metadata { params[k] = v }
+        logEvent("high_engagement_signal", parameters: params)
+    }
+
+    /// Track pre-purchase behavior (browsed paywall, compared plans, etc.)
+    func trackPrePurchaseBehavior(action: String, metadata: [String: Any] = [:]) {
+        var params: [String: Any] = [
+            "action": action,
+            "session_number": session.totalSessions,
+            "days_since_install": session.daysSinceInstall
+        ]
+        for (k, v) in metadata { params[k] = v }
+        logEvent("pre_purchase_behavior", parameters: params)
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 4. Churn Forensics
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Fires at end of EVERY session with quality metrics for churn analysis.
+    func trackSessionQuality() {
+        let stats = session.endSession()
+
+        let engagementScore = min(100, (stats.screensVisited * 10) + (stats.maxDepth * 15) + min(stats.durationSec / 6, 50))
+
+        logEvent("session_quality", parameters: [
+            "session_number": session.totalSessions,
+            "duration_sec": stats.durationSec,
+            "screens_visited": stats.screensVisited,
+            "max_depth": stats.maxDepth,
+            "core_actions_count": session.coreActionsThisSession.count,
+            "core_actions": session.coreActionsThisSession.prefix(10).joined(separator: ","),
+            "engagement_score": engagementScore,
+            "days_since_install": session.daysSinceInstall,
+            "streak_days": session.streakDays,
+            "is_first_session": session.isFirstSession ? 1 : 0
+        ])
+
+        // Update user properties for cohort analysis
+        setUserProperty("last_engagement_score", value: "\(engagementScore)")
+        setUserProperty("last_session_depth", value: "\(stats.maxDepth)")
+        setUserProperty("last_core_action", value: session.coreActionsThisSession.last ?? "none")
+
+        // Monetization signal: high-engagement sessions predict payment
+        if engagementScore >= 70 {
+            trackHighEngagementSignal(signal: "high_session_quality", metadata: [
+                "engagement_score": engagementScore,
+                "core_actions_count": session.coreActionsThisSession.count
+            ])
+        }
+        if session.coreActionsThisSession.count >= 5 {
+            trackHighEngagementSignal(signal: "power_session", metadata: [
+                "core_actions_count": session.coreActionsThisSession.count,
+                "screens_visited": stats.screensVisited
+            ])
+        }
+    }
+
+    /// Track the last meaningful action before session ends (for churn forensics).
+    func trackLastMeaningfulAction(action: String, screen: AppFeature) {
+        setUserProperty("last_meaningful_action", value: action)
+        setUserProperty("last_active_screen", value: screen.rawValue)
     }
 
     // MARK: - Generic Action

@@ -101,7 +101,7 @@ final class CategoryDetailViewModel {
               let value = series.latestValue else {
             return "--"
         }
-        return formatValue(value, metric: metric)
+        return metric.formatValue(value)
     }
 
     /// Get anomaly severity for a metric (if any)
@@ -109,17 +109,5 @@ final class CategoryDetailViewModel {
         let anomaly = analysisEngine.anomaly(for: metric)
         guard let anomaly, anomaly.severity != .info else { return nil }
         return anomaly.severity
-    }
-
-    private func formatValue(_ value: Double, metric: HealthMetric) -> String {
-        switch metric {
-        case .steps, .activeCalories, .basalCalories, .flightsClimbed:
-            return String(format: "%.0f", value)
-        case .heartRate, .restingHeartRate, .walkingHeartRateAverage, .heartRateRecovery,
-             .bloodPressureSystolic, .bloodPressureDiastolic:
-            return String(format: "%.0f", value)
-        default:
-            return String(format: "%.1f", value)
-        }
     }
 }

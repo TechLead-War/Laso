@@ -8,17 +8,16 @@ final class FeedbackPromptManager {
     private let defaults = UserDefaults.standard
 
     private enum Key {
-        static let installDate = "laso.install_date"
-        static let lastPromptDate = "laso.feedback.last_prompt_date"
-        static let feedbackSubmitted = "laso.feedback.submitted"
-        static let promptCooldownDays = "laso.feedback.cooldown_days"
+        static let installDate = AppKeys.Lifecycle.installDate
+        static let lastPromptDate = AppKeys.Feedback.lastPromptDate
+        static let feedbackSubmitted = AppKeys.Feedback.submitted
     }
 
     /// Default: re-ask every 30 days after the first prompt (if user skipped).
-    private let cooldownDays: Int = 30
+    private var cooldownDays: Int { RemoteConfigManager.shared.feedbackCooldownDays }
 
     /// Minimum days after install before showing the first prompt.
-    private let daysBeforeFirstPrompt: Int = 5
+    private var daysBeforeFirstPrompt: Int { RemoteConfigManager.shared.feedbackDaysBeforeFirstPrompt }
 
     private init() {}
 

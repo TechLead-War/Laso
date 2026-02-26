@@ -222,6 +222,19 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         }
     }
 
+    /// Formats a value according to this metric's natural precision
+    func formatValue(_ value: Double) -> String {
+        switch self {
+        case .steps, .activeCalories, .basalCalories, .flightsClimbed:
+            return String(format: "%.0f", value)
+        case .heartRate, .restingHeartRate, .walkingHeartRateAverage, .heartRateRecovery,
+             .bloodPressureSystolic, .bloodPressureDiastolic:
+            return String(format: "%.0f", value)
+        default:
+            return String(format: "%.1f", value)
+        }
+    }
+
     var systemImageName: String {
         switch self {
         case .heartRate, .restingHeartRate, .heartRateVariability, .heartRateRecovery,

@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 /// Time-range comparison section: 7D/30D/3M/6M tabs with focus-filtered metric rows
 struct PeriodSummarySection: View {
@@ -10,6 +11,11 @@ struct PeriodSummarySection: View {
             Text("Trends")
                 .font(.headline)
                 .padding(.horizontal)
+                .onAppear {
+                    AppAnalytics.shared.trackSectionImpression(section: .periodSummarySection, screen: .home, metadata: [
+                        "selected_period": viewModel.selectedPeriod.rawValue
+                    ])
+                }
 
             // Period picker
             Picker("Period", selection: Binding(
@@ -195,10 +201,15 @@ struct MetricChangeRow: View {
 }
 
 #Preview {
+    let container = try! ModelContainer(
+        for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self,
+        configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+    )
     PeriodSummarySection(
         viewModel: DashboardViewModel(
             healthKitManager: HealthKitManager(),
-            analysisEngine: AnalysisEngine()
+            analysisEngine: AnalysisEngine(),
+            store: HealthDataStore(modelContainer: container)
         ),
         onTapMetric: { _ in }
     )

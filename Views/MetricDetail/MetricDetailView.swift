@@ -27,10 +27,20 @@ struct MetricDetailView: View {
                     }
                     // Current Value Header
                     headerSection
+                        .onAppear {
+                            AppAnalytics.shared.trackSectionImpression(section: .metricDetailHeader, screen: .metricDetail, metadata: [
+                                "metric": viewModel.metric.rawValue,
+                                "has_baseline": viewModel.baseline != nil ? 1 : 0,
+                                "outside_range": viewModel.isOutsideNormalRange ? 1 : 0
+                            ])
+                        }
 
                     // Action Banner — show recommendation if insight exists
                     if let recommendation = viewModel.insights.first?.recommendation {
                         actionBanner(recommendation)
+                            .onAppear {
+                                AppAnalytics.shared.trackSectionImpression(section: .actionBannerCard, screen: .metricDetail, metadata: ["metric": viewModel.metric.rawValue])
+                            }
                     }
 
                     // Time Range Selector
@@ -47,6 +57,7 @@ struct MetricDetailView: View {
                                     fromDays: oldRange,
                                     toDays: newRange
                                 )
+                                AppAnalytics.shared.trackCoreAction(.changedTimeRange, screen: .metricDetail)
                             }
                         }
                     ))
@@ -54,18 +65,40 @@ struct MetricDetailView: View {
 
                     // Chart
                     chartSection
+                        .onAppear {
+                            AppAnalytics.shared.trackSectionImpression(section: .chartSection, screen: .metricDetail, metadata: [
+                                "metric": viewModel.metric.rawValue,
+                                "sample_count": viewModel.chartSamples.count,
+                                "time_range_days": viewModel.selectedTimeRange
+                            ])
+                        }
 
                     // Contextual Summary (replaces raw stats grid)
                     contextualSummary
+                        .onAppear {
+                            AppAnalytics.shared.trackSectionImpression(section: .contextualSummary, screen: .metricDetail, metadata: ["metric": viewModel.metric.rawValue])
+                        }
 
                     // Score Breakdown
                     if !viewModel.scoreBreakdown.isEmpty {
                         scoreBreakdownSection
+                            .onAppear {
+                                AppAnalytics.shared.trackSectionImpression(section: .scoreBreakdownSection, screen: .metricDetail, metadata: [
+                                    "metric": viewModel.metric.rawValue,
+                                    "component_count": viewModel.scoreBreakdown.count
+                                ])
+                            }
                     }
 
                     // Insights
                     if !viewModel.insights.isEmpty {
                         insightsSection
+                            .onAppear {
+                                AppAnalytics.shared.trackSectionImpression(section: .insightsSection, screen: .metricDetail, metadata: [
+                                    "metric": viewModel.metric.rawValue,
+                                    "insight_count": viewModel.insights.count
+                                ])
+                            }
                     }
                 }
             }
@@ -86,6 +119,9 @@ struct MetricDetailView: View {
                 }
             }
             AppAnalytics.shared.trackFeatureOpen(.metricDetail, metadata: ["metric": viewModel.metric.rawValue])
+            AppAnalytics.shared.trackActivationMilestone(.firstMetricDetail)
+            AppAnalytics.shared.trackCoreAction(.viewedMetricDetail, screen: .metricDetail)
+            AppAnalytics.shared.trackLastMeaningfulAction(action: "viewed_metric_detail", screen: .metricDetail)
         }
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.metricDetail, metadata: ["metric": viewModel.metric.rawValue]) }
     }

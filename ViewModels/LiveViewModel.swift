@@ -1,6 +1,7 @@
 import Foundation
 import HealthKit
 import Observation
+import SwiftUI
 
 /// ViewModel for the Live tab — streams real-time health data from Apple Watch via HealthKit
 @Observable
@@ -137,14 +138,14 @@ final class LiveViewModel {
         case peak = "Peak"
         case extreme = "Extreme"
 
-        var color: String {
+        var color: Color {
             switch self {
-            case .rest: return "gray"
-            case .warmUp: return "blue"
-            case .fatBurn: return "green"
-            case .cardio: return "yellow"
-            case .peak: return "orange"
-            case .extreme: return "red"
+            case .rest: return .gray
+            case .warmUp: return .blue
+            case .fatBurn: return .green
+            case .cardio: return .yellow
+            case .peak: return .orange
+            case .extreme: return .red
             }
         }
 
@@ -220,6 +221,16 @@ final class LiveViewModel {
             case .low: return "Low"
             case .critical: return "Critical"
             case .unknown: return "No Data"
+            }
+        }
+
+        var color: Color {
+            switch self {
+            case .normal: return .green
+            case .elevated: return .orange
+            case .low: return .yellow
+            case .critical: return .red
+            case .unknown: return .gray
             }
         }
     }
@@ -323,18 +334,13 @@ final class LiveViewModel {
     func stopStreaming() {
         isStreaming = false
 
-        if let query = heartRateQuery {
+        for query in [heartRateQuery, bloodOxygenQuery, respiratoryRateQuery].compactMap({ $0 }) {
             healthStore.stop(query)
-            heartRateQuery = nil
         }
-        if let query = bloodOxygenQuery {
-            healthStore.stop(query)
-            bloodOxygenQuery = nil
-        }
-        if let query = respiratoryRateQuery {
-            healthStore.stop(query)
-            respiratoryRateQuery = nil
-        }
+        heartRateQuery = nil
+        bloodOxygenQuery = nil
+        respiratoryRateQuery = nil
+
         refreshTimer?.invalidate()
         refreshTimer = nil
     }
@@ -398,75 +404,60 @@ final class LiveViewModel {
     // MARK: - Blood Oxygen Stream
 
     private func startBloodOxygenStream() {
-        let spo2Type = HKQuantityType(.oxygenSaturation)
-        let unit = HKUnit.percent()
-
-        let predicate = HKQuery.predicateForSamples(
-            withStart: Date().addingTimeInterval(-6 * 3600),
-            end: nil,
-            options: .strictStartDate
-        )
-
-        let query = HKAnchoredObjectQuery(
-            type: spo2Type,
-            predicate: predicate,
-            anchor: nil,
-            limit: HKObjectQueryNoLimit
-        ) { [weak self] _, samples, _, _, _ in
-            self?.processLatestSample(samples, unit: unit) { val, date in
-                self?.currentBloodOxygen = val * 100
-                self?.bloodOxygenTimestamp = date
-                self?.lastUpdate = Date()
-            }
+        bloodOxygenQuery = startVitalStream(
+            identifier: .oxygenSaturation,
+            unit: .percent(),
+            hoursBack: 6
+        ) { [weak self] val, date in
+            self?.currentBloodOxygen = val * 100
+            self?.bloodOxygenTimestamp = date
+            self?.lastUpdate = Date()
         }
-
-        query.updateHandler = { [weak self] _, samples, _, _, _ in
-            self?.processLatestSample(samples, unit: unit) { val, date in
-                self?.currentBloodOxygen = val * 100
-                self?.bloodOxygenTimestamp = date
-                self?.lastUpdate = Date()
-            }
-        }
-
-        healthStore.execute(query)
-        bloodOxygenQuery = query
     }
 
     // MARK: - Respiratory Rate Stream
 
     private func startRespiratoryRateStream() {
-        let respType = HKQuantityType(.respiratoryRate)
-        let unit = HKUnit.count().unitDivided(by: .minute())
+        respiratoryRateQuery = startVitalStream(
+            identifier: .respiratoryRate,
+            unit: HKUnit.count().unitDivided(by: .minute()),
+            hoursBack: 6
+        ) { [weak self] val, date in
+            self?.currentRespiratoryRate = val
+            self?.respiratoryRateTimestamp = date
+            self?.lastUpdate = Date()
+        }
+    }
 
+    /// Generic anchored object query for vital sign streaming — eliminates duplicate setup code
+    private func startVitalStream(
+        identifier: HKQuantityTypeIdentifier,
+        unit: HKUnit,
+        hoursBack: Double,
+        update: @escaping @MainActor (Double, Date) -> Void
+    ) -> HKAnchoredObjectQuery {
+        let type = HKQuantityType(identifier)
         let predicate = HKQuery.predicateForSamples(
-            withStart: Date().addingTimeInterval(-6 * 3600),
+            withStart: Date().addingTimeInterval(-hoursBack * 3600),
             end: nil,
             options: .strictStartDate
         )
 
         let query = HKAnchoredObjectQuery(
-            type: respType,
+            type: type,
             predicate: predicate,
             anchor: nil,
             limit: HKObjectQueryNoLimit
         ) { [weak self] _, samples, _, _, _ in
-            self?.processLatestSample(samples, unit: unit) { val, date in
-                self?.currentRespiratoryRate = val
-                self?.respiratoryRateTimestamp = date
-                self?.lastUpdate = Date()
-            }
+            self?.processLatestSample(samples, unit: unit, update: update)
         }
 
         query.updateHandler = { [weak self] _, samples, _, _, _ in
-            self?.processLatestSample(samples, unit: unit) { val, date in
-                self?.currentRespiratoryRate = val
-                self?.respiratoryRateTimestamp = date
-                self?.lastUpdate = Date()
-            }
+            self?.processLatestSample(samples, unit: unit, update: update)
         }
 
         healthStore.execute(query)
-        respiratoryRateQuery = query
+        return query
     }
 
     // MARK: - Helpers
@@ -487,24 +478,18 @@ final class LiveViewModel {
 
     func fetchTodayCumulativeStats() {
         let startOfDay = Calendar.current.startOfDay(for: Date())
-
-        fetchTodayStat(.stepCount, unit: .count(), from: startOfDay) { [weak self] value in
-            Task { @MainActor in self?.todaySteps = value }
-        }
-        fetchTodayStat(.activeEnergyBurned, unit: .kilocalorie(), from: startOfDay) { [weak self] value in
-            Task { @MainActor in self?.todayActiveCalories = value }
-        }
-        fetchTodayStat(.appleExerciseTime, unit: .minute(), from: startOfDay) { [weak self] value in
-            Task { @MainActor in self?.todayExerciseMinutes = value }
-        }
-        fetchTodayStat(.appleStandTime, unit: .hour(), from: startOfDay) { [weak self] value in
-            Task { @MainActor in self?.todayStandHours = value }
-        }
-        fetchTodayStat(.distanceWalkingRunning, unit: .meterUnit(with: .kilo), from: startOfDay) { [weak self] value in
-            Task { @MainActor in self?.todayDistance = value }
-        }
-        fetchTodayStat(.flightsClimbed, unit: .count(), from: startOfDay) { [weak self] value in
-            Task { @MainActor in self?.todayFlightsClimbed = value }
+        let stats: [(HKQuantityTypeIdentifier, HKUnit, ReferenceWritableKeyPath<LiveViewModel, Double>)] = [
+            (.stepCount,              .count(),                  \.todaySteps),
+            (.activeEnergyBurned,     .kilocalorie(),            \.todayActiveCalories),
+            (.appleExerciseTime,      .minute(),                 \.todayExerciseMinutes),
+            (.appleStandTime,         .hour(),                   \.todayStandHours),
+            (.distanceWalkingRunning, .meterUnit(with: .kilo),   \.todayDistance),
+            (.flightsClimbed,         .count(),                  \.todayFlightsClimbed),
+        ]
+        for (identifier, unit, keyPath) in stats {
+            fetchTodayStat(identifier, unit: unit, from: startOfDay) { [weak self] value in
+                Task { @MainActor in self?[keyPath: keyPath] = value }
+            }
         }
     }
 

@@ -157,10 +157,10 @@ struct FeedbackSheet: View {
         isSending = true
 
         // 1. Save locally as backup
-        var allFeedback = UserDefaults.standard.stringArray(forKey: "laso.feedback.entries") ?? []
+        var allFeedback = UserDefaults.standard.stringArray(forKey: AppKeys.Feedback.entries) ?? []
         let entry = "[\(selectedCategory.rawValue)] \(trimmed) — \(Date().formatted(.dateTime.month().day().year()))"
         allFeedback.append(entry)
-        UserDefaults.standard.set(allFeedback, forKey: "laso.feedback.entries")
+        UserDefaults.standard.set(allFeedback, forKey: AppKeys.Feedback.entries)
 
         // 2. Send to Firebase Firestore (collective feedback)
         let feedbackData: [String: Any] = [

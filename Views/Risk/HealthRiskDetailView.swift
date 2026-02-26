@@ -10,6 +10,13 @@ struct HealthRiskDetailView: View {
             VStack(spacing: 20) {
                 // Hero: risk level gauge
                 riskGaugeSection
+                    .onAppear {
+                        AppAnalytics.shared.trackSectionImpression(section: .riskGaugeSection, screen: .riskDetail, metadata: [
+                            "risk_type": risk.riskType.rawValue,
+                            "risk_level": risk.level,
+                            "risk_grade": risk.riskGrade.displayName
+                        ])
+                    }
 
                 // Description
                 Text(risk.riskType.description)
@@ -21,20 +28,40 @@ struct HealthRiskDetailView: View {
                 // Focus Areas (what to do)
                 if !risk.focusAreas.isEmpty {
                     focusAreasSection
+                        .onAppear {
+                            AppAnalytics.shared.trackSectionImpression(section: .focusAreasSection, screen: .riskDetail, metadata: [
+                                "risk_type": risk.riskType.rawValue,
+                                "area_count": risk.focusAreas.count
+                            ])
+                        }
                 }
 
                 // Contributing Factors
                 contributingFactorsSection
+                    .onAppear {
+                        AppAnalytics.shared.trackSectionImpression(section: .contributingFactorsSection, screen: .riskDetail, metadata: [
+                            "risk_type": risk.riskType.rawValue,
+                            "measured_count": risk.measuredFactors.count,
+                            "total_count": risk.factors.count
+                        ])
+                    }
 
                 // Disclaimer
                 disclaimerSection
+                    .onAppear {
+                        AppAnalytics.shared.trackSectionImpression(section: .disclaimerSection, screen: .riskDetail)
+                    }
             }
             .padding(.bottom)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle(risk.riskType.displayName)
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { AppAnalytics.shared.trackFeatureOpen(.riskDetail, metadata: ["risk": risk.riskType.rawValue]) }
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.riskDetail, metadata: ["risk": risk.riskType.rawValue])
+            AppAnalytics.shared.trackCoreAction(.viewedRiskDetail, screen: .riskDetail)
+            AppAnalytics.shared.trackLastMeaningfulAction(action: "viewed_risk_detail", screen: .riskDetail)
+        }
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.riskDetail, metadata: ["risk": risk.riskType.rawValue]) }
     }
 
@@ -207,11 +234,7 @@ struct HealthRiskDetailView: View {
     // MARK: - Helpers
 
     private func formatValue(_ value: Double, metric: HealthMetric) -> String {
-        let formatted: String
-        if value >= 1000 { formatted = String(format: "%.0f", value) }
-        else if value >= 100 { formatted = String(format: "%.0f", value) }
-        else { formatted = String(format: "%.1f", value) }
-        return "\(formatted) \(metric.unit)"
+        "\(metric.formatValue(value)) \(metric.unit)"
     }
 }
 

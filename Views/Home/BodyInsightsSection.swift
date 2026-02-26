@@ -44,6 +44,7 @@ struct BodyInsightsSection: View {
             VStack(alignment: .leading, spacing: 10) {
                 // Section header
                 HStack(spacing: 8) {
+
                     Text("Today's Briefing")
                         .font(.headline)
 
@@ -76,6 +77,13 @@ struct BodyInsightsSection: View {
                 if smartAction != nil {
                     smartActionCard
                 }
+            }
+            .onAppear {
+                AppAnalytics.shared.trackSectionImpression(section: .todaysBriefingSection, screen: .home, metadata: [
+                    "has_headline": viewModel.headlineInsight != nil ? 1 : 0,
+                    "has_smart_action": smartAction != nil ? 1 : 0,
+                    "total_insights": totalInsightCount
+                ])
             }
         }
     }

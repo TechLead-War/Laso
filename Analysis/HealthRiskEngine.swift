@@ -470,8 +470,6 @@ struct HealthRiskEngine {
     }
 
     private static func formatValue(_ value: Double, metric: HealthMetric) -> String {
-        if value >= 1000 { return String(format: "%.0f", value) }
-        if value >= 100 { return String(format: "%.0f", value) }
-        return String(format: "%.1f", value)
+        metric.formatValue(value)
     }
 }
