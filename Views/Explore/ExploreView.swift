@@ -21,13 +21,13 @@ struct ExploreView: View {
                         } label: {
                             ExploreCategoryRow(
                                 category: category,
-                                score: viewModel.analysisEngine.score(for: category)?.score ?? 100,
+                                score: viewModel.analysisEngine.score(for: category)?.score,
                                 insightCount: viewModel.analysisEngine.insights(for: category).count
                             )
                         }
                         .buttonStyle(.plain)
                         .accessibilityElement(children: .combine)
-                        .accessibilityLabel("\(category.displayName), score \(viewModel.analysisEngine.score(for: category)?.score ?? 100), \(viewModel.analysisEngine.insights(for: category).count) insights")
+                        .accessibilityLabel("\(category.displayName), \(viewModel.analysisEngine.score(for: category).map { "score \($0.score)" } ?? "no data"), \(viewModel.analysisEngine.insights(for: category).count) insights")
                         .accessibilityHint("View \(category.displayName) details")
 
                         if category != HealthCategory.allCases.last {
@@ -52,53 +52,82 @@ struct ExploreView: View {
         }
     }
 
+    private var hasScoreData: Bool {
+        !viewModel.analysisEngine.categoryScores.isEmpty
+    }
+
     private var healthScoreHero: some View {
         VStack(spacing: 12) {
-            HStack(spacing: 20) {
-                HealthScoreRing(
-                    score: viewModel.overallScore.score,
-                    label: "",
-                    size: 100,
-                    lineWidth: 10
-                )
+            if hasScoreData {
+                HStack(spacing: 20) {
+                    HealthScoreRing(
+                        score: viewModel.overallScore.score,
+                        label: "",
+                        size: 100,
+                        lineWidth: 10
+                    )
 
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Your Health Score")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Your Health Score")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
 
-                    Text(grade)
-                        .font(.system(size: 44, weight: .bold, design: .rounded))
-                        .foregroundStyle(gradeColor)
+                        Text(grade)
+                            .font(.system(size: 44, weight: .bold, design: .rounded))
+                            .foregroundStyle(gradeColor)
 
-                    Text(scoreLabel)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                        Text(scoreLabel)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
 
-                Spacer()
-            }
-
-            // Show weakest category to guide improvement
-            if let weakest = weakestCategory {
-                HStack(spacing: 6) {
-                    Image(systemName: weakest.category.systemImageName)
-                        .font(.caption)
-                        .foregroundStyle(weakest.category.color)
-                    Text("Focus on \(weakest.category.displayName) to improve your score")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
                     Spacer()
                 }
-                .padding(10)
-                .background(weakest.category.color.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+
+                // Show weakest category to guide improvement
+                if let weakest = weakestCategory {
+                    HStack(spacing: 6) {
+                        Image(systemName: weakest.category.systemImageName)
+                            .font(.caption)
+                            .foregroundStyle(weakest.category.color)
+                        Text("Focus on \(weakest.category.displayName) to improve your score")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                    }
+                    .padding(10)
+                    .background(weakest.category.color.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+                }
+            } else {
+                // No analysis data yet
+                HStack(spacing: 16) {
+                    Image(systemName: "heart.text.clipboard")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.secondary)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Your Health Score")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+
+                        Text("Collecting data...")
+                            .font(.title3.weight(.medium))
+                            .foregroundStyle(.primary)
+
+                        Text("Wear your watch and sync health data to see your score")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+                }
             }
         }
         .padding(16)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
         .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .healthScoreHero, screen: .explore) }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Health score \(viewModel.overallScore.score) out of 100, grade \(grade), \(scoreLabel)")
+        .accessibilityLabel(hasScoreData ? "Health score \(viewModel.overallScore.score) out of 100, grade \(grade), \(scoreLabel)" : "Health score not yet available")
     }
 
     private var weakestCategory: (category: HealthCategory, score: Int)? {
@@ -141,7 +170,7 @@ struct ExploreView: View {
 /// A single category row in the Explore list
 private struct ExploreCategoryRow: View {
     let category: HealthCategory
-    let score: Int
+    let score: Int?
     let insightCount: Int
 
     var body: some View {
@@ -162,12 +191,19 @@ private struct ExploreCategoryRow: View {
 
             Spacer()
 
-            HealthScoreRing(
-                score: score,
-                label: "",
-                size: 36,
-                lineWidth: 4
-            )
+            if let score {
+                HealthScoreRing(
+                    score: score,
+                    label: "",
+                    size: 36,
+                    lineWidth: 4
+                )
+            } else {
+                Text("—")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.tertiary)
+                    .frame(width: 36, height: 36)
+            }
 
             Image(systemName: "chevron.right")
                 .font(.caption.weight(.semibold))
@@ -178,6 +214,7 @@ private struct ExploreCategoryRow: View {
     }
 
     private var scoreStatus: String {
+        guard let score else { return "No data yet" }
         switch score {
         case 85...100: return "On track"
         case 70..<85: return "Doing well"
@@ -188,6 +225,7 @@ private struct ExploreCategoryRow: View {
     }
 
     private var scoreStatusColor: Color {
+        guard let score else { return .secondary }
         switch score {
         case 80...100: return .green
         case 60..<80: return .secondary

@@ -115,16 +115,17 @@ struct HealthRiskDetailView: View {
                 .padding(.horizontal)
 
             ForEach(risk.factors) { factor in
-                Button {
-                    if factor.status != .unmeasured {
+                if factor.status != .unmeasured {
+                    Button {
                         AppAnalytics.shared.trackBlockTap(title: factor.metric.displayName, type: .riskFactor, screen: .riskDetail)
                         onTapMetric(factor.metric)
+                    } label: {
+                        factorRow(factor)
                     }
-                } label: {
+                    .buttonStyle(.plain)
+                } else {
                     factorRow(factor)
                 }
-                .buttonStyle(.plain)
-                .disabled(factor.status == .unmeasured)
             }
         }
     }

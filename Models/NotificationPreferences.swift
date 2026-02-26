@@ -27,6 +27,12 @@ struct NotificationPreferences: Codable {
     /// Improvement celebration alerts
     var improvementAlertsEnabled: Bool = false
 
+    /// Apple Watch not-worn reminder (triggers after 1 hour without watch data)
+    var watchNotWornReminderEnabled: Bool = true
+
+    /// Low battery reminder (shown once when watch battery drops below 10%)
+    var lowBatteryReminderEnabled: Bool = true
+
     var maxNotificationsPerDay: Int = 4
 
     /// Metrics for which warning alerts are enabled — only the most safety-critical metrics by default
@@ -57,5 +63,6 @@ extension NotificationPreferences {
         case warningAlertMetrics
         case heartRateSpikeAlertsEnabled, heartRateSpikeThreshold, heartRateDropThreshold
         case trendReversalAlertsEnabled, improvementAlertsEnabled
+        case watchNotWornReminderEnabled, lowBatteryReminderEnabled
     }
 }

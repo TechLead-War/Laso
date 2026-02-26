@@ -99,3 +99,221 @@ The 30-Day Transformation
 
 
   Their #1 thing to fix — The single weakest area holding their score down. Not five suggestions. One.
+
+
+================================================================================
+NETWORK OFF / LOW BANDWIDTH — What happens
+================================================================================
+
+Core data (HealthKit) — FULLY OFFLINE
+  - All health data is read from the on-device HealthKit store. Zero network needed.
+  - Live vitals streaming, activity rings, sleep, readiness score, insights, correlations,
+    trend analysis — all work with no internet.
+  - HealthKit anchored object queries and observer queries continue in background.
+
+Firebase Remote Config — GRACEFUL FALLBACK
+  - On first launch with no network: all 13 feature flags, pricing, limits, and system
+    config use hardcoded in-app defaults (RemoteConfigManager.defaults).
+  - After a successful fetch, Firebase SDK caches values locally. Subsequent offline
+    launches use the cached config. Production fetch interval: 1 hour.
+  - fetchError is set but never blocks UI — the app continues with last-known or default values.
+
+Firebase Analytics — QUEUED OFFLINE
+  - Events are queued locally when offline and flushed when connectivity returns.
+  - No data loss. Firebase SDK handles this automatically.
+
+StoreKit 2 (Subscriptions) — PARTIAL
+  - Subscription status is cached on-device by StoreKit. isPro / trial status works offline.
+  - New purchases require network. Purchase buttons will fail gracefully with StoreKit errors.
+  - Transaction listener picks up completed transactions when network returns.
+
+iCloud Key-Value Store (PersistenceManager) — EVENTUAL SYNC
+  - Baselines and preferences are saved to UserDefaults locally first.
+  - iCloud KVS syncs when network is available. NSUbiquitousKeyValueStore handles this.
+  - Cross-device sync is delayed but no data is lost.
+
+Push Notifications — DELAYED
+  - Local notifications (watch reminders, alerts) work fully offline.
+  - Remote push delivery is delayed until connectivity returns.
+
+What does NOT work offline:
+  - Export to web report (ChartJSBundle loads CDN resources — has offline bundle fallback)
+  - First-time Remote Config fetch (falls back to defaults)
+  - New subscription purchases
+  - iCloud sync to other devices
+
+Low bandwidth:
+  - App is essentially unaffected. The only network calls are Firebase config fetch (~2 KB),
+    analytics event flush (~small batches), and StoreKit. No images, no API calls, no streaming.
+  - Firebase SDK has built-in retry with exponential backoff.
+
+
+================================================================================
+SUPPORTED WATCH / WEARABLE COMPANIES
+================================================================================
+
+All devices sync to Apple Health via their companion iOS app. HealthPulse reads from Apple Health.
+
+1.  Apple Watch          — Companion: Apple Health (native, automatic sync)
+2.  iPhone               — Built-in sensors (steps, distance, flights climbed)
+3.  Garmin               — Companion: Garmin Connect
+4.  Fitbit               — Companion: Fitbit
+5.  Oura Ring            — Companion: Oura
+6.  Whoop                — Companion: Whoop
+7.  Samsung Galaxy Watch — Companion: Samsung Health
+8.  Amazfit              — Companion: Zepp (formerly Amazfit)
+9.  Withings             — Companion: Withings Health Mate
+10. Polar                — Companion: Polar Flow
+11. Xiaomi Smart Band    — Companion: Mi Fitness
+12. Google Pixel Watch   — Companion: Google Fit
+13. Noise                — Companion: NoiseFit          [NEW]
+14. boAt                 — Companion: boAt Wearables    [NEW]
+15. Fire-Boltt           — Companion: FireBoltt          [NEW]
+16. Huawei Watch         — Companion: Huawei Health      [NEW]
+17. COROS                — Companion: COROS              [NEW]
+18. Suunto               — Companion: Suunto             [NEW]
+
+Total: 18 supported devices (17 wearables + iPhone built-in sensors)
+
+Notes on newly added watches:
+  - Noise, boAt, Fire-Boltt: Popular Indian wearable brands. Apple Health sync confirmed
+    but limited — typically syncs HR, steps, calories, SpO2, basic sleep. No sleep stages,
+    no HRV. Fire-Boltt has known duplicate-data issues when syncing.
+  - Huawei: Full-featured Apple Health sync via Huawei Health app. Syncs HR, HRV, sleep
+    stages, SpO2, steps, calories, workouts.
+  - COROS: Sports/running watch. Strong Apple Health sync — HR, HRV, sleep stages, VO2 Max,
+    SpO2, steps, workouts. Popular with runners and triathletes.
+  - Suunto: Outdoor/endurance watch. Good Apple Health sync — HR, HRV, sleep stages, VO2 Max,
+    steps, workouts.
+
+
+================================================================================
+iOS VERSIONS / watchOS VERSIONS COMPATIBILITY
+================================================================================
+
+HealthPulse App
+  - Minimum deployment target: iOS 17.0
+  - Recommended: iOS 17.0+
+  - Uses: @Observable, .sensoryFeedback, .contentTransition(.numericText()),
+    Charts framework, StoreKit 2, HealthKit sleep stages API
+
+Apple Watch (native HealthKit sync)
+  - Apple Watch Series 3          — watchOS 8 (max), iOS 15+      [limited: no SpO2, no temp, no sleep stages]
+  - Apple Watch SE (1st gen)      — watchOS 10 (max), iOS 17+     [no SpO2, no temp]
+  - Apple Watch Series 4          — watchOS 11, iOS 17+           [no SpO2, no temp]
+  - Apple Watch Series 5          — watchOS 11, iOS 17+           [no temp]
+  - Apple Watch SE (2nd gen)      — watchOS 11, iOS 17+           [no SpO2, no temp]
+  - Apple Watch Series 6          — watchOS 11, iOS 17+           [has SpO2, no temp]
+  - Apple Watch Series 7          — watchOS 11, iOS 17+           [has SpO2, no temp]
+  - Apple Watch Series 8          — watchOS 11, iOS 17+           [has SpO2 + wrist temp]
+  - Apple Watch SE (3rd gen)      — watchOS 11, iOS 17+           [no SpO2, no temp]
+  - Apple Watch Ultra              — watchOS 11, iOS 17+           [has SpO2 + wrist temp + depth]
+  - Apple Watch Series 9          — watchOS 11, iOS 17+           [has SpO2 + wrist temp + double tap]
+  - Apple Watch Ultra 2            — watchOS 11, iOS 17+           [has SpO2 + wrist temp + depth + double tap]
+  - Apple Watch Series 10         — watchOS 11, iOS 18+           [has SpO2 + wrist temp + sleep apnea detection]
+
+  Note: Apple Watch Series 3 cannot run iOS 17 companion — effectively unsupported by HealthPulse.
+  Minimum practical watch: Apple Watch SE (1st gen) or Series 4 with iOS 17.
+
+Third-Party Watches (sync via companion app → Apple Health → HealthPulse)
+  - These don't run watchOS. Their companion iOS apps write to HealthKit.
+  - Minimum iOS for companion apps:
+    - Garmin Connect:       iOS 16+
+    - Fitbit:               iOS 16+
+    - Oura:                 iOS 16+
+    - Whoop:                iOS 16+
+    - Samsung Health:       iOS 14+
+    - Zepp (Amazfit):       iOS 14+
+    - Withings Health Mate: iOS 15+
+    - Polar Flow:           iOS 16+
+    - Mi Fitness (Xiaomi):  iOS 14+
+    - Google Fit:           iOS 16+
+    - NoiseFit:             iOS 14+
+    - boAt Wearables:       iOS 14+
+    - FireBoltt:            iOS 15+
+    - Huawei Health:        iOS 14+
+    - COROS:                iOS 15+
+    - Suunto:               iOS 15+
+
+  Since HealthPulse requires iOS 17.0, all companion apps are compatible.
+  Users just need iOS 17+ on their iPhone — the watch firmware is independent.
+
+
+================================================================================
+MISSING SENSOR / NO WATCH — Current App Behavior
+================================================================================
+
+When a watch doesn't have a particular sensor, or when the user doesn't own
+a watch at all, HealthKit simply returns no samples for that metric.
+
+Current behavior per metric when data is nil/missing:
+
+  Live Tab (LiveView):
+    Heart Rate        → Shows "Syncing" placeholder, no BPM displayed
+    SpO2 / Resp Rate  → Shows "Syncing" in the vital card
+    HR Zone            → Defaults to "Rest" zone, zone bar at 0%
+    Session stats      → Min/Avg/Max row hidden entirely
+    Today's HR range   → Row hidden entirely
+    Activity rings     → Shows 0/goal for all rings (or "No activity yet" before 10 AM)
+    Blood Pressure     → Card hidden entirely (only shows when data exists)
+    Body Temperature   → Card hidden entirely (only shows when data exists)
+    Last Workout       → Card hidden entirely if no recent workout
+    All vitals stale   → "Wear Your Apple Watch" prompt replaces hero card
+
+  Home Tab (HomeView):
+    Readiness Score    → Recovery card hidden when score is nil (needs both RHR + HRV)
+    Readiness stale    → "Recovery Unavailable" card shown when data > 24h old
+    Stress Level       → Shows "No Data" when HRV or RHR is nil
+    Sleep              → Sleep card / insights hidden when no sleep data
+    Smart Action       → Hidden when no real data backs it
+
+  Vital Status labels:
+    .unknown           → "No Data" (gray dot)
+    .normal            → "Normal" (green dot)
+    .elevated          → "Elevated" (orange dot)
+    .low               → "Low" (yellow dot)
+    .critical          → "Critical" (red dot)
+
+  Dashboard / Insights:
+    - Analysis engine skips metrics with insufficient data points
+    - Baselines require minimum 7 days of data to compute
+    - Correlations require both metrics to have overlapping data
+    - Insights are only generated for metrics with enough history
+
+What this means per watch type:
+
+  Apple Watch (all sensors)
+    → Full experience. All metrics, live streaming, readiness, everything works.
+
+  Garmin / Huawei / COROS / Suunto / Polar / Oura / Whoop (most sensors)
+    → Near-full experience. HRV, sleep stages, SpO2 all sync. Missing: live
+      streaming (data arrives in batches via companion app, not real-time).
+      Live tab may show "Waiting for data" more often.
+
+  Noise / boAt / Fire-Boltt (basic sensors)
+    → Limited experience. Gets: HR, steps, SpO2, basic sleep duration, calories.
+      Missing: HRV, sleep stages, respiratory rate, wrist temperature.
+      Impact: No readiness score (needs HRV + RHR), no stress level, no sleep
+      stage breakdown, simpler insights.
+
+  Fitbit / Samsung / Amazfit / Xiaomi / Google Pixel Watch (mid-range sync)
+    → Good experience. HR, sleep stages, steps, SpO2, workouts.
+      Some may lack HRV depending on model/app version.
+
+  iPhone only (no watch)
+    → Minimal: steps, distance, flights climbed, walking speed.
+      No heart rate, sleep, SpO2, readiness, or live vitals.
+      Home tab shows data but most cards are hidden. Live tab shows
+      "Waiting for Live Data" empty state.
+
+  No device at all
+    → Empty state on Home tab: "Connect Your Health Data" with setup guide.
+      Live tab: "Waiting for Live Data" with tips to pair a watch.
+
+Critical metrics and their fallback:
+  - Readiness Score: requires BOTH HRV + RHR. If either missing → score is nil, card hidden.
+  - Stress Level: same as readiness — derived from HRV + RHR.
+  - Sleep Quality: requires sleep samples. No samples → sleep section hidden.
+  - Heart Rate Zone: requires HR. No HR → defaults to "Rest" zone.
+  - Activity Rings: always shown (defaults to 0/goal), since Apple Health
+    always has step/calorie data even from iPhone alone.

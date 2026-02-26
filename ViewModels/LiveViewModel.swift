@@ -34,7 +34,9 @@ final class LiveViewModel {
     // MARK: - Latest Resting / Recovery Values
 
     var latestRestingHeartRate: Double?
+    var latestRestingHeartRateTimestamp: Date?
     var latestHRV: Double?
+    var latestHRVTimestamp: Date?
     var latestHeartRateRecovery: Double?
 
     // MARK: - Blood Pressure
@@ -222,14 +224,45 @@ final class LiveViewModel {
         }
     }
 
-    // MARK: - Data Availability
+    // MARK: - Data Availability & Freshness
 
     var hasAnyLiveData: Bool {
         currentHeartRate != nil || currentBloodOxygen != nil || currentRespiratoryRate != nil
     }
 
+    /// True only if we have live vitals AND they were recorded recently (within 10 minutes)
+    var hasFreshLiveData: Bool {
+        let tenMinutes: TimeInterval = 10 * 60
+        let now = Date()
+        if let ts = heartRateTimestamp, now.timeIntervalSince(ts) < tenMinutes { return true }
+        if let ts = bloodOxygenTimestamp, now.timeIntervalSince(ts) < tenMinutes { return true }
+        if let ts = respiratoryRateTimestamp, now.timeIntervalSince(ts) < tenMinutes { return true }
+        return false
+    }
+
+    /// True if vital data exists but is older than 10 minutes
+    var isVitalDataStale: Bool {
+        hasAnyLiveData && !hasFreshLiveData
+    }
+
+    /// The most recent vital timestamp across all vitals
+    var mostRecentVitalTimestamp: Date? {
+        [heartRateTimestamp, bloodOxygenTimestamp, respiratoryRateTimestamp]
+            .compactMap { $0 }
+            .max()
+    }
+
     var hasAnyActivityData: Bool {
         todaySteps > 0 || todayActiveCalories > 0 || todayExerciseMinutes > 0
+    }
+
+    /// True if readiness inputs (RHR + HRV) were recorded within the last 24 hours
+    var isReadinessDataFresh: Bool {
+        let twentyFourHours: TimeInterval = 24 * 3600
+        let now = Date()
+        let rhrFresh = latestRestingHeartRateTimestamp.map { now.timeIntervalSince($0) < twentyFourHours } ?? false
+        let hrvFresh = latestHRVTimestamp.map { now.timeIntervalSince($0) < twentyFourHours } ?? false
+        return rhrFresh && hrvFresh
     }
 
     // MARK: - Activity Ring Progress
@@ -528,15 +561,17 @@ final class LiveViewModel {
     // MARK: - Latest Daily Values
 
     func fetchLatestDailyValues() {
-        fetchLatestSample(.restingHeartRate, unit: HKUnit.count().unitDivided(by: .minute())) { [weak self] value in
+        fetchLatestSampleWithDate(.restingHeartRate, unit: HKUnit.count().unitDivided(by: .minute()), maxAge: 48 * 3600) { [weak self] value, date in
             Task { @MainActor in
                 self?.latestRestingHeartRate = value
+                self?.latestRestingHeartRateTimestamp = date
                 self?.computeReadinessScore()
             }
         }
-        fetchLatestSample(.heartRateVariabilitySDNN, unit: HKUnit.secondUnit(with: .milli)) { [weak self] value in
+        fetchLatestSampleWithDate(.heartRateVariabilitySDNN, unit: HKUnit.secondUnit(with: .milli), maxAge: 48 * 3600) { [weak self] value, date in
             Task { @MainActor in
                 self?.latestHRV = value
+                self?.latestHRVTimestamp = date
                 self?.computeReadinessScore()
             }
         }
@@ -558,8 +593,11 @@ final class LiveViewModel {
     func fetchLatestBodyTemperature() {
         let type = HKQuantityType(.bodyTemperature)
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+        // Only show body temp from the last 24 hours
+        let cutoff = Date().addingTimeInterval(-24 * 3600)
+        let predicate = HKQuery.predicateForSamples(withStart: cutoff, end: Date(), options: .strictStartDate)
 
-        let query = HKSampleQuery(sampleType: type, predicate: nil, limit: 1, sortDescriptors: [sort]) { [weak self] _, results, _ in
+        let query = HKSampleQuery(sampleType: type, predicate: predicate, limit: 1, sortDescriptors: [sort]) { [weak self] _, results, _ in
             if let sample = results?.first as? HKQuantitySample {
                 let value = sample.quantity.doubleValue(for: .degreeCelsius())
                 let date = sample.startDate
@@ -601,10 +639,13 @@ final class LiveViewModel {
 
     func fetchLatestWorkout() {
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+        // Only show workouts from the last 7 days
+        let cutoff = Date().addingTimeInterval(-7 * 24 * 3600)
+        let predicate = HKQuery.predicateForSamples(withStart: cutoff, end: Date(), options: .strictStartDate)
 
         let query = HKSampleQuery(
             sampleType: HKWorkoutType.workoutType(),
-            predicate: nil,
+            predicate: predicate,
             limit: 1,
             sortDescriptors: [sort]
         ) { [weak self] _, results, _ in
@@ -767,14 +808,17 @@ final class LiveViewModel {
 
     // MARK: - Fallback Latest-Sample Fetches
 
-    /// Fetches the most recent sample with no time window, returning both value and date
-    private func fetchLatestSampleWithDate(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit, completion: @escaping (Double, Date) -> Void) {
+    /// Fetches the most recent sample within a time window, returning both value and date.
+    /// Only returns data if a sample exists within `maxAge` seconds from now.
+    private func fetchLatestSampleWithDate(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit, maxAge: TimeInterval, completion: @escaping (Double, Date) -> Void) {
         let type = HKQuantityType(identifier)
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+        let cutoff = Date().addingTimeInterval(-maxAge)
+        let predicate = HKQuery.predicateForSamples(withStart: cutoff, end: Date(), options: .strictStartDate)
 
         let query = HKSampleQuery(
             sampleType: type,
-            predicate: nil,
+            predicate: predicate,
             limit: 1,
             sortDescriptors: [sort]
         ) { _, results, _ in
@@ -790,7 +834,8 @@ final class LiveViewModel {
     private func fetchFallbackHeartRate() {
         guard currentHeartRate == nil else { return }
         let unit = HKUnit.count().unitDivided(by: .minute())
-        fetchLatestSampleWithDate(.heartRate, unit: unit) { [weak self] value, date in
+        // Only show heart rate from the last 1 hour — anything older is not "live"
+        fetchLatestSampleWithDate(.heartRate, unit: unit, maxAge: 3600) { [weak self] value, date in
             Task { @MainActor in
                 guard self?.currentHeartRate == nil else { return }
                 self?.currentHeartRate = value
@@ -802,7 +847,8 @@ final class LiveViewModel {
 
     private func fetchFallbackBloodOxygen() {
         guard currentBloodOxygen == nil else { return }
-        fetchLatestSampleWithDate(.oxygenSaturation, unit: .percent()) { [weak self] value, date in
+        // SpO2 is measured less frequently — allow up to 6 hours
+        fetchLatestSampleWithDate(.oxygenSaturation, unit: .percent(), maxAge: 6 * 3600) { [weak self] value, date in
             Task { @MainActor in
                 guard self?.currentBloodOxygen == nil else { return }
                 self?.currentBloodOxygen = value * 100
@@ -815,7 +861,8 @@ final class LiveViewModel {
     private func fetchFallbackRespiratoryRate() {
         guard currentRespiratoryRate == nil else { return }
         let unit = HKUnit.count().unitDivided(by: .minute())
-        fetchLatestSampleWithDate(.respiratoryRate, unit: unit) { [weak self] value, date in
+        // Respiratory rate measured during sleep — allow up to 12 hours
+        fetchLatestSampleWithDate(.respiratoryRate, unit: unit, maxAge: 12 * 3600) { [weak self] value, date in
             Task { @MainActor in
                 guard self?.currentRespiratoryRate == nil else { return }
                 self?.currentRespiratoryRate = value
@@ -827,13 +874,16 @@ final class LiveViewModel {
 
     // MARK: - Query Helpers
 
+    /// Fetches the most recent sample within the last 48 hours for daily values (RHR, HRV, BP)
     private func fetchLatestSample(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit, completion: @escaping (Double) -> Void) {
         let type = HKQuantityType(identifier)
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+        let cutoff = Date().addingTimeInterval(-48 * 3600)
+        let predicate = HKQuery.predicateForSamples(withStart: cutoff, end: Date(), options: .strictStartDate)
 
         let query = HKSampleQuery(
             sampleType: type,
-            predicate: nil,
+            predicate: predicate,
             limit: 1,
             sortDescriptors: [sort]
         ) { _, results, _ in

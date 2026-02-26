@@ -329,9 +329,42 @@ struct HomeView: View {
     private var todaySection: some View {
         VStack(spacing: 12) {
             if let score = liveViewModel.readinessScore {
-                recoveryCard(score: score)
+                if liveViewModel.isReadinessDataFresh {
+                    recoveryCard(score: score)
+                } else {
+                    staleRecoveryCard
+                }
             }
         }
+    }
+
+    private var staleRecoveryCard: some View {
+        HStack(spacing: 14) {
+            Image(systemName: "exclamationmark.applewatch")
+                .font(.title2)
+                .foregroundStyle(.orange)
+                .frame(width: 44, height: 44)
+                .background(.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Recovery Unavailable")
+                    .font(.subheadline.weight(.semibold))
+
+                Text("Wear your Apple Watch overnight to update your readiness score.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+
+            Spacer()
+        }
+        .padding()
+        .background(.background, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(.orange.opacity(0.15), lineWidth: 0.5)
+        )
+        .padding(.horizontal)
     }
 
     // MARK: - Time-of-Day Helpers
@@ -371,13 +404,17 @@ struct HomeView: View {
 
                 HStack(spacing: 4) {
                     Circle()
-                        .fill(.green)
+                        .fill(liveViewModel.hasFreshLiveData ? .green : .orange)
                         .frame(width: 6, height: 6)
-                        .scaleEffect(livePulse ? 1.0 : 0.5)
-                        .opacity(livePulse ? 1.0 : 0.4)
+                        .scaleEffect(liveViewModel.hasFreshLiveData && livePulse ? 1.0 : 0.5)
+                        .opacity(liveViewModel.hasFreshLiveData && livePulse ? 1.0 : 0.4)
                         .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: livePulse)
 
-                    if let lastRefresh = viewModel.lastRefresh {
+                    if let rhrTs = liveViewModel.latestRestingHeartRateTimestamp {
+                        Text(rhrTs, style: .relative)
+                            .font(.system(size: 9, weight: .medium).monospacedDigit())
+                            .foregroundStyle(.tertiary)
+                    } else if let lastRefresh = viewModel.lastRefresh {
                         Text(lastRefresh, style: .relative)
                             .font(.system(size: 9, weight: .medium).monospacedDigit())
                             .foregroundStyle(.tertiary)

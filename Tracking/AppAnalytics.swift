@@ -172,6 +172,29 @@ final class AppAnalytics {
 
         setUserProperty("streak_days", value: "\(session.streakDays)")
         setUserProperty("country", value: Locale.current.region?.identifier ?? "unknown")
+        setUserProperty("price_tier", value: SubscriptionConfig.currentTier.rawValue)
+    }
+
+    /// Update subscription-related user properties. Call after subscription status changes.
+    func updateSubscriptionProperties(status: SubscriptionManager.Status) {
+        let statusLabel: String
+        let userTier: String
+        switch status {
+        case .trial:
+            statusLabel = "trial"
+            userTier = "free"
+        case .subscribed:
+            statusLabel = "pro"
+            userTier = "pro"
+        case .expired:
+            statusLabel = "expired"
+            userTier = "free"
+        case .unknown:
+            statusLabel = "unknown"
+            userTier = "free"
+        }
+        setUserProperty("subscription_status", value: statusLabel)
+        setUserProperty("user_tier", value: userTier)
     }
 
     /// Call when app enters background.

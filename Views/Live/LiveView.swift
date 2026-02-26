@@ -19,6 +19,13 @@ struct LiveView: View {
                         .onAppear {
                             AppAnalytics.shared.trackEmptyStateShown(screen: .live, stateType: "waiting_for_watch")
                         }
+                } else if viewModel.isVitalDataStale {
+                    // Stale vitals — show wear-your-watch prompt with last known readings
+                    staleVitalsPrompt
+                    activityRingsSection
+                        .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .activityRingsSection, screen: .live) }
+                    lastWorkoutCard
+                    statusFooter
                 } else {
                     heartRateHeroCard
                         .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .heartRateHeroCard, screen: .live) }
@@ -61,6 +68,110 @@ struct LiveView: View {
             previousZone = newZone
         }
         .sensoryFeedback(.success, trigger: viewModel.hasAnyLiveData)
+    }
+
+    // MARK: - Stale Vitals Prompt
+
+    private var staleVitalsPrompt: some View {
+        VStack(spacing: 16) {
+            // Wear your watch CTA
+            VStack(spacing: 12) {
+                Image(systemName: "exclamationmark.applewatch")
+                    .font(.system(size: 36))
+                    .foregroundStyle(.orange)
+
+                Text("Wear Your Apple Watch")
+                    .font(.title3.weight(.semibold))
+
+                Text("Your vitals are out of date. Put on your Apple Watch to resume live tracking.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+            }
+            .padding(.vertical, 20)
+            .frame(maxWidth: .infinity)
+            .background(.orange.opacity(0.06), in: RoundedRectangle(cornerRadius: 16))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .strokeBorder(.orange.opacity(0.15), lineWidth: 0.5)
+            )
+            .padding(.horizontal)
+
+            // Last known readings — compact muted row
+            if viewModel.hasAnyLiveData {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        Text("Last Known Readings")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    HStack(spacing: 16) {
+                        if let hr = viewModel.currentHeartRate {
+                            staleReadingPill(
+                                icon: "heart.fill",
+                                color: .red,
+                                value: "\(Int(hr))",
+                                unit: "bpm",
+                                timestamp: viewModel.heartRateTimestamp
+                            )
+                        }
+                        if let spo2 = viewModel.currentBloodOxygen {
+                            staleReadingPill(
+                                icon: "drop.fill",
+                                color: .blue,
+                                value: "\(Int(spo2))",
+                                unit: "%",
+                                timestamp: viewModel.bloodOxygenTimestamp
+                            )
+                        }
+                        if let rr = viewModel.currentRespiratoryRate {
+                            staleReadingPill(
+                                icon: "wind",
+                                color: .teal,
+                                value: "\(Int(rr))",
+                                unit: "br/m",
+                                timestamp: viewModel.respiratoryRateTimestamp
+                            )
+                        }
+                    }
+                }
+                .padding()
+                .background(.background, in: RoundedRectangle(cornerRadius: 14))
+                .padding(.horizontal)
+            }
+        }
+        .onAppear {
+            AppAnalytics.shared.trackEmptyStateShown(screen: .live, stateType: "stale_vitals")
+        }
+    }
+
+    private func staleReadingPill(icon: String, color: Color, value: String, unit: String, timestamp: Date?) -> some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.caption2)
+                    .foregroundStyle(color.opacity(0.6))
+                HStack(alignment: .firstTextBaseline, spacing: 1) {
+                    Text(value)
+                        .font(.subheadline.weight(.semibold).monospacedDigit())
+                        .foregroundStyle(.secondary)
+                    Text(unit)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            if let ts = timestamp {
+                Text(ts, style: .relative)
+                    .font(.system(size: 9))
+                    .foregroundStyle(.quaternary)
+            }
+        }
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Waiting for Data (Empty State)
@@ -124,9 +235,9 @@ struct LiveView: View {
 
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(viewModel.hasAnyLiveData ? .green : .gray)
+                        .fill(viewModel.hasFreshLiveData ? .green : (viewModel.isVitalDataStale ? .orange : .gray))
                         .frame(width: 8, height: 8)
-                        .shadow(color: viewModel.hasAnyLiveData ? .green.opacity(0.6) : .clear, radius: 4)
+                        .shadow(color: viewModel.hasFreshLiveData ? .green.opacity(0.6) : .clear, radius: 4)
 
                     Text(liveStatusLabel)
                         .font(.caption)
@@ -139,15 +250,17 @@ struct LiveView: View {
             Image(systemName: "applewatch.radiowaves.left.and.right")
                 .font(.title2)
                 .foregroundStyle(.secondary)
-                .symbolEffect(.pulse, isActive: viewModel.hasAnyLiveData)
+                .symbolEffect(.pulse, isActive: viewModel.hasFreshLiveData)
         }
         .padding(.horizontal)
         .padding(.top, 16)
     }
 
     private var liveStatusLabel: String {
-        if viewModel.hasAnyLiveData {
+        if viewModel.hasFreshLiveData {
             return "Streaming"
+        } else if viewModel.isVitalDataStale {
+            return "Data is stale — wear your watch"
         } else if viewModel.isStreaming {
             return "Waiting for watch"
         } else {
@@ -496,11 +609,36 @@ struct LiveView: View {
 
     // MARK: - Activity Rings
 
+    private var isActivityAllZeros: Bool {
+        viewModel.todayActiveCalories == 0 && viewModel.todayExerciseMinutes == 0 && viewModel.todayStandHours == 0
+    }
+
     private var activityRingsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Activity Rings")
                 .font(.headline)
                 .padding(.horizontal)
+
+            if isActivityAllZeros && Calendar.current.component(.hour, from: Date()) < 10 {
+                HStack(spacing: 12) {
+                    Image(systemName: "figure.stand")
+                        .font(.title2)
+                        .foregroundStyle(.secondary)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("No activity yet")
+                            .font(.subheadline.weight(.medium))
+                        Text("Your rings will fill as you move throughout the day.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+                }
+                .padding()
+                .background(.background, in: RoundedRectangle(cornerRadius: 16))
+                .padding(.horizontal)
+            } else {
 
             HStack(spacing: 16) {
                 // Triple ring
@@ -551,6 +689,8 @@ struct LiveView: View {
                 quickStatPill(icon: "figure.stairs", value: "\(Int(viewModel.todayFlightsClimbed))", label: "Flights", color: .purple)
             }
             .padding(.horizontal)
+
+            } // end else (has activity)
         }
     }
 

@@ -15,18 +15,28 @@ struct BodyInsightsSection: View {
         viewModel.analysisEngine.insights.first { $0.category == .sleepPerformance }
     }
 
-    private var smartAction: DashboardViewModel.SmartAction {
-        viewModel.smartDailyAction(liveVM: liveVM)
+    private var smartAction: DashboardViewModel.SmartAction? {
+        // Only show if there's real, fresh data driving it (not generic defaults or stale readings)
+        guard liveVM.readinessScore != nil || liveVM.stressLevel != nil ||
+              liveVM.hasSleepData || liveVM.todayExerciseMinutes > 0 else {
+            return nil
+        }
+        // Don't show readiness/stress-based actions when underlying data is stale
+        guard liveVM.isReadinessDataFresh || liveVM.hasSleepData || liveVM.todayExerciseMinutes > 0 else {
+            return nil
+        }
+        return viewModel.smartDailyAction(liveVM: liveVM)
     }
 
     private var totalInsightCount: Int {
         viewModel.focusedInsights.count
     }
 
-    /// Section shows if any sub-component has data
+    /// Section shows if there's a headline insight or meaningful data to surface
     private var hasAnyContent: Bool {
+        viewModel.headlineInsight != nil ||
         liveVM.hasSleepData ||
-        true // SmartAction always renders
+        liveVM.readinessScore != nil
     }
 
     var body: some View {
@@ -62,8 +72,10 @@ struct BodyInsightsSection: View {
                     headlineInsightCard(headline)
                 }
 
-                // 2. Smart daily action
-                smartActionCard
+                // 2. Smart daily action (only when driven by real data)
+                if smartAction != nil {
+                    smartActionCard
+                }
             }
         }
     }
@@ -92,51 +104,54 @@ struct BodyInsightsSection: View {
 
     // MARK: - Smart Action Card
 
+    @ViewBuilder
     private var smartActionCard: some View {
-        HStack(spacing: 12) {
-            Image(systemName: smartAction.icon)
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(.yellow)
-                .frame(width: 36, height: 36)
-                .background(
-                    LinearGradient(
-                        colors: [.yellow.opacity(0.2), .orange.opacity(0.15)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    in: Circle()
-                )
+        if let action = smartAction {
+            HStack(spacing: 12) {
+                Image(systemName: action.icon)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(.yellow)
+                    .frame(width: 36, height: 36)
+                    .background(
+                        LinearGradient(
+                            colors: [.yellow.opacity(0.2), .orange.opacity(0.15)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        in: Circle()
+                    )
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(smartAction.title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.primary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(action.title)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
 
-                Text(smartAction.subtitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
+                    Text(action.subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+
+                Spacer()
             }
-
-            Spacer()
-        }
-        .padding(12)
-        .background(
-            LinearGradient(
-                colors: [.yellow.opacity(0.06), .orange.opacity(0.04)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ),
-            in: RoundedRectangle(cornerRadius: 14)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .strokeBorder(.yellow.opacity(0.15), lineWidth: 0.5)
-        )
-        .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
-        .padding(.horizontal)
-        .onAppear {
-            AppAnalytics.shared.trackCardImpression(cardType: .smartAction, screen: .home)
+            .padding(12)
+            .background(
+                LinearGradient(
+                    colors: [.yellow.opacity(0.06), .orange.opacity(0.04)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ),
+                in: RoundedRectangle(cornerRadius: 14)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .strokeBorder(.yellow.opacity(0.15), lineWidth: 0.5)
+            )
+            .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
+            .padding(.horizontal)
+            .onAppear {
+                AppAnalytics.shared.trackCardImpression(cardType: .smartAction, screen: .home)
+            }
         }
     }
 

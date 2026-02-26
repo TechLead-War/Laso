@@ -112,6 +112,7 @@ struct ContentView: View {
         .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .active && oldPhase != .active {
                 AppAnalytics.shared.trackSessionStart()
+                WatchMonitor.shared.evaluateWatchStatus()
             } else if newPhase == .background {
                 AppAnalytics.shared.trackSessionEnd()
             }

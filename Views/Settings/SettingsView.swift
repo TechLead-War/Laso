@@ -117,6 +117,27 @@ struct SettingsView: View {
                     Text("Get notified when your heart rate goes above or below your thresholds while not exercising.")
                 }
 
+                // Apple Watch Reminders
+                Section {
+                    Toggle("Watch Not Worn Reminder", isOn: $preferences.watchNotWornReminderEnabled)
+                    if preferences.watchNotWornReminderEnabled {
+                        Text("Get notified if your Apple Watch hasn't recorded data for over 1 hour.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Toggle("Low Battery Reminder", isOn: $preferences.lowBatteryReminderEnabled)
+                    if preferences.lowBatteryReminderEnabled {
+                        Text("Get a one-time alert when your watch battery drops below 10%.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } header: {
+                    Label("Apple Watch", systemImage: "applewatch")
+                } footer: {
+                    Text("These reminders help you keep your watch on and charged so you never miss health data.")
+                }
+
                 // General Alerts
                 Section("Alerts") {
                     Toggle("Critical Alerts", isOn: $preferences.criticalAlertsEnabled)
@@ -249,6 +270,14 @@ struct SettingsView: View {
             .onChange(of: preferences.improvementAlertsEnabled) { _, newValue in
                 savePreferences()
                 AppAnalytics.shared.trackSettingChanged(name: "improvement_alerts_enabled", value: newValue)
+            }
+            .onChange(of: preferences.watchNotWornReminderEnabled) { _, newValue in
+                savePreferences()
+                AppAnalytics.shared.trackSettingChanged(name: "watch_not_worn_reminder_enabled", value: newValue)
+            }
+            .onChange(of: preferences.lowBatteryReminderEnabled) { _, newValue in
+                savePreferences()
+                AppAnalytics.shared.trackSettingChanged(name: "low_battery_reminder_enabled", value: newValue)
             }
             .onChange(of: preferences.warningAlertMetrics) { _, newValue in
                 savePreferences()

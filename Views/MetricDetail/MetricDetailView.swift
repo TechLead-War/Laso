@@ -6,12 +6,25 @@ struct MetricDetailView: View {
     let viewModel: MetricDetailViewModel
     var deviceSourceManager: DeviceSourceManager? = nil
 
+    @State private var autoExpandedRange: Int?
+
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
                 if viewModel.chartSamples.isEmpty {
                     noDataView
                 } else {
+                    // Notify user if time range was auto-expanded
+                    if let expandedTo = autoExpandedRange {
+                        HStack(spacing: 6) {
+                            Image(systemName: "info.circle")
+                                .font(.caption)
+                            Text("Showing \(expandedTo)-day range — no data found in the last 30 days")
+                                .font(.caption)
+                        }
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal)
+                    }
                     // Current Value Header
                     headerSection
 
@@ -26,6 +39,7 @@ struct MetricDetailView: View {
                         set: { newRange in
                             let oldRange = viewModel.selectedTimeRange
                             viewModel.selectedTimeRange = newRange
+                            autoExpandedRange = nil
                             if oldRange != newRange {
                                 AppAnalytics.shared.trackTimeRangeChanged(
                                     screen: .metricDetail,
@@ -61,11 +75,14 @@ struct MetricDetailView: View {
         .navigationTitle(viewModel.metric.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            // If default 30-day range is empty, try broader ranges
+            // If default 30-day range is empty, try broader ranges and notify the user
             if viewModel.chartSamples.isEmpty {
                 for range in [90, 180, 365] {
                     viewModel.selectedTimeRange = range
-                    if !viewModel.chartSamples.isEmpty { break }
+                    if !viewModel.chartSamples.isEmpty {
+                        autoExpandedRange = range
+                        break
+                    }
                 }
             }
             AppAnalytics.shared.trackFeatureOpen(.metricDetail, metadata: ["metric": viewModel.metric.rawValue])

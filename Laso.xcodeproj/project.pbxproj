@@ -67,6 +67,10 @@
 		92BC085F0F66295F8221BE88 /* MetricChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 386D956FFA31A24C5784E847 /* MetricChartView.swift */; };
 		96BBA163882B87B9A552E1E7 /* SupportedDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 391756FFDD3E57F3DC5BAB6B /* SupportedDevice.swift */; };
 		9CD90616A76A0279E781C75B /* MetricSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3826F990FCA6BA8F63C2D597 /* MetricSample.swift */; };
+		A1B2C3D4E5F6071812345002 /* SubscriptionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071812345001 /* SubscriptionManager.swift */; };
+		A1B2C3D4E5F6071812345004 /* SubscriptionConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071812345003 /* SubscriptionConfig.swift */; };
+		A1B2C3D4E5F6071812345006 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071812345005 /* PaywallView.swift */; };
+		A1B2C3D4E5F6071812345009 /* RemoteConfigManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071812345008 /* RemoteConfigManager.swift */; };
 		A1D93F47B8E62C10D4F5A7B2 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7B42A19F3D18C05A92E6D4F /* OnboardingView.swift */; };
 		A2EBB41C493BD4BCF809BA7A /* WorkoutEffectivenessAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD947BF688F7B5F398D7E9FD /* WorkoutEffectivenessAnalyzer.swift */; };
 		A3D387E5C8702DB2CEDB690D /* AlertEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D5096C22B6F3AB852F5E2EF /* AlertEvaluator.swift */; };
@@ -96,6 +100,7 @@
 		D9B616C68A9D620FCD634DD6 /* DailySummaryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25AA9F4078B6E2B0ABE0ACC5 /* DailySummaryScheduler.swift */; };
 		DD665ED61DC41E5020E97D74 /* DataSourceBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = E05DC7C028B652C5A152BCDB /* DataSourceBadge.swift */; };
 		DF2F2BDB18160AE458E6911A /* HealthRiskEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52C5FA0AC1DF45B09601C7C0 /* HealthRiskEngine.swift */; };
+		E1A2B3C4D5E6F7081234ABCE /* WatchMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A2B3C4D5E6F7081234ABCD /* WatchMonitor.swift */; };
 		ED365DC524595A3E75820B9B /* AppTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38C8B1B2721A86DF6305D5BE /* AppTab.swift */; };
 		F0718385055A5C796633EE10 /* ConnectedDeviceInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5827B420D1FD0325FE028282 /* ConnectedDeviceInfo.swift */; };
 		F3ADAAE50EB935144DD0AED0 /* DeviceDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 665F4B99E035582C345F6F71 /* DeviceDetailView.swift */; };
@@ -103,6 +108,7 @@
 		F50F037FBB87C39594B74063 /* HealthCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13A5CE433514CE2A9BA47EEB /* HealthCategory.swift */; };
 		F6025BFDFF8FE702319AE9A7 /* HealthPulseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBA4A8AA9CB8C8329773FDB /* HealthPulseApp.swift */; };
 		FA12345678ABCDEF12345602 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = FA12345678ABCDEF12345601 /* FirebaseAnalytics */; };
+		FA12345678ABCDEF12345612 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = FA12345678ABCDEF12345611 /* FirebaseRemoteConfig */; };
 		FD40DB932CA77AD50E94E81D /* HealthKitMetricRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E5897F9E01DF1DD783F450C /* HealthKitMetricRegistry.swift */; };
 		FD5174EF7814834BE4FDB853 /* NotificationPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A5C28150EA681F904CAAB60 /* NotificationPreferences.swift */; };
 		FDDD14EED24B7DFA348D415B /* TrendBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C14C4080D8F86D1D9FE887E9 /* TrendBadge.swift */; };
@@ -168,6 +174,10 @@
 		9EE3D24D56D4FF0A64BA0321 /* SleepCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepCard.swift; sourceTree = "<group>"; };
 		A0A12061DC73AA4746DA1D13 /* Date+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Extensions.swift"; sourceTree = "<group>"; };
 		A0FEFA8B2E9C3EAD5191FC58 /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071812345001 /* SubscriptionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManager.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071812345003 /* SubscriptionConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionConfig.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071812345005 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071812345008 /* RemoteConfigManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteConfigManager.swift; sourceTree = "<group>"; };
 		A260467379612091A6B0F24B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A38F981323AA745B14093958 /* UserBaseline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserBaseline.swift; sourceTree = "<group>"; };
 		A81D7BD7EBC7DA97F93A3F66 /* HealthRiskDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthRiskDetailView.swift; sourceTree = "<group>"; };
@@ -199,6 +209,7 @@
 		DC44ABE94B394F43210D39AC /* DeviceSetupGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceSetupGuideView.swift; sourceTree = "<group>"; };
 		DD947BF688F7B5F398D7E9FD /* WorkoutEffectivenessAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutEffectivenessAnalyzer.swift; sourceTree = "<group>"; };
 		E05DC7C028B652C5A152BCDB /* DataSourceBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSourceBadge.swift; sourceTree = "<group>"; };
+		E1A2B3C4D5E6F7081234ABCD /* WatchMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchMonitor.swift; sourceTree = "<group>"; };
 		E3D2C1B0A918270F5E4D3C2B /* WeeklyReviewViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyReviewViewModel.swift; sourceTree = "<group>"; };
 		E7B42A19F3D18C05A92E6D4F /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		EBDE9B00704B16D8F8D55649 /* BaselineCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaselineCalculator.swift; sourceTree = "<group>"; };
@@ -221,6 +232,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FA12345678ABCDEF12345602 /* FirebaseAnalytics in Frameworks */,
+				FA12345678ABCDEF12345612 /* FirebaseRemoteConfig in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -380,6 +392,7 @@
 				B06BD355B62AAD51CF24AC41 /* Paywall */,
 				3AF1DCD9930E05D8F0824B5F /* Risk */,
 				592D623307DC64EB165C46E2 /* Settings */,
+				A1B2C3D4E5F6071812345007 /* Subscription */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -453,6 +466,14 @@
 			path = Explore;
 			sourceTree = "<group>";
 		};
+		A1B2C3D4E5F6071812345007 /* Subscription */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F6071812345005 /* PaywallView.swift */,
+			);
+			path = Subscription;
+			sourceTree = "<group>";
+		};
 		A1CB447EE663113B316BE5A6 /* WebExport */ = {
 			isa = PBXGroup;
 			children = (
@@ -505,6 +526,8 @@
 		E1B4BA327CF50355E5EF00C0 /* Subscriptions */ = {
 			isa = PBXGroup;
 			children = (
+				A1B2C3D4E5F6071812345003 /* SubscriptionConfig.swift */,
+				A1B2C3D4E5F6071812345001 /* SubscriptionManager.swift */,
 			);
 			path = Subscriptions;
 			sourceTree = "<group>";
@@ -548,6 +571,7 @@
 		F4F842DF9AF1A93301E1012D /* Config */ = {
 			isa = PBXGroup;
 			children = (
+				A1B2C3D4E5F6071812345008 /* RemoteConfigManager.swift */,
 			);
 			path = Config;
 			sourceTree = "<group>";
@@ -573,6 +597,7 @@
 				BB4B38A39ECF9EDAF3EABE37 /* FrequencyCapManager.swift */,
 				796E420E97993725432653BA /* NotificationManager.swift */,
 				B69DBEF9B8C73BB52502BFFC /* WeeklySummaryScheduler.swift */,
+				E1A2B3C4D5E6F7081234ABCD /* WatchMonitor.swift */,
 			);
 			path = Notifications;
 			sourceTree = "<group>";
@@ -595,6 +620,7 @@
 			name = HealthPulse;
 			packageProductDependencies = (
 				FA12345678ABCDEF12345601 /* FirebaseAnalytics */,
+				FA12345678ABCDEF12345611 /* FirebaseRemoteConfig */,
 			);
 			productName = HealthPulse;
 			productReference = 65E5978C39EAFBDCEECA6DA6 /* HealthPulse.app */;
@@ -757,8 +783,13 @@
 				C2B3D4E5F6071829B0C1D2E3 /* WeeklyReviewViewModel.swift in Sources */,
 				D3C4E5F607182A30C1D2E3F4 /* WeeklyReviewView.swift in Sources */,
 				4E605AB07A30B9DC850D70B0 /* WeeklySummaryScheduler.swift in Sources */,
+				E1A2B3C4D5E6F7081234ABCE /* WatchMonitor.swift in Sources */,
 				A2EBB41C493BD4BCF809BA7A /* WorkoutEffectivenessAnalyzer.swift in Sources */,
 				A1D93F47B8E62C10D4F5A7B2 /* OnboardingView.swift in Sources */,
+				A1B2C3D4E5F6071812345006 /* PaywallView.swift in Sources */,
+				A1B2C3D4E5F6071812345009 /* RemoteConfigManager.swift in Sources */,
+				A1B2C3D4E5F6071812345004 /* SubscriptionConfig.swift in Sources */,
+				A1B2C3D4E5F6071812345002 /* SubscriptionManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -973,6 +1004,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FB12345678ABCDEF12345601 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAnalytics;
+		};
+		FA12345678ABCDEF12345611 /* FirebaseRemoteConfig */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FB12345678ABCDEF12345601 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseRemoteConfig;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
