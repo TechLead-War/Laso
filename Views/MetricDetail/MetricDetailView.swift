@@ -3,7 +3,7 @@ import Charts
 
 /// Deep-dive view for a single metric with charts, stats, moving averages, baselines, and insights
 struct MetricDetailView: View {
-    let viewModel: MetricDetailViewModel
+    @State var viewModel: MetricDetailViewModel
     var deviceSourceManager: DeviceSourceManager? = nil
 
     @State private var autoExpandedRange: Int?

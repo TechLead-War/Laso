@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Detail view for a health category showing score, analytics, trends, and all metrics
 struct CategoryDetailView: View {
-    let viewModel: CategoryDetailViewModel
+    @State var viewModel: CategoryDetailViewModel
 
     var body: some View {
         ScrollView {

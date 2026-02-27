@@ -158,7 +158,7 @@ struct InsightsDetailView: View {
             }
             .padding(.vertical)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("Insights")
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
@@ -216,11 +216,11 @@ private struct EnrichedInsightCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             // Top: metric icon + category + severity
-            HStack(spacing: 10) {
+            HStack(spacing: 12) {
                 Image(systemName: insight.metric.systemImageName)
                     .font(.body.weight(.semibold))
                     .foregroundStyle(.white)
-                    .frame(width: 34, height: 34)
+                    .frame(width: 36, height: 36)
                     .background(insight.metric.category.color, in: Circle())
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -280,14 +280,16 @@ private struct EnrichedInsightCard: View {
     private var actionText: String {
         let sentences = insight.recommendation.components(separatedBy: ". ")
         for sentence in sentences {
-            let lower = sentence.lowercased().trimmingCharacters(in: .whitespaces)
+            let trimmed = sentence.trimmingCharacters(in: .whitespaces)
+            let lower = trimmed.lowercased()
             if lower.isEmpty { continue }
+            // Skip numbered list prefixes like "1", "2"
+            if trimmed.allSatisfy(\.isNumber) { continue }
             let isGeneric = lower.hasPrefix("monitor") || lower.hasPrefix("track") ||
                 lower.hasPrefix("continue") || lower.hasPrefix("your") ||
                 lower.hasPrefix("keep an eye") || lower.hasPrefix("consult")
             if !isGeneric {
-                let clean = sentence.trimmingCharacters(in: .whitespaces)
-                return clean.hasSuffix(".") ? clean : clean + "."
+                return trimmed.hasSuffix(".") ? trimmed : trimmed + "."
             }
         }
         return ""

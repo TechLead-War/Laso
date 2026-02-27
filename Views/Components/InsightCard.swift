@@ -34,11 +34,6 @@ struct InsightCard: View {
                 }
             }
 
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.tertiary)
         }
         .padding(14)
         .background(.background, in: RoundedRectangle(cornerRadius: 14))
@@ -49,8 +44,18 @@ private extension InsightCard {
     /// First sentence of the recommendation — the actionable part
     var actionText: String {
         let rec = insight.recommendation
-        if let dotIndex = rec.firstIndex(of: ".") {
-            return String(rec[rec.startIndex...dotIndex])
+        // Find the first "." that ends a real sentence, not a numbered prefix like "1."
+        var searchStart = rec.startIndex
+        while searchStart < rec.endIndex {
+            guard let dotIndex = rec[searchStart...].firstIndex(of: ".") else { break }
+            let prefix = rec[rec.startIndex...dotIndex]
+            let beforeDot = rec[searchStart..<dotIndex]
+            // Skip if this is just a number (e.g., "1." in a numbered list)
+            if beforeDot.trimmingCharacters(in: .whitespaces).allSatisfy(\.isNumber) {
+                searchStart = rec.index(after: dotIndex)
+                continue
+            }
+            return String(prefix)
         }
         return rec
     }

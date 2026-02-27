@@ -102,7 +102,6 @@ struct BodyInsightsSection: View {
             Text(insight.recommendation)
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(.white)
-                .lineLimit(3)
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -126,7 +125,6 @@ struct BodyInsightsSection: View {
             Text(chain.narrative)
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(.white)
-                .lineLimit(4)
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)

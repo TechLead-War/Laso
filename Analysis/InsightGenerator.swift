@@ -221,6 +221,19 @@ struct InsightGenerator {
         let isGenericAction = !hasConcrete && genericActions.contains { recLower.contains($0) }
         if hasConcrete { score += 25 }
         if isGenericAction { score -= 10 }
+        if recLower.contains("priority today") { score += 10 }
+
+        let genericRecommendationPatterns = [
+            "within normal range",
+            "is normal",
+            "is stable",
+            "holding steady"
+        ]
+        if insight.severity == .info &&
+            genericRecommendationPatterns.contains(where: { recLower.contains($0) }) &&
+            abs(insight.deviationPercent) < 8 {
+            score -= 15
+        }
 
         // Severity is warning or critical → +20
         if insight.severity >= .warning { score += 20 }
@@ -252,7 +265,7 @@ struct InsightGenerator {
     // MARK: - High-Quality Filtering
 
     /// Return only high-quality, actionable insights suitable for a Today/Home section.
-    /// Filters to actionability score >= 35, sorted by priority, limited to maxCount.
+    /// Filters to actionability score >= 40, sorted by priority, limited to maxCount.
     /// Excludes stable/improving platitudes that don't tell the user what to do.
     static func filterToActionable(_ insights: [Insight], maxCount: Int = 5) -> [Insight] {
         insights
@@ -268,7 +281,7 @@ struct InsightGenerator {
                 if insight.trend == .improving && insight.severity == .info && abs(insight.deviationPercent) < 5 {
                     return false
                 }
-                return actionabilityScore(insight) >= 35
+                return actionabilityScore(insight) >= 40
             }
             .sorted { $0.priorityScore > $1.priorityScore }
             .prefix(maxCount)
@@ -298,9 +311,17 @@ struct InsightGenerator {
             historicalContext: historicalContext,
             insightContext: insightContext
         )
-        let recommendation = RulesConfiguration.recommendation(
+        let baseRecommendation = RulesConfiguration.recommendation(
             for: metric, severity: severity, trend: trend,
             currentValue: currentValue, deviationPercent: deviationPercent,
+            context: insightContext
+        )
+        let recommendation = personalizeRecommendation(
+            baseRecommendation: baseRecommendation,
+            metric: metric,
+            severity: severity,
+            trend: trend,
+            deviationPercent: deviationPercent,
             context: insightContext
         )
 
@@ -374,17 +395,32 @@ struct InsightGenerator {
         let relevantCorrelations = correlations
             .filter { $0.metricA == metric || $0.metricB == metric }
             .sorted { abs($0.correlation) > abs($1.correlation) }
-            .prefix(3)
+        let topCorrelations = Array(relevantCorrelations.prefix(3))
 
-        ctx.correlatedFactors = relevantCorrelations.map { corr in
+        ctx.correlatedFactors = topCorrelations.map { corr in
             let factorMetric = corr.metricA == metric ? corr.metricB : corr.metricA
             return CorrelatedFactor(
                 metric: factorMetric,
                 correlation: corr.correlation,
-                effectPercent: corr.effectPercentDiff
+                effectPercent: corr.effectPercentDiff,
+                dayOffset: corr.dayOffset,
+                sampleCount: corr.sampleCount
             )
         }
         if !ctx.correlatedFactors.isEmpty { hasData = true }
+
+        // Infer a likely root cause metric when enough directional evidence exists.
+        if let rootCause = inferRootCause(
+            metric: metric,
+            correlations: relevantCorrelations,
+            trends: trends,
+            baselines: baselines,
+            timeSeries: timeSeries
+        ) {
+            ctx.rootCauseMetric = rootCause.metric
+            ctx.rootCauseDeviation = rootCause.deviation
+            hasData = true
+        }
 
         // Recent values (last 7 days)
         if let series = timeSeries[metric] {
@@ -402,6 +438,208 @@ struct InsightGenerator {
         }
 
         return hasData ? ctx : nil
+    }
+
+    // MARK: - Root Cause Inference
+
+    private static func inferRootCause(
+        metric: HealthMetric,
+        correlations: [HealthCorrelation],
+        trends: [HealthMetric: TrendAnalyzer.TrendResult],
+        baselines: [HealthMetric: UserBaseline],
+        timeSeries: [HealthMetric: MetricTimeSeries]
+    ) -> (metric: HealthMetric, deviation: Double)? {
+        var best: (metric: HealthMetric, deviation: Double, score: Double)?
+
+        for corr in correlations {
+            let candidateMetric: HealthMetric
+            if corr.metricB == metric {
+                candidateMetric = corr.metricA
+            } else if corr.metricA == metric, corr.dayOffset == 0 {
+                candidateMetric = corr.metricB
+            } else {
+                continue
+            }
+
+            guard candidateMetric != metric,
+                  let deviation = deviationPercent(
+                    for: candidateMetric,
+                    trends: trends,
+                    baselines: baselines,
+                    timeSeries: timeSeries
+                  ),
+                  abs(deviation) >= 4 else { continue }
+
+            let correlationStrength = abs(corr.correlation)               // 0...1
+            let effectStrength = min(abs(corr.effectPercentDiff) / 20, 1) // 0...1
+            let deviationStrength = min(abs(deviation) / 20, 1)           // 0...1
+            let sampleStrength = min(Double(corr.sampleCount) / 45, 1)    // 0...1
+            let lagBonus = (corr.metricB == metric && corr.dayOffset > 0) ? 0.1 : 0
+
+            var score = (0.35 * correlationStrength) +
+                (0.30 * effectStrength) +
+                (0.20 * deviationStrength) +
+                (0.15 * sampleStrength) +
+                lagBonus
+
+            if trends[candidateMetric]?.direction == .declining {
+                score += 0.05
+            }
+
+            guard score >= 0.55 else { continue }
+
+            if best == nil || score > best!.score {
+                best = (candidateMetric, deviation, score)
+            }
+        }
+
+        return best.map { (metric: $0.metric, deviation: $0.deviation) }
+    }
+
+    private static func deviationPercent(
+        for metric: HealthMetric,
+        trends: [HealthMetric: TrendAnalyzer.TrendResult],
+        baselines: [HealthMetric: UserBaseline],
+        timeSeries: [HealthMetric: MetricTimeSeries]
+    ) -> Double? {
+        if let trend = trends[metric], abs(trend.weekOverWeekChange) > 0 {
+            return trend.weekOverWeekChange
+        }
+
+        guard let baseline = baselines[metric],
+              baseline.mean != 0,
+              let latest = timeSeries[metric]?.latestValue else { return nil }
+
+        return ((latest - baseline.mean) / baseline.mean) * 100.0
+    }
+
+    // MARK: - Personalized Recommendation Composition
+
+    private static func personalizeRecommendation(
+        baseRecommendation: String,
+        metric: HealthMetric,
+        severity: Severity,
+        trend: TrendDirection,
+        deviationPercent: Double,
+        context: InsightContext?
+    ) -> String {
+        let lever = bestPersonalLever(targetMetric: metric, context: context)
+        let needsAction = severity >= .warning || trend == .declining || abs(deviationPercent) >= 10
+        guard needsAction || lever != nil else { return baseRecommendation }
+
+        var parts: [String] = []
+
+        if let priority = priorityActionSentence(
+            metric: metric,
+            severity: severity,
+            trend: trend,
+            lever: lever
+        ) {
+            parts.append(priority)
+        }
+
+        parts.append(baseRecommendation)
+
+        if let lever {
+            let leadTime = leadTimeLabel(for: lever.dayOffset)
+            let impact = String(format: "%.0f", abs(lever.effectPercent))
+            let evidence = evidenceLabel(context: context, sampleCount: lever.sampleCount)
+            parts.append(
+                "Why this is personalized: your data links \(lever.metric.displayName.lowercased()) to \(metric.displayName.lowercased()) with ~\(impact)% impact (\(leadTime), \(evidence) confidence)."
+            )
+        } else if let confidence = context?.confidenceLevel, confidence < 0.45 {
+            parts.append("Personalization confidence is still building. Keep syncing daily so the action plan can adapt to your own patterns.")
+        }
+
+        if let followUp = followUpSentence(severity: severity, context: context) {
+            parts.append(followUp)
+        }
+
+        return parts.joined(separator: " ")
+    }
+
+    private static func bestPersonalLever(targetMetric: HealthMetric, context: InsightContext?) -> CorrelatedFactor? {
+        guard let factors = context?.correlatedFactors else { return nil }
+
+        return factors
+            .filter {
+                $0.metric != targetMetric &&
+                abs($0.correlation) >= 0.30 &&
+                abs($0.effectPercent) >= 6 &&
+                $0.sampleCount >= 12
+            }
+            .max {
+                (abs($0.correlation) * abs($0.effectPercent)) <
+                    (abs($1.correlation) * abs($1.effectPercent))
+            }
+    }
+
+    private static func priorityActionSentence(
+        metric: HealthMetric,
+        severity: Severity,
+        trend: TrendDirection,
+        lever: CorrelatedFactor?
+    ) -> String? {
+        guard severity >= .warning || trend == .declining || lever != nil else { return nil }
+        let actionMetric = lever?.metric ?? metric
+        return "Priority today: \(actionProtocol(for: actionMetric, severity: severity))."
+    }
+
+    private static func followUpSentence(severity: Severity, context: InsightContext?) -> String? {
+        if let days = context?.projectedDaysToThreshold, days <= 7 {
+            return "Follow-up: recheck in 48 hours to confirm this is stabilizing before it reaches warning range."
+        }
+        if severity >= .warning {
+            return "Follow-up: review this trend again in 3 days to verify the direction has improved."
+        }
+        return nil
+    }
+
+    private static func leadTimeLabel(for dayOffset: Int) -> String {
+        if dayOffset <= 0 { return "same-day signal" }
+        if dayOffset == 1 { return "next-day signal" }
+        return "\(dayOffset)-day lead signal"
+    }
+
+    private static func evidenceLabel(context: InsightContext?, sampleCount: Int) -> String {
+        let confidence = context?.confidenceLevel ?? 0
+        let points = max(sampleCount, context?.dataPointCount ?? 0)
+        if confidence >= 0.75 && points >= 90 { return "high" }
+        if confidence >= 0.50 && points >= 45 { return "medium" }
+        return "early"
+    }
+
+    private static func actionProtocol(for metric: HealthMetric, severity: Severity) -> String {
+        switch metric {
+        case .sleepDuration, .sleepDeep, .sleepREM, .sleepCore, .sleepAwake:
+            return "protect an 8-hour sleep window tonight and cut screens 60 minutes before bed"
+        case .steps, .activeCalories, .exerciseMinutes, .appleMoveTime, .distanceWalkingRunning, .standHours:
+            return "add two 10-minute brisk walks today and hit at least 30 active minutes"
+        case .heartRateVariability:
+            return "do 10 minutes of slow breathing and finish dinner at least 3 hours before bedtime"
+        case .restingHeartRate, .heartRate, .walkingHeartRateAverage:
+            return "avoid caffeine after 2 PM and do a 10-minute wind-down breathing session before sleep"
+        case .mindfulMinutes, .electrodermalActivity:
+            return "run one 10-minute mindfulness session now and one before bed"
+        case .timeInDaylight:
+            return "get 20 minutes of outdoor light before noon"
+        case .bloodPressureSystolic, .bloodPressureDiastolic:
+            return severity >= .warning
+                ? "cap sodium under 2300mg today and complete a 20-minute easy walk"
+                : "check blood pressure at the same time tomorrow morning"
+        case .bloodOxygen, .atrialFibrillationBurden, .bodyTemperature, .respiratoryRate:
+            return severity >= .warning
+                ? "repeat the measurement now and contact a clinician if it stays abnormal"
+                : "recheck this metric later today after rest"
+        case .weight, .bmi, .bodyFatPercentage, .waistCircumference:
+            return "anchor meals around protein and fiber today and avoid late-night snacking"
+        case .vo2Max, .heartRateRecovery:
+            return "schedule one 25-minute zone-2 cardio session today or tomorrow"
+        case .walkingSpeed, .walkingStepLength, .walkingAsymmetry, .walkingDoubleSupportPercentage, .stairAscentSpeed, .stairDescentSpeed, .sixMinuteWalkTestDistance:
+            return "add a 10-minute mobility and balance block before your next walk"
+        default:
+            return "run one small habit experiment today and compare tomorrow's metric response"
+        }
     }
 
     private static func generateTitle(

@@ -42,7 +42,7 @@ struct PaywallView: View {
 
             footer
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .onAppear {
             selectedProduct = yearly ?? monthly
             paywallOpenDate = Date()

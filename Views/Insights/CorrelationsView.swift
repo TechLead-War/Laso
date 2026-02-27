@@ -70,7 +70,7 @@ struct CorrelationsView: View {
             }
             .padding(.vertical)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("What Affects What")
         .navigationBarTitleDisplayMode(.large)
         .onAppear {

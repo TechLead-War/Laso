@@ -138,6 +138,22 @@ struct CorrelatedFactor {
     let metric: HealthMetric
     let correlation: Double
     let effectPercent: Double
+    let dayOffset: Int
+    let sampleCount: Int
+
+    init(
+        metric: HealthMetric,
+        correlation: Double,
+        effectPercent: Double,
+        dayOffset: Int = 0,
+        sampleCount: Int = 0
+    ) {
+        self.metric = metric
+        self.correlation = correlation
+        self.effectPercent = effectPercent
+        self.dayOffset = dayOffset
+        self.sampleCount = sampleCount
+    }
 }
 
 // MARK: - Insight

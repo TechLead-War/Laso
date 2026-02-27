@@ -62,7 +62,7 @@ struct ActionCard: View {
                 }
                 .padding(.leading, 10)
                 .padding(.trailing, 14)
-                .padding(.vertical, 10)
+                .padding(.vertical, 14)
             }
             .background(
                 categoryColor.opacity(0.04),
@@ -85,7 +85,14 @@ struct ActionCard: View {
     /// First sentence of the recommendation, truncated
     private var shortAction: String {
         let rec = insight.recommendation
-        if let dotIndex = rec.firstIndex(of: ".") {
+        var searchStart = rec.startIndex
+        while searchStart < rec.endIndex {
+            guard let dotIndex = rec[searchStart...].firstIndex(of: ".") else { break }
+            let beforeDot = rec[searchStart..<dotIndex]
+            if beforeDot.trimmingCharacters(in: .whitespaces).allSatisfy(\.isNumber) {
+                searchStart = rec.index(after: dotIndex)
+                continue
+            }
             return String(rec[rec.startIndex...dotIndex])
         }
         return rec
