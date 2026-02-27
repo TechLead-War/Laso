@@ -16,26 +16,10 @@ struct CategoryDetailView: View {
                         lineWidth: 10
                     )
                     .padding(.top)
-                    .onAppear {
-                        AppAnalytics.shared.trackSectionImpression(section: .categoryScoreRing, screen: .categoryDetail, metadata: [
-                            "category": viewModel.category.displayName,
-                            "score": score.score
-                        ])
-                    }
                 }
 
                 // Category Analytics Summary
                 categoryAnalyticsSection
-                    .onAppear {
-                        let trends = viewModel.trendSummary
-                        AppAnalytics.shared.trackSectionImpression(section: .categoryTrendSummary, screen: .categoryDetail, metadata: [
-                            "category": viewModel.category.displayName,
-                            "improving": trends.improving,
-                            "stable": trends.stable,
-                            "declining": trends.declining,
-                            "anomalous_count": viewModel.anomalousMetricCount
-                        ])
-                    }
 
                 // Time Range Selector
                 TimeRangeSelector(selectedDays: Binding(
@@ -113,19 +97,15 @@ struct CategoryDetailView: View {
                         ForEach(viewModel.insights) { insight in
                             InsightCard(insight: insight)
                                 .padding(.horizontal)
-                                .onAppear {
-                                    AppAnalytics.shared.trackCardImpression(cardType: .insightCard, screen: .categoryDetail)
-                                }
                                 .onTapGesture {
-                                    AppAnalytics.shared.trackBlockTap(title: insight.title, type: .insightCard, screen: .categoryDetail)
+                                    AppAnalytics.shared.trackInsightTapped(
+                                        category: insight.category.rawValue,
+                                        severity: insight.severity.rawValue,
+                                        metric: insight.metric.rawValue,
+                                        screen: .categoryDetail
+                                    )
                                 }
                         }
-                    }
-                    .onAppear {
-                        AppAnalytics.shared.trackSectionImpression(section: .categoryInsightsSection, screen: .categoryDetail, metadata: [
-                            "category": viewModel.category.displayName,
-                            "insight_count": viewModel.insights.count
-                        ])
                     }
                 }
 
@@ -151,24 +131,20 @@ struct CategoryDetailView: View {
                         .simultaneousGesture(TapGesture().onEnded {
                             AppAnalytics.shared.trackBlockTap(title: metric.displayName, type: .metricRow, screen: .categoryDetail)
                         })
-                        .onAppear {
-                            AppAnalytics.shared.trackCardImpression(cardType: .metricRow, screen: .categoryDetail)
-                        }
                     }
-                }
-                .onAppear {
-                    AppAnalytics.shared.trackSectionImpression(section: .categoryMetricList, screen: .categoryDetail, metadata: [
-                        "category": viewModel.category.displayName,
-                        "metric_count": viewModel.metricsSortedBySeverity.count,
-                        "active_count": viewModel.activeMetricCount
-                    ])
                 }
             }
             .padding(.bottom)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle(viewModel.category.displayName)
-        .onAppear { AppAnalytics.shared.trackFeatureOpen(.categoryDetail, metadata: ["category": viewModel.category.displayName]) }
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.categoryDetail, metadata: [
+                "category": viewModel.category.displayName,
+                "score": viewModel.categoryScore?.score ?? 0,
+                "insight_count": viewModel.insights.count
+            ])
+        }
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.categoryDetail, metadata: ["category": viewModel.category.displayName]) }
     }
 

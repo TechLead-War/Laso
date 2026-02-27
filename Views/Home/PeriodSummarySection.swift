@@ -11,11 +11,6 @@ struct PeriodSummarySection: View {
             Text("Trends")
                 .font(.headline)
                 .padding(.horizontal)
-                .onAppear {
-                    AppAnalytics.shared.trackSectionImpression(section: .periodSummarySection, screen: .home, metadata: [
-                        "selected_period": viewModel.selectedPeriod.rawValue
-                    ])
-                }
 
             // Period picker
             Picker("Period", selection: Binding(

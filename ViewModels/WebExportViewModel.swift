@@ -39,6 +39,12 @@ final class WebExportViewModel {
             // Apply complete file protection so the file is encrypted at rest
             try (fileURL as NSURL).setResourceValue(URLFileProtection.complete, forKey: .fileProtectionKey)
             exportedURL = fileURL
+
+            AppAnalytics.shared.trackReportExported(
+                score: analysisEngine.overallScore.score,
+                metricsCount: healthKitManager.timeSeries.count,
+                insightsCount: analysisEngine.insights.count
+            )
         } catch {
             self.error = "Failed to save report: \(error.localizedDescription)"
         }

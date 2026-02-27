@@ -47,13 +47,6 @@ struct CorrelationsView: View {
                     }
                     .padding(.horizontal)
                 }
-                .onAppear {
-                    AppAnalytics.shared.trackSectionImpression(
-                        section: .correlationsFilterChips,
-                        screen: .correlations,
-                        metadata: ["filter_count": CorrelationFilter.allCases.count]
-                    )
-                }
 
                 if filteredCorrelations.isEmpty {
                     emptyState
@@ -62,26 +55,15 @@ struct CorrelationsView: View {
                     LazyVStack(spacing: 12) {
                         ForEach(filteredCorrelations) { correlation in
                             CorrelationDetailCard(correlation: correlation) {
-                                AppAnalytics.shared.trackBlockTap(
-                                    title: "\(correlation.causeLabel) \u{2192} \(correlation.effectLabel)",
-                                    type: .correlationCard,
+                                AppAnalytics.shared.trackCorrelationTapped(
+                                    metricA: correlation.metricA.rawValue,
+                                    metricB: correlation.metricB.rawValue,
+                                    strength: correlation.strengthLabel,
                                     screen: .correlations
                                 )
                                 onTapMetric(correlation.metricA)
                             }
                             .padding(.horizontal)
-                            .onAppear {
-                                AppAnalytics.shared.trackSectionImpression(
-                                    section: .correlationDetailCard,
-                                    screen: .correlations,
-                                    metadata: [
-                                        "cause": correlation.causeLabel,
-                                        "effect": correlation.effectLabel,
-                                        "strength": correlation.strengthLabel,
-                                        "filter": selectedFilter.rawValue
-                                    ]
-                                )
-                            }
                         }
                     }
                 }
@@ -150,12 +132,6 @@ struct CorrelationsView: View {
                 .multilineTextAlignment(.center)
         }
         .padding(.vertical, 40)
-        .onAppear {
-            AppAnalytics.shared.trackEmptyStateShown(
-                screen: .correlations,
-                stateType: selectedFilter == .all ? "no_correlations" : "filter_empty_\(selectedFilter.rawValue.lowercased())"
-            )
-        }
     }
 }
 

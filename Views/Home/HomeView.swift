@@ -16,7 +16,11 @@ struct HomeView: View {
     var body: some View {
         Group {
             if viewModel.isLoading {
-                LoadingView("Analyzing your health data...")
+                if viewModel.isFirstLaunchSync {
+                    firstLaunchLoadingView
+                } else {
+                    LoadingView("Analyzing your health data...")
+                }
             } else if let error = viewModel.errorMessage {
                 errorView(error)
             } else {
@@ -25,6 +29,16 @@ struct HomeView: View {
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        .fullScreenCover(isPresented: Binding(
+            get: { viewModel.showDiscovery },
+            set: { if !$0 { viewModel.dismissDiscovery() } }
+        )) {
+            DiscoveryView(
+                discoveries: viewModel.discoveries,
+                dataDepth: viewModel.dataDepth,
+                onDismiss: { viewModel.dismissDiscovery() }
+            )
+        }
         .refreshable {
             AppAnalytics.shared.trackPullToRefresh(screen: .home)
             AppAnalytics.shared.trackActivationMilestone(.firstPullToRefresh)
@@ -98,9 +112,6 @@ struct HomeView: View {
                         AppAnalytics.shared.trackBlockTap(title: "Weekly Review", type: .weeklyReviewCard, screen: .home)
                         navigationPath.append("weeklyReview")
                     }
-                    .onAppear {
-                        AppAnalytics.shared.trackSectionImpression(section: .weeklyReviewSection, screen: .home)
-                    }
 
                     // Last updated footer
                     if let lastRefresh = viewModel.lastRefresh {
@@ -109,16 +120,9 @@ struct HomeView: View {
                             .foregroundStyle(.tertiary)
                             .padding(.bottom, 8)
                             .accessibilityLabel("Last updated \(lastRefresh, style: .relative) ago")
-                            .onAppear {
-                                AppAnalytics.shared.trackSectionImpression(section: .lastUpdatedFooter, screen: .home)
-                            }
                     }
                 } else {
                     connectHealthView
-                        .onAppear {
-                            AppAnalytics.shared.trackEmptyStateShown(screen: .home, stateType: "no_health_data")
-                            AppAnalytics.shared.trackSectionImpression(section: .connectHealthSection, screen: .home)
-                        }
                 }
             }
         }
@@ -484,15 +488,8 @@ struct HomeView: View {
             if let score = liveViewModel.readinessScore {
                 if liveViewModel.isReadinessDataFresh {
                     recoveryCard(score: score)
-                        .onAppear {
-                            AppAnalytics.shared.trackCardImpression(cardType: .recoveryCard, screen: .home)
-                            AppAnalytics.shared.trackSectionImpression(section: .recoveryCard, screen: .home, metadata: ["score": score])
-                        }
                 } else {
                     staleRecoveryCard
-                        .onAppear {
-                            AppAnalytics.shared.trackSectionImpression(section: .staleRecoveryCard, screen: .home)
-                        }
                 }
             }
         }
@@ -639,6 +636,82 @@ struct HomeView: View {
         case 40..<60: return .yellow
         case 20..<40: return .orange
         default: return .red
+        }
+    }
+
+    // MARK: - First Launch Loading
+
+    @State private var firstLaunchIconScale: CGFloat = 0.8
+    @State private var firstLaunchDotCount = 0
+    @State private var firstLaunchAppeared = false
+
+    private var firstLaunchPhase: (icon: String, text: String, color: Color) {
+        switch viewModel.syncPhase {
+        case .idle, .importing:
+            return ("antenna.radiowaves.left.and.right", "Importing your health history", .blue)
+        case .analyzing:
+            let points = viewModel.dataDepth.totalDataPoints
+            let label = points > 0 ? "Analyzing \(points) data points" : "Analyzing your data"
+            return ("brain.head.profile", label, .purple)
+        case .discovering:
+            return ("sparkles", "Discovering patterns", .orange)
+        case .complete:
+            return ("checkmark.circle.fill", "Ready", .green)
+        }
+    }
+
+    private var firstLaunchLoadingView: some View {
+        let phase = firstLaunchPhase
+        return VStack(spacing: 32) {
+            Spacer()
+
+            ZStack {
+                Circle()
+                    .fill(phase.color.opacity(0.1))
+                    .frame(width: 120, height: 120)
+                    .scaleEffect(firstLaunchIconScale == 1.0 ? 1.3 : 0.9)
+                    .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: firstLaunchIconScale)
+
+                Circle()
+                    .fill(phase.color.opacity(0.05))
+                    .frame(width: 160, height: 160)
+                    .scaleEffect(firstLaunchIconScale == 1.0 ? 1.5 : 1.0)
+                    .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: firstLaunchIconScale)
+
+                Image(systemName: phase.icon)
+                    .font(.system(size: 40, weight: .medium))
+                    .foregroundStyle(phase.color)
+                    .frame(width: 80, height: 80)
+                    .background(phase.color.opacity(0.12), in: Circle())
+                    .scaleEffect(firstLaunchIconScale)
+                    .contentTransition(.symbolEffect(.replace))
+            }
+
+            VStack(spacing: 8) {
+                Text(phase.text + String(repeating: ".", count: firstLaunchDotCount))
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.primary)
+                    .contentTransition(.numericText())
+                    .animation(.easeInOut(duration: 0.3), value: viewModel.syncPhase)
+
+                Text("This only happens once")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            firstLaunchAppeared = true
+            firstLaunchIconScale = 1.0
+            Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
+                guard firstLaunchAppeared else { timer.invalidate(); return }
+                firstLaunchDotCount = (firstLaunchDotCount % 3) + 1
+            }
+        }
+        .onDisappear {
+            firstLaunchAppeared = false
         }
     }
 

@@ -125,6 +125,9 @@
 		FDDD14EED24B7DFA348D415B /* TrendBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C14C4080D8F86D1D9FE887E9 /* TrendBadge.swift */; };
 		FFCF2BEF13D3B81A68D9EF3B /* InsightCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA30AD19F71C6BA2C98C876C /* InsightCard.swift */; };
 		PRO00100000000000000002 /* ProFeatureOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = PRO00100000000000000001 /* ProFeatureOverlay.swift */; };
+		DSC00100000000000000002 /* Discovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = DSC00100000000000000001 /* Discovery.swift */; };
+		DSC00100000000000000004 /* DiscoveryEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = DSC00100000000000000003 /* DiscoveryEngine.swift */; };
+		DSC00100000000000000006 /* DiscoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DSC00100000000000000005 /* DiscoveryView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -248,6 +251,9 @@
 		IEW00100000000000000001 /* IllnessEarlyWarning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IllnessEarlyWarning.swift; sourceTree = "<group>"; };
 		CMA00100000000000000001 /* CrossMetricAnomalyDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrossMetricAnomalyDetector.swift; sourceTree = "<group>"; };
 		CCE00100000000000000001 /* CausalChainEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CausalChainEngine.swift; sourceTree = "<group>"; };
+		DSC00100000000000000001 /* Discovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Discovery.swift; sourceTree = "<group>"; };
+		DSC00100000000000000003 /* DiscoveryEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryEngine.swift; sourceTree = "<group>"; };
+		DSC00100000000000000005 /* DiscoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -280,6 +286,7 @@
 				EBDE9B00704B16D8F8D55649 /* BaselineCalculator.swift */,
 				ANL00100000000000000002 /* BaselineDriftDetector.swift */,
 				FBEF954BF9638721771548FD /* CorrelationAnalyzer.swift */,
+				DSC00100000000000000003 /* DiscoveryEngine.swift */,
 				52C5FA0AC1DF45B09601C7C0 /* HealthRiskEngine.swift */,
 				1D16F5DEFE599901E791BDB5 /* HealthScorer.swift */,
 				AA6AA95BCF0971B533299AD2 /* InsightGenerator.swift */,
@@ -316,6 +323,14 @@
 			children = (
 			);
 			path = configuration;
+			sourceTree = "<group>";
+		};
+		DSC00100000000000000007 /* Discovery */ = {
+			isa = PBXGroup;
+			children = (
+				DSC00100000000000000005 /* DiscoveryView.swift */,
+			);
+			path = Discovery;
 			sourceTree = "<group>";
 		};
 		32081A283F9FE80454177B5B /* Insights */ = {
@@ -356,6 +371,7 @@
 			isa = PBXGroup;
 			children = (
 				5827B420D1FD0325FE028282 /* ConnectedDeviceInfo.swift */,
+				DSC00100000000000000001 /* Discovery.swift */,
 				13A5CE433514CE2A9BA47EEB /* HealthCategory.swift */,
 				4A7E91B3C2D85F06E3A14D9B /* HealthCorrelation.swift */,
 				CE8179C058000EE1F6531E0C /* HealthMetric.swift */,
@@ -413,6 +429,7 @@
 				9745169D371D1C50E7BACFA9 /* Category */,
 				851743D16201C84B9B933A9E /* Components */,
 				74B0CF7E4D5600CDC04B7881 /* Devices */,
+				DSC00100000000000000007 /* Discovery */,
 				99D0AF908CB6DDB616431FAD /* Explore */,
 				391E722D5014D80238CF86D6 /* Home */,
 				32081A283F9FE80454177B5B /* Insights */,
@@ -766,6 +783,9 @@
 				F3ADAAE50EB935144DD0AED0 /* DeviceDetailView.swift in Sources */,
 				44668A325618FCCEEAD03601 /* DeviceSetupGuideView.swift in Sources */,
 				C611E934A36A23C81BBDDD8B /* DeviceSourceManager.swift in Sources */,
+				DSC00100000000000000002 /* Discovery.swift in Sources */,
+				DSC00100000000000000004 /* DiscoveryEngine.swift in Sources */,
+				DSC00100000000000000006 /* DiscoveryView.swift in Sources */,
 				SEC00100000000000000002 /* EncryptedStore.swift in Sources */,
 				42878B22DB80B2F30672FE3E /* ExploreView.swift in Sources */,
 				571C07FA430DAA198FC73588 /* FeedbackPromptManager.swift in Sources */,

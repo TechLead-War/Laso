@@ -186,6 +186,7 @@ final class WatchMonitor {
             identifier: "healthpulse.watch.notWorn",
             maxPerDay: maxPerDay
         )
+        AppAnalytics.shared.trackNotificationSent(type: "watch_not_worn")
 
         defaults.set(Date().timeIntervalSince1970, forKey: lastNotWornNotificationKey)
     }
@@ -210,6 +211,7 @@ final class WatchMonitor {
                 identifier: "healthpulse.watch.lowBattery",
                 maxPerDay: preferences.maxNotificationsPerDay
             )
+            AppAnalytics.shared.trackNotificationSent(type: "battery_low")
 
             defaults.set(true, forKey: lowBatteryAlertShownKey)
         } else {

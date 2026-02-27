@@ -7,7 +7,12 @@ struct PatternCard: View {
 
     var body: some View {
         Button(action: {
-            AppAnalytics.shared.trackBlockTap(title: insight.title, type: .patternCard, screen: .home)
+            AppAnalytics.shared.trackInsightTapped(
+                category: insight.category.rawValue,
+                severity: insight.severity.rawValue,
+                metric: insight.metric.rawValue,
+                screen: .home
+            )
             onTap()
         }) {
             HStack(spacing: 0) {

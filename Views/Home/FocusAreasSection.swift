@@ -27,7 +27,11 @@ struct FocusAreasSection: View {
 
                     ForEach(risks.prefix(3)) { risk in
                         FocusRiskCard(risk: risk) {
-                            AppAnalytics.shared.trackBlockTap(title: risk.riskType.displayName, type: .focusArea, screen: .home)
+                            AppAnalytics.shared.trackRiskTapped(
+                                riskType: risk.riskType.rawValue,
+                                grade: risk.riskGrade.rawValue,
+                                screen: .home
+                            )
                             onTapRisk(risk)
                         }
                         .padding(.horizontal)

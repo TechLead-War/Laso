@@ -133,13 +133,11 @@ struct ContentView: View {
                 AppAnalytics.shared.trackReturnSession()
                 WatchMonitor.shared.evaluateWatchStatus()
             } else if newPhase == .background {
-                AppAnalytics.shared.trackFirstSessionProfile()
-                AppAnalytics.shared.trackSessionQuality()
                 AppAnalytics.shared.trackSessionEnd()
             }
         }
-        .onChange(of: selectedTab) { oldTab, newTab in
-            AppAnalytics.shared.trackTabSwitch(to: newTab.rawValue, from: oldTab.rawValue)
+        .onChange(of: selectedTab) { _, newTab in
+            SessionTracker.shared.currentTab = newTab.rawValue
         }
         .onChange(of: navigationPath.count) { _, newCount in
             AppAnalytics.shared.updateNavigationDepth(newCount)

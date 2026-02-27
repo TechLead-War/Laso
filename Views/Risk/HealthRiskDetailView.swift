@@ -10,13 +10,6 @@ struct HealthRiskDetailView: View {
             VStack(spacing: 20) {
                 // Hero: risk level gauge
                 riskGaugeSection
-                    .onAppear {
-                        AppAnalytics.shared.trackSectionImpression(section: .riskGaugeSection, screen: .riskDetail, metadata: [
-                            "risk_type": risk.riskType.rawValue,
-                            "risk_level": risk.level,
-                            "risk_grade": risk.riskGrade.displayName
-                        ])
-                    }
 
                 // Description
                 Text(risk.riskType.description)
@@ -28,29 +21,13 @@ struct HealthRiskDetailView: View {
                 // Focus Areas (what to do)
                 if !risk.focusAreas.isEmpty {
                     focusAreasSection
-                        .onAppear {
-                            AppAnalytics.shared.trackSectionImpression(section: .focusAreasSection, screen: .riskDetail, metadata: [
-                                "risk_type": risk.riskType.rawValue,
-                                "area_count": risk.focusAreas.count
-                            ])
-                        }
                 }
 
                 // Contributing Factors
                 contributingFactorsSection
-                    .onAppear {
-                        AppAnalytics.shared.trackSectionImpression(section: .contributingFactorsSection, screen: .riskDetail, metadata: [
-                            "risk_type": risk.riskType.rawValue,
-                            "measured_count": risk.measuredFactors.count,
-                            "total_count": risk.factors.count
-                        ])
-                    }
 
                 // Disclaimer
                 disclaimerSection
-                    .onAppear {
-                        AppAnalytics.shared.trackSectionImpression(section: .disclaimerSection, screen: .riskDetail)
-                    }
             }
             .padding(.bottom)
         }
@@ -58,7 +35,11 @@ struct HealthRiskDetailView: View {
         .navigationTitle(risk.riskType.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            AppAnalytics.shared.trackFeatureOpen(.riskDetail, metadata: ["risk": risk.riskType.rawValue])
+            AppAnalytics.shared.trackFeatureOpen(.riskDetail, metadata: [
+                "risk": risk.riskType.rawValue,
+                "grade": risk.riskGrade.rawValue,
+                "focus_area_count": risk.focusAreas.count
+            ])
             AppAnalytics.shared.trackCoreAction(.viewedRiskDetail, screen: .riskDetail)
             AppAnalytics.shared.trackLastMeaningfulAction(action: "viewed_risk_detail", screen: .riskDetail)
         }
@@ -126,7 +107,11 @@ struct HealthRiskDetailView: View {
 
             ForEach(risk.focusAreas) { area in
                 FocusAreaCard(area: area) {
-                    AppAnalytics.shared.trackBlockTap(title: area.title, type: .focusAreaCard, screen: .riskDetail)
+                    AppAnalytics.shared.trackRiskTapped(
+                        riskType: risk.riskType.rawValue,
+                        grade: risk.riskGrade.rawValue,
+                        screen: .riskDetail
+                    )
                     onTapMetric(area.metric)
                 }
             }
@@ -144,7 +129,11 @@ struct HealthRiskDetailView: View {
             ForEach(risk.factors) { factor in
                 if factor.status != .unmeasured {
                     Button {
-                        AppAnalytics.shared.trackBlockTap(title: factor.metric.displayName, type: .riskFactor, screen: .riskDetail)
+                        AppAnalytics.shared.trackRiskTapped(
+                            riskType: risk.riskType.rawValue,
+                            grade: risk.riskGrade.rawValue,
+                            screen: .riskDetail
+                        )
                         onTapMetric(factor.metric)
                     } label: {
                         factorRow(factor)

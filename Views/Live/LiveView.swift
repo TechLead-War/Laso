@@ -16,15 +16,10 @@ struct LiveView: View {
 
                 if !viewModel.hasAnyLiveData && !viewModel.hasAnyActivityData && viewModel.lastUpdate == nil {
                     waitingForDataView
-                        .onAppear {
-                            AppAnalytics.shared.trackEmptyStateShown(screen: .live, stateType: "waiting_for_watch")
-                        }
                 } else if viewModel.isVitalDataStale {
                     // Stale vitals — show wear-your-watch prompt with last known readings
                     staleVitalsPrompt
-                        .onAppear { AppAnalytics.shared.trackSectionImpression(section: .staleVitalsPrompt, screen: .live) }
                     activityRingsSection
-                        .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .activityRingsSection, screen: .live) }
                     lastWorkoutCard
                     statusFooter
                 } else {
@@ -32,13 +27,9 @@ struct LiveView: View {
                         agingDataBanner
                     }
                     heartRateHeroCard
-                        .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .heartRateHeroCard, screen: .live) }
                     vitalSignsRow
-                        .onAppear { AppAnalytics.shared.trackSectionImpression(section: .vitalSignsRow, screen: .live) }
                     activityRingsSection
-                        .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .activityRingsSection, screen: .live) }
                     bloodPressureAndTempRow
-                        .onAppear { AppAnalytics.shared.trackSectionImpression(section: .bloodPressureTempRow, screen: .live) }
                     lastWorkoutCard
                     statusFooter
                 }
@@ -49,7 +40,10 @@ struct LiveView: View {
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
             viewModel.startStreaming()
-            AppAnalytics.shared.trackFeatureOpen(.live)
+            AppAnalytics.shared.trackFeatureOpen(.live, metadata: [
+                "has_heart_rate": viewModel.currentHeartRate != nil,
+                "is_streaming": viewModel.isStreaming
+            ])
             AppAnalytics.shared.trackStreamingStarted()
             AppAnalytics.shared.trackActivationMilestone(.firstLiveSession)
             AppAnalytics.shared.trackCoreAction(.usedLiveTab, screen: .live)
@@ -66,14 +60,7 @@ struct LiveView: View {
                 AppAnalytics.shared.trackLiveFirstDataReceived()
             }
         }
-        .onChange(of: viewModel.currentHeartRateZone) { oldZone, newZone in
-            if let prev = previousZone, prev != newZone {
-                AppAnalytics.shared.trackHeartRateZoneChanged(
-                    fromZone: prev.rawValue,
-                    toZone: newZone.rawValue,
-                    bpm: Int(viewModel.currentHeartRate ?? 0)
-                )
-            }
+        .onChange(of: viewModel.currentHeartRateZone) { _, newZone in
             previousZone = newZone
         }
         .sensoryFeedback(.success, trigger: viewModel.hasAnyLiveData)
@@ -153,9 +140,6 @@ struct LiveView: View {
                 .background(.background, in: RoundedRectangle(cornerRadius: 14))
                 .padding(.horizontal)
             }
-        }
-        .onAppear {
-            AppAnalytics.shared.trackEmptyStateShown(screen: .live, stateType: "stale_vitals")
         }
     }
 
@@ -417,11 +401,6 @@ struct LiveView: View {
                 heartRateMiniChart
                     .padding(.horizontal)
                     .padding(.bottom, 12)
-                    .onAppear {
-                        AppAnalytics.shared.trackSectionImpression(section: .heartRateMiniChart, screen: .live, metadata: [
-                            "data_points": viewModel.recentHeartRates.count
-                        ])
-                    }
             }
         }
         .background(.background, in: RoundedRectangle(cornerRadius: 16))
@@ -568,7 +547,6 @@ struct LiveView: View {
                 timestamp: viewModel.bloodOxygenTimestamp,
                 status: viewModel.bloodOxygenStatus
             )
-            .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .vitalCardSpo2, screen: .live) }
 
             vitalCard(
                 icon: "wind",
@@ -579,7 +557,6 @@ struct LiveView: View {
                 timestamp: viewModel.respiratoryRateTimestamp,
                 status: viewModel.respiratoryRateStatus
             )
-            .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .vitalCardRespRate, screen: .live) }
         }
         .padding(.horizontal)
     }
@@ -731,12 +708,6 @@ struct LiveView: View {
                 quickStatPill(icon: "figure.stairs", value: "\(Int(viewModel.todayFlightsClimbed))", label: "Flights", color: .purple)
             }
             .padding(.horizontal)
-            .onAppear {
-                AppAnalytics.shared.trackSectionImpression(section: .quickStatsRow, screen: .live, metadata: [
-                    "steps": Int(viewModel.todaySteps),
-                    "distance_km": viewModel.todayDistance
-                ])
-            }
 
             } // end else (has activity)
         }
@@ -841,7 +812,6 @@ struct LiveView: View {
                     .padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(.background, in: RoundedRectangle(cornerRadius: 14))
-                    .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .bloodPressureCard, screen: .live) }
                 }
 
                 if let temp = viewModel.latestBodyTemp {
@@ -873,7 +843,6 @@ struct LiveView: View {
                     .padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(.background, in: RoundedRectangle(cornerRadius: 14))
-                    .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .temperatureCard, screen: .live) }
                 }
             }
             .padding(.horizontal)
@@ -937,7 +906,6 @@ struct LiveView: View {
                 .background(.background, in: RoundedRectangle(cornerRadius: 14))
                 .padding(.horizontal)
             }
-            .onAppear { AppAnalytics.shared.trackCardImpression(cardType: .lastWorkoutCard, screen: .live) }
         }
     }
 

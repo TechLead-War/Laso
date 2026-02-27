@@ -48,7 +48,13 @@ struct ExploreView: View {
         .navigationBarTitleDisplayMode(.large)
         .toolbar(.visible, for: .navigationBar)
         .onAppear {
-            AppAnalytics.shared.trackFeatureOpen(.explore)
+            AppAnalytics.shared.trackFeatureOpen(.explore, metadata: [
+                "score": viewModel.overallScore.score,
+                "score_change_week": viewModel.scoreChangeFromLastWeek ?? 0,
+                "weakest_category": weakestCategory?.category.displayName ?? "none",
+                "insights_count": viewModel.focusedInsights.count,
+                "data_days": viewModel.dataDepth.daysOfData
+            ])
             AppAnalytics.shared.trackActivationMilestone(.firstScoreSeen)
             AppAnalytics.shared.trackCoreAction(.viewedScore, screen: .explore)
         }

@@ -71,6 +71,18 @@ final class DeviceSourceManager {
             if a.isActive != b.isActive { return a.isActive }
             return a.metricCount > b.metricCount
         }
+
+        // Track detected devices
+        for device in connectedDevices {
+            AppAnalytics.shared.trackDeviceDetected(
+                deviceType: device.device.rawValue,
+                metricsCount: device.metricCount,
+                isActive: device.isActive
+            )
+        }
+        let activeCount = connectedDevices.filter(\.isActive).count
+        let primary = connectedDevices.first?.device.rawValue ?? "none"
+        AppAnalytics.shared.updateDeviceProperties(activeCount: activeCount, primaryDevice: primary)
     }
 
     /// Query sources for a given sample type and return (source, metric, lastSampleDate) tuples

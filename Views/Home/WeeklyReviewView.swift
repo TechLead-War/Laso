@@ -75,23 +75,8 @@ struct WeeklyReviewView: View {
             VStack(spacing: 24) {
                 if let review = viewModel.review {
                     scoreSection(review)
-                        .onAppear {
-                            AppAnalytics.shared.trackSectionImpression(section: .weeklyScoreSection, screen: .weeklyReview, metadata: [
-                                "score": review.currentScore
-                            ])
-                        }
                     winsSection(review)
-                        .onAppear {
-                            AppAnalytics.shared.trackSectionImpression(section: .weeklyWinsSection, screen: .weeklyReview, metadata: [
-                                "wins_count": review.wins.count
-                            ])
-                        }
                     watchOutSection(review)
-                        .onAppear {
-                            AppAnalytics.shared.trackSectionImpression(section: .weeklyWatchOutSection, screen: .weeklyReview, metadata: [
-                                "watch_out_count": review.watchOuts.count
-                            ])
-                        }
                 } else if viewModel.isLoading {
                     ProgressView()
                         .padding(.top, 40)
@@ -109,9 +94,6 @@ struct WeeklyReviewView: View {
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 32)
                     }
-                    .onAppear {
-                        AppAnalytics.shared.trackEmptyStateShown(screen: .weeklyReview, stateType: "not_enough_data")
-                    }
                 }
             }
             .padding(.vertical, 16)
@@ -121,7 +103,12 @@ struct WeeklyReviewView: View {
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
             viewModel.load()
-            AppAnalytics.shared.trackFeatureOpen(.weeklyReview)
+            AppAnalytics.shared.trackFeatureOpen(.weeklyReview, metadata: [
+                "score": viewModel.review?.currentScore ?? 0,
+                "score_delta": viewModel.scoreDelta ?? 0,
+                "wins_count": viewModel.review?.wins.count ?? 0,
+                "watchouts_count": viewModel.review?.watchOuts.count ?? 0
+            ])
             AppAnalytics.shared.trackActivationMilestone(.firstWeeklyReview)
             AppAnalytics.shared.trackCoreAction(.viewedWeeklyReview, screen: .weeklyReview)
             AppAnalytics.shared.trackLastMeaningfulAction(action: "viewed_weekly_review", screen: .weeklyReview)

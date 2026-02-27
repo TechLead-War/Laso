@@ -9,6 +9,7 @@ enum AppKeys {
     enum App {
         static let onboardingCompleted = "healthpulse.onboardingCompleted"
         static let appTheme            = "healthpulse.appTheme"
+        static let hasSeenDiscovery    = "healthpulse.hasSeenDiscovery"
     }
 
     // MARK: - Session & Lifecycle

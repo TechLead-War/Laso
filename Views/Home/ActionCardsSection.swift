@@ -27,7 +27,12 @@ struct ActionCardsSection: View {
 
                 ForEach(Array(insights.prefix(2)), id: \.id) { insight in
                     ActionCard(insight: insight) {
-                        AppAnalytics.shared.trackBlockTap(title: insight.title, type: .actionCard, screen: .home)
+                        AppAnalytics.shared.trackInsightTapped(
+                            category: insight.category.rawValue,
+                            severity: insight.severity.rawValue,
+                            metric: insight.metric.rawValue,
+                            screen: .home
+                        )
                         onTapInsight(insight.metric)
                     }
                     .padding(.horizontal)

@@ -12,6 +12,19 @@ final class DashboardViewModel {
     var isLoading = false
     var errorMessage: String?
 
+    // MARK: - Discovery (Day 0)
+    var discoveries: [Discovery] = []
+    var showDiscovery = false
+    var syncPhase: SyncPhase = .idle
+
+    enum SyncPhase {
+        case idle, importing, analyzing, discovering, complete
+    }
+
+    var isFirstLaunchSync: Bool {
+        !UserDefaults.standard.bool(forKey: AppKeys.App.hasSeenDiscovery)
+    }
+
     /// Selected time period — shared across all Home screen sections
     var selectedPeriod: TimePeriod = .sevenDays
 
@@ -311,6 +324,27 @@ final class DashboardViewModel {
         }
 
         await refresh()
+
+        // Day 0 discovery generation — after refresh so all data is available
+        if isFirstLaunchSync {
+            syncPhase = .discovering
+            let results = DiscoveryEngine.generateDiscoveries(
+                timeSeries: healthKitManager.timeSeries,
+                correlations: analysisEngine.correlations,
+                historicalContext: analysisEngine.historicalContext
+            )
+            if results.count >= DiscoveryEngine.minimumDiscoveriesRequired {
+                discoveries = results
+                showDiscovery = true
+            }
+            syncPhase = .complete
+        }
+    }
+
+    /// Dismiss the discovery view and mark as seen
+    func dismissDiscovery() {
+        showDiscovery = false
+        UserDefaults.standard.set(true, forKey: AppKeys.App.hasSeenDiscovery)
     }
 
     /// Refresh data from HealthKit, sync to on-device store, and re-run analysis
@@ -322,7 +356,9 @@ final class DashboardViewModel {
         let prevTrends = previousTrends
 
         // Load stored data + incrementally sync new data from HealthKit
+        if isFirstLaunchSync { syncPhase = .importing }
         await healthKitManager.loadAndSync(store: store)
+        if isFirstLaunchSync { syncPhase = .analyzing }
         analysisEngine.runFullAnalysis(timeSeries: healthKitManager.timeSeries)
 
         // Persist today's analysis snapshot for historical score tracking
@@ -355,6 +391,17 @@ final class DashboardViewModel {
 
         // Re-sort after adding trajectory and drift insights
         analysisEngine.insights.sort { $0.priorityScore > $1.priorityScore }
+
+        // Track analysis output
+        AppAnalytics.shared.trackAnalysisCompleted(
+            score: overallScore.score,
+            insightsCount: analysisEngine.insights.count,
+            anomaliesCount: analysisEngine.anomalies.count,
+            risksCount: analysisEngine.healthRisks.count,
+            correlationsCount: analysisEngine.correlations.count,
+            illnessWarningsCount: analysisEngine.illnessWarnings.count,
+            metricsAnalyzed: healthKitManager.timeSeries.count
+        )
 
         // Store current trends for next refresh comparison
         previousTrends = analysisEngine.trends.mapValues { $0.direction }

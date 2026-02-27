@@ -28,11 +28,6 @@ struct CoachGreetingView: View {
             .accessibilityLabel("Settings")
         }
         .padding(.horizontal)
-        .onAppear {
-            AppAnalytics.shared.trackSectionImpression(section: .coachGreeting, screen: .home, metadata: [
-                "greeting": greeting
-            ])
-        }
     }
 
     private var greeting: String {

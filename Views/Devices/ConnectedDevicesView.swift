@@ -94,7 +94,12 @@ struct ConnectedDevicesView: View {
         }
         .navigationTitle("Connected Devices")
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { AppAnalytics.shared.trackFeatureOpen(.connectedDevices) }
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.connectedDevices, metadata: [
+                "active_count": viewModel.activeDevices.count,
+                "total_count": viewModel.activeDevices.count + viewModel.inactiveDevices.count
+            ])
+        }
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.connectedDevices) }
         .refreshable {
             AppAnalytics.shared.trackPullToRefresh(screen: .connectedDevices)

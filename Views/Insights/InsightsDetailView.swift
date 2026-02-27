@@ -122,6 +122,12 @@ struct InsightsDetailView: View {
                 if !displayedItems.isEmpty {
                     ForEach(displayedItems) { insight in
                         Button {
+                            AppAnalytics.shared.trackInsightTapped(
+                                category: insight.category.rawValue,
+                                severity: insight.severity.rawValue,
+                                metric: insight.metric.rawValue,
+                                screen: .insightsDetail
+                            )
                             onTapMetric(insight.metric)
                         } label: {
                             EnrichedInsightCard(insight: insight, showCategory: selectedTab == .allInsights)
@@ -156,7 +162,10 @@ struct InsightsDetailView: View {
         .navigationTitle("Insights")
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
-            AppAnalytics.shared.trackFeatureOpen(.insightsDetail)
+            AppAnalytics.shared.trackFeatureOpen(.insightsDetail, metadata: [
+                "total_count": allInsights.count,
+                "actionable_count": highConfidenceActions.count
+            ])
             AppAnalytics.shared.trackActivationMilestone(.firstInsightViewed)
             AppAnalytics.shared.trackCoreAction(.viewedInsight, screen: .insightsDetail)
         }

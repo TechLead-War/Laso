@@ -31,16 +31,15 @@ struct CorrelationsSection: View {
 
                     ForEach(correlations) { correlation in
                         CorrelationCard(correlation: correlation) {
+                            AppAnalytics.shared.trackCorrelationTapped(
+                                metricA: correlation.metricA.rawValue,
+                                metricB: correlation.metricB.rawValue,
+                                strength: correlation.strengthLabel,
+                                screen: .home
+                            )
                             onTapMetric(correlation.metricA)
                         }
                         .padding(.horizontal)
-                        .onAppear {
-                            AppAnalytics.shared.trackSectionImpression(section: .correlationCardImpression, screen: .home, metadata: [
-                                "cause_metric": correlation.metricA.rawValue,
-                                "effect_metric": correlation.metricB.rawValue,
-                                "strength": correlation.strengthLabel
-                            ])
-                        }
                     }
                 }
             }

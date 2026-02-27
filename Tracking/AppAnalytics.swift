@@ -20,16 +20,15 @@ enum AppFeature: String, Hashable {
     case weeklyReview = "weekly_review"
     case metricAlertPicker = "metric_alert_picker"
     case paywall
+    case discovery
 }
 
 /// Actionable block/card types — only user-initiated taps and meaningful interactions.
-/// Section impressions removed (they were noise, not actionable).
 enum BlockType: String {
     // Home — user taps
     case recoveryCard = "recovery_card"
     case sleepCard = "sleep_card"
     case smartAction = "smart_action"
-    case actionCard = "action_card"
     case headlineInsight = "headline_insight"
     case seeAllInsights = "see_all_insights"
     case seeAllNeedsAttention = "see_all_needs_attention"
@@ -59,16 +58,6 @@ enum BlockType: String {
 
     // Category Detail — user taps
     case metricRow = "metric_row"
-    case insightCard = "insight_card"
-    case patternCard = "pattern_card"
-
-    // Correlations — user taps
-    case correlationCard = "correlation_card"
-
-    // Risk — user taps
-    case focusArea = "focus_area"
-    case focusAreaCard = "focus_area_card"
-    case riskFactor = "risk_factor"
 
     // Devices — user taps
     case manageDevices = "manage_devices"
@@ -103,84 +92,38 @@ enum BlockType: String {
     case onboardingContinueAnyway = "onboarding_continue_anyway"
     case onboardingFocusChip = "onboarding_focus_chip"
     case onboardingGetStarted = "onboarding_get_started"
-
-    // Legacy section impression types — kept for compile compatibility, no longer logged.
-    case todaysBriefingSection = "todays_briefing_section"
-    case needsAttentionSection = "needs_attention_section"
-    case correlationsSection = "correlations_section"
-    case correlationCardImpression = "correlation_card_impression"
-    case weeklyReviewSection = "weekly_review_section"
-    case staleRecoveryCard = "stale_recovery_card"
-    case connectHealthSection = "connect_health_section"
-    case coachGreeting = "coach_greeting"
-    case lastUpdatedFooter = "last_updated_footer"
-    case periodSummarySection = "period_summary_section"
-    case metricDetailHeader = "metric_detail_header"
-    case chartSection = "chart_section"
-    case contextualSummary = "contextual_summary"
-    case scoreBreakdownSection = "score_breakdown_section"
-    case insightsSection = "insights_section"
-    case actionBannerCard = "action_banner_card"
-    case riskGaugeSection = "risk_gauge_section"
-    case focusAreasSection = "focus_areas_section"
-    case contributingFactorsSection = "contributing_factors_section"
-    case disclaimerSection = "disclaimer_section"
-    case staleVitalsPrompt = "stale_vitals_prompt"
-    case quickStatsRow = "quick_stats_row"
-    case bloodPressureTempRow = "blood_pressure_temp_row"
-    case liveHeaderSection = "live_header_section"
-    case heartRateMiniChart = "heart_rate_mini_chart"
-    case vitalSignsRow = "vital_signs_row"
-    case categoryList = "category_list"
-    case weakestCategoryBanner = "weakest_category_banner"
-    case categoryScoreRing = "category_score_ring"
-    case categoryTrendSummary = "category_trend_summary"
-    case categoryInsightsSection = "category_insights_section"
-    case categoryMetricList = "category_metric_list"
-    case weeklyScoreSection = "weekly_score_section"
-    case weeklyWinsSection = "weekly_wins_section"
-    case weeklyWatchOutSection = "weekly_watch_out_section"
-    case insightsFilterChips = "insights_filter_chips"
-    case actionableInsightCard = "actionable_insight_card"
-    case correlationsFilterChips = "correlations_filter_chips"
-    case correlationDetailCard = "correlation_detail_card"
-    case settingsConnectedDevices = "settings_connected_devices"
-    case settingsDailySummary = "settings_daily_summary"
-    case settingsWeeklySummary = "settings_weekly_summary"
-    case settingsHeartRateAlerts = "settings_heart_rate_alerts"
-    case settingsAppleWatch = "settings_apple_watch"
-    case settingsAlerts = "settings_alerts"
-    case settingsMetricAlerts = "settings_metric_alerts"
-    case settingsDataExport = "settings_data_export"
-    case settingsAppearance = "settings_appearance"
-    case settingsOnDeviceData = "settings_on_device_data"
-    case settingsAbout = "settings_about"
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
 // MARK: - Event Reference (Decision-Making Events Only)
 // ──────────────────────────────────────────────────────────────────────────────
 //
-// BUSINESS EVENTS (these answer real questions):
+// BUSINESS EVENTS (every event answers a product question):
 //
 //  Event                         Key Params                          Question Answered
 //  ─────────────────────────────────────────────────────────────────────────────────────
-//  session_start                 session_id, hour, weekday, streak   DAU, time-of-use
-//  session_end                   duration_sec, screens, max_depth    session depth
-//  screen_viewed                 screen, tab, depth                  feature usage
-//  screen_exited                 screen, duration_sec                time per feature
-//  block_tapped                  block_type, screen                  what users tap
-//  trial_started                 days_remaining                      install→trial funnel
-//  trial_day_check               days_remaining, engagement_score    trial health
-//  trial_expired                 converted, milestones_completed     why users don't pay
-//  paywall_viewed                source, trial_days_remaining        paywall reach rate
-//  paywall_dismissed             time_on_paywall_sec                 paywall friction
-//  subscription_purchased        product_id, price, region, trial_converted   revenue
-//  subscription_renewed          months_subscribed, renewal_count    retention/LTV
-//  subscription_cancelled        months_subscribed, last_action      churn reason
-//  feedback_submitted            category, text_length               what users want
-//  activation_milestone          milestone, time_since_install_sec   aha moments
-//  core_action_completed         action, days_since_install          retention signals
+//  session_start                 session_id, hour, weekday, streak   When do users open the app?
+//  session_end                   duration_sec, screens, max_depth    How deep are sessions?
+//  return_session                session_number, days_since_last     Are users coming back?
+//  screen_viewed                 screen + content params             What do users see when they open a feature?
+//  screen_exited                 screen, duration_sec                How long per feature?
+//  block_tapped                  block_type, screen                  What UI elements get tapped?
+//  insight_tapped                category, severity, metric          Which insights resonate?
+//  correlation_tapped            metric_a, metric_b, strength        Which correlations interest users?
+//  risk_tapped                   risk_type, grade                    Do risk alerts drive engagement?
+//  analysis_completed            score, insights/anomalies counts    Is the engine producing useful content?
+//  report_exported               score, metrics_count                How valuable is export?
+//  device_detected               device_type, metrics_count          What devices do users have?
+//  notification_sent             type                                How often do we prompt?
+//  pull_to_refresh               screen                              Where do users want fresh data?
+//  time_range_changed            from_days, to_days                  What time periods matter?
+//  chart_interaction             metric, interaction_type             Which charts get explored?
+//  data_sync_completed           metrics_count, new_samples          Is HealthKit sync healthy?
+//  activation_milestone          milestone, time_since_install       When do users discover features?
+//  core_action_completed         action, screen                      Which actions predict retention?
+//  setting_changed               setting_name, new_value             What do users customize?
+//  feedback_submitted            category, text_length               What do users want?
+//  Subscription events (7)       varies                              Full purchase funnel
 //
 // USER PROPERTIES (for cohort analysis in Firebase/GA4):
 //
@@ -197,12 +140,19 @@ enum BlockType: String {
 //  days_since_install        0, 1, 2, ...                     Retention cohorts
 //  activation_milestones     0-10                              Activation depth
 //  total_sessions            1, 2, 3, ...                      Usage frequency
+//  health_score_bracket      0-39 | 40-59 | 60-79 | 80-100   Score-based segmentation
+//  data_richness             low | medium | high               Data completeness
+//  connected_device_count    0, 1, 2, ...                      Device ecosystem
+//  primary_device            apple_watch | garmin | ...        Primary data source
 //
 // REMOVED (noise, not actionable):
+//  - tab_switched (screen_viewed covers this)
+//  - session_quality (duplicates session_end)
+//  - first_session_profile (data available from milestones)
+//  - heart_rate_zone_changed (too granular)
+//  - empty_state_shown (not actionable alone)
+//  - nav_transition (duplicates screen_viewed)
 //  - card_impressed / section_impressed (55 call sites, zero decisions made from them)
-//  - feature_open / feature_close (duplicated screen_viewed / screen_exited)
-//  - streak_updated (already a user property)
-//  - high_engagement_signal / power_session (computed, not raw signals)
 //
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -489,17 +439,6 @@ final class AppAnalytics {
         ])
     }
 
-    // MARK: - Tab Events
-
-    func trackTabSwitch(to tab: String, from fromTab: String) {
-        session.currentTab = tab
-
-        logEvent("tab_switched", parameters: [
-            "tab": tab,
-            "from_tab": fromTab
-        ])
-    }
-
     // MARK: - Screen Events
 
     func trackFeatureOpen(_ feature: AppFeature, metadata: [String: Any] = [:]) {
@@ -518,13 +457,6 @@ final class AppAnalytics {
         ]
         for (k, v) in metadata { params[k] = v }
         logEvent("screen_viewed", parameters: params)
-
-        if let from = fromScreen, from != feature.rawValue {
-            logEvent("nav_transition", parameters: [
-                "from_screen": from,
-                "to_screen": feature.rawValue
-            ])
-        }
     }
 
     func trackFeatureClose(_ feature: AppFeature, metadata: [String: Any] = [:]) {
@@ -641,34 +573,85 @@ final class AppAnalytics {
         ])
     }
 
-    func trackHeartRateZoneChanged(fromZone: String, toZone: String, bpm: Int) {
-        logEvent("heart_rate_zone_changed", parameters: [
-            "from_zone": fromZone,
-            "to_zone": toZone,
-            "bpm": bpm
+    // MARK: - Content-Specific Tap Events
+
+    func trackInsightTapped(category: String, severity: String, metric: String, screen: AppFeature) {
+        logEvent("insight_tapped", parameters: [
+            "insight_category": category,
+            "severity": severity,
+            "metric": metric,
+            "screen": screen.rawValue
         ])
     }
 
-    // MARK: - Empty State Events
-
-    func trackEmptyStateShown(screen: AppFeature, stateType: String) {
-        logEvent("empty_state_shown", parameters: [
-            "screen": screen.rawValue,
-            "state_type": stateType,
-            "tab": session.currentTab
+    func trackCorrelationTapped(metricA: String, metricB: String, strength: String, screen: AppFeature) {
+        logEvent("correlation_tapped", parameters: [
+            "metric_a": metricA,
+            "metric_b": metricB,
+            "strength": strength,
+            "screen": screen.rawValue
         ])
     }
 
-    // MARK: - Section/Card Impressions (NO-OP — removed noise)
-
-    /// Kept for compile compatibility. No longer fires events.
-    func trackCardImpression(cardType: BlockType, screen: AppFeature) {
-        // Intentionally empty — impression events were noise, not actionable.
+    func trackRiskTapped(riskType: String, grade: String, screen: AppFeature) {
+        logEvent("risk_tapped", parameters: [
+            "risk_type": riskType,
+            "grade": grade,
+            "screen": screen.rawValue
+        ])
     }
 
-    /// Kept for compile compatibility. No longer fires events.
-    func trackSectionImpression(section: BlockType, screen: AppFeature, metadata: [String: Any] = [:]) {
-        // Intentionally empty — impression events were noise, not actionable.
+    // MARK: - Content-Aware Events
+
+    func trackAnalysisCompleted(score: Int, insightsCount: Int, anomaliesCount: Int,
+                                 risksCount: Int, correlationsCount: Int,
+                                 illnessWarningsCount: Int, metricsAnalyzed: Int) {
+        logEvent("analysis_completed", parameters: [
+            "score": score,
+            "insights_count": insightsCount,
+            "anomalies_count": anomaliesCount,
+            "risks_count": risksCount,
+            "correlations_count": correlationsCount,
+            "illness_warnings_count": illnessWarningsCount,
+            "metrics_analyzed": metricsAnalyzed
+        ])
+
+        let bracket: String
+        switch score {
+        case ..<40: bracket = "0-39"
+        case 40..<60: bracket = "40-59"
+        case 60..<80: bracket = "60-79"
+        default: bracket = "80-100"
+        }
+        setUserProperty("health_score_bracket", value: bracket)
+        setUserProperty("data_richness", value: metricsAnalyzed < 10 ? "low" : metricsAnalyzed < 30 ? "medium" : "high")
+    }
+
+    func trackReportExported(score: Int, metricsCount: Int, insightsCount: Int) {
+        logEvent("report_exported", parameters: [
+            "score": score,
+            "metrics_count": metricsCount,
+            "insights_count": insightsCount
+        ])
+    }
+
+    func trackDeviceDetected(deviceType: String, metricsCount: Int, isActive: Bool) {
+        logEvent("device_detected", parameters: [
+            "device_type": deviceType,
+            "metrics_count": metricsCount,
+            "is_active": isActive ? 1 : 0
+        ])
+    }
+
+    func updateDeviceProperties(activeCount: Int, primaryDevice: String) {
+        setUserProperty("connected_device_count", value: "\(activeCount)")
+        setUserProperty("primary_device", value: primaryDevice)
+    }
+
+    func trackNotificationSent(type: String) {
+        logEvent("notification_sent", parameters: [
+            "type": type
+        ])
     }
 
     // MARK: - Share Sheet
@@ -784,18 +767,6 @@ final class AppAnalytics {
         }
     }
 
-    func trackFirstSessionProfile() {
-        guard session.isFirstSession else { return }
-
-        logEvent("first_session_profile", parameters: [
-            "screens_visited": session.screensVisited.count,
-            "max_depth": session.maxDepth,
-            "milestones_completed": session.completedMilestones.count,
-            "core_actions": session.coreActionsThisSession.joined(separator: ","),
-            "duration_sec": session.sessionElapsedSeconds
-        ])
-    }
-
     // ══════════════════════════════════════════════════════════════════════
     // MARK: - Core Action Tracking
     // ══════════════════════════════════════════════════════════════════════
@@ -879,37 +850,34 @@ final class AppAnalytics {
         logEvent("pre_purchase_behavior", parameters: params)
     }
 
-    // ══════════════════════════════════════════════════════════════════════
-    // MARK: - Session Quality (Churn Analysis)
-    // ══════════════════════════════════════════════════════════════════════
-
-    func trackSessionQuality() {
-        let stats = session.endSession()
-
-        let engagementScore = min(100,
-            (stats.screensVisited * 10) +
-            (stats.maxDepth * 15) +
-            min(stats.durationSec / 6, 50)
-        )
-
-        logEvent("session_quality", parameters: [
-            "session_number": session.totalSessions,
-            "duration_sec": stats.durationSec,
-            "screens_visited": stats.screensVisited,
-            "max_depth": stats.maxDepth,
-            "core_actions_count": session.coreActionsThisSession.count,
-            "engagement_score": engagementScore,
-            "days_since_install": session.daysSinceInstall,
-            "streak_days": session.streakDays,
-            "is_first_session": session.isFirstSession ? 1 : 0
-        ])
-
-        setUserProperty("last_engagement_score", value: "\(engagementScore)")
-    }
-
     func trackLastMeaningfulAction(action: String, screen: AppFeature) {
         setUserProperty("last_meaningful_action", value: action)
         setUserProperty("last_active_screen", value: screen.rawValue)
+    }
+
+    // MARK: - Discovery Events
+
+    func trackDiscoveryShown(count: Int, types: [String]) {
+        logEvent("discovery_shown", parameters: [
+            "count": count,
+            "types": types.joined(separator: ","),
+            "days_since_install": session.daysSinceInstall
+        ])
+    }
+
+    func trackDiscoveryPageViewed(type: String, index: Int) {
+        logEvent("discovery_page_viewed", parameters: [
+            "type": type,
+            "page_index": index
+        ])
+    }
+
+    func trackDiscoveryCompleted(pagesViewed: Int, totalPages: Int) {
+        logEvent("discovery_completed", parameters: [
+            "pages_viewed": pagesViewed,
+            "total_pages": totalPages,
+            "days_since_install": session.daysSinceInstall
+        ])
     }
 
     // MARK: - Generic Action
