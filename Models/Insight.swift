@@ -21,6 +21,7 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
     case illnessWarning      // "Early Warning"
     case causalChain         // "Cause & Effect"
     case crossMetricAnomaly  // "Cross-Metric"
+    case cognitiveEnergy     // "Cognitive & Energy"
 
     var displayName: String {
         switch self {
@@ -38,6 +39,7 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .illnessWarning: return "Early Warning"
         case .causalChain: return "Cause & Effect"
         case .crossMetricAnomaly: return "Cross-Metric"
+        case .cognitiveEnergy: return "Cognitive & Energy"
         }
     }
 
@@ -57,6 +59,7 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .illnessWarning: return "shield.lefthalf.filled.badge.checkmark"
         case .causalChain: return "arrow.triangle.turn.up.right.diamond.fill"
         case .crossMetricAnomaly: return "circle.grid.cross.fill"
+        case .cognitiveEnergy: return "brain.head.profile"
         }
     }
 
@@ -72,12 +75,69 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .personalRecord: return .yellow
         case .scoreTrajectory: return .mint
         case .baselineDrift: return .cyan
-        case .multiMetricCluster: return .pink
+        case .multiMetricCluster: return Color.red.opacity(0.8)
         case .illnessWarning: return .red
         case .causalChain: return .indigo
         case .crossMetricAnomaly: return .purple
+        case .cognitiveEnergy: return .orange
         }
     }
+}
+
+// MARK: - Insight Context
+
+/// Rich data carrier from analyzers to text generation — enables specific, data-backed recommendations
+struct InsightContext {
+    var slope: Double?
+    var projectedDaysToThreshold: Int?
+    var allTimePercentile: Double?
+    var seasonalDeviation: Double?
+    var yearOverYearChange: Double?
+    var correlatedFactors: [CorrelatedFactor]
+    var rootCauseMetric: HealthMetric?
+    var rootCauseDeviation: Double?
+    var comparisonToLastWeek: Double?
+    var recentValues: [(date: Date, value: Double)]?
+    var confidenceLevel: Double?
+    var dataPointCount: Int?
+    var categoryDrivers: [(category: HealthCategory, change: Double)]?
+
+    init(
+        slope: Double? = nil,
+        projectedDaysToThreshold: Int? = nil,
+        allTimePercentile: Double? = nil,
+        seasonalDeviation: Double? = nil,
+        yearOverYearChange: Double? = nil,
+        correlatedFactors: [CorrelatedFactor] = [],
+        rootCauseMetric: HealthMetric? = nil,
+        rootCauseDeviation: Double? = nil,
+        comparisonToLastWeek: Double? = nil,
+        recentValues: [(date: Date, value: Double)]? = nil,
+        confidenceLevel: Double? = nil,
+        dataPointCount: Int? = nil,
+        categoryDrivers: [(category: HealthCategory, change: Double)]? = nil
+    ) {
+        self.slope = slope
+        self.projectedDaysToThreshold = projectedDaysToThreshold
+        self.allTimePercentile = allTimePercentile
+        self.seasonalDeviation = seasonalDeviation
+        self.yearOverYearChange = yearOverYearChange
+        self.correlatedFactors = correlatedFactors
+        self.rootCauseMetric = rootCauseMetric
+        self.rootCauseDeviation = rootCauseDeviation
+        self.comparisonToLastWeek = comparisonToLastWeek
+        self.recentValues = recentValues
+        self.confidenceLevel = confidenceLevel
+        self.dataPointCount = dataPointCount
+        self.categoryDrivers = categoryDrivers
+    }
+}
+
+/// A correlated factor linking a metric to an effect size
+struct CorrelatedFactor {
+    let metric: HealthMetric
+    let correlation: Double
+    let effectPercent: Double
 }
 
 // MARK: - Insight
@@ -97,6 +157,7 @@ struct Insight: Identifiable {
     let generatedAt: Date
     let category: InsightCategory
     let relatedMetrics: [HealthMetric]
+    var context: InsightContext?
 
     /// First sentence of the recommendation — used as a concise action summary
     var actionSummary: String {
@@ -135,7 +196,8 @@ struct Insight: Identifiable {
         deviationPercent: Double,
         generatedAt: Date = Date(),
         category: InsightCategory = .anomaly,
-        relatedMetrics: [HealthMetric] = []
+        relatedMetrics: [HealthMetric] = [],
+        context: InsightContext? = nil
     ) {
         self.id = id
         self.metric = metric
@@ -150,5 +212,6 @@ struct Insight: Identifiable {
         self.generatedAt = generatedAt
         self.category = category
         self.relatedMetrics = relatedMetrics
+        self.context = context
     }
 }

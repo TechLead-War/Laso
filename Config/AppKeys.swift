@@ -22,6 +22,14 @@ enum AppKeys {
         static let milestones        = "laso.lifecycle.milestones"
         static let lastSessionDate   = "laso.lifecycle.last_session_date"
         static let firstValueTimeSec = "laso.lifecycle.first_value_time_sec"
+
+        // Retention & Habit
+        static let retentionMilestones   = "laso.session.retention_milestones"
+        static let streakMilestones      = "laso.session.streak_milestones"
+        static let lifetimeCoreActions   = "laso.session.lifetime_core_actions"
+
+        // Churn / Inactivity
+        static let lastInactivityAlert   = "laso.session.last_inactivity_alert"
     }
 
     // MARK: - Install
@@ -53,6 +61,8 @@ enum AppKeys {
         static let submitted      = "laso.feedback.submitted"
         static let cooldownDays   = "laso.feedback.cooldown_days"
         static let entries        = "laso.feedback.entries"
+        static let lastNPSDate    = "laso.feedback.last_nps_date"
+        static let lastNPSScore   = "laso.feedback.last_nps_score"
     }
 
     // MARK: - Watch Monitor

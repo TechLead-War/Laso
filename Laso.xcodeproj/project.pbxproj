@@ -122,6 +122,7 @@
 		IEW00100000000000000002 /* IllnessEarlyWarning.swift in Sources */ = {isa = PBXBuildFile; fileRef = IEW00100000000000000001 /* IllnessEarlyWarning.swift */; };
 		CMA00100000000000000002 /* CrossMetricAnomalyDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = CMA00100000000000000001 /* CrossMetricAnomalyDetector.swift */; };
 		CCE00100000000000000002 /* CausalChainEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCE00100000000000000001 /* CausalChainEngine.swift */; };
+		CEA00100000000000000002 /* CognitiveEnergyAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA00100000000000000001 /* CognitiveEnergyAnalyzer.swift */; };
 		FDDD14EED24B7DFA348D415B /* TrendBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C14C4080D8F86D1D9FE887E9 /* TrendBadge.swift */; };
 		FFCF2BEF13D3B81A68D9EF3B /* InsightCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA30AD19F71C6BA2C98C876C /* InsightCard.swift */; };
 		PRO00100000000000000002 /* ProFeatureOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = PRO00100000000000000001 /* ProFeatureOverlay.swift */; };
@@ -251,6 +252,7 @@
 		IEW00100000000000000001 /* IllnessEarlyWarning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IllnessEarlyWarning.swift; sourceTree = "<group>"; };
 		CMA00100000000000000001 /* CrossMetricAnomalyDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrossMetricAnomalyDetector.swift; sourceTree = "<group>"; };
 		CCE00100000000000000001 /* CausalChainEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CausalChainEngine.swift; sourceTree = "<group>"; };
+		CEA00100000000000000001 /* CognitiveEnergyAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CognitiveEnergyAnalyzer.swift; sourceTree = "<group>"; };
 		DSC00100000000000000001 /* Discovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Discovery.swift; sourceTree = "<group>"; };
 		DSC00100000000000000003 /* DiscoveryEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryEngine.swift; sourceTree = "<group>"; };
 		DSC00100000000000000005 /* DiscoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryView.swift; sourceTree = "<group>"; };
@@ -304,6 +306,7 @@
 				IEW00100000000000000001 /* IllnessEarlyWarning.swift */,
 				CMA00100000000000000001 /* CrossMetricAnomalyDetector.swift */,
 				CCE00100000000000000001 /* CausalChainEngine.swift */,
+				CEA00100000000000000001 /* CognitiveEnergyAnalyzer.swift */,
 			);
 			path = Analysis;
 			sourceTree = "<group>";
@@ -820,6 +823,7 @@
 				IEW00100000000000000002 /* IllnessEarlyWarning.swift in Sources */,
 				CMA00100000000000000002 /* CrossMetricAnomalyDetector.swift in Sources */,
 				CCE00100000000000000002 /* CausalChainEngine.swift in Sources */,
+				CEA00100000000000000002 /* CognitiveEnergyAnalyzer.swift in Sources */,
 				92BC085F0F66295F8221BE88 /* MetricChartView.swift in Sources */,
 				A7CB64E2140A793DD0258993 /* MetricDetailView.swift in Sources */,
 				202D80E10EC59F9CFC4DAEA0 /* MetricDetailViewModel.swift in Sources */,

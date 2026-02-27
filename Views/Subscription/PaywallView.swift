@@ -8,9 +8,14 @@ struct PaywallView: View {
 
     @State private var selectedProduct: Product?
     @State private var isRestoring = false
+    @State private var paywallOpenDate = Date()
 
     private var yearly: Product? { subscriptionManager.yearlyProduct }
     private var monthly: Product? { subscriptionManager.monthlyProduct }
+    private var callToActionTitle: String {
+        guard let product = selectedProduct else { return "Subscribe" }
+        return product.subscription?.introductoryOffer != nil ? "Start Free Trial" : "Subscribe Now"
+    }
 
     /// Monthly cost if paying yearly, for "save X%" label.
     private var yearlySavingsPercent: Int? {
@@ -40,14 +45,13 @@ struct PaywallView: View {
         .background(Color(.systemGroupedBackground))
         .onAppear {
             selectedProduct = yearly ?? monthly
-            AppAnalytics.shared.trackAction("paywall_shown", metadata: [
-                "region": Locale.current.region?.identifier ?? "unknown",
-                "price_tier": SubscriptionConfig.currentTier.rawValue,
-            ])
-            AppAnalytics.shared.trackPrePurchaseBehavior(action: "paywall_viewed", metadata: [
-                "source": "trial_expired",
-                "price_tier": SubscriptionConfig.currentTier.rawValue
-            ])
+            paywallOpenDate = Date()
+            AppAnalytics.shared.trackPaywallViewed(source: "trial_expired")
+        }
+        .onChange(of: subscriptionManager.products) { _, _ in
+            if selectedProduct == nil {
+                selectedProduct = yearly ?? monthly
+            }
         }
     }
 
@@ -79,7 +83,7 @@ struct PaywallView: View {
             featureRow(icon: "brain.head.profile", text: "Personalized insights & root cause analysis")
             featureRow(icon: "chart.line.uptrend.xyaxis", text: "Trends, correlations & weekly reports")
             featureRow(icon: "bell.badge.fill", text: "Smart alerts with custom thresholds")
-            featureRow(icon: "lock.shield.fill", text: "100% on-device \u{2014} your data never leaves")
+            featureRow(icon: "lock.shield.fill", text: "Health data stays on-device; anonymous usage analytics and optional feedback improve Laso")
         }
         .padding(20)
         .background(.background, in: RoundedRectangle(cornerRadius: 16))
@@ -204,10 +208,10 @@ struct PaywallView: View {
 
             Button {
                 guard let product = selectedProduct else { return }
-                AppAnalytics.shared.trackPrePurchaseBehavior(action: "subscribe_tapped", metadata: [
-                    "product_id": product.id,
-                    "price": product.displayPrice
-                ])
+                AppAnalytics.shared.trackPaywallCTATapped(
+                    productID: product.id,
+                    price: product.displayPrice
+                )
                 Task { await subscriptionManager.purchase(product) }
             } label: {
                 Group {
@@ -215,7 +219,7 @@ struct PaywallView: View {
                         ProgressView()
                             .tint(.white)
                     } else {
-                        Text("Start 7-Day Free Trial")
+                        Text(callToActionTitle)
                             .font(.headline)
                     }
                 }
@@ -229,7 +233,14 @@ struct PaywallView: View {
             Button {
                 isRestoring = true
                 Task {
+                    let previousStatus = subscriptionManager.status
                     await subscriptionManager.restorePurchases()
+                    let restored = subscriptionManager.hasAccess && !{
+                        if case .trial = previousStatus { return true }
+                        if case .subscribed = previousStatus { return true }
+                        return false
+                    }()
+                    AppAnalytics.shared.trackRestoreAttempted(success: restored)
                     isRestoring = false
                 }
             } label: {
@@ -242,6 +253,16 @@ struct PaywallView: View {
                 }
             }
             .buttonStyle(.plain)
+
+            if subscriptionManager.products.isEmpty {
+                Button {
+                    Task { await subscriptionManager.loadProducts() }
+                } label: {
+                    Text("Retry loading plans")
+                        .font(.subheadline.weight(.medium))
+                }
+                .buttonStyle(.plain)
+            }
 
             HStack(spacing: 16) {
                 Link("Terms of Use", destination: URL(string: "https://lasohealth.com/terms")!)

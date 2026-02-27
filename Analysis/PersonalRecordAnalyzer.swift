@@ -131,12 +131,22 @@ struct PersonalRecordAnalyzer {
 
         // Only report if it's a meaningful PR (within 2% of previous best counts as "tied")
         guard improvement < 2 || movingAverages.count <= window + 1 else {
+            // Calculate how long the previous record stood
+            let previousBestIndex: Int
+            if lowerIsBetter {
+                previousBestIndex = movingAverages.dropLast().enumerated().min(by: { $0.element < $1.element })?.offset ?? 0
+            } else {
+                previousBestIndex = movingAverages.dropLast().enumerated().max(by: { $0.element < $1.element })?.offset ?? 0
+            }
+            let recordAgeDays = movingAverages.count - 1 - previousBestIndex
+            let recordAgeNote = recordAgeDays > 7 ? " You beat a record that stood for \(recordAgeDays) days." : ""
+
             // It's a new PR with real improvement
             return Insight(
                 metric: metric,
                 title: "New \(windowLabel) PR: \(metric.displayName)",
-                summary: "Your \(windowLabel) average \(metric.displayName.lowercased()) hit a personal record: \(String(format: "%.1f", currentAvg)) \(metric.unit). Previous best: \(String(format: "%.1f", bestPrevious)) \(metric.unit).",
-                recommendation: "You're at your all-time best! Keep the momentum going while ensuring adequate recovery.",
+                summary: "Your \(windowLabel) average \(metric.displayName.lowercased()) hit a personal record: \(String(format: "%.1f", currentAvg)) \(metric.unit). Previous best: \(String(format: "%.1f", bestPrevious)) \(metric.unit) (\(String(format: "%.1f", improvement))% improvement).\(recordAgeNote)",
+                recommendation: "You're at your all-time \(windowLabel) best! Keep the momentum going while ensuring adequate recovery.",
                 severity: .info,
                 trend: .improving,
                 currentValue: currentAvg,

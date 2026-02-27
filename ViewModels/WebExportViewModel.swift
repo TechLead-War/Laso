@@ -19,6 +19,8 @@ final class WebExportViewModel {
     /// Generate and save the HTML report
     func exportReport() {
         isExporting = true
+        error = nil
+        exportedURL = nil
         defer { isExporting = false }
 
         let html = HTMLReportGenerator.generate(

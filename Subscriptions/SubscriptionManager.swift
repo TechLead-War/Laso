@@ -107,6 +107,7 @@ final class SubscriptionManager {
         do {
             let loaded = try await Product.products(for: SubscriptionConfig.allProductIDs)
             products = loaded.sorted { $0.price > $1.price } // yearly first
+            errorMessage = nil
         } catch {
             errorMessage = "Could not load subscription options. Check your connection."
         }
@@ -131,7 +132,7 @@ final class SubscriptionManager {
                 trackPurchase(product: product, isTrialConversion: wasTrialBefore)
 
             case .userCancelled:
-                break
+                AppAnalytics.shared.trackPurchaseFailed(productID: product.id, errorType: "user_cancelled")
 
             case .pending:
                 errorMessage = "Purchase is pending approval."
@@ -141,6 +142,7 @@ final class SubscriptionManager {
             }
         } catch {
             errorMessage = "Purchase failed. Please try again."
+            AppAnalytics.shared.trackPurchaseFailed(productID: product.id, errorType: "purchase_error")
         }
     }
 

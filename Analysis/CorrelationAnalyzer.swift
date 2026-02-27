@@ -173,27 +173,36 @@ struct CorrelationAnalyzer {
                 causeLabel: pair.causeLabel,
                 effectLabel: effectLabel,
                 effectSummary: effectResult.summary,
+                effectPercentDiff: effectResult.percentDiff,
                 isPositive: best.r > 0,
-                dayOffset: best.lag
+                dayOffset: best.lag,
+                avgBAbove: effectResult.avgBAbove,
+                avgBBelow: effectResult.avgBBelow
             ))
         }
 
         return results.sorted { abs($0.correlation) > abs($1.correlation) }
     }
 
-    /// Generate top correlation insights (for the Insights list)
+    /// Generate top correlation insights with actionable, data-specific text
     static func generateInsights(from correlations: [HealthCorrelation]) -> [Insight] {
         let topResults = Array(correlations.prefix(3))
 
         return topResults.map { result in
             let severity: Severity = abs(result.correlation) >= 0.5 ? .warning : .info
-            let direction: String = result.isPositive ? "positive" : "inverse"
+            let formattedAbove = result.metricB.formatValue(result.avgBAbove)
+            let formattedBelow = result.metricB.formatValue(result.avgBBelow)
+            let diffPct = String(format: "%.0f", result.effectPercentDiff)
+
+            let summary = "When your \(result.metricA.displayName.lowercased()) is above average, your \(result.metricB.displayName.lowercased()) averages \(formattedAbove) vs \(formattedBelow) \(result.metricB.unit) (\(diffPct)% \(result.isPositive ? "higher" : "lower")). Based on \(result.sampleCount) days of data (\(result.strengthLabel.lowercased()) correlation, r=\(String(format: "%.2f", result.correlation)))."
+
+            let recommendation = buildCorrelationRecommendation(result)
 
             return Insight(
                 metric: result.metricA,
                 title: "\(result.causeLabel) \u{2192} \(result.effectLabel)",
-                summary: result.effectSummary,
-                recommendation: "Pay attention to your \(result.metricA.displayName.lowercased()) \u{2014} it has a \(direction) correlation with your \(result.metricB.displayName.lowercased()).",
+                summary: summary,
+                recommendation: recommendation,
                 severity: severity,
                 trend: .stable,
                 currentValue: result.correlation,
@@ -202,6 +211,29 @@ struct CorrelationAnalyzer {
                 category: .correlation,
                 relatedMetrics: [result.metricA, result.metricB]
             )
+        }
+    }
+
+    /// Build a specific, actionable recommendation based on the correlation data
+    private static func buildCorrelationRecommendation(_ result: HealthCorrelation) -> String {
+        let aName = result.metricA.displayName.lowercased()
+        let bName = result.metricB.displayName.lowercased()
+        let diffPct = String(format: "%.0f", result.effectPercentDiff)
+
+        // Build metric-specific recommendations with concrete numbers
+        switch (result.metricA, result.metricB) {
+        case (.sleepDuration, .heartRateVariability), (.sleepDuration, .restingHeartRate):
+            return "Prioritize 7+ hrs sleep to sustain better \(bName). Your data shows \(diffPct)% improvement in \(bName) on above-average sleep nights."
+        case (.sleepDeep, .heartRateVariability), (.sleepREM, .heartRateVariability):
+            return "Boost \(aName) with a cool bedroom (65-68\u{00B0}F), no alcohol 3hrs before bed, and consistent bedtimes. Each improvement raises your next-day HRV by ~\(diffPct)%."
+        case (.exerciseMinutes, .heartRateVariability), (.exerciseMinutes, .sleepDeep):
+            return "Your exercise directly improves your \(bName) — \(diffPct)% better on active days. Aim for 30+ min of moderate exercise to maximize this effect."
+        case (.mindfulMinutes, .heartRateVariability), (.mindfulMinutes, .restingHeartRate):
+            return "Even 10 min of daily mindfulness raises your \(bName) by \(diffPct)%. Start with a guided breathing session to lock in this habit."
+        case (.steps, .sleepDuration), (.activeCalories, .sleepDeep):
+            return "Higher \(aName) leads to \(diffPct)% better \(bName). A 20-min walk after dinner is the easiest way to boost both activity and sleep."
+        default:
+            return "Improving your \(aName) directly impacts your \(bName) by \(diffPct)%. Focus on \(aName) as a lever to improve \(bName)."
         }
     }
 
@@ -220,13 +252,15 @@ struct CorrelationAnalyzer {
         return "Mild"
     }
 
-    private struct EffectResult {
+    struct EffectResult {
         let percentDiff: Double
         let summary: String
+        let avgBAbove: Double
+        let avgBBelow: Double
     }
 
     /// Partition by above/below baseline of metric A, compute average difference in metric B
-    private static func computeConditionalEffect(
+    static func computeConditionalEffect(
         aligned: [TimeSeriesAligner.AlignedPair],
         metricA: HealthMetric,
         metricB: HealthMetric
@@ -240,7 +274,9 @@ struct CorrelationAnalyzer {
         guard !aboveBaseline.isEmpty, !belowBaseline.isEmpty else {
             return EffectResult(
                 percentDiff: 0,
-                summary: "\(metricA.displayName) correlates with \(metricB.displayName)."
+                summary: "\(metricA.displayName) correlates with \(metricB.displayName).",
+                avgBAbove: 0,
+                avgBBelow: 0
             )
         }
 
@@ -250,7 +286,9 @@ struct CorrelationAnalyzer {
         guard avgBBelow != 0 else {
             return EffectResult(
                 percentDiff: 0,
-                summary: "\(metricA.displayName) correlates with \(metricB.displayName)."
+                summary: "\(metricA.displayName) correlates with \(metricB.displayName).",
+                avgBAbove: avgBAbove,
+                avgBBelow: 0
             )
         }
 
@@ -258,8 +296,11 @@ struct CorrelationAnalyzer {
         let direction = percentDiff > 0 ? "higher" : "lower"
         let absPercent = String(format: "%.0f", abs(percentDiff))
 
-        let summary = "When your \(metricA.displayName.lowercased()) is above average, your \(metricB.displayName.lowercased()) is \(absPercent)% \(direction)."
+        let formattedAbove = metricB.formatValue(avgBAbove)
+        let formattedBelow = metricB.formatValue(avgBBelow)
 
-        return EffectResult(percentDiff: abs(percentDiff), summary: summary)
+        let summary = "When your \(metricA.displayName.lowercased()) is above average, your \(metricB.displayName.lowercased()) averages \(formattedAbove)\(metricB.unit) vs \(formattedBelow)\(metricB.unit) (\(absPercent)% \(direction))."
+
+        return EffectResult(percentDiff: abs(percentDiff), summary: summary, avgBAbove: avgBAbove, avgBBelow: avgBBelow)
     }
 }

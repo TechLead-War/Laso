@@ -44,14 +44,16 @@ struct RecoveryAnalyzer {
             if !recoveryDays.isEmpty {
                 let avgRecovery = recoveryDays.map { Double($0) }.mean
                 let trend: TrendDirection = avgRecovery > 2.5 ? .declining : .improving
+                let postWorkoutAvg = String(format: "%.0f", hrvBaseline.mean - hrvBaseline.standardDeviation)
+                let baselineStr = String(format: "%.0f", hrvBaseline.mean)
 
                 insights.append(Insight(
                     metric: .heartRateVariability,
                     title: "Post-Workout HRV Recovery",
-                    summary: "Your HRV takes an average of \(String(format: "%.1f", avgRecovery)) days to return to baseline after workouts.",
+                    summary: "Your HRV takes an average of \(String(format: "%.1f", avgRecovery)) days to return to baseline after workouts. Post-workout HRV averages ~\(postWorkoutAvg)ms vs your \(baselineStr)ms baseline.",
                     recommendation: avgRecovery > 2 ?
-                        "Consider adding more rest days or reducing workout intensity to improve recovery." :
-                        "Your recovery is strong — your body bounces back quickly after workouts.",
+                        "Add 1 extra rest day per week and reduce workout intensity by 20% on back-to-back training days. Your recovery time suggests your body needs more time between sessions." :
+                        "Your recovery is strong at \(String(format: "%.1f", avgRecovery)) days \u{2014} keep your current training-to-rest ratio.",
                     severity: avgRecovery > 3 ? .warning : .info,
                     trend: trend,
                     currentValue: avgRecovery,
@@ -94,9 +96,18 @@ struct RecoveryAnalyzer {
         let sleepDeclining = trends[.sleepDuration]?.direction == .declining
 
         var signals: [String] = []
-        if hrvDeclining { signals.append("HRV is declining") }
-        if rhrElevated { signals.append("resting heart rate is elevated") }
-        if sleepDeclining { signals.append("sleep duration is dropping") }
+        if hrvDeclining {
+            let hrvChange = trends[.heartRateVariability]?.weekOverWeekChange ?? 0
+            signals.append("HRV declining \(String(format: "%.0f", abs(hrvChange)))%")
+        }
+        if rhrElevated {
+            let rhrChange = trends[.restingHeartRate]?.weekOverWeekChange ?? 0
+            signals.append("resting HR elevated \(String(format: "%.0f", abs(rhrChange)))%")
+        }
+        if sleepDeclining {
+            let sleepChange = trends[.sleepDuration]?.weekOverWeekChange ?? 0
+            signals.append("sleep down \(String(format: "%.0f", abs(sleepChange)))%")
+        }
 
         if signals.count >= 2 {
             let isAllThree = signals.count == 3
@@ -107,8 +118,8 @@ struct RecoveryAnalyzer {
                 title: isAllThree ? "Overtraining Warning" : "Early Overtraining Signal",
                 summary: "\(signals.count) of 3 overtraining indicators present: \(signalText).\(isAllThree ? "" : " A third declining signal would confirm overtraining.")",
                 recommendation: isAllThree
-                    ? "Take 2-3 complete rest days. Focus on sleep, hydration, and light movement like walking. Resume training at reduced intensity."
-                    : "Consider a deload week — reduce training volume by 40-50%. Prioritize sleep and monitor whether the trend reverses.",
+                    ? "Take 2-3 complete rest days starting tomorrow. Focus on sleep (8+ hrs), hydration (3L water), and light walking only. Resume training at 60% intensity."
+                    : "Reduce training volume by 40-50% this week. Prioritize 8+ hrs sleep and track whether HRV stabilizes within 3 days.",
                 severity: isAllThree ? .critical : .warning,
                 trend: .declining,
                 currentValue: Double(signals.count),

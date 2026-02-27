@@ -597,30 +597,29 @@ struct CrossMetricAnomalyDetector {
 
     private static func buildRecommendation(for anomaly: CrossMetricAnomaly) -> String {
         let involvedCategories = Set(anomaly.involvedMetrics.map { $0.metric.category })
+        let topMetrics = anomaly.involvedMetrics.prefix(3).map { $0.metric.displayName.lowercased() }.joined(separator: ", ")
 
         switch anomaly.severity {
         case .critical:
-            return "This combination of metric values is extremely rare for you and may indicate " +
-                "a significant change in your health pattern. Monitor these metrics closely over " +
-                "the next few days and consult a healthcare provider if this pattern persists."
+            return "This combination of metric values (\(topMetrics)) is extremely rare for you. Review what was different yesterday \u{2014} travel, diet, late exercise, alcohol, or stress changes are common triggers. If this pattern repeats for 2+ days, consult a healthcare provider."
         case .warning:
             if !anomaly.brokenCorrelations.isEmpty {
                 let broken = anomaly.brokenCorrelations[0]
                 return "The usual relationship between your \(broken.metricA.displayName.lowercased()) " +
-                    "and \(broken.metricB.displayName.lowercased()) has broken down. This can happen " +
-                    "during lifestyle changes, illness, or increased stress. Review any recent changes " +
-                    "to your routine."
+                    "and \(broken.metricB.displayName.lowercased()) has broken down. Review what was different yesterday \u{2014} " +
+                    "travel, diet changes, late exercise, or unusual stress are common triggers. " +
+                    "Track whether this normalizes within 48 hours."
             }
             if involvedCategories.count >= 2 {
-                return "Multiple health categories are showing an unusual combination. Cross-category " +
-                    "patterns often reflect systemic changes like stress, recovery, or lifestyle shifts. " +
-                    "Pay attention to how you feel overall."
+                return "Unusual pattern across \(involvedCategories.count) categories (\(topMetrics)). " +
+                    "Review what was different yesterday \u{2014} travel, diet, late exercise, or stress changes are the most common triggers. " +
+                    "If you feel fine, this may be a one-off."
             }
-            return "This combination of values is uncommon for you. It may be worth noting what was " +
-                "different about this day \u{2014} travel, diet, stress, or activity changes."
+            return "Unusual combination in \(topMetrics). Review what was different yesterday \u{2014} " +
+                "travel, diet, late exercise, or stress changes are common triggers."
         case .info:
-            return "An unusual combination worth noting. No immediate action needed, but tracking " +
-                "whether this pattern recurs can provide useful context for your health trends."
+            return "Unusual but mild pattern in \(topMetrics). No immediate action needed \u{2014} " +
+                "track whether this recurs over the next 3 days to determine if it's a one-off or emerging trend."
         }
     }
 }

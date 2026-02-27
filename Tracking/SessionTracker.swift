@@ -1,7 +1,7 @@
 import Foundation
 
 /// Manages session lifecycle, navigation depth, screen transitions, daily streak,
-/// activation milestones, and retention signals.
+/// activation milestones, retention signals, and habit/churn detection.
 final class SessionTracker {
     static let shared = SessionTracker()
 
@@ -20,6 +20,8 @@ final class SessionTracker {
     // MARK: - Streak State
 
     private(set) var streakDays: Int = 0
+    /// Previous streak before it was broken (populated on streak reset).
+    private(set) var previousStreakBeforeBreak: Int?
 
     // MARK: - Lifecycle State
 
@@ -28,6 +30,12 @@ final class SessionTracker {
     private(set) var isFirstSession: Bool = false
     private(set) var completedMilestones: Set<String> = []
     private(set) var coreActionsThisSession: [String] = []
+    private(set) var lifetimeCoreActions: Int = 0
+
+    // MARK: - Retention State
+
+    private(set) var retentionMilestones: Set<String> = []
+    private(set) var streakMilestonesReached: Set<String> = []
 
     private enum Key {
         static let lastActiveDate = AppKeys.Session.lastActiveDate
@@ -38,6 +46,10 @@ final class SessionTracker {
         static let completedMilestones = AppKeys.Session.milestones
         static let lastSessionDate = AppKeys.Session.lastSessionDate
         static let firstValueTimeSec = AppKeys.Session.firstValueTimeSec
+        static let retentionMilestones = AppKeys.Session.retentionMilestones
+        static let streakMilestones = AppKeys.Session.streakMilestones
+        static let lifetimeCoreActions = AppKeys.Session.lifetimeCoreActions
+        static let lastInactivityAlert = AppKeys.Session.lastInactivityAlert
     }
 
     private init() {
@@ -55,6 +67,7 @@ final class SessionTracker {
         currentDepth = 0
         lastScreen = nil
         coreActionsThisSession = []
+        previousStreakBeforeBreak = nil
         updateStreak()
         updateLifecycleOnStart()
     }
@@ -72,7 +85,7 @@ final class SessionTracker {
 
     // MARK: - Screen Tracking
 
-    /// Records a screen view and returns the previous screen name (for nav_transition).
+    /// Records a screen view and returns the previous screen name.
     func recordScreenView(_ screen: String) -> String? {
         let previousScreen = lastScreen
         screensVisited.insert(screen)
@@ -91,6 +104,10 @@ final class SessionTracker {
         streakDays >= defaults.integer(forKey: Key.longestStreak)
     }
 
+    var longestStreak: Int {
+        defaults.integer(forKey: Key.longestStreak)
+    }
+
     private func loadStreak() {
         streakDays = defaults.integer(forKey: Key.streakDays)
     }
@@ -106,6 +123,8 @@ final class SessionTracker {
             if daysDiff == 1 {
                 streakDays += 1
             } else if daysDiff > 1 {
+                // Streak broken — record the previous streak for analytics
+                previousStreakBeforeBreak = defaults.integer(forKey: Key.streakDays)
                 streakDays = 1
             }
             // daysDiff == 0 → same day, no change
@@ -122,10 +141,78 @@ final class SessionTracker {
         }
     }
 
+    /// Check and record streak milestones (7, 14, 30, 60, 100).
+    /// Returns the milestone value if newly reached, nil otherwise.
+    func checkStreakMilestone() -> Int? {
+        if streakMilestonesReached.isEmpty,
+           let stored = defaults.stringArray(forKey: Key.streakMilestones) {
+            streakMilestonesReached = Set(stored)
+        }
+
+        let milestones = [7, 14, 30, 60, 100]
+        for m in milestones {
+            let key = "streak_\(m)"
+            if streakDays >= m && !streakMilestonesReached.contains(key) {
+                streakMilestonesReached.insert(key)
+                defaults.set(Array(streakMilestonesReached), forKey: Key.streakMilestones)
+                return m
+            }
+        }
+        return nil
+    }
+
+    // MARK: - Retention Milestones
+
+    /// Check and record retention day milestones (day 1, 2, 3, 7, 14, 30).
+    /// Returns the milestone day if newly reached, nil otherwise.
+    func checkRetentionMilestone() -> Int? {
+        if retentionMilestones.isEmpty,
+           let stored = defaults.stringArray(forKey: Key.retentionMilestones) {
+            retentionMilestones = Set(stored)
+        }
+
+        let milestones = [1, 2, 3, 7, 14, 30]
+        for day in milestones {
+            let key = "day_\(day)"
+            if daysSinceInstall >= day && !retentionMilestones.contains(key) {
+                retentionMilestones.insert(key)
+                defaults.set(Array(retentionMilestones), forKey: Key.retentionMilestones)
+                return day
+            }
+        }
+        return nil
+    }
+
+    // MARK: - Inactivity Detection
+
+    /// Returns days since last session, but only if it crosses a threshold (3, 7).
+    /// Returns nil if no notable inactivity or already alerted for this gap.
+    func checkInactivityPeriod() -> Int? {
+        guard let daysSince = daysSinceLastSession, daysSince >= 3 else { return nil }
+
+        let lastAlertedGap = defaults.integer(forKey: Key.lastInactivityAlert)
+
+        // Alert at 3 and 7 day thresholds (only once per threshold)
+        if daysSince >= 7 && lastAlertedGap < 7 {
+            defaults.set(7, forKey: Key.lastInactivityAlert)
+            return 7
+        } else if daysSince >= 3 && lastAlertedGap < 3 {
+            defaults.set(3, forKey: Key.lastInactivityAlert)
+            return 3
+        }
+        return nil
+    }
+
+    /// Reset inactivity tracking when user becomes active again.
+    func clearInactivityState() {
+        defaults.set(0, forKey: Key.lastInactivityAlert)
+    }
+
     // MARK: - Lifecycle / Activation / Retention
 
     private func loadLifecycleState() {
         totalSessions = defaults.integer(forKey: Key.totalSessions)
+        lifetimeCoreActions = defaults.integer(forKey: Key.lifetimeCoreActions)
         if let milestones = defaults.stringArray(forKey: Key.completedMilestones) {
             completedMilestones = Set(milestones)
         }
@@ -160,10 +247,13 @@ final class SessionTracker {
     }
 
     /// Record a core action in this session (for session quality scoring).
+    /// Also increments lifetime core actions.
     func recordCoreAction(_ action: String) {
         if !coreActionsThisSession.contains(action) {
             coreActionsThisSession.append(action)
         }
+        lifetimeCoreActions += 1
+        defaults.set(lifetimeCoreActions, forKey: Key.lifetimeCoreActions)
     }
 
     /// Record time-to-first-value (only once, on first meaningful data load).
@@ -179,5 +269,10 @@ final class SessionTracker {
 
     var installDate: Date {
         defaults.object(forKey: Key.installDate) as? Date ?? Date()
+    }
+
+    /// Whether the user meets activation criteria: 3+ milestones within first 7 days.
+    var isActivated: Bool {
+        completedMilestones.count >= 3
     }
 }

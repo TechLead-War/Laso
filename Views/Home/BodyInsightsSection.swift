@@ -106,7 +106,7 @@ struct BodyInsightsSection: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.tint, in: RoundedRectangle(cornerRadius: 14))
+        .background(.blue.gradient, in: RoundedRectangle(cornerRadius: 14))
         .padding(.horizontal)
     }
 
@@ -130,7 +130,7 @@ struct BodyInsightsSection: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.purple.gradient, in: RoundedRectangle(cornerRadius: 14))
+        .background(.indigo.gradient, in: RoundedRectangle(cornerRadius: 14))
         .padding(.horizontal)
     }
 

@@ -1,6 +1,10 @@
 Firebase App: laso-health-v1
 App Bundle: com.lasohealth.app
 
+
+python3 fetch_analytics.py --property-id 525486766 --credentials laso-health-v1-firebase-adminsdk-fbsvc-db9db97f3e.json
+
+
 /var/folders/v3/dzfc_vcd5bqf618x5xmqg0s00000gn/T/TemporaryItems/NSIRD_screencaptureui_LnzXIK/Screenshot 2026-02-22 at 12.00.41 PM.png
 
 

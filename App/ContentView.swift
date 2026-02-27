@@ -116,12 +116,10 @@ struct ContentView: View {
         .task {
             await dashboardViewModel.load()
             liveViewModel.fetchHomeData()
-            AppAnalytics.shared.setDemographics(from: healthKitManager.healthStore)
         }
         .onAppear {
             FeedbackPromptManager.shared.recordAppOpen()
-            AppAnalytics.shared.trackSessionStart()
-            AppAnalytics.shared.trackReturnSession()
+            startSessionAnalytics()
             if FeedbackPromptManager.shared.shouldShowFeedbackPrompt() {
                 showFeedback = true
                 FeedbackPromptManager.shared.markPromptShown()
@@ -129,8 +127,7 @@ struct ContentView: View {
         }
         .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .active && oldPhase != .active {
-                AppAnalytics.shared.trackSessionStart()
-                AppAnalytics.shared.trackReturnSession()
+                startSessionAnalytics()
                 WatchMonitor.shared.evaluateWatchStatus()
             } else if newPhase == .background {
                 AppAnalytics.shared.trackSessionEnd()
@@ -171,6 +168,16 @@ struct ContentView: View {
                 navigationPath: $navigationPath
             )
         }
+    }
+
+    // MARK: - Session Analytics
+
+    private func startSessionAnalytics() {
+        let analytics = AppAnalytics.shared
+        analytics.trackSessionStart()
+        analytics.trackReturnSession()
+        analytics.trackRetentionMilestones()
+        analytics.trackInactivityIfNeeded()
     }
 
     // MARK: - Billing Grace Banner (subtle, non-blocking, only after 16 days)

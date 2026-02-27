@@ -104,8 +104,6 @@ struct WeeklyReviewView: View {
         .onAppear {
             viewModel.load()
             AppAnalytics.shared.trackFeatureOpen(.weeklyReview, metadata: [
-                "score": viewModel.review?.currentScore ?? 0,
-                "score_delta": viewModel.scoreDelta ?? 0,
                 "wins_count": viewModel.review?.wins.count ?? 0,
                 "watchouts_count": viewModel.review?.watchOuts.count ?? 0
             ])

@@ -229,6 +229,11 @@ struct SettingsView: View {
                         if webExportViewModel.isExporting {
                             ProgressView("Generating report...")
                         }
+                        if let error = webExportViewModel.error {
+                            Text(error)
+                                .font(.caption)
+                                .foregroundStyle(.red)
+                        }
                     } else {
                         HStack {
                             Label("Generate Web Report", systemImage: "globe")
@@ -301,7 +306,7 @@ struct SettingsView: View {
                     HStack {
                         Text("Data Privacy")
                         Spacer()
-                        Text("100% On-Device")
+                        Text("Health Data On-Device")
                             .foregroundStyle(.secondary)
                     }
                 }

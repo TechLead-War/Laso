@@ -68,11 +68,14 @@ enum HealthFocus: String, Codable, Identifiable, Hashable, CaseIterable {
 struct OnboardingView: View {
     @State private var currentPage = 0
     @State private var selectedFocuses: Set<HealthFocus> = []
+    @State private var onboardingStartDate = Date()
+    @State private var stepStartDate = Date()
 
     let healthKitManager: HealthKitManager
     let onComplete: () -> Void
 
     private let totalPages = 2
+    private let stepNames = ["connect_health", "focus_selection"]
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -107,20 +110,44 @@ struct OnboardingView: View {
         .interactiveDismissDisabled()
         .sensoryFeedback(.selection, trigger: currentPage)
         .onAppear {
+            onboardingStartDate = Date()
+            stepStartDate = Date()
             AppAnalytics.shared.trackFeatureOpen(.onboarding)
         }
-        .onChange(of: currentPage) { _, newPage in
-            AppAnalytics.shared.trackAction("onboarding_page_viewed", metadata: ["page": newPage])
+        .onChange(of: currentPage) { oldPage, newPage in
+            // Track step completion for the step we just left
+            let stepDuration = Int(Date().timeIntervalSince(stepStartDate))
+            AppAnalytics.shared.trackOnboardingStepCompleted(
+                step: oldPage,
+                stepName: stepNames[oldPage],
+                durationSec: stepDuration
+            )
+            stepStartDate = Date()
+        }
+        .onDisappear {
+            // If onboarding disappears without completion, track drop-off
+            if !UserDefaults.standard.bool(forKey: AppKeys.App.onboardingCompleted) {
+                let totalDuration = Int(Date().timeIntervalSince(onboardingStartDate))
+                AppAnalytics.shared.trackOnboardingDropOff(
+                    lastStep: currentPage,
+                    lastStepName: stepNames[currentPage],
+                    durationSec: totalDuration
+                )
+            }
         }
     }
 
     private func finishOnboarding() {
         let focuses = selectedFocuses.isEmpty ? Set(HealthFocus.allCases) : selectedFocuses
         PersistenceManager().saveHealthFocuses(focuses)
-        AppAnalytics.shared.trackFeatureClose(.onboarding, metadata: [
-            "focuses_selected": focuses.map(\.rawValue).joined(separator: ","),
-            "focuses_count": focuses.count
-        ])
+
+        let totalDuration = Int(Date().timeIntervalSince(onboardingStartDate))
+        AppAnalytics.shared.trackOnboardingCompleted(
+            focuses: focuses.map(\.rawValue),
+            durationSec: totalDuration,
+            stepsCompleted: totalPages
+        )
+        AppAnalytics.shared.trackFeatureClose(.onboarding)
         onComplete()
     }
 }
@@ -153,7 +180,7 @@ private struct ConnectHealthPage: View {
                 Divider().padding(.leading, 52)
                 benefitRow(icon: "sparkles", color: .blue, text: "Personalized insights and alerts")
                 Divider().padding(.leading, 52)
-                benefitRow(icon: "lock.fill", color: .orange, text: "100% on-device — nothing uploaded")
+                benefitRow(icon: "lock.fill", color: .orange, text: "Health data stays on-device; anonymous usage analytics and optional feedback improve Laso")
             }
             .background(.background, in: RoundedRectangle(cornerRadius: 16))
             .padding(.horizontal)

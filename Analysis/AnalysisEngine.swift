@@ -105,27 +105,30 @@ final class AnalysisEngine {
             trends: trends
         )
 
-        // Step 7: Generate insights (with historical context when available)
-        // Historical context is computed in step 7h but needs to be available here.
-        // Compute it early for the insight generator to use.
+        // Step 7: Compute correlations early (needed by InsightGenerator for context)
+        correlations = CorrelationAnalyzer.analyzeAll(timeSeries: timeSeries)
+
+        // Step 7a: Historical context (needed by InsightGenerator)
         historicalContext = HistoricalAnalyzer.analyzeAll(
             timeSeries: timeSeries,
             baselines: baselines
         )
 
+        // Step 7b: Generate base insights with full context
         insights = InsightGenerator.generate(
             anomalies: anomalies,
             trends: trends,
             baselines: baselines,
-            historicalContext: historicalContext
+            historicalContext: historicalContext,
+            correlations: correlations,
+            timeSeries: timeSeries
         )
 
-        // Step 7a: Correlation analysis + insights
-        correlations = CorrelationAnalyzer.analyzeAll(timeSeries: timeSeries)
+        // Step 7c: Correlation insights
         let correlationInsights = CorrelationAnalyzer.generateInsights(from: correlations)
         insights.append(contentsOf: correlationInsights)
 
-        // Step 7b: Recovery insights
+        // Step 7d: Recovery insights
         let recoveryInsights = RecoveryAnalyzer.generateInsights(
             timeSeries: timeSeries,
             baselines: baselines,
@@ -133,28 +136,38 @@ final class AnalysisEngine {
         )
         insights.append(contentsOf: recoveryInsights)
 
-        // Step 7c: Workout effectiveness insights
+        // Step 7e: Workout effectiveness insights
         let workoutInsights = WorkoutEffectivenessAnalyzer.generateInsights(timeSeries: timeSeries)
         insights.append(contentsOf: workoutInsights)
 
-        // Step 7d: Sleep-performance insights
+        // Step 7f: Sleep-performance insights
         let sleepPerfInsights = SleepPerformanceAnalyzer.generateInsights(timeSeries: timeSeries)
         insights.append(contentsOf: sleepPerfInsights)
 
-        // Step 7e: Weekly pattern insights
+        // Step 7g: Weekly pattern insights
         let weeklyInsights = WeeklyPatternAnalyzer.generateInsights(timeSeries: timeSeries)
         insights.append(contentsOf: weeklyInsights)
 
-        // Step 7f: Personal record insights
+        // Step 7h: Personal record insights
         let prInsights = PersonalRecordAnalyzer.generateInsights(timeSeries: timeSeries)
         insights.append(contentsOf: prInsights)
 
-        // Step 7g: Multi-metric cluster insights
+        // Step 7i: Multi-metric cluster insights (with baselines for actual values)
         let clusterInsights = MultiMetricClusterAnalyzer.generateInsights(
             anomalies: anomalies,
-            trends: trends
+            trends: trends,
+            baselines: baselines
         )
         insights.append(contentsOf: clusterInsights)
+
+        // Step 7j: Cognitive & Energy insights
+        let cognitiveInsights = CognitiveEnergyAnalyzer.generateInsights(
+            timeSeries: timeSeries,
+            baselines: baselines,
+            trends: trends,
+            correlations: correlations
+        )
+        insights.append(contentsOf: cognitiveInsights)
 
         // Step 7h: Deep historical insights (leverages ALL available data — years, not days)
         // historicalContext was already computed in Step 7 for enriching base insights.

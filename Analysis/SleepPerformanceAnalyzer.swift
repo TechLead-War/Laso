@@ -145,7 +145,8 @@ struct SleepPerformanceAnalyzer {
         sleepSeries: MetricTimeSeries,
         timeSeries: [HealthMetric: MetricTimeSeries]
     ) -> Insight? {
-        let last30 = sleepSeries.samples(lastDays: 30).map(\.value)
+        let last30Samples = sleepSeries.samples(lastDays: 30)
+        let last30 = last30Samples.map(\.value)
         guard last30.count >= 14 else { return nil }
 
         let stdDev = last30.standardDeviation
@@ -155,18 +156,60 @@ struct SleepPerformanceAnalyzer {
 
         let cv = stdDev / mean  // coefficient of variation
 
+        // Weekday vs weekend split
+        let calendar = Calendar.current
+        let weekdaySamples = last30Samples.filter { sample in
+            let weekday = calendar.component(.weekday, from: sample.date)
+            return weekday >= 2 && weekday <= 6 // Mon-Fri
+        }.map(\.value)
+        let weekendSamples = last30Samples.filter { sample in
+            let weekday = calendar.component(.weekday, from: sample.date)
+            return weekday == 1 || weekday == 7 // Sun, Sat
+        }.map(\.value)
+
+        let weekdayAvg = weekdaySamples.isEmpty ? 0 : weekdaySamples.mean
+        let weekendAvg = weekendSamples.isEmpty ? 0 : weekendSamples.mean
+        let hasWeekdayWeekendData = !weekdaySamples.isEmpty && !weekendSamples.isEmpty
+
+        // Find worst nights
+        let sortedByValue = last30Samples.sorted { $0.value < $1.value }
+        let worstNights = sortedByValue.prefix(3)
+        let worstDays = worstNights.compactMap { sample -> String? in
+            let weekday = calendar.component(.weekday, from: sample.date)
+            return calendar.shortWeekdaySymbols[weekday - 1]
+        }
+
         let isConsistent = cv < 0.15
         let severity: Severity = cv > 0.25 ? .warning : .info
+
+        var summaryParts: [String] = []
+        if isConsistent {
+            summaryParts.append("Your sleep schedule is consistent (\u{00B1}\(String(format: "%.0f", stdDev * 60)) min variation)")
+        } else {
+            summaryParts.append("Your sleep varies by \u{00B1}\(String(format: "%.1f", stdDev)) hours night to night")
+        }
+        if hasWeekdayWeekendData {
+            summaryParts.append("Weekday avg: \(String(format: "%.1f", weekdayAvg)) hrs, weekend avg: \(String(format: "%.1f", weekendAvg)) hrs")
+        }
+        if !worstDays.isEmpty && !isConsistent {
+            summaryParts.append("Worst nights tend to fall on \(worstDays.joined(separator: ", "))")
+        }
+
+        let gapNote: String
+        if hasWeekdayWeekendData && abs(weekdayAvg - weekendAvg) > 0.5 {
+            let shorter = weekdayAvg < weekendAvg ? "weekday" : "weekend"
+            gapNote = " Your \(shorter) sleep is \(String(format: "%.1f", abs(weekdayAvg - weekendAvg))) hrs shorter \u{2014} closing this gap will improve your circadian rhythm."
+        } else {
+            gapNote = ""
+        }
 
         return Insight(
             metric: .sleepDuration,
             title: "Sleep Consistency",
-            summary: isConsistent ?
-                "Your sleep schedule is consistent (±\(String(format: "%.1f", stdDev * 60)) min variation). Consistent sleepers get more deep sleep." :
-                "Your sleep varies by ±\(String(format: "%.1f", stdDev)) hours night to night. Irregular sleep reduces deep sleep quality.",
+            summary: summaryParts.joined(separator: ". ") + ".",
             recommendation: isConsistent ?
-                "Keep it up! A consistent sleep schedule is one of the best things you can do for recovery." :
-                "Try setting a fixed bedtime and wake time, even on weekends. Your body's circadian rhythm thrives on consistency.",
+                "Consistent sleep schedule at \(String(format: "%.1f", mean)) hrs avg \u{2014} this directly improves deep sleep and recovery.\(gapNote)" :
+                "Set a fixed bedtime and wake time 7 days a week. Aim for \u{00B1}30 min variation max.\(gapNote)",
             severity: severity,
             trend: isConsistent ? .improving : .declining,
             currentValue: cv * 100,

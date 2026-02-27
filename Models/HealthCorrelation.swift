@@ -11,8 +11,13 @@ struct HealthCorrelation: Identifiable {
     let causeLabel: String           // "More deep sleep"
     let effectLabel: String          // "Higher HRV next day"
     let effectSummary: String        // "When deep sleep is above average, HRV is 18% higher"
+    let effectPercentDiff: Double    // Effect size as % difference between above/below baseline groups
     let isPositive: Bool             // direction of relationship
     let dayOffset: Int               // 0 = same day, 1 = next day
+    /// Average of metricB when metricA is above its baseline
+    let avgBAbove: Double
+    /// Average of metricB when metricA is below its baseline
+    let avgBBelow: Double
 
     init(
         id: UUID = UUID(),
@@ -24,8 +29,11 @@ struct HealthCorrelation: Identifiable {
         causeLabel: String,
         effectLabel: String,
         effectSummary: String,
+        effectPercentDiff: Double = 0,
         isPositive: Bool,
-        dayOffset: Int
+        dayOffset: Int,
+        avgBAbove: Double = 0,
+        avgBBelow: Double = 0
     ) {
         self.id = id
         self.metricA = metricA
@@ -36,7 +44,10 @@ struct HealthCorrelation: Identifiable {
         self.causeLabel = causeLabel
         self.effectLabel = effectLabel
         self.effectSummary = effectSummary
+        self.effectPercentDiff = effectPercentDiff
         self.isPositive = isPositive
         self.dayOffset = dayOffset
+        self.avgBAbove = avgBAbove
+        self.avgBBelow = avgBBelow
     }
 }

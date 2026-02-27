@@ -4,13 +4,13 @@ import Foundation
 /// Uses stored daily analysis snapshots to detect long-term score trends.
 struct ScoreTrajectoryAnalyzer {
 
-    /// Generate insights from score history
-    static func generateInsights(scoreHistory: [(date: Date, score: Int)]) -> [Insight] {
+    /// Generate insights from score history with optional category breakdown
+    static func generateInsights(scoreHistory: [(date: Date, score: Int)], categoryScores: [HealthScore] = []) -> [Insight] {
         guard scoreHistory.count >= 7 else { return [] }
         var insights: [Insight] = []
 
         // 1. Overall trajectory over last 30 days
-        if let trajectory = analyzeTrajectory(scoreHistory: scoreHistory, days: 30) {
+        if let trajectory = analyzeTrajectory(scoreHistory: scoreHistory, days: 30, categoryScores: categoryScores) {
             insights.append(trajectory)
         }
 
@@ -29,7 +29,7 @@ struct ScoreTrajectoryAnalyzer {
 
     // MARK: - Trajectory (30-day score direction)
 
-    private static func analyzeTrajectory(scoreHistory: [(date: Date, score: Int)], days: Int) -> Insight? {
+    private static func analyzeTrajectory(scoreHistory: [(date: Date, score: Int)], days: Int, categoryScores: [HealthScore] = []) -> Insight? {
         let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
         let recent = scoreHistory.filter { $0.date >= cutoff }
         guard recent.count >= 5 else { return nil }
@@ -52,13 +52,33 @@ struct ScoreTrajectoryAnalyzer {
         let absChange = String(format: "%.0f", abs(changePercent))
         let currentScore = Int(secondAvg.rounded())
 
+        // Build category driver text for declining scores
+        let categoryDriverText: String
+        if !improving && !categoryScores.isEmpty {
+            let sorted = categoryScores
+                .filter { $0.score < 70 }
+                .sorted { $0.score < $1.score }
+                .prefix(3)
+            if !sorted.isEmpty {
+                let driverList = sorted.compactMap { score -> String? in
+                    guard let cat = score.category else { return nil }
+                    return "\(cat.displayName) (\(score.score)/100)"
+                }.joined(separator: ", ")
+                categoryDriverText = " Pulled down by: \(driverList)."
+            } else {
+                categoryDriverText = ""
+            }
+        } else {
+            categoryDriverText = ""
+        }
+
         return Insight(
             metric: .restingHeartRate, // Representative metric for overall health
             title: improving ? "Health Score Trending Up" : "Health Score Declining",
-            summary: "Your overall health score has \(improving ? "improved" : "declined") \(absChange)% over the last \(days) days. Current average: \(currentScore).",
+            summary: "Your overall health score has \(improving ? "improved" : "declined") \(absChange)% over the last \(days) days. Current average: \(currentScore).\(categoryDriverText)",
             recommendation: improving
-                ? "Great progress! Your consistent efforts are paying off. Keep maintaining your current habits."
-                : "Multiple metrics are pulling your score down. Focus on the top declining areas in your insights.",
+                ? "Your consistent efforts are paying off \u{2014} score up \(absChange)%. Keep maintaining your current habits."
+                : "Focus on the weakest categories above. Improving just 1 area by 10 points will noticeably raise your overall score.",
             severity: improving ? .info : .warning,
             trend: improving ? .improving : .declining,
             currentValue: secondAvg,

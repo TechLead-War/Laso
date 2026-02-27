@@ -381,12 +381,15 @@ final class DashboardViewModel {
             baselines: analysisEngine.baselines
         )
 
-        // Step 8: Score trajectory insights (uses stored score history)
+        // Step 8: Score trajectory insights (uses stored score history + category breakdown)
         let scoreHistory = store.loadScoreHistory(days: 60)
-        let trajectoryInsights = ScoreTrajectoryAnalyzer.generateInsights(scoreHistory: scoreHistory)
+        let trajectoryInsights = ScoreTrajectoryAnalyzer.generateInsights(
+            scoreHistory: scoreHistory,
+            categoryScores: analysisEngine.categoryScores
+        )
         analysisEngine.insights.append(contentsOf: trajectoryInsights)
 
-        // Step 9: Baseline drift insights (uses stored baseline history)
+        // Step 9: Baseline drift insights (uses stored baseline history + correlations for co-drift)
         var baselineHistory: [HealthMetric: [(date: Date, baseline: UserBaseline)]] = [:]
         for metric in analysisEngine.baselines.keys {
             let history = store.loadBaselineHistory(for: metric)
@@ -397,7 +400,8 @@ final class DashboardViewModel {
         if !baselineHistory.isEmpty {
             let driftInsights = BaselineDriftDetector.generateInsights(
                 currentBaselines: analysisEngine.baselines,
-                baselineHistory: baselineHistory
+                baselineHistory: baselineHistory,
+                correlations: analysisEngine.correlations
             )
             analysisEngine.insights.append(contentsOf: driftInsights)
         }
@@ -437,6 +441,13 @@ final class DashboardViewModel {
         let previousScore = persistence.loadPreviousWeekScore()
         let scoreChange = previousScore.map { overallScore.score - $0 } ?? 0
         persistence.recordWeeklyScore(overallScore.score)
+
+        // Track weekly score change for outcome metrics
+        AppAnalytics.shared.trackWeeklyScoreChange(
+            newScore: overallScore.score,
+            previousScore: previousScore,
+            delta: scoreChange
+        )
 
         // Daily summary with richer data
         let anomalyCount = analysisEngine.anomalies.filter { $0.severity >= .warning }.count

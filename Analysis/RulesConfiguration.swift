@@ -84,208 +84,294 @@ struct RulesConfiguration {
     static let outsideNormalRangeDeduction: Int = -15
     static let improvingTrendBonus: Int = 5
 
-    /// Recommendation templates — base version
+    /// Recommendation templates — base version (no context)
     static func recommendation(for metric: HealthMetric, severity: Severity, trend: TrendDirection) -> String {
-        recommendation(for: metric, severity: severity, trend: trend, currentValue: nil, deviationPercent: nil)
+        recommendation(for: metric, severity: severity, trend: trend, currentValue: nil, deviationPercent: nil, context: nil)
     }
 
-    /// Enhanced recommendation with actual values woven into the text
+    /// Enhanced recommendation with actual values
     static func recommendation(for metric: HealthMetric, severity: Severity, trend: TrendDirection, currentValue: Double?, deviationPercent: Double?) -> String {
+        recommendation(for: metric, severity: severity, trend: trend, currentValue: currentValue, deviationPercent: deviationPercent, context: nil)
+    }
+
+    // MARK: - Context-Aware Helpers
+
+    /// "At this rate, you'll reach warning level in ~8 days."
+    static func projectionSentence(context: InsightContext?, trend: TrendDirection) -> String {
+        guard trend == .declining, let days = context?.projectedDaysToThreshold, days > 0, days <= 21 else { return "" }
+        return " At this rate, you'll reach warning level in ~\(days) days."
+    }
+
+    /// "This appears connected to your sleep duration dropping 18%."
+    static func rootCauseSentence(context: InsightContext?) -> String {
+        guard let ctx = context, let rootMetric = ctx.rootCauseMetric, let rootDev = ctx.rootCauseDeviation else { return "" }
+        return " This appears connected to your \(rootMetric.displayName.lowercased()) shifting \(String(format: "%.0f", abs(rootDev)))%."
+    }
+
+    /// "This puts you in the bottom 12% of your history. This is 15% below your typical February."
+    static func historicalPositionSentence(context: InsightContext?) -> String {
+        guard let ctx = context else { return "" }
+        var parts: [String] = []
+        if let pct = ctx.allTimePercentile, pct <= 20 || pct >= 80 {
+            let label = pct >= 80 ? "top \(Int(100 - pct))%" : "bottom \(Int(pct))%"
+            parts.append("in the \(label) of your history")
+        }
+        if let seasonal = ctx.seasonalDeviation, abs(seasonal) >= 5 {
+            let monthName = Calendar.current.monthSymbols[Calendar.current.component(.month, from: Date()) - 1]
+            parts.append("\(String(format: "%.0f", abs(seasonal)))% \(seasonal > 0 ? "above" : "below") your typical \(monthName)")
+        }
+        if let yoy = ctx.yearOverYearChange, abs(yoy) > 2 {
+            parts.append("\(String(format: "%.0f", abs(yoy)))% \(yoy > 0 ? "better" : "worse") than this time last year")
+        }
+        guard !parts.isEmpty else { return "" }
+        return " Historically: " + parts.joined(separator: "; ") + "."
+    }
+
+    /// "Your data shows that improving sleep by 1hr typically raises your HRV by ~12ms."
+    static func correlationActionSentence(context: InsightContext?, metric: HealthMetric) -> String {
+        guard let ctx = context, let top = ctx.correlatedFactors.first else { return "" }
+        return " Your data shows that improving \(top.metric.displayName.lowercased()) raises your \(metric.displayName.lowercased()) by ~\(String(format: "%.0f", top.effectPercent))%."
+    }
+
+    // MARK: - Context-Aware Recommendation
+
+    /// Full context-aware recommendation — uses context data when available, falls back to templates
+    static func recommendation(for metric: HealthMetric, severity: Severity, trend: TrendDirection, currentValue: Double?, deviationPercent: Double?, context: InsightContext?) -> String {
         let devStr = deviationPercent.map { String(format: "%.0f", abs($0)) + "% " } ?? ""
-        let valStr = currentValue.map { metric.formatValue($0) + " " + metric.unit + " — " } ?? ""
+        let valStr = currentValue.map { metric.formatValue($0) + " " + metric.unit + " \u{2014} " } ?? ""
+
+        // Build context suffix that applies to any metric
+        let projection = projectionSentence(context: context, trend: trend)
+        let rootCause = rootCauseSentence(context: context)
+        let historical = historicalPositionSentence(context: context)
+        let correlationAction = correlationActionSentence(context: context, metric: metric)
+
+        // Use the strongest correlated factor for the recommendation action when available
+        let topLever: String? = context?.correlatedFactors.first.map { factor in
+            "Your #1 lever: improve \(factor.metric.displayName.lowercased()) (\(String(format: "%.0f", factor.effectPercent))% impact on \(metric.displayName.lowercased()))."
+        }
 
         switch metric {
         case .heartRate, .restingHeartRate:
             if severity >= .warning {
-                return "\(valStr)Your resting HR is \(devStr)above baseline. Cut caffeine after 2 PM and try 10 min of deep breathing before bed."
+                let base = "\(valStr)Your resting HR is \(devStr)above baseline."
+                if let lever = topLever {
+                    return base + rootCause + " " + lever + projection + historical
+                }
+                return base + rootCause + " Reduce caffeine after 2 PM, add 10 min of deep breathing before bed, and prioritize 7+ hrs sleep." + projection + historical
             }
             return trend == .improving
-                ? "Your heart rate trend is positive. Continue current lifestyle habits."
-                : "Maintain regular cardiovascular exercise to keep your resting heart rate low."
+                ? "\(valStr)Resting HR is trending down \u{2014} your recent habits are working." + historical
+                : "\(valStr)Add 20 min of moderate cardio 3x per week to lower your resting HR." + correlationAction + historical
 
         case .heartRateVariability:
             if trend == .declining {
-                return "\(valStr)HRV is down \(devStr)from baseline. Prioritize 7+ hours of sleep tonight and try a 10-min meditation session."
+                let base = "\(valStr)HRV is down \(devStr)from baseline."
+                if let lever = topLever {
+                    return base + rootCause + " " + lever + projection + historical
+                }
+                return base + rootCause + " Prioritize 7+ hours of sleep tonight and try a 10-min meditation session." + projection + historical
             }
-            return "Your HRV is healthy. Continue balancing exercise with recovery."
+            return "\(valStr)HRV is holding steady." + correlationAction + historical
 
         case .vo2Max:
             if trend == .improving {
-                return "Your cardiovascular fitness is improving. Keep up the aerobic exercise! Consider adding zone 2 training for sustained improvement."
+                return "\(valStr)VO2 Max is up \(devStr)\u{2014} your cardiovascular fitness is improving. Continue your current training intensity." + historical
             }
-            return "Add 20 minutes of zone 2 cardio (brisk walking, easy jogging) 3-4 times this week to boost VO2 max."
+            return "\(valStr)Add 20 min of zone 2 cardio (brisk walking, easy jogging) 3-4 times this week to boost VO2 Max." + projection + historical
 
         case .bloodOxygen:
             if severity >= .warning {
-                return "\(valStr)Practice deep breathing exercises and ensure good ventilation. Seek medical attention if readings remain below 95%."
+                return "\(valStr)Blood oxygen is below 95%. Practice 4-7-8 breathing exercises and ensure good ventilation. Seek medical attention if this persists." + rootCause + projection
             }
-            return "Blood oxygen levels are normal."
+            return "\(valStr)Blood oxygen is within normal range." + historical
 
         case .atrialFibrillationBurden:
             if severity >= .warning {
-                return "Elevated AFib burden detected. Consult your cardiologist promptly. Avoid excessive alcohol and caffeine."
+                return "\(valStr)Elevated AFib burden detected. Consult your cardiologist promptly. Avoid excessive alcohol and caffeine." + projection
             }
-            return "AFib burden is within normal range. Continue regular monitoring."
+            return "\(valStr)AFib burden is within normal range." + historical
 
         case .peripheralPerfusionIndex:
             if severity >= .warning {
-                return "Perfusion index is outside normal range. Monitor circulation and consult your physician if you notice cold extremities."
+                return "\(valStr)Perfusion index is outside normal range. Consult your physician if you notice cold extremities or numbness." + rootCause
             }
-            return "Peripheral perfusion is within normal range."
+            return "\(valStr)Peripheral perfusion is within normal range."
 
         case .sleepDuration:
             if severity >= .warning || trend == .declining {
-                return "\(valStr)Set your bedtime 30 min earlier tonight. Avoid screens 1 hour before bed and keep your bedroom cool."
+                let base = "\(valStr)Sleep duration is down \(devStr)from baseline."
+                if let lever = topLever {
+                    return base + rootCause + " " + lever + projection + historical
+                }
+                return base + rootCause + " Set your bedtime 30 min earlier tonight. Avoid screens 1 hour before bed and keep your bedroom at 65-68\u{00B0}F." + projection + historical
             }
-            return "Your sleep duration is adequate. Maintain your current sleep schedule."
+            return "\(valStr)Sleep duration is solid." + correlationAction + historical
 
         case .sleepREM, .sleepDeep:
-            return "\(valStr)Avoid alcohol before bed, keep bedtimes consistent, and exercise earlier in the day to improve deep/REM sleep."
+            let stageName = metric == .sleepDeep ? "deep" : "REM"
+            let base = "\(valStr)\(stageName.capitalized) sleep is \(devStr)\(trend == .declining ? "below" : "above") baseline."
+            if let lever = topLever {
+                return base + rootCause + " " + lever + projection + historical
+            }
+            return base + rootCause + " Avoid alcohol before bed, keep bedtimes consistent, and exercise earlier in the day." + projection + historical
 
         case .sleepCore:
-            return "Core sleep forms the majority of your sleep. Maintain consistent sleep and wake times."
+            return "\(valStr)Core sleep forms the bulk of your rest. Maintain consistent sleep and wake times." + historical
 
         case .sleepAwake:
             if severity >= .warning {
-                return "Excessive wake time during sleep. Cut caffeine after 2 PM and try a relaxation routine before bed."
+                return "\(valStr)Excessive wake time during sleep (\(devStr)above normal). Cut caffeine after 2 PM and add a relaxation routine before bed." + rootCause + projection
             }
-            return "Your nighttime awake periods are within normal range."
+            return "\(valStr)Nighttime awake periods are within normal range." + historical
 
         case .steps:
             if trend == .declining {
-                return "\(valStr)Steps are down \(devStr)from baseline. Try a 10-minute walk after each meal to get back on track."
+                let base = "\(valStr)Steps are down \(devStr)from baseline."
+                if let lever = topLever {
+                    return base + rootCause + " " + lever + projection + historical
+                }
+                return base + rootCause + " Add a 10-minute walk after each meal to get back to baseline." + projection + historical
             }
             return trend == .improving
-                ? "Great step count improvement! Aim for 10,000+ daily for optimal health."
-                : "Consider a walking meeting or post-dinner stroll to keep step count up."
+                ? "\(valStr)Step count is up \(devStr)\u{2014} aim for 10,000+ daily for optimal health." + historical
+                : "\(valStr)Add a post-dinner walk or walking meeting to boost daily steps." + correlationAction + historical
 
         case .activeCalories:
-            return trend == .declining
-                ? "\(valStr)Active calorie burn is down \(devStr). Add a 20-minute workout or brisk walk to your routine."
-                : "Your activity level is good. Keep up the current routine."
+            if trend == .declining {
+                return "\(valStr)Active calorie burn is down \(devStr)from baseline. Add a 20-minute workout or brisk walk to your routine." + rootCause + projection + historical
+            }
+            return "\(valStr)Active calorie burn is strong." + correlationAction + historical
 
         case .exerciseMinutes:
-            return trend == .declining
-                ? "\(valStr)Exercise time is dropping. Schedule workouts as calendar events to maintain consistency."
-                : "Your exercise routine looks solid. Aim for 150+ minutes per week."
+            if trend == .declining {
+                return "\(valStr)Exercise time is dropping \(devStr). Schedule workouts as calendar events to maintain consistency." + rootCause + projection + historical
+            }
+            return "\(valStr)Exercise routine is solid. Aim for 150+ minutes per week." + historical
 
         case .distanceCycling:
             return trend == .declining
-                ? "Cycling distance is decreasing. Try scheduling regular rides or commuting by bike."
-                : "Your cycling activity is on track. Keep pedaling!"
+                ? "\(valStr)Cycling distance is down \(devStr). Schedule regular rides or commute by bike 2x per week." + projection + historical
+                : "\(valStr)Cycling activity is consistent." + historical
 
         case .distanceSwimming, .swimmingStrokeCount:
             return trend == .declining
-                ? "Swimming activity is dropping. Aim for 2-3 swim sessions per week for cardiovascular benefit."
-                : "Your swimming routine is consistent. Great for full-body fitness."
+                ? "\(valStr)Swimming activity is dropping. Aim for 2-3 swim sessions per week for cardiovascular benefit." + projection
+                : "\(valStr)Swimming routine is consistent." + historical
 
         case .appleMoveTime:
             return trend == .declining
-                ? "Move time is decreasing. Set hourly reminders to stand and move for a few minutes."
-                : "Your daily movement time is healthy. Keep staying active throughout the day."
+                ? "\(valStr)Move time is down \(devStr). Set hourly reminders to stand and move for a few minutes." + projection
+                : "\(valStr)Daily movement time is healthy." + historical
 
         case .weight, .bmi, .bodyFatPercentage:
-            return "Weight changes are gradual. Focus on consistent nutrition and exercise rather than daily fluctuations."
+            if trend == .declining && !metric.higherIsBetter {
+                return "\(valStr)Trending up \(devStr). Focus on consistent nutrition and 150+ min of weekly exercise." + rootCause + projection + historical
+            }
+            return "\(valStr)Body composition is stable. Focus on consistent nutrition and exercise rather than daily fluctuations." + historical
 
         case .leanBodyMass:
             return trend == .declining
-                ? "Lean body mass is decreasing. Ensure adequate protein intake and include resistance training."
-                : "Your lean body mass is stable. Maintain your strength training routine."
+                ? "\(valStr)Lean body mass is down \(devStr). Increase protein intake to 1.6g/kg and add 2-3 resistance training sessions per week." + projection + historical
+                : "\(valStr)Lean body mass is stable." + historical
 
         case .waistCircumference:
             if severity >= .warning {
-                return "Waist circumference is above recommended levels. Focus on whole foods, regular cardio, and core exercises."
+                return "\(valStr)Waist circumference is \(devStr)above recommended levels. Focus on whole foods, 30 min daily cardio, and core exercises." + projection + historical
             }
-            return "Waist circumference is within a healthy range."
+            return "\(valStr)Waist circumference is within a healthy range." + historical
 
         case .appleSleepingWristTemperature:
             if severity >= .warning {
-                return "Wrist temperature deviation detected during sleep. This may indicate illness onset or hormonal changes. Monitor how you feel."
+                return "\(valStr)Wrist temperature deviation detected. This often indicates illness onset or hormonal changes. Rest, hydrate, and track how you feel tomorrow." + rootCause
             }
-            return "Sleeping wrist temperature is within normal variation."
+            return "\(valStr)Sleeping wrist temperature is within normal variation."
 
         case .bloodPressureSystolic, .bloodPressureDiastolic:
             if severity >= .warning {
-                return "\(valStr)Reduce sodium intake, exercise regularly, and consult your physician about blood pressure management."
+                return "\(valStr)Blood pressure is \(devStr)above target. Reduce sodium to <2300mg/day, exercise 30 min daily, and consult your physician." + rootCause + projection
             }
-            return "Blood pressure is within healthy range."
+            return "\(valStr)Blood pressure is within healthy range." + historical
 
         case .respiratoryRate:
             if severity >= .warning {
-                return "\(valStr)Respiratory rate is elevated. Practice deep breathing exercises and monitor for respiratory symptoms."
+                return "\(valStr)Respiratory rate is elevated \(devStr)above normal. Practice 4-7-8 breathing exercises 3x daily." + rootCause + projection
             }
-            return "Respiratory rate is normal."
+            return "\(valStr)Respiratory rate is normal." + historical
 
         case .peakExpiratoryFlowRate:
             if severity >= .warning {
-                return "Peak flow rate is below normal. If you have asthma, review your action plan. Consider consulting a pulmonologist."
+                return "\(valStr)Peak flow rate is below normal. If you have asthma, review your action plan. Consult a pulmonologist if this continues." + projection
             }
-            return "Peak expiratory flow rate is within normal range."
+            return "\(valStr)Peak expiratory flow rate is within normal range."
 
         case .forcedVitalCapacity:
             if severity >= .warning {
-                return "Forced vital capacity is reduced. Practice breathing exercises and consult your physician for a pulmonary assessment."
+                return "\(valStr)Forced vital capacity is reduced \(devStr). Practice breathing exercises and consult your physician for a pulmonary assessment." + projection
             }
-            return "Lung capacity is within normal range."
+            return "\(valStr)Lung capacity is within normal range."
 
         case .bodyTemperature:
             if severity >= .warning {
-                return "Body temperature deviation detected. Monitor for other symptoms and rest if feeling unwell."
+                return "\(valStr)Body temperature is \(devStr)outside normal range. Rest, hydrate, and check again in 4 hours. Seek medical attention if fever persists above 38.3\u{00B0}C." + rootCause
             }
-            return "Body temperature is within normal range."
+            return "\(valStr)Body temperature is within normal range."
 
         case .mindfulMinutes:
-            return trend == .declining
-                ? "Mindfulness time is decreasing. Try a 5-minute guided meditation to restart the habit."
-                : "Good mindfulness practice. Even 10 minutes daily reduces stress and improves focus."
+            if trend == .declining {
+                return "\(valStr)Mindfulness time dropped \(devStr). Start with just 5 min of guided breathing tomorrow morning." + correlationAction + projection
+            }
+            return "\(valStr)Mindfulness practice is consistent. Even 10 min daily reduces stress and improves HRV." + correlationAction + historical
 
         case .timeInDaylight:
-            return trend == .declining
-                ? "Time in daylight is dropping. Aim for 20-30 minutes of outdoor light daily, especially in the morning."
-                : "Good daylight exposure. Natural light supports circadian rhythm and vitamin D production."
+            if trend == .declining {
+                return "\(valStr)Daylight exposure is down \(devStr). Get 20+ min of outdoor light before noon \u{2014} this directly impacts your sleep quality and circadian rhythm." + correlationAction + projection
+            }
+            return "\(valStr)Good daylight exposure. Natural light supports circadian rhythm and vitamin D production." + historical
 
         case .electrodermalActivity:
             if severity >= .warning {
-                return "Elevated electrodermal activity suggests increased stress arousal. Try deep breathing or a brief mindfulness session."
+                return "\(valStr)EDA is elevated \(devStr)\u{2014} increased stress arousal detected. Try 5 min of box breathing (4-4-4-4 pattern) right now." + rootCause
             }
-            return "Electrodermal activity is within normal range."
+            return "\(valStr)Electrodermal activity is within normal range."
 
         case .walkingSpeed:
             return trend == .declining
-                ? "Walking speed is decreasing. Incorporate brisk walking intervals to maintain gait velocity."
-                : "Walking speed is healthy. Maintaining pace supports cardiovascular fitness."
+                ? "\(valStr)Walking speed is down \(devStr). Add 10-min brisk walking intervals to your daily walks." + projection + historical
+                : "\(valStr)Walking speed is healthy." + historical
 
         case .walkingStepLength:
             return trend == .declining
-                ? "Step length is shortening. Stretching and hip mobility exercises can help maintain stride."
-                : "Step length is within normal range."
+                ? "\(valStr)Step length is shortening \(devStr). Add 5 min of hip flexor stretches and leg swings daily." + projection + historical
+                : "\(valStr)Step length is within normal range." + historical
 
         case .walkingAsymmetry:
             if severity >= .warning {
-                return "Walking asymmetry is elevated. Consider consulting a physical therapist to address gait imbalance."
+                return "\(valStr)Walking asymmetry is elevated \(devStr). Consult a physical therapist to address gait imbalance before it compounds." + projection
             }
-            return "Walking symmetry is good."
+            return "\(valStr)Walking symmetry is good." + historical
 
         case .walkingDoubleSupportPercentage:
             if severity >= .warning {
-                return "Double support time is elevated, suggesting reduced balance confidence. Balance exercises and strength training may help."
+                return "\(valStr)Double support time is elevated \(devStr)\u{2014} reduced balance confidence. Add single-leg stands and tandem walking exercises." + projection
             }
-            return "Double support percentage is within normal range."
+            return "\(valStr)Double support percentage is within normal range."
 
         case .stairAscentSpeed, .stairDescentSpeed:
             return trend == .declining
-                ? "Stair speed is declining. Leg strengthening exercises and regular stair use can help maintain mobility."
-                : "Stair navigation speed is healthy."
+                ? "\(valStr)Stair speed is down \(devStr). Add leg strengthening (squats, lunges) and use stairs instead of elevators 2x daily." + projection + historical
+                : "\(valStr)Stair navigation speed is healthy." + historical
 
         case .sixMinuteWalkTestDistance:
             return trend == .declining
-                ? "Six-minute walk distance is decreasing. Regular walking and cardio exercise can help maintain endurance."
-                : "Six-minute walk distance is within healthy range."
+                ? "\(valStr)Six-minute walk distance is down \(devStr). Regular 30-min walks and cardio exercise can help maintain endurance." + projection + historical
+                : "\(valStr)Six-minute walk distance is within healthy range." + historical
 
         default:
-            return trend == .declining
-                ? "This metric is declining \(devStr)from baseline. Review your recent habits for changes."
-                : "This metric is within normal parameters."
+            if trend == .declining {
+                return "\(valStr)\(metric.displayName) is declining \(devStr)from baseline. Review your recent habits for changes." + rootCause + projection + historical
+            }
+            return "\(valStr)\(metric.displayName) is within normal parameters." + historical
         }
     }
 }

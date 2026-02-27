@@ -1,5 +1,4 @@
 import Foundation
-import HealthKit
 import FirebaseAnalytics
 
 /// All trackable screens in the app.
@@ -95,69 +94,103 @@ enum BlockType: String {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// MARK: - Event Reference (Decision-Making Events Only)
+// MARK: - Event Reference (PMF-Focused, Decision-Making Events Only)
 // ──────────────────────────────────────────────────────────────────────────────
 //
-// BUSINESS EVENTS (every event answers a product question):
+// PMF CORE METRICS (4 numbers that matter):
+//   1. Activation %    → onboarding_completed → activation_completed funnel
+//   2. Day 7 retention → retention_milestone day=7
+//   3. % disappointed  → nps_submitted score < 7
+//   4. % paying        → subscription_purchased conversion
+//
+// BUSINESS EVENTS:
 //
 //  Event                         Key Params                          Question Answered
 //  ─────────────────────────────────────────────────────────────────────────────────────
-//  session_start                 session_id, hour, weekday, streak   When do users open the app?
-//  session_end                   duration_sec, screens, max_depth    How deep are sessions?
+//  SESSION & RETENTION:
+//  session_start                 session_id, hour, weekday, streak   When do users open?
+//  session_end                   duration_sec, screens, depth        How deep are sessions?
 //  return_session                session_number, days_since_last     Are users coming back?
-//  screen_viewed                 screen + content params             What do users see when they open a feature?
-//  screen_exited                 screen, duration_sec                How long per feature?
-//  block_tapped                  block_type, screen                  What UI elements get tapped?
-//  insight_tapped                category, severity, metric          Which insights resonate?
-//  correlation_tapped            metric_a, metric_b, strength        Which correlations interest users?
-//  risk_tapped                   risk_type, grade                    Do risk alerts drive engagement?
-//  analysis_completed            score, insights/anomalies counts    Is the engine producing useful content?
-//  report_exported               score, metrics_count                How valuable is export?
-//  device_detected               device_type, metrics_count          What devices do users have?
-//  notification_sent             type                                How often do we prompt?
-//  pull_to_refresh               screen                              Where do users want fresh data?
-//  time_range_changed            from_days, to_days                  What time periods matter?
-//  chart_interaction             metric, interaction_type             Which charts get explored?
-//  data_sync_completed           metrics_count, new_samples          Is HealthKit sync healthy?
-//  activation_milestone          milestone, time_since_install       When do users discover features?
-//  core_action_completed         action, screen                      Which actions predict retention?
-//  setting_changed               setting_name, new_value             What do users customize?
-//  feedback_submitted            category, text_length               What do users want?
-//  Subscription events (7)       varies                              Full purchase funnel
+//  retention_milestone           day (1,2,3,7,14,30)                 When do we lose users?
+//  inactive_period_detected      days_inactive (3, 7)                Who is churning?
+//  streak_broken                 previous_streak, longest_streak     When do habits break?
+//  streak_milestone              days (7, 14, 30, 60, 100)           Who forms habits?
 //
-// USER PROPERTIES (for cohort analysis in Firebase/GA4):
+//  ACTIVATION:
+//  onboarding_completed          focuses, duration_sec, step         Did they finish setup?
+//  onboarding_step_completed     step, step_name, duration_sec       Where do they drop?
+//  activation_completed          milestones_count, days_to_activate  Did they find value?
+//  time_to_first_value           seconds                             How fast is aha moment?
+//  activation_milestone          milestone, time_since_install       What features click?
+//
+//  FEATURE ENGAGEMENT:
+//  screen_viewed                 screen, tab, depth, content         What do users see?
+//  screen_exited                 screen, duration_sec                How long per feature?
+//  feature_abandoned             screen, duration_sec                What confuses users?
+//  block_tapped                  block_type, screen                  What UI gets tapped?
+//  core_action_completed         action, screen                      What predicts retention?
+//  chart_interaction             metric, type, period                Which charts explored?
+//  time_range_changed            from_days, to_days                  What periods matter?
+//
+//  CONTENT VALUE:
+//  insight_tapped                category, severity, metric          Which insights resonate?
+//  correlation_tapped            metric_a, metric_b, strength        Which correlations?
+//  risk_tapped                   risk_type, grade                    Do risks drive action?
+//  analysis_completed            insights/anomalies counts           Is engine useful?
+//  weekly_score_change           delta, direction, new_score         Is user improving?
+//
+//  MONETIZATION:
+//  paywall_viewed                source, days_since_install          When do they see paywall?
+//  paywall_dismissed             time_on_paywall, source             Why don't they convert?
+//  paywall_cta_tapped            product_id, price                   What triggers purchase?
+//  subscription_purchased        product_id, trial_converted         Who pays?
+//  subscription_renewed          months_subscribed                   Who stays?
+//  subscription_cancelled        months_subscribed                   Who churns?
+//  trial_started                 days_remaining                      Trial began
+//  trial_day_check               days_remaining, milestones          Engagement during trial
+//  trial_expired                 milestones_completed                Why didn't they convert?
+//  restore_attempted             success                             Are they confused?
+//  purchase_failed               error_type                          What blocks payment?
+//
+//  EMOTIONAL / NPS:
+//  nps_submitted                 score, category                     Would they recommend?
+//  feedback_submitted            category, text_length               What do they want?
+//
+//  FRICTION:
+//  error_occurred                error_type, screen                  What breaks?
+//  onboarding_drop_off           last_step, duration_sec             Where do they give up?
+//
+//  DEVICE & DATA:
+//  device_detected               device_type, is_active              What devices do they own?
+//  data_sync_completed           metrics, new_samples                Is sync healthy?
+//
+// USER PROPERTIES (for cohort analysis):
 //
 //  Property                  Values                           Use
 //  ─────────────────────────────────────────────────────────────────────────────
-//  subscription_status       trial | pro | billing_grace |    Segment everything by tier
+//  subscription_status       trial | pro | billing_grace |    Segment by tier
 //                            expired | unknown
 //  months_subscribed         0, 1, 2, ...                     LTV / churn month
 //  trial_converted           yes | no | pending               Conversion rate
-//  biological_sex            male | female | other | unknown   Demographic segmentation
-//  age_bracket               18-24 | 25-34 | 35-44 | ...      Age-based behavior
-//  region                    US | IN | DE | ...                Geo segmentation
 //  price_tier                standard | reduced | premium      Pricing analysis
 //  days_since_install        0, 1, 2, ...                     Retention cohorts
+//  activation_status         not_activated | activated         Did they find value?
 //  activation_milestones     0-10                              Activation depth
 //  total_sessions            1, 2, 3, ...                      Usage frequency
-//  health_score_bracket      0-39 | 40-59 | 60-79 | 80-100   Score-based segmentation
 //  data_richness             low | medium | high               Data completeness
 //  connected_device_count    0, 1, 2, ...                      Device ecosystem
 //  primary_device            apple_watch | garmin | ...        Primary data source
-//
-// REMOVED (noise, not actionable):
-//  - tab_switched (screen_viewed covers this)
-//  - session_quality (duplicates session_end)
-//  - first_session_profile (data available from milestones)
-//  - heart_rate_zone_changed (too granular)
-//  - empty_state_shown (not actionable alone)
-//  - nav_transition (duplicates screen_viewed)
-//  - card_impressed / section_impressed (55 call sites, zero decisions made from them)
+//  health_focus              sleep,fitness,heartHealth,...      User goals
+//  longest_streak            0, 1, 2, ...                      Habit strength
+//  lifetime_core_actions     0, 1, 2, ...                      Value extracted
+//  health_score_bracket      low | medium | high               Outcome segment
+//  retention_day             0, 1, 2, 3, 7, 14, 30            Furthest milestone
+//  onboarding_completed      yes | no                          Setup completion
 //
 // ──────────────────────────────────────────────────────────────────────────────
 
 /// Central analytics facade. Firebase Analytics backend.
-/// Focused on business-critical events: funnel, retention, demographics, monetization.
+/// Focused on PMF metrics: activation, retention, monetization, and value delivery.
 final class AppAnalytics {
     static let shared = AppAnalytics()
 
@@ -167,571 +200,49 @@ final class AppAnalytics {
 
     private var openTimestamps: [AppFeature: Date] = [:]
     private var streamingStartDate: Date?
-    private var demographicsSet = false
-
     private enum Key {
-        static let demographicsSet = "laso.analytics.demographics_set"
         static let subscriptionStartDate = "laso.analytics.subscription_start_date"
         static let renewalCount = "laso.analytics.renewal_count"
         static let trialConverted = "laso.analytics.trial_converted"
         static let lastKnownStatus = "laso.analytics.last_known_status"
     }
 
-    private init() {
-        demographicsSet = defaults.bool(forKey: Key.demographicsSet)
-    }
+    private init() {}
 
     // ══════════════════════════════════════════════════════════════════════
-    // MARK: - Demographics (from HealthKit)
+    // MARK: - 1. Activation Events
     // ══════════════════════════════════════════════════════════════════════
 
-    /// Call once after HealthKit authorization. Sets biological_sex, age_bracket, region.
-    func setDemographics(from healthStore: HKHealthStore) {
-        guard !demographicsSet else { return }
-
-        // Biological sex
-        let sexLabel: String
-        if let sex = try? healthStore.biologicalSex().biologicalSex {
-            switch sex {
-            case .male: sexLabel = "male"
-            case .female: sexLabel = "female"
-            case .other: sexLabel = "other"
-            case .notSet: sexLabel = "unknown"
-            @unknown default: sexLabel = "unknown"
-            }
-        } else {
-            sexLabel = "unknown"
-        }
-        setUserProperty("biological_sex", value: sexLabel)
-
-        // Age bracket from date of birth
-        if let dob = try? healthStore.dateOfBirthComponents(),
-           let birthDate = Calendar.current.date(from: dob) {
-            let age = Calendar.current.dateComponents([.year], from: birthDate, to: Date()).year ?? 0
-            let bracket: String
-            switch age {
-            case ..<18: bracket = "under_18"
-            case 18..<25: bracket = "18-24"
-            case 25..<35: bracket = "25-34"
-            case 35..<45: bracket = "35-44"
-            case 45..<55: bracket = "45-54"
-            case 55..<65: bracket = "55-64"
-            default: bracket = "65+"
-            }
-            setUserProperty("age_bracket", value: bracket)
-        } else {
-            setUserProperty("age_bracket", value: "unknown")
-        }
-
-        // Region
-        let region = Locale.current.region?.identifier ?? "unknown"
-        setUserProperty("region", value: region)
-        setUserProperty("price_tier", value: SubscriptionConfig.currentTier.rawValue)
-
-        defaults.set(true, forKey: Key.demographicsSet)
-        demographicsSet = true
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // MARK: - Subscription Funnel
-    // ══════════════════════════════════════════════════════════════════════
-
-    /// Call when trial begins (first app launch after onboarding).
-    func trackTrialStarted(daysRemaining: Int) {
-        logEvent("trial_started", parameters: [
-            "days_remaining": daysRemaining
-        ])
-        setUserProperty("subscription_status", value: "trial")
-        setUserProperty("trial_converted", value: "pending")
-        defaults.set("pending", forKey: Key.trialConverted)
-    }
-
-    /// Call on each session during trial to track engagement vs trial days left.
-    func trackTrialDayCheck(daysRemaining: Int) {
-        logEvent("trial_day_check", parameters: [
-            "days_remaining": daysRemaining,
-            "milestones_completed": session.completedMilestones.count,
-            "total_sessions": session.totalSessions,
-            "days_since_install": session.daysSinceInstall
+    /// Call when user completes a specific onboarding step.
+    func trackOnboardingStepCompleted(step: Int, stepName: String, durationSec: Int) {
+        logEvent("onboarding_step_completed", parameters: [
+            "step": step,
+            "step_name": stepName,
+            "duration_sec": durationSec
         ])
     }
 
-    /// Call when trial expires without a purchase.
-    func trackTrialExpired() {
-        let converted = defaults.string(forKey: Key.trialConverted) ?? "no"
-        guard converted != "yes" else { return }
-
-        logEvent("trial_expired", parameters: [
-            "converted": 0,
-            "milestones_completed": session.completedMilestones.count,
-            "total_sessions": session.totalSessions,
-            "days_since_install": session.daysSinceInstall
-        ])
-        setUserProperty("trial_converted", value: "no")
-        defaults.set("no", forKey: Key.trialConverted)
-    }
-
-    /// Call when paywall is dismissed without purchasing.
-    func trackPaywallDismissed(timeOnPaywallSec: Int, source: String) {
-        logEvent("paywall_dismissed", parameters: [
-            "time_on_paywall_sec": timeOnPaywallSec,
-            "source": source,
-            "days_since_install": session.daysSinceInstall,
-            "trial_converted": defaults.string(forKey: Key.trialConverted) ?? "pending"
-        ])
-    }
-
-    /// Call after a successful purchase. Tracks conversion and sets subscription properties.
-    func trackSubscriptionPurchased(productID: String, price: String, isTrialConversion: Bool) {
-        let region = Locale.current.region?.identifier ?? "unknown"
-
-        logEvent("subscription_purchased", parameters: [
-            "product_id": productID,
-            "price": price,
-            "region": region,
-            "price_tier": SubscriptionConfig.currentTier.rawValue,
-            "trial_converted": isTrialConversion ? 1 : 0,
-            "days_since_install": session.daysSinceInstall,
-            "total_sessions": session.totalSessions,
-            "milestones_completed": session.completedMilestones.count
-        ])
-
-        // Mark trial as converted
-        if isTrialConversion {
-            setUserProperty("trial_converted", value: "yes")
-            defaults.set("yes", forKey: Key.trialConverted)
-        }
-
-        // Set subscription start date if first time
-        if defaults.object(forKey: Key.subscriptionStartDate) == nil {
-            defaults.set(Date(), forKey: Key.subscriptionStartDate)
-        }
-
-        // Increment renewal count
-        let renewals = defaults.integer(forKey: Key.renewalCount) + 1
-        defaults.set(renewals, forKey: Key.renewalCount)
-
-        setUserProperty("subscription_status", value: "pro")
-        setUserProperty("renewal_count", value: "\(renewals)")
-        updateMonthsSubscribed()
-    }
-
-    /// Call when we detect a renewal (transaction listener fires for an existing subscriber).
-    func trackSubscriptionRenewed() {
-        let renewals = defaults.integer(forKey: Key.renewalCount) + 1
-        defaults.set(renewals, forKey: Key.renewalCount)
-
-        updateMonthsSubscribed()
-
-        logEvent("subscription_renewed", parameters: [
-            "months_subscribed": monthsSubscribed,
-            "renewal_count": renewals,
-            "total_sessions": session.totalSessions
-        ])
-
-        setUserProperty("renewal_count", value: "\(renewals)")
-    }
-
-    /// Call when subscription transitions to expired from a previously-subscribed state.
-    func trackSubscriptionCancelled() {
-        logEvent("subscription_cancelled", parameters: [
-            "months_subscribed": monthsSubscribed,
-            "renewal_count": defaults.integer(forKey: Key.renewalCount),
-            "total_sessions": session.totalSessions,
-            "days_since_install": session.daysSinceInstall
-        ])
-        setUserProperty("subscription_status", value: "expired")
-    }
-
-    /// Update subscription-related user properties. Call after subscription status changes.
-    func updateSubscriptionProperties(status: SubscriptionManager.Status) {
-        let previousStatus = defaults.string(forKey: Key.lastKnownStatus) ?? "unknown"
-
-        let statusLabel: String
-        let userTier: String
-        switch status {
-        case .trial(let daysRemaining):
-            statusLabel = "trial"
-            userTier = "free"
-            // Track trial day check each session
-            trackTrialDayCheck(daysRemaining: daysRemaining)
-            // Detect first trial start
-            if previousStatus == "unknown" {
-                trackTrialStarted(daysRemaining: daysRemaining)
-            }
-        case .subscribed:
-            statusLabel = "pro"
-            userTier = "pro"
-            updateMonthsSubscribed()
-            // Detect renewal: was already subscribed, got a new entitlement
-            if previousStatus == "pro" {
-                trackSubscriptionRenewed()
-            }
-        case .billingGrace:
-            statusLabel = "billing_grace"
-            userTier = "pro"
-        case .expired:
-            statusLabel = "expired"
-            userTier = "free"
-            // Detect churn: was subscribed, now expired
-            if previousStatus == "pro" || previousStatus == "billing_grace" {
-                trackSubscriptionCancelled()
-            }
-            // Detect trial expiry: was trial, now expired
-            if previousStatus == "trial" {
-                trackTrialExpired()
-            }
-        case .unknown:
-            statusLabel = "unknown"
-            userTier = "free"
-        }
-
-        defaults.set(statusLabel, forKey: Key.lastKnownStatus)
-        setUserProperty("subscription_status", value: statusLabel)
-        setUserProperty("user_tier", value: userTier)
-    }
-
-    /// Months since first subscription purchase.
-    private var monthsSubscribed: Int {
-        guard let startDate = defaults.object(forKey: Key.subscriptionStartDate) as? Date else { return 0 }
-        return Calendar.current.dateComponents([.month], from: startDate, to: Date()).month ?? 0
-    }
-
-    private func updateMonthsSubscribed() {
-        setUserProperty("months_subscribed", value: "\(monthsSubscribed)")
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // MARK: - Session Events
-    // ══════════════════════════════════════════════════════════════════════
-
-    /// Call when app enters foreground.
-    func trackSessionStart() {
-        session.startSession()
-
-        let calendar = Calendar.current
-        let now = Date()
-        let hour = calendar.component(.hour, from: now)
-        let weekday = calendar.component(.weekday, from: now)
-        let dayNames = ["", "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
-
-        logEvent("session_start", parameters: [
-            "session_id": session.sessionId,
-            "hour_of_day": hour,
-            "day_of_week": dayNames[weekday],
-            "streak_days": session.streakDays,
-            "app_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
-        ])
-
-        setUserProperty("streak_days", value: "\(session.streakDays)")
-        setUserProperty("price_tier", value: SubscriptionConfig.currentTier.rawValue)
-    }
-
-    /// Call when app enters background.
-    func trackSessionEnd() {
-        let stats = session.endSession()
-
-        logEvent("session_end", parameters: [
-            "session_id": session.sessionId,
-            "duration_sec": stats.durationSec,
-            "screens_visited": stats.screensVisited,
-            "max_depth": stats.maxDepth
-        ])
-    }
-
-    // MARK: - Screen Events
-
-    func trackFeatureOpen(_ feature: AppFeature, metadata: [String: Any] = [:]) {
-        let now = Date()
-
-        queue.sync {
-            self.openTimestamps[feature] = now
-        }
-
-        let fromScreen = session.recordScreenView(feature.rawValue)
-
-        var params: [String: Any] = [
-            "screen": feature.rawValue,
-            "tab": session.currentTab,
-            "depth": session.currentDepth
-        ]
-        for (k, v) in metadata { params[k] = v }
-        logEvent("screen_viewed", parameters: params)
-    }
-
-    func trackFeatureClose(_ feature: AppFeature, metadata: [String: Any] = [:]) {
-        let now = Date()
-        var durationSeconds = 0.0
-
-        queue.sync {
-            if let start = openTimestamps[feature] {
-                durationSeconds = now.timeIntervalSince(start)
-            }
-            openTimestamps[feature] = nil
-        }
-
-        let duration = Int(durationSeconds.rounded())
-
-        logEvent("screen_exited", parameters: [
-            "screen": feature.rawValue,
-            "tab": session.currentTab,
-            "duration_sec": duration
-        ])
-    }
-
-    // MARK: - Block Tap Events
-
-    func trackBlockTap(title: String, type: BlockType, screen: AppFeature) {
-        logEvent("block_tapped", parameters: [
-            "block_title": title,
-            "block_type": type.rawValue,
-            "screen": screen.rawValue,
-            "tab": session.currentTab
-        ])
-    }
-
-    // MARK: - Pull to Refresh
-
-    func trackPullToRefresh(screen: AppFeature) {
-        logEvent("pull_to_refresh", parameters: [
-            "screen": screen.rawValue,
-            "tab": session.currentTab
-        ])
-    }
-
-    // MARK: - Time Range Changed
-
-    func trackTimeRangeChanged(screen: AppFeature, context: String, fromDays: Int, toDays: Int) {
-        logEvent("time_range_changed", parameters: [
-            "screen": screen.rawValue,
-            "context": context,
-            "from_days": fromDays,
-            "to_days": toDays
-        ])
-    }
-
-    // MARK: - Filter Changed
-
-    func trackFilterChanged(screen: AppFeature, filterType: String, from: String, to: String) {
-        logEvent("filter_changed", parameters: [
-            "screen": screen.rawValue,
-            "filter_type": filterType,
-            "from_filter": from,
-            "to_filter": to
-        ])
-    }
-
-    // MARK: - Settings Changed
-
-    func trackSettingChanged(name: String, value: Any) {
-        var stringValue: String
-        switch value {
-        case let v as Bool: stringValue = v ? "on" : "off"
-        case let v as Int: stringValue = "\(v)"
-        case let v as Double: stringValue = String(format: "%.0f", v)
-        case let v as String: stringValue = v
-        default: stringValue = String(describing: value)
-        }
-        logEvent("setting_changed", parameters: [
-            "setting_name": name,
-            "new_value": stringValue,
-            "screen": AppFeature.settings.rawValue
-        ])
-    }
-
-    func trackThemeChanged(from fromTheme: String, to toTheme: String) {
-        logEvent("theme_changed", parameters: [
-            "from_theme": fromTheme,
-            "to_theme": toTheme
-        ])
-    }
-
-    // MARK: - Live Streaming Events
-
-    func trackStreamingStarted() {
-        streamingStartDate = Date()
-        logEvent("streaming_started", parameters: [
-            "screen": AppFeature.live.rawValue
-        ])
-    }
-
-    func trackStreamingStopped() {
-        var duration = 0
-        if let start = streamingStartDate {
-            duration = Int(Date().timeIntervalSince(start))
-        }
-        streamingStartDate = nil
-        logEvent("streaming_stopped", parameters: [
-            "screen": AppFeature.live.rawValue,
-            "duration_sec": duration
-        ])
-    }
-
-    func trackLiveFirstDataReceived() {
-        logEvent("live_first_data_received", parameters: [
-            "screen": AppFeature.live.rawValue
-        ])
-    }
-
-    // MARK: - Content-Specific Tap Events
-
-    func trackInsightTapped(category: String, severity: String, metric: String, screen: AppFeature) {
-        logEvent("insight_tapped", parameters: [
-            "insight_category": category,
-            "severity": severity,
-            "metric": metric,
-            "screen": screen.rawValue
-        ])
-    }
-
-    func trackCorrelationTapped(metricA: String, metricB: String, strength: String, screen: AppFeature) {
-        logEvent("correlation_tapped", parameters: [
-            "metric_a": metricA,
-            "metric_b": metricB,
-            "strength": strength,
-            "screen": screen.rawValue
-        ])
-    }
-
-    func trackRiskTapped(riskType: String, grade: String, screen: AppFeature) {
-        logEvent("risk_tapped", parameters: [
-            "risk_type": riskType,
-            "grade": grade,
-            "screen": screen.rawValue
-        ])
-    }
-
-    // MARK: - Content-Aware Events
-
-    func trackAnalysisCompleted(score: Int, insightsCount: Int, anomaliesCount: Int,
-                                 risksCount: Int, correlationsCount: Int,
-                                 illnessWarningsCount: Int, metricsAnalyzed: Int) {
-        logEvent("analysis_completed", parameters: [
-            "score": score,
-            "insights_count": insightsCount,
-            "anomalies_count": anomaliesCount,
-            "risks_count": risksCount,
-            "correlations_count": correlationsCount,
-            "illness_warnings_count": illnessWarningsCount,
-            "metrics_analyzed": metricsAnalyzed
-        ])
-
-        let bracket: String
-        switch score {
-        case ..<40: bracket = "0-39"
-        case 40..<60: bracket = "40-59"
-        case 60..<80: bracket = "60-79"
-        default: bracket = "80-100"
-        }
-        setUserProperty("health_score_bracket", value: bracket)
-        setUserProperty("data_richness", value: metricsAnalyzed < 10 ? "low" : metricsAnalyzed < 30 ? "medium" : "high")
-    }
-
-    func trackReportExported(score: Int, metricsCount: Int, insightsCount: Int) {
-        logEvent("report_exported", parameters: [
-            "score": score,
-            "metrics_count": metricsCount,
-            "insights_count": insightsCount
-        ])
-    }
-
-    func trackDeviceDetected(deviceType: String, metricsCount: Int, isActive: Bool) {
-        logEvent("device_detected", parameters: [
-            "device_type": deviceType,
-            "metrics_count": metricsCount,
-            "is_active": isActive ? 1 : 0
-        ])
-    }
-
-    func updateDeviceProperties(activeCount: Int, primaryDevice: String) {
-        setUserProperty("connected_device_count", value: "\(activeCount)")
-        setUserProperty("primary_device", value: primaryDevice)
-    }
-
-    func trackNotificationSent(type: String) {
-        logEvent("notification_sent", parameters: [
-            "type": type
-        ])
-    }
-
-    // MARK: - Share Sheet
-
-    func trackShareSheetPresented(contentType: String) {
-        logEvent("share_sheet_presented", parameters: [
-            "content_type": contentType,
-            "screen": AppFeature.settings.rawValue
-        ])
-    }
-
-    // MARK: - Navigation Depth
-
-    func updateNavigationDepth(_ depth: Int) {
-        session.updateDepth(depth)
-    }
-
-    // MARK: - Feedback Events
-
-    func trackFeedbackPromptShown(daysSinceInstall: Int) {
-        logEvent("feedback_prompt_shown", parameters: [
-            "days_since_install": daysSinceInstall
-        ])
-    }
-
-    func trackFeedbackSubmitted(category: String, textLength: Int) {
-        logEvent("feedback_submitted", parameters: [
-            "category": category,
-            "text_length": textLength
-        ])
-    }
-
-    // MARK: - Chart Interaction Events
-
-    func trackChartInteraction(metric: String, interactionType: String, screen: AppFeature, metadata: [String: Any] = [:]) {
-        var params: [String: Any] = [
-            "metric": metric,
-            "interaction_type": interactionType,
-            "screen": screen.rawValue,
-            "tab": session.currentTab
-        ]
-        for (k, v) in metadata { params[k] = v }
-        logEvent("chart_interaction", parameters: params)
-    }
-
-    // MARK: - Data Sync Events
-
-    func trackDataSync(metricsCount: Int, newSamplesCount: Int, durationSec: Int, isFirstSync: Bool) {
-        logEvent("data_sync_completed", parameters: [
-            "metrics_count": metricsCount,
-            "new_samples_count": newSamplesCount,
+    /// Call when onboarding is fully completed.
+    func trackOnboardingCompleted(focuses: [String], durationSec: Int, stepsCompleted: Int) {
+        logEvent("onboarding_completed", parameters: [
+            "focuses": focuses.joined(separator: ","),
+            "focuses_count": focuses.count,
             "duration_sec": durationSec,
-            "is_first_sync": isFirstSync ? 1 : 0
+            "steps_completed": stepsCompleted,
+            "days_since_install": session.daysSinceInstall
         ])
+        setUserProperty("onboarding_completed", value: "yes")
+        setUserProperty("health_focus", value: focuses.joined(separator: ","))
     }
 
-    // MARK: - Scroll Depth
-
-    func trackScrollDepth(screen: AppFeature, maxDepthPercent: Int) {
-        logEvent("scroll_depth", parameters: [
-            "screen": screen.rawValue,
-            "max_depth_percent": maxDepthPercent,
-            "tab": session.currentTab
+    /// Call when user drops off onboarding without completing.
+    func trackOnboardingDropOff(lastStep: Int, lastStepName: String, durationSec: Int) {
+        logEvent("onboarding_drop_off", parameters: [
+            "last_step": lastStep,
+            "last_step_name": lastStepName,
+            "duration_sec": durationSec
         ])
     }
-
-    // MARK: - Subscription/Paywall Events
-
-    func trackPaywallViewed(source: String) {
-        logEvent("paywall_viewed", parameters: [
-            "source": source,
-            "tab": session.currentTab,
-            "days_since_install": session.daysSinceInstall,
-            "trial_converted": defaults.string(forKey: Key.trialConverted) ?? "pending"
-        ])
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // MARK: - Activation Discovery
-    // ══════════════════════════════════════════════════════════════════════
 
     enum ActivationMilestone: String {
         case firstDataLoad = "first_data_load"
@@ -762,13 +273,195 @@ final class AppAnalytics {
 
         setUserProperty("activation_milestones", value: "\(session.completedMilestones.count)")
 
-        if session.completedMilestones.count >= 3 {
+        // Check if user just became activated (3+ milestones)
+        if session.completedMilestones.count == 3 {
+            logEvent("activation_completed", parameters: [
+                "milestones_completed": session.completedMilestones.count,
+                "days_to_activate": session.daysSinceInstall,
+                "sessions_to_activate": session.totalSessions,
+                "time_since_install_sec": timeSinceInstall
+            ])
             setUserProperty("activation_status", value: "activated")
         }
     }
 
+    func trackTimeToFirstValue() {
+        session.recordFirstValueTime()
+        let ttfv = session.firstValueTimeSec
+        if ttfv > 0 {
+            logEvent("time_to_first_value", parameters: [
+                "seconds": ttfv,
+                "session_number": session.totalSessions
+            ])
+            setUserProperty("first_value_time_sec", value: "\(ttfv)")
+        }
+    }
+
     // ══════════════════════════════════════════════════════════════════════
-    // MARK: - Core Action Tracking
+    // MARK: - 2. Habit Formation (Retention & Streaks)
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Call on each session start. Checks and fires retention milestones.
+    func trackRetentionMilestones() {
+        // Retention day milestones
+        if let day = session.checkRetentionMilestone() {
+            logEvent("retention_milestone", parameters: [
+                "day": day,
+                "total_sessions": session.totalSessions,
+                "activation_milestones": session.completedMilestones.count,
+                "streak_days": session.streakDays
+            ])
+            setUserProperty("retention_day", value: "\(day)")
+        }
+
+        // Streak milestones
+        if let streakDays = session.checkStreakMilestone() {
+            logEvent("streak_milestone", parameters: [
+                "days": streakDays,
+                "total_sessions": session.totalSessions,
+                "days_since_install": session.daysSinceInstall
+            ])
+            setUserProperty("longest_streak", value: "\(session.longestStreak)")
+        }
+
+        // Streak broken detection
+        if let previousStreak = session.previousStreakBeforeBreak, previousStreak > 1 {
+            logEvent("streak_broken", parameters: [
+                "previous_streak": previousStreak,
+                "longest_streak": session.longestStreak,
+                "days_since_install": session.daysSinceInstall
+            ])
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 3. Churn Signals
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Call on session start. Detects and logs inactivity periods.
+    func trackInactivityIfNeeded() {
+        if let inactiveDays = session.checkInactivityPeriod() {
+            logEvent("inactive_period_detected", parameters: [
+                "days_inactive": inactiveDays,
+                "total_sessions": session.totalSessions,
+                "days_since_install": session.daysSinceInstall,
+                "was_activated": session.isActivated ? 1 : 0,
+                "lifetime_core_actions": session.lifetimeCoreActions
+            ])
+        }
+
+        // Clear inactivity state since user is now active
+        session.clearInactivityState()
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 4. Session Events
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Call when app enters foreground.
+    func trackSessionStart() {
+        session.startSession()
+
+        let calendar = Calendar.current
+        let now = Date()
+        let hour = calendar.component(.hour, from: now)
+        let weekday = calendar.component(.weekday, from: now)
+        let dayNames = ["", "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+
+        logEvent("session_start", parameters: [
+            "session_id": session.sessionId,
+            "hour_of_day": hour,
+            "day_of_week": dayNames[weekday],
+            "streak_days": session.streakDays,
+            "app_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown",
+            "days_since_install": session.daysSinceInstall
+        ])
+
+        setUserProperty("streak_days", value: "\(session.streakDays)")
+        setUserProperty("price_tier", value: SubscriptionConfig.currentTier.rawValue)
+        setUserProperty("days_since_install", value: "\(session.daysSinceInstall)")
+        setUserProperty("total_sessions", value: "\(session.totalSessions)")
+        setUserProperty("lifetime_core_actions", value: "\(session.lifetimeCoreActions)")
+    }
+
+    /// Call when app enters background.
+    func trackSessionEnd() {
+        let stats = session.endSession()
+
+        logEvent("session_end", parameters: [
+            "session_id": session.sessionId,
+            "duration_sec": stats.durationSec,
+            "screens_visited": stats.screensVisited,
+            "max_depth": stats.maxDepth,
+            "core_actions_count": session.coreActionsThisSession.count
+        ])
+    }
+
+    func trackReturnSession() {
+        guard session.totalSessions > 1 else { return }
+
+        logEvent("return_session", parameters: [
+            "session_number": session.totalSessions,
+            "days_since_last_session": session.daysSinceLastSession ?? -1,
+            "days_since_install": session.daysSinceInstall,
+            "streak_days": session.streakDays,
+            "lifetime_core_actions": session.lifetimeCoreActions
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 5. Screen Events
+    // ══════════════════════════════════════════════════════════════════════
+
+    func trackFeatureOpen(_ feature: AppFeature, metadata: [String: Any] = [:]) {
+        let now = Date()
+
+        queue.sync {
+            self.openTimestamps[feature] = now
+        }
+
+        let _ = session.recordScreenView(feature.rawValue)
+
+        var params: [String: Any] = [
+            "screen": feature.rawValue,
+            "tab": session.currentTab,
+            "depth": session.currentDepth
+        ]
+        for (k, v) in metadata { params[k] = v }
+        logEvent("screen_viewed", parameters: params)
+    }
+
+    func trackFeatureClose(_ feature: AppFeature, metadata: [String: Any] = [:]) {
+        let now = Date()
+        var durationSeconds = 0.0
+
+        queue.sync {
+            if let start = openTimestamps[feature] {
+                durationSeconds = now.timeIntervalSince(start)
+            }
+            openTimestamps[feature] = nil
+        }
+
+        let duration = Int(durationSeconds.rounded())
+
+        // Feature abandoned = opened but closed in < 3 seconds
+        if duration < 3 && duration > 0 {
+            logEvent("feature_abandoned", parameters: [
+                "screen": feature.rawValue,
+                "duration_sec": duration,
+                "tab": session.currentTab
+            ])
+        }
+
+        logEvent("screen_exited", parameters: [
+            "screen": feature.rawValue,
+            "tab": session.currentTab,
+            "duration_sec": duration
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 6. Core Actions & Block Taps
     // ══════════════════════════════════════════════════════════════════════
 
     enum CoreAction: String {
@@ -792,42 +485,505 @@ final class AppAnalytics {
             "screen": screen.rawValue,
             "session_number": session.totalSessions,
             "core_actions_this_session": session.coreActionsThisSession.count,
+            "lifetime_core_actions": session.lifetimeCoreActions,
             "days_since_install": session.daysSinceInstall
         ])
 
-        setUserProperty("session_core_actions", value: "\(session.coreActionsThisSession.count)")
+        setUserProperty("lifetime_core_actions", value: "\(session.lifetimeCoreActions)")
     }
 
-    func trackTimeToFirstValue() {
-        session.recordFirstValueTime()
-        let ttfv = session.firstValueTimeSec
-        if ttfv > 0 {
-            logEvent("time_to_first_value", parameters: [
-                "seconds": ttfv,
-                "session_number": session.totalSessions
-            ])
-            setUserProperty("first_value_time_sec", value: "\(ttfv)")
-        }
+    func trackBlockTap(title: String, type: BlockType, screen: AppFeature) {
+        logEvent("block_tapped", parameters: [
+            "block_title": title,
+            "block_type": type.rawValue,
+            "screen": screen.rawValue,
+            "tab": session.currentTab
+        ])
     }
 
-    func trackReturnSession() {
-        guard session.totalSessions > 1 else { return }
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 7. Content Engagement Events
+    // ══════════════════════════════════════════════════════════════════════
 
-        logEvent("return_session", parameters: [
-            "session_number": session.totalSessions,
-            "days_since_last_session": session.daysSinceLastSession ?? -1,
-            "days_since_install": session.daysSinceInstall,
-            "streak_days": session.streakDays
+    func trackInsightTapped(category: String, severity: String, metric: String, screen: AppFeature) {
+        logEvent("insight_tapped", parameters: [
+            "insight_category": category,
+            "severity": severity,
+            "metric": metric,
+            "screen": screen.rawValue
+        ])
+    }
+
+    func trackCorrelationTapped(metricA: String, metricB: String, strength: String, screen: AppFeature) {
+        logEvent("correlation_tapped", parameters: [
+            "metric_a": metricA,
+            "metric_b": metricB,
+            "strength": strength,
+            "screen": screen.rawValue
+        ])
+    }
+
+    func trackRiskTapped(riskType: String, grade: String, screen: AppFeature) {
+        logEvent("risk_tapped", parameters: [
+            "risk_type": riskType,
+            "grade": grade,
+            "screen": screen.rawValue
+        ])
+    }
+
+    func trackChartInteraction(metric: String, interactionType: String, period: String, screen: AppFeature) {
+        logEvent("chart_interaction", parameters: [
+            "metric": metric,
+            "interaction_type": interactionType,
+            "period": period,
+            "screen": screen.rawValue,
+            "tab": session.currentTab
+        ])
+    }
+
+    func trackPullToRefresh(screen: AppFeature) {
+        logEvent("pull_to_refresh", parameters: [
+            "screen": screen.rawValue,
+            "tab": session.currentTab
+        ])
+    }
+
+    func trackTimeRangeChanged(screen: AppFeature, context: String, fromDays: Int, toDays: Int) {
+        logEvent("time_range_changed", parameters: [
+            "screen": screen.rawValue,
+            "context": context,
+            "from_days": fromDays,
+            "to_days": toDays
+        ])
+    }
+
+    func trackFilterChanged(screen: AppFeature, filterType: String, from: String, to: String) {
+        logEvent("filter_changed", parameters: [
+            "screen": screen.rawValue,
+            "filter_type": filterType,
+            "from_filter": from,
+            "to_filter": to
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 8. Outcome Metrics
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Call after analysis refresh when we have a new score.
+    func trackWeeklyScoreChange(newScore: Int, previousScore: Int?, delta: Int) {
+        let direction: String
+        if delta > 2 { direction = "improving" }
+        else if delta < -2 { direction = "declining" }
+        else { direction = "stable" }
+
+        logEvent("weekly_score_change", parameters: [
+            "new_score": newScore,
+            "previous_score": previousScore ?? -1,
+            "delta": delta,
+            "direction": direction,
+            "days_since_install": session.daysSinceInstall
         ])
 
-        setUserProperty("total_sessions", value: "\(session.totalSessions)")
-        setUserProperty("days_since_install", value: "\(session.daysSinceInstall)")
+        let bracket: String
+        if newScore >= 75 { bracket = "high" }
+        else if newScore >= 50 { bracket = "medium" }
+        else { bracket = "low" }
+        setUserProperty("health_score_bracket", value: bracket)
+    }
+
+    func trackAnalysisCompleted(score: Int, insightsCount: Int, anomaliesCount: Int,
+                                 risksCount: Int, correlationsCount: Int,
+                                 illnessWarningsCount: Int, metricsAnalyzed: Int) {
+        logEvent("analysis_completed", parameters: [
+            "insights_count": insightsCount,
+            "anomalies_count": anomaliesCount,
+            "risks_count": risksCount,
+            "correlations_count": correlationsCount,
+            "illness_warnings_count": illnessWarningsCount,
+            "metrics_analyzed": metricsAnalyzed,
+            "score": score
+        ])
+
+        setUserProperty("data_richness", value: metricsAnalyzed < 10 ? "low" : metricsAnalyzed < 30 ? "medium" : "high")
+
+        let bracket: String
+        if score >= 75 { bracket = "high" }
+        else if score >= 50 { bracket = "medium" }
+        else { bracket = "low" }
+        setUserProperty("health_score_bracket", value: bracket)
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // MARK: - Monetization Signals
+    // MARK: - 9. Subscription Funnel
     // ══════════════════════════════════════════════════════════════════════
 
+    /// Call when trial begins (first app launch after onboarding).
+    func trackTrialStarted(daysRemaining: Int) {
+        logEvent("trial_started", parameters: [
+            "days_remaining": daysRemaining
+        ])
+        setUserProperty("subscription_status", value: "trial")
+        setUserProperty("trial_converted", value: "pending")
+        defaults.set("pending", forKey: Key.trialConverted)
+    }
+
+    /// Call on each session during trial to track engagement vs trial days left.
+    func trackTrialDayCheck(daysRemaining: Int) {
+        logEvent("trial_day_check", parameters: [
+            "days_remaining": daysRemaining,
+            "milestones_completed": session.completedMilestones.count,
+            "total_sessions": session.totalSessions,
+            "days_since_install": session.daysSinceInstall,
+            "lifetime_core_actions": session.lifetimeCoreActions
+        ])
+    }
+
+    /// Call when trial expires without a purchase.
+    func trackTrialExpired() {
+        let converted = defaults.string(forKey: Key.trialConverted) ?? "no"
+        guard converted != "yes" else { return }
+
+        logEvent("trial_expired", parameters: [
+            "converted": 0,
+            "milestones_completed": session.completedMilestones.count,
+            "total_sessions": session.totalSessions,
+            "days_since_install": session.daysSinceInstall,
+            "lifetime_core_actions": session.lifetimeCoreActions,
+            "was_activated": session.isActivated ? 1 : 0
+        ])
+        setUserProperty("trial_converted", value: "no")
+        defaults.set("no", forKey: Key.trialConverted)
+    }
+
+    /// Call when paywall is viewed.
+    func trackPaywallViewed(source: String) {
+        logEvent("paywall_viewed", parameters: [
+            "source": source,
+            "tab": session.currentTab,
+            "days_since_install": session.daysSinceInstall,
+            "trial_converted": defaults.string(forKey: Key.trialConverted) ?? "pending",
+            "was_activated": session.isActivated ? 1 : 0,
+            "lifetime_core_actions": session.lifetimeCoreActions
+        ])
+    }
+
+    /// Call when paywall is dismissed without purchasing.
+    func trackPaywallDismissed(timeOnPaywallSec: Int, source: String) {
+        logEvent("paywall_dismissed", parameters: [
+            "time_on_paywall_sec": timeOnPaywallSec,
+            "source": source,
+            "days_since_install": session.daysSinceInstall,
+            "trial_converted": defaults.string(forKey: Key.trialConverted) ?? "pending"
+        ])
+    }
+
+    /// Call when user taps subscribe/CTA button on paywall.
+    func trackPaywallCTATapped(productID: String, price: String) {
+        logEvent("paywall_cta_tapped", parameters: [
+            "product_id": productID,
+            "price": price,
+            "days_since_install": session.daysSinceInstall,
+            "lifetime_core_actions": session.lifetimeCoreActions
+        ])
+    }
+
+    /// Call after a successful purchase.
+    func trackSubscriptionPurchased(productID: String, price: String, isTrialConversion: Bool) {
+        let region = Locale.current.region?.identifier ?? "unknown"
+
+        logEvent("subscription_purchased", parameters: [
+            "product_id": productID,
+            "price": price,
+            "region": region,
+            "price_tier": SubscriptionConfig.currentTier.rawValue,
+            "trial_converted": isTrialConversion ? 1 : 0,
+            "days_since_install": session.daysSinceInstall,
+            "total_sessions": session.totalSessions,
+            "milestones_completed": session.completedMilestones.count,
+            "lifetime_core_actions": session.lifetimeCoreActions
+        ])
+
+        if isTrialConversion {
+            setUserProperty("trial_converted", value: "yes")
+            defaults.set("yes", forKey: Key.trialConverted)
+        }
+
+        if defaults.object(forKey: Key.subscriptionStartDate) == nil {
+            defaults.set(Date(), forKey: Key.subscriptionStartDate)
+        }
+
+        let renewals = defaults.integer(forKey: Key.renewalCount) + 1
+        defaults.set(renewals, forKey: Key.renewalCount)
+
+        setUserProperty("subscription_status", value: "pro")
+        setUserProperty("renewal_count", value: "\(renewals)")
+        updateMonthsSubscribed()
+    }
+
+    /// Call when we detect a renewal.
+    func trackSubscriptionRenewed() {
+        let renewals = defaults.integer(forKey: Key.renewalCount) + 1
+        defaults.set(renewals, forKey: Key.renewalCount)
+
+        updateMonthsSubscribed()
+
+        logEvent("subscription_renewed", parameters: [
+            "months_subscribed": monthsSubscribed,
+            "renewal_count": renewals,
+            "total_sessions": session.totalSessions
+        ])
+
+        setUserProperty("renewal_count", value: "\(renewals)")
+    }
+
+    /// Call when subscription transitions to expired.
+    func trackSubscriptionCancelled() {
+        logEvent("subscription_cancelled", parameters: [
+            "months_subscribed": monthsSubscribed,
+            "renewal_count": defaults.integer(forKey: Key.renewalCount),
+            "total_sessions": session.totalSessions,
+            "days_since_install": session.daysSinceInstall,
+            "lifetime_core_actions": session.lifetimeCoreActions
+        ])
+        setUserProperty("subscription_status", value: "expired")
+    }
+
+    /// Call when restore purchases is attempted.
+    func trackRestoreAttempted(success: Bool) {
+        logEvent("restore_attempted", parameters: [
+            "success": success ? 1 : 0,
+            "days_since_install": session.daysSinceInstall
+        ])
+    }
+
+    /// Call when a purchase fails.
+    func trackPurchaseFailed(productID: String, errorType: String) {
+        logEvent("purchase_failed", parameters: [
+            "product_id": productID,
+            "error_type": errorType,
+            "days_since_install": session.daysSinceInstall
+        ])
+    }
+
+    /// Update subscription-related user properties. Call after subscription status changes.
+    func updateSubscriptionProperties(status: SubscriptionManager.Status) {
+        let previousStatus = defaults.string(forKey: Key.lastKnownStatus) ?? "unknown"
+
+        let statusLabel: String
+        let userTier: String
+        switch status {
+        case .trial(let daysRemaining):
+            statusLabel = "trial"
+            userTier = "free"
+            trackTrialDayCheck(daysRemaining: daysRemaining)
+            if previousStatus == "unknown" {
+                trackTrialStarted(daysRemaining: daysRemaining)
+            }
+        case .subscribed:
+            statusLabel = "pro"
+            userTier = "pro"
+            updateMonthsSubscribed()
+            if previousStatus == "pro" {
+                trackSubscriptionRenewed()
+            }
+        case .billingGrace:
+            statusLabel = "billing_grace"
+            userTier = "pro"
+        case .expired:
+            statusLabel = "expired"
+            userTier = "free"
+            if previousStatus == "pro" || previousStatus == "billing_grace" {
+                trackSubscriptionCancelled()
+            }
+            if previousStatus == "trial" {
+                trackTrialExpired()
+            }
+        case .unknown:
+            statusLabel = "unknown"
+            userTier = "free"
+        }
+
+        defaults.set(statusLabel, forKey: Key.lastKnownStatus)
+        setUserProperty("subscription_status", value: statusLabel)
+        setUserProperty("user_tier", value: userTier)
+    }
+
+    private var monthsSubscribed: Int {
+        guard let startDate = defaults.object(forKey: Key.subscriptionStartDate) as? Date else { return 0 }
+        return Calendar.current.dateComponents([.month], from: startDate, to: Date()).month ?? 0
+    }
+
+    private func updateMonthsSubscribed() {
+        setUserProperty("months_subscribed", value: "\(monthsSubscribed)")
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 10. Emotional / NPS
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Call when user submits NPS score (0-10).
+    func trackNPSSubmitted(score: Int, source: String) {
+        logEvent("nps_submitted", parameters: [
+            "score": score,
+            "source": source,
+            "days_since_install": session.daysSinceInstall,
+            "total_sessions": session.totalSessions,
+            "lifetime_core_actions": session.lifetimeCoreActions,
+            "was_activated": session.isActivated ? 1 : 0
+        ])
+
+        defaults.set(Date(), forKey: AppKeys.Feedback.lastNPSDate)
+        defaults.set(score, forKey: AppKeys.Feedback.lastNPSScore)
+
+        let category: String
+        if score >= 9 { category = "promoter" }
+        else if score >= 7 { category = "passive" }
+        else { category = "detractor" }
+        setUserProperty("nps_category", value: category)
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 11. Friction Metrics
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Track any error that occurs in the app.
+    func trackError(type: String, screen: AppFeature, message: String = "") {
+        logEvent("error_occurred", parameters: [
+            "error_type": type,
+            "screen": screen.rawValue,
+            "message": String(message.prefix(100))
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 12. Device & Data Events
+    // ══════════════════════════════════════════════════════════════════════
+
+    func trackDeviceDetected(deviceType: String, metricsCount: Int, isActive: Bool) {
+        logEvent("device_detected", parameters: [
+            "device_type": deviceType,
+            "metrics_count": metricsCount,
+            "is_active": isActive ? 1 : 0
+        ])
+    }
+
+    func updateDeviceProperties(activeCount: Int, primaryDevice: String) {
+        setUserProperty("connected_device_count", value: "\(activeCount)")
+        setUserProperty("primary_device", value: primaryDevice)
+    }
+
+    func trackDataSync(metricsCount: Int, newSamplesCount: Int, durationSec: Int, isFirstSync: Bool) {
+        logEvent("data_sync_completed", parameters: [
+            "metrics_count": metricsCount,
+            "new_samples_count": newSamplesCount,
+            "duration_sec": durationSec,
+            "is_first_sync": isFirstSync ? 1 : 0
+        ])
+    }
+
+    func trackReportExported(score: Int, metricsCount: Int, insightsCount: Int) {
+        logEvent("report_exported", parameters: [
+            "score": score,
+            "metrics_count": metricsCount,
+            "insights_count": insightsCount
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 13. Settings & Misc
+    // ══════════════════════════════════════════════════════════════════════
+
+    func trackSettingChanged(name: String, value: Any) {
+        var stringValue: String
+        switch value {
+        case let v as Bool: stringValue = v ? "on" : "off"
+        case let v as Int: stringValue = "\(v)"
+        case let v as Double: stringValue = String(format: "%.0f", v)
+        case let v as String: stringValue = v
+        default: stringValue = String(describing: value)
+        }
+        logEvent("setting_changed", parameters: [
+            "setting_name": name,
+            "new_value": stringValue,
+            "screen": AppFeature.settings.rawValue
+        ])
+    }
+
+    func trackThemeChanged(from fromTheme: String, to toTheme: String) {
+        logEvent("theme_changed", parameters: [
+            "from_theme": fromTheme,
+            "to_theme": toTheme
+        ])
+    }
+
+    func trackNotificationSent(type: String) {
+        logEvent("notification_sent", parameters: [
+            "type": type
+        ])
+    }
+
+    func trackShareSheetPresented(contentType: String) {
+        logEvent("share_sheet_presented", parameters: [
+            "content_type": contentType,
+            "screen": AppFeature.settings.rawValue
+        ])
+    }
+
+    func updateNavigationDepth(_ depth: Int) {
+        session.updateDepth(depth)
+    }
+
+    // Live Streaming
+    func trackStreamingStarted() {
+        streamingStartDate = Date()
+        logEvent("streaming_started", parameters: [
+            "screen": AppFeature.live.rawValue
+        ])
+    }
+
+    func trackStreamingStopped() {
+        var duration = 0
+        if let start = streamingStartDate {
+            duration = Int(Date().timeIntervalSince(start))
+        }
+        streamingStartDate = nil
+        logEvent("streaming_stopped", parameters: [
+            "screen": AppFeature.live.rawValue,
+            "duration_sec": duration
+        ])
+    }
+
+    func trackLiveFirstDataReceived() {
+        logEvent("live_first_data_received", parameters: [
+            "screen": AppFeature.live.rawValue
+        ])
+    }
+
+    // Feedback
+    func trackFeedbackPromptShown(daysSinceInstall: Int) {
+        logEvent("feedback_prompt_shown", parameters: [
+            "days_since_install": daysSinceInstall
+        ])
+    }
+
+    func trackFeedbackSubmitted(category: String, textLength: Int) {
+        logEvent("feedback_submitted", parameters: [
+            "category": category,
+            "text_length": textLength
+        ])
+    }
+
+    // Scroll depth
+    func trackScrollDepth(screen: AppFeature, maxDepthPercent: Int) {
+        logEvent("scroll_depth", parameters: [
+            "screen": screen.rawValue,
+            "max_depth_percent": maxDepthPercent,
+            "tab": session.currentTab
+        ])
+    }
+
+    // Monetization signals
     func trackPremiumFeatureAttempted(feature: String, screen: AppFeature) {
         logEvent("premium_feature_attempted", parameters: [
             "feature": feature,
@@ -836,27 +992,12 @@ final class AppAnalytics {
         ])
     }
 
-    func trackHighEngagementSignal(signal: String, metadata: [String: Any] = [:]) {
-        // Kept as user property update only, no longer a standalone event
-        setUserProperty("last_engagement_signal", value: signal)
-    }
-
-    func trackPrePurchaseBehavior(action: String, metadata: [String: Any] = [:]) {
-        var params: [String: Any] = [
-            "action": action,
-            "days_since_install": session.daysSinceInstall
-        ]
-        for (k, v) in metadata { params[k] = v }
-        logEvent("pre_purchase_behavior", parameters: params)
-    }
-
     func trackLastMeaningfulAction(action: String, screen: AppFeature) {
         setUserProperty("last_meaningful_action", value: action)
         setUserProperty("last_active_screen", value: screen.rawValue)
     }
 
-    // MARK: - Discovery Events
-
+    // Discovery
     func trackDiscoveryShown(count: Int, types: [String]) {
         logEvent("discovery_shown", parameters: [
             "count": count,
@@ -880,8 +1021,7 @@ final class AppAnalytics {
         ])
     }
 
-    // MARK: - Generic Action
-
+    // Generic action (use sparingly — prefer specific event methods)
     func trackAction(_ action: String, metadata: [String: Any] = [:]) {
         let sanitized = sanitizeEventName(action)
         logEvent(sanitized, parameters: metadata)

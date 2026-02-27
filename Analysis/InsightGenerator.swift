@@ -8,7 +8,9 @@ struct InsightGenerator {
         anomalies: [AnomalyDetector.AnomalyResult],
         trends: [HealthMetric: TrendAnalyzer.TrendResult],
         baselines: [HealthMetric: UserBaseline],
-        historicalContext: [HealthMetric: HistoricalAnalyzer.HistoricalContext] = [:]
+        historicalContext: [HealthMetric: HistoricalAnalyzer.HistoricalContext] = [:],
+        correlations: [HealthCorrelation] = [],
+        timeSeries: [HealthMetric: MetricTimeSeries] = [:]
     ) -> [Insight] {
         var insights: [Insight] = []
 
@@ -31,6 +33,15 @@ struct InsightGenerator {
                 effectiveSeverity = anomaly.severity
             }
 
+            let context = buildContext(
+                metric: anomaly.metric,
+                baselines: baselines,
+                historicalContext: historicalContext,
+                correlations: correlations,
+                timeSeries: timeSeries,
+                trends: trends
+            )
+
             let insight = createInsight(
                 metric: anomaly.metric,
                 severity: effectiveSeverity,
@@ -40,7 +51,8 @@ struct InsightGenerator {
                 currentValue: anomaly.currentValue,
                 baselineValue: anomaly.baselineValue,
                 deviationPercent: anomaly.deviationPercent,
-                historicalContext: historicalContext[anomaly.metric]
+                historicalContext: historicalContext[anomaly.metric],
+                insightContext: context
             )
             insights.append(insight)
         }
@@ -53,6 +65,15 @@ struct InsightGenerator {
 
             let currentValue = baseline.mean * (1.0 + trendResult.weekOverWeekChange / 100.0)
 
+            let context = buildContext(
+                metric: metric,
+                baselines: baselines,
+                historicalContext: historicalContext,
+                correlations: correlations,
+                timeSeries: timeSeries,
+                trends: trends
+            )
+
             let insight = createInsight(
                 metric: metric,
                 severity: .info,
@@ -61,7 +82,8 @@ struct InsightGenerator {
                 inflection: trendResult.inflection,
                 currentValue: currentValue,
                 baselineValue: baseline.mean,
-                deviationPercent: trendResult.weekOverWeekChange
+                deviationPercent: trendResult.weekOverWeekChange,
+                insightContext: context
             )
             insights.append(insight)
         }
@@ -75,6 +97,15 @@ struct InsightGenerator {
 
             let currentValue = baseline.mean * (1.0 + trendResult.weekOverWeekChange / 100.0)
 
+            let context = buildContext(
+                metric: metric,
+                baselines: baselines,
+                historicalContext: historicalContext,
+                correlations: correlations,
+                timeSeries: timeSeries,
+                trends: trends
+            )
+
             let insight = createInsight(
                 metric: metric,
                 severity: .info,
@@ -83,7 +114,8 @@ struct InsightGenerator {
                 inflection: trendResult.inflection,
                 currentValue: currentValue,
                 baselineValue: baseline.mean,
-                deviationPercent: trendResult.weekOverWeekChange
+                deviationPercent: trendResult.weekOverWeekChange,
+                insightContext: context
             )
             insights.append(insight)
         }
@@ -207,25 +239,36 @@ struct InsightGenerator {
             && abs(insight.deviationPercent) < 5
         if isGenericAdvice { score -= 30 }
 
+        // Boost context-rich insights
+        if let ctx = insight.context {
+            if !ctx.correlatedFactors.isEmpty { score += 10 }
+            if ctx.projectedDaysToThreshold != nil { score += 5 }
+            if ctx.rootCauseMetric != nil { score += 10 }
+        }
+
         return max(0, min(100, score))
     }
 
     // MARK: - High-Quality Filtering
 
     /// Return only high-quality, actionable insights suitable for a Today/Home section.
-    /// Filters to actionability score >= 50, sorted by priority, limited to maxCount.
+    /// Filters to actionability score >= 35, sorted by priority, limited to maxCount.
     /// Excludes stable/improving platitudes that don't tell the user what to do.
     static func filterToActionable(_ insights: [Insight], maxCount: Int = 5) -> [Insight] {
         insights
             .filter { insight in
                 // Filter out generic stable/improving insights that add no value
                 if insight.trend == .stable && insight.severity == .info && abs(insight.deviationPercent) < 5 {
+                    // Exception: show stable metrics in extreme percentiles (top/bottom 10%)
+                    if let pct = insight.context?.allTimePercentile, pct <= 10 || pct >= 90 {
+                        return true
+                    }
                     return false
                 }
-                if insight.trend == .improving && insight.severity == .info && abs(insight.deviationPercent) < 8 {
+                if insight.trend == .improving && insight.severity == .info && abs(insight.deviationPercent) < 5 {
                     return false
                 }
-                return actionabilityScore(insight) >= 50
+                return actionabilityScore(insight) >= 35
             }
             .sorted { $0.priorityScore > $1.priorityScore }
             .prefix(maxCount)
@@ -241,7 +284,8 @@ struct InsightGenerator {
         currentValue: Double,
         baselineValue: Double,
         deviationPercent: Double,
-        historicalContext: HistoricalAnalyzer.HistoricalContext? = nil
+        historicalContext: HistoricalAnalyzer.HistoricalContext? = nil,
+        insightContext: InsightContext? = nil
     ) -> Insight {
         let title = generateTitle(metric: metric, trend: trend, severity: severity, rateOfChange: rateOfChange, inflection: inflection)
         let summary = generateSummary(
@@ -251,11 +295,13 @@ struct InsightGenerator {
             deviationPercent: deviationPercent,
             trend: trend,
             inflection: inflection,
-            historicalContext: historicalContext
+            historicalContext: historicalContext,
+            insightContext: insightContext
         )
         let recommendation = RulesConfiguration.recommendation(
             for: metric, severity: severity, trend: trend,
-            currentValue: currentValue, deviationPercent: deviationPercent
+            currentValue: currentValue, deviationPercent: deviationPercent,
+            context: insightContext
         )
 
         return Insight(
@@ -267,8 +313,95 @@ struct InsightGenerator {
             trend: trend,
             currentValue: currentValue,
             baselineValue: baselineValue,
-            deviationPercent: deviationPercent
+            deviationPercent: deviationPercent,
+            context: insightContext
         )
+    }
+
+    // MARK: - Context Building
+
+    /// Build rich InsightContext for a metric from all available data sources
+    private static func buildContext(
+        metric: HealthMetric,
+        baselines: [HealthMetric: UserBaseline],
+        historicalContext: [HealthMetric: HistoricalAnalyzer.HistoricalContext],
+        correlations: [HealthCorrelation],
+        timeSeries: [HealthMetric: MetricTimeSeries],
+        trends: [HealthMetric: TrendAnalyzer.TrendResult]
+    ) -> InsightContext? {
+        var ctx = InsightContext()
+        var hasData = false
+
+        // Slope + projected days to threshold
+        if let trend = trends[metric], let baseline = baselines[metric] {
+            ctx.slope = trend.weekOverWeekChange / 7.0
+            if trend.direction == .declining, let slope = ctx.slope, abs(slope) > 0.1 {
+                let range = RulesConfiguration.normalRange(for: metric)
+                let threshold = metric.higherIsBetter ? range.low : range.high
+                let current = baseline.mean * (1.0 + trend.weekOverWeekChange / 100.0)
+                let distToThreshold = abs(current - threshold)
+                let dailyChange = abs(slope) * baseline.mean / 100.0
+                if dailyChange > 0 {
+                    let days = Int(distToThreshold / dailyChange)
+                    if days > 0 && days <= 21 {
+                        ctx.projectedDaysToThreshold = days
+                        hasData = true
+                    }
+                }
+            }
+            ctx.comparisonToLastWeek = trend.weekOverWeekChange
+            hasData = true
+        }
+
+        // Historical context
+        if let hist = historicalContext[metric] {
+            if hist.totalDataPoints >= 180 {
+                ctx.allTimePercentile = hist.allTimePercentile
+                hasData = true
+            }
+            if let seasonal = hist.seasonalDeviation, abs(seasonal) >= 5, hist.yearsOfData >= 2 {
+                ctx.seasonalDeviation = seasonal
+                hasData = true
+            }
+            if let yoy = hist.yearOverYearChange, abs(yoy) > 2 {
+                ctx.yearOverYearChange = yoy
+                hasData = true
+            }
+            ctx.dataPointCount = hist.totalDataPoints
+        }
+
+        // Top 3 correlated factors for this metric
+        let relevantCorrelations = correlations
+            .filter { $0.metricA == metric || $0.metricB == metric }
+            .sorted { abs($0.correlation) > abs($1.correlation) }
+            .prefix(3)
+
+        ctx.correlatedFactors = relevantCorrelations.map { corr in
+            let factorMetric = corr.metricA == metric ? corr.metricB : corr.metricA
+            return CorrelatedFactor(
+                metric: factorMetric,
+                correlation: corr.correlation,
+                effectPercent: corr.effectPercentDiff
+            )
+        }
+        if !ctx.correlatedFactors.isEmpty { hasData = true }
+
+        // Recent values (last 7 days)
+        if let series = timeSeries[metric] {
+            let recent = series.samples(lastDays: 7)
+            if !recent.isEmpty {
+                ctx.recentValues = recent.map { (date: $0.date, value: $0.value) }
+                hasData = true
+            }
+        }
+
+        // Confidence level based on data depth
+        if let baseline = baselines[metric] {
+            let confidence = min(Double(baseline.sampleCount) / 90.0, 1.0)
+            ctx.confidenceLevel = confidence
+        }
+
+        return hasData ? ctx : nil
     }
 
     private static func generateTitle(
@@ -306,7 +439,8 @@ struct InsightGenerator {
         deviationPercent: Double,
         trend: TrendDirection,
         inflection: TrendAnalyzer.Inflection = .steady,
-        historicalContext: HistoricalAnalyzer.HistoricalContext? = nil
+        historicalContext: HistoricalAnalyzer.HistoricalContext? = nil,
+        insightContext: InsightContext? = nil
     ) -> String {
         let formattedCurrent = formatValue(currentValue, metric: metric)
         let formattedBaseline = formatValue(baselineValue, metric: metric)
@@ -327,7 +461,7 @@ struct InsightGenerator {
             var parts: [String] = []
 
             // Year-over-year comparison
-            if let yoy = ctx.yearOverYearChange, abs(yoy) > 3 {
+            if let yoy = ctx.yearOverYearChange, abs(yoy) > 2 {
                 let yoyAbs = String(format: "%.0f", abs(yoy))
                 parts.append("\(yoy > 0 ? "up" : "down") \(yoyAbs)% vs this time last year")
             }
@@ -335,14 +469,14 @@ struct InsightGenerator {
             // All-time percentile
             if ctx.totalDataPoints >= 180 {
                 let pct = Int(ctx.allTimePercentile.rounded())
-                if pct <= 10 || pct >= 90 {
-                    let label = pct >= 90 ? "top \(100 - pct)%" : "bottom \(pct)%"
+                if pct <= 20 || pct >= 80 {
+                    let label = pct >= 80 ? "top \(100 - pct)%" : "bottom \(pct)%"
                     parts.append("in the \(label) of your \(ctx.yearsOfData)-year history")
                 }
             }
 
             // Seasonal context
-            if let seasonalDev = ctx.seasonalDeviation, abs(seasonalDev) > 8, ctx.yearsOfData >= 2 {
+            if let seasonalDev = ctx.seasonalDeviation, abs(seasonalDev) >= 5, ctx.yearsOfData >= 2 {
                 let monthName = Calendar.current.monthSymbols[Calendar.current.component(.month, from: Date()) - 1]
                 let seasonalAbs = String(format: "%.0f", abs(seasonalDev))
                 parts.append("\(seasonalDev > 0 ? "above" : "below") your typical \(monthName) by \(seasonalAbs)%")
@@ -356,9 +490,17 @@ struct InsightGenerator {
         // Build causal hint from historical context correlations
         let causalHint = generateCausalHint(metric: metric, deviationPercent: deviationPercent, historicalContext: historicalContext)
 
+        // Projection sentence from InsightContext
+        let projectionNote: String
+        if trend == .declining, let days = insightContext?.projectedDaysToThreshold, days > 0, days <= 21 {
+            projectionNote = " At the current rate, this could reach warning level in ~\(days) days."
+        } else {
+            projectionNote = ""
+        }
+
         switch trend {
         case .declining:
-            return "Your \(metric.displayName.lowercased()) is \(absDeviation)% \(direction) your baseline (\(formattedBaseline) \(metric.unit)). Current: \(formattedCurrent) \(metric.unit).\(inflectionNote)\(causalHint)\(historyNote)"
+            return "Your \(metric.displayName.lowercased()) is \(absDeviation)% \(direction) your baseline (\(formattedBaseline) \(metric.unit)). Current: \(formattedCurrent) \(metric.unit).\(inflectionNote)\(projectionNote)\(causalHint)\(historyNote)"
         case .improving:
             return "Your \(metric.displayName.lowercased()) has improved \(absDeviation)% from your baseline. Current: \(formattedCurrent) \(metric.unit).\(inflectionNote)\(causalHint)\(historyNote)"
         case .stable:

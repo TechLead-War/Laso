@@ -33,6 +33,15 @@ struct MetricChartView: View {
         return max(1, Calendar.current.dateComponents([.day], from: first, to: last).day ?? 7)
     }
 
+    /// Human-readable period label for analytics
+    private var periodLabel: String {
+        if dataSpanDays <= 1 { return "daily" }
+        if dataSpanDays <= 7 { return "weekly" }
+        if dataSpanDays <= 31 { return "monthly" }
+        if dataSpanDays <= 93 { return "quarterly" }
+        return "yearly"
+    }
+
     /// Adaptive X-axis stride based on data span — keeps ~4-6 labels visible
     private var xAxisStride: (component: Calendar.Component, count: Int) {
         switch dataSpanDays {
@@ -192,6 +201,7 @@ struct MetricChartView: View {
                                     AppAnalytics.shared.trackChartInteraction(
                                         metric: metric.rawValue,
                                         interactionType: "drag_start",
+                                        period: periodLabel,
                                         screen: .metricDetail
                                     )
                                     AppAnalytics.shared.trackActivationMilestone(.firstChartInteraction)
@@ -209,8 +219,8 @@ struct MetricChartView: View {
                                 AppAnalytics.shared.trackChartInteraction(
                                     metric: metric.rawValue,
                                     interactionType: "drag_end",
-                                    screen: .metricDetail,
-                                    metadata: ["selected_value": selectedSample?.value ?? 0]
+                                    period: periodLabel,
+                                    screen: .metricDetail
                                 )
                             }
                     )
@@ -223,6 +233,7 @@ struct MetricChartView: View {
                                 AppAnalytics.shared.trackChartInteraction(
                                     metric: metric.rawValue,
                                     interactionType: "tap_deselect",
+                                    period: periodLabel,
                                     screen: .metricDetail
                                 )
                             } else {
@@ -230,8 +241,8 @@ struct MetricChartView: View {
                                 AppAnalytics.shared.trackChartInteraction(
                                     metric: metric.rawValue,
                                     interactionType: "tap_select",
-                                    screen: .metricDetail,
-                                    metadata: ["selected_value": selectedSample?.value ?? 0]
+                                    period: periodLabel,
+                                    screen: .metricDetail
                                 )
                             }
                         }

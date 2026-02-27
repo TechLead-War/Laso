@@ -4,15 +4,16 @@ import Foundation
 /// A cluster of 3+ declining metrics in the same category is a stronger signal than any single decline.
 struct MultiMetricClusterAnalyzer {
 
-    /// Generate cluster insights from current anomalies and trends
+    /// Generate cluster insights from current anomalies and trends, with optional baselines for actual values
     static func generateInsights(
         anomalies: [AnomalyDetector.AnomalyResult],
-        trends: [HealthMetric: TrendAnalyzer.TrendResult]
+        trends: [HealthMetric: TrendAnalyzer.TrendResult],
+        baselines: [HealthMetric: UserBaseline] = [:]
     ) -> [Insight] {
         var insights: [Insight] = []
 
         // 1. Category-level clusters: 3+ declining metrics in same category
-        if let categoryCluster = detectCategoryClusters(anomalies: anomalies, trends: trends) {
+        if let categoryCluster = detectCategoryClusters(anomalies: anomalies, trends: trends, baselines: baselines) {
             insights.append(contentsOf: categoryCluster)
         }
 
@@ -28,7 +29,8 @@ struct MultiMetricClusterAnalyzer {
 
     private static func detectCategoryClusters(
         anomalies: [AnomalyDetector.AnomalyResult],
-        trends: [HealthMetric: TrendAnalyzer.TrendResult]
+        trends: [HealthMetric: TrendAnalyzer.TrendResult],
+        baselines: [HealthMetric: UserBaseline] = [:]
     ) -> [Insight]? {
         // Group declining metrics by category
         var decliningByCategory: [HealthCategory: [(metric: HealthMetric, severity: Severity, deviation: Double)]] = [:]
@@ -57,14 +59,25 @@ struct MultiMetricClusterAnalyzer {
             guard decliningMetrics.count >= 3 else { continue }
 
             let sorted = decliningMetrics.sorted { $0.severity > $1.severity }
-            let metricNames = sorted.prefix(4).map { $0.metric.displayName }.joined(separator: ", ")
             let worstSeverity = sorted.first?.severity ?? .warning
             let avgDeviation = sorted.map { abs($0.deviation) }.reduce(0, +) / Double(sorted.count)
+
+            // Build detailed metric descriptions with actual values and baseline deviations
+            let metricDetails = sorted.prefix(4).map { item -> String in
+                if let baseline = baselines[item.metric] {
+                    let currentValue = baseline.mean * (1.0 + item.deviation / 100.0)
+                    let formatted = item.metric.formatValue(currentValue)
+                    let devStr = String(format: "%.0f", abs(item.deviation))
+                    let dir = item.deviation > 0 ? "above" : "below"
+                    return "\(item.metric.displayName): \(formatted) \(item.metric.unit) (\(devStr)% \(dir) baseline)"
+                }
+                return "\(item.metric.displayName) (\(String(format: "%.0f", abs(item.deviation)))% deviation)"
+            }.joined(separator: ", ")
 
             let insight = Insight(
                 metric: sorted[0].metric,
                 title: "\(category.displayName): Multiple Metrics Declining",
-                summary: "\(decliningMetrics.count) metrics are declining together in \(category.displayName): \(metricNames). Average deviation: \(String(format: "%.1f", avgDeviation))%.",
+                summary: "\(decliningMetrics.count) metrics declining together in \(category.displayName): \(metricDetails).",
                 recommendation: recommendationForCluster(category: category, count: decliningMetrics.count),
                 severity: worstSeverity >= .warning ? .critical : .warning,
                 trend: .declining,

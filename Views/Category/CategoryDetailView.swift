@@ -141,7 +141,6 @@ struct CategoryDetailView: View {
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.categoryDetail, metadata: [
                 "category": viewModel.category.displayName,
-                "score": viewModel.categoryScore?.score ?? 0,
                 "insight_count": viewModel.insights.count
             ])
         }

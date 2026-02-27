@@ -56,13 +56,17 @@ struct WorkoutEffectivenessAnalyzer {
         let severity: Severity = consistencyScore < 50 ? .warning : .info
         let trend: TrendDirection = weekWorkoutCounts.last ?? 0 >= weekWorkoutCounts.first ?? 0 ? .improving : .declining
 
+        let weekBreakdown = weekWorkoutCounts.enumerated()
+            .map { "Week \($0.offset + 1): \($0.element)" }
+            .joined(separator: ", ")
+
         return Insight(
             metric: .workoutDuration,
             title: "Workout Consistency",
-            summary: "\(Int(consistencyScore))% of the last 4 weeks had 3+ workout days. You're averaging \(String(format: "%.1f", weeklyAvg)) workouts per week.",
+            summary: "\(Int(consistencyScore))% of the last 4 weeks had 3+ workout days (avg \(String(format: "%.1f", weeklyAvg))/week). Breakdown: \(weekBreakdown).",
             recommendation: consistencyScore >= 75 ?
-                "Excellent consistency! Maintain this routine for long-term fitness gains." :
-                "Aim for at least 3 workout days per week. Scheduling workouts at the same time builds the habit.",
+                "Excellent consistency at \(String(format: "%.1f", weeklyAvg)) sessions/week. Maintain this routine for long-term fitness gains." :
+                "Aim for at least 3 workout days per week. Schedule workouts as recurring calendar events at the same time each day.",
             severity: severity,
             trend: trend,
             currentValue: consistencyScore,
@@ -90,13 +94,26 @@ struct WorkoutEffectivenessAnalyzer {
         let change = ((recentAvg - olderAvg) / olderAvg) * 100
         let trend: TrendDirection = change > 2 ? .improving : (change < -2 ? .declining : .stable)
 
+        // Weekly VO2 progression
+        let allSamples = vo2Series.samples(lastDays: 30)
+        var weeklyAvgs: [String] = []
+        for weekOffset in stride(from: 3, through: 0, by: -1) {
+            let weekStart = Date().daysAgo(7 * (weekOffset + 1))
+            let weekEnd = Date().daysAgo(7 * weekOffset)
+            let weekSamples = allSamples.filter { $0.date >= weekStart && $0.date < weekEnd }
+            if !weekSamples.isEmpty {
+                weeklyAvgs.append(String(format: "%.1f", weekSamples.map(\.value).mean))
+            }
+        }
+        let weeklyProgression = weeklyAvgs.isEmpty ? "" : " Weekly VO2: \(weeklyAvgs.joined(separator: " \u{2192} "))."
+
         return Insight(
             metric: .vo2Max,
             title: "VO2 Max Response",
-            summary: "Your VO2 Max \(change > 0 ? "improved" : "decreased") \(String(format: "%.1f", abs(change)))% over the last 30 days (\(String(format: "%.1f", olderAvg)) → \(String(format: "%.1f", recentAvg)) \(HealthMetric.vo2Max.unit)).",
+            summary: "Your VO2 Max \(change > 0 ? "improved" : "decreased") \(String(format: "%.1f", abs(change)))% over the last 30 days (\(String(format: "%.1f", olderAvg)) \u{2192} \(String(format: "%.1f", recentAvg)) \(HealthMetric.vo2Max.unit)).\(weeklyProgression)",
             recommendation: change > 0 ?
-                "Your cardiovascular fitness is improving. Keep up your current training intensity." :
-                "Consider adding more zone 2 cardio (conversational pace) to boost aerobic capacity.",
+                "VO2 Max is up \(String(format: "%.1f", abs(change)))% \u{2014} your cardiovascular fitness is responding to training. Maintain current intensity and add 1 zone 2 session per week for continued gains." :
+                "VO2 Max dropped \(String(format: "%.1f", abs(change)))%. Add 20 min of zone 2 cardio (conversational pace) 3x per week to reverse this. Consistency matters more than intensity.",
             severity: abs(change) > 5 ? .warning : .info,
             trend: trend,
             currentValue: recentAvg,
