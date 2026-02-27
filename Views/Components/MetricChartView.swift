@@ -27,6 +27,33 @@ struct MetricChartView: View {
         metric.category.color
     }
 
+    /// Days spanned by the current sample set
+    private var dataSpanDays: Int {
+        guard let first = samples.first?.date, let last = samples.last?.date else { return 7 }
+        return max(1, Calendar.current.dateComponents([.day], from: first, to: last).day ?? 7)
+    }
+
+    /// Adaptive X-axis stride based on data span — keeps ~4-6 labels visible
+    private var xAxisStride: (component: Calendar.Component, count: Int) {
+        switch dataSpanDays {
+        case 0...10:   return (.day, 2)       // 7D  → every 2 days  (~4 labels)
+        case 11...35:  return (.day, 7)       // 30D → every 7 days  (~4 labels)
+        case 36...100: return (.day, 14)      // 3M  → every 2 weeks (~6 labels)
+        case 101...200: return (.month, 1)    // 6M  → every month   (~6 labels)
+        case 201...400: return (.month, 2)    // 1Y  → every 2 months(~6 labels)
+        default:       return (.month, 3)     // All → every quarter (~4-5 labels)
+        }
+    }
+
+    /// Adaptive date format — shorter labels for longer spans
+    private var xAxisDateFormat: Date.FormatStyle {
+        switch dataSpanDays {
+        case 0...35:   return .dateTime.month(.abbreviated).day()   // "Jan 15"
+        case 36...200: return .dateTime.month(.abbreviated).day()   // "Jan 15"
+        default:       return .dateTime.month(.abbreviated).year(.twoDigits) // "Jan '25"
+        }
+    }
+
     /// Focused Y-axis domain based on actual data, not the full normal range.
     /// Prevents small-variation metrics (e.g. walking asymmetry 2-5%) from looking
     /// flat when the normal range is much wider (0-15%).
@@ -140,8 +167,8 @@ struct MetricChartView: View {
         .chartYScale(domain: yDomain)
         .chartXSelection(value: $selectedDate)
         .chartXAxis {
-            AxisMarks(values: .stride(by: .day, count: 7)) { _ in
-                AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+            AxisMarks(values: .stride(by: xAxisStride.component, count: xAxisStride.count)) { _ in
+                AxisValueLabel(format: xAxisDateFormat)
                 AxisGridLine()
             }
         }

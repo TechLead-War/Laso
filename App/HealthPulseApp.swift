@@ -24,9 +24,9 @@ struct HealthPulseApp: App {
         }
     }
 
-    /// Show paywall when onboarding is done but user has no access (trial expired, not subscribed).
+    /// Show paywall only when onboarding is done and subscription is definitively expired.
     private var shouldShowPaywall: Bool {
-        onboardingCompleted && !FeatureGate.hasFullAccess
+        onboardingCompleted && subscriptionManager.shouldEnforcePaywall
     }
 
     init() {

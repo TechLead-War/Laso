@@ -104,6 +104,10 @@ final class LiveViewModel {
 
     var readinessScore: Int? // 0-100
 
+    // MARK: - Data Unavailability (timeout-based)
+
+    var respiratoryRateUnavailable = false
+
     // MARK: - State
 
     var isStreaming = false
@@ -237,19 +241,32 @@ final class LiveViewModel {
 
     // MARK: - Data Availability & Freshness
 
+    private static let freshnessThreshold: TimeInterval = 30 * 60 // 30 minutes
+
     var hasAnyLiveData: Bool {
         currentHeartRate != nil || currentBloodOxygen != nil || currentRespiratoryRate != nil
+    }
+
+    /// Per-vital freshness checks — true if the specific vital was recorded within 30 minutes
+    var isHeartRateFresh: Bool {
+        guard let ts = heartRateTimestamp else { return false }
+        return Date().timeIntervalSince(ts) < Self.freshnessThreshold
+    }
+
+    var isBloodOxygenFresh: Bool {
+        guard let ts = bloodOxygenTimestamp else { return false }
+        return Date().timeIntervalSince(ts) < Self.freshnessThreshold
+    }
+
+    var isRespiratoryRateFresh: Bool {
+        guard let ts = respiratoryRateTimestamp else { return false }
+        return Date().timeIntervalSince(ts) < Self.freshnessThreshold
     }
 
     /// True only if we have live vitals AND they were recorded recently (within 30 minutes).
     /// Apple Watch measures HR periodically (not continuously), so 30 min accommodates normal gaps.
     var hasFreshLiveData: Bool {
-        let thirtyMinutes: TimeInterval = 30 * 60
-        let now = Date()
-        if let ts = heartRateTimestamp, now.timeIntervalSince(ts) < thirtyMinutes { return true }
-        if let ts = bloodOxygenTimestamp, now.timeIntervalSince(ts) < thirtyMinutes { return true }
-        if let ts = respiratoryRateTimestamp, now.timeIntervalSince(ts) < thirtyMinutes { return true }
-        return false
+        isHeartRateFresh || isBloodOxygenFresh || isRespiratoryRateFresh
     }
 
     /// True if we have vital data recorded within the last 2 hours — watch is likely still being worn
@@ -336,6 +353,12 @@ final class LiveViewModel {
             self?.fetchFallbackHeartRate()
             self?.fetchFallbackBloodOxygen()
             self?.fetchFallbackRespiratoryRate()
+        }
+
+        // After 5 seconds, if respiratory rate is still nil, mark as unavailable
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
+            guard let self, self.currentRespiratoryRate == nil else { return }
+            self.respiratoryRateUnavailable = true
         }
 
         // Refresh cumulative stats every 30 seconds
@@ -437,10 +460,11 @@ final class LiveViewModel {
         respiratoryRateQuery = startVitalStream(
             identifier: .respiratoryRate,
             unit: HKUnit.count().unitDivided(by: .minute()),
-            hoursBack: 6
+            hoursBack: 24
         ) { [weak self] val, date in
             self?.currentRespiratoryRate = val
             self?.respiratoryRateTimestamp = date
+            self?.respiratoryRateUnavailable = false
             self?.lastUpdate = Date()
         }
     }
@@ -863,12 +887,13 @@ final class LiveViewModel {
     private func fetchFallbackRespiratoryRate() {
         guard currentRespiratoryRate == nil else { return }
         let unit = HKUnit.count().unitDivided(by: .minute())
-        // Respiratory rate measured during sleep — allow up to 12 hours
-        fetchLatestSampleWithDate(.respiratoryRate, unit: unit, maxAge: 12 * 3600) { [weak self] value, date in
+        // Respiratory rate measured during sleep — allow up to 48 hours
+        fetchLatestSampleWithDate(.respiratoryRate, unit: unit, maxAge: 48 * 3600) { [weak self] value, date in
             Task { @MainActor in
                 guard self?.currentRespiratoryRate == nil else { return }
                 self?.currentRespiratoryRate = value
                 self?.respiratoryRateTimestamp = date
+                self?.respiratoryRateUnavailable = false
                 self?.lastUpdate = Date()
             }
         }

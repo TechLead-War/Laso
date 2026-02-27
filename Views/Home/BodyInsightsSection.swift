@@ -68,8 +68,10 @@ struct BodyInsightsSection: View {
                 }
                 .padding(.horizontal)
 
-                // 1. Headline insight — the coach speaking to you
-                if let headline = viewModel.headlineInsight {
+                // 1. Headline: prefer causal chain (explains WHY), fall back to top insight
+                if let chain = viewModel.topCausalChain {
+                    causalChainCard(chain)
+                } else if let headline = viewModel.headlineInsight {
                     headlineInsightCard(headline)
                 }
 
@@ -84,12 +86,20 @@ struct BodyInsightsSection: View {
     // MARK: - Headline Insight Card
 
     private func headlineInsightCard(_ insight: Insight) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: "lightbulb.fill")
-                .font(.title3)
-                .foregroundStyle(.white)
+        VStack(alignment: .leading, spacing: 6) {
+            // Context line: what's happening
+            HStack(spacing: 6) {
+                Image(systemName: "lightbulb.fill")
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.7))
+                Text(insight.title)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.white.opacity(0.7))
+                    .lineLimit(1)
+            }
 
-            Text(insight.title)
+            // Main message: what to DO about it
+            Text(insight.recommendation)
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(.white)
                 .lineLimit(3)
@@ -97,6 +107,30 @@ struct BodyInsightsSection: View {
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.tint, in: RoundedRectangle(cornerRadius: 14))
+        .padding(.horizontal)
+    }
+
+    // MARK: - Causal Chain Card
+
+    private func causalChainCard(_ chain: CausalChain) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Image(systemName: "link")
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.7))
+                Text("Why This Is Happening")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.white.opacity(0.7))
+            }
+
+            Text(chain.narrative)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.white)
+                .lineLimit(4)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.purple.gradient, in: RoundedRectangle(cornerRadius: 14))
         .padding(.horizontal)
     }
 

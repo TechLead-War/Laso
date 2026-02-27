@@ -202,12 +202,9 @@ struct HealthRiskEngine {
     // MARK: - Helpers
 
     /// Whether the metric's trend direction is bad for health
-    private static func isMetricDecliningForHealth(metric: HealthMetric, trend: TrendDirection) -> Bool {
-        if metric.higherIsBetter {
-            return trend == .declining
-        } else {
-            return trend == .improving // "improving" for a lower-is-better metric means it's going up = bad
-        }
+    private static func isMetricDecliningForHealth(metric _: HealthMetric, trend: TrendDirection) -> Bool {
+        // TrendAnalyzer already normalizes direction by metric semantics.
+        return trend == .declining
     }
 
     /// Fractional distance from normal range (0 = at boundary, 1 = far out)
@@ -262,12 +259,11 @@ struct HealthRiskEngine {
 
         switch trend {
         case .declining:
-            let dir = metric.higherIsBetter ? "decreasing" : "elevated but stable"
+            let dir = metric.higherIsBetter ? "decreasing" : "rising"
             parts.append("and \(dir)")
         case .improving:
-            if !metric.higherIsBetter {
-                parts.append("and rising")
-            }
+            let dir = metric.higherIsBetter ? "increasing" : "decreasing"
+            parts.append("while trending \(dir)")
         case .stable:
             break
         }

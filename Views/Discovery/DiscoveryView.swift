@@ -93,7 +93,7 @@ struct DiscoveryView: View {
 
             // Swipe hint
             VStack(spacing: 4) {
-                Image(systemName: "chevron.left")
+                Image(systemName: "chevron.right")
                     .font(.caption2.weight(.bold))
                     .foregroundStyle(.tertiary)
                 Text("Swipe to explore")

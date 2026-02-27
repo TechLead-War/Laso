@@ -119,21 +119,24 @@ struct AlertEvaluator {
         // Check heart rate for spikes above threshold
         if let hrSeries = timeSeries[.heartRate],
            let latestHR = hrSeries.latestValue {
-            if latestHR >= spikeThreshold {
-                sendHeartRateAlert(
-                    title: "High Heart Rate Detected",
-                    body: "Your heart rate reached \(Int(latestHR)) bpm (threshold: \(Int(spikeThreshold)) bpm). If you weren't exercising, consider medical attention.",
-                    identifier: "healthpulse.spike.hr.high",
-                    maxPerDay: maxPerDay
-                )
-            }
-            if latestHR <= dropThreshold {
-                sendHeartRateAlert(
-                    title: "Low Heart Rate Detected",
-                    body: "Your heart rate dropped to \(Int(latestHR)) bpm (threshold: \(Int(dropThreshold)) bpm). Seek medical attention if you feel dizzy or faint.",
-                    identifier: "healthpulse.spike.hr.low",
-                    maxPerDay: maxPerDay
-                )
+            // Threshold spikes require sub-daily granularity; skip if only daily aggregates exist.
+            if hasSubdailyResolution(hrSeries) {
+                if latestHR >= spikeThreshold {
+                    sendHeartRateAlert(
+                        title: "High Heart Rate Detected",
+                        body: "Your heart rate reached \(Int(latestHR)) bpm (threshold: \(Int(spikeThreshold)) bpm). If you weren't exercising, consider medical attention.",
+                        identifier: "healthpulse.spike.hr.high",
+                        maxPerDay: maxPerDay
+                    )
+                }
+                if latestHR <= dropThreshold {
+                    sendHeartRateAlert(
+                        title: "Low Heart Rate Detected",
+                        body: "Your heart rate dropped to \(Int(latestHR)) bpm (threshold: \(Int(dropThreshold)) bpm). Seek medical attention if you feel dizzy or faint.",
+                        identifier: "healthpulse.spike.hr.low",
+                        maxPerDay: maxPerDay
+                    )
+                }
             }
         }
 
@@ -284,5 +287,13 @@ struct AlertEvaluator {
             maxPerDay: min(RemoteConfigManager.shared.heartAlertCap, maxPerDay)  // Heart alerts capped, but respect user's lower cap
         )
         recordAlert(identifier: identifier)
+    }
+
+    private static func hasSubdailyResolution(_ series: MetricTimeSeries) -> Bool {
+        let calendar = Calendar.current
+        return series.sortedSamples.contains { sample in
+            let components = calendar.dateComponents([.hour, .minute, .second], from: sample.date)
+            return (components.hour ?? 0) != 0 || (components.minute ?? 0) != 0 || (components.second ?? 0) != 0
+        }
     }
 }

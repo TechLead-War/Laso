@@ -79,6 +79,7 @@ final class HealthKitManager {
 
         // Phase 3: Fetch new data from HealthKit in parallel
         var newData: [(HealthMetric, MetricTimeSeries)] = []
+        var fetchedMetrics = Set<HealthMetric>()
 
         await withTaskGroup(of: (HealthMetric, MetricTimeSeries?).self) { group in
             for metric in HealthMetric.allCases {
@@ -98,7 +99,9 @@ final class HealthKitManager {
             }
 
             for await (metric, series) in group {
-                if let series, !series.samples.isEmpty {
+                guard let series else { continue }
+                fetchedMetrics.insert(metric)
+                if !series.samples.isEmpty {
                     newData.append((metric, series))
                 }
             }
@@ -107,6 +110,12 @@ final class HealthKitManager {
         // Phase 4: Save new data to SwiftData (sequential, main actor)
         for (metric, series) in newData {
             store.saveSamples(series.samples, for: metric)
+        }
+
+        // Metrics that fetched successfully but had no new samples should still advance sync metadata.
+        let metricsWithNewSamples = Set(newData.map { $0.0 })
+        for metric in fetchedMetrics.subtracting(metricsWithNewSamples) {
+            store.markSyncCompleted(for: metric, at: endDate)
         }
 
         // Phase 5: Reload complete stored data (includes both old + new)
@@ -255,15 +264,23 @@ final class HealthKitManager {
 
                 // Group by night and sum durations per sleep stage
                 var dailyDurations: [Date: Double] = [:]
+                let asleepStageValues: Set<Int> = [
+                    HKCategoryValueSleepAnalysis.asleep.rawValue,
+                    HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue,
+                    HKCategoryValueSleepAnalysis.asleepCore.rawValue,
+                    HKCategoryValueSleepAnalysis.asleepDeep.rawValue,
+                    HKCategoryValueSleepAnalysis.asleepREM.rawValue
+                ]
 
                 for sample in results {
-                    let day = sample.startDate.startOfDay
+                    // Attribute each sleep segment to the wake-up day to avoid overnight splits.
+                    let day = sample.endDate.startOfDay
                     let duration = sample.endDate.timeIntervalSince(sample.startDate) / 3600.0 // hours
 
                     let matchesStage: Bool
                     switch metric {
                     case .sleepDuration:
-                        matchesStage = sample.value != HKCategoryValueSleepAnalysis.awake.rawValue
+                        matchesStage = asleepStageValues.contains(sample.value)
                     case .sleepREM:
                         matchesStage = sample.value == HKCategoryValueSleepAnalysis.asleepREM.rawValue
                     case .sleepDeep:

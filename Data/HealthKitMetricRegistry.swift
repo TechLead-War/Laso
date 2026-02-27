@@ -55,8 +55,8 @@ struct HealthKitMetricRegistry {
             )
         case .heartRateRecovery:
             return MetricConfig(
-                sampleType: HKQuantityType(.heartRate),
-                quantityType: HKQuantityType(.heartRate),
+                sampleType: HKQuantityType(.heartRateRecoveryOneMinute),
+                quantityType: HKQuantityType(.heartRateRecoveryOneMinute),
                 unit: HKUnit.count().unitDivided(by: .minute()),
                 strategy: .quantitySample,
                 statisticsOption: .discreteAverage

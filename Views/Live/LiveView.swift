@@ -23,9 +23,6 @@ struct LiveView: View {
                     lastWorkoutCard
                     statusFooter
                 } else {
-                    if viewModel.isLiveDataAging {
-                        agingDataBanner
-                    }
                     heartRateHeroCard
                     vitalSignsRow
                     activityRingsSection
@@ -141,43 +138,6 @@ struct LiveView: View {
                 .padding(.horizontal)
             }
         }
-    }
-
-    // MARK: - Aging Data Banner
-
-    /// Subtle banner shown when live data exists but is 30 min – 2 hr old
-    private var agingDataBanner: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "clock")
-                .font(.caption2.weight(.medium))
-                .foregroundStyle(.secondary)
-
-            if let ts = viewModel.mostRecentVitalTimestamp {
-                Text("Last reading ")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                + Text(ts, style: .relative)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                + Text(" ago")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                Text("Waiting for new readings")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Image(systemName: "applewatch")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
-        .background(.orange.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
-        .padding(.horizontal)
     }
 
     private func staleReadingPill(icon: String, color: Color, value: String, unit: String, timestamp: Date?) -> some View {
@@ -302,23 +262,28 @@ struct LiveView: View {
 
     // MARK: - Heart Rate Hero
 
+    private var isHeartRateStale: Bool {
+        !viewModel.isHeartRateFresh && viewModel.heartRateTimestamp != nil
+    }
+
     private var heartRateHeroCard: some View {
         VStack(spacing: 0) {
             // Top: pulsing heart + big number + zone
             HStack(alignment: .top, spacing: 16) {
-                // Animated pulsing heart
+                // Animated pulsing heart — stops pulsing when stale
                 ZStack {
                     Circle()
-                        .fill(.red.opacity(0.1))
+                        .fill(.red.opacity(isHeartRateStale ? 0.05 : 0.1))
                         .frame(width: 64, height: 64)
-                        .scaleEffect(pulseScale)
+                        .scaleEffect(isHeartRateStale ? 1.0 : pulseScale)
 
                     Image(systemName: "heart.fill")
                         .font(.system(size: 28))
-                        .foregroundStyle(.red)
-                        .scaleEffect(pulseScale)
+                        .foregroundStyle(.red.opacity(isHeartRateStale ? 0.4 : 1.0))
+                        .scaleEffect(isHeartRateStale ? 1.0 : pulseScale)
                 }
                 .onChange(of: viewModel.currentHeartRate) {
+                    guard viewModel.isHeartRateFresh else { return }
                     withAnimation(.easeInOut(duration: 0.15)) {
                         pulseScale = 1.15
                     }
@@ -333,13 +298,13 @@ struct LiveView: View {
                         if let hr = viewModel.currentHeartRate {
                             Text(String(format: "%.0f", hr))
                                 .font(.system(size: 52, weight: .bold, design: .rounded))
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(.primary.opacity(isHeartRateStale ? 0.4 : 1.0))
                                 .contentTransition(.numericText())
                                 .animation(.easeInOut(duration: 0.3), value: hr)
 
                             Text("bpm")
                                 .font(.title3)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.secondary.opacity(isHeartRateStale ? 0.5 : 1.0))
                         } else {
                             Text("Syncing")
                                 .font(.title2.weight(.medium))
@@ -347,19 +312,43 @@ struct LiveView: View {
                         }
                     }
 
-                    // Zone badge
-                    HStack(spacing: 6) {
-                        Text(viewModel.currentHeartRateZone.rawValue)
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(viewModel.currentHeartRateZone.color, in: Capsule())
+                    // Stale: show prominent "Last Reading X ago" instead of zone
+                    if isHeartRateStale {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Last Reading")
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(.white.opacity(0.8))
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(.gray, in: Capsule())
 
-                        if let ts = viewModel.heartRateTimestamp {
-                            Text(ts, style: .relative)
-                                .font(.caption2)
-                                .foregroundStyle(.tertiary)
+                            if let ts = viewModel.heartRateTimestamp {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "clock")
+                                        .font(.caption2)
+                                    Text(ts, style: .relative)
+                                        .font(.caption.weight(.medium))
+                                    Text("ago")
+                                        .font(.caption.weight(.medium))
+                                }
+                                .foregroundStyle(.secondary)
+                            }
+                        }
+                    } else {
+                        // Zone badge — only shown when data is fresh
+                        HStack(spacing: 6) {
+                            Text(viewModel.currentHeartRateZone.rawValue)
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(viewModel.currentHeartRateZone.color, in: Capsule())
+
+                            if let ts = viewModel.heartRateTimestamp {
+                                Text(ts, style: .relative)
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
+                            }
                         }
                     }
                 }
@@ -545,7 +534,8 @@ struct LiveView: View {
                 value: viewModel.currentBloodOxygen.map { String(format: "%.0f", $0) },
                 unit: "%",
                 timestamp: viewModel.bloodOxygenTimestamp,
-                status: viewModel.bloodOxygenStatus
+                status: viewModel.bloodOxygenStatus,
+                isFresh: viewModel.isBloodOxygenFresh
             )
 
             vitalCard(
@@ -555,7 +545,10 @@ struct LiveView: View {
                 value: viewModel.currentRespiratoryRate.map { String(format: "%.0f", $0) },
                 unit: "br/min",
                 timestamp: viewModel.respiratoryRateTimestamp,
-                status: viewModel.respiratoryRateStatus
+                status: viewModel.respiratoryRateStatus,
+                isFresh: viewModel.isRespiratoryRateFresh,
+                isUnavailable: viewModel.respiratoryRateUnavailable,
+                unavailableHint: "Measured during sleep"
             )
         }
         .padding(.horizontal)
@@ -568,13 +561,18 @@ struct LiveView: View {
         value: String?,
         unit: String,
         timestamp: Date?,
-        status: LiveViewModel.VitalStatus
+        status: LiveViewModel.VitalStatus,
+        isFresh: Bool = true,
+        isUnavailable: Bool = false,
+        unavailableHint: String? = nil
     ) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        let isStale = !isFresh && timestamp != nil
+
+        return VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: icon)
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(iconColor)
+                    .foregroundStyle(iconColor.opacity(isStale ? 0.5 : 1.0))
 
                 Text(label)
                     .font(.caption2.weight(.medium))
@@ -583,16 +581,27 @@ struct LiveView: View {
                 Spacer()
             }
 
-            if let value {
+            if isUnavailable && value == nil {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("No data")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.tertiary)
+                    if let hint = unavailableHint {
+                        Text(hint)
+                            .font(.caption2)
+                            .foregroundStyle(.quaternary)
+                    }
+                }
+            } else if let value {
                 HStack(alignment: .firstTextBaseline, spacing: 2) {
                     Text(value)
                         .font(.title2.weight(.bold).monospacedDigit())
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(.primary.opacity(isStale ? 0.4 : 1.0))
                         .contentTransition(.numericText())
 
                     Text(unit)
                         .font(.caption2.weight(.medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.secondary.opacity(isStale ? 0.5 : 1.0))
                 }
             } else {
                 Text("Syncing")
@@ -600,22 +609,37 @@ struct LiveView: View {
                     .foregroundStyle(.tertiary)
             }
 
-            HStack(spacing: 4) {
-                if status != .unknown {
-                    Circle()
-                        .fill(status.color)
-                        .frame(width: 6, height: 6)
-                    Text(status.label)
-                        .font(.caption2.weight(.medium))
-                        .foregroundStyle(status.color)
-                }
-
-                Spacer()
-
+            if isStale {
+                // Prominent stale timestamp
                 if let ts = timestamp {
-                    Text(ts, style: .relative)
-                        .font(.caption2)
-                        .foregroundStyle(.quaternary)
+                    HStack(spacing: 4) {
+                        Image(systemName: "clock")
+                            .font(.system(size: 9))
+                        Text(ts, style: .relative)
+                            .font(.caption2.weight(.medium))
+                        Text("ago")
+                            .font(.caption2.weight(.medium))
+                    }
+                    .foregroundStyle(.secondary)
+                }
+            } else {
+                HStack(spacing: 4) {
+                    if status != .unknown {
+                        Circle()
+                            .fill(status.color)
+                            .frame(width: 6, height: 6)
+                        Text(status.label)
+                            .font(.caption2.weight(.medium))
+                            .foregroundStyle(status.color)
+                    }
+
+                    Spacer()
+
+                    if let ts = timestamp {
+                        Text(ts, style: .relative)
+                            .font(.caption2)
+                            .foregroundStyle(.quaternary)
+                    }
                 }
             }
         }

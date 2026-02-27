@@ -174,22 +174,37 @@ final class HealthDataStore {
         return result
     }
 
-    private func updateSyncMetadata(for metric: HealthMetric) {
+    /// Mark a metric as successfully synced, even if no new samples were inserted.
+    func markSyncCompleted(for metric: HealthMetric, at date: Date = Date()) {
+        updateSyncMetadata(for: metric, lastSyncDate: date, recalculateSampleCount: false)
+    }
+
+    private func updateSyncMetadata(
+        for metric: HealthMetric,
+        lastSyncDate: Date = Date(),
+        recalculateSampleCount: Bool = true
+    ) {
         let rawValue = metric.rawValue
         let predicate = #Predicate<StoredSyncMetadata> { $0.metricRawValue == rawValue }
         let descriptor = FetchDescriptor(predicate: predicate)
 
-        // Count total samples for this metric
-        let samplePredicate = #Predicate<StoredDailySample> { $0.metricRawValue == rawValue }
-        let totalSamples = (try? modelContext.fetchCount(FetchDescriptor(predicate: samplePredicate))) ?? 0
+        let totalSamples: Int
+        if recalculateSampleCount {
+            let samplePredicate = #Predicate<StoredDailySample> { $0.metricRawValue == rawValue }
+            totalSamples = (try? modelContext.fetchCount(FetchDescriptor(predicate: samplePredicate))) ?? 0
+        } else {
+            totalSamples = 0
+        }
 
         if let existing = try? modelContext.fetch(descriptor).first {
-            existing.lastSyncDate = Date()
-            existing.totalSamples = totalSamples
+            existing.lastSyncDate = lastSyncDate
+            if recalculateSampleCount {
+                existing.totalSamples = totalSamples
+            }
         } else {
             modelContext.insert(StoredSyncMetadata(
                 metricRawValue: rawValue,
-                lastSyncDate: Date(),
+                lastSyncDate: lastSyncDate,
                 totalSamples: totalSamples
             ))
         }

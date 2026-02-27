@@ -35,6 +35,12 @@ final class SubscriptionManager {
         }
     }
 
+    /// Paywall is enforced only after status is definitively expired.
+    var shouldEnforcePaywall: Bool {
+        if case .expired = status { return true }
+        return false
+    }
+
     /// True when we're in a silent billing retry grace period.
     var isBillingGrace: Bool {
         if case .billingGrace = status { return true }

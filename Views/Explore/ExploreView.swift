@@ -277,6 +277,11 @@ struct ExploreView: View {
                 Text(highlight.title)
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(.primary)
+
+                Text(highlight.recommendation)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
             }
 
             Spacer()
@@ -356,15 +361,28 @@ struct ExploreView: View {
         .background(.background, in: RoundedRectangle(cornerRadius: 12))
     }
 
-    // MARK: - 6. Categories
+    // MARK: - 6. Categories (focus-sorted)
+
+    /// Categories sorted so user's focus areas appear first
+    private var sortedCategories: [HealthCategory] {
+        let focuses = viewModel.focusCategories
+        guard !focuses.isEmpty else { return HealthCategory.allCases.map { $0 } }
+        return HealthCategory.allCases.sorted { a, b in
+            let aFocus = focuses.contains(a)
+            let bFocus = focuses.contains(b)
+            if aFocus != bFocus { return aFocus }
+            return false // preserve relative order for same-group items
+        }
+    }
 
     private var categoriesSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        let categories = sortedCategories
+        return VStack(alignment: .leading, spacing: 10) {
             Text("Categories")
                 .font(.headline)
 
             VStack(spacing: 0) {
-                ForEach(HealthCategory.allCases) { category in
+                ForEach(Array(categories.enumerated()), id: \.element) { index, category in
                     Button {
                         navigationPath.append(category)
                     } label: {
@@ -376,7 +394,7 @@ struct ExploreView: View {
                     }
                     .buttonStyle(.plain)
 
-                    if category != HealthCategory.allCases.last {
+                    if index < categories.count - 1 {
                         Divider()
                             .padding(.leading, 56)
                     }

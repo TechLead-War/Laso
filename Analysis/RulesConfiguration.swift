@@ -84,20 +84,28 @@ struct RulesConfiguration {
     static let outsideNormalRangeDeduction: Int = -15
     static let improvingTrendBonus: Int = 5
 
-    /// Recommendation templates
+    /// Recommendation templates — base version
     static func recommendation(for metric: HealthMetric, severity: Severity, trend: TrendDirection) -> String {
+        recommendation(for: metric, severity: severity, trend: trend, currentValue: nil, deviationPercent: nil)
+    }
+
+    /// Enhanced recommendation with actual values woven into the text
+    static func recommendation(for metric: HealthMetric, severity: Severity, trend: TrendDirection, currentValue: Double?, deviationPercent: Double?) -> String {
+        let devStr = deviationPercent.map { String(format: "%.0f", abs($0)) + "% " } ?? ""
+        let valStr = currentValue.map { metric.formatValue($0) + " " + metric.unit + " — " } ?? ""
+
         switch metric {
         case .heartRate, .restingHeartRate:
             if severity >= .warning {
-                return "Monitor your heart rate closely. Reduce caffeine, manage stress, and ensure adequate sleep. Consult a physician if elevated HR persists."
+                return "\(valStr)Your resting HR is \(devStr)above baseline. Cut caffeine after 2 PM and try 10 min of deep breathing before bed."
             }
             return trend == .improving
                 ? "Your heart rate trend is positive. Continue current lifestyle habits."
-                : "Your resting heart rate is stable. Maintain regular cardiovascular exercise."
+                : "Maintain regular cardiovascular exercise to keep your resting heart rate low."
 
         case .heartRateVariability:
             if trend == .declining {
-                return "Declining HRV suggests increased stress or insufficient recovery. Try meditation, prioritize sleep, and consider reducing exercise intensity for a few days."
+                return "\(valStr)HRV is down \(devStr)from baseline. Prioritize 7+ hours of sleep tonight and try a 10-min meditation session."
             }
             return "Your HRV is healthy. Continue balancing exercise with recovery."
 
@@ -109,7 +117,7 @@ struct RulesConfiguration {
 
         case .bloodOxygen:
             if severity >= .warning {
-                return "Low blood oxygen detected. Ensure good ventilation, practice deep breathing exercises. Seek medical attention if readings remain below 95%."
+                return "\(valStr)Practice deep breathing exercises and ensure good ventilation. Seek medical attention if readings remain below 95%."
             }
             return "Blood oxygen levels are normal."
 
@@ -127,38 +135,38 @@ struct RulesConfiguration {
 
         case .sleepDuration:
             if severity >= .warning || trend == .declining {
-                return "Set a consistent bedtime 30 minutes earlier. Avoid screens 1 hour before bed. Keep your bedroom cool and dark."
+                return "\(valStr)Set your bedtime 30 min earlier tonight. Avoid screens 1 hour before bed and keep your bedroom cool."
             }
             return "Your sleep duration is adequate. Maintain your current sleep schedule."
 
         case .sleepREM, .sleepDeep:
-            return "Improve deep/REM sleep by avoiding alcohol before bed, maintaining consistent sleep times, and exercising earlier in the day."
+            return "\(valStr)Avoid alcohol before bed, keep bedtimes consistent, and exercise earlier in the day to improve deep/REM sleep."
 
         case .sleepCore:
             return "Core sleep forms the majority of your sleep. Maintain consistent sleep and wake times."
 
         case .sleepAwake:
             if severity >= .warning {
-                return "Excessive wake time during sleep. Avoid caffeine after 2 PM, reduce evening screen time, and try relaxation techniques before bed."
+                return "Excessive wake time during sleep. Cut caffeine after 2 PM and try a relaxation routine before bed."
             }
             return "Your nighttime awake periods are within normal range."
 
         case .steps:
             if trend == .declining {
-                return "Your step count is declining. Try a 10-minute walk after each meal to boost daily movement."
+                return "\(valStr)Steps are down \(devStr)from baseline. Try a 10-minute walk after each meal to get back on track."
             }
             return trend == .improving
                 ? "Great step count improvement! Aim for 10,000+ daily for optimal health."
-                : "Maintain your walking habits. Consider a walking meeting or post-dinner stroll."
+                : "Consider a walking meeting or post-dinner stroll to keep step count up."
 
         case .activeCalories:
             return trend == .declining
-                ? "Active calorie burn is decreasing. Add a 20-minute workout or brisk walk to your routine."
+                ? "\(valStr)Active calorie burn is down \(devStr). Add a 20-minute workout or brisk walk to your routine."
                 : "Your activity level is good. Keep up the current routine."
 
         case .exerciseMinutes:
             return trend == .declining
-                ? "Exercise time is dropping. Schedule workouts as calendar events to maintain consistency."
+                ? "\(valStr)Exercise time is dropping. Schedule workouts as calendar events to maintain consistency."
                 : "Your exercise routine looks solid. Aim for 150+ minutes per week."
 
         case .distanceCycling:
@@ -198,13 +206,13 @@ struct RulesConfiguration {
 
         case .bloodPressureSystolic, .bloodPressureDiastolic:
             if severity >= .warning {
-                return "Blood pressure is outside normal range. Reduce sodium intake, exercise regularly, and consult your physician."
+                return "\(valStr)Reduce sodium intake, exercise regularly, and consult your physician about blood pressure management."
             }
             return "Blood pressure is within healthy range."
 
         case .respiratoryRate:
             if severity >= .warning {
-                return "Respiratory rate is elevated. Practice deep breathing exercises and monitor for respiratory symptoms."
+                return "\(valStr)Respiratory rate is elevated. Practice deep breathing exercises and monitor for respiratory symptoms."
             }
             return "Respiratory rate is normal."
 
@@ -276,7 +284,7 @@ struct RulesConfiguration {
 
         default:
             return trend == .declining
-                ? "This metric is showing a declining trend. Review your recent habits for changes."
+                ? "This metric is declining \(devStr)from baseline. Review your recent habits for changes."
                 : "This metric is within normal parameters."
         }
     }

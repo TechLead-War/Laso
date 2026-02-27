@@ -84,10 +84,12 @@ struct MetricTimeSeries: Identifiable {
         return Swift.max(1, Calendar.current.dateComponents([.year], from: earliest, to: Date()).year ?? 0)
     }
 
-    /// Number of days of data available
+    /// Number of distinct calendar days with actual data points
     var daysOfData: Int {
-        guard let earliest = sortedSamples.first?.date else { return 0 }
-        return Swift.max(1, Calendar.current.dateComponents([.day], from: earliest, to: Date()).day ?? 0)
+        guard !sortedSamples.isEmpty else { return 0 }
+        let calendar = Calendar.current
+        let uniqueDays = Set(sortedSamples.map { calendar.startOfDay(for: $0.date) })
+        return uniqueDays.count
     }
 
     /// Total number of data points

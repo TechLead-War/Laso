@@ -39,8 +39,8 @@ final class DashboardViewModel {
         analysisEngine.categoryScores
     }
 
-    /// User's selected health focuses — used to filter insights
-    private var focusCategories: Set<HealthCategory> {
+    /// User's selected health focuses — used to filter insights and sort content
+    var focusCategories: Set<HealthCategory> {
         let focuses = persistence.loadHealthFocuses()
         return HealthFocus.categories(for: focuses)
     }
@@ -71,9 +71,19 @@ final class DashboardViewModel {
         analysisEngine.correlations
     }
 
-    /// Top correlations for the home screen section
+    /// Top correlations for the home screen section, sorted by focus relevance
     var topCorrelations: [HealthCorrelation] {
-        Array(analysisEngine.correlations.prefix(5))
+        let focuses = focusCategories
+        if focuses.isEmpty {
+            return Array(analysisEngine.correlations.prefix(5))
+        }
+        let sorted = analysisEngine.correlations.sorted { a, b in
+            let aRelevant = focuses.contains(a.metricA.category) || focuses.contains(a.metricB.category)
+            let bRelevant = focuses.contains(b.metricA.category) || focuses.contains(b.metricB.category)
+            if aRelevant != bRelevant { return aRelevant }
+            return abs(a.correlation) > abs(b.correlation)
+        }
+        return Array(sorted.prefix(5))
     }
 
     /// Health risks sorted by level (highest risk first)
@@ -336,6 +346,9 @@ final class DashboardViewModel {
             if results.count >= DiscoveryEngine.minimumDiscoveriesRequired {
                 discoveries = results
                 showDiscovery = true
+            } else {
+                // Do not keep users in perpetual "first launch sync" when data is still sparse.
+                UserDefaults.standard.set(true, forKey: AppKeys.App.hasSeenDiscovery)
             }
             syncPhase = .complete
         }
@@ -408,6 +421,22 @@ final class DashboardViewModel {
 
         // Schedule notifications
         let prefs = persistence.loadPreferences()
+        let notificationsEnabled =
+            prefs.dailySummaryEnabled ||
+            prefs.weeklySummaryEnabled ||
+            prefs.criticalAlertsEnabled ||
+            prefs.warningAlertsEnabled ||
+            prefs.heartRateSpikeAlertsEnabled ||
+            prefs.trendReversalAlertsEnabled ||
+            prefs.improvementAlertsEnabled ||
+            prefs.watchNotWornReminderEnabled ||
+            prefs.lowBatteryReminderEnabled
+        let notificationsAuthorized = notificationsEnabled
+            ? await NotificationManager.shared.requestAuthorizationIfNeeded()
+            : false
+        let previousScore = persistence.loadPreviousWeekScore()
+        let scoreChange = previousScore.map { overallScore.score - $0 } ?? 0
+        persistence.recordWeeklyScore(overallScore.score)
 
         // Daily summary with richer data
         let anomalyCount = analysisEngine.anomalies.filter { $0.severity >= .warning }.count
@@ -431,10 +460,6 @@ final class DashboardViewModel {
             .prefix(5)
             .map { (metric: $0.key.displayName, direction: $0.value.direction.symbol, change: $0.value.weekOverWeekChange) }
 
-        let previousScore = persistence.loadPreviousWeekScore()
-        let scoreChange = previousScore.map { overallScore.score - $0 } ?? 0
-        persistence.recordWeeklyScore(overallScore.score)
-
         WeeklySummaryScheduler.schedule(
             score: overallScore.score,
             scoreChange: scoreChange,
@@ -444,14 +469,16 @@ final class DashboardViewModel {
             preferences: prefs
         )
 
-        // Full alert evaluation with spike detection and trend reversals
-        AlertEvaluator.evaluate(
-            anomalies: analysisEngine.anomalies,
-            trends: analysisEngine.trends,
-            timeSeries: healthKitManager.timeSeries,
-            previousTrends: prevTrends,
-            preferences: prefs
-        )
+        if notificationsAuthorized {
+            // Full alert evaluation with spike detection and trend reversals
+            AlertEvaluator.evaluate(
+                anomalies: analysisEngine.anomalies,
+                trends: analysisEngine.trends,
+                timeSeries: healthKitManager.timeSeries,
+                previousTrends: prevTrends,
+                preferences: prefs
+            )
+        }
     }
 
     // MARK: - Computed Analytics for Views
@@ -532,6 +559,7 @@ final class DashboardViewModel {
         let metric: HealthMetric
         let type: HighlightType
         let title: String
+        let recommendation: String
         let isPositive: Bool
         let significance: Double
 
@@ -565,14 +593,19 @@ final class DashboardViewModel {
         let ctx = analysisEngine.historicalContext
         var highlights: [HistoricalHighlight] = []
         let monthName = Calendar.current.monthSymbols[Calendar.current.component(.month, from: Date()) - 1]
+        let focuses = focusCategories
 
         for (metric, context) in ctx {
             if let yoy = context.yearOverYearChange, abs(yoy) > 5 {
                 let improving = metric.higherIsBetter ? yoy > 0 : yoy < 0
+                let rec = improving
+                    ? "Keep doing what's working — your consistency is paying off."
+                    : RulesConfiguration.recommendation(for: metric, severity: .warning, trend: .declining)
                 highlights.append(HistoricalHighlight(
                     metric: metric,
                     type: .yearOverYear,
                     title: "\(String(format: "%.0f", abs(yoy)))% \(improving ? "better" : "worse") than last \(monthName)",
+                    recommendation: rec,
                     isPositive: improving,
                     significance: abs(yoy)
                 ))
@@ -581,10 +614,14 @@ final class DashboardViewModel {
             if context.isAllTimeExtreme, context.totalDataPoints >= 180 {
                 let isHigh = context.allTimePercentile >= 95
                 let good = isHigh == metric.higherIsBetter
+                let rec = good
+                    ? "You're at a personal best. Lock in the habits that got you here."
+                    : RulesConfiguration.recommendation(for: metric, severity: .warning, trend: .declining)
                 highlights.append(HistoricalHighlight(
                     metric: metric,
                     type: .allTimeExtreme,
                     title: "Near \(context.yearsOfData)-year \(isHigh ? "high" : "low")",
+                    recommendation: rec,
                     isPositive: good,
                     significance: 90
                 ))
@@ -592,10 +629,14 @@ final class DashboardViewModel {
 
             if let seasonalDev = context.seasonalDeviation, abs(seasonalDev) > 10, context.yearsOfData >= 2 {
                 let improving = metric.higherIsBetter ? seasonalDev > 0 : seasonalDev < 0
+                let rec = improving
+                    ? "You're beating your seasonal average — strong work."
+                    : "You usually do better this time of year. \(RulesConfiguration.recommendation(for: metric, severity: .info, trend: .declining))"
                 highlights.append(HistoricalHighlight(
                     metric: metric,
                     type: .seasonal,
                     title: "\(String(format: "%.0f", abs(seasonalDev)))% \(seasonalDev > 0 ? "above" : "below") \(monthName) norm",
+                    recommendation: rec,
                     isPositive: improving,
                     significance: abs(seasonalDev)
                 ))
@@ -604,17 +645,27 @@ final class DashboardViewModel {
             if let change = context.longTermChangePercent, abs(change) > 10, context.yearsOfData >= 1 {
                 let improving = metric.higherIsBetter ? change > 0 : change < 0
                 let periodLabel = context.yearsOfData >= 2 ? "\(context.yearsOfData) years" : "1 year"
+                let rec = improving
+                    ? "Sustained improvement — your consistency is the key. Don't change what's working."
+                    : "Gradual decline over \(periodLabel). Small daily adjustments compound. \(RulesConfiguration.recommendation(for: metric, severity: .info, trend: .declining))"
                 highlights.append(HistoricalHighlight(
                     metric: metric,
                     type: .longTermTrajectory,
                     title: "\(improving ? "Up" : "Down") \(String(format: "%.0f", abs(change)))% over \(periodLabel)",
+                    recommendation: rec,
                     isPositive: improving,
                     significance: abs(change)
                 ))
             }
         }
 
-        highlights.sort { $0.significance > $1.significance }
+        // Sort: focus-relevant metrics first, then by significance
+        highlights.sort { a, b in
+            let aFocus = !focuses.isEmpty && focuses.contains(a.metric.category)
+            let bFocus = !focuses.isEmpty && focuses.contains(b.metric.category)
+            if aFocus != bFocus { return aFocus }
+            return a.significance > b.significance
+        }
         return Array(highlights.prefix(5))
     }
 
@@ -701,7 +752,7 @@ final class DashboardViewModel {
         }
     }
 
-    /// Context-aware daily action based on recovery, stress, sleep, exercise, time of day
+    /// Context-aware daily action based on recovery, stress, sleep, exercise, time of day, and user focus areas
     func smartDailyAction(liveVM: LiveViewModel) -> SmartAction {
         let hour = Calendar.current.component(.hour, from: Date())
         let stress = liveVM.stressLevel
@@ -709,6 +760,7 @@ final class DashboardViewModel {
         let sleepHours = liveVM.lastNightSleepDuration / 3600
         let exerciseMin = liveVM.todayExerciseMinutes
         let exerciseGoal = liveVM.exerciseGoal
+        let focuses = persistence.loadHealthFocuses()
 
         // Priority 1: High stress
         if let s = stress, s >= 60 {
@@ -737,7 +789,12 @@ final class DashboardViewModel {
             )
         }
 
-        // Priority 4: Exercise goal already met
+        // Priority 4: Focus-aware actions based on onboarding priorities
+        if let focusAction = focusAwareAction(liveVM: liveVM, focuses: focuses) {
+            return focusAction
+        }
+
+        // Priority 5: Exercise goal already met
         if exerciseMin >= exerciseGoal {
             return SmartAction(
                 icon: "checkmark.seal.fill",
@@ -746,7 +803,7 @@ final class DashboardViewModel {
             )
         }
 
-        // Priority 5: Good recovery + exercise remaining
+        // Priority 6: Good recovery + exercise remaining
         if let r = readiness, r >= 60 {
             let remaining = Int(exerciseGoal - exerciseMin)
             return SmartAction(
@@ -756,7 +813,7 @@ final class DashboardViewModel {
             )
         }
 
-        // Priority 6: Evening wind-down
+        // Priority 7: Evening wind-down
         if hour >= 20 {
             return SmartAction(
                 icon: "moon.fill",
@@ -771,6 +828,64 @@ final class DashboardViewModel {
             title: "Take a 15 min walk",
             subtitle: "A short walk boosts mood and energy"
         )
+    }
+
+    /// Generate a focus-specific action based on user's onboarding health priorities
+    private func focusAwareAction(liveVM: LiveViewModel, focuses: Set<HealthFocus>) -> SmartAction? {
+        guard !focuses.isEmpty else { return nil }
+
+        let sleepHours = liveVM.lastNightSleepDuration / 3600
+        let exerciseMin = liveVM.todayExerciseMinutes
+        let exerciseGoal = liveVM.exerciseGoal
+
+        if focuses.contains(.sleep) && liveVM.hasSleepData {
+            let deepSleepMin = liveVM.lastNightDeepSleep / 60
+            if deepSleepMin < 45 {
+                return SmartAction(
+                    icon: "moon.zzz.fill",
+                    title: "Boost your deep sleep",
+                    subtitle: "Only \(Int(deepSleepMin)) min of deep sleep — try cutting caffeine after 2 PM"
+                )
+            }
+            if sleepHours < 7 {
+                return SmartAction(
+                    icon: "bed.double.fill",
+                    title: "Get to bed 30 min earlier",
+                    subtitle: "\(formatHoursMinutes(sleepHours)) last night — aim for 7+ hours"
+                )
+            }
+        }
+
+        if focuses.contains(.fitness) && exerciseMin < exerciseGoal {
+            let remaining = Int(exerciseGoal - exerciseMin)
+            return SmartAction(
+                icon: "figure.run",
+                title: "You're \(remaining) min from your goal",
+                subtitle: "A brisk walk or quick workout would close the gap"
+            )
+        }
+
+        if focuses.contains(.heartHealth) {
+            if let rhr = liveVM.latestRestingHeartRate, let baseline = analysisEngine.baselines[.restingHeartRate]?.mean, rhr > baseline * 1.05 {
+                return SmartAction(
+                    icon: "heart.fill",
+                    title: "Your resting HR is trending up",
+                    subtitle: "Try 10 min of meditation or deep breathing to bring it down"
+                )
+            }
+        }
+
+        if focuses.contains(.recovery) {
+            if let r = liveVM.readinessScore, r < 60 {
+                return SmartAction(
+                    icon: "figure.mind.and.body",
+                    title: "Focus on recovery today",
+                    subtitle: "Readiness is \(r)% — light stretching and hydration will help"
+                )
+            }
+        }
+
+        return nil
     }
 
     struct SmartAction {

@@ -213,10 +213,20 @@ struct InsightGenerator {
     // MARK: - High-Quality Filtering
 
     /// Return only high-quality, actionable insights suitable for a Today/Home section.
-    /// Filters to actionability score >= 40, sorted by priority, limited to maxCount.
+    /// Filters to actionability score >= 50, sorted by priority, limited to maxCount.
+    /// Excludes stable/improving platitudes that don't tell the user what to do.
     static func filterToActionable(_ insights: [Insight], maxCount: Int = 5) -> [Insight] {
         insights
-            .filter { actionabilityScore($0) >= 40 }
+            .filter { insight in
+                // Filter out generic stable/improving insights that add no value
+                if insight.trend == .stable && insight.severity == .info && abs(insight.deviationPercent) < 5 {
+                    return false
+                }
+                if insight.trend == .improving && insight.severity == .info && abs(insight.deviationPercent) < 8 {
+                    return false
+                }
+                return actionabilityScore(insight) >= 50
+            }
             .sorted { $0.priorityScore > $1.priorityScore }
             .prefix(maxCount)
             .map { $0 }
@@ -243,7 +253,10 @@ struct InsightGenerator {
             inflection: inflection,
             historicalContext: historicalContext
         )
-        let recommendation = RulesConfiguration.recommendation(for: metric, severity: severity, trend: trend)
+        let recommendation = RulesConfiguration.recommendation(
+            for: metric, severity: severity, trend: trend,
+            currentValue: currentValue, deviationPercent: deviationPercent
+        )
 
         return Insight(
             metric: metric,

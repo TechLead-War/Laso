@@ -21,6 +21,22 @@ final class NotificationManager {
         }
     }
 
+    /// Request authorization only if status is not determined yet.
+    @discardableResult
+    func requestAuthorizationIfNeeded() async -> Bool {
+        let settings = await center.notificationSettings()
+        switch settings.authorizationStatus {
+        case .authorized, .provisional, .ephemeral:
+            return true
+        case .notDetermined:
+            return await requestAuthorization()
+        case .denied:
+            return false
+        @unknown default:
+            return false
+        }
+    }
+
     /// Schedule a notification if within frequency cap
     func scheduleNotification(
         title: String,
@@ -29,9 +45,13 @@ final class NotificationManager {
         trigger: UNNotificationTrigger? = nil,
         maxPerDay: Int = 5
     ) {
-        guard frequencyCap.canSendNotification(maxPerDay: maxPerDay) else {
-            print("Notification frequency cap reached for today")
-            return
+        // Repeating summaries should not consume the daily cap at scheduling time.
+        let countsTowardDailyCap = (trigger == nil)
+        if countsTowardDailyCap {
+            guard frequencyCap.canSendNotification(maxPerDay: maxPerDay) else {
+                print("Notification frequency cap reached for today")
+                return
+            }
         }
 
         let content = UNMutableNotificationContent()
@@ -48,7 +68,7 @@ final class NotificationManager {
         center.add(request) { [weak self] error in
             if let error {
                 print("Failed to schedule notification: \(error.localizedDescription)")
-            } else {
+            } else if countsTowardDailyCap {
                 self?.frequencyCap.recordNotification()
             }
         }
