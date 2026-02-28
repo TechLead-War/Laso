@@ -22,6 +22,9 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
     case causalChain         // "Cause & Effect"
     case crossMetricAnomaly  // "Cross-Metric"
     case cognitiveEnergy     // "Cognitive & Energy"
+    case mlPattern           // "ML Pattern"
+    case mlState             // "ML State"
+    case mlPrediction        // "ML Prediction"
 
     var displayName: String {
         switch self {
@@ -40,6 +43,9 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .causalChain: return "Cause & Effect"
         case .crossMetricAnomaly: return "Cross-Metric"
         case .cognitiveEnergy: return "Cognitive & Energy"
+        case .mlPattern: return "ML Pattern"
+        case .mlState: return "ML State"
+        case .mlPrediction: return "ML Prediction"
         }
     }
 
@@ -60,6 +66,9 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .causalChain: return "arrow.triangle.turn.up.right.diamond.fill"
         case .crossMetricAnomaly: return "circle.grid.cross.fill"
         case .cognitiveEnergy: return "brain.head.profile"
+        case .mlPattern: return "waveform.path.ecg.rectangle"
+        case .mlState: return "gauge.with.dots.needle.67percent"
+        case .mlPrediction: return "sparkles"
         }
     }
 
@@ -80,6 +89,9 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .causalChain: return .indigo
         case .crossMetricAnomaly: return .purple
         case .cognitiveEnergy: return .orange
+        case .mlPattern: return .teal
+        case .mlState: return .mint
+        case .mlPrediction: return .indigo
         }
     }
 }

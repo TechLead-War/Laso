@@ -381,6 +381,12 @@ final class DashboardViewModel {
             baselines: analysisEngine.baselines
         )
 
+        // CloudKit backup (fire-and-forget, throttled to once per 6 hours)
+        Task.detached(priority: .utility) { [store] in
+            let persistence = PersistenceManager()
+            await CloudBackupManager.shared.backupIfNeeded(store: store, persistence: persistence)
+        }
+
         // Step 8: Score trajectory insights (uses stored score history + category breakdown)
         let scoreHistory = store.loadScoreHistory(days: 60)
         let trajectoryInsights = ScoreTrajectoryAnalyzer.generateInsights(

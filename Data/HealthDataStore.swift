@@ -48,6 +48,24 @@ final class StoredAnalysisSnapshot {
     }
 }
 
+/// Persists learned ML model parameters for on-device ML components
+@Model
+final class StoredMLModelState {
+    @Attribute(.unique) var componentName: String
+    var version: Int
+    var parametersJSON: Data
+    var dataPointsUsed: Int
+    var lastTrainedDate: Date
+
+    init(componentName: String, version: Int, parametersJSON: Data, dataPointsUsed: Int, lastTrainedDate: Date) {
+        self.componentName = componentName
+        self.version = version
+        self.parametersJSON = parametersJSON
+        self.dataPointsUsed = dataPointsUsed
+        self.lastTrainedDate = lastTrainedDate
+    }
+}
+
 // MARK: - HealthDataStore
 
 /// On-device persistent store for all health metric data using SwiftData.
@@ -252,6 +270,23 @@ final class HealthDataStore {
         try? modelContext.save()
     }
 
+    /// Load all analysis snapshots (used for CloudKit backup)
+    func loadAllAnalysisSnapshots() -> [StoredAnalysisSnapshot] {
+        let descriptor = FetchDescriptor<StoredAnalysisSnapshot>(sortBy: [SortDescriptor(\.date)])
+        return (try? modelContext.fetch(descriptor)) ?? []
+    }
+
+    /// Insert a restored snapshot from CloudKit backup (skips dedup — only called on fresh install)
+    func insertRestoredSnapshot(date: Date, overallScore: Int, categoryScoresJSON: Data, baselinesJSON: Data) {
+        modelContext.insert(StoredAnalysisSnapshot(
+            date: date,
+            overallScore: overallScore,
+            categoryScoresJSON: categoryScoresJSON,
+            baselinesJSON: baselinesJSON
+        ))
+        try? modelContext.save()
+    }
+
     /// Load score history for charting (optional day limit, nil = all time)
     func loadScoreHistory(days: Int? = nil) -> [(date: Date, score: Int)] {
         var descriptor: FetchDescriptor<StoredAnalysisSnapshot>
@@ -275,6 +310,61 @@ final class HealthDataStore {
             guard let dict = try? JSONDecoder().decode([String: UserBaseline].self, from: snapshot.baselinesJSON),
                   let baseline = dict[metric.rawValue] else { return nil }
             return (snapshot.date, baseline)
+        }
+    }
+
+    // MARK: - ML Model State
+
+    /// Save an ML component's learned parameters
+    func saveMLModelState(_ state: MLModelState) {
+        let name = state.componentName
+        let predicate = #Predicate<StoredMLModelState> { $0.componentName == name }
+        let descriptor = FetchDescriptor(predicate: predicate)
+
+        if let existing = try? modelContext.fetch(descriptor).first {
+            existing.version = state.version
+            existing.parametersJSON = state.parametersJSON
+            existing.dataPointsUsed = state.dataPointsUsed
+            existing.lastTrainedDate = state.lastTrainedDate
+        } else {
+            modelContext.insert(StoredMLModelState(
+                componentName: state.componentName,
+                version: state.version,
+                parametersJSON: state.parametersJSON,
+                dataPointsUsed: state.dataPointsUsed,
+                lastTrainedDate: state.lastTrainedDate
+            ))
+        }
+        try? modelContext.save()
+    }
+
+    /// Load an ML component's learned parameters
+    func loadMLModelState(componentName: String) -> MLModelState? {
+        let predicate = #Predicate<StoredMLModelState> { $0.componentName == componentName }
+        let descriptor = FetchDescriptor(predicate: predicate)
+
+        guard let stored = try? modelContext.fetch(descriptor).first else { return nil }
+        return MLModelState(
+            componentName: stored.componentName,
+            version: stored.version,
+            parametersJSON: stored.parametersJSON,
+            dataPointsUsed: stored.dataPointsUsed,
+            lastTrainedDate: stored.lastTrainedDate
+        )
+    }
+
+    /// Load all ML model states
+    func loadAllMLModelStates() -> [MLModelState] {
+        let descriptor = FetchDescriptor<StoredMLModelState>()
+        guard let stored = try? modelContext.fetch(descriptor) else { return [] }
+        return stored.map {
+            MLModelState(
+                componentName: $0.componentName,
+                version: $0.version,
+                parametersJSON: $0.parametersJSON,
+                dataPointsUsed: $0.dataPointsUsed,
+                lastTrainedDate: $0.lastTrainedDate
+            )
         }
     }
 

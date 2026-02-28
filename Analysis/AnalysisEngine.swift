@@ -22,6 +22,15 @@ final class AnalysisEngine {
     var isAnalyzing = false
     var lastAnalysis: Date?
 
+    // MARK: - ML Integration
+    let mlOrchestrator = MLOrchestrator()
+    /// ML-predicted risk for tomorrow
+    var tomorrowRiskPrediction: MLPrediction? { mlOrchestrator.tomorrowRiskPrediction }
+    /// Current ML-classified health state
+    var currentHealthState: HealthState? { mlOrchestrator.currentHealthState }
+    /// Periodic patterns discovered by ML
+    var discoveredPatterns: [DiscoveredPattern] { mlOrchestrator.discoveredPatterns }
+
     init() {
         baselines = persistence.loadBaselines()
         lastAnalysis = persistence.loadLastAnalysisDate()
@@ -52,8 +61,30 @@ final class AnalysisEngine {
         }
         trends = newTrends
 
-        // Step 3: Detect anomalies
-        anomalies = AnomalyDetector.detectAll(timeSeries: timeSeries, baselines: baselines)
+        // Step 3: Detect anomalies (rule-based as foundation)
+        var ruleBasedAnomalies = AnomalyDetector.detectAll(timeSeries: timeSeries, baselines: baselines)
+
+        // Step 3a: Merge ML forecast-based anomalies when available
+        if mlOrchestrator.forecaster.isReady {
+            let forecastAnomalies = mlOrchestrator.forecaster.detectAnomalies(timeSeries: timeSeries)
+            // Add ML anomalies for metrics not already flagged by rule-based detection
+            let existingMetrics = Set(ruleBasedAnomalies.map(\.metric))
+            for mlAnomaly in forecastAnomalies where !existingMetrics.contains(mlAnomaly.metric) {
+                let allTimeValues = timeSeries[mlAnomaly.metric]?.values ?? []
+                ruleBasedAnomalies.append(AnomalyDetector.AnomalyResult(
+                    metric: mlAnomaly.metric,
+                    severity: mlAnomaly.severity,
+                    deviationPercent: mlAnomaly.deviationPercent,
+                    zScore: mlAnomaly.normalizedResidual,
+                    currentValue: mlAnomaly.currentValue,
+                    baselineValue: mlAnomaly.predictedValue,
+                    isAboveBaseline: mlAnomaly.residual > 0,
+                    outsideNormalRange: mlAnomaly.normalizedResidual > 2.0,
+                    allTimePercentile: timeSeries[mlAnomaly.metric]?.percentile(of: mlAnomaly.currentValue) ?? 50
+                ))
+            }
+        }
+        anomalies = ruleBasedAnomalies
 
         // Step 4: Compute health scores
         var metricScoresByCategory: [HealthCategory: [(metric: HealthMetric, score: Int, components: [ScoreComponent])]] = [:]
@@ -105,8 +136,12 @@ final class AnalysisEngine {
             trends: trends
         )
 
-        // Step 7: Compute correlations early (needed by InsightGenerator for context)
+        // Step 7: Compute correlations (rule-based 35 pairs, ML supplements when ready)
         correlations = CorrelationAnalyzer.analyzeAll(timeSeries: timeSeries)
+
+        // Step 7 supplement: ML correlation discoveries (novel pairs not in hardcoded 35)
+        // These are surfaced as insights, not merged into HealthCorrelation array,
+        // since they use different significance metrics (MI, Granger, partial r)
 
         // Step 7a: Historical context (needed by InsightGenerator)
         historicalContext = HistoricalAnalyzer.analyzeAll(
@@ -212,8 +247,44 @@ final class AnalysisEngine {
         let causalInsights = CausalChainEngine.generateInsights(from: causalChains)
         insights.append(contentsOf: causalInsights)
 
+        // Step 12: ML-powered insights (patterns, state, predictions)
+        if mlOrchestrator.hasRunOnce {
+            let mlInsights = mlOrchestrator.generateInsights()
+            insights.append(contentsOf: mlInsights)
+        }
+
         // Final: deduplicate and re-sort all insights
         insights.sort { $0.priorityScore > $1.priorityScore }
+    }
+
+    // MARK: - ML Pipeline
+
+    /// Run the ML analysis pipeline asynchronously after rule-based analysis.
+    /// Call this after `runFullAnalysis` with the same timeSeries data.
+    func runMLAnalysis(
+        timeSeries: [HealthMetric: MetricTimeSeries],
+        scoreHistory: [(date: Date, score: Int)],
+        anomalyCounts: [Date: Int]
+    ) async {
+        await mlOrchestrator.runMLAnalysis(
+            timeSeries: timeSeries,
+            baselines: baselines,
+            scoreHistory: scoreHistory,
+            anomalyCounts: anomalyCounts
+        )
+
+        // After ML completes, regenerate ML insights and re-sort
+        let mlInsights = mlOrchestrator.generateInsights()
+        insights.append(contentsOf: mlInsights)
+        insights.sort { $0.priorityScore > $1.priorityScore }
+
+        // Incremental training for next run
+        mlOrchestrator.trainIncremental(
+            timeSeries: timeSeries,
+            baselines: baselines,
+            todayScore: overallScore.score,
+            todayAnomalyCount: anomalies.count
+        )
     }
 
     /// Get the top N insights

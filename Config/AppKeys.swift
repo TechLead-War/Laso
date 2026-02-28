@@ -80,6 +80,13 @@ enum AppKeys {
         static let lastSubscribedDate = "laso.billing.last_subscribed_date"
     }
 
+    // MARK: - Backup
+
+    enum Backup {
+        static let lastBackupDate = "healthpulse.backup.lastBackupDate"
+        static let backupEnabled  = "healthpulse.backup.enabled"
+    }
+
     // MARK: - Notifications
 
     enum Notifications {

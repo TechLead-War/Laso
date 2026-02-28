@@ -42,7 +42,7 @@ struct HealthPulseApp: App {
             try? (storeURL as NSURL).setResourceValue(URLFileProtection.complete, forKey: .fileProtectionKey)
             let config = ModelConfiguration(url: storeURL.appendingPathComponent("health.store"))
             container = try ModelContainer(
-                for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self,
+                for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self, StoredMLModelState.self,
                 configurations: config
             )
         } catch {
@@ -50,13 +50,13 @@ struct HealthPulseApp: App {
             let fallback = ModelConfiguration(isStoredInMemoryOnly: true)
             do {
                 container = try ModelContainer(
-                    for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self,
+                    for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self, StoredMLModelState.self,
                     configurations: fallback
                 )
             } catch {
                 // Last resort: empty container with default configuration
                 container = try! ModelContainer(
-                    for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self
+                    for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self, StoredMLModelState.self
                 )
             }
         }
@@ -94,6 +94,16 @@ struct HealthPulseApp: App {
                     .interactiveDismissDisabled()
             }
             .task {
+                // Restore from CloudKit on fresh install (before HealthKit sync)
+                if healthDataStore.totalStoredSamples == 0 {
+                    let persistence = PersistenceManager()
+                    let restored = await CloudBackupManager.shared.restore(
+                        store: healthDataStore, persistence: persistence
+                    )
+                    if restored {
+                        // Data restored — HealthKit sync will be incremental (not full re-fetch)
+                    }
+                }
                 await subscriptionManager.configure()
                 WatchMonitor.shared.startMonitoring()
             }
