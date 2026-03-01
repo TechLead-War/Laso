@@ -127,6 +127,8 @@ struct SampleDataProvider {
             return 5 + noise * 2
         case .workoutCount:
             return dayIndex % 2 == 0 ? 1 : 0
+        case .bloodGlucose:
+            return 95 + sin(progress * .pi * 3) * 10 + noise * 15
         case .workoutDuration:
             return dayIndex % 2 == 0 ? 45 + noise * 15 : 0
         }

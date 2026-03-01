@@ -365,6 +365,14 @@ struct HealthKitMetricRegistry {
                 strategy: .quantitySample,
                 statisticsOption: .discreteAverage
             )
+        case .bloodGlucose:
+            return MetricConfig(
+                sampleType: HKQuantityType(.bloodGlucose),
+                quantityType: HKQuantityType(.bloodGlucose),
+                unit: HKUnit(from: "mg/dL"),
+                strategy: .quantitySample,
+                statisticsOption: .discreteAverage
+            )
         case .workoutCount, .workoutDuration:
             return MetricConfig(
                 sampleType: HKWorkoutType.workoutType(),

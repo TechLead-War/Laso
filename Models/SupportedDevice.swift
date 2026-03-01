@@ -17,7 +17,7 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
     case fitbit
     case ouraRing
     case whoop
-    case samsungGalaxyWatch
+    case samsungGalaxy
     case amazfit
     case withings
     case polar
@@ -29,6 +29,26 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
     case huawei
     case coros
     case suunto
+    // Sports / Fitness Watches
+    case wahoo
+    case ticWatch
+    case casioGShock
+    case tagHeuer
+    case fossil
+    // Smart Rings
+    case ultrahumanRing
+    case ringConn
+    case circularRing
+    // Health / Medical Devices
+    case omron
+    case renpho
+    case dexcom
+    case freestyleLibre
+    case eightSleep
+    // Fitness Platforms
+    case biostrap
+    case myzone
+    case peloton
     case generic
 
     var displayName: String {
@@ -39,7 +59,7 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
         case .fitbit: return "Fitbit"
         case .ouraRing: return "Oura Ring"
         case .whoop: return "Whoop"
-        case .samsungGalaxyWatch: return "Samsung Galaxy Watch"
+        case .samsungGalaxy: return "Samsung Galaxy"
         case .amazfit: return "Amazfit"
         case .withings: return "Withings"
         case .polar: return "Polar"
@@ -51,6 +71,22 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
         case .huawei: return "Huawei Watch"
         case .coros: return "COROS"
         case .suunto: return "Suunto"
+        case .wahoo: return "Wahoo"
+        case .ticWatch: return "TicWatch"
+        case .casioGShock: return "Casio G-Shock"
+        case .tagHeuer: return "TAG Heuer"
+        case .fossil: return "Fossil"
+        case .ultrahumanRing: return "Ultrahuman Ring Air"
+        case .ringConn: return "RingConn"
+        case .circularRing: return "Circular Ring"
+        case .omron: return "Omron"
+        case .renpho: return "Renpho"
+        case .dexcom: return "Dexcom"
+        case .freestyleLibre: return "Freestyle Libre"
+        case .eightSleep: return "Eight Sleep"
+        case .biostrap: return "Biostrap"
+        case .myzone: return "Myzone"
+        case .peloton: return "Peloton"
         case .generic: return "Unknown Device"
         }
     }
@@ -62,7 +98,7 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
         case .fitbit: return "Fitbit"
         case .ouraRing: return "Oura"
         case .whoop: return "Whoop"
-        case .samsungGalaxyWatch: return "Samsung Health"
+        case .samsungGalaxy: return "Samsung Health"
         case .amazfit: return "Zepp"
         case .withings: return "Withings Health Mate"
         case .polar: return "Polar Flow"
@@ -74,6 +110,22 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
         case .huawei: return "Huawei Health"
         case .coros: return "COROS"
         case .suunto: return "Suunto"
+        case .wahoo: return "Wahoo Fitness"
+        case .ticWatch: return "Mobvoi"
+        case .casioGShock: return "G-SHOCK MOVE"
+        case .tagHeuer: return "TAG Heuer Connected"
+        case .fossil: return "Fossil Smartwatches"
+        case .ultrahumanRing: return "Ultrahuman"
+        case .ringConn: return "RingConn"
+        case .circularRing: return "Circular"
+        case .omron: return "OMRON connect"
+        case .renpho: return "Renpho"
+        case .dexcom: return "Dexcom"
+        case .freestyleLibre: return "LibreLink"
+        case .eightSleep: return "Eight Sleep"
+        case .biostrap: return "Biostrap"
+        case .myzone: return "Myzone"
+        case .peloton: return "Peloton"
         case .generic: return "Companion App"
         }
     }
@@ -86,7 +138,7 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
         case .fitbit: return ["com.fitbit"]
         case .ouraRing: return ["com.ouraring"]
         case .whoop: return ["com.whoop"]
-        case .samsungGalaxyWatch: return ["com.sec.samsung", "com.samsung.health"]
+        case .samsungGalaxy: return ["com.sec.samsung", "com.samsung.health"]
         case .amazfit: return ["com.huami", "com.amazfit"]
         case .withings: return ["com.withings"]
         case .polar: return ["com.polar"]
@@ -98,6 +150,22 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
         case .huawei: return ["com.huawei.health"]
         case .coros: return ["com.coros"]
         case .suunto: return ["com.suunto"]
+        case .wahoo: return ["com.wahoofitness"]
+        case .ticWatch: return ["com.mobvoi"]
+        case .casioGShock: return ["jp.co.casio"]
+        case .tagHeuer: return ["com.tagheuer"]
+        case .fossil: return ["com.fossil"]
+        case .ultrahumanRing: return ["com.ultrahuman"]
+        case .ringConn: return ["com.ringconn"]
+        case .circularRing: return ["com.circular"]
+        case .omron: return ["jp.co.omron.healthcare"]
+        case .renpho: return ["com.renpho"]
+        case .dexcom: return ["com.dexcom"]
+        case .freestyleLibre: return ["com.abbott.librelink"]
+        case .eightSleep: return ["com.eightsleep"]
+        case .biostrap: return ["com.biostrap"]
+        case .myzone: return ["com.myzone"]
+        case .peloton: return ["com.onepeloton"]
         case .generic: return []
         }
     }
@@ -109,7 +177,7 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
         case .fitbit: return URL(string: "https://apps.apple.com/app/fitbit-health-fitness/id462638897")
         case .ouraRing: return URL(string: "https://apps.apple.com/app/oura-ring/id1043837948")
         case .whoop: return URL(string: "https://apps.apple.com/app/whoop/id933944389")
-        case .samsungGalaxyWatch: return URL(string: "https://apps.apple.com/app/samsung-health/id1224498498")
+        case .samsungGalaxy: return URL(string: "https://apps.apple.com/app/samsung-health/id1224498498")
         case .amazfit: return URL(string: "https://apps.apple.com/app/zepp-formerly-amazfit/id1127269366")
         case .withings: return URL(string: "https://apps.apple.com/app/withings-health-mate/id542701020")
         case .polar: return URL(string: "https://apps.apple.com/app/polar-flow/id717172678")
@@ -121,6 +189,22 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
         case .huawei: return URL(string: "https://apps.apple.com/app/huawei-health/id1174646498")
         case .coros: return URL(string: "https://apps.apple.com/app/coros/id1169521325")
         case .suunto: return URL(string: "https://apps.apple.com/app/suunto/id1230327951")
+        case .wahoo: return URL(string: "https://apps.apple.com/app/wahoo-fitness/id391599899")
+        case .ticWatch: return URL(string: "https://apps.apple.com/app/mobvoi/id1454523498")
+        case .casioGShock: return URL(string: "https://apps.apple.com/app/g-shock-move/id1472764049")
+        case .tagHeuer: return URL(string: "https://apps.apple.com/app/tag-heuer-connected/id1456817498")
+        case .fossil: return URL(string: "https://apps.apple.com/app/fossil-smartwatches/id1027498498")
+        case .ultrahumanRing: return URL(string: "https://apps.apple.com/app/ultrahuman/id1547498498")
+        case .ringConn: return URL(string: "https://apps.apple.com/app/ringconn/id6443824498")
+        case .circularRing: return URL(string: "https://apps.apple.com/app/circular/id1571234498")
+        case .omron: return URL(string: "https://apps.apple.com/app/omron-connect/id1003177498")
+        case .renpho: return URL(string: "https://apps.apple.com/app/renpho/id1219889498")
+        case .dexcom: return URL(string: "https://apps.apple.com/app/dexcom-g7/id1431476498")
+        case .freestyleLibre: return URL(string: "https://apps.apple.com/app/librelink/id1307476498")
+        case .eightSleep: return URL(string: "https://apps.apple.com/app/eight-sleep/id1127389498")
+        case .biostrap: return URL(string: "https://apps.apple.com/app/biostrap/id1187459498")
+        case .myzone: return URL(string: "https://apps.apple.com/app/myzone/id874028498")
+        case .peloton: return URL(string: "https://apps.apple.com/app/peloton/id792750948")
         }
     }
 
@@ -128,9 +212,14 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
         switch self {
         case .appleWatch: return "applewatch"
         case .iPhone: return "iphone"
-        case .ouraRing: return "circle.circle"
+        case .ouraRing, .ultrahumanRing, .ringConn, .circularRing: return "circle.circle"
         case .whoop: return "waveform.path.ecg.rectangle"
-        case .withings: return "scalemass.fill"
+        case .withings, .renpho: return "scalemass.fill"
+        case .omron: return "waveform.path.ecg"
+        case .dexcom, .freestyleLibre: return "drop.fill"
+        case .eightSleep: return "bed.double.fill"
+        case .myzone: return "heart.fill"
+        case .wahoo, .peloton: return "figure.indoor.cycle"
         case .generic: return "sensor.fill"
         default: return "watchface.applewatch.case"
         }
@@ -138,14 +227,19 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
 
     var iconColor: Color {
         switch self {
-        case .appleWatch, .iPhone, .coros: return .blue
+        case .appleWatch, .iPhone, .coros, .wahoo: return .blue
         case .garmin: return .cyan
         case .fitbit: return .teal
-        case .ouraRing: return .mint
-        case .whoop, .xiaomiSmartBand, .fireBoltt: return .orange
-        case .samsungGalaxyWatch, .suunto: return .indigo
-        case .amazfit, .polar, .noise, .boAt, .huawei: return .red
-        case .withings, .googlePixelWatch: return .green
+        case .ouraRing, .ultrahumanRing, .circularRing: return .mint
+        case .whoop, .xiaomiSmartBand, .fireBoltt, .myzone: return .orange
+        case .samsungGalaxy, .suunto, .tagHeuer: return .indigo
+        case .amazfit, .polar, .noise, .boAt, .huawei, .peloton: return .red
+        case .withings, .googlePixelWatch, .dexcom, .freestyleLibre: return .green
+        case .ticWatch, .fossil, .biostrap: return .purple
+        case .casioGShock: return .yellow
+        case .ringConn: return .pink
+        case .omron, .renpho: return .teal
+        case .eightSleep: return .cyan
         case .generic: return .secondary
         }
     }
@@ -171,6 +265,11 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
         .heartRateVariability
     ])
 
+    /// Ring: full + body temp, but no steps/distance (smart rings)
+    private static let ringMetrics: Set<HealthMetric> = fullMetrics.union([
+        .bodyTemperature
+    ]).subtracting([.steps, .distanceWalkingRunning])
+
     var supportedMetrics: Set<HealthMetric> {
         switch self {
         case .appleWatch:
@@ -195,10 +294,31 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
             return Self.fullMetrics.union([.vo2Max]).subtracting([.bloodOxygen])
         case .huawei:
             return Self.fullMetrics
-        case .fitbit, .samsungGalaxyWatch, .amazfit, .xiaomiSmartBand, .googlePixelWatch:
+        case .fitbit, .samsungGalaxy, .amazfit, .xiaomiSmartBand, .googlePixelWatch, .ticWatch, .fossil:
             return Self.midMetrics
-        case .noise, .boAt, .fireBoltt:
+        case .noise, .boAt, .fireBoltt, .casioGShock, .tagHeuer:
             return Self.basicMetrics
+        case .ultrahumanRing, .ringConn, .circularRing:
+            return Self.ringMetrics
+        case .omron:
+            return [.bloodPressureSystolic, .bloodPressureDiastolic, .heartRate, .restingHeartRate]
+        case .renpho:
+            return [.weight, .bmi, .bodyFatPercentage]
+        case .dexcom, .freestyleLibre:
+            return [.bloodGlucose]
+        case .eightSleep:
+            return [.sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .sleepAwake,
+                    .heartRate, .restingHeartRate, .bodyTemperature]
+        case .biostrap:
+            return Self.fullMetrics.union([.respiratoryRate])
+        case .myzone:
+            return [.heartRate, .restingHeartRate, .activeCalories,
+                    .workoutCount, .workoutDuration]
+        case .peloton:
+            return [.heartRate, .restingHeartRate, .activeCalories,
+                    .workoutCount, .workoutDuration, .distanceCycling]
+        case .wahoo:
+            return Self.basicMetrics.union([.distanceCycling])
         case .generic:
             return []
         }
@@ -211,11 +331,18 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
         switch self {
         case .garmin: return "Settings → Health → Apple Health → enable all categories"
         case .fitbit: return "Account → App Settings → enable Apple Health sync"
-        case .samsungGalaxyWatch: return "Settings → Connected Services → Apple Health"
+        case .samsungGalaxy: return "Settings → Connected Services → Apple Health"
         case .amazfit: return "Profile → Add Accounts → Apple Health → enable all"
         case .withings: return "Profile → Health → Apple Health → enable all"
         case .huawei: return "Me → Settings → Data Sharing → Apple Health → enable all"
         case .suunto: return "Settings → Partner Services → Apple Health → enable all"
+        case .wahoo: return "Settings → Health → Apple Health → enable all categories"
+        case .omron: return "More → App Settings → Apple Health → enable all"
+        case .renpho: return "Me → Apple Health → enable all"
+        case .dexcom: return "Settings → Health → Apple Health → enable glucose sharing"
+        case .freestyleLibre: return "Connected Apps → Apple Health → enable glucose"
+        case .eightSleep: return "Settings → Health → Apple Health → enable all"
+        case .peloton: return "More → Health App → Apple Health → enable all"
         default: return nil
         }
     }

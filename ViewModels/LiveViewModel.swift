@@ -3,112 +3,28 @@ import HealthKit
 import Observation
 import SwiftUI
 
-/// ViewModel for the Live tab — streams real-time health data from Apple Watch via HealthKit
+/// ViewModel for the Live tab — streams real-time health data from Apple Watch via HealthKit.
+/// Properties are grouped into independently observable sub-objects so that changes in one group
+/// (e.g. heart rate) don't trigger re-renders in views that only read another group (e.g. sleep).
 @Observable
 final class LiveViewModel {
     let healthKitManager: HealthKitManager
     private var healthStore: HKHealthStore { healthKitManager.healthStore }
 
-    // MARK: - Live Vitals
+    // MARK: - Grouped Observable Sub-Objects
 
-    var currentHeartRate: Double?
-    var heartRateTimestamp: Date?
-    var currentBloodOxygen: Double?
-    var bloodOxygenTimestamp: Date?
-    var currentRespiratoryRate: Double?
-    var respiratoryRateTimestamp: Date?
-    var currentWristTemperature: Double?
-    var wristTemperatureTimestamp: Date?
+    /// Real-time vitals from Apple Watch (HR, SpO2, respiratory rate, BP, temperature)
+    let vitals = VitalsData()
+    /// Last night's sleep analysis
+    let sleep = SleepData()
+    /// Today's cumulative activity stats and goals
+    let activity = ActivityData()
+    /// Recovery metrics (RHR, HRV, readiness, stress)
+    let recovery = RecoveryData()
+    /// Most recent workout info
+    let workout = WorkoutData()
 
-    // MARK: - Heart Rate Session Stats (last 30 min)
-
-    var recentHeartRates: [(date: Date, value: Double)] = []
-    var heartRateMin30: Double?
-    var heartRateMax30: Double?
-    var heartRateAvg30: Double?
-
-    // MARK: - Today's HR Range
-
-    var todayHeartRateMin: Double?
-    var todayHeartRateMax: Double?
-
-    // MARK: - Latest Resting / Recovery Values
-
-    var latestRestingHeartRate: Double?
-    var latestRestingHeartRateTimestamp: Date?
-    var latestHRV: Double?
-    var latestHRVTimestamp: Date?
-    var latestHeartRateRecovery: Double?
-
-    // MARK: - Blood Pressure
-
-    var latestSystolic: Double?
-    var latestDiastolic: Double?
-    var bloodPressureTimestamp: Date?
-
-    // MARK: - Body Temperature
-
-    var latestBodyTemp: Double?
-    var bodyTempTimestamp: Date?
-
-    // MARK: - Today's Cumulative Activity
-
-    var todaySteps: Double = 0
-    var todayActiveCalories: Double = 0
-    var todayExerciseMinutes: Double = 0
-    var todayStandHours: Double = 0
-    var todayDistance: Double = 0
-    var todayFlightsClimbed: Double = 0
-
-    // Activity goals — fetched from HealthKit, with evidence-based defaults
-    // Defaults: WHO recommends 150 min/week (~30 min/day exercise),
-    // Apple Watch default stand goal is 12 hrs (1 min standing in 12 waking hours)
-    var moveGoal: Double = 500     // kcal
-    var exerciseGoal: Double = 30  // minutes
-    var standGoal: Double = 12     // hours
-
-    // MARK: - Last Night's Sleep
-
-    var lastNightSleepDuration: TimeInterval = 0   // total seconds
-    var lastNightDeepSleep: TimeInterval = 0
-    var lastNightREMSleep: TimeInterval = 0
-    var lastNightCoreSleep: TimeInterval = 0
-    var lastNightAwakeTime: TimeInterval = 0
-
-    var hasSleepData: Bool { lastNightSleepDuration > 0 }
-
-    var hasSleepStageBreakdown: Bool {
-        lastNightDeepSleep > 0 || lastNightREMSleep > 0 || lastNightCoreSleep > 0
-    }
-
-    var sleepQualityLabel: String {
-        let hours = lastNightSleepDuration / 3600
-        if hours >= 7.5 { return "Great" }
-        if hours >= 6.5 { return "Good" }
-        if hours >= 5.5 { return "Fair" }
-        return "Poor"
-    }
-
-    // MARK: - Mindfulness
-
-    var todayMindfulMinutes: Double = 0
-
-    // MARK: - Latest Workout
-
-    var lastWorkoutType: String?
-    var lastWorkoutDuration: Double? // minutes
-    var lastWorkoutCalories: Double?
-    var lastWorkoutTimestamp: Date?
-
-    // MARK: - Readiness Score (computed from HRV + RHR + sleep)
-
-    var readinessScore: Int? // 0-100
-
-    // MARK: - Data Unavailability (timeout-based)
-
-    var respiratoryRateUnavailable = false
-
-    // MARK: - State
+    // MARK: - Streaming State
 
     var isStreaming = false
     var lastUpdate: Date?
@@ -122,7 +38,7 @@ final class LiveViewModel {
         self.healthKitManager = healthKitManager
     }
 
-    // MARK: - Heart Rate Zone
+    // MARK: - Heart Rate Zone (needs healthStore for age)
 
     /// Estimated max heart rate (220 - age, defaults to 190 if unknown)
     var estimatedMaxHR: Double {
@@ -166,7 +82,7 @@ final class LiveViewModel {
     }
 
     var currentHeartRateZone: HeartRateZone {
-        guard let hr = currentHeartRate else { return .rest }
+        guard let hr = vitals.currentHeartRate else { return .rest }
         let maxHR = estimatedMaxHR
         let pct = hr / maxHR * 100
         switch pct {
@@ -180,39 +96,8 @@ final class LiveViewModel {
     }
 
     var heartRateZonePercent: Double {
-        guard let hr = currentHeartRate else { return 0 }
+        guard let hr = vitals.currentHeartRate else { return 0 }
         return min(hr / estimatedMaxHR, 1.0)
-    }
-
-    // MARK: - Vital Status
-
-    var heartRateStatus: VitalStatus {
-        guard let hr = currentHeartRate else { return .unknown }
-        if hr > 120 { return .elevated }
-        if hr < 45 { return .low }
-        return .normal
-    }
-
-    var bloodOxygenStatus: VitalStatus {
-        guard let spo2 = currentBloodOxygen else { return .unknown }
-        if spo2 < 92 { return .critical }
-        if spo2 < 95 { return .low }
-        return .normal
-    }
-
-    var respiratoryRateStatus: VitalStatus {
-        guard let rr = currentRespiratoryRate else { return .unknown }
-        if rr > 24 { return .elevated }
-        if rr < 10 { return .low }
-        return .normal
-    }
-
-    var bloodPressureStatus: VitalStatus {
-        guard let sys = latestSystolic else { return .unknown }
-        if sys >= 140 { return .critical }
-        if sys >= 130 { return .elevated }
-        if sys < 90 { return .low }
-        return .normal
     }
 
     enum VitalStatus: Equatable {
@@ -239,85 +124,18 @@ final class LiveViewModel {
         }
     }
 
-    // MARK: - Data Availability & Freshness
-
-    private static let freshnessThreshold: TimeInterval = 30 * 60 // 30 minutes
-
-    var hasAnyLiveData: Bool {
-        currentHeartRate != nil || currentBloodOxygen != nil || currentRespiratoryRate != nil
-    }
-
-    /// Per-vital freshness checks — true if the specific vital was recorded within 30 minutes
-    var isHeartRateFresh: Bool {
-        guard let ts = heartRateTimestamp else { return false }
-        return Date().timeIntervalSince(ts) < Self.freshnessThreshold
-    }
-
-    var isBloodOxygenFresh: Bool {
-        guard let ts = bloodOxygenTimestamp else { return false }
-        return Date().timeIntervalSince(ts) < Self.freshnessThreshold
-    }
-
-    var isRespiratoryRateFresh: Bool {
-        guard let ts = respiratoryRateTimestamp else { return false }
-        return Date().timeIntervalSince(ts) < Self.freshnessThreshold
-    }
-
-    /// True only if we have live vitals AND they were recorded recently (within 30 minutes).
-    /// Apple Watch measures HR periodically (not continuously), so 30 min accommodates normal gaps.
-    var hasFreshLiveData: Bool {
-        isHeartRateFresh || isBloodOxygenFresh || isRespiratoryRateFresh
-    }
-
-    /// True if we have vital data recorded within the last 2 hours — watch is likely still being worn
-    var hasRecentLiveData: Bool {
-        let twoHours: TimeInterval = 2 * 3600
-        let now = Date()
-        if let ts = heartRateTimestamp, now.timeIntervalSince(ts) < twoHours { return true }
-        if let ts = bloodOxygenTimestamp, now.timeIntervalSince(ts) < twoHours { return true }
-        if let ts = respiratoryRateTimestamp, now.timeIntervalSince(ts) < twoHours { return true }
-        return false
-    }
-
-    /// True if vital data exists but is older than 2 hours — watch is probably not being worn
-    var isVitalDataStale: Bool {
-        hasAnyLiveData && !hasRecentLiveData
-    }
-
-    /// True if data exists but is aging (30 min – 2 hr old) — show subtle "last reading X min ago" banner
-    var isLiveDataAging: Bool {
-        hasAnyLiveData && !hasFreshLiveData && hasRecentLiveData
-    }
-
-    /// The most recent vital timestamp across all vitals
-    var mostRecentVitalTimestamp: Date? {
-        [heartRateTimestamp, bloodOxygenTimestamp, respiratoryRateTimestamp]
-            .compactMap { $0 }
-            .max()
-    }
-
-    var hasAnyActivityData: Bool {
-        todaySteps > 0 || todayActiveCalories > 0 || todayExerciseMinutes > 0
-    }
-
-    /// True if readiness inputs (RHR + HRV) were recorded within the last 24 hours
-    var isReadinessDataFresh: Bool {
-        let twentyFourHours: TimeInterval = 24 * 3600
-        let now = Date()
-        let rhrFresh = latestRestingHeartRateTimestamp.map { now.timeIntervalSince($0) < twentyFourHours } ?? false
-        let hrvFresh = latestHRVTimestamp.map { now.timeIntervalSince($0) < twentyFourHours } ?? false
-        return rhrFresh && hrvFresh
-    }
-
-    // MARK: - Activity Ring Progress
-
-    var moveProgress: Double { min(todayActiveCalories / moveGoal, 1.0) }
-    var exerciseProgress: Double { min(todayExerciseMinutes / exerciseGoal, 1.0) }
-    var standProgress: Double { min(todayStandHours / standGoal, 1.0) }
-
     // MARK: - Readiness + Today Quick Fetch (for Home tab, no streams)
 
-    /// Lightweight fetch for Home screen — gets readiness data + today's activity without starting live streams
+    /// Timestamps for tiered Home polling — avoids querying slow-changing data every tick
+    private var lastSlowFetch: Date?   // RHR, HRV, workout, sleep
+    private var lastMediumFetch: Date?  // goals, mindful minutes
+
+    /// Tiered polling intervals (seconds)
+    private static let fastInterval: TimeInterval = 60     // steps, calories, exercise, stand, distance, flights
+    private static let mediumInterval: TimeInterval = 300   // goals, mindful minutes
+    private static let slowInterval: TimeInterval = 600     // RHR, HRV, workout, sleep
+
+    /// Full fetch — calls all tiers unconditionally (used on first appear and manual refresh)
     func fetchHomeData() {
         guard HKHealthStore.isHealthDataAvailable() else { return }
         fetchLatestDailyValues()
@@ -326,6 +144,32 @@ final class LiveViewModel {
         fetchTodayMindfulMinutes()
         fetchLatestWorkout()
         fetchLastNightSleep()
+        lastSlowFetch = Date()
+        lastMediumFetch = Date()
+    }
+
+    /// Tiered fetch — only queries data whose refresh interval has elapsed
+    func fetchHomeDataTiered() {
+        guard HKHealthStore.isHealthDataAvailable() else { return }
+        let now = Date()
+
+        // Fast tier: always fetch (steps, calories, exercise, stand, distance, flights)
+        fetchTodayCumulativeStats()
+
+        // Medium tier: goals + mindful minutes (every 5 min)
+        if lastMediumFetch == nil || now.timeIntervalSince(lastMediumFetch!) >= Self.mediumInterval {
+            fetchActivityGoals()
+            fetchTodayMindfulMinutes()
+            lastMediumFetch = now
+        }
+
+        // Slow tier: RHR, HRV, workout, sleep (every 10 min)
+        if lastSlowFetch == nil || now.timeIntervalSince(lastSlowFetch!) >= Self.slowInterval {
+            fetchLatestDailyValues()
+            fetchLatestWorkout()
+            fetchLastNightSleep()
+            lastSlowFetch = now
+        }
     }
 
     // MARK: - Start / Stop
@@ -357,8 +201,8 @@ final class LiveViewModel {
 
         // After 5 seconds, if respiratory rate is still nil, mark as unavailable
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
-            guard let self, self.currentRespiratoryRate == nil else { return }
-            self.respiratoryRateUnavailable = true
+            guard let self, self.vitals.currentRespiratoryRate == nil else { return }
+            self.vitals.respiratoryRateUnavailable = true
         }
 
         // Refresh cumulative stats every 30 seconds
@@ -418,23 +262,23 @@ final class LiveViewModel {
             for sample in quantitySamples {
                 let value = sample.quantity.doubleValue(for: unit)
                 let date = sample.startDate
-                recentHeartRates.append((date: date, value: value))
+                vitals.recentHeartRates.append((date: date, value: value))
             }
 
             // Keep only last 30 minutes
             let cutoff = Date().addingTimeInterval(-30 * 60)
-            recentHeartRates.removeAll { $0.date < cutoff }
+            vitals.recentHeartRates.removeAll { $0.date < cutoff }
 
             // Compute session stats
-            let values = recentHeartRates.map(\.value)
-            heartRateMin30 = values.min()
-            heartRateMax30 = values.max()
-            heartRateAvg30 = values.isEmpty ? nil : values.reduce(0, +) / Double(values.count)
+            let values = vitals.recentHeartRates.map(\.value)
+            vitals.heartRateMin30 = values.min()
+            vitals.heartRateMax30 = values.max()
+            vitals.heartRateAvg30 = values.isEmpty ? nil : values.reduce(0, +) / Double(values.count)
 
             // Set current to most recent
             if let latest = quantitySamples.max(by: { $0.startDate < $1.startDate }) {
-                currentHeartRate = latest.quantity.doubleValue(for: unit)
-                heartRateTimestamp = latest.startDate
+                vitals.currentHeartRate = latest.quantity.doubleValue(for: unit)
+                vitals.heartRateTimestamp = latest.startDate
                 lastUpdate = Date()
             }
         }
@@ -448,8 +292,8 @@ final class LiveViewModel {
             unit: .percent(),
             hoursBack: 6
         ) { [weak self] val, date in
-            self?.currentBloodOxygen = val * 100
-            self?.bloodOxygenTimestamp = date
+            self?.vitals.currentBloodOxygen = val * 100
+            self?.vitals.bloodOxygenTimestamp = date
             self?.lastUpdate = Date()
         }
     }
@@ -462,9 +306,9 @@ final class LiveViewModel {
             unit: HKUnit.count().unitDivided(by: .minute()),
             hoursBack: 24
         ) { [weak self] val, date in
-            self?.currentRespiratoryRate = val
-            self?.respiratoryRateTimestamp = date
-            self?.respiratoryRateUnavailable = false
+            self?.vitals.currentRespiratoryRate = val
+            self?.vitals.respiratoryRateTimestamp = date
+            self?.vitals.respiratoryRateUnavailable = false
             self?.lastUpdate = Date()
         }
     }
@@ -518,18 +362,23 @@ final class LiveViewModel {
 
     func fetchTodayCumulativeStats() {
         let startOfDay = Calendar.current.startOfDay(for: Date())
-        let stats: [(HKQuantityTypeIdentifier, HKUnit, ReferenceWritableKeyPath<LiveViewModel, Double>)] = [
-            (.stepCount,              .count(),                  \.todaySteps),
-            (.activeEnergyBurned,     .kilocalorie(),            \.todayActiveCalories),
-            (.appleExerciseTime,      .minute(),                 \.todayExerciseMinutes),
-            (.appleStandTime,         .hour(),                   \.todayStandHours),
-            (.distanceWalkingRunning, .meterUnit(with: .kilo),   \.todayDistance),
-            (.flightsClimbed,         .count(),                  \.todayFlightsClimbed),
-        ]
-        for (identifier, unit, keyPath) in stats {
-            fetchTodayStat(identifier, unit: unit, from: startOfDay) { [weak self] value in
-                Task { @MainActor in self?[keyPath: keyPath] = value }
-            }
+        fetchTodayStat(.stepCount, unit: .count(), from: startOfDay) { [weak self] v in
+            Task { @MainActor in self?.activity.todaySteps = v }
+        }
+        fetchTodayStat(.activeEnergyBurned, unit: .kilocalorie(), from: startOfDay) { [weak self] v in
+            Task { @MainActor in self?.activity.todayActiveCalories = v }
+        }
+        fetchTodayStat(.appleExerciseTime, unit: .minute(), from: startOfDay) { [weak self] v in
+            Task { @MainActor in self?.activity.todayExerciseMinutes = v }
+        }
+        fetchTodayStat(.appleStandTime, unit: .hour(), from: startOfDay) { [weak self] v in
+            Task { @MainActor in self?.activity.todayStandHours = v }
+        }
+        fetchTodayStat(.distanceWalkingRunning, unit: .meterUnit(with: .kilo), from: startOfDay) { [weak self] v in
+            Task { @MainActor in self?.activity.todayDistance = v }
+        }
+        fetchTodayStat(.flightsClimbed, unit: .count(), from: startOfDay) { [weak self] v in
+            Task { @MainActor in self?.activity.todayFlightsClimbed = v }
         }
     }
 
@@ -574,9 +423,9 @@ final class LiveViewModel {
             let exercise = summary.exerciseTimeGoal?.doubleValue(for: .minute()) ?? 0
             let stand = summary.standHoursGoal?.doubleValue(for: .count()) ?? 0
             Task { @MainActor in
-                if move > 0 { self?.moveGoal = move }
-                if exercise > 0 { self?.exerciseGoal = exercise }
-                if stand > 0 { self?.standGoal = stand }
+                if move > 0 { self?.activity.moveGoal = move }
+                if exercise > 0 { self?.activity.exerciseGoal = exercise }
+                if stand > 0 { self?.activity.standGoal = stand }
             }
         }
 
@@ -588,15 +437,15 @@ final class LiveViewModel {
     func fetchLatestDailyValues() {
         fetchLatestSampleWithDate(.restingHeartRate, unit: HKUnit.count().unitDivided(by: .minute()), maxAge: 48 * 3600) { [weak self] value, date in
             Task { @MainActor in
-                self?.latestRestingHeartRate = value
-                self?.latestRestingHeartRateTimestamp = date
+                self?.recovery.latestRestingHeartRate = value
+                self?.recovery.latestRestingHeartRateTimestamp = date
                 self?.computeReadinessScore()
             }
         }
         fetchLatestSampleWithDate(.heartRateVariabilitySDNN, unit: HKUnit.secondUnit(with: .milli), maxAge: 48 * 3600) { [weak self] value, date in
             Task { @MainActor in
-                self?.latestHRV = value
-                self?.latestHRVTimestamp = date
+                self?.recovery.latestHRV = value
+                self?.recovery.latestHRVTimestamp = date
                 self?.computeReadinessScore()
             }
         }
@@ -606,10 +455,10 @@ final class LiveViewModel {
 
     func fetchLatestBloodPressure() {
         fetchLatestSample(.bloodPressureSystolic, unit: .millimeterOfMercury()) { [weak self] value in
-            Task { @MainActor in self?.latestSystolic = value }
+            Task { @MainActor in self?.vitals.latestSystolic = value }
         }
         fetchLatestSample(.bloodPressureDiastolic, unit: .millimeterOfMercury()) { [weak self] value in
-            Task { @MainActor in self?.latestDiastolic = value }
+            Task { @MainActor in self?.vitals.latestDiastolic = value }
         }
     }
 
@@ -627,8 +476,8 @@ final class LiveViewModel {
                 let value = sample.quantity.doubleValue(for: .degreeCelsius())
                 let date = sample.startDate
                 Task { @MainActor in
-                    self?.latestBodyTemp = value
-                    self?.bodyTempTimestamp = date
+                    self?.vitals.latestBodyTemp = value
+                    self?.vitals.bodyTempTimestamp = date
                 }
             }
         }
@@ -652,8 +501,8 @@ final class LiveViewModel {
             let minVal = result?.minimumQuantity()?.doubleValue(for: unit)
             let maxVal = result?.maximumQuantity()?.doubleValue(for: unit)
             Task { @MainActor in
-                self?.todayHeartRateMin = minVal
-                self?.todayHeartRateMax = maxVal
+                self?.vitals.todayHeartRateMin = minVal
+                self?.vitals.todayHeartRateMax = maxVal
             }
         }
 
@@ -674,17 +523,17 @@ final class LiveViewModel {
             limit: 1,
             sortDescriptors: [sort]
         ) { [weak self] _, results, _ in
-            if let workout = results?.first as? HKWorkout {
-                let typeName = workout.workoutActivityType.displayName
-                let duration = workout.duration / 60.0
+            if let w = results?.first as? HKWorkout {
+                let typeName = w.workoutActivityType.displayName
+                let duration = w.duration / 60.0
                 let caloriesType = HKQuantityType(.activeEnergyBurned)
-                let calories = workout.statistics(for: caloriesType)?.sumQuantity()?.doubleValue(for: .kilocalorie())
-                let date = workout.startDate
+                let calories = w.statistics(for: caloriesType)?.sumQuantity()?.doubleValue(for: .kilocalorie())
+                let date = w.startDate
                 Task { @MainActor in
-                    self?.lastWorkoutType = typeName
-                    self?.lastWorkoutDuration = duration
-                    self?.lastWorkoutCalories = calories
-                    self?.lastWorkoutTimestamp = date
+                    self?.workout.lastWorkoutType = typeName
+                    self?.workout.lastWorkoutDuration = duration
+                    self?.workout.lastWorkoutCalories = calories
+                    self?.workout.lastWorkoutTimestamp = date
                 }
             }
         }
@@ -695,53 +544,13 @@ final class LiveViewModel {
     // MARK: - Readiness Score
 
     func computeReadinessScore() {
-        // Simple readiness: based on HRV (higher=better) and RHR (lower=better)
-        // Score 0-100
-        guard let hrv = latestHRV, let rhr = latestRestingHeartRate else {
-            readinessScore = nil
+        guard let hrv = recovery.latestHRV, let rhr = recovery.latestRestingHeartRate else {
+            recovery.readinessScore = nil
             return
         }
-
-        // HRV component: 20ms = poor (0), 60ms+ = excellent (50 pts)
         let hrvScore = min(max((hrv - 20) / 40.0 * 50, 0), 50)
-
-        // RHR component: 80bpm = poor (0), 50bpm = excellent (50 pts)
         let rhrScore = min(max((80 - rhr) / 30.0 * 50, 0), 50)
-
-        readinessScore = Int(hrvScore + rhrScore)
-    }
-
-    // MARK: - Stress Level (derived from HRV + RHR)
-
-    /// Stress level 0–100 (inverse of readiness — low HRV + high RHR = high stress)
-    var stressLevel: Int? {
-        guard let hrv = latestHRV, let rhr = latestRestingHeartRate else { return nil }
-        // High HRV = low stress, Low RHR = low stress
-        let hrvStress = min(max((60 - hrv) / 40.0 * 50, 0), 50)
-        let rhrStress = min(max((rhr - 50) / 30.0 * 50, 0), 50)
-        return Int(hrvStress + rhrStress)
-    }
-
-    var stressLabel: String {
-        guard let level = stressLevel else { return "No Data" }
-        switch level {
-        case 0..<20: return "Relaxed"
-        case 20..<40: return "Low"
-        case 40..<60: return "Moderate"
-        case 60..<80: return "High"
-        default: return "Very High"
-        }
-    }
-
-    var stressColor: String {
-        guard let level = stressLevel else { return "gray" }
-        switch level {
-        case 0..<20: return "green"
-        case 20..<40: return "green"
-        case 40..<60: return "yellow"
-        case 60..<80: return "orange"
-        default: return "red"
-        }
+        recovery.readinessScore = Int(hrvScore + rhrScore)
     }
 
     // MARK: - Last Night's Sleep Fetch
@@ -750,7 +559,6 @@ final class LiveViewModel {
         let sleepType = HKCategoryType(.sleepAnalysis)
         let calendar = Calendar.current
 
-        // Window: yesterday 6 PM → today noon (covers most sleep schedules)
         let now = Date()
         let startOfToday = calendar.startOfDay(for: now)
         guard let yesterday = calendar.date(byAdding: .day, value: -1, to: startOfToday),
@@ -789,7 +597,6 @@ final class LiveViewModel {
                 case .awake:
                     awake += duration
                 case .asleepUnspecified, .inBed:
-                    // inBed or unspecified — count as total if no stage breakdown
                     total += duration
                 @unknown default:
                     break
@@ -797,11 +604,11 @@ final class LiveViewModel {
             }
 
             Task { @MainActor in
-                self?.lastNightSleepDuration = total
-                self?.lastNightDeepSleep = deep
-                self?.lastNightREMSleep = rem
-                self?.lastNightCoreSleep = core
-                self?.lastNightAwakeTime = awake
+                self?.sleep.lastNightSleepDuration = total
+                self?.sleep.lastNightDeepSleep = deep
+                self?.sleep.lastNightREMSleep = rem
+                self?.sleep.lastNightCoreSleep = core
+                self?.sleep.lastNightAwakeTime = awake
             }
         }
 
@@ -825,7 +632,7 @@ final class LiveViewModel {
                 sum + sample.endDate.timeIntervalSince(sample.startDate)
             }
             Task { @MainActor in
-                self?.todayMindfulMinutes = totalSeconds / 60.0
+                self?.activity.todayMindfulMinutes = totalSeconds / 60.0
             }
         }
 
@@ -834,8 +641,6 @@ final class LiveViewModel {
 
     // MARK: - Fallback Latest-Sample Fetches
 
-    /// Fetches the most recent sample within a time window, returning both value and date.
-    /// Only returns data if a sample exists within `maxAge` seconds from now.
     private func fetchLatestSampleWithDate(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit, maxAge: TimeInterval, completion: @escaping (Double, Date) -> Void) {
         let type = HKQuantityType(identifier)
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
@@ -858,42 +663,39 @@ final class LiveViewModel {
     }
 
     private func fetchFallbackHeartRate() {
-        guard currentHeartRate == nil else { return }
+        guard vitals.currentHeartRate == nil else { return }
         let unit = HKUnit.count().unitDivided(by: .minute())
-        // Only show heart rate from the last 1 hour — anything older is not "live"
         fetchLatestSampleWithDate(.heartRate, unit: unit, maxAge: 3600) { [weak self] value, date in
             Task { @MainActor in
-                guard self?.currentHeartRate == nil else { return }
-                self?.currentHeartRate = value
-                self?.heartRateTimestamp = date
+                guard self?.vitals.currentHeartRate == nil else { return }
+                self?.vitals.currentHeartRate = value
+                self?.vitals.heartRateTimestamp = date
                 self?.lastUpdate = Date()
             }
         }
     }
 
     private func fetchFallbackBloodOxygen() {
-        guard currentBloodOxygen == nil else { return }
-        // SpO2 is measured less frequently — allow up to 6 hours
+        guard vitals.currentBloodOxygen == nil else { return }
         fetchLatestSampleWithDate(.oxygenSaturation, unit: .percent(), maxAge: 6 * 3600) { [weak self] value, date in
             Task { @MainActor in
-                guard self?.currentBloodOxygen == nil else { return }
-                self?.currentBloodOxygen = value * 100
-                self?.bloodOxygenTimestamp = date
+                guard self?.vitals.currentBloodOxygen == nil else { return }
+                self?.vitals.currentBloodOxygen = value * 100
+                self?.vitals.bloodOxygenTimestamp = date
                 self?.lastUpdate = Date()
             }
         }
     }
 
     private func fetchFallbackRespiratoryRate() {
-        guard currentRespiratoryRate == nil else { return }
+        guard vitals.currentRespiratoryRate == nil else { return }
         let unit = HKUnit.count().unitDivided(by: .minute())
-        // Respiratory rate measured during sleep — allow up to 48 hours
         fetchLatestSampleWithDate(.respiratoryRate, unit: unit, maxAge: 48 * 3600) { [weak self] value, date in
             Task { @MainActor in
-                guard self?.currentRespiratoryRate == nil else { return }
-                self?.currentRespiratoryRate = value
-                self?.respiratoryRateTimestamp = date
-                self?.respiratoryRateUnavailable = false
+                guard self?.vitals.currentRespiratoryRate == nil else { return }
+                self?.vitals.currentRespiratoryRate = value
+                self?.vitals.respiratoryRateTimestamp = date
+                self?.vitals.respiratoryRateUnavailable = false
                 self?.lastUpdate = Date()
             }
         }
@@ -901,7 +703,6 @@ final class LiveViewModel {
 
     // MARK: - Query Helpers
 
-    /// Fetches the most recent sample within the last 48 hours for daily values (RHR, HRV, BP)
     private func fetchLatestSample(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit, completion: @escaping (Double) -> Void) {
         let type = HKQuantityType(identifier)
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
@@ -921,6 +722,226 @@ final class LiveViewModel {
         }
 
         healthStore.execute(query)
+    }
+}
+
+// MARK: - Observable Sub-Object Definitions
+
+extension LiveViewModel {
+
+    /// Real-time vitals — HR, SpO2, respiratory rate, blood pressure, body temperature
+    @Observable
+    final class VitalsData {
+        // Heart rate
+        var currentHeartRate: Double?
+        var heartRateTimestamp: Date?
+        var recentHeartRates: [(date: Date, value: Double)] = []
+        var heartRateMin30: Double?
+        var heartRateMax30: Double?
+        var heartRateAvg30: Double?
+        var todayHeartRateMin: Double?
+        var todayHeartRateMax: Double?
+
+        // Blood oxygen
+        var currentBloodOxygen: Double?
+        var bloodOxygenTimestamp: Date?
+
+        // Respiratory rate
+        var currentRespiratoryRate: Double?
+        var respiratoryRateTimestamp: Date?
+        var respiratoryRateUnavailable = false
+
+        // Wrist temperature
+        var currentWristTemperature: Double?
+        var wristTemperatureTimestamp: Date?
+
+        // Blood pressure
+        var latestSystolic: Double?
+        var latestDiastolic: Double?
+        var bloodPressureTimestamp: Date?
+
+        // Body temperature
+        var latestBodyTemp: Double?
+        var bodyTempTimestamp: Date?
+
+        // MARK: - Freshness & Status (computed from vitals only)
+
+        private static let freshnessThreshold: TimeInterval = 30 * 60
+
+        var heartRateStatus: LiveViewModel.VitalStatus {
+            guard let hr = currentHeartRate else { return .unknown }
+            if hr > 120 { return .elevated }
+            if hr < 45 { return .low }
+            return .normal
+        }
+
+        var bloodOxygenStatus: LiveViewModel.VitalStatus {
+            guard let spo2 = currentBloodOxygen else { return .unknown }
+            if spo2 < 92 { return .critical }
+            if spo2 < 95 { return .low }
+            return .normal
+        }
+
+        var respiratoryRateStatus: LiveViewModel.VitalStatus {
+            guard let rr = currentRespiratoryRate else { return .unknown }
+            if rr > 24 { return .elevated }
+            if rr < 10 { return .low }
+            return .normal
+        }
+
+        var bloodPressureStatus: LiveViewModel.VitalStatus {
+            guard let sys = latestSystolic else { return .unknown }
+            if sys >= 140 { return .critical }
+            if sys >= 130 { return .elevated }
+            if sys < 90 { return .low }
+            return .normal
+        }
+
+        var isHeartRateFresh: Bool {
+            guard let ts = heartRateTimestamp else { return false }
+            return Date().timeIntervalSince(ts) < Self.freshnessThreshold
+        }
+
+        var isBloodOxygenFresh: Bool {
+            guard let ts = bloodOxygenTimestamp else { return false }
+            return Date().timeIntervalSince(ts) < Self.freshnessThreshold
+        }
+
+        var isRespiratoryRateFresh: Bool {
+            guard let ts = respiratoryRateTimestamp else { return false }
+            return Date().timeIntervalSince(ts) < Self.freshnessThreshold
+        }
+
+        var hasAnyData: Bool {
+            currentHeartRate != nil || currentBloodOxygen != nil || currentRespiratoryRate != nil
+        }
+
+        var hasFreshData: Bool {
+            isHeartRateFresh || isBloodOxygenFresh || isRespiratoryRateFresh
+        }
+
+        var hasRecentData: Bool {
+            let twoHours: TimeInterval = 2 * 3600
+            let now = Date()
+            if let ts = heartRateTimestamp, now.timeIntervalSince(ts) < twoHours { return true }
+            if let ts = bloodOxygenTimestamp, now.timeIntervalSince(ts) < twoHours { return true }
+            if let ts = respiratoryRateTimestamp, now.timeIntervalSince(ts) < twoHours { return true }
+            return false
+        }
+
+        var isStale: Bool { hasAnyData && !hasRecentData }
+        var isAging: Bool { hasAnyData && !hasFreshData && hasRecentData }
+
+        var mostRecentTimestamp: Date? {
+            [heartRateTimestamp, bloodOxygenTimestamp, respiratoryRateTimestamp]
+                .compactMap { $0 }
+                .max()
+        }
+    }
+
+    /// Last night's sleep data
+    @Observable
+    final class SleepData {
+        var lastNightSleepDuration: TimeInterval = 0
+        var lastNightDeepSleep: TimeInterval = 0
+        var lastNightREMSleep: TimeInterval = 0
+        var lastNightCoreSleep: TimeInterval = 0
+        var lastNightAwakeTime: TimeInterval = 0
+
+        var hasSleepData: Bool { lastNightSleepDuration > 0 }
+
+        var hasSleepStageBreakdown: Bool {
+            lastNightDeepSleep > 0 || lastNightREMSleep > 0 || lastNightCoreSleep > 0
+        }
+
+        var sleepQualityLabel: String {
+            let hours = lastNightSleepDuration / 3600
+            if hours >= 7.5 { return "Great" }
+            if hours >= 6.5 { return "Good" }
+            if hours >= 5.5 { return "Fair" }
+            return "Poor"
+        }
+    }
+
+    /// Today's cumulative activity and goals
+    @Observable
+    final class ActivityData {
+        var todaySteps: Double = 0
+        var todayActiveCalories: Double = 0
+        var todayExerciseMinutes: Double = 0
+        var todayStandHours: Double = 0
+        var todayDistance: Double = 0
+        var todayFlightsClimbed: Double = 0
+        var todayMindfulMinutes: Double = 0
+
+        var moveGoal: Double = 500
+        var exerciseGoal: Double = 30
+        var standGoal: Double = 12
+
+        var moveProgress: Double { min(todayActiveCalories / moveGoal, 1.0) }
+        var exerciseProgress: Double { min(todayExerciseMinutes / exerciseGoal, 1.0) }
+        var standProgress: Double { min(todayStandHours / standGoal, 1.0) }
+
+        var hasAnyData: Bool {
+            todaySteps > 0 || todayActiveCalories > 0 || todayExerciseMinutes > 0
+        }
+    }
+
+    /// Recovery metrics — RHR, HRV, readiness score, stress
+    @Observable
+    final class RecoveryData {
+        var latestRestingHeartRate: Double?
+        var latestRestingHeartRateTimestamp: Date?
+        var latestHRV: Double?
+        var latestHRVTimestamp: Date?
+        var latestHeartRateRecovery: Double?
+        var readinessScore: Int?
+
+        var isReadinessDataFresh: Bool {
+            let twentyFourHours: TimeInterval = 24 * 3600
+            let now = Date()
+            let rhrFresh = latestRestingHeartRateTimestamp.map { now.timeIntervalSince($0) < twentyFourHours } ?? false
+            let hrvFresh = latestHRVTimestamp.map { now.timeIntervalSince($0) < twentyFourHours } ?? false
+            return rhrFresh && hrvFresh
+        }
+
+        var stressLevel: Int? {
+            guard let hrv = latestHRV, let rhr = latestRestingHeartRate else { return nil }
+            let hrvStress = min(max((60 - hrv) / 40.0 * 50, 0), 50)
+            let rhrStress = min(max((rhr - 50) / 30.0 * 50, 0), 50)
+            return Int(hrvStress + rhrStress)
+        }
+
+        var stressLabel: String {
+            guard let level = stressLevel else { return "No Data" }
+            switch level {
+            case 0..<20: return "Relaxed"
+            case 20..<40: return "Low"
+            case 40..<60: return "Moderate"
+            case 60..<80: return "High"
+            default: return "Very High"
+            }
+        }
+
+        var stressColor: String {
+            guard let level = stressLevel else { return "gray" }
+            switch level {
+            case 0..<20: return "green"
+            case 20..<40: return "green"
+            case 40..<60: return "yellow"
+            case 60..<80: return "orange"
+            default: return "red"
+            }
+        }
+    }
+
+    /// Most recent workout info
+    @Observable
+    final class WorkoutData {
+        var lastWorkoutType: String?
+        var lastWorkoutDuration: Double?
+        var lastWorkoutCalories: Double?
+        var lastWorkoutTimestamp: Date?
     }
 }
 

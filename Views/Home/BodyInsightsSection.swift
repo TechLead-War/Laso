@@ -17,12 +17,12 @@ struct BodyInsightsSection: View {
 
     private var smartAction: DashboardViewModel.SmartAction? {
         // Only show if there's real, fresh data driving it (not generic defaults or stale readings)
-        guard liveVM.readinessScore != nil || liveVM.stressLevel != nil ||
-              liveVM.hasSleepData || liveVM.todayExerciseMinutes > 0 else {
+        guard liveVM.recovery.readinessScore != nil || liveVM.recovery.stressLevel != nil ||
+              liveVM.sleep.hasSleepData || liveVM.activity.todayExerciseMinutes > 0 else {
             return nil
         }
         // Don't show readiness/stress-based actions when underlying data is stale
-        guard liveVM.isReadinessDataFresh || liveVM.hasSleepData || liveVM.todayExerciseMinutes > 0 else {
+        guard liveVM.recovery.isReadinessDataFresh || liveVM.sleep.hasSleepData || liveVM.activity.todayExerciseMinutes > 0 else {
             return nil
         }
         return viewModel.smartDailyAction(liveVM: liveVM)
@@ -35,8 +35,8 @@ struct BodyInsightsSection: View {
     /// Section shows if there's a headline insight or meaningful data to surface
     private var hasAnyContent: Bool {
         viewModel.headlineInsight != nil ||
-        liveVM.hasSleepData ||
-        liveVM.readinessScore != nil
+        liveVM.sleep.hasSleepData ||
+        liveVM.recovery.readinessScore != nil
     }
 
     var body: some View {

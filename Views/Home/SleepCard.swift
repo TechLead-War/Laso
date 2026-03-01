@@ -6,10 +6,10 @@ struct SleepCard: View {
     let sleepBaseline: Double? // baseline hours from AnalysisEngine
     let sleepInsight: Insight? // top sleep performance insight, if any
 
-    private var hours: Double { liveVM.lastNightSleepDuration / 3600 }
+    private var hours: Double { liveVM.sleep.lastNightSleepDuration / 3600 }
 
     var body: some View {
-        if liveVM.hasSleepData {
+        if liveVM.sleep.hasSleepData {
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
                     // Left accent bar — indigo
@@ -45,7 +45,7 @@ struct SleepCard: View {
 
                             Spacer()
 
-                            Text(liveVM.sleepQualityLabel)
+                            Text(liveVM.sleep.sleepQualityLabel)
                                 .font(.caption.weight(.bold))
                                 .foregroundStyle(qualityColor)
                                 .padding(.horizontal, 8)
@@ -54,7 +54,7 @@ struct SleepCard: View {
                         }
 
                         // Stage breakdown bar
-                        if liveVM.hasSleepStageBreakdown {
+                        if liveVM.sleep.hasSleepStageBreakdown {
                             stageBar
                         }
 
@@ -88,13 +88,13 @@ struct SleepCard: View {
     private var stageBar: some View {
         VStack(alignment: .leading, spacing: 6) {
             GeometryReader { geo in
-                let total = liveVM.lastNightDeepSleep + liveVM.lastNightREMSleep + liveVM.lastNightCoreSleep + liveVM.lastNightAwakeTime
+                let total = liveVM.sleep.lastNightDeepSleep + liveVM.sleep.lastNightREMSleep + liveVM.sleep.lastNightCoreSleep + liveVM.sleep.lastNightAwakeTime
                 if total > 0 {
                     HStack(spacing: 1.5) {
-                        stageSegment(duration: liveVM.lastNightDeepSleep, total: total, color: .purple, width: geo.size.width)
-                        stageSegment(duration: liveVM.lastNightREMSleep, total: total, color: .blue, width: geo.size.width)
-                        stageSegment(duration: liveVM.lastNightCoreSleep, total: total, color: .cyan, width: geo.size.width)
-                        stageSegment(duration: liveVM.lastNightAwakeTime, total: total, color: Color(.systemGray4), width: geo.size.width)
+                        stageSegment(duration: liveVM.sleep.lastNightDeepSleep, total: total, color: .purple, width: geo.size.width)
+                        stageSegment(duration: liveVM.sleep.lastNightREMSleep, total: total, color: .blue, width: geo.size.width)
+                        stageSegment(duration: liveVM.sleep.lastNightCoreSleep, total: total, color: .cyan, width: geo.size.width)
+                        stageSegment(duration: liveVM.sleep.lastNightAwakeTime, total: total, color: Color(.systemGray4), width: geo.size.width)
                     }
                 }
             }
@@ -103,10 +103,10 @@ struct SleepCard: View {
 
             // Legend
             HStack(spacing: 12) {
-                stageLegend(label: "Deep", duration: liveVM.lastNightDeepSleep, color: .purple)
-                stageLegend(label: "REM", duration: liveVM.lastNightREMSleep, color: .blue)
-                stageLegend(label: "Core", duration: liveVM.lastNightCoreSleep, color: .cyan)
-                stageLegend(label: "Awake", duration: liveVM.lastNightAwakeTime, color: Color(.systemGray4))
+                stageLegend(label: "Deep", duration: liveVM.sleep.lastNightDeepSleep, color: .purple)
+                stageLegend(label: "REM", duration: liveVM.sleep.lastNightREMSleep, color: .blue)
+                stageLegend(label: "Core", duration: liveVM.sleep.lastNightCoreSleep, color: .cyan)
+                stageLegend(label: "Awake", duration: liveVM.sleep.lastNightAwakeTime, color: Color(.systemGray4))
             }
         }
     }
@@ -144,7 +144,7 @@ struct SleepCard: View {
     }
 
     private var qualityColor: Color {
-        switch liveVM.sleepQualityLabel {
+        switch liveVM.sleep.sleepQualityLabel {
         case "Great": return .green
         case "Good": return .blue
         case "Fair": return .orange

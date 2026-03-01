@@ -66,6 +66,9 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
     case stairDescentSpeed
     case sixMinuteWalkTestDistance
 
+    // MARK: - Metabolic
+    case bloodGlucose
+
     // MARK: - Workouts
     case workoutCount
     case workoutDuration
@@ -119,6 +122,7 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .stairAscentSpeed: return "Stair Ascent Speed"
         case .stairDescentSpeed: return "Stair Descent Speed"
         case .sixMinuteWalkTestDistance: return "6-Min Walk Distance"
+        case .bloodGlucose: return "Blood Glucose"
         case .workoutCount: return "Workout Count"
         case .workoutDuration: return "Workout Duration"
         }
@@ -162,6 +166,7 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .walkingDoubleSupportPercentage: return "%"
         case .stairAscentSpeed, .stairDescentSpeed: return "m/s"
         case .sixMinuteWalkTestDistance: return "m"
+        case .bloodGlucose: return "mg/dL"
         case .workoutCount: return ""
         case .workoutDuration: return "min"
         }
@@ -181,7 +186,8 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
             return .activity
         case .weight, .bmi, .bodyFatPercentage, .bloodPressureSystolic,
              .bloodPressureDiastolic, .bodyTemperature,
-             .appleSleepingWristTemperature, .leanBodyMass, .waistCircumference:
+             .appleSleepingWristTemperature, .leanBodyMass, .waistCircumference,
+             .bloodGlucose:
             return .body
         case .vo2Max, .bloodOxygen, .respiratoryRate,
              .peakExpiratoryFlowRate, .forcedVitalCapacity:
@@ -215,7 +221,8 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
              .bodyTemperature, .basalCalories, .sleepCore,
              .atrialFibrillationBurden, .walkingDoubleSupportPercentage,
              .electrodermalActivity, .peripheralPerfusionIndex,
-             .appleSleepingWristTemperature, .waistCircumference:
+             .appleSleepingWristTemperature, .waistCircumference,
+             .bloodGlucose:
             return false
         case .weight:
             return false // context-dependent, default to false
@@ -228,7 +235,7 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .steps, .activeCalories, .basalCalories, .flightsClimbed:
             return String(format: "%.0f", value)
         case .heartRate, .restingHeartRate, .walkingHeartRateAverage, .heartRateRecovery,
-             .bloodPressureSystolic, .bloodPressureDiastolic:
+             .bloodPressureSystolic, .bloodPressureDiastolic, .bloodGlucose:
             return String(format: "%.0f", value)
         default:
             return String(format: "%.1f", value)
@@ -273,6 +280,7 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .stairAscentSpeed: return "figure.stairs"
         case .stairDescentSpeed: return "figure.stairs"
         case .sixMinuteWalkTestDistance: return "figure.walk.diamond.fill"
+        case .bloodGlucose: return "drop.fill"
         case .workoutCount, .workoutDuration: return "dumbbell.fill"
         }
     }

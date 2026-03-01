@@ -13,6 +13,15 @@ final class HealthKitManager {
     var lastRefresh: Date?
     var error: String?
 
+    /// Result of a loadAndSync call — tells callers what changed
+    struct SyncResult {
+        let metricsWithNewData: Set<HealthMetric>
+        let totalNewSamples: Int
+        let isFirstSync: Bool
+
+        var hasNewData: Bool { !metricsWithNewData.isEmpty }
+    }
+
     /// Check if HealthKit is available on this device
     var isHealthKitAvailable: Bool {
         HKHealthStore.isHealthDataAvailable()
@@ -62,10 +71,12 @@ final class HealthKitManager {
     }
 
     /// Load stored data from SwiftData, then incrementally sync new data from HealthKit.
-    /// - First launch: fetches ALL available HealthKit history (up to 10 years)
+    /// - First launch: fetches HealthKit history (up to 5 years)
     /// - Subsequent launches: fetches only data since last sync (with 1-day overlap)
+    /// - Returns a `SyncResult` indicating which metrics had new data
     @MainActor
-    func loadAndSync(store: HealthDataStore) async {
+    @discardableResult
+    func loadAndSync(store: HealthDataStore) async -> SyncResult {
         isLoading = true
         let syncStartTime = Date()
 
@@ -90,8 +101,8 @@ final class HealthKitManager {
                         // Incremental: fetch from last sync minus 1 day for overlap safety
                         startDate = Calendar.current.date(byAdding: .day, value: -1, to: lastSync) ?? lastSync
                     } else {
-                        // First sync: fetch all available HealthKit history
-                        startDate = Calendar.current.date(byAdding: .year, value: -10, to: endDate) ?? endDate
+                        // First sync: fetch up to 5 years of HealthKit history
+                        startDate = Calendar.current.date(byAdding: .year, value: -5, to: endDate) ?? endDate
                     }
                     let series = await self.fetchMetric(metric, from: startDate, to: endDate)
                     return (metric, series)
@@ -139,6 +150,12 @@ final class HealthKitManager {
             AppAnalytics.shared.trackActivationMilestone(.firstDataLoad)
             AppAnalytics.shared.trackTimeToFirstValue()
         }
+
+        return SyncResult(
+            metricsWithNewData: metricsWithNewSamples,
+            totalNewSamples: totalNewSamples,
+            isFirstSync: isFirstSync
+        )
     }
 
     /// Fetch a single metric's time series

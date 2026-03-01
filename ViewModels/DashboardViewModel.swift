@@ -12,6 +12,10 @@ final class DashboardViewModel {
     var isLoading = false
     var errorMessage: String?
 
+    /// Tracks last full analysis to avoid redundant re-runs when no new data arrives
+    private var lastAnalysisDate: Date?
+    private static let analysisMinInterval: TimeInterval = 300  // 5 minutes
+
     // MARK: - Cached Properties (updated on refresh, not on every view render)
     private(set) var cachedScoreChangeFromLastWeek: Int?
     private(set) var cachedTrendsSummary: TrendsSummary?
@@ -356,7 +360,8 @@ final class DashboardViewModel {
         UserDefaults.standard.set(true, forKey: AppKeys.App.hasSeenDiscovery)
     }
 
-    /// Refresh data from HealthKit, sync to on-device store, and re-run analysis
+    /// Refresh data from HealthKit, sync to on-device store, and re-run analysis.
+    /// Skips the heavy analysis pipeline if no new data arrived and we analyzed recently.
     func refresh() async {
         isLoading = true
         defer { isLoading = false }
@@ -366,7 +371,14 @@ final class DashboardViewModel {
 
         // Load stored data + incrementally sync new data from HealthKit
         if isFirstLaunchSync { syncPhase = .importing }
-        await healthKitManager.loadAndSync(store: store)
+        let syncResult = await healthKitManager.loadAndSync(store: store)
+
+        // Skip full analysis if no new data AND we analyzed within the last 5 minutes
+        let recentlyAnalyzed = lastAnalysisDate.map { Date().timeIntervalSince($0) < Self.analysisMinInterval } ?? false
+        if !syncResult.hasNewData && recentlyAnalyzed && !syncResult.isFirstSync {
+            return
+        }
+
         if isFirstLaunchSync { syncPhase = .analyzing }
         analysisEngine.runFullAnalysis(timeSeries: healthKitManager.timeSeries)
 
@@ -407,6 +419,9 @@ final class DashboardViewModel {
 
         // Update cached computed properties so views don't recompute on every render
         updateCachedProperties()
+
+        // Mark analysis timestamp so subsequent no-change refreshes can skip
+        lastAnalysisDate = Date()
 
         // Track analysis output
         AppAnalytics.shared.trackAnalysisCompleted(
@@ -799,11 +814,11 @@ final class DashboardViewModel {
     /// Context-aware daily action based on recovery, stress, sleep, exercise, time of day, and user focus areas
     func smartDailyAction(liveVM: LiveViewModel) -> SmartAction {
         let hour = Calendar.current.component(.hour, from: Date())
-        let stress = liveVM.stressLevel
-        let readiness = liveVM.readinessScore
-        let sleepHours = liveVM.lastNightSleepDuration / 3600
-        let exerciseMin = liveVM.todayExerciseMinutes
-        let exerciseGoal = liveVM.exerciseGoal
+        let stress = liveVM.recovery.stressLevel
+        let readiness = liveVM.recovery.readinessScore
+        let sleepHours = liveVM.sleep.lastNightSleepDuration / 3600
+        let exerciseMin = liveVM.activity.todayExerciseMinutes
+        let exerciseGoal = liveVM.activity.exerciseGoal
         let focuses = persistence.loadHealthFocuses()
 
         // Priority 1: High stress
@@ -816,7 +831,7 @@ final class DashboardViewModel {
         }
 
         // Priority 2: Poor sleep
-        if liveVM.hasSleepData && sleepHours < 5.5 {
+        if liveVM.sleep.hasSleepData && sleepHours < 5.5 {
             return SmartAction(
                 icon: "moon.zzz.fill",
                 title: "Go easy today",
@@ -878,12 +893,12 @@ final class DashboardViewModel {
     private func focusAwareAction(liveVM: LiveViewModel, focuses: Set<HealthFocus>) -> SmartAction? {
         guard !focuses.isEmpty else { return nil }
 
-        let sleepHours = liveVM.lastNightSleepDuration / 3600
-        let exerciseMin = liveVM.todayExerciseMinutes
-        let exerciseGoal = liveVM.exerciseGoal
+        let sleepHours = liveVM.sleep.lastNightSleepDuration / 3600
+        let exerciseMin = liveVM.activity.todayExerciseMinutes
+        let exerciseGoal = liveVM.activity.exerciseGoal
 
-        if focuses.contains(.sleep) && liveVM.hasSleepData {
-            let deepSleepMin = liveVM.lastNightDeepSleep / 60
+        if focuses.contains(.sleep) && liveVM.sleep.hasSleepData {
+            let deepSleepMin = liveVM.sleep.lastNightDeepSleep / 60
             if deepSleepMin < 45 {
                 return SmartAction(
                     icon: "moon.zzz.fill",
@@ -910,7 +925,7 @@ final class DashboardViewModel {
         }
 
         if focuses.contains(.heartHealth) {
-            if let rhr = liveVM.latestRestingHeartRate, let baseline = analysisEngine.baselines[.restingHeartRate]?.mean, rhr > baseline * 1.05 {
+            if let rhr = liveVM.recovery.latestRestingHeartRate, let baseline = analysisEngine.baselines[.restingHeartRate]?.mean, rhr > baseline * 1.05 {
                 return SmartAction(
                     icon: "heart.fill",
                     title: "Your resting HR is trending up",
@@ -920,7 +935,7 @@ final class DashboardViewModel {
         }
 
         if focuses.contains(.recovery) {
-            if let r = liveVM.readinessScore, r < 60 {
+            if let r = liveVM.recovery.readinessScore, r < 60 {
                 return SmartAction(
                     icon: "figure.mind.and.body",
                     title: "Focus on recovery today",

@@ -14,9 +14,9 @@ struct LiveView: View {
             VStack(spacing: 20) {
                 headerSection
 
-                if !viewModel.hasAnyLiveData && !viewModel.hasAnyActivityData && viewModel.lastUpdate == nil {
+                if !viewModel.vitals.hasAnyData && !viewModel.activity.hasAnyData && viewModel.lastUpdate == nil {
                     waitingForDataView
-                } else if viewModel.isVitalDataStale {
+                } else if viewModel.vitals.isStale {
                     // Stale vitals — show wear-your-watch prompt with last known readings
                     staleVitalsPrompt
                     activityRingsSection
@@ -38,7 +38,7 @@ struct LiveView: View {
         .onAppear {
             viewModel.startStreaming()
             AppAnalytics.shared.trackFeatureOpen(.live, metadata: [
-                "has_heart_rate": viewModel.currentHeartRate != nil,
+                "has_heart_rate": viewModel.vitals.currentHeartRate != nil,
                 "is_streaming": viewModel.isStreaming
             ])
             AppAnalytics.shared.trackStreamingStarted()
@@ -51,7 +51,7 @@ struct LiveView: View {
             AppAnalytics.shared.trackFeatureClose(.live)
             AppAnalytics.shared.trackStreamingStopped()
         }
-        .onChange(of: viewModel.hasAnyLiveData) { _, hasData in
+        .onChange(of: viewModel.vitals.hasAnyData) { _, hasData in
             if hasData && !hasTrackedFirstData {
                 hasTrackedFirstData = true
                 AppAnalytics.shared.trackLiveFirstDataReceived()
@@ -60,7 +60,7 @@ struct LiveView: View {
         .onChange(of: viewModel.currentHeartRateZone) { _, newZone in
             previousZone = newZone
         }
-        .sensoryFeedback(.success, trigger: viewModel.hasAnyLiveData)
+        .sensoryFeedback(.success, trigger: viewModel.vitals.hasAnyData)
     }
 
     // MARK: - Stale Vitals Prompt
@@ -92,7 +92,7 @@ struct LiveView: View {
             .padding(.horizontal)
 
             // Last known readings — compact muted row
-            if viewModel.hasAnyLiveData {
+            if viewModel.vitals.hasAnyData {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 6) {
                         Image(systemName: "clock.arrow.circlepath")
@@ -104,31 +104,31 @@ struct LiveView: View {
                     }
 
                     HStack(spacing: 16) {
-                        if let hr = viewModel.currentHeartRate {
+                        if let hr = viewModel.vitals.currentHeartRate {
                             staleReadingPill(
                                 icon: "heart.fill",
                                 color: .red,
                                 value: "\(Int(hr))",
                                 unit: "bpm",
-                                timestamp: viewModel.heartRateTimestamp
+                                timestamp: viewModel.vitals.heartRateTimestamp
                             )
                         }
-                        if let spo2 = viewModel.currentBloodOxygen {
+                        if let spo2 = viewModel.vitals.currentBloodOxygen {
                             staleReadingPill(
                                 icon: "drop.fill",
                                 color: .blue,
                                 value: "\(Int(spo2))",
                                 unit: "%",
-                                timestamp: viewModel.bloodOxygenTimestamp
+                                timestamp: viewModel.vitals.bloodOxygenTimestamp
                             )
                         }
-                        if let rr = viewModel.currentRespiratoryRate {
+                        if let rr = viewModel.vitals.currentRespiratoryRate {
                             staleReadingPill(
                                 icon: "wind",
                                 color: .teal,
                                 value: "\(Int(rr))",
                                 unit: "br/m",
-                                timestamp: viewModel.respiratoryRateTimestamp
+                                timestamp: viewModel.vitals.respiratoryRateTimestamp
                             )
                         }
                     }
@@ -225,9 +225,9 @@ struct LiveView: View {
 
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(viewModel.hasFreshLiveData ? .green : (viewModel.isLiveDataAging ? .yellow : (viewModel.isVitalDataStale ? .orange : .gray)))
+                        .fill(viewModel.vitals.hasFreshData ? .green : (viewModel.vitals.isAging ? .yellow : (viewModel.vitals.isStale ? .orange : .gray)))
                         .frame(width: 8, height: 8)
-                        .shadow(color: viewModel.hasFreshLiveData ? .green.opacity(0.6) : .clear, radius: 4)
+                        .shadow(color: viewModel.vitals.hasFreshData ? .green.opacity(0.6) : .clear, radius: 4)
 
                     Text(liveStatusLabel)
                         .font(.caption)
@@ -240,18 +240,18 @@ struct LiveView: View {
             Image(systemName: "applewatch.radiowaves.left.and.right")
                 .font(.title2)
                 .foregroundStyle(.secondary)
-                .symbolEffect(.pulse, isActive: viewModel.hasFreshLiveData)
+                .symbolEffect(.pulse, isActive: viewModel.vitals.hasFreshData)
         }
         .padding(.horizontal)
         .padding(.top, 16)
     }
 
     private var liveStatusLabel: String {
-        if viewModel.hasFreshLiveData {
+        if viewModel.vitals.hasFreshData {
             return "Streaming"
-        } else if viewModel.isLiveDataAging {
+        } else if viewModel.vitals.isAging {
             return "Last reading aging"
-        } else if viewModel.isVitalDataStale {
+        } else if viewModel.vitals.isStale {
             return "Data is stale — wear your watch"
         } else if viewModel.isStreaming {
             return "Waiting for watch"
@@ -263,7 +263,7 @@ struct LiveView: View {
     // MARK: - Heart Rate Hero
 
     private var isHeartRateStale: Bool {
-        !viewModel.isHeartRateFresh && viewModel.heartRateTimestamp != nil
+        !viewModel.vitals.isHeartRateFresh && viewModel.vitals.heartRateTimestamp != nil
     }
 
     private var heartRateHeroCard: some View {
@@ -282,8 +282,8 @@ struct LiveView: View {
                         .foregroundStyle(.red.opacity(isHeartRateStale ? 0.4 : 1.0))
                         .scaleEffect(isHeartRateStale ? 1.0 : pulseScale)
                 }
-                .onChange(of: viewModel.currentHeartRate) {
-                    guard viewModel.isHeartRateFresh else { return }
+                .onChange(of: viewModel.vitals.currentHeartRate) {
+                    guard viewModel.vitals.isHeartRateFresh else { return }
                     withAnimation(.easeInOut(duration: 0.15)) {
                         pulseScale = 1.15
                     }
@@ -295,7 +295,7 @@ struct LiveView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     // BPM
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        if let hr = viewModel.currentHeartRate {
+                        if let hr = viewModel.vitals.currentHeartRate {
                             Text(String(format: "%.0f", hr))
                                 .font(.system(size: 52, weight: .bold, design: .rounded))
                                 .foregroundStyle(.primary.opacity(isHeartRateStale ? 0.4 : 1.0))
@@ -322,7 +322,7 @@ struct LiveView: View {
                                 .padding(.vertical, 3)
                                 .background(.gray, in: Capsule())
 
-                            if let ts = viewModel.heartRateTimestamp {
+                            if let ts = viewModel.vitals.heartRateTimestamp {
                                 HStack(spacing: 4) {
                                     Image(systemName: "clock")
                                         .font(.caption2)
@@ -344,7 +344,7 @@ struct LiveView: View {
                                 .padding(.vertical, 3)
                                 .background(viewModel.currentHeartRateZone.color, in: Capsule())
 
-                            if let ts = viewModel.heartRateTimestamp {
+                            if let ts = viewModel.vitals.heartRateTimestamp {
                                 Text(ts, style: .relative)
                                     .font(.caption2)
                                     .foregroundStyle(.tertiary)
@@ -362,19 +362,19 @@ struct LiveView: View {
                 .padding(.horizontal)
 
             // Session stats: Min / Avg / Max (30 min)
-            if viewModel.heartRateMin30 != nil {
+            if viewModel.vitals.heartRateMin30 != nil {
                 HStack(spacing: 0) {
-                    sessionStatCell(label: "Min", value: viewModel.heartRateMin30, unit: "bpm", color: .blue)
+                    sessionStatCell(label: "Min", value: viewModel.vitals.heartRateMin30, unit: "bpm", color: .blue)
                     Divider().frame(height: 32)
-                    sessionStatCell(label: "Avg", value: viewModel.heartRateAvg30, unit: "bpm", color: .primary)
+                    sessionStatCell(label: "Avg", value: viewModel.vitals.heartRateAvg30, unit: "bpm", color: .primary)
                     Divider().frame(height: 32)
-                    sessionStatCell(label: "Max", value: viewModel.heartRateMax30, unit: "bpm", color: .red)
+                    sessionStatCell(label: "Max", value: viewModel.vitals.heartRateMax30, unit: "bpm", color: .red)
                 }
                 .padding(.vertical, 10)
             }
 
             // Today's range
-            if let minHR = viewModel.todayHeartRateMin, let maxHR = viewModel.todayHeartRateMax {
+            if let minHR = viewModel.vitals.todayHeartRateMin, let maxHR = viewModel.vitals.todayHeartRateMax {
                 HStack(spacing: 4) {
                     Image(systemName: "calendar")
                         .font(.caption2)
@@ -386,7 +386,7 @@ struct LiveView: View {
             }
 
             // Mini chart — last 30 minutes
-            if viewModel.recentHeartRates.count > 1 {
+            if viewModel.vitals.recentHeartRates.count > 1 {
                 heartRateMiniChart
                     .padding(.horizontal)
                     .padding(.bottom, 12)
@@ -400,16 +400,16 @@ struct LiveView: View {
         .padding(.horizontal)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(heartRateAccessibilityLabel)
-        .sensoryFeedback(.warning, trigger: viewModel.heartRateStatus == .elevated)
+        .sensoryFeedback(.warning, trigger: viewModel.vitals.heartRateStatus == .elevated)
     }
 
     private var heartRateAccessibilityLabel: String {
-        let hr = viewModel.currentHeartRate.map { "\(Int($0)) beats per minute" } ?? "no data"
+        let hr = viewModel.vitals.currentHeartRate.map { "\(Int($0)) beats per minute" } ?? "no data"
         let zone = viewModel.currentHeartRateZone.rawValue
         let stats = [
-            viewModel.heartRateMin30.map { "minimum \(Int($0))" },
-            viewModel.heartRateAvg30.map { "average \(Int($0))" },
-            viewModel.heartRateMax30.map { "maximum \(Int($0))" }
+            viewModel.vitals.heartRateMin30.map { "minimum \(Int($0))" },
+            viewModel.vitals.heartRateAvg30.map { "average \(Int($0))" },
+            viewModel.vitals.heartRateMax30.map { "maximum \(Int($0))" }
         ].compactMap { $0 }.joined(separator: ", ")
         return "Heart rate \(hr), zone \(zone)\(stats.isEmpty ? "" : ", last 30 minutes \(stats)")"
     }
@@ -475,7 +475,7 @@ struct LiveView: View {
 
     private var heartRateMiniChart: some View {
         Chart {
-            ForEach(Array(viewModel.recentHeartRates.enumerated()), id: \.offset) { _, entry in
+            ForEach(Array(viewModel.vitals.recentHeartRates.enumerated()), id: \.offset) { _, entry in
                 LineMark(
                     x: .value("Time", entry.date),
                     y: .value("BPM", entry.value)
@@ -531,23 +531,23 @@ struct LiveView: View {
                 icon: "drop.fill",
                 iconColor: .blue,
                 label: "SpO2",
-                value: viewModel.currentBloodOxygen.map { String(format: "%.0f", $0) },
+                value: viewModel.vitals.currentBloodOxygen.map { String(format: "%.0f", $0) },
                 unit: "%",
-                timestamp: viewModel.bloodOxygenTimestamp,
-                status: viewModel.bloodOxygenStatus,
-                isFresh: viewModel.isBloodOxygenFresh
+                timestamp: viewModel.vitals.bloodOxygenTimestamp,
+                status: viewModel.vitals.bloodOxygenStatus,
+                isFresh: viewModel.vitals.isBloodOxygenFresh
             )
 
             vitalCard(
                 icon: "wind",
                 iconColor: .teal,
                 label: "Resp Rate",
-                value: viewModel.currentRespiratoryRate.map { String(format: "%.0f", $0) },
+                value: viewModel.vitals.currentRespiratoryRate.map { String(format: "%.0f", $0) },
                 unit: "br/min",
-                timestamp: viewModel.respiratoryRateTimestamp,
-                status: viewModel.respiratoryRateStatus,
-                isFresh: viewModel.isRespiratoryRateFresh,
-                isUnavailable: viewModel.respiratoryRateUnavailable,
+                timestamp: viewModel.vitals.respiratoryRateTimestamp,
+                status: viewModel.vitals.respiratoryRateStatus,
+                isFresh: viewModel.vitals.isRespiratoryRateFresh,
+                isUnavailable: viewModel.vitals.respiratoryRateUnavailable,
                 unavailableHint: "Measured during sleep"
             )
         }
@@ -653,7 +653,7 @@ struct LiveView: View {
     // MARK: - Activity Rings
 
     private var isActivityAllZeros: Bool {
-        viewModel.todayActiveCalories == 0 && viewModel.todayExerciseMinutes == 0 && viewModel.todayStandHours == 0
+        viewModel.activity.todayActiveCalories == 0 && viewModel.activity.todayExerciseMinutes == 0 && viewModel.activity.todayStandHours == 0
     }
 
     private var activityRingsSection: some View {
@@ -687,11 +687,11 @@ struct LiveView: View {
                 // Triple ring
                 ZStack {
                     // Stand (outer) — cyan
-                    ringArc(progress: viewModel.standProgress, color: .cyan, size: 90, lineWidth: 8)
+                    ringArc(progress: viewModel.activity.standProgress, color: .cyan, size: 90, lineWidth: 8)
                     // Exercise (middle) — green
-                    ringArc(progress: viewModel.exerciseProgress, color: .green, size: 70, lineWidth: 8)
+                    ringArc(progress: viewModel.activity.exerciseProgress, color: .green, size: 70, lineWidth: 8)
                     // Move (inner) — pink
-                    ringArc(progress: viewModel.moveProgress, color: .pink, size: 50, lineWidth: 8)
+                    ringArc(progress: viewModel.activity.moveProgress, color: .pink, size: 50, lineWidth: 8)
                 }
                 .frame(width: 100, height: 100)
 
@@ -700,20 +700,20 @@ struct LiveView: View {
                     ringLabel(
                         color: .pink,
                         label: "Move",
-                        value: "\(Int(viewModel.todayActiveCalories))/\(Int(viewModel.moveGoal)) kcal",
-                        progress: viewModel.moveProgress
+                        value: "\(Int(viewModel.activity.todayActiveCalories))/\(Int(viewModel.activity.moveGoal)) kcal",
+                        progress: viewModel.activity.moveProgress
                     )
                     ringLabel(
                         color: .green,
                         label: "Exercise",
-                        value: "\(Int(viewModel.todayExerciseMinutes))/\(Int(viewModel.exerciseGoal)) min",
-                        progress: viewModel.exerciseProgress
+                        value: "\(Int(viewModel.activity.todayExerciseMinutes))/\(Int(viewModel.activity.exerciseGoal)) min",
+                        progress: viewModel.activity.exerciseProgress
                     )
                     ringLabel(
                         color: .cyan,
                         label: "Stand",
-                        value: "\(Int(viewModel.todayStandHours))/\(Int(viewModel.standGoal)) hrs",
-                        progress: viewModel.standProgress
+                        value: "\(Int(viewModel.activity.todayStandHours))/\(Int(viewModel.activity.standGoal)) hrs",
+                        progress: viewModel.activity.standProgress
                     )
                 }
 
@@ -723,13 +723,13 @@ struct LiveView: View {
             .background(.background, in: RoundedRectangle(cornerRadius: 16))
             .padding(.horizontal)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Activity rings. Move: \(Int(viewModel.todayActiveCalories)) of \(Int(viewModel.moveGoal)) calories, \(Int(viewModel.moveProgress * 100)) percent. Exercise: \(Int(viewModel.todayExerciseMinutes)) of \(Int(viewModel.exerciseGoal)) minutes, \(Int(viewModel.exerciseProgress * 100)) percent. Stand: \(Int(viewModel.todayStandHours)) of \(Int(viewModel.standGoal)) hours, \(Int(viewModel.standProgress * 100)) percent.")
+            .accessibilityLabel("Activity rings. Move: \(Int(viewModel.activity.todayActiveCalories)) of \(Int(viewModel.activity.moveGoal)) calories, \(Int(viewModel.activity.moveProgress * 100)) percent. Exercise: \(Int(viewModel.activity.todayExerciseMinutes)) of \(Int(viewModel.activity.exerciseGoal)) minutes, \(Int(viewModel.activity.exerciseProgress * 100)) percent. Stand: \(Int(viewModel.activity.todayStandHours)) of \(Int(viewModel.activity.standGoal)) hours, \(Int(viewModel.activity.standProgress * 100)) percent.")
 
             // Quick stats row
             HStack(spacing: 12) {
-                quickStatPill(icon: "figure.walk", value: formatLargeNumber(viewModel.todaySteps), label: "Steps", color: .green)
-                quickStatPill(icon: "location.fill", value: String(format: "%.1f km", viewModel.todayDistance), label: "Distance", color: .blue)
-                quickStatPill(icon: "figure.stairs", value: "\(Int(viewModel.todayFlightsClimbed))", label: "Flights", color: .purple)
+                quickStatPill(icon: "figure.walk", value: formatLargeNumber(viewModel.activity.todaySteps), label: "Steps", color: .green)
+                quickStatPill(icon: "location.fill", value: String(format: "%.1f km", viewModel.activity.todayDistance), label: "Distance", color: .blue)
+                quickStatPill(icon: "figure.stairs", value: "\(Int(viewModel.activity.todayFlightsClimbed))", label: "Flights", color: .purple)
             }
             .padding(.horizontal)
 
@@ -799,12 +799,12 @@ struct LiveView: View {
 
     @ViewBuilder
     private var bloodPressureAndTempRow: some View {
-        let hasBP = viewModel.latestSystolic != nil
-        let hasTemp = viewModel.latestBodyTemp != nil
+        let hasBP = viewModel.vitals.latestSystolic != nil
+        let hasTemp = viewModel.vitals.latestBodyTemp != nil
 
         if hasBP || hasTemp {
             HStack(spacing: 12) {
-                if let sys = viewModel.latestSystolic, let dia = viewModel.latestDiastolic {
+                if let sys = viewModel.vitals.latestSystolic, let dia = viewModel.vitals.latestDiastolic {
                     // Blood Pressure card
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
@@ -826,11 +826,11 @@ struct LiveView: View {
 
                         HStack(spacing: 4) {
                             Circle()
-                                .fill(viewModel.bloodPressureStatus.color)
+                                .fill(viewModel.vitals.bloodPressureStatus.color)
                                 .frame(width: 6, height: 6)
-                            Text(viewModel.bloodPressureStatus.label)
+                            Text(viewModel.vitals.bloodPressureStatus.label)
                                 .font(.caption2.weight(.medium))
-                                .foregroundStyle(viewModel.bloodPressureStatus.color)
+                                .foregroundStyle(viewModel.vitals.bloodPressureStatus.color)
                         }
                     }
                     .padding(12)
@@ -838,7 +838,7 @@ struct LiveView: View {
                     .background(.background, in: RoundedRectangle(cornerRadius: 14))
                 }
 
-                if let temp = viewModel.latestBodyTemp {
+                if let temp = viewModel.vitals.latestBodyTemp {
                     // Temperature card
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
@@ -858,7 +858,7 @@ struct LiveView: View {
                                 .foregroundStyle(.secondary)
                         }
 
-                        if let ts = viewModel.bodyTempTimestamp {
+                        if let ts = viewModel.vitals.bodyTempTimestamp {
                             Text(ts, style: .relative)
                                 .font(.caption2)
                                 .foregroundStyle(.tertiary)
@@ -877,7 +877,7 @@ struct LiveView: View {
 
     @ViewBuilder
     private var lastWorkoutCard: some View {
-        if let type = viewModel.lastWorkoutType {
+        if let type = viewModel.workout.lastWorkoutType {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Last Workout")
                     .font(.headline)
@@ -896,7 +896,7 @@ struct LiveView: View {
                             .font(.subheadline.weight(.semibold))
 
                         HStack(spacing: 12) {
-                            if let dur = viewModel.lastWorkoutDuration {
+                            if let dur = viewModel.workout.lastWorkoutDuration {
                                 HStack(spacing: 3) {
                                     Image(systemName: "clock")
                                         .font(.caption2)
@@ -906,7 +906,7 @@ struct LiveView: View {
                                 .foregroundStyle(.secondary)
                             }
 
-                            if let cal = viewModel.lastWorkoutCalories {
+                            if let cal = viewModel.workout.lastWorkoutCalories {
                                 HStack(spacing: 3) {
                                     Image(systemName: "flame.fill")
                                         .font(.caption2)
@@ -920,7 +920,7 @@ struct LiveView: View {
 
                     Spacer()
 
-                    if let ts = viewModel.lastWorkoutTimestamp {
+                    if let ts = viewModel.workout.lastWorkoutTimestamp {
                         Text(ts, style: .relative)
                             .font(.caption2)
                             .foregroundStyle(.tertiary)

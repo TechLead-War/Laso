@@ -61,11 +61,12 @@ struct HomeView: View {
         }
     }
 
-    /// Periodically refresh home data every 60s so the Recovery card stays fresh
+    /// Periodically refresh home data — uses tiered polling to minimize HealthKit queries.
+    /// Fast-changing data (steps, calories) every 60s; slow-changing (sleep, workout) every 10min.
     private func startHomeRefresh() {
         homeRefreshTimer?.invalidate()
         homeRefreshTimer = Timer.scheduledTimer(withTimeInterval: TimeInterval(RemoteConfigManager.shared.homeRefreshIntervalSeconds), repeats: true) { _ in
-            liveViewModel.fetchHomeData()
+            liveViewModel.fetchHomeDataTiered()
             refreshTick += 1
         }
     }
@@ -496,8 +497,8 @@ struct HomeView: View {
 
     private var todaySection: some View {
         VStack(spacing: 12) {
-            if let score = liveViewModel.readinessScore {
-                if liveViewModel.isReadinessDataFresh {
+            if let score = liveViewModel.recovery.readinessScore {
+                if liveViewModel.recovery.isReadinessDataFresh {
                     recoveryCard(score: score)
                 } else {
                     staleRecoveryCard
@@ -541,7 +542,7 @@ struct HomeView: View {
     /// After pull-to-refresh, this ensures the timestamp updates even if no new RHR data arrived.
     private var mostRecentTimestamp: Date? {
         let candidates = [
-            liveViewModel.latestRestingHeartRateTimestamp,
+            liveViewModel.recovery.latestRestingHeartRateTimestamp,
             viewModel.lastRefresh,
         ].compactMap { $0 }
         return candidates.max()
@@ -584,10 +585,10 @@ struct HomeView: View {
 
                 HStack(spacing: 4) {
                     Circle()
-                        .fill(liveViewModel.hasFreshLiveData ? .green : .orange)
+                        .fill(liveViewModel.vitals.hasFreshData ? .green : .orange)
                         .frame(width: 6, height: 6)
-                        .scaleEffect(liveViewModel.hasFreshLiveData && livePulse ? 1.0 : 0.5)
-                        .opacity(liveViewModel.hasFreshLiveData && livePulse ? 1.0 : 0.4)
+                        .scaleEffect(liveViewModel.vitals.hasFreshData && livePulse ? 1.0 : 0.5)
+                        .opacity(liveViewModel.vitals.hasFreshData && livePulse ? 1.0 : 0.4)
                         .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: livePulse)
 
                     if let displayTs = mostRecentTimestamp {
@@ -659,7 +660,7 @@ struct HomeView: View {
     private var firstLaunchPhase: (icon: String, text: String, color: Color) {
         switch viewModel.syncPhase {
         case .idle, .importing:
-            return ("antenna.radiowaves.left.and.right", "Importing your health history", .blue)
+            return ("antenna.radiowaves.left.and.right", "Syncing your last 5 years of health data", .blue)
         case .analyzing:
             let points = viewModel.dataDepth.totalDataPoints
             let label = points > 0 ? "Analyzing \(points) data points" : "Analyzing your data"
