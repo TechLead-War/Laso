@@ -153,10 +153,17 @@ final class HealthDataStore {
 
     /// Load all stored time series in a single efficient query
     func loadAllTimeSeries() -> [HealthMetric: MetricTimeSeries] {
+        guard modelContext != nil else {
+            print("[HealthDataStore] loadAllTimeSeries: modelContext is nil — SwiftData unavailable")
+            return [:]
+        }
         var descriptor = FetchDescriptor<StoredDailySample>()
         descriptor.sortBy = [SortDescriptor(\.date)]
 
-        guard let allSamples = try? modelContext?.fetch(descriptor) else { return [:] }
+        guard let allSamples = try? modelContext?.fetch(descriptor) else {
+            print("[HealthDataStore] loadAllTimeSeries: fetch failed")
+            return [:]
+        }
 
         // Group by metric in one pass
         var grouped: [String: [MetricSample]] = [:]

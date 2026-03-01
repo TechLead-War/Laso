@@ -77,7 +77,6 @@ final class HealthKitManager {
     @MainActor
     @discardableResult
     func loadAndSync(store: HealthDataStore) async -> SyncResult {
-        isLoading = true
         let syncStartTime = Date()
 
         // Phase 1: Instantly load stored data so the UI has something to show
@@ -130,7 +129,17 @@ final class HealthKitManager {
         }
 
         // Phase 5: Reload complete stored data (includes both old + new)
-        timeSeries = store.loadAllTimeSeries()
+        let reloaded = store.loadAllTimeSeries()
+        if reloaded.isEmpty && !newData.isEmpty {
+            // SwiftData failed silently — use the fetched HealthKit data directly
+            var directTimeSeries: [HealthMetric: MetricTimeSeries] = [:]
+            for (metric, series) in newData {
+                directTimeSeries[metric] = series
+            }
+            timeSeries = directTimeSeries
+        } else {
+            timeSeries = reloaded
+        }
 
         lastRefresh = Date()
         isLoading = false

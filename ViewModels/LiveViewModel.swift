@@ -205,8 +205,8 @@ final class LiveViewModel {
             self.vitals.respiratoryRateUnavailable = true
         }
 
-        // Refresh cumulative stats every 30 seconds
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+        // Refresh cumulative stats every 60 seconds
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
                 self.fetchTodayCumulativeStats()

@@ -84,6 +84,13 @@ struct HomeView: View {
         !viewModel.healthKitManager.timeSeries.isEmpty
     }
 
+    /// Only show the "Connect Your Health Data" empty state after the initial load
+    /// has completed AND there is genuinely no data. This prevents the empty state
+    /// from flashing during startup before HealthKit data has been loaded.
+    private var shouldShowEmptyState: Bool {
+        viewModel.hasCompletedInitialLoad && !hasData
+    }
+
     private var homeContent: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -91,7 +98,9 @@ struct HomeView: View {
                 CoachGreetingView(showSettings: $showSettings)
                     .padding(.top, 12)
 
-                if hasData {
+                if shouldShowEmptyState {
+                    connectHealthView
+                } else if hasData {
                     // 2. Recovery
                     todaySection
 
@@ -133,8 +142,6 @@ struct HomeView: View {
                             .padding(.bottom, 8)
                             .accessibilityLabel("Last updated \(lastRefresh, style: .relative) ago")
                     }
-                } else {
-                    connectHealthView
                 }
             }
         }
