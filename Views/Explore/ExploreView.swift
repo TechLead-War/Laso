@@ -404,9 +404,13 @@ struct ExploreView: View {
 
     // MARK: - Empty State
 
+    private var hasAnyHealthData: Bool {
+        !viewModel.healthKitManager.timeSeries.isEmpty
+    }
+
     private var emptyState: some View {
         HStack(spacing: 16) {
-            Image(systemName: "heart.text.clipboard")
+            Image(systemName: hasAnyHealthData ? "chart.line.text.clipboard" : "heart.text.clipboard")
                 .font(.system(size: 40))
                 .foregroundStyle(.secondary)
 
@@ -415,11 +419,13 @@ struct ExploreView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
-                Text("Collecting data...")
+                Text(hasAnyHealthData ? "Almost there..." : "No data yet")
                     .font(.title3.weight(.medium))
                     .foregroundStyle(.primary)
 
-                Text("Wear your watch and sync health data to see your analysis")
+                Text(hasAnyHealthData
+                     ? "A few more days of tracking and your score will be ready"
+                     : "Open the Health app and allow access to see your analysis")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

@@ -96,7 +96,7 @@ struct InsightsDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 16) {
                 // Tab picker: Action Items vs All Insights
                 Picker("View", selection: $selectedTab) {
                     ForEach(InsightTab.allCases) { tab in
@@ -118,6 +118,7 @@ struct InsightsDetailView: View {
                     }
                     .padding(.horizontal)
                 }
+                .scrollBounceBehavior(.basedOnSize)
 
                 if !displayedItems.isEmpty {
                     ForEach(displayedItems) { insight in
@@ -131,6 +132,7 @@ struct InsightsDetailView: View {
                             onTapMetric(insight.metric)
                         } label: {
                             EnrichedInsightCard(insight: insight, showCategory: selectedTab == .allInsights)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .buttonStyle(.plain)
                         .padding(.horizontal)
@@ -157,7 +159,9 @@ struct InsightsDetailView: View {
                 }
             }
             .padding(.vertical)
+            .frame(maxWidth: .infinity)
         }
+        .scrollBounceBehavior(.basedOnSize)
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("Insights")
         .navigationBarTitleDisplayMode(.large)

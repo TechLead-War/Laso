@@ -72,8 +72,8 @@ final class StoredMLModelState {
 /// Enables years of historical data storage, incremental HealthKit sync, and score history.
 @Observable
 final class HealthDataStore {
-    let modelContainer: ModelContainer
-    private let modelContext: ModelContext
+    let modelContainer: ModelContainer?
+    private let modelContext: ModelContext?
 
     private static let dayFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -85,6 +85,12 @@ final class HealthDataStore {
     init(modelContainer: ModelContainer) {
         self.modelContainer = modelContainer
         self.modelContext = ModelContext(modelContainer)
+    }
+
+    /// Emergency init when SwiftData is unavailable — all reads return empty, writes are no-ops
+    init() {
+        self.modelContainer = nil
+        self.modelContext = nil
     }
 
     // MARK: - Save Samples
@@ -102,7 +108,7 @@ final class HealthDataStore {
             $0.metricRawValue == rawValue && $0.date >= minDate && $0.date <= maxDate
         }
         let descriptor = FetchDescriptor(predicate: predicate)
-        let existing = (try? modelContext.fetch(descriptor)) ?? []
+        let existing = (try? modelContext?.fetch(descriptor)) ?? []
 
         // Build lookup by date string for O(1) dedup
         let formatter = Self.dayFormatter
@@ -119,7 +125,7 @@ final class HealthDataStore {
                     existingSample.value = sample.value
                 }
             } else {
-                modelContext.insert(StoredDailySample(
+                modelContext?.insert(StoredDailySample(
                     metricRawValue: rawValue,
                     date: sample.date,
                     value: sample.value
@@ -127,7 +133,7 @@ final class HealthDataStore {
             }
         }
 
-        try? modelContext.save()
+        try? modelContext?.save()
         updateSyncMetadata(for: metric)
     }
 
@@ -140,7 +146,7 @@ final class HealthDataStore {
         var descriptor = FetchDescriptor(predicate: predicate)
         descriptor.sortBy = [SortDescriptor(\.date)]
 
-        guard let stored = try? modelContext.fetch(descriptor), !stored.isEmpty else { return nil }
+        guard let stored = try? modelContext?.fetch(descriptor), !stored.isEmpty else { return nil }
         let samples = stored.map { MetricSample(date: $0.date, value: $0.value) }
         return MetricTimeSeries(metric: metric, samples: samples)
     }
@@ -150,7 +156,7 @@ final class HealthDataStore {
         var descriptor = FetchDescriptor<StoredDailySample>()
         descriptor.sortBy = [SortDescriptor(\.date)]
 
-        guard let allSamples = try? modelContext.fetch(descriptor) else { return [:] }
+        guard let allSamples = try? modelContext?.fetch(descriptor) else { return [:] }
 
         // Group by metric in one pass
         var grouped: [String: [MetricSample]] = [:]
@@ -175,13 +181,13 @@ final class HealthDataStore {
         let rawValue = metric.rawValue
         let predicate = #Predicate<StoredSyncMetadata> { $0.metricRawValue == rawValue }
         let descriptor = FetchDescriptor(predicate: predicate)
-        return try? modelContext.fetch(descriptor).first?.lastSyncDate
+        return try? modelContext?.fetch(descriptor).first?.lastSyncDate
     }
 
     /// Get all sync dates at once (more efficient than per-metric queries)
     func allSyncDates() -> [HealthMetric: Date] {
         let descriptor = FetchDescriptor<StoredSyncMetadata>()
-        guard let metadata = try? modelContext.fetch(descriptor) else { return [:] }
+        guard let metadata = try? modelContext?.fetch(descriptor) else { return [:] }
 
         var result: [HealthMetric: Date] = [:]
         for meta in metadata {
@@ -209,24 +215,24 @@ final class HealthDataStore {
         let totalSamples: Int
         if recalculateSampleCount {
             let samplePredicate = #Predicate<StoredDailySample> { $0.metricRawValue == rawValue }
-            totalSamples = (try? modelContext.fetchCount(FetchDescriptor(predicate: samplePredicate))) ?? 0
+            totalSamples = (try? modelContext?.fetchCount(FetchDescriptor(predicate: samplePredicate))) ?? 0
         } else {
             totalSamples = 0
         }
 
-        if let existing = try? modelContext.fetch(descriptor).first {
+        if let existing = try? modelContext?.fetch(descriptor).first {
             existing.lastSyncDate = lastSyncDate
             if recalculateSampleCount {
                 existing.totalSamples = totalSamples
             }
         } else {
-            modelContext.insert(StoredSyncMetadata(
+            modelContext?.insert(StoredSyncMetadata(
                 metricRawValue: rawValue,
                 lastSyncDate: lastSyncDate,
                 totalSamples: totalSamples
             ))
         }
-        try? modelContext.save()
+        try? modelContext?.save()
     }
 
     // MARK: - Analysis Snapshots
@@ -255,36 +261,36 @@ final class HealthDataStore {
         )
         let baseJSON = (try? JSONEncoder().encode(baseDict)) ?? Data()
 
-        if let existing = try? modelContext.fetch(descriptor).first {
+        if let existing = try? modelContext?.fetch(descriptor).first {
             existing.overallScore = overallScore
             existing.categoryScoresJSON = catJSON
             existing.baselinesJSON = baseJSON
         } else {
-            modelContext.insert(StoredAnalysisSnapshot(
+            modelContext?.insert(StoredAnalysisSnapshot(
                 date: Date(),
                 overallScore: overallScore,
                 categoryScoresJSON: catJSON,
                 baselinesJSON: baseJSON
             ))
         }
-        try? modelContext.save()
+        try? modelContext?.save()
     }
 
     /// Load all analysis snapshots (used for CloudKit backup)
     func loadAllAnalysisSnapshots() -> [StoredAnalysisSnapshot] {
         let descriptor = FetchDescriptor<StoredAnalysisSnapshot>(sortBy: [SortDescriptor(\.date)])
-        return (try? modelContext.fetch(descriptor)) ?? []
+        return (try? modelContext?.fetch(descriptor)) ?? []
     }
 
     /// Insert a restored snapshot from CloudKit backup (skips dedup — only called on fresh install)
     func insertRestoredSnapshot(date: Date, overallScore: Int, categoryScoresJSON: Data, baselinesJSON: Data) {
-        modelContext.insert(StoredAnalysisSnapshot(
+        modelContext?.insert(StoredAnalysisSnapshot(
             date: date,
             overallScore: overallScore,
             categoryScoresJSON: categoryScoresJSON,
             baselinesJSON: baselinesJSON
         ))
-        try? modelContext.save()
+        try? modelContext?.save()
     }
 
     /// Load score history for charting (optional day limit, nil = all time)
@@ -297,14 +303,14 @@ final class HealthDataStore {
         } else {
             descriptor = FetchDescriptor(sortBy: [SortDescriptor(\.date)])
         }
-        let snapshots = (try? modelContext.fetch(descriptor)) ?? []
+        let snapshots = (try? modelContext?.fetch(descriptor)) ?? []
         return snapshots.map { ($0.date, $0.overallScore) }
     }
 
     /// Load baseline evolution over time for a single metric
     func loadBaselineHistory(for metric: HealthMetric) -> [(date: Date, baseline: UserBaseline)] {
         let descriptor = FetchDescriptor<StoredAnalysisSnapshot>(sortBy: [SortDescriptor(\.date)])
-        let snapshots = (try? modelContext.fetch(descriptor)) ?? []
+        let snapshots = (try? modelContext?.fetch(descriptor)) ?? []
 
         return snapshots.compactMap { snapshot in
             guard let dict = try? JSONDecoder().decode([String: UserBaseline].self, from: snapshot.baselinesJSON),
@@ -321,13 +327,13 @@ final class HealthDataStore {
         let predicate = #Predicate<StoredMLModelState> { $0.componentName == name }
         let descriptor = FetchDescriptor(predicate: predicate)
 
-        if let existing = try? modelContext.fetch(descriptor).first {
+        if let existing = try? modelContext?.fetch(descriptor).first {
             existing.version = state.version
             existing.parametersJSON = state.parametersJSON
             existing.dataPointsUsed = state.dataPointsUsed
             existing.lastTrainedDate = state.lastTrainedDate
         } else {
-            modelContext.insert(StoredMLModelState(
+            modelContext?.insert(StoredMLModelState(
                 componentName: state.componentName,
                 version: state.version,
                 parametersJSON: state.parametersJSON,
@@ -335,7 +341,7 @@ final class HealthDataStore {
                 lastTrainedDate: state.lastTrainedDate
             ))
         }
-        try? modelContext.save()
+        try? modelContext?.save()
     }
 
     /// Load an ML component's learned parameters
@@ -343,7 +349,7 @@ final class HealthDataStore {
         let predicate = #Predicate<StoredMLModelState> { $0.componentName == componentName }
         let descriptor = FetchDescriptor(predicate: predicate)
 
-        guard let stored = try? modelContext.fetch(descriptor).first else { return nil }
+        guard let stored = try? modelContext?.fetch(descriptor).first else { return nil }
         return MLModelState(
             componentName: stored.componentName,
             version: stored.version,
@@ -356,7 +362,7 @@ final class HealthDataStore {
     /// Load all ML model states
     func loadAllMLModelStates() -> [MLModelState] {
         let descriptor = FetchDescriptor<StoredMLModelState>()
-        guard let stored = try? modelContext.fetch(descriptor) else { return [] }
+        guard let stored = try? modelContext?.fetch(descriptor) else { return [] }
         return stored.map {
             MLModelState(
                 componentName: $0.componentName,
@@ -372,14 +378,14 @@ final class HealthDataStore {
 
     /// Total number of daily samples stored on device
     var totalStoredSamples: Int {
-        (try? modelContext.fetchCount(FetchDescriptor<StoredDailySample>())) ?? 0
+        (try? modelContext?.fetchCount(FetchDescriptor<StoredDailySample>())) ?? 0
     }
 
     /// Earliest data point stored
     var oldestDataDate: Date? {
         var descriptor = FetchDescriptor<StoredDailySample>(sortBy: [SortDescriptor(\.date)])
         descriptor.fetchLimit = 1
-        return try? modelContext.fetch(descriptor).first?.date
+        return try? modelContext?.fetch(descriptor).first?.date
     }
 
     /// Human-readable description of how much data is stored
@@ -398,6 +404,6 @@ final class HealthDataStore {
     /// Number of metrics that have stored data
     var metricsWithData: Int {
         let descriptor = FetchDescriptor<StoredSyncMetadata>()
-        return (try? modelContext.fetchCount(descriptor)) ?? 0
+        return (try? modelContext?.fetchCount(descriptor)) ?? 0
     }
 }

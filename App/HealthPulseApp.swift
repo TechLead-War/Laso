@@ -34,33 +34,70 @@ struct HealthPulseApp: App {
         _healthKitManager = State(wrappedValue: hkManager)
         _deviceSourceManager = State(wrappedValue: DeviceSourceManager(healthStore: hkManager.healthStore))
 
-        let container: ModelContainer
+        if let container = Self.createModelContainer() {
+            _healthDataStore = State(wrappedValue: HealthDataStore(modelContainer: container))
+        } else {
+            print("[HealthPulse] Running without SwiftData — all persistence disabled")
+            _healthDataStore = State(wrappedValue: HealthDataStore())
+        }
+    }
+
+    /// Creates a ModelContainer with progressive fallback — uses Schema-based API and logs every failure.
+    private static func createModelContainer() -> ModelContainer? {
+        let storeDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("HealthData", isDirectory: true)
+        try? FileManager.default.createDirectory(at: storeDir, withIntermediateDirectories: true)
+        try? (storeDir as NSURL).setResourceValue(URLFileProtection.complete, forKey: .fileProtectionKey)
+        let dbURL = storeDir.appendingPathComponent("health.store")
+
+        let allModels: [any PersistentModel.Type] = [
+            StoredDailySample.self, StoredSyncMetadata.self,
+            StoredAnalysisSnapshot.self, StoredMLModelState.self
+        ]
+
+        // 1. Disk-based with all models (happy path)
         do {
-            let storeURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-                .appendingPathComponent("HealthData", isDirectory: true)
-            try? FileManager.default.createDirectory(at: storeURL, withIntermediateDirectories: true)
-            try? (storeURL as NSURL).setResourceValue(URLFileProtection.complete, forKey: .fileProtectionKey)
-            let config = ModelConfiguration(url: storeURL.appendingPathComponent("health.store"))
-            container = try ModelContainer(
-                for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self, StoredMLModelState.self,
-                configurations: config
-            )
+            let config = ModelConfiguration(url: dbURL)
+            return try ModelContainer(for: Schema(allModels), configurations: [config])
         } catch {
-            // Fallback to in-memory store if disk-based container fails (corrupted DB, etc.)
-            let fallback = ModelConfiguration(isStoredInMemoryOnly: true)
+            print("[HealthPulse] Step 1 (disk, all models) failed: \(error)")
+        }
+
+        // 2. Delete corrupt database, retry disk
+        for suffix in ["", "-wal", "-shm"] {
+            try? FileManager.default.removeItem(atPath: dbURL.path + suffix)
+        }
+        do {
+            let config = ModelConfiguration(url: dbURL)
+            return try ModelContainer(for: Schema(allModels), configurations: [config])
+        } catch {
+            print("[HealthPulse] Step 2 (clean disk, all models) failed: \(error)")
+        }
+
+        // 3–6. Progressive in-memory fallbacks with fewer models
+        let fallbackSets: [[any PersistentModel.Type]] = [
+            allModels,
+            [StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self],
+            [StoredDailySample.self, StoredSyncMetadata.self],
+            [StoredDailySample.self]
+        ]
+
+        for (i, models) in fallbackSets.enumerated() {
             do {
-                container = try ModelContainer(
-                    for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self, StoredMLModelState.self,
-                    configurations: fallback
-                )
+                let config = ModelConfiguration(isStoredInMemoryOnly: true)
+                return try ModelContainer(for: Schema(models), configurations: [config])
             } catch {
-                // Last resort: empty container with default configuration
-                container = try! ModelContainer(
-                    for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self, StoredMLModelState.self
-                )
+                print("[HealthPulse] Step \(i + 3) (in-memory, \(models.count) model\(models.count == 1 ? "" : "s")) failed: \(error)")
             }
         }
-        _healthDataStore = State(wrappedValue: HealthDataStore(modelContainer: container))
+
+        // All Schema-based attempts failed — try the simplest possible call as last resort
+        do {
+            return try ModelContainer(for: StoredDailySample.self)
+        } catch {
+            print("[HealthPulse] All ModelContainer attempts failed: \(error)")
+            return nil
+        }
     }
 
     var body: some Scene {

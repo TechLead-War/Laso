@@ -1,5 +1,6 @@
 import Foundation
 import HealthKit
+import UserNotifications
 
 /// Monitors Apple Watch wearing status via HealthKit heart rate data freshness
 /// and provides low-battery notification support.
@@ -36,6 +37,7 @@ final class WatchMonitor {
         }
         checkTimer?.invalidate()
         checkTimer = nil
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [scheduledNotWornIdentifier])
     }
 
     // MARK: - Heart Rate Observer (Watch Wearing Detection)
@@ -59,6 +61,9 @@ final class WatchMonitor {
 
         healthStore.execute(query)
         observerQuery = query
+
+        // Enable background delivery so the observer fires even when the app is suspended
+        healthStore.enableBackgroundDelivery(for: heartRateType, frequency: .hourly) { _, _ in }
 
         // Also check immediately
         checkLatestHeartRateSource()
@@ -87,6 +92,8 @@ final class WatchMonitor {
                         sample.startDate.timeIntervalSince1970,
                         forKey: self.lastWatchDataKey
                     )
+                    // Watch is actively sending data — push the "not worn" notification forward
+                    self.rescheduleNotWornReminder()
                     return
                 }
             }
@@ -148,7 +155,34 @@ final class WatchMonitor {
         }
     }
 
-    // MARK: - Watch Not Worn Check
+    // MARK: - Scheduled "Not Worn" Notification (Background-capable)
+
+    private let scheduledNotWornIdentifier = "healthpulse.watch.notWorn.scheduled"
+
+    /// Cancels any pending scheduled "not worn" notification, then schedules a new one
+    /// to fire after `thresholdHours`. Each time fresh Apple Watch data arrives, this
+    /// gets called — pushing the notification forward. If data stops (watch removed or
+    /// battery dead), the notification fires automatically even if the app is killed.
+    private func rescheduleNotWornReminder() {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [scheduledNotWornIdentifier])
+
+        let preferences = PersistenceManager().loadPreferences()
+        guard preferences.watchNotWornReminderEnabled else { return }
+
+        let thresholdSeconds = RemoteConfigManager.shared.watchNotWornThresholdHours * 3600
+
+        let content = UNMutableNotificationContent()
+        content.title = "Wear Your Watch"
+        content.body = "Your Apple Watch hasn't recorded data for a while. Put it on to keep tracking, or charge it if the battery is low."
+        content.sound = .default
+
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: thresholdSeconds, repeats: false)
+        let request = UNNotificationRequest(identifier: scheduledNotWornIdentifier, content: content, trigger: trigger)
+        center.add(request) { _ in }
+    }
+
+    // MARK: - Watch Not Worn Check (Foreground Fallback)
 
     private func checkWatchNotWorn(maxPerDay: Int) {
         let defaults = UserDefaults.standard
@@ -175,9 +209,9 @@ final class WatchMonitor {
 
         let body: String
         if hours >= 1 {
-            body = "Your Apple Watch hasn't recorded data for \(hours)h \(minutes)m. Put it on to keep tracking your health."
+            body = "Your Apple Watch hasn't recorded data for \(hours)h \(minutes)m. Put it on to keep tracking, or charge it if the battery is low."
         } else {
-            body = "Your Apple Watch hasn't recorded data recently. Put it on to keep tracking your health."
+            body = "Your Apple Watch hasn't recorded data recently. Put it on to keep tracking, or charge it if the battery is low."
         }
 
         NotificationManager.shared.scheduleNotification(

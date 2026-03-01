@@ -48,7 +48,7 @@ import '../styles/globals.css'
           </button>
         </form>
         <p class="hero-success mt-3 text-sm text-emerald-600 font-medium hidden">You're in! We'll be in touch soon.</p>
-        <p class="mt-3 text-[13px] text-apple-secondary/60">Free to join. No spam. We'll notify you when it's ready.</p>
+        <p class="mt-3 text-[13px] text-apple-secondary/60">Free to join. <strong class="text-apple-dark"><span class="signup-counter">550</span>+ have joined</strong>. We'll notify you when it's ready.</p>
       </div>
     </section>
 
@@ -742,7 +742,7 @@ import '../styles/globals.css'
             </button>
           </form>
           <p class="ea-success mt-3 text-sm text-emerald-600 font-medium hidden">You're in! We'll be in touch soon.</p>
-          <p class="mt-3 text-[13px] text-apple-secondary/60">Free to join. We'll send updates and let you know when it's ready.</p>
+          <p class="mt-3 text-[13px] text-apple-secondary/60">Free to join. <strong class="text-apple-dark"><span class="signup-counter">550</span>+ have joined</strong>. We'll notify you when it's ready.</p>
         </div>
         <div class="section-reveal mt-10 flex flex-wrap justify-center gap-3">
           <a href="mailto:hello@lasohealth.com" class="inline-flex items-center gap-2 bg-white rounded-full px-5 py-2.5 text-sm font-medium text-apple-dark hover:bg-gray-100 transition-colors">
@@ -777,12 +777,75 @@ import '../styles/globals.css'
 
   <!-- ════════ CLIENT-SIDE SCRIPT ════════ -->
   <script>
-    // ── GA4 helper ──
+    // ── Analytics helpers ──
     function trackEvent(name: string, params?: Record<string, string | number>) {
       if (typeof window.gtag === 'function') {
         window.gtag('event', name, params)
       }
     }
+
+    function trackMeta(event: string, params?: Record<string, string | number | boolean>) {
+      if (typeof window.fbq === 'function') {
+        const standard = ['Lead', 'ViewContent', 'CompleteRegistration', 'PageView', 'AddToWishlist']
+        if (standard.includes(event)) {
+          window.fbq('track', event, params)
+        } else {
+          window.fbq('trackCustom', event, params)
+        }
+      }
+    }
+
+    // ── UTM + attribution capture ──
+    const urlParams = new URLSearchParams(window.location.search)
+    const utmParams: Record<string, string> = {}
+    for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']) {
+      const val = urlParams.get(key)
+      if (val) utmParams[key] = val
+    }
+    const fbclid = urlParams.get('fbclid')
+    if (fbclid) utmParams['fbclid'] = fbclid
+    const gclid = urlParams.get('gclid')
+    if (gclid) utmParams['gclid'] = gclid
+
+    // ── Signup counter ──
+    const SIGNUP_BASE = 550
+    let currentSignupCount = SIGNUP_BASE
+
+    async function fetchSignupCount() {
+      try {
+        const res = await fetch(
+          'https://firestore.googleapis.com/v1/projects/laso-health-v1/databases/(default)/documents:runAggregationQuery',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              structuredAggregationQuery: {
+                structuredQuery: {
+                  from: [{ collectionId: 'early_access' }]
+                },
+                aggregations: [{ alias: 'count', count: {} }]
+              }
+            })
+          }
+        )
+        if (!res.ok) return 0
+        const data = await res.json()
+        return parseInt(data[0]?.result?.aggregateFields?.count?.integerValue ?? '0', 10)
+      } catch {
+        return 0
+      }
+    }
+
+    function updateCounterDisplay(count: number) {
+      currentSignupCount = count
+      document.querySelectorAll('.signup-counter').forEach(el => {
+        el.textContent = String(count)
+      })
+    }
+
+    fetchSignupCount().then(count => {
+      updateCounterDisplay(SIGNUP_BASE + count)
+    })
 
     // ── Early access form handler ──
     async function handleSignup(form: HTMLFormElement) {
@@ -790,29 +853,61 @@ import '../styles/globals.css'
       const email = emailInput?.value?.trim()
       if (!email) return
 
-      trackEvent('early_access_signup', { email_domain: email.split('@')[1] ?? 'unknown' })
+      const emailDomain = email.split('@')[1] ?? 'unknown'
+      const formId = form.id === 'hero-form' ? 'hero' : 'early_access_cta'
 
-      // Store in localStorage as fallback
+      // GA4
+      trackEvent('early_access_signup', { email_domain: emailDomain, form_location: formId, ...utmParams })
+
+      // Meta Pixel — Lead (standard event, used for ad optimization + lookalike audiences)
+      trackMeta('Lead', {
+        content_name: 'early_access',
+        content_category: 'signup',
+        value: 0,
+        currency: 'USD',
+      })
+      // Also fire AddToWishlist for secondary optimization signal
+      trackMeta('AddToWishlist', {
+        content_name: 'laso_app',
+        content_category: formId,
+      })
+
+      // Store in localStorage as fallback (with attribution)
       const signups = JSON.parse(localStorage.getItem('laso_signups') || '[]')
-      signups.push({ email, timestamp: new Date().toISOString() })
+      signups.push({ email, timestamp: new Date().toISOString(), ...utmParams, form: formId })
       localStorage.setItem('laso_signups', JSON.stringify(signups))
 
-      // Try sending to Firestore
+      // Send to Firestore (with full attribution data)
       try {
+        const fields: Record<string, { stringValue: string } | { timestampValue: string }> = {
+          email: { stringValue: email },
+          timestamp: { timestampValue: new Date().toISOString() },
+          source: { stringValue: utmParams['utm_source'] || 'direct' },
+          medium: { stringValue: utmParams['utm_medium'] || 'none' },
+          campaign: { stringValue: utmParams['utm_campaign'] || '' },
+          referrer: { stringValue: document.referrer || 'none' },
+          landing_page: { stringValue: window.location.pathname },
+          form_location: { stringValue: formId },
+          user_agent: { stringValue: navigator.userAgent },
+          screen_size: { stringValue: `${screen.width}x${screen.height}` },
+          locale: { stringValue: navigator.language || '' },
+        }
+        if (utmParams['utm_content']) fields['utm_content'] = { stringValue: utmParams['utm_content'] }
+        if (utmParams['utm_term']) fields['utm_term'] = { stringValue: utmParams['utm_term'] }
+        if (utmParams['fbclid']) fields['fbclid'] = { stringValue: utmParams['fbclid'] }
+        if (utmParams['gclid']) fields['gclid'] = { stringValue: utmParams['gclid'] }
+
         await fetch('https://firestore.googleapis.com/v1/projects/laso-health-v1/databases/(default)/documents/early_access', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fields: {
-              email: { stringValue: email },
-              timestamp: { timestampValue: new Date().toISOString() },
-              source: { stringValue: 'website' },
-            }
-          })
+          body: JSON.stringify({ fields })
         })
       } catch {
         // Silent fail — we have the localStorage backup
       }
+
+      // Update counter immediately
+      updateCounterDisplay(currentSignupCount + 1)
 
       // Show success state
       const success = form.parentElement?.querySelector('.hero-success, .ea-success')
@@ -833,7 +928,35 @@ import '../styles/globals.css'
       })
     })
 
-    // ── Section reveal ──
+    // ── Form interaction tracking (intent signals for Meta optimization) ──
+    let formFocused = false
+    let formStarted = false
+    document.querySelectorAll<HTMLInputElement>('input[type="email"]').forEach(input => {
+      input.addEventListener('focus', () => {
+        if (!formFocused) {
+          formFocused = true
+          trackEvent('form_focus', { form: 'early_access' })
+          trackMeta('FormInteraction', { action: 'focus' })
+        }
+      })
+      input.addEventListener('input', () => {
+        if (!formStarted) {
+          formStarted = true
+          trackEvent('form_start', { form: 'early_access' })
+          trackMeta('FormInteraction', { action: 'typing' })
+        }
+      })
+    })
+
+    // ── CTA click tracking ──
+    document.querySelectorAll('a[href="#early-access"]').forEach(el => {
+      el.addEventListener('click', () => {
+        trackEvent('cta_click', { button: 'get_early_access_nav' })
+        trackMeta('CTAClick', { button: 'get_early_access_nav' })
+      })
+    })
+
+    // ── Section reveal + tracking ──
     const viewedSections = new Set<string>()
     const sectionObserver = new IntersectionObserver(
       (entries) => {
@@ -843,6 +966,7 @@ import '../styles/globals.css'
             if (section && !viewedSections.has(section)) {
               viewedSections.add(section)
               trackEvent('section_view', { section })
+              trackMeta('ViewContent', { content_name: section, content_category: 'section' })
             }
           }
         })
@@ -899,6 +1023,7 @@ import '../styles/globals.css'
         if (pct >= t && !scrollFired.has(t)) {
           scrollFired.add(t)
           trackEvent('scroll_depth', { depth: t })
+          trackMeta('ScrollDepth', { depth: t })
         }
       }
     }, { passive: true })
@@ -909,6 +1034,7 @@ import '../styles/globals.css'
       if (document.visibilityState === 'hidden') {
         const duration = Math.round((Date.now() - startTime) / 1000)
         trackEvent('time_on_page', { duration_sec: duration })
+        trackMeta('TimeOnPage', { seconds: duration })
       }
     })
   </script>
