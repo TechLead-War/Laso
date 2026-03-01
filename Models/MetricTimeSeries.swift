@@ -4,11 +4,16 @@ import Foundation
 struct MetricTimeSeries: Identifiable {
     let id = UUID()
     let metric: HealthMetric
+    /// All samples, stored in chronological order (sorted once at initialization).
     let samples: [MetricSample]
 
-    var sortedSamples: [MetricSample] {
-        samples.sorted { $0.date < $1.date }
+    init(metric: HealthMetric, samples: [MetricSample]) {
+        self.metric = metric
+        self.samples = samples.sorted { $0.date < $1.date }
     }
+
+    /// Samples in chronological order — O(1), already sorted at init.
+    var sortedSamples: [MetricSample] { samples }
 
     var values: [Double] {
         sortedSamples.map(\.value)

@@ -33,6 +33,13 @@ final class LiveViewModel {
     private var bloodOxygenQuery: HKAnchoredObjectQuery?
     private var respiratoryRateQuery: HKAnchoredObjectQuery?
     private var refreshTimer: Timer?
+    private var fallbackFetchWorkItem: DispatchWorkItem?
+    private var respiratoryAvailabilityWorkItem: DispatchWorkItem?
+
+    /// Live polling cadence and chart density controls (CPU/GPU protection).
+    private static let liveActivityRefreshInterval: TimeInterval = 120
+    private static let heartRateBucketSize: TimeInterval = 10
+    private static let maxHeartRatePoints = 180
 
     init(healthKitManager: HealthKitManager) {
         self.healthKitManager = healthKitManager
@@ -40,14 +47,21 @@ final class LiveViewModel {
 
     // MARK: - Heart Rate Zone (needs healthStore for age)
 
-    /// Estimated max heart rate (220 - age, defaults to 190 if unknown)
+    /// Estimated max heart rate (220 - age, defaults to 190 if unknown).
+    /// Cached on first access — date of birth never changes.
+    private var _cachedMaxHR: Double?
     var estimatedMaxHR: Double {
+        if let cached = _cachedMaxHR { return cached }
+        let result: Double
         if let dob = try? healthStore.dateOfBirthComponents(),
            let birthDate = Calendar.current.date(from: dob) {
             let age = Calendar.current.dateComponents([.year], from: birthDate, to: Date()).year ?? 30
-            return Double(220 - age)
+            result = Double(220 - age)
+        } else {
+            result = 190
         }
-        return 190
+        _cachedMaxHR = result
+        return result
     }
 
     enum HeartRateZone: String {
@@ -193,25 +207,34 @@ final class LiveViewModel {
         computeReadinessScore()
 
         // After 2 seconds, fill in any gaps the anchored queries didn't cover
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
-            self?.fetchFallbackHeartRate()
-            self?.fetchFallbackBloodOxygen()
-            self?.fetchFallbackRespiratoryRate()
+        fallbackFetchWorkItem?.cancel()
+        let fallbackWorkItem = DispatchWorkItem { [weak self] in
+            guard let self, self.isStreaming else { return }
+            self.fetchFallbackHeartRate()
+            self.fetchFallbackBloodOxygen()
+            self.fetchFallbackRespiratoryRate()
         }
+        fallbackFetchWorkItem = fallbackWorkItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: fallbackWorkItem)
 
         // After 5 seconds, if respiratory rate is still nil, mark as unavailable
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
+        respiratoryAvailabilityWorkItem?.cancel()
+        let availabilityWorkItem = DispatchWorkItem { [weak self] in
             guard let self, self.vitals.currentRespiratoryRate == nil else { return }
             self.vitals.respiratoryRateUnavailable = true
         }
+        respiratoryAvailabilityWorkItem = availabilityWorkItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: availabilityWorkItem)
 
-        // Refresh cumulative stats every 60 seconds
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+        // Refresh cumulative stats every 2 minutes (vitals stream continuously via anchored queries).
+        let timer = Timer.scheduledTimer(withTimeInterval: Self.liveActivityRefreshInterval, repeats: true) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
                 self.fetchTodayCumulativeStats()
             }
         }
+        timer.tolerance = 15
+        refreshTimer = timer
     }
 
     func stopStreaming() {
@@ -226,6 +249,10 @@ final class LiveViewModel {
 
         refreshTimer?.invalidate()
         refreshTimer = nil
+        fallbackFetchWorkItem?.cancel()
+        fallbackFetchWorkItem = nil
+        respiratoryAvailabilityWorkItem?.cancel()
+        respiratoryAvailabilityWorkItem = nil
     }
 
     // MARK: - Heart Rate Stream
@@ -257,26 +284,72 @@ final class LiveViewModel {
 
     private func processHeartRateSamples(_ samples: [HKSample]?, unit: HKUnit) {
         guard let quantitySamples = samples as? [HKQuantitySample], !quantitySamples.isEmpty else { return }
+        let sortedSamples = quantitySamples.sorted { $0.startDate < $1.startDate }
+        let latestSample = sortedSamples.last
+
+        // Pre-bucket off-main to avoid multiple @Observable writes per sample.
+        var bucketedPoints: [(date: Date, value: Double)] = []
+        bucketedPoints.reserveCapacity(sortedSamples.count)
+        for sample in sortedSamples {
+            let value = sample.quantity.doubleValue(for: unit)
+            let bucketedDate = Self.bucketDate(sample.startDate, by: Self.heartRateBucketSize)
+            if let last = bucketedPoints.last, last.date == bucketedDate {
+                bucketedPoints[bucketedPoints.count - 1] = (date: bucketedDate, value: value)
+            } else {
+                bucketedPoints.append((date: bucketedDate, value: value))
+            }
+        }
 
         Task { @MainActor in
-            for sample in quantitySamples {
-                let value = sample.quantity.doubleValue(for: unit)
-                let date = sample.startDate
-                vitals.recentHeartRates.append((date: date, value: value))
+            var merged = vitals.recentHeartRates
+            merged.reserveCapacity(merged.count + bucketedPoints.count)
+
+            for point in bucketedPoints {
+                if let last = merged.last, last.date == point.date {
+                    merged[merged.count - 1] = point
+                } else {
+                    merged.append(point)
+                }
             }
 
             // Keep only last 30 minutes
             let cutoff = Date().addingTimeInterval(-30 * 60)
-            vitals.recentHeartRates.removeAll { $0.date < cutoff }
+            if let firstKeptIndex = merged.firstIndex(where: { $0.date >= cutoff }) {
+                if firstKeptIndex > 0 {
+                    merged.removeFirst(firstKeptIndex)
+                }
+            } else {
+                merged.removeAll()
+            }
+
+            // Hard cap to avoid unbounded chart work in long sessions.
+            if merged.count > Self.maxHeartRatePoints {
+                merged.removeFirst(merged.count - Self.maxHeartRatePoints)
+            }
+
+            vitals.recentHeartRates = merged
 
             // Compute session stats
-            let values = vitals.recentHeartRates.map(\.value)
-            vitals.heartRateMin30 = values.min()
-            vitals.heartRateMax30 = values.max()
-            vitals.heartRateAvg30 = values.isEmpty ? nil : values.reduce(0, +) / Double(values.count)
+            if merged.isEmpty {
+                vitals.heartRateMin30 = nil
+                vitals.heartRateMax30 = nil
+                vitals.heartRateAvg30 = nil
+            } else {
+                var minValue = Double.greatestFiniteMagnitude
+                var maxValue = -Double.greatestFiniteMagnitude
+                var sum = 0.0
+                for point in merged {
+                    minValue = min(minValue, point.value)
+                    maxValue = max(maxValue, point.value)
+                    sum += point.value
+                }
+                vitals.heartRateMin30 = minValue
+                vitals.heartRateMax30 = maxValue
+                vitals.heartRateAvg30 = sum / Double(merged.count)
+            }
 
             // Set current to most recent
-            if let latest = quantitySamples.max(by: { $0.startDate < $1.startDate }) {
+            if let latest = latestSample {
                 vitals.currentHeartRate = latest.quantity.doubleValue(for: unit)
                 vitals.heartRateTimestamp = latest.startDate
                 lastUpdate = Date()
@@ -722,6 +795,11 @@ final class LiveViewModel {
         }
 
         healthStore.execute(query)
+    }
+
+    private static func bucketDate(_ date: Date, by interval: TimeInterval) -> Date {
+        let t = date.timeIntervalSince1970
+        return Date(timeIntervalSince1970: floor(t / interval) * interval)
     }
 }
 

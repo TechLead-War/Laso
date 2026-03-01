@@ -15,26 +15,26 @@ struct ExploreView: View {
                     scoreHeroSection
                         .padding(.horizontal)
 
-                    // 2. Data depth bar
-                    dataSummaryBar
-                        .padding(.horizontal)
-
-                    // 3. Score Breakdown — what's driving the score
+                    // 2. Needs Attention — negative factors only
                     scoreBreakdownSection
                         .padding(.horizontal)
 
-                    // 4. From Your History
-                    if !viewModel.historicalHighlights.isEmpty {
+                    // 3. Declining metrics from history
+                    if !decliningHighlights.isEmpty {
                         historicalSection
                     }
 
-                    // 5. Correlations preview
+                    // 4. Correlations preview
                     if FeatureGate.canAccess(.advancedAnalytics), !viewModel.topCorrelations.isEmpty {
                         correlationsPreview
                     }
 
-                    // 6. Categories drill-down
+                    // 5. Categories — worst first
                     categoriesSection
+                        .padding(.horizontal)
+
+                    // 6. Data depth bar
+                    dataSummaryBar
                         .padding(.horizontal)
                 } else {
                     emptyState
@@ -166,73 +166,103 @@ struct ExploreView: View {
         return "\(count)"
     }
 
-    // MARK: - 3. Score Breakdown
+    // MARK: - 3. Score Breakdown (negative factors only)
 
     @ViewBuilder
     private var scoreBreakdownSection: some View {
         if let explanation = viewModel.scoreExplanation {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("What's Driving Your Score")
-                    .font(.headline)
+            let negativeFactors = explanation.topFactors.filter { !$0.isPositive }
+            let weakCategories = explanation.categoryContributions
+                .filter { $0.score < 75 }
+                .sorted { $0.score < $1.score }
 
-                // Top factors
-                ForEach(Array(explanation.topFactors.prefix(4).enumerated()), id: \.offset) { _, factor in
-                    HStack(spacing: 10) {
-                        Image(systemName: factor.metric.systemImageName)
-                            .font(.caption)
-                            .foregroundStyle(factor.metric.category.color)
-                            .frame(width: 24)
+            if !negativeFactors.isEmpty || !weakCategories.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Needs Attention")
+                        .font(.headline)
 
-                        Text(factor.reason)
-                            .font(.caption)
-                            .foregroundStyle(.primary)
-                            .lineLimit(2)
+                    // Negative factors only — what's dragging the score down
+                    ForEach(Array(negativeFactors.prefix(5).enumerated()), id: \.offset) { _, factor in
+                        Button {
+                            navigationPath.append(factor.metric)
+                        } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: factor.metric.systemImageName)
+                                    .font(.caption)
+                                    .foregroundStyle(factor.metric.category.color)
+                                    .frame(width: 28, height: 28)
+                                    .background(factor.metric.category.color.opacity(0.12), in: RoundedRectangle(cornerRadius: 7))
 
-                        Spacer()
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(factor.metric.displayName)
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundStyle(.primary)
 
-                        Text("\(factor.impact > 0 ? "+" : "")\(factor.impact)")
-                            .font(.subheadline.weight(.bold).monospacedDigit())
-                            .foregroundStyle(factor.isPositive ? .green : .red)
-                    }
-                    .padding(.vertical, 4)
-                }
+                                    Text(factor.reason)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(2)
+                                }
 
-                // Category weights
-                if !explanation.categoryContributions.isEmpty {
-                    Divider()
-                        .padding(.vertical, 4)
+                                Spacer()
 
-                    HStack(spacing: 0) {
-                        ForEach(explanation.categoryContributions.sorted(by: { $0.weight > $1.weight }).prefix(4), id: \.category) { contrib in
-                            VStack(spacing: 2) {
-                                Image(systemName: contrib.category.systemImageName)
-                                    .font(.caption2)
-                                    .foregroundStyle(contrib.category.color)
-                                Text("\(contrib.score)")
-                                    .font(.caption.weight(.bold).monospacedDigit())
-                                Text("\(Int(contrib.weight * 100))%")
-                                    .font(.system(size: 8))
-                                    .foregroundStyle(.secondary)
+                                Text("\(factor.impact)")
+                                    .font(.subheadline.weight(.bold).monospacedDigit())
+                                    .foregroundStyle(.red)
                             }
-                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 4)
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    // Weak categories bar
+                    if !weakCategories.isEmpty {
+                        Divider()
+                            .padding(.vertical, 4)
+
+                        HStack(spacing: 0) {
+                            ForEach(weakCategories.prefix(4), id: \.category) { contrib in
+                                Button {
+                                    navigationPath.append(contrib.category)
+                                } label: {
+                                    VStack(spacing: 2) {
+                                        Image(systemName: contrib.category.systemImageName)
+                                            .font(.caption2)
+                                            .foregroundStyle(contrib.category.color)
+                                        Text("\(contrib.score)")
+                                            .font(.caption.weight(.bold).monospacedDigit())
+                                            .foregroundStyle(contrib.score < 60 ? .red : .orange)
+                                        Text(contrib.category.shortName)
+                                            .font(.system(size: 8))
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
                     }
                 }
+                .padding(16)
+                .background(.background, in: RoundedRectangle(cornerRadius: 16))
             }
-            .padding(16)
-            .background(.background, in: RoundedRectangle(cornerRadius: 16))
         }
     }
 
-    // MARK: - 4. From Your History
+    // MARK: - 4. Declining Historical Trends
+
+    /// Only show negative historical highlights — things getting worse
+    private var decliningHighlights: [DashboardViewModel.HistoricalHighlight] {
+        viewModel.historicalHighlights.filter { !$0.isPositive }
+    }
 
     private var historicalSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("From Your History")
+            Text("Declining Trends")
                 .font(.headline)
                 .padding(.horizontal)
 
-            ForEach(viewModel.historicalHighlights) { highlight in
+            ForEach(decliningHighlights) { highlight in
                 Button {
                     navigationPath.append(highlight.metric)
                 } label: {
@@ -248,32 +278,25 @@ struct ExploreView: View {
         HStack(spacing: 12) {
             Image(systemName: highlight.icon)
                 .font(.body)
-                .foregroundStyle(highlight.isPositive ? .green : .orange)
+                .foregroundStyle(.orange)
                 .frame(width: 32, height: 32)
-                .background(
-                    (highlight.isPositive ? Color.green : Color.orange).opacity(0.12),
-                    in: RoundedRectangle(cornerRadius: 8)
-                )
+                .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
 
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
                     Text(highlight.metric.displayName)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.subheadline.weight(.semibold))
 
                     Text(highlight.typeLabel)
                         .font(.caption2.weight(.medium))
-                        .foregroundStyle(highlight.isPositive ? .green : .orange)
+                        .foregroundStyle(.orange)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 1)
-                        .background(
-                            (highlight.isPositive ? Color.green : Color.orange).opacity(0.12),
-                            in: Capsule()
-                        )
+                        .background(Color.orange.opacity(0.12), in: Capsule())
                 }
 
                 Text(highlight.title)
-                    .font(.subheadline.weight(.medium))
+                    .font(.caption.weight(.medium))
                     .foregroundStyle(.primary)
 
                 Text(highlight.recommendation)
@@ -359,17 +382,18 @@ struct ExploreView: View {
         .background(.background, in: RoundedRectangle(cornerRadius: 12))
     }
 
-    // MARK: - 6. Categories (focus-sorted)
+    // MARK: - 6. Categories (worst-first)
 
-    /// Categories sorted so user's focus areas appear first
-    private var sortedCategories: [HealthCategory] {
-        let focuses = viewModel.focusCategories
-        guard !focuses.isEmpty else { return HealthCategory.allCases.map { $0 } }
-        return HealthCategory.allCases.sorted { a, b in
-            let aFocus = focuses.contains(a)
-            let bFocus = focuses.contains(b)
-            if aFocus != bFocus { return aFocus }
-            return false // preserve relative order for same-group items
+    /// Categories sorted by score ascending — weakest areas first
+    private var sortedCategories: [(category: HealthCategory, score: Int?)] {
+        HealthCategory.allCases.map { cat in
+            (category: cat, score: viewModel.analysisEngine.score(for: cat)?.score)
+        }
+        .sorted { a, b in
+            // Categories with scores come first, sorted ascending (worst first)
+            guard let aScore = a.score else { return false }
+            guard let bScore = b.score else { return true }
+            return aScore < bScore
         }
     }
 
@@ -380,14 +404,14 @@ struct ExploreView: View {
                 .font(.headline)
 
             VStack(spacing: 0) {
-                ForEach(Array(categories.enumerated()), id: \.element) { index, category in
+                ForEach(Array(categories.enumerated()), id: \.element.category) { index, item in
                     Button {
-                        navigationPath.append(category)
+                        navigationPath.append(item.category)
                     } label: {
                         ExploreCategoryRow(
-                            category: category,
-                            score: viewModel.analysisEngine.score(for: category)?.score,
-                            insightCount: viewModel.analysisEngine.insights(for: category).count
+                            category: item.category,
+                            score: item.score,
+                            insightCount: viewModel.analysisEngine.insights(for: item.category).count
                         )
                     }
                     .buttonStyle(.plain)
@@ -481,6 +505,11 @@ private struct ExploreCategoryRow: View {
     let score: Int?
     let insightCount: Int
 
+    private var needsAttention: Bool {
+        guard let score else { return false }
+        return score < 70
+    }
+
     var body: some View {
         HStack(spacing: 14) {
             Image(systemName: category.systemImageName)
@@ -490,11 +519,11 @@ private struct ExploreCategoryRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(category.displayName)
-                    .font(.body.weight(.medium))
+                    .font(needsAttention ? .body.weight(.bold) : .body.weight(.medium))
 
                 HStack(spacing: 8) {
                     Text(scoreStatus)
-                        .font(.caption)
+                        .font(.caption.weight(needsAttention ? .semibold : .regular))
                         .foregroundStyle(scoreStatusColor)
 
                     if insightCount > 0 {

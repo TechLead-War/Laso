@@ -112,7 +112,7 @@ struct CorrelationAnalyzer {
                   let seriesB = timeSeries[pair.metricB] else { continue }
 
             // Test the predefined lag AND nearby lags to find the strongest correlation
-            let lagsToTest = Set([pair.dayOffset, 0, 1, 2, 3])
+            let lagsToTest = Set([pair.dayOffset, 0, 1])
 
             var bestResult: (r: Double, t: Double, lag: Int, aligned: [TimeSeriesAligner.AlignedPair])?
 

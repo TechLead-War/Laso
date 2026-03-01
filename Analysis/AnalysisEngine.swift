@@ -22,6 +22,19 @@ final class AnalysisEngine {
     var isAnalyzing = false
     var lastAnalysis: Date?
 
+    // MARK: - Deferred Analysis Caching
+
+    /// Tracks when the heavy analysis tier last ran so we can skip it if fresh.
+    private var lastHeavyAnalysisDate: Date?
+    /// TTL for heavy analysis — correlations/historical/cross-metric change slowly.
+    private static let heavyAnalysisTTL: TimeInterval = 3600  // 1 hour
+
+    /// Whether the heavy analysis phase needs to run (expired or never ran).
+    var needsHeavyAnalysis: Bool {
+        guard let last = lastHeavyAnalysisDate else { return true }
+        return Date().timeIntervalSince(last) >= Self.heavyAnalysisTTL
+    }
+
     // MARK: - ML Integration
     let mlOrchestrator = MLOrchestrator()
     /// ML-predicted risk for tomorrow
@@ -37,18 +50,19 @@ final class AnalysisEngine {
     }
 
     /// Run the full analysis pipeline on the given time series data.
-    /// Split into two phases:
-    /// - `runCoreAnalysis`: baselines, trends, anomalies, scores, correlations (blocks UI)
-    /// - `runDeferredAnalysis`: insight generators, health risks, illness, causal chains (background)
+    /// Split into phases:
+    /// - `runCoreAnalysis`: baselines, trends, anomalies, scores (blocks UI)
+    /// - `runDeferredEssentials`: lightweight insight generators, health risks, illness warnings
+    /// - `runDeferredHeavy`: correlations, historical, cross-metric anomalies, causal chains
     func runFullAnalysis(timeSeries: [HealthMetric: MetricTimeSeries]) {
         runCoreAnalysis(timeSeries: timeSeries)
-        runDeferredAnalysis(timeSeries: timeSeries)
+        runDeferredEssentials(timeSeries: timeSeries)
+        runDeferredHeavy(timeSeries: timeSeries)
     }
 
     // MARK: - Phase 1: Core Analysis (required before UI renders)
 
     /// Computes baselines, trends, anomalies, and scores — the minimum needed to render the UI.
-    /// Correlations, historical context, insights, and risks are deferred to `runDeferredAnalysis`.
     /// All computation uses local variables; @Observable properties are batch-updated at the end
     /// to minimize UI re-render cascades.
     func runCoreAnalysis(timeSeries: [HealthMetric: MetricTimeSeries]) {
@@ -138,34 +152,24 @@ final class AnalysisEngine {
         persistence.saveLastAnalysisDate(Date())
     }
 
-    // MARK: - Phase 2: Deferred Analysis (runs after UI renders)
+    // MARK: - Phase 2A: Deferred Essentials (lightweight, runs immediately after core)
 
-    /// Runs correlations, historical analysis, all insight generators, health risk assessment,
-    /// illness warnings, cross-metric anomaly detection, and causal chain analysis.
-    /// Uses local variables and batch-applies results to minimize re-renders.
-    func runDeferredAnalysis(timeSeries: [HealthMetric: MetricTimeSeries]) {
-        // Snapshot core results (already set by runCoreAnalysis)
+    /// Runs lightweight insight generators, health risks, and illness warnings.
+    /// These are cheap (~15K operations total) and provide Home tab content quickly.
+    func runDeferredEssentials(timeSeries: [HealthMetric: MetricTimeSeries]) {
         let coreBaselines = baselines
         let coreTrends = trends
         let coreAnomalies = anomalies
 
-        // ── Correlations + Historical context (moved from core for faster startup) ──
-        let newCorrelations = CorrelationAnalyzer.analyzeAll(timeSeries: timeSeries)
-        let newHistoricalContext = HistoricalAnalyzer.analyzeAll(
-            timeSeries: timeSeries,
-            baselines: coreBaselines
-        )
-
-        // ── Insight generators ──
+        // ── Lightweight insight generators (no correlations/historical needed) ──
         var allInsights = InsightGenerator.generate(
             anomalies: coreAnomalies,
             trends: coreTrends,
             baselines: coreBaselines,
-            historicalContext: newHistoricalContext,
-            correlations: newCorrelations,
+            historicalContext: [:],
+            correlations: [],
             timeSeries: timeSeries
         )
-        allInsights.append(contentsOf: CorrelationAnalyzer.generateInsights(from: newCorrelations))
         allInsights.append(contentsOf: RecoveryAnalyzer.generateInsights(
             timeSeries: timeSeries, baselines: coreBaselines, trends: coreTrends
         ))
@@ -176,46 +180,91 @@ final class AnalysisEngine {
         allInsights.append(contentsOf: MultiMetricClusterAnalyzer.generateInsights(
             anomalies: coreAnomalies, trends: coreTrends, baselines: coreBaselines
         ))
-        allInsights.append(contentsOf: CognitiveEnergyAnalyzer.generateInsights(
-            timeSeries: timeSeries, baselines: coreBaselines, trends: coreTrends, correlations: newCorrelations
-        ))
-        allInsights.append(contentsOf: HistoricalAnalyzer.generateInsights(
-            historicalContext: newHistoricalContext, baselines: coreBaselines
-        ))
 
-        // ── Heavy secondary analyzers ──
+        // ── Lightweight secondary analyzers ──
         let newHealthRisks = HealthRiskEngine.assessAllRisks(
             timeSeries: timeSeries, baselines: coreBaselines, trends: coreTrends, anomalies: coreAnomalies
         )
-
         let newIllnessWarnings = IllnessEarlyWarning.evaluate(timeSeries: timeSeries, baselines: coreBaselines)
         allInsights.append(contentsOf: IllnessEarlyWarning.generateInsights(from: newIllnessWarnings))
 
-        let newCrossMetricAnomalies = CrossMetricAnomalyDetector.detect(timeSeries: timeSeries, baselines: coreBaselines)
-        allInsights.append(contentsOf: CrossMetricAnomalyDetector.generateInsights(from: newCrossMetricAnomalies))
-
-        let newCausalChains = CausalChainEngine.buildChains(
-            correlations: newCorrelations, anomalies: coreAnomalies,
-            trends: coreTrends, timeSeries: timeSeries, baselines: coreBaselines
-        )
-        allInsights.append(contentsOf: CausalChainEngine.generateInsights(from: newCausalChains))
-
-        // ML insights
+        // ML insights (if previously computed — we don't trigger ML here)
         if mlOrchestrator.hasRunOnce {
             allInsights.append(contentsOf: mlOrchestrator.generateInsights())
         }
 
         allInsights.sort { $0.priorityScore > $1.priorityScore }
 
-        // ── Batch apply all deferred results ──
-        correlations = newCorrelations
-        historicalContext = newHistoricalContext
+        // ── Batch apply essentials ──
         insights = allInsights
         healthRisks = newHealthRisks
         illnessWarnings = newIllnessWarnings
+    }
+
+    // MARK: - Phase 2B: Deferred Heavy (expensive, runs with delay)
+
+    /// Runs correlations, historical analysis, cross-metric anomaly detection, and causal chains.
+    /// These are the CPU-heavy operations (~300K+ operations) that should run with thermal breaks.
+    /// Skips computation if results are fresh (within TTL) and `force` is false.
+    func runDeferredHeavy(timeSeries: [HealthMetric: MetricTimeSeries], force: Bool = false) {
+        guard force || needsHeavyAnalysis else {
+            isAnalyzing = false
+            return
+        }
+
+        let coreBaselines = baselines
+        let coreTrends = trends
+        let coreAnomalies = anomalies
+
+        // ── Heavy cross-metric analysis ──
+        let newCorrelations = CorrelationAnalyzer.analyzeAll(timeSeries: timeSeries)
+        let newHistoricalContext = HistoricalAnalyzer.analyzeAll(
+            timeSeries: timeSeries,
+            baselines: coreBaselines
+        )
+        let newCrossMetricAnomalies = CrossMetricAnomalyDetector.detect(
+            timeSeries: timeSeries, baselines: coreBaselines
+        )
+
+        // ── Insights that need correlations/historical ──
+        var heavyInsights: [Insight] = []
+        heavyInsights.append(contentsOf: CorrelationAnalyzer.generateInsights(from: newCorrelations))
+        heavyInsights.append(contentsOf: HistoricalAnalyzer.generateInsights(
+            historicalContext: newHistoricalContext, baselines: coreBaselines
+        ))
+        heavyInsights.append(contentsOf: CognitiveEnergyAnalyzer.generateInsights(
+            timeSeries: timeSeries, baselines: coreBaselines, trends: coreTrends, correlations: newCorrelations
+        ))
+        heavyInsights.append(contentsOf: CrossMetricAnomalyDetector.generateInsights(from: newCrossMetricAnomalies))
+
+        // ── Causal chains (needs correlations) ──
+        let newCausalChains = CausalChainEngine.buildChains(
+            correlations: newCorrelations, anomalies: coreAnomalies,
+            trends: coreTrends, timeSeries: timeSeries, baselines: coreBaselines
+        )
+        heavyInsights.append(contentsOf: CausalChainEngine.generateInsights(from: newCausalChains))
+
+        // Merge heavy insights into the existing insights from essentials
+        var mergedInsights = insights
+        mergedInsights.append(contentsOf: heavyInsights)
+        mergedInsights.sort { $0.priorityScore > $1.priorityScore }
+
+        // ── Batch apply heavy results ──
+        correlations = newCorrelations
+        historicalContext = newHistoricalContext
         crossMetricAnomalies = newCrossMetricAnomalies
         causalChains = newCausalChains
+        insights = mergedInsights
+        lastHeavyAnalysisDate = Date()
         isAnalyzing = false
+    }
+
+    // MARK: - Legacy Compatibility
+
+    /// Old single-method deferred analysis — calls both tiers sequentially.
+    func runDeferredAnalysis(timeSeries: [HealthMetric: MetricTimeSeries]) {
+        runDeferredEssentials(timeSeries: timeSeries)
+        runDeferredHeavy(timeSeries: timeSeries, force: true)
     }
 
     // MARK: - ML Pipeline

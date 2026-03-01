@@ -270,18 +270,16 @@ struct InsightGenerator {
     static func filterToActionable(_ insights: [Insight], maxCount: Int = 5) -> [Insight] {
         insights
             .filter { insight in
-                // Filter out generic stable/improving insights that add no value
-                if insight.trend == .stable && insight.severity == .info && abs(insight.deviationPercent) < 5 {
-                    // Exception: show stable metrics in extreme percentiles (top/bottom 10%)
-                    if let pct = insight.context?.allTimePercentile, pct <= 10 || pct >= 90 {
-                        return true
-                    }
-                    return false
+                // Only show insights the user can act on: declining trends or warning+ severity
+                if insight.severity >= .warning { return true }
+                if insight.trend == .declining && abs(insight.deviationPercent) >= 5 {
+                    return actionabilityScore(insight) >= 40
                 }
-                if insight.trend == .improving && insight.severity == .info && abs(insight.deviationPercent) < 5 {
-                    return false
+                // Exception: extreme percentiles (bottom 10%) even if stable
+                if let pct = insight.context?.allTimePercentile, pct <= 10 {
+                    return true
                 }
-                return actionabilityScore(insight) >= 40
+                return false
             }
             .sorted { $0.priorityScore > $1.priorityScore }
             .prefix(maxCount)

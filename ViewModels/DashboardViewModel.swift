@@ -12,16 +12,21 @@ final class DashboardViewModel {
     var isLoading = false
     var hasCompletedInitialLoad = false
     var errorMessage: String?
+    private var isSyncRetryInProgress = false
+    private var lastSyncRetryAttempt: Date?
 
     /// Tracks last full analysis to avoid redundant re-runs when no new data arrives
     private var lastAnalysisDate: Date?
     private static let analysisMinInterval: TimeInterval = 300  // 5 minutes
+    private static let syncRetryMinInterval: TimeInterval = 600  // 10 minutes
 
     // MARK: - Cached Properties (updated on refresh, not on every view render)
     private(set) var cachedScoreChangeFromLastWeek: Int?
     private(set) var cachedTrendsSummary: TrendsSummary?
     private(set) var cachedHistoricalHighlights: [HistoricalHighlight] = []
     private(set) var cachedTopCorrelations: [HealthCorrelation] = []
+    private(set) var cachedFocusCategories: Set<HealthCategory> = []
+    private(set) var cachedFocusedInsights: [Insight] = []
 
     // MARK: - Discovery (Day 0)
     var discoveries: [Discovery] = []
@@ -50,18 +55,14 @@ final class DashboardViewModel {
         analysisEngine.categoryScores
     }
 
-    /// User's selected health focuses — used to filter insights and sort content
+    /// User's selected health focuses — cached to avoid Keychain+AES-GCM decrypt per access
     var focusCategories: Set<HealthCategory> {
-        let focuses = persistence.loadHealthFocuses()
-        return HealthFocus.categories(for: focuses)
+        cachedFocusCategories
     }
 
-    /// Insights filtered to user's focus areas + any critical/warning severity
+    /// Insights filtered to user's focus areas + any critical/warning severity — cached
     var focusedInsights: [Insight] {
-        let categories = focusCategories
-        return analysisEngine.insights.filter { insight in
-            insight.severity >= .warning || categories.contains(insight.metric.category)
-        }
+        cachedFocusedInsights
     }
 
     /// The single most important insight for today's briefing headline
@@ -317,8 +318,24 @@ final class DashboardViewModel {
         self.store = store
     }
 
-    /// Initial load: authorize, fetch, analyze
-    func load() async {
+    /// Use results produced by onboarding calibration without re-running heavy first-load work.
+    /// Assumes shared `healthKitManager` + `analysisEngine` were already populated.
+    func hydrateFromCalibration() {
+        isLoading = false
+        errorMessage = nil
+        hasCompletedInitialLoad = true
+        updateCachedProperties()
+        lastAnalysisDate = Date()
+    }
+
+    /// Initial load: authorize, fetch, analyze.
+    /// `skipDiscovery` is used by onboarding calibration to avoid extra first-day computation.
+    func load(
+        skipDiscovery: Bool = false,
+        awaitDeferredAnalysis: Bool = false,
+        forceHeavyDeferred: Bool = false,
+        runHousekeeping: Bool = true
+    ) async {
         isLoading = true
         defer { isLoading = false }
 
@@ -334,11 +351,16 @@ final class DashboardViewModel {
             return
         }
 
-        await refresh()
+        await refresh(
+            awaitDeferredAnalysis: awaitDeferredAnalysis,
+            forceHeavyDeferred: forceHeavyDeferred,
+            runHousekeeping: runHousekeeping
+        )
         hasCompletedInitialLoad = true
 
-        // Day 0 discovery generation — after refresh so all data is available
-        if isFirstLaunchSync {
+        // Day 0 discovery generation — after refresh so all data is available.
+        // Skipped when onboarding already provides a dedicated calibration flow.
+        if isFirstLaunchSync && !skipDiscovery {
             syncPhase = .discovering
             let results = DiscoveryEngine.generateDiscoveries(
                 timeSeries: healthKitManager.timeSeries,
@@ -362,10 +384,35 @@ final class DashboardViewModel {
         UserDefaults.standard.set(true, forKey: AppKeys.App.hasSeenDiscovery)
     }
 
+    /// True when the initial load finished but no health data is available despite authorization.
+    /// Used by Home timer and scene-phase recovery to trigger automatic retries.
+    var needsSyncRetry: Bool {
+        hasCompletedInitialLoad && healthKitManager.timeSeries.isEmpty && healthKitManager.isAuthorized
+    }
+
+    /// Retry the full sync if Home is stuck in empty state.
+    /// Debounced so concurrent calls from timer + scene-phase don't overlap.
+    func retrySyncIfNeeded() async {
+        guard needsSyncRetry, !isSyncRetryInProgress else { return }
+        if let lastAttempt = lastSyncRetryAttempt,
+           Date().timeIntervalSince(lastAttempt) < Self.syncRetryMinInterval {
+            return
+        }
+
+        lastSyncRetryAttempt = Date()
+        isSyncRetryInProgress = true
+        defer { isSyncRetryInProgress = false }
+        await refresh()
+    }
+
     /// Refresh data from HealthKit, sync to on-device store, and re-run analysis.
     /// Skips the heavy analysis pipeline if no new data arrived and we analyzed recently.
     /// Note: Does NOT manage `isLoading` — callers (`load()`, `.refreshable`) manage their own loading state.
-    func refresh() async {
+    func refresh(
+        awaitDeferredAnalysis: Bool = false,
+        forceHeavyDeferred: Bool = false,
+        runHousekeeping: Bool = true
+    ) async {
         // Capture previous trends before re-analysis
         let prevTrends = previousTrends
 
@@ -413,123 +460,199 @@ final class DashboardViewModel {
         let currentBaselines = analysisEngine.baselines
         let metricsCount = healthKitManager.timeSeries.count
 
-        Task.detached(priority: .utility) { [weak self, store, prevTrends] in
+        // Calibration mode: wait for full deferred analysis before returning.
+        if awaitDeferredAnalysis {
+            await Task.detached(priority: .utility) { [analysisEngine] in
+                analysisEngine.runDeferredEssentials(timeSeries: ts)
+            }.value
+
+            updateCachedProperties()
+
+            await Task.detached(priority: .background) { [analysisEngine] in
+                analysisEngine.runDeferredHeavy(timeSeries: ts, force: forceHeavyDeferred)
+            }.value
+
+            updateCachedProperties()
+
+            await runPostHeavyPhase(
+                timeSeries: ts,
+                prevTrends: prevTrends,
+                currentScore: currentScore,
+                currentAnomalies: currentAnomalies,
+                currentTrends: currentTrends,
+                currentCategoryScores: currentCategoryScores,
+                currentBaselines: currentBaselines,
+                metricsCount: metricsCount,
+                runHousekeeping: runHousekeeping
+            )
+            return
+        }
+
+        // Phase 2A: Essential insights — lightweight (~15K ops), runs immediately
+        Task.detached(priority: .utility) { [weak self] in
+            guard let self else { return }
+            self.analysisEngine.runDeferredEssentials(timeSeries: ts)
+            await MainActor.run { self.updateCachedProperties() }
+        }
+
+        // Phase 2B: Heavy analysis + housekeeping — delayed for thermal relief
+        Task.detached(priority: .background) { [weak self, prevTrends] in
             guard let self else { return }
             let analysisEngine = self.analysisEngine
 
-            // Run all insight generators + health risks + illness warnings etc.
-            analysisEngine.runDeferredAnalysis(timeSeries: ts)
+            // Thermal break — let CPU cool after core + essentials
+            try? await Task.sleep(for: .seconds(3))
+
+            // Heavy cross-metric analysis (correlations, historical, causal chains)
+            // Skipped automatically if results are still fresh (1-hour TTL)
+            analysisEngine.runDeferredHeavy(timeSeries: ts, force: forceHeavyDeferred)
 
             // Update cached properties now that correlations + historicalContext are available
             await MainActor.run { self.updateCachedProperties() }
 
-            // Snapshot correlations after deferred analysis populates them
-            let currentCorrelations = analysisEngine.correlations
-
-            // Score trajectory + baseline drift insights (need stored history)
-            let scoreHistory = store.loadScoreHistory(days: 60)
-            let trajectoryInsights = ScoreTrajectoryAnalyzer.generateInsights(
-                scoreHistory: scoreHistory,
-                categoryScores: currentCategoryScores
+            await self.runPostHeavyPhase(
+                timeSeries: ts,
+                prevTrends: prevTrends,
+                currentScore: currentScore,
+                currentAnomalies: currentAnomalies,
+                currentTrends: currentTrends,
+                currentCategoryScores: currentCategoryScores,
+                currentBaselines: currentBaselines,
+                metricsCount: metricsCount,
+                runHousekeeping: runHousekeeping
             )
-            let baselineHistory = store.loadAllBaselineHistory(forMetrics: Set(currentBaselines.keys))
-            var extraInsights = trajectoryInsights
-            if !baselineHistory.isEmpty {
-                extraInsights.append(contentsOf: BaselineDriftDetector.generateInsights(
-                    currentBaselines: currentBaselines,
-                    baselineHistory: baselineHistory,
-                    correlations: currentCorrelations
-                ))
-            }
-            if !extraInsights.isEmpty {
-                analysisEngine.insights.append(contentsOf: extraInsights)
-                analysisEngine.insights.sort { $0.priorityScore > $1.priorityScore }
-            }
+        }
+    }
 
-            // CloudKit backup (throttled to once per 6 hours)
-            let persistence = PersistenceManager()
-            await CloudBackupManager.shared.backupIfNeeded(store: store, persistence: persistence)
+    /// Runs post-heavy enrichments and optional housekeeping (backup/notifications/analytics).
+    private func runPostHeavyPhase(
+        timeSeries: [HealthMetric: MetricTimeSeries],
+        prevTrends: [HealthMetric: TrendDirection],
+        currentScore: Int,
+        currentAnomalies: [AnomalyDetector.AnomalyResult],
+        currentTrends: [HealthMetric: TrendAnalyzer.TrendResult],
+        currentCategoryScores: [HealthScore],
+        currentBaselines: [HealthMetric: UserBaseline],
+        metricsCount: Int,
+        runHousekeeping: Bool
+    ) async {
+        let currentCorrelations = analysisEngine.correlations
 
-            // Analytics tracking
-            AppAnalytics.shared.trackAnalysisCompleted(
-                score: currentScore,
-                insightsCount: analysisEngine.insights.count,
-                anomaliesCount: currentAnomalies.count,
-                risksCount: analysisEngine.healthRisks.count,
-                correlationsCount: currentCorrelations.count,
-                illnessWarningsCount: analysisEngine.illnessWarnings.count,
-                metricsAnalyzed: metricsCount
-            )
+        // Score trajectory + baseline drift insights (need stored history)
+        let scoreHistory = store.loadScoreHistory(days: 60)
+        let trajectoryInsights = ScoreTrajectoryAnalyzer.generateInsights(
+            scoreHistory: scoreHistory,
+            categoryScores: currentCategoryScores
+        )
+        let baselineHistory = store.loadAllBaselineHistory(forMetrics: Set(currentBaselines.keys))
+        var extraInsights = trajectoryInsights
+        if !baselineHistory.isEmpty {
+            extraInsights.append(contentsOf: BaselineDriftDetector.generateInsights(
+                currentBaselines: currentBaselines,
+                baselineHistory: baselineHistory,
+                correlations: currentCorrelations
+            ))
+        }
+        if !extraInsights.isEmpty {
+            analysisEngine.insights.append(contentsOf: extraInsights)
+            analysisEngine.insights.sort { $0.priorityScore > $1.priorityScore }
+        }
 
-            // Schedule notifications
-            let prefs = persistence.loadPreferences()
-            let notificationsEnabled =
-                prefs.dailySummaryEnabled ||
-                prefs.weeklySummaryEnabled ||
-                prefs.criticalAlertsEnabled ||
-                prefs.warningAlertsEnabled ||
-                prefs.heartRateSpikeAlertsEnabled ||
-                prefs.trendReversalAlertsEnabled ||
-                prefs.improvementAlertsEnabled ||
-                prefs.watchNotWornReminderEnabled ||
-                prefs.lowBatteryReminderEnabled
-            let notificationsAuthorized = notificationsEnabled
-                ? await NotificationManager.shared.requestAuthorizationIfNeeded()
-                : false
-            let previousScore = persistence.loadPreviousWeekScore()
-            let scoreChange = previousScore.map { currentScore - $0 } ?? 0
-            persistence.recordWeeklyScore(currentScore)
+        guard runHousekeeping else { return }
 
-            AppAnalytics.shared.trackWeeklyScoreChange(
-                newScore: currentScore,
-                previousScore: previousScore,
-                delta: scoreChange
-            )
+        // CloudKit backup (throttled to once per 6 hours)
+        let persistence = PersistenceManager()
+        await CloudBackupManager.shared.backupIfNeeded(store: store, persistence: persistence)
 
-            let anomalyCount = currentAnomalies.filter { $0.severity >= .warning }.count
-            let categoryBreakdown = currentCategoryScores.compactMap { score -> String? in
-                guard let cat = score.category else { return nil }
-                return "\(cat.shortName): \(score.score)"
-            }.joined(separator: " | ")
+        // Analytics tracking
+        AppAnalytics.shared.trackAnalysisCompleted(
+            score: currentScore,
+            insightsCount: analysisEngine.insights.count,
+            anomaliesCount: currentAnomalies.count,
+            risksCount: analysisEngine.healthRisks.count,
+            correlationsCount: currentCorrelations.count,
+            illnessWarningsCount: analysisEngine.illnessWarnings.count,
+            metricsAnalyzed: metricsCount
+        )
 
-            DailySummaryScheduler.schedule(
-                score: currentScore,
-                anomalyCount: anomalyCount,
-                topInsights: Array(analysisEngine.insights.prefix(3)),
-                categoryBreakdown: categoryBreakdown,
+        // Schedule notifications
+        let prefs = persistence.loadPreferences()
+        let notificationsEnabled =
+            prefs.dailySummaryEnabled ||
+            prefs.weeklySummaryEnabled ||
+            prefs.criticalAlertsEnabled ||
+            prefs.warningAlertsEnabled ||
+            prefs.heartRateSpikeAlertsEnabled ||
+            prefs.trendReversalAlertsEnabled ||
+            prefs.improvementAlertsEnabled ||
+            prefs.watchNotWornReminderEnabled ||
+            prefs.lowBatteryReminderEnabled
+        let notificationsAuthorized = notificationsEnabled
+            ? await NotificationManager.shared.requestAuthorizationIfNeeded()
+            : false
+        let previousScore = persistence.loadPreviousWeekScore()
+        let scoreChange = previousScore.map { currentScore - $0 } ?? 0
+        persistence.recordWeeklyScore(currentScore)
+
+        AppAnalytics.shared.trackWeeklyScoreChange(
+            newScore: currentScore,
+            previousScore: previousScore,
+            delta: scoreChange
+        )
+
+        let anomalyCount = currentAnomalies.filter { $0.severity >= .warning }.count
+        let categoryBreakdown = currentCategoryScores.compactMap { score -> String? in
+            guard let cat = score.category else { return nil }
+            return "\(cat.shortName): \(score.score)"
+        }.joined(separator: " | ")
+
+        DailySummaryScheduler.schedule(
+            score: currentScore,
+            anomalyCount: anomalyCount,
+            topInsights: Array(analysisEngine.insights.prefix(3)),
+            categoryBreakdown: categoryBreakdown,
+            preferences: prefs
+        )
+
+        let periodSummary7d = await MainActor.run { self.periodSummary(for: .sevenDays) }
+        let topTrends: [(metric: String, direction: String, change: Double)] = currentTrends
+            .sorted { abs($0.value.weekOverWeekChange) > abs($1.value.weekOverWeekChange) }
+            .prefix(5)
+            .map { (metric: $0.key.displayName, direction: $0.value.direction.symbol, change: $0.value.weekOverWeekChange) }
+
+        WeeklySummaryScheduler.schedule(
+            score: currentScore,
+            scoreChange: scoreChange,
+            improvedCount: periodSummary7d.improvedCount,
+            declinedCount: periodSummary7d.declinedCount,
+            topTrends: topTrends,
+            preferences: prefs
+        )
+
+        if notificationsAuthorized {
+            AlertEvaluator.evaluate(
+                anomalies: currentAnomalies,
+                trends: currentTrends,
+                timeSeries: timeSeries,
+                previousTrends: prevTrends,
                 preferences: prefs
             )
-
-            let periodSummary7d = await MainActor.run { self.periodSummary(for: .sevenDays) }
-            let topTrends: [(metric: String, direction: String, change: Double)] = currentTrends
-                .sorted { abs($0.value.weekOverWeekChange) > abs($1.value.weekOverWeekChange) }
-                .prefix(5)
-                .map { (metric: $0.key.displayName, direction: $0.value.direction.symbol, change: $0.value.weekOverWeekChange) }
-
-            WeeklySummaryScheduler.schedule(
-                score: currentScore,
-                scoreChange: scoreChange,
-                improvedCount: periodSummary7d.improvedCount,
-                declinedCount: periodSummary7d.declinedCount,
-                topTrends: topTrends,
-                preferences: prefs
-            )
-
-            if notificationsAuthorized {
-                AlertEvaluator.evaluate(
-                    anomalies: currentAnomalies,
-                    trends: currentTrends,
-                    timeSeries: ts,
-                    previousTrends: prevTrends,
-                    preferences: prefs
-                )
-            }
         }
     }
 
     // MARK: - Cache Update (called once per refresh, not per render)
 
     private func updateCachedProperties() {
+        // Cache focus categories first (Keychain + AES-GCM decrypt — do once, not per view access)
+        let focuses = persistence.loadHealthFocuses()
+        cachedFocusCategories = HealthFocus.categories(for: focuses)
+
+        // Cache focused insights (depends on focus categories)
+        let categories = cachedFocusCategories
+        cachedFocusedInsights = analysisEngine.insights.filter { insight in
+            insight.severity >= .warning || categories.contains(insight.metric.category)
+        }
+
         cachedScoreChangeFromLastWeek = computeScoreChangeFromLastWeek()
         cachedTrendsSummary = computeTrendsSummary()
         cachedHistoricalHighlights = computeHistoricalHighlights()

@@ -240,6 +240,8 @@ struct CrossMetricAnomalyDetector {
 
         let eligibleMetrics = metricCounts
             .filter { $0.value >= 14 }
+            .sorted { $0.value > $1.value }  // most-observed first
+            .prefix(12)                       // cap pairs to O(66) instead of O(M²)
             .map(\.key)
             .sorted { $0.rawValue < $1.rawValue }
 
@@ -472,6 +474,8 @@ struct CrossMetricAnomalyDetector {
             let matchRatio = Double(matchingMetrics) / Double(comparedMetrics)
             if matchRatio >= 0.8 {
                 count += 1
+                // Early-exit: once we know it's not rare, skip remaining history
+                if count >= maxSimilarDaysThreshold { return count }
             }
         }
 

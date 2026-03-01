@@ -7,11 +7,41 @@ import Observation
 final class HealthKitManager {
     let healthStore = HKHealthStore()
 
+    struct SyncProgress {
+        enum Phase: String {
+            case preparing
+            case fetching
+            case saving
+            case finalizing
+            case completed
+
+            var title: String {
+                switch self {
+                case .preparing: return "Preparing"
+                case .fetching: return "Scanning Health Data"
+                case .saving: return "Saving Data"
+                case .finalizing: return "Finalizing"
+                case .completed: return "Sync Complete"
+                }
+            }
+        }
+
+        var phase: Phase
+        var startedAt: Date
+        var metricsCompleted: Int
+        var totalMetrics: Int
+        var metricsWithSamples: Int
+        var samplesDiscovered: Int
+        var oldestSampleDate: Date?
+        var latestMetric: HealthMetric?
+    }
+
     var isAuthorized = false
     var isLoading = false
     var timeSeries: [HealthMetric: MetricTimeSeries] = [:]
     var lastRefresh: Date?
     var error: String?
+    var syncProgress: SyncProgress?
 
     /// Result of a loadAndSync call — tells callers what changed
     struct SyncResult {
@@ -78,14 +108,29 @@ final class HealthKitManager {
     @discardableResult
     func loadAndSync(store: HealthDataStore) async -> SyncResult {
         let syncStartTime = Date()
+        isLoading = true
+        syncProgress = SyncProgress(
+            phase: .preparing,
+            startedAt: syncStartTime,
+            metricsCompleted: 0,
+            totalMetrics: HealthMetric.allCases.count,
+            metricsWithSamples: 0,
+            samplesDiscovered: 0,
+            oldestSampleDate: nil,
+            latestMetric: nil
+        )
 
         // Phase 1: Instantly load stored data so the UI has something to show
-        timeSeries = store.loadAllTimeSeries()
+        // Skip if we already have data (e.g. pull-to-refresh) to avoid redundant @Observable mutation
+        if timeSeries.isEmpty {
+            timeSeries = store.loadAllTimeSeries()
+        }
 
         // Phase 2: Gather sync dates before entering the task group (ModelContext is not thread-safe)
         let syncDates = store.allSyncDates()
         let isFirstSync = syncDates.isEmpty
         let endDate = Date()
+        syncProgress?.phase = .fetching
 
         // Phase 3: Fetch new data from HealthKit in parallel
         var newData: [(HealthMetric, MetricTimeSeries)] = []
@@ -114,10 +159,24 @@ final class HealthKitManager {
                 if !series.samples.isEmpty {
                     newData.append((metric, series))
                 }
+                syncProgress?.metricsCompleted += 1
+                syncProgress?.latestMetric = metric
+                if !series.samples.isEmpty {
+                    syncProgress?.metricsWithSamples += 1
+                    syncProgress?.samplesDiscovered += series.samples.count
+                    if let seriesOldest = series.samples.first?.date {
+                        if let existingOldest = syncProgress?.oldestSampleDate {
+                            syncProgress?.oldestSampleDate = min(existingOldest, seriesOldest)
+                        } else {
+                            syncProgress?.oldestSampleDate = seriesOldest
+                        }
+                    }
+                }
             }
         }
 
         // Phase 4: Save new data to SwiftData (sequential, main actor)
+        syncProgress?.phase = .saving
         for (metric, series) in newData {
             store.saveSamples(series.samples, for: metric)
         }
@@ -129,6 +188,7 @@ final class HealthKitManager {
         }
 
         // Phase 5: Reload complete stored data (includes both old + new)
+        syncProgress?.phase = .finalizing
         let reloaded = store.loadAllTimeSeries()
         if reloaded.isEmpty && !newData.isEmpty {
             // SwiftData failed silently — use the fetched HealthKit data directly
@@ -143,6 +203,7 @@ final class HealthKitManager {
 
         lastRefresh = Date()
         isLoading = false
+        syncProgress?.phase = .completed
 
         // Track sync completion
         let totalNewSamples = newData.reduce(0) { $0 + $1.1.samples.count }

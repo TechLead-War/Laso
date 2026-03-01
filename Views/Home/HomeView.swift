@@ -8,11 +8,12 @@ struct HomeView: View {
     let deviceSourceManager: DeviceSourceManager
     @Binding var navigationPath: NavigationPath
     @Binding var showSettings: Bool
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var livePulse = false
-    @State private var refreshTick = 0
     @State private var homeRefreshTimer: Timer?
     @State private var weeklyReviewViewModel: WeeklyReviewViewModel?
+    @State private var showScoreGuide = false
 
     var body: some View {
         Group {
@@ -40,6 +41,9 @@ struct HomeView: View {
                 onDismiss: { viewModel.dismissDiscovery() }
             )
         }
+        .sheet(isPresented: $showScoreGuide) {
+            ScoreGuideSheet()
+        }
         .refreshable {
             AppAnalytics.shared.trackPullToRefresh(screen: .home)
             AppAnalytics.shared.trackActivationMilestone(.firstPullToRefresh)
@@ -52,23 +56,60 @@ struct HomeView: View {
             livePulse = true
             startHomeRefresh()
             AppAnalytics.shared.trackFeatureOpen(.home)
+            showScoreGuideIfNeeded()
         }
         .onDisappear {
-            homeRefreshTimer?.invalidate()
-            homeRefreshTimer = nil
+            stopHomeRefresh()
+            stopFirstLaunchDotTimer()
             livePulse = false
             AppAnalytics.shared.trackFeatureClose(.home)
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                startHomeRefresh()
+            } else {
+                stopHomeRefresh()
+                stopFirstLaunchDotTimer()
+            }
+        }
+        .onChange(of: viewModel.isLoading) { _, isLoading in
+            if !isLoading {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    showScoreGuideIfNeeded()
+                }
+            }
         }
     }
 
     /// Periodically refresh home data — uses tiered polling to minimize HealthKit queries.
     /// Fast-changing data (steps, calories) every 60s; slow-changing (sleep, workout) every 10min.
+    /// If timeSeries is empty (bad initial sync), retries the full sync instead of lightweight fetches.
+    private static let minHomeRefreshInterval: TimeInterval = 60
     private func startHomeRefresh() {
         homeRefreshTimer?.invalidate()
-        homeRefreshTimer = Timer.scheduledTimer(withTimeInterval: TimeInterval(RemoteConfigManager.shared.homeRefreshIntervalSeconds), repeats: true) { _ in
-            liveViewModel.fetchHomeDataTiered()
-            refreshTick += 1
+        let requestedInterval = TimeInterval(RemoteConfigManager.shared.homeRefreshIntervalSeconds)
+        let interval = max(requestedInterval, Self.minHomeRefreshInterval)
+        let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
+            if viewModel.needsSyncRetry {
+                Task { await viewModel.retrySyncIfNeeded() }
+            } else {
+                liveViewModel.fetchHomeDataTiered()
+            }
         }
+        timer.tolerance = min(10, interval * 0.2)
+        homeRefreshTimer = timer
+    }
+
+    private func showScoreGuideIfNeeded() {
+        guard hasData,
+              !viewModel.showDiscovery,
+              !UserDefaults.standard.bool(forKey: AppKeys.App.hasSeenScoreGuide) else { return }
+        showScoreGuide = true
+    }
+
+    private func stopHomeRefresh() {
+        homeRefreshTimer?.invalidate()
+        homeRefreshTimer = nil
     }
 
     /// Lazily created and reused WeeklyReviewViewModel to avoid re-allocation on every body render
@@ -663,6 +704,7 @@ struct HomeView: View {
     @State private var firstLaunchIconScale: CGFloat = 0.8
     @State private var firstLaunchDotCount = 0
     @State private var firstLaunchAppeared = false
+    @State private var firstLaunchDotTimer: Timer?
 
     private var firstLaunchPhase: (icon: String, text: String, color: Color) {
         switch viewModel.syncPhase {
@@ -724,14 +766,30 @@ struct HomeView: View {
         .onAppear {
             firstLaunchAppeared = true
             firstLaunchIconScale = 1.0
-            Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
-                guard firstLaunchAppeared else { timer.invalidate(); return }
-                firstLaunchDotCount = (firstLaunchDotCount % 3) + 1
-            }
+            startFirstLaunchDotTimer()
         }
         .onDisappear {
             firstLaunchAppeared = false
+            stopFirstLaunchDotTimer()
         }
+    }
+
+    private func startFirstLaunchDotTimer() {
+        stopFirstLaunchDotTimer()
+        let timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
+            guard firstLaunchAppeared else {
+                timer.invalidate()
+                return
+            }
+            firstLaunchDotCount = (firstLaunchDotCount % 3) + 1
+        }
+        timer.tolerance = 0.1
+        firstLaunchDotTimer = timer
+    }
+
+    private func stopFirstLaunchDotTimer() {
+        firstLaunchDotTimer?.invalidate()
+        firstLaunchDotTimer = nil
     }
 
     private func errorView(_ message: String) -> some View {

@@ -32,6 +32,7 @@
 		2E52654793C791C7D17290E1 /* SessionTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 090582BC4080434BB854B76C /* SessionTracker.swift */; };
 		3232F287CD8399F46204F71B /* SleepPerformanceAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D06050FC363373F86388B7 /* SleepPerformanceAnalyzer.swift */; };
 		336798DBA725DB5F6CA4750A /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE89F23BCF8C78C43EF02806 /* HomeView.swift */; };
+		SC0G01D3E5F6071812345001 /* ScoreGuideSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC0G01F3E5F6071812345001 /* ScoreGuideSheet.swift */; };
 		35739B15E146FD7C5DD05500 /* ConnectedDevicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D47CC3DA4706CBBFCA45DBB /* ConnectedDevicesView.swift */; };
 		3666EC6E2CD0DBD8DCC5600D /* HealthScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CA1197FB7924596AE0FB1B3 /* HealthScore.swift */; };
 		3C26F7D4A54DF11714EA0B4C /* MetricTimeSeries.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEB6FD13F69A1C4D05BA9C00 /* MetricTimeSeries.swift */; };
@@ -203,6 +204,7 @@
 		8AD419B0E2DDFF1B068F480E /* ActionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionCard.swift; sourceTree = "<group>"; };
 		9D418CA7C1389DB583EEE75D /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
 		9EE3D24D56D4FF0A64BA0321 /* SleepCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepCard.swift; sourceTree = "<group>"; };
+		SC0G01F3E5F6071812345001 /* ScoreGuideSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreGuideSheet.swift; sourceTree = "<group>"; };
 		A0A12061DC73AA4746DA1D13 /* Date+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Extensions.swift"; sourceTree = "<group>"; };
 		A0FEFA8B2E9C3EAD5191FC58 /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6071812345001 /* SubscriptionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManager.swift; sourceTree = "<group>"; };
@@ -398,6 +400,7 @@
 				BE89F23BCF8C78C43EF02806 /* HomeView.swift */,
 				B5AC32CCDA92931FFD3ED248 /* PatternCard.swift */,
 				F43429261BE644C3EACA8620 /* PeriodSummarySection.swift */,
+				SC0G01F3E5F6071812345001 /* ScoreGuideSheet.swift */,
 				9EE3D24D56D4FF0A64BA0321 /* SleepCard.swift */,
 				F4E3D2C1B0A9382017E5D4C3 /* WeeklyReviewView.swift */,
 			);
@@ -905,6 +908,7 @@
 				6B68269A12B583505AC4B013 /* WeeklyPatternAnalyzer.swift in Sources */,
 				B1A2C3D4E5F60718A9B0C1D2 /* WeeklyChallenge.swift in Sources */,
 				C2B3D4E5F6071829B0C1D2E3 /* WeeklyReviewViewModel.swift in Sources */,
+				SC0G01D3E5F6071812345001 /* ScoreGuideSheet.swift in Sources */,
 				D3C4E5F607182A30C1D2E3F4 /* WeeklyReviewView.swift in Sources */,
 				4E605AB07A30B9DC850D70B0 /* WeeklySummaryScheduler.swift in Sources */,
 				E1A2B3C4D5E6F7081234ABCE /* WatchMonitor.swift in Sources */,

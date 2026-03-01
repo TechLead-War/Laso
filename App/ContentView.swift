@@ -8,6 +8,8 @@ struct ContentView: View {
     let deviceSourceManager: DeviceSourceManager
     let healthDataStore: HealthDataStore
 
+    @AppStorage(AppKeys.App.onboardingCompleted) private var onboardingCompleted = false
+    @AppStorage(AppKeys.App.pendingCalibrationHydration) private var pendingCalibrationHydration = false
     @Environment(\.scenePhase) private var scenePhase
     @State private var selectedTab: AppTab = .home
     @State private var showSettings = false
@@ -113,8 +115,15 @@ struct ContentView: View {
         .sheet(isPresented: $showFeedback) {
             FeedbackSheet()
         }
-        .task {
-            await dashboardViewModel.load()
+        .task(id: onboardingCompleted) {
+            guard onboardingCompleted else { return }
+
+            if pendingCalibrationHydration && healthKitManager.lastRefresh != nil {
+                dashboardViewModel.hydrateFromCalibration()
+                pendingCalibrationHydration = false
+            } else {
+                await dashboardViewModel.load()
+            }
             liveViewModel.fetchHomeData()
         }
         .onAppear {
@@ -129,6 +138,9 @@ struct ContentView: View {
             if newPhase == .active && oldPhase != .active {
                 startSessionAnalytics()
                 WatchMonitor.shared.evaluateWatchStatus()
+                // Retry sync if Home is stuck in empty state (e.g. user granted
+                // permissions in Settings and returned, or initial sync failed)
+                Task { await dashboardViewModel.retrySyncIfNeeded() }
             } else if newPhase == .background {
                 AppAnalytics.shared.trackSessionEnd()
             }

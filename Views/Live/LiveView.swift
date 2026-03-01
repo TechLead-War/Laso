@@ -4,6 +4,7 @@ import Charts
 /// Real-time health dashboard — live vitals, heart rate zones, activity rings, readiness
 struct LiveView: View {
     let viewModel: LiveViewModel
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var pulseScale: CGFloat = 1.0
     @State private var previousZone: LiveViewModel.HeartRateZone?
@@ -50,6 +51,17 @@ struct LiveView: View {
             viewModel.stopStreaming()
             AppAnalytics.shared.trackFeatureClose(.live)
             AppAnalytics.shared.trackStreamingStopped()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                if !viewModel.isStreaming {
+                    viewModel.startStreaming()
+                }
+            } else if newPhase == .inactive || newPhase == .background {
+                if viewModel.isStreaming {
+                    viewModel.stopStreaming()
+                }
+            }
         }
         .onChange(of: viewModel.vitals.hasAnyData) { _, hasData in
             if hasData && !hasTrackedFirstData {
@@ -475,7 +487,7 @@ struct LiveView: View {
 
     private var heartRateMiniChart: some View {
         Chart {
-            ForEach(Array(viewModel.vitals.recentHeartRates.enumerated()), id: \.offset) { _, entry in
+            ForEach(viewModel.vitals.recentHeartRates, id: \.date) { entry in
                 LineMark(
                     x: .value("Time", entry.date),
                     y: .value("BPM", entry.value)

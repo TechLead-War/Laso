@@ -20,6 +20,7 @@ enum AppFeature: String, Hashable {
     case metricAlertPicker = "metric_alert_picker"
     case paywall
     case discovery
+    case scoreGuide = "score_guide"
 }
 
 /// Actionable block/card types — only user-initiated taps and meaningful interactions.
@@ -91,6 +92,8 @@ enum BlockType: String {
     case onboardingContinueAnyway = "onboarding_continue_anyway"
     case onboardingFocusChip = "onboarding_focus_chip"
     case onboardingGetStarted = "onboarding_get_started"
+    case onboardingCultureContinue = "onboarding_culture_continue"
+    case scoreGuideGotIt = "score_guide_got_it"
 }
 
 // ──────────────────────────────────────────────────────────────────────────────

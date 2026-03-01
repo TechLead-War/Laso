@@ -8,6 +8,9 @@ struct LoadingView: View {
     @State private var iconScale: CGFloat = 0.8
     @State private var iconOpacity: Double = 0.6
     @State private var appeared = false
+    @State private var phaseTimer: Timer?
+    @State private var dotTimer: Timer?
+    @State private var loaderTimer: Timer?
 
     let message: String
 
@@ -92,6 +95,7 @@ struct LoadingView: View {
         }
         .onDisappear {
             appeared = false
+            invalidateTimers()
         }
     }
 
@@ -104,7 +108,8 @@ struct LoadingView: View {
     }
 
     private func startPhaseTimer() {
-        Timer.scheduledTimer(withTimeInterval: 1.8, repeats: true) { timer in
+        phaseTimer?.invalidate()
+        phaseTimer = Timer.scheduledTimer(withTimeInterval: 1.8, repeats: true) { timer in
             guard appeared else { timer.invalidate(); return }
             withAnimation(.easeInOut(duration: 0.4)) {
                 if currentPhase < phases.count - 1 {
@@ -117,14 +122,16 @@ struct LoadingView: View {
     }
 
     private func startDotTimer() {
-        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
+        dotTimer?.invalidate()
+        dotTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
             guard appeared else { timer.invalidate(); return }
             dotCount = (dotCount % 3) + 1
         }
     }
 
     private func startDotLoader() {
-        Timer.scheduledTimer(withTimeInterval: 0.35, repeats: true) { timer in
+        loaderTimer?.invalidate()
+        loaderTimer = Timer.scheduledTimer(withTimeInterval: 0.35, repeats: true) { timer in
             guard appeared else { timer.invalidate(); return }
             withAnimation {
                 if activeDots >= phases.count {
@@ -134,6 +141,15 @@ struct LoadingView: View {
                 }
             }
         }
+    }
+
+    private func invalidateTimers() {
+        phaseTimer?.invalidate()
+        dotTimer?.invalidate()
+        loaderTimer?.invalidate()
+        phaseTimer = nil
+        dotTimer = nil
+        loaderTimer = nil
     }
 }
 

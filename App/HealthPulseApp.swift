@@ -8,6 +8,7 @@ struct HealthPulseApp: App {
 
     @AppStorage(AppKeys.App.onboardingCompleted) private var onboardingCompleted = false
     @AppStorage(AppKeys.App.appTheme) private var appTheme: String = "system"
+    @AppStorage(AppKeys.App.pendingCalibrationHydration) private var pendingCalibrationHydration = false
 
     @State private var healthKitManager: HealthKitManager
     @State private var analysisEngine = AnalysisEngine()
@@ -27,6 +28,32 @@ struct HealthPulseApp: App {
     /// Show paywall only when onboarding is done and subscription is definitively expired.
     private var shouldShowPaywall: Bool {
         onboardingCompleted && subscriptionManager.shouldEnforcePaywall
+    }
+
+    /// Runs one-time initial calibration (historical sync + baseline analysis) during onboarding.
+    /// Returns an error message when calibration fails; nil indicates success.
+    @MainActor
+    private func performInitialCalibration() async -> String? {
+        let calibrator = DashboardViewModel(
+            healthKitManager: healthKitManager,
+            analysisEngine: analysisEngine,
+            store: healthDataStore
+        )
+        await calibrator.load(
+            skipDiscovery: true,
+            awaitDeferredAnalysis: true,
+            forceHeavyDeferred: true,
+            runHousekeeping: false
+        )
+
+        if let error = calibrator.errorMessage {
+            return error
+        }
+
+        // Calibration has already done the first full analysis; avoid showing Day-0 discovery later.
+        UserDefaults.standard.set(true, forKey: AppKeys.App.hasSeenDiscovery)
+        pendingCalibrationHydration = true
+        return nil
     }
 
     init() {
@@ -117,7 +144,10 @@ struct HealthPulseApp: App {
                     NSUbiquitousKeyValueStore.default.set(true, forKey: AppKeys.App.onboardingCompleted)
                 }}
             )) {
-                OnboardingView(healthKitManager: healthKitManager) {
+                OnboardingView(
+                    healthKitManager: healthKitManager,
+                    runCalibration: performInitialCalibration
+                ) {
                     onboardingCompleted = true
                     NSUbiquitousKeyValueStore.default.set(true, forKey: AppKeys.App.onboardingCompleted)
                 }
