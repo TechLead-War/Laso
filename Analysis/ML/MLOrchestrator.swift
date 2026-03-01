@@ -73,10 +73,12 @@ final class MLOrchestrator {
         // Run independent components in parallel using structured concurrency
         await withTaskGroup(of: Void.self) { group in
 
-            // Forecaster (21+ days)
+            // Forecaster (21+ days, needs full retrain check)
             if totalDays >= TimeSeriesForecaster.minimumDays {
-                group.addTask { [forecaster, timeSeries] in
-                    forecaster.fit(timeSeries: timeSeries)
+                if forecaster.needsRetrain || !forecaster.isReady {
+                    group.addTask { [forecaster, timeSeries] in
+                        forecaster.fit(timeSeries: timeSeries)
+                    }
                 }
             }
 
@@ -109,10 +111,12 @@ final class MLOrchestrator {
                 }
             }
 
-            // State Classifier (60+ days)
+            // State Classifier (60+ days, needs full retrain check)
             if totalDays >= HealthStateClassifier.minimumDays {
-                group.addTask { [stateClassifier, vectors, orderedKeys] in
-                    stateClassifier.train(vectors: vectors, orderedKeys: orderedKeys)
+                if stateClassifier.needsRetrain || !stateClassifier.isReady {
+                    group.addTask { [stateClassifier, vectors, orderedKeys] in
+                        stateClassifier.train(vectors: vectors, orderedKeys: orderedKeys)
+                    }
                 }
             }
 

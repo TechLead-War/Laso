@@ -142,6 +142,7 @@ struct HealthPulseApp: App {
                     }
                 }
                 await subscriptionManager.configure()
+                WatchMonitor.shared.configure(healthStore: healthKitManager.healthStore)
                 WatchMonitor.shared.startMonitoring()
             }
         }

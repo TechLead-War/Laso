@@ -12,6 +12,7 @@ struct HomeView: View {
     @State private var livePulse = false
     @State private var refreshTick = 0
     @State private var homeRefreshTimer: Timer?
+    @State private var weeklyReviewViewModel: WeeklyReviewViewModel?
 
     var body: some View {
         Group {
@@ -55,6 +56,7 @@ struct HomeView: View {
         .onDisappear {
             homeRefreshTimer?.invalidate()
             homeRefreshTimer = nil
+            livePulse = false
             AppAnalytics.shared.trackFeatureClose(.home)
         }
     }
@@ -66,6 +68,15 @@ struct HomeView: View {
             liveViewModel.fetchHomeData()
             refreshTick += 1
         }
+    }
+
+    /// Lazily created and reused WeeklyReviewViewModel to avoid re-allocation on every body render
+    private var weeklyReviewVM: WeeklyReviewViewModel {
+        if let existing = weeklyReviewViewModel { return existing }
+        let vm = WeeklyReviewViewModel(dashboardViewModel: viewModel)
+        // Can't mutate @State in a computed property body, so we dispatch
+        DispatchQueue.main.async { weeklyReviewViewModel = vm }
+        return vm
     }
 
     private var hasData: Bool {
@@ -107,7 +118,7 @@ struct HomeView: View {
 
                     // 7. Weekly Review
                     WeeklyReviewEntryCard(
-                        viewModel: WeeklyReviewViewModel(dashboardViewModel: viewModel)
+                        viewModel: weeklyReviewVM
                     ) {
                         AppAnalytics.shared.trackBlockTap(title: "Weekly Review", type: .weeklyReviewCard, screen: .home)
                         navigationPath.append("weeklyReview")

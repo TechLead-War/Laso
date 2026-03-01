@@ -39,6 +39,15 @@ final class TimeSeriesForecaster {
     /// Residuals for anomaly scoring
     private var recentResiduals: [HealthMetric: [Double]] = [:]
 
+    /// Last full retrain date — guards against expensive grid search too frequently
+    private var lastRetrainDate: Date?
+
+    /// Whether a full retrain is needed (never trained, or >30 days since last)
+    var needsRetrain: Bool {
+        guard let lastRetrain = lastRetrainDate else { return true }
+        return Date().timeIntervalSince(lastRetrain) > 30 * 24 * 3600
+    }
+
     // MARK: - Training
 
     /// Fit Holt-Winters model for each metric with sufficient data
@@ -53,6 +62,8 @@ final class TimeSeriesForecaster {
             let bestState = gridSearchFit(values: values, period: period)
             states[metric] = bestState
         }
+
+        lastRetrainDate = Date()
     }
 
     /// Fit a single metric

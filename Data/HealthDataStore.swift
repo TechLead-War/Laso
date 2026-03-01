@@ -319,6 +319,26 @@ final class HealthDataStore {
         }
     }
 
+    /// Load baseline history for ALL metrics in a single pass (avoids N separate full-table fetches + JSON decodes)
+    func loadAllBaselineHistory(forMetrics metrics: Set<HealthMetric>, minCount: Int = 30) -> [HealthMetric: [(date: Date, baseline: UserBaseline)]] {
+        let descriptor = FetchDescriptor<StoredAnalysisSnapshot>(sortBy: [SortDescriptor(\.date)])
+        let snapshots = (try? modelContext?.fetch(descriptor)) ?? []
+        let metricRawValues = Set(metrics.map(\.rawValue))
+
+        var result: [HealthMetric: [(date: Date, baseline: UserBaseline)]] = [:]
+
+        for snapshot in snapshots {
+            guard let dict = try? JSONDecoder().decode([String: UserBaseline].self, from: snapshot.baselinesJSON) else { continue }
+            for (rawValue, baseline) in dict where metricRawValues.contains(rawValue) {
+                guard let metric = HealthMetric(rawValue: rawValue) else { continue }
+                result[metric, default: []].append((snapshot.date, baseline))
+            }
+        }
+
+        // Filter to metrics with enough history
+        return result.filter { $0.value.count >= minCount }
+    }
+
     // MARK: - ML Model State
 
     /// Save an ML component's learned parameters

@@ -40,10 +40,14 @@ struct CoachGreetingView: View {
         }
     }
 
-    private var dateString: String {
+    private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEEE, MMM d"
-        return formatter.string(from: Date())
+        return formatter
+    }()
+
+    private var dateString: String {
+        Self.dateFormatter.string(from: Date())
     }
 }
 

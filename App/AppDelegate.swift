@@ -1,5 +1,4 @@
 import UIKit
-import HealthKit
 import UserNotifications
 import FirebaseCore
 
@@ -20,12 +19,6 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 
         // Set up notification delegate
         UNUserNotificationCenter.current().delegate = self
-
-        // Enable background delivery for HealthKit
-        if HKHealthStore.isHealthDataAvailable() {
-            let manager = HealthKitManager()
-            manager.enableBackgroundDelivery()
-        }
 
         return true
     }

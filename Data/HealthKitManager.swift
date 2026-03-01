@@ -383,33 +383,4 @@ final class HealthKitManager {
         }
     }
 
-    // MARK: - Background Delivery
-
-    /// Enable background delivery for all health-critical metrics
-    func enableBackgroundDelivery() {
-        let criticalMetrics: [HealthMetric] = [
-            // Heart — most critical for spike/drop detection
-            .restingHeartRate, .heartRate, .heartRateVariability,
-            .heartRateRecovery, .bloodOxygen,
-            // Blood pressure
-            .bloodPressureSystolic, .bloodPressureDiastolic,
-            // Respiratory
-            .respiratoryRate, .vo2Max,
-            // Body temperature
-            .bodyTemperature,
-            // Atrial fibrillation
-            .atrialFibrillationBurden
-        ]
-
-        for metric in criticalMetrics {
-            let config = HealthKitMetricRegistry.config(for: metric)
-            guard let sampleType = config.sampleType else { continue }
-
-            healthStore.enableBackgroundDelivery(for: sampleType, frequency: .hourly) { success, error in
-                if let error {
-                    print("Background delivery failed for \(metric): \(error.localizedDescription)")
-                }
-            }
-        }
-    }
 }

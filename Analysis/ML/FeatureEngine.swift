@@ -74,17 +74,17 @@ final class FeatureEngine {
 
         let metricsWithData = Array(metricByDate.keys)
 
-        // Update running statistics with all values
+        // Update running statistics incrementally — only recompute if no prior state exists
         for (metric, dateMap) in metricByDate {
-            if runningStats[metric] == nil {
-                runningStats[metric] = WelfordState()
+            if runningStats[metric] == nil || runningStats[metric]!.count == 0 {
+                // First time: build from scratch
+                var state = WelfordState()
+                for value in dateMap.values {
+                    state.update(value: value)
+                }
+                runningStats[metric] = state
             }
-            // Reset and recompute for consistency
-            var state = WelfordState()
-            for value in dateMap.values {
-                state.update(value: value)
-            }
-            runningStats[metric] = state
+            // Otherwise keep existing Welford state — incremental updates happen via updateIncremental()
         }
 
         // Build ordered keys for deterministic array output

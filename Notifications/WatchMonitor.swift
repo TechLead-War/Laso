@@ -7,9 +7,8 @@ import UserNotifications
 final class WatchMonitor {
     static let shared = WatchMonitor()
 
-    private let healthStore = HKHealthStore()
+    private var healthStore: HKHealthStore?
     private var observerQuery: HKObserverQuery?
-    private var checkTimer: Timer?
 
     // MARK: - UserDefaults Keys
 
@@ -20,30 +19,39 @@ final class WatchMonitor {
     /// Minimum hours between repeated "not worn" notifications
     private var notWornCooldownHours: Double { RemoteConfigManager.shared.watchNotWornCooldownHours }
 
+    /// Cached preferences to avoid repeated Keychain + AES-GCM decryption
+    private var cachedPreferences: NotificationPreferences?
+    private var preferencesLoadedAt: Date?
+
     private init() {}
 
     // MARK: - Start / Stop
 
+    /// Configure with a shared HKHealthStore to avoid creating duplicate instances
+    func configure(healthStore: HKHealthStore) {
+        self.healthStore = healthStore
+    }
+
     func startMonitoring() {
         guard HKHealthStore.isHealthDataAvailable() else { return }
+        // Use shared store, or create one as fallback
+        if healthStore == nil { healthStore = HKHealthStore() }
         startHeartRateObserver()
-        startPeriodicCheck()
     }
 
     func stopMonitoring() {
-        if let query = observerQuery {
-            healthStore.stop(query)
+        if let query = observerQuery, let store = healthStore {
+            store.stop(query)
             observerQuery = nil
         }
-        checkTimer?.invalidate()
-        checkTimer = nil
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [scheduledNotWornIdentifier])
     }
 
     // MARK: - Heart Rate Observer (Watch Wearing Detection)
 
     private func startHeartRateObserver() {
-        guard let heartRateType = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return }
+        guard let healthStore,
+              let heartRateType = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return }
 
         // Stop any existing observer
         if let existing = observerQuery {
@@ -71,7 +79,8 @@ final class WatchMonitor {
 
     /// Query the most recent heart rate sample and check if it came from an Apple Watch
     private func checkLatestHeartRateSource() {
-        guard let heartRateType = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return }
+        guard let healthStore,
+              let heartRateType = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return }
 
         // Only look at samples from the last 2 hours
         let twHoursAgo = Date().addingTimeInterval(-RemoteConfigManager.shared.watchDataFreshnessHours * 3600)
@@ -134,25 +143,35 @@ final class WatchMonitor {
         return false
     }
 
-    // MARK: - Periodic Check
+    // MARK: - Foreground Check
 
-    private func startPeriodicCheck() {
-        checkTimer?.invalidate()
-        // Check every 15 minutes
-        checkTimer = Timer.scheduledTimer(withTimeInterval: TimeInterval(RemoteConfigManager.shared.watchMonitorCheckInterval), repeats: true) { [weak self] _ in
-            self?.evaluateWatchStatus()
-        }
-        // Run immediately
-        evaluateWatchStatus()
-    }
-
-    /// Called on foreground or by timer — evaluates all watch-related alerts
+    /// Called on foreground return — evaluates all watch-related alerts.
+    /// No periodic timer needed: the HKObserverQuery + scheduled UNNotification handle detection.
     func evaluateWatchStatus() {
-        let preferences = PersistenceManager().loadPreferences()
+        let preferences = loadCachedPreferences()
 
         if preferences.watchNotWornReminderEnabled {
             checkWatchNotWorn(maxPerDay: preferences.maxNotificationsPerDay)
         }
+    }
+
+    /// Load preferences with a 5-minute cache to avoid repeated Keychain + AES-GCM decryption
+    private func loadCachedPreferences() -> NotificationPreferences {
+        if let cached = cachedPreferences,
+           let loadedAt = preferencesLoadedAt,
+           Date().timeIntervalSince(loadedAt) < 300 {
+            return cached
+        }
+        let prefs = PersistenceManager().loadPreferences()
+        cachedPreferences = prefs
+        preferencesLoadedAt = Date()
+        return prefs
+    }
+
+    /// Invalidate cached preferences (call when user changes settings)
+    func invalidatePreferencesCache() {
+        cachedPreferences = nil
+        preferencesLoadedAt = nil
     }
 
     // MARK: - Scheduled "Not Worn" Notification (Background-capable)
@@ -167,7 +186,7 @@ final class WatchMonitor {
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: [scheduledNotWornIdentifier])
 
-        let preferences = PersistenceManager().loadPreferences()
+        let preferences = loadCachedPreferences()
         guard preferences.watchNotWornReminderEnabled else { return }
 
         let thresholdSeconds = RemoteConfigManager.shared.watchNotWornThresholdHours * 3600
@@ -230,7 +249,7 @@ final class WatchMonitor {
     /// Call this when battery level data becomes available (e.g. via WatchConnectivity companion).
     /// `level` is 0.0–1.0 (e.g. 0.08 = 8%).
     func handleBatteryLevel(_ level: Double) {
-        let preferences = PersistenceManager().loadPreferences()
+        let preferences = loadCachedPreferences()
         guard preferences.lowBatteryReminderEnabled else { return }
 
         let defaults = UserDefaults.standard

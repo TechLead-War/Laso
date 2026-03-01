@@ -7,7 +7,7 @@ import SwiftUI
 @Observable
 final class LiveViewModel {
     let healthKitManager: HealthKitManager
-    private let healthStore = HKHealthStore()
+    private var healthStore: HKHealthStore { healthKitManager.healthStore }
 
     // MARK: - Live Vitals
 

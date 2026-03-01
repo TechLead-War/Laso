@@ -90,6 +90,9 @@ struct LoadingView: View {
             startDotTimer()
             startDotLoader()
         }
+        .onDisappear {
+            appeared = false
+        }
     }
 
     private var currentColor: Color {

@@ -12,6 +12,12 @@ final class DashboardViewModel {
     var isLoading = false
     var errorMessage: String?
 
+    // MARK: - Cached Properties (updated on refresh, not on every view render)
+    private(set) var cachedScoreChangeFromLastWeek: Int?
+    private(set) var cachedTrendsSummary: TrendsSummary?
+    private(set) var cachedHistoricalHighlights: [HistoricalHighlight] = []
+    private(set) var cachedTopCorrelations: [HealthCorrelation] = []
+
     // MARK: - Discovery (Day 0)
     var discoveries: [Discovery] = []
     var showDiscovery = false
@@ -73,17 +79,7 @@ final class DashboardViewModel {
 
     /// Top correlations for the home screen section, sorted by focus relevance
     var topCorrelations: [HealthCorrelation] {
-        let focuses = focusCategories
-        if focuses.isEmpty {
-            return Array(analysisEngine.correlations.prefix(5))
-        }
-        let sorted = analysisEngine.correlations.sorted { a, b in
-            let aRelevant = focuses.contains(a.metricA.category) || focuses.contains(a.metricB.category)
-            let bRelevant = focuses.contains(b.metricA.category) || focuses.contains(b.metricB.category)
-            if aRelevant != bRelevant { return aRelevant }
-            return abs(a.correlation) > abs(b.correlation)
-        }
-        return Array(sorted.prefix(5))
+        cachedTopCorrelations
     }
 
     /// Health risks sorted by level (highest risk first)
@@ -396,13 +392,7 @@ final class DashboardViewModel {
         analysisEngine.insights.append(contentsOf: trajectoryInsights)
 
         // Step 9: Baseline drift insights (uses stored baseline history + correlations for co-drift)
-        var baselineHistory: [HealthMetric: [(date: Date, baseline: UserBaseline)]] = [:]
-        for metric in analysisEngine.baselines.keys {
-            let history = store.loadBaselineHistory(for: metric)
-            if history.count >= 30 {
-                baselineHistory[metric] = history
-            }
-        }
+        let baselineHistory = store.loadAllBaselineHistory(forMetrics: Set(analysisEngine.baselines.keys))
         if !baselineHistory.isEmpty {
             let driftInsights = BaselineDriftDetector.generateInsights(
                 currentBaselines: analysisEngine.baselines,
@@ -414,6 +404,9 @@ final class DashboardViewModel {
 
         // Re-sort after adding trajectory and drift insights
         analysisEngine.insights.sort { $0.priorityScore > $1.priorityScore }
+
+        // Update cached computed properties so views don't recompute on every render
+        updateCachedProperties()
 
         // Track analysis output
         AppAnalytics.shared.trackAnalysisCompleted(
@@ -498,27 +491,16 @@ final class DashboardViewModel {
         }
     }
 
-    // MARK: - Computed Analytics for Views
+    // MARK: - Cache Update (called once per refresh, not per render)
 
-    /// All anomalous metrics across all categories
-    var anomalousMetrics: [AnomalyDetector.AnomalyResult] {
-        analysisEngine.anomalies.filter { $0.severity >= .warning }
+    private func updateCachedProperties() {
+        cachedScoreChangeFromLastWeek = computeScoreChangeFromLastWeek()
+        cachedTrendsSummary = computeTrendsSummary()
+        cachedHistoricalHighlights = computeHistoricalHighlights()
+        cachedTopCorrelations = computeTopCorrelations()
     }
 
-    /// Number of critical alerts currently active
-    var criticalAlertCount: Int {
-        analysisEngine.anomalies.filter { $0.severity == .critical }.count
-    }
-
-    /// Number of warning alerts currently active
-    var warningAlertCount: Int {
-        analysisEngine.anomalies.filter { $0.severity == .warning }.count
-    }
-
-    // MARK: - Explore Tab Data
-
-    /// Score delta from stored history (comparing to 7 days ago)
-    var scoreChangeFromLastWeek: Int? {
+    private func computeScoreChangeFromLastWeek() -> Int? {
         let history = store.loadScoreHistory(days: 14)
         guard history.count >= 2 else { return nil }
         let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
@@ -528,22 +510,7 @@ final class DashboardViewModel {
         return delta == 0 ? nil : delta
     }
 
-    /// Global trends summary across all tracked metrics
-    struct TrendsSummary {
-        let improving: Int
-        let stable: Int
-        let declining: Int
-        let topMovers: [MetricMover]
-    }
-
-    struct MetricMover: Identifiable {
-        var id: String { metric.rawValue }
-        let metric: HealthMetric
-        let changePercent: Double
-        let improving: Bool
-    }
-
-    var trendsSummary: TrendsSummary {
+    private func computeTrendsSummary() -> TrendsSummary {
         var improving = 0, stable = 0, declining = 0
         var movers: [MetricMover] = []
 
@@ -570,43 +537,21 @@ final class DashboardViewModel {
         )
     }
 
-    /// Historical highlights computed from deep analysis context
-    struct HistoricalHighlight: Identifiable {
-        let id = UUID()
-        let metric: HealthMetric
-        let type: HighlightType
-        let title: String
-        let recommendation: String
-        let isPositive: Bool
-        let significance: Double
-
-        enum HighlightType {
-            case yearOverYear
-            case allTimeExtreme
-            case seasonal
-            case longTermTrajectory
+    private func computeTopCorrelations() -> [HealthCorrelation] {
+        let focuses = focusCategories
+        if focuses.isEmpty {
+            return Array(analysisEngine.correlations.prefix(5))
         }
-
-        var icon: String {
-            switch type {
-            case .yearOverYear: return "calendar.badge.clock"
-            case .allTimeExtreme: return "trophy.fill"
-            case .seasonal: return "leaf.fill"
-            case .longTermTrajectory: return "chart.line.uptrend.xyaxis"
-            }
+        let sorted = analysisEngine.correlations.sorted { a, b in
+            let aRelevant = focuses.contains(a.metricA.category) || focuses.contains(a.metricB.category)
+            let bRelevant = focuses.contains(b.metricA.category) || focuses.contains(b.metricB.category)
+            if aRelevant != bRelevant { return aRelevant }
+            return abs(a.correlation) > abs(b.correlation)
         }
-
-        var typeLabel: String {
-            switch type {
-            case .yearOverYear: return "Year-over-Year"
-            case .allTimeExtreme: return "All-Time"
-            case .seasonal: return "Seasonal"
-            case .longTermTrajectory: return "Long-Term"
-            }
-        }
+        return Array(sorted.prefix(5))
     }
 
-    var historicalHighlights: [HistoricalHighlight] {
+    private func computeHistoricalHighlights() -> [HistoricalHighlight] {
         let ctx = analysisEngine.historicalContext
         var highlights: [HistoricalHighlight] = []
         let monthName = Calendar.current.monthSymbols[Calendar.current.component(.month, from: Date()) - 1]
@@ -676,7 +621,6 @@ final class DashboardViewModel {
             }
         }
 
-        // Sort: focus-relevant metrics first, then by significance
         highlights.sort { a, b in
             let aFocus = !focuses.isEmpty && focuses.contains(a.metric.category)
             let bFocus = !focuses.isEmpty && focuses.contains(b.metric.category)
@@ -684,6 +628,89 @@ final class DashboardViewModel {
             return a.significance > b.significance
         }
         return Array(highlights.prefix(5))
+    }
+
+    // MARK: - Computed Analytics for Views
+
+    /// All anomalous metrics across all categories
+    var anomalousMetrics: [AnomalyDetector.AnomalyResult] {
+        analysisEngine.anomalies.filter { $0.severity >= .warning }
+    }
+
+    /// Number of critical alerts currently active
+    var criticalAlertCount: Int {
+        analysisEngine.anomalies.filter { $0.severity == .critical }.count
+    }
+
+    /// Number of warning alerts currently active
+    var warningAlertCount: Int {
+        analysisEngine.anomalies.filter { $0.severity == .warning }.count
+    }
+
+    // MARK: - Explore Tab Data
+
+    /// Score delta from stored history (comparing to 7 days ago) — cached on refresh
+    var scoreChangeFromLastWeek: Int? {
+        cachedScoreChangeFromLastWeek
+    }
+
+    /// Global trends summary across all tracked metrics
+    struct TrendsSummary {
+        let improving: Int
+        let stable: Int
+        let declining: Int
+        let topMovers: [MetricMover]
+    }
+
+    struct MetricMover: Identifiable {
+        var id: String { metric.rawValue }
+        let metric: HealthMetric
+        let changePercent: Double
+        let improving: Bool
+    }
+
+    var trendsSummary: TrendsSummary {
+        cachedTrendsSummary ?? TrendsSummary(improving: 0, stable: 0, declining: 0, topMovers: [])
+    }
+
+    /// Historical highlights computed from deep analysis context
+    struct HistoricalHighlight: Identifiable {
+        let id = UUID()
+        let metric: HealthMetric
+        let type: HighlightType
+        let title: String
+        let recommendation: String
+        let isPositive: Bool
+        let significance: Double
+
+        enum HighlightType {
+            case yearOverYear
+            case allTimeExtreme
+            case seasonal
+            case longTermTrajectory
+        }
+
+        var icon: String {
+            switch type {
+            case .yearOverYear: return "calendar.badge.clock"
+            case .allTimeExtreme: return "trophy.fill"
+            case .seasonal: return "leaf.fill"
+            case .longTermTrajectory: return "chart.line.uptrend.xyaxis"
+            }
+        }
+
+        var typeLabel: String {
+            switch type {
+            case .yearOverYear: return "Year-over-Year"
+            case .allTimeExtreme: return "All-Time"
+            case .seasonal: return "Seasonal"
+            case .longTermTrajectory: return "Long-Term"
+            }
+        }
+    }
+
+    var historicalHighlights: [HistoricalHighlight] {
+        cachedHistoricalHighlights
     }
 
     /// Data depth summary — how much data powers the analysis

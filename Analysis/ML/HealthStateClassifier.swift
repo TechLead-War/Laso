@@ -25,6 +25,15 @@ final class HealthStateClassifier {
     /// Feature keys used during training
     private var trainedKeys: [FeatureKey] = []
 
+    /// Last full retrain date — guards against retraining too frequently
+    private var lastRetrainDate: Date?
+
+    /// Whether a full retrain is needed (never trained, or >30 days since last)
+    var needsRetrain: Bool {
+        guard let lastRetrain = lastRetrainDate else { return true }
+        return Date().timeIntervalSince(lastRetrain) > 30 * 24 * 3600
+    }
+
     // MARK: - Training
 
     /// Train the classifier on daily feature vectors
@@ -76,6 +85,8 @@ final class HealthStateClassifier {
         if let lastVector = vectors.last {
             currentState = classify(vector: lastVector)
         }
+
+        lastRetrainDate = Date()
     }
 
     // MARK: - Classification
