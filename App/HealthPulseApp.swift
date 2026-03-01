@@ -15,6 +15,9 @@ struct HealthPulseApp: App {
     @State private var deviceSourceManager: DeviceSourceManager
     @State private var healthDataStore: HealthDataStore
 
+    /// Controls the splash → content transition. Stays true until async init completes.
+    @State private var showSplash = true
+
     private let subscriptionManager = SubscriptionManager.shared
 
     private var colorScheme: ColorScheme? {
@@ -26,8 +29,9 @@ struct HealthPulseApp: App {
     }
 
     /// Show paywall only when onboarding is done and subscription is definitively expired.
+    /// Free year: paywall disabled for PMF signal.
     private var shouldShowPaywall: Bool {
-        onboardingCompleted && subscriptionManager.shouldEnforcePaywall
+        false
     }
 
     /// Runs one-time initial calibration (historical sync + baseline analysis) during onboarding.
@@ -129,51 +133,95 @@ struct HealthPulseApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(
-                healthKitManager: healthKitManager,
-                analysisEngine: analysisEngine,
-                deviceSourceManager: deviceSourceManager,
-                healthDataStore: healthDataStore
-            )
-            .preferredColorScheme(colorScheme)
-            // 1. Onboarding (first launch)
-            .fullScreenCover(isPresented: Binding(
-                get: { !onboardingCompleted },
-                set: { if !$0 {
-                    onboardingCompleted = true
-                    NSUbiquitousKeyValueStore.default.set(true, forKey: AppKeys.App.onboardingCompleted)
-                }}
-            )) {
-                OnboardingView(
+            ZStack {
+                ContentView(
                     healthKitManager: healthKitManager,
-                    runCalibration: performInitialCalibration
-                ) {
-                    onboardingCompleted = true
-                    NSUbiquitousKeyValueStore.default.set(true, forKey: AppKeys.App.onboardingCompleted)
-                }
-            }
-            // 2. Paywall (trial expired + not subscribed)
-            .fullScreenCover(isPresented: Binding(
-                get: { shouldShowPaywall },
-                set: { _ in }  // Cannot dismiss — must subscribe
-            )) {
-                PaywallView(subscriptionManager: subscriptionManager)
-                    .interactiveDismissDisabled()
-            }
-            .task {
-                // Restore from CloudKit on fresh install (before HealthKit sync)
-                if healthDataStore.totalStoredSamples == 0 {
-                    let persistence = PersistenceManager()
-                    let restored = await CloudBackupManager.shared.restore(
-                        store: healthDataStore, persistence: persistence
-                    )
-                    if restored {
-                        // Data restored — HealthKit sync will be incremental (not full re-fetch)
+                    analysisEngine: analysisEngine,
+                    deviceSourceManager: deviceSourceManager,
+                    healthDataStore: healthDataStore
+                )
+                .preferredColorScheme(colorScheme)
+                // 1. Onboarding (first launch)
+                .fullScreenCover(isPresented: Binding(
+                    get: { !onboardingCompleted },
+                    set: { if !$0 {
+                        onboardingCompleted = true
+                        NSUbiquitousKeyValueStore.default.set(true, forKey: AppKeys.App.onboardingCompleted)
+                    }}
+                )) {
+                    OnboardingView(
+                        healthKitManager: healthKitManager,
+                        runCalibration: performInitialCalibration
+                    ) {
+                        onboardingCompleted = true
+                        NSUbiquitousKeyValueStore.default.set(true, forKey: AppKeys.App.onboardingCompleted)
                     }
                 }
-                await subscriptionManager.configure()
-                WatchMonitor.shared.configure(healthStore: healthKitManager.healthStore)
-                WatchMonitor.shared.startMonitoring()
+                // 2. Paywall (trial expired + not subscribed)
+                .fullScreenCover(isPresented: Binding(
+                    get: { shouldShowPaywall },
+                    set: { _ in }  // Cannot dismiss — must subscribe
+                )) {
+                    PaywallView(subscriptionManager: subscriptionManager)
+                        .interactiveDismissDisabled()
+                }
+                .task {
+                    // Run CloudKit restore and subscription configure in parallel
+                    let store = healthDataStore
+                    async let cloudRestoreTask: Void = {
+                        if store.totalStoredSamples == 0 {
+                            let persistence = PersistenceManager()
+                            _ = await CloudBackupManager.shared.restore(
+                                store: store, persistence: persistence
+                            )
+                        }
+                    }()
+                    async let subscriptionTask: Void = subscriptionManager.configure()
+
+                    // Wait for both to complete concurrently
+                    _ = await (cloudRestoreTask, subscriptionTask)
+
+                    WatchMonitor.shared.configure(healthStore: healthKitManager.healthStore)
+                    WatchMonitor.shared.startMonitoring()
+
+                    // Cancel stale scheduled notifications (weekly summary, watch-not-worn)
+                    // that may have been registered with older, more aggressive defaults.
+                    WeeklySummaryScheduler.cancel()
+                    NotificationManager.shared.cancelNotification(identifier: "healthpulse.watch.notWorn.scheduled")
+
+                    // Dismiss splash once background init is done
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        showSplash = false
+                    }
+                }
+
+                // Branded splash — matches system launch screen for seamless transition.
+                // Covers the gap between Firebase init and first meaningful render.
+                if showSplash {
+                    splashView
+                        .transition(.opacity)
+                        .zIndex(1)
+                }
+            }
+        }
+    }
+
+    // MARK: - Splash View
+
+    private var splashView: some View {
+        ZStack {
+            Color("LaunchBackground")
+                .ignoresSafeArea()
+
+            VStack(spacing: 16) {
+                Image("LaunchIcon")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 80, height: 80)
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+
+                ProgressView()
+                    .tint(.secondary)
             }
         }
     }

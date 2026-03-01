@@ -56,7 +56,7 @@ struct HTMLReportGenerator {
         let dateString = dateFormatter.string(from: Date())
 
         return ReportTemplate.html(
-            title: "HealthPulse Report",
+            title: "Laso Report",
             date: dateString,
             body: body
         )

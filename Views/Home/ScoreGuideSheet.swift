@@ -92,6 +92,41 @@ struct ScoreGuideSheet: View {
                         .padding(.horizontal)
                     }
 
+                    // MARK: - Recovery / Readiness
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Recovery & Readiness")
+                            .font(.headline)
+                            .padding(.horizontal)
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Your Readiness score (0–100) tells you how recovered your body is. It's calculated from two signals your Apple Watch measures while you sleep:")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+
+                            recoveryFactorRow(
+                                icon: "waveform.path.ecg",
+                                color: .purple,
+                                name: "Heart Rate Variability (HRV)",
+                                detail: "Higher HRV means better recovery and lower stress."
+                            )
+                            Divider().padding(.leading, 40)
+                            recoveryFactorRow(
+                                icon: "heart.fill",
+                                color: .red,
+                                name: "Resting Heart Rate",
+                                detail: "Lower resting HR means your heart is recovering well."
+                            )
+                        }
+                        .padding()
+                        .background(.background, in: RoundedRectangle(cornerRadius: 16))
+                        .padding(.horizontal)
+
+                        Text("Wear your Apple Watch overnight so we can update your readiness each morning.")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                            .padding(.horizontal)
+                    }
+
                     // MARK: - Baseline callout
                     HStack(spacing: 12) {
                         Image(systemName: "person.fill.checkmark")
@@ -165,6 +200,27 @@ struct ScoreGuideSheet: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+    }
+
+    // MARK: - Recovery Factor Row
+
+    private func recoveryFactorRow(icon: String, color: Color, name: String, detail: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 16))
+                .foregroundStyle(color)
+                .frame(width: 24)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(name)
+                    .font(.subheadline.weight(.medium))
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+        }
     }
 
     // MARK: - Category Row

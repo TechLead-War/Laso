@@ -22,6 +22,7 @@ final class DashboardViewModel {
 
     // MARK: - Cached Properties (updated on refresh, not on every view render)
     private(set) var cachedScoreChangeFromLastWeek: Int?
+    private(set) var cachedScoreChangeFromYesterday: Int?
     private(set) var cachedTrendsSummary: TrendsSummary?
     private(set) var cachedHistoricalHighlights: [HistoricalHighlight] = []
     private(set) var cachedTopCorrelations: [HealthCorrelation] = []
@@ -606,12 +607,20 @@ final class DashboardViewModel {
             return "\(cat.shortName): \(score.score)"
         }.joined(separator: " | ")
 
+        let topAnomaly: (metricName: String, changePercent: Double)? = currentAnomalies
+            .filter { $0.severity >= .warning }
+            .max(by: { $0.severity < $1.severity })
+            .map { (metricName: $0.metric.displayName, changePercent: $0.deviationPercent) }
+
         DailySummaryScheduler.schedule(
             score: currentScore,
             anomalyCount: anomalyCount,
             topInsights: Array(analysisEngine.insights.prefix(3)),
             categoryBreakdown: categoryBreakdown,
-            preferences: prefs
+            preferences: prefs,
+            topAnomaly: topAnomaly,
+            scoreChangeFromYesterday: cachedScoreChangeFromYesterday,
+            streakDays: SessionTracker.shared.streakDays
         )
 
         let periodSummary7d = await MainActor.run { self.periodSummary(for: .sevenDays) }
@@ -654,6 +663,7 @@ final class DashboardViewModel {
         }
 
         cachedScoreChangeFromLastWeek = computeScoreChangeFromLastWeek()
+        cachedScoreChangeFromYesterday = computeScoreChangeFromYesterday()
         cachedTrendsSummary = computeTrendsSummary()
         cachedHistoricalHighlights = computeHistoricalHighlights()
         cachedTopCorrelations = computeTopCorrelations()
@@ -666,6 +676,18 @@ final class DashboardViewModel {
         let oldEntries = history.filter { $0.date <= weekAgo }
         guard let oldScore = oldEntries.last?.score else { return nil }
         let delta = overallScore.score - oldScore
+        return delta == 0 ? nil : delta
+    }
+
+    private func computeScoreChangeFromYesterday() -> Int? {
+        let history = store.loadScoreHistory(days: 3)
+        guard history.count >= 2 else { return nil }
+        let cal = Calendar.current
+        let yesterday = cal.startOfDay(for: cal.date(byAdding: .day, value: -1, to: Date()) ?? Date())
+        let today = cal.startOfDay(for: Date())
+        let yesterdayEntries = history.filter { $0.date >= yesterday && $0.date < today }
+        guard let yesterdayScore = yesterdayEntries.last?.score else { return nil }
+        let delta = overallScore.score - yesterdayScore
         return delta == 0 ? nil : delta
     }
 
@@ -811,6 +833,11 @@ final class DashboardViewModel {
     /// Score delta from stored history (comparing to 7 days ago) — cached on refresh
     var scoreChangeFromLastWeek: Int? {
         cachedScoreChangeFromLastWeek
+    }
+
+    /// Score delta from stored history (comparing to yesterday) — cached on refresh
+    var scoreChangeFromYesterday: Int? {
+        cachedScoreChangeFromYesterday
     }
 
     /// Global trends summary across all tracked metrics

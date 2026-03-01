@@ -23,7 +23,8 @@ struct AlertEvaluator {
 
     // MARK: - Main Evaluation Entry Point
 
-    /// Full evaluation: anomalies + heart rate spikes + trend reversals + improvements
+    /// Full evaluation: anomalies + heart rate spikes + trend reversals + improvements.
+    /// Suppressed within 1 hour of the daily summary time to avoid duplicate morning alerts.
     static func evaluate(
         anomalies: [AnomalyDetector.AnomalyResult],
         trends: [HealthMetric: TrendAnalyzer.TrendResult],
@@ -31,9 +32,17 @@ struct AlertEvaluator {
         previousTrends: [HealthMetric: TrendDirection],
         preferences: NotificationPreferences
     ) {
-        let maxPerDay = preferences.maxNotificationsPerDay
+        // Morning suppression: skip real-time alerts within 1 hour of the daily summary
+        // since the summary already includes the top anomaly info.
+        if preferences.dailySummaryEnabled, isNearDailySummaryTime(preferences.dailySummaryTime) {
+            return
+        }
 
-        // 1. Anomaly-based alerts (critical + warning for ALL configured metrics)
+        // Hard cap: real-time alerts get at most 1 slot per day.
+        // The daily summary (repeating) uses the other slot → total max 2/day.
+        let maxPerDay = 1
+
+        // 1. Anomaly-based alerts (critical only — warnings disabled by default)
         evaluateAnomalies(anomalies: anomalies, preferences: preferences, maxPerDay: maxPerDay)
 
         // 2. Heart rate spike/drop detection
@@ -66,7 +75,7 @@ struct AlertEvaluator {
         anomalies: [AnomalyDetector.AnomalyResult],
         preferences: NotificationPreferences
     ) {
-        evaluateAnomalies(anomalies: anomalies, preferences: preferences, maxPerDay: preferences.maxNotificationsPerDay)
+        evaluateAnomalies(anomalies: anomalies, preferences: preferences, maxPerDay: 1)
     }
 
     // MARK: - Anomaly Alerts
@@ -287,6 +296,18 @@ struct AlertEvaluator {
             maxPerDay: min(RemoteConfigManager.shared.heartAlertCap, maxPerDay)  // Heart alerts capped, but respect user's lower cap
         )
         recordAlert(identifier: identifier)
+    }
+
+    /// Returns true if the current time is within 1 hour of the daily summary time.
+    private static func isNearDailySummaryTime(_ summaryTime: DateComponents) -> Bool {
+        let cal = Calendar.current
+        let now = Date()
+        let hour = cal.component(.hour, from: now)
+        let minute = cal.component(.minute, from: now)
+        let nowMinutes = hour * 60 + minute
+        let summaryMinutes = (summaryTime.hour ?? 8) * 60 + (summaryTime.minute ?? 0)
+        let diff = abs(nowMinutes - summaryMinutes)
+        return diff <= 60 || diff >= (24 * 60 - 60) // handle midnight wrap
     }
 
     private static func hasSubdailyResolution(_ series: MetricTimeSeries) -> Bool {

@@ -16,33 +16,36 @@ struct FeatureGate {
     }
 
     /// Whether the user can access a specific feature.
+    /// Free year: all features unlocked for PMF signal.
     static func canAccess(_ feature: RemoteConfigManager.FeatureKey) -> Bool {
-        config.isFeatureEnabled(feature, for: currentTier)
+        true
     }
 
     /// Whether the user is on the free tier (for showing upgrade prompts).
+    /// Free year: always treated as pro.
     static var isFreeTier: Bool {
-        currentTier == "free"
+        false
     }
 
     /// Whether the user has full app access (trial or subscribed).
+    /// Free year: always true.
     static var hasFullAccess: Bool {
-        subscription.hasAccess
+        true
     }
 
     /// The number of metric detail views allowed for free users.
     static var metricDetailLimit: Int {
-        isFreeTier ? config.freeMetricDetailLimit : .max
+        .max
     }
 
     /// The number of insights shown to free users.
     static var insightLimit: Int {
-        isFreeTier ? config.freeInsightLimit : .max
+        .max
     }
 
     /// Allowed time range periods for the current tier.
     static var allowedPeriods: [String] {
-        isFreeTier ? config.freePeriods : ["7d", "30d", "3m", "6m", "1y"]
+        ["7d", "30d", "3m", "6m", "1y"]
     }
 
     /// Metrics available to the current tier.

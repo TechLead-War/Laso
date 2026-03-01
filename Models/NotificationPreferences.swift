@@ -2,6 +2,9 @@ import Foundation
 
 /// User preferences for notifications
 struct NotificationPreferences: Codable, Equatable {
+    // Only the daily summary is on by default — everything else is opt-in.
+    // Users hate notification spam; one morning briefing is enough.
+
     var dailySummaryEnabled: Bool = true
     var dailySummaryTime: DateComponents = {
         var c = DateComponents()
@@ -10,14 +13,14 @@ struct NotificationPreferences: Codable, Equatable {
         return c
     }()
 
-    var weeklySummaryEnabled: Bool = true
+    var weeklySummaryEnabled: Bool = false
     var weeklySummaryDay: Int = 2 // Monday = 2
 
-    var criticalAlertsEnabled: Bool = true
-    var warningAlertsEnabled: Bool = true
+    var criticalAlertsEnabled: Bool = false
+    var warningAlertsEnabled: Bool = false
 
     /// Heart rate spike/drop real-time alerts
-    var heartRateSpikeAlertsEnabled: Bool = true
+    var heartRateSpikeAlertsEnabled: Bool = false
     var heartRateSpikeThreshold: Double = 120 // bpm — alert if above
     var heartRateDropThreshold: Double = 45   // bpm — alert if below
 
@@ -27,13 +30,13 @@ struct NotificationPreferences: Codable, Equatable {
     /// Improvement celebration alerts
     var improvementAlertsEnabled: Bool = false
 
-    /// Apple Watch not-worn reminder (triggers after 1 hour without watch data)
-    var watchNotWornReminderEnabled: Bool = true
+    /// Apple Watch not-worn reminder
+    var watchNotWornReminderEnabled: Bool = false
 
-    /// Low battery reminder (shown once when watch battery drops below 10%)
-    var lowBatteryReminderEnabled: Bool = true
+    /// Low battery reminder
+    var lowBatteryReminderEnabled: Bool = false
 
-    var maxNotificationsPerDay: Int = 4
+    var maxNotificationsPerDay: Int = 1
 
     /// Metrics for which warning alerts are enabled — only the most safety-critical metrics by default
     var warningAlertMetrics: Set<HealthMetric> = [

@@ -5,13 +5,17 @@ import UserNotifications
 struct DailySummaryScheduler {
     private static let identifier = "healthpulse.dailySummary"
 
-    /// Schedule rich daily summary with score, anomalies, top insights, and category breakdown
+    /// Schedule rich daily summary with score, anomalies, top insights, category breakdown,
+    /// specific anomaly callout, yesterday score delta, and streak.
     static func schedule(
         score: Int,
         anomalyCount: Int,
         topInsights: [Insight],
         categoryBreakdown: String,
-        preferences: NotificationPreferences
+        preferences: NotificationPreferences,
+        topAnomaly: (metricName: String, changePercent: Double)? = nil,
+        scoreChangeFromYesterday: Int? = nil,
+        streakDays: Int = 0
     ) {
         guard preferences.dailySummaryEnabled else {
             NotificationManager.shared.cancelNotification(identifier: identifier)
@@ -19,12 +23,22 @@ struct DailySummaryScheduler {
         }
 
         let grade = gradeFor(score: score)
-        let title = "Health Score: \(score)/100 (\(grade))"
+
+        // Title includes yesterday delta arrow when available
+        var titleSuffix = ""
+        if let delta = scoreChangeFromYesterday {
+            let arrow = delta > 0 ? "\u{2191}" : "\u{2193}"  // ↑ or ↓
+            titleSuffix = " \(arrow)\(abs(delta))"
+        }
+        let title = "Health Score: \(score)/100 (\(grade))\(titleSuffix)"
 
         var bodyParts: [String] = []
 
-        // Anomaly summary
-        if anomalyCount > 0 {
+        // Specific anomaly callout
+        if let anomaly = topAnomaly {
+            let direction = anomaly.changePercent > 0 ? "up" : "down"
+            bodyParts.append("\(anomaly.metricName) \(direction) \(String(format: "%.0f", abs(anomaly.changePercent)))%.")
+        } else if anomalyCount > 0 {
             bodyParts.append("\(anomalyCount) metric\(anomalyCount == 1 ? "" : "s") need\(anomalyCount == 1 ? "s" : "") attention.")
         } else {
             bodyParts.append("All metrics looking healthy!")
@@ -34,6 +48,11 @@ struct DailySummaryScheduler {
         if let top = topInsights.first {
             let shortRec = firstSentence(top.recommendation)
             bodyParts.append("Action: \(shortRec)")
+        }
+
+        // Streak mention
+        if streakDays > 1 {
+            bodyParts.append("\(streakDays)-day streak!")
         }
 
         // Category breakdown (compact)

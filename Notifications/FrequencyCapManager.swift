@@ -14,10 +14,16 @@ final class FrequencyCapManager {
         saveLog(log)
     }
 
-    /// Check if we can send another notification today
-    func canSendNotification(maxPerDay: Int = 5) -> Bool {
-        let log = loadLog().filter { Calendar.current.isDateInToday($0) }
-        return log.count < maxPerDay
+    /// Check if we can send another notification today, respecting both daily cap and minimum spacing.
+    func canSendNotification(maxPerDay: Int = 2, minimumSpacingHours: Double = 4) -> Bool {
+        let todayLog = loadLog().filter { Calendar.current.isDateInToday($0) }
+        guard todayLog.count < maxPerDay else { return false }
+        // Enforce minimum spacing between consecutive notifications
+        if let lastSent = todayLog.max() {
+            let hoursSinceLast = Date().timeIntervalSince(lastSent) / 3600
+            if hoursSinceLast < minimumSpacingHours { return false }
+        }
+        return true
     }
 
     /// Number of notifications sent today

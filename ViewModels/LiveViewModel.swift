@@ -33,7 +33,6 @@ final class LiveViewModel {
     private var bloodOxygenQuery: HKAnchoredObjectQuery?
     private var respiratoryRateQuery: HKAnchoredObjectQuery?
     private var refreshTimer: Timer?
-    private var fallbackFetchWorkItem: DispatchWorkItem?
     private var respiratoryAvailabilityWorkItem: DispatchWorkItem?
 
     /// Live polling cadence and chart density controls (CPU/GPU protection).
@@ -149,7 +148,8 @@ final class LiveViewModel {
     private static let mediumInterval: TimeInterval = 300   // goals, mindful minutes
     private static let slowInterval: TimeInterval = 600     // RHR, HRV, workout, sleep
 
-    /// Full fetch — calls all tiers unconditionally (used on first appear and manual refresh)
+    /// Full fetch — calls all tiers unconditionally (used on first appear and manual refresh).
+    /// Also pre-fetches latest vitals so the Live tab opens instantly with data.
     func fetchHomeData() {
         guard HKHealthStore.isHealthDataAvailable() else { return }
         fetchLatestDailyValues()
@@ -158,6 +158,10 @@ final class LiveViewModel {
         fetchTodayMindfulMinutes()
         fetchLatestWorkout()
         fetchLastNightSleep()
+        // Pre-fetch latest vitals so Live tab has data immediately when opened
+        fetchFallbackHeartRate()
+        fetchFallbackBloodOxygen()
+        fetchFallbackRespiratoryRate()
         lastSlowFetch = Date()
         lastMediumFetch = Date()
     }
@@ -206,16 +210,12 @@ final class LiveViewModel {
         fetchLastNightSleep()
         computeReadinessScore()
 
-        // After 2 seconds, fill in any gaps the anchored queries didn't cover
-        fallbackFetchWorkItem?.cancel()
-        let fallbackWorkItem = DispatchWorkItem { [weak self] in
-            guard let self, self.isStreaming else { return }
-            self.fetchFallbackHeartRate()
-            self.fetchFallbackBloodOxygen()
-            self.fetchFallbackRespiratoryRate()
-        }
-        fallbackFetchWorkItem = fallbackWorkItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: fallbackWorkItem)
+        // Run fallback fetches immediately in parallel with anchored queries.
+        // This ensures the user sees last-known values right away, even if the
+        // anchored query's narrow window (30 min) has no recent samples.
+        fetchFallbackHeartRate()
+        fetchFallbackBloodOxygen()
+        fetchFallbackRespiratoryRate()
 
         // After 5 seconds, if respiratory rate is still nil, mark as unavailable
         respiratoryAvailabilityWorkItem?.cancel()
@@ -249,8 +249,6 @@ final class LiveViewModel {
 
         refreshTimer?.invalidate()
         refreshTimer = nil
-        fallbackFetchWorkItem?.cancel()
-        fallbackFetchWorkItem = nil
         respiratoryAvailabilityWorkItem?.cancel()
         respiratoryAvailabilityWorkItem = nil
     }
@@ -738,7 +736,7 @@ final class LiveViewModel {
     private func fetchFallbackHeartRate() {
         guard vitals.currentHeartRate == nil else { return }
         let unit = HKUnit.count().unitDivided(by: .minute())
-        fetchLatestSampleWithDate(.heartRate, unit: unit, maxAge: 3600) { [weak self] value, date in
+        fetchLatestSampleWithDate(.heartRate, unit: unit, maxAge: 24 * 3600) { [weak self] value, date in
             Task { @MainActor in
                 guard self?.vitals.currentHeartRate == nil else { return }
                 self?.vitals.currentHeartRate = value
@@ -750,7 +748,7 @@ final class LiveViewModel {
 
     private func fetchFallbackBloodOxygen() {
         guard vitals.currentBloodOxygen == nil else { return }
-        fetchLatestSampleWithDate(.oxygenSaturation, unit: .percent(), maxAge: 6 * 3600) { [weak self] value, date in
+        fetchLatestSampleWithDate(.oxygenSaturation, unit: .percent(), maxAge: 24 * 3600) { [weak self] value, date in
             Task { @MainActor in
                 guard self?.vitals.currentBloodOxygen == nil else { return }
                 self?.vitals.currentBloodOxygen = value * 100

@@ -14,6 +14,7 @@ struct HomeView: View {
     @State private var homeRefreshTimer: Timer?
     @State private var weeklyReviewViewModel: WeeklyReviewViewModel?
     @State private var showScoreGuide = false
+    @State private var showRecoveryInfo = false
 
     var body: some View {
         Group {
@@ -43,6 +44,10 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showScoreGuide) {
             ScoreGuideSheet()
+        }
+        .sheet(isPresented: $showRecoveryInfo) {
+            RecoveryInfoSheet()
+                .presentationDetents([.medium])
         }
         .refreshable {
             AppAnalytics.shared.trackPullToRefresh(screen: .home)
@@ -136,7 +141,13 @@ struct HomeView: View {
         ScrollView {
             VStack(spacing: 20) {
                 // 1. Greeting header
-                CoachGreetingView(showSettings: $showSettings)
+                CoachGreetingView(
+                    showSettings: $showSettings,
+                    streakDays: SessionTracker.shared.streakDays,
+                    scoreChangeFromYesterday: viewModel.scoreChangeFromYesterday,
+                    currentScore: hasData ? viewModel.overallScore.score : nil,
+                    onTapScoreInfo: { showScoreGuide = true }
+                )
                     .padding(.top, 12)
 
                 if shouldShowEmptyState {
@@ -175,6 +186,9 @@ struct HomeView: View {
                         navigationPath.append("weeklyReview")
                     }
 
+                    // 8. From Your History / Health Tips
+                    historicalOrTipsSection
+
                     // Last updated footer
                     if let lastRefresh = viewModel.lastRefresh {
                         Text("Updated \(lastRefresh, style: .relative) ago")
@@ -202,7 +216,7 @@ struct HomeView: View {
                 Text("Connect Your Health Data")
                     .font(.title3.weight(.semibold))
 
-                Text("HealthPulse reads from Apple Health, which syncs with your wearable automatically. No extra setup needed.")
+                Text("Laso reads from Apple Health, which syncs with your wearable automatically. No extra setup needed.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -303,6 +317,121 @@ struct HomeView: View {
             Text(text)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    // MARK: - Historical Insights / Health Tips
+
+    @ViewBuilder
+    private var historicalOrTipsSection: some View {
+        let daysOfData = viewModel.dataDepth.daysOfData
+        if daysOfData >= 30 {
+            let highlights = Array(viewModel.historicalHighlights.prefix(3))
+            if !highlights.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("From Your History")
+                        .font(.headline)
+                        .padding(.horizontal)
+
+                    ForEach(highlights) { highlight in
+                        Button {
+                            navigationPath.append(highlight.metric)
+                        } label: {
+                            historicalHighlightCard(highlight)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal)
+                    }
+                }
+            }
+        } else if hasData {
+            healthTipsSection(daysRemaining: 30 - daysOfData)
+        }
+    }
+
+    private func historicalHighlightCard(_ highlight: DashboardViewModel.HistoricalHighlight) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: highlight.metric.systemImageName)
+                .font(.title3)
+                .foregroundStyle(highlight.metric.category.color)
+                .frame(width: 36, height: 36)
+                .background(highlight.metric.category.color.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Text(highlight.title)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+
+                    highlightTypeBadge(highlight.type)
+                }
+
+                Text(highlight.recommendation)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+        }
+        .padding(12)
+        .background(.background, in: RoundedRectangle(cornerRadius: 14))
+    }
+
+    private func highlightTypeBadge(_ type: DashboardViewModel.HistoricalHighlight.HighlightType) -> some View {
+        let (label, color): (String, Color) = switch type {
+        case .yearOverYear: ("YoY", .blue)
+        case .allTimeExtreme: ("Record", .orange)
+        case .seasonal: ("Seasonal", .purple)
+        case .longTermTrajectory: ("Trend", .green)
+        }
+        return Text(label)
+            .font(.system(size: 9, weight: .bold))
+            .foregroundStyle(color)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 2)
+            .background(color.opacity(0.12), in: Capsule())
+    }
+
+    private func healthTipsSection(daysRemaining: Int) -> some View {
+        let tips: [(icon: String, title: String)] = [
+            ("figure.walk", "Move Every Hour"),
+            ("bed.double.fill", "Consistent Sleep Schedule"),
+            ("drop.fill", "Stay Hydrated"),
+            ("heart.fill", "Monitor Resting Heart Rate"),
+            ("wind", "Practice Deep Breathing"),
+        ]
+
+        return VStack(alignment: .leading, spacing: 10) {
+            Text("Health Tips")
+                .font(.headline)
+                .padding(.horizontal)
+
+            ForEach(tips.prefix(3), id: \.title) { tip in
+                HStack(spacing: 12) {
+                    Image(systemName: tip.icon)
+                        .font(.body)
+                        .foregroundStyle(.tint)
+                        .frame(width: 28)
+                    Text(tip.title)
+                        .font(.subheadline)
+                        .foregroundStyle(.primary)
+                    Spacer()
+                }
+                .padding(12)
+                .background(.background, in: RoundedRectangle(cornerRadius: 14))
+                .padding(.horizontal)
+            }
+
+            Text("\(daysRemaining) more day\(daysRemaining == 1 ? "" : "s") until personalized historical insights")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+                .padding(.horizontal)
         }
     }
 
@@ -661,8 +790,19 @@ struct HomeView: View {
                 )
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Recovery")
-                        .font(.title3.weight(.semibold))
+                    HStack(spacing: 6) {
+                        Text("Recovery")
+                            .font(.title3.weight(.semibold))
+
+                        Button {
+                            showRecoveryInfo = true
+                        } label: {
+                            Image(systemName: "info.circle")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
 
                     Text(Self.recoveryLabel(score))
                         .font(.subheadline.weight(.medium))
@@ -677,6 +817,18 @@ struct HomeView: View {
         .padding()
         .background(.background, in: RoundedRectangle(cornerRadius: 16))
         .padding(.horizontal)
+        .onAppear {
+            showRecoveryInfoIfNeeded()
+        }
+    }
+
+    private func showRecoveryInfoIfNeeded() {
+        guard !UserDefaults.standard.bool(forKey: AppKeys.App.hasSeenRecoveryInfo) else { return }
+        UserDefaults.standard.set(true, forKey: AppKeys.App.hasSeenRecoveryInfo)
+        // Slight delay so the card renders first
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            showRecoveryInfo = true
+        }
     }
 
     static func recoveryLabel(_ score: Int) -> String {

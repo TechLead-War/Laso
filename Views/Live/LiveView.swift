@@ -15,15 +15,18 @@ struct LiveView: View {
             VStack(spacing: 20) {
                 headerSection
 
-                if !viewModel.vitals.hasAnyData && !viewModel.activity.hasAnyData && viewModel.lastUpdate == nil {
+                if !viewModel.vitals.hasAnyData && !viewModel.activity.hasAnyData && viewModel.lastUpdate == nil && !viewModel.isStreaming {
+                    // No data at all and not streaming — full empty state
                     waitingForDataView
-                } else if viewModel.vitals.isStale {
-                    // Stale vitals — show wear-your-watch prompt with last known readings
+                } else if viewModel.vitals.isStale && !viewModel.isStreaming {
+                    // Stale vitals with no active stream — show wear-your-watch prompt
                     staleVitalsPrompt
                     activityRingsSection
                     lastWorkoutCard
                     statusFooter
                 } else {
+                    // Show full UI immediately — values fill in as they arrive.
+                    // When streaming without vitals yet, show activity first + a loading indicator.
                     heartRateHeroCard
                     vitalSignsRow
                     activityRingsSection
@@ -249,10 +252,16 @@ struct LiveView: View {
 
             Spacer()
 
-            Image(systemName: "applewatch.radiowaves.left.and.right")
-                .font(.title2)
-                .foregroundStyle(.secondary)
-                .symbolEffect(.pulse, isActive: viewModel.vitals.hasFreshData)
+            if viewModel.isStreaming && !viewModel.vitals.hasFreshData {
+                ProgressView()
+                    .controlSize(.small)
+                    .tint(.secondary)
+            } else {
+                Image(systemName: "applewatch.radiowaves.left.and.right")
+                    .font(.title2)
+                    .foregroundStyle(.secondary)
+                    .symbolEffect(.pulse, isActive: viewModel.vitals.hasFreshData)
+            }
         }
         .padding(.horizontal)
         .padding(.top, 16)
@@ -262,13 +271,13 @@ struct LiveView: View {
         if viewModel.vitals.hasFreshData {
             return "Streaming"
         } else if viewModel.vitals.isAging {
-            return "Last reading aging"
-        } else if viewModel.vitals.isStale {
-            return "Data is stale — wear your watch"
+            return "Updating..."
         } else if viewModel.isStreaming {
-            return "Waiting for watch"
+            return "Refreshing..."
+        } else if viewModel.vitals.isStale {
+            return "Wear your watch"
         } else {
-            return "Not connected"
+            return "Connecting..."
         }
     }
 

@@ -11,6 +11,7 @@ enum AppKeys {
         static let appTheme            = "healthpulse.appTheme"
         static let hasSeenDiscovery    = "healthpulse.hasSeenDiscovery"
         static let hasSeenScoreGuide   = "healthpulse.hasSeenScoreGuide"
+        static let hasSeenRecoveryInfo = "healthpulse.hasSeenRecoveryInfo"
         static let pendingCalibrationHydration = "healthpulse.pendingCalibrationHydration"
     }
 

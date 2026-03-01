@@ -32,7 +32,7 @@ final class WebExportViewModel {
         )
 
         // Save to temp directory
-        let fileName = "HealthPulse_Report_\(Date().shortDateString.replacingOccurrences(of: "/", with: "-")).html"
+        let fileName = "Laso_Report_\(Date().shortDateString.replacingOccurrences(of: "/", with: "-")).html"
         let tempDir = FileManager.default.temporaryDirectory
         let fileURL = tempDir.appendingPathComponent(fileName)
 

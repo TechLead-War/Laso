@@ -1,18 +1,70 @@
 import SwiftUI
 
-/// Greeting header with time-based salutation, date, and settings button
+/// Greeting header with score, yesterday delta, streak badge, and settings button
 struct CoachGreetingView: View {
     let showSettings: Binding<Bool>
+    var streakDays: Int = 0
+    var scoreChangeFromYesterday: Int? = nil
+    var currentScore: Int? = nil
+    var onTapScoreInfo: (() -> Void)? = nil
 
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(greeting)
-                    .font(.title2.weight(.bold))
+                // Primary line: score with delta or time-based greeting
+                if let score = currentScore {
+                    HStack(spacing: 6) {
+                        Text("Score: \(score)")
+                            .font(.title2.weight(.bold))
 
-                Text(dateString)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                        if let onTapScoreInfo {
+                            Button {
+                                onTapScoreInfo()
+                            } label: {
+                                Image(systemName: "info.circle")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+
+                        if let delta = scoreChangeFromYesterday {
+                            HStack(spacing: 2) {
+                                Image(systemName: delta > 0 ? "arrow.up.right" : "arrow.down.right")
+                                    .font(.caption.weight(.bold))
+                                Text("\(abs(delta))")
+                                    .font(.caption.weight(.bold).monospacedDigit())
+                            }
+                            .foregroundStyle(delta > 0 ? .green : .red)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background((delta > 0 ? Color.green : Color.red).opacity(0.12), in: Capsule())
+                        }
+                    }
+                } else {
+                    Text(greeting)
+                        .font(.title2.weight(.bold))
+                }
+
+                // Date subtitle with optional streak badge
+                HStack(spacing: 6) {
+                    Text(dateString)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+
+                    if streakDays > 1 {
+                        HStack(spacing: 2) {
+                            Image(systemName: "flame.fill")
+                                .font(.caption2)
+                            Text("\(streakDays)")
+                                .font(.caption2.weight(.bold).monospacedDigit())
+                        }
+                        .foregroundStyle(.orange)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.orange.opacity(0.12), in: Capsule())
+                    }
+                }
             }
 
             Spacer()
@@ -28,6 +80,25 @@ struct CoachGreetingView: View {
             .accessibilityLabel("Settings")
         }
         .padding(.horizontal)
+        .overlay(alignment: .top) {
+            streakMilestoneOverlay
+        }
+    }
+
+    // MARK: - Streak Milestone
+
+    @ViewBuilder
+    private var streakMilestoneOverlay: some View {
+        if let milestone = SessionTracker.shared.checkStreakMilestone() {
+            Text("\(milestone)-day streak!")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(.orange.gradient, in: Capsule())
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .offset(y: -32)
+        }
     }
 
     private var greeting: String {
@@ -53,6 +124,9 @@ struct CoachGreetingView: View {
 
 #Preview {
     CoachGreetingView(
-        showSettings: .constant(false)
+        showSettings: .constant(false),
+        streakDays: 14,
+        scoreChangeFromYesterday: 3,
+        currentScore: 72
     )
 }

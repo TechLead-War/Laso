@@ -37,19 +37,22 @@ final class NotificationManager {
         }
     }
 
-    /// Schedule a notification if within frequency cap
+    /// Schedule a notification if within frequency cap.
+    /// The daily summary (repeating calendar trigger) is the only notification that bypasses the cap.
+    /// All other notifications are hard-capped at 1/day with 4-hour minimum spacing.
     func scheduleNotification(
         title: String,
         body: String,
         identifier: String,
         trigger: UNNotificationTrigger? = nil,
-        maxPerDay: Int = 5
+        maxPerDay: Int = 1
     ) {
-        // Repeating summaries should not consume the daily cap at scheduling time.
-        let countsTowardDailyCap = (trigger == nil)
-        if countsTowardDailyCap {
+        let isDailySummary = identifier == "healthpulse.dailySummary"
+
+        // Everything except the daily summary is capped
+        if !isDailySummary {
             guard frequencyCap.canSendNotification(maxPerDay: maxPerDay) else {
-                print("Notification frequency cap reached for today")
+                print("Notification frequency cap reached for today — suppressing: \(identifier)")
                 return
             }
         }
@@ -68,7 +71,7 @@ final class NotificationManager {
         center.add(request) { [weak self] error in
             if let error {
                 print("Failed to schedule notification: \(error.localizedDescription)")
-            } else if countsTowardDailyCap {
+            } else if !isDailySummary {
                 self?.frequencyCap.recordNotification()
             }
         }

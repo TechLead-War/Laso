@@ -77,7 +77,7 @@ struct OnboardingView: View {
 
     private let totalPages = 7
     private let stepNames = [
-        "culture_actionable", "culture_privacy", "culture_you_vs_you", "culture_engine",
+        "culture_you_vs_you", "culture_engine", "culture_actionable", "culture_privacy",
         "connect_health", "focus_selection", "initial_calibration"
     ]
 
@@ -85,34 +85,34 @@ struct OnboardingView: View {
         ZStack(alignment: .bottom) {
             TabView(selection: $currentPage) {
                 CulturePage(
-                    icon: "sparkles",
-                    color: .blue,
-                    title: "Only What Matters",
-                    message: "We don't show things already in good shape. You only see what needs your attention — no noise, no vanity stats."
-                ) { currentPage = 1 }
-                .tag(0)
-
-                CulturePage(
-                    icon: "lock.shield.fill",
-                    color: .green,
-                    title: "Your Data Stays Here",
-                    message: "Your health data never leaves your device. No cloud uploads, no names, no tracking. Everything is completely private."
-                ) { currentPage = 2 }
-                .tag(1)
-
-                CulturePage(
                     icon: "person.fill.checkmark",
                     color: .purple,
                     title: "You vs You",
                     message: "We never compare you to world averages or country norms. We only compare you to yourself — if something drops, we catch it."
-                ) { currentPage = 3 }
-                .tag(2)
+                ) { currentPage = 1 }
+                .tag(0)
 
                 CulturePage(
                     icon: "cpu.fill",
                     color: .orange,
                     title: "Gets Smarter Over Time",
                     message: "An engine runs entirely on your device, learning your patterns. Over time, the insights rival a professional health coach."
+                ) { currentPage = 2 }
+                .tag(1)
+
+                CulturePage(
+                    icon: "sparkles",
+                    color: .blue,
+                    title: "Only What Matters",
+                    message: "We don't show things already in good shape. You only see what needs your attention — no noise, no vanity stats."
+                ) { currentPage = 3 }
+                .tag(2)
+
+                CulturePage(
+                    icon: "lock.shield.fill",
+                    color: .green,
+                    title: "Your Data Stays Here",
+                    message: "Your health data never leaves your device. No cloud uploads, no names, no tracking. Everything is completely private."
                 ) { currentPage = 4 }
                 .tag(3)
 
@@ -203,20 +203,30 @@ private struct ConnectHealthPage: View {
     let onContinue: () -> Void
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 0) {
             Spacer()
 
-            GlowIcon(systemName: "heart.text.clipboard", color: .red)
+            Text("Laso")
+                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .foregroundStyle(.secondary)
+                .padding(.bottom, 32)
 
-            VStack(spacing: 12) {
+            Image(systemName: "heart.text.clipboard")
+                .font(.system(size: 44, weight: .medium))
+                .foregroundStyle(.red)
+                .frame(width: 88, height: 88)
+                .background(Color.red.opacity(0.12), in: Circle())
+                .padding(.bottom, 28)
+
+            VStack(spacing: 10) {
                 Text("Your health, understood.")
-                    .font(.title3.weight(.semibold))
+                    .font(.title2.weight(.bold))
 
                 Text("Laso turns your Apple Watch data into clear health scores and insights — privately, on your device.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, 32)
             }
 
             VStack(spacing: 0) {
@@ -224,11 +234,13 @@ private struct ConnectHealthPage: View {
                 Divider().padding(.leading, 52)
                 benefitRow(icon: "sparkles", color: .blue, text: "Personalized insights and alerts")
                 Divider().padding(.leading, 52)
-                benefitRow(icon: "lock.fill", color: .orange, text: "Health data stays on-device; anonymous usage analytics and optional feedback improve Laso")
+                benefitRow(icon: "lock.fill", color: .orange, text: "All health data stays on your device")
             }
             .background(.background, in: RoundedRectangle(cornerRadius: 16))
             .padding(.horizontal)
+            .padding(.top, 24)
 
+            Spacer()
             Spacer()
 
             if HKHealthStore.isHealthDataAvailable() {
@@ -240,7 +252,8 @@ private struct ConnectHealthPage: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .font(.subheadline.weight(.medium))
+                .controlSize(.large)
+                .font(.subheadline.weight(.semibold))
                 .padding(.bottom, 48)
             } else {
                 VStack(spacing: 12) {
@@ -252,8 +265,9 @@ private struct ConnectHealthPage: View {
                         AppAnalytics.shared.trackBlockTap(title: "Continue Anyway", type: .onboardingContinueAnyway, screen: .onboarding)
                         onContinue()
                     }
-                        .buttonStyle(.borderedProminent)
-                        .font(.subheadline.weight(.medium))
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .font(.subheadline.weight(.semibold))
                 }
                 .padding(.bottom, 48)
             }
@@ -286,19 +300,25 @@ private struct FocusPage: View {
     let onContinue: () -> Void
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 0) {
             Spacer()
 
-            VStack(spacing: 12) {
+            Text("Laso")
+                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .foregroundStyle(.secondary)
+                .padding(.bottom, 28)
+
+            VStack(spacing: 10) {
                 Text("What matters most to you?")
-                    .font(.title3.weight(.semibold))
+                    .font(.title2.weight(.bold))
 
                 Text("Pick your areas — we'll prioritize those insights.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, 32)
             }
+            .padding(.bottom, 24)
 
             FlowLayout(spacing: 10) {
                 ForEach(HealthFocus.allCases) { focus in
@@ -339,14 +359,16 @@ private struct FocusPage: View {
             .padding(.horizontal)
 
             Spacer()
+            Spacer()
 
             Button("Continue") {
                 AppAnalytics.shared.trackBlockTap(title: "Continue", type: .onboardingGetStarted, screen: .onboarding)
                 onContinue()
             }
-                .buttonStyle(.borderedProminent)
-                .font(.subheadline.weight(.medium))
-                .padding(.bottom, 48)
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .font(.subheadline.weight(.semibold))
+            .padding(.bottom, 48)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -386,24 +408,34 @@ private struct CalibrationPage: View {
     }
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 0) {
             Spacer()
 
-            GlowIcon(
-                systemName: state == .success ? "checkmark.seal.fill" : "gearshape.2.fill",
-                color: state == .success ? .green : .blue
-            )
+            Text("Laso")
+                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .foregroundStyle(.secondary)
+                .padding(.bottom, 32)
 
-            VStack(spacing: 12) {
+            let iconName = state == .success ? "checkmark.seal.fill" : "gearshape.2.fill"
+            let iconColor: Color = state == .success ? .green : .blue
+            Image(systemName: iconName)
+                .font(.system(size: 44, weight: .medium))
+                .foregroundStyle(iconColor)
+                .frame(width: 88, height: 88)
+                .background(iconColor.opacity(0.12), in: Circle())
+                .contentTransition(.symbolEffect(.replace))
+                .padding(.bottom, 28)
+
+            VStack(spacing: 10) {
                 Text(title)
-                    .font(.title3.weight(.semibold))
+                    .font(.title2.weight(.bold))
                     .multilineTextAlignment(.center)
 
                 Text(message)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, 32)
             }
 
             if case .running = state {
@@ -447,8 +479,8 @@ private struct CalibrationPage: View {
         case .idle, .running:
             EmptyView()
         case .success:
-            Button("Enter HealthPulse") {
-                AppAnalytics.shared.trackBlockTap(title: "Enter HealthPulse", type: .onboardingGetStarted, screen: .onboarding)
+            Button("Enter Laso") {
+                AppAnalytics.shared.trackBlockTap(title: "Enter Laso", type: .onboardingGetStarted, screen: .onboarding)
                 onComplete()
             }
             .buttonStyle(.borderedProminent)
@@ -654,22 +686,37 @@ private struct CulturePage: View {
     let onContinue: () -> Void
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 0) {
             Spacer()
 
-            GlowIcon(systemName: icon, color: color)
+            // Branding
+            Text("Laso")
+                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .foregroundStyle(.secondary)
+                .padding(.bottom, 32)
 
-            VStack(spacing: 12) {
+            // Icon
+            Image(systemName: icon)
+                .font(.system(size: 44, weight: .medium))
+                .foregroundStyle(color)
+                .frame(width: 88, height: 88)
+                .background(color.opacity(0.12), in: Circle())
+                .padding(.bottom, 28)
+
+            // Title + Message
+            VStack(spacing: 10) {
                 Text(title)
-                    .font(.title3.weight(.semibold))
+                    .font(.title2.weight(.bold))
 
                 Text(message)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, 32)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
+            Spacer()
             Spacer()
 
             Button("Continue") {
@@ -677,41 +724,11 @@ private struct CulturePage: View {
                 onContinue()
             }
             .buttonStyle(.borderedProminent)
-            .font(.subheadline.weight(.medium))
+            .controlSize(.large)
+            .font(.subheadline.weight(.semibold))
             .padding(.bottom, 48)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
-// MARK: - Glow Icon Component
-
-private struct GlowIcon: View {
-    let systemName: String
-    let color: Color
-
-    @State private var animate = false
-
-    var body: some View {
-        ZStack {
-            Circle()
-                .fill(color.opacity(0.1))
-                .frame(width: 120, height: 120)
-                .scaleEffect(animate ? 1.3 : 0.9)
-                .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: animate)
-
-            Circle()
-                .fill(color.opacity(0.05))
-                .frame(width: 160, height: 160)
-                .scaleEffect(animate ? 1.5 : 1.0)
-                .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: animate)
-
-            Image(systemName: systemName)
-                .font(.system(size: 40, weight: .medium))
-                .foregroundStyle(color)
-                .frame(width: 80, height: 80)
-                .background(color.opacity(0.12), in: Circle())
-        }
-        .onAppear { animate = true }
-    }
-}

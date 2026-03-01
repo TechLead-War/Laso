@@ -6,6 +6,7 @@ import SwiftData
 struct ExploreView: View {
     let viewModel: DashboardViewModel
     @Binding var navigationPath: NavigationPath
+    @State private var showScoreGuide = false
 
     var body: some View {
         ScrollView {
@@ -15,26 +16,26 @@ struct ExploreView: View {
                     scoreHeroSection
                         .padding(.horizontal)
 
-                    // 2. Needs Attention — negative factors only
+                    // 2. Data depth bar — Metrics, Data Points, Days
+                    dataSummaryBar
+                        .padding(.horizontal)
+
+                    // 3. Needs Attention — negative factors only
                     scoreBreakdownSection
                         .padding(.horizontal)
 
-                    // 3. Declining metrics from history
+                    // 4. Declining metrics from history
                     if !decliningHighlights.isEmpty {
                         historicalSection
                     }
 
-                    // 4. Correlations preview
+                    // 5. Correlations preview
                     if FeatureGate.canAccess(.advancedAnalytics), !viewModel.topCorrelations.isEmpty {
                         correlationsPreview
                     }
 
-                    // 5. Categories — worst first
+                    // 6. Categories — worst first
                     categoriesSection
-                        .padding(.horizontal)
-
-                    // 6. Data depth bar
-                    dataSummaryBar
                         .padding(.horizontal)
                 } else {
                     emptyState
@@ -57,6 +58,9 @@ struct ExploreView: View {
             AppAnalytics.shared.trackCoreAction(.viewedScore, screen: .explore)
         }
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.explore) }
+        .sheet(isPresented: $showScoreGuide) {
+            ScoreGuideSheet()
+        }
         .refreshable {
             AppAnalytics.shared.trackPullToRefresh(screen: .explore)
             await viewModel.refresh()
@@ -82,9 +86,20 @@ struct ExploreView: View {
                 )
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Health Score")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 6) {
+                        Text("Health Score")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+
+                        Button {
+                            showScoreGuide = true
+                        } label: {
+                            Image(systemName: "info.circle")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
 
                     Text(grade)
                         .font(.system(size: 44, weight: .bold, design: .rounded))
