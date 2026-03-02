@@ -365,6 +365,14 @@ struct HealthKitMetricRegistry {
                 strategy: .quantitySample,
                 statisticsOption: .discreteAverage
             )
+        case .waterIntake:
+            return MetricConfig(
+                sampleType: HKQuantityType(.dietaryWater),
+                quantityType: HKQuantityType(.dietaryWater),
+                unit: .liter(),
+                strategy: .statisticsDaily,
+                statisticsOption: .cumulativeSum
+            )
         case .bloodGlucose:
             return MetricConfig(
                 sampleType: HKQuantityType(.bloodGlucose),

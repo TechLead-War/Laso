@@ -82,6 +82,7 @@
 		A3EE20518D6FA4A81069FC5D /* PeriodSummarySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F43429261BE644C3EACA8620 /* PeriodSummarySection.swift */; };
 		A4B2B919FB3D1957C58AF899 /* HTMLReportGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F95FB00C49E1EB4BE11CDAA /* HTMLReportGenerator.swift */; };
 		A7CB64E2140A793DD0258993 /* MetricDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59AFB7BF706251B5AA4B10B3 /* MetricDetailView.swift */; };
+		A7CB64E2140A793DD0259001 /* MetricLogSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59AFB7BF706251B5AA4B1001 /* MetricLogSheet.swift */; };
 		A83908D9EE2AE59D575C250C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A260467379612091A6B0F24B /* AppDelegate.swift */; };
 		AAD4C0915EACE9877AE53731 /* CustomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 816F82CFA63FB0FE6C771713 /* CustomTabBar.swift */; };
 		B1A2C3D4E5F60718A9B0C1D2 /* WeeklyChallenge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2C1B0A9081706F5E4D3C2A1 /* WeeklyChallenge.swift */; };
@@ -183,6 +184,7 @@
 		540A9FC7CEE865985F272489 /* CoachGreetingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachGreetingView.swift; sourceTree = "<group>"; };
 		5827B420D1FD0325FE028282 /* ConnectedDeviceInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectedDeviceInfo.swift; sourceTree = "<group>"; };
 		59AFB7BF706251B5AA4B10B3 /* MetricDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricDetailView.swift; sourceTree = "<group>"; };
+		59AFB7BF706251B5AA4B1001 /* MetricLogSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricLogSheet.swift; sourceTree = "<group>"; };
 		5BDFE796A4164EAF5B516AEB /* FeedbackPromptManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackPromptManager.swift; sourceTree = "<group>"; };
 		629618CFCAA39621B43158A8 /* AppAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAnalytics.swift; sourceTree = "<group>"; };
 		644B807CD403736D1B4418D5 /* package.xcworkspace */ = {isa = PBXFileReference; lastKnownFileType = wrapper.workspace; path = package.xcworkspace; sourceTree = "<group>"; };
@@ -462,6 +464,7 @@
 			isa = PBXGroup;
 			children = (
 				59AFB7BF706251B5AA4B10B3 /* MetricDetailView.swift */,
+				59AFB7BF706251B5AA4B1001 /* MetricLogSheet.swift */,
 			);
 			path = MetricDetail;
 			sourceTree = "<group>";
@@ -878,6 +881,7 @@
 				CEA00100000000000000002 /* CognitiveEnergyAnalyzer.swift in Sources */,
 				92BC085F0F66295F8221BE88 /* MetricChartView.swift in Sources */,
 				A7CB64E2140A793DD0258993 /* MetricDetailView.swift in Sources */,
+				A7CB64E2140A793DD0259001 /* MetricLogSheet.swift in Sources */,
 				202D80E10EC59F9CFC4DAEA0 /* MetricDetailViewModel.swift in Sources */,
 				9CD90616A76A0279E781C75B /* MetricSample.swift in Sources */,
 				3C26F7D4A54DF11714EA0B4C /* MetricTimeSeries.swift in Sources */,

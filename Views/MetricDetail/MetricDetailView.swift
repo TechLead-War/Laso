@@ -5,8 +5,11 @@ import Charts
 struct MetricDetailView: View {
     @State var viewModel: MetricDetailViewModel
     var deviceSourceManager: DeviceSourceManager? = nil
+    var healthKitManager: HealthKitManager? = nil
+    var healthDataStore: HealthDataStore? = nil
 
     @State private var autoExpandedRange: Int?
+    @State private var showLogSheet = false
 
     var body: some View {
         ScrollView {
@@ -27,6 +30,17 @@ struct MetricDetailView: View {
                     }
                     // Current Value Header
                     headerSection
+
+                    // Log button for writable metrics
+                    if HealthKitManager.writableMetrics.contains(viewModel.metric) {
+                        Button {
+                            showLogSheet = true
+                        } label: {
+                            Label("Log \(viewModel.metric.displayName)", systemImage: "plus.circle.fill")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+                    }
 
                     // Action Banner — show recommendation if insight exists
                     if let recommendation = viewModel.insights.first?.recommendation {
@@ -80,6 +94,16 @@ struct MetricDetailView: View {
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle(viewModel.metric.displayName)
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showLogSheet) {
+            if let hkManager = healthKitManager, let store = healthDataStore {
+                MetricLogSheet(
+                    metric: viewModel.metric,
+                    healthKitManager: hkManager,
+                    healthDataStore: store
+                )
+                .presentationDetents([.medium])
+            }
+        }
         .onAppear {
             // If default 30-day range is empty, try broader ranges and notify the user
             if viewModel.chartSamples.isEmpty {

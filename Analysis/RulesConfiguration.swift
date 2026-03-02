@@ -62,6 +62,7 @@ struct RulesConfiguration {
         case .mindfulMinutes: return NormalRange(low: 5, high: 60)
         case .timeInDaylight: return NormalRange(low: 15, high: 180)
         case .electrodermalActivity: return NormalRange(low: 0.01, high: 20)
+        case .waterIntake: return NormalRange(low: 1.5, high: 4.0)  // liters per day
         case .bloodGlucose: return NormalRange(low: 70, high: 140)
         case .workoutCount: return NormalRange(low: 0, high: 3)
         case .workoutDuration: return NormalRange(low: 0, high: 120)

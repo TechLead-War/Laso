@@ -66,7 +66,9 @@ struct ContentView: View {
                             healthKitManager: healthKitManager,
                             analysisEngine: analysisEngine
                         ),
-                        deviceSourceManager: deviceSourceManager
+                        deviceSourceManager: deviceSourceManager,
+                        healthKitManager: healthKitManager,
+                        healthDataStore: healthDataStore
                     )
                 }
                 .navigationDestination(for: HealthRiskType.self) { riskType in

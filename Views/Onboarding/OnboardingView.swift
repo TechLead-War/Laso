@@ -89,7 +89,7 @@ struct OnboardingView: View {
                     color: .purple,
                     title: "You vs You",
                     message: "We never compare you to world averages or country norms. We only compare you to yourself — if something drops, we catch it."
-                ) { currentPage = 1 }
+                ) { withAnimation(.smooth(duration: 0.4)) { currentPage = 1 } }
                 .tag(0)
 
                 CulturePage(
@@ -97,7 +97,7 @@ struct OnboardingView: View {
                     color: .orange,
                     title: "Gets Smarter Over Time",
                     message: "An engine runs entirely on your device, learning your patterns. Over time, the insights rival a professional health coach."
-                ) { currentPage = 2 }
+                ) { withAnimation(.smooth(duration: 0.4)) { currentPage = 2 } }
                 .tag(1)
 
                 CulturePage(
@@ -105,7 +105,7 @@ struct OnboardingView: View {
                     color: .blue,
                     title: "Only What Matters",
                     message: "We don't show things already in good shape. You only see what needs your attention — no noise, no vanity stats."
-                ) { currentPage = 3 }
+                ) { withAnimation(.smooth(duration: 0.4)) { currentPage = 3 } }
                 .tag(2)
 
                 CulturePage(
@@ -113,16 +113,16 @@ struct OnboardingView: View {
                     color: .green,
                     title: "Your Data Stays Here",
                     message: "Your health data never leaves your device. No cloud uploads, no names, no tracking. Everything is completely private."
-                ) { currentPage = 4 }
+                ) { withAnimation(.smooth(duration: 0.4)) { currentPage = 4 } }
                 .tag(3)
 
                 ConnectHealthPage(healthKitManager: healthKitManager) {
-                    currentPage = 5
+                    withAnimation(.smooth(duration: 0.4)) { currentPage = 5 }
                 }
                 .tag(4)
 
                 FocusPage(selectedFocuses: $selectedFocuses) {
-                    currentPage = 6
+                    withAnimation(.smooth(duration: 0.4)) { currentPage = 6 }
                 }
                 .tag(5)
 
@@ -206,10 +206,11 @@ private struct ConnectHealthPage: View {
         VStack(spacing: 0) {
             Spacer()
 
-            Text("Laso")
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
-                .foregroundStyle(.secondary)
-                .padding(.bottom, 32)
+            Image("LaunchIcon")
+                .resizable()
+                .frame(width: 64, height: 64)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .padding(.bottom, 24)
 
             Image(systemName: "heart.text.clipboard")
                 .font(.system(size: 44, weight: .medium))
@@ -244,16 +245,20 @@ private struct ConnectHealthPage: View {
             Spacer()
 
             if HKHealthStore.isHealthDataAvailable() {
-                Button("Connect Apple Health") {
+                Button {
                     AppAnalytics.shared.trackBlockTap(title: "Connect Apple Health", type: .onboardingConnectHealth, screen: .onboarding)
                     Task {
                         await healthKitManager.requestAuthorization()
                         onContinue()
                     }
+                } label: {
+                    Text("Connect Apple Health")
+                        .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
-                .font(.subheadline.weight(.semibold))
+                .font(.headline)
+                .padding(.horizontal, 24)
                 .padding(.bottom, 48)
             } else {
                 VStack(spacing: 12) {
@@ -261,13 +266,17 @@ private struct ConnectHealthPage: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
-                    Button("Continue Anyway") {
+                    Button {
                         AppAnalytics.shared.trackBlockTap(title: "Continue Anyway", type: .onboardingContinueAnyway, screen: .onboarding)
                         onContinue()
+                    } label: {
+                        Text("Continue Anyway")
+                            .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.headline)
+                    .padding(.horizontal, 24)
                 }
                 .padding(.bottom, 48)
             }
@@ -303,10 +312,11 @@ private struct FocusPage: View {
         VStack(spacing: 0) {
             Spacer()
 
-            Text("Laso")
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
-                .foregroundStyle(.secondary)
-                .padding(.bottom, 28)
+            Image("LaunchIcon")
+                .resizable()
+                .frame(width: 64, height: 64)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .padding(.bottom, 20)
 
             VStack(spacing: 10) {
                 Text("What matters most to you?")
@@ -361,13 +371,17 @@ private struct FocusPage: View {
             Spacer()
             Spacer()
 
-            Button("Continue") {
+            Button {
                 AppAnalytics.shared.trackBlockTap(title: "Continue", type: .onboardingGetStarted, screen: .onboarding)
                 onContinue()
+            } label: {
+                Text("Continue")
+                    .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
-            .font(.subheadline.weight(.semibold))
+            .font(.headline)
+            .padding(.horizontal, 24)
             .padding(.bottom, 48)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -479,19 +493,29 @@ private struct CalibrationPage: View {
         case .idle, .running:
             EmptyView()
         case .success:
-            Button("Enter Laso") {
+            Button {
                 AppAnalytics.shared.trackBlockTap(title: "Enter Laso", type: .onboardingGetStarted, screen: .onboarding)
                 onComplete()
+            } label: {
+                Text("Enter Laso")
+                    .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
-            .font(.subheadline.weight(.medium))
+            .controlSize(.large)
+            .font(.headline)
+            .padding(.horizontal, 24)
         case .failed:
             VStack(spacing: 10) {
-                Button("Retry Calibration") {
+                Button {
                     startCalibration()
+                } label: {
+                    Text("Retry Calibration")
+                        .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .font(.subheadline.weight(.medium))
+                .controlSize(.large)
+                .font(.headline)
+                .padding(.horizontal, 24)
 
                 Button("Skip for Now") {
                     onComplete()
@@ -719,13 +743,17 @@ private struct CulturePage: View {
             Spacer()
             Spacer()
 
-            Button("Continue") {
+            Button {
                 AppAnalytics.shared.trackBlockTap(title: title, type: .onboardingCultureContinue, screen: .onboarding)
                 onContinue()
+            } label: {
+                Text("Continue")
+                    .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
-            .font(.subheadline.weight(.semibold))
+            .font(.headline)
+            .padding(.horizontal, 24)
             .padding(.bottom, 48)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

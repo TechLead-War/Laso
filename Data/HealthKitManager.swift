@@ -66,8 +66,14 @@ final class HealthKitManager {
 
         let readTypes = HealthKitMetricRegistry.allSampleTypes
 
+        let writeTypes: Set<HKSampleType> = [
+            HKQuantityType(.bodyMass),
+            HKQuantityType(.dietaryWater),
+            HKCategoryType(.mindfulSession)
+        ]
+
         do {
-            try await healthStore.requestAuthorization(toShare: [], read: readTypes)
+            try await healthStore.requestAuthorization(toShare: writeTypes, read: readTypes)
             isAuthorized = true
         } catch {
             self.error = "Authorization failed: \(error.localizedDescription)"
@@ -432,6 +438,62 @@ final class HealthKitManager {
             }
 
             healthStore.execute(query)
+        }
+    }
+
+    // MARK: - Write Support
+
+    /// Metrics the user can log from the app
+    static let writableMetrics: Set<HealthMetric> = [.weight, .waterIntake, .mindfulMinutes]
+
+    /// Save a body weight sample to HealthKit
+    func saveWeight(_ kg: Double, date: Date = Date()) async throws {
+        let quantity = HKQuantity(unit: .gramUnit(with: .kilo), doubleValue: kg)
+        let sample = HKQuantitySample(
+            type: HKQuantityType(.bodyMass),
+            quantity: quantity,
+            start: date,
+            end: date
+        )
+        try await healthStore.save(sample)
+    }
+
+    /// Save a water intake sample to HealthKit (input in mL, stored in liters)
+    func saveWaterIntake(milliliters: Double, date: Date = Date()) async throws {
+        let liters = milliliters / 1000.0
+        let quantity = HKQuantity(unit: .liter(), doubleValue: liters)
+        let sample = HKQuantitySample(
+            type: HKQuantityType(.dietaryWater),
+            quantity: quantity,
+            start: date,
+            end: date
+        )
+        try await healthStore.save(sample)
+    }
+
+    /// Save a mindful session to HealthKit
+    func saveMindfulSession(minutes: Double) async throws {
+        let endDate = Date()
+        let startDate = endDate.addingTimeInterval(-minutes * 60)
+        let sample = HKCategorySample(
+            type: HKCategoryType(.mindfulSession),
+            value: HKCategoryValue.notApplicable.rawValue,
+            start: startDate,
+            end: endDate
+        )
+        try await healthStore.save(sample)
+    }
+
+    /// Re-fetch a single metric from HealthKit and update SwiftData + timeSeries
+    @MainActor
+    func refreshMetric(_ metric: HealthMetric, store: HealthDataStore) async {
+        let endDate = Date()
+        let startDate = endDate.daysAgo(90)
+        guard let series = await fetchMetric(metric, from: startDate, to: endDate) else { return }
+        store.saveSamples(series.samples, for: metric)
+        let reloaded = store.loadTimeSeries(for: metric)
+        if let reloaded {
+            timeSeries[metric] = reloaded
         }
     }
 
