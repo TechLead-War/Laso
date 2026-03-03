@@ -208,7 +208,6 @@ struct HistoricalAnalyzer {
 
         let improving = metric.higherIsBetter ? yoyChange > 0 : yoyChange < 0
         let absChange = String(format: "%.0f", abs(yoyChange))
-        let currentFormatted = metric.formatValue(ctx.allTimePercentile > 50 ? lastYearValue * (1 + yoyChange / 100) : lastYearValue * (1 + yoyChange / 100))
         let lastYearFormatted = metric.formatValue(lastYearValue)
 
         let monthName = Calendar.current.monthSymbols[Calendar.current.component(.month, from: Date()) - 1]
@@ -233,7 +232,6 @@ struct HistoricalAnalyzer {
         guard ctx.isAllTimeExtreme, ctx.totalDataPoints >= 180 else { return nil }
         guard let high = ctx.allTimeHigh, let low = ctx.allTimeLow else { return nil }
 
-        let currentValue = high * (ctx.allTimePercentile / 100)  // approximate
         let isNearHigh = ctx.allTimePercentile >= 95
         let isNearLow = ctx.allTimePercentile <= 5
 

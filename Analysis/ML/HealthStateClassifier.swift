@@ -51,7 +51,6 @@ final class HealthStateClassifier {
         }
 
         // Auto-select k via silhouette score
-        var bestK = 3
         var bestSilhouette = -1.0
         var bestCentroids: [[Double]] = []
         var bestAssignments: [Int] = []
@@ -64,7 +63,6 @@ final class HealthStateClassifier {
 
             if sil > bestSilhouette {
                 bestSilhouette = sil
-                bestK = k
                 bestCentroids = c
                 bestAssignments = a
             }

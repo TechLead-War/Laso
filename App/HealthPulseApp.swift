@@ -184,19 +184,17 @@ struct HealthPulseApp: App {
                 }
                 .task {
                     // Run CloudKit restore and subscription configure in parallel
-                    let store = healthDataStore
-                    async let cloudRestoreTask: Void = {
-                        if store.totalStoredSamples == 0 {
-                            let persistence = PersistenceManager()
-                            _ = await CloudBackupManager.shared.restore(
-                                store: store, persistence: persistence
-                            )
-                        }
-                    }()
                     async let subscriptionTask: Void = subscriptionManager.configure()
 
+                    if healthDataStore.totalStoredSamples == 0 {
+                        let persistence = PersistenceManager()
+                        _ = await CloudBackupManager.shared.restore(
+                            store: healthDataStore, persistence: persistence
+                        )
+                    }
+
                     // Wait for both to complete concurrently
-                    _ = await (cloudRestoreTask, subscriptionTask)
+                    _ = await subscriptionTask
 
                     NotificationManager.shared.store = healthDataStore
 

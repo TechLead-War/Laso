@@ -95,7 +95,7 @@ struct ECGFeatureExtractor {
         // Pad to next power of 2
         let fftSize = 1 << Int(ceil(log2(Double(n))))
 
-        var paddedSignal = signal + Array(repeating: 0.0, count: fftSize - n)
+        let paddedSignal = signal + Array(repeating: 0.0, count: fftSize - n)
 
         // Forward FFT
         guard let fftSetup = vDSP_DFT_zop_CreateSetup(nil, vDSP_Length(fftSize), .FORWARD) else {

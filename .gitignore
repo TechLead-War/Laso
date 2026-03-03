@@ -23,3 +23,6 @@ build/
 
 # Personal notes
 values.txt
+
+# Claude Code worktrees
+.claude/worktrees/

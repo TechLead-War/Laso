@@ -541,7 +541,6 @@ final class HealthKitManager {
                 // Group by night and sum durations per sleep stage
                 var dailyDurations: [Date: Double] = [:]
                 let asleepStageValues: Set<Int> = [
-                    HKCategoryValueSleepAnalysis.asleep.rawValue,
                     HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue,
                     HKCategoryValueSleepAnalysis.asleepCore.rawValue,
                     HKCategoryValueSleepAnalysis.asleepDeep.rawValue,

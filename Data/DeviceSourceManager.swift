@@ -87,18 +87,23 @@ final class DeviceSourceManager {
 
     /// Query sources for a given sample type and return (source, metric, lastSampleDate) tuples
     private func querySources(for sampleType: HKSampleType, metric: HealthMetric) async -> [(HKSource, HealthMetric, Date?)] {
-        await withCheckedContinuation { continuation in
-            let query = HKSourceQuery(sampleType: sampleType, samplePredicate: nil) { [weak self] _, sourcesOrNil, error in
-                guard let self, let sources = sourcesOrNil, error == nil else {
+        let healthStore = self.healthStore
+        return await withCheckedContinuation { continuation in
+            let query = HKSourceQuery(sampleType: sampleType, samplePredicate: nil) { _, sourcesOrNil, error in
+                guard let sources = sourcesOrNil, error == nil else {
                     continuation.resume(returning: [])
                     return
                 }
 
-                Task {
+                Task { [healthStore, sampleType, metric] in
                     var results: [(HKSource, HealthMetric, Date?)] = []
                     results.reserveCapacity(sources.count)
                     for source in sources {
-                        let lastDate = await self.latestSampleDate(for: sampleType, source: source)
+                        let lastDate = await Self.latestSampleDate(
+                            in: healthStore,
+                            for: sampleType,
+                            source: source
+                        )
                         results.append((source, metric, lastDate))
                     }
                     continuation.resume(returning: results)
@@ -109,7 +114,7 @@ final class DeviceSourceManager {
     }
 
     /// Fetch the most recent sample date for a specific source + type.
-    private func latestSampleDate(for sampleType: HKSampleType, source: HKSource) async -> Date? {
+    private static func latestSampleDate(in healthStore: HKHealthStore, for sampleType: HKSampleType, source: HKSource) async -> Date? {
         await withCheckedContinuation { continuation in
             let sourcePredicate = HKQuery.predicateForObjects(from: [source])
             let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
