@@ -171,8 +171,8 @@ final class HealthKitManager {
                         // Incremental: fetch from last sync minus 1 day for overlap safety
                         startDate = Calendar.current.date(byAdding: .day, value: -1, to: lastSync) ?? lastSync
                     } else {
-                        // First sync: fetch up to 5 years of HealthKit history
-                        startDate = Calendar.current.date(byAdding: .year, value: -5, to: endDate) ?? endDate
+                        // First sync: fetch up to 1 year of HealthKit history
+                        startDate = Calendar.current.date(byAdding: .year, value: -1, to: endDate) ?? endDate
                     }
                     let series = await self.fetchMetric(metric, from: startDate, to: endDate)
                     return (metric, series)
