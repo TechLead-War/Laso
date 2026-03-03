@@ -345,8 +345,6 @@ struct HealthStateTimelineView: View {
     }
 
     private func monthYearString(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM yyyy"
-        return formatter.string(from: date)
+        date.formatted(.dateTime.month(.wide).year())
     }
 }

@@ -1,6 +1,6 @@
 import Foundation
 
-/// Deep historical analysis that leverages years of HealthKit data.
+/// Deep historical analysis that leverages up to 1 year of HealthKit data.
 /// Produces per-metric context: YoY change, all-time percentile, seasonal norms,
 /// long-term trajectory, and historical rarity — none of which exist in the
 /// 90-day-capped baseline/trend pipeline.
@@ -24,7 +24,7 @@ struct HistoricalAnalyzer {
         let seasonalDeviation: Double?          // % above/below seasonal norm
 
         // Long-Term Trajectory
-        let longTermSlope: Double?              // slope over 365+ days (per day)
+        let longTermSlope: Double?              // slope over up to 365 days (per day)
         let longTermChangePercent: Double?      // total % change over longest available period
 
         // Historical Rarity
@@ -92,15 +92,13 @@ struct HistoricalAnalyzer {
             return ((currentValue - avg) / avg) * 100
         }
 
-        // ── Long-Term Trajectory (365+ days) ──
+        // ── Long-Term Trajectory (up to 365 days) ──
         let longTermSamples = series.sortedSamples
         var longTermSlope: Double? = nil
         var longTermChangePercent: Double? = nil
 
         if longTermSamples.count >= 90 {
-            // Use 365 days or all data, whichever is larger
-            let lookbackDays = max(365, series.yearsOfData * 365)
-            let longSamples = series.samples(lastDays: lookbackDays)
+            let longSamples = series.samples(lastDays: 365)
             if longSamples.count >= 60 {
                 let values = longSamples.map(\.value)
                 let slope = values.linearRegression.slope
@@ -248,12 +246,10 @@ struct HistoricalAnalyzer {
             goodExtreme = !metric.higherIsBetter
         }
 
-        let yearsLabel = ctx.yearsOfData == 1 ? "year" : "years"
-
         return Insight(
             metric: metric,
-            title: "\(metric.displayName) Near \(ctx.yearsOfData)-Year \(isNearHigh ? "High" : "Low")",
-            summary: "Your \(metric.displayName.lowercased()) is in the \(isNearHigh ? "top" : "bottom") 5% of all values recorded over \(ctx.yearsOfData) \(yearsLabel) of data (\(ctx.totalDataPoints) data points).",
+            title: "\(metric.displayName) Near All-Time \(isNearHigh ? "High" : "Low")",
+            summary: "Your \(metric.displayName.lowercased()) is in the \(isNearHigh ? "top" : "bottom") 5% of all values recorded over the past year (\(ctx.totalDataPoints) data points).",
             recommendation: goodExtreme
                 ? "This is exceptional — you're at a personal best level. Whatever you're doing, it's working across your entire history."
                 : "This level is rare in your history. It may warrant attention if it persists beyond a few days.",
@@ -269,7 +265,7 @@ struct HistoricalAnalyzer {
     private static func seasonalInsight(metric: HealthMetric, ctx: HistoricalContext) -> Insight? {
         guard let seasonalDev = ctx.seasonalDeviation, abs(seasonalDev) > 10,
               let seasonalAvg = ctx.seasonalAverage,
-              ctx.yearsOfData >= 2 else { return nil }
+              ctx.yearsOfData >= 1 else { return nil }
 
         let monthName = Calendar.current.monthSymbols[Calendar.current.component(.month, from: Date()) - 1]
         let absDev = String(format: "%.0f", abs(seasonalDev))
@@ -279,7 +275,7 @@ struct HistoricalAnalyzer {
         return Insight(
             metric: metric,
             title: "\(metric.displayName) \(improving ? "Above" : "Below") \(monthName) Average",
-            summary: "Your \(metric.displayName.lowercased()) is \(absDev)% \(isAbove ? "above" : "below") your typical \(monthName) levels (historical average: \(metric.formatValue(seasonalAvg)) \(metric.unit) across \(ctx.yearsOfData) years).",
+            summary: "Your \(metric.displayName.lowercased()) is \(absDev)% \(isAbove ? "above" : "below") your typical \(monthName) levels (historical average: \(metric.formatValue(seasonalAvg)) \(metric.unit) over the past year).",
             recommendation: improving
                 ? "You're outperforming your seasonal norm. This suggests genuine improvement beyond seasonal patterns."
                 : "This is worse than your usual \(monthName) levels. While some seasonal variation is normal, a \(absDev)% deviation is significant.",
@@ -298,20 +294,15 @@ struct HistoricalAnalyzer {
 
         let improving = metric.higherIsBetter ? changePercent > 0 : changePercent < 0
         let absChange = String(format: "%.0f", abs(changePercent))
-        let periodLabel: String
-        if ctx.yearsOfData >= 2 {
-            periodLabel = "\(ctx.yearsOfData) years"
-        } else {
-            periodLabel = "the past year"
-        }
+        let periodLabel = "the past year"
 
         return Insight(
             metric: metric,
             title: "\(metric.displayName) \(improving ? "Up" : "Down") \(absChange)% Over \(periodLabel.capitalized)",
             summary: "Looking at \(ctx.totalDataPoints) data points over \(periodLabel), your \(metric.displayName.lowercased()) has \(changePercent > 0 ? "increased" : "decreased") \(absChange)% overall.",
             recommendation: improving
-                ? "This long-term improvement is the most reliable signal. Short-term dips don't erase years of positive change."
-                : "A multi-year decline suggests something structural has changed. Consider consulting a healthcare provider if this trend continues.",
+                ? "This long-term improvement is the most reliable signal. Short-term dips don't erase months of positive change."
+                : "A sustained decline suggests something structural has changed. Consider consulting a healthcare provider if this trend continues.",
             severity: improving ? .info : .warning,
             trend: improving ? .improving : .declining,
             currentValue: ctx.longTermChangePercent ?? 0,

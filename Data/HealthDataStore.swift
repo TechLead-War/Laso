@@ -130,6 +130,39 @@ final class HealthDataStore {
         return f
     }()
 
+    private static let encoderKey = "HealthPulse.HealthDataStore.encoder"
+    private static let decoderKey = "HealthPulse.HealthDataStore.decoder"
+
+    private static func threadEncoder() -> JSONEncoder {
+        let dictionary = Thread.current.threadDictionary
+        if let encoder = dictionary[encoderKey] as? JSONEncoder {
+            return encoder
+        }
+
+        let encoder = JSONEncoder()
+        dictionary[encoderKey] = encoder
+        return encoder
+    }
+
+    private static func threadDecoder() -> JSONDecoder {
+        let dictionary = Thread.current.threadDictionary
+        if let decoder = dictionary[decoderKey] as? JSONDecoder {
+            return decoder
+        }
+
+        let decoder = JSONDecoder()
+        dictionary[decoderKey] = decoder
+        return decoder
+    }
+
+    private static func encodeJSON<T: Encodable>(_ value: T) -> Data? {
+        try? threadEncoder().encode(value)
+    }
+
+    private static func decodeJSON<T: Decodable>(_ type: T.Type, from data: Data) -> T? {
+        try? threadDecoder().decode(type, from: data)
+    }
+
     init(modelContainer: ModelContainer) {
         self.modelContainer = modelContainer
         self.modelContext = ModelContext(modelContainer)
@@ -309,12 +342,12 @@ final class HealthDataStore {
                 return (cat.rawValue, score.score)
             }
         )
-        let catJSON = (try? JSONEncoder().encode(catDict)) ?? Data()
+        let catJSON = Self.encodeJSON(catDict) ?? Data()
 
         let baseDict = Dictionary(uniqueKeysWithValues:
             baselines.map { ($0.key.rawValue, $0.value) }
         )
-        let baseJSON = (try? JSONEncoder().encode(baseDict)) ?? Data()
+        let baseJSON = Self.encodeJSON(baseDict) ?? Data()
 
         if let existing = try? modelContext?.fetch(descriptor).first {
             existing.overallScore = overallScore
@@ -368,7 +401,7 @@ final class HealthDataStore {
         let snapshots = (try? modelContext?.fetch(descriptor)) ?? []
 
         return snapshots.compactMap { snapshot in
-            guard let dict = try? JSONDecoder().decode([String: UserBaseline].self, from: snapshot.baselinesJSON),
+            guard let dict = Self.decodeJSON([String: UserBaseline].self, from: snapshot.baselinesJSON),
                   let baseline = dict[metric.rawValue] else { return nil }
             return (snapshot.date, baseline)
         }
@@ -383,7 +416,7 @@ final class HealthDataStore {
         var result: [HealthMetric: [(date: Date, baseline: UserBaseline)]] = [:]
 
         for snapshot in snapshots {
-            guard let dict = try? JSONDecoder().decode([String: UserBaseline].self, from: snapshot.baselinesJSON) else { continue }
+            guard let dict = Self.decodeJSON([String: UserBaseline].self, from: snapshot.baselinesJSON) else { continue }
             for (rawValue, baseline) in dict where metricRawValues.contains(rawValue) {
                 guard let metric = HealthMetric(rawValue: rawValue) else { continue }
                 result[metric, default: []].append((snapshot.date, baseline))

@@ -7,6 +7,8 @@ struct WeeklyPatternAnalyzer {
         .steps, .activeCalories, .exerciseMinutes, .sleepDuration, .restingHeartRate, .heartRateVariability
     ]
 
+    private static let weekdaySymbols: [String] = DateFormatter().weekdaySymbols
+
     /// Analyze weekly patterns and generate insights
     static func generateInsights(timeSeries: [HealthMetric: MetricTimeSeries]) -> [Insight] {
         var insights: [Insight] = []
@@ -51,7 +53,7 @@ struct WeeklyPatternAnalyzer {
             guard dayAverages.count >= 5 else { continue }
 
             dayAverages.sort { $0.avg < $1.avg }
-            let overallAvg = dayAverages.map(\.avg).mean
+            let overallAvg = dayAverages.mean { $0.avg }
 
             guard let weakest = dayAverages.first,
                   let strongest = dayAverages.last,
@@ -96,13 +98,31 @@ struct WeeklyPatternAnalyzer {
 
             let groups = TimeSeriesAligner.groupByDayOfWeek(series)
 
-            let weekdayValues = [2, 3, 4, 5, 6].flatMap { groups[$0] ?? [] }
-            let weekendValues = [1, 7].flatMap { groups[$0] ?? [] }
+            var weekdaySum = 0.0
+            var weekendSum = 0.0
+            var weekdayCount = 0
+            var weekendCount = 0
 
-            guard weekdayValues.count >= 5, weekendValues.count >= 2 else { continue }
+            for day in [2, 3, 4, 5, 6] {
+                guard let values = groups[day] else { continue }
+                weekdayCount += values.count
+                for value in values {
+                    weekdaySum += value
+                }
+            }
 
-            let weekdayAvg = weekdayValues.mean
-            let weekendAvg = weekendValues.mean
+            for day in [1, 7] {
+                guard let values = groups[day] else { continue }
+                weekendCount += values.count
+                for value in values {
+                    weekendSum += value
+                }
+            }
+
+            guard weekdayCount >= 5, weekendCount >= 2 else { continue }
+
+            let weekdayAvg = weekdaySum / Double(weekdayCount)
+            let weekendAvg = weekendSum / Double(weekendCount)
 
             guard weekdayAvg > 0 else { continue }
 
@@ -181,8 +201,9 @@ struct WeeklyPatternAnalyzer {
     // MARK: - Helpers
 
     private static func dayName(for weekday: Int) -> String {
-        let formatter = DateFormatter()
-        return formatter.weekdaySymbols[weekday - 1]  // weekday is 1-indexed
+        let index = weekday - 1
+        guard index >= 0, index < weekdaySymbols.count else { return "Unknown" }
+        return weekdaySymbols[index]  // weekday is 1-indexed
     }
 }
 

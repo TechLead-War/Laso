@@ -884,7 +884,7 @@ struct HomeView: View {
     private var firstLaunchPhase: (icon: String, text: String, color: Color) {
         switch viewModel.syncPhase {
         case .idle, .importing:
-            return ("antenna.radiowaves.left.and.right", "Syncing your last 5 years of health data", .blue)
+            return ("brain.head.profile", "Syncing your last 1 years of health data", .purple)
         case .analyzing:
             let points = viewModel.dataDepth.totalDataPoints
             let label = points > 0 ? "Analyzing \(points) data points" : "Analyzing your data"

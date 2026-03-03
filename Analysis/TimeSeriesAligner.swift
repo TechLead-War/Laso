@@ -13,6 +13,7 @@ struct TimeSeriesAligner {
     /// Build a Date→Double dictionary keyed by start-of-day for fast lookup
     static func dailyValueMap(_ series: MetricTimeSeries) -> [Date: Double] {
         var map: [Date: Double] = [:]
+        map.reserveCapacity(series.samples.count)
         for sample in series.samples {
             let day = sample.date.startOfDay
             // If multiple samples per day, use the latest (overwrite)
@@ -30,12 +31,24 @@ struct TimeSeriesAligner {
         let mapB = dailyValueMap(seriesB)
 
         var pairs: [AlignedPair] = []
-        for (date, valueA) in mapA {
-            if let valueB = mapB[date] {
-                pairs.append(AlignedPair(date: date, valueA: valueA, valueB: valueB))
+        pairs.reserveCapacity(Swift.min(mapA.count, mapB.count))
+
+        let aIsPrimary = mapA.count <= mapB.count
+        let primary = aIsPrimary ? mapA : mapB
+        let secondary = aIsPrimary ? mapB : mapA
+
+        for (date, primaryValue) in primary {
+            guard let secondaryValue = secondary[date] else { continue }
+            if aIsPrimary {
+                pairs.append(AlignedPair(date: date, valueA: primaryValue, valueB: secondaryValue))
+            } else {
+                pairs.append(AlignedPair(date: date, valueA: secondaryValue, valueB: primaryValue))
             }
         }
-        return pairs.sorted { $0.date < $1.date }
+        if pairs.count > 1 {
+            pairs.sort { $0.date < $1.date }
+        }
+        return pairs
     }
 
     /// Align series A day N with series B day N+offset
@@ -49,13 +62,18 @@ struct TimeSeriesAligner {
         let mapB = dailyValueMap(seriesB)
 
         var pairs: [AlignedPair] = []
+        pairs.reserveCapacity(Swift.min(mapA.count, mapB.count))
+        let calendar = Calendar.current
         for (dateA, valueA) in mapA {
-            let dateB = Calendar.current.date(byAdding: .day, value: dayOffset, to: dateA)?.startOfDay ?? dateA
+            let dateB = calendar.date(byAdding: .day, value: dayOffset, to: dateA)?.startOfDay ?? dateA
             if let valueB = mapB[dateB] {
                 pairs.append(AlignedPair(date: dateA, valueA: valueA, valueB: valueB))
             }
         }
-        return pairs.sorted { $0.date < $1.date }
+        if pairs.count > 1 {
+            pairs.sort { $0.date < $1.date }
+        }
+        return pairs
     }
 
     /// Group samples by day of week (1=Sunday ... 7=Saturday)

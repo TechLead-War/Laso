@@ -344,7 +344,7 @@ struct MetricDetailView: View {
 
             // Data depth footnote
             if let ctx = viewModel.historicalContext {
-                Text("Based on \(ctx.totalDataPoints) data points over \(ctx.yearsOfData) \(ctx.yearsOfData == 1 ? "year" : "years")")
+                Text("Based on \(ctx.totalDataPoints) data points over the past year")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .padding(.horizontal)

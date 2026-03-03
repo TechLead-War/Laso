@@ -397,7 +397,7 @@ struct InsightGenerator {
                 ctx.allTimePercentile = hist.allTimePercentile
                 hasData = true
             }
-            if let seasonal = hist.seasonalDeviation, abs(seasonal) >= 5, hist.yearsOfData >= 2 {
+            if let seasonal = hist.seasonalDeviation, abs(seasonal) >= 5, hist.yearsOfData >= 1 {
                 ctx.seasonalDeviation = seasonal
                 hasData = true
             }
@@ -726,12 +726,12 @@ struct InsightGenerator {
                 let pct = Int(ctx.allTimePercentile.rounded())
                 if pct <= 20 || pct >= 80 {
                     let label = pct >= 80 ? "top \(100 - pct)%" : "bottom \(pct)%"
-                    parts.append("in the \(label) of your \(ctx.yearsOfData)-year history")
+                    parts.append("in the \(label) of your history")
                 }
             }
 
             // Seasonal context
-            if let seasonalDev = ctx.seasonalDeviation, abs(seasonalDev) >= 5, ctx.yearsOfData >= 2 {
+            if let seasonalDev = ctx.seasonalDeviation, abs(seasonalDev) >= 5, ctx.yearsOfData >= 1 {
                 let monthName = Calendar.current.monthSymbols[Calendar.current.component(.month, from: Date()) - 1]
                 let seasonalAbs = String(format: "%.0f", abs(seasonalDev))
                 parts.append("\(seasonalDev > 0 ? "above" : "below") your typical \(monthName) by \(seasonalAbs)%")

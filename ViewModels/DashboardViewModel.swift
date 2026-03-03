@@ -214,7 +214,7 @@ final class DashboardViewModel {
             case .threeMonths: return 90
             case .sixMonths: return 180
             case .oneYear: return 365
-            case .allTime: return 3650
+            case .allTime: return 365
             }
         }
 
@@ -430,7 +430,7 @@ final class DashboardViewModel {
         if isFirstLaunchSync { syncPhase = .analyzing }
 
         let ts = healthKitManager.timeSeries
-        async let cycleFlowSamplesTask = healthKitManager.fetchMenstrualFlowSamples(days: 420)
+        async let cycleFlowSamplesTask = healthKitManager.fetchMenstrualFlowSamples(days: 365)
 
         // Phase 1: Core analysis — scores, trends, baselines (blocks until done, UI needs these)
         await Task.detached(priority: .userInitiated) { [analysisEngine] in
@@ -814,14 +814,14 @@ final class DashboardViewModel {
                 highlights.append(HistoricalHighlight(
                     metric: metric,
                     type: .allTimeExtreme,
-                    title: "Near \(context.yearsOfData)-year \(isHigh ? "high" : "low")",
+                    title: "Near all-time \(isHigh ? "high" : "low")",
                     recommendation: rec,
                     isPositive: good,
                     significance: 90
                 ))
             }
 
-            if let seasonalDev = context.seasonalDeviation, abs(seasonalDev) > 10, context.yearsOfData >= 2 {
+            if let seasonalDev = context.seasonalDeviation, abs(seasonalDev) > 10, context.yearsOfData >= 1 {
                 let improving = metric.higherIsBetter ? seasonalDev > 0 : seasonalDev < 0
                 let rec = improving
                     ? "You're beating your seasonal average — strong work."
@@ -838,7 +838,7 @@ final class DashboardViewModel {
 
             if let change = context.longTermChangePercent, abs(change) > 10, context.yearsOfData >= 1 {
                 let improving = metric.higherIsBetter ? change > 0 : change < 0
-                let periodLabel = context.yearsOfData >= 2 ? "\(context.yearsOfData) years" : "1 year"
+                let periodLabel = "1 year"
                 let rec = improving
                     ? "Sustained improvement — your consistency is the key. Don't change what's working."
                     : "Gradual decline over \(periodLabel). Small daily adjustments compound. \(RulesConfiguration.recommendation(for: metric, severity: .info, trend: .declining))"

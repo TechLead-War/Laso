@@ -100,7 +100,7 @@ final class CategoryDetailViewModel {
                 let isHigh = ctx.allTimePercentile >= 95
                 results.append((
                     metric: metric,
-                    text: "Near \(ctx.yearsOfData > 1 ? "\(ctx.yearsOfData)-year" : "all-time") \(isHigh ? "high" : "low")",
+                    text: "Near all-time \(isHigh ? "high" : "low")",
                     icon: "trophy.fill",
                     significance: 90
                 ))
@@ -108,7 +108,7 @@ final class CategoryDetailViewModel {
 
             if let change = ctx.longTermChangePercent, abs(change) > 10, ctx.yearsOfData >= 1 {
                 let improving = metric.higherIsBetter ? change > 0 : change < 0
-                let period = ctx.yearsOfData >= 2 ? "\(ctx.yearsOfData) years" : "1 year"
+                let period = "1 year"
                 results.append((
                     metric: metric,
                     text: "\(improving ? "Up" : "Down") \(String(format: "%.0f", abs(change)))% over \(period)",

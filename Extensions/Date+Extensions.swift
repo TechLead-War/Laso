@@ -1,6 +1,47 @@
 import Foundation
 
 extension Date {
+    private enum FormatterCache {
+        static func formatter(key: String, configure: (DateFormatter) -> Void) -> DateFormatter {
+            let dictionary = Thread.current.threadDictionary
+            if let cached = dictionary[key] as? DateFormatter {
+                return cached
+            }
+
+            let formatter = DateFormatter()
+            configure(formatter)
+            dictionary[key] = formatter
+            return formatter
+        }
+    }
+
+    private static var shortDateFormatter: DateFormatter {
+        FormatterCache.formatter(key: "HealthPulse.Date.short") { formatter in
+            formatter.dateStyle = .short
+            formatter.timeStyle = .none
+        }
+    }
+
+    private static var mediumDateFormatter: DateFormatter {
+        FormatterCache.formatter(key: "HealthPulse.Date.medium") { formatter in
+            formatter.dateStyle = .medium
+            formatter.timeStyle = .none
+        }
+    }
+
+    private static var shortTimeFormatter: DateFormatter {
+        FormatterCache.formatter(key: "HealthPulse.Date.time.short") { formatter in
+            formatter.dateStyle = .none
+            formatter.timeStyle = .short
+        }
+    }
+
+    private static var weekdayNameFormatter: DateFormatter {
+        FormatterCache.formatter(key: "HealthPulse.Date.weekdayName") { formatter in
+            formatter.dateFormat = "EEEE"
+        }
+    }
+
     /// Start of the current day
     var startOfDay: Date {
         Calendar.current.startOfDay(for: self)
@@ -30,24 +71,15 @@ extension Date {
 
     /// Formatted string for display
     var shortDateString: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .none
-        return formatter.string(from: self)
+        Self.shortDateFormatter.string(from: self)
     }
 
     var mediumDateString: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        return formatter.string(from: self)
+        Self.mediumDateFormatter.string(from: self)
     }
 
     var timeString: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .none
-        formatter.timeStyle = .short
-        return formatter.string(from: self)
+        Self.shortTimeFormatter.string(from: self)
     }
 
     /// Date range from N days ago to now
@@ -71,8 +103,6 @@ extension Date {
 
     /// Day of week as localized name (e.g. "Monday")
     var dayOfWeekName: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEEE"
-        return formatter.string(from: self)
+        Self.weekdayNameFormatter.string(from: self)
     }
 }

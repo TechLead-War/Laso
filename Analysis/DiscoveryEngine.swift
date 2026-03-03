@@ -15,7 +15,10 @@ struct DiscoveryEngine {
         historicalContext: [HealthMetric: HistoricalAnalyzer.HistoricalContext]
     ) -> [Discovery] {
         // Require minimum data depth
-        let maxDays = timeSeries.values.map(\.daysOfData).max() ?? 0
+        var maxDays = 0
+        for series in timeSeries.values where series.daysOfData > maxDays {
+            maxDays = series.daysOfData
+        }
         guard maxDays >= minimumDaysRequired else { return [] }
 
         var all: [Discovery] = []
@@ -94,20 +97,31 @@ struct DiscoveryEngine {
                 aligned = TimeSeriesAligner.alignWithOffset(causeSeries, effectSeries, dayOffset: pair.dayOffset)
             }
 
-            let above = aligned.filter { $0.valueA >= pair.threshold }
-            let below = aligned.filter { $0.valueA < pair.threshold }
+            var aboveSum = 0.0
+            var belowSum = 0.0
+            var aboveCount = 0
+            var belowCount = 0
+            for pairData in aligned {
+                if pairData.valueA >= pair.threshold {
+                    aboveSum += pairData.valueB
+                    aboveCount += 1
+                } else {
+                    belowSum += pairData.valueB
+                    belowCount += 1
+                }
+            }
 
-            guard above.count >= 10, below.count >= 10 else { continue }
+            guard aboveCount >= 10, belowCount >= 10 else { continue }
 
-            let aboveMean = above.map(\.valueB).mean
-            let belowMean = below.map(\.valueB).mean
+            let aboveMean = aboveSum / Double(aboveCount)
+            let belowMean = belowSum / Double(belowCount)
             let diff = aboveMean - belowMean
             let absDiff = abs(diff)
 
             guard absDiff >= pair.minEffect else { continue }
 
             let percentDiff = belowMean != 0 ? abs(diff / belowMean) * 100 : 0
-            let totalPairs = above.count + below.count
+            let totalPairs = aboveCount + belowCount
             let impactScore = min(percentDiff * log2(Double(totalPairs)), 100)
 
             let effectUnit = pair.effect.unit
@@ -181,6 +195,7 @@ struct DiscoveryEngine {
             }
 
             guard aligned.count >= 20 else { continue }
+            let alignedEffectMean = aligned.mean(of: \.valueB)
 
             // Find the threshold boundary with the biggest jump
             var bestBoundary: (threshold: Double, diff: Double, aboveCount: Int, belowCount: Int)?
@@ -189,18 +204,30 @@ struct DiscoveryEngine {
                 let lower = ladder.thresholds[i]
                 let upper = ladder.thresholds[i + 1]
 
-                let belowUpper = aligned.filter { $0.valueA >= lower && $0.valueA < upper }
-                let aboveUpper = aligned.filter { $0.valueA >= upper }
+                var belowSum = 0.0
+                var aboveSum = 0.0
+                var belowCount = 0
+                var aboveCount = 0
 
-                guard belowUpper.count >= 8, aboveUpper.count >= 8 else { continue }
+                for pairData in aligned {
+                    if pairData.valueA >= upper {
+                        aboveSum += pairData.valueB
+                        aboveCount += 1
+                    } else if pairData.valueA >= lower {
+                        belowSum += pairData.valueB
+                        belowCount += 1
+                    }
+                }
 
-                let belowMean = belowUpper.map(\.valueB).mean
-                let aboveMean = aboveUpper.map(\.valueB).mean
+                guard belowCount >= 8, aboveCount >= 8 else { continue }
+
+                let belowMean = belowSum / Double(belowCount)
+                let aboveMean = aboveSum / Double(aboveCount)
                 let diff = abs(aboveMean - belowMean)
 
                 if diff >= ladder.minEffect {
                     if bestBoundary == nil || diff > abs(bestBoundary!.diff) {
-                        bestBoundary = (upper, aboveMean - belowMean, aboveUpper.count, belowUpper.count)
+                        bestBoundary = (upper, aboveMean - belowMean, aboveCount, belowCount)
                     }
                 }
             }
@@ -208,7 +235,7 @@ struct DiscoveryEngine {
             guard let best = bestBoundary else { continue }
 
             let totalDays = best.aboveCount + best.belowCount
-            let percentDiff = abs(best.diff) / max(1, abs(aligned.map(\.valueB).mean)) * 100
+            let percentDiff = abs(best.diff) / max(1, abs(alignedEffectMean)) * 100
             let impactScore = min(percentDiff * log2(Double(totalDays)) * 0.8, 100) // Slightly lower priority than conditional
 
             let causeFormatted = ladder.metric.formatValue(best.threshold)
@@ -262,7 +289,9 @@ struct DiscoveryEngine {
 
             guard percentDiff > 15 else { continue }
 
-            let totalSamples = grouped.values.flatMap { $0 }.count
+            let totalSamples = grouped.values.reduce(0) { partial, values in
+                partial + values.count
+            }
             let impactScore = min(percentDiff * 0.6, 100)
 
             let formattedDiff = metric.formatValue(abs(diff))
@@ -307,7 +336,7 @@ struct DiscoveryEngine {
 
             let improving = metric.higherIsBetter ? changePercent > 0 : changePercent < 0
             let direction = improving ? "improved" : "shifted"
-            let periodLabel = context.yearsOfData >= 2 ? "\(context.yearsOfData) years" : context.yearsOfData == 1 ? "past year" : "\(context.totalDataPoints / 30) months"
+            let periodLabel = "past year"
 
             // Compute absolute change if we have slope
             var absoluteDetail = ""
@@ -356,7 +385,7 @@ struct DiscoveryEngine {
 
             let headline = "Your \(metric.displayName.lowercased()) this month is in your \(bracket) of all time"
             let impactScore = min(abs(percentile - 50) * 1.5, 100)
-            let periodLabel = context.yearsOfData >= 2 ? "\(context.yearsOfData) years" : "all recorded history"
+            let periodLabel = "the past year"
             let evidence = "Based on \(context.totalDataPoints) data points across \(periodLabel)"
 
             discoveries.append(Discovery(
@@ -430,8 +459,10 @@ struct DiscoveryEngine {
             let mapB = TimeSeriesAligner.dailyValueMap(seriesB)
             let mapOut = TimeSeriesAligner.dailyValueMap(outcomeSeries)
 
-            var bothMet: [Double] = []
-            var neitherMet: [Double] = []
+            var bothSum = 0.0
+            var neitherSum = 0.0
+            var bothCount = 0
+            var neitherCount = 0
 
             for (date, outcomeVal) in mapOut {
                 guard let valA = mapA[date], let valB = mapB[date] else { continue }
@@ -439,23 +470,25 @@ struct DiscoveryEngine {
                 let bMet = valB >= compound.conditionB.threshold
 
                 if aMet && bMet {
-                    bothMet.append(outcomeVal)
+                    bothSum += outcomeVal
+                    bothCount += 1
                 } else if !aMet && !bMet {
-                    neitherMet.append(outcomeVal)
+                    neitherSum += outcomeVal
+                    neitherCount += 1
                 }
             }
 
-            guard bothMet.count >= 10, neitherMet.count >= 10 else { continue }
+            guard bothCount >= 10, neitherCount >= 10 else { continue }
 
-            let bothMean = bothMet.mean
-            let neitherMean = neitherMet.mean
+            let bothMean = bothSum / Double(bothCount)
+            let neitherMean = neitherSum / Double(neitherCount)
             let diff = bothMean - neitherMean
             let absDiff = abs(diff)
 
             guard absDiff >= compound.minEffect else { continue }
 
             let percentDiff = neitherMean != 0 ? abs(diff / neitherMean) * 100 : 0
-            let totalDays = bothMet.count + neitherMet.count
+            let totalDays = bothCount + neitherCount
             let impactScore = min(percentDiff * log2(Double(totalDays)) * 0.9, 100)
 
             let formattedPercent = String(format: "%.0f", percentDiff)

@@ -99,8 +99,8 @@ final class MetricDetailViewModel {
         if ctx.totalDataPoints >= 90 {
             let pct = Int(ctx.allTimePercentile.rounded())
             let label: String
-            if pct >= 90 { label = "Top \(100 - pct)% of your \(ctx.yearsOfData > 1 ? "\(ctx.yearsOfData)-year" : "") history" }
-            else if pct <= 10 { label = "Bottom \(pct)% of your \(ctx.yearsOfData > 1 ? "\(ctx.yearsOfData)-year" : "") history" }
+            if pct >= 90 { label = "Top \(100 - pct)% of your history" }
+            else if pct <= 10 { label = "Bottom \(pct)% of your history" }
             else { label = "\(ordinal(pct)) percentile in your history" }
             facts.append(HistoricalFact(icon: "chart.bar.fill", text: label))
         }
@@ -115,7 +115,7 @@ final class MetricDetailViewModel {
         }
 
         // Seasonal
-        if let seasonalDev = ctx.seasonalDeviation, abs(seasonalDev) > 8, ctx.yearsOfData >= 2 {
+        if let seasonalDev = ctx.seasonalDeviation, abs(seasonalDev) > 8, ctx.yearsOfData >= 1 {
             let direction = seasonalDev > 0 ? "above" : "below"
             facts.append(HistoricalFact(
                 icon: "leaf.fill",
@@ -126,7 +126,7 @@ final class MetricDetailViewModel {
         // Long-term trajectory
         if let change = ctx.longTermChangePercent, abs(change) > 5, ctx.totalDataPoints >= 180 {
             let direction = change > 0 ? "up" : "down"
-            let period = ctx.yearsOfData >= 2 ? "\(ctx.yearsOfData) years" : "the past year"
+            let period = "the past year"
             facts.append(HistoricalFact(
                 icon: "chart.line.uptrend.xyaxis",
                 text: "\(String(format: "%.0f", abs(change)))% \(direction) over \(period)"
@@ -138,7 +138,7 @@ final class MetricDetailViewModel {
             let isHigh = ctx.allTimePercentile >= 95
             facts.append(HistoricalFact(
                 icon: "trophy.fill",
-                text: "Near \(ctx.yearsOfData > 1 ? "\(ctx.yearsOfData)-year" : "all-time") \(isHigh ? "high" : "low")"
+                text: "Near all-time \(isHigh ? "high" : "low")"
             ))
         }
 

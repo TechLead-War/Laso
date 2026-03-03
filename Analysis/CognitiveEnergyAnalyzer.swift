@@ -58,7 +58,7 @@ struct CognitiveEnergyAnalyzer {
         if let hrvSeries = timeSeries[.heartRateVariability] {
             let recent = hrvSeries.samples(lastDays: 3)
             if !recent.isEmpty {
-                let avg = recent.map(\.value).mean
+                let avg = recent.mean(of: \.value)
                 let z = (avg - hrvBaseline.mean) / max(hrvBaseline.standardDeviation, 1)
                 let normalizedScore = min(max((z + 2) / 4.0, 0), 1) * 100 // -2σ=0, +2σ=100
                 score += normalizedScore * 0.30
@@ -74,7 +74,7 @@ struct CognitiveEnergyAnalyzer {
         if let deepSeries = timeSeries[.sleepDeep], let deepBaseline = baselines[.sleepDeep] {
             let recent = deepSeries.samples(lastDays: 3)
             if !recent.isEmpty {
-                let avg = recent.map(\.value).mean
+                let avg = recent.mean(of: \.value)
                 let z = (avg - deepBaseline.mean) / max(deepBaseline.standardDeviation, 0.1)
                 let normalizedScore = min(max((z + 2) / 4.0, 0), 1) * 100
                 score += normalizedScore * 0.25
@@ -90,7 +90,7 @@ struct CognitiveEnergyAnalyzer {
         if let remSeries = timeSeries[.sleepREM], let remBaseline = baselines[.sleepREM] {
             let recent = remSeries.samples(lastDays: 3)
             if !recent.isEmpty {
-                let avg = recent.map(\.value).mean
+                let avg = recent.mean(of: \.value)
                 let z = (avg - remBaseline.mean) / max(remBaseline.standardDeviation, 0.1)
                 let normalizedScore = min(max((z + 2) / 4.0, 0), 1) * 100
                 score += normalizedScore * 0.15
@@ -106,7 +106,7 @@ struct CognitiveEnergyAnalyzer {
         if let o2Series = timeSeries[.bloodOxygen], let o2Baseline = baselines[.bloodOxygen] {
             let recent = o2Series.samples(lastDays: 3)
             if !recent.isEmpty {
-                let avg = recent.map(\.value).mean
+                let avg = recent.mean(of: \.value)
                 let z = (avg - o2Baseline.mean) / max(o2Baseline.standardDeviation, 0.1)
                 let normalizedScore = min(max((z + 2) / 4.0, 0), 1) * 100
                 score += normalizedScore * 0.15
@@ -118,7 +118,7 @@ struct CognitiveEnergyAnalyzer {
         if let sleepSeries = timeSeries[.sleepDuration] {
             let recent = sleepSeries.samples(lastDays: 3)
             if !recent.isEmpty {
-                let avg = recent.map(\.value).mean
+                let avg = recent.mean(of: \.value)
                 let z = (avg - sleepBaseline.mean) / max(sleepBaseline.standardDeviation, 0.1)
                 let normalizedScore = min(max((z + 2) / 4.0, 0), 1) * 100
                 score += normalizedScore * 0.15
@@ -182,7 +182,7 @@ struct CognitiveEnergyAnalyzer {
         let last7 = sleepSeries.samples(lastDays: 7)
         guard last7.count >= 5 else { return nil }
 
-        let weeklyAvg = last7.map(\.value).mean
+        let weeklyAvg = last7.mean(of: \.value)
         let dailyDeficit = sleepBaseline.mean - weeklyAvg
         let cumulativeDebt = dailyDeficit * Double(last7.count)
 
@@ -284,7 +284,7 @@ struct CognitiveEnergyAnalyzer {
         if let sleepSeries = timeSeries[.sleepDuration], let sleepBaseline = baselines[.sleepDuration] {
             let recent = sleepSeries.samples(lastDays: 3)
             if !recent.isEmpty {
-                let avg = recent.map(\.value).mean
+                let avg = recent.mean(of: \.value)
                 let deficit = (sleepBaseline.mean - avg) / sleepBaseline.mean * 100
                 if deficit > 8 {
                     signals.append(("sleep averaging \(String(format: "%.1f", avg)) hrs (\(String(format: "%.0f", deficit))% below baseline)", deficit))
@@ -468,13 +468,26 @@ struct CognitiveEnergyAnalyzer {
         let aligned = TimeSeriesAligner.alignWithOffset(metricSeries, rhrSeries, dayOffset: 1)
         guard aligned.count >= 14 else { return nil }
 
-        let aboveAvg = aligned.filter { $0.valueA >= aligned.map(\.valueA).mean }
-        let belowAvg = aligned.filter { $0.valueA < aligned.map(\.valueA).mean }
+        let averageMetric = aligned.mean(of: \.valueA)
+        var aboveSum = 0.0
+        var belowSum = 0.0
+        var aboveCount = 0
+        var belowCount = 0
 
-        guard !aboveAvg.isEmpty, !belowAvg.isEmpty else { return nil }
+        for pair in aligned {
+            if pair.valueA >= averageMetric {
+                aboveSum += pair.valueB
+                aboveCount += 1
+            } else {
+                belowSum += pair.valueB
+                belowCount += 1
+            }
+        }
 
-        let rhrAbove = aboveAvg.map(\.valueB).mean
-        let rhrBelow = belowAvg.map(\.valueB).mean
+        guard aboveCount > 0, belowCount > 0 else { return nil }
+
+        let rhrAbove = aboveSum / Double(aboveCount)
+        let rhrBelow = belowSum / Double(belowCount)
 
         guard rhrBelow > 0 else { return nil }
 
@@ -492,14 +505,26 @@ struct CognitiveEnergyAnalyzer {
         let aligned = TimeSeriesAligner.alignByDate(daylightSeries, deepSeries)
         guard aligned.count >= 14 else { return nil }
 
-        let avgDaylight = aligned.map(\.valueA).mean
-        let highDaylight = aligned.filter { $0.valueA >= avgDaylight }
-        let lowDaylight = aligned.filter { $0.valueA < avgDaylight }
+        let avgDaylight = aligned.mean(of: \.valueA)
+        var highSum = 0.0
+        var lowSum = 0.0
+        var highCount = 0
+        var lowCount = 0
 
-        guard !highDaylight.isEmpty, !lowDaylight.isEmpty else { return nil }
+        for pair in aligned {
+            if pair.valueA >= avgDaylight {
+                highSum += pair.valueB
+                highCount += 1
+            } else {
+                lowSum += pair.valueB
+                lowCount += 1
+            }
+        }
 
-        let deepOnHighDaylight = highDaylight.map(\.valueB).mean
-        let deepOnLowDaylight = lowDaylight.map(\.valueB).mean
+        guard highCount > 0, lowCount > 0 else { return nil }
+
+        let deepOnHighDaylight = highSum / Double(highCount)
+        let deepOnLowDaylight = lowSum / Double(lowCount)
 
         guard deepOnLowDaylight > 0 else { return nil }
 

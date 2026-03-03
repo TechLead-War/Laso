@@ -15,7 +15,7 @@ struct HealthPulseApp: App {
     @State private var deviceSourceManager: DeviceSourceManager
     @State private var healthDataStore: HealthDataStore
 
-    /// Controls the splash → content transition. Stays true until async init completes.
+    /// Controls optional branded splash overlay.
     @State private var showSplash = true
 
     private let subscriptionManager = SubscriptionManager.shared

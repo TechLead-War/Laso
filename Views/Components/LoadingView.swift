@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Full-screen loading state with animated syncing phases
 struct LoadingView: View {
-    @State private var currentPhase = 0
+    @State private var currentPhase = 1
     @State private var dotCount = 0
     @State private var activeDots = 0
     @State private var iconScale: CGFloat = 0.8
@@ -87,6 +87,7 @@ struct LoadingView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             appeared = true
+            currentPhase = min(1, phases.count - 1)
             iconScale = 1.0
             iconOpacity = 1.0
             startPhaseTimer()
@@ -115,7 +116,7 @@ struct LoadingView: View {
                 if currentPhase < phases.count - 1 {
                     currentPhase += 1
                 } else {
-                    currentPhase = 0
+                    currentPhase = min(1, phases.count - 1)
                 }
             }
         }

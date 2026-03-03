@@ -126,10 +126,7 @@ struct CorrelationAnalyzer {
 
                 guard aligned.count >= 14 else { continue }
 
-                let xValues = aligned.map(\.valueA)
-                let yValues = aligned.map(\.valueB)
-
-                guard let r = [Double].pearsonCorrelation(xValues, yValues),
+                guard let r = pearsonCorrelation(aligned),
                       abs(r) >= 0.2 else { continue }
 
                 let n = Double(aligned.count)
@@ -252,6 +249,35 @@ struct CorrelationAnalyzer {
         return "Mild"
     }
 
+    /// Pearson correlation on aligned pairs without intermediate arrays.
+    private static func pearsonCorrelation(_ aligned: [TimeSeriesAligner.AlignedPair]) -> Double? {
+        let count = aligned.count
+        guard count >= 5 else { return nil }
+
+        var sumA = 0.0
+        var sumB = 0.0
+        for pair in aligned {
+            sumA += pair.valueA
+            sumB += pair.valueB
+        }
+        let meanA = sumA / Double(count)
+        let meanB = sumB / Double(count)
+
+        var numerator = 0.0
+        var denomA = 0.0
+        var denomB = 0.0
+        for pair in aligned {
+            let deltaA = pair.valueA - meanA
+            let deltaB = pair.valueB - meanB
+            numerator += deltaA * deltaB
+            denomA += deltaA * deltaA
+            denomB += deltaB * deltaB
+        }
+
+        guard denomA > 0, denomB > 0 else { return nil }
+        return numerator / (denomA.squareRoot() * denomB.squareRoot())
+    }
+
     struct EffectResult {
         let percentDiff: Double
         let summary: String
@@ -265,13 +291,7 @@ struct CorrelationAnalyzer {
         metricA: HealthMetric,
         metricB: HealthMetric
     ) -> EffectResult {
-        let aValues = aligned.map(\.valueA)
-        let baseline = aValues.mean
-
-        let aboveBaseline = aligned.filter { $0.valueA >= baseline }
-        let belowBaseline = aligned.filter { $0.valueA < baseline }
-
-        guard !aboveBaseline.isEmpty, !belowBaseline.isEmpty else {
+        guard !aligned.isEmpty else {
             return EffectResult(
                 percentDiff: 0,
                 summary: "\(metricA.displayName) correlates with \(metricB.displayName).",
@@ -280,8 +300,34 @@ struct CorrelationAnalyzer {
             )
         }
 
-        let avgBAbove = aboveBaseline.map(\.valueB).mean
-        let avgBBelow = belowBaseline.map(\.valueB).mean
+        let baseline = aligned.mean(of: \.valueA)
+
+        var aboveSum = 0.0
+        var belowSum = 0.0
+        var aboveCount = 0
+        var belowCount = 0
+
+        for pair in aligned {
+            if pair.valueA >= baseline {
+                aboveSum += pair.valueB
+                aboveCount += 1
+            } else {
+                belowSum += pair.valueB
+                belowCount += 1
+            }
+        }
+
+        guard aboveCount > 0, belowCount > 0 else {
+            return EffectResult(
+                percentDiff: 0,
+                summary: "\(metricA.displayName) correlates with \(metricB.displayName).",
+                avgBAbove: 0,
+                avgBBelow: 0
+            )
+        }
+
+        let avgBAbove = aboveSum / Double(aboveCount)
+        let avgBBelow = belowSum / Double(belowCount)
 
         guard avgBBelow != 0 else {
             return EffectResult(

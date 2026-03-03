@@ -101,7 +101,7 @@ final class HealthKitManager {
     }
 
     /// Fetch all metrics for the given number of days (legacy, in-memory only)
-    func fetchAllMetrics(days: Int = 90) async {
+    func fetchAllMetrics(days: Int = 365) async {
         isLoading = true
         defer { isLoading = false }
 
@@ -127,7 +127,7 @@ final class HealthKitManager {
     }
 
     /// Load stored data from SwiftData, then incrementally sync new data from HealthKit.
-    /// - First launch: fetches HealthKit history (up to 5 years)
+    /// - First launch: fetches HealthKit history (up to 1 year)
     /// - Subsequent launches: fetches only data since last sync (with 1-day overlap)
     /// - Returns a `SyncResult` indicating which metrics had new data
     @MainActor
@@ -275,7 +275,7 @@ final class HealthKitManager {
 
     /// Fetch menstrual flow category samples for cycle-phase analysis.
     /// Returns empty when data is unavailable or permission is denied.
-    func fetchMenstrualFlowSamples(days: Int = 420) async -> [MenstrualFlowSample] {
+    func fetchMenstrualFlowSamples(days: Int = 365) async -> [MenstrualFlowSample] {
         guard isAuthorized,
               let menstrualType = HKObjectType.categoryType(forIdentifier: .menstrualFlow) else {
             return []
@@ -387,7 +387,7 @@ final class HealthKitManager {
         case luteal
     }
 
-    func fetchMenstrualCycleData(days: Int = 180) async -> [CyclePhaseDay]? {
+    func fetchMenstrualCycleData(days: Int = 365) async -> [CyclePhaseDay]? {
         let flowSamples = await fetchMenstrualFlowSamples(days: days)
         guard flowSamples.count >= 2 else { return nil }
 
@@ -671,7 +671,7 @@ final class HealthKitManager {
     @MainActor
     func refreshMetric(_ metric: HealthMetric, store: HealthDataStore) async {
         let endDate = Date()
-        let startDate = endDate.daysAgo(90)
+        let startDate = endDate.daysAgo(365)
         guard let series = await fetchMetric(metric, from: startDate, to: endDate) else { return }
         store.saveSamples(series.samples, for: metric)
         let reloaded = store.loadTimeSeries(for: metric)

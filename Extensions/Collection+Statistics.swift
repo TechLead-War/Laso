@@ -6,7 +6,11 @@ extension Array where Element == Double {
     /// Arithmetic mean
     var mean: Double {
         guard !isEmpty else { return 0 }
-        return reduce(0, +) / Double(count)
+        var total = 0.0
+        for value in self {
+            total += value
+        }
+        return total / Double(count)
     }
 
     /// Population standard deviation
@@ -53,14 +57,13 @@ extension Array where Element == Double {
     /// x values are assumed to be 0, 1, 2, ... (indices)
     var linearRegression: (slope: Double, intercept: Double) {
         guard count > 1 else { return (0, first ?? 0) }
-        let xs = (0..<count).map { Double($0) }
-        let xMean = xs.mean
+        let xMean = Double(count - 1) / 2.0
         let yMean = mean
 
         var numerator: Double = 0
         var denominator: Double = 0
         for i in 0..<count {
-            let xDiff = xs[i] - xMean
+            let xDiff = Double(i) - xMean
             let yDiff = self[i] - yMean
             numerator += xDiff * yDiff
             denominator += xDiff * xDiff
@@ -76,9 +79,22 @@ extension Array where Element == Double {
     func movingAverage(window: Int) -> [Double] {
         guard window > 0, count >= window else { return self }
         var result: [Double] = []
-        for i in (window - 1)..<count {
-            let windowSlice = Array(self[(i - window + 1)...i])
-            result.append(windowSlice.mean)
+        result.reserveCapacity(count - window + 1)
+
+        var runningTotal = 0.0
+        for index in 0..<window {
+            runningTotal += self[index]
+        }
+        result.append(runningTotal / Double(window))
+
+        if count == window {
+            return result
+        }
+
+        for index in window..<count {
+            runningTotal += self[index]
+            runningTotal -= self[index - window]
+            result.append(runningTotal / Double(window))
         }
         return result
     }
@@ -109,18 +125,22 @@ extension Array where Element == Double {
         let n = Swift.min(x.count, y.count)
         guard n >= 5 else { return nil }
 
-        let xSlice = Array(x.prefix(n))
-        let ySlice = Array(y.prefix(n))
-        let xMean = xSlice.mean
-        let yMean = ySlice.mean
+        var xTotal = 0.0
+        var yTotal = 0.0
+        for i in 0..<n {
+            xTotal += x[i]
+            yTotal += y[i]
+        }
+        let xMean = xTotal / Double(n)
+        let yMean = yTotal / Double(n)
 
         var numerator: Double = 0
         var xDenom: Double = 0
         var yDenom: Double = 0
 
         for i in 0..<n {
-            let xDiff = xSlice[i] - xMean
-            let yDiff = ySlice[i] - yMean
+            let xDiff = x[i] - xMean
+            let yDiff = y[i] - yMean
             numerator += xDiff * yDiff
             xDenom += xDiff * xDiff
             yDenom += yDiff * yDiff
@@ -128,5 +148,26 @@ extension Array where Element == Double {
 
         guard xDenom > 0, yDenom > 0 else { return nil }
         return numerator / (xDenom.squareRoot() * yDenom.squareRoot())
+    }
+}
+
+extension Sequence {
+    /// Mean over transformed values without materializing an intermediate array.
+    func mean(of transform: (Element) -> Double) -> Double {
+        var total = 0.0
+        var count = 0
+
+        for element in self {
+            total += transform(element)
+            count += 1
+        }
+
+        guard count > 0 else { return 0 }
+        return total / Double(count)
+    }
+
+    /// Mean over a Double key path without materializing an intermediate array.
+    func mean(of keyPath: KeyPath<Element, Double>) -> Double {
+        mean { $0[keyPath: keyPath] }
     }
 }
