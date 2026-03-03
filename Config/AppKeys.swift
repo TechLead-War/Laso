@@ -55,6 +55,7 @@ enum AppKeys {
         static let currentScore      = "healthpulse.currentScore"
         static let scoreDate         = "healthpulse.scoreDate"
         static let healthFocuses     = "healthpulse.healthFocuses"
+        static let progressiveCoachState = "healthpulse.progressiveCoachState"
     }
 
     // MARK: - Feedback

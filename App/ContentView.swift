@@ -90,7 +90,9 @@ struct ContentView: View {
                             insightsByCategory: dashboardViewModel.actionableInsightsByCategory,
                             onTapMetric: { metric in
                                 navigationPath.append(metric)
-                            }
+                            },
+                            headlineSummary: dashboardViewModel.topCausalChain?.narrative ?? dashboardViewModel.headlineInsight?.recommendation,
+                            store: healthDataStore
                         )
                     } else if route == "weeklyReview" {
                         WeeklyReviewView(
@@ -140,6 +142,9 @@ struct ContentView: View {
             if newPhase == .active && oldPhase != .active {
                 startSessionAnalytics()
                 WatchMonitor.shared.evaluateWatchStatus()
+                // Refresh home data (recovery, steps, sleep) immediately on foreground
+                // so the Today section picks up watch data that arrived while backgrounded.
+                liveViewModel.fetchHomeData()
                 // Retry sync if Home is stuck in empty state (e.g. user granted
                 // permissions in Settings and returned, or initial sync failed)
                 Task { await dashboardViewModel.retrySyncIfNeeded() }

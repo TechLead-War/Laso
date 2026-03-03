@@ -22,9 +22,16 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
     case causalChain         // "Cause & Effect"
     case crossMetricAnomaly  // "Cross-Metric"
     case cognitiveEnergy     // "Cognitive & Energy"
+    case cyclePhase          // "Cycle Phase"
     case mlPattern           // "ML Pattern"
     case mlState             // "ML State"
     case mlPrediction        // "ML Prediction"
+    case simulation          // "What-If"
+    case adherenceFeedback   // "Advice Feedback"
+    case circadian           // "Circadian"
+    case clinicalTrajectory  // "Clinical Trajectory"
+    case ecgIntelligence     // "ECG"
+    case nutritionCorrelation // "Nutrition"
 
     var displayName: String {
         switch self {
@@ -43,9 +50,16 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .causalChain: return "Cause & Effect"
         case .crossMetricAnomaly: return "Cross-Metric"
         case .cognitiveEnergy: return "Cognitive & Energy"
+        case .cyclePhase: return "Cycle Phase"
         case .mlPattern: return "ML Pattern"
         case .mlState: return "ML State"
         case .mlPrediction: return "ML Prediction"
+        case .simulation: return "What-If"
+        case .adherenceFeedback: return "Advice Feedback"
+        case .circadian: return "Circadian"
+        case .clinicalTrajectory: return "Clinical Trajectory"
+        case .ecgIntelligence: return "ECG"
+        case .nutritionCorrelation: return "Nutrition"
         }
     }
 
@@ -66,9 +80,16 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .causalChain: return "arrow.triangle.turn.up.right.diamond.fill"
         case .crossMetricAnomaly: return "circle.grid.cross.fill"
         case .cognitiveEnergy: return "brain.head.profile"
+        case .cyclePhase: return "calendar.badge.clock"
         case .mlPattern: return "waveform.path.ecg.rectangle"
         case .mlState: return "gauge.with.dots.needle.67percent"
         case .mlPrediction: return "sparkles"
+        case .simulation: return "wand.and.stars"
+        case .adherenceFeedback: return "checkmark.seal.fill"
+        case .circadian: return "clock.arrow.2.circlepath"
+        case .clinicalTrajectory: return "stethoscope.circle.fill"
+        case .ecgIntelligence: return "waveform.path.ecg"
+        case .nutritionCorrelation: return "fork.knife.circle.fill"
         }
     }
 
@@ -89,9 +110,16 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .causalChain: return .indigo
         case .crossMetricAnomaly: return .purple
         case .cognitiveEnergy: return .orange
+        case .cyclePhase: return .pink
         case .mlPattern: return .teal
         case .mlState: return .mint
         case .mlPrediction: return .indigo
+        case .simulation: return .cyan
+        case .adherenceFeedback: return .green
+        case .circadian: return .orange
+        case .clinicalTrajectory: return .red
+        case .ecgIntelligence: return .red
+        case .nutritionCorrelation: return .green
         }
     }
 }

@@ -7,6 +7,15 @@ struct ExploreView: View {
     let viewModel: DashboardViewModel
     @Binding var navigationPath: NavigationPath
     @State private var showScoreGuide = false
+    @State private var showSimulation = false
+
+    // Section trackers
+    @State private var scoreHeroTracker = SectionTracker(section: .exploreScoreHero, tab: .explore)
+    @State private var dataSummaryTracker = SectionTracker(section: .exploreDataSummary, tab: .explore)
+    @State private var needsAttentionTracker = SectionTracker(section: .exploreNeedsAttention, tab: .explore)
+    @State private var decliningTrendsTracker = SectionTracker(section: .exploreDecliningTrends, tab: .explore)
+    @State private var correlationsTracker = SectionTracker(section: .exploreCorrelations, tab: .explore)
+    @State private var categoriesTracker = SectionTracker(section: .exploreCategories, tab: .explore)
 
     var body: some View {
         ScrollView {
@@ -15,28 +24,52 @@ struct ExploreView: View {
                     // 1. Score Hero with trend
                     scoreHeroSection
                         .padding(.horizontal)
+                        .onAppear { scoreHeroTracker.appeared() }
+                        .onDisappear { scoreHeroTracker.disappeared() }
 
                     // 2. Data depth bar — Metrics, Data Points, Days
                     dataSummaryBar
                         .padding(.horizontal)
+                        .onAppear { dataSummaryTracker.appeared() }
+                        .onDisappear { dataSummaryTracker.disappeared() }
 
                     // 3. Needs Attention — negative factors only
                     scoreBreakdownSection
                         .padding(.horizontal)
+                        .onAppear { needsAttentionTracker.appeared() }
+                        .onDisappear { needsAttentionTracker.disappeared() }
 
                     // 4. Declining metrics from history
                     if !decliningHighlights.isEmpty {
                         historicalSection
+                            .onAppear { decliningTrendsTracker.appeared() }
+                            .onDisappear { decliningTrendsTracker.disappeared() }
+                    }
+
+                    // 4b. What-If Simulation teaser
+                    if FeatureGate.canAccess(.simulation) {
+                        simulationTeaser
+                            .padding(.horizontal)
+                    }
+
+                    // 4c. Health State Timeline link
+                    if viewModel.analysisEngine.mlOrchestrator.stateClassifier.isReady {
+                        healthStateLink
+                            .padding(.horizontal)
                     }
 
                     // 5. Correlations preview
                     if FeatureGate.canAccess(.advancedAnalytics), !viewModel.topCorrelations.isEmpty {
                         correlationsPreview
+                            .onAppear { correlationsTracker.appeared() }
+                            .onDisappear { correlationsTracker.disappeared() }
                     }
 
                     // 6. Categories — worst first
                     categoriesSection
                         .padding(.horizontal)
+                        .onAppear { categoriesTracker.appeared() }
+                        .onDisappear { categoriesTracker.disappeared() }
                 } else {
                     emptyState
                         .padding(.horizontal)
@@ -61,6 +94,9 @@ struct ExploreView: View {
         .sheet(isPresented: $showScoreGuide) {
             ScoreGuideSheet()
         }
+        .sheet(isPresented: $showSimulation) {
+            SimulationView(viewModel: SimulationViewModel(analysisEngine: viewModel.analysisEngine))
+        }
         .refreshable {
             AppAnalytics.shared.trackPullToRefresh(screen: .explore)
             await viewModel.refresh()
@@ -71,6 +107,79 @@ struct ExploreView: View {
 
     private var hasScoreData: Bool {
         !viewModel.analysisEngine.categoryScores.isEmpty
+    }
+
+    // MARK: - Simulation Teaser
+
+    private var simulationTeaser: some View {
+        Button {
+            showSimulation = true
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "wand.and.stars")
+                    .font(.title3)
+                    .foregroundStyle(.cyan)
+                    .frame(width: 36, height: 36)
+                    .background(Color.cyan.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("What If?")
+                        .font(.subheadline.weight(.semibold))
+                    Text("See how changes could improve your score")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(12)
+            .background(.background, in: RoundedRectangle(cornerRadius: 14))
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Health State Link
+
+    private var healthStateLink: some View {
+        Button {
+            navigationPath.append("healthStateTimeline")
+        } label: {
+            HStack(spacing: 12) {
+                let state = viewModel.analysisEngine.currentHealthState
+                Image(systemName: "gauge.with.dots.needle.67percent")
+                    .font(.title3)
+                    .foregroundStyle(.mint)
+                    .frame(width: 36, height: 36)
+                    .background(Color.mint.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Health States")
+                        .font(.subheadline.weight(.semibold))
+                    if let state {
+                        Text("\(state.label) for \(state.daysInState) day\(state.daysInState == 1 ? "" : "s")")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text("See your health state patterns")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(12)
+            .background(.background, in: RoundedRectangle(cornerRadius: 14))
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - 1. Score Hero

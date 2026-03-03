@@ -62,7 +62,15 @@ struct RulesConfiguration {
         case .mindfulMinutes: return NormalRange(low: 5, high: 60)
         case .timeInDaylight: return NormalRange(low: 15, high: 180)
         case .electrodermalActivity: return NormalRange(low: 0.01, high: 20)
-        case .waterIntake: return NormalRange(low: 1.5, high: 4.0)  // liters per day
+        case .waterIntake: return NormalRange(low: 1500, high: 4000)  // mL per day
+        case .caffeineIntake: return NormalRange(low: 0, high: 400)  // mg
+        case .proteinIntake: return NormalRange(low: 50, high: 200)  // g
+        case .fiberIntake: return NormalRange(low: 25, high: 50)  // g
+        case .sugarIntake: return NormalRange(low: 0, high: 36)  // g (AHA)
+        case .sodiumIntake: return NormalRange(low: 500, high: 2300)  // mg
+        case .totalCaloriesIntake: return NormalRange(low: 1500, high: 3000)  // kcal
+        case .carbohydrateIntake: return NormalRange(low: 200, high: 400)  // g
+        case .fatIntake: return NormalRange(low: 44, high: 78)  // g
         case .bloodGlucose: return NormalRange(low: 70, high: 140)
         case .workoutCount: return NormalRange(low: 0, high: 3)
         case .workoutDuration: return NormalRange(low: 0, high: 120)

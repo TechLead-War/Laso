@@ -152,6 +152,9 @@ final class WatchMonitor {
 
         if preferences.watchNotWornReminderEnabled {
             checkWatchNotWorn(maxPerDay: preferences.maxNotificationsPerDay)
+            // Re-check watch data freshness and reschedule the background notification
+            // so it fires even when the app is killed after being opened without watch.
+            checkLatestHeartRateSource()
         }
     }
 

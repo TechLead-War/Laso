@@ -139,6 +139,7 @@ final class PersistenceManager {
     private let previousWeekScoreKey = AppKeys.Data.previousWeekScore
     private let currentScoreKey = AppKeys.Data.currentScore
     private let scoreDateKey = AppKeys.Data.scoreDate
+    private let progressiveCoachStateKey = AppKeys.Data.progressiveCoachState
 
     func recordWeeklyScore(_ score: Int) {
         let calendar = Calendar.current
@@ -170,6 +171,19 @@ final class PersistenceManager {
     private func scoreDate() -> Date? {
         let interval = defaults.double(forKey: scoreDateKey)
         return interval > 0 ? Date(timeIntervalSince1970: interval) : nil
+    }
+
+    // MARK: - Progressive Coach (Encrypted)
+
+    func saveProgressiveCoachState(_ state: ProgressiveCoachState) {
+        if let data = try? JSONEncoder().encode(state) {
+            saveEncrypted(data, forKey: progressiveCoachStateKey)
+        }
+    }
+
+    func loadProgressiveCoachState() -> ProgressiveCoachState? {
+        guard let data = loadEncrypted(forKey: progressiveCoachStateKey) else { return nil }
+        return try? JSONDecoder().decode(ProgressiveCoachState.self, from: data)
     }
 
     // MARK: - Health Focuses (Encrypted)

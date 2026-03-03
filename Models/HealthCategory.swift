@@ -12,6 +12,7 @@ enum HealthCategory: String, CaseIterable, Identifiable, Codable {
     case respiratory
     case mindfulness
     case mobility
+    case nutrition
 
     var displayName: String {
         switch self {
@@ -22,6 +23,7 @@ enum HealthCategory: String, CaseIterable, Identifiable, Codable {
         case .respiratory: return "Respiratory"
         case .mindfulness: return "Mindfulness"
         case .mobility: return "Mobility"
+        case .nutrition: return "Nutrition"
         }
     }
 
@@ -34,6 +36,7 @@ enum HealthCategory: String, CaseIterable, Identifiable, Codable {
         case .respiratory: return "lungs.fill"
         case .mindfulness: return "brain.head.profile"
         case .mobility: return "figure.walk.motion"
+        case .nutrition: return "fork.knife"
         }
     }
 
@@ -46,6 +49,7 @@ enum HealthCategory: String, CaseIterable, Identifiable, Codable {
         case .respiratory: return .teal
         case .mindfulness: return .cyan
         case .mobility: return .purple
+        case .nutrition: return .brown
         }
     }
 
@@ -58,6 +62,7 @@ enum HealthCategory: String, CaseIterable, Identifiable, Codable {
         case .respiratory: return "Lungs"
         case .mindfulness: return "Mind"
         case .mobility: return "Mobility"
+        case .nutrition: return "Nutrition"
         }
     }
 

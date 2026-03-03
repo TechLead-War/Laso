@@ -5,9 +5,15 @@ import SwiftUI
 struct InsightsDetailView: View {
     let insightsByCategory: [(category: InsightCategory, insights: [Insight])]
     let onTapMetric: (HealthMetric) -> Void
+    var headlineSummary: String?
 
     @State private var selectedTab: InsightTab = .actionItems
     @State private var selectedFilter: FocusFilter = .all
+
+    // Section trackers
+    @State private var sectionTracker = SectionTracker(section: .insightsActionItems, tab: .insightsDetail)
+
+    var store: HealthDataStore?
 
     enum InsightTab: String, CaseIterable, Identifiable {
         case actionItems = "Action Items"
@@ -97,6 +103,14 @@ struct InsightsDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                // Headline summary from the Home card (shown in full here)
+                if let headline = headlineSummary {
+                    Text(headline)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal)
+                }
+
                 // Tab picker: Action Items vs All Insights
                 Picker("View", selection: $selectedTab) {
                     ForEach(InsightTab.allCases) { tab in
@@ -129,6 +143,7 @@ struct InsightsDetailView: View {
                                 metric: insight.metric.rawValue,
                                 screen: .insightsDetail
                             )
+                            store?.recordRecommendationTapped(insightId: insight.id)
                             onTapMetric(insight.metric)
                         } label: {
                             EnrichedInsightCard(insight: insight, showCategory: selectedTab == .allInsights)
@@ -172,8 +187,20 @@ struct InsightsDetailView: View {
             ])
             AppAnalytics.shared.trackActivationMilestone(.firstInsightViewed)
             AppAnalytics.shared.trackCoreAction(.viewedInsight, screen: .insightsDetail)
+            sectionTracker.appeared()
         }
-        .onDisappear { AppAnalytics.shared.trackFeatureClose(.insightsDetail) }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.insightsDetail)
+            sectionTracker.disappeared()
+        }
+        .onChange(of: selectedTab) { _, newTab in
+            sectionTracker.disappeared()
+            sectionTracker = SectionTracker(
+                section: newTab == .actionItems ? .insightsActionItems : .insightsAllInsights,
+                tab: .insightsDetail
+            )
+            sectionTracker.appeared()
+        }
     }
 
     // MARK: - Filter Chip

@@ -146,7 +146,7 @@ final class LiveViewModel {
     /// Tiered polling intervals (seconds)
     private static let fastInterval: TimeInterval = 60     // steps, calories, exercise, stand, distance, flights
     private static let mediumInterval: TimeInterval = 300   // goals, mindful minutes
-    private static let slowInterval: TimeInterval = 600     // RHR, HRV, workout, sleep
+    private static let slowInterval: TimeInterval = 120     // RHR, HRV, workout, sleep
 
     /// Full fetch — calls all tiers unconditionally (used on first appear and manual refresh).
     /// Also pre-fetches latest vitals so the Live tab opens instantly with data.
@@ -195,6 +195,9 @@ final class LiveViewModel {
     func startStreaming() {
         guard !isStreaming, HKHealthStore.isHealthDataAvailable() else { return }
         isStreaming = true
+
+        // Reset flags from previous session so fresh data takes priority
+        vitals.respiratoryRateUnavailable = false
 
         startHeartRateStream()
         startBloodOxygenStream()
@@ -251,6 +254,17 @@ final class LiveViewModel {
         refreshTimer = nil
         respiratoryAvailabilityWorkItem?.cancel()
         respiratoryAvailabilityWorkItem = nil
+
+        // Clear stale vital data so fresh queries populate on next startStreaming().
+        // Without this, old values block fallback fetches and the UI stays stuck on
+        // "Wear your Apple Watch" indefinitely after the watch is put back on.
+        vitals.currentHeartRate = nil
+        vitals.heartRateTimestamp = nil
+        vitals.currentBloodOxygen = nil
+        vitals.bloodOxygenTimestamp = nil
+        vitals.currentRespiratoryRate = nil
+        vitals.respiratoryRateTimestamp = nil
+        vitals.respiratoryRateUnavailable = false
     }
 
     // MARK: - Heart Rate Stream
@@ -615,13 +629,29 @@ final class LiveViewModel {
     // MARK: - Readiness Score
 
     func computeReadinessScore() {
-        guard let hrv = recovery.latestHRV, let rhr = recovery.latestRestingHeartRate else {
+        let hrv = recovery.latestHRV
+        let rhr = recovery.latestRestingHeartRate
+
+        // Need at least one metric to compute a score
+        guard hrv != nil || rhr != nil else {
             recovery.readinessScore = nil
             return
         }
-        let hrvScore = min(max((hrv - 20) / 40.0 * 50, 0), 50)
-        let rhrScore = min(max((80 - rhr) / 30.0 * 50, 0), 50)
-        recovery.readinessScore = Int(hrvScore + rhrScore)
+
+        if let hrv, let rhr {
+            // Full score: both metrics available
+            let hrvScore = min(max((hrv - 20) / 40.0 * 50, 0), 50)
+            let rhrScore = min(max((80 - rhr) / 30.0 * 50, 0), 50)
+            recovery.readinessScore = Int(hrvScore + rhrScore)
+        } else if let rhr {
+            // Partial score: RHR only — scale to full range (assume median HRV contribution)
+            let rhrScore = min(max((80 - rhr) / 30.0 * 50, 0), 50)
+            recovery.readinessScore = Int(rhrScore + 25) // 25 = neutral HRV midpoint
+        } else if let hrv {
+            // Partial score: HRV only — scale to full range (assume median RHR contribution)
+            let hrvScore = min(max((hrv - 20) / 40.0 * 50, 0), 50)
+            recovery.readinessScore = Int(hrvScore + 25) // 25 = neutral RHR midpoint
+        }
     }
 
     // MARK: - Last Night's Sleep Fetch
@@ -734,11 +764,12 @@ final class LiveViewModel {
     }
 
     private func fetchFallbackHeartRate() {
-        guard vitals.currentHeartRate == nil else { return }
+        // Fetch if nil or stale (>2h old) — ensures recovery after watch is put back on
+        let needsFetch = vitals.currentHeartRate == nil || vitals.isStale
+        guard needsFetch else { return }
         let unit = HKUnit.count().unitDivided(by: .minute())
         fetchLatestSampleWithDate(.heartRate, unit: unit, maxAge: 24 * 3600) { [weak self] value, date in
             Task { @MainActor in
-                guard self?.vitals.currentHeartRate == nil else { return }
                 self?.vitals.currentHeartRate = value
                 self?.vitals.heartRateTimestamp = date
                 self?.lastUpdate = Date()
@@ -747,10 +778,10 @@ final class LiveViewModel {
     }
 
     private func fetchFallbackBloodOxygen() {
-        guard vitals.currentBloodOxygen == nil else { return }
+        let needsFetch = vitals.currentBloodOxygen == nil || vitals.isStale
+        guard needsFetch else { return }
         fetchLatestSampleWithDate(.oxygenSaturation, unit: .percent(), maxAge: 24 * 3600) { [weak self] value, date in
             Task { @MainActor in
-                guard self?.vitals.currentBloodOxygen == nil else { return }
                 self?.vitals.currentBloodOxygen = value * 100
                 self?.vitals.bloodOxygenTimestamp = date
                 self?.lastUpdate = Date()
@@ -759,11 +790,11 @@ final class LiveViewModel {
     }
 
     private func fetchFallbackRespiratoryRate() {
-        guard vitals.currentRespiratoryRate == nil else { return }
+        let needsFetch = vitals.currentRespiratoryRate == nil || vitals.isStale
+        guard needsFetch else { return }
         let unit = HKUnit.count().unitDivided(by: .minute())
         fetchLatestSampleWithDate(.respiratoryRate, unit: unit, maxAge: 48 * 3600) { [weak self] value, date in
             Task { @MainActor in
-                guard self?.vitals.currentRespiratoryRate == nil else { return }
                 self?.vitals.currentRespiratoryRate = value
                 self?.vitals.respiratoryRateTimestamp = date
                 self?.vitals.respiratoryRateUnavailable = false
@@ -974,11 +1005,12 @@ extension LiveViewModel {
         var readinessScore: Int?
 
         var isReadinessDataFresh: Bool {
-            let twentyFourHours: TimeInterval = 24 * 3600
+            let fortyEightHours: TimeInterval = 48 * 3600
             let now = Date()
-            let rhrFresh = latestRestingHeartRateTimestamp.map { now.timeIntervalSince($0) < twentyFourHours } ?? false
-            let hrvFresh = latestHRVTimestamp.map { now.timeIntervalSince($0) < twentyFourHours } ?? false
-            return rhrFresh && hrvFresh
+            let rhrFresh = latestRestingHeartRateTimestamp.map { now.timeIntervalSince($0) < fortyEightHours } ?? false
+            let hrvFresh = latestHRVTimestamp.map { now.timeIntervalSince($0) < fortyEightHours } ?? false
+            // Fresh if at least one metric is available (matches partial score logic)
+            return rhrFresh || hrvFresh
         }
 
         var stressLevel: Int? {

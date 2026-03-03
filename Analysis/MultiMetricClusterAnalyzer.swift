@@ -144,6 +144,8 @@ struct MultiMetricClusterAnalyzer {
             return "Stress and mindfulness metrics are declining together. Build in 10 minutes of intentional breathing or meditation daily."
         case .mobility:
             return "Multiple mobility metrics declining together. Prioritize stretching, balance exercises, and regular walking to maintain functional fitness."
+        case .nutrition:
+            return "Multiple nutrition metrics changing together. Review your dietary habits and consider tracking meals for a few days to identify patterns."
         }
     }
 }

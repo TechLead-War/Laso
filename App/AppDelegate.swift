@@ -39,6 +39,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
+        let identifier = response.notification.request.identifier
+        NotificationManager.shared.store?.recordNotificationOpened(id: identifier)
+        AppAnalytics.shared.trackNotificationOpened(identifier: identifier)
         completionHandler()
     }
 }

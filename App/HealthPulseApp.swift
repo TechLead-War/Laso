@@ -83,13 +83,28 @@ struct HealthPulseApp: App {
 
         let allModels: [any PersistentModel.Type] = [
             StoredDailySample.self, StoredSyncMetadata.self,
-            StoredAnalysisSnapshot.self, StoredMLModelState.self
+            StoredAnalysisSnapshot.self, StoredMLModelState.self,
+            StoredRecommendation.self, StoredNotificationEvent.self,
+            StoredAdherenceRecord.self, StoredECGFeatures.self
         ]
+
+        // Schema version tracking — delete DB when model set changes to avoid hangs
+        let schemaVersionKey = "healthdata.schema.version"
+        let currentSchemaVersion = allModels.count
+        let storedSchemaVersion = UserDefaults.standard.integer(forKey: schemaVersionKey)
+        if storedSchemaVersion != 0 && storedSchemaVersion != currentSchemaVersion {
+            print("[HealthPulse] Schema changed (\(storedSchemaVersion) → \(currentSchemaVersion)), deleting DB")
+            for suffix in ["", "-wal", "-shm"] {
+                try? FileManager.default.removeItem(atPath: dbURL.path + suffix)
+            }
+        }
 
         // 1. Disk-based with all models (happy path)
         do {
             let config = ModelConfiguration(url: dbURL)
-            return try ModelContainer(for: Schema(allModels), configurations: [config])
+            let container = try ModelContainer(for: Schema(allModels), configurations: [config])
+            UserDefaults.standard.set(currentSchemaVersion, forKey: schemaVersionKey)
+            return container
         } catch {
             print("[HealthPulse] Step 1 (disk, all models) failed: \(error)")
         }
@@ -100,7 +115,9 @@ struct HealthPulseApp: App {
         }
         do {
             let config = ModelConfiguration(url: dbURL)
-            return try ModelContainer(for: Schema(allModels), configurations: [config])
+            let container = try ModelContainer(for: Schema(allModels), configurations: [config])
+            UserDefaults.standard.set(currentSchemaVersion, forKey: schemaVersionKey)
+            return container
         } catch {
             print("[HealthPulse] Step 2 (clean disk, all models) failed: \(error)")
         }
@@ -108,7 +125,7 @@ struct HealthPulseApp: App {
         // 3–6. Progressive in-memory fallbacks with fewer models
         let fallbackSets: [[any PersistentModel.Type]] = [
             allModels,
-            [StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self],
+            [StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self, StoredRecommendation.self, StoredNotificationEvent.self],
             [StoredDailySample.self, StoredSyncMetadata.self],
             [StoredDailySample.self]
         ]
@@ -181,13 +198,14 @@ struct HealthPulseApp: App {
                     // Wait for both to complete concurrently
                     _ = await (cloudRestoreTask, subscriptionTask)
 
+                    NotificationManager.shared.store = healthDataStore
+
                     WatchMonitor.shared.configure(healthStore: healthKitManager.healthStore)
                     WatchMonitor.shared.startMonitoring()
 
-                    // Cancel stale scheduled notifications (weekly summary, watch-not-worn)
-                    // that may have been registered with older, more aggressive defaults.
+                    // Cancel stale weekly summary notifications that may have been
+                    // registered with older, more aggressive defaults.
                     WeeklySummaryScheduler.cancel()
-                    NotificationManager.shared.cancelNotification(identifier: "healthpulse.watch.notWorn.scheduled")
 
                     // Dismiss splash once background init is done
                     withAnimation(.easeOut(duration: 0.3)) {

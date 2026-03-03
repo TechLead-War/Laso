@@ -298,8 +298,22 @@ struct InsightGenerator {
         historicalContext: HistoricalAnalyzer.HistoricalContext? = nil,
         insightContext: InsightContext? = nil
     ) -> Insight {
-        let title = generateTitle(metric: metric, trend: trend, severity: severity, rateOfChange: rateOfChange, inflection: inflection)
-        let summary = generateSummary(
+        let triage = SafetyTriageEngine.assess(
+            metric: metric,
+            currentValue: currentValue,
+            baselineValue: baselineValue,
+            trend: trend
+        )
+        let effectiveSeverity = max(severity, triage.level.minimumSeverity)
+
+        let title = generateTitle(
+            metric: metric,
+            trend: trend,
+            severity: effectiveSeverity,
+            rateOfChange: rateOfChange,
+            inflection: inflection
+        )
+        var summary = generateSummary(
             metric: metric,
             currentValue: currentValue,
             baselineValue: baselineValue,
@@ -309,26 +323,31 @@ struct InsightGenerator {
             historicalContext: historicalContext,
             insightContext: insightContext
         )
+        if let triageNote = triage.summaryNote {
+            summary += " \(triageNote)"
+        }
+
         let baseRecommendation = RulesConfiguration.recommendation(
-            for: metric, severity: severity, trend: trend,
+            for: metric, severity: effectiveSeverity, trend: trend,
             currentValue: currentValue, deviationPercent: deviationPercent,
             context: insightContext
         )
-        let recommendation = personalizeRecommendation(
+        let personalizedRecommendation = personalizeRecommendation(
             baseRecommendation: baseRecommendation,
             metric: metric,
-            severity: severity,
+            severity: effectiveSeverity,
             trend: trend,
             deviationPercent: deviationPercent,
             context: insightContext
         )
+        let recommendation = triage.decorateRecommendation(personalizedRecommendation)
 
         return Insight(
             metric: metric,
             title: title,
             summary: summary,
             recommendation: recommendation,
-            severity: severity,
+            severity: effectiveSeverity,
             trend: trend,
             currentValue: currentValue,
             baselineValue: baselineValue,

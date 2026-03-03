@@ -185,3 +185,387 @@ struct WeeklyPatternAnalyzer {
         return formatter.weekdaySymbols[weekday - 1]  // weekday is 1-indexed
     }
 }
+
+/// Maps daily health data against menstrual cycle phases and generates phase-aware guidance.
+struct CyclePhaseAnalyzer {
+
+    private enum Phase: String, CaseIterable {
+        case menstrual
+        case follicular
+        case ovulatory
+        case luteal
+
+        var displayName: String {
+            rawValue.capitalized
+        }
+
+        var baselineExpectation: String {
+            switch self {
+            case .menstrual:
+                return "Lower energy and recovery variability can be normal during menstruation."
+            case .follicular:
+                return "Energy and training readiness often improve through the follicular phase."
+            case .ovulatory:
+                return "Many people experience peak readiness around ovulation."
+            case .luteal:
+                return "Slightly lower energy in the luteal phase is common and usually expected."
+            }
+        }
+
+        var recommendation: String {
+            switch self {
+            case .menstrual:
+                return "Prioritize recovery-first days: lighter training, hydration, and consistent sleep."
+            case .follicular:
+                return "Use this phase for progressive overload and higher-focus tasks while readiness is trending up."
+            case .ovulatory:
+                return "Schedule your key workouts here, then protect sleep and hydration to stabilize recovery."
+            case .luteal:
+                return "Plan slightly lower-intensity sessions, lock in an earlier bedtime, and favor steady routines."
+            }
+        }
+    }
+
+    private struct MenstrualEpisode {
+        let start: Date
+        let end: Date
+
+        var lengthDays: Int {
+            daysBetween(start, end) + 1
+        }
+    }
+
+    private struct PhaseSnapshot {
+        let hrv: Double?
+        let restingHeartRate: Double?
+        let sleepQuality: Double?
+        let activitySteps: Double?
+    }
+
+    private struct MetricSignal {
+        let metric: HealthMetric
+        let label: String
+        let current: Double
+        let baseline: Double
+        let deviationPercent: Double
+    }
+
+    static func generateInsights(
+        timeSeries: [HealthMetric: MetricTimeSeries],
+        menstrualFlowSamples: [HealthKitManager.MenstrualFlowSample],
+        now: Date = Date()
+    ) -> [Insight] {
+        let episodes = extractMenstrualEpisodes(from: menstrualFlowSamples)
+        guard episodes.count >= 2 else { return [] }
+
+        let cycleStarts = episodes.map(\.start).sorted()
+        let cycleLengths = zip(cycleStarts.dropLast(), cycleStarts.dropFirst())
+            .map { daysBetween($0, $1) }
+            .filter { (18...45).contains($0) }
+
+        let estimatedCycleLength = clamp(median(cycleLengths) ?? 28, min: 21, max: 40)
+        let estimatedMenstrualLength = clamp(
+            median(episodes.map(\.lengthDays).filter { (2...10).contains($0) }) ?? 5,
+            min: 3,
+            max: 8
+        )
+
+        guard let latestCycleStart = cycleStarts.last else { return [] }
+        let dayInCycle = daysBetween(latestCycleStart, now.startOfDay) + 1
+        guard dayInCycle >= 1 else { return [] }
+
+        let currentPhase = phase(
+            forCycleDay: dayInCycle,
+            cycleLength: estimatedCycleLength,
+            menstrualLength: estimatedMenstrualLength
+        )
+
+        let windowStart = now.daysAgo(180).startOfDay
+        let phaseByDate = assignPhases(
+            from: windowStart,
+            to: now.startOfDay,
+            cycleStarts: cycleStarts,
+            fallbackCycleLength: estimatedCycleLength,
+            menstrualLength: estimatedMenstrualLength
+        )
+        guard phaseByDate.count >= 20 else { return [] }
+
+        let stepsMap = dailyValueMap(for: .steps, timeSeries: timeSeries)
+        let hrvMap = dailyValueMap(for: .heartRateVariability, timeSeries: timeSeries)
+        let restingHRMap = dailyValueMap(for: .restingHeartRate, timeSeries: timeSeries)
+        let sleepDurationMap = dailyValueMap(for: .sleepDuration, timeSeries: timeSeries)
+        let sleepDeepMap = dailyValueMap(for: .sleepDeep, timeSeries: timeSeries)
+        let sleepRemMap = dailyValueMap(for: .sleepREM, timeSeries: timeSeries)
+        let sleepQualityMap = buildSleepQualityMap(
+            duration: sleepDurationMap,
+            deep: sleepDeepMap,
+            rem: sleepRemMap
+        )
+
+        let allTrackedDates = Array(phaseByDate.keys)
+        let overallSnapshot = PhaseSnapshot(
+            hrv: mean(on: allTrackedDates, from: hrvMap),
+            restingHeartRate: mean(on: allTrackedDates, from: restingHRMap),
+            sleepQuality: mean(on: allTrackedDates, from: sleepQualityMap),
+            activitySteps: mean(on: allTrackedDates, from: stepsMap)
+        )
+
+        let currentPhaseDates = phaseByDate.compactMap { date, phase in
+            phase == currentPhase ? date : nil
+        }
+        guard currentPhaseDates.count >= 4 else { return [] }
+
+        let currentSnapshot = PhaseSnapshot(
+            hrv: mean(on: currentPhaseDates, from: hrvMap),
+            restingHeartRate: mean(on: currentPhaseDates, from: restingHRMap),
+            sleepQuality: mean(on: currentPhaseDates, from: sleepQualityMap),
+            activitySteps: mean(on: currentPhaseDates, from: stepsMap)
+        )
+
+        let signals = metricSignals(current: currentSnapshot, baseline: overallSnapshot)
+        guard let primarySignal = signals.max(by: { abs($0.deviationPercent) < abs($1.deviationPercent) }) else {
+            return []
+        }
+
+        let deviations = Dictionary(uniqueKeysWithValues: signals.map { ($0.metric, $0.deviationPercent) })
+        let highLoadShift =
+            (deviations[.restingHeartRate] ?? 0) >= 8 ||
+            (deviations[.heartRateVariability] ?? 0) <= -12 ||
+            (deviations[.steps] ?? 0) <= -20 ||
+            (deviations[.sleepDuration] ?? 0) <= -15
+
+        let severity: Severity = highLoadShift ? .warning : .info
+        let trend = trendDirection(for: primarySignal)
+
+        let highlights = signals
+            .sorted { abs($0.deviationPercent) > abs($1.deviationPercent) }
+            .prefix(3)
+            .map { signal in
+                let direction = signal.deviationPercent >= 0 ? "up" : "down"
+                return "\(signal.label) \(direction) \(String(format: "%.0f", abs(signal.deviationPercent)))%"
+            }
+
+        var summary = "You're in your \(currentPhase.rawValue) phase (day \(dayInCycle) of ~\(estimatedCycleLength)). \(currentPhase.baselineExpectation)"
+        if !highlights.isEmpty {
+            summary += " Compared with your cycle average: \(highlights.joined(separator: ", "))."
+        }
+
+        var recommendation = currentPhase.recommendation
+        if highLoadShift {
+            recommendation += " Your current shift is stronger than your norm, so scale intensity for 48 hours and monitor how you feel."
+        } else {
+            recommendation += " Keep logging daily so the phase model can keep adapting to your own baseline."
+        }
+
+        let relatedMetrics = signals.map(\.metric)
+
+        let insight = Insight(
+            metric: primarySignal.metric,
+            title: "Cycle Phase Analyzer: \(currentPhase.displayName)",
+            summary: summary,
+            recommendation: recommendation,
+            severity: severity,
+            trend: trend,
+            currentValue: primarySignal.current,
+            baselineValue: primarySignal.baseline,
+            deviationPercent: primarySignal.deviationPercent,
+            category: .cyclePhase,
+            relatedMetrics: relatedMetrics
+        )
+        return [insight]
+    }
+
+    private static func extractMenstrualEpisodes(
+        from samples: [HealthKitManager.MenstrualFlowSample]
+    ) -> [MenstrualEpisode] {
+        let bleedingDays = Array(Set(
+            samples
+                .filter(\.isBleedingDay)
+                .map(\.day)
+        )).sorted()
+
+        guard !bleedingDays.isEmpty else { return [] }
+
+        var episodes: [MenstrualEpisode] = []
+        var episodeStart = bleedingDays[0]
+        var episodeEnd = bleedingDays[0]
+
+        for day in bleedingDays.dropFirst() {
+            if daysBetween(episodeEnd, day) <= 1 {
+                episodeEnd = day
+            } else {
+                episodes.append(MenstrualEpisode(start: episodeStart, end: episodeEnd))
+                episodeStart = day
+                episodeEnd = day
+            }
+        }
+        episodes.append(MenstrualEpisode(start: episodeStart, end: episodeEnd))
+
+        return episodes.filter { (2...10).contains($0.lengthDays) }
+    }
+
+    private static func assignPhases(
+        from startDate: Date,
+        to endDate: Date,
+        cycleStarts: [Date],
+        fallbackCycleLength: Int,
+        menstrualLength: Int
+    ) -> [Date: Phase] {
+        guard !cycleStarts.isEmpty else { return [:] }
+
+        var phaseByDay: [Date: Phase] = [:]
+        var day = startDate.startOfDay
+
+        while day <= endDate {
+            guard let startIndex = cycleStarts.lastIndex(where: { $0 <= day }) else {
+                day = Calendar.current.date(byAdding: .day, value: 1, to: day) ?? day
+                continue
+            }
+
+            let cycleStart = cycleStarts[startIndex]
+            let nextStart = (startIndex + 1) < cycleStarts.count ? cycleStarts[startIndex + 1] : nil
+            let cycleLength = clamp(
+                nextStart.map { daysBetween(cycleStart, $0) } ?? fallbackCycleLength,
+                min: 21,
+                max: 40
+            )
+            let dayInCycle = daysBetween(cycleStart, day) + 1
+            phaseByDay[day] = phase(
+                forCycleDay: dayInCycle,
+                cycleLength: cycleLength,
+                menstrualLength: menstrualLength
+            )
+
+            day = Calendar.current.date(byAdding: .day, value: 1, to: day) ?? day
+        }
+
+        return phaseByDay
+    }
+
+    private static func phase(forCycleDay day: Int, cycleLength: Int, menstrualLength: Int) -> Phase {
+        if day <= menstrualLength {
+            return .menstrual
+        }
+
+        let ovulationCenter = clamp(cycleLength - 14, min: menstrualLength + 3, max: cycleLength - 6)
+        let ovulationStart = max(menstrualLength + 1, ovulationCenter - 1)
+        let ovulationEnd = min(cycleLength, ovulationCenter + 1)
+
+        if day < ovulationStart {
+            return .follicular
+        }
+        if day <= ovulationEnd {
+            return .ovulatory
+        }
+        return .luteal
+    }
+
+    private static func metricSignals(current: PhaseSnapshot, baseline: PhaseSnapshot) -> [MetricSignal] {
+        var signals: [MetricSignal] = []
+
+        if let currentHRV = current.hrv, let baselineHRV = baseline.hrv, baselineHRV > 0 {
+            signals.append(MetricSignal(
+                metric: .heartRateVariability,
+                label: "HRV",
+                current: currentHRV,
+                baseline: baselineHRV,
+                deviationPercent: percentChange(current: currentHRV, baseline: baselineHRV)
+            ))
+        }
+        if let currentRHR = current.restingHeartRate, let baselineRHR = baseline.restingHeartRate, baselineRHR > 0 {
+            signals.append(MetricSignal(
+                metric: .restingHeartRate,
+                label: "Resting HR",
+                current: currentRHR,
+                baseline: baselineRHR,
+                deviationPercent: percentChange(current: currentRHR, baseline: baselineRHR)
+            ))
+        }
+        if let currentSleepQuality = current.sleepQuality,
+           let baselineSleepQuality = baseline.sleepQuality,
+           baselineSleepQuality > 0 {
+            signals.append(MetricSignal(
+                metric: .sleepDuration,
+                label: "Sleep quality",
+                current: currentSleepQuality,
+                baseline: baselineSleepQuality,
+                deviationPercent: percentChange(current: currentSleepQuality, baseline: baselineSleepQuality)
+            ))
+        }
+        if let currentSteps = current.activitySteps, let baselineSteps = baseline.activitySteps, baselineSteps > 0 {
+            signals.append(MetricSignal(
+                metric: .steps,
+                label: "Activity",
+                current: currentSteps,
+                baseline: baselineSteps,
+                deviationPercent: percentChange(current: currentSteps, baseline: baselineSteps)
+            ))
+        }
+
+        return signals
+    }
+
+    private static func trendDirection(for signal: MetricSignal) -> TrendDirection {
+        guard abs(signal.deviationPercent) >= 4 else { return .stable }
+        if signal.metric.higherIsBetter {
+            return signal.deviationPercent >= 0 ? .improving : .declining
+        }
+        return signal.deviationPercent <= 0 ? .improving : .declining
+    }
+
+    private static func buildSleepQualityMap(
+        duration: [Date: Double],
+        deep: [Date: Double],
+        rem: [Date: Double]
+    ) -> [Date: Double] {
+        let candidateDays = Set(duration.keys)
+        var quality: [Date: Double] = [:]
+
+        for day in candidateDays {
+            guard let sleepDuration = duration[day], sleepDuration >= 3 else { continue }
+            let restorativeSleep = (deep[day] ?? 0) + (rem[day] ?? 0)
+            guard restorativeSleep > 0 else { continue }
+
+            let ratio = min(max(restorativeSleep / sleepDuration, 0), 1.0)
+            quality[day] = ratio * 100
+        }
+        return quality
+    }
+
+    private static func dailyValueMap(
+        for metric: HealthMetric,
+        timeSeries: [HealthMetric: MetricTimeSeries]
+    ) -> [Date: Double] {
+        guard let series = timeSeries[metric] else { return [:] }
+        var buckets: [Date: [Double]] = [:]
+        for sample in series.sortedSamples {
+            buckets[sample.date.startOfDay, default: []].append(sample.value)
+        }
+        return buckets.mapValues(\.mean)
+    }
+
+    private static func mean(on dates: [Date], from map: [Date: Double]) -> Double? {
+        let values = dates.compactMap { map[$0] }
+        guard values.count >= 3 else { return nil }
+        return values.mean
+    }
+
+    private static func percentChange(current: Double, baseline: Double) -> Double {
+        guard baseline != 0 else { return 0 }
+        return ((current - baseline) / baseline) * 100
+    }
+
+    private static func median(_ values: [Int]) -> Int? {
+        guard !values.isEmpty else { return nil }
+        let sorted = values.sorted()
+        return sorted[sorted.count / 2]
+    }
+
+    private static func clamp(_ value: Int, min: Int, max: Int) -> Int {
+        Swift.max(min, Swift.min(max, value))
+    }
+
+    private static func daysBetween(_ start: Date, _ end: Date) -> Int {
+        Calendar.current.dateComponents([.day], from: start.startOfDay, to: end.startOfDay).day ?? 0
+    }
+}

@@ -52,6 +52,22 @@ final class HealthKitManager {
         var hasNewData: Bool { !metricsWithNewData.isEmpty }
     }
 
+    /// Raw menstrual flow sample used for cycle-phase analytics.
+    struct MenstrualFlowSample: Sendable {
+        let startDate: Date
+        let endDate: Date
+        let flowValueRaw: Int
+
+        var day: Date { startDate.startOfDay }
+
+        var isBleedingDay: Bool {
+            if let flow = HKCategoryValueMenstrualFlow(rawValue: flowValueRaw) {
+                return flow != .none
+            }
+            return flowValueRaw != 0
+        }
+    }
+
     /// Check if HealthKit is available on this device
     var isHealthKitAvailable: Bool {
         HKHealthStore.isHealthDataAvailable()
@@ -64,7 +80,11 @@ final class HealthKitManager {
             return
         }
 
-        let readTypes = HealthKitMetricRegistry.allSampleTypes
+        var readTypes = HealthKitMetricRegistry.allSampleTypes
+        if let menstrualFlowType = HKObjectType.categoryType(forIdentifier: .menstrualFlow) {
+            readTypes.insert(menstrualFlowType)
+        }
+        readTypes.insert(HKObjectType.electrocardiogramType())
 
         let writeTypes: Set<HKSampleType> = [
             HKQuantityType(.bodyMass),
@@ -251,6 +271,169 @@ final class HealthKitManager {
         case .workoutQuery:
             return await fetchWorkouts(metric: metric, from: startDate, to: endDate)
         }
+    }
+
+    /// Fetch menstrual flow category samples for cycle-phase analysis.
+    /// Returns empty when data is unavailable or permission is denied.
+    func fetchMenstrualFlowSamples(days: Int = 420) async -> [MenstrualFlowSample] {
+        guard isAuthorized,
+              let menstrualType = HKObjectType.categoryType(forIdentifier: .menstrualFlow) else {
+            return []
+        }
+
+        let endDate = Date()
+        let startDate = endDate.daysAgo(days)
+
+        return await withCheckedContinuation { continuation in
+            let predicate = HealthKitQueryBuilder.datePredicate(from: startDate, to: endDate)
+            let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
+
+            let query = HKSampleQuery(
+                sampleType: menstrualType,
+                predicate: predicate,
+                limit: HKObjectQueryNoLimit,
+                sortDescriptors: [sort]
+            ) { _, results, error in
+                guard let results = results as? [HKCategorySample], error == nil else {
+                    continuation.resume(returning: [])
+                    return
+                }
+
+                let samples = results.map { sample in
+                    MenstrualFlowSample(
+                        startDate: sample.startDate,
+                        endDate: sample.endDate,
+                        flowValueRaw: sample.value
+                    )
+                }
+                continuation.resume(returning: samples)
+            }
+
+            healthStore.execute(query)
+        }
+    }
+
+    // MARK: - Hourly Data (Circadian Analysis)
+
+    /// Fetch hourly-binned samples for circadian rhythm analysis.
+    /// Returns 24 arrays (one per hour), each containing the daily values for that hour slot.
+    func fetchHourlySamples(_ metric: HealthMetric, days: Int = 30) async -> [[Double]]? {
+        let config = HealthKitMetricRegistry.config(for: metric)
+        guard let quantityType = config.quantityType else { return nil }
+
+        let endDate = Date()
+        let startDate = endDate.daysAgo(days)
+
+        return await withCheckedContinuation { continuation in
+            var interval = DateComponents()
+            interval.hour = 1
+
+            let predicate = HealthKitQueryBuilder.datePredicate(from: startDate, to: endDate)
+
+            let query = HKStatisticsCollectionQuery(
+                quantityType: quantityType,
+                quantitySamplePredicate: predicate,
+                options: config.statisticsOption == .cumulativeSum ? .cumulativeSum : .discreteAverage,
+                anchorDate: startDate.startOfDay,
+                intervalComponents: interval
+            )
+
+            query.initialResultsHandler = { _, results, error in
+                guard let results, error == nil else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                // Bin values by hour-of-day (0-23)
+                var hourBins: [[Double]] = Array(repeating: [], count: 24)
+                let calendar = Calendar.current
+
+                results.enumerateStatistics(from: startDate, to: endDate) { statistics, _ in
+                    let value: Double?
+                    if config.statisticsOption == .cumulativeSum {
+                        value = statistics.sumQuantity()?.doubleValue(for: config.unit)
+                    } else {
+                        value = statistics.averageQuantity()?.doubleValue(for: config.unit)
+                    }
+                    if let value, value > 0 {
+                        let hour = calendar.component(.hour, from: statistics.startDate)
+                        hourBins[hour].append(value)
+                    }
+                }
+
+                // Only return if we have meaningful data
+                let hoursWithData = hourBins.filter { !$0.isEmpty }.count
+                guard hoursWithData >= 12 else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                continuation.resume(returning: hourBins)
+            }
+
+            healthStore.execute(query)
+        }
+    }
+
+    /// Fetch menstrual cycle phase data for cycle-aware circadian analysis.
+    struct CyclePhaseDay {
+        let date: Date
+        let phase: CyclePhase
+    }
+
+    enum CyclePhase: String, Codable {
+        case menstrual
+        case follicular
+        case ovulatory
+        case luteal
+    }
+
+    func fetchMenstrualCycleData(days: Int = 180) async -> [CyclePhaseDay]? {
+        let flowSamples = await fetchMenstrualFlowSamples(days: days)
+        guard flowSamples.count >= 2 else { return nil }
+
+        // Find bleeding periods (menstrual phase markers)
+        let bleedingDays = flowSamples.filter { $0.isBleedingDay }.map { $0.day }
+        guard bleedingDays.count >= 2 else { return nil }
+
+        // Group bleeding days into cycles (gap > 20 days = new cycle)
+        var cycles: [[Date]] = []
+        var currentCycle: [Date] = []
+        for day in bleedingDays.sorted() {
+            if let last = currentCycle.last,
+               Calendar.current.dateComponents([.day], from: last, to: day).day ?? 0 > 20 {
+                if !currentCycle.isEmpty { cycles.append(currentCycle) }
+                currentCycle = [day]
+            } else {
+                currentCycle.append(day)
+            }
+        }
+        if !currentCycle.isEmpty { cycles.append(currentCycle) }
+        guard cycles.count >= 2 else { return nil }
+
+        // Estimate cycle length from consecutive cycle starts
+        var phaseDays: [CyclePhaseDay] = []
+        let calendar = Calendar.current
+
+        for i in 0..<(cycles.count - 1) {
+            guard let cycleStart = cycles[i].first,
+                  let nextCycleStart = cycles[i + 1].first else { continue }
+            let cycleLength = calendar.dateComponents([.day], from: cycleStart, to: nextCycleStart).day ?? 28
+
+            // Assign phases: menstrual (days 1-5), follicular (6-13), ovulatory (14-16), luteal (17-end)
+            for dayOffset in 0..<cycleLength {
+                guard let date = calendar.date(byAdding: .day, value: dayOffset, to: cycleStart) else { continue }
+                let phase: CyclePhase
+                switch dayOffset {
+                case 0..<5: phase = .menstrual
+                case 5..<13: phase = .follicular
+                case 13..<16: phase = .ovulatory
+                default: phase = .luteal
+                }
+                phaseDays.append(CyclePhaseDay(date: date, phase: phase))
+            }
+        }
+
+        return phaseDays.isEmpty ? nil : phaseDays
     }
 
     // MARK: - Private Query Methods

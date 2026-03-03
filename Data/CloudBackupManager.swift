@@ -81,8 +81,8 @@ final class CloudBackupManager {
         // Build payload from current on-device data
         let payload = buildPayload(store: store, persistence: persistence)
 
-        guard let compressedData = payload.compressed() else {
-            backupStatus = .failed("Compression failed")
+        guard let compressedData = payload.compressedAndEncrypted() else {
+            backupStatus = .failed("Encryption failed")
             return
         }
 
@@ -112,6 +112,7 @@ final class CloudBackupManager {
         record["overallScore"] = (payload.snapshots.last?.overallScore ?? 0) as CKRecordValue
         record["mlComponentCount"] = payload.mlStates.count as CKRecordValue
         record["snapshotCount"] = payload.snapshots.count as CKRecordValue
+        record["encrypted"] = true as CKRecordValue
 
         do {
             try await container.privateCloudDatabase.save(record)
@@ -145,9 +146,22 @@ final class CloudBackupManager {
 
         guard let asset = record["payload"] as? CKAsset,
               let fileURL = asset.fileURL,
-              let compressedData = try? Data(contentsOf: fileURL),
-              let payload = BackupPayload.decompress(from: compressedData) else {
+              let compressedData = try? Data(contentsOf: fileURL) else {
             backupStatus = .failed("Failed to read backup data")
+            return false
+        }
+
+        // Decrypt (v2) or decompress (v1 fallback)
+        var payload = BackupPayload.decryptAndDecompress(from: compressedData)
+
+        // If decryption failed and we don't have the sync key yet, wait for iCloud Keychain
+        if payload == nil && !EncryptedStore.shared.hasSyncKey {
+            try? await Task.sleep(for: .seconds(30))
+            payload = BackupPayload.decryptAndDecompress(from: compressedData)
+        }
+
+        guard let payload else {
+            backupStatus = .failed("Failed to decrypt backup — ensure iCloud Keychain is enabled")
             return false
         }
 
@@ -206,6 +220,16 @@ final class CloudBackupManager {
             }
         }
 
+        // Restore notification preferences (v2)
+        if let prefs = payload.notificationPreferences {
+            persistence.savePreferences(prefs)
+        }
+
+        // Restore progressive coach state (v2)
+        if let coachState = payload.progressiveCoachState {
+            persistence.saveProgressiveCoachState(coachState)
+        }
+
         backupStatus = .idle
         return true
     }
@@ -255,6 +279,10 @@ final class CloudBackupManager {
         let scoreHistory = store.loadScoreHistory(days: 1)
         let currentScore = scoreHistory.last?.score
 
+        // Notification preferences & coach state (v2)
+        let notificationPrefs = persistence.loadPreferences()
+        let coachState = persistence.loadProgressiveCoachState()
+
         // Sync dates
         let syncDateMap = store.allSyncDates()
         let syncDates = Dictionary(uniqueKeysWithValues: syncDateMap.map { ($0.key.rawValue, $0.value) })
@@ -268,6 +296,8 @@ final class CloudBackupManager {
             healthFocuses: focuses,
             previousWeekScore: previousWeekScore,
             currentScore: currentScore,
+            notificationPreferences: notificationPrefs,
+            progressiveCoachState: coachState,
             syncDates: syncDates
         )
     }

@@ -233,7 +233,11 @@ private struct ConnectHealthPage: View {
             VStack(spacing: 0) {
                 benefitRow(icon: "waveform.path.ecg", color: .red, text: "Scores, trends, and live vitals")
                 Divider().padding(.leading, 52)
-                benefitRow(icon: "sparkles", color: .blue, text: "Personalized insights and alerts")
+                benefitRow(icon: "cross.case.fill", color: .blue, text: "Safety Triage Engine: clear monitor vs seek-care guidance")
+                Divider().padding(.leading, 52)
+                benefitRow(icon: "figure.walk.motion", color: .green, text: "Progressive Coach: starts at 4K steps and adapts weekly")
+                Divider().padding(.leading, 52)
+                benefitRow(icon: "calendar.badge.clock", color: .pink, text: "Cycle Phase Analyzer: phase-aware energy and recovery insights")
                 Divider().padding(.leading, 52)
                 benefitRow(icon: "lock.fill", color: .orange, text: "All health data stays on your device")
             }
@@ -759,4 +763,3 @@ private struct CulturePage: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
-

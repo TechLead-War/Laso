@@ -8,6 +8,7 @@ final class EncryptedStore {
     static let shared = EncryptedStore()
 
     private let keychainAccount = "com.lasohealth.encryption.key"
+    private let syncKeychainAccount = "com.lasohealth.encryption.synckey"
     private let defaults = UserDefaults.standard
 
     private init() {}
@@ -60,7 +61,80 @@ final class EncryptedStore {
         return decrypted
     }
 
-    // MARK: - Keychain Key Management
+    // MARK: - iCloud Sync Key (for E2E encrypted CloudKit backup)
+
+    /// Whether a sync key exists in the Keychain (may still be syncing via iCloud Keychain)
+    var hasSyncKey: Bool {
+        loadSyncKeyFromKeychain() != nil
+    }
+
+    /// Get or create the iCloud-synced AES-256 key for CloudKit encryption.
+    /// Stored with kSecAttrSynchronizable so iCloud Keychain replicates it across devices.
+    func getOrCreateSyncKey() -> SymmetricKey? {
+        if let existingKeyData = loadSyncKeyFromKeychain() {
+            return SymmetricKey(data: existingKeyData)
+        }
+        let newKey = SymmetricKey(size: .bits256)
+        let keyData = newKey.withUnsafeBytes { Data($0) }
+        if saveSyncKeyToKeychain(keyData) {
+            return newKey
+        }
+        return nil
+    }
+
+    /// Encrypt data using the iCloud-synced key (for CloudKit backup payloads)
+    func encryptForCloud(_ data: Data) -> Data? {
+        guard let key = getOrCreateSyncKey() else { return nil }
+        return encrypt(data, using: key)
+    }
+
+    /// Decrypt data using the iCloud-synced key (for CloudKit backup payloads)
+    func decryptFromCloud(_ data: Data) -> Data? {
+        guard let keyData = loadSyncKeyFromKeychain() else { return nil }
+        let key = SymmetricKey(data: keyData)
+        return decrypt(data, using: key)
+    }
+
+    private func loadSyncKeyFromKeychain() -> Data? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: syncKeychainAccount,
+            kSecAttrSynchronizable as String: true,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        guard status == errSecSuccess else { return nil }
+        return result as? Data
+    }
+
+    private func saveSyncKeyToKeychain(_ keyData: Data) -> Bool {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: syncKeychainAccount,
+            kSecValueData as String: keyData,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
+            kSecAttrSynchronizable as String: true
+        ]
+        var status = SecItemAdd(query as CFDictionary, nil)
+
+        if status == errSecDuplicateItem {
+            let searchQuery: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrAccount as String: syncKeychainAccount,
+                kSecAttrSynchronizable as String: true
+            ]
+            let updateAttributes: [String: Any] = [
+                kSecValueData as String: keyData
+            ]
+            status = SecItemUpdate(searchQuery as CFDictionary, updateAttributes as CFDictionary)
+        }
+
+        return status == errSecSuccess
+    }
+
+    // MARK: - Keychain Key Management (device-local)
 
     private func getOrCreateKey() -> SymmetricKey? {
         if let existingKeyData = loadKeyFromKeychain() {

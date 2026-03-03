@@ -11,40 +11,9 @@ struct CoachGreetingView: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                // Primary line: score with delta or time-based greeting
-                if let score = currentScore {
-                    HStack(spacing: 6) {
-                        Text("Score: \(score)")
-                            .font(.title2.weight(.bold))
-
-                        if let onTapScoreInfo {
-                            Button {
-                                onTapScoreInfo()
-                            } label: {
-                                Image(systemName: "info.circle")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            .buttonStyle(.plain)
-                        }
-
-                        if let delta = scoreChangeFromYesterday {
-                            HStack(spacing: 2) {
-                                Image(systemName: delta > 0 ? "arrow.up.right" : "arrow.down.right")
-                                    .font(.caption.weight(.bold))
-                                Text("\(abs(delta))")
-                                    .font(.caption.weight(.bold).monospacedDigit())
-                            }
-                            .foregroundStyle(delta > 0 ? .green : .red)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background((delta > 0 ? Color.green : Color.red).opacity(0.12), in: Capsule())
-                        }
-                    }
-                } else {
-                    Text(greeting)
-                        .font(.title2.weight(.bold))
-                }
+                // Time-based greeting
+                Text(greeting)
+                    .font(.title2.weight(.bold))
 
                 // Date subtitle with optional streak badge
                 HStack(spacing: 6) {

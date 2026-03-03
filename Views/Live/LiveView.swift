@@ -57,9 +57,12 @@ struct LiveView: View {
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
-                if !viewModel.isStreaming {
-                    viewModel.startStreaming()
+                // Always restart streaming on foreground — stopStreaming() clears stale
+                // data, so startStreaming() issues fresh queries that detect the watch.
+                if viewModel.isStreaming {
+                    viewModel.stopStreaming()
                 }
+                viewModel.startStreaming()
             } else if newPhase == .inactive || newPhase == .background {
                 if viewModel.isStreaming {
                     viewModel.stopStreaming()

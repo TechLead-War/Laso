@@ -430,6 +430,7 @@ final class DashboardViewModel {
         if isFirstLaunchSync { syncPhase = .analyzing }
 
         let ts = healthKitManager.timeSeries
+        async let cycleFlowSamplesTask = healthKitManager.fetchMenstrualFlowSamples(days: 420)
 
         // Phase 1: Core analysis — scores, trends, baselines (blocks until done, UI needs these)
         await Task.detached(priority: .userInitiated) { [analysisEngine] in
@@ -463,8 +464,12 @@ final class DashboardViewModel {
 
         // Calibration mode: wait for full deferred analysis before returning.
         if awaitDeferredAnalysis {
+            let cycleFlowSamples = await cycleFlowSamplesTask
             await Task.detached(priority: .utility) { [analysisEngine] in
-                analysisEngine.runDeferredEssentials(timeSeries: ts)
+                analysisEngine.runDeferredEssentials(
+                    timeSeries: ts,
+                    cycleFlowSamples: cycleFlowSamples
+                )
             }.value
 
             updateCachedProperties()
@@ -490,9 +495,13 @@ final class DashboardViewModel {
         }
 
         // Phase 2A: Essential insights — lightweight (~15K ops), runs immediately
+        let cycleFlowSamples = await cycleFlowSamplesTask
         Task.detached(priority: .utility) { [weak self] in
             guard let self else { return }
-            self.analysisEngine.runDeferredEssentials(timeSeries: ts)
+            self.analysisEngine.runDeferredEssentials(
+                timeSeries: ts,
+                cycleFlowSamples: cycleFlowSamples
+            )
             await MainActor.run { self.updateCachedProperties() }
         }
 
@@ -559,11 +568,37 @@ final class DashboardViewModel {
             analysisEngine.insights.sort { $0.priorityScore > $1.priorityScore }
         }
 
+        // Circadian analysis (weekly, hourly data fetch)
+        if analysisEngine.mlOrchestrator.needsCircadianAnalysis {
+            let metricsForCircadian = CircadianAnalyzer.metricsToAnalyze + CircadianAnalyzer.optionalMetrics
+            var hourlyData: [HealthMetric: [[Double]]] = [:]
+            await withTaskGroup(of: (HealthMetric, [[Double]]?).self) { group in
+                for metric in metricsForCircadian {
+                    group.addTask { [healthKitManager] in
+                        let data = await healthKitManager.fetchHourlySamples(metric, days: 30)
+                        return (metric, data)
+                    }
+                }
+                for await (metric, data) in group {
+                    if let data { hourlyData[metric] = data }
+                }
+            }
+            if !hourlyData.isEmpty {
+                analysisEngine.mlOrchestrator.runCircadianAnalysis(hourlyData: hourlyData)
+            }
+        }
+
         guard runHousekeeping else { return }
 
         // CloudKit backup (throttled to once per 6 hours)
         let persistence = PersistenceManager()
         await CloudBackupManager.shared.backupIfNeeded(store: store, persistence: persistence)
+
+        // Evaluate recommendation outcomes and prune old records
+        let currentTimeSeries = healthKitManager.timeSeries
+        RecommendationEvaluator.evaluatePending(store: store, timeSeries: currentTimeSeries)
+        store.pruneOldRecommendations()
+        store.pruneOldNotificationEvents()
 
         // Analytics tracking
         AppAnalytics.shared.trackAnalysisCompleted(
@@ -612,12 +647,20 @@ final class DashboardViewModel {
             .max(by: { $0.severity < $1.severity })
             .map { (metricName: $0.metric.displayName, changePercent: $0.deviationPercent) }
 
+        // Optimize daily summary timing based on notification engagement data
+        var optimizedPrefs = prefs
+        let notifEvents = store.loadNotificationEvents(days: 30)
+        if notifEvents.count >= 14 {
+            let optimalHour = NotificationOptimizer.optimalHour(events: notifEvents)
+            optimizedPrefs.dailySummaryTime.hour = optimalHour
+        }
+
         DailySummaryScheduler.schedule(
             score: currentScore,
             anomalyCount: anomalyCount,
             topInsights: Array(analysisEngine.insights.prefix(3)),
             categoryBreakdown: categoryBreakdown,
-            preferences: prefs,
+            preferences: optimizedPrefs,
             topAnomaly: topAnomaly,
             scoreChangeFromYesterday: cachedScoreChangeFromYesterday,
             streakDays: SessionTracker.shared.streakDays
@@ -667,6 +710,14 @@ final class DashboardViewModel {
         cachedTrendsSummary = computeTrendsSummary()
         cachedHistoricalHighlights = computeHistoricalHighlights()
         cachedTopCorrelations = computeTopCorrelations()
+
+        // Save shown recommendations for outcome tracking
+        let insightsToSave = cachedFocusedInsights.prefix(10)
+        Task { @MainActor [store] in
+            for insight in insightsToSave {
+                store.saveRecommendation(insight)
+            }
+        }
     }
 
     private func computeScoreChangeFromLastWeek() -> Int? {

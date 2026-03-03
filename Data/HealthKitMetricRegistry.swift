@@ -373,6 +373,70 @@ struct HealthKitMetricRegistry {
                 strategy: .statisticsDaily,
                 statisticsOption: .cumulativeSum
             )
+        case .caffeineIntake:
+            return MetricConfig(
+                sampleType: HKQuantityType(.dietaryCaffeine),
+                quantityType: HKQuantityType(.dietaryCaffeine),
+                unit: .gramUnit(with: .milli),
+                strategy: .statisticsDaily,
+                statisticsOption: .cumulativeSum
+            )
+        case .proteinIntake:
+            return MetricConfig(
+                sampleType: HKQuantityType(.dietaryProtein),
+                quantityType: HKQuantityType(.dietaryProtein),
+                unit: .gram(),
+                strategy: .statisticsDaily,
+                statisticsOption: .cumulativeSum
+            )
+        case .fiberIntake:
+            return MetricConfig(
+                sampleType: HKQuantityType(.dietaryFiber),
+                quantityType: HKQuantityType(.dietaryFiber),
+                unit: .gram(),
+                strategy: .statisticsDaily,
+                statisticsOption: .cumulativeSum
+            )
+        case .sugarIntake:
+            return MetricConfig(
+                sampleType: HKQuantityType(.dietarySugar),
+                quantityType: HKQuantityType(.dietarySugar),
+                unit: .gram(),
+                strategy: .statisticsDaily,
+                statisticsOption: .cumulativeSum
+            )
+        case .sodiumIntake:
+            return MetricConfig(
+                sampleType: HKQuantityType(.dietarySodium),
+                quantityType: HKQuantityType(.dietarySodium),
+                unit: .gramUnit(with: .milli),
+                strategy: .statisticsDaily,
+                statisticsOption: .cumulativeSum
+            )
+        case .totalCaloriesIntake:
+            return MetricConfig(
+                sampleType: HKQuantityType(.dietaryEnergyConsumed),
+                quantityType: HKQuantityType(.dietaryEnergyConsumed),
+                unit: .kilocalorie(),
+                strategy: .statisticsDaily,
+                statisticsOption: .cumulativeSum
+            )
+        case .carbohydrateIntake:
+            return MetricConfig(
+                sampleType: HKQuantityType(.dietaryCarbohydrates),
+                quantityType: HKQuantityType(.dietaryCarbohydrates),
+                unit: .gram(),
+                strategy: .statisticsDaily,
+                statisticsOption: .cumulativeSum
+            )
+        case .fatIntake:
+            return MetricConfig(
+                sampleType: HKQuantityType(.dietaryFatTotal),
+                quantityType: HKQuantityType(.dietaryFatTotal),
+                unit: .gram(),
+                strategy: .statisticsDaily,
+                statisticsOption: .cumulativeSum
+            )
         case .bloodGlucose:
             return MetricConfig(
                 sampleType: HKQuantityType(.bloodGlucose),

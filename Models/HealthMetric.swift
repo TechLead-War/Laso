@@ -68,6 +68,14 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
 
     // MARK: - Nutrition
     case waterIntake
+    case caffeineIntake
+    case proteinIntake
+    case fiberIntake
+    case sugarIntake
+    case sodiumIntake
+    case totalCaloriesIntake
+    case carbohydrateIntake
+    case fatIntake
 
     // MARK: - Metabolic
     case bloodGlucose
@@ -126,6 +134,14 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .stairDescentSpeed: return "Stair Descent Speed"
         case .sixMinuteWalkTestDistance: return "6-Min Walk Distance"
         case .waterIntake: return "Water Intake"
+        case .caffeineIntake: return "Caffeine"
+        case .proteinIntake: return "Protein"
+        case .fiberIntake: return "Fiber"
+        case .sugarIntake: return "Sugar"
+        case .sodiumIntake: return "Sodium"
+        case .totalCaloriesIntake: return "Calories (Diet)"
+        case .carbohydrateIntake: return "Carbs"
+        case .fatIntake: return "Fat"
         case .bloodGlucose: return "Blood Glucose"
         case .workoutCount: return "Workout Count"
         case .workoutDuration: return "Workout Duration"
@@ -171,6 +187,14 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .stairAscentSpeed, .stairDescentSpeed: return "m/s"
         case .sixMinuteWalkTestDistance: return "m"
         case .waterIntake: return "mL"
+        case .caffeineIntake: return "mg"
+        case .proteinIntake: return "g"
+        case .fiberIntake: return "g"
+        case .sugarIntake: return "g"
+        case .sodiumIntake: return "mg"
+        case .totalCaloriesIntake: return "kcal"
+        case .carbohydrateIntake: return "g"
+        case .fatIntake: return "g"
         case .bloodGlucose: return "mg/dL"
         case .workoutCount: return ""
         case .workoutDuration: return "min"
@@ -192,8 +216,12 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .weight, .bmi, .bodyFatPercentage, .bloodPressureSystolic,
              .bloodPressureDiastolic, .bodyTemperature,
              .appleSleepingWristTemperature, .leanBodyMass, .waistCircumference,
-             .waterIntake, .bloodGlucose:
+             .bloodGlucose:
             return .body
+        case .waterIntake, .caffeineIntake, .proteinIntake, .fiberIntake,
+             .sugarIntake, .sodiumIntake, .totalCaloriesIntake,
+             .carbohydrateIntake, .fatIntake:
+            return .nutrition
         case .vo2Max, .bloodOxygen, .respiratoryRate,
              .peakExpiratoryFlowRate, .forcedVitalCapacity:
             return .respiratory
@@ -218,7 +246,8 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
              .distanceCycling, .distanceSwimming, .swimmingStrokeCount, .appleMoveTime,
              .leanBodyMass, .peakExpiratoryFlowRate, .forcedVitalCapacity,
              .mindfulMinutes, .timeInDaylight, .waterIntake,
-             .stairAscentSpeed, .stairDescentSpeed, .sixMinuteWalkTestDistance:
+             .stairAscentSpeed, .stairDescentSpeed, .sixMinuteWalkTestDistance,
+             .proteinIntake, .fiberIntake:
             return true
         case .heartRate, .restingHeartRate, .walkingHeartRateAverage,
              .sleepAwake, .walkingAsymmetry, .bmi, .bodyFatPercentage,
@@ -227,7 +256,9 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
              .atrialFibrillationBurden, .walkingDoubleSupportPercentage,
              .electrodermalActivity, .peripheralPerfusionIndex,
              .appleSleepingWristTemperature, .waistCircumference,
-             .bloodGlucose:
+             .bloodGlucose,
+             .sugarIntake, .sodiumIntake, .caffeineIntake,
+             .totalCaloriesIntake, .carbohydrateIntake, .fatIntake:
             return false
         case .weight:
             return false // context-dependent, default to false
@@ -237,10 +268,12 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
     /// Formats a value according to this metric's natural precision
     func formatValue(_ value: Double) -> String {
         switch self {
-        case .steps, .activeCalories, .basalCalories, .flightsClimbed, .waterIntake:
+        case .steps, .activeCalories, .basalCalories, .flightsClimbed, .waterIntake,
+             .caffeineIntake, .sodiumIntake, .totalCaloriesIntake:
             return String(format: "%.0f", value)
         case .heartRate, .restingHeartRate, .walkingHeartRateAverage, .heartRateRecovery,
-             .bloodPressureSystolic, .bloodPressureDiastolic, .bloodGlucose:
+             .bloodPressureSystolic, .bloodPressureDiastolic, .bloodGlucose,
+             .proteinIntake, .fiberIntake, .sugarIntake, .carbohydrateIntake, .fatIntake:
             return String(format: "%.0f", value)
         default:
             return String(format: "%.1f", value)
@@ -286,6 +319,14 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .stairDescentSpeed: return "figure.stairs"
         case .sixMinuteWalkTestDistance: return "figure.walk.diamond.fill"
         case .waterIntake: return "drop.fill"
+        case .caffeineIntake: return "cup.and.saucer.fill"
+        case .proteinIntake: return "fork.knife"
+        case .fiberIntake: return "leaf.fill"
+        case .sugarIntake: return "cube.fill"
+        case .sodiumIntake: return "drop.triangle.fill"
+        case .totalCaloriesIntake: return "flame.fill"
+        case .carbohydrateIntake: return "chart.pie.fill"
+        case .fatIntake: return "drop.halffull"
         case .bloodGlucose: return "drop.fill"
         case .workoutCount, .workoutDuration: return "dumbbell.fill"
         }

@@ -48,6 +48,54 @@ final class StoredAnalysisSnapshot {
     }
 }
 
+/// Tracks a recommendation shown to the user and its outcome
+@Model
+final class StoredRecommendation {
+    @Attribute(.unique) var insightId: String
+    var metricRawValue: String
+    var recommendation: String
+    var severityRawValue: String
+    var categoryRawValue: String
+    var baselineValue: Double
+    var shownDate: Date
+    var tappedDate: Date?
+    var evaluated24h: Bool = false
+    var evaluated7d: Bool = false
+    var lift24h: Double?
+    var lift7d: Double?
+    var outcomeRawValue: String?
+
+    init(insightId: String, metricRawValue: String, recommendation: String, severityRawValue: String, categoryRawValue: String, baselineValue: Double, shownDate: Date) {
+        self.insightId = insightId
+        self.metricRawValue = metricRawValue
+        self.recommendation = recommendation
+        self.severityRawValue = severityRawValue
+        self.categoryRawValue = categoryRawValue
+        self.baselineValue = baselineValue
+        self.shownDate = shownDate
+    }
+}
+
+/// Tracks notification send/open events for optimizer feedback loop
+@Model
+final class StoredNotificationEvent {
+    @Attribute(.unique) var notificationId: String
+    var typeRawValue: String
+    var sentDate: Date
+    var openedDate: Date?
+    var actionTaken: Bool = false
+    var hourSent: Int
+    var dayOfWeek: Int
+
+    init(notificationId: String, typeRawValue: String, sentDate: Date, hourSent: Int, dayOfWeek: Int) {
+        self.notificationId = notificationId
+        self.typeRawValue = typeRawValue
+        self.sentDate = sentDate
+        self.hourSent = hourSent
+        self.dayOfWeek = dayOfWeek
+    }
+}
+
 /// Persists learned ML model parameters for on-device ML components
 @Model
 final class StoredMLModelState {
@@ -432,5 +480,153 @@ final class HealthDataStore {
     var metricsWithData: Int {
         let descriptor = FetchDescriptor<StoredSyncMetadata>()
         return (try? modelContext?.fetchCount(descriptor)) ?? 0
+    }
+
+    // MARK: - Recommendations
+
+    /// Save a recommendation when an insight is shown to the user (upsert by insightId)
+    func saveRecommendation(_ insight: Insight) {
+        let idString = insight.id.uuidString
+        let predicate = #Predicate<StoredRecommendation> { $0.insightId == idString }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        guard (try? modelContext?.fetch(descriptor))?.isEmpty ?? true else { return }
+
+        modelContext?.insert(StoredRecommendation(
+            insightId: idString,
+            metricRawValue: insight.metric.rawValue,
+            recommendation: String(insight.actionSummary.prefix(500)),
+            severityRawValue: insight.severity.rawValue,
+            categoryRawValue: insight.category.rawValue,
+            baselineValue: insight.baselineValue,
+            shownDate: Date()
+        ))
+        try? modelContext?.save()
+    }
+
+    /// Record that the user tapped on an insight recommendation
+    func recordRecommendationTapped(insightId: UUID) {
+        let idString = insightId.uuidString
+        let predicate = #Predicate<StoredRecommendation> { $0.insightId == idString }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        guard let rec = try? modelContext?.fetch(descriptor).first else { return }
+        rec.tappedDate = Date()
+        try? modelContext?.save()
+    }
+
+    /// Load recommendations that still need 24h or 7d evaluation
+    func loadPendingRecommendations() -> [StoredRecommendation] {
+        let predicate = #Predicate<StoredRecommendation> { !$0.evaluated24h || !$0.evaluated7d }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        return (try? modelContext?.fetch(descriptor)) ?? []
+    }
+
+    /// Load evaluated recommendations within a date range
+    func loadEvaluatedRecommendations(days: Int) -> [StoredRecommendation] {
+        let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let predicate = #Predicate<StoredRecommendation> { $0.shownDate >= cutoff && $0.evaluated7d }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        return (try? modelContext?.fetch(descriptor)) ?? []
+    }
+
+    /// Delete recommendations older than 60 days
+    func pruneOldRecommendations() {
+        let cutoff = Calendar.current.date(byAdding: .day, value: -60, to: Date()) ?? Date()
+        let predicate = #Predicate<StoredRecommendation> { $0.shownDate < cutoff }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        guard let old = try? modelContext?.fetch(descriptor) else { return }
+        for rec in old { modelContext?.delete(rec) }
+        try? modelContext?.save()
+    }
+
+    // MARK: - Notification Events
+
+    /// Record that a notification was sent
+    func recordNotificationSent(id: String, type: String) {
+        let now = Date()
+        let cal = Calendar.current
+        modelContext?.insert(StoredNotificationEvent(
+            notificationId: id,
+            typeRawValue: type,
+            sentDate: now,
+            hourSent: cal.component(.hour, from: now),
+            dayOfWeek: cal.component(.weekday, from: now)
+        ))
+        try? modelContext?.save()
+    }
+
+    /// Record that a notification was opened by the user
+    func recordNotificationOpened(id: String) {
+        let predicate = #Predicate<StoredNotificationEvent> { $0.notificationId == id }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        guard let event = try? modelContext?.fetch(descriptor).first else { return }
+        event.openedDate = Date()
+        event.actionTaken = true
+        try? modelContext?.save()
+    }
+
+    /// Load notification events from the last N days
+    func loadNotificationEvents(days: Int) -> [StoredNotificationEvent] {
+        let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let predicate = #Predicate<StoredNotificationEvent> { $0.sentDate >= cutoff }
+        let descriptor = FetchDescriptor(predicate: predicate, sortBy: [SortDescriptor(\.sentDate)])
+        return (try? modelContext?.fetch(descriptor)) ?? []
+    }
+
+    /// Delete notification events older than 90 days
+    func pruneOldNotificationEvents() {
+        let cutoff = Calendar.current.date(byAdding: .day, value: -90, to: Date()) ?? Date()
+        let predicate = #Predicate<StoredNotificationEvent> { $0.sentDate < cutoff }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        guard let old = try? modelContext?.fetch(descriptor) else { return }
+        for event in old { modelContext?.delete(event) }
+        try? modelContext?.save()
+    }
+
+    // MARK: - Adherence Records
+
+    /// Save new adherence records
+    func saveAdherenceRecords(_ records: [StoredAdherenceRecord]) {
+        guard let ctx = modelContext else { return }
+        for record in records { ctx.insert(record) }
+        try? ctx.save()
+    }
+
+    /// Load pending (unevaluated) adherence records
+    func loadPendingAdherenceRecords() -> [StoredAdherenceRecord] {
+        let descriptor = FetchDescriptor<StoredAdherenceRecord>(
+            sortBy: [SortDescriptor(\.givenDate, order: .reverse)]
+        )
+        let all = (try? modelContext?.fetch(descriptor)) ?? []
+        return all.filter { !$0.isEvaluated }
+    }
+
+    /// Load evaluated adherence records
+    func loadEvaluatedAdherenceRecords() -> [StoredAdherenceRecord] {
+        let descriptor = FetchDescriptor<StoredAdherenceRecord>(
+            sortBy: [SortDescriptor(\.givenDate, order: .reverse)]
+        )
+        let all = (try? modelContext?.fetch(descriptor)) ?? []
+        return all.filter { $0.isEvaluated }
+    }
+
+    /// Save updated adherence records (after outcome measurement)
+    func updateAdherenceOutcomes() {
+        try? modelContext?.save()
+    }
+
+    // MARK: - ECG Features
+
+    /// Save ECG feature extraction results
+    func saveECGFeatures(_ features: StoredECGFeatures) {
+        modelContext?.insert(features)
+        try? modelContext?.save()
+    }
+
+    /// Load all stored ECG features sorted by date
+    func loadECGFeatures() -> [StoredECGFeatures] {
+        let descriptor = FetchDescriptor<StoredECGFeatures>(
+            sortBy: [SortDescriptor(\.ecgDate, order: .reverse)]
+        )
+        return (try? modelContext?.fetch(descriptor)) ?? []
     }
 }

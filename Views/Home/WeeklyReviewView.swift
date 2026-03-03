@@ -41,6 +41,12 @@ struct WeeklyReviewEntryCard: View {
                                         .foregroundStyle(.secondary)
                                 }
                             }
+
+                            if let coachPlan = review.coachPlan {
+                                Text("Coach target: \(formatSteps(coachPlan.currentDailyStepTarget))/day")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
 
                         Spacer()
@@ -63,6 +69,10 @@ struct WeeklyReviewEntryCard: View {
             viewModel.load()
         }
     }
+
+    private func formatSteps(_ value: Int) -> String {
+        NumberFormatter.localizedString(from: NSNumber(value: value), number: .decimal)
+    }
 }
 
 // MARK: - Full Weekly Review Screen
@@ -70,13 +80,27 @@ struct WeeklyReviewEntryCard: View {
 struct WeeklyReviewView: View {
     let viewModel: WeeklyReviewViewModel
 
+    // Section trackers
+    @State private var scoreTracker = SectionTracker(section: .weeklyReviewScore, tab: .weeklyReview)
+    @State private var winsTracker = SectionTracker(section: .weeklyReviewWins, tab: .weeklyReview)
+    @State private var watchOutTracker = SectionTracker(section: .weeklyReviewWatchOut, tab: .weeklyReview)
+
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
                 if let review = viewModel.review {
                     scoreSection(review)
+                        .onAppear { scoreTracker.appeared() }
+                        .onDisappear { scoreTracker.disappeared() }
+                    if let coachPlan = review.coachPlan {
+                        progressiveCoachSection(coachPlan)
+                    }
                     winsSection(review)
+                        .onAppear { winsTracker.appeared() }
+                        .onDisappear { winsTracker.disappeared() }
                     watchOutSection(review)
+                        .onAppear { watchOutTracker.appeared() }
+                        .onDisappear { watchOutTracker.disappeared() }
                 } else if viewModel.isLoading {
                     ProgressView()
                         .padding(.top, 40)
@@ -257,6 +281,96 @@ struct WeeklyReviewView: View {
             }
         }
         .padding(.vertical, 4)
+    }
+
+    // MARK: - Progressive Coach
+
+    private func progressiveCoachSection(_ plan: ProgressiveCoachPlan) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Progressive Coach", systemImage: "figure.walk.motion")
+                .font(.headline)
+                .foregroundStyle(.blue)
+                .padding(.horizontal)
+
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("Current target")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text("\(formatSteps(plan.currentDailyStepTarget))/day")
+                        .font(.subheadline.weight(.semibold).monospacedDigit())
+                }
+
+                HStack {
+                    Text("Current average")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text("\(formatSteps(plan.currentAverageDailySteps))/day")
+                        .font(.subheadline.weight(.semibold).monospacedDigit())
+                }
+
+                HStack {
+                    Text("Status")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(plan.adherence.displayName)
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(adherenceColor(for: plan.adherence))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(adherenceColor(for: plan.adherence).opacity(0.12), in: Capsule())
+                }
+
+                Divider()
+
+                HStack {
+                    Text("Next week target")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text("\(formatSteps(plan.nextDailyStepTarget))/day")
+                        .font(.subheadline.weight(.semibold).monospacedDigit())
+                    let deltaText = deltaLabel(plan.weeklyDelta)
+                    if !deltaText.isEmpty {
+                        Text(deltaText)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(plan.weeklyDelta >= 0 ? .green : .orange)
+                    }
+                }
+
+                Text(plan.coachingMessage)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding()
+            .background(.background, in: RoundedRectangle(cornerRadius: 14))
+            .padding(.horizontal)
+        }
+        .padding(.vertical, 16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.background, in: RoundedRectangle(cornerRadius: 16))
+        .padding(.horizontal)
+    }
+
+    private func adherenceColor(for status: CoachAdherenceStatus) -> Color {
+        switch status {
+        case .keepingUp: return .green
+        case .plateauing: return .orange
+        case .struggling: return .red
+        }
+    }
+
+    private func deltaLabel(_ delta: Int) -> String {
+        guard delta != 0 else { return "" }
+        let sign = delta > 0 ? "+" : "-"
+        return "(\(sign)\(formatSteps(abs(delta))))"
+    }
+
+    private func formatSteps(_ value: Int) -> String {
+        NumberFormatter.localizedString(from: NSNumber(value: value), number: .decimal)
     }
 }
 

@@ -92,8 +92,13 @@ struct AlertEvaluator {
                     sendCriticalAlert(anomaly: anomaly, maxPerDay: maxPerDay)
                 }
             case .warning:
-                if preferences.warningAlertsEnabled,
-                   preferences.warningAlertMetrics.contains(anomaly.metric) {
+                let triage = triageAssessment(for: anomaly)
+                let isEscalatedSafetyCase = triage.level == .seekCare
+                if isEscalatedSafetyCase,
+                   (preferences.criticalAlertsEnabled || preferences.warningAlertsEnabled) {
+                    sendWarningAlert(anomaly: anomaly, maxPerDay: maxPerDay)
+                } else if preferences.warningAlertsEnabled,
+                          preferences.warningAlertMetrics.contains(anomaly.metric) {
                     sendWarningAlert(anomaly: anomaly, maxPerDay: maxPerDay)
                 }
             case .info:
@@ -114,8 +119,21 @@ struct AlertEvaluator {
         if let rhrSeries = timeSeries[.restingHeartRate],
            let latestRHR = rhrSeries.latestValue {
             let avg7d = rhrSeries.mean(lastDays: 7)
-            // Alert if RHR suddenly jumped 15%+ above 7-day average
-            if avg7d > 0 && latestRHR > avg7d * RemoteConfigManager.shared.heartRateSpikeMultiplier {
+            let triage = SafetyTriageEngine.assess(
+                metric: .restingHeartRate,
+                currentValue: latestRHR,
+                baselineValue: avg7d > 0 ? avg7d : nil
+            )
+
+            if triage.level != .normal {
+                sendSafetyTriageAlert(
+                    assessment: triage,
+                    identifier: "healthpulse.triage.restingHeartRate.\(triage.level.rawValue)",
+                    maxPerDay: maxPerDay,
+                    useHeartCap: true
+                )
+            } else if avg7d > 0 && latestRHR > avg7d * RemoteConfigManager.shared.heartRateSpikeMultiplier {
+                // Fallback for milder spikes that do not cross triage thresholds.
                 sendHeartRateAlert(
                     title: "Resting Heart Rate Elevated",
                     body: "Your resting heart rate (\(Int(latestRHR)) bpm) is significantly above your recent average (\(Int(avg7d)) bpm). Consider rest or consult your doctor if persistent.",
@@ -130,15 +148,28 @@ struct AlertEvaluator {
            let latestHR = hrSeries.latestValue {
             // Threshold spikes require sub-daily granularity; skip if only daily aggregates exist.
             if hasSubdailyResolution(hrSeries) {
-                if latestHR >= spikeThreshold {
+                let avg7d = hrSeries.mean(lastDays: 7)
+                let triage = SafetyTriageEngine.assess(
+                    metric: .heartRate,
+                    currentValue: latestHR,
+                    baselineValue: avg7d > 0 ? avg7d : nil
+                )
+
+                if triage.level != .normal {
+                    sendSafetyTriageAlert(
+                        assessment: triage,
+                        identifier: "healthpulse.triage.heartRate.\(triage.level.rawValue)",
+                        maxPerDay: maxPerDay,
+                        useHeartCap: true
+                    )
+                } else if latestHR >= spikeThreshold {
                     sendHeartRateAlert(
                         title: "High Heart Rate Detected",
                         body: "Your heart rate reached \(Int(latestHR)) bpm (threshold: \(Int(spikeThreshold)) bpm). If you weren't exercising, consider medical attention.",
                         identifier: "healthpulse.spike.hr.high",
                         maxPerDay: maxPerDay
                     )
-                }
-                if latestHR <= dropThreshold {
+                } else if latestHR <= dropThreshold {
                     sendHeartRateAlert(
                         title: "Low Heart Rate Detected",
                         body: "Your heart rate dropped to \(Int(latestHR)) bpm (threshold: \(Int(dropThreshold)) bpm). Seek medical attention if you feel dizzy or faint.",
@@ -167,7 +198,21 @@ struct AlertEvaluator {
         // Check blood oxygen for dangerous drops
         if let spo2Series = timeSeries[.bloodOxygen],
            let latestSpO2 = spo2Series.latestValue {
-            if latestSpO2 < RemoteConfigManager.shared.spo2CriticalThreshold {
+            let avg7d = spo2Series.mean(lastDays: 7)
+            let triage = SafetyTriageEngine.assess(
+                metric: .bloodOxygen,
+                currentValue: latestSpO2,
+                baselineValue: avg7d > 0 ? avg7d : nil
+            )
+
+            if triage.level != .normal {
+                sendSafetyTriageAlert(
+                    assessment: triage,
+                    identifier: "healthpulse.triage.bloodOxygen.\(triage.level.rawValue)",
+                    maxPerDay: maxPerDay,
+                    useHeartCap: true
+                )
+            } else if latestSpO2 < RemoteConfigManager.shared.spo2CriticalThreshold {
                 sendHeartRateAlert(
                     title: "Blood Oxygen Critically Low",
                     body: "Your blood oxygen is \(String(format: "%.1f", latestSpO2))%. Values below 92% may require immediate medical attention.",
@@ -188,7 +233,20 @@ struct AlertEvaluator {
         if let rrSeries = timeSeries[.respiratoryRate],
            let latestRR = rrSeries.latestValue {
             let avg7d = rrSeries.mean(lastDays: 7)
-            if avg7d > 0 && latestRR > avg7d * RemoteConfigManager.shared.respiratoryRateSpikeMultiplier {
+            let triage = SafetyTriageEngine.assess(
+                metric: .respiratoryRate,
+                currentValue: latestRR,
+                baselineValue: avg7d > 0 ? avg7d : nil
+            )
+
+            if triage.level != .normal {
+                sendSafetyTriageAlert(
+                    assessment: triage,
+                    identifier: "healthpulse.triage.respiratoryRate.\(triage.level.rawValue)",
+                    maxPerDay: maxPerDay,
+                    useHeartCap: true
+                )
+            } else if avg7d > 0 && latestRR > avg7d * RemoteConfigManager.shared.respiratoryRateSpikeMultiplier {
                 sendHeartRateAlert(
                     title: "Respiratory Rate Elevated",
                     body: "Your respiratory rate (\(String(format: "%.1f", latestRR)) br/min) is elevated compared to your average (\(String(format: "%.1f", avg7d)) br/min).",
@@ -253,29 +311,81 @@ struct AlertEvaluator {
     // MARK: - Alert Senders
 
     private static func sendCriticalAlert(anomaly: AnomalyDetector.AnomalyResult, maxPerDay: Int) {
-        let identifier = "healthpulse.alert.\(anomaly.metric.rawValue).critical"
-        guard !isOnCooldown(identifier: identifier) else { return }
+        let triage = triageAssessment(for: anomaly)
+        if triage.level != .normal {
+            sendSafetyTriageAlert(
+                assessment: triage,
+                identifier: "healthpulse.triage.\(anomaly.metric.rawValue).\(triage.level.rawValue)",
+                maxPerDay: maxPerDay
+            )
+            return
+        }
 
-        let title = "Critical: \(anomaly.metric.displayName)"
         let direction = anomaly.isAboveBaseline ? "above" : "below"
         let body = "Your \(anomaly.metric.displayName.lowercased()) is \(String(format: "%.0f", abs(anomaly.deviationPercent)))% \(direction) your baseline. Current: \(String(format: "%.1f", anomaly.currentValue)) \(anomaly.metric.unit)"
-
-        NotificationManager.shared.scheduleNotification(
-            title: title,
+        sendAlert(
+            title: "Critical: \(anomaly.metric.displayName)",
             body: body,
-            identifier: identifier,
+            identifier: "healthpulse.alert.\(anomaly.metric.rawValue).critical",
             maxPerDay: maxPerDay
         )
-        recordAlert(identifier: identifier)
     }
 
     private static func sendWarningAlert(anomaly: AnomalyDetector.AnomalyResult, maxPerDay: Int) {
-        let identifier = "healthpulse.alert.\(anomaly.metric.rawValue).warning"
-        guard !isOnCooldown(identifier: identifier) else { return }
+        let triage = triageAssessment(for: anomaly)
+        if triage.level != .normal {
+            sendSafetyTriageAlert(
+                assessment: triage,
+                identifier: "healthpulse.triage.\(anomaly.metric.rawValue).\(triage.level.rawValue)",
+                maxPerDay: maxPerDay
+            )
+            return
+        }
 
-        let title = "Warning: \(anomaly.metric.displayName)"
         let direction = anomaly.isAboveBaseline ? "above" : "below"
         let body = "Your \(anomaly.metric.displayName.lowercased()) is \(String(format: "%.0f", abs(anomaly.deviationPercent)))% \(direction) your baseline."
+        sendAlert(
+            title: "Warning: \(anomaly.metric.displayName)",
+            body: body,
+            identifier: "healthpulse.alert.\(anomaly.metric.rawValue).warning",
+            maxPerDay: maxPerDay
+        )
+    }
+
+    private static func sendSafetyTriageAlert(
+        assessment: SafetyTriageAssessment,
+        identifier: String,
+        maxPerDay: Int,
+        useHeartCap: Bool = false
+    ) {
+        guard assessment.level != .normal else { return }
+        if useHeartCap {
+            sendHeartRateAlert(
+                title: assessment.alertTitle,
+                body: assessment.alertBody,
+                identifier: identifier,
+                maxPerDay: maxPerDay
+            )
+        } else {
+            sendAlert(
+                title: assessment.alertTitle,
+                body: assessment.alertBody,
+                identifier: identifier,
+                maxPerDay: maxPerDay
+            )
+        }
+    }
+
+    private static func triageAssessment(for anomaly: AnomalyDetector.AnomalyResult) -> SafetyTriageAssessment {
+        SafetyTriageEngine.assess(
+            metric: anomaly.metric,
+            currentValue: anomaly.currentValue,
+            baselineValue: anomaly.baselineValue
+        )
+    }
+
+    private static func sendAlert(title: String, body: String, identifier: String, maxPerDay: Int) {
+        guard !isOnCooldown(identifier: identifier) else { return }
 
         NotificationManager.shared.scheduleNotification(
             title: title,

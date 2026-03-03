@@ -188,6 +188,23 @@ final class RemoteConfigManager {
         remoteConfig.configValue(forKey: "watch_battery_low_threshold").numberValue.doubleValue
     }
 
+    // MARK: - Notification Optimizer
+
+    /// Maximum non-daily-summary notifications per day
+    var notificationDailyBudget: Int {
+        remoteConfig.configValue(forKey: "notification_daily_budget").numberValue.intValue
+    }
+
+    /// 7-day open rate below which user is considered fatigued
+    var notificationFatigueThreshold: Double {
+        remoteConfig.configValue(forKey: "notification_fatigue_threshold").numberValue.doubleValue
+    }
+
+    /// Minimum priority score for a notification to be sent (except critical)
+    var notificationMinPriorityScore: Int {
+        remoteConfig.configValue(forKey: "notification_min_priority_score").numberValue.intValue
+    }
+
     // MARK: - Analysis Thresholds
 
     /// Warning deviation from baseline (proportion, e.g. 0.10 = 10%)
@@ -257,6 +274,12 @@ extension RemoteConfigManager {
         case liveTab           = "feature_access_liveTab"
         case exportReport      = "feature_access_exportReport"
         case advancedAnalytics = "feature_access_advancedAnalytics"
+        case simulation = "feature_access_simulation"
+        case clinicalIntelligence = "feature_access_clinicalIntelligence"
+        case ecgIntelligence = "feature_access_ecgIntelligence"
+        case nutritionCorrelations = "feature_access_nutritionCorrelations"
+        case circadianAnalysis = "feature_access_circadianAnalysis"
+        case adherenceTracking = "feature_access_adherenceTracking"
     }
 }
 
@@ -281,6 +304,12 @@ extension RemoteConfigManager {
         "feature_access_liveTab":           "pro" as NSString,
         "feature_access_exportReport":      "pro" as NSString,
         "feature_access_advancedAnalytics": "pro" as NSString,
+        "feature_access_simulation": "pro" as NSString,
+        "feature_access_clinicalIntelligence": "pro" as NSString,
+        "feature_access_ecgIntelligence": "pro" as NSString,
+        "feature_access_nutritionCorrelations": "pro" as NSString,
+        "feature_access_circadianAnalysis": "pro" as NSString,
+        "feature_access_adherenceTracking": "pro" as NSString,
 
         // Limits
         "free_metric_detail_limit": 3 as NSNumber,
@@ -316,6 +345,11 @@ extension RemoteConfigManager {
         "watch_not_worn_cooldown_hours":   4 as NSNumber,
         "watch_not_worn_threshold_hours":  1 as NSNumber,
         "watch_battery_low_threshold":     0.10 as NSNumber,
+
+        // Notification optimizer
+        "notification_daily_budget":            3 as NSNumber,
+        "notification_fatigue_threshold":       0.15 as NSNumber,
+        "notification_min_priority_score":      30 as NSNumber,
 
         // Analysis thresholds
         "analysis_warning_deviation":       0.10 as NSNumber,

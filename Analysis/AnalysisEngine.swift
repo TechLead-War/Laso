@@ -54,9 +54,12 @@ final class AnalysisEngine {
     /// - `runCoreAnalysis`: baselines, trends, anomalies, scores (blocks UI)
     /// - `runDeferredEssentials`: lightweight insight generators, health risks, illness warnings
     /// - `runDeferredHeavy`: correlations, historical, cross-metric anomalies, causal chains
-    func runFullAnalysis(timeSeries: [HealthMetric: MetricTimeSeries]) {
+    func runFullAnalysis(
+        timeSeries: [HealthMetric: MetricTimeSeries],
+        cycleFlowSamples: [HealthKitManager.MenstrualFlowSample] = []
+    ) {
         runCoreAnalysis(timeSeries: timeSeries)
-        runDeferredEssentials(timeSeries: timeSeries)
+        runDeferredEssentials(timeSeries: timeSeries, cycleFlowSamples: cycleFlowSamples)
         runDeferredHeavy(timeSeries: timeSeries)
     }
 
@@ -156,7 +159,10 @@ final class AnalysisEngine {
 
     /// Runs lightweight insight generators, health risks, and illness warnings.
     /// These are cheap (~15K operations total) and provide Home tab content quickly.
-    func runDeferredEssentials(timeSeries: [HealthMetric: MetricTimeSeries]) {
+    func runDeferredEssentials(
+        timeSeries: [HealthMetric: MetricTimeSeries],
+        cycleFlowSamples: [HealthKitManager.MenstrualFlowSample] = []
+    ) {
         let coreBaselines = baselines
         let coreTrends = trends
         let coreAnomalies = anomalies
@@ -177,8 +183,17 @@ final class AnalysisEngine {
         allInsights.append(contentsOf: SleepPerformanceAnalyzer.generateInsights(timeSeries: timeSeries))
         allInsights.append(contentsOf: WeeklyPatternAnalyzer.generateInsights(timeSeries: timeSeries))
         allInsights.append(contentsOf: PersonalRecordAnalyzer.generateInsights(timeSeries: timeSeries))
+        allInsights.append(contentsOf: CyclePhaseAnalyzer.generateInsights(
+            timeSeries: timeSeries,
+            menstrualFlowSamples: cycleFlowSamples
+        ))
         allInsights.append(contentsOf: MultiMetricClusterAnalyzer.generateInsights(
             anomalies: coreAnomalies, trends: coreTrends, baselines: coreBaselines
+        ))
+
+        // ── Clinical intelligence (lightweight, single-metric) ──
+        allInsights.append(contentsOf: ClinicalIntelligence.generateInsights(
+            timeSeries: timeSeries, baselines: coreBaselines, trends: coreTrends
         ))
 
         // ── Lightweight secondary analyzers ──
@@ -237,6 +252,10 @@ final class AnalysisEngine {
         ))
         heavyInsights.append(contentsOf: CrossMetricAnomalyDetector.generateInsights(from: newCrossMetricAnomalies))
 
+        // ── Nutrition correlation analysis ──
+        let nutritionCorrelations = NutritionCorrelationAnalyzer.analyze(timeSeries: timeSeries)
+        heavyInsights.append(contentsOf: NutritionCorrelationAnalyzer.generateInsights(from: nutritionCorrelations))
+
         // ── Causal chains (needs correlations) ──
         let newCausalChains = CausalChainEngine.buildChains(
             correlations: newCorrelations, anomalies: coreAnomalies,
@@ -262,8 +281,11 @@ final class AnalysisEngine {
     // MARK: - Legacy Compatibility
 
     /// Old single-method deferred analysis — calls both tiers sequentially.
-    func runDeferredAnalysis(timeSeries: [HealthMetric: MetricTimeSeries]) {
-        runDeferredEssentials(timeSeries: timeSeries)
+    func runDeferredAnalysis(
+        timeSeries: [HealthMetric: MetricTimeSeries],
+        cycleFlowSamples: [HealthKitManager.MenstrualFlowSample] = []
+    ) {
+        runDeferredEssentials(timeSeries: timeSeries, cycleFlowSamples: cycleFlowSamples)
         runDeferredHeavy(timeSeries: timeSeries, force: true)
     }
 

@@ -986,6 +986,47 @@ final class AppAnalytics {
         ])
     }
 
+    // Section analytics
+    func trackSectionViewed(section: AppSection, tab: AppFeature, durationMs: Int) {
+        logEvent("section_viewed", parameters: [
+            "section_id": section.rawValue,
+            "tab": tab.rawValue,
+            "duration_ms": durationMs,
+            "session_id": session.sessionId
+        ])
+    }
+
+    func trackSectionTapped(section: AppSection, tab: AppFeature, target: String) {
+        logEvent("section_tapped", parameters: [
+            "section_id": section.rawValue,
+            "tab": tab.rawValue,
+            "target": target,
+            "session_id": session.sessionId
+        ])
+    }
+
+    // Recommendation outcome
+    func trackRecommendationOutcome(category: String, metric: String, severity: String, lift24h: Double?, lift7d: Double?, wasTapped: Bool, outcome: String) {
+        var params: [String: Any] = [
+            "category": category,
+            "metric": metric,
+            "severity": severity,
+            "was_tapped": wasTapped,
+            "outcome": outcome
+        ]
+        if let lift24h { params["lift_24h"] = lift24h }
+        if let lift7d { params["lift_7d"] = lift7d }
+        logEvent("recommendation_outcome", parameters: params)
+    }
+
+    // Notification opened
+    func trackNotificationOpened(identifier: String) {
+        logEvent("notification_opened", parameters: [
+            "notification_id": identifier,
+            "type": NotificationManager.notificationType(identifier)
+        ])
+    }
+
     // Monetization signals
     func trackPremiumFeatureAttempted(feature: String, screen: AppFeature) {
         logEvent("premium_feature_attempted", parameters: [
@@ -1028,6 +1069,69 @@ final class AppAnalytics {
     func trackAction(_ action: String, metadata: [String: Any] = [:]) {
         let sanitized = sanitizeEventName(action)
         logEvent(sanitized, parameters: metadata)
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 14. Intelligence Suite
+    // ══════════════════════════════════════════════════════════════════════
+
+    func trackSimulationRun(adjustedMetrics: Int, scoreDelta: Int, confidence: Double) {
+        logEvent("simulation_run", parameters: [
+            "adjusted_metrics": adjustedMetrics,
+            "score_delta": scoreDelta,
+            "confidence": String(format: "%.2f", confidence),
+            "screen": AppFeature.explore.rawValue
+        ])
+    }
+
+    func trackROIRecommendationTapped(metric: String, predictedGain: Int, effortLevel: String) {
+        logEvent("roi_recommendation_tapped", parameters: [
+            "metric": metric,
+            "predicted_gain": predictedGain,
+            "effort_level": effortLevel,
+            "screen": AppFeature.explore.rawValue
+        ])
+    }
+
+    func trackECGAnalysisCompleted(recordingsCount: Int, afibCount: Int, insightsGenerated: Int) {
+        logEvent("ecg_analysis_completed", parameters: [
+            "recordings_count": recordingsCount,
+            "afib_count": afibCount,
+            "insights_generated": insightsGenerated
+        ])
+    }
+
+    func trackNutritionCorrelationDiscovered(nutritionMetric: String, outcomeMetric: String, correlation: Double) {
+        logEvent("nutrition_correlation_discovered", parameters: [
+            "nutrition_metric": nutritionMetric,
+            "outcome_metric": outcomeMetric,
+            "correlation": String(format: "%.2f", correlation)
+        ])
+    }
+
+    func trackClinicalInsightGenerated(metric: String, stage: String, trajectory: String) {
+        logEvent("clinical_insight_generated", parameters: [
+            "metric": metric,
+            "clinical_stage": stage,
+            "trajectory": trajectory
+        ])
+    }
+
+    func trackHealthStateTimelineViewed(currentState: String, daysInState: Int, totalStates: Int) {
+        logEvent("health_state_timeline_viewed", parameters: [
+            "current_state": currentState,
+            "days_in_state": daysInState,
+            "total_states": totalStates,
+            "screen": AppFeature.explore.rawValue
+        ])
+    }
+
+    func trackCircadianAnalysisCompleted(chronotype: String, metricsAnalyzed: Int, confidence: Double) {
+        logEvent("circadian_analysis_completed", parameters: [
+            "chronotype": chronotype,
+            "metrics_analyzed": metricsAnalyzed,
+            "confidence": String(format: "%.2f", confidence)
+        ])
     }
 
     // MARK: - Private Helpers

@@ -144,6 +144,25 @@
 		ML001000000000000000001A /* MLOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = ML001000000000000000000A /* MLOrchestrator.swift */; };
 		CB0010000000000000000001 /* BackupPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0010000000000000000011 /* BackupPayload.swift */; };
 		CB0010000000000000000002 /* CloudBackupManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0010000000000000000012 /* CloudBackupManager.swift */; };
+		STK0020000000000000000B /* SectionTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = STK0020000000000000000F /* SectionTracker.swift */; };
+		REV0020000000000000000B /* RecommendationEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = REV0020000000000000000F /* RecommendationEvaluator.swift */; };
+		NTO0020000000000000000B /* NotificationOptimizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = NTO0020000000000000000F /* NotificationOptimizer.swift */; };
+		MIS0020000000000000001B /* HealthStateTimelineViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = MIS0020000000000000001F /* HealthStateTimelineViewModel.swift */; };
+		MIS0020000000000000002B /* SimulationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = MIS0020000000000000002F /* SimulationViewModel.swift */; };
+		MIS0020000000000000003B /* ClinicalIntelligence.swift in Sources */ = {isa = PBXBuildFile; fileRef = MIS0020000000000000003F /* ClinicalIntelligence.swift */; };
+		MIS0020000000000000004B /* NutritionCorrelationAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = MIS0020000000000000004F /* NutritionCorrelationAnalyzer.swift */; };
+		MIS0020000000000000005B /* AdherenceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = MIS0020000000000000005F /* AdherenceTracker.swift */; };
+		MIS0020000000000000006B /* SimulationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = MIS0020000000000000006F /* SimulationEngine.swift */; };
+		MIS0020000000000000007B /* SimulationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = MIS0020000000000000007F /* SimulationTypes.swift */; };
+		MIS0020000000000000008B /* ROIRanker.swift in Sources */ = {isa = PBXBuildFile; fileRef = MIS0020000000000000008F /* ROIRanker.swift */; };
+		MIS0020000000000000009B /* AdherenceRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = MIS0020000000000000009F /* AdherenceRecord.swift */; };
+		MIS002000000000000000AB /* SimulationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MIS002000000000000000AF /* SimulationView.swift */; };
+		MIS002000000000000000BB /* HealthStateTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MIS002000000000000000BF /* HealthStateTimelineView.swift */; };
+		CIR0020000000000000000B /* CircadianAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CIR0020000000000000000F /* CircadianAnalyzer.swift */; };
+		ECG0020000000000000001B /* StoredECGFeatures.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECG0020000000000000001F /* StoredECGFeatures.swift */; };
+		ECG0020000000000000002B /* ECGDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECG0020000000000000002F /* ECGDataManager.swift */; };
+		ECG0020000000000000003B /* ECGFeatureExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECG0020000000000000003F /* ECGFeatureExtractor.swift */; };
+		ECG0020000000000000004B /* ECGIntelligence.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECG0020000000000000004F /* ECGIntelligence.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -286,6 +305,25 @@
 		ML0010000000000000000008 /* HealthStateClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthStateClassifier.swift; sourceTree = "<group>"; };
 		ML0010000000000000000009 /* PredictiveScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictiveScorer.swift; sourceTree = "<group>"; };
 		ML001000000000000000000A /* MLOrchestrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLOrchestrator.swift; sourceTree = "<group>"; };
+		STK0020000000000000000F /* SectionTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionTracker.swift; sourceTree = "<group>"; };
+		REV0020000000000000000F /* RecommendationEvaluator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationEvaluator.swift; sourceTree = "<group>"; };
+		NTO0020000000000000000F /* NotificationOptimizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationOptimizer.swift; sourceTree = "<group>"; };
+		MIS0020000000000000001F /* HealthStateTimelineViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthStateTimelineViewModel.swift; sourceTree = "<group>"; };
+		MIS0020000000000000002F /* SimulationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulationViewModel.swift; sourceTree = "<group>"; };
+		MIS0020000000000000003F /* ClinicalIntelligence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClinicalIntelligence.swift; sourceTree = "<group>"; };
+		MIS0020000000000000004F /* NutritionCorrelationAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionCorrelationAnalyzer.swift; sourceTree = "<group>"; };
+		MIS0020000000000000005F /* AdherenceTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherenceTracker.swift; sourceTree = "<group>"; };
+		MIS0020000000000000006F /* SimulationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulationEngine.swift; sourceTree = "<group>"; };
+		MIS0020000000000000007F /* SimulationTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulationTypes.swift; sourceTree = "<group>"; };
+		MIS0020000000000000008F /* ROIRanker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ROIRanker.swift; sourceTree = "<group>"; };
+		MIS0020000000000000009F /* AdherenceRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherenceRecord.swift; sourceTree = "<group>"; };
+		MIS002000000000000000AF /* SimulationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulationView.swift; sourceTree = "<group>"; };
+		MIS002000000000000000BF /* HealthStateTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthStateTimelineView.swift; sourceTree = "<group>"; };
+		CIR0020000000000000000F /* CircadianAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircadianAnalyzer.swift; sourceTree = "<group>"; };
+		ECG0020000000000000001F /* StoredECGFeatures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredECGFeatures.swift; sourceTree = "<group>"; };
+		ECG0020000000000000002F /* ECGDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ECGDataManager.swift; sourceTree = "<group>"; };
+		ECG0020000000000000003F /* ECGFeatureExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ECGFeatureExtractor.swift; sourceTree = "<group>"; };
+		ECG0020000000000000004F /* ECGIntelligence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ECGIntelligence.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -338,6 +376,14 @@
 				CMA00100000000000000001 /* CrossMetricAnomalyDetector.swift */,
 				CCE00100000000000000001 /* CausalChainEngine.swift */,
 				CEA00100000000000000001 /* CognitiveEnergyAnalyzer.swift */,
+				REV0020000000000000000F /* RecommendationEvaluator.swift */,
+				MIS0020000000000000003F /* ClinicalIntelligence.swift */,
+				MIS0020000000000000004F /* NutritionCorrelationAnalyzer.swift */,
+				MIS0020000000000000006F /* SimulationEngine.swift */,
+				MIS0020000000000000007F /* SimulationTypes.swift */,
+				MIS0020000000000000008F /* ROIRanker.swift */,
+				ECG0020000000000000003F /* ECGFeatureExtractor.swift */,
+				ECG0020000000000000004F /* ECGIntelligence.swift */,
 			);
 			path = Analysis;
 			sourceTree = "<group>";
@@ -355,6 +401,8 @@
 				ML0010000000000000000006 /* PatternMiner.swift */,
 				ML0010000000000000000009 /* PredictiveScorer.swift */,
 				ML0010000000000000000004 /* TimeSeriesForecaster.swift */,
+				MIS0020000000000000005F /* AdherenceTracker.swift */,
+				CIR0020000000000000000F /* CircadianAnalyzer.swift */,
 			);
 			path = ML;
 			sourceTree = "<group>";
@@ -439,6 +487,8 @@
 				D74888150504AB62B6BC174C /* TrendDirection.swift */,
 				A38F981323AA745B14093958 /* UserBaseline.swift */,
 				D2C1B0A9081706F5E4D3C2A1 /* WeeklyChallenge.swift */,
+				MIS0020000000000000009F /* AdherenceRecord.swift */,
+				ECG0020000000000000001F /* StoredECGFeatures.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -495,6 +545,8 @@
 				3AF1DCD9930E05D8F0824B5F /* Risk */,
 				592D623307DC64EB165C46E2 /* Settings */,
 				A1B2C3D4E5F6071812345007 /* Subscription */,
+				SIM0020000000000000000G /* Simulation */,
+				HSV0020000000000000000G /* HealthState */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -577,6 +629,22 @@
 			path = Subscription;
 			sourceTree = "<group>";
 		};
+		SIM0020000000000000000G /* Simulation */ = {
+			isa = PBXGroup;
+			children = (
+				MIS002000000000000000AF /* SimulationView.swift */,
+			);
+			path = Simulation;
+			sourceTree = "<group>";
+		};
+		HSV0020000000000000000G /* HealthState */ = {
+			isa = PBXGroup;
+			children = (
+				MIS002000000000000000BF /* HealthStateTimelineView.swift */,
+			);
+			path = HealthState;
+			sourceTree = "<group>";
+		};
 		A1CB447EE663113B316BE5A6 /* WebExport */ = {
 			isa = PBXGroup;
 			children = (
@@ -597,6 +665,8 @@
 				AE979866642C58D7CC1E2D20 /* MetricDetailViewModel.swift */,
 				E3D2C1B0A918270F5E4D3C2B /* WeeklyReviewViewModel.swift */,
 				F5BC756F69A9FE2C7DE1C298 /* WebExportViewModel.swift */,
+				MIS0020000000000000001F /* HealthStateTimelineViewModel.swift */,
+				MIS0020000000000000002F /* SimulationViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -629,6 +699,7 @@
 			children = (
 				629618CFCAA39621B43158A8 /* AppAnalytics.swift */,
 				5BDFE796A4164EAF5B516AEB /* FeedbackPromptManager.swift */,
+				STK0020000000000000000F /* SectionTracker.swift */,
 				090582BC4080434BB854B76C /* SessionTracker.swift */,
 			);
 			path = Tracking;
@@ -702,6 +773,7 @@
 				187345F5C9D8A3E6D1B6FCB8 /* HealthKitQueryBuilder.swift */,
 				1748830A3C5C9B2C4B821B16 /* PersistenceManager.swift */,
 				79D307F2173910B0A37FB5E9 /* SampleDataProvider.swift */,
+				ECG0020000000000000002F /* ECGDataManager.swift */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -713,6 +785,7 @@
 				25AA9F4078B6E2B0ABE0ACC5 /* DailySummaryScheduler.swift */,
 				BB4B38A39ECF9EDAF3EABE37 /* FrequencyCapManager.swift */,
 				796E420E97993725432653BA /* NotificationManager.swift */,
+				NTO0020000000000000000F /* NotificationOptimizer.swift */,
 				B69DBEF9B8C73BB52502BFFC /* WeeklySummaryScheduler.swift */,
 				E1A2B3C4D5E6F7081234ABCD /* WatchMonitor.swift */,
 			);
@@ -938,6 +1011,25 @@
 				ML0010000000000000000016 /* PatternMiner.swift in Sources */,
 				ML0010000000000000000019 /* PredictiveScorer.swift in Sources */,
 				ML0010000000000000000014 /* TimeSeriesForecaster.swift in Sources */,
+				STK0020000000000000000B /* SectionTracker.swift in Sources */,
+				REV0020000000000000000B /* RecommendationEvaluator.swift in Sources */,
+				NTO0020000000000000000B /* NotificationOptimizer.swift in Sources */,
+				MIS0020000000000000001B /* HealthStateTimelineViewModel.swift in Sources */,
+				MIS0020000000000000002B /* SimulationViewModel.swift in Sources */,
+				MIS0020000000000000003B /* ClinicalIntelligence.swift in Sources */,
+				MIS0020000000000000004B /* NutritionCorrelationAnalyzer.swift in Sources */,
+				MIS0020000000000000005B /* AdherenceTracker.swift in Sources */,
+				MIS0020000000000000006B /* SimulationEngine.swift in Sources */,
+				MIS0020000000000000007B /* SimulationTypes.swift in Sources */,
+				MIS0020000000000000008B /* ROIRanker.swift in Sources */,
+				MIS0020000000000000009B /* AdherenceRecord.swift in Sources */,
+				MIS002000000000000000AB /* SimulationView.swift in Sources */,
+				MIS002000000000000000BB /* HealthStateTimelineView.swift in Sources */,
+				CIR0020000000000000000B /* CircadianAnalyzer.swift in Sources */,
+				ECG0020000000000000001B /* StoredECGFeatures.swift in Sources */,
+				ECG0020000000000000002B /* ECGDataManager.swift in Sources */,
+				ECG0020000000000000003B /* ECGFeatureExtractor.swift in Sources */,
+				ECG0020000000000000004B /* ECGIntelligence.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

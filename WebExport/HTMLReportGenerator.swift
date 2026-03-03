@@ -245,6 +245,7 @@ struct HTMLReportGenerator {
         case .respiratory: return "#30b0c7"
         case .mindfulness: return "#32ade6"
         case .mobility: return "#af52de"
+        case .nutrition: return "#4cd964"
         }
     }
 }

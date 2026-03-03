@@ -16,6 +16,15 @@ struct HomeView: View {
     @State private var showScoreGuide = false
     @State private var showRecoveryInfo = false
 
+    // Section trackers
+    @State private var recoveryTracker = SectionTracker(section: .homeRecovery, tab: .home)
+    @State private var illnessTracker = SectionTracker(section: .homeIllness, tab: .home)
+    @State private var bodyInsightsTracker = SectionTracker(section: .homeBodyInsights, tab: .home)
+    @State private var trendsTracker = SectionTracker(section: .homeTrends, tab: .home)
+    @State private var risksTracker = SectionTracker(section: .homeRisks, tab: .home)
+    @State private var weeklyReviewTracker = SectionTracker(section: .homeWeeklyReview, tab: .home)
+    @State private var historicalTracker = SectionTracker(section: .homeHistorical, tab: .home)
+
     var body: some View {
         Group {
             if viewModel.isLoading {
@@ -155,9 +164,13 @@ struct HomeView: View {
                 } else if hasData {
                     // 2. Recovery
                     todaySection
+                        .onAppear { recoveryTracker.appeared() }
+                        .onDisappear { recoveryTracker.disappeared() }
 
                     // 3. Illness Warning (only when active)
                     illnessWarningCard
+                        .onAppear { illnessTracker.appeared() }
+                        .onDisappear { illnessTracker.disappeared() }
 
                     // 4. Today's Briefing — actionable insights only
                     BodyInsightsSection(
@@ -171,12 +184,18 @@ struct HomeView: View {
                             navigationPath.append("insightsDetail")
                         }
                     )
+                    .onAppear { bodyInsightsTracker.appeared() }
+                    .onDisappear { bodyInsightsTracker.disappeared() }
 
                     // 5. Your Trends — improving/stable/declining + top movers
                     todayTrendsSection
+                        .onAppear { trendsTracker.appeared() }
+                        .onDisappear { trendsTracker.disappeared() }
 
                     // 6. Health Risks — moderate+ only
                     todayRisksSection
+                        .onAppear { risksTracker.appeared() }
+                        .onDisappear { risksTracker.disappeared() }
 
                     // 7. Weekly Review
                     WeeklyReviewEntryCard(
@@ -185,9 +204,13 @@ struct HomeView: View {
                         AppAnalytics.shared.trackBlockTap(title: "Weekly Review", type: .weeklyReviewCard, screen: .home)
                         navigationPath.append("weeklyReview")
                     }
+                    .onAppear { weeklyReviewTracker.appeared() }
+                    .onDisappear { weeklyReviewTracker.disappeared() }
 
                     // 8. From Your History / Health Tips
                     historicalOrTipsSection
+                        .onAppear { historicalTracker.appeared() }
+                        .onDisappear { historicalTracker.disappeared() }
 
                     // Last updated footer
                     if let lastRefresh = viewModel.lastRefresh {

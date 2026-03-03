@@ -14,6 +14,8 @@ final class MLOrchestrator {
     let correlationDiscovery = CorrelationDiscovery()
     let stateClassifier = HealthStateClassifier()
     let predictiveScorer = PredictiveScorer()
+    let adherenceTracker = AdherenceTracker()
+    let circadianAnalyzer = CircadianAnalyzer()
 
     // MARK: - State
 
@@ -42,6 +44,33 @@ final class MLOrchestrator {
     // MARK: - Cached Feature Vectors
 
     private var cachedVectors: [DailyFeatureVector] = []
+
+    /// Latest feature vector (for simulation engine)
+    var latestVector: DailyFeatureVector? { cachedVectors.last }
+
+    /// Full state history from classifier (for Health State Timeline)
+    var stateHistory: [(date: Date, label: String)] {
+        stateClassifier.isReady ? stateClassifier.stateHistory : []
+    }
+
+    /// Transition matrix from classifier (for Health State Timeline)
+    var stateTransitionMatrix: [String: [String: Double]] {
+        stateClassifier.isReady ? stateClassifier.transitionMatrix : [:]
+    }
+
+    /// All identified health states from classifier
+    var healthStates: [HealthState] {
+        stateClassifier.isReady ? stateClassifier.states : []
+    }
+
+    /// Circadian profile (chronotype, peak times)
+    var circadianProfile: CircadianAnalyzer.CircadianProfile? { circadianAnalyzer.profile }
+
+    /// Timing recommendations from circadian analysis
+    var timingRecommendations: [CircadianAnalyzer.TimingRecommendation] { circadianAnalyzer.recommendations }
+
+    /// Whether circadian analysis should run
+    var needsCircadianAnalysis: Bool { circadianAnalyzer.needsAnalysis }
 
     // MARK: - Run ML Analysis
 
@@ -190,6 +219,14 @@ final class MLOrchestrator {
         lastFullRetrain = Date()
     }
 
+    // MARK: - Circadian Analysis (separate pipeline, runs weekly)
+
+    /// Run circadian analysis using hourly data. Called separately from the main ML pipeline.
+    func runCircadianAnalysis(hourlyData: [HealthMetric: [[Double]]]) {
+        guard !hourlyData.isEmpty else { return }
+        circadianAnalyzer.analyze(hourlyData: hourlyData)
+    }
+
     // MARK: - Result Collection
 
     private func collectResults(
@@ -308,6 +345,11 @@ final class MLOrchestrator {
                     dataPointCount: cachedVectors.count
                 )
             ))
+        }
+
+        // Circadian insights
+        if circadianAnalyzer.isReady {
+            insights.append(contentsOf: circadianAnalyzer.generateInsights())
         }
 
         // ML correlation insights (novel discoveries not in the hardcoded 35)

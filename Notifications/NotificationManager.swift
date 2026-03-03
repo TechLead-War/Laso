@@ -8,7 +8,21 @@ final class NotificationManager {
     private let center = UNUserNotificationCenter.current()
     private let frequencyCap = FrequencyCapManager()
 
+    /// Data store for notification event tracking (set at app launch)
+    var store: HealthDataStore?
+
     private init() {}
+
+    /// Derive a notification type string from its identifier
+    static func notificationType(_ identifier: String) -> String {
+        if identifier == "healthpulse.dailySummary" { return "daily_summary" }
+        if identifier.hasPrefix("healthpulse.alert.") { return "alert" }
+        if identifier.hasPrefix("healthpulse.trend.") { return "trend_reversal" }
+        if identifier.hasPrefix("healthpulse.improvement.") { return "improvement" }
+        if identifier.hasPrefix("healthpulse.watch.") { return "watch_monitor" }
+        if identifier.hasPrefix("healthpulse.weekly") { return "weekly_summary" }
+        return "other"
+    }
 
     /// Request notification authorization
     @discardableResult
@@ -37,21 +51,44 @@ final class NotificationManager {
         }
     }
 
-    /// Schedule a notification if within frequency cap.
+    /// Schedule a notification if within frequency cap and optimizer budget.
     /// The daily summary (repeating calendar trigger) is the only notification that bypasses the cap.
-    /// All other notifications are hard-capped at 1/day with 4-hour minimum spacing.
+    /// All other notifications are hard-capped and optimized for priority and fatigue.
     func scheduleNotification(
         title: String,
         body: String,
         identifier: String,
         trigger: UNNotificationTrigger? = nil,
-        maxPerDay: Int = 1
+        maxPerDay: Int = 1,
+        severity: Severity = .info,
+        deviationPercent: Double = 0,
+        metricInFocus: Bool = false
     ) {
         let isDailySummary = identifier == "healthpulse.dailySummary"
 
-        // Everything except the daily summary is capped
+        // Everything except the daily summary is capped and optimized
         if !isDailySummary {
-            guard frequencyCap.canSendNotification(maxPerDay: maxPerDay) else {
+            // Priority filtering — skip low-priority unless critical
+            let priority = NotificationOptimizer.priorityScore(
+                severity: severity,
+                deviationPercent: deviationPercent,
+                metricInFocus: metricInFocus
+            )
+            let minPriority = RemoteConfigManager.shared.notificationMinPriorityScore
+            if priority < minPriority && severity != .critical {
+                return
+            }
+
+            // Dynamic budget based on fatigue detection
+            let dynamicBudget: Int
+            if let store {
+                let events = store.loadNotificationEvents(days: 7)
+                dynamicBudget = NotificationOptimizer.dailyBudget(events: events)
+            } else {
+                dynamicBudget = maxPerDay
+            }
+
+            guard frequencyCap.canSendNotification(maxPerDay: dynamicBudget) else {
                 print("Notification frequency cap reached for today — suppressing: \(identifier)")
                 return
             }
@@ -75,6 +112,10 @@ final class NotificationManager {
                 self?.frequencyCap.recordNotification()
             }
         }
+
+        // Record the send event for optimizer tracking
+        let notifType = Self.notificationType(identifier)
+        store?.recordNotificationSent(id: identifier, type: notifType)
     }
 
     /// Cancel a specific notification
