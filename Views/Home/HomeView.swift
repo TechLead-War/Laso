@@ -16,7 +16,7 @@ struct HomeView: View {
     @State private var weeklyReviewViewModel: WeeklyReviewViewModel?
     @State private var showScoreGuide = false
     @State private var showRecoveryInfo = false
-    @State private var showSiriTip = true
+    @AppStorage(AppKeys.Dismissals.siriTip) private var siriTipDismissed = false
 
     // Section trackers
     @State private var recoveryTracker = SectionTracker(section: .homeRecovery, tab: .home)
@@ -161,8 +161,13 @@ struct HomeView: View {
                     .padding(.top, 12)
 
                 // Siri Shortcut discovery tip
-                SiriTipView(intent: HealthScoreIntent(), isVisible: $showSiriTip)
+                if !siriTipDismissed {
+                    SiriTipView(intent: HealthScoreIntent(), isVisible: Binding(
+                        get: { !siriTipDismissed },
+                        set: { if !$0 { siriTipDismissed = true } }
+                    ))
                     .padding(.horizontal, 16)
+                }
 
                 if shouldShowEmptyState {
                     connectHealthView

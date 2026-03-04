@@ -16,22 +16,28 @@ const functions = firebase.functions();
 const db = firebase.firestore();
 
 // ─── Config Schema ───────────────────────────────────────────────────────────
-// Defines all 26 keys, their section, display name, input type, and tiers list.
+// All keys match RemoteConfigManager.swift defaults.
 
 const FEATURES = [
-  { key: "feature_access_healthScore",       label: "Health Score" },
-  { key: "feature_access_categoryScores",    label: "Category Scores" },
-  { key: "feature_access_basicMetrics",      label: "Basic Metrics" },
-  { key: "feature_access_allMetrics",        label: "All Metrics" },
-  { key: "feature_access_sevenDayTrends",    label: "7-Day Trends" },
-  { key: "feature_access_extendedHistory",   label: "Extended History" },
-  { key: "feature_access_riskPredictions",   label: "Risk Predictions" },
-  { key: "feature_access_focusAreas",        label: "Focus Areas" },
-  { key: "feature_access_basicInsights",     label: "Basic Insights" },
-  { key: "feature_access_allInsights",       label: "All Insights" },
-  { key: "feature_access_liveTab",           label: "Live Vitals" },
-  { key: "feature_access_exportReport",      label: "Export Reports" },
-  { key: "feature_access_advancedAnalytics", label: "Advanced Analytics" },
+  { key: "feature_access_healthScore",            label: "Health Score" },
+  { key: "feature_access_categoryScores",         label: "Category Scores" },
+  { key: "feature_access_basicMetrics",           label: "Basic Metrics" },
+  { key: "feature_access_allMetrics",             label: "All Metrics" },
+  { key: "feature_access_sevenDayTrends",         label: "7-Day Trends" },
+  { key: "feature_access_extendedHistory",        label: "Extended History" },
+  { key: "feature_access_riskPredictions",        label: "Risk Predictions" },
+  { key: "feature_access_focusAreas",             label: "Focus Areas" },
+  { key: "feature_access_basicInsights",          label: "Basic Insights" },
+  { key: "feature_access_allInsights",            label: "All Insights" },
+  { key: "feature_access_liveTab",                label: "Live Vitals" },
+  { key: "feature_access_exportReport",           label: "Export Reports" },
+  { key: "feature_access_advancedAnalytics",      label: "Advanced Analytics" },
+  { key: "feature_access_simulation",             label: "Simulation" },
+  { key: "feature_access_clinicalIntelligence",   label: "Clinical Intelligence" },
+  { key: "feature_access_ecgIntelligence",        label: "ECG Intelligence" },
+  { key: "feature_access_nutritionCorrelations",  label: "Nutrition Correlations" },
+  { key: "feature_access_circadianAnalysis",      label: "Circadian Analysis" },
+  { key: "feature_access_adherenceTracking",      label: "Adherence Tracking" },
 ];
 
 const LIMITS = [
@@ -49,11 +55,43 @@ const PRICING = [
   { key: "pricing_pro_trial_days",            label: "Pro Trial Days",            type: "number" },
 ];
 
+const ALERTS = [
+  { key: "alert_cooldown_hours",       label: "Alert Cooldown (Hours)",          type: "number" },
+  { key: "alert_hr_spike_multiplier",  label: "HR Spike Multiplier",            type: "number" },
+  { key: "alert_hrv_drop_multiplier",  label: "HRV Drop Multiplier",            type: "number" },
+  { key: "alert_spo2_critical",        label: "SpO₂ Critical Threshold",        type: "number" },
+  { key: "alert_spo2_warning",         label: "SpO₂ Warning Threshold",         type: "number" },
+  { key: "alert_rr_spike_multiplier",  label: "Resp Rate Spike Multiplier",     type: "number" },
+  { key: "alert_heart_cap_per_day",    label: "Heart Alerts Cap / Day",         type: "number" },
+];
+
+const WATCH = [
+  { key: "watch_monitor_check_seconds",       label: "Monitor Check Interval (s)",      type: "number" },
+  { key: "watch_data_freshness_hours",         label: "Data Freshness Lookback (hrs)",   type: "number" },
+  { key: "watch_not_worn_cooldown_hours",      label: "Not-Worn Cooldown (hrs)",         type: "number" },
+  { key: "watch_not_worn_threshold_hours",     label: "Not-Worn Threshold (hrs)",        type: "number" },
+  { key: "watch_battery_low_threshold",        label: "Battery Low Threshold (0-1)",     type: "number" },
+];
+
+const NOTIFICATIONS = [
+  { key: "notification_daily_budget",          label: "Daily Notification Budget",       type: "number" },
+  { key: "notification_fatigue_threshold",     label: "Fatigue Threshold (open rate)",   type: "number" },
+  { key: "notification_min_priority_score",    label: "Min Priority Score",             type: "number" },
+];
+
+const ANALYSIS = [
+  { key: "analysis_warning_deviation",         label: "Warning Deviation (%)",           type: "number" },
+  { key: "analysis_critical_deviation",        label: "Critical Deviation (%)",          type: "number" },
+  { key: "analysis_trend_slope_threshold",     label: "Trend Slope Threshold",          type: "number" },
+];
+
 const SYSTEM = [
-  { key: "feedback_prompt_after_sessions", label: "Feedback Prompt After Sessions", type: "number" },
-  { key: "feedback_cooldown_days",         label: "Feedback Cooldown (Days)",       type: "number" },
-  { key: "max_local_analytics_events",     label: "Max Local Analytics Events",    type: "number" },
-  { key: "session_timeout_seconds",        label: "Session Timeout (Seconds)",     type: "number" },
+  { key: "feedback_prompt_after_sessions",     label: "Feedback Prompt After Sessions",  type: "number" },
+  { key: "feedback_cooldown_days",             label: "Feedback Cooldown (Days)",        type: "number" },
+  { key: "feedback_days_before_first_prompt",  label: "Days Before First Prompt",        type: "number" },
+  { key: "max_local_analytics_events",         label: "Max Local Analytics Events",      type: "number" },
+  { key: "session_timeout_seconds",            label: "Session Timeout (Seconds)",       type: "number" },
+  { key: "home_refresh_interval_seconds",      label: "Home Refresh Interval (s)",       type: "number" },
 ];
 
 const TIERS = ["free", "pro"];
@@ -136,6 +174,10 @@ function buildInputRows(container, fields) {
 buildFeatureRows(document.getElementById("section-features"), FEATURES);
 buildInputRows(document.getElementById("section-limits"), LIMITS);
 buildInputRows(document.getElementById("section-pricing"), PRICING);
+buildInputRows(document.getElementById("section-alerts"), ALERTS);
+buildInputRows(document.getElementById("section-watch"), WATCH);
+buildInputRows(document.getElementById("section-notifications"), NOTIFICATIONS);
+buildInputRows(document.getElementById("section-analysis"), ANALYSIS);
 buildInputRows(document.getElementById("section-system"), SYSTEM);
 
 // Enable save when any input changes
@@ -163,7 +205,7 @@ async function loadConfig() {
     });
 
     // Populate input fields
-    [...LIMITS, ...PRICING, ...SYSTEM].forEach(({ key }) => {
+    [...LIMITS, ...PRICING, ...ALERTS, ...WATCH, ...NOTIFICATIONS, ...ANALYSIS, ...SYSTEM].forEach(({ key }) => {
       const input = document.querySelector(`input[data-key="${key}"]`);
       if (input && params[key]) {
         input.value = params[key].defaultValue ?? "";
@@ -198,7 +240,7 @@ saveBtn.addEventListener("click", async () => {
   });
 
   // Collect input values
-  [...LIMITS, ...PRICING, ...SYSTEM].forEach(({ key }) => {
+  [...LIMITS, ...PRICING, ...ALERTS, ...WATCH, ...NOTIFICATIONS, ...ANALYSIS, ...SYSTEM].forEach(({ key }) => {
     const input = document.querySelector(`input[data-key="${key}"]`);
     if (input) parameters[key] = input.value;
   });

@@ -85,6 +85,12 @@ enum AppKeys {
         static let lowBatteryAlertShown     = "healthpulse.watchMonitor.lowBatteryAlertShown"
     }
 
+    // MARK: - UI Dismissals
+
+    enum Dismissals {
+        static let siriTip = "laso.dismissed.siri_tip"
+    }
+
     // MARK: - Billing Grace
 
     enum Billing {
