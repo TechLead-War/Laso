@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import os
 
 /// ViewModel for the main dashboard showing overall score, top insights, and category cards
 @Observable
@@ -509,9 +510,22 @@ final class DashboardViewModel {
         Task.detached(priority: .background) { [weak self, prevTrends] in
             guard let self else { return }
             let analysisEngine = self.analysisEngine
+            let logger = Logger(subsystem: "com.healthpulse", category: "Dashboard")
 
             // Thermal break — let CPU cool after core + essentials
-            try? await Task.sleep(for: .seconds(3))
+            try? await Task.sleep(for: .seconds(10))
+
+            // Gate on thermal state — skip heavy work entirely if device is overheating
+            if ThermalManager.shared.shouldThrottle {
+                logger.warning("Skipping deferred heavy analysis — thermal state is elevated")
+                return
+            }
+
+            // Wait for ML analysis to complete before starting heavy cross-metric work
+            // so we don't stack CPU-intensive phases on top of each other
+            while analysisEngine.mlOrchestrator.isRunning {
+                try? await Task.sleep(for: .milliseconds(500))
+            }
 
             // Heavy cross-metric analysis (correlations, historical, causal chains)
             // Skipped automatically if results are still fresh (1-hour TTL)

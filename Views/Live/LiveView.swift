@@ -9,6 +9,7 @@ struct LiveView: View {
     @State private var pulseScale: CGFloat = 1.0
     @State private var previousZone: LiveViewModel.HeartRateZone?
     @State private var hasTrackedFirstData = false
+    @State private var lastAnimationTime: Date = .distantPast
 
     var body: some View {
         ScrollView {
@@ -151,8 +152,8 @@ struct LiveView: View {
                         }
                     }
                 }
-                .padding()
-                .background(.background, in: RoundedRectangle(cornerRadius: 14))
+                .padding(DS.cardPadding)
+                .cardStyle()
                 .padding(.horizontal)
             }
         }
@@ -211,8 +212,8 @@ struct LiveView: View {
                 tipRow(icon: "heart.fill", text: "Open a workout or check your heart rate on the Watch")
                 tipRow(icon: "arrow.clockwise", text: "Recent data may take a moment to sync")
             }
-            .padding()
-            .background(.background, in: RoundedRectangle(cornerRadius: 16))
+            .padding(DS.cardPadding)
+            .cardStyle()
             .padding(.horizontal)
 
             Spacer()
@@ -308,6 +309,8 @@ struct LiveView: View {
                 }
                 .onChange(of: viewModel.vitals.currentHeartRate) {
                     guard viewModel.vitals.isHeartRateFresh else { return }
+                    guard Date.now.timeIntervalSince(lastAnimationTime) >= 1.0 else { return }
+                    lastAnimationTime = .now
                     withAnimation(.easeInOut(duration: 0.15)) {
                         pulseScale = 1.15
                     }
@@ -342,8 +345,8 @@ struct LiveView: View {
                             Text("Last Reading")
                                 .font(.caption.weight(.bold))
                                 .foregroundStyle(.white.opacity(0.8))
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
+                                .padding(.horizontal, DS.badgeH)
+                                .padding(.vertical, DS.badgeV)
                                 .background(.gray, in: Capsule())
 
                             if let ts = viewModel.vitals.heartRateTimestamp {
@@ -364,8 +367,8 @@ struct LiveView: View {
                             Text(viewModel.currentHeartRateZone.rawValue)
                                 .font(.caption.weight(.bold))
                                 .foregroundStyle(.white)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
+                                .padding(.horizontal, DS.badgeH)
+                                .padding(.vertical, DS.badgeV)
                                 .background(viewModel.currentHeartRateZone.color, in: Capsule())
 
                             if let ts = viewModel.vitals.heartRateTimestamp {
@@ -379,7 +382,7 @@ struct LiveView: View {
 
                 Spacer()
             }
-            .padding()
+            .padding(DS.cardPadding)
 
             // Zone bar — gradient from blue to red
             zoneProgressBar
@@ -389,9 +392,9 @@ struct LiveView: View {
             if viewModel.vitals.heartRateMin30 != nil {
                 HStack(spacing: 0) {
                     sessionStatCell(label: "Min", value: viewModel.vitals.heartRateMin30, unit: "bpm", color: .blue)
-                    Divider().frame(height: 32)
+                    Divider().frame(height: DS.dividerHeight)
                     sessionStatCell(label: "Avg", value: viewModel.vitals.heartRateAvg30, unit: "bpm", color: .primary)
-                    Divider().frame(height: 32)
+                    Divider().frame(height: DS.dividerHeight)
                     sessionStatCell(label: "Max", value: viewModel.vitals.heartRateMax30, unit: "bpm", color: .red)
                 }
                 .padding(.vertical, 10)
@@ -416,11 +419,7 @@ struct LiveView: View {
                     .padding(.bottom, 12)
             }
         }
-        .background(.background, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .strokeBorder(.red.opacity(0.12), lineWidth: 0.5)
-        )
+        .cardStyle(tint: .red)
         .padding(.horizontal)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(heartRateAccessibilityLabel)
@@ -667,9 +666,9 @@ struct LiveView: View {
                 }
             }
         }
-        .padding(12)
+        .padding(DS.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.background, in: RoundedRectangle(cornerRadius: 14))
+        .cardStyle()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(label), \(value ?? "no data") \(unit), \(status.label)")
     }
@@ -702,8 +701,8 @@ struct LiveView: View {
 
                     Spacer()
                 }
-                .padding()
-                .background(.background, in: RoundedRectangle(cornerRadius: 16))
+                .padding(DS.cardPadding)
+                .cardStyle()
                 .padding(.horizontal)
             } else {
 
@@ -743,8 +742,8 @@ struct LiveView: View {
 
                 Spacer()
             }
-            .padding()
-            .background(.background, in: RoundedRectangle(cornerRadius: 16))
+            .padding(DS.cardPadding)
+            .cardStyle()
             .padding(.horizontal)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Activity rings. Move: \(Int(viewModel.activity.todayActiveCalories)) of \(Int(viewModel.activity.moveGoal)) calories, \(Int(viewModel.activity.moveProgress * 100)) percent. Exercise: \(Int(viewModel.activity.todayExerciseMinutes)) of \(Int(viewModel.activity.exerciseGoal)) minutes, \(Int(viewModel.activity.exerciseProgress * 100)) percent. Stand: \(Int(viewModel.activity.todayStandHours)) of \(Int(viewModel.activity.standGoal)) hours, \(Int(viewModel.activity.standProgress * 100)) percent.")
@@ -814,7 +813,7 @@ struct LiveView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .background(color.opacity(0.06), in: RoundedRectangle(cornerRadius: 12))
+        .background(color.opacity(DS.tintBg), in: RoundedRectangle(cornerRadius: DS.cardRadius))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(label): \(value)")
     }
@@ -857,9 +856,9 @@ struct LiveView: View {
                                 .foregroundStyle(viewModel.vitals.bloodPressureStatus.color)
                         }
                     }
-                    .padding(12)
+                    .padding(DS.cardPadding)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(.background, in: RoundedRectangle(cornerRadius: 14))
+                    .cardStyle()
                 }
 
                 if let temp = viewModel.vitals.latestBodyTemp {
@@ -888,9 +887,9 @@ struct LiveView: View {
                                 .foregroundStyle(.tertiary)
                         }
                     }
-                    .padding(12)
+                    .padding(DS.cardPadding)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(.background, in: RoundedRectangle(cornerRadius: 14))
+                    .cardStyle()
                 }
             }
             .padding(.horizontal)
@@ -912,8 +911,8 @@ struct LiveView: View {
                     Image(systemName: "figure.run")
                         .font(.title2.weight(.semibold))
                         .foregroundStyle(.green)
-                        .frame(width: 44, height: 44)
-                        .background(.green.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+                        .frame(width: DS.iconSize, height: DS.iconSize)
+                        .background(.green.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.iconRadius))
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text(type)
@@ -950,8 +949,8 @@ struct LiveView: View {
                             .foregroundStyle(.tertiary)
                     }
                 }
-                .padding()
-                .background(.background, in: RoundedRectangle(cornerRadius: 14))
+                .padding(DS.cardPadding)
+                .cardStyle()
                 .padding(.horizontal)
             }
         }

@@ -17,7 +17,7 @@ struct PatternCard: View {
         }) {
             HStack(spacing: 0) {
                 // Left accent bar — category colour
-                RoundedRectangle(cornerRadius: 2)
+                RoundedRectangle(cornerRadius: DS.accentRadius)
                     .fill(insight.category.color)
                     .frame(width: 4)
                     .padding(.vertical, 6)
@@ -27,7 +27,7 @@ struct PatternCard: View {
                     Image(systemName: insight.category.systemImageName)
                         .font(.body.weight(.semibold))
                         .foregroundStyle(.white)
-                        .frame(width: 32, height: 32)
+                        .frame(width: DS.iconSize, height: DS.iconSize)
                         .background(insight.category.color, in: Circle())
 
                     // Content
@@ -47,9 +47,9 @@ struct PatternCard: View {
                             Text(insight.category.displayName)
                                 .font(.caption2.weight(.medium))
                                 .foregroundStyle(insight.category.color)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(insight.category.color.opacity(0.12), in: Capsule())
+                                .padding(.horizontal, DS.badgeH)
+                                .padding(.vertical, DS.badgeV)
+                                .background(insight.category.color.opacity(DS.badgeBg), in: Capsule())
 
                             Spacer()
 
@@ -59,19 +59,11 @@ struct PatternCard: View {
                         }
                     }
                 }
-                .padding(.leading, 10)
-                .padding(.trailing, 14)
-                .padding(.vertical, 10)
+                .padding(.leading, DS.accentLeading)
+                .padding(.trailing, DS.accentTrailing)
+                .padding(.vertical, DS.accentVertical)
             }
-            .background(
-                insight.category.color.opacity(0.04),
-                in: RoundedRectangle(cornerRadius: 14)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .strokeBorder(insight.category.color.opacity(0.1), lineWidth: 0.5)
-            )
-            .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
+            .cardStyle(tint: insight.category.color)
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)

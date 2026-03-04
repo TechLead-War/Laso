@@ -16,7 +16,7 @@ struct InsightCard: View {
             // Action + context
             VStack(alignment: .leading, spacing: 4) {
                 Text(actionText)
-                    .font(.subheadline.weight(.medium))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(2)
 
@@ -35,8 +35,8 @@ struct InsightCard: View {
             }
 
         }
-        .padding(14)
-        .background(.background, in: RoundedRectangle(cornerRadius: 14))
+        .padding(DS.cardPadding)
+        .cardStyle()
     }
 }
 

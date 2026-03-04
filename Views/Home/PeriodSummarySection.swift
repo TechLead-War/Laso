@@ -82,7 +82,7 @@ struct PeriodCounter: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 4)
-            .background(isSelected ? color.opacity(0.12) : .clear, in: RoundedRectangle(cornerRadius: 8))
+            .background(isSelected ? color.opacity(DS.badgeBg) : .clear, in: RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
@@ -173,10 +173,10 @@ struct MetricChangeRow: View {
                         .font(.caption.weight(.semibold).monospacedDigit())
                 }
                 .foregroundStyle(changeColor)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, DS.badgeH)
+                .padding(.vertical, DS.badgeV)
                 .background(
-                    changeColor.opacity(0.1),
+                    changeColor.opacity(DS.badgeBg),
                     in: Capsule()
                 )
 
@@ -186,7 +186,7 @@ struct MetricChangeRow: View {
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 12)
-            .background(.background, in: RoundedRectangle(cornerRadius: 10))
+            .background(.background, in: RoundedRectangle(cornerRadius: DS.iconRadius))
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)

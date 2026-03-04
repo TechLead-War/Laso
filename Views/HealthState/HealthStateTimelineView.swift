@@ -8,7 +8,7 @@ struct HealthStateTimelineView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: DS.sectionSpacing) {
                 // 1. Current state hero
                 if let current = viewModel.currentState {
                     currentStateHero(current)
@@ -82,8 +82,8 @@ struct HealthStateTimelineView: View {
                         .foregroundStyle(.secondary)
                     Spacer()
                 }
-                .padding(10)
-                .background(color.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+                .padding(DS.cardPadding)
+                .background(color.opacity(0.1), in: RoundedRectangle(cornerRadius: DS.iconRadius))
             }
 
             // Characteristics
@@ -178,8 +178,8 @@ struct HealthStateTimelineView: View {
             }
             .padding(.top, 4)
         }
-        .padding(16)
-        .background(.background, in: RoundedRectangle(cornerRadius: 16))
+        .padding(DS.cardPadding)
+        .cardStyle()
     }
 
     private func calendarCell(_ day: HealthStateTimelineViewModel.CalendarDay) -> some View {
@@ -237,8 +237,8 @@ struct HealthStateTimelineView: View {
                 Spacer()
             }
         }
-        .padding(16)
-        .background(.background, in: RoundedRectangle(cornerRadius: 16))
+        .padding(DS.cardPadding)
+        .cardStyle()
     }
 
     // MARK: - 4. Transitions
@@ -284,8 +284,8 @@ struct HealthStateTimelineView: View {
                 .padding(.vertical, 4)
             }
         }
-        .padding(16)
-        .background(.background, in: RoundedRectangle(cornerRadius: 16))
+        .padding(DS.cardPadding)
+        .cardStyle()
     }
 
     // MARK: - 5. State Descriptions
@@ -325,8 +325,8 @@ struct HealthStateTimelineView: View {
                 }
             }
         }
-        .padding(16)
-        .background(.background, in: RoundedRectangle(cornerRadius: 16))
+        .padding(DS.cardPadding)
+        .cardStyle()
     }
 
     // MARK: - Helpers

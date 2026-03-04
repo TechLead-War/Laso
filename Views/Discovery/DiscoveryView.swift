@@ -10,6 +10,12 @@ struct DiscoveryView: View {
     @State private var appeared = false
     @State private var maxPageViewed = 0
 
+    /// When true, all repeating animations are suppressed to reduce GPU load.
+    private var thermallyConstrained: Bool {
+        let state = ProcessInfo.processInfo.thermalState
+        return state == .serious || state == .critical
+    }
+
     /// Total pages: opening + discoveries + CTA
     private var totalPages: Int {
         1 + discoveries.count + 1
@@ -39,7 +45,14 @@ struct DiscoveryView: View {
             trackPageView(newValue)
         }
         .onAppear {
-            appeared = true
+            if thermallyConstrained {
+                // Skip to final values without animation to save GPU under thermal pressure
+                appeared = true
+            } else {
+                withAnimation(.easeInOut(duration: 0.6)) {
+                    appeared = true
+                }
+            }
             let types = discoveries.map(\.type.rawValue)
             AppAnalytics.shared.trackDiscoveryShown(count: discoveries.count, types: types)
         }
@@ -57,13 +70,18 @@ struct DiscoveryView: View {
                     .fill(.blue.opacity(0.08))
                     .frame(width: 140, height: 140)
                     .scaleEffect(appeared ? 1.2 : 0.8)
-                    .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: appeared)
+                    .animation(
+                        thermallyConstrained
+                            ? .easeInOut(duration: 0.6)
+                            : .easeInOut(duration: 1.5).repeatForever(autoreverses: true),
+                        value: appeared
+                    )
 
                 Circle()
                     .fill(.blue.opacity(0.04))
                     .frame(width: 180, height: 180)
                     .scaleEffect(appeared ? 1.4 : 0.9)
-                    .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: appeared)
+                    .animation(.easeInOut(duration: 1.0), value: appeared)
 
                 Image(systemName: "waveform.path.ecg")
                     .font(.system(size: 44, weight: .medium))
@@ -119,7 +137,7 @@ struct DiscoveryView: View {
                     .fill(discovery.accentColor.opacity(0.08))
                     .frame(width: 130, height: 130)
                     .scaleEffect(appeared ? 1.15 : 0.9)
-                    .animation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true), value: appeared)
+                    .animation(.easeInOut(duration: 0.8), value: appeared)
 
                 Image(systemName: discovery.icon)
                     .font(.system(size: 36, weight: .medium))
@@ -167,7 +185,7 @@ struct DiscoveryView: View {
                     .fill(.green.opacity(0.08))
                     .frame(width: 130, height: 130)
                     .scaleEffect(appeared ? 1.15 : 0.9)
-                    .animation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true), value: appeared)
+                    .animation(.easeInOut(duration: 0.8), value: appeared)
 
                 Image(systemName: "checkmark.seal.fill")
                     .font(.system(size: 44, weight: .medium))

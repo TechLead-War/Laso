@@ -105,13 +105,8 @@ struct CorrelationCard: View {
                         .foregroundStyle(.tertiary)
                 }
             }
-            .padding(14)
-            .background(.purple.opacity(0.04), in: RoundedRectangle(cornerRadius: 14))
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .strokeBorder(.purple.opacity(0.1), lineWidth: 0.5)
-            )
-            .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
+            .padding(DS.cardPadding)
+            .cardStyle(tint: .purple)
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
@@ -130,9 +125,9 @@ struct StrengthBadge: View {
         Text(label)
             .font(.caption2.weight(.bold))
             .foregroundStyle(badgeColor)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 3)
-            .background(badgeColor.opacity(0.12), in: Capsule())
+            .padding(.horizontal, DS.badgeH)
+            .padding(.vertical, DS.badgeV)
+            .background(badgeColor.opacity(DS.badgeBg), in: Capsule())
     }
 
     private var badgeColor: Color {

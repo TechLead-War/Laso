@@ -184,8 +184,8 @@ struct MetricDetailView: View {
                     Text("Outside Normal Range")
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
+                        .padding(.horizontal, DS.badgeH)
+                        .padding(.vertical, DS.badgeV)
                         .background(.red, in: Capsule())
                 }
             }
@@ -205,7 +205,7 @@ struct MetricDetailView: View {
         }
         .padding(.vertical, 16)
         .frame(maxWidth: .infinity)
-        .background(.background, in: RoundedRectangle(cornerRadius: 14))
+        .cardStyle()
         .padding(.horizontal)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(viewModel.metric.displayName), current value \(viewModel.currentValue) \(viewModel.metric.unit), \(viewModel.trendDirection == .improving ? "improving" : viewModel.trendDirection == .declining ? "declining" : "stable")\(viewModel.isOutsideNormalRange ? ", outside normal range" : "")")
@@ -220,8 +220,8 @@ struct MetricDetailView: View {
                 normalRange: viewModel.normalRange
             )
         }
-        .padding()
-        .background(.background, in: RoundedRectangle(cornerRadius: 14))
+        .padding(DS.cardPadding)
+        .cardStyle()
         .padding(.horizontal)
     }
 
@@ -236,9 +236,9 @@ struct MetricDetailView: View {
                 .foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding()
+        .padding(DS.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.yellow.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
+        .cardStyle(tint: .yellow)
         .padding(.horizontal)
     }
 
@@ -274,75 +274,115 @@ struct MetricDetailView: View {
             .frame(maxWidth: .infinity)
         }
         .padding(.vertical, 16)
-        .background(.background, in: RoundedRectangle(cornerRadius: 14))
+        .cardStyle()
         .padding(.horizontal)
     }
 
-    private var scoreBreakdownSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Score Impact")
-                .font(.headline)
-                .padding(.horizontal)
+    // MARK: - Shared Row Builder
 
-            VStack(spacing: 0) {
-                ForEach(viewModel.scoreBreakdown) { component in
-                    HStack {
-                        Image(systemName: component.points >= 0 ? "plus.circle.fill" : "minus.circle.fill")
-                            .foregroundStyle(component.points >= 0 ? .green : .red)
-                            .font(.body)
+    /// Single row builder used by ALL sections — guarantees pixel-perfect alignment.
+    /// The icon, spacing, padding, and text position are identical for every row on the page.
+    private func sectionRow(
+        icon: String,
+        iconColor: Color,
+        text: String,
+        detail: String? = nil,
+        detailColor: Color = .secondary,
+        trailing: String? = nil,
+        trailingColor: Color = .primary
+    ) -> some View {
+        HStack(alignment: .center, spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 14))
+                .foregroundStyle(iconColor)
+                .frame(width: 30, height: 30)
+                .background(iconColor.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: 7))
 
-                        Text(component.reason)
-                            .font(.subheadline)
-                            .foregroundStyle(.primary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(text)
+                    .font(.subheadline)
+                    .foregroundStyle(.primary)
 
-                        Spacer()
-
-                        Text("\(component.points > 0 ? "+" : "")\(component.points) pts")
-                            .font(.subheadline.weight(.semibold).monospacedDigit())
-                            .foregroundStyle(component.points >= 0 ? .green : .red)
-                    }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
+                if let detail {
+                    Text(detail)
+                        .font(.caption)
+                        .foregroundStyle(detailColor)
                 }
             }
-            .background(.background, in: RoundedRectangle(cornerRadius: 14))
+
+            Spacer(minLength: 4)
+
+            if let trailing {
+                Text(trailing)
+                    .font(.subheadline.weight(.semibold).monospacedDigit())
+                    .foregroundStyle(trailingColor)
+            }
+        }
+        .padding(.horizontal, DS.cardPadding)
+        .padding(.vertical, 11)
+    }
+
+    private static let rowDividerLeading: CGFloat = DS.cardPadding + 30 + 10
+
+    private func sectionHeader(icon: String, title: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.subheadline)
+                .foregroundStyle(.tint)
+            Text(title)
+                .font(.headline)
+        }
+        .padding(.horizontal)
+    }
+
+    // MARK: - Score Breakdown
+
+    private var scoreBreakdownSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            sectionHeader(icon: "chart.bar.fill", title: "Score Impact")
+
+            VStack(spacing: 0) {
+                ForEach(Array(viewModel.scoreBreakdown.enumerated()), id: \.element.id) { index, component in
+                    sectionRow(
+                        icon: component.points >= 0 ? "plus.circle.fill" : "minus.circle.fill",
+                        iconColor: component.points >= 0 ? .green : .red,
+                        text: component.reason,
+                        trailing: "\(component.points > 0 ? "+" : "")\(component.points) pts",
+                        trailingColor: component.points >= 0 ? .green : .red
+                    )
+
+                    if index < viewModel.scoreBreakdown.count - 1 {
+                        Divider().padding(.leading, Self.rowDividerLeading)
+                    }
+                }
+            }
+            .cardStyle()
             .padding(.horizontal)
         }
     }
 
+    // MARK: - Historical Context
+
     private var historicalContextSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
-                Image(systemName: "clock.arrow.circlepath")
-                    .font(.subheadline)
-                    .foregroundStyle(.tint)
-                Text("Historical Context")
-                    .font(.headline)
-            }
-            .padding(.horizontal)
+            sectionHeader(icon: "clock.arrow.circlepath", title: "Historical Context")
 
             VStack(spacing: 0) {
-                ForEach(viewModel.historicalFacts) { fact in
-                    HStack(spacing: 10) {
-                        Image(systemName: fact.icon)
-                            .font(.caption)
-                            .foregroundStyle(.tint)
-                            .frame(width: 20)
+                ForEach(Array(viewModel.historicalFacts.enumerated()), id: \.element.id) { index, fact in
+                    sectionRow(
+                        icon: fact.icon,
+                        iconColor: .blue,
+                        text: fact.text
+                    )
 
-                        Text(fact.text)
-                            .font(.subheadline)
-                            .foregroundStyle(.primary)
-
-                        Spacer()
+                    if index < viewModel.historicalFacts.count - 1 {
+                        Divider().padding(.leading, Self.rowDividerLeading)
                     }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 9)
                 }
             }
-            .background(.background, in: RoundedRectangle(cornerRadius: 14))
+            .cardStyle()
             .padding(.horizontal)
 
-            // Data depth footnote
             if let ctx = viewModel.historicalContext {
                 Text("Based on \(ctx.totalDataPoints) data points over the past year")
                     .font(.caption2)
@@ -352,19 +392,46 @@ struct MetricDetailView: View {
         }
     }
 
-    private var insightsSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Insights")
-                .font(.headline)
-                .padding(.horizontal)
+    // MARK: - Insights
 
-            VStack(spacing: 8) {
-                ForEach(viewModel.insights) { insight in
-                    InsightCard(insight: insight)
+    private var insightsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            sectionHeader(icon: "lightbulb.fill", title: "Insights")
+
+            VStack(spacing: 0) {
+                ForEach(Array(viewModel.insights.enumerated()), id: \.element.id) { index, insight in
+                    sectionRow(
+                        icon: insight.metric.systemImageName,
+                        iconColor: insight.metric.category.color,
+                        text: insightActionText(insight),
+                        detail: "\(insight.metric.displayName)  ·  \(insight.severity.displayName)",
+                        detailColor: insight.severity.color
+                    )
+
+                    if index < viewModel.insights.count - 1 {
+                        Divider().padding(.leading, Self.rowDividerLeading)
+                    }
                 }
             }
+            .cardStyle()
             .padding(.horizontal)
         }
+    }
+
+    /// First sentence of the recommendation
+    private func insightActionText(_ insight: Insight) -> String {
+        let rec = insight.recommendation
+        var searchStart = rec.startIndex
+        while searchStart < rec.endIndex {
+            guard let dotIndex = rec[searchStart...].firstIndex(of: ".") else { break }
+            let beforeDot = rec[searchStart..<dotIndex]
+            if beforeDot.trimmingCharacters(in: .whitespaces).allSatisfy(\.isNumber) {
+                searchStart = rec.index(after: dotIndex)
+                continue
+            }
+            return String(rec[rec.startIndex...dotIndex])
+        }
+        return rec
     }
 }
 

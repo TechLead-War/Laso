@@ -75,6 +75,8 @@
 		A1B2C3D4E5F6071812345009 /* RemoteConfigManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071812345008 /* RemoteConfigManager.swift */; };
 		A1B2C3D4E5F6A1B2C3D40002 /* AppKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A1B2C3D40001 /* AppKeys.swift */; };
 		A1B2C3D4E5F6A1B2C3D40004 /* FeatureGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A1B2C3D40003 /* FeatureGate.swift */; };
+		A1B2C3D4E5F6A1B2C3D40006 /* ThermalManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A1B2C3D40005 /* ThermalManager.swift */; };
+		D5E6F7A8B9C0D5E6F7A80002 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E6F7A8B9C0D5E6F7A80001 /* DesignSystem.swift */; };
 		A1D93F47B8E62C10D4F5A7B2 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7B42A19F3D18C05A92E6D4F /* OnboardingView.swift */; };
 		A2EBB41C493BD4BCF809BA7A /* WorkoutEffectivenessAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD947BF688F7B5F398D7E9FD /* WorkoutEffectivenessAnalyzer.swift */; };
 		A3D387E5C8702DB2CEDB690D /* AlertEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D5096C22B6F3AB852F5E2EF /* AlertEvaluator.swift */; };
@@ -235,6 +237,8 @@
 		A1B2C3D4E5F6071812345008 /* RemoteConfigManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteConfigManager.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6A1B2C3D40001 /* AppKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppKeys.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6A1B2C3D40003 /* FeatureGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGate.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A1B2C3D40005 /* ThermalManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalManager.swift; sourceTree = "<group>"; };
+		D5E6F7A8B9C0D5E6F7A80001 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		A260467379612091A6B0F24B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A38F981323AA745B14093958 /* UserBaseline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserBaseline.swift; sourceTree = "<group>"; };
 		A81D7BD7EBC7DA97F93A3F66 /* HealthRiskDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthRiskDetailView.swift; sourceTree = "<group>"; };
@@ -581,6 +585,7 @@
 			isa = PBXGroup;
 			children = (
 				8AD419B0E2DDFF1B068F480E /* ActionCard.swift */,
+				D5E6F7A8B9C0D5E6F7A80001 /* DesignSystem.swift */,
 				E05DC7C028B652C5A152BCDB /* DataSourceBadge.swift */,
 				875E5644CBFE4833921C057E /* FeedbackSheet.swift */,
 				02889FC7AED277F3E00C8B52 /* HealthScoreRing.swift */,
@@ -756,6 +761,7 @@
 				A1B2C3D4E5F6A1B2C3D40001 /* AppKeys.swift */,
 				A1B2C3D4E5F6A1B2C3D40003 /* FeatureGate.swift */,
 				A1B2C3D4E5F6071812345008 /* RemoteConfigManager.swift */,
+				A1B2C3D4E5F6A1B2C3D40005 /* ThermalManager.swift */,
 			);
 			path = Config;
 			sourceTree = "<group>";
@@ -939,6 +945,7 @@
 				336798DBA725DB5F6CA4750A /* HomeView.swift in Sources */,
 				BB6797AF7093F2DBF7EF1DC7 /* Insight.swift in Sources */,
 				FFCF2BEF13D3B81A68D9EF3B /* InsightCard.swift in Sources */,
+				D5E6F7A8B9C0D5E6F7A80002 /* DesignSystem.swift in Sources */,
 				7A60C76E99D1878A23B6A18E /* InsightGenerator.swift in Sources */,
 				BD2A1EF7B9AC522C9B4A8705 /* InsightsDetailView.swift in Sources */,
 				5C297BDDFF5374E7525051EC /* LiveView.swift in Sources */,
@@ -997,6 +1004,7 @@
 				A1B2C3D4E5F6A1B2C3D40002 /* AppKeys.swift in Sources */,
 				A1B2C3D4E5F6A1B2C3D40004 /* FeatureGate.swift in Sources */,
 				A1B2C3D4E5F6071812345009 /* RemoteConfigManager.swift in Sources */,
+				A1B2C3D4E5F6A1B2C3D40006 /* ThermalManager.swift in Sources */,
 				A1B2C3D4E5F6071812345004 /* SubscriptionConfig.swift in Sources */,
 				A1B2C3D4E5F6071812345002 /* SubscriptionManager.swift in Sources */,
 				ML0010000000000000000012 /* AccelerateHelpers.swift in Sources */,

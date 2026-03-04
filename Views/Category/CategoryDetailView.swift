@@ -82,7 +82,7 @@ struct CategoryDetailView: View {
                                 .buttonStyle(.plain)
                             }
                         }
-                        .background(.background, in: RoundedRectangle(cornerRadius: 14))
+                        .cardStyle()
                         .padding(.horizontal)
                     }
                 }
@@ -160,14 +160,14 @@ struct CategoryDetailView: View {
                     icon: "arrow.up.right",
                     color: .green
                 )
-                Divider().frame(height: 36)
+                Divider().frame(height: DS.dividerHeight)
                 analyticsPill(
                     count: trends.stable,
                     label: "Stable",
                     icon: "arrow.right",
                     color: .secondary
                 )
-                Divider().frame(height: 36)
+                Divider().frame(height: DS.dividerHeight)
                 analyticsPill(
                     count: trends.declining,
                     label: "Declining",
@@ -176,7 +176,7 @@ struct CategoryDetailView: View {
                 )
             }
             .padding(.vertical, 10)
-            .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 14))
+            .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: DS.cardRadius))
             .padding(.horizontal)
 
             // Anomaly count badge
@@ -191,7 +191,7 @@ struct CategoryDetailView: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
-                .background(.orange.opacity(0.1), in: Capsule())
+                .background(.orange.opacity(DS.badgeBg), in: Capsule())
                 .padding(.horizontal)
             }
         }
@@ -257,8 +257,8 @@ struct CategoryDetailView: View {
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
-        .padding()
-        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .padding(DS.cardPadding)
+        .cardStyle()
         .padding(.horizontal)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(metric.displayName), \(viewModel.latestValue(for: metric)) \(metric.unit)")

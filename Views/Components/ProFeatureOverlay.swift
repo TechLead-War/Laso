@@ -24,8 +24,8 @@ struct ProFeatureOverlay: View {
                         .font(.title2.weight(.bold))
                     Text("PRO")
                         .font(.caption.weight(.bold))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
+                        .padding(.horizontal, DS.badgeH)
+                        .padding(.vertical, DS.badgeV)
                         .background(.tint, in: Capsule())
                         .foregroundStyle(.white)
                 }

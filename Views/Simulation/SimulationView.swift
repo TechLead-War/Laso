@@ -9,7 +9,7 @@ struct SimulationView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 20) {
+                VStack(spacing: DS.sectionSpacing) {
                     // 1. Score comparison hero
                     scoreComparisonHero
                         .padding(.horizontal)
@@ -115,7 +115,7 @@ struct SimulationView: View {
                 .padding(.horizontal)
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
+                HStack(spacing: DS.itemSpacing) {
                     ForEach(viewModel.rankedRecommendations.prefix(6)) { rec in
                         roiCard(rec)
                     }
@@ -150,9 +150,9 @@ struct SimulationView: View {
                     Spacer()
                 }
             }
-            .padding(10)
+            .padding(DS.cardPadding)
             .frame(width: 130)
-            .background(.background, in: RoundedRectangle(cornerRadius: 12))
+            .cardStyle()
         }
         .buttonStyle(.plain)
     }
@@ -168,7 +168,7 @@ struct SimulationView: View {
     // MARK: - 3. Metric Sliders
 
     private var slidersSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text("Adjust Metrics")
                 .font(.headline)
 
@@ -215,8 +215,8 @@ struct SimulationView: View {
             )
             .tint(metric.category.color)
         }
-        .padding(12)
-        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .padding(DS.cardPadding)
+        .cardStyle()
     }
 
     // MARK: - 4. Impact Breakdown
@@ -231,8 +231,8 @@ struct SimulationView: View {
                     Image(systemName: impact.metric.systemImageName)
                         .font(.caption)
                         .foregroundStyle(impact.metric.category.color)
-                        .frame(width: 28, height: 28)
-                        .background(impact.metric.category.color.opacity(0.12), in: RoundedRectangle(cornerRadius: 7))
+                        .frame(width: DS.iconSize, height: DS.iconSize)
+                        .background(impact.metric.category.color.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.iconRadius))
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(impact.metric.displayName)
@@ -257,7 +257,7 @@ struct SimulationView: View {
                 .foregroundStyle(.secondary)
                 .padding(.top, 4)
         }
-        .padding(16)
-        .background(.background, in: RoundedRectangle(cornerRadius: 16))
+        .padding(DS.cardPadding)
+        .cardStyle()
     }
 }

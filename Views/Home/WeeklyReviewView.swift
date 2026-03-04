@@ -56,7 +56,7 @@ struct WeeklyReviewEntryCard: View {
                             .foregroundStyle(.tertiary)
                     }
                     .padding()
-                    .background(.background, in: RoundedRectangle(cornerRadius: 16))
+                    .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
                 }
                 .buttonStyle(.plain)
                 .padding(.horizontal)
@@ -168,7 +168,7 @@ struct WeeklyReviewView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 20)
         .padding(.horizontal)
-        .background(.background, in: RoundedRectangle(cornerRadius: 16))
+        .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
         .padding(.horizontal)
     }
 
@@ -192,7 +192,7 @@ struct WeeklyReviewView: View {
                 }
                 .padding(.vertical, 16)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(.background, in: RoundedRectangle(cornerRadius: 16))
+                .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
                 .padding(.horizontal)
             }
         }
@@ -216,9 +216,9 @@ struct WeeklyReviewView: View {
                     .font(.caption.weight(.semibold).monospacedDigit())
             }
             .foregroundStyle(.green)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(.green.opacity(0.1), in: Capsule())
+            .padding(.horizontal, DS.badgeH)
+            .padding(.vertical, DS.badgeV)
+            .background(.green.opacity(DS.badgeBg), in: Capsule())
         }
         .padding(.vertical, 4)
     }
@@ -243,7 +243,7 @@ struct WeeklyReviewView: View {
                 }
                 .padding(.vertical, 16)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(.background, in: RoundedRectangle(cornerRadius: 16))
+                .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
                 .padding(.horizontal)
             }
         }
@@ -268,9 +268,9 @@ struct WeeklyReviewView: View {
                         .font(.caption.weight(.semibold).monospacedDigit())
                 }
                 .foregroundStyle(.red)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(.red.opacity(0.1), in: Capsule())
+                .padding(.horizontal, DS.badgeH)
+                .padding(.vertical, DS.badgeV)
+                .background(.red.opacity(DS.badgeBg), in: Capsule())
             }
 
             if let nudge = MetricChangeRow.nudgeFor(change.metric) {
@@ -319,9 +319,9 @@ struct WeeklyReviewView: View {
                     Text(plan.adherence.displayName)
                         .font(.caption.weight(.bold))
                         .foregroundStyle(adherenceColor(for: plan.adherence))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(adherenceColor(for: plan.adherence).opacity(0.12), in: Capsule())
+                        .padding(.horizontal, DS.badgeH)
+                        .padding(.vertical, DS.badgeV)
+                        .background(adherenceColor(for: plan.adherence).opacity(DS.badgeBg), in: Capsule())
                 }
 
                 Divider()
@@ -346,12 +346,12 @@ struct WeeklyReviewView: View {
                     .foregroundStyle(.secondary)
             }
             .padding()
-            .background(.background, in: RoundedRectangle(cornerRadius: 14))
+            .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
             .padding(.horizontal)
         }
         .padding(.vertical, 16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.background, in: RoundedRectangle(cornerRadius: 16))
+        .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
         .padding(.horizontal)
     }
 

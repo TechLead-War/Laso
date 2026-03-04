@@ -14,7 +14,7 @@ struct ActionCard: View {
         Button(action: onTap) {
             HStack(spacing: 0) {
                 // Left accent bar
-                RoundedRectangle(cornerRadius: 2)
+                RoundedRectangle(cornerRadius: DS.accentRadius)
                     .fill(categoryColor)
                     .frame(width: 4)
                     .padding(.vertical, 6)
@@ -24,7 +24,7 @@ struct ActionCard: View {
                     Image(systemName: insight.metric.systemImageName)
                         .font(.body.weight(.semibold))
                         .foregroundStyle(.white)
-                        .frame(width: 36, height: 36)
+                        .frame(width: DS.iconSize, height: DS.iconSize)
                         .background(categoryColor, in: Circle())
 
                     // Content
@@ -60,19 +60,11 @@ struct ActionCard: View {
                         }
                     }
                 }
-                .padding(.leading, 10)
-                .padding(.trailing, 14)
-                .padding(.vertical, 14)
+                .padding(.leading, DS.accentLeading)
+                .padding(.trailing, DS.accentTrailing)
+                .padding(.vertical, DS.accentVertical)
             }
-            .background(
-                categoryColor.opacity(0.04),
-                in: RoundedRectangle(cornerRadius: 14)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .strokeBorder(categoryColor.opacity(0.1), lineWidth: 0.5)
-            )
-            .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
+            .cardStyle(tint: categoryColor)
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
@@ -123,8 +115,8 @@ struct DeviationBadge: View {
         Text("\(arrow)\(formatted)")
             .font(.caption2.weight(.bold))
             .foregroundStyle(percent >= 0 ? .red : .blue)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
+            .padding(.horizontal, DS.badgeH)
+            .padding(.vertical, DS.badgeV)
             .background(
                 (percent >= 0 ? Color.red : Color.blue).opacity(0.1),
                 in: Capsule()

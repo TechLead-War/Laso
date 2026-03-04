@@ -119,8 +119,8 @@ struct ExploreView: View {
                 Image(systemName: "wand.and.stars")
                     .font(.title3)
                     .foregroundStyle(.cyan)
-                    .frame(width: 36, height: 36)
-                    .background(Color.cyan.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+                    .frame(width: DS.iconSize, height: DS.iconSize)
+                    .background(Color.cyan.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.iconRadius))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("What If?")
@@ -136,8 +136,8 @@ struct ExploreView: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.tertiary)
             }
-            .padding(12)
-            .background(.background, in: RoundedRectangle(cornerRadius: 14))
+            .padding(DS.cardPadding)
+            .cardStyle()
         }
         .buttonStyle(.plain)
     }
@@ -153,8 +153,8 @@ struct ExploreView: View {
                 Image(systemName: "gauge.with.dots.needle.67percent")
                     .font(.title3)
                     .foregroundStyle(.mint)
-                    .frame(width: 36, height: 36)
-                    .background(Color.mint.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+                    .frame(width: DS.iconSize, height: DS.iconSize)
+                    .background(Color.mint.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.iconRadius))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Health States")
@@ -176,8 +176,8 @@ struct ExploreView: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.tertiary)
             }
-            .padding(12)
-            .background(.background, in: RoundedRectangle(cornerRadius: 14))
+            .padding(DS.cardPadding)
+            .cardStyle()
         }
         .buttonStyle(.plain)
     }
@@ -260,17 +260,17 @@ struct ExploreView: View {
 
         return HStack(spacing: 0) {
             dataStat(value: "\(depth.metricsTracked)", label: "Metrics")
-            Divider().frame(height: 28)
+            Divider().frame(height: DS.dividerHeight)
             dataStat(value: formatDataPoints(depth.totalDataPoints), label: "Data Points")
             if depth.daysOfData > 0 {
-                Divider().frame(height: 28)
+                Divider().frame(height: DS.dividerHeight)
                 dataStat(value: "\(depth.daysOfData)", label: depth.daysOfData == 1 ? "Day" : "Days")
             }
-            Divider().frame(height: 28)
+            Divider().frame(height: DS.dividerHeight)
             dataStat(value: "\(insightCount)", label: "Insights")
         }
         .padding(.vertical, 10)
-        .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 12))
+        .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: DS.cardRadius))
     }
 
     private func dataStat(value: String, label: String) -> some View {
@@ -314,8 +314,8 @@ struct ExploreView: View {
                                 Image(systemName: factor.metric.systemImageName)
                                     .font(.caption)
                                     .foregroundStyle(factor.metric.category.color)
-                                    .frame(width: 28, height: 28)
-                                    .background(factor.metric.category.color.opacity(0.12), in: RoundedRectangle(cornerRadius: 7))
+                                    .frame(width: DS.iconSize, height: DS.iconSize)
+                                    .background(factor.metric.category.color.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.iconRadius))
 
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(factor.metric.displayName)
@@ -403,8 +403,8 @@ struct ExploreView: View {
             Image(systemName: highlight.icon)
                 .font(.body)
                 .foregroundStyle(.orange)
-                .frame(width: 32, height: 32)
-                .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+                .frame(width: DS.iconSize, height: DS.iconSize)
+                .background(Color.orange.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.iconRadius))
 
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
@@ -414,9 +414,9 @@ struct ExploreView: View {
                     Text(highlight.typeLabel)
                         .font(.caption2.weight(.medium))
                         .foregroundStyle(.orange)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 1)
-                        .background(Color.orange.opacity(0.12), in: Capsule())
+                        .padding(.horizontal, DS.badgeH)
+                        .padding(.vertical, DS.badgeV)
+                        .background(Color.orange.opacity(DS.badgeBg), in: Capsule())
                 }
 
                 Text(highlight.title)
@@ -435,8 +435,8 @@ struct ExploreView: View {
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
         }
-        .padding(12)
-        .background(.background, in: RoundedRectangle(cornerRadius: 14))
+        .padding(DS.cardPadding)
+        .cardStyle()
     }
 
     // MARK: - 5. Correlations Preview
@@ -502,8 +502,8 @@ struct ExploreView: View {
 
             Spacer()
         }
-        .padding(10)
-        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .padding(DS.cardPadding)
+        .cardStyle()
     }
 
     // MARK: - 6. Categories (worst-first)
@@ -546,7 +546,7 @@ struct ExploreView: View {
                     }
                 }
             }
-            .background(.background, in: RoundedRectangle(cornerRadius: 14))
+            .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
         }
     }
 

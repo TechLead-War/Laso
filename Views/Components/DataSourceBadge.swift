@@ -20,9 +20,9 @@ struct DataSourceBadge: View {
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 3)
-        .background(device.iconColor.opacity(0.1), in: Capsule())
+        .padding(.horizontal, DS.badgeH)
+        .padding(.vertical, DS.badgeV)
+        .background(device.iconColor.opacity(DS.badgeBg), in: Capsule())
     }
 }
 

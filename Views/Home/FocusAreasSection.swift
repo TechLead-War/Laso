@@ -55,22 +55,18 @@ struct FocusRiskCard: View {
         Button(action: onTap) {
             HStack(spacing: 0) {
                 // Risk level indicator bar
-                RoundedRectangle(cornerRadius: 2)
+                RoundedRectangle(cornerRadius: DS.accentRadius)
                     .fill(risk.riskGrade.color)
                     .frame(width: 4)
                     .padding(.vertical, 6)
 
                 HStack(spacing: 12) {
                     // Risk type icon
-                    ZStack {
-                        Circle()
-                            .fill(risk.riskType.color.opacity(0.15))
-                            .frame(width: 44, height: 44)
-
-                        Image(systemName: risk.riskType.systemImageName)
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(risk.riskType.color)
-                    }
+                    Image(systemName: risk.riskType.systemImageName)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: DS.iconSize, height: DS.iconSize)
+                        .background(risk.riskType.color, in: Circle())
 
                     // Content
                     VStack(alignment: .leading, spacing: 4) {
@@ -121,19 +117,11 @@ struct FocusRiskCard: View {
                         }
                     }
                 }
-                .padding(.leading, 10)
-                .padding(.trailing, 14)
-                .padding(.vertical, 10)
+                .padding(.leading, DS.accentLeading)
+                .padding(.trailing, DS.accentTrailing)
+                .padding(.vertical, DS.accentVertical)
             }
-            .background(
-                risk.riskType.color.opacity(0.04),
-                in: RoundedRectangle(cornerRadius: 14)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .strokeBorder(risk.riskType.color.opacity(0.1), lineWidth: 0.5)
-            )
-            .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
+            .cardStyle(tint: risk.riskType.color)
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
@@ -156,9 +144,9 @@ struct RiskGradeBadge: View {
                 .font(.caption2.weight(.bold))
         }
         .foregroundStyle(grade.color)
-        .padding(.horizontal, 7)
-        .padding(.vertical, 3)
-        .background(grade.color.opacity(0.12), in: Capsule())
+        .padding(.horizontal, DS.badgeH)
+        .padding(.vertical, DS.badgeV)
+        .background(grade.color.opacity(DS.badgeBg), in: Capsule())
     }
 }
 

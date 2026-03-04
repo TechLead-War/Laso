@@ -35,6 +35,17 @@ final class LiveViewModel {
     private var refreshTimer: Timer?
     private var respiratoryAvailabilityWorkItem: DispatchWorkItem?
 
+    /// Throttle UI-facing property updates to max 1 per second to reduce GPU work.
+    private var lastUIUpdateTime: Date = .distantPast
+    private var pendingHeartRateUpdate: PendingHRUpdate?
+    private var pendingUIUpdateWorkItem: DispatchWorkItem?
+
+    private struct PendingHRUpdate {
+        var merged: [(date: Date, value: Double)]
+        var latestValue: Double
+        var latestTimestamp: Date
+    }
+
     /// Live polling cadence and chart density controls (CPU/GPU protection).
     private static let liveActivityRefreshInterval: TimeInterval = 120
     private static let heartRateBucketSize: TimeInterval = 10
@@ -254,6 +265,9 @@ final class LiveViewModel {
         refreshTimer = nil
         respiratoryAvailabilityWorkItem?.cancel()
         respiratoryAvailabilityWorkItem = nil
+        pendingUIUpdateWorkItem?.cancel()
+        pendingUIUpdateWorkItem = nil
+        pendingHeartRateUpdate = nil
 
         // Clear stale vital data so fresh queries populate on next startStreaming().
         // Without this, old values block fallback fetches and the UI stays stuck on
@@ -313,7 +327,9 @@ final class LiveViewModel {
         }
 
         Task { @MainActor in
-            var merged = vitals.recentHeartRates
+            // Merge new bucketed points into the existing (or pending) chart data.
+            let base = pendingHeartRateUpdate?.merged ?? vitals.recentHeartRates
+            var merged = base
             merged.reserveCapacity(merged.count + bucketedPoints.count)
 
             for point in bucketedPoints {
@@ -339,34 +355,77 @@ final class LiveViewModel {
                 merged.removeFirst(merged.count - Self.maxHeartRatePoints)
             }
 
-            vitals.recentHeartRates = merged
-
-            // Compute session stats
-            if merged.isEmpty {
-                vitals.heartRateMin30 = nil
-                vitals.heartRateMax30 = nil
-                vitals.heartRateAvg30 = nil
+            // Buffer the processed data
+            if let latest = latestSample {
+                pendingHeartRateUpdate = PendingHRUpdate(
+                    merged: merged,
+                    latestValue: latest.quantity.doubleValue(for: unit),
+                    latestTimestamp: latest.startDate
+                )
             } else {
-                var minValue = Double.greatestFiniteMagnitude
-                var maxValue = -Double.greatestFiniteMagnitude
-                var sum = 0.0
-                for point in merged {
-                    minValue = min(minValue, point.value)
-                    maxValue = max(maxValue, point.value)
-                    sum += point.value
-                }
-                vitals.heartRateMin30 = minValue
-                vitals.heartRateMax30 = maxValue
-                vitals.heartRateAvg30 = sum / Double(merged.count)
+                pendingHeartRateUpdate = PendingHRUpdate(
+                    merged: merged,
+                    latestValue: pendingHeartRateUpdate?.latestValue ?? 0,
+                    latestTimestamp: pendingHeartRateUpdate?.latestTimestamp ?? Date()
+                )
             }
 
-            // Set current to most recent
-            if let latest = latestSample {
-                vitals.currentHeartRate = latest.quantity.doubleValue(for: unit)
-                vitals.heartRateTimestamp = latest.startDate
-                lastUpdate = Date()
+            // Throttle: only push to @Observable properties at most once per second
+            let now = Date()
+            let elapsed = now.timeIntervalSince(lastUIUpdateTime)
+            if elapsed >= 1.0 {
+                applyPendingHeartRateUpdate()
+            } else {
+                // Schedule a deferred flush if one isn't already pending
+                if pendingUIUpdateWorkItem == nil {
+                    let delay = 1.0 - elapsed
+                    let workItem = DispatchWorkItem { [weak self] in
+                        guard let self else { return }
+                        Task { @MainActor in
+                            self.applyPendingHeartRateUpdate()
+                            self.pendingUIUpdateWorkItem = nil
+                        }
+                    }
+                    pendingUIUpdateWorkItem = workItem
+                    DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
+                }
             }
         }
+    }
+
+    /// Flush buffered heart rate data to @Observable properties (triggers view redraws).
+    @MainActor
+    private func applyPendingHeartRateUpdate() {
+        guard let update = pendingHeartRateUpdate else { return }
+        pendingHeartRateUpdate = nil
+        lastUIUpdateTime = Date()
+
+        let merged = update.merged
+        vitals.recentHeartRates = merged
+
+        // Compute session stats
+        if merged.isEmpty {
+            vitals.heartRateMin30 = nil
+            vitals.heartRateMax30 = nil
+            vitals.heartRateAvg30 = nil
+        } else {
+            var minValue = Double.greatestFiniteMagnitude
+            var maxValue = -Double.greatestFiniteMagnitude
+            var sum = 0.0
+            for point in merged {
+                minValue = min(minValue, point.value)
+                maxValue = max(maxValue, point.value)
+                sum += point.value
+            }
+            vitals.heartRateMin30 = minValue
+            vitals.heartRateMax30 = maxValue
+            vitals.heartRateAvg30 = sum / Double(merged.count)
+        }
+
+        // Set current to most recent
+        vitals.currentHeartRate = update.latestValue
+        vitals.heartRateTimestamp = update.latestTimestamp
+        lastUpdate = Date()
     }
 
     // MARK: - Blood Oxygen Stream

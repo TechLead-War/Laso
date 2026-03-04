@@ -402,8 +402,8 @@ struct HomeView: View {
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
         }
-        .padding(12)
-        .background(.background, in: RoundedRectangle(cornerRadius: 14))
+        .padding(DS.cardPadding)
+        .cardStyle()
     }
 
     private func highlightTypeBadge(_ type: DashboardViewModel.HistoricalHighlight.HighlightType) -> some View {
@@ -416,9 +416,9 @@ struct HomeView: View {
         return Text(label)
             .font(.system(size: 9, weight: .bold))
             .foregroundStyle(color)
-            .padding(.horizontal, 5)
-            .padding(.vertical, 2)
-            .background(color.opacity(0.12), in: Capsule())
+            .padding(.horizontal, DS.badgeH)
+            .padding(.vertical, DS.badgeV)
+            .background(color.opacity(DS.badgeBg), in: Capsule())
     }
 
     private func healthTipsSection(daysRemaining: Int) -> some View {
@@ -446,8 +446,8 @@ struct HomeView: View {
                         .foregroundStyle(.primary)
                     Spacer()
                 }
-                .padding(12)
-                .background(.background, in: RoundedRectangle(cornerRadius: 14))
+                .padding(DS.cardPadding)
+                .cardStyle()
                 .padding(.horizontal)
             }
 
@@ -472,8 +472,8 @@ struct HomeView: View {
                         .font(.subheadline.weight(.semibold))
                     Text("PRO")
                         .font(.caption2.weight(.bold))
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 1)
+                        .padding(.horizontal, DS.badgeH)
+                        .padding(.vertical, DS.badgeV)
                         .background(.tint, in: Capsule())
                         .foregroundStyle(.white)
                 }
@@ -486,8 +486,8 @@ struct HomeView: View {
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
-        .padding()
-        .background(.background, in: RoundedRectangle(cornerRadius: 14))
+        .padding(DS.cardPadding)
+        .cardStyle()
         .padding(.horizontal)
         .onTapGesture {
             AppAnalytics.shared.trackPremiumFeatureAttempted(feature: title, screen: .home)
@@ -512,8 +512,8 @@ struct HomeView: View {
                     Text(warning.severity == .critical ? "High" : warning.severity == .warning ? "Moderate" : "Low")
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
+                        .padding(.horizontal, DS.badgeH)
+                        .padding(.vertical, DS.badgeV)
                         .background(warning.severity == .critical ? .red : warning.severity == .warning ? .orange : .yellow, in: Capsule())
                 }
 
@@ -562,13 +562,13 @@ struct HomeView: View {
                 // Counters row
                 HStack(spacing: 0) {
                     trendCounter(count: summary.improving, label: "Improving", icon: "arrow.up.right", color: .green)
-                    Divider().frame(height: 36)
+                    Divider().frame(height: DS.dividerHeight)
                     trendCounter(count: summary.stable, label: "Stable", icon: "arrow.right", color: .secondary)
-                    Divider().frame(height: 36)
+                    Divider().frame(height: DS.dividerHeight)
                     trendCounter(count: summary.declining, label: "Declining", icon: "arrow.down.right", color: .red)
                 }
                 .padding(.vertical, 10)
-                .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 14))
+                .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: DS.cardRadius))
                 .padding(.horizontal)
 
                 // Top movers (max 3)
@@ -583,7 +583,7 @@ struct HomeView: View {
                             .buttonStyle(.plain)
                         }
                     }
-                    .background(.background, in: RoundedRectangle(cornerRadius: 14))
+                    .cardStyle()
                     .padding(.horizontal)
                 }
             }
@@ -689,8 +689,8 @@ struct HomeView: View {
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
         }
-        .padding(12)
-        .background(.background, in: RoundedRectangle(cornerRadius: 14))
+        .padding(DS.cardPadding)
+        .cardStyle()
     }
 
     // MARK: - Today Section
@@ -712,8 +712,8 @@ struct HomeView: View {
             Image(systemName: "exclamationmark.applewatch")
                 .font(.title2)
                 .foregroundStyle(.orange)
-                .frame(width: 44, height: 44)
-                .background(.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+                .frame(width: DS.iconSize, height: DS.iconSize)
+                .background(.orange.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.iconRadius))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("Recovery Unavailable")
@@ -727,12 +727,8 @@ struct HomeView: View {
 
             Spacer()
         }
-        .padding()
-        .background(.background, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .strokeBorder(.orange.opacity(0.15), lineWidth: 0.5)
-        )
+        .padding(DS.cardPadding)
+        .cardStyle(tint: .orange)
         .padding(.horizontal)
     }
 

@@ -13,7 +13,7 @@ struct SleepCard: View {
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
                     // Left accent bar — indigo
-                    RoundedRectangle(cornerRadius: 2)
+                    RoundedRectangle(cornerRadius: DS.accentRadius)
                         .fill(.indigo)
                         .frame(width: 4)
                         .padding(.vertical, 6)
@@ -24,7 +24,7 @@ struct SleepCard: View {
                             Image(systemName: "moon.fill")
                                 .font(.body.weight(.semibold))
                                 .foregroundStyle(.white)
-                                .frame(width: 32, height: 32)
+                                .frame(width: DS.iconSize, height: DS.iconSize)
                                 .background(.indigo, in: Circle())
 
                             VStack(alignment: .leading, spacing: 2) {
@@ -48,9 +48,9 @@ struct SleepCard: View {
                             Text(liveVM.sleep.sleepQualityLabel)
                                 .font(.caption.weight(.bold))
                                 .foregroundStyle(qualityColor)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .background(qualityColor.opacity(0.12), in: Capsule())
+                                .padding(.horizontal, DS.badgeH)
+                                .padding(.vertical, DS.badgeV)
+                                .background(qualityColor.opacity(DS.badgeBg), in: Capsule())
                         }
 
                         // Stage breakdown bar
@@ -66,19 +66,11 @@ struct SleepCard: View {
                                 .lineLimit(2)
                         }
                     }
-                    .padding(.leading, 10)
-                    .padding(.trailing, 14)
-                    .padding(.vertical, 12)
+                    .padding(.leading, DS.accentLeading)
+                    .padding(.trailing, DS.accentTrailing)
+                    .padding(.vertical, DS.accentVertical)
                 }
-                .background(
-                    Color.indigo.opacity(0.04),
-                    in: RoundedRectangle(cornerRadius: 14)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .strokeBorder(Color.indigo.opacity(0.1), lineWidth: 0.5)
-                )
-                .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
+                .cardStyle(tint: .indigo)
             }
         }
     }
@@ -138,8 +130,8 @@ struct SleepCard: View {
         return Text("\(arrow)\(Int(percent))% vs avg")
             .font(.caption2.weight(.medium))
             .foregroundStyle(diff >= 0 ? .green : .orange)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
+            .padding(.horizontal, DS.badgeH)
+            .padding(.vertical, DS.badgeV)
             .background((diff >= 0 ? Color.green : Color.orange).opacity(0.1), in: Capsule())
     }
 

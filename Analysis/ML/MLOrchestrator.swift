@@ -1,9 +1,12 @@
 import Foundation
 import Observation
+import os
 
-/// Manages all ML component lifecycle, parallel execution, incremental training, and periodic retraining.
+/// Manages all ML component lifecycle, sequential execution, incremental training, and periodic retraining.
 @Observable
 final class MLOrchestrator {
+
+    private let logger = Logger(subsystem: "com.healthpulse.ml", category: "MLOrchestrator")
 
     // MARK: - ML Components
 
@@ -75,12 +78,20 @@ final class MLOrchestrator {
     // MARK: - Run ML Analysis
 
     /// Run all ML components that are ready. Called from AnalysisEngine after rule-based analysis.
+    /// Components run sequentially (one at a time) to avoid CPU spikes, ordered by priority.
+    /// Thermal state is checked before starting and between each component.
     func runMLAnalysis(
         timeSeries: [HealthMetric: MetricTimeSeries],
         baselines: [HealthMetric: UserBaseline],
         scoreHistory: [(date: Date, score: Int)],
         anomalyCounts: [Date: Int]
     ) async {
+        // Bail out entirely if device is critically overheated
+        if ProcessInfo.processInfo.thermalState == .critical {
+            logger.warning("Skipping ML analysis: device thermal state is critical")
+            return
+        }
+
         isRunning = true
         defer {
             isRunning = false
@@ -99,72 +110,100 @@ final class MLOrchestrator {
 
         let totalDays = vectors.count
 
-        // Run independent components in parallel using structured concurrency
-        await withTaskGroup(of: Void.self) { group in
+        // Run components sequentially in priority order to avoid CPU spikes.
+        // Between each component, yield briefly and check thermal state.
+        // Priority order:
+        //   1. FeatureEngine (already ran above — vectors built)
+        //   2. TimeSeriesForecaster (anomaly detection)
+        //   3. PredictiveScorer (tomorrow prediction)
+        //   4. CorrelationDiscovery
+        //   5. HealthStateClassifier
+        //   6. PatternMiner
+        //   7. AdaptiveAnomalyDetector
 
-            // Forecaster (21+ days, needs full retrain check)
-            if totalDays >= TimeSeriesForecaster.minimumDays {
-                if forecaster.needsRetrain || !forecaster.isReady {
-                    group.addTask { [forecaster, timeSeries] in
-                        forecaster.fit(timeSeries: timeSeries)
-                    }
-                }
+        // --- 1. TimeSeriesForecaster (21+ days) ---
+        if totalDays >= TimeSeriesForecaster.minimumDays {
+            if forecaster.needsRetrain || !forecaster.isReady {
+                logger.debug("Running TimeSeriesForecaster")
+                forecaster.fit(timeSeries: timeSeries)
             }
-
-            // Pattern Miner (60+ days)
-            if totalDays >= PatternMiner.minimumDays {
-                group.addTask { [patternMiner, timeSeries] in
-                    patternMiner.mine(timeSeries: timeSeries)
-                }
-            }
-
-            // Correlation Discovery (30+ days)
-            if totalDays >= CorrelationDiscovery.minimumDays {
-                group.addTask { [correlationDiscovery, timeSeries] in
-                    correlationDiscovery.discover(timeSeries: timeSeries)
-                }
-            }
-
-            await group.waitForAll()
         }
 
-        // Components that depend on feature vectors (run after feature engine)
-        await withTaskGroup(of: Void.self) { group in
-
-            // Isolation Forest (60+ days, needs full retrain check)
-            if totalDays >= AdaptiveAnomalyDetector.minimumDays {
-                if anomalyDetector.needsRetrain || !anomalyDetector.isReady {
-                    group.addTask { [anomalyDetector, vectors, orderedKeys] in
-                        anomalyDetector.train(vectors: vectors, orderedKeys: orderedKeys)
-                    }
-                }
-            }
-
-            // State Classifier (60+ days, needs full retrain check)
-            if totalDays >= HealthStateClassifier.minimumDays {
-                if stateClassifier.needsRetrain || !stateClassifier.isReady {
-                    group.addTask { [stateClassifier, vectors, orderedKeys] in
-                        stateClassifier.train(vectors: vectors, orderedKeys: orderedKeys)
-                    }
-                }
-            }
-
-            // Predictive Scorer (30+ days)
-            if totalDays >= PredictiveScorer.minimumDays {
-                group.addTask { [predictiveScorer, vectors, orderedKeys, scoreHistory, anomalyCounts] in
-                    predictiveScorer.train(
-                        vectors: vectors,
-                        orderedKeys: orderedKeys,
-                        scoreHistory: scoreHistory,
-                        anomalyCounts: anomalyCounts
-                    )
-                }
-            }
-
-            await group.waitForAll()
+        try? await Task.sleep(for: .milliseconds(200))
+        if ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue {
+            logger.warning("Stopping ML analysis after TimeSeriesForecaster: thermal state serious or above")
+            collectResults(timeSeries: timeSeries, vectors: vectors)
+            return
         }
 
-        // Collect results
+        // --- 2. PredictiveScorer (30+ days) ---
+        if totalDays >= PredictiveScorer.minimumDays {
+            logger.debug("Running PredictiveScorer")
+            predictiveScorer.train(
+                vectors: vectors,
+                orderedKeys: orderedKeys,
+                scoreHistory: scoreHistory,
+                anomalyCounts: anomalyCounts
+            )
+        }
+
+        try? await Task.sleep(for: .milliseconds(200))
+        if ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue {
+            logger.warning("Stopping ML analysis after PredictiveScorer: thermal state serious or above")
+            collectResults(timeSeries: timeSeries, vectors: vectors)
+            return
+        }
+
+        // --- 3. CorrelationDiscovery (30+ days) ---
+        if totalDays >= CorrelationDiscovery.minimumDays {
+            logger.debug("Running CorrelationDiscovery")
+            correlationDiscovery.discover(timeSeries: timeSeries)
+        }
+
+        try? await Task.sleep(for: .milliseconds(200))
+        if ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue {
+            logger.warning("Stopping ML analysis after CorrelationDiscovery: thermal state serious or above")
+            collectResults(timeSeries: timeSeries, vectors: vectors)
+            return
+        }
+
+        // --- 4. HealthStateClassifier (60+ days) ---
+        if totalDays >= HealthStateClassifier.minimumDays {
+            if stateClassifier.needsRetrain || !stateClassifier.isReady {
+                logger.debug("Running HealthStateClassifier")
+                stateClassifier.train(vectors: vectors, orderedKeys: orderedKeys)
+            }
+        }
+
+        try? await Task.sleep(for: .milliseconds(200))
+        if ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue {
+            logger.warning("Stopping ML analysis after HealthStateClassifier: thermal state serious or above")
+            collectResults(timeSeries: timeSeries, vectors: vectors)
+            return
+        }
+
+        // --- 5. PatternMiner (60+ days) ---
+        if totalDays >= PatternMiner.minimumDays {
+            logger.debug("Running PatternMiner")
+            patternMiner.mine(timeSeries: timeSeries)
+        }
+
+        try? await Task.sleep(for: .milliseconds(200))
+        if ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue {
+            logger.warning("Stopping ML analysis after PatternMiner: thermal state serious or above")
+            collectResults(timeSeries: timeSeries, vectors: vectors)
+            return
+        }
+
+        // --- 6. AdaptiveAnomalyDetector (60+ days) ---
+        if totalDays >= AdaptiveAnomalyDetector.minimumDays {
+            if anomalyDetector.needsRetrain || !anomalyDetector.isReady {
+                logger.debug("Running AdaptiveAnomalyDetector")
+                anomalyDetector.train(vectors: vectors, orderedKeys: orderedKeys)
+            }
+        }
+
+        // Collect results from all components that ran
         collectResults(timeSeries: timeSeries, vectors: vectors)
     }
 

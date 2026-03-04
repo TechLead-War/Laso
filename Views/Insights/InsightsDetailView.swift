@@ -251,7 +251,7 @@ private struct EnrichedInsightCard: View {
                 Image(systemName: insight.metric.systemImageName)
                     .font(.body.weight(.semibold))
                     .foregroundStyle(.white)
-                    .frame(width: 36, height: 36)
+                    .frame(width: DS.iconSize, height: DS.iconSize)
                     .background(insight.metric.category.color, in: Circle())
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -264,9 +264,9 @@ private struct EnrichedInsightCard: View {
                             Text(insight.category.displayName)
                                 .font(.caption2.weight(.semibold))
                                 .foregroundStyle(insight.category.color)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 1)
-                                .background(insight.category.color.opacity(0.12), in: Capsule())
+                                .padding(.horizontal, DS.badgeH)
+                                .padding(.vertical, DS.badgeV)
+                                .background(insight.category.color.opacity(DS.badgeBg), in: Capsule())
                         }
                     }
 
@@ -296,8 +296,8 @@ private struct EnrichedInsightCard: View {
                     .lineLimit(2)
             }
         }
-        .padding(14)
-        .background(.background, in: RoundedRectangle(cornerRadius: 14))
+        .padding(DS.cardPadding)
+        .cardStyle()
     }
 
     private var severityColor: Color {

@@ -8,9 +8,9 @@ struct LoadingView: View {
     @State private var iconScale: CGFloat = 0.8
     @State private var iconOpacity: Double = 0.6
     @State private var appeared = false
-    @State private var phaseTimer: Timer?
-    @State private var dotTimer: Timer?
-    @State private var loaderTimer: Timer?
+    @State private var tickTimer: Timer?
+    /// Counts ticks so we can advance the phase every 2nd tick (~1.8s at 0.9s interval).
+    @State private var tickCount = 0
 
     let message: String
 
@@ -23,6 +23,12 @@ struct LoadingView: View {
         ("sparkles", "Almost ready", .green),
     ]
 
+    /// When true, repeating animations are suppressed to reduce GPU load.
+    private var thermallyConstrained: Bool {
+        let state = ProcessInfo.processInfo.thermalState
+        return state == .serious || state == .critical
+    }
+
     init(_ message: String = "Loading health data...") {
         self.message = message
     }
@@ -33,18 +39,18 @@ struct LoadingView: View {
 
             // Animated icon with glow
             ZStack {
-                // Glow ring
+                // Glow ring — one-shot scale on appear (no repeatForever)
                 Circle()
                     .fill(currentColor.opacity(0.1))
                     .frame(width: 120, height: 120)
                     .scaleEffect(iconScale == 1.0 ? 1.3 : 0.9)
-                    .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: iconScale)
+                    .animation(.easeInOut(duration: 1.2), value: iconScale)
 
                 Circle()
                     .fill(currentColor.opacity(0.05))
                     .frame(width: 160, height: 160)
                     .scaleEffect(iconScale == 1.0 ? 1.5 : 1.0)
-                    .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: iconScale)
+                    .animation(.easeInOut(duration: 1.5), value: iconScale)
 
                 // Icon
                 Image(systemName: phases[currentPhase].icon)
@@ -88,15 +94,23 @@ struct LoadingView: View {
         .onAppear {
             appeared = true
             currentPhase = min(1, phases.count - 1)
-            iconScale = 1.0
-            iconOpacity = 1.0
-            startPhaseTimer()
-            startDotTimer()
-            startDotLoader()
+
+            if thermallyConstrained {
+                iconScale = 1.0
+                iconOpacity = 1.0
+            } else {
+                withAnimation(.easeInOut(duration: 0.6)) {
+                    iconScale = 1.0
+                    iconOpacity = 1.0
+                }
+            }
+
+            startTickTimer()
         }
         .onDisappear {
             appeared = false
-            invalidateTimers()
+            tickTimer?.invalidate()
+            tickTimer = nil
         }
     }
 
@@ -108,32 +122,18 @@ struct LoadingView: View {
         String(repeating: ".", count: dotCount)
     }
 
-    private func startPhaseTimer() {
-        phaseTimer?.invalidate()
-        phaseTimer = Timer.scheduledTimer(withTimeInterval: 1.8, repeats: true) { timer in
-            guard appeared else { timer.invalidate(); return }
-            withAnimation(.easeInOut(duration: 0.4)) {
-                if currentPhase < phases.count - 1 {
-                    currentPhase += 1
-                } else {
-                    currentPhase = min(1, phases.count - 1)
-                }
-            }
-        }
-    }
+    // MARK: - Single consolidated timer
 
-    private func startDotTimer() {
-        dotTimer?.invalidate()
-        dotTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
+    private func startTickTimer() {
+        tickTimer?.invalidate()
+        tickTimer = Timer.scheduledTimer(withTimeInterval: 0.9, repeats: true) { timer in
             guard appeared else { timer.invalidate(); return }
+            tickCount += 1
+
+            // Cycle dots every tick: 1 → 2 → 3 → 1 ...
             dotCount = (dotCount % 3) + 1
-        }
-    }
 
-    private func startDotLoader() {
-        loaderTimer?.invalidate()
-        loaderTimer = Timer.scheduledTimer(withTimeInterval: 0.35, repeats: true) { timer in
-            guard appeared else { timer.invalidate(); return }
+            // Advance progress dots every tick
             withAnimation {
                 if activeDots >= phases.count {
                     activeDots = 0
@@ -141,16 +141,18 @@ struct LoadingView: View {
                     activeDots += 1
                 }
             }
-        }
-    }
 
-    private func invalidateTimers() {
-        phaseTimer?.invalidate()
-        dotTimer?.invalidate()
-        loaderTimer?.invalidate()
-        phaseTimer = nil
-        dotTimer = nil
-        loaderTimer = nil
+            // Advance phase every 2nd tick (~1.8s, matching original interval)
+            if tickCount % 2 == 0 {
+                withAnimation(.easeInOut(duration: 0.4)) {
+                    if currentPhase < phases.count - 1 {
+                        currentPhase += 1
+                    } else {
+                        currentPhase = min(1, phases.count - 1)
+                    }
+                }
+            }
+        }
     }
 }
 

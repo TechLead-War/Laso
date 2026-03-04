@@ -13,9 +13,9 @@ struct SeverityBadge: View {
                 .font(.caption2.weight(.medium))
         }
         .foregroundStyle(severity.color)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 3)
-        .background(severity.color.opacity(0.12), in: Capsule())
+        .padding(.horizontal, DS.badgeH)
+        .padding(.vertical, DS.badgeV)
+        .background(severity.color.opacity(DS.badgeBg), in: Capsule())
     }
 }
 

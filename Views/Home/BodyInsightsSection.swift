@@ -48,8 +48,8 @@ struct BodyInsightsSection: View {
                 .font(.caption2)
                 .foregroundStyle(.white.opacity(0.5))
         }
-        .padding(12)
-        .background(.blue.gradient, in: RoundedRectangle(cornerRadius: 12))
+        .padding(DS.cardPadding)
+        .background(.blue.gradient, in: RoundedRectangle(cornerRadius: DS.cardRadius))
         .padding(.horizontal)
     }
 
@@ -72,8 +72,8 @@ struct BodyInsightsSection: View {
                 .font(.caption2)
                 .foregroundStyle(.white.opacity(0.5))
         }
-        .padding(12)
-        .background(.indigo.gradient, in: RoundedRectangle(cornerRadius: 12))
+        .padding(DS.cardPadding)
+        .background(.indigo.gradient, in: RoundedRectangle(cornerRadius: DS.cardRadius))
         .padding(.horizontal)
     }
 }
