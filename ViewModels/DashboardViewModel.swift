@@ -866,7 +866,591 @@ final class DashboardViewModel {
 
     // MARK: - Coach Goals Computation
 
+    /// Dedicated intelligence layer for coach recommendations.
+    /// Fuses insights, trends, risks, correlations, and causal chains into high-signal daily goals.
+    private struct CoachRecommendationEngine {
+        struct Recommendation {
+            let metric: HealthMetric
+            let action: String
+            let reason: String
+            let priority: Double
+        }
+
+        private struct Candidate {
+            let metric: HealthMetric
+            var action: String
+            var reasons: [String]
+            var score: Double
+            var evidenceSources: Set<String>
+            var category: HealthCategory { metric.category }
+
+            mutating func merge(action newAction: String, reason: String, score newScore: Double, source: String) {
+                let sanitizedReason = sanitize(reason)
+                if !sanitizedReason.isEmpty, !reasons.contains(sanitizedReason) {
+                    reasons.append(sanitizedReason)
+                }
+                if newScore > score || isGenericAction(action) {
+                    action = newAction
+                }
+                score = max(score, newScore) + min(newScore * 0.15, 16)
+                evidenceSources.insert(source)
+                if reasons.count > 3 {
+                    reasons = Array(reasons.prefix(3))
+                }
+            }
+        }
+
+        static func generateRecommendations(
+            insights: [Insight],
+            trends: [HealthMetric: TrendAnalyzer.TrendResult],
+            baselines: [HealthMetric: UserBaseline],
+            timeSeries: [HealthMetric: MetricTimeSeries],
+            correlations: [HealthCorrelation],
+            causalChains: [CausalChain],
+            healthRisks: [HealthRisk],
+            focusCategories: Set<HealthCategory>,
+            maxCount: Int = 3
+        ) -> [Recommendation] {
+            var candidateByMetric: [HealthMetric: Candidate] = [:]
+            var chainByEffect: [HealthMetric: CausalChain] = [:]
+            for chain in causalChains {
+                if let existing = chainByEffect[chain.affectedMetric],
+                   existing.confidence >= chain.confidence {
+                    continue
+                }
+                chainByEffect[chain.affectedMetric] = chain
+            }
+
+            // 1) Insight-driven candidates: strongest first, includes causal and illness insights.
+            let actionableInsights = InsightGenerator.filterToActionable(insights, maxCount: 24)
+            for insight in actionableInsights {
+                let leverMetric = preferredLeverMetric(for: insight, chainByEffect: chainByEffect) ?? insight.metric
+                guard isActionableMetric(leverMetric) else { continue }
+
+                let trend = trends[leverMetric]
+                let baseline = baselines[leverMetric]
+                let recent = recentValue(for: leverMetric, in: timeSeries)
+
+                let action = buildAction(
+                    metric: leverMetric,
+                    trend: trend,
+                    baseline: baseline,
+                    recentValue: recent,
+                    recommendationHint: insight.recommendation
+                )
+                let reason = buildInsightReason(insight: insight, leverMetric: leverMetric)
+                let score = scoreInsight(
+                    insight: insight,
+                    leverMetric: leverMetric,
+                    focusCategories: focusCategories
+                )
+                upsert(
+                    metric: leverMetric,
+                    action: action,
+                    reason: reason,
+                    score: score,
+                    source: "insight",
+                    into: &candidateByMetric
+                )
+            }
+
+            // 2) Correlation levers: prioritize non-obvious cause->effect opportunities.
+            for corr in correlations.prefix(20) {
+                guard isActionableMetric(corr.metricA),
+                      abs(corr.correlation) >= 0.3,
+                      corr.effectPercentDiff >= 10,
+                      corr.sampleCount >= 14 else { continue }
+
+                let trendB = trends[corr.metricB]
+                let targetDeclining = trendB?.direction == .declining
+                guard targetDeclining || abs(corr.correlation) >= 0.45 else { continue }
+
+                let action = buildAction(
+                    metric: corr.metricA,
+                    trend: trends[corr.metricA],
+                    baseline: baselines[corr.metricA],
+                    recentValue: recentValue(for: corr.metricA, in: timeSeries),
+                    recommendationHint: nil,
+                    targetMetric: corr.metricB,
+                    expectedEffectPercent: corr.effectPercentDiff
+                )
+
+                let lagText = corr.dayOffset == 0 ? "same-day" : "next-day"
+                let reason = "\(corr.sampleCount)-day \(lagText) pattern: higher \(corr.metricA.displayName.lowercased()) links to \(String(format: "%.0f", corr.effectPercentDiff))% better \(corr.metricB.displayName.lowercased())."
+                let score = scoreCorrelation(
+                    correlation: corr,
+                    targetTrend: trendB,
+                    focusCategories: focusCategories
+                )
+                upsert(
+                    metric: corr.metricA,
+                    action: action,
+                    reason: reason,
+                    score: score,
+                    source: "correlation",
+                    into: &candidateByMetric
+                )
+            }
+
+            // 3) Risk factors: pull high-impact factors even if they have no direct insight yet.
+            for risk in healthRisks where risk.riskGrade != .low {
+                for factor in risk.measuredFactors.sorted(by: { $0.contribution > $1.contribution }).prefix(4) {
+                    let metric = factor.metric
+                    guard isActionableMetric(metric) else { continue }
+
+                    let action = buildAction(
+                        metric: metric,
+                        trend: trends[metric],
+                        baseline: baselines[metric],
+                        recentValue: recentValue(for: metric, in: timeSeries),
+                        recommendationHint: nil
+                    )
+                    let reason = "\(risk.riskType.displayName) is \(risk.riskGrade.displayName.lowercased()); \(metric.displayName) is \(factor.status.displayName.lowercased())."
+                    let score = scoreRisk(
+                        risk: risk,
+                        factor: factor,
+                        focusCategories: focusCategories
+                    )
+                    upsert(
+                        metric: metric,
+                        action: action,
+                        reason: reason,
+                        score: score,
+                        source: "risk",
+                        into: &candidateByMetric
+                    )
+                }
+            }
+
+            // 4) Trend fallback: ensure coach still has concrete targets when other evidence is sparse.
+            for (metric, trend) in trends {
+                guard isActionableMetric(metric),
+                      trend.direction == .declining,
+                      abs(trend.weekOverWeekChange) >= 4 else { continue }
+
+                let action = buildAction(
+                    metric: metric,
+                    trend: trend,
+                    baseline: baselines[metric],
+                    recentValue: recentValue(for: metric, in: timeSeries),
+                    recommendationHint: nil
+                )
+                let reason = "\(metric.displayName) moved \(String(format: "%.0f", trend.weekOverWeekChange))% week-over-week."
+                let score = scoreTrend(trend: trend, metric: metric, focusCategories: focusCategories)
+                upsert(
+                    metric: metric,
+                    action: action,
+                    reason: reason,
+                    score: score,
+                    source: "trend",
+                    into: &candidateByMetric
+                )
+            }
+
+            let ranked = candidateByMetric.values
+                .map { candidate in
+                    var updated = candidate
+                    updated.score += Double(updated.evidenceSources.count) * 8
+                    if updated.reasons.isEmpty {
+                        updated.reasons = ["\(updated.metric.displayName) is currently off your baseline."]
+                    }
+                    return updated
+                }
+                .sorted { $0.score > $1.score }
+
+            // Keep diversity: avoid flooding the coach section with one category only.
+            var selected: [Candidate] = []
+            var usedCategories: Set<HealthCategory> = []
+            for candidate in ranked {
+                if usedCategories.contains(candidate.category) && selected.count < maxCount - 1 {
+                    continue
+                }
+                selected.append(candidate)
+                usedCategories.insert(candidate.category)
+                if selected.count >= maxCount { break }
+            }
+
+            // Backfill if diversity filter removed too many.
+            if selected.count < maxCount {
+                for candidate in ranked where !selected.contains(where: { $0.metric == candidate.metric }) {
+                    selected.append(candidate)
+                    if selected.count >= maxCount { break }
+                }
+            }
+
+            return selected.prefix(maxCount).map { candidate in
+                Recommendation(
+                    metric: candidate.metric,
+                    action: sanitize(candidate.action, maxLength: 140),
+                    reason: sanitize(candidate.reasons.joined(separator: " "), maxLength: 150),
+                    priority: candidate.score
+                )
+            }
+        }
+
+        private static func upsert(
+            metric: HealthMetric,
+            action: String,
+            reason: String,
+            score: Double,
+            source: String,
+            into map: inout [HealthMetric: Candidate]
+        ) {
+            guard !action.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+            if var existing = map[metric] {
+                existing.merge(action: action, reason: reason, score: score, source: source)
+                map[metric] = existing
+            } else {
+                map[metric] = Candidate(
+                    metric: metric,
+                    action: sanitize(action),
+                    reasons: [sanitize(reason)],
+                    score: score,
+                    evidenceSources: [source]
+                )
+            }
+        }
+
+        private static func preferredLeverMetric(
+            for insight: Insight,
+            chainByEffect: [HealthMetric: CausalChain]
+        ) -> HealthMetric? {
+            if let root = insight.context?.rootCauseMetric, isActionableMetric(root) {
+                return root
+            }
+
+            if insight.category == .causalChain,
+               let chain = chainByEffect[insight.metric],
+               let cause = chain.links.first?.causeMetric,
+               isActionableMetric(cause) {
+                return cause
+            }
+
+            if let related = insight.relatedMetrics.first(where: { isActionableMetric($0) }) {
+                return related
+            }
+            return nil
+        }
+
+        private static func scoreInsight(
+            insight: Insight,
+            leverMetric: HealthMetric,
+            focusCategories: Set<HealthCategory>
+        ) -> Double {
+            let severityWeight: Double = switch insight.severity {
+            case .critical: 130
+            case .warning: 85
+            case .info: 30
+            }
+            let actionability = Double(InsightGenerator.actionabilityScore(insight))
+            let deviation = min(abs(insight.deviationPercent), 50) * 1.4
+            let trendBoost: Double = insight.trend == .declining ? 28 : 8
+            let focusBoost: Double = focusCategories.contains(leverMetric.category) ? 30 : 0
+            let categoryBoost: Double = switch insight.category {
+            case .causalChain: 36
+            case .illnessWarning: 34
+            case .crossMetricAnomaly: 28
+            case .correlation: 24
+            case .cognitiveEnergy: 20
+            default: 12
+            }
+            let confidenceBoost = (insight.context?.confidenceLevel ?? 0) * 25
+            let rootCauseBoost: Double = insight.context?.rootCauseMetric == nil ? 0 : 18
+
+            var total = severityWeight
+            total += actionability
+            total += deviation
+            total += trendBoost
+            total += focusBoost
+            total += categoryBoost
+            total += confidenceBoost
+            total += rootCauseBoost
+            return total
+        }
+
+        private static func scoreCorrelation(
+            correlation: HealthCorrelation,
+            targetTrend: TrendAnalyzer.TrendResult?,
+            focusCategories: Set<HealthCategory>
+        ) -> Double {
+            var score = abs(correlation.correlation) * 130
+            score += min(correlation.effectPercentDiff, 40) * 2.2
+            score += min(Double(correlation.sampleCount), 50)
+            if targetTrend?.direction == .declining { score += 30 }
+            if focusCategories.contains(correlation.metricA.category) { score += 24 }
+            if correlation.dayOffset > 0 { score += 8 }
+            return score
+        }
+
+        private static func scoreRisk(
+            risk: HealthRisk,
+            factor: RiskFactor,
+            focusCategories: Set<HealthCategory>
+        ) -> Double {
+            let statusBoost: Double = switch factor.status {
+            case .critical: 35
+            case .concerning: 24
+            case .borderline: 12
+            case .optimal, .unmeasured: 0
+            }
+            let focusBoost: Double = focusCategories.contains(factor.metric.category) ? 20 : 0
+            let base = Double(risk.level) * 1.8
+            return base + Double(factor.contribution) + statusBoost + focusBoost
+        }
+
+        private static func scoreTrend(
+            trend: TrendAnalyzer.TrendResult,
+            metric: HealthMetric,
+            focusCategories: Set<HealthCategory>
+        ) -> Double {
+            let wow = abs(trend.weekOverWeekChange)
+            let inflectionBoost: Double = switch trend.inflection {
+            case .accelerating: 20
+            case .reversing: 12
+            case .decelerating: 8
+            case .steady: 0
+            }
+            let focusBoost: Double = focusCategories.contains(metric.category) ? 18 : 0
+            return wow * 6 + inflectionBoost + focusBoost + 30
+        }
+
+        private static func buildInsightReason(insight: Insight, leverMetric: HealthMetric) -> String {
+            var parts: [String] = []
+            let absDeviation = abs(insight.deviationPercent)
+            if absDeviation >= 5 {
+                parts.append("\(insight.metric.displayName) is off baseline by \(String(format: "%.0f", absDeviation))%.")
+            }
+            if leverMetric != insight.metric {
+                parts.append("Best lever from your data: \(leverMetric.displayName.lowercased()).")
+            }
+            if !insight.relatedMetrics.isEmpty {
+                let topRelated = insight.relatedMetrics.prefix(2).map { $0.displayName.lowercased() }.joined(separator: " + ")
+                parts.append("Connected metrics: \(topRelated).")
+            }
+            if let confidence = insight.context?.confidenceLevel, confidence > 0 {
+                parts.append("Confidence \(String(format: "%.0f", confidence * 100))%.")
+            }
+            if parts.isEmpty {
+                parts.append(insight.summary)
+            }
+            return parts.joined(separator: " ")
+        }
+
+        private static func buildAction(
+            metric: HealthMetric,
+            trend: TrendAnalyzer.TrendResult?,
+            baseline: UserBaseline?,
+            recentValue: Double?,
+            recommendationHint: String?,
+            targetMetric: HealthMetric? = nil,
+            expectedEffectPercent: Double? = nil
+        ) -> String {
+            if let hint = recommendationHint {
+                let cleanedHint = cleanHintAction(hint)
+                if !cleanedHint.isEmpty && !isGenericAction(cleanedHint) {
+                    return sanitize(cleanedHint, maxLength: 140)
+                }
+            }
+
+            let fallbackTrend = trend?.direction ?? .declining
+            let attachEffect: (String) -> String = { base in
+                guard let targetMetric, let expectedEffectPercent, expectedEffectPercent >= 10 else {
+                    return sanitize(base, maxLength: 140)
+                }
+                let annotated = "\(base) Potential upside: ~\(String(format: "%.0f", expectedEffectPercent))% better \(targetMetric.displayName.lowercased())."
+                return sanitize(annotated, maxLength: 140)
+            }
+
+            switch metric {
+            case .steps, .distanceWalkingRunning:
+                let baselineSteps = Int((baseline?.mean ?? 8_000).rounded())
+                let recentSteps = Int((recentValue ?? Double(baselineSteps)).rounded())
+                let gap = max(800, baselineSteps - recentSteps)
+                return attachEffect("Add a 20-minute walk and close at least \(formatLargeInt(gap)) steps today.")
+
+            case .activeCalories, .exerciseMinutes, .workoutDuration, .workoutCount, .appleMoveTime:
+                let target = max(20, Int((baseline?.mean ?? 30).rounded()))
+                return attachEffect("Schedule \(target) minutes of moderate movement today, split into two short sessions if needed.")
+
+            case .sleepDuration:
+                let baselineHours = baseline?.mean ?? 7.5
+                let recent = recentValue ?? baselineHours
+                let boundedDiff = max(-2.0, min(2.0, baselineHours - recent))
+                if boundedDiff > 0.25 {
+                    let extraMinutes = max(30, Int((boundedDiff * 60).rounded()))
+                    return attachEffect("Move bedtime earlier and add about \(extraMinutes) minutes of sleep tonight.")
+                }
+                return attachEffect("Hold a consistent bedtime tonight and protect your current sleep rhythm.")
+
+            case .sleepDeep:
+                return attachEffect("Protect deep sleep tonight: no alcohol, no caffeine after 2 pm, and keep the room cool.")
+
+            case .sleepREM:
+                return attachEffect("Stabilize REM tonight with a fixed wake time and a 60-minute screen-free wind-down.")
+
+            case .sleepCore, .sleepAwake:
+                return attachEffect("Keep bedtime and wake time consistent tonight to reduce sleep fragmentation.")
+
+            case .mindfulMinutes:
+                let target = max(10, Int((baseline?.mean ?? 12).rounded()))
+                return attachEffect("Run a focused breathing block for \(target) minutes before your highest-stress period.")
+
+            case .timeInDaylight:
+                return attachEffect("Get 20 minutes of outdoor light before noon to improve recovery and sleep timing.")
+
+            case .waterIntake:
+                let targetMl = Int((baseline?.mean ?? 2_500).rounded())
+                return attachEffect("Front-load hydration: drink 500 mL now and target \(formatLargeInt(targetMl)) mL total today.")
+
+            case .proteinIntake:
+                let targetG = max(70, Int((baseline?.mean ?? 95).rounded()))
+                return attachEffect("Hit \(targetG)g protein today by anchoring each meal with a clear protein source.")
+
+            case .fiberIntake:
+                let targetG = max(25, Int((baseline?.mean ?? 28).rounded()))
+                return attachEffect("Push fiber to \(targetG)g today by adding vegetables and a whole-grain serving.")
+
+            case .restingHeartRate:
+                return attachEffect("Use a low-load recovery day, hydration, and an early bedtime to bring resting HR down.")
+
+            case .heartRateVariability:
+                return attachEffect("Prioritize parasympathetic recovery: 10 minutes of slow breathing and an easier training day.")
+
+            case .heartRateRecovery:
+                return attachEffect("Add a controlled cooldown after workouts and one easy cardio session to improve HR recovery.")
+
+            case .vo2Max:
+                return attachEffect("Add one 20-30 minute zone-2 cardio block today to defend VO2 max.")
+
+            case .bloodOxygen, .respiratoryRate:
+                return attachEffect("Favor nasal breathing during light activity and avoid late intense sessions tonight.")
+
+            case .weight, .bodyFatPercentage, .waistCircumference, .bloodGlucose:
+                return attachEffect("Anchor meals around protein and fiber, then add a 10-15 minute post-meal walk.")
+
+            default:
+                let deviation = baseline.flatMap { base -> Double? in
+                    guard let recentValue else { return nil }
+                    return base.deviationPercent(for: recentValue)
+                }
+                let fallback = RulesConfiguration.recommendation(
+                    for: metric,
+                    severity: .warning,
+                    trend: fallbackTrend,
+                    currentValue: recentValue,
+                    deviationPercent: deviation
+                )
+                return sanitize(cleanHintAction(fallback), maxLength: 140)
+            }
+        }
+
+        private static func cleanHintAction(_ text: String) -> String {
+            let sentences = text
+                .split(separator: ".", omittingEmptySubsequences: true)
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+
+            let filtered = sentences.filter { sentence in
+                let lower = sentence.lowercased()
+                return !lower.contains("triage level")
+            }
+            return sanitize((filtered.first ?? "").appending(filtered.isEmpty ? "" : "."))
+        }
+
+        private static func recentValue(for metric: HealthMetric, in seriesMap: [HealthMetric: MetricTimeSeries]) -> Double? {
+            guard let series = seriesMap[metric] else { return nil }
+            if let latest = series.latestValue { return latest }
+            let last3 = series.samples(lastDays: 3).map(\.value)
+            return last3.isEmpty ? nil : last3.mean
+        }
+
+        private static func isActionableMetric(_ metric: HealthMetric) -> Bool {
+            switch metric {
+            case .steps, .activeCalories, .exerciseMinutes, .standHours, .distanceWalkingRunning,
+                 .flightsClimbed, .distanceCycling, .distanceSwimming, .appleMoveTime,
+                 .sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .sleepAwake,
+                 .mindfulMinutes, .timeInDaylight,
+                 .waterIntake, .proteinIntake, .fiberIntake, .sugarIntake, .sodiumIntake,
+                 .caffeineIntake, .totalCaloriesIntake, .carbohydrateIntake, .fatIntake,
+                 .restingHeartRate, .heartRateVariability, .heartRateRecovery,
+                 .vo2Max, .bloodOxygen, .respiratoryRate,
+                 .weight, .bodyFatPercentage, .waistCircumference, .bloodGlucose,
+                 .walkingSpeed, .walkingStepLength, .walkingAsymmetry,
+                 .walkingDoubleSupportPercentage, .stairAscentSpeed, .stairDescentSpeed,
+                 .sixMinuteWalkTestDistance, .workoutDuration, .workoutCount:
+                return true
+            default:
+                return false
+            }
+        }
+
+        private static func sanitize(_ text: String, maxLength: Int = 220) -> String {
+            let compact = text
+                .replacingOccurrences(of: "\n", with: " ")
+                .replacingOccurrences(of: "  ", with: " ")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            guard compact.count > maxLength else { return compact }
+
+            let truncated = compact.prefix(maxLength)
+            if let split = truncated.lastIndex(of: " ") {
+                return String(truncated[..<split]) + "..."
+            }
+            return String(truncated) + "..."
+        }
+
+        private static func isGenericAction(_ text: String) -> Bool {
+            let lower = text.lowercased()
+            let genericPhrases = [
+                "keep it up",
+                "stay on track",
+                "monitor",
+                "watch this",
+                "good trend",
+                "looks stable",
+                "within normal range"
+            ]
+            return genericPhrases.contains { lower.contains($0) }
+        }
+
+        private static func formatLargeInt(_ value: Int) -> String {
+            if value >= 10_000 {
+                return String(format: "%.1fk", Double(value) / 1000)
+            }
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .decimal
+            return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
+        }
+    }
+
     private func computeCoachGoals() -> [CoachGoal] {
+        let enriched = CoachRecommendationEngine.generateRecommendations(
+            insights: analysisEngine.insights,
+            trends: analysisEngine.trends,
+            baselines: analysisEngine.baselines,
+            timeSeries: healthKitManager.timeSeries,
+            correlations: analysisEngine.correlations,
+            causalChains: analysisEngine.causalChains,
+            healthRisks: analysisEngine.healthRisks,
+            focusCategories: cachedFocusCategories,
+            maxCount: 3
+        )
+
+        if !enriched.isEmpty {
+            return enriched.map { rec in
+                CoachGoal(
+                    metric: rec.metric,
+                    action: rec.action,
+                    reason: rec.reason,
+                    priority: rec.priority
+                )
+            }
+        }
+
+        // Fallback to legacy approach if the intelligence layer has too little evidence.
+        return computeCoachGoalsLegacy()
+    }
+
+    private func computeCoachGoalsLegacy() -> [CoachGoal] {
         let focuses = cachedFocusCategories
         var goals: [CoachGoal] = []
         var usedCategories: Set<HealthCategory> = []
