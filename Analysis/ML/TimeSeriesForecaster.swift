@@ -199,9 +199,9 @@ final class TimeSeriesForecaster {
     // MARK: - Private: Grid Search Fit
 
     private func gridSearchFit(values: [Double], period: Int) -> HoltWintersState {
-        let alphas = [0.1, 0.2, 0.3, 0.5]
-        let betas = [0.01, 0.05, 0.1, 0.2]
-        let gammas = [0.1, 0.3, 0.5]
+        let alphas = [0.1, 0.3, 0.5]
+        let betas = [0.01, 0.1, 0.2]
+        let gammas = [0.1, 0.5]
 
         var bestState: HoltWintersState?
         var bestSSE = Double.infinity

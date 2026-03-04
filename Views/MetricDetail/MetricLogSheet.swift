@@ -21,6 +21,7 @@ struct MetricLogSheet: View {
     @State private var isSaving = false
     @State private var errorMessage: String?
     @State private var didSave = false
+    @State private var formTracker = SectionTracker(section: .metricLogForm, tab: .metricLog)
 
     var body: some View {
         NavigationStack {
@@ -48,10 +49,16 @@ struct MetricLogSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") {
+                        AppAnalytics.shared.trackBlockTap(title: "Cancel", type: .metricLogCancel, screen: .metricLog)
+                        formTracker.tapped(target: "cancel")
+                        dismiss()
+                    }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
+                        AppAnalytics.shared.trackBlockTap(title: "Save", type: .metricLogSave, screen: .metricLog)
+                        formTracker.tapped(target: "save")
                         Task { await save() }
                     }
                     .fontWeight(.semibold)
@@ -59,6 +66,18 @@ struct MetricLogSheet: View {
                 }
             }
             .sensoryFeedback(.success, trigger: didSave)
+        }
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.metricLog, metadata: [
+                "metric": metric.rawValue
+            ])
+            formTracker.appeared()
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.metricLog, metadata: [
+                "metric": metric.rawValue
+            ])
+            formTracker.disappeared()
         }
     }
 
@@ -92,6 +111,12 @@ struct MetricLogSheet: View {
                     ForEach([250, 500, 750, 1000], id: \.self) { amount in
                         Button {
                             waterMl = Double(amount)
+                            AppAnalytics.shared.trackBlockTap(
+                                title: "Water \(amount)",
+                                type: .metricLogQuickAmount,
+                                screen: .metricLog
+                            )
+                            formTracker.tapped(target: "water_\(amount)")
                         } label: {
                             Text("\(amount)")
                                 .font(.subheadline.weight(.medium))

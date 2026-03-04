@@ -16,14 +16,30 @@ final class CorrelationDiscovery {
     /// Discovered correlations
     private(set) var correlations: [MLCorrelation] = []
 
+    /// Last analysis date — guards against rerunning too frequently
+    private var lastAnalysisDate: Date?
+
+    /// Whether a full reanalysis is needed (never run, or >30 days since last)
+    var needsRetrain: Bool {
+        guard let lastAnalysis = lastAnalysisDate else { return true }
+        return Date().timeIntervalSince(lastAnalysis) > 30 * 24 * 3600
+    }
+
     // MARK: - Discovery
 
     /// Discover all significant correlations between metric pairs
     func discover(timeSeries: [HealthMetric: MetricTimeSeries]) {
         correlations = []
         let calendar = Calendar.current
+        let recentCutoff = calendar.date(byAdding: .day, value: -7, to: Date()) ?? Date()
 
-        let metrics = Array(timeSeries.keys).sorted { $0.rawValue < $1.rawValue }
+        // Filter to metrics with data in the past 7 days
+        let activeMetrics = Array(timeSeries.keys.filter { metric in
+            guard let series = timeSeries[metric] else { return false }
+            return series.sortedSamples.last.map { $0.date >= recentCutoff } ?? false
+        }).sorted { $0.rawValue < $1.rawValue }
+
+        let metrics = activeMetrics
         guard metrics.count >= 2 else { return }
 
         // Build date-aligned values for each metric
@@ -60,28 +76,43 @@ final class CorrelationDiscovery {
                 // 1. Pearson correlation
                 let pearsonR = [Double].pearsonCorrelation(valuesA, valuesB) ?? 0
 
+                // Early exit: skip weak correlations entirely
+                guard abs(pearsonR) >= 0.15 else { continue }
+
                 // 2. Mutual information
                 let mi = mutualInformation(valuesA, valuesB)
 
-                // 3. Granger causality (A → B)
-                let (grangerCausal, grangerP) = grangerCausality(
-                    cause: valuesA, effect: valuesB, maxLag: Self.maxGrangerLag
-                )
-
-                // 4. Partial correlation (controlling for strongest confounder)
+                // Tiered pruning: skip expensive tests for moderate-weak correlations
+                let grangerCausal: Bool
+                let grangerP: Double
                 var partialCorr: Double?
                 var confounder: HealthMetric?
-                if metrics.count > 2 {
-                    (partialCorr, confounder) = partialCorrelation(
-                        a: valuesA, b: valuesB,
-                        metricA: metricA, metricB: metricB,
-                        allDateValues: dateValues,
-                        commonDates: commonDates
-                    )
-                }
+                let stability: Double
 
-                // 5. Stability over sliding windows
-                let stability = correlationStability(valuesA, valuesB)
+                if abs(pearsonR) >= 0.25 {
+                    // 3. Granger causality (A → B)
+                    (grangerCausal, grangerP) = grangerCausality(
+                        cause: valuesA, effect: valuesB, maxLag: Self.maxGrangerLag
+                    )
+
+                    // 4. Partial correlation (controlling for strongest confounder)
+                    if metrics.count > 2 {
+                        (partialCorr, confounder) = partialCorrelation(
+                            a: valuesA, b: valuesB,
+                            metricA: metricA, metricB: metricB,
+                            allDateValues: dateValues,
+                            commonDates: commonDates
+                        )
+                    }
+
+                    // 5. Stability over sliding windows
+                    stability = correlationStability(valuesA, valuesB)
+                } else {
+                    // Weak-moderate (0.15-0.25): only Pearson + MI
+                    grangerCausal = false
+                    grangerP = 1.0
+                    stability = 1.0
+                }
 
                 let correlation = MLCorrelation(
                     metricA: metricA,
@@ -104,6 +135,8 @@ final class CorrelationDiscovery {
 
         // Sort by overall strength
         correlations.sort { $0.overallStrength > $1.overallStrength }
+
+        lastAnalysisDate = Date()
     }
 
     // MARK: - Mutual Information

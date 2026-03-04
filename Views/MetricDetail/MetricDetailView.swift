@@ -34,6 +34,11 @@ struct MetricDetailView: View {
                     // Log button for writable metrics
                     if HealthKitManager.writableMetrics.contains(viewModel.metric) {
                         Button {
+                            AppAnalytics.shared.trackBlockTap(
+                                title: "Log \(viewModel.metric.displayName)",
+                                type: .metricLogOpen,
+                                screen: .metricDetail
+                            )
                             showLogSheet = true
                         } label: {
                             Label("Log \(viewModel.metric.displayName)", systemImage: "plus.circle.fill")

@@ -38,7 +38,8 @@ struct ProFeatureOverlay: View {
             }
 
             Button {
-                AppAnalytics.shared.trackPremiumFeatureAttempted(feature: feature, screen: .home)
+                AppAnalytics.shared.trackBlockTap(title: "Upgrade to Pro", type: .proUpgradeButton, screen: .proOverlay)
+                AppAnalytics.shared.trackPremiumFeatureAttempted(feature: feature, screen: .proOverlay)
                 showPaywall = true
             } label: {
                 Text("Upgrade to Pro")
@@ -54,6 +55,16 @@ struct ProFeatureOverlay: View {
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .sheet(isPresented: $showPaywall) {
             PaywallView(subscriptionManager: SubscriptionManager.shared)
+        }
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.proOverlay, metadata: [
+                "feature": feature
+            ])
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.proOverlay, metadata: [
+                "feature": feature
+            ])
         }
     }
 }

@@ -105,6 +105,12 @@ struct ContentView: View {
                                 navigationPath.append(metric)
                             }
                         )
+                    } else if route == "healthStateTimeline" {
+                        HealthStateTimelineView(
+                            viewModel: HealthStateTimelineViewModel(
+                                mlOrchestrator: dashboardViewModel.analysisEngine.mlOrchestrator
+                            )
+                        )
                     }
                 }
         }

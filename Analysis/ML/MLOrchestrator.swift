@@ -156,8 +156,10 @@ final class MLOrchestrator {
 
         // --- 3. CorrelationDiscovery (30+ days) ---
         if totalDays >= CorrelationDiscovery.minimumDays {
-            logger.debug("Running CorrelationDiscovery")
-            correlationDiscovery.discover(timeSeries: timeSeries)
+            if correlationDiscovery.needsRetrain || !correlationDiscovery.isReady {
+                logger.debug("Running CorrelationDiscovery")
+                correlationDiscovery.discover(timeSeries: timeSeries)
+            }
         }
 
         try? await Task.sleep(for: .milliseconds(200))

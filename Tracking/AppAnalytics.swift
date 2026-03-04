@@ -21,6 +21,11 @@ enum AppFeature: String, Hashable {
     case paywall
     case discovery
     case scoreGuide = "score_guide"
+    case recoveryInfo = "recovery_info"
+    case simulation
+    case healthStateTimeline = "health_state_timeline"
+    case metricLog = "metric_log"
+    case proOverlay = "pro_overlay"
 }
 
 /// Actionable block/card types — only user-initiated taps and meaningful interactions.
@@ -94,6 +99,60 @@ enum BlockType: String {
     case onboardingGetStarted = "onboarding_get_started"
     case onboardingCultureContinue = "onboarding_culture_continue"
     case scoreGuideGotIt = "score_guide_got_it"
+
+    // Navigation
+    case tabHome = "tab_home"
+    case tabLive = "tab_live"
+    case tabExplore = "tab_explore"
+
+    // Discovery
+    case discoveryContinue = "discovery_continue"
+
+    // Score/Recovery sheets
+    case scoreGuideClose = "score_guide_close"
+    case recoveryInfoDone = "recovery_info_done"
+
+    // Explore extras
+    case exploreScoreInfo = "explore_score_info"
+    case exploreSimulationTeaser = "explore_simulation_teaser"
+    case exploreHealthStateTeaser = "explore_health_state_teaser"
+    case exploreNeedsAttentionMetric = "explore_needs_attention_metric"
+    case exploreWeakCategory = "explore_weak_category"
+    case exploreDecliningMetric = "explore_declining_metric"
+    case exploreSeeAllCorrelations = "explore_see_all_correlations"
+    case exploreCorrelationPreview = "explore_correlation_preview"
+
+    // Home extras
+    case homeTrendMetric = "home_trend_metric"
+    case homeRiskRow = "home_risk_row"
+    case homeHistoricalHighlight = "home_historical_highlight"
+    case homeRecoveryInfoButton = "home_recovery_info_button"
+
+    // Live
+    case staleWatchPrompt = "stale_watch_prompt"
+
+    // Simulation
+    case simulationDone = "simulation_done"
+    case simulationReset = "simulation_reset"
+    case simulationRecommendation = "simulation_recommendation"
+
+    // Health State
+    case healthStatePrevMonth = "health_state_prev_month"
+    case healthStateNextMonth = "health_state_next_month"
+
+    // Metric Log
+    case metricLogCancel = "metric_log_cancel"
+    case metricLogSave = "metric_log_save"
+    case metricLogQuickAmount = "metric_log_quick_amount"
+    case metricLogOpen = "metric_log_open"
+
+    // Paywall
+    case paywallPlanYearly = "paywall_plan_yearly"
+    case paywallPlanMonthly = "paywall_plan_monthly"
+    case paywallSubscribe = "paywall_subscribe"
+    case paywallRestore = "paywall_restore"
+    case paywallRetryPlans = "paywall_retry_plans"
+    case proUpgradeButton = "pro_upgrade_button"
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -1005,6 +1064,15 @@ final class AppAnalytics {
         ])
     }
 
+    func trackSectionStuck(section: AppSection, tab: AppFeature, durationMs: Int) {
+        logEvent("section_stuck", parameters: [
+            "section_id": section.rawValue,
+            "tab": tab.rawValue,
+            "duration_ms": durationMs,
+            "session_id": session.sessionId
+        ])
+    }
+
     // Recommendation outcome
     func trackRecommendationOutcome(category: String, metric: String, severity: String, lift24h: Double?, lift7d: Double?, wasTapped: Bool, outcome: String) {
         var params: [String: Any] = [
@@ -1080,7 +1148,7 @@ final class AppAnalytics {
             "adjusted_metrics": adjustedMetrics,
             "score_delta": scoreDelta,
             "confidence": String(format: "%.2f", confidence),
-            "screen": AppFeature.explore.rawValue
+            "screen": AppFeature.simulation.rawValue
         ])
     }
 
@@ -1089,7 +1157,7 @@ final class AppAnalytics {
             "metric": metric,
             "predicted_gain": predictedGain,
             "effort_level": effortLevel,
-            "screen": AppFeature.explore.rawValue
+            "screen": AppFeature.simulation.rawValue
         ])
     }
 
@@ -1122,7 +1190,7 @@ final class AppAnalytics {
             "current_state": currentState,
             "days_in_state": daysInState,
             "total_states": totalStates,
-            "screen": AppFeature.explore.rawValue
+            "screen": AppFeature.healthStateTimeline.rawValue
         ])
     }
 

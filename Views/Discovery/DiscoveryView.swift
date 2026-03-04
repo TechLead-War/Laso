@@ -9,6 +9,7 @@ struct DiscoveryView: View {
     @State private var currentPage = 0
     @State private var appeared = false
     @State private var maxPageViewed = 0
+    @State private var flowTracker = SectionTracker(section: .discoveryFlow, tab: .discovery)
 
     /// When true, all repeating animations are suppressed to reduce GPU load.
     private var thermallyConstrained: Bool {
@@ -54,7 +55,19 @@ struct DiscoveryView: View {
                 }
             }
             let types = discoveries.map(\.type.rawValue)
+            AppAnalytics.shared.trackFeatureOpen(.discovery, metadata: [
+                "discovery_count": discoveries.count,
+                "days_of_data": dataDepth.daysOfData
+            ])
             AppAnalytics.shared.trackDiscoveryShown(count: discoveries.count, types: types)
+            flowTracker.appeared()
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.discovery, metadata: [
+                "max_page_viewed": maxPageViewed,
+                "total_pages": totalPages
+            ])
+            flowTracker.disappeared()
         }
     }
 
@@ -205,6 +218,8 @@ struct DiscoveryView: View {
             }
 
             Button {
+                AppAnalytics.shared.trackBlockTap(title: "Continue", type: .discoveryContinue, screen: .discovery)
+                flowTracker.tapped(target: "continue")
                 AppAnalytics.shared.trackDiscoveryCompleted(
                     pagesViewed: maxPageViewed + 1,
                     totalPages: totalPages

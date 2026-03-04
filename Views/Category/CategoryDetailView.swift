@@ -80,6 +80,13 @@ struct CategoryDetailView: View {
                                     .padding(.vertical, 9)
                                 }
                                 .buttonStyle(.plain)
+                                .simultaneousGesture(TapGesture().onEnded {
+                                    AppAnalytics.shared.trackBlockTap(
+                                        title: item.metric.displayName,
+                                        type: .metricRow,
+                                        screen: .categoryDetail
+                                    )
+                                })
                             }
                         }
                         .cardStyle()

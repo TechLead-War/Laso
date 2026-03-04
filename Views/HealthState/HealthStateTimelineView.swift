@@ -6,6 +6,13 @@ struct HealthStateTimelineView: View {
     let viewModel: HealthStateTimelineViewModel
     @State private var selectedMonth = Date()
 
+    // Section trackers
+    @State private var currentStateTracker = SectionTracker(section: .healthStateCurrent, tab: .healthStateTimeline)
+    @State private var calendarTracker = SectionTracker(section: .healthStateCalendar, tab: .healthStateTimeline)
+    @State private var distributionTracker = SectionTracker(section: .healthStateDistribution, tab: .healthStateTimeline)
+    @State private var transitionsTracker = SectionTracker(section: .healthStateTransitions, tab: .healthStateTimeline)
+    @State private var guideTracker = SectionTracker(section: .healthStateGuide, tab: .healthStateTimeline)
+
     var body: some View {
         ScrollView {
             VStack(spacing: DS.sectionSpacing) {
@@ -13,31 +20,57 @@ struct HealthStateTimelineView: View {
                 if let current = viewModel.currentState {
                     currentStateHero(current)
                         .padding(.horizontal)
+                        .onAppear { currentStateTracker.appeared() }
+                        .onDisappear { currentStateTracker.disappeared() }
                 }
 
                 // 2. Calendar grid
                 calendarSection
                     .padding(.horizontal)
+                    .onAppear { calendarTracker.appeared() }
+                    .onDisappear { calendarTracker.disappeared() }
 
                 // 3. State distribution
                 distributionBar
                     .padding(.horizontal)
+                    .onAppear { distributionTracker.appeared() }
+                    .onDisappear { distributionTracker.disappeared() }
 
                 // 4. Transition patterns
                 if !viewModel.commonTransitions.isEmpty {
                     transitionSection
                         .padding(.horizontal)
+                        .onAppear { transitionsTracker.appeared() }
+                        .onDisappear { transitionsTracker.disappeared() }
                 }
 
                 // 5. State descriptions
                 stateDescriptions
                     .padding(.horizontal)
+                    .onAppear { guideTracker.appeared() }
+                    .onDisappear { guideTracker.disappeared() }
             }
             .padding(.vertical)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("Health States")
         .navigationBarTitleDisplayMode(.large)
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.healthStateTimeline, metadata: [
+                "states_count": viewModel.states.count,
+                "history_days": viewModel.stateHistory.count
+            ])
+            if let current = viewModel.currentState {
+                AppAnalytics.shared.trackHealthStateTimelineViewed(
+                    currentState: current.label,
+                    daysInState: current.daysInState,
+                    totalStates: viewModel.states.count
+                )
+            }
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.healthStateTimeline)
+        }
     }
 
     // MARK: - 1. Current State Hero
@@ -116,6 +149,12 @@ struct HealthStateTimelineView: View {
             HStack {
                 Button {
                     selectedMonth = Calendar.current.date(byAdding: .month, value: -1, to: selectedMonth) ?? selectedMonth
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Previous Month",
+                        type: .healthStatePrevMonth,
+                        screen: .healthStateTimeline
+                    )
+                    calendarTracker.tapped(target: "previous_month")
                 } label: {
                     Image(systemName: "chevron.left")
                         .font(.caption.weight(.semibold))
@@ -132,6 +171,12 @@ struct HealthStateTimelineView: View {
                     let next = Calendar.current.date(byAdding: .month, value: 1, to: selectedMonth) ?? selectedMonth
                     if next <= Date() {
                         selectedMonth = next
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Next Month",
+                            type: .healthStateNextMonth,
+                            screen: .healthStateTimeline
+                        )
+                        calendarTracker.tapped(target: "next_month")
                     }
                 } label: {
                     Image(systemName: "chevron.right")

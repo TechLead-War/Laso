@@ -3,6 +3,7 @@ import SwiftUI
 /// One-time tutorial sheet explaining the Health Score to new users.
 struct ScoreGuideSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @State private var contentTracker = SectionTracker(section: .scoreGuideContent, tab: .scoreGuide)
 
     var body: some View {
         NavigationStack {
@@ -147,8 +148,8 @@ struct ScoreGuideSheet: View {
 
                     // MARK: - Got It
                     Button("Got It") {
-                        AppAnalytics.shared.trackBlockTap(title: "Got It", type: .scoreGuideGotIt, screen: .home)
-                        AppAnalytics.shared.trackFeatureClose(.scoreGuide)
+                        AppAnalytics.shared.trackBlockTap(title: "Got It", type: .scoreGuideGotIt, screen: .scoreGuide)
+                        contentTracker.tapped(target: "got_it")
                         UserDefaults.standard.set(true, forKey: AppKeys.App.hasSeenScoreGuide)
                         dismiss()
                     }
@@ -162,6 +163,8 @@ struct ScoreGuideSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") {
+                        AppAnalytics.shared.trackBlockTap(title: "Close", type: .scoreGuideClose, screen: .scoreGuide)
+                        contentTracker.tapped(target: "close")
                         UserDefaults.standard.set(true, forKey: AppKeys.App.hasSeenScoreGuide)
                         dismiss()
                     }
@@ -170,6 +173,11 @@ struct ScoreGuideSheet: View {
             }
             .onAppear {
                 AppAnalytics.shared.trackFeatureOpen(.scoreGuide)
+                contentTracker.appeared()
+            }
+            .onDisappear {
+                AppAnalytics.shared.trackFeatureClose(.scoreGuide)
+                contentTracker.disappeared()
             }
         }
     }

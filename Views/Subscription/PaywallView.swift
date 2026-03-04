@@ -10,6 +10,12 @@ struct PaywallView: View {
     @State private var isRestoring = false
     @State private var paywallOpenDate = Date()
 
+    // Section trackers
+    @State private var headerTracker = SectionTracker(section: .paywallHeader, tab: .paywall)
+    @State private var featuresTracker = SectionTracker(section: .paywallFeatures, tab: .paywall)
+    @State private var pricingTracker = SectionTracker(section: .paywallPricing, tab: .paywall)
+    @State private var footerTracker = SectionTracker(section: .paywallFooter, tab: .paywall)
+
     private var yearly: Product? { subscriptionManager.yearlyProduct }
     private var monthly: Product? { subscriptionManager.monthlyProduct }
     private var callToActionTitle: String {
@@ -32,8 +38,14 @@ struct PaywallView: View {
             ScrollView {
                 VStack(spacing: 28) {
                     header
+                        .onAppear { headerTracker.appeared() }
+                        .onDisappear { headerTracker.disappeared() }
                     features
+                        .onAppear { featuresTracker.appeared() }
+                        .onDisappear { featuresTracker.disappeared() }
                     pricing
+                        .onAppear { pricingTracker.appeared() }
+                        .onDisappear { pricingTracker.disappeared() }
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 48)
@@ -41,12 +53,28 @@ struct PaywallView: View {
             }
 
             footer
+                .onAppear { footerTracker.appeared() }
+                .onDisappear { footerTracker.disappeared() }
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .onAppear {
             selectedProduct = yearly ?? monthly
             paywallOpenDate = Date()
+            AppAnalytics.shared.trackFeatureOpen(.paywall, metadata: [
+                "source": "trial_expired",
+                "products_available": subscriptionManager.products.count
+            ])
             AppAnalytics.shared.trackPaywallViewed(source: "trial_expired")
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.paywall)
+            let duration = Int(Date().timeIntervalSince(paywallOpenDate))
+            if !subscriptionManager.hasAccess {
+                AppAnalytics.shared.trackPaywallDismissed(
+                    timeOnPaywallSec: duration,
+                    source: "trial_expired"
+                )
+            }
         }
         .onChange(of: subscriptionManager.products) { _, _ in
             if selectedProduct == nil {
@@ -152,6 +180,9 @@ struct PaywallView: View {
             withAnimation(.easeInOut(duration: 0.2)) {
                 selectedProduct = product
             }
+            let type: BlockType = label == "Yearly" ? .paywallPlanYearly : .paywallPlanMonthly
+            AppAnalytics.shared.trackBlockTap(title: label, type: type, screen: .paywall)
+            pricingTracker.tapped(target: label.lowercased())
         } label: {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
@@ -208,6 +239,8 @@ struct PaywallView: View {
 
             Button {
                 guard let product = selectedProduct else { return }
+                AppAnalytics.shared.trackBlockTap(title: "Subscribe", type: .paywallSubscribe, screen: .paywall)
+                footerTracker.tapped(target: "subscribe")
                 AppAnalytics.shared.trackPaywallCTATapped(
                     productID: product.id,
                     price: product.displayPrice
@@ -231,6 +264,8 @@ struct PaywallView: View {
             .disabled(selectedProduct == nil || subscriptionManager.isPurchasing)
 
             Button {
+                AppAnalytics.shared.trackBlockTap(title: "Restore Purchases", type: .paywallRestore, screen: .paywall)
+                footerTracker.tapped(target: "restore_purchases")
                 isRestoring = true
                 Task {
                     let previousStatus = subscriptionManager.status
@@ -256,6 +291,8 @@ struct PaywallView: View {
 
             if subscriptionManager.products.isEmpty {
                 Button {
+                    AppAnalytics.shared.trackBlockTap(title: "Retry loading plans", type: .paywallRetryPlans, screen: .paywall)
+                    footerTracker.tapped(target: "retry_loading_plans")
                     Task { await subscriptionManager.loadProducts() }
                 } label: {
                     Text("Retry loading plans")

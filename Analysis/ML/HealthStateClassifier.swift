@@ -213,8 +213,8 @@ final class HealthStateClassifier {
 
         // Sample for performance (max 200 points)
         let sampleIndices: [Int]
-        if n > 200 {
-            sampleIndices = Array((0..<n).shuffled().prefix(200))
+        if n > 100 {
+            sampleIndices = Array((0..<n).shuffled().prefix(100))
         } else {
             sampleIndices = Array(0..<n)
         }

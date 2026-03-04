@@ -358,6 +358,12 @@ struct HomeView: View {
 
                     ForEach(highlights) { highlight in
                         Button {
+                            AppAnalytics.shared.trackBlockTap(
+                                title: highlight.metric.displayName,
+                                type: .homeHistoricalHighlight,
+                                screen: .home
+                            )
+                            historicalTracker.tapped(target: highlight.metric.rawValue)
                             navigationPath.append(highlight.metric)
                         } label: {
                             historicalHighlightCard(highlight)
@@ -576,6 +582,12 @@ struct HomeView: View {
                     VStack(spacing: 0) {
                         ForEach(Array(summary.topMovers.prefix(3))) { mover in
                             Button {
+                                AppAnalytics.shared.trackBlockTap(
+                                    title: mover.metric.displayName,
+                                    type: .homeTrendMetric,
+                                    screen: .home
+                                )
+                                trendsTracker.tapped(target: mover.metric.rawValue)
                                 navigationPath.append(mover.metric)
                             } label: {
                                 moverRow(mover)
@@ -640,6 +652,12 @@ struct HomeView: View {
 
                 ForEach(risks.prefix(3)) { risk in
                     Button {
+                        AppAnalytics.shared.trackBlockTap(
+                            title: risk.riskType.displayName,
+                            type: .homeRiskRow,
+                            screen: .home
+                        )
+                        risksTracker.tapped(target: risk.riskType.rawValue)
                         navigationPath.append(risk.riskType)
                     } label: {
                         riskRow(risk)
@@ -814,6 +832,12 @@ struct HomeView: View {
                             .font(.title3.weight(.semibold))
 
                         Button {
+                            AppAnalytics.shared.trackBlockTap(
+                                title: "Recovery Info",
+                                type: .homeRecoveryInfoButton,
+                                screen: .home
+                            )
+                            recoveryTracker.tapped(target: "recovery_info")
                             showRecoveryInfo = true
                         } label: {
                             Image(systemName: "info.circle")

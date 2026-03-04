@@ -18,7 +18,7 @@ struct InsightCard: View {
                 Text(actionText)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
-                    .lineLimit(2)
+                    .lineLimit(3)
 
                 HStack(spacing: 8) {
                     Text(insight.metric.displayName)
@@ -35,6 +35,7 @@ struct InsightCard: View {
             }
 
         }
+        .frame(minHeight: 72, alignment: .center)
         .padding(DS.cardPadding)
         .cardStyle()
     }

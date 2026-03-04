@@ -11,8 +11,16 @@ struct CustomTabBar: View {
             HStack {
                 ForEach(AppTab.allCases) { tab in
                     Button {
+                        let fromTab = selectedTab
                         withAnimation(.easeInOut(duration: 0.2)) {
                             selectedTab = tab
+                        }
+                        if fromTab != tab {
+                            AppAnalytics.shared.trackBlockTap(
+                                title: tab.label,
+                                type: blockType(for: tab),
+                                screen: feature(for: fromTab)
+                            )
                         }
                     } label: {
                         VStack(spacing: 4) {
@@ -38,6 +46,22 @@ struct CustomTabBar: View {
         }
         .background(.ultraThinMaterial)
         .sensoryFeedback(.selection, trigger: selectedTab)
+    }
+
+    private func feature(for tab: AppTab) -> AppFeature {
+        switch tab {
+        case .home: return .home
+        case .live: return .live
+        case .explore: return .explore
+        }
+    }
+
+    private func blockType(for tab: AppTab) -> BlockType {
+        switch tab {
+        case .home: return .tabHome
+        case .live: return .tabLive
+        case .explore: return .tabExplore
+        }
     }
 }
 

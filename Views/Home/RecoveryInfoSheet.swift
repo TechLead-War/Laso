@@ -3,6 +3,7 @@ import SwiftUI
 /// One-time tutorial sheet explaining how Recovery & Readiness is calculated.
 struct RecoveryInfoSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @State private var contentTracker = SectionTracker(section: .recoveryInfoContent, tab: .recoveryInfo)
 
     var body: some View {
         NavigationStack {
@@ -53,10 +54,22 @@ struct RecoveryInfoSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button("Done") {
+                        AppAnalytics.shared.trackBlockTap(title: "Done", type: .recoveryInfoDone, screen: .recoveryInfo)
+                        contentTracker.tapped(target: "done")
+                        dismiss()
+                    }
                         .font(.subheadline.weight(.medium))
                 }
             }
+        }
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.recoveryInfo)
+            contentTracker.appeared()
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.recoveryInfo)
+            contentTracker.disappeared()
         }
     }
 

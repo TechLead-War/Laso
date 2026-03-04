@@ -201,6 +201,16 @@ struct InsightsDetailView: View {
             )
             sectionTracker.appeared()
         }
+        .onChange(of: selectedFilter) { oldFilter, newFilter in
+            if oldFilter != newFilter {
+                AppAnalytics.shared.trackFilterChanged(
+                    screen: .insightsDetail,
+                    filterType: "focus_filter",
+                    from: oldFilter.rawValue,
+                    to: newFilter.rawValue
+                )
+            }
+        }
     }
 
     // MARK: - Filter Chip
@@ -210,6 +220,12 @@ struct InsightsDetailView: View {
             withAnimation(.easeInOut(duration: 0.2)) {
                 selectedFilter = filter
             }
+            AppAnalytics.shared.trackBlockTap(
+                title: filter.rawValue,
+                type: .trendFilter,
+                screen: .insightsDetail
+            )
+            sectionTracker.tapped(target: "filter_\(filter.rawValue.lowercased())")
         } label: {
             HStack(spacing: 4) {
                 Text(filter.rawValue)

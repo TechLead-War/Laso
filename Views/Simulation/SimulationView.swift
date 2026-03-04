@@ -6,6 +6,12 @@ struct SimulationView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var hasLoadedROI = false
 
+    // Section trackers
+    @State private var scoreHeroTracker = SectionTracker(section: .simulationScoreHero, tab: .simulation)
+    @State private var roiTracker = SectionTracker(section: .simulationRoi, tab: .simulation)
+    @State private var slidersTracker = SectionTracker(section: .simulationSliders, tab: .simulation)
+    @State private var impactTracker = SectionTracker(section: .simulationImpact, tab: .simulation)
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -13,20 +19,28 @@ struct SimulationView: View {
                     // 1. Score comparison hero
                     scoreComparisonHero
                         .padding(.horizontal)
+                        .onAppear { scoreHeroTracker.appeared() }
+                        .onDisappear { scoreHeroTracker.disappeared() }
 
                     // 2. ROI recommendation cards
                     if !viewModel.rankedRecommendations.isEmpty {
                         roiSection
+                            .onAppear { roiTracker.appeared() }
+                            .onDisappear { roiTracker.disappeared() }
                     }
 
                     // 3. Metric adjustment sliders
                     slidersSection
                         .padding(.horizontal)
+                        .onAppear { slidersTracker.appeared() }
+                        .onDisappear { slidersTracker.disappeared() }
 
                     // 4. Impact breakdown
                     if let result = viewModel.simulationResult, !result.perMetricImpact.isEmpty {
                         impactBreakdown(result)
                             .padding(.horizontal)
+                            .onAppear { impactTracker.appeared() }
+                            .onDisappear { impactTracker.disappeared() }
                     }
                 }
                 .padding(.vertical)
@@ -36,10 +50,16 @@ struct SimulationView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") { dismiss() }
+                    Button("Done") {
+                        AppAnalytics.shared.trackBlockTap(title: "Done", type: .simulationDone, screen: .simulation)
+                        dismiss()
+                    }
                 }
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Reset") { viewModel.reset() }
+                    Button("Reset") {
+                        AppAnalytics.shared.trackBlockTap(title: "Reset", type: .simulationReset, screen: .simulation)
+                        viewModel.reset()
+                    }
                         .disabled(viewModel.adjustments.isEmpty)
                 }
             }
@@ -48,6 +68,15 @@ struct SimulationView: View {
                     viewModel.computeROIRankings()
                     hasLoadedROI = true
                 }
+                AppAnalytics.shared.trackFeatureOpen(.simulation, metadata: [
+                    "available_metrics": viewModel.availableMetrics.count,
+                    "roi_count": viewModel.rankedRecommendations.count
+                ])
+            }
+            .onDisappear {
+                AppAnalytics.shared.trackFeatureClose(.simulation, metadata: [
+                    "adjusted_metrics": viewModel.adjustments.count
+                ])
             }
         }
     }
@@ -127,7 +156,25 @@ struct SimulationView: View {
 
     private func roiCard(_ rec: ROIRanker.RankedRecommendation) -> some View {
         Button {
+            AppAnalytics.shared.trackBlockTap(
+                title: rec.metric.displayName,
+                type: .simulationRecommendation,
+                screen: .simulation
+            )
+            roiTracker.tapped(target: rec.metric.rawValue)
+            AppAnalytics.shared.trackROIRecommendationTapped(
+                metric: rec.metric.rawValue,
+                predictedGain: Int(rec.predictedScoreGain),
+                effortLevel: rec.effortLevel.displayName
+            )
             viewModel.applyQuickSuggestion(rec)
+            if let result = viewModel.simulationResult {
+                AppAnalytics.shared.trackSimulationRun(
+                    adjustedMetrics: viewModel.adjustments.count,
+                    scoreDelta: result.scoreDelta,
+                    confidence: result.confidence
+                )
+            }
         } label: {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 6) {
@@ -211,7 +258,16 @@ struct SimulationView: View {
                     set: { adjustment.wrappedValue = $0 - current }
                 ),
                 in: range,
-                step: step
+                step: step,
+                onEditingChanged: { isEditing in
+                    if !isEditing, let result = viewModel.simulationResult {
+                        AppAnalytics.shared.trackSimulationRun(
+                            adjustedMetrics: viewModel.adjustments.count,
+                            scoreDelta: result.scoreDelta,
+                            confidence: result.confidence
+                        )
+                    }
+                }
             )
             .tint(metric.category.color)
         }

@@ -11,6 +11,15 @@ struct LiveView: View {
     @State private var hasTrackedFirstData = false
     @State private var lastAnimationTime: Date = .distantPast
 
+    // Section trackers
+    @State private var headerTracker = SectionTracker(section: .liveHeader, tab: .live)
+    @State private var heartRateTracker = SectionTracker(section: .liveHeartRate, tab: .live)
+    @State private var vitalsTracker = SectionTracker(section: .liveVitals, tab: .live)
+    @State private var activityTracker = SectionTracker(section: .liveActivity, tab: .live)
+    @State private var quickStatsTracker = SectionTracker(section: .liveQuickStats, tab: .live)
+    @State private var bpTempTracker = SectionTracker(section: .liveBloodPressureTemperature, tab: .live)
+    @State private var workoutTracker = SectionTracker(section: .liveWorkout, tab: .live)
+
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -269,6 +278,8 @@ struct LiveView: View {
         }
         .padding(.horizontal)
         .padding(.top, 16)
+        .onAppear { headerTracker.appeared() }
+        .onDisappear { headerTracker.disappeared() }
     }
 
     private var liveStatusLabel: String {
@@ -424,6 +435,12 @@ struct LiveView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(heartRateAccessibilityLabel)
         .sensoryFeedback(.warning, trigger: viewModel.vitals.heartRateStatus == .elevated)
+        .onAppear { heartRateTracker.appeared() }
+        .onDisappear { heartRateTracker.disappeared() }
+        .onTapGesture {
+            AppAnalytics.shared.trackBlockTap(title: "Heart Rate Hero", type: .heartRateHeroCard, screen: .live)
+            heartRateTracker.tapped(target: "heart_rate_hero")
+        }
     }
 
     private var heartRateAccessibilityLabel: String {
@@ -575,6 +592,8 @@ struct LiveView: View {
             )
         }
         .padding(.horizontal)
+        .onAppear { vitalsTracker.appeared() }
+        .onDisappear { vitalsTracker.disappeared() }
     }
 
     private func vitalCard(
@@ -590,6 +609,13 @@ struct LiveView: View {
         unavailableHint: String? = nil
     ) -> some View {
         let isStale = !isFresh && timestamp != nil
+        let blockType: BlockType? = {
+            switch label {
+            case "SpO2": return .vitalCardSpo2
+            case "Resp Rate": return .vitalCardRespRate
+            default: return nil
+            }
+        }()
 
         return VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -671,6 +697,11 @@ struct LiveView: View {
         .cardStyle()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(label), \(value ?? "no data") \(unit), \(status.label)")
+        .onTapGesture {
+            guard let blockType else { return }
+            AppAnalytics.shared.trackBlockTap(title: label, type: blockType, screen: .live)
+            vitalsTracker.tapped(target: label.lowercased().replacingOccurrences(of: " ", with: "_"))
+        }
     }
 
     // MARK: - Activity Rings
@@ -747,17 +778,43 @@ struct LiveView: View {
             .padding(.horizontal)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Activity rings. Move: \(Int(viewModel.activity.todayActiveCalories)) of \(Int(viewModel.activity.moveGoal)) calories, \(Int(viewModel.activity.moveProgress * 100)) percent. Exercise: \(Int(viewModel.activity.todayExerciseMinutes)) of \(Int(viewModel.activity.exerciseGoal)) minutes, \(Int(viewModel.activity.exerciseProgress * 100)) percent. Stand: \(Int(viewModel.activity.todayStandHours)) of \(Int(viewModel.activity.standGoal)) hours, \(Int(viewModel.activity.standProgress * 100)) percent.")
+            .onTapGesture {
+                AppAnalytics.shared.trackBlockTap(title: "Activity Rings", type: .activityRingsSection, screen: .live)
+                activityTracker.tapped(target: "activity_rings")
+            }
 
             // Quick stats row
             HStack(spacing: 12) {
-                quickStatPill(icon: "figure.walk", value: formatLargeNumber(viewModel.activity.todaySteps), label: "Steps", color: .green)
-                quickStatPill(icon: "location.fill", value: String(format: "%.1f km", viewModel.activity.todayDistance), label: "Distance", color: .blue)
-                quickStatPill(icon: "figure.stairs", value: "\(Int(viewModel.activity.todayFlightsClimbed))", label: "Flights", color: .purple)
+                quickStatPill(
+                    icon: "figure.walk",
+                    value: formatLargeNumber(viewModel.activity.todaySteps),
+                    label: "Steps",
+                    color: .green,
+                    blockType: .quickStatSteps
+                )
+                quickStatPill(
+                    icon: "location.fill",
+                    value: String(format: "%.1f km", viewModel.activity.todayDistance),
+                    label: "Distance",
+                    color: .blue,
+                    blockType: .quickStatDistance
+                )
+                quickStatPill(
+                    icon: "figure.stairs",
+                    value: "\(Int(viewModel.activity.todayFlightsClimbed))",
+                    label: "Flights",
+                    color: .purple,
+                    blockType: .quickStatFlights
+                )
             }
             .padding(.horizontal)
+            .onAppear { quickStatsTracker.appeared() }
+            .onDisappear { quickStatsTracker.disappeared() }
 
             } // end else (has activity)
         }
+        .onAppear { activityTracker.appeared() }
+        .onDisappear { activityTracker.disappeared() }
     }
 
     private func ringArc(progress: Double, color: Color, size: CGFloat, lineWidth: CGFloat) -> some View {
@@ -796,7 +853,7 @@ struct LiveView: View {
         }
     }
 
-    private func quickStatPill(icon: String, value: String, label: String, color: Color) -> some View {
+    private func quickStatPill(icon: String, value: String, label: String, color: Color, blockType: BlockType) -> some View {
         VStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.caption.weight(.semibold))
@@ -816,6 +873,10 @@ struct LiveView: View {
         .background(color.opacity(DS.tintBg), in: RoundedRectangle(cornerRadius: DS.cardRadius))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(label): \(value)")
+        .onTapGesture {
+            AppAnalytics.shared.trackBlockTap(title: label, type: blockType, screen: .live)
+            quickStatsTracker.tapped(target: label.lowercased())
+        }
     }
 
     // MARK: - Blood Pressure & Temperature
@@ -859,6 +920,10 @@ struct LiveView: View {
                     .padding(DS.cardPadding)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .cardStyle()
+                    .onTapGesture {
+                        AppAnalytics.shared.trackBlockTap(title: "Blood Pressure", type: .bloodPressureCard, screen: .live)
+                        bpTempTracker.tapped(target: "blood_pressure")
+                    }
                 }
 
                 if let temp = viewModel.vitals.latestBodyTemp {
@@ -890,9 +955,15 @@ struct LiveView: View {
                     .padding(DS.cardPadding)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .cardStyle()
+                    .onTapGesture {
+                        AppAnalytics.shared.trackBlockTap(title: "Temperature", type: .temperatureCard, screen: .live)
+                        bpTempTracker.tapped(target: "temperature")
+                    }
                 }
             }
             .padding(.horizontal)
+            .onAppear { bpTempTracker.appeared() }
+            .onDisappear { bpTempTracker.disappeared() }
         }
     }
 
@@ -952,7 +1023,13 @@ struct LiveView: View {
                 .padding(DS.cardPadding)
                 .cardStyle()
                 .padding(.horizontal)
+                .onTapGesture {
+                    AppAnalytics.shared.trackBlockTap(title: "Last Workout", type: .lastWorkoutCard, screen: .live)
+                    workoutTracker.tapped(target: "last_workout")
+                }
             }
+            .onAppear { workoutTracker.appeared() }
+            .onDisappear { workoutTracker.disappeared() }
         }
     }
 

@@ -7,7 +7,7 @@ final class PatternMiner {
     static let minimumDays = 60
 
     /// Standard lags to check for periodicity
-    private static let standardLags = [7, 14, 28, 30, 90]
+    private static let standardLags = [7, 14, 28]
 
     /// Discovered patterns
     private(set) var patterns: [DiscoveredPattern] = []

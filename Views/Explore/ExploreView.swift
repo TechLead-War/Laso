@@ -113,6 +113,7 @@ struct ExploreView: View {
 
     private var simulationTeaser: some View {
         Button {
+            AppAnalytics.shared.trackBlockTap(title: "What If?", type: .exploreSimulationTeaser, screen: .explore)
             showSimulation = true
         } label: {
             HStack(spacing: 12) {
@@ -146,6 +147,7 @@ struct ExploreView: View {
 
     private var healthStateLink: some View {
         Button {
+            AppAnalytics.shared.trackBlockTap(title: "Health States", type: .exploreHealthStateTeaser, screen: .explore)
             navigationPath.append("healthStateTimeline")
         } label: {
             HStack(spacing: 12) {
@@ -201,6 +203,8 @@ struct ExploreView: View {
                             .foregroundStyle(.secondary)
 
                         Button {
+                            AppAnalytics.shared.trackBlockTap(title: "Score Info", type: .exploreScoreInfo, screen: .explore)
+                            scoreHeroTracker.tapped(target: "score_info")
                             showScoreGuide = true
                         } label: {
                             Image(systemName: "info.circle")
@@ -308,6 +312,12 @@ struct ExploreView: View {
                     // Negative factors only — what's dragging the score down
                     ForEach(Array(negativeFactors.prefix(5).enumerated()), id: \.offset) { _, factor in
                         Button {
+                            AppAnalytics.shared.trackBlockTap(
+                                title: factor.metric.displayName,
+                                type: .exploreNeedsAttentionMetric,
+                                screen: .explore
+                            )
+                            needsAttentionTracker.tapped(target: factor.metric.rawValue)
                             navigationPath.append(factor.metric)
                         } label: {
                             HStack(spacing: 10) {
@@ -347,6 +357,12 @@ struct ExploreView: View {
                         HStack(spacing: 0) {
                             ForEach(weakCategories.prefix(4), id: \.category) { contrib in
                                 Button {
+                                    AppAnalytics.shared.trackBlockTap(
+                                        title: contrib.category.displayName,
+                                        type: .exploreWeakCategory,
+                                        screen: .explore
+                                    )
+                                    needsAttentionTracker.tapped(target: contrib.category.rawValue)
                                     navigationPath.append(contrib.category)
                                 } label: {
                                     VStack(spacing: 2) {
@@ -388,6 +404,12 @@ struct ExploreView: View {
 
             ForEach(decliningHighlights) { highlight in
                 Button {
+                    AppAnalytics.shared.trackBlockTap(
+                        title: highlight.metric.displayName,
+                        type: .exploreDecliningMetric,
+                        screen: .explore
+                    )
+                    decliningTrendsTracker.tapped(target: highlight.metric.rawValue)
                     navigationPath.append(highlight.metric)
                 } label: {
                     historicalCard(highlight)
@@ -450,6 +472,12 @@ struct ExploreView: View {
                 Spacer()
 
                 Button {
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "See all",
+                        type: .exploreSeeAllCorrelations,
+                        screen: .explore
+                    )
+                    correlationsTracker.tapped(target: "see_all")
                     navigationPath.append("correlationsDetail")
                 } label: {
                     HStack(spacing: 4) {
@@ -530,6 +558,8 @@ struct ExploreView: View {
             VStack(spacing: 0) {
                 ForEach(Array(categories.enumerated()), id: \.element.category) { index, item in
                     Button {
+                        AppAnalytics.shared.trackBlockTap(title: item.category.displayName, type: .categoryRow, screen: .explore)
+                        categoriesTracker.tapped(target: item.category.rawValue)
                         navigationPath.append(item.category)
                     } label: {
                         ExploreCategoryRow(

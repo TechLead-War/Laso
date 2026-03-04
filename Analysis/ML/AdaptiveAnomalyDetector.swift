@@ -7,7 +7,7 @@ final class AdaptiveAnomalyDetector {
     static let minimumDays = 60
 
     /// Number of isolation trees
-    private static let numTrees = 100
+    private static let numTrees = 50
     /// Subsample size for each tree
     private static let subSampleSize = 256
     /// Anomaly score threshold (global)
