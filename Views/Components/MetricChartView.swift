@@ -101,6 +101,15 @@ struct MetricChartView: View {
     }
 
     var body: some View {
+        if samples.count < 2 {
+            ContentUnavailableView("Not Enough Data", systemImage: "chart.line.downtrend.xyaxis", description: Text("At least 2 data points needed"))
+                .frame(height: 220)
+        } else {
+        chart
+        }
+    }
+
+    private var chart: some View {
         Chart {
             // Normal range area
             if let range = normalRange {

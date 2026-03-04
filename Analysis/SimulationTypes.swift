@@ -56,13 +56,14 @@ enum ActionableMetric {
         let low = max(physiologicalLow, mean - 2 * standardDeviation)
         let high = min(physiologicalHigh, mean + 2 * standardDeviation)
 
-        // Degenerate overlap can happen when baseline sits outside the normal range.
-        if low <= high {
-            return low...high
+        // Ensure range has positive width so Slider step doesn't crash
+        guard low < high else {
+            let clampedMean = min(max(mean, physiologicalLow), physiologicalHigh)
+            let halfStep = sliderStep(for: metric)
+            return (clampedMean - halfStep)...(clampedMean + halfStep)
         }
 
-        let clampedMean = min(max(mean, physiologicalLow), physiologicalHigh)
-        return clampedMean...clampedMean
+        return low...high
     }
 }
 
