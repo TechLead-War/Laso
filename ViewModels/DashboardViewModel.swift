@@ -871,49 +871,52 @@ final class DashboardViewModel {
         var goals: [CoachGoal] = []
         var usedCategories: Set<HealthCategory> = []
 
-        // 1. Declining metrics the user can act on → actionable daily focus
+        // 1. Declining actionable metrics → personalized nudge with real numbers
         for (metric, trend) in analysisEngine.trends {
-            guard trend.weekOverWeekChange < -3,
-                  let action = dailyAction(for: metric) else { continue }
+            guard trend.weekOverWeekChange < -3 else { continue }
             let category = metric.category
             guard !usedCategories.contains(category) else { continue }
-
-            let drop = String(format: "%.0f", abs(trend.weekOverWeekChange))
-            goals.append(CoachGoal(
-                metric: metric,
-                action: action,
-                reason: "\(metric.displayName) down \(drop)% this week",
-                priority: abs(trend.weekOverWeekChange)
-            ))
+            guard let goal = buildPersonalizedGoal(metric: metric, trend: trend) else { continue }
+            goals.append(goal)
             usedCategories.insert(category)
         }
 
-        // 2. Risk focus areas → one actionable item per risk
+        // 2. Risk focus areas → data-backed action per risk
         for risk in analysisEngine.healthRisks where risk.riskGrade != .low {
             for factor in risk.measuredFactors {
-                guard !usedCategories.contains(factor.metric.category),
-                      let action = dailyAction(for: factor.metric) else { continue }
+                let metric = factor.metric
+                guard !usedCategories.contains(metric.category) else { continue }
+                let trend = analysisEngine.trends[metric]
+                guard let goal = buildPersonalizedGoal(
+                    metric: metric,
+                    trend: trend,
+                    reasonOverride: "\(risk.riskType.displayName) risk — \(risk.riskGrade.displayName.lowercased())"
+                ) else { continue }
                 goals.append(CoachGoal(
-                    metric: factor.metric,
-                    action: action,
-                    reason: "\(risk.riskType.displayName) risk is \(risk.riskGrade.displayName.lowercased())",
+                    metric: goal.metric,
+                    action: goal.action,
+                    reason: "\(risk.riskType.displayName) risk — \(risk.riskGrade.displayName.lowercased())",
                     priority: Double(risk.level)
                 ))
-                usedCategories.insert(factor.metric.category)
+                usedCategories.insert(metric.category)
             }
         }
 
-        // 3. Correlation-derived — surface something the user might not think of
+        // 3. Correlation-derived — surface a non-obvious connection with data
         for corr in analysisEngine.correlations.prefix(10) {
             let metric = corr.metricA
             guard !usedCategories.contains(metric.category),
-                  let action = dailyAction(for: metric),
                   let trend = analysisEngine.trends[metric],
                   trend.direction != .improving else { continue }
-            goals.append(CoachGoal(
+            guard let goal = buildPersonalizedGoal(
                 metric: metric,
-                action: action,
-                reason: "\(corr.causeLabel) → \(corr.effectLabel)",
+                trend: trend,
+                reasonOverride: corr.effectSummary
+            ) else { continue }
+            goals.append(CoachGoal(
+                metric: goal.metric,
+                action: goal.action,
+                reason: corr.effectSummary,
                 priority: abs(corr.correlation) * 50
             ))
             usedCategories.insert(metric.category)
@@ -930,48 +933,210 @@ final class DashboardViewModel {
         return Array(goals.prefix(3))
     }
 
-    /// Maps a metric to a concrete thing the user can do today.
-    /// Returns nil for metrics that aren't directly actionable (HRV, resting HR, blood oxygen, etc.).
-    private func dailyAction(for metric: HealthMetric) -> String? {
+    /// Builds a personalized, data-driven action for a metric.
+    /// Returns nil for metrics that aren't directly actionable by the user.
+    private func buildPersonalizedGoal(
+        metric: HealthMetric,
+        trend: TrendAnalyzer.TrendResult?,
+        reasonOverride: String? = nil
+    ) -> CoachGoal? {
+        let baseline = analysisEngine.baselines[metric]
+        let series = healthKitManager.timeSeries[metric]
+        let recentValue = series?.samples(lastDays: 1).last?.value
+        let weekAvg = series?.samples(lastDays: 7).map(\.value).mean
+        let baselineMean = baseline?.mean
+
+        let action: String
+        let reason: String
+        let priority: Double = abs(trend?.weekOverWeekChange ?? 0)
+
         switch metric {
+        // MARK: Activity — user can directly move more
         case .steps, .distanceWalkingRunning:
-            return "Take a walk after your next meal"
+            if let recent = recentValue, let base = baselineMean {
+                let gap = Int(base - recent)
+                if gap > 0 {
+                    action = "You need about \(formatLargeInt(gap)) more steps to hit your usual \(formatLargeInt(Int(base)))"
+                } else {
+                    action = "You're on track — keep moving to stay above \(formatLargeInt(Int(base))) steps"
+                }
+            } else if let base = baselineMean {
+                action = "Aim for \(formatLargeInt(Int(base))) steps — try a walk after lunch"
+            } else {
+                action = "Get a walk in today"
+            }
+
         case .activeCalories:
-            return "Fit in 20 minutes of movement today"
+            if let avg = weekAvg, let base = baselineMean, base > 0 {
+                let pct = Int(((base - avg) / base) * 100)
+                if pct > 0 {
+                    action = "You're burning \(pct)% fewer calories than usual — add a brisk walk"
+                } else {
+                    action = "Calorie burn is on track at \(Int(avg)) kcal — keep the momentum"
+                }
+            } else {
+                action = "Get some active movement in today"
+            }
+
         case .exerciseMinutes, .workoutDuration:
-            return "Get a workout in today"
+            if let base = baselineMean {
+                action = "Fit in \(Int(base)) min of exercise — even a short session counts"
+            } else {
+                action = "Get a workout in today"
+            }
+
         case .workoutCount:
-            return "Make time for a workout today"
+            if let avg = weekAvg, avg < 0.5 {
+                action = "You haven't worked out in a few days — today's a good day"
+            } else {
+                action = "Keep your workout streak going today"
+            }
+
         case .flightsClimbed:
-            return "Take the stairs instead of the elevator"
+            if let base = baselineMean {
+                action = "Climb \(Int(base)) flights today — take the stairs when you can"
+            } else {
+                action = "Take the stairs instead of the elevator today"
+            }
+
         case .standHours:
-            return "Stand up and stretch every hour"
+            if let avg = weekAvg, let base = baselineMean, avg < base * 0.8 {
+                action = "You're averaging \(String(format: "%.0f", avg)) stand hours vs your usual \(String(format: "%.0f", base)) — set hourly reminders"
+            } else {
+                action = "Stand up and move every hour today"
+            }
+
+        // MARK: Sleep — user can control bedtime habits
         case .sleepDuration:
-            return "Start winding down 30 minutes earlier tonight"
-        case .sleepDeep, .sleepREM:
-            return "Avoid screens an hour before bed tonight"
+            if let recent = recentValue, let base = baselineMean {
+                let diff = base - recent
+                if diff > 0.5 {
+                    let hrs = String(format: "%.1f", recent)
+                    let target = String(format: "%.1f", base)
+                    action = "Last night was \(hrs) hrs — get to bed earlier to reach your \(target) hr average"
+                } else {
+                    action = "Sleep was solid — keep the same bedtime tonight"
+                }
+            } else if let base = baselineMean {
+                action = "Target \(String(format: "%.1f", base)) hrs tonight — start winding down early"
+            } else {
+                action = "Prioritize a full night's sleep tonight"
+            }
+
+        case .sleepDeep:
+            if let avg = weekAvg, let base = baselineMean, avg < base * 0.85 {
+                action = "Deep sleep is down to \(String(format: "%.1f", avg)) hrs — skip caffeine after 2pm and dim lights early"
+            } else {
+                action = "Protect your deep sleep — keep the room cool and dark"
+            }
+
+        case .sleepREM:
+            if let avg = weekAvg, let base = baselineMean, avg < base * 0.85 {
+                action = "REM sleep dropped to \(String(format: "%.1f", avg)) hrs — avoid alcohol tonight and keep a steady wake time"
+            } else {
+                action = "REM is healthy — stick with your current routine"
+            }
+
         case .sleepCore:
-            return "Keep a consistent bedtime tonight"
+            action = "Keep a consistent bedtime tonight — your body clock depends on it"
+
+        // MARK: Mindfulness — user can practice
         case .mindfulMinutes:
-            return "Do a 5-minute breathing exercise today"
+            if let base = baselineMean, base > 0 {
+                action = "You usually do \(Int(base)) min — try a breathing session before lunch"
+            } else {
+                action = "Try a 5-minute breathing exercise today"
+            }
+
         case .timeInDaylight:
-            return "Spend 15 minutes outside today"
+            if let avg = weekAvg, let base = baselineMean, avg < base * 0.7 {
+                action = "Only \(Int(avg)) min of daylight this week vs your usual \(Int(base)) — get outside for 15 min"
+            } else {
+                action = "Keep getting daylight — it helps sleep and mood"
+            }
+
+        // MARK: Nutrition — user can eat/drink
         case .waterIntake:
-            return "Drink a glass of water right now"
-        case .distanceCycling:
-            return "Go for a bike ride today"
-        case .distanceSwimming:
-            return "Fit in a swim session today"
-        case .vo2Max:
-            return "Do some cardio — a brisk walk or jog"
+            if let avg = weekAvg, let base = baselineMean, avg < base * 0.8 {
+                action = "You're at \(Int(avg)) mL/day vs your usual \(Int(base)) mL — drink a glass now"
+            } else {
+                action = "Stay on top of hydration today"
+            }
+
         case .proteinIntake:
-            return "Add a protein-rich snack today"
+            if let avg = weekAvg, let base = baselineMean, avg < base * 0.85 {
+                action = "Protein is \(Int(avg))g vs your usual \(Int(base))g — add eggs, chicken, or a shake"
+            } else {
+                action = "Protein intake is solid — keep it up"
+            }
+
         case .fiberIntake:
-            return "Add vegetables or whole grains to your next meal"
+            if let avg = weekAvg, let base = baselineMean, avg < base * 0.85 {
+                action = "Fiber is low at \(Int(avg))g — add vegetables or whole grains to your next meal"
+            } else {
+                action = "Fiber intake is on track"
+            }
+
+        // MARK: Cardio — user can do cardio work
+        case .vo2Max:
+            if let trend = trend, trend.direction == .declining {
+                action = "VO2 max is trending down — do 20+ min of sustained cardio today"
+            } else {
+                action = "Maintain your cardio fitness with a run or brisk walk"
+            }
+
+        case .distanceCycling:
+            if let base = baselineMean, base > 0 {
+                action = "You usually ride \(String(format: "%.1f", base)) km — try to get a ride in today"
+            } else {
+                action = "Go for a bike ride today"
+            }
+
+        case .distanceSwimming:
+            action = "Fit in a swim session today"
+
         case .appleMoveTime:
-            return "Move around for a few minutes this hour"
+            if let avg = weekAvg, let base = baselineMean, avg < base * 0.8 {
+                action = "Move time is \(Int(avg)) min vs \(Int(base)) min — take a walk break"
+            } else {
+                action = "Keep moving throughout the day"
+            }
+
         default:
             return nil
+        }
+
+        if let reasonOverride {
+            reason = reasonOverride
+        } else if let trend, abs(trend.weekOverWeekChange) > 3 {
+            let direction = trend.weekOverWeekChange < 0 ? "down" : "up"
+            let pct = String(format: "%.0f", abs(trend.weekOverWeekChange))
+            if let avg = weekAvg {
+                reason = "\(metric.displayName) \(direction) \(pct)% — averaging \(metric.formatValue(avg)) \(metric.unit)"
+            } else {
+                reason = "\(metric.displayName) \(direction) \(pct)% this week"
+            }
+        } else if let avg = weekAvg, let base = baselineMean, base > 0 {
+            let pct = Int(((avg - base) / base) * 100)
+            if abs(pct) > 3 {
+                reason = "\(metric.displayName) is \(pct > 0 ? "+" : "")\(pct)% vs your baseline"
+            } else {
+                reason = "\(metric.displayName) is right at your baseline"
+            }
+        } else {
+            reason = ""
+        }
+
+        return CoachGoal(metric: metric, action: action, reason: reason, priority: priority)
+    }
+
+    private func formatLargeInt(_ value: Int) -> String {
+        if value >= 10_000 {
+            return String(format: "%.1fk", Double(value) / 1000)
+        } else {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .decimal
+            return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
         }
     }
 
