@@ -126,9 +126,8 @@ enum BlockType: String {
     case exploreCorrelationPreview = "explore_correlation_preview"
 
     // Home extras
-    case homeTrendMetric = "home_trend_metric"
+    case homeCoachGoal = "home_coach_goal"
     case homeRiskRow = "home_risk_row"
-    case homeHistoricalHighlight = "home_historical_highlight"
     case homeRecoveryInfoButton = "home_recovery_info_button"
 
     // Live

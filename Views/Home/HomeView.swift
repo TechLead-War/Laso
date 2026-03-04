@@ -20,10 +20,9 @@ struct HomeView: View {
     @State private var recoveryTracker = SectionTracker(section: .homeRecovery, tab: .home)
     @State private var illnessTracker = SectionTracker(section: .homeIllness, tab: .home)
     @State private var bodyInsightsTracker = SectionTracker(section: .homeBodyInsights, tab: .home)
-    @State private var trendsTracker = SectionTracker(section: .homeTrends, tab: .home)
     @State private var risksTracker = SectionTracker(section: .homeRisks, tab: .home)
     @State private var weeklyReviewTracker = SectionTracker(section: .homeWeeklyReview, tab: .home)
-    @State private var historicalTracker = SectionTracker(section: .homeHistorical, tab: .home)
+    @State private var coachTracker = SectionTracker(section: .homeCoach, tab: .home)
 
     var body: some View {
         Group {
@@ -195,17 +194,12 @@ struct HomeView: View {
                     .onAppear { bodyInsightsTracker.appeared() }
                     .onDisappear { bodyInsightsTracker.disappeared() }
 
-                    // 5. Your Trends — improving/stable/declining + top movers
-                    todayTrendsSection
-                        .onAppear { trendsTracker.appeared() }
-                        .onDisappear { trendsTracker.disappeared() }
-
-                    // 6. Health Risks — moderate+ only
+                    // 5. Health Risks — moderate+ only
                     todayRisksSection
                         .onAppear { risksTracker.appeared() }
                         .onDisappear { risksTracker.disappeared() }
 
-                    // 7. Weekly Review
+                    // 6. Weekly Review
                     WeeklyReviewEntryCard(
                         viewModel: weeklyReviewVM
                     ) {
@@ -223,10 +217,26 @@ struct HomeView: View {
                     .onAppear { weeklyReviewTracker.appeared() }
                     .onDisappear { weeklyReviewTracker.disappeared() }
 
-                    // 8. From Your History / Health Tips
-                    historicalOrTipsSection
-                        .onAppear { historicalTracker.appeared() }
-                        .onDisappear { historicalTracker.disappeared() }
+                    // 7. Your Coach — weekly goals with progress
+                    CoachGoalsSection(
+                        goals: viewModel.coachGoals,
+                        daysOfData: viewModel.dataDepth.daysOfData,
+                        onTapGoal: { metric in
+                            AppAnalytics.shared.trackBlockTap(
+                                title: metric.displayName,
+                                type: .homeCoachGoal,
+                                screen: .home,
+                                metadata: [
+                                    "metric_id": metric.rawValue,
+                                    "metric_category": metric.category.rawValue
+                                ]
+                            )
+                            coachTracker.tapped(target: metric.rawValue)
+                            navigationPath.append(metric)
+                        }
+                    )
+                    .onAppear { coachTracker.appeared() }
+                    .onDisappear { coachTracker.disappeared() }
 
                     // Last updated footer
                     if let lastRefresh = viewModel.lastRefresh {
@@ -374,133 +384,6 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Historical Insights / Health Tips
-
-    @ViewBuilder
-    private var historicalOrTipsSection: some View {
-        let daysOfData = viewModel.dataDepth.daysOfData
-        if daysOfData >= 14 {
-            let highlights = Array(viewModel.historicalHighlights.prefix(3))
-            if !highlights.isEmpty {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("This Week")
-                        .font(.headline)
-                        .padding(.horizontal)
-
-                    ForEach(highlights) { highlight in
-                        Button {
-                            AppAnalytics.shared.trackBlockTap(
-                                title: highlight.metric.displayName,
-                                type: .homeHistoricalHighlight,
-                                screen: .home,
-                                metadata: [
-                                    "metric_id": highlight.metric.rawValue,
-                                    "metric_category": highlight.metric.category.rawValue,
-                                    "highlight_type": highlight.typeLabel
-                                ]
-                            )
-                            historicalTracker.tapped(target: highlight.metric.rawValue)
-                            navigationPath.append(highlight.metric)
-                        } label: {
-                            historicalHighlightCard(highlight)
-                        }
-                        .buttonStyle(.plain)
-                        .padding(.horizontal)
-                    }
-                }
-            }
-        } else if hasData {
-            healthTipsSection(daysRemaining: 14 - daysOfData)
-        }
-    }
-
-    private func historicalHighlightCard(_ highlight: DashboardViewModel.HistoricalHighlight) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: highlight.metric.systemImageName)
-                .font(.title3)
-                .foregroundStyle(highlight.metric.category.color)
-                .frame(width: 36, height: 36)
-                .background(highlight.metric.category.color.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
-
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
-                    Text(highlight.title)
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.primary)
-                        .lineLimit(2)
-
-                    highlightTypeBadge(highlight.type)
-                }
-
-                Text(highlight.recommendation)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-        }
-        .padding(DS.cardPadding)
-        .cardStyle()
-    }
-
-    private func highlightTypeBadge(_ type: DashboardViewModel.HistoricalHighlight.HighlightType) -> some View {
-        let (label, color): (String, Color) = switch type {
-        case .weekOverWeek: ("Week", .blue)
-        case .yearOverYear: ("YoY", .blue)
-        case .allTimeExtreme: ("Record", .orange)
-        case .seasonal: ("Seasonal", .purple)
-        case .longTermTrajectory: ("Trend", .green)
-        }
-        return Text(label)
-            .font(.system(size: 9, weight: .bold))
-            .foregroundStyle(color)
-            .padding(.horizontal, DS.badgeH)
-            .padding(.vertical, DS.badgeV)
-            .background(color.opacity(DS.badgeBg), in: Capsule())
-    }
-
-    private func healthTipsSection(daysRemaining: Int) -> some View {
-        let tips: [(icon: String, title: String)] = [
-            ("figure.walk", "Move Every Hour"),
-            ("bed.double.fill", "Consistent Sleep Schedule"),
-            ("drop.fill", "Stay Hydrated"),
-            ("heart.fill", "Monitor Resting Heart Rate"),
-            ("wind", "Practice Deep Breathing"),
-        ]
-
-        return VStack(alignment: .leading, spacing: 10) {
-            Text("Health Tips")
-                .font(.headline)
-                .padding(.horizontal)
-
-            ForEach(tips.prefix(3), id: \.title) { tip in
-                HStack(spacing: 12) {
-                    Image(systemName: tip.icon)
-                        .font(.body)
-                        .foregroundStyle(.tint)
-                        .frame(width: 28)
-                    Text(tip.title)
-                        .font(.subheadline)
-                        .foregroundStyle(.primary)
-                    Spacer()
-                }
-                .padding(DS.cardPadding)
-                .cardStyle()
-                .padding(.horizontal)
-            }
-
-            Text("\(daysRemaining) more day\(daysRemaining == 1 ? "" : "s") until your coach can compare weeks")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-                .padding(.horizontal)
-        }
-    }
-
     // MARK: - Pro Feature Teaser
 
     private func proTeaser(title: String, subtitle: String, icon: String) -> some View {
@@ -589,96 +472,6 @@ struct HomeView: View {
             )
             .padding(.horizontal)
         }
-    }
-
-    // MARK: - Today Trends Section
-
-    @ViewBuilder
-    private var todayTrendsSection: some View {
-        let summary = viewModel.trendsSummary
-        if summary.improving + summary.declining > 0 {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Your Trends")
-                    .font(.headline)
-                    .padding(.horizontal)
-
-                // Counters row
-                HStack(spacing: 0) {
-                    trendCounter(count: summary.improving, label: "Improving", icon: "arrow.up.right", color: .green)
-                    Divider().frame(height: DS.dividerHeight)
-                    trendCounter(count: summary.stable, label: "Stable", icon: "arrow.right", color: .secondary)
-                    Divider().frame(height: DS.dividerHeight)
-                    trendCounter(count: summary.declining, label: "Declining", icon: "arrow.down.right", color: .red)
-                }
-                .padding(.vertical, 10)
-                .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: DS.cardRadius))
-                .padding(.horizontal)
-
-                // Top movers (max 3)
-                if !summary.topMovers.isEmpty {
-                    VStack(spacing: 0) {
-                        ForEach(Array(summary.topMovers.prefix(3))) { mover in
-                            Button {
-                                AppAnalytics.shared.trackBlockTap(
-                                    title: mover.metric.displayName,
-                                    type: .homeTrendMetric,
-                                    screen: .home,
-                                    metadata: [
-                                        "metric_id": mover.metric.rawValue,
-                                        "metric_category": mover.metric.category.rawValue,
-                                        "change_percent": mover.changePercent
-                                    ]
-                                )
-                                trendsTracker.tapped(target: mover.metric.rawValue)
-                                navigationPath.append(mover.metric)
-                            } label: {
-                                moverRow(mover)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .cardStyle()
-                    .padding(.horizontal)
-                }
-            }
-        }
-    }
-
-    private func trendCounter(count: Int, label: String, icon: String, color: Color) -> some View {
-        VStack(spacing: 3) {
-            HStack(spacing: 3) {
-                Image(systemName: icon)
-                    .font(.caption2.weight(.bold))
-                    .foregroundStyle(color)
-                Text("\(count)")
-                    .font(.title3.weight(.bold).monospacedDigit())
-            }
-            Text(label)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    private func moverRow(_ mover: DashboardViewModel.MetricMover) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: mover.metric.systemImageName)
-                .font(.body)
-                .foregroundStyle(mover.metric.category.color)
-                .frame(width: 28)
-            Text(mover.metric.displayName)
-                .font(.subheadline)
-                .foregroundStyle(.primary)
-            Spacer()
-            Text(TrendAnalyzer.formattedPercentChange(mover.changePercent))
-                .font(.subheadline.weight(.semibold).monospacedDigit())
-                .foregroundStyle(mover.improving ? .green : .red)
-            Image(systemName: "chevron.right")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
     }
 
     // MARK: - Today Health Risks Section

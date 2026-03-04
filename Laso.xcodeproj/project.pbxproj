@@ -64,6 +64,7 @@
 		80026655386670641F71E54A /* SeverityBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF35C1AEF3CC68D59F22FB41 /* SeverityBadge.swift */; };
 		8301D008755999181C847054 /* StatisticsGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC8EDD113328305A89EFB85 /* StatisticsGrid.swift */; };
 		8465B9DFD8DD5C20924D8BE4 /* CoachGreetingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 540A9FC7CEE865985F272489 /* CoachGreetingView.swift */; };
+		51540B41FFE167D3C050C23F /* CoachGoalsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D278C360A3913CB74B4B5A /* CoachGoalsSection.swift */; };
 		84D0FD3CD9218F371D32A81F /* HealthMetric.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE8179C058000EE1F6531E0C /* HealthMetric.swift */; };
 		8B3F62D1A4C97E05F1B286CA /* HealthCorrelation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A7E91B3C2D85F06E3A14D9B /* HealthCorrelation.swift */; };
 		92BC085F0F66295F8221BE88 /* MetricChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 386D956FFA31A24C5784E847 /* MetricChartView.swift */; };
@@ -202,6 +203,7 @@
 		52C5FA0AC1DF45B09601C7C0 /* HealthRiskEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthRiskEngine.swift; sourceTree = "<group>"; };
 		53D06050FC363373F86388B7 /* SleepPerformanceAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepPerformanceAnalyzer.swift; sourceTree = "<group>"; };
 		540A9FC7CEE865985F272489 /* CoachGreetingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachGreetingView.swift; sourceTree = "<group>"; };
+		D5D278C360A3913CB74B4B5A /* CoachGoalsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachGoalsSection.swift; sourceTree = "<group>"; };
 		5827B420D1FD0325FE028282 /* ConnectedDeviceInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectedDeviceInfo.swift; sourceTree = "<group>"; };
 		59AFB7BF706251B5AA4B10B3 /* MetricDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricDetailView.swift; sourceTree = "<group>"; };
 		59AFB7BF706251B5AA4B1001 /* MetricLogSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricLogSheet.swift; sourceTree = "<group>"; };
@@ -450,6 +452,7 @@
 				F978F22FCAD104AFEB5A79DB /* ActionCardsSection.swift */,
 				87FD655D1ED1E49C55293DD4 /* BodyInsightsSection.swift */,
 				540A9FC7CEE865985F272489 /* CoachGreetingView.swift */,
+				D5D278C360A3913CB74B4B5A /* CoachGoalsSection.swift */,
 				D93A5E8F17C42B60E4F8A3D1 /* CorrelationsSection.swift */,
 				3FF4180D7FEC1853F0B00F79 /* FocusAreasSection.swift */,
 				BE89F23BCF8C78C43EF02806 /* HomeView.swift */,
@@ -900,6 +903,7 @@
 				6DCB867FBD31DCCBDECF9C52 /* CategoryDetailViewModel.swift in Sources */,
 				B95A601E010A5216E6976D8F /* ChartJSBundle.swift in Sources */,
 				8465B9DFD8DD5C20924D8BE4 /* CoachGreetingView.swift in Sources */,
+				51540B41FFE167D3C050C23F /* CoachGoalsSection.swift in Sources */,
 				1DA2246CF2944D4B84D8A733 /* Collection+Statistics.swift in Sources */,
 				F0718385055A5C796633EE10 /* ConnectedDeviceInfo.swift in Sources */,
 				35739B15E146FD7C5DD05500 /* ConnectedDevicesView.swift in Sources */,

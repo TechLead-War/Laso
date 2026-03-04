@@ -2,14 +2,13 @@ import Foundation
 
 /// All trackable sections across the app's views
 enum AppSection: String {
-    // Home (7)
+    // Home (6)
     case homeRecovery = "home_recovery"
     case homeIllness = "home_illness"
     case homeBodyInsights = "home_body_insights"
-    case homeTrends = "home_trends"
+    case homeCoach = "home_coach"
     case homeRisks = "home_risks"
     case homeWeeklyReview = "home_weekly_review"
-    case homeHistorical = "home_historical"
 
     // Explore (6)
     case exploreScoreHero = "explore_score_hero"

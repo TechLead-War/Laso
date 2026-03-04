@@ -31,6 +31,7 @@ final class DashboardViewModel {
     private(set) var cachedTopCorrelations: [HealthCorrelation] = []
     private(set) var cachedFocusCategories: Set<HealthCategory> = []
     private(set) var cachedFocusedInsights: [Insight] = []
+    private(set) var cachedCoachGoals: [CoachGoal] = []
 
     // MARK: - Discovery (Day 0)
     var discoveries: [Discovery] = []
@@ -743,6 +744,7 @@ final class DashboardViewModel {
         cachedTrendsSummary = computeTrendsSummary()
         cachedHistoricalHighlights = computeHistoricalHighlights()
         cachedTopCorrelations = computeTopCorrelations()
+        cachedCoachGoals = computeCoachGoals()
 
         // Save shown recommendations for outcome tracking
         let insightsToSave = cachedFocusedInsights.prefix(10)
@@ -862,6 +864,117 @@ final class DashboardViewModel {
         return Array(highlights.prefix(5))
     }
 
+    // MARK: - Coach Goals Computation
+
+    private func computeCoachGoals() -> [CoachGoal] {
+        let focuses = cachedFocusCategories
+        var goals: [CoachGoal] = []
+        var usedCategories: Set<HealthCategory> = []
+
+        // 1. Declining metrics the user can act on → actionable daily focus
+        for (metric, trend) in analysisEngine.trends {
+            guard trend.weekOverWeekChange < -3,
+                  let action = dailyAction(for: metric) else { continue }
+            let category = metric.category
+            guard !usedCategories.contains(category) else { continue }
+
+            let drop = String(format: "%.0f", abs(trend.weekOverWeekChange))
+            goals.append(CoachGoal(
+                metric: metric,
+                action: action,
+                reason: "\(metric.displayName) down \(drop)% this week",
+                priority: abs(trend.weekOverWeekChange)
+            ))
+            usedCategories.insert(category)
+        }
+
+        // 2. Risk focus areas → one actionable item per risk
+        for risk in analysisEngine.healthRisks where risk.riskGrade != .low {
+            for factor in risk.measuredFactors {
+                guard !usedCategories.contains(factor.metric.category),
+                      let action = dailyAction(for: factor.metric) else { continue }
+                goals.append(CoachGoal(
+                    metric: factor.metric,
+                    action: action,
+                    reason: "\(risk.riskType.displayName) risk is \(risk.riskGrade.displayName.lowercased())",
+                    priority: Double(risk.level)
+                ))
+                usedCategories.insert(factor.metric.category)
+            }
+        }
+
+        // 3. Correlation-derived — surface something the user might not think of
+        for corr in analysisEngine.correlations.prefix(10) {
+            let metric = corr.metricA
+            guard !usedCategories.contains(metric.category),
+                  let action = dailyAction(for: metric),
+                  let trend = analysisEngine.trends[metric],
+                  trend.direction != .improving else { continue }
+            goals.append(CoachGoal(
+                metric: metric,
+                action: action,
+                reason: "\(corr.causeLabel) → \(corr.effectLabel)",
+                priority: abs(corr.correlation) * 50
+            ))
+            usedCategories.insert(metric.category)
+        }
+
+        // Sort: focus categories first, then by priority
+        goals.sort { a, b in
+            let aFocus = !focuses.isEmpty && focuses.contains(a.metric.category)
+            let bFocus = !focuses.isEmpty && focuses.contains(b.metric.category)
+            if aFocus != bFocus { return aFocus }
+            return a.priority > b.priority
+        }
+
+        return Array(goals.prefix(3))
+    }
+
+    /// Maps a metric to a concrete thing the user can do today.
+    /// Returns nil for metrics that aren't directly actionable (HRV, resting HR, blood oxygen, etc.).
+    private func dailyAction(for metric: HealthMetric) -> String? {
+        switch metric {
+        case .steps, .distanceWalkingRunning:
+            return "Take a walk after your next meal"
+        case .activeCalories:
+            return "Fit in 20 minutes of movement today"
+        case .exerciseMinutes, .workoutDuration:
+            return "Get a workout in today"
+        case .workoutCount:
+            return "Make time for a workout today"
+        case .flightsClimbed:
+            return "Take the stairs instead of the elevator"
+        case .standHours:
+            return "Stand up and stretch every hour"
+        case .sleepDuration:
+            return "Start winding down 30 minutes earlier tonight"
+        case .sleepDeep, .sleepREM:
+            return "Avoid screens an hour before bed tonight"
+        case .sleepCore:
+            return "Keep a consistent bedtime tonight"
+        case .mindfulMinutes:
+            return "Do a 5-minute breathing exercise today"
+        case .timeInDaylight:
+            return "Spend 15 minutes outside today"
+        case .waterIntake:
+            return "Drink a glass of water right now"
+        case .distanceCycling:
+            return "Go for a bike ride today"
+        case .distanceSwimming:
+            return "Fit in a swim session today"
+        case .vo2Max:
+            return "Do some cardio — a brisk walk or jog"
+        case .proteinIntake:
+            return "Add a protein-rich snack today"
+        case .fiberIntake:
+            return "Add vegetables or whole grains to your next meal"
+        case .appleMoveTime:
+            return "Move around for a few minutes this hour"
+        default:
+            return nil
+        }
+    }
+
     // MARK: - Computed Analytics for Views
 
     /// All anomalous metrics across all categories
@@ -951,6 +1064,20 @@ final class DashboardViewModel {
 
     var historicalHighlights: [HistoricalHighlight] {
         cachedHistoricalHighlights
+    }
+
+    // MARK: - Coach Goals
+
+    struct CoachGoal: Identifiable {
+        let id = UUID()
+        let metric: HealthMetric
+        let action: String
+        let reason: String
+        let priority: Double
+    }
+
+    var coachGoals: [CoachGoal] {
+        cachedCoachGoals
     }
 
     /// Data depth summary — how much data powers the analysis

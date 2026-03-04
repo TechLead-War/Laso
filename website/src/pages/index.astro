@@ -909,7 +909,8 @@ import '../styles/globals.css'
     const SIGNUP_BASE = 550
     let currentSignupCount = SIGNUP_BASE
 
-    async function fetchSignupCount() {
+    async function fetchSignupCount(): Promise<number> {
+      // Try aggregation query first, fall back to listing documents
       try {
         const res = await fetch(`${FIRESTORE_BASE}:runAggregationQuery`, {
           method: 'POST',
@@ -923,12 +924,32 @@ import '../styles/globals.css'
             }
           })
         })
-        if (!res.ok) return 0
-        const data = await res.json()
-        return parseInt(data[0]?.result?.aggregateFields?.count?.integerValue ?? '0', 10)
-      } catch {
-        return 0
-      }
+        if (res.ok) {
+          const data = await res.json()
+          const count = parseInt(data[0]?.result?.aggregateFields?.count?.integerValue ?? '0', 10)
+          if (count > 0) return count
+        }
+      } catch { /* fall through */ }
+
+      // Fallback: list documents and count (select no fields to minimize payload)
+      try {
+        const res = await fetch(`${FIRESTORE_BASE}:runQuery`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            structuredQuery: {
+              from: [{ collectionId: 'early_access' }],
+              select: { fields: [{ fieldPath: '__name__' }] }
+            }
+          })
+        })
+        if (res.ok) {
+          const data = await res.json()
+          return Array.isArray(data) ? data.filter((d: any) => d.document).length : 0
+        }
+      } catch { /* silent */ }
+
+      return 0
     }
 
     function updateCounterDisplay(count: number) {
@@ -939,9 +960,7 @@ import '../styles/globals.css'
     }
 
     fetchSignupCount().then(count => {
-      if (count > 0) {
-        updateCounterDisplay(SIGNUP_BASE + count)
-      }
+      updateCounterDisplay(SIGNUP_BASE + count)
     })
 
     // ── Early access form handler ──
