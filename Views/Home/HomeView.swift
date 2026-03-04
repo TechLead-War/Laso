@@ -379,11 +379,11 @@ struct HomeView: View {
     @ViewBuilder
     private var historicalOrTipsSection: some View {
         let daysOfData = viewModel.dataDepth.daysOfData
-        if daysOfData >= 30 {
+        if daysOfData >= 14 {
             let highlights = Array(viewModel.historicalHighlights.prefix(3))
             if !highlights.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("From Your History")
+                    Text("This Week")
                         .font(.headline)
                         .padding(.horizontal)
 
@@ -410,7 +410,7 @@ struct HomeView: View {
                 }
             }
         } else if hasData {
-            healthTipsSection(daysRemaining: 30 - daysOfData)
+            healthTipsSection(daysRemaining: 14 - daysOfData)
         }
     }
 
@@ -450,6 +450,7 @@ struct HomeView: View {
 
     private func highlightTypeBadge(_ type: DashboardViewModel.HistoricalHighlight.HighlightType) -> some View {
         let (label, color): (String, Color) = switch type {
+        case .weekOverWeek: ("Week", .blue)
         case .yearOverYear: ("YoY", .blue)
         case .allTimeExtreme: ("Record", .orange)
         case .seasonal: ("Seasonal", .purple)
@@ -493,7 +494,7 @@ struct HomeView: View {
                 .padding(.horizontal)
             }
 
-            Text("\(daysRemaining) more day\(daysRemaining == 1 ? "" : "s") until personalized historical insights")
+            Text("\(daysRemaining) more day\(daysRemaining == 1 ? "" : "s") until your coach can compare weeks")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
                 .padding(.horizontal)

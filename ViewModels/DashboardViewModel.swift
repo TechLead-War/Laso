@@ -817,73 +817,40 @@ final class DashboardViewModel {
     }
 
     private func computeHistoricalHighlights() -> [HistoricalHighlight] {
-        let ctx = analysisEngine.historicalContext
         var highlights: [HistoricalHighlight] = []
-        let monthName = Calendar.current.monthSymbols[Calendar.current.component(.month, from: Date()) - 1]
         let focuses = focusCategories
 
-        for (metric, context) in ctx {
-            if let yoy = context.yearOverYearChange, abs(yoy) > 5 {
-                let improving = metric.higherIsBetter ? yoy > 0 : yoy < 0
-                let rec = improving
-                    ? "Keep doing what's working — your consistency is paying off."
-                    : RulesConfiguration.recommendation(for: metric, severity: .warning, trend: .declining)
-                highlights.append(HistoricalHighlight(
-                    metric: metric,
-                    type: .yearOverYear,
-                    title: "\(String(format: "%.0f", abs(yoy)))% \(improving ? "better" : "worse") than last \(monthName)",
-                    recommendation: rec,
-                    isPositive: improving,
-                    significance: abs(yoy)
-                ))
+        // Week-over-week comparison for the Home/Coach screen
+        for (metric, series) in healthKitManager.timeSeries {
+            let thisWeek = series.samples(lastDays: 7)
+            let lastWeek = series.sortedSamples.filter { sample in
+                let daysAgo = Calendar.current.dateComponents([.day], from: sample.date, to: Date()).day ?? 0
+                return daysAgo >= 7 && daysAgo < 14
             }
 
-            if context.isAllTimeExtreme, context.totalDataPoints >= 180 {
-                let isHigh = context.allTimePercentile >= 95
-                let good = isHigh == metric.higherIsBetter
-                let rec = good
-                    ? "You're at a personal best. Lock in the habits that got you here."
-                    : RulesConfiguration.recommendation(for: metric, severity: .warning, trend: .declining)
-                highlights.append(HistoricalHighlight(
-                    metric: metric,
-                    type: .allTimeExtreme,
-                    title: "Near all-time \(isHigh ? "high" : "low")",
-                    recommendation: rec,
-                    isPositive: good,
-                    significance: 90
-                ))
-            }
+            guard !thisWeek.isEmpty, !lastWeek.isEmpty else { continue }
 
-            if let seasonalDev = context.seasonalDeviation, abs(seasonalDev) > 10, context.yearsOfData >= 1 {
-                let improving = metric.higherIsBetter ? seasonalDev > 0 : seasonalDev < 0
-                let rec = improving
-                    ? "You're beating your seasonal average — strong work."
-                    : "You usually do better this time of year. \(RulesConfiguration.recommendation(for: metric, severity: .info, trend: .declining))"
-                highlights.append(HistoricalHighlight(
-                    metric: metric,
-                    type: .seasonal,
-                    title: "\(String(format: "%.0f", abs(seasonalDev)))% \(seasonalDev > 0 ? "above" : "below") \(monthName) norm",
-                    recommendation: rec,
-                    isPositive: improving,
-                    significance: abs(seasonalDev)
-                ))
-            }
+            let thisAvg = thisWeek.map(\.value).mean
+            let lastAvg = lastWeek.map(\.value).mean
+            guard lastAvg != 0 else { continue }
 
-            if let change = context.longTermChangePercent, abs(change) > 10, context.yearsOfData >= 1 {
-                let improving = metric.higherIsBetter ? change > 0 : change < 0
-                let periodLabel = "1 year"
-                let rec = improving
-                    ? "Sustained improvement — your consistency is the key. Don't change what's working."
-                    : "Gradual decline over \(periodLabel). Small daily adjustments compound. \(RulesConfiguration.recommendation(for: metric, severity: .info, trend: .declining))"
-                highlights.append(HistoricalHighlight(
-                    metric: metric,
-                    type: .longTermTrajectory,
-                    title: "\(improving ? "Up" : "Down") \(String(format: "%.0f", abs(change)))% over \(periodLabel)",
-                    recommendation: rec,
-                    isPositive: improving,
-                    significance: abs(change)
-                ))
-            }
+            let change = ((thisAvg - lastAvg) / lastAvg) * 100
+            guard abs(change) > 3 else { continue }
+
+            let improving = metric.higherIsBetter ? change > 0 : change < 0
+            let direction = change > 0 ? "up" : "down"
+            let rec = improving
+                ? "Good trend — keep it going this week."
+                : RulesConfiguration.recommendation(for: metric, severity: .warning, trend: .declining)
+
+            highlights.append(HistoricalHighlight(
+                metric: metric,
+                type: .weekOverWeek,
+                title: "\(metric.displayName) \(direction) \(String(format: "%.0f", abs(change)))% this week",
+                recommendation: rec,
+                isPositive: improving,
+                significance: abs(change)
+            ))
         }
 
         highlights.sort { a, b in
@@ -954,6 +921,7 @@ final class DashboardViewModel {
         let significance: Double
 
         enum HighlightType {
+            case weekOverWeek
             case yearOverYear
             case allTimeExtreme
             case seasonal
@@ -962,6 +930,7 @@ final class DashboardViewModel {
 
         var icon: String {
             switch type {
+            case .weekOverWeek: return "calendar.badge.clock"
             case .yearOverYear: return "calendar.badge.clock"
             case .allTimeExtreme: return "trophy.fill"
             case .seasonal: return "leaf.fill"
@@ -971,6 +940,7 @@ final class DashboardViewModel {
 
         var typeLabel: String {
             switch type {
+            case .weekOverWeek: return "This Week"
             case .yearOverYear: return "Year-over-Year"
             case .allTimeExtreme: return "All-Time"
             case .seasonal: return "Seasonal"
