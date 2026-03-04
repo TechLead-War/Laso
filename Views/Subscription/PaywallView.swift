@@ -181,7 +181,16 @@ struct PaywallView: View {
                 selectedProduct = product
             }
             let type: BlockType = label == "Yearly" ? .paywallPlanYearly : .paywallPlanMonthly
-            AppAnalytics.shared.trackBlockTap(title: label, type: type, screen: .paywall)
+            AppAnalytics.shared.trackBlockTap(
+                title: label,
+                type: type,
+                screen: .paywall,
+                metadata: [
+                    "product_id": product.id,
+                    "price": product.displayPrice,
+                    "billing_period": label.lowercased()
+                ]
+            )
             pricingTracker.tapped(target: label.lowercased())
         } label: {
             HStack {
@@ -239,7 +248,16 @@ struct PaywallView: View {
 
             Button {
                 guard let product = selectedProduct else { return }
-                AppAnalytics.shared.trackBlockTap(title: "Subscribe", type: .paywallSubscribe, screen: .paywall)
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Subscribe",
+                    type: .paywallSubscribe,
+                    screen: .paywall,
+                    metadata: [
+                        "product_id": product.id,
+                        "price": product.displayPrice,
+                        "cta_title": callToActionTitle
+                    ]
+                )
                 footerTracker.tapped(target: "subscribe")
                 AppAnalytics.shared.trackPaywallCTATapped(
                     productID: product.id,
@@ -264,7 +282,14 @@ struct PaywallView: View {
             .disabled(selectedProduct == nil || subscriptionManager.isPurchasing)
 
             Button {
-                AppAnalytics.shared.trackBlockTap(title: "Restore Purchases", type: .paywallRestore, screen: .paywall)
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Restore Purchases",
+                    type: .paywallRestore,
+                    screen: .paywall,
+                    metadata: [
+                        "source": "paywall_footer"
+                    ]
+                )
                 footerTracker.tapped(target: "restore_purchases")
                 isRestoring = true
                 Task {
@@ -291,7 +316,14 @@ struct PaywallView: View {
 
             if subscriptionManager.products.isEmpty {
                 Button {
-                    AppAnalytics.shared.trackBlockTap(title: "Retry loading plans", type: .paywallRetryPlans, screen: .paywall)
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Retry loading plans",
+                        type: .paywallRetryPlans,
+                        screen: .paywall,
+                        metadata: [
+                            "source": "paywall_footer"
+                        ]
+                    )
                     footerTracker.tapped(target: "retry_loading_plans")
                     Task { await subscriptionManager.loadProducts() }
                 } label: {
@@ -304,14 +336,28 @@ struct PaywallView: View {
             HStack(spacing: 16) {
                 Link("Terms of Use", destination: URL(string: "https://lasohealth.com/terms")!)
                     .simultaneousGesture(TapGesture().onEnded {
-                        AppAnalytics.shared.trackBlockTap(title: "Terms of Use", type: .paywallTermsLink, screen: .paywall)
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Terms of Use",
+                            type: .paywallTermsLink,
+                            screen: .paywall,
+                            metadata: [
+                                "destination": "https://lasohealth.com/terms"
+                            ]
+                        )
                         footerTracker.tapped(target: "terms_of_use")
                     })
                 Text("\u{00B7}")
                     .foregroundStyle(.quaternary)
                 Link("Privacy Policy", destination: URL(string: "https://lasohealth.com/privacy")!)
                     .simultaneousGesture(TapGesture().onEnded {
-                        AppAnalytics.shared.trackBlockTap(title: "Privacy Policy", type: .paywallPrivacyLink, screen: .paywall)
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Privacy Policy",
+                            type: .paywallPrivacyLink,
+                            screen: .paywall,
+                            metadata: [
+                                "destination": "https://lasohealth.com/privacy"
+                            ]
+                        )
                         footerTracker.tapped(target: "privacy_policy")
                     })
             }

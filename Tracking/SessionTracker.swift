@@ -93,6 +93,10 @@ final class SessionTracker {
         return previousScreen
     }
 
+    var currentScreen: String? {
+        lastScreen
+    }
+
     func updateDepth(_ depth: Int) {
         currentDepth = depth
         maxDepth = max(maxDepth, depth)

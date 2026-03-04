@@ -25,8 +25,16 @@ struct PeriodSummarySection: View {
             .padding(.horizontal)
             .sensoryFeedback(.selection, trigger: viewModel.selectedPeriod)
             .accessibilityLabel("Time period selector")
-            .onChange(of: viewModel.selectedPeriod) { _, newPeriod in
-                AppAnalytics.shared.trackBlockTap(title: newPeriod.rawValue, type: .periodSelector, screen: .home)
+            .onChange(of: viewModel.selectedPeriod) { oldPeriod, newPeriod in
+                AppAnalytics.shared.trackBlockTap(
+                    title: newPeriod.rawValue,
+                    type: .periodSelector,
+                    screen: .home,
+                    metadata: [
+                        "from_period": oldPeriod.rawValue,
+                        "to_period": newPeriod.rawValue
+                    ]
+                )
             }
 
             let summary = viewModel.focusFilteredPeriodSummary(for: viewModel.selectedPeriod)
@@ -43,7 +51,16 @@ struct PeriodSummarySection: View {
                             ? MetricChangeRow.nudgeFor(change.metric)
                             : nil
                         MetricChangeRow(change: change, actionNudge: nudge) {
-                            AppAnalytics.shared.trackBlockTap(title: change.metric.displayName, type: .metricRow, screen: .home)
+                            AppAnalytics.shared.trackBlockTap(
+                                title: change.metric.displayName,
+                                type: .metricRow,
+                                screen: .home,
+                                metadata: [
+                                    "metric_id": change.metric.rawValue,
+                                    "metric_category": change.metric.category.rawValue,
+                                    "period": viewModel.selectedPeriod.rawValue
+                                ]
+                            )
                             onTapMetric(change.metric)
                         }
                     }

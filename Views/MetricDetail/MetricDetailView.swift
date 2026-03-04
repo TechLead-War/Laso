@@ -46,7 +46,11 @@ struct MetricDetailView: View {
                             AppAnalytics.shared.trackBlockTap(
                                 title: "Log \(viewModel.metric.displayName)",
                                 type: .metricLogOpen,
-                                screen: .metricDetail
+                                screen: .metricDetail,
+                                metadata: [
+                                    "metric_id": viewModel.metric.rawValue,
+                                    "destination": "metric_log_sheet"
+                                ]
                             )
                             showLogSheet = true
                         } label: {

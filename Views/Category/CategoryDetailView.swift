@@ -94,7 +94,12 @@ struct CategoryDetailView: View {
                                     AppAnalytics.shared.trackBlockTap(
                                         title: item.metric.displayName,
                                         type: .metricRow,
-                                        screen: .categoryDetail
+                                        screen: .categoryDetail,
+                                        metadata: [
+                                            "metric_id": item.metric.rawValue,
+                                            "metric_category": item.metric.category.rawValue,
+                                            "source_section": "history"
+                                        ]
                                     )
                                     historyTracker.tapped(target: item.metric.rawValue)
                                 })
@@ -152,7 +157,16 @@ struct CategoryDetailView: View {
                         }
                         .buttonStyle(.plain)
                         .simultaneousGesture(TapGesture().onEnded {
-                            AppAnalytics.shared.trackBlockTap(title: metric.displayName, type: .metricRow, screen: .categoryDetail)
+                            AppAnalytics.shared.trackBlockTap(
+                                title: metric.displayName,
+                                type: .metricRow,
+                                screen: .categoryDetail,
+                                metadata: [
+                                    "metric_id": metric.rawValue,
+                                    "metric_category": metric.category.rawValue,
+                                    "source_section": "metrics"
+                                ]
+                            )
                             metricsTracker.tapped(target: metric.rawValue)
                         })
                     }

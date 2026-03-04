@@ -35,7 +35,11 @@ struct DeviceSetupGuideView: View {
                         AppAnalytics.shared.trackBlockTap(
                             title: "Open App Store — \(device.displayName)",
                             type: .appStoreLink,
-                            screen: .deviceDetail
+                            screen: .deviceDetail,
+                            metadata: [
+                                "device_id": device.rawValue,
+                                "destination": "app_store"
+                            ]
                         )
                     })
                 }

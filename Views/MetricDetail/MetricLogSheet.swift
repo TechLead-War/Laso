@@ -50,14 +50,29 @@ struct MetricLogSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
-                        AppAnalytics.shared.trackBlockTap(title: "Cancel", type: .metricLogCancel, screen: .metricLog)
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Cancel",
+                            type: .metricLogCancel,
+                            screen: .metricLog,
+                            metadata: [
+                                "metric_id": metric.rawValue
+                            ]
+                        )
                         formTracker.tapped(target: "cancel")
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        AppAnalytics.shared.trackBlockTap(title: "Save", type: .metricLogSave, screen: .metricLog)
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Save",
+                            type: .metricLogSave,
+                            screen: .metricLog,
+                            metadata: [
+                                "metric_id": metric.rawValue,
+                                "value": currentInputValue
+                            ]
+                        )
                         formTracker.tapped(target: "save")
                         Task { await save() }
                     }
@@ -114,7 +129,11 @@ struct MetricLogSheet: View {
                             AppAnalytics.shared.trackBlockTap(
                                 title: "Water \(amount)",
                                 type: .metricLogQuickAmount,
-                                screen: .metricLog
+                                screen: .metricLog,
+                                metadata: [
+                                    "metric_id": HealthMetric.waterIntake.rawValue,
+                                    "amount_ml": amount
+                                ]
                             )
                             formTracker.tapped(target: "water_\(amount)")
                         } label: {
@@ -176,6 +195,19 @@ struct MetricLogSheet: View {
         } catch {
             errorMessage = "Failed to save: \(error.localizedDescription)"
             isSaving = false
+        }
+    }
+
+    private var currentInputValue: String {
+        switch metric {
+        case .weight:
+            return String(format: "%.1f", weightKg)
+        case .waterIntake:
+            return "\(Int(waterMl))"
+        case .mindfulMinutes:
+            return "\(Int(mindfulMinutes))"
+        default:
+            return "0"
         }
     }
 }

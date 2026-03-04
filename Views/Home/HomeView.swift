@@ -177,7 +177,15 @@ struct HomeView: View {
                         viewModel: viewModel,
                         liveVM: liveViewModel,
                         onTapMetric: { metric in
-                            AppAnalytics.shared.trackBlockTap(title: metric.displayName, type: .metricRow, screen: .home)
+                            AppAnalytics.shared.trackBlockTap(
+                                title: metric.displayName,
+                                type: .metricRow,
+                                screen: .home,
+                                metadata: [
+                                    "metric_id": metric.rawValue,
+                                    "metric_category": metric.category.rawValue
+                                ]
+                            )
                             navigationPath.append(metric)
                         },
                         onTapSeeAll: {
@@ -201,7 +209,15 @@ struct HomeView: View {
                     WeeklyReviewEntryCard(
                         viewModel: weeklyReviewVM
                     ) {
-                        AppAnalytics.shared.trackBlockTap(title: "Weekly Review", type: .weeklyReviewCard, screen: .home)
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Weekly Review",
+                            type: .weeklyReviewCard,
+                            screen: .home,
+                            metadata: [
+                                "destination": "weekly_review",
+                                "score": viewModel.overallScore.score
+                            ]
+                        )
                         navigationPath.append("weeklyReview")
                     }
                     .onAppear { weeklyReviewTracker.appeared() }
@@ -296,11 +312,26 @@ struct HomeView: View {
             }
             .buttonStyle(.bordered)
             .simultaneousGesture(TapGesture().onEnded {
-                AppAnalytics.shared.trackBlockTap(title: "Manage Devices", type: .emptyStateManageDevices, screen: .home)
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Manage Devices",
+                    type: .emptyStateManageDevices,
+                    screen: .home,
+                    metadata: [
+                        "destination": "connected_devices",
+                        "source": "empty_state"
+                    ]
+                )
             })
 
             Button {
-                AppAnalytics.shared.trackBlockTap(title: "Refresh", type: .emptyStateRefresh, screen: .home)
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Refresh",
+                    type: .emptyStateRefresh,
+                    screen: .home,
+                    metadata: [
+                        "source": "empty_state"
+                    ]
+                )
                 Task { await viewModel.refresh() }
             } label: {
                 Label("Refresh", systemImage: "arrow.clockwise")
@@ -361,7 +392,12 @@ struct HomeView: View {
                             AppAnalytics.shared.trackBlockTap(
                                 title: highlight.metric.displayName,
                                 type: .homeHistoricalHighlight,
-                                screen: .home
+                                screen: .home,
+                                metadata: [
+                                    "metric_id": highlight.metric.rawValue,
+                                    "metric_category": highlight.metric.category.rawValue,
+                                    "highlight_type": highlight.typeLabel
+                                ]
                             )
                             historicalTracker.tapped(target: highlight.metric.rawValue)
                             navigationPath.append(highlight.metric)
@@ -585,7 +621,12 @@ struct HomeView: View {
                                 AppAnalytics.shared.trackBlockTap(
                                     title: mover.metric.displayName,
                                     type: .homeTrendMetric,
-                                    screen: .home
+                                    screen: .home,
+                                    metadata: [
+                                        "metric_id": mover.metric.rawValue,
+                                        "metric_category": mover.metric.category.rawValue,
+                                        "change_percent": mover.changePercent
+                                    ]
                                 )
                                 trendsTracker.tapped(target: mover.metric.rawValue)
                                 navigationPath.append(mover.metric)
@@ -655,7 +696,11 @@ struct HomeView: View {
                         AppAnalytics.shared.trackBlockTap(
                             title: risk.riskType.displayName,
                             type: .homeRiskRow,
-                            screen: .home
+                            screen: .home,
+                            metadata: [
+                                "risk_id": risk.riskType.rawValue,
+                                "risk_grade": risk.riskGrade.rawValue
+                            ]
                         )
                         risksTracker.tapped(target: risk.riskType.rawValue)
                         navigationPath.append(risk.riskType)
@@ -835,7 +880,11 @@ struct HomeView: View {
                             AppAnalytics.shared.trackBlockTap(
                                 title: "Recovery Info",
                                 type: .homeRecoveryInfoButton,
-                                screen: .home
+                                screen: .home,
+                                metadata: [
+                                    "destination": "recovery_info_sheet",
+                                    "readiness_score": score
+                                ]
                             )
                             recoveryTracker.tapped(target: "recovery_info")
                             showRecoveryInfo = true
@@ -1003,7 +1052,14 @@ struct HomeView: View {
                 .multilineTextAlignment(.center)
 
             Button("Try Again") {
-                AppAnalytics.shared.trackBlockTap(title: "Try Again", type: .errorRetry, screen: .home)
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Try Again",
+                    type: .errorRetry,
+                    screen: .home,
+                    metadata: [
+                        "source": "home_error_view"
+                    ]
+                )
                 Task { await viewModel.load() }
             }
             .buttonStyle(.borderedProminent)

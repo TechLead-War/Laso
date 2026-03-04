@@ -55,7 +55,14 @@ struct RecoveryInfoSheet: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
-                        AppAnalytics.shared.trackBlockTap(title: "Done", type: .recoveryInfoDone, screen: .recoveryInfo)
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Done",
+                            type: .recoveryInfoDone,
+                            screen: .recoveryInfo,
+                            metadata: [
+                                "destination": "dismiss_recovery_info"
+                            ]
+                        )
                         contentTracker.tapped(target: "done")
                         dismiss()
                     }

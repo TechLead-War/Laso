@@ -47,7 +47,14 @@ struct FeedbackSheet: View {
                     HStack(spacing: 8) {
                         ForEach(FeedbackCategory.allCases) { category in
                             Button {
-                                AppAnalytics.shared.trackBlockTap(title: category.displayName, type: .feedbackCategory, screen: .feedback)
+                                AppAnalytics.shared.trackBlockTap(
+                                    title: category.displayName,
+                                    type: .feedbackCategory,
+                                    screen: .feedback,
+                                    metadata: [
+                                        "feedback_category": category.rawValue
+                                    ]
+                                )
                                 selectedCategory = category
                             } label: {
                                 HStack(spacing: 4) {
@@ -83,7 +90,15 @@ struct FeedbackSheet: View {
 
                 // Submit
                 Button {
-                    AppAnalytics.shared.trackBlockTap(title: "Send Feedback", type: .feedbackSubmit, screen: .feedback)
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Send Feedback",
+                        type: .feedbackSubmit,
+                        screen: .feedback,
+                        metadata: [
+                            "feedback_category": selectedCategory.rawValue,
+                            "text_length": feedbackText.trimmingCharacters(in: .whitespacesAndNewlines).count
+                        ]
+                    )
                     submitFeedback()
                 } label: {
                     if isSending {
@@ -108,7 +123,15 @@ struct FeedbackSheet: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Skip") {
-                    AppAnalytics.shared.trackBlockTap(title: "Skip", type: .feedbackSkip, screen: .feedback)
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Skip",
+                        type: .feedbackSkip,
+                        screen: .feedback,
+                        metadata: [
+                            "feedback_category": selectedCategory.rawValue,
+                            "text_length": feedbackText.trimmingCharacters(in: .whitespacesAndNewlines).count
+                        ]
+                    )
                     dismiss()
                 }
                 .font(.subheadline)
@@ -138,14 +161,21 @@ struct FeedbackSheet: View {
             Spacer()
 
             Button("Done") {
-                AppAnalytics.shared.trackBlockTap(title: "Done After Submit", type: .feedbackDoneAfterSubmit, screen: .feedback)
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Done After Submit",
+                    type: .feedbackDoneAfterSubmit,
+                    screen: .feedback,
+                    metadata: [
+                        "feedback_category": selectedCategory.rawValue
+                    ]
+                )
                 dismiss()
             }
                 .buttonStyle(.borderedProminent)
                 .padding(.bottom, 32)
         }
         .onAppear {
-            AppAnalytics.shared.trackAction("feedback_thank_you_shown")
+            AppAnalytics.shared.trackFeedbackThankYouShown(category: selectedCategory.rawValue)
         }
     }
 

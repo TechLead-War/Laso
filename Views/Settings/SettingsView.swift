@@ -59,7 +59,15 @@ struct SettingsView: View {
                         }
                     }
                     .simultaneousGesture(TapGesture().onEnded {
-                        AppAnalytics.shared.trackBlockTap(title: "Manage Devices", type: .manageDevices, screen: .settings)
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Manage Devices",
+                            type: .manageDevices,
+                            screen: .settings,
+                            metadata: [
+                                "destination": "connected_devices",
+                                "connected_devices_count": deviceSourceManager.connectedDevices.count
+                            ]
+                        )
                         devicesTracker.tapped(target: "manage_devices")
                     })
                 }
@@ -220,7 +228,15 @@ struct SettingsView: View {
                         }
                     }
                     .simultaneousGesture(TapGesture().onEnded {
-                        AppAnalytics.shared.trackBlockTap(title: "Warning Alert Metrics", type: .metricAlertsPicker, screen: .settings)
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Warning Alert Metrics",
+                            type: .metricAlertsPicker,
+                            screen: .settings,
+                            metadata: [
+                                "destination": "metric_alert_picker",
+                                "selected_metrics_count": preferences.warningAlertMetrics.count
+                            ]
+                        )
                         metricAlertsTracker.tapped(target: "warning_alert_metrics")
                     })
                 } header: {
@@ -235,7 +251,15 @@ struct SettingsView: View {
                 Section("Data Export") {
                     if FeatureGate.canAccess(.exportReport) {
                         Button {
-                            AppAnalytics.shared.trackBlockTap(title: "Generate Web Report", type: .exportReport, screen: .settings)
+                            AppAnalytics.shared.trackBlockTap(
+                                title: "Generate Web Report",
+                                type: .exportReport,
+                                screen: .settings,
+                                metadata: [
+                                    "destination": "web_report_share",
+                                    "metrics_count": healthDataStore.metricsWithData
+                                ]
+                            )
                             exportTracker.tapped(target: "generate_web_report")
                             webExportViewModel.exportReport()
                             // Only show sheet after export completes with a valid URL
@@ -348,7 +372,14 @@ struct SettingsView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
-                        AppAnalytics.shared.trackBlockTap(title: "Done", type: .settingsDoneButton, screen: .settings)
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Done",
+                            type: .settingsDoneButton,
+                            screen: .settings,
+                            metadata: [
+                                "destination": "dismiss_settings"
+                            ]
+                        )
                         dismiss()
                     }
                 }

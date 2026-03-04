@@ -20,6 +20,8 @@ final class DashboardViewModel {
     private var lastAnalysisDate: Date?
     private static let analysisMinInterval: TimeInterval = 300  // 5 minutes
     private static let syncRetryMinInterval: TimeInterval = 600  // 10 minutes
+    private static let connectivityRecoveryMinInterval: TimeInterval = 900  // 15 minutes
+    private var lastConnectivityRecoverySync: Date?
 
     // MARK: - Cached Properties (updated on refresh, not on every view render)
     private(set) var cachedScoreChangeFromLastWeek: Int?
@@ -405,6 +407,23 @@ final class DashboardViewModel {
         isSyncRetryInProgress = true
         defer { isSyncRetryInProgress = false }
         await refresh()
+    }
+
+    /// Re-sync after connectivity is restored, throttled to avoid repeated heavy work.
+    /// Returns true when a refresh was actually triggered.
+    func refreshAfterConnectivityRestoreIfNeeded() async -> Bool {
+        guard hasCompletedInitialLoad else { return false }
+        guard healthKitManager.isAuthorized else { return false }
+        guard !isLoading, !isSyncRetryInProgress else { return false }
+
+        if let lastRecovery = lastConnectivityRecoverySync,
+           Date().timeIntervalSince(lastRecovery) < Self.connectivityRecoveryMinInterval {
+            return false
+        }
+
+        lastConnectivityRecoverySync = Date()
+        await refresh()
+        return true
     }
 
     /// Refresh data from HealthKit, sync to on-device store, and re-run analysis.

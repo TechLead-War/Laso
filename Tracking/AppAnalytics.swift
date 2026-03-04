@@ -487,15 +487,31 @@ final class AppAnalytics {
             self.openTimestamps[feature] = now
         }
 
-        let _ = session.recordScreenView(feature.rawValue)
+        let previousScreen = session.recordScreenView(feature.rawValue)
 
         var params: [String: Any] = [
             "screen": feature.rawValue,
+            "screen_id": feature.rawValue,
             "tab": session.currentTab,
             "depth": session.currentDepth
         ]
         for (k, v) in metadata { params[k] = v }
         logEvent("screen_viewed", parameters: params)
+
+        Analytics.logEvent(AnalyticsEventScreenView, parameters: [
+            AnalyticsParameterScreenName: feature.rawValue,
+            AnalyticsParameterScreenClass: screenClassName(for: feature)
+        ])
+
+        if let previousScreen, previousScreen != feature.rawValue {
+            logEvent("nav_transition", parameters: [
+                "from_screen": previousScreen,
+                "to_screen": feature.rawValue,
+                "to_screen_id": feature.rawValue,
+                "tab": session.currentTab,
+                "depth": session.currentDepth
+            ])
+        }
     }
 
     func trackFeatureClose(_ feature: AppFeature, metadata: [String: Any] = [:]) {
@@ -522,6 +538,7 @@ final class AppAnalytics {
 
         logEvent("screen_exited", parameters: [
             "screen": feature.rawValue,
+            "screen_id": feature.rawValue,
             "tab": session.currentTab,
             "duration_sec": duration
         ])
@@ -559,13 +576,26 @@ final class AppAnalytics {
         setUserProperty("lifetime_core_actions", value: "\(session.lifetimeCoreActions)")
     }
 
-    func trackBlockTap(title: String, type: BlockType, screen: AppFeature) {
-        logEvent("block_tapped", parameters: [
+    func trackBlockTap(title: String, type: BlockType, screen: AppFeature, metadata: [String: Any] = [:]) {
+        let derivedTargetId = slugify(title)
+        let actionId = "\(screen.rawValue)_\(type.rawValue)_\(derivedTargetId)"
+        var params: [String: Any] = [
+            // Canonical card identity for actionable analysis.
+            "card_id": type.rawValue,
+            "card_label": title,
+            "interaction_id": actionId,
+            "action_id": actionId,
+            "element_id": "\(screen.rawValue)_\(type.rawValue)",
+            "target_id": derivedTargetId,
+            // Backward-compatible keys already used in dashboards.
             "block_title": title,
             "block_type": type.rawValue,
             "screen": screen.rawValue,
             "tab": session.currentTab
-        ])
+        ]
+        for (k, v) in metadata { params[k] = v }
+        logEvent("block_tapped", parameters: params)
+        logEvent("tap_\(type.rawValue)", parameters: params)
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -1041,6 +1071,13 @@ final class AppAnalytics {
         ])
     }
 
+    func trackFeedbackThankYouShown(category: String) {
+        logEvent("feedback_thank_you_shown", parameters: [
+            "category": category,
+            "screen": AppFeature.feedback.rawValue
+        ])
+    }
+
     // Scroll depth
     func trackScrollDepth(screen: AppFeature, maxDepthPercent: Int) {
         logEvent("scroll_depth", parameters: [
@@ -1055,6 +1092,7 @@ final class AppAnalytics {
         logEvent("section_viewed", parameters: [
             "section_id": section.rawValue,
             "tab": tab.rawValue,
+            "screen": tab.rawValue,
             "duration_ms": durationMs,
             "session_id": session.sessionId
         ])
@@ -1064,6 +1102,8 @@ final class AppAnalytics {
         logEvent("section_tapped", parameters: [
             "section_id": section.rawValue,
             "tab": tab.rawValue,
+            "screen": tab.rawValue,
+            "target_id": slugify(target),
             "target": target,
             "session_id": session.sessionId
         ])
@@ -1073,8 +1113,40 @@ final class AppAnalytics {
         logEvent("section_stuck", parameters: [
             "section_id": section.rawValue,
             "tab": tab.rawValue,
+            "screen": tab.rawValue,
             "duration_ms": durationMs,
             "session_id": session.sessionId
+        ])
+    }
+
+    // Subscription billing grace
+    func trackBillingGraceStarted(daysSinceInstall: Int) {
+        logEvent("billing_grace_started", parameters: [
+            "days_since_install": daysSinceInstall
+        ])
+    }
+
+    func trackBillingGraceResolved(daysInGrace: Int) {
+        logEvent("billing_grace_resolved", parameters: [
+            "days_in_grace": daysInGrace,
+            "days_since_install": session.daysSinceInstall
+        ])
+    }
+
+    // Connectivity recovery
+    func trackConnectivityRecovered(offlineDurationSec: Int, syncTriggered: Bool, backupTriggered: Bool) {
+        logEvent("connectivity_recovered", parameters: [
+            "offline_duration_sec": offlineDurationSec,
+            "sync_triggered": syncTriggered ? 1 : 0,
+            "backup_triggered": backupTriggered ? 1 : 0
+        ])
+    }
+
+    func trackConnectivityStateChanged(isOnline: Bool, isExpensive: Bool, isConstrained: Bool) {
+        logEvent("connectivity_state_changed", parameters: [
+            "is_online": isOnline ? 1 : 0,
+            "is_expensive": isExpensive ? 1 : 0,
+            "is_constrained": isConstrained ? 1 : 0
         ])
     }
 
@@ -1138,7 +1210,8 @@ final class AppAnalytics {
         ])
     }
 
-    // Generic action (use sparingly — prefer specific event methods)
+    // Generic action is intentionally unavailable to prevent non-actionable analytics.
+    @available(*, unavailable, message: "Use specific AppAnalytics tracking methods with explicit metadata.")
     func trackAction(_ action: String, metadata: [String: Any] = [:]) {
         let sanitized = sanitizeEventName(action)
         logEvent(sanitized, parameters: metadata)
@@ -1248,13 +1321,65 @@ final class AppAnalytics {
         return sanitized
     }
 
+    private func slugify(_ value: String) -> String {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let normalized = trimmed.map { ch -> Character in
+            if ch.isLetter || ch.isNumber {
+                return ch
+            }
+            return "_"
+        }
+        let collapsed = String(normalized).replacingOccurrences(of: "__+", with: "_", options: .regularExpression)
+        let cleaned = collapsed.trimmingCharacters(in: CharacterSet(charactersIn: "_"))
+        return cleaned.isEmpty ? "unknown" : String(cleaned.prefix(64))
+    }
+
     fileprivate func logEvent(_ name: String, parameters: [String: Any]) {
+        var enriched = parameters
+        if enriched["session_id"] == nil {
+            enriched["session_id"] = session.sessionId
+        }
+        if enriched["tab"] == nil {
+            enriched["tab"] = session.currentTab
+        }
+        if enriched["screen"] == nil, let currentScreen = session.currentScreen {
+            enriched["screen"] = currentScreen
+        }
+
         let eventName = sanitizeEventName(name)
-        let params = sanitizeParameters(parameters)
+        let params = sanitizeParameters(enriched)
         Analytics.logEvent(eventName, parameters: params)
     }
 
     private func setUserProperty(_ name: String, value: String) {
         Analytics.setUserProperty(value, forName: name)
+    }
+
+    private func screenClassName(for feature: AppFeature) -> String {
+        switch feature {
+        case .home: return "HomeView"
+        case .live: return "LiveView"
+        case .explore: return "ExploreView"
+        case .categoryDetail: return "CategoryDetailView"
+        case .metricDetail: return "MetricDetailView"
+        case .riskDetail: return "HealthRiskDetailView"
+        case .settings: return "SettingsView"
+        case .connectedDevices: return "ConnectedDevicesView"
+        case .deviceDetail: return "DeviceDetailView"
+        case .insightsDetail: return "InsightsDetailView"
+        case .correlations: return "CorrelationsView"
+        case .feedback: return "FeedbackSheet"
+        case .onboarding: return "OnboardingView"
+        case .weeklyReview: return "WeeklyReviewView"
+        case .metricAlertPicker: return "MetricAlertPickerView"
+        case .paywall: return "PaywallView"
+        case .discovery: return "DiscoveryView"
+        case .scoreGuide: return "ScoreGuideSheet"
+        case .recoveryInfo: return "RecoveryInfoSheet"
+        case .simulation: return "SimulationView"
+        case .healthStateTimeline: return "HealthStateTimelineView"
+        case .metricLog: return "MetricLogSheet"
+        case .proOverlay: return "ProFeatureOverlay"
+        }
     }
 }

@@ -33,7 +33,17 @@ struct ConnectedDevicesView: View {
                             deviceRow(info: info)
                         }
                         .simultaneousGesture(TapGesture().onEnded {
-                            AppAnalytics.shared.trackBlockTap(title: info.device.displayName, type: .deviceRow, screen: .connectedDevices)
+                            AppAnalytics.shared.trackBlockTap(
+                                title: info.device.displayName,
+                                type: .deviceRow,
+                                screen: .connectedDevices,
+                                metadata: [
+                                    "device_id": info.device.rawValue,
+                                    "device_connected": 1,
+                                    "device_active": info.isActive ? 1 : 0,
+                                    "metric_count": info.metricCount
+                                ]
+                            )
                         })
                     }
                 }
@@ -49,7 +59,17 @@ struct ConnectedDevicesView: View {
                             deviceRow(info: info)
                         }
                         .simultaneousGesture(TapGesture().onEnded {
-                            AppAnalytics.shared.trackBlockTap(title: info.device.displayName, type: .deviceRow, screen: .connectedDevices)
+                            AppAnalytics.shared.trackBlockTap(
+                                title: info.device.displayName,
+                                type: .deviceRow,
+                                screen: .connectedDevices,
+                                metadata: [
+                                    "device_id": info.device.rawValue,
+                                    "device_connected": 1,
+                                    "device_active": info.isActive ? 1 : 0,
+                                    "metric_count": info.metricCount
+                                ]
+                            )
                         })
                     }
                 } header: {
@@ -82,7 +102,16 @@ struct ConnectedDevicesView: View {
                             }
                         }
                         .simultaneousGesture(TapGesture().onEnded {
-                            AppAnalytics.shared.trackBlockTap(title: device.displayName, type: .unconnectedDeviceRow, screen: .connectedDevices)
+                            AppAnalytics.shared.trackBlockTap(
+                                title: device.displayName,
+                                type: .unconnectedDeviceRow,
+                                screen: .connectedDevices,
+                                metadata: [
+                                    "device_id": device.rawValue,
+                                    "device_connected": 0,
+                                    "metric_count": device.supportedMetrics.count
+                                ]
+                            )
                         })
                     }
                 } header: {

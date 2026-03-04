@@ -1,5 +1,7 @@
 import SwiftUI
 import SwiftData
+import Network
+import Observation
 
 /// Root view with custom three-tab navigation and NavigationStack
 struct ContentView: View {
@@ -15,6 +17,7 @@ struct ContentView: View {
     @State private var showSettings = false
     @State private var showFeedback = false
     @State private var navigationPath = NavigationPath()
+    @State private var connectivityMonitor = ConnectivityMonitor.shared
 
     @State private var dashboardViewModel: DashboardViewModel
     @State private var liveViewModel: LiveViewModel
@@ -160,6 +163,48 @@ struct ContentView: View {
                 AppAnalytics.shared.trackSessionEnd()
             }
         }
+        .onChange(of: connectivityMonitor.isOnline) { wasOnline, isOnline in
+            AppAnalytics.shared.trackConnectivityStateChanged(
+                isOnline: isOnline,
+                isExpensive: connectivityMonitor.isExpensive,
+                isConstrained: connectivityMonitor.isConstrained
+            )
+
+            guard wasOnline == false, isOnline == true else { return }
+            guard onboardingCompleted, scenePhase == .active else { return }
+
+            Task {
+                let shouldRunSync = selectedTab == .home && !ThermalManager.shared.shouldThrottle
+                let shouldRunBackup = !ThermalManager.shared.shouldThrottle
+                let didSync: Bool
+
+                if shouldRunSync && shouldRunBackup {
+                    async let syncTask: Bool = dashboardViewModel.refreshAfterConnectivityRestoreIfNeeded()
+                    async let backupTask: Void = CloudBackupManager.shared.backupIfNeeded(
+                        store: healthDataStore,
+                        persistence: PersistenceManager()
+                    )
+                    didSync = await syncTask
+                    _ = await backupTask
+                } else if shouldRunSync {
+                    didSync = await dashboardViewModel.refreshAfterConnectivityRestoreIfNeeded()
+                } else {
+                    didSync = false
+                    if shouldRunBackup {
+                        await CloudBackupManager.shared.backupIfNeeded(
+                            store: healthDataStore,
+                            persistence: PersistenceManager()
+                        )
+                    }
+                }
+
+                AppAnalytics.shared.trackConnectivityRecovered(
+                    offlineDurationSec: connectivityMonitor.lastOfflineDurationSec,
+                    syncTriggered: didSync,
+                    backupTriggered: shouldRunBackup
+                )
+            }
+        }
         .onChange(of: selectedTab) { _, newTab in
             SessionTracker.shared.currentTab = newTab.rawValue
             guard scenePhase == .active else { return }
@@ -252,4 +297,66 @@ struct ContentView: View {
         deviceSourceManager: DeviceSourceManager(healthStore: hkManager.healthStore),
         healthDataStore: HealthDataStore(modelContainer: container)
     )
+}
+
+/// Tracks internet reachability and transition timing for online recovery workflows.
+@MainActor
+@Observable
+final class ConnectivityMonitor {
+    static let shared = ConnectivityMonitor()
+
+    private let monitor = NWPathMonitor()
+    private let queue = DispatchQueue(label: "com.healthpulse.connectivity.monitor", qos: .utility)
+
+    private(set) var isOnline = true
+    private(set) var isExpensive = false
+    private(set) var isConstrained = false
+    private(set) var lastBecameOfflineAt: Date?
+    private(set) var lastRecoveredAt: Date?
+    private(set) var lastOfflineDurationSec: Int = 0
+
+    private init() {
+        monitor.pathUpdateHandler = { [weak self] path in
+            guard let self else { return }
+            let online = path.status == .satisfied
+            let expensive = path.isExpensive
+            let constrained = path.isConstrained
+
+            Task { @MainActor in
+                self.applyPathState(
+                    isOnline: online,
+                    isExpensive: expensive,
+                    isConstrained: constrained
+                )
+            }
+        }
+        monitor.start(queue: queue)
+    }
+
+    deinit {
+        monitor.cancel()
+    }
+
+    private func applyPathState(isOnline: Bool, isExpensive: Bool, isConstrained: Bool) {
+        let wasOnline = self.isOnline
+        let now = Date()
+
+        if wasOnline != isOnline {
+            if isOnline {
+                if let offlineSince = lastBecameOfflineAt {
+                    lastOfflineDurationSec = max(0, Int(now.timeIntervalSince(offlineSince)))
+                } else {
+                    lastOfflineDurationSec = 0
+                }
+                lastRecoveredAt = now
+                lastBecameOfflineAt = nil
+            } else {
+                lastBecameOfflineAt = now
+            }
+        }
+
+        self.isOnline = isOnline
+        self.isExpensive = isExpensive
+        self.isConstrained = isConstrained
+    }
 }

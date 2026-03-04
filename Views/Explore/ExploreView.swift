@@ -113,7 +113,15 @@ struct ExploreView: View {
 
     private var simulationTeaser: some View {
         Button {
-            AppAnalytics.shared.trackBlockTap(title: "What If?", type: .exploreSimulationTeaser, screen: .explore)
+            AppAnalytics.shared.trackBlockTap(
+                title: "What If?",
+                type: .exploreSimulationTeaser,
+                screen: .explore,
+                metadata: [
+                    "destination": "simulation_sheet",
+                    "score": viewModel.overallScore.score
+                ]
+            )
             showSimulation = true
         } label: {
             HStack(spacing: 12) {
@@ -147,7 +155,15 @@ struct ExploreView: View {
 
     private var healthStateLink: some View {
         Button {
-            AppAnalytics.shared.trackBlockTap(title: "Health States", type: .exploreHealthStateTeaser, screen: .explore)
+            AppAnalytics.shared.trackBlockTap(
+                title: "Health States",
+                type: .exploreHealthStateTeaser,
+                screen: .explore,
+                metadata: [
+                    "destination": "health_state_timeline",
+                    "state": viewModel.analysisEngine.currentHealthState?.label ?? "unknown"
+                ]
+            )
             navigationPath.append("healthStateTimeline")
         } label: {
             HStack(spacing: 12) {
@@ -203,7 +219,15 @@ struct ExploreView: View {
                             .foregroundStyle(.secondary)
 
                         Button {
-                            AppAnalytics.shared.trackBlockTap(title: "Score Info", type: .exploreScoreInfo, screen: .explore)
+                            AppAnalytics.shared.trackBlockTap(
+                                title: "Score Info",
+                                type: .exploreScoreInfo,
+                                screen: .explore,
+                                metadata: [
+                                    "score": viewModel.overallScore.score,
+                                    "grade": grade
+                                ]
+                            )
                             scoreHeroTracker.tapped(target: "score_info")
                             showScoreGuide = true
                         } label: {
@@ -315,7 +339,11 @@ struct ExploreView: View {
                             AppAnalytics.shared.trackBlockTap(
                                 title: factor.metric.displayName,
                                 type: .exploreNeedsAttentionMetric,
-                                screen: .explore
+                                screen: .explore,
+                                metadata: [
+                                    "metric_id": factor.metric.rawValue,
+                                    "metric_category": factor.metric.category.rawValue
+                                ]
                             )
                             needsAttentionTracker.tapped(target: factor.metric.rawValue)
                             navigationPath.append(factor.metric)
@@ -360,7 +388,11 @@ struct ExploreView: View {
                                     AppAnalytics.shared.trackBlockTap(
                                         title: contrib.category.displayName,
                                         type: .exploreWeakCategory,
-                                        screen: .explore
+                                        screen: .explore,
+                                        metadata: [
+                                            "category_id": contrib.category.rawValue,
+                                            "category_score": contrib.score
+                                        ]
                                     )
                                     needsAttentionTracker.tapped(target: contrib.category.rawValue)
                                     navigationPath.append(contrib.category)
@@ -407,7 +439,12 @@ struct ExploreView: View {
                     AppAnalytics.shared.trackBlockTap(
                         title: highlight.metric.displayName,
                         type: .exploreDecliningMetric,
-                        screen: .explore
+                        screen: .explore,
+                        metadata: [
+                            "metric_id": highlight.metric.rawValue,
+                            "metric_category": highlight.metric.category.rawValue,
+                            "highlight_type": highlight.typeLabel
+                        ]
                     )
                     decliningTrendsTracker.tapped(target: highlight.metric.rawValue)
                     navigationPath.append(highlight.metric)
@@ -475,7 +512,11 @@ struct ExploreView: View {
                     AppAnalytics.shared.trackBlockTap(
                         title: "See all",
                         type: .exploreSeeAllCorrelations,
-                        screen: .explore
+                        screen: .explore,
+                        metadata: [
+                            "destination": "correlations_detail",
+                            "correlations_count": viewModel.topCorrelations.count
+                        ]
                     )
                     correlationsTracker.tapped(target: "see_all")
                     navigationPath.append("correlationsDetail")
@@ -558,7 +599,15 @@ struct ExploreView: View {
             VStack(spacing: 0) {
                 ForEach(Array(categories.enumerated()), id: \.element.category) { index, item in
                     Button {
-                        AppAnalytics.shared.trackBlockTap(title: item.category.displayName, type: .categoryRow, screen: .explore)
+                        AppAnalytics.shared.trackBlockTap(
+                            title: item.category.displayName,
+                            type: .categoryRow,
+                            screen: .explore,
+                            metadata: [
+                                "category_id": item.category.rawValue,
+                                "category_score": item.score ?? -1
+                            ]
+                        )
                         categoriesTracker.tapped(target: item.category.rawValue)
                         navigationPath.append(item.category)
                     } label: {

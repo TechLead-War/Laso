@@ -51,13 +51,27 @@ struct SimulationView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") {
-                        AppAnalytics.shared.trackBlockTap(title: "Done", type: .simulationDone, screen: .simulation)
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Done",
+                            type: .simulationDone,
+                            screen: .simulation,
+                            metadata: [
+                                "adjusted_metrics": viewModel.adjustments.count
+                            ]
+                        )
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button("Reset") {
-                        AppAnalytics.shared.trackBlockTap(title: "Reset", type: .simulationReset, screen: .simulation)
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Reset",
+                            type: .simulationReset,
+                            screen: .simulation,
+                            metadata: [
+                                "adjusted_metrics": viewModel.adjustments.count
+                            ]
+                        )
                         viewModel.reset()
                     }
                         .disabled(viewModel.adjustments.isEmpty)
@@ -159,7 +173,12 @@ struct SimulationView: View {
             AppAnalytics.shared.trackBlockTap(
                 title: rec.metric.displayName,
                 type: .simulationRecommendation,
-                screen: .simulation
+                screen: .simulation,
+                metadata: [
+                    "metric_id": rec.metric.rawValue,
+                    "predicted_gain": Int(rec.predictedScoreGain),
+                    "effort_level": rec.effortLevel.displayName
+                ]
             )
             roiTracker.tapped(target: rec.metric.rawValue)
             AppAnalytics.shared.trackROIRecommendationTapped(

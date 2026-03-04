@@ -152,7 +152,11 @@ struct HealthStateTimelineView: View {
                     AppAnalytics.shared.trackBlockTap(
                         title: "Previous Month",
                         type: .healthStatePrevMonth,
-                        screen: .healthStateTimeline
+                        screen: .healthStateTimeline,
+                        metadata: [
+                            "direction": "previous",
+                            "month": monthYearString(selectedMonth)
+                        ]
                     )
                     calendarTracker.tapped(target: "previous_month")
                 } label: {
@@ -174,7 +178,11 @@ struct HealthStateTimelineView: View {
                         AppAnalytics.shared.trackBlockTap(
                             title: "Next Month",
                             type: .healthStateNextMonth,
-                            screen: .healthStateTimeline
+                            screen: .healthStateTimeline,
+                            metadata: [
+                                "direction": "next",
+                                "month": monthYearString(selectedMonth)
+                            ]
                         )
                         calendarTracker.tapped(target: "next_month")
                     }

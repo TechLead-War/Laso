@@ -223,7 +223,12 @@ struct InsightsDetailView: View {
             AppAnalytics.shared.trackBlockTap(
                 title: filter.rawValue,
                 type: .trendFilter,
-                screen: .insightsDetail
+                screen: .insightsDetail,
+                metadata: [
+                    "insight_tab": selectedTab.rawValue,
+                    "filter": filter.rawValue,
+                    "results_count": count
+                ]
             )
             sectionTracker.tapped(target: "filter_\(filter.rawValue.lowercased())")
         } label: {

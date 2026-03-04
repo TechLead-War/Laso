@@ -218,7 +218,15 @@ struct DiscoveryView: View {
             }
 
             Button {
-                AppAnalytics.shared.trackBlockTap(title: "Continue", type: .discoveryContinue, screen: .discovery)
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Continue",
+                    type: .discoveryContinue,
+                    screen: .discovery,
+                    metadata: [
+                        "pages_viewed": maxPageViewed + 1,
+                        "total_pages": totalPages
+                    ]
+                )
                 flowTracker.tapped(target: "continue")
                 AppAnalytics.shared.trackDiscoveryCompleted(
                     pagesViewed: maxPageViewed + 1,

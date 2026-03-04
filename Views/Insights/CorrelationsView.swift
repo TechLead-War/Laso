@@ -40,7 +40,12 @@ struct CorrelationsView: View {
                                     AppAnalytics.shared.trackBlockTap(
                                         title: filter.rawValue,
                                         type: .correlationFilterChip,
-                                        screen: .correlations
+                                        screen: .correlations,
+                                        metadata: [
+                                            "from_filter": oldFilter.rawValue,
+                                            "to_filter": filter.rawValue,
+                                            "results_count": filteredCount(for: filter)
+                                        ]
                                     )
                                     filtersTracker.tapped(target: filter.rawValue.lowercased())
                                     AppAnalytics.shared.trackFilterChanged(

@@ -231,17 +231,18 @@ final class SubscriptionManager {
         }
         // First time entering grace — record the start
         defaults.set(Date(), forKey: Key.graceStartDate)
-        AppAnalytics.shared.trackAction("billing_grace_started")
+        AppAnalytics.shared.trackBillingGraceStarted(daysSinceInstall: SessionTracker.shared.daysSinceInstall)
         return 0
     }
 
     /// Clears grace period state when subscription is restored or grace expires.
     private func clearGraceState() {
-        if defaults.object(forKey: Key.graceStartDate) != nil {
+        if let graceStart = defaults.object(forKey: Key.graceStartDate) as? Date {
             let wasActive = isBillingGrace
+            let daysInGrace = Calendar.current.dateComponents([.day], from: graceStart, to: Date()).day ?? 0
             defaults.removeObject(forKey: Key.graceStartDate)
             if wasActive {
-                AppAnalytics.shared.trackAction("billing_grace_resolved")
+                AppAnalytics.shared.trackBillingGraceResolved(daysInGrace: daysInGrace)
             }
         }
     }

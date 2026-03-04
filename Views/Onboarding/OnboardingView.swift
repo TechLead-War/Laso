@@ -250,7 +250,15 @@ private struct ConnectHealthPage: View {
 
             if HKHealthStore.isHealthDataAvailable() {
                 Button {
-                    AppAnalytics.shared.trackBlockTap(title: "Connect Apple Health", type: .onboardingConnectHealth, screen: .onboarding)
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Connect Apple Health",
+                        type: .onboardingConnectHealth,
+                        screen: .onboarding,
+                        metadata: [
+                            "step_name": "connect_health",
+                            "healthkit_available": 1
+                        ]
+                    )
                     Task {
                         await healthKitManager.requestAuthorization()
                         onContinue()
@@ -271,7 +279,15 @@ private struct ConnectHealthPage: View {
                         .foregroundStyle(.secondary)
 
                     Button {
-                        AppAnalytics.shared.trackBlockTap(title: "Continue Anyway", type: .onboardingContinueAnyway, screen: .onboarding)
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Continue Anyway",
+                            type: .onboardingContinueAnyway,
+                            screen: .onboarding,
+                            metadata: [
+                                "step_name": "connect_health",
+                                "healthkit_available": 0
+                            ]
+                        )
                         onContinue()
                     } label: {
                         Text("Continue Anyway")
@@ -346,7 +362,13 @@ private struct FocusPage: View {
                         AppAnalytics.shared.trackBlockTap(
                             title: focus.displayName,
                             type: .onboardingFocusChip,
-                            screen: .onboarding
+                            screen: .onboarding,
+                            metadata: [
+                                "step_name": "focus_selection",
+                                "focus_id": focus.rawValue,
+                                "is_selected": selectedFocuses.contains(focus) ? 1 : 0,
+                                "selected_count": selectedFocuses.count
+                            ]
                         )
                         AppAnalytics.shared.trackSettingChanged(
                             name: "onboarding_focus_\(focus.rawValue)",
@@ -376,7 +398,15 @@ private struct FocusPage: View {
             Spacer()
 
             Button {
-                AppAnalytics.shared.trackBlockTap(title: "Continue", type: .onboardingGetStarted, screen: .onboarding)
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Continue",
+                    type: .onboardingGetStarted,
+                    screen: .onboarding,
+                    metadata: [
+                        "step_name": "focus_selection",
+                        "selected_focuses_count": selectedFocuses.count
+                    ]
+                )
                 onContinue()
             } label: {
                 Text("Continue")
@@ -498,7 +528,15 @@ private struct CalibrationPage: View {
             EmptyView()
         case .success:
             Button {
-                AppAnalytics.shared.trackBlockTap(title: "Enter Laso", type: .onboardingGetStarted, screen: .onboarding)
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Enter Laso",
+                    type: .onboardingGetStarted,
+                    screen: .onboarding,
+                    metadata: [
+                        "step_name": "initial_calibration",
+                        "calibration_state": "success"
+                    ]
+                )
                 onComplete()
             } label: {
                 Text("Enter Laso")
@@ -511,7 +549,15 @@ private struct CalibrationPage: View {
         case .failed:
             VStack(spacing: 10) {
                 Button {
-                    AppAnalytics.shared.trackBlockTap(title: "Retry Calibration", type: .onboardingCalibrationRetry, screen: .onboarding)
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Retry Calibration",
+                        type: .onboardingCalibrationRetry,
+                        screen: .onboarding,
+                        metadata: [
+                            "step_name": "initial_calibration",
+                            "calibration_state": "failed"
+                        ]
+                    )
                     startCalibration()
                 } label: {
                     Text("Retry Calibration")
@@ -523,7 +569,15 @@ private struct CalibrationPage: View {
                 .padding(.horizontal, 24)
 
                 Button("Skip for Now") {
-                    AppAnalytics.shared.trackBlockTap(title: "Skip for Now", type: .onboardingCalibrationSkip, screen: .onboarding)
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Skip for Now",
+                        type: .onboardingCalibrationSkip,
+                        screen: .onboarding,
+                        metadata: [
+                            "step_name": "initial_calibration",
+                            "calibration_state": "failed"
+                        ]
+                    )
                     onComplete()
                 }
                 .buttonStyle(.bordered)
@@ -750,7 +804,15 @@ private struct CulturePage: View {
             Spacer()
 
             Button {
-                AppAnalytics.shared.trackBlockTap(title: title, type: .onboardingCultureContinue, screen: .onboarding)
+                AppAnalytics.shared.trackBlockTap(
+                    title: title,
+                    type: .onboardingCultureContinue,
+                    screen: .onboarding,
+                    metadata: [
+                        "step_name": "culture_page",
+                        "page_title": title
+                    ]
+                )
                 onContinue()
             } label: {
                 Text("Continue")

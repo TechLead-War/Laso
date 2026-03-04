@@ -148,7 +148,14 @@ struct ScoreGuideSheet: View {
 
                     // MARK: - Got It
                     Button("Got It") {
-                        AppAnalytics.shared.trackBlockTap(title: "Got It", type: .scoreGuideGotIt, screen: .scoreGuide)
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Got It",
+                            type: .scoreGuideGotIt,
+                            screen: .scoreGuide,
+                            metadata: [
+                                "destination": "dismiss_score_guide"
+                            ]
+                        )
                         contentTracker.tapped(target: "got_it")
                         UserDefaults.standard.set(true, forKey: AppKeys.App.hasSeenScoreGuide)
                         dismiss()
@@ -163,7 +170,14 @@ struct ScoreGuideSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") {
-                        AppAnalytics.shared.trackBlockTap(title: "Close", type: .scoreGuideClose, screen: .scoreGuide)
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Close",
+                            type: .scoreGuideClose,
+                            screen: .scoreGuide,
+                            metadata: [
+                                "destination": "dismiss_score_guide"
+                            ]
+                        )
                         contentTracker.tapped(target: "close")
                         UserDefaults.standard.set(true, forKey: AppKeys.App.hasSeenScoreGuide)
                         dismiss()

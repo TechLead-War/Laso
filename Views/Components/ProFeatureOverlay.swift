@@ -38,7 +38,12 @@ struct ProFeatureOverlay: View {
             }
 
             Button {
-                AppAnalytics.shared.trackBlockTap(title: "Upgrade to Pro", type: .proUpgradeButton, screen: .proOverlay)
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Upgrade to Pro",
+                    type: .proUpgradeButton,
+                    screen: .proOverlay,
+                    metadata: ["feature_name": feature]
+                )
                 AppAnalytics.shared.trackPremiumFeatureAttempted(feature: feature, screen: .proOverlay)
                 showPaywall = true
             } label: {

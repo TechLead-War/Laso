@@ -18,7 +18,11 @@ struct CustomTabBar: View {
                         AppAnalytics.shared.trackBlockTap(
                             title: tab.label,
                             type: blockType(for: tab),
-                            screen: feature(for: fromTab)
+                            screen: feature(for: fromTab),
+                            metadata: [
+                                "from_tab": fromTab.rawValue,
+                                "to_tab": tab.rawValue
+                            ]
                         )
                     } label: {
                         VStack(spacing: 4) {

@@ -438,7 +438,16 @@ struct LiveView: View {
         .onAppear { heartRateTracker.appeared() }
         .onDisappear { heartRateTracker.disappeared() }
         .onTapGesture {
-            AppAnalytics.shared.trackBlockTap(title: "Heart Rate Hero", type: .heartRateHeroCard, screen: .live)
+            AppAnalytics.shared.trackBlockTap(
+                title: "Heart Rate Hero",
+                type: .heartRateHeroCard,
+                screen: .live,
+                metadata: [
+                    "metric_id": HealthMetric.heartRate.rawValue,
+                    "heart_rate": Int(viewModel.vitals.currentHeartRate ?? 0),
+                    "zone": viewModel.currentHeartRateZone.rawValue
+                ]
+            )
             heartRateTracker.tapped(target: "heart_rate_hero")
         }
     }
@@ -699,7 +708,17 @@ struct LiveView: View {
         .accessibilityLabel("\(label), \(value ?? "no data") \(unit), \(status.label)")
         .onTapGesture {
             guard let blockType else { return }
-            AppAnalytics.shared.trackBlockTap(title: label, type: blockType, screen: .live)
+            let metricId: String = label == "SpO2" ? HealthMetric.bloodOxygen.rawValue : HealthMetric.respiratoryRate.rawValue
+            AppAnalytics.shared.trackBlockTap(
+                title: label,
+                type: blockType,
+                screen: .live,
+                metadata: [
+                    "metric_id": metricId,
+                    "status": status.label,
+                    "is_stale": isStale ? 1 : 0
+                ]
+            )
             vitalsTracker.tapped(target: label.lowercased().replacingOccurrences(of: " ", with: "_"))
         }
     }
@@ -779,7 +798,17 @@ struct LiveView: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Activity rings. Move: \(Int(viewModel.activity.todayActiveCalories)) of \(Int(viewModel.activity.moveGoal)) calories, \(Int(viewModel.activity.moveProgress * 100)) percent. Exercise: \(Int(viewModel.activity.todayExerciseMinutes)) of \(Int(viewModel.activity.exerciseGoal)) minutes, \(Int(viewModel.activity.exerciseProgress * 100)) percent. Stand: \(Int(viewModel.activity.todayStandHours)) of \(Int(viewModel.activity.standGoal)) hours, \(Int(viewModel.activity.standProgress * 100)) percent.")
             .onTapGesture {
-                AppAnalytics.shared.trackBlockTap(title: "Activity Rings", type: .activityRingsSection, screen: .live)
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Activity Rings",
+                    type: .activityRingsSection,
+                    screen: .live,
+                    metadata: [
+                        "metric_id": "activity_rings",
+                        "move_progress": Int(viewModel.activity.moveProgress * 100),
+                        "exercise_progress": Int(viewModel.activity.exerciseProgress * 100),
+                        "stand_progress": Int(viewModel.activity.standProgress * 100)
+                    ]
+                )
                 activityTracker.tapped(target: "activity_rings")
             }
 
@@ -874,7 +903,21 @@ struct LiveView: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(label): \(value)")
         .onTapGesture {
-            AppAnalytics.shared.trackBlockTap(title: label, type: blockType, screen: .live)
+            let metricId: String = switch blockType {
+            case .quickStatSteps: HealthMetric.steps.rawValue
+            case .quickStatDistance: HealthMetric.distanceWalkingRunning.rawValue
+            case .quickStatFlights: HealthMetric.flightsClimbed.rawValue
+            default: "unknown"
+            }
+            AppAnalytics.shared.trackBlockTap(
+                title: label,
+                type: blockType,
+                screen: .live,
+                metadata: [
+                    "metric_id": metricId,
+                    "value": value
+                ]
+            )
             quickStatsTracker.tapped(target: label.lowercased())
         }
     }
@@ -921,7 +964,16 @@ struct LiveView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .cardStyle()
                     .onTapGesture {
-                        AppAnalytics.shared.trackBlockTap(title: "Blood Pressure", type: .bloodPressureCard, screen: .live)
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Blood Pressure",
+                            type: .bloodPressureCard,
+                            screen: .live,
+                            metadata: [
+                                "metric_id": "blood_pressure",
+                                "systolic": Int(sys),
+                                "diastolic": Int(dia)
+                            ]
+                        )
                         bpTempTracker.tapped(target: "blood_pressure")
                     }
                 }
@@ -956,7 +1008,15 @@ struct LiveView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .cardStyle()
                     .onTapGesture {
-                        AppAnalytics.shared.trackBlockTap(title: "Temperature", type: .temperatureCard, screen: .live)
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Temperature",
+                            type: .temperatureCard,
+                            screen: .live,
+                            metadata: [
+                                "metric_id": HealthMetric.bodyTemperature.rawValue,
+                                "value_c": temp
+                            ]
+                        )
                         bpTempTracker.tapped(target: "temperature")
                     }
                 }
@@ -1024,7 +1084,16 @@ struct LiveView: View {
                 .cardStyle()
                 .padding(.horizontal)
                 .onTapGesture {
-                    AppAnalytics.shared.trackBlockTap(title: "Last Workout", type: .lastWorkoutCard, screen: .live)
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Last Workout",
+                        type: .lastWorkoutCard,
+                        screen: .live,
+                        metadata: [
+                            "workout_type": type,
+                            "duration_min": Int(viewModel.workout.lastWorkoutDuration ?? 0),
+                            "calories": Int(viewModel.workout.lastWorkoutCalories ?? 0)
+                        ]
+                    )
                     workoutTracker.tapped(target: "last_workout")
                 }
             }

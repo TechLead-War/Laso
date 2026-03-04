@@ -16,7 +16,15 @@ struct BodyInsightsSection: View {
     var body: some View {
         if hasAnyContent {
             Button {
-                AppAnalytics.shared.trackBlockTap(title: "Briefing Card", type: .seeAllInsights, screen: .home)
+                let source: String = viewModel.topCausalChain != nil ? "causal_chain" : "headline_insight"
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Briefing Card",
+                    type: .seeAllInsights,
+                    screen: .home,
+                    metadata: [
+                        "source": source
+                    ]
+                )
                 onTapSeeAll()
             } label: {
                 if let chain = viewModel.topCausalChain {

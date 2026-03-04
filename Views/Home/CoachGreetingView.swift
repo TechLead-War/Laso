@@ -39,7 +39,14 @@ struct CoachGreetingView: View {
             Spacer()
 
             Button {
-                AppAnalytics.shared.trackBlockTap(title: "Settings", type: .settingsGear, screen: .home)
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Settings",
+                    type: .settingsGear,
+                    screen: .home,
+                    metadata: [
+                        "destination": "settings_sheet"
+                    ]
+                )
                 showSettings.wrappedValue = true
             } label: {
                 Image(systemName: "gearshape.fill")
