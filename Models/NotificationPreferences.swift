@@ -16,11 +16,11 @@ struct NotificationPreferences: Codable, Equatable {
     var weeklySummaryEnabled: Bool = false
     var weeklySummaryDay: Int = 2 // Monday = 2
 
-    var criticalAlertsEnabled: Bool = false
+    var criticalAlertsEnabled: Bool = true
     var warningAlertsEnabled: Bool = false
 
     /// Heart rate spike/drop real-time alerts
-    var heartRateSpikeAlertsEnabled: Bool = false
+    var heartRateSpikeAlertsEnabled: Bool = true
     var heartRateSpikeThreshold: Double = 120 // bpm — alert if above
     var heartRateDropThreshold: Double = 45   // bpm — alert if below
 
@@ -36,7 +36,7 @@ struct NotificationPreferences: Codable, Equatable {
     /// Low battery reminder
     var lowBatteryReminderEnabled: Bool = false
 
-    var maxNotificationsPerDay: Int = 1
+    var maxNotificationsPerDay: Int = 2
 
     /// Metrics for which warning alerts are enabled — only the most safety-critical metrics by default
     var warningAlertMetrics: Set<HealthMetric> = [

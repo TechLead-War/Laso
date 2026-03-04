@@ -48,7 +48,7 @@ import '../styles/globals.css'
           </button>
         </form>
         <p class="hero-success mt-3 text-sm text-emerald-600 font-medium hidden">You're in! We'll be in touch soon.</p>
-        <p class="mt-3 text-[13px] text-apple-secondary/60">Free to join. <strong class="text-apple-dark"><span class="signup-counter">550</span>+ have joined</strong>. We'll notify you when it's ready.</p>
+        <p class="mt-3 text-[13px] text-apple-secondary/60">Free to join. <strong class="text-apple-dark"><span class="signup-counter">0</span> have joined</strong>. We'll notify you when it's ready.</p>
       </div>
     </section>
 
@@ -839,7 +839,7 @@ import '../styles/globals.css'
             </button>
           </form>
           <p class="ea-success mt-3 text-sm text-emerald-600 font-medium hidden">You're in! We'll be in touch soon.</p>
-          <p class="mt-3 text-[13px] text-apple-secondary/60">Free to join. <strong class="text-apple-dark"><span class="signup-counter">550</span>+ have joined</strong>. We'll notify you when it's ready.</p>
+          <p class="mt-3 text-[13px] text-apple-secondary/60">Free to join. <strong class="text-apple-dark"><span class="signup-counter">0</span> have joined</strong>. We'll notify you when it's ready.</p>
         </div>
         <div class="section-reveal mt-10 flex flex-wrap justify-center gap-3">
           <a href="mailto:hello@lasohealth.com" class="inline-flex items-center gap-2 bg-white rounded-full px-5 py-2.5 text-sm font-medium text-apple-dark hover:bg-gray-100 transition-colors">
@@ -905,51 +905,22 @@ import '../styles/globals.css'
     if (gclid) utmParams['gclid'] = gclid
 
     // ── Signup counter ──
-    const FIRESTORE_BASE = 'https://firestore.googleapis.com/v1/projects/laso-health-v1/databases/(default)/documents'
-    const SIGNUP_BASE = 550
-    let currentSignupCount = SIGNUP_BASE
+    const SIGNUP_API_BASE = 'https://us-central1-laso-health-v1.cloudfunctions.net'
+    const SIGNUP_COUNT_URL = `${SIGNUP_API_BASE}/getSignupCount`
+    const SIGNUP_SUBMIT_URL = `${SIGNUP_API_BASE}/earlyAccessSignup`
+    let currentSignupCount = 0
 
-    async function fetchSignupCount(): Promise<number> {
-      // Try aggregation query first, fall back to listing documents
+    async function fetchSignupCount(): Promise<number | null> {
       try {
-        const res = await fetch(`${FIRESTORE_BASE}:runAggregationQuery`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            structuredAggregationQuery: {
-              structuredQuery: {
-                from: [{ collectionId: 'early_access' }]
-              },
-              aggregations: [{ alias: 'count', count: {} }]
-            }
-          })
-        })
+        const res = await fetch(SIGNUP_COUNT_URL, { method: 'GET' })
         if (res.ok) {
           const data = await res.json()
-          const count = parseInt(data[0]?.result?.aggregateFields?.count?.integerValue ?? '0', 10)
-          if (count > 0) return count
-        }
-      } catch { /* fall through */ }
-
-      // Fallback: list documents and count (select no fields to minimize payload)
-      try {
-        const res = await fetch(`${FIRESTORE_BASE}:runQuery`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            structuredQuery: {
-              from: [{ collectionId: 'early_access' }],
-              select: { fields: [{ fieldPath: '__name__' }] }
-            }
-          })
-        })
-        if (res.ok) {
-          const data = await res.json()
-          return Array.isArray(data) ? data.filter((d: any) => d.document).length : 0
+          const rawCount = Number(data?.count)
+          if (Number.isFinite(rawCount) && rawCount >= 0) return Math.floor(rawCount)
         }
       } catch { /* silent */ }
 
-      return 0
+      return null
     }
 
     function updateCounterDisplay(count: number) {
@@ -959,9 +930,13 @@ import '../styles/globals.css'
       })
     }
 
-    fetchSignupCount().then(count => {
-      updateCounterDisplay(SIGNUP_BASE + count)
-    })
+    async function refreshSignupCount() {
+      const count = await fetchSignupCount()
+      if (count !== null) updateCounterDisplay(count)
+    }
+
+    refreshSignupCount()
+    window.setInterval(refreshSignupCount, 15000)
 
     // ── Early access form handler ──
     async function handleSignup(form: HTMLFormElement) {
@@ -990,40 +965,50 @@ import '../styles/globals.css'
 
       localStorage.setItem('laso_signed_up', 'true')
 
-      // Send to Firestore directly (create rule allows anonymous writes)
+      // Send signup to backend so response includes the latest global count
+      let submittedCount: number | null = null
       try {
-        const fields: Record<string, { stringValue: string } | { timestampValue: string }> = {
-          email: { stringValue: email },
-          timestamp: { timestampValue: new Date().toISOString() },
-          source: { stringValue: utmParams['utm_source'] || 'direct' },
-          medium: { stringValue: utmParams['utm_medium'] || 'none' },
-          campaign: { stringValue: utmParams['utm_campaign'] || '' },
-          referrer: { stringValue: document.referrer || 'none' },
-          landing_page: { stringValue: window.location.pathname },
-          form_location: { stringValue: formId },
-          user_agent: { stringValue: navigator.userAgent },
-          screen_size: { stringValue: `${screen.width}x${screen.height}` },
-          locale: { stringValue: navigator.language || '' },
+        const payload: Record<string, string> = {
+          email,
+          source: utmParams['utm_source'] || 'direct',
+          medium: utmParams['utm_medium'] || 'none',
+          campaign: utmParams['utm_campaign'] || '',
+          referrer: document.referrer || 'none',
+          landing_page: window.location.pathname,
+          form_location: formId,
+          user_agent: navigator.userAgent,
+          screen_size: `${screen.width}x${screen.height}`,
+          locale: navigator.language || '',
         }
-        if (utmParams['utm_content']) fields['utm_content'] = { stringValue: utmParams['utm_content'] }
-        if (utmParams['utm_term']) fields['utm_term'] = { stringValue: utmParams['utm_term'] }
-        if (utmParams['fbclid']) fields['fbclid'] = { stringValue: utmParams['fbclid'] }
-        if (utmParams['gclid']) fields['gclid'] = { stringValue: utmParams['gclid'] }
+        if (utmParams['utm_content']) payload['utm_content'] = utmParams['utm_content']
+        if (utmParams['utm_term']) payload['utm_term'] = utmParams['utm_term']
+        if (utmParams['fbclid']) payload['fbclid'] = utmParams['fbclid']
+        if (utmParams['gclid']) payload['gclid'] = utmParams['gclid']
 
-        await fetch(`${FIRESTORE_BASE}/early_access`, {
+        const res = await fetch(SIGNUP_SUBMIT_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fields })
+          body: JSON.stringify(payload)
         })
+        if (res.ok) {
+          const data = await res.json()
+          const rawCount = Number(data?.count)
+          if (Number.isFinite(rawCount) && rawCount >= 0) {
+            submittedCount = Math.floor(rawCount)
+          }
+        }
       } catch {
         // Silent fail
       }
 
-      // Refresh count from Firestore after signup
-      fetchSignupCount().then(count => {
-        if (count > 0) updateCounterDisplay(SIGNUP_BASE + count)
+      // Refresh count from backend after signup
+      if (submittedCount !== null) {
+        updateCounterDisplay(submittedCount)
+      } else {
+        const latestCount = await fetchSignupCount()
+        if (latestCount !== null) updateCounterDisplay(latestCount)
         else updateCounterDisplay(currentSignupCount + 1)
-      })
+      }
 
       // Show success state
       const success = form.parentElement?.querySelector('.hero-success, .ea-success')

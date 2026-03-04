@@ -185,6 +185,15 @@ struct OnboardingView: View {
         let focuses = selectedFocuses.isEmpty ? Set(HealthFocus.allCases) : selectedFocuses
         PersistenceManager().saveHealthFocuses(focuses)
 
+        // Request notification permission at the moment of highest trust —
+        // calibration just showed personalized results.
+        Task {
+            let granted = await NotificationManager.shared.requestAuthorizationIfNeeded()
+            if granted {
+                ReengagementScheduler.reschedule()
+            }
+        }
+
         let totalDuration = Int(Date().timeIntervalSince(onboardingStartDate))
         AppAnalytics.shared.trackOnboardingCompleted(
             focuses: focuses.map(\.rawValue),
@@ -497,6 +506,11 @@ private struct CalibrationPage: View {
                 }
             }
 
+            if case .success = state {
+                siriTipCard
+                    .padding(.top, 20)
+            }
+
             Spacer()
 
             footerActions
@@ -743,6 +757,31 @@ private struct CalibrationPage: View {
             }
         }
         calibrationTask = task
+    }
+
+    private var siriTipCard: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 10) {
+                Image(systemName: "mic.fill")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.blue)
+                    .frame(width: 32, height: 32)
+                    .background(Color.blue.opacity(0.12), in: Circle())
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Works with Siri")
+                        .font(.subheadline.weight(.semibold))
+                    Text("Try saying \"Hey Siri, what's my health score in Laso\"")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer(minLength: 0)
+            }
+        }
+        .padding(12)
+        .background(Color.blue.opacity(0.06), in: RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, 24)
     }
 
     private func startDotTimer() {

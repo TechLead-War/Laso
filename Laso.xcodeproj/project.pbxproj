@@ -109,6 +109,18 @@
 		DD665ED61DC41E5020E97D74 /* DataSourceBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = E05DC7C028B652C5A152BCDB /* DataSourceBadge.swift */; };
 		DF2F2BDB18160AE458E6911A /* HealthRiskEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52C5FA0AC1DF45B09601C7C0 /* HealthRiskEngine.swift */; };
 		E1A2B3C4D5E6F7081234ABCE /* WatchMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A2B3C4D5E6F7081234ABCD /* WatchMonitor.swift */; };
+		RE0010000000000000000002 /* ReengagementScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = RE0010000000000000000001 /* ReengagementScheduler.swift */; };
+		SI0010000000000000000002 /* HealthScoreIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SI0010000000000000000001 /* HealthScoreIntent.swift */; };
+		SI0020000000000000000002 /* LogWaterIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SI0020000000000000000001 /* LogWaterIntent.swift */; };
+		SI0030000000000000000002 /* SleepSummaryIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SI0030000000000000000001 /* SleepSummaryIntent.swift */; };
+		SI0040000000000000000002 /* ReadinessIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SI0040000000000000000001 /* ReadinessIntent.swift */; };
+		SI0050000000000000000002 /* ShowTrendsIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SI0050000000000000000001 /* ShowTrendsIntent.swift */; };
+		SI0060000000000000000002 /* LogWorkoutIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SI0060000000000000000001 /* LogWorkoutIntent.swift */; };
+		SI0070000000000000000002 /* WorkoutTypeAppEnum.swift in Sources */ = {isa = PBXBuildFile; fileRef = SI0070000000000000000001 /* WorkoutTypeAppEnum.swift */; };
+		SI0080000000000000000002 /* IntentSnippetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = SI0080000000000000000001 /* IntentSnippetViews.swift */; };
+		SI0090000000000000000002 /* IntentDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = SI0090000000000000000001 /* IntentDataProvider.swift */; };
+		SI0100000000000000000002 /* IntentDonationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = SI0100000000000000000001 /* IntentDonationManager.swift */; };
+		SI0110000000000000000002 /* HealthPulseShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = SI0110000000000000000001 /* HealthPulseShortcutsProvider.swift */; };
 		ED365DC524595A3E75820B9B /* AppTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38C8B1B2721A86DF6305D5BE /* AppTab.swift */; };
 		F0718385055A5C796633EE10 /* ConnectedDeviceInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5827B420D1FD0325FE028282 /* ConnectedDeviceInfo.swift */; };
 		F3ADAAE50EB935144DD0AED0 /* DeviceDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 665F4B99E035582C345F6F71 /* DeviceDetailView.swift */; };
@@ -273,6 +285,18 @@
 		DD947BF688F7B5F398D7E9FD /* WorkoutEffectivenessAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutEffectivenessAnalyzer.swift; sourceTree = "<group>"; };
 		E05DC7C028B652C5A152BCDB /* DataSourceBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSourceBadge.swift; sourceTree = "<group>"; };
 		E1A2B3C4D5E6F7081234ABCD /* WatchMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchMonitor.swift; sourceTree = "<group>"; };
+		RE0010000000000000000001 /* ReengagementScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReengagementScheduler.swift; sourceTree = "<group>"; };
+		SI0010000000000000000001 /* HealthScoreIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthScoreIntent.swift; sourceTree = "<group>"; };
+		SI0020000000000000000001 /* LogWaterIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogWaterIntent.swift; sourceTree = "<group>"; };
+		SI0030000000000000000001 /* SleepSummaryIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepSummaryIntent.swift; sourceTree = "<group>"; };
+		SI0040000000000000000001 /* ReadinessIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadinessIntent.swift; sourceTree = "<group>"; };
+		SI0050000000000000000001 /* ShowTrendsIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowTrendsIntent.swift; sourceTree = "<group>"; };
+		SI0060000000000000000001 /* LogWorkoutIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogWorkoutIntent.swift; sourceTree = "<group>"; };
+		SI0070000000000000000001 /* WorkoutTypeAppEnum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutTypeAppEnum.swift; sourceTree = "<group>"; };
+		SI0080000000000000000001 /* IntentSnippetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentSnippetViews.swift; sourceTree = "<group>"; };
+		SI0090000000000000000001 /* IntentDataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentDataProvider.swift; sourceTree = "<group>"; };
+		SI0100000000000000000001 /* IntentDonationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentDonationManager.swift; sourceTree = "<group>"; };
+		SI0110000000000000000001 /* HealthPulseShortcutsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthPulseShortcutsProvider.swift; sourceTree = "<group>"; };
 		E3D2C1B0A918270F5E4D3C2B /* WeeklyReviewViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyReviewViewModel.swift; sourceTree = "<group>"; };
 		E7B42A19F3D18C05A92E6D4F /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		EBDE9B00704B16D8F8D55649 /* BaselineCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaselineCalculator.swift; sourceTree = "<group>"; };
@@ -748,6 +772,7 @@
 				E539D755BFE39275A3539FF3 /* HealthPulse */,
 				46EC9F33A83E250CF50CEB66 /* Models */,
 				FB27FC419922167688397BBA /* Notifications */,
+				SI0000000000000000000000 /* Intents */,
 				SEC00100000000000000003 /* Security */,
 				E1B4BA327CF50355E5EF00C0 /* Subscriptions */,
 				C936DC718B142DC99A17A3FF /* Tracking */,
@@ -794,10 +819,29 @@
 				BB4B38A39ECF9EDAF3EABE37 /* FrequencyCapManager.swift */,
 				796E420E97993725432653BA /* NotificationManager.swift */,
 				NTO0020000000000000000F /* NotificationOptimizer.swift */,
+				RE0010000000000000000001 /* ReengagementScheduler.swift */,
 				B69DBEF9B8C73BB52502BFFC /* WeeklySummaryScheduler.swift */,
 				E1A2B3C4D5E6F7081234ABCD /* WatchMonitor.swift */,
 			);
 			path = Notifications;
+			sourceTree = "<group>";
+		};
+		SI0000000000000000000000 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				SI0010000000000000000001 /* HealthScoreIntent.swift */,
+				SI0020000000000000000001 /* LogWaterIntent.swift */,
+				SI0030000000000000000001 /* SleepSummaryIntent.swift */,
+				SI0040000000000000000001 /* ReadinessIntent.swift */,
+				SI0050000000000000000001 /* ShowTrendsIntent.swift */,
+				SI0060000000000000000001 /* LogWorkoutIntent.swift */,
+				SI0070000000000000000001 /* WorkoutTypeAppEnum.swift */,
+				SI0080000000000000000001 /* IntentSnippetViews.swift */,
+				SI0090000000000000000001 /* IntentDataProvider.swift */,
+				SI0100000000000000000001 /* IntentDonationManager.swift */,
+				SI0110000000000000000001 /* HealthPulseShortcutsProvider.swift */,
+			);
+			path = Intents;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1002,6 +1046,18 @@
 				D3C4E5F607182A30C1D2E3F4 /* WeeklyReviewView.swift in Sources */,
 				4E605AB07A30B9DC850D70B0 /* WeeklySummaryScheduler.swift in Sources */,
 				E1A2B3C4D5E6F7081234ABCE /* WatchMonitor.swift in Sources */,
+				RE0010000000000000000002 /* ReengagementScheduler.swift in Sources */,
+				SI0010000000000000000002 /* HealthScoreIntent.swift in Sources */,
+				SI0020000000000000000002 /* LogWaterIntent.swift in Sources */,
+				SI0030000000000000000002 /* SleepSummaryIntent.swift in Sources */,
+				SI0040000000000000000002 /* ReadinessIntent.swift in Sources */,
+				SI0050000000000000000002 /* ShowTrendsIntent.swift in Sources */,
+				SI0060000000000000000002 /* LogWorkoutIntent.swift in Sources */,
+				SI0070000000000000000002 /* WorkoutTypeAppEnum.swift in Sources */,
+				SI0080000000000000000002 /* IntentSnippetViews.swift in Sources */,
+				SI0090000000000000000002 /* IntentDataProvider.swift in Sources */,
+				SI0100000000000000000002 /* IntentDonationManager.swift in Sources */,
+				SI0110000000000000000002 /* HealthPulseShortcutsProvider.swift in Sources */,
 				A2EBB41C493BD4BCF809BA7A /* WorkoutEffectivenessAnalyzer.swift in Sources */,
 				A1D93F47B8E62C10D4F5A7B2 /* OnboardingView.swift in Sources */,
 				A1B2C3D4E5F6071812345006 /* PaywallView.swift in Sources */,

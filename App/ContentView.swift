@@ -215,6 +215,9 @@ struct ContentView: View {
         .onChange(of: navigationPath.count) { _, newCount in
             AppAnalytics.shared.updateNavigationDepth(newCount)
         }
+        .onReceive(NotificationCenter.default.publisher(for: .healthPulseNavigateToExplore)) { _ in
+            selectedTab = .explore
+        }
     }
 
     @ViewBuilder
@@ -254,6 +257,10 @@ struct ContentView: View {
         analytics.trackReturnSession()
         analytics.trackRetentionMilestones()
         analytics.trackInactivityIfNeeded()
+
+        // Push re-engagement notification 3 days into the future on every session.
+        // If the user keeps opening the app, this never fires.
+        ReengagementScheduler.reschedule()
     }
 
     // MARK: - Billing Grace Banner (subtle, non-blocking, only after 16 days)

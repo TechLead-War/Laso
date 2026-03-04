@@ -78,7 +78,9 @@ struct HealthPulseApp: App {
         let storeDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
             .appendingPathComponent("HealthData", isDirectory: true)
         try? FileManager.default.createDirectory(at: storeDir, withIntermediateDirectories: true)
-        try? (storeDir as NSURL).setResourceValue(URLFileProtection.complete, forKey: .fileProtectionKey)
+        // Use completeUntilFirstUserAuthentication so App Intents (Siri) can access
+        // the store when the device is locked (after first unlock).
+        try? (storeDir as NSURL).setResourceValue(URLFileProtection.completeUntilFirstUserAuthentication, forKey: .fileProtectionKey)
         let dbURL = storeDir.appendingPathComponent("health.store")
 
         let allModels: [any PersistentModel.Type] = [

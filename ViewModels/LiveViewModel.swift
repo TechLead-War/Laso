@@ -46,10 +46,34 @@ final class LiveViewModel {
         var latestTimestamp: Date
     }
 
+    private struct RecoveryBaselineStats {
+        let mean: Double
+        let median: Double
+        let standardDeviation: Double
+        let iqr: Double
+        let sampleCount: Int
+    }
+
+    private struct RecoverySignal {
+        let score: Double        // 0-100
+        let weight: Double       // relative importance
+        let confidence: Double   // 0-1 data quality/freshness factor
+    }
+
     /// Live polling cadence and chart density controls (CPU/GPU protection).
     private static let liveActivityRefreshInterval: TimeInterval = 30
     private static let heartRateBucketSize: TimeInterval = 10
     private static let maxHeartRatePoints = 180
+    private static let readinessBaselineWindowDays = 42
+    private static let readinessBaselineGapDays = 2
+    private static let readinessBaselineMinSamples = 10
+    private static let readinessBaselineRefreshInterval: TimeInterval = 6 * 3600
+    private static let readinessSmoothingAlpha = 0.7
+
+    private var readinessBaselines: [HKQuantityTypeIdentifier: RecoveryBaselineStats] = [:]
+    private var lastReadinessBaselineRefresh: Date?
+    private var readinessBaselineRefreshTask: Task<Void, Never>?
+    private var smoothedReadinessScore: Double?
 
     init(healthKitManager: HealthKitManager) {
         self.healthKitManager = healthKitManager
@@ -592,6 +616,8 @@ final class LiveViewModel {
     // MARK: - Latest Daily Values
 
     func fetchLatestDailyValues() {
+        refreshReadinessBaselinesIfNeeded()
+
         fetchLatestSampleWithDate(.restingHeartRate, unit: HKUnit.count().unitDivided(by: .minute()), maxAge: 48 * 3600) { [weak self] value, date in
             Task { @MainActor in
                 self?.recovery.latestRestingHeartRate = value
@@ -691,6 +717,7 @@ final class LiveViewModel {
                     self?.workout.lastWorkoutDuration = duration
                     self?.workout.lastWorkoutCalories = calories
                     self?.workout.lastWorkoutTimestamp = date
+                    self?.computeReadinessScore()
                 }
             }
         }
@@ -701,29 +728,98 @@ final class LiveViewModel {
     // MARK: - Readiness Score
 
     func computeReadinessScore() {
-        let hrv = recovery.latestHRV
-        let rhr = recovery.latestRestingHeartRate
+        let now = Date()
+        var signals: [RecoverySignal] = []
 
-        // Need at least one metric to compute a score
-        guard hrv != nil || rhr != nil else {
+        if let hrv = recovery.latestHRV {
+            let baseline = readinessBaselines[.heartRateVariabilitySDNN]
+            let score = Self.hrvScore(current: hrv, baseline: baseline)
+            let age = recovery.latestHRVTimestamp.map { now.timeIntervalSince($0) } ?? (72 * 3600)
+            let freshness = Self.freshnessConfidence(age: age, maxAge: 48 * 3600)
+            let baselineConfidence = baseline.map { min(1.0, Double($0.sampleCount) / 21.0) } ?? 0.55
+            signals.append(RecoverySignal(score: score, weight: 0.40, confidence: freshness * baselineConfidence))
+        }
+
+        if let rhr = recovery.latestRestingHeartRate {
+            let baseline = readinessBaselines[.restingHeartRate]
+            let score = Self.rhrScore(current: rhr, baseline: baseline)
+            let age = recovery.latestRestingHeartRateTimestamp.map { now.timeIntervalSince($0) } ?? (72 * 3600)
+            let freshness = Self.freshnessConfidence(age: age, maxAge: 48 * 3600)
+            let baselineConfidence = baseline.map { min(1.0, Double($0.sampleCount) / 21.0) } ?? 0.55
+            signals.append(RecoverySignal(score: score, weight: 0.35, confidence: freshness * baselineConfidence))
+        }
+
+        let sleepHours = sleep.lastNightSleepDuration / 3600.0
+        if sleepHours > 0 {
+            let score = Self.sleepDurationScore(hours: sleepHours)
+            let confidence = min(1.0, max(0.5, sleepHours / 7.0))
+            signals.append(RecoverySignal(score: score, weight: 0.15, confidence: confidence))
+        }
+
+        if sleep.hasSleepStageBreakdown, sleep.lastNightSleepDuration > 0 {
+            let score = Self.sleepStageScore(
+                deep: sleep.lastNightDeepSleep,
+                rem: sleep.lastNightREMSleep,
+                total: sleep.lastNightSleepDuration
+            )
+            signals.append(RecoverySignal(score: score, weight: 0.06, confidence: 0.85))
+        }
+
+        if let workoutDate = workout.lastWorkoutTimestamp,
+           let workoutDuration = workout.lastWorkoutDuration {
+            let hoursSinceWorkout = now.timeIntervalSince(workoutDate) / 3600.0
+            let score = Self.workoutRecoveryScore(
+                hoursSinceWorkout: hoursSinceWorkout,
+                durationMinutes: workoutDuration,
+                calories: workout.lastWorkoutCalories
+            )
+            let confidence = min(1.0, max(0.4, 1.0 - (max(0.0, hoursSinceWorkout - 36.0) / 24.0)))
+            signals.append(RecoverySignal(score: score, weight: 0.04, confidence: confidence))
+        }
+
+        guard !signals.isEmpty else {
             recovery.readinessScore = nil
+            recovery.readinessConfidence = nil
+            smoothedReadinessScore = nil
             return
         }
 
-        if let hrv, let rhr {
-            // Full score: both metrics available
-            let hrvScore = min(max((hrv - 20) / 40.0 * 50, 0), 50)
-            let rhrScore = min(max((80 - rhr) / 30.0 * 50, 0), 50)
-            recovery.readinessScore = Int(hrvScore + rhrScore)
-        } else if let rhr {
-            // Partial score: RHR only — scale to full range (assume median HRV contribution)
-            let rhrScore = min(max((80 - rhr) / 30.0 * 50, 0), 50)
-            recovery.readinessScore = Int(rhrScore + 25) // 25 = neutral HRV midpoint
-        } else if let hrv {
-            // Partial score: HRV only — scale to full range (assume median RHR contribution)
-            let hrvScore = min(max((hrv - 20) / 40.0 * 50, 0), 50)
-            recovery.readinessScore = Int(hrvScore + 25) // 25 = neutral RHR midpoint
+        let effectiveWeightTotal = signals.reduce(0.0) { $0 + ($1.weight * $1.confidence) }
+        guard effectiveWeightTotal > 0 else {
+            recovery.readinessScore = nil
+            recovery.readinessConfidence = nil
+            smoothedReadinessScore = nil
+            return
         }
+
+        let weightedScore = signals.reduce(0.0) { partial, signal in
+            partial + (signal.score * signal.weight * signal.confidence)
+        } / effectiveWeightTotal
+
+        // Pull uncertain outputs toward neutral when data is sparse/stale.
+        let totalConfiguredWeight = signals.reduce(0.0) { $0 + $1.weight }
+        let confidence = min(1.0, effectiveWeightTotal / max(totalConfiguredWeight, 0.0001))
+        var score = 50 + (weightedScore - 50) * (0.35 + 0.65 * confidence)
+
+        if let bestAge = Self.freshestCardiacAgeHours(
+            hrvTimestamp: recovery.latestHRVTimestamp,
+            rhrTimestamp: recovery.latestRestingHeartRateTimestamp,
+            now: now
+        ), bestAge > 24 {
+            // Extra penalty for stale autonomic signals.
+            score -= min(12.0, (bestAge - 24.0) * 0.5)
+        }
+
+        let clamped = Self.clamp(score, min: 0, max: 100)
+        if let previous = smoothedReadinessScore {
+            smoothedReadinessScore = previous + Self.readinessSmoothingAlpha * (clamped - previous)
+        } else {
+            smoothedReadinessScore = clamped
+        }
+
+        let finalScore = Int(Self.clamp(smoothedReadinessScore ?? clamped, min: 0, max: 100).rounded())
+        recovery.readinessScore = finalScore
+        recovery.readinessConfidence = Int((confidence * 100).rounded())
     }
 
     // MARK: - Last Night's Sleep Fetch
@@ -782,6 +878,7 @@ final class LiveViewModel {
                 self?.sleep.lastNightREMSleep = rem
                 self?.sleep.lastNightCoreSleep = core
                 self?.sleep.lastNightAwakeTime = awake
+                self?.computeReadinessScore()
             }
         }
 
@@ -896,6 +993,194 @@ final class LiveViewModel {
         }
 
         healthStore.execute(query)
+    }
+
+    private func refreshReadinessBaselinesIfNeeded(force: Bool = false) {
+        let now = Date()
+        if !force,
+           let last = lastReadinessBaselineRefresh,
+           now.timeIntervalSince(last) < Self.readinessBaselineRefreshInterval {
+            return
+        }
+        guard readinessBaselineRefreshTask == nil else { return }
+
+        readinessBaselineRefreshTask = Task { [weak self] in
+            guard let self else { return }
+
+            async let rhrValues = self.fetchHistoricalDailyAverages(
+                identifier: .restingHeartRate,
+                unit: HKUnit.count().unitDivided(by: .minute())
+            )
+            async let hrvValues = self.fetchHistoricalDailyAverages(
+                identifier: .heartRateVariabilitySDNN,
+                unit: HKUnit.secondUnit(with: .milli)
+            )
+
+            let rhrBaseline = Self.makeBaseline(values: await rhrValues, minimumSD: 2.0)
+            let hrvBaseline = Self.makeBaseline(values: await hrvValues, minimumSD: 4.0)
+
+            await MainActor.run {
+                if let rhrBaseline {
+                    self.readinessBaselines[.restingHeartRate] = rhrBaseline
+                }
+                if let hrvBaseline {
+                    self.readinessBaselines[.heartRateVariabilitySDNN] = hrvBaseline
+                }
+                self.lastReadinessBaselineRefresh = Date()
+                self.readinessBaselineRefreshTask = nil
+                self.computeReadinessScore()
+            }
+        }
+    }
+
+    private func fetchHistoricalDailyAverages(
+        identifier: HKQuantityTypeIdentifier,
+        unit: HKUnit
+    ) async -> [Double] {
+        let calendar = Calendar.current
+        let now = Date()
+        let baselineEnd = calendar.date(byAdding: .day, value: -Self.readinessBaselineGapDays, to: now) ?? now
+        let baselineStart = calendar.date(
+            byAdding: .day,
+            value: -(Self.readinessBaselineWindowDays + Self.readinessBaselineGapDays),
+            to: now
+        ) ?? baselineEnd.addingTimeInterval(-Double(Self.readinessBaselineWindowDays) * 24 * 3600)
+
+        return await withCheckedContinuation { continuation in
+            let type = HKQuantityType(identifier)
+            let predicate = HKQuery.predicateForSamples(withStart: baselineStart, end: baselineEnd, options: .strictStartDate)
+            var interval = DateComponents()
+            interval.day = 1
+
+            let query = HKStatisticsCollectionQuery(
+                quantityType: type,
+                quantitySamplePredicate: predicate,
+                options: .discreteAverage,
+                anchorDate: calendar.startOfDay(for: baselineStart),
+                intervalComponents: interval
+            )
+
+            query.initialResultsHandler = { _, results, _ in
+                guard let results else {
+                    continuation.resume(returning: [])
+                    return
+                }
+
+                var values: [Double] = []
+                results.enumerateStatistics(from: baselineStart, to: baselineEnd) { statistics, _ in
+                    guard let average = statistics.averageQuantity()?.doubleValue(for: unit),
+                          average.isFinite,
+                          average > 0 else { return }
+                    values.append(average)
+                }
+                continuation.resume(returning: values)
+            }
+
+            healthStore.execute(query)
+        }
+    }
+
+    private static func makeBaseline(values: [Double], minimumSD: Double) -> RecoveryBaselineStats? {
+        let clean = values.filter { $0.isFinite && $0 > 0 }
+        guard clean.count >= readinessBaselineMinSamples else { return nil }
+
+        let q1 = clean.percentile(25)
+        let q3 = clean.percentile(75)
+        let iqr = max(0.001, q3 - q1)
+        let lower = q1 - 1.5 * iqr
+        let upper = q3 + 1.5 * iqr
+        let trimmed = clean.filter { $0 >= lower && $0 <= upper }
+        let usable = trimmed.count >= readinessBaselineMinSamples ? trimmed : clean
+
+        let mean = usable.mean
+        let median = usable.median
+        let adaptiveFloor = max(minimumSD, abs(mean) * 0.05, iqr * 0.3)
+        let sd = max(usable.standardDeviation, adaptiveFloor)
+
+        return RecoveryBaselineStats(
+            mean: mean,
+            median: median,
+            standardDeviation: sd,
+            iqr: iqr,
+            sampleCount: usable.count
+        )
+    }
+
+    private static func hrvScore(current: Double, baseline: RecoveryBaselineStats?) -> Double {
+        if let baseline {
+            let z = (current - baseline.median) / baseline.standardDeviation
+            let normalized = tanh(z / 1.8)
+            return clamp(55 + normalized * 35, min: 0, max: 100)
+        }
+
+        // Population fallback when personal baseline is unavailable.
+        return clamp((current - 15) / 55 * 100, min: 0, max: 100)
+    }
+
+    private static func rhrScore(current: Double, baseline: RecoveryBaselineStats?) -> Double {
+        if let baseline {
+            let z = (baseline.median - current) / baseline.standardDeviation
+            let normalized = tanh(z / 1.8)
+            return clamp(55 + normalized * 35, min: 0, max: 100)
+        }
+
+        // Population fallback when personal baseline is unavailable.
+        return clamp((85 - current) / 40 * 100, min: 0, max: 100)
+    }
+
+    private static func sleepDurationScore(hours: Double) -> Double {
+        if hours < 7.5 {
+            let deficit = 7.5 - hours
+            let penalty = deficit * 13 + deficit * deficit * 4
+            return clamp(100 - penalty, min: 10, max: 100)
+        } else {
+            let excess = hours - 7.5
+            let penalty = excess * 7 + excess * excess * 2
+            return clamp(100 - penalty, min: 35, max: 100)
+        }
+    }
+
+    private static func sleepStageScore(deep: TimeInterval, rem: TimeInterval, total: TimeInterval) -> Double {
+        guard total > 0 else { return 50 }
+        let restorativeRatio = (deep + rem) / total
+        return clamp((restorativeRatio - 0.16) / 0.24 * 100, min: 0, max: 100)
+    }
+
+    private static func workoutRecoveryScore(
+        hoursSinceWorkout: Double,
+        durationMinutes: Double,
+        calories: Double?
+    ) -> Double {
+        let workoutLoad = min(1.0, max(durationMinutes / 75.0, (calories ?? 0) / 600.0))
+        if hoursSinceWorkout < 6 {
+            return 85 - workoutLoad * 35
+        }
+        if hoursSinceWorkout < 18 {
+            return 92 - workoutLoad * 25
+        }
+        return 96 - workoutLoad * 12
+    }
+
+    private static func freshnessConfidence(age: TimeInterval, maxAge: TimeInterval) -> Double {
+        guard age.isFinite else { return 0.35 }
+        let ratio = clamp(age / maxAge, min: 0, max: 2)
+        return clamp(1.0 - ratio * 0.65, min: 0.35, max: 1.0)
+    }
+
+    private static func freshestCardiacAgeHours(
+        hrvTimestamp: Date?,
+        rhrTimestamp: Date?,
+        now: Date
+    ) -> Double? {
+        let ages = [hrvTimestamp, rhrTimestamp]
+            .compactMap { $0 }
+            .map { now.timeIntervalSince($0) / 3600.0 }
+            .filter { $0.isFinite && $0 >= 0 }
+        return ages.min()
+    }
+
+    private static func clamp(_ value: Double, min lower: Double, max upper: Double) -> Double {
+        Swift.max(lower, Swift.min(upper, value))
     }
 
     private static func bucketDate(_ date: Date, by interval: TimeInterval) -> Date {
@@ -1075,6 +1360,7 @@ extension LiveViewModel {
         var latestHRVTimestamp: Date?
         var latestHeartRateRecovery: Double?
         var readinessScore: Int?
+        var readinessConfidence: Int?
 
         var isReadinessDataFresh: Bool {
             let fortyEightHours: TimeInterval = 48 * 3600

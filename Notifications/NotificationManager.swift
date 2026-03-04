@@ -21,6 +21,7 @@ final class NotificationManager {
         if identifier.hasPrefix("healthpulse.improvement.") { return "improvement" }
         if identifier.hasPrefix("healthpulse.watch.") { return "watch_monitor" }
         if identifier.hasPrefix("healthpulse.weekly") { return "weekly_summary" }
+        if identifier.hasPrefix("healthpulse.reengagement") { return "reengagement" }
         return "other"
     }
 
