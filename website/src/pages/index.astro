@@ -925,23 +925,37 @@ import '../styles/globals.css'
             })
           }
         )
-        if (!res.ok) return 0
+        if (!res.ok) {
+          console.warn('[Laso] Firestore count query failed:', res.status, await res.text().catch(() => ''))
+          return 0
+        }
         const data = await res.json()
         return parseInt(data[0]?.result?.aggregateFields?.count?.integerValue ?? '0', 10)
-      } catch {
+      } catch (err) {
+        console.warn('[Laso] Firestore count query error:', err)
         return 0
       }
     }
 
     function updateCounterDisplay(count: number) {
       currentSignupCount = count
+      localStorage.setItem('laso_signup_count', String(count))
       document.querySelectorAll('.signup-counter').forEach(el => {
         el.textContent = String(count)
       })
     }
 
+    // Use locally cached count as immediate value, then update from Firestore if available
+    const cachedCount = parseInt(localStorage.getItem('laso_signup_count') || '0', 10)
+    if (cachedCount > SIGNUP_BASE) {
+      updateCounterDisplay(cachedCount)
+    }
+
     fetchSignupCount().then(count => {
-      updateCounterDisplay(SIGNUP_BASE + count)
+      const firestoreTotal = SIGNUP_BASE + count
+      // Use the higher of Firestore count or locally cached count
+      const best = Math.max(firestoreTotal, cachedCount)
+      updateCounterDisplay(best)
     })
 
     // ── Early access form handler ──
@@ -973,6 +987,7 @@ import '../styles/globals.css'
       const signups = JSON.parse(localStorage.getItem('laso_signups') || '[]')
       signups.push({ email, timestamp: new Date().toISOString(), ...utmParams, form: formId })
       localStorage.setItem('laso_signups', JSON.stringify(signups))
+      localStorage.setItem('laso_signed_up', 'true')
 
       // Send to Firestore (with full attribution data)
       try {
@@ -1024,6 +1039,22 @@ import '../styles/globals.css'
         handleSignup(form)
       })
     })
+
+    // ── Restore signed-up state on refresh ──
+    if (localStorage.getItem('laso_signed_up') === 'true') {
+      document.querySelectorAll<HTMLFormElement>('#hero-form, #early-access-form').forEach((form) => {
+        const emailInput = form.querySelector('input[type="email"]') as HTMLInputElement | null
+        if (emailInput) emailInput.value = ''
+        const success = form.parentElement?.querySelector('.hero-success, .ea-success')
+        if (success) success.classList.remove('hidden')
+        const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null
+        if (btn) {
+          btn.textContent = "You're in!"
+          btn.disabled = true
+          btn.classList.add('opacity-60')
+        }
+      })
+    }
 
     // ── Form interaction tracking (intent signals for Meta optimization) ──
     let formFocused = false
