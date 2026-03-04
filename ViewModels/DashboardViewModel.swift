@@ -579,7 +579,7 @@ final class DashboardViewModel {
         }
         if !extraInsights.isEmpty {
             analysisEngine.insights.append(contentsOf: extraInsights)
-            analysisEngine.insights.sort { $0.priorityScore > $1.priorityScore }
+            analysisEngine.insights = AnalysisEngine.deduplicateInsights(analysisEngine.insights)
         }
 
         // Circadian analysis (weekly, hourly data fetch)

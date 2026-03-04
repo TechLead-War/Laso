@@ -47,7 +47,7 @@ final class LiveViewModel {
     }
 
     /// Live polling cadence and chart density controls (CPU/GPU protection).
-    private static let liveActivityRefreshInterval: TimeInterval = 120
+    private static let liveActivityRefreshInterval: TimeInterval = 30
     private static let heartRateBucketSize: TimeInterval = 10
     private static let maxHeartRatePoints = 180
 
@@ -157,7 +157,7 @@ final class LiveViewModel {
     /// Tiered polling intervals (seconds)
     private static let fastInterval: TimeInterval = 60     // steps, calories, exercise, stand, distance, flights
     private static let mediumInterval: TimeInterval = 300   // goals, mindful minutes
-    private static let slowInterval: TimeInterval = 120     // RHR, HRV, workout, sleep
+    private static let slowInterval: TimeInterval = 600     // RHR, HRV, workout, sleep
 
     /// Full fetch — calls all tiers unconditionally (used on first appear and manual refresh).
     /// Also pre-fetches latest vitals so the Live tab opens instantly with data.
@@ -213,15 +213,23 @@ final class LiveViewModel {
         startHeartRateStream()
         startBloodOxygenStream()
         startRespiratoryRateStream()
+
+        let now = Date()
         fetchTodayCumulativeStats()
-        fetchLatestDailyValues()
-        fetchLatestBloodPressure()
-        fetchLatestBodyTemperature()
-        fetchLatestWorkout()
-        fetchTodayHeartRateRange()
-        fetchActivityGoals()
-        fetchTodayMindfulMinutes()
-        fetchLastNightSleep()
+        if lastMediumFetch == nil || now.timeIntervalSince(lastMediumFetch!) >= Self.mediumInterval {
+            fetchActivityGoals()
+            fetchTodayMindfulMinutes()
+            lastMediumFetch = now
+        }
+        if lastSlowFetch == nil || now.timeIntervalSince(lastSlowFetch!) >= Self.slowInterval {
+            fetchLatestDailyValues()
+            fetchLatestBloodPressure()
+            fetchLatestBodyTemperature()
+            fetchLatestWorkout()
+            fetchTodayHeartRateRange()
+            fetchLastNightSleep()
+            lastSlowFetch = now
+        }
         computeReadinessScore()
 
         // Run fallback fetches immediately in parallel with anchored queries.
@@ -240,14 +248,17 @@ final class LiveViewModel {
         respiratoryAvailabilityWorkItem = availabilityWorkItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: availabilityWorkItem)
 
-        // Refresh cumulative stats every 2 minutes (vitals stream continuously via anchored queries).
-        let timer = Timer.scheduledTimer(withTimeInterval: Self.liveActivityRefreshInterval, repeats: true) { [weak self] _ in
+        // Refresh cumulative stats every 30 seconds while the Live screen is visible.
+        // If the device is thermally constrained, back off to 60 seconds.
+        let interval = ThermalManager.shared.shouldThrottle ? 60.0 : Self.liveActivityRefreshInterval
+        let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             guard let self else { return }
+            guard self.isStreaming else { return }
             Task { @MainActor in
                 self.fetchTodayCumulativeStats()
             }
         }
-        timer.tolerance = 15
+        timer.tolerance = min(8, interval * 0.2)
         refreshTimer = timer
     }
 
@@ -309,6 +320,7 @@ final class LiveViewModel {
     }
 
     private func processHeartRateSamples(_ samples: [HKSample]?, unit: HKUnit) {
+        guard isStreaming else { return }
         guard let quantitySamples = samples as? [HKQuantitySample], !quantitySamples.isEmpty else { return }
         let sortedSamples = quantitySamples.sorted { $0.startDate < $1.startDate }
         let latestSample = sortedSamples.last
@@ -491,6 +503,7 @@ final class LiveViewModel {
     // MARK: - Helpers
 
     private func processLatestSample(_ samples: [HKSample]?, unit: HKUnit, update: @escaping @MainActor (Double, Date) -> Void) {
+        guard isStreaming else { return }
         guard let quantitySamples = samples as? [HKQuantitySample],
               let latest = quantitySamples.max(by: { $0.startDate < $1.startDate }) else { return }
 

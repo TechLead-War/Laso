@@ -128,7 +128,9 @@ struct ContentView: View {
             } else {
                 await dashboardViewModel.load()
             }
-            liveViewModel.fetchHomeData()
+            if selectedTab == .home {
+                liveViewModel.fetchHomeData()
+            }
         }
         .onAppear {
             FeedbackPromptManager.shared.recordAppOpen()
@@ -142,18 +144,22 @@ struct ContentView: View {
             if newPhase == .active && oldPhase != .active {
                 startSessionAnalytics()
                 WatchMonitor.shared.evaluateWatchStatus()
-                // Refresh home data (recovery, steps, sleep) immediately on foreground
-                // so the Today section picks up watch data that arrived while backgrounded.
-                liveViewModel.fetchHomeData()
-                // Retry sync if Home is stuck in empty state (e.g. user granted
-                // permissions in Settings and returned, or initial sync failed)
-                Task { await dashboardViewModel.retrySyncIfNeeded() }
+                if selectedTab == .home {
+                    // Refresh home data only when Home is visible.
+                    liveViewModel.fetchHomeData()
+                    // Retry sync only when Home is visible and potentially stuck.
+                    Task { await dashboardViewModel.retrySyncIfNeeded() }
+                }
             } else if newPhase == .background {
                 AppAnalytics.shared.trackSessionEnd()
             }
         }
         .onChange(of: selectedTab) { _, newTab in
             SessionTracker.shared.currentTab = newTab.rawValue
+            guard scenePhase == .active else { return }
+            if newTab == .home {
+                liveViewModel.fetchHomeDataTiered()
+            }
         }
         .onChange(of: navigationPath.count) { _, newCount in
             AppAnalytics.shared.updateNavigationDepth(newCount)

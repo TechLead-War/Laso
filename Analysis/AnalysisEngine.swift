@@ -263,10 +263,10 @@ final class AnalysisEngine {
         )
         heavyInsights.append(contentsOf: CausalChainEngine.generateInsights(from: newCausalChains))
 
-        // Merge heavy insights into the existing insights from essentials
+        // Merge heavy insights into the existing insights from essentials (deduplicated)
         var mergedInsights = insights
         mergedInsights.append(contentsOf: heavyInsights)
-        mergedInsights.sort { $0.priorityScore > $1.priorityScore }
+        mergedInsights = Self.deduplicateInsights(mergedInsights)
 
         // ── Batch apply heavy results ──
         correlations = newCorrelations
@@ -305,10 +305,10 @@ final class AnalysisEngine {
             anomalyCounts: anomalyCounts
         )
 
-        // After ML completes, regenerate ML insights and re-sort
+        // After ML completes, regenerate ML insights and deduplicate
         let mlInsights = mlOrchestrator.generateInsights()
         insights.append(contentsOf: mlInsights)
-        insights.sort { $0.priorityScore > $1.priorityScore }
+        insights = Self.deduplicateInsights(insights)
 
         // Incremental training for next run
         mlOrchestrator.trainIncremental(
@@ -346,6 +346,40 @@ final class AnalysisEngine {
 
     /// Get insights for a specific category
     func insights(for category: HealthCategory) -> [Insight] {
-        insights.filter { $0.metric.category == category }
+        Self.deduplicateInsights(insights.filter { $0.metric.category == category })
+    }
+
+    // MARK: - Global Insight Deduplication
+
+    /// Remove duplicate insights about the same metric across all analyzers.
+    /// Keeps max 2 per metric: best causal-chain + best other (by priority score).
+    static func deduplicateInsights(_ insights: [Insight]) -> [Insight] {
+        var grouped: [HealthMetric: [Insight]] = [:]
+        for insight in insights {
+            grouped[insight.metric, default: []].append(insight)
+        }
+
+        var result: [Insight] = []
+        for (_, metricInsights) in grouped {
+            if metricInsights.count <= 1 {
+                result.append(contentsOf: metricInsights)
+                continue
+            }
+
+            let causalChains = metricInsights.filter { $0.category == .causalChain }
+            let others = metricInsights.filter { $0.category != .causalChain }
+
+            // Keep the best causal chain if any
+            if let bestCausal = causalChains.max(by: { $0.priorityScore < $1.priorityScore }) {
+                result.append(bestCausal)
+            }
+
+            // Keep the single best non-causal insight
+            if let bestOther = others.max(by: { $0.priorityScore < $1.priorityScore }) {
+                result.append(bestOther)
+            }
+        }
+
+        return result.sorted { $0.priorityScore > $1.priorityScore }
     }
 }
