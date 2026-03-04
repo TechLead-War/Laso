@@ -15,7 +15,6 @@
 		0825D70B8EA6433B2925AB1B /* ReportTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18995389F66C775115FE7B33 /* ReportTemplate.swift */; };
 		099BF19D125B7D14164B3320 /* AnalysisEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C147C71560B1AD4933882E5 /* AnalysisEngine.swift */; };
 		0ABED1C74BED10F14598826D /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C589A8A37D2C34A66A66C26 /* SettingsView.swift */; };
-		0E2A173AED11DABEB853586A /* package.xcworkspace in Resources */ = {isa = PBXBuildFile; fileRef = 644B807CD403736D1B4418D5 /* package.xcworkspace */; };
 		0F936D71A6745AAD2BF214E5 /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0A12061DC73AA4746DA1D13 /* Date+Extensions.swift */; };
 		10D0C08519F277EF7FBC3741 /* values.txt in Resources */ = {isa = PBXBuildFile; fileRef = CD0C32A7AEE4A821118D57D7 /* values.txt */; };
 		114255FEDB7FDC29E8208926 /* FocusAreasSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FF4180D7FEC1853F0B00F79 /* FocusAreasSection.swift */; };
@@ -869,7 +868,6 @@
 				C993BD032930C85C51752FED /* Assets.xcassets in Resources */,
 				72CBF61AECB1A877DA61CE93 /* GoogleService-Info.plist in Resources */,
 				F479062A1BBC6C0917707709 /* PrivacyInfo.xcprivacy in Resources */,
-				0E2A173AED11DABEB853586A /* package.xcworkspace in Resources */,
 				10D0C08519F277EF7FBC3741 /* values.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
