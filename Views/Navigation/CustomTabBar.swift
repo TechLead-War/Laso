@@ -15,13 +15,11 @@ struct CustomTabBar: View {
                         withAnimation(.easeInOut(duration: 0.2)) {
                             selectedTab = tab
                         }
-                        if fromTab != tab {
-                            AppAnalytics.shared.trackBlockTap(
-                                title: tab.label,
-                                type: blockType(for: tab),
-                                screen: feature(for: fromTab)
-                            )
-                        }
+                        AppAnalytics.shared.trackBlockTap(
+                            title: tab.label,
+                            type: blockType(for: tab),
+                            screen: feature(for: fromTab)
+                        )
                     } label: {
                         VStack(spacing: 4) {
                             Image(systemName: tab.systemImageName)

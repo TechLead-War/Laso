@@ -28,6 +28,35 @@ enum AppSection: String {
     case weeklyReviewWins = "weekly_review_wins"
     case weeklyReviewWatchOut = "weekly_review_watch_out"
 
+    // Category Detail (5)
+    case categoryDetailScore = "category_detail_score"
+    case categoryDetailAnalytics = "category_detail_analytics"
+    case categoryDetailHistory = "category_detail_history"
+    case categoryDetailInsights = "category_detail_insights"
+    case categoryDetailMetrics = "category_detail_metrics"
+
+    // Metric Detail (6)
+    case metricDetailHeader = "metric_detail_header"
+    case metricDetailChart = "metric_detail_chart"
+    case metricDetailSummary = "metric_detail_summary"
+    case metricDetailHistory = "metric_detail_history"
+    case metricDetailScoreImpact = "metric_detail_score_impact"
+    case metricDetailInsights = "metric_detail_insights"
+
+    // Correlations (2)
+    case correlationsFilters = "correlations_filters"
+    case correlationsList = "correlations_list"
+
+    // Settings (8)
+    case settingsDevices = "settings_devices"
+    case settingsNotifications = "settings_notifications"
+    case settingsAlerts = "settings_alerts"
+    case settingsMetricAlerts = "settings_metric_alerts"
+    case settingsExport = "settings_export"
+    case settingsAppearance = "settings_appearance"
+    case settingsDataStorage = "settings_data_storage"
+    case settingsAbout = "settings_about"
+
     // Discovery (1)
     case discoveryFlow = "discovery_flow"
 

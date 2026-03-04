@@ -303,9 +303,17 @@ struct PaywallView: View {
 
             HStack(spacing: 16) {
                 Link("Terms of Use", destination: URL(string: "https://lasohealth.com/terms")!)
+                    .simultaneousGesture(TapGesture().onEnded {
+                        AppAnalytics.shared.trackBlockTap(title: "Terms of Use", type: .paywallTermsLink, screen: .paywall)
+                        footerTracker.tapped(target: "terms_of_use")
+                    })
                 Text("\u{00B7}")
                     .foregroundStyle(.quaternary)
                 Link("Privacy Policy", destination: URL(string: "https://lasohealth.com/privacy")!)
+                    .simultaneousGesture(TapGesture().onEnded {
+                        AppAnalytics.shared.trackBlockTap(title: "Privacy Policy", type: .paywallPrivacyLink, screen: .paywall)
+                        footerTracker.tapped(target: "privacy_policy")
+                    })
             }
             .font(.caption2)
             .foregroundStyle(.tertiary)

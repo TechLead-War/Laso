@@ -6,6 +6,8 @@ struct CorrelationsView: View {
     let onTapMetric: (HealthMetric) -> Void
 
     @State private var selectedFilter: CorrelationFilter = .all
+    @State private var filtersTracker = SectionTracker(section: .correlationsFilters, tab: .correlations)
+    @State private var listTracker = SectionTracker(section: .correlationsList, tab: .correlations)
 
     enum CorrelationFilter: String, CaseIterable, Identifiable {
         case all = "All"
@@ -35,6 +37,12 @@ struct CorrelationsView: View {
                                     selectedFilter = filter
                                 }
                                 if oldFilter != filter {
+                                    AppAnalytics.shared.trackBlockTap(
+                                        title: filter.rawValue,
+                                        type: .correlationFilterChip,
+                                        screen: .correlations
+                                    )
+                                    filtersTracker.tapped(target: filter.rawValue.lowercased())
                                     AppAnalytics.shared.trackFilterChanged(
                                         screen: .correlations,
                                         filterType: "correlation_strength",
@@ -47,6 +55,8 @@ struct CorrelationsView: View {
                     }
                     .padding(.horizontal)
                 }
+                .onAppear { filtersTracker.appeared() }
+                .onDisappear { filtersTracker.disappeared() }
 
                 if filteredCorrelations.isEmpty {
                     emptyState
@@ -61,11 +71,14 @@ struct CorrelationsView: View {
                                     strength: correlation.strengthLabel,
                                     screen: .correlations
                                 )
+                                listTracker.tapped(target: "\(correlation.metricA.rawValue)_\(correlation.metricB.rawValue)")
                                 onTapMetric(correlation.metricA)
                             }
                             .padding(.horizontal)
                         }
                     }
+                    .onAppear { listTracker.appeared() }
+                    .onDisappear { listTracker.disappeared() }
                 }
             }
             .padding(.vertical)

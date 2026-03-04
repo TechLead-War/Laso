@@ -4,6 +4,12 @@ import SwiftUI
 struct CategoryDetailView: View {
     @State var viewModel: CategoryDetailViewModel
 
+    @State private var scoreTracker = SectionTracker(section: .categoryDetailScore, tab: .categoryDetail)
+    @State private var analyticsTracker = SectionTracker(section: .categoryDetailAnalytics, tab: .categoryDetail)
+    @State private var historyTracker = SectionTracker(section: .categoryDetailHistory, tab: .categoryDetail)
+    @State private var insightsTracker = SectionTracker(section: .categoryDetailInsights, tab: .categoryDetail)
+    @State private var metricsTracker = SectionTracker(section: .categoryDetailMetrics, tab: .categoryDetail)
+
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -16,10 +22,14 @@ struct CategoryDetailView: View {
                         lineWidth: 10
                     )
                     .padding(.top)
+                    .onAppear { scoreTracker.appeared() }
+                    .onDisappear { scoreTracker.disappeared() }
                 }
 
                 // Category Analytics Summary
                 categoryAnalyticsSection
+                    .onAppear { analyticsTracker.appeared() }
+                    .onDisappear { analyticsTracker.disappeared() }
 
                 // Time Range Selector
                 TimeRangeSelector(selectedDays: Binding(
@@ -86,12 +96,15 @@ struct CategoryDetailView: View {
                                         type: .metricRow,
                                         screen: .categoryDetail
                                     )
+                                    historyTracker.tapped(target: item.metric.rawValue)
                                 })
                             }
                         }
                         .cardStyle()
                         .padding(.horizontal)
                     }
+                    .onAppear { historyTracker.appeared() }
+                    .onDisappear { historyTracker.disappeared() }
                 }
 
                 // Insights for this category
@@ -111,9 +124,12 @@ struct CategoryDetailView: View {
                                         metric: insight.metric.rawValue,
                                         screen: .categoryDetail
                                     )
+                                    insightsTracker.tapped(target: insight.metric.rawValue)
                                 }
                         }
                     }
+                    .onAppear { insightsTracker.appeared() }
+                    .onDisappear { insightsTracker.disappeared() }
                 }
 
                 // Metric List — sorted by severity
@@ -137,9 +153,12 @@ struct CategoryDetailView: View {
                         .buttonStyle(.plain)
                         .simultaneousGesture(TapGesture().onEnded {
                             AppAnalytics.shared.trackBlockTap(title: metric.displayName, type: .metricRow, screen: .categoryDetail)
+                            metricsTracker.tapped(target: metric.rawValue)
                         })
                     }
                 }
+                .onAppear { metricsTracker.appeared() }
+                .onDisappear { metricsTracker.disappeared() }
             }
             .padding(.bottom)
         }

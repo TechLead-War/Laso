@@ -78,6 +78,7 @@ enum BlockType: String {
     // Filters — user taps
     case trendFilter = "trend_filter"
     case periodSelector = "period_selector"
+    case correlationFilterChip = "correlation_filter_chip"
 
     // Chart — user taps
     case chartTouch = "chart_touch"
@@ -98,6 +99,8 @@ enum BlockType: String {
     case onboardingFocusChip = "onboarding_focus_chip"
     case onboardingGetStarted = "onboarding_get_started"
     case onboardingCultureContinue = "onboarding_culture_continue"
+    case onboardingCalibrationRetry = "onboarding_calibration_retry"
+    case onboardingCalibrationSkip = "onboarding_calibration_skip"
     case scoreGuideGotIt = "score_guide_got_it"
 
     // Navigation
@@ -152,6 +155,8 @@ enum BlockType: String {
     case paywallSubscribe = "paywall_subscribe"
     case paywallRestore = "paywall_restore"
     case paywallRetryPlans = "paywall_retry_plans"
+    case paywallTermsLink = "paywall_terms_link"
+    case paywallPrivacyLink = "paywall_privacy_link"
     case proUpgradeButton = "pro_upgrade_button"
 }
 

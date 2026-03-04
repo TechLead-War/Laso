@@ -11,6 +11,13 @@ struct MetricDetailView: View {
     @State private var autoExpandedRange: Int?
     @State private var showLogSheet = false
 
+    @State private var headerTracker = SectionTracker(section: .metricDetailHeader, tab: .metricDetail)
+    @State private var chartTracker = SectionTracker(section: .metricDetailChart, tab: .metricDetail)
+    @State private var summaryTracker = SectionTracker(section: .metricDetailSummary, tab: .metricDetail)
+    @State private var historyTracker = SectionTracker(section: .metricDetailHistory, tab: .metricDetail)
+    @State private var scoreImpactTracker = SectionTracker(section: .metricDetailScoreImpact, tab: .metricDetail)
+    @State private var insightsTracker = SectionTracker(section: .metricDetailInsights, tab: .metricDetail)
+
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -30,6 +37,8 @@ struct MetricDetailView: View {
                     }
                     // Current Value Header
                     headerSection
+                        .onAppear { headerTracker.appeared() }
+                        .onDisappear { headerTracker.disappeared() }
 
                     // Log button for writable metrics
                     if HealthKitManager.writableMetrics.contains(viewModel.metric) {
@@ -74,23 +83,33 @@ struct MetricDetailView: View {
 
                     // Chart
                     chartSection
+                        .onAppear { chartTracker.appeared() }
+                        .onDisappear { chartTracker.disappeared() }
 
                     // Contextual Summary (replaces raw stats grid)
                     contextualSummary
+                        .onAppear { summaryTracker.appeared() }
+                        .onDisappear { summaryTracker.disappeared() }
 
                     // Historical Context
                     if !viewModel.historicalFacts.isEmpty {
                         historicalContextSection
+                            .onAppear { historyTracker.appeared() }
+                            .onDisappear { historyTracker.disappeared() }
                     }
 
                     // Score Breakdown
                     if !viewModel.scoreBreakdown.isEmpty {
                         scoreBreakdownSection
+                            .onAppear { scoreImpactTracker.appeared() }
+                            .onDisappear { scoreImpactTracker.disappeared() }
                     }
 
                     // Insights
                     if !viewModel.insights.isEmpty {
                         insightsSection
+                            .onAppear { insightsTracker.appeared() }
+                            .onDisappear { insightsTracker.disappeared() }
                     }
                 }
             }

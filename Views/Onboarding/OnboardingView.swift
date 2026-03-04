@@ -511,6 +511,7 @@ private struct CalibrationPage: View {
         case .failed:
             VStack(spacing: 10) {
                 Button {
+                    AppAnalytics.shared.trackBlockTap(title: "Retry Calibration", type: .onboardingCalibrationRetry, screen: .onboarding)
                     startCalibration()
                 } label: {
                     Text("Retry Calibration")
@@ -522,6 +523,7 @@ private struct CalibrationPage: View {
                 .padding(.horizontal, 24)
 
                 Button("Skip for Now") {
+                    AppAnalytics.shared.trackBlockTap(title: "Skip for Now", type: .onboardingCalibrationSkip, screen: .onboarding)
                     onComplete()
                 }
                 .buttonStyle(.bordered)

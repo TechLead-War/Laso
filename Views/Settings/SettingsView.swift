@@ -9,6 +9,15 @@ struct SettingsView: View {
     @State private var showExportSheet = false
     @State private var showMetricAlertPicker = false
 
+    @State private var devicesTracker = SectionTracker(section: .settingsDevices, tab: .settings)
+    @State private var notificationsTracker = SectionTracker(section: .settingsNotifications, tab: .settings)
+    @State private var alertsTracker = SectionTracker(section: .settingsAlerts, tab: .settings)
+    @State private var metricAlertsTracker = SectionTracker(section: .settingsMetricAlerts, tab: .settings)
+    @State private var exportTracker = SectionTracker(section: .settingsExport, tab: .settings)
+    @State private var appearanceTracker = SectionTracker(section: .settingsAppearance, tab: .settings)
+    @State private var dataStorageTracker = SectionTracker(section: .settingsDataStorage, tab: .settings)
+    @State private var aboutTracker = SectionTracker(section: .settingsAbout, tab: .settings)
+
     private let persistence = PersistenceManager()
     let webExportViewModel: WebExportViewModel
     let deviceSourceManager: DeviceSourceManager
@@ -51,8 +60,11 @@ struct SettingsView: View {
                     }
                     .simultaneousGesture(TapGesture().onEnded {
                         AppAnalytics.shared.trackBlockTap(title: "Manage Devices", type: .manageDevices, screen: .settings)
+                        devicesTracker.tapped(target: "manage_devices")
                     })
                 }
+                .onAppear { devicesTracker.appeared() }
+                .onDisappear { devicesTracker.disappeared() }
 
                 // Notifications
                 Section("Daily Summary") {
@@ -83,6 +95,8 @@ struct SettingsView: View {
                         )
                     }
                 }
+                .onAppear { notificationsTracker.appeared() }
+                .onDisappear { notificationsTracker.disappeared() }
 
                 Section("Weekly Summary") {
                     Toggle("Enable Weekly Report", isOn: $preferences.weeklySummaryEnabled)
@@ -190,6 +204,8 @@ struct SettingsView: View {
                         AppAnalytics.shared.trackSettingChanged(name: "max_notifications_per_day", value: newValue)
                     }
                 }
+                .onAppear { alertsTracker.appeared() }
+                .onDisappear { alertsTracker.disappeared() }
 
                 // Per-Metric Alert Configuration
                 Section {
@@ -205,18 +221,22 @@ struct SettingsView: View {
                     }
                     .simultaneousGesture(TapGesture().onEnded {
                         AppAnalytics.shared.trackBlockTap(title: "Warning Alert Metrics", type: .metricAlertsPicker, screen: .settings)
+                        metricAlertsTracker.tapped(target: "warning_alert_metrics")
                     })
                 } header: {
                     Text("Metric Alerts")
                 } footer: {
                     Text("Choose which metrics trigger warning-level notifications when they deviate from your baseline.")
                 }
+                .onAppear { metricAlertsTracker.appeared() }
+                .onDisappear { metricAlertsTracker.disappeared() }
 
                 // Export
                 Section("Data Export") {
                     if FeatureGate.canAccess(.exportReport) {
                         Button {
                             AppAnalytics.shared.trackBlockTap(title: "Generate Web Report", type: .exportReport, screen: .settings)
+                            exportTracker.tapped(target: "generate_web_report")
                             webExportViewModel.exportReport()
                             // Only show sheet after export completes with a valid URL
                             if webExportViewModel.exportedURL != nil {
@@ -248,6 +268,8 @@ struct SettingsView: View {
                         }
                     }
                 }
+                .onAppear { exportTracker.appeared() }
+                .onDisappear { exportTracker.disappeared() }
 
                 // Appearance
                 Section("Appearance") {
@@ -263,6 +285,8 @@ struct SettingsView: View {
                         AppAnalytics.shared.trackThemeChanged(from: oldTheme, to: newTheme)
                     }
                 }
+                .onAppear { appearanceTracker.appeared() }
+                .onDisappear { appearanceTracker.disappeared() }
 
                 // Data Storage
                 Section {
@@ -293,6 +317,8 @@ struct SettingsView: View {
                 } footer: {
                     Text("All your health data is stored securely on this device. The longer you use the app, the better your insights become.")
                 }
+                .onAppear { dataStorageTracker.appeared() }
+                .onDisappear { dataStorageTracker.disappeared() }
 
                 // About
                 Section("About") {
@@ -310,6 +336,8 @@ struct SettingsView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
+                .onAppear { aboutTracker.appeared() }
+                .onDisappear { aboutTracker.disappeared() }
             }
             .navigationTitle("Settings")
             .onAppear {

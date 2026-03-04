@@ -83,6 +83,7 @@ struct FeedbackSheet: View {
 
                 // Submit
                 Button {
+                    AppAnalytics.shared.trackBlockTap(title: "Send Feedback", type: .feedbackSubmit, screen: .feedback)
                     submitFeedback()
                 } label: {
                     if isSending {
