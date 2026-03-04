@@ -2,6 +2,8 @@ import Foundation
 
 /// Analyzes trends in metric time series data using statistical methods
 struct TrendAnalyzer {
+    /// Canonical period used by Home "Your Trends" and default metric detail.
+    static let homeTrendDays = 30
 
     struct TrendResult {
         let direction: TrendDirection
@@ -70,6 +72,26 @@ struct TrendAnalyzer {
     /// Analyze trend for a metric's time series (uses all data)
     static func analyze(series: MetricTimeSeries, higherIsBetter: Bool) -> TrendResult {
         return analyze(series: series, higherIsBetter: higherIsBetter, days: nil)
+    }
+
+    /// Canonical trend resolver used by UI surfaces that must stay consistent.
+    /// Uses cached analysis-engine trends for the home default period to avoid value drift.
+    static func canonicalTrend(
+        metric: HealthMetric,
+        series: MetricTimeSeries?,
+        analysisEngine: AnalysisEngine?,
+        days: Int
+    ) -> TrendResult? {
+        guard let series, series.values.count >= 3 else { return nil }
+        if days == homeTrendDays, let cachedTrend = analysisEngine?.trend(for: metric) {
+            return cachedTrend
+        }
+        return analyze(series: series, higherIsBetter: metric.higherIsBetter, days: days)
+    }
+
+    static func formattedPercentChange(_ change: Double) -> String {
+        let sign = change >= 0 ? "+" : ""
+        return "\(sign)\(String(format: "%.1f", change))%"
     }
 
     /// Analyze trend for a metric's time series within a specific time range

@@ -905,57 +905,43 @@ import '../styles/globals.css'
     if (gclid) utmParams['gclid'] = gclid
 
     // ── Signup counter ──
+    const FIRESTORE_BASE = 'https://firestore.googleapis.com/v1/projects/laso-health-v1/databases/(default)/documents'
     const SIGNUP_BASE = 550
     let currentSignupCount = SIGNUP_BASE
 
     async function fetchSignupCount() {
       try {
-        const res = await fetch(
-          'https://firestore.googleapis.com/v1/projects/laso-health-v1/databases/(default)/documents:runAggregationQuery',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              structuredAggregationQuery: {
-                structuredQuery: {
-                  from: [{ collectionId: 'early_access' }]
-                },
-                aggregations: [{ alias: 'count', count: {} }]
-              }
-            })
-          }
-        )
-        if (!res.ok) {
-          console.warn('[Laso] Firestore count query failed:', res.status, await res.text().catch(() => ''))
-          return 0
-        }
+        const res = await fetch(`${FIRESTORE_BASE}:runAggregationQuery`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            structuredAggregationQuery: {
+              structuredQuery: {
+                from: [{ collectionId: 'early_access' }]
+              },
+              aggregations: [{ alias: 'count', count: {} }]
+            }
+          })
+        })
+        if (!res.ok) return 0
         const data = await res.json()
         return parseInt(data[0]?.result?.aggregateFields?.count?.integerValue ?? '0', 10)
-      } catch (err) {
-        console.warn('[Laso] Firestore count query error:', err)
+      } catch {
         return 0
       }
     }
 
     function updateCounterDisplay(count: number) {
       currentSignupCount = count
-      localStorage.setItem('laso_signup_count', String(count))
       document.querySelectorAll('.signup-counter').forEach(el => {
         el.textContent = String(count)
       })
     }
 
-    // Use locally cached count as immediate value, then update from Firestore if available
-    const cachedCount = parseInt(localStorage.getItem('laso_signup_count') || '0', 10)
-    if (cachedCount > SIGNUP_BASE) {
-      updateCounterDisplay(cachedCount)
-    }
-
     fetchSignupCount().then(count => {
-      const firestoreTotal = SIGNUP_BASE + count
-      // Use the higher of Firestore count or locally cached count
-      const best = Math.max(firestoreTotal, cachedCount)
-      updateCounterDisplay(best)
+      if (count > 0) {
+        updateCounterDisplay(SIGNUP_BASE + count)
+      }
     })
 
     // ── Early access form handler ──
@@ -983,13 +969,9 @@ import '../styles/globals.css'
         content_category: formId,
       })
 
-      // Store in localStorage as fallback (with attribution)
-      const signups = JSON.parse(localStorage.getItem('laso_signups') || '[]')
-      signups.push({ email, timestamp: new Date().toISOString(), ...utmParams, form: formId })
-      localStorage.setItem('laso_signups', JSON.stringify(signups))
       localStorage.setItem('laso_signed_up', 'true')
 
-      // Send to Firestore (with full attribution data)
+      // Send to Firestore directly (create rule allows anonymous writes)
       try {
         const fields: Record<string, { stringValue: string } | { timestampValue: string }> = {
           email: { stringValue: email },
@@ -1009,17 +991,20 @@ import '../styles/globals.css'
         if (utmParams['fbclid']) fields['fbclid'] = { stringValue: utmParams['fbclid'] }
         if (utmParams['gclid']) fields['gclid'] = { stringValue: utmParams['gclid'] }
 
-        await fetch('https://firestore.googleapis.com/v1/projects/laso-health-v1/databases/(default)/documents/early_access', {
+        await fetch(`${FIRESTORE_BASE}/early_access`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ fields })
         })
       } catch {
-        // Silent fail — we have the localStorage backup
+        // Silent fail
       }
 
-      // Update counter immediately
-      updateCounterDisplay(currentSignupCount + 1)
+      // Refresh count from Firestore after signup
+      fetchSignupCount().then(count => {
+        if (count > 0) updateCounterDisplay(SIGNUP_BASE + count)
+        else updateCounterDisplay(currentSignupCount + 1)
+      })
 
       // Show success state
       const success = form.parentElement?.querySelector('.hero-success, .ea-success')

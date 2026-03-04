@@ -9,13 +9,13 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // Early access signups: anyone can write, only admin can read
+    // Early access signups: anyone can write and read (needed for public signup counter)
     match /early_access/{docId} {
       allow create: if request.resource.data.keys().hasAll(['email', 'timestamp'])
                     && request.resource.data.email is string
                     && request.resource.data.email.size() > 0
                     && request.resource.data.email.size() < 256;
-      allow read: if request.auth != null && request.auth.token.admin == true;
+      allow read: if true;
       allow update, delete: if false;
     }
 

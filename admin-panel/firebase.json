@@ -4,6 +4,18 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
+        "source": "/api/getSignupCount",
+        "function": {
+          "functionId": "getSignupCount"
+        }
+      },
+      {
+        "source": "/api/earlyAccessSignup",
+        "function": {
+          "functionId": "earlyAccessSignup"
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

@@ -2,7 +2,7 @@
   "name": "laso-admin-functions",
   "description": "Cloud Functions for Laso Remote Config admin panel",
   "engines": {
-    "node": "18"
+    "node": "20"
   },
   "main": "index.js",
   "dependencies": {
