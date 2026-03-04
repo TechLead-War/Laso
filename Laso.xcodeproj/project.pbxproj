@@ -888,6 +888,9 @@
 							com.apple.iCloud = {
 								enabled = YES;
 							};
+							com.apple.Siri = {
+								enabled = YES;
+							};
 						};
 					};
 				};

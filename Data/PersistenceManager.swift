@@ -34,6 +34,7 @@ final class PersistenceManager {
     init() {
         startCloudSync()
         migratePlaintextData()
+        migrateCriticalAlertsDefault()
     }
 
     // MARK: - Migration
@@ -43,6 +44,27 @@ final class PersistenceManager {
         for key in Self.encryptedKeys {
             encrypted.migrateIfNeeded(forKey: key)
         }
+    }
+
+    /// One-time migration: enable critical + heart rate alerts for existing users.
+    /// Only runs once; skips if user already has them enabled.
+    private func migrateCriticalAlertsDefault() {
+        let migrationKey = "healthpulse.migration.criticalAlertsDefault"
+        guard !defaults.bool(forKey: migrationKey) else { return }
+        defaults.set(true, forKey: migrationKey)
+
+        var prefs = loadPreferences()
+        // Only flip if the user never enabled them (still at old defaults)
+        if !prefs.criticalAlertsEnabled {
+            prefs.criticalAlertsEnabled = true
+        }
+        if !prefs.heartRateSpikeAlertsEnabled {
+            prefs.heartRateSpikeAlertsEnabled = true
+        }
+        if prefs.maxNotificationsPerDay < 2 {
+            prefs.maxNotificationsPerDay = 2
+        }
+        savePreferences(prefs)
     }
 
     // MARK: - iCloud Sync (non-sensitive only)

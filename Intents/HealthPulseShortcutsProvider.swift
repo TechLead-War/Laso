@@ -3,6 +3,8 @@ import AppIntents
 /// Provides suggested shortcuts that appear in the Shortcuts app and Spotlight.
 struct HealthPulseShortcutsProvider: AppShortcutsProvider {
 
+    static var shortcutTileColor: ShortcutTileColor { .navy }
+
     /// All app shortcuts exposed to Siri and the Shortcuts app.
     static var appShortcuts: [AppShortcut] {
         AppShortcut(

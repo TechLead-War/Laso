@@ -14,21 +14,27 @@ struct HealthScoreIntent: AppIntent {
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         guard let result = await IntentDataProvider.fetchCurrentHealthScore() else {
             return .result(
-                dialog: "I don't have enough health data yet. Open HealthPulse and let it sync with Apple Health first."
+                dialog: "I don't have enough health data yet. Open Laso and let it sync with Apple Health first."
             ) {
                 IntentSnippetViews.ErrorSnippet(message: "No health data available")
             }
         }
 
-        let dialog = IntentDialog(
-            "Your health score is \(result.score) out of 100 — that's a \(result.grade). \(result.summary)"
-        )
+        var spoken = "Your health score is \(result.score) out of 100 — that's a \(result.grade)."
+        if let readiness = result.readinessScore {
+            let label = result.readinessLabel ?? ""
+            spoken += " Recovery is \(readiness)% — \(label.lowercased())."
+        }
+
+        let dialog = IntentDialog(stringLiteral: spoken)
 
         return .result(dialog: dialog) {
             IntentSnippetViews.ScoreSnippet(
                 score: result.score,
                 grade: result.grade,
-                summary: result.summary
+                summary: result.summary,
+                readinessScore: result.readinessScore,
+                readinessLabel: result.readinessLabel
             )
         }
     }

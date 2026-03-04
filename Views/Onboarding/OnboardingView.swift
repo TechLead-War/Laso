@@ -185,14 +185,8 @@ struct OnboardingView: View {
         let focuses = selectedFocuses.isEmpty ? Set(HealthFocus.allCases) : selectedFocuses
         PersistenceManager().saveHealthFocuses(focuses)
 
-        // Request notification permission at the moment of highest trust —
-        // calibration just showed personalized results.
-        Task {
-            let granted = await NotificationManager.shared.requestAuthorizationIfNeeded()
-            if granted {
-                ReengagementScheduler.reschedule()
-            }
-        }
+        // Notification permission is requested from the main app after the
+        // dashboard loads — asking here interrupts the onboarding→app transition.
 
         let totalDuration = Int(Date().timeIntervalSince(onboardingStartDate))
         AppAnalytics.shared.trackOnboardingCompleted(

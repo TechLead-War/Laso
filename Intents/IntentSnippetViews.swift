@@ -9,6 +9,8 @@ enum IntentSnippetViews {
         let score: Int
         let grade: String
         let summary: String
+        var readinessScore: Int? = nil
+        var readinessLabel: String? = nil
 
         private var scoreColor: Color {
             switch score {
@@ -19,27 +21,35 @@ enum IntentSnippetViews {
             }
         }
 
+        private var readinessColor: Color {
+            switch readinessScore ?? 0 {
+            case 80...100: return .green
+            case 60..<80: return .blue
+            case 40..<60: return .yellow
+            default: return .orange
+            }
+        }
+
         var body: some View {
             VStack(spacing: 12) {
                 HStack(spacing: 16) {
-                    // Mini gauge
-                    ZStack {
-                        Circle()
-                            .stroke(Color.gray.opacity(0.2), lineWidth: 8)
-                        Circle()
-                            .trim(from: 0, to: Double(score) / 100.0)
-                            .stroke(scoreColor, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                            .rotationEffect(.degrees(-90))
-                        VStack(spacing: 2) {
-                            Text("\(score)")
-                                .font(.system(size: 28, weight: .bold, design: .rounded))
-                                .foregroundStyle(scoreColor)
-                            Text(grade)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
+                    // Health score gauge
+                    scoreGauge(
+                        value: score,
+                        label: grade,
+                        color: scoreColor,
+                        caption: "Health"
+                    )
+
+                    // Recovery gauge (if available)
+                    if let readiness = readinessScore {
+                        scoreGauge(
+                            value: readiness,
+                            label: readinessLabel ?? "",
+                            color: readinessColor,
+                            caption: "Recovery"
+                        )
                     }
-                    .frame(width: 80, height: 80)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Health Score")
@@ -52,6 +62,26 @@ enum IntentSnippetViews {
                 }
             }
             .padding()
+        }
+
+        private func scoreGauge(value: Int, label: String, color: Color, caption: String) -> some View {
+            VStack(spacing: 4) {
+                ZStack {
+                    Circle()
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 6)
+                    Circle()
+                        .trim(from: 0, to: Double(value) / 100.0)
+                        .stroke(color, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
+                    Text("\(value)")
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .foregroundStyle(color)
+                }
+                .frame(width: 60, height: 60)
+                Text(caption)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 

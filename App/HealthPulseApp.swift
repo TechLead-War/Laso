@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import AppIntents
 
 /// Main entry point for the Laso app
 @main
@@ -200,6 +201,9 @@ struct HealthPulseApp: App {
 
                     NotificationManager.shared.store = healthDataStore
 
+                    // Register Siri shortcuts so the system can discover them immediately.
+                    HealthPulseShortcutsProvider.updateAppShortcutParameters()
+
                     WatchMonitor.shared.configure(healthStore: healthKitManager.healthStore)
                     WatchMonitor.shared.startMonitoring()
 
@@ -210,6 +214,14 @@ struct HealthPulseApp: App {
                     // Dismiss splash once background init is done
                     withAnimation(.easeOut(duration: 0.3)) {
                         showSplash = false
+                    }
+
+                    // Request notification permission after a brief pause so the user
+                    // sees their dashboard before the system alert appears.
+                    try? await Task.sleep(for: .seconds(3))
+                    let granted = await NotificationManager.shared.requestAuthorizationIfNeeded()
+                    if granted {
+                        ReengagementScheduler.reschedule()
                     }
                 }
 

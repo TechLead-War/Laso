@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import AppIntents
 
 /// Main home screen composing visual hero, key metrics, period trends, categories, and compact alerts
 struct HomeView: View {
@@ -15,6 +16,7 @@ struct HomeView: View {
     @State private var weeklyReviewViewModel: WeeklyReviewViewModel?
     @State private var showScoreGuide = false
     @State private var showRecoveryInfo = false
+    @State private var showSiriTip = true
 
     // Section trackers
     @State private var recoveryTracker = SectionTracker(section: .homeRecovery, tab: .home)
@@ -157,6 +159,10 @@ struct HomeView: View {
                     onTapScoreInfo: { showScoreGuide = true }
                 )
                     .padding(.top, 12)
+
+                // Siri Shortcut discovery tip
+                SiriTipView(intent: HealthScoreIntent(), isVisible: $showSiriTip)
+                    .padding(.horizontal, 16)
 
                 if shouldShowEmptyState {
                     connectHealthView

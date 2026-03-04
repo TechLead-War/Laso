@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import AppIntents
 
 /// Settings view for notification preferences, heart rate alerts, per-metric toggles, and export
 struct SettingsView: View {
@@ -343,6 +344,16 @@ struct SettingsView: View {
                 }
                 .onAppear { dataStorageTracker.appeared() }
                 .onDisappear { dataStorageTracker.disappeared() }
+
+                // Siri & Shortcuts
+                Section {
+                    ShortcutsLink()
+                    SiriTipView(intent: HealthScoreIntent())
+                } header: {
+                    Text("Siri & Shortcuts")
+                } footer: {
+                    Text("Say \"Hey Siri, what's my health score in Laso\" to check your score hands-free.")
+                }
 
                 // About
                 Section("About") {

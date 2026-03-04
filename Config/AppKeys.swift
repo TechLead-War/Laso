@@ -58,6 +58,14 @@ enum AppKeys {
         static let progressiveCoachState = "healthpulse.progressiveCoachState"
     }
 
+    // MARK: - Intent Cache (lightweight, non-sensitive — used by Siri shortcuts)
+
+    enum Intent {
+        static let score   = "healthpulse.intent.score"
+        static let grade   = "healthpulse.intent.grade"
+        static let summary = "healthpulse.intent.summary"
+    }
+
     // MARK: - Feedback
 
     enum Feedback {

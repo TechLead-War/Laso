@@ -1,6 +1,5 @@
 import Foundation
 import HealthKit
-import SwiftData
 
 /// Shared data provider for all App Intents — fetches health data without requiring
 /// the full app's ViewModel/AnalysisEngine stack to be running.
@@ -9,38 +8,30 @@ enum IntentDataProvider {
 
     // MARK: - Health Score
 
-    /// Computes the current overall health score by loading stored data and running core analysis.
-    /// Returns (score, grade, summary) or nil if no data is available.
-    static func fetchCurrentHealthScore() async -> (score: Int, grade: String, summary: String)? {
-        let store = createHealthDataStore()
-        guard let store else { return nil }
+    /// Reads the cached health score (written by DashboardViewModel after each analysis)
+    /// and fetches live readiness from HealthKit. Returns nil only if the app has never run analysis.
+    static func fetchCurrentHealthScore() async -> (score: Int, grade: String, summary: String, readinessScore: Int?, readinessLabel: String?)? {
+        let defaults = UserDefaults.standard
+        let score = defaults.integer(forKey: AppKeys.Intent.score)
+        guard score > 0 else { return nil }
 
-        let timeSeries = store.loadAllTimeSeries()
-        guard !timeSeries.isEmpty else { return nil }
+        let grade = defaults.string(forKey: AppKeys.Intent.grade) ?? "?"
+        let areas = defaults.string(forKey: AppKeys.Intent.summary) ?? ""
+        let summary = "\(scoreLabel(for: score)). \(areas)".trimmingCharacters(in: .whitespaces)
 
-        let engine = AnalysisEngine()
-        engine.runCoreAnalysis(timeSeries: timeSeries)
+        // Fetch live readiness in parallel
+        let readiness = await fetchReadiness()
 
-        let score = engine.overallScore.score
-        let grade = engine.overallScore.grade
+        return (score, grade, summary, readiness?.readinessScore, readiness.map { readinessLabel(for: $0.readinessScore) })
+    }
 
-        // Build a brief summary from category scores
-        let topCategories = engine.categoryScores
-            .sorted { $0.score < $1.score }
-            .prefix(2)
-            .compactMap { s -> String? in
-                guard let cat = s.category else { return nil }
-                return "\(cat.shortName) \(s.score)"
-            }
-
-        let summary: String
-        if topCategories.isEmpty {
-            summary = scoreLabel(for: score)
-        } else {
-            summary = "\(scoreLabel(for: score)). Areas to watch: \(topCategories.joined(separator: ", "))."
+    private static func readinessLabel(for score: Int) -> String {
+        switch score {
+        case 80...100: "Great"
+        case 60..<80: "Good"
+        case 40..<60: "Fair"
+        default: "Low"
         }
-
-        return (score, grade, summary)
     }
 
     // MARK: - Sleep Summary
@@ -207,49 +198,14 @@ enum IntentDataProvider {
 
     // MARK: - Trends Summary
 
-    /// Returns a brief trends summary from stored analysis data.
+    /// Returns a brief trends summary from the cached intent data.
     static func fetchTrendsSummary() async -> String? {
-        let store = createHealthDataStore()
-        guard let store else { return nil }
-
-        let timeSeries = store.loadAllTimeSeries()
-        guard !timeSeries.isEmpty else { return nil }
-
-        let engine = AnalysisEngine()
-        engine.runCoreAnalysis(timeSeries: timeSeries)
-
-        let improvingCount = engine.trends.values.filter { $0.direction == .improving }.count
-        let decliningCount = engine.trends.values.filter { $0.direction == .declining }.count
-        let stableCount = engine.trends.values.filter { $0.direction == .stable }.count
-
-        return "\(improvingCount) improving, \(stableCount) stable, \(decliningCount) declining"
+        let summary = UserDefaults.standard.string(forKey: AppKeys.Intent.summary)
+        guard let summary, !summary.isEmpty else { return nil }
+        return summary
     }
 
     // MARK: - Helpers
-
-    private static func createHealthDataStore() -> HealthDataStore? {
-        let storeDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("HealthData", isDirectory: true)
-        let dbURL = storeDir.appendingPathComponent("health.store")
-
-        guard FileManager.default.fileExists(atPath: dbURL.path) else { return nil }
-
-        // Must match the main app's schema exactly
-        let allModels: [any PersistentModel.Type] = [
-            StoredDailySample.self, StoredSyncMetadata.self,
-            StoredAnalysisSnapshot.self, StoredMLModelState.self,
-            StoredRecommendation.self, StoredNotificationEvent.self,
-            StoredAdherenceRecord.self, StoredECGFeatures.self
-        ]
-
-        do {
-            let config = ModelConfiguration(url: dbURL)
-            let container = try ModelContainer(for: Schema(allModels), configurations: [config])
-            return HealthDataStore(modelContainer: container)
-        } catch {
-            return nil
-        }
-    }
 
     private static func fetchLatestQuantity(
         store: HKHealthStore,

@@ -746,6 +746,21 @@ final class DashboardViewModel {
         cachedTopCorrelations = computeTopCorrelations()
         cachedCoachGoals = computeCoachGoals()
 
+        // Cache lightweight score data for Siri intents (avoids SwiftData conflicts)
+        let score = overallScore.score
+        let topAreas = analysisEngine.categoryScores
+            .sorted { $0.score < $1.score }
+            .prefix(2)
+            .compactMap { s -> String? in
+                guard let cat = s.category else { return nil }
+                return "\(cat.shortName) \(s.score)"
+            }
+        let summaryText = topAreas.isEmpty ? "" : "Areas to watch: \(topAreas.joined(separator: ", "))."
+        let defaults = UserDefaults.standard
+        defaults.set(score, forKey: AppKeys.Intent.score)
+        defaults.set(overallScore.grade, forKey: AppKeys.Intent.grade)
+        defaults.set(summaryText, forKey: AppKeys.Intent.summary)
+
         // Save shown recommendations for outcome tracking
         let insightsToSave = cachedFocusedInsights.prefix(10)
         Task { @MainActor [store] in
