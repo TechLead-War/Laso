@@ -8,7 +8,7 @@ final class CategoryDetailViewModel {
     let healthKitManager: HealthKitManager
     let analysisEngine: AnalysisEngine
 
-    var selectedTimeRange: Int = 30 // days
+    var selectedTimeRange: Int = TrendAnalyzer.homeTrendDays
 
     var metrics: [HealthMetric] {
         category.metrics
@@ -43,8 +43,7 @@ final class CategoryDetailViewModel {
         var stable = 0
         var declining = 0
         for metric in metrics {
-            guard let series = healthKitManager.timeSeries[metric], series.values.count >= 3 else { continue }
-            let trend = TrendAnalyzer.analyze(series: series, higherIsBetter: metric.higherIsBetter, days: selectedTimeRange)
+            guard let trend = trendResult(for: metric) else { continue }
             switch trend.direction {
             case .improving: improving += 1
             case .stable: stable += 1
@@ -61,8 +60,8 @@ final class CategoryDetailViewModel {
             let bSeverity = analysisEngine.anomaly(for: b)?.severity ?? .info
             if aSeverity != bSeverity { return aSeverity > bSeverity }
 
-            let aTrend = analysisEngine.trend(for: a)?.direction ?? .stable
-            let bTrend = analysisEngine.trend(for: b)?.direction ?? .stable
+            let aTrend = trendResult(for: a)?.direction ?? .stable
+            let bTrend = trendResult(for: b)?.direction ?? .stable
             if aTrend == .declining && bTrend != .declining { return true }
             if bTrend == .declining && aTrend != .declining { return false }
             return false
@@ -71,11 +70,8 @@ final class CategoryDetailViewModel {
 
     /// Period change for a metric (period-aware)
     func weekOverWeekChange(for metric: HealthMetric) -> String {
-        guard let series = healthKitManager.timeSeries[metric], series.values.count >= 3 else { return "--" }
-        let trend = TrendAnalyzer.analyze(series: series, higherIsBetter: metric.higherIsBetter, days: selectedTimeRange)
-        let change = trend.weekOverWeekChange
-        let sign = change >= 0 ? "+" : ""
-        return "\(sign)\(String(format: "%.1f", change))%"
+        guard let trend = trendResult(for: metric) else { return "--" }
+        return TrendAnalyzer.formattedPercentChange(trend.weekOverWeekChange)
     }
 
     /// Historical highlights for metrics in this category
@@ -135,8 +131,7 @@ final class CategoryDetailViewModel {
 
     /// Get trend for a metric (period-aware)
     func trend(for metric: HealthMetric) -> TrendDirection? {
-        guard let series = healthKitManager.timeSeries[metric], series.values.count >= 3 else { return nil }
-        return TrendAnalyzer.analyze(series: series, higherIsBetter: metric.higherIsBetter, days: selectedTimeRange).direction
+        trendResult(for: metric)?.direction
     }
 
     /// Get latest value for a metric
@@ -153,5 +148,14 @@ final class CategoryDetailViewModel {
         let anomaly = analysisEngine.anomaly(for: metric)
         guard let anomaly, anomaly.severity != .info else { return nil }
         return anomaly.severity
+    }
+
+    private func trendResult(for metric: HealthMetric) -> TrendAnalyzer.TrendResult? {
+        TrendAnalyzer.canonicalTrend(
+            metric: metric,
+            series: healthKitManager.timeSeries[metric],
+            analysisEngine: analysisEngine,
+            days: selectedTimeRange
+        )
     }
 }

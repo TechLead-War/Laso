@@ -670,7 +670,7 @@ struct HomeView: View {
                 .font(.subheadline)
                 .foregroundStyle(.primary)
             Spacer()
-            Text("\(mover.changePercent > 0 ? "+" : "")\(String(format: "%.1f", mover.changePercent))%")
+            Text(TrendAnalyzer.formattedPercentChange(mover.changePercent))
                 .font(.subheadline.weight(.semibold).monospacedDigit())
                 .foregroundStyle(mover.improving ? .green : .red)
             Image(systemName: "chevron.right")

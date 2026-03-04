@@ -8,7 +8,7 @@ final class MetricDetailViewModel {
     let healthKitManager: HealthKitManager
     let analysisEngine: AnalysisEngine
 
-    var selectedTimeRange: Int = 30 // days
+    var selectedTimeRange: Int = TrendAnalyzer.homeTrendDays
 
     var timeSeries: MetricTimeSeries? {
         healthKitManager.timeSeries[metric]
@@ -16,8 +16,12 @@ final class MetricDetailViewModel {
 
     /// Period-aware trend computed from the selected time range
     var trend: TrendAnalyzer.TrendResult? {
-        guard let series = timeSeries, series.values.count >= 3 else { return nil }
-        return TrendAnalyzer.analyze(series: series, higherIsBetter: metric.higherIsBetter, days: selectedTimeRange)
+        TrendAnalyzer.canonicalTrend(
+            metric: metric,
+            series: timeSeries,
+            analysisEngine: analysisEngine,
+            days: selectedTimeRange
+        )
     }
 
     var anomaly: AnomalyDetector.AnomalyResult? {
@@ -64,9 +68,7 @@ final class MetricDetailViewModel {
 
     var weekOverWeekChange: String {
         guard let trend else { return "--" }
-        let change = trend.weekOverWeekChange
-        let sign = change >= 0 ? "+" : ""
-        return "\(sign)\(String(format: "%.1f", change))%"
+        return TrendAnalyzer.formattedPercentChange(trend.weekOverWeekChange)
     }
 
     var normalRange: RulesConfiguration.NormalRange {
