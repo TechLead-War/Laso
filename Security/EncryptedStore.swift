@@ -7,8 +7,8 @@ import Security
 final class EncryptedStore {
     static let shared = EncryptedStore()
 
-    private let keychainAccount = "com.lasohealth.encryption.key"
-    private let syncKeychainAccount = "com.lasohealth.encryption.synckey"
+    private let keychainAccount = AppSecrets.Keychain.encryptionKeyAccount
+    private let syncKeychainAccount = AppSecrets.Keychain.syncKeyAccount
     private let defaults = UserDefaults.standard
 
     private init() {}

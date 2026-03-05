@@ -20,12 +20,12 @@ final class CloudBackupManager {
     private(set) var backupStatus: BackupStatus = .idle
     private(set) var lastBackupDate: Date?
 
-    private let container = CKContainer(identifier: "iCloud.com.lasohealth.app")
-    private let recordID = CKRecord.ID(recordName: "HealthBackup-v1")
-    private static let recordType = "HealthBackup"
+    private let container = CKContainer(identifier: AppSecrets.CloudKit.containerID)
+    private let recordID = CKRecord.ID(recordName: AppSecrets.CloudKit.recordID)
+    private static let recordType = AppSecrets.CloudKit.recordType
 
     /// Minimum interval between automatic backups (6 hours)
-    private static let backupThrottleInterval: TimeInterval = 6 * 60 * 60
+    private static let backupThrottleInterval: TimeInterval = AppConstants.Timing.backupThrottle
 
     private init() {
         lastBackupDate = UserDefaults.standard.object(forKey: AppKeys.Backup.lastBackupDate) as? Date

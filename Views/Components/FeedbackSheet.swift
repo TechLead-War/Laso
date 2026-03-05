@@ -203,7 +203,7 @@ struct FeedbackSheet: View {
         ]
 
 #if canImport(FirebaseFirestore)
-        Firestore.firestore().collection("feedback").addDocument(data: feedbackData) { _ in
+        Firestore.firestore().collection(AppSecrets.Firestore.feedbackCollection).addDocument(data: feedbackData) { _ in
             finishSubmission(trimmed: trimmed)
         }
 #else
@@ -213,10 +213,18 @@ struct FeedbackSheet: View {
     }
 
     private func finishSubmission(trimmed: String) {
+        // Derive sentiment: feature/metric requests = positive (user wants more),
+        // design/other = neutral (could be complaint or suggestion)
+        let sentiment: String = switch selectedCategory {
+        case .feature, .metric: "positive"
+        case .design, .other: "neutral"
+        }
+
         // 3. Fire analytics event
         AppAnalytics.shared.trackFeedbackSubmitted(
             category: selectedCategory.rawValue,
-            textLength: trimmed.count
+            textLength: trimmed.count,
+            sentiment: sentiment
         )
         FeedbackPromptManager.shared.markFeedbackSubmitted()
 

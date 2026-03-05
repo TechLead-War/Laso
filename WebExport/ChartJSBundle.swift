@@ -4,7 +4,7 @@ import Foundation
 /// Using a minimal CDN reference since embedding 200KB+ inline is impractical
 struct ChartJSBundle {
     /// Chart.js CDN URL (fallback: inline minimal charting)
-    static let cdnURL = "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"
+    static let cdnURL = AppSecrets.CDN.chartJS
 
     /// Minimal inline chart implementation for truly offline reports
     static let inlineChartJS: String = """

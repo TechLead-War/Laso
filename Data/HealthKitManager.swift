@@ -240,6 +240,12 @@ final class HealthKitManager {
             durationSec: syncDuration,
             isFirstSync: isFirstSync
         )
+        AppAnalytics.shared.trackSyncPerformance(
+            durationMs: Int(Date().timeIntervalSince(syncStartTime) * 1000),
+            metricsCount: newData.count,
+            samplesLoaded: totalNewSamples,
+            isIncremental: !isFirstSync
+        )
 
         // Activation: first data load + time-to-first-value
         if !newData.isEmpty {

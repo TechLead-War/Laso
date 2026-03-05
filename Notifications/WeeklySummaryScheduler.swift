@@ -3,7 +3,7 @@ import UserNotifications
 
 /// Schedules weekly trend report notifications with detailed analytics
 struct WeeklySummaryScheduler {
-    private static let identifier = "healthpulse.weeklySummary"
+    private static let identifier = AppConstants.NotificationID.weeklySummary
 
     /// Schedule rich weekly summary with score, improvements, declines, and top trends
     static func schedule(

@@ -100,7 +100,7 @@ struct ScoreGuideSheet: View {
                             .padding(.horizontal)
 
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Your Readiness score (0–100) tells you how recovered your body is. It's calculated from two signals your Apple Watch measures while you sleep:")
+                            Text("Your Readiness score (0–100) tells you how recovered your body is. It's calculated from two signals your \(DeviceMessaging.deviceName) measures while you sleep:")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
 
@@ -122,7 +122,7 @@ struct ScoreGuideSheet: View {
                         .background(.background, in: RoundedRectangle(cornerRadius: 16))
                         .padding(.horizontal)
 
-                        Text("Wear your Apple Watch overnight so we can update your readiness each morning.")
+                        Text(DeviceMessaging.wearOvernightMessage)
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                             .padding(.horizontal)

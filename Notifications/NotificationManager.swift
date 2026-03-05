@@ -117,6 +117,7 @@ final class NotificationManager {
         // Record the send event for optimizer tracking
         let notifType = Self.notificationType(identifier)
         store?.recordNotificationSent(id: identifier, type: notifType)
+        AppAnalytics.shared.trackNotificationScheduled(type: notifType, identifier: identifier)
     }
 
     /// Cancel a specific notification

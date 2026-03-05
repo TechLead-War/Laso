@@ -92,7 +92,7 @@ struct HealthPulseApp: App {
         ]
 
         // Schema version tracking — delete DB when model set changes to avoid hangs
-        let schemaVersionKey = "healthdata.schema.version"
+        let schemaVersionKey = AppConstants.Schema.versionKey
         let currentSchemaVersion = allModels.count
         let storedSchemaVersion = UserDefaults.standard.integer(forKey: schemaVersionKey)
         if storedSchemaVersion != 0 && storedSchemaVersion != currentSchemaVersion {

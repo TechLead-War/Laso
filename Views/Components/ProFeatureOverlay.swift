@@ -45,6 +45,7 @@ struct ProFeatureOverlay: View {
                     metadata: ["feature_name": feature]
                 )
                 AppAnalytics.shared.trackPremiumFeatureAttempted(feature: feature, screen: .proOverlay)
+                AppAnalytics.shared.trackProFeatureFunnel(feature: feature, step: "upgrade_tapped")
                 showPaywall = true
             } label: {
                 Text("Upgrade to Pro")
@@ -62,6 +63,7 @@ struct ProFeatureOverlay: View {
             PaywallView(subscriptionManager: SubscriptionManager.shared)
         }
         .onAppear {
+            AppAnalytics.shared.trackProFeatureFunnel(feature: feature, step: "overlay_shown")
             AppAnalytics.shared.trackFeatureOpen(.proOverlay, metadata: [
                 "feature": feature
             ])

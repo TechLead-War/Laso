@@ -3,7 +3,7 @@ import UserNotifications
 
 /// Schedules morning daily summary notifications with rich health data
 struct DailySummaryScheduler {
-    private static let identifier = "healthpulse.dailySummary"
+    private static let identifier = AppConstants.NotificationID.dailySummary
 
     /// Schedule rich daily summary with score, anomalies, top insights, category breakdown,
     /// specific anomaly callout, yesterday score delta, and streak.

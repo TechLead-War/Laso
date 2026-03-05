@@ -10,7 +10,7 @@ enum AppTab: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .home: return "Coach"
+        case .home: return "Today"
         case .live: return "Live"
         case .explore: return "Explore"
         }

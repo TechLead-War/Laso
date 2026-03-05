@@ -17,6 +17,25 @@ final class SessionTracker {
     var currentTab: String = "home"
     private var lastScreen: String?
 
+    // MARK: - Session Source
+
+    enum SessionSource: String {
+        case organic
+        case notification
+        case widget
+    }
+
+    /// Set this BEFORE calling startSession() to tag the session source.
+    var pendingSessionSource: SessionSource = .organic
+
+    /// Source of the current session.
+    private(set) var currentSessionSource: SessionSource = .organic
+
+    // MARK: - Stickiness
+
+    /// Number of unique days the user was active in the current calendar week.
+    private(set) var weeklyActiveDays: Int = 0
+
     // MARK: - Streak State
 
     private(set) var streakDays: Int = 0
@@ -68,7 +87,11 @@ final class SessionTracker {
         lastScreen = nil
         coreActionsThisSession = []
         previousStreakBeforeBreak = nil
+        currentSessionSource = pendingSessionSource
+        pendingSessionSource = .organic // reset for next session
         updateStreak()
+        updateStickiness()
+        updateSessionSourceCounts()
         updateLifecycleOnStart()
     }
 
@@ -278,5 +301,66 @@ final class SessionTracker {
     /// Whether the user meets activation criteria: 3+ milestones within first 7 days.
     var isActivated: Bool {
         completedMilestones.count >= 3
+    }
+
+    // MARK: - Stickiness (Weekly Active Days)
+
+    /// Tracks unique active days in the current ISO calendar week.
+    /// Resets when a new week begins.
+    private func updateStickiness() {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let currentWeek = calendar.component(.weekOfYear, from: today)
+        let currentYear = calendar.component(.yearForWeekOfYear, from: today)
+
+        // Load stored data: [year, week, day1Timestamp, day2Timestamp, ...]
+        var storedDays = defaults.array(forKey: AppKeys.Session.weeklyActiveDaysData) as? [Double] ?? []
+
+        let storedYear = storedDays.count >= 2 ? Int(storedDays[0]) : 0
+        let storedWeek = storedDays.count >= 2 ? Int(storedDays[1]) : 0
+
+        if storedYear != currentYear || storedWeek != currentWeek {
+            // New week — reset
+            storedDays = [Double(currentYear), Double(currentWeek), today.timeIntervalSince1970]
+        } else {
+            // Same week — add today if not already present
+            let existingDays = storedDays.dropFirst(2).map { Date(timeIntervalSince1970: $0) }
+            let alreadyRecorded = existingDays.contains { calendar.isDate($0, inSameDayAs: today) }
+            if !alreadyRecorded {
+                storedDays.append(today.timeIntervalSince1970)
+            }
+        }
+
+        weeklyActiveDays = storedDays.count - 2 // subtract year + week entries
+        defaults.set(storedDays, forKey: AppKeys.Session.weeklyActiveDaysData)
+        defaults.set(weeklyActiveDays, forKey: AppKeys.Session.weeklyActiveDays)
+    }
+
+    // MARK: - Session Source Counts (for organic %)
+
+    var organicSessionCount: Int {
+        defaults.integer(forKey: AppKeys.Session.organicSessions)
+    }
+
+    var notificationSessionCount: Int {
+        defaults.integer(forKey: AppKeys.Session.notifSessions)
+    }
+
+    /// Percentage of sessions that were organic (0-100).
+    var organicSessionPercent: Int {
+        let total = organicSessionCount + notificationSessionCount
+        guard total > 0 else { return 100 }
+        return (organicSessionCount * 100) / total
+    }
+
+    private func updateSessionSourceCounts() {
+        switch currentSessionSource {
+        case .organic:
+            defaults.set(organicSessionCount + 1, forKey: AppKeys.Session.organicSessions)
+        case .notification:
+            defaults.set(notificationSessionCount + 1, forKey: AppKeys.Session.notifSessions)
+        case .widget:
+            defaults.set(organicSessionCount + 1, forKey: AppKeys.Session.organicSessions)
+        }
     }
 }

@@ -75,6 +75,8 @@
 		A1B2C3D4E5F6071812345006 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071812345005 /* PaywallView.swift */; };
 		A1B2C3D4E5F6071812345009 /* RemoteConfigManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071812345008 /* RemoteConfigManager.swift */; };
 		A1B2C3D4E5F6A1B2C3D40002 /* AppKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A1B2C3D40001 /* AppKeys.swift */; };
+		A1B2C3D4E5F6A1B2C3D50002 /* AppSecrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A1B2C3D50001 /* AppSecrets.swift */; };
+		A1B2C3D4E5F6A1B2C3D60002 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A1B2C3D60001 /* AppConstants.swift */; };
 		A1B2C3D4E5F6A1B2C3D40004 /* FeatureGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A1B2C3D40003 /* FeatureGate.swift */; };
 		A1B2C3D4E5F6A1B2C3D40006 /* ThermalManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A1B2C3D40005 /* ThermalManager.swift */; };
 		D5E6F7A8B9C0D5E6F7A80002 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E6F7A8B9C0D5E6F7A80001 /* DesignSystem.swift */; };
@@ -123,6 +125,7 @@
 		SI0110000000000000000002 /* HealthPulseShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = SI0110000000000000000001 /* HealthPulseShortcutsProvider.swift */; };
 		ED365DC524595A3E75820B9B /* AppTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38C8B1B2721A86DF6305D5BE /* AppTab.swift */; };
 		F0718385055A5C796633EE10 /* ConnectedDeviceInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5827B420D1FD0325FE028282 /* ConnectedDeviceInfo.swift */; };
+		9HSDZ09XESXR28I32P0XSXN0 /* DeviceMessaging.swift in Sources */ = {isa = PBXBuildFile; fileRef = WY4FXC9721NR8SN9UAZ12BQU /* DeviceMessaging.swift */; };
 		F3ADAAE50EB935144DD0AED0 /* DeviceDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 665F4B99E035582C345F6F71 /* DeviceDetailView.swift */; };
 		F479062A1BBC6C0917707709 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C78750704CE766C4F10D4F3F /* PrivacyInfo.xcprivacy */; };
 		F50F037FBB87C39594B74063 /* HealthCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13A5CE433514CE2A9BA47EEB /* HealthCategory.swift */; };
@@ -217,6 +220,7 @@
 		540A9FC7CEE865985F272489 /* CoachGreetingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachGreetingView.swift; sourceTree = "<group>"; };
 		D5D278C360A3913CB74B4B5A /* CoachGoalsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachGoalsSection.swift; sourceTree = "<group>"; };
 		5827B420D1FD0325FE028282 /* ConnectedDeviceInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectedDeviceInfo.swift; sourceTree = "<group>"; };
+		WY4FXC9721NR8SN9UAZ12BQU /* DeviceMessaging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceMessaging.swift; sourceTree = "<group>"; };
 		59AFB7BF706251B5AA4B10B3 /* MetricDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricDetailView.swift; sourceTree = "<group>"; };
 		59AFB7BF706251B5AA4B1001 /* MetricLogSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricLogSheet.swift; sourceTree = "<group>"; };
 		5BDFE796A4164EAF5B516AEB /* FeedbackPromptManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackPromptManager.swift; sourceTree = "<group>"; };
@@ -250,6 +254,8 @@
 		A1B2C3D4E5F6071812345005 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6071812345008 /* RemoteConfigManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteConfigManager.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6A1B2C3D40001 /* AppKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppKeys.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A1B2C3D50001 /* AppSecrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSecrets.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A1B2C3D60001 /* AppConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConstants.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6A1B2C3D40003 /* FeatureGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGate.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6A1B2C3D40005 /* ThermalManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalManager.swift; sourceTree = "<group>"; };
 		D5E6F7A8B9C0D5E6F7A80001 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
@@ -502,6 +508,7 @@
 			isa = PBXGroup;
 			children = (
 				5827B420D1FD0325FE028282 /* ConnectedDeviceInfo.swift */,
+				WY4FXC9721NR8SN9UAZ12BQU /* DeviceMessaging.swift */,
 				DSC00100000000000000001 /* Discovery.swift */,
 				13A5CE433514CE2A9BA47EEB /* HealthCategory.swift */,
 				4A7E91B3C2D85F06E3A14D9B /* HealthCorrelation.swift */,
@@ -786,7 +793,9 @@
 		F4F842DF9AF1A93301E1012D /* Config */ = {
 			isa = PBXGroup;
 			children = (
+				A1B2C3D4E5F6A1B2C3D60001 /* AppConstants.swift */,
 				A1B2C3D4E5F6A1B2C3D40001 /* AppKeys.swift */,
+				A1B2C3D4E5F6A1B2C3D50001 /* AppSecrets.swift */,
 				A1B2C3D4E5F6A1B2C3D40003 /* FeatureGate.swift */,
 				A1B2C3D4E5F6071812345008 /* RemoteConfigManager.swift */,
 				A1B2C3D4E5F6A1B2C3D40005 /* ThermalManager.swift */,
@@ -953,6 +962,7 @@
 				51540B41FFE167D3C050C23F /* CoachGoalsSection.swift in Sources */,
 				1DA2246CF2944D4B84D8A733 /* Collection+Statistics.swift in Sources */,
 				F0718385055A5C796633EE10 /* ConnectedDeviceInfo.swift in Sources */,
+				9HSDZ09XESXR28I32P0XSXN0 /* DeviceMessaging.swift in Sources */,
 				35739B15E146FD7C5DD05500 /* ConnectedDevicesView.swift in Sources */,
 				5A6CE414C3B27FB2666E9C4A /* ConnectedDevicesViewModel.swift in Sources */,
 				510B39210FAAFFF763751001 /* ContentView.swift in Sources */,
@@ -1065,6 +1075,8 @@
 				A1D93F47B8E62C10D4F5A7B2 /* OnboardingView.swift in Sources */,
 				A1B2C3D4E5F6071812345006 /* PaywallView.swift in Sources */,
 				A1B2C3D4E5F6A1B2C3D40002 /* AppKeys.swift in Sources */,
+				A1B2C3D4E5F6A1B2C3D50002 /* AppSecrets.swift in Sources */,
+				A1B2C3D4E5F6A1B2C3D60002 /* AppConstants.swift in Sources */,
 				A1B2C3D4E5F6A1B2C3D40004 /* FeatureGate.swift in Sources */,
 				A1B2C3D4E5F6071812345009 /* RemoteConfigManager.swift in Sources */,
 				A1B2C3D4E5F6A1B2C3D40006 /* ThermalManager.swift in Sources */,

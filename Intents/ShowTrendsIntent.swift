@@ -27,5 +27,5 @@ struct ShowTrendsIntent: AppIntent {
 // MARK: - Navigation Notification
 
 extension Notification.Name {
-    static let healthPulseNavigateToExplore = Notification.Name("healthPulseNavigateToExplore")
+    static let healthPulseNavigateToExplore = AppConstants.NotificationName.navigateToExplore
 }

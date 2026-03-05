@@ -334,28 +334,28 @@ struct PaywallView: View {
             }
 
             HStack(spacing: 16) {
-                Link("Terms of Use", destination: URL(string: "https://lasohealth.com/terms")!)
+                Link("Terms of Use", destination: URL(string: AppSecrets.URLs.termsOfUse)!)
                     .simultaneousGesture(TapGesture().onEnded {
                         AppAnalytics.shared.trackBlockTap(
                             title: "Terms of Use",
                             type: .paywallTermsLink,
                             screen: .paywall,
                             metadata: [
-                                "destination": "https://lasohealth.com/terms"
+                                "destination": AppSecrets.URLs.termsOfUse
                             ]
                         )
                         footerTracker.tapped(target: "terms_of_use")
                     })
                 Text("\u{00B7}")
                     .foregroundStyle(.quaternary)
-                Link("Privacy Policy", destination: URL(string: "https://lasohealth.com/privacy")!)
+                Link("Privacy Policy", destination: URL(string: AppSecrets.URLs.privacyPolicy)!)
                     .simultaneousGesture(TapGesture().onEnded {
                         AppAnalytics.shared.trackBlockTap(
                             title: "Privacy Policy",
                             type: .paywallPrivacyLink,
                             screen: .paywall,
                             metadata: [
-                                "destination": "https://lasohealth.com/privacy"
+                                "destination": AppSecrets.URLs.privacyPolicy
                             ]
                         )
                         footerTracker.tapped(target: "privacy_policy")

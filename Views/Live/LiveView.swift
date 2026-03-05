@@ -97,14 +97,14 @@ struct LiveView: View {
         VStack(spacing: 16) {
             // Wear your watch CTA
             VStack(spacing: 12) {
-                Image(systemName: "exclamationmark.applewatch")
+                Image(systemName: DeviceMessaging.deviceIcon)
                     .font(.system(size: 36))
                     .foregroundStyle(.orange)
 
-                Text("Wear Your Apple Watch")
+                Text(DeviceMessaging.wearPromptTitle)
                     .font(.title3.weight(.semibold))
 
-                Text("Your vitals are out of date. Put on your Apple Watch to resume live tracking.")
+                Text(DeviceMessaging.staleVitalsMessage)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -198,7 +198,7 @@ struct LiveView: View {
         VStack(spacing: 24) {
             Spacer().frame(height: 40)
 
-            Image(systemName: "applewatch.and.arrow.forward")
+            Image(systemName: DeviceMessaging.deviceIcon)
                 .font(.system(size: 56))
                 .foregroundStyle(.secondary)
                 .symbolEffect(.pulse, isActive: viewModel.isStreaming)
@@ -207,7 +207,7 @@ struct LiveView: View {
                 Text("Waiting for Live Data")
                     .font(.title3.weight(.semibold))
 
-                Text("Make sure your Apple Watch is paired and worn. Heart rate and other vitals will appear here automatically.")
+                Text(DeviceMessaging.ensurePairedMessage)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -216,7 +216,7 @@ struct LiveView: View {
 
             // Tips
             VStack(alignment: .leading, spacing: 12) {
-                tipRow(icon: "applewatch", text: "Wear your Apple Watch snugly")
+                tipRow(icon: DeviceMessaging.deviceIcon, text: "Wear your \(DeviceMessaging.deviceName) snugly")
                 tipRow(icon: "bluetooth", text: "Keep Bluetooth enabled on iPhone")
                 tipRow(icon: "heart.fill", text: "Open a workout or check your heart rate on the Watch")
                 tipRow(icon: "arrow.clockwise", text: "Recent data may take a moment to sync")
@@ -228,7 +228,7 @@ struct LiveView: View {
             Spacer()
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Waiting for live data from Apple Watch. Make sure your watch is paired and worn.")
+        .accessibilityLabel("Waiting for live data from \(DeviceMessaging.deviceName). Make sure your device is paired and worn.")
     }
 
     private func tipRow(icon: String, text: String) -> some View {

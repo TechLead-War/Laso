@@ -179,7 +179,7 @@ final class WatchMonitor {
 
     // MARK: - Scheduled "Not Worn" Notification (Background-capable)
 
-    private let scheduledNotWornIdentifier = "healthpulse.watch.notWorn.scheduled"
+    private let scheduledNotWornIdentifier = AppConstants.NotificationID.watchNotWornScheduled
 
     /// Cancels any pending scheduled "not worn" notification, then schedules a new one
     /// to fire after `thresholdHours`. Each time fresh Apple Watch data arrives, this
@@ -195,8 +195,8 @@ final class WatchMonitor {
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: thresholdSeconds, repeats: false)
         NotificationManager.shared.scheduleNotification(
-            title: "Wear Your Watch",
-            body: "Your Apple Watch hasn't recorded data for a while. Put it on to keep tracking, or charge it if the battery is low.",
+            title: DeviceMessaging.wearPromptTitle,
+            body: "\(DeviceMessaging.deviceName) hasn't recorded data for a while. \(DeviceMessaging.wearToTrackMessage)",
             identifier: scheduledNotWornIdentifier,
             trigger: trigger,
             maxPerDay: 1
@@ -230,15 +230,15 @@ final class WatchMonitor {
 
         let body: String
         if hours >= 1 {
-            body = "Your Apple Watch hasn't recorded data for \(hours)h \(minutes)m. Put it on to keep tracking, or charge it if the battery is low."
+            body = "\(DeviceMessaging.deviceName) hasn't recorded data for \(hours)h \(minutes)m. \(DeviceMessaging.wearToTrackMessage)"
         } else {
-            body = "Your Apple Watch hasn't recorded data recently. Put it on to keep tracking, or charge it if the battery is low."
+            body = "\(DeviceMessaging.deviceName) hasn't recorded data recently. \(DeviceMessaging.wearToTrackMessage)"
         }
 
         NotificationManager.shared.scheduleNotification(
-            title: "Wear Your Watch",
+            title: DeviceMessaging.wearPromptTitle,
             body: body,
-            identifier: "healthpulse.watch.notWorn",
+            identifier: AppConstants.NotificationID.watchNotWorn,
             maxPerDay: 1
         )
         AppAnalytics.shared.trackNotificationSent(type: "watch_not_worn")
@@ -262,8 +262,8 @@ final class WatchMonitor {
 
             NotificationManager.shared.scheduleNotification(
                 title: "Watch Battery Low",
-                body: "Your Apple Watch battery is at \(Int(level * 100))%. Charge it soon to avoid missing health data.",
-                identifier: "healthpulse.watch.lowBattery",
+                body: "Your \(DeviceMessaging.deviceName) battery is at \(Int(level * 100))%. Charge it soon to avoid missing health data.",
+                identifier: AppConstants.NotificationID.watchLowBattery,
                 maxPerDay: 1
             )
             AppAnalytics.shared.trackNotificationSent(type: "battery_low")

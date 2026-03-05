@@ -82,6 +82,7 @@ final class DeviceSourceManager {
         }
         let activeCount = connectedDevices.filter(\.isActive).count
         let primary = connectedDevices.first?.device.rawValue ?? "none"
+        UserDefaults.standard.set(primary, forKey: AppKeys.Data.primaryDevice)
         AppAnalytics.shared.updateDeviceProperties(activeCount: activeCount, primaryDevice: primary)
     }
 
@@ -160,6 +161,11 @@ final class DeviceSourceManager {
     /// Inactive devices (detected but stale data)
     var inactiveDevices: [ConnectedDeviceInfo] {
         connectedDevices.filter { !$0.isActive }
+    }
+
+    /// The primary wearable device (most active, most metrics)
+    var primaryDevice: SupportedDevice {
+        connectedDevices.first?.device ?? .appleWatch
     }
 
     /// Total unique metrics being tracked across all devices

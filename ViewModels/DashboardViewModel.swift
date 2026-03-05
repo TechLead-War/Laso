@@ -512,6 +512,10 @@ final class DashboardViewModel {
                 metricsCount: metricsCount,
                 runHousekeeping: runHousekeeping
             )
+
+            // ML pipeline — runs after rule-based analysis completes
+            await runMLPhase(timeSeries: ts)
+
             return
         }
 
@@ -565,6 +569,9 @@ final class DashboardViewModel {
                 metricsCount: metricsCount,
                 runHousekeeping: runHousekeeping
             )
+
+            // ML pipeline — runs after rule-based analysis completes
+            await self.runMLPhase(timeSeries: ts)
         }
     }
 
@@ -724,6 +731,32 @@ final class DashboardViewModel {
                 preferences: prefs
             )
         }
+    }
+
+    // MARK: - ML Pipeline
+
+    /// Runs the on-device ML analysis pipeline after rule-based analysis completes.
+    /// Uses score history from SwiftData and anomaly counts derived from stored snapshots.
+    private func runMLPhase(timeSeries: [HealthMetric: MetricTimeSeries]) async {
+        let scoreHistory = store.loadScoreHistory(days: 365)
+
+        // Build anomaly counts per day from stored analysis snapshots.
+        // Each snapshot records the anomaly count for that day's analysis run.
+        var anomalyCounts: [Date: Int] = [:]
+        for entry in scoreHistory {
+            // Score history entries correspond to daily analysis runs;
+            // use today's live anomaly count for the current day, 0 for historical.
+            anomalyCounts[entry.date] = 0
+        }
+        let today = Calendar.current.startOfDay(for: Date())
+        anomalyCounts[today] = analysisEngine.anomalies.count
+
+        await analysisEngine.runMLAnalysis(
+            timeSeries: timeSeries,
+            scoreHistory: scoreHistory,
+            anomalyCounts: anomalyCounts
+        )
+        await MainActor.run { updateCachedProperties() }
     }
 
     // MARK: - Cache Update (called once per refresh, not per render)

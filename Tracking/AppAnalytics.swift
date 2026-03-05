@@ -174,9 +174,11 @@ enum BlockType: String {
 //  Event                         Key Params                          Question Answered
 //  ─────────────────────────────────────────────────────────────────────────────────────
 //  SESSION & RETENTION:
-//  session_start                 session_id, hour, weekday, streak   When do users open?
+//  session_start                 session_id, hour, weekday, streak,  When do users open?
+//                                session_source, weekly_active_days  + How? (organic/notif)
 //  session_end                   duration_sec, screens, depth        How deep are sessions?
 //  return_session                session_number, days_since_last     Are users coming back?
+//  daily_active                  session_source, weekly_active_days  DAU/WAU/MAU counting
 //  retention_milestone           day (1,2,3,7,14,30)                 When do we lose users?
 //  inactive_period_detected      days_inactive (3, 7)                Who is churning?
 //  streak_broken                 previous_streak, longest_streak     When do habits break?
@@ -220,7 +222,7 @@ enum BlockType: String {
 //
 //  EMOTIONAL / NPS:
 //  nps_submitted                 score, category                     Would they recommend?
-//  feedback_submitted            category, text_length               What do they want?
+//  feedback_submitted            category, text_length, sentiment    What do they want?
 //
 //  FRICTION:
 //  error_occurred                error_type, screen                  What breaks?
@@ -229,6 +231,14 @@ enum BlockType: String {
 //  DEVICE & DATA:
 //  device_detected               device_type, is_active              What devices do they own?
 //  data_sync_completed           metrics, new_samples                Is sync healthy?
+//  sync_performance              duration_ms, metrics, samples       How fast is sync?
+//
+//  DASHBOARD METRICS:
+//  daily_active                  source, weekly_active_days          DAU/WAU/MAU
+//  notification_scheduled        type, notification_id               Notif delivery tracking
+//  ml_analysis_performance       duration_ms, components, data_pts   ML speed
+//  pro_feature_funnel            feature, step                       Pro conversion by feature
+//  insight_engagement            category, metric, action            Insight usefulness
 //
 // USER PROPERTIES (for cohort analysis):
 //
@@ -252,6 +262,8 @@ enum BlockType: String {
 //  health_score_bracket      low | medium | high               Outcome segment
 //  retention_day             0, 1, 2, 3, 7, 14, 30            Furthest milestone
 //  onboarding_completed      yes | no                          Setup completion
+//  weekly_active_days        1-7                                Stickiness (days/week)
+//  organic_session_pct       0-100                              % organic (vs notif)
 //
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -439,8 +451,10 @@ final class AppAnalytics {
             "hour_of_day": hour,
             "day_of_week": dayNames[weekday],
             "streak_days": session.streakDays,
+            "session_source": session.currentSessionSource.rawValue,
             "app_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown",
-            "days_since_install": session.daysSinceInstall
+            "days_since_install": session.daysSinceInstall,
+            "weekly_active_days": session.weeklyActiveDays
         ])
 
         setUserProperty("streak_days", value: "\(session.streakDays)")
@@ -448,6 +462,8 @@ final class AppAnalytics {
         setUserProperty("days_since_install", value: "\(session.daysSinceInstall)")
         setUserProperty("total_sessions", value: "\(session.totalSessions)")
         setUserProperty("lifetime_core_actions", value: "\(session.lifetimeCoreActions)")
+        setUserProperty("weekly_active_days", value: "\(session.weeklyActiveDays)")
+        setUserProperty("organic_session_pct", value: "\(session.organicSessionPercent)")
     }
 
     /// Call when app enters background.
@@ -1063,10 +1079,11 @@ final class AppAnalytics {
         ])
     }
 
-    func trackFeedbackSubmitted(category: String, textLength: Int) {
+    func trackFeedbackSubmitted(category: String, textLength: Int, sentiment: String = "neutral") {
         logEvent("feedback_submitted", parameters: [
             "category": category,
-            "text_length": textLength
+            "text_length": textLength,
+            "sentiment": sentiment
         ])
     }
 
@@ -1276,6 +1293,65 @@ final class AppAnalytics {
             "chronotype": chronotype,
             "metrics_analyzed": metricsAnalyzed,
             "confidence": String(format: "%.2f", confidence)
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 15. Dashboard Metrics (Retention/Stickiness/Engagement)
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Fires once per calendar day to power DAU/WAU/MAU in Firebase.
+    /// Call from session start — deduplicated by Firebase's unique user counting.
+    func trackDailyActiveUser() {
+        logEvent("daily_active", parameters: [
+            "session_source": session.currentSessionSource.rawValue,
+            "weekly_active_days": session.weeklyActiveDays,
+            "app_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
+        ])
+    }
+
+    /// Track notification delivery (when we schedule a local notification).
+    func trackNotificationScheduled(type: String, identifier: String) {
+        logEvent("notification_scheduled", parameters: [
+            "type": type,
+            "notification_id": identifier
+        ])
+    }
+
+    /// Track HealthKit sync performance for the sync duration chart.
+    func trackSyncPerformance(durationMs: Int, metricsCount: Int, samplesLoaded: Int, isIncremental: Bool) {
+        logEvent("sync_performance", parameters: [
+            "duration_ms": durationMs,
+            "metrics_count": metricsCount,
+            "samples_loaded": samplesLoaded,
+            "is_incremental": isIncremental ? 1 : 0
+        ])
+    }
+
+    /// Track ML analysis performance for the analysis duration chart.
+    func trackMLAnalysisPerformance(durationMs: Int, componentsRun: Int, dataPointsUsed: Int) {
+        logEvent("ml_analysis_performance", parameters: [
+            "duration_ms": durationMs,
+            "components_run": componentsRun,
+            "data_points_used": dataPointsUsed
+        ])
+    }
+
+    /// Track which pro features drive conversions.
+    func trackProFeatureFunnel(feature: String, step: String) {
+        logEvent("pro_feature_funnel", parameters: [
+            "feature": feature,
+            "step": step,
+            "days_since_install": session.daysSinceInstall
+        ])
+    }
+
+    /// Track insight usefulness (did user act on it?).
+    func trackInsightEngagement(category: String, metric: String, action: String) {
+        logEvent("insight_engagement", parameters: [
+            "insight_category": category,
+            "metric": metric,
+            "action": action
         ])
     }
 

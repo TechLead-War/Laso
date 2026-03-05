@@ -42,7 +42,7 @@ struct RecoveryInfoSheet: View {
                 .background(.background, in: RoundedRectangle(cornerRadius: 16))
                 .padding(.horizontal)
 
-                Text("Wear your Apple Watch overnight so we can update your readiness each morning.")
+                Text(DeviceMessaging.wearOvernightMessage)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)

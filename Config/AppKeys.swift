@@ -33,6 +33,12 @@ enum AppKeys {
 
         // Churn / Inactivity
         static let lastInactivityAlert   = "laso.session.last_inactivity_alert"
+
+        // Stickiness
+        static let weeklyActiveDays      = "laso.session.weekly_active_days"
+        static let weeklyActiveDaysData  = "laso.session.weekly_active_days_data"
+        static let organicSessions       = "laso.session.organic_sessions"
+        static let notifSessions         = "laso.session.notif_sessions"
     }
 
     // MARK: - Install
@@ -56,6 +62,7 @@ enum AppKeys {
         static let scoreDate         = "healthpulse.scoreDate"
         static let healthFocuses     = "healthpulse.healthFocuses"
         static let progressiveCoachState = "healthpulse.progressiveCoachState"
+        static let primaryDevice         = "healthpulse.primaryDevice"
     }
 
     // MARK: - Intent Cache (lightweight, non-sensitive — used by Siri shortcuts)

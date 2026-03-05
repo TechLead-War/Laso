@@ -7,8 +7,8 @@ struct SubscriptionConfig {
 
     // MARK: - Fallback Product IDs (used when Remote Config hasn't loaded yet)
 
-    static let fallbackYearlyProductID  = "com.lasohealth.yearly"
-    static let fallbackMonthlyProductID = "com.lasohealth.monthly"
+    static let fallbackYearlyProductID  = AppSecrets.StoreKit.yearlyProductID
+    static let fallbackMonthlyProductID = AppSecrets.StoreKit.monthlyProductID
     static let fallbackTrialDays = 7
 
     // MARK: - Live Product IDs (from Remote Config, falls back to hardcoded)

@@ -254,6 +254,7 @@ struct ContentView: View {
     private func startSessionAnalytics() {
         let analytics = AppAnalytics.shared
         analytics.trackSessionStart()
+        analytics.trackDailyActiveUser()
         analytics.trackReturnSession()
         analytics.trackRetentionMilestones()
         analytics.trackInactivityIfNeeded()
@@ -279,7 +280,7 @@ struct ContentView: View {
 
                 Spacer(minLength: 0)
 
-                if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+                if let url = URL(string: AppSecrets.URLs.manageSubscriptions) {
                     Link("Update", destination: url)
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(.orange)

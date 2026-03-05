@@ -6,10 +6,10 @@ import UserNotifications
 /// 3 days into the future — so it only delivers if the user stops opening the app.
 enum ReengagementScheduler {
 
-    private static let identifier = "healthpulse.reengagement.3day"
+    private static let identifier = AppConstants.NotificationID.reengagement
 
     /// Interval before the re-engagement notification fires (3 days).
-    private static let delaySeconds: TimeInterval = 3 * 24 * 60 * 60
+    private static let delaySeconds: TimeInterval = AppConstants.Timing.reengagementDelay
 
     /// Cancel any pending re-engagement notification and schedule a new one
     /// 3 days from now. Call this on every session start.

@@ -148,8 +148,8 @@ struct HomeView: View {
     }
 
     private var homeContent: some View {
-        ScrollView {
-            VStack(spacing: 20) {
+        GeometryReader { geo in
+            VStack(spacing: 0) {
                 // 1. Greeting header
                 CoachGreetingView(
                     showSettings: $showSettings,
@@ -158,7 +158,7 @@ struct HomeView: View {
                     currentScore: hasData ? viewModel.overallScore.score : nil,
                     onTapScoreInfo: { showScoreGuide = true }
                 )
-                    .padding(.top, 12)
+                .padding(.top, 12)
 
                 // Siri Shortcut discovery tip
                 if !siriTipDismissed {
@@ -167,11 +167,14 @@ struct HomeView: View {
                         set: { if !$0 { siriTipDismissed = true } }
                     ))
                     .padding(.horizontal, 16)
+                    .padding(.top, 12)
                 }
 
                 if shouldShowEmptyState {
                     connectHealthView
                 } else if hasData {
+                    Spacer(minLength: 8)
+
                     // 2. Recovery
                     todaySection
                         .onAppear { recoveryTracker.appeared() }
@@ -181,6 +184,8 @@ struct HomeView: View {
                     illnessWarningCard
                         .onAppear { illnessTracker.appeared() }
                         .onDisappear { illnessTracker.disappeared() }
+
+                    Spacer(minLength: 8)
 
                     // 4. Today's Briefing — actionable insights only
                     BodyInsightsSection(
@@ -205,10 +210,14 @@ struct HomeView: View {
                     .onAppear { bodyInsightsTracker.appeared() }
                     .onDisappear { bodyInsightsTracker.disappeared() }
 
+                    Spacer(minLength: 8)
+
                     // 5. Health Risks — moderate+ only
                     todayRisksSection
                         .onAppear { risksTracker.appeared() }
                         .onDisappear { risksTracker.disappeared() }
+
+                    Spacer(minLength: 8)
 
                     // 6. Weekly Review
                     WeeklyReviewEntryCard(
@@ -228,10 +237,13 @@ struct HomeView: View {
                     .onAppear { weeklyReviewTracker.appeared() }
                     .onDisappear { weeklyReviewTracker.disappeared() }
 
-                    // 7. Your Coach — weekly goals with progress
+                    Spacer(minLength: 8)
+
+                    // 7. Today — weekly goals with progress
                     CoachGoalsSection(
                         goals: viewModel.coachGoals,
                         daysOfData: viewModel.dataDepth.daysOfData,
+                        timeSeries: viewModel.healthKitManager.timeSeries,
                         onTapGoal: { metric in
                             AppAnalytics.shared.trackBlockTap(
                                 title: metric.displayName,
@@ -249,6 +261,8 @@ struct HomeView: View {
                     .onAppear { coachTracker.appeared() }
                     .onDisappear { coachTracker.disappeared() }
 
+                    Spacer(minLength: 4)
+
                     // Last updated footer
                     if let lastRefresh = viewModel.lastRefresh {
                         Text("Updated \(lastRefresh, style: .relative) ago")
@@ -259,6 +273,7 @@ struct HomeView: View {
                     }
                 }
             }
+            .frame(minHeight: geo.size.height)
         }
     }
 
@@ -496,7 +511,7 @@ struct HomeView: View {
                     .font(.headline)
                     .padding(.horizontal)
 
-                ForEach(risks.prefix(3)) { risk in
+                ForEach(risks.prefix(2)) { risk in
                     Button {
                         AppAnalytics.shared.trackBlockTap(
                             title: risk.riskType.displayName,
@@ -577,7 +592,7 @@ struct HomeView: View {
 
     private var staleRecoveryCard: some View {
         HStack(spacing: 14) {
-            Image(systemName: "exclamationmark.applewatch")
+            Image(systemName: DeviceMessaging.deviceIcon)
                 .font(.title2)
                 .foregroundStyle(.orange)
                 .frame(width: DS.iconSize, height: DS.iconSize)
@@ -587,7 +602,7 @@ struct HomeView: View {
                 Text("Recovery Unavailable")
                     .font(.subheadline.weight(.semibold))
 
-                Text("Wear your Apple Watch overnight to update your readiness score.")
+                Text(DeviceMessaging.wearOvernightMessage)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
