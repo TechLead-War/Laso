@@ -232,8 +232,10 @@ struct ContentView: View {
                 showSettings: $showSettings
             )
         case .live:
-            if FeatureGate.canAccess(.liveTab) {
-                LiveView(viewModel: liveViewModel)
+            if RemoteConfigManager.shared.killLiveTab {
+                MaintenanceView(message: "Live monitoring is temporarily unavailable. We're working on a fix.")
+            } else if FeatureGate.canAccess(.liveTab) {
+                LiveView(viewModel: liveViewModel, mlOrchestrator: dashboardViewModel.analysisEngine.mlOrchestrator)
             } else {
                 ProFeatureOverlay(
                     feature: "Live Vitals",

@@ -67,6 +67,11 @@ final class NotificationManager {
     ) {
         let isDailySummary = identifier == "healthpulse.dailySummary"
 
+        // Kill switch — remotely disable all non-critical notifications
+        if RemoteConfigManager.shared.killNotifications && severity != .critical {
+            return
+        }
+
         // Everything except the daily summary is capped and optimized
         if !isDailySummary {
             // Priority filtering — skip low-priority unless critical

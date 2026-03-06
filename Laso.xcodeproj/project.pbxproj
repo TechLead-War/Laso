@@ -132,6 +132,7 @@
 		F6025BFDFF8FE702319AE9A7 /* HealthPulseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBA4A8AA9CB8C8329773FDB /* HealthPulseApp.swift */; };
 		FA12345678ABCDEF12345602 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = FA12345678ABCDEF12345601 /* FirebaseAnalytics */; };
 		FA12345678ABCDEF12345612 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = FA12345678ABCDEF12345611 /* FirebaseRemoteConfig */; };
+		FA12345678ABCDEF12345622 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = FA12345678ABCDEF12345621 /* FirebaseCrashlytics */; };
 		FD40DB932CA77AD50E94E81D /* HealthKitMetricRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E5897F9E01DF1DD783F450C /* HealthKitMetricRegistry.swift */; };
 		FD5174EF7814834BE4FDB853 /* NotificationPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A5C28150EA681F904CAAB60 /* NotificationPreferences.swift */; };
 		SEC00100000000000000002 /* EncryptedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = SEC00100000000000000001 /* EncryptedStore.swift */; };
@@ -146,6 +147,8 @@
 		FDDD14EED24B7DFA348D415B /* TrendBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C14C4080D8F86D1D9FE887E9 /* TrendBadge.swift */; };
 		FFCF2BEF13D3B81A68D9EF3B /* InsightCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA30AD19F71C6BA2C98C876C /* InsightCard.swift */; };
 		PRO00100000000000000002 /* ProFeatureOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = PRO00100000000000000001 /* ProFeatureOverlay.swift */; };
+		FU000100000000000000002 /* ForceUpdateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FU000100000000000000001 /* ForceUpdateView.swift */; };
+		MV000100000000000000002 /* MaintenanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MV000100000000000000001 /* MaintenanceView.swift */; };
 		DSC00100000000000000002 /* Discovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = DSC00100000000000000001 /* Discovery.swift */; };
 		DSC00100000000000000004 /* DiscoveryEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = DSC00100000000000000003 /* DiscoveryEngine.swift */; };
 		DSC00100000000000000006 /* DiscoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DSC00100000000000000005 /* DiscoveryView.swift */; };
@@ -323,6 +326,8 @@
 		ANL00100000000000000003 /* MultiMetricClusterAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiMetricClusterAnalyzer.swift; sourceTree = "<group>"; };
 		HST00100000000000000001 /* HistoricalAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoricalAnalyzer.swift; sourceTree = "<group>"; };
 		PRO00100000000000000001 /* ProFeatureOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProFeatureOverlay.swift; sourceTree = "<group>"; };
+		FU000100000000000000001 /* ForceUpdateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForceUpdateView.swift; sourceTree = "<group>"; };
+		MV000100000000000000001 /* MaintenanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaintenanceView.swift; sourceTree = "<group>"; };
 		IEW00100000000000000001 /* IllnessEarlyWarning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IllnessEarlyWarning.swift; sourceTree = "<group>"; };
 		CMA00100000000000000001 /* CrossMetricAnomalyDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrossMetricAnomalyDetector.swift; sourceTree = "<group>"; };
 		CCE00100000000000000001 /* CausalChainEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CausalChainEngine.swift; sourceTree = "<group>"; };
@@ -368,6 +373,7 @@
 			files = (
 				FA12345678ABCDEF12345602 /* FirebaseAnalytics in Frameworks */,
 				FA12345678ABCDEF12345612 /* FirebaseRemoteConfig in Frameworks */,
+				FA12345678ABCDEF12345622 /* FirebaseCrashlytics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -626,6 +632,8 @@
 				AA30AD19F71C6BA2C98C876C /* InsightCard.swift */,
 				9D418CA7C1389DB583EEE75D /* LoadingView.swift */,
 				386D956FFA31A24C5784E847 /* MetricChartView.swift */,
+				FU000100000000000000001 /* ForceUpdateView.swift */,
+				MV000100000000000000001 /* MaintenanceView.swift */,
 				PRO00100000000000000001 /* ProFeatureOverlay.swift */,
 				FF35C1AEF3CC68D59F22FB41 /* SeverityBadge.swift */,
 				CCC8EDD113328305A89EFB85 /* StatisticsGrid.swift */,
@@ -872,6 +880,7 @@
 			packageProductDependencies = (
 				FA12345678ABCDEF12345601 /* FirebaseAnalytics */,
 				FA12345678ABCDEF12345611 /* FirebaseRemoteConfig */,
+				FA12345678ABCDEF12345621 /* FirebaseCrashlytics */,
 			);
 			productName = HealthPulse;
 			productReference = 65E5978C39EAFBDCEECA6DA6 /* HealthPulse.app */;
@@ -1031,6 +1040,8 @@
 				5BBF461D49DC29339CA792EE /* PersistenceManager.swift in Sources */,
 				C09FBA6AB73AE7FF59FAA9A6 /* PersonalRecordAnalyzer.swift in Sources */,
 				PRO00100000000000000002 /* ProFeatureOverlay.swift in Sources */,
+				FU000100000000000000002 /* ForceUpdateView.swift in Sources */,
+				MV000100000000000000002 /* MaintenanceView.swift in Sources */,
 				642B207288AEA3FFD5B0BC63 /* RecoveryAnalyzer.swift in Sources */,
 				0825D70B8EA6433B2925AB1B /* ReportTemplate.swift in Sources */,
 				1EEEA8E3541DF51EE16406F7 /* RulesConfiguration.swift in Sources */,
@@ -1330,6 +1341,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FB12345678ABCDEF12345601 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseRemoteConfig;
+		};
+		FA12345678ABCDEF12345621 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FB12345678ABCDEF12345601 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

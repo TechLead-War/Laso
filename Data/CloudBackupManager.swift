@@ -49,6 +49,12 @@ final class CloudBackupManager {
 
     /// Backup if enough time has passed since the last backup (throttled to once per 6 hours)
     func backupIfNeeded(store: HealthDataStore, persistence: PersistenceManager) async {
+        // Kill switch — remotely disable CloudKit backup if it's causing issues
+        guard !RemoteConfigManager.shared.killCloudBackup else {
+            backupStatus = .disabled
+            return
+        }
+
         // Backup is enabled by default (nil = true). Only disabled if explicitly set to false.
         if UserDefaults.standard.object(forKey: AppKeys.Backup.backupEnabled) != nil,
            !UserDefaults.standard.bool(forKey: AppKeys.Backup.backupEnabled) {

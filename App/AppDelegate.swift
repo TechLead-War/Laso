@@ -1,6 +1,7 @@
 import UIKit
 import UserNotifications
 import FirebaseCore
+import FirebaseCrashlytics
 
 /// AppDelegate for background delivery registration and notification setup
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
@@ -11,6 +12,10 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     ) -> Bool {
         // Configure Firebase (Analytics + Firestore + Remote Config)
         FirebaseApp.configure()
+
+        // Configure Crashlytics
+        Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(true)
+        setupCrashMetadata()
 
         // Fetch Remote Config (non-blocking — uses cached/default values until fetch completes)
         Task {
@@ -44,5 +49,22 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         SessionTracker.shared.pendingSessionSource = .notification
         AppAnalytics.shared.trackNotificationOpened(identifier: identifier)
         completionHandler()
+    }
+
+    // MARK: - Crashlytics Metadata
+
+    private func setupCrashMetadata() {
+        let crashlytics = Crashlytics.crashlytics()
+
+        // App version info
+        if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+            crashlytics.setCustomValue(version, forKey: "app_version")
+        }
+        if let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
+            crashlytics.setCustomValue(build, forKey: "build_number")
+        }
+
+        // Subscription status
+        crashlytics.setCustomValue(FeatureGate.currentTier, forKey: "subscription_tier")
     }
 }

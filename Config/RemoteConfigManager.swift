@@ -234,6 +234,52 @@ final class RemoteConfigManager {
         remoteConfig.configValue(forKey: "feedback_days_before_first_prompt").numberValue.intValue
     }
 
+    // MARK: - Kill Switches
+
+    /// Master kill switch — disables the entire app with a maintenance message
+    var killSwitchEnabled: Bool {
+        remoteConfig.configValue(forKey: "kill_switch_enabled").boolValue
+    }
+
+    var killSwitchMessage: String {
+        let value = remoteConfig.configValue(forKey: "kill_switch_message").stringValue
+        return value.isEmpty ? "HealthPulse is temporarily unavailable. Please try again later." : value
+    }
+
+    /// Kill switch for Live tab streaming
+    var killLiveTab: Bool {
+        remoteConfig.configValue(forKey: "kill_live_tab").boolValue
+    }
+
+    /// Kill switch for ML analysis pipeline
+    var killMLPipeline: Bool {
+        remoteConfig.configValue(forKey: "kill_ml_pipeline").boolValue
+    }
+
+    /// Kill switch for CloudKit backup
+    var killCloudBackup: Bool {
+        remoteConfig.configValue(forKey: "kill_cloud_backup").boolValue
+    }
+
+    /// Kill switch for push notifications (except critical)
+    var killNotifications: Bool {
+        remoteConfig.configValue(forKey: "kill_notifications").boolValue
+    }
+
+    // MARK: - Force Update
+
+    /// Minimum app version required (e.g. "1.48"). Users below this see a force-update screen.
+    var minimumAppVersion: String {
+        let value = remoteConfig.configValue(forKey: "minimum_app_version").stringValue
+        return value.isEmpty ? "0.0" : value
+    }
+
+    /// Whether the current app version is below the required minimum
+    var requiresForceUpdate: Bool {
+        let current = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0"
+        return current.compare(minimumAppVersion, options: .numeric) == .orderedAscending
+    }
+
     // MARK: - Generic Access
 
     /// Read any string value by key (for future keys added via admin panel).
@@ -359,5 +405,16 @@ extension RemoteConfigManager {
         // UI intervals
         "home_refresh_interval_seconds":       60 as NSNumber,
         "feedback_days_before_first_prompt":   5 as NSNumber,
+
+        // Kill switches (all off by default)
+        "kill_switch_enabled":       false as NSNumber,
+        "kill_switch_message":       "" as NSString,
+        "kill_live_tab":             false as NSNumber,
+        "kill_ml_pipeline":          false as NSNumber,
+        "kill_cloud_backup":         false as NSNumber,
+        "kill_notifications":        false as NSNumber,
+
+        // Force update
+        "minimum_app_version":       "0.0" as NSString,
     ]
 }

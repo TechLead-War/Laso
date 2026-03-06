@@ -751,6 +751,8 @@ final class DashboardViewModel {
         let today = Calendar.current.startOfDay(for: Date())
         anomalyCounts[today] = analysisEngine.anomalies.count
 
+        guard !RemoteConfigManager.shared.killMLPipeline else { return }
+
         await analysisEngine.runMLAnalysis(
             timeSeries: timeSeries,
             scoreHistory: scoreHistory,

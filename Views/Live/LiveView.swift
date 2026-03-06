@@ -4,6 +4,7 @@ import Charts
 /// Real-time health dashboard — live vitals, heart rate zones, activity rings, readiness
 struct LiveView: View {
     let viewModel: LiveViewModel
+    let mlOrchestrator: MLOrchestrator?
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var pulseScale: CGFloat = 1.0
@@ -281,6 +282,7 @@ struct LiveView: View {
         .onAppear { headerTracker.appeared() }
         .onDisappear { headerTracker.disappeared() }
     }
+
 
     private var liveStatusLabel: String {
         if viewModel.vitals.hasFreshData {
@@ -1133,5 +1135,5 @@ struct LiveView: View {
 }
 
 #Preview {
-    LiveView(viewModel: LiveViewModel(healthKitManager: HealthKitManager()))
+    LiveView(viewModel: LiveViewModel(healthKitManager: HealthKitManager()), mlOrchestrator: nil)
 }

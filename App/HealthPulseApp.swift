@@ -20,6 +20,7 @@ struct HealthPulseApp: App {
     @State private var showSplash = true
 
     private let subscriptionManager = SubscriptionManager.shared
+    private var remoteConfig: RemoteConfigManager { .shared }
 
     private var colorScheme: ColorScheme? {
         switch appTheme {
@@ -154,74 +155,42 @@ struct HealthPulseApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
-                ContentView(
-                    healthKitManager: healthKitManager,
-                    analysisEngine: analysisEngine,
-                    deviceSourceManager: deviceSourceManager,
-                    healthDataStore: healthDataStore
-                )
-                .preferredColorScheme(colorScheme)
-                // 1. Onboarding (first launch)
-                .fullScreenCover(isPresented: Binding(
-                    get: { !onboardingCompleted },
-                    set: { if !$0 {
-                        onboardingCompleted = true
-                        NSUbiquitousKeyValueStore.default.set(true, forKey: AppKeys.App.onboardingCompleted)
-                    }}
-                )) {
-                    OnboardingView(
+                // 0. Force update or maintenance — blocks everything
+                if remoteConfig.requiresForceUpdate {
+                    ForceUpdateView()
+                } else if remoteConfig.killSwitchEnabled {
+                    MaintenanceView(message: remoteConfig.killSwitchMessage)
+                } else {
+                    ContentView(
                         healthKitManager: healthKitManager,
-                        runCalibration: performInitialCalibration
-                    ) {
-                        onboardingCompleted = true
-                        NSUbiquitousKeyValueStore.default.set(true, forKey: AppKeys.App.onboardingCompleted)
+                        analysisEngine: analysisEngine,
+                        deviceSourceManager: deviceSourceManager,
+                        healthDataStore: healthDataStore
+                    )
+                    .preferredColorScheme(colorScheme)
+                    // 1. Onboarding (first launch)
+                    .fullScreenCover(isPresented: Binding(
+                        get: { !onboardingCompleted },
+                        set: { if !$0 {
+                            onboardingCompleted = true
+                            NSUbiquitousKeyValueStore.default.set(true, forKey: AppKeys.App.onboardingCompleted)
+                        }}
+                    )) {
+                        OnboardingView(
+                            healthKitManager: healthKitManager,
+                            runCalibration: performInitialCalibration
+                        ) {
+                            onboardingCompleted = true
+                            NSUbiquitousKeyValueStore.default.set(true, forKey: AppKeys.App.onboardingCompleted)
+                        }
                     }
-                }
-                // 2. Paywall (trial expired + not subscribed)
-                .fullScreenCover(isPresented: Binding(
-                    get: { shouldShowPaywall },
-                    set: { _ in }  // Cannot dismiss — must subscribe
-                )) {
-                    PaywallView(subscriptionManager: subscriptionManager)
-                        .interactiveDismissDisabled()
-                }
-                .task {
-                    // Run CloudKit restore and subscription configure in parallel
-                    async let subscriptionTask: Void = subscriptionManager.configure()
-
-                    if healthDataStore.totalStoredSamples == 0 {
-                        let persistence = PersistenceManager()
-                        _ = await CloudBackupManager.shared.restore(
-                            store: healthDataStore, persistence: persistence
-                        )
-                    }
-
-                    // Wait for both to complete concurrently
-                    _ = await subscriptionTask
-
-                    NotificationManager.shared.store = healthDataStore
-
-                    // Register Siri shortcuts so the system can discover them immediately.
-                    HealthPulseShortcutsProvider.updateAppShortcutParameters()
-
-                    WatchMonitor.shared.configure(healthStore: healthKitManager.healthStore)
-                    WatchMonitor.shared.startMonitoring()
-
-                    // Cancel stale weekly summary notifications that may have been
-                    // registered with older, more aggressive defaults.
-                    WeeklySummaryScheduler.cancel()
-
-                    // Dismiss splash once background init is done
-                    withAnimation(.easeOut(duration: 0.3)) {
-                        showSplash = false
-                    }
-
-                    // Request notification permission after a brief pause so the user
-                    // sees their dashboard before the system alert appears.
-                    try? await Task.sleep(for: .seconds(3))
-                    let granted = await NotificationManager.shared.requestAuthorizationIfNeeded()
-                    if granted {
-                        ReengagementScheduler.reschedule()
+                    // 2. Paywall (trial expired + not subscribed)
+                    .fullScreenCover(isPresented: Binding(
+                        get: { shouldShowPaywall },
+                        set: { _ in }  // Cannot dismiss — must subscribe
+                    )) {
+                        PaywallView(subscriptionManager: subscriptionManager)
+                            .interactiveDismissDisabled()
                     }
                 }
 
@@ -231,6 +200,45 @@ struct HealthPulseApp: App {
                     splashView
                         .transition(.opacity)
                         .zIndex(1)
+                }
+            }
+            .task {
+                // Run CloudKit restore and subscription configure in parallel
+                async let subscriptionTask: Void = subscriptionManager.configure()
+
+                if healthDataStore.totalStoredSamples == 0 {
+                    let persistence = PersistenceManager()
+                    _ = await CloudBackupManager.shared.restore(
+                        store: healthDataStore, persistence: persistence
+                    )
+                }
+
+                // Wait for both to complete concurrently
+                _ = await subscriptionTask
+
+                NotificationManager.shared.store = healthDataStore
+
+                // Register Siri shortcuts so the system can discover them immediately.
+                HealthPulseShortcutsProvider.updateAppShortcutParameters()
+
+                WatchMonitor.shared.configure(healthStore: healthKitManager.healthStore)
+                WatchMonitor.shared.startMonitoring()
+
+                // Cancel stale weekly summary notifications that may have been
+                // registered with older, more aggressive defaults.
+                WeeklySummaryScheduler.cancel()
+
+                // Dismiss splash once background init is done
+                withAnimation(.easeOut(duration: 0.3)) {
+                    showSplash = false
+                }
+
+                // Request notification permission after a brief pause so the user
+                // sees their dashboard before the system alert appears.
+                try? await Task.sleep(for: .seconds(3))
+                let granted = await NotificationManager.shared.requestAuthorizationIfNeeded()
+                if granted {
+                    ReengagementScheduler.reschedule()
                 }
             }
         }

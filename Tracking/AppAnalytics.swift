@@ -1,5 +1,6 @@
 import Foundation
 import FirebaseAnalytics
+import FirebaseCrashlytics
 
 /// All trackable screens in the app.
 enum AppFeature: String, Hashable {
@@ -286,6 +287,30 @@ final class AppAnalytics {
     }
 
     private init() {}
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - Crashlytics
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Record a non-fatal error to Crashlytics for monitoring without crashing.
+    func recordNonFatal(_ error: Error, context: String, metadata: [String: Any] = [:]) {
+        let crashlytics = Crashlytics.crashlytics()
+        crashlytics.log("\(context): \(error.localizedDescription)")
+        for (key, value) in metadata {
+            crashlytics.setCustomValue("\(value)", forKey: key)
+        }
+        crashlytics.record(error: error)
+    }
+
+    /// Log a breadcrumb message to Crashlytics (visible in crash reports).
+    func logBreadcrumb(_ message: String) {
+        Crashlytics.crashlytics().log(message)
+    }
+
+    /// Set the Crashlytics user identifier for crash attribution.
+    func setCrashlyticsUser(_ userId: String) {
+        Crashlytics.crashlytics().setUserID(userId)
+    }
 
     // ══════════════════════════════════════════════════════════════════════
     // MARK: - 1. Activation Events
