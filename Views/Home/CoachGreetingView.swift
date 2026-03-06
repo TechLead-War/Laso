@@ -54,6 +54,7 @@ struct CoachGreetingView: View {
                     .foregroundStyle(.secondary)
             }
             .accessibilityLabel("Settings")
+            .accessibilityIdentifier("home.settingsButton")
         }
         .padding(.horizontal)
         .overlay(alignment: .top) {

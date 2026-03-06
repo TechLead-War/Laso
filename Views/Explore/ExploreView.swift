@@ -77,6 +77,7 @@ struct ExploreView: View {
             }
             .padding(.bottom, 16)
         }
+        .accessibilityIdentifier("screen.explore")
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("Explore")
         .navigationBarTitleDisplayMode(.large)

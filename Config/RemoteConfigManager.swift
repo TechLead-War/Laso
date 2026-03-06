@@ -1,4 +1,5 @@
 import Foundation
+import FirebaseCore
 import FirebaseRemoteConfig
 import Observation
 
@@ -13,27 +14,53 @@ final class RemoteConfigManager {
 
     static let shared = RemoteConfigManager()
 
-    private let remoteConfig = RemoteConfig.remoteConfig()
+    /// nil when Firebase is not configured (e.g. UI test mode)
+    private let remoteConfig: RemoteConfig?
     private(set) var lastFetchTime: Date?
     private(set) var fetchError: String?
 
     // MARK: - Init
 
     private init() {
+        guard FirebaseApp.app() != nil else {
+            remoteConfig = nil
+            return
+        }
+        let rc = RemoteConfig.remoteConfig()
         let settings = RemoteConfigSettings()
         #if DEBUG
         settings.minimumFetchInterval = 0  // No throttle in debug
         #else
         settings.minimumFetchInterval = 3600  // 1 hour in production
         #endif
-        remoteConfig.configSettings = settings
-        remoteConfig.setDefaults(Self.defaults)
+        rc.configSettings = settings
+        rc.setDefaults(Self.defaults)
+        remoteConfig = rc
+    }
+
+    // MARK: - Helpers
+
+    private func stringValue(forKey key: String) -> String {
+        remoteConfig?.configValue(forKey: key).stringValue ?? (Self.defaults[key] as? String ?? "")
+    }
+
+    private func intValue(forKey key: String) -> Int {
+        remoteConfig?.configValue(forKey: key).numberValue.intValue ?? (Self.defaults[key] as? NSNumber)?.intValue ?? 0
+    }
+
+    private func doubleValue(forKey key: String) -> Double {
+        remoteConfig?.configValue(forKey: key).numberValue.doubleValue ?? (Self.defaults[key] as? NSNumber)?.doubleValue ?? 0
+    }
+
+    private func boolValue(forKey key: String) -> Bool {
+        remoteConfig?.configValue(forKey: key).boolValue ?? (Self.defaults[key] as? NSNumber)?.boolValue ?? false
     }
 
     // MARK: - Fetch
 
     /// Fetch and activate remote config. Call once at app launch.
     func fetchAndActivate() async {
+        guard let remoteConfig else { return }
         do {
             let status = try await remoteConfig.fetchAndActivate()
             if status == .successFetchedFromRemote || status == .successUsingPreFetchedData {
@@ -49,7 +76,7 @@ final class RemoteConfigManager {
 
     /// Check if a feature is available for the given tier ("free" or "pro").
     func isFeatureEnabled(_ feature: FeatureKey, for tier: String) -> Bool {
-        let value = remoteConfig.configValue(forKey: feature.rawValue).stringValue
+        let value = stringValue(forKey: feature.rawValue)
         let tiers = value.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
         return tiers.contains(tier)
     }
@@ -62,215 +89,215 @@ final class RemoteConfigManager {
     // MARK: - Limits
 
     var freeMetricDetailLimit: Int {
-        remoteConfig.configValue(forKey: "free_metric_detail_limit").numberValue.intValue
+        intValue(forKey: "free_metric_detail_limit")
     }
 
     var freeMetrics: [String] {
-        let csv = remoteConfig.configValue(forKey: "free_metrics").stringValue
+        let csv = stringValue(forKey: "free_metrics")
         return csv.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
     }
 
     var freeInsightLimit: Int {
-        remoteConfig.configValue(forKey: "free_insight_limit").numberValue.intValue
+        intValue(forKey: "free_insight_limit")
     }
 
     var freePeriods: [String] {
-        let csv = remoteConfig.configValue(forKey: "free_periods").stringValue
+        let csv = stringValue(forKey: "free_periods")
         return csv.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
     }
 
     // MARK: - Pricing
 
     var proMonthlyProductID: String {
-        let value = remoteConfig.configValue(forKey: "pricing_pro_monthly_product_id").stringValue
+        let value = stringValue(forKey: "pricing_pro_monthly_product_id")
         return value.isEmpty ? SubscriptionConfig.fallbackMonthlyProductID : value
     }
 
     var proYearlyProductID: String {
-        let value = remoteConfig.configValue(forKey: "pricing_pro_yearly_product_id").stringValue
+        let value = stringValue(forKey: "pricing_pro_yearly_product_id")
         return value.isEmpty ? SubscriptionConfig.fallbackYearlyProductID : value
     }
 
     var proTrialDays: Int {
-        let value = remoteConfig.configValue(forKey: "pricing_pro_trial_days").numberValue.intValue
+        let value = intValue(forKey: "pricing_pro_trial_days")
         return value > 0 ? value : SubscriptionConfig.fallbackTrialDays
     }
 
     var proMonthlyDisplayPrice: String {
-        let value = remoteConfig.configValue(forKey: "pricing_pro_monthly_display_price").stringValue
+        let value = stringValue(forKey: "pricing_pro_monthly_display_price")
         return value.isEmpty ? "$5.99" : value
     }
 
     var proYearlyDisplayPrice: String {
-        let value = remoteConfig.configValue(forKey: "pricing_pro_yearly_display_price").stringValue
+        let value = stringValue(forKey: "pricing_pro_yearly_display_price")
         return value.isEmpty ? "$29.99" : value
     }
 
     // MARK: - System
 
     var feedbackPromptAfterSessions: Int {
-        remoteConfig.configValue(forKey: "feedback_prompt_after_sessions").numberValue.intValue
+        intValue(forKey: "feedback_prompt_after_sessions")
     }
 
     var feedbackCooldownDays: Int {
-        remoteConfig.configValue(forKey: "feedback_cooldown_days").numberValue.intValue
+        intValue(forKey: "feedback_cooldown_days")
     }
 
     var maxLocalAnalyticsEvents: Int {
-        remoteConfig.configValue(forKey: "max_local_analytics_events").numberValue.intValue
+        intValue(forKey: "max_local_analytics_events")
     }
 
     var sessionTimeoutSeconds: Int {
-        remoteConfig.configValue(forKey: "session_timeout_seconds").numberValue.intValue
+        intValue(forKey: "session_timeout_seconds")
     }
 
     // MARK: - Alert Thresholds
 
     /// Cooldown hours between repeated alerts for same identifier
     var alertCooldownHours: Double {
-        remoteConfig.configValue(forKey: "alert_cooldown_hours").numberValue.doubleValue
+        doubleValue(forKey: "alert_cooldown_hours")
     }
 
     /// Multiplier above 7-day avg RHR that triggers spike alert (e.g. 1.15 = 15% above)
     var heartRateSpikeMultiplier: Double {
-        remoteConfig.configValue(forKey: "alert_hr_spike_multiplier").numberValue.doubleValue
+        doubleValue(forKey: "alert_hr_spike_multiplier")
     }
 
     /// Percentage below 7-day avg HRV that triggers drop alert (e.g. 0.7 = 30% drop)
     var hrvDropMultiplier: Double {
-        remoteConfig.configValue(forKey: "alert_hrv_drop_multiplier").numberValue.doubleValue
+        doubleValue(forKey: "alert_hrv_drop_multiplier")
     }
 
     /// Blood oxygen critical threshold (below this = critical alert)
     var spo2CriticalThreshold: Double {
-        remoteConfig.configValue(forKey: "alert_spo2_critical").numberValue.doubleValue
+        doubleValue(forKey: "alert_spo2_critical")
     }
 
     /// Blood oxygen warning threshold (below this = warning alert)
     var spo2WarningThreshold: Double {
-        remoteConfig.configValue(forKey: "alert_spo2_warning").numberValue.doubleValue
+        doubleValue(forKey: "alert_spo2_warning")
     }
 
     /// Respiratory rate spike multiplier (e.g. 1.25 = 25% above avg)
     var respiratoryRateSpikeMultiplier: Double {
-        remoteConfig.configValue(forKey: "alert_rr_spike_multiplier").numberValue.doubleValue
+        doubleValue(forKey: "alert_rr_spike_multiplier")
     }
 
     /// Max heart-related alerts per day (capped separately from total)
     var heartAlertCap: Int {
-        remoteConfig.configValue(forKey: "alert_heart_cap_per_day").numberValue.intValue
+        intValue(forKey: "alert_heart_cap_per_day")
     }
 
     // MARK: - Watch Monitor
 
     /// Interval in seconds between periodic watch status checks
     var watchMonitorCheckInterval: Int {
-        remoteConfig.configValue(forKey: "watch_monitor_check_seconds").numberValue.intValue
+        intValue(forKey: "watch_monitor_check_seconds")
     }
 
     /// Hours of data lookback for checking if watch is being worn
     var watchDataFreshnessHours: Double {
-        remoteConfig.configValue(forKey: "watch_data_freshness_hours").numberValue.doubleValue
+        doubleValue(forKey: "watch_data_freshness_hours")
     }
 
     /// Cooldown hours between "watch not worn" notifications
     var watchNotWornCooldownHours: Double {
-        remoteConfig.configValue(forKey: "watch_not_worn_cooldown_hours").numberValue.doubleValue
+        doubleValue(forKey: "watch_not_worn_cooldown_hours")
     }
 
     /// Hours without data before "not worn" alert fires
     var watchNotWornThresholdHours: Double {
-        remoteConfig.configValue(forKey: "watch_not_worn_threshold_hours").numberValue.doubleValue
+        doubleValue(forKey: "watch_not_worn_threshold_hours")
     }
 
     /// Battery percentage below which low battery alert fires (0.0-1.0)
     var watchBatteryLowThreshold: Double {
-        remoteConfig.configValue(forKey: "watch_battery_low_threshold").numberValue.doubleValue
+        doubleValue(forKey: "watch_battery_low_threshold")
     }
 
     // MARK: - Notification Optimizer
 
     /// Maximum non-daily-summary notifications per day
     var notificationDailyBudget: Int {
-        remoteConfig.configValue(forKey: "notification_daily_budget").numberValue.intValue
+        intValue(forKey: "notification_daily_budget")
     }
 
     /// 7-day open rate below which user is considered fatigued
     var notificationFatigueThreshold: Double {
-        remoteConfig.configValue(forKey: "notification_fatigue_threshold").numberValue.doubleValue
+        doubleValue(forKey: "notification_fatigue_threshold")
     }
 
     /// Minimum priority score for a notification to be sent (except critical)
     var notificationMinPriorityScore: Int {
-        remoteConfig.configValue(forKey: "notification_min_priority_score").numberValue.intValue
+        intValue(forKey: "notification_min_priority_score")
     }
 
     // MARK: - Analysis Thresholds
 
     /// Warning deviation from baseline (proportion, e.g. 0.10 = 10%)
     var analysisWarningDeviation: Double {
-        remoteConfig.configValue(forKey: "analysis_warning_deviation").numberValue.doubleValue
+        doubleValue(forKey: "analysis_warning_deviation")
     }
 
     /// Critical deviation from baseline (proportion, e.g. 0.20 = 20%)
     var analysisCriticalDeviation: Double {
-        remoteConfig.configValue(forKey: "analysis_critical_deviation").numberValue.doubleValue
+        doubleValue(forKey: "analysis_critical_deviation")
     }
 
     /// Trend slope threshold for significance
     var analysisTrendSlopeThreshold: Double {
-        remoteConfig.configValue(forKey: "analysis_trend_slope_threshold").numberValue.doubleValue
+        doubleValue(forKey: "analysis_trend_slope_threshold")
     }
 
     // MARK: - UI Intervals
 
     /// Home screen auto-refresh interval in seconds
     var homeRefreshIntervalSeconds: Int {
-        remoteConfig.configValue(forKey: "home_refresh_interval_seconds").numberValue.intValue
+        intValue(forKey: "home_refresh_interval_seconds")
     }
 
     /// Days before first feedback prompt
     var feedbackDaysBeforeFirstPrompt: Int {
-        remoteConfig.configValue(forKey: "feedback_days_before_first_prompt").numberValue.intValue
+        intValue(forKey: "feedback_days_before_first_prompt")
     }
 
     // MARK: - Kill Switches
 
     /// Master kill switch — disables the entire app with a maintenance message
     var killSwitchEnabled: Bool {
-        remoteConfig.configValue(forKey: "kill_switch_enabled").boolValue
+        boolValue(forKey: "kill_switch_enabled")
     }
 
     var killSwitchMessage: String {
-        let value = remoteConfig.configValue(forKey: "kill_switch_message").stringValue
+        let value = stringValue(forKey: "kill_switch_message")
         return value.isEmpty ? "HealthPulse is temporarily unavailable. Please try again later." : value
     }
 
     /// Kill switch for Live tab streaming
     var killLiveTab: Bool {
-        remoteConfig.configValue(forKey: "kill_live_tab").boolValue
+        boolValue(forKey: "kill_live_tab")
     }
 
     /// Kill switch for ML analysis pipeline
     var killMLPipeline: Bool {
-        remoteConfig.configValue(forKey: "kill_ml_pipeline").boolValue
+        boolValue(forKey: "kill_ml_pipeline")
     }
 
     /// Kill switch for CloudKit backup
     var killCloudBackup: Bool {
-        remoteConfig.configValue(forKey: "kill_cloud_backup").boolValue
+        boolValue(forKey: "kill_cloud_backup")
     }
 
     /// Kill switch for push notifications (except critical)
     var killNotifications: Bool {
-        remoteConfig.configValue(forKey: "kill_notifications").boolValue
+        boolValue(forKey: "kill_notifications")
     }
 
     // MARK: - Force Update
 
     /// Minimum app version required (e.g. "1.48"). Users below this see a force-update screen.
     var minimumAppVersion: String {
-        let value = remoteConfig.configValue(forKey: "minimum_app_version").stringValue
+        let value = stringValue(forKey: "minimum_app_version")
         return value.isEmpty ? "0.0" : value
     }
 
@@ -284,20 +311,20 @@ final class RemoteConfigManager {
 
     /// Read any string value by key (for future keys added via admin panel).
     func string(forKey key: String) -> String? {
-        let value = remoteConfig.configValue(forKey: key).stringValue
+        let value = stringValue(forKey: key)
         return value.isEmpty ? nil : value
     }
 
     func bool(forKey key: String) -> Bool {
-        remoteConfig.configValue(forKey: key).boolValue
+        boolValue(forKey: key)
     }
 
     func int(forKey key: String) -> Int {
-        remoteConfig.configValue(forKey: key).numberValue.intValue
+        intValue(forKey: key)
     }
 
     func double(forKey key: String) -> Double {
-        remoteConfig.configValue(forKey: key).numberValue.doubleValue
+        doubleValue(forKey: key)
     }
 }
 

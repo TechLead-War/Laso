@@ -130,6 +130,8 @@ enum BlockType: String {
     case homeCoachGoal = "home_coach_goal"
     case homeRiskRow = "home_risk_row"
     case homeRecoveryInfoButton = "home_recovery_info_button"
+    case dataConfidenceBadge = "data_confidence_badge"
+    case shareCard = "share_card"
 
     // Live
     case staleWatchPrompt = "stale_watch_prompt"
@@ -1449,10 +1451,12 @@ final class AppAnalytics {
         let eventName = sanitizeEventName(name)
         let params = sanitizeParameters(enriched)
         Analytics.logEvent(eventName, parameters: params)
+        PostHogManager.shared.capture(event: eventName, properties: params)
     }
 
     private func setUserProperty(_ name: String, value: String) {
         Analytics.setUserProperty(value, forName: name)
+        PostHogManager.shared.setUserProperty(name: name, value: value)
     }
 
     private func screenClassName(for feature: AppFeature) -> String {

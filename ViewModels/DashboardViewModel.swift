@@ -344,6 +344,11 @@ final class DashboardViewModel {
         isLoading = true
         defer { isLoading = false }
 
+        if UITestMode.isEnabled {
+            hasCompletedInitialLoad = true
+            return
+        }
+
         guard healthKitManager.isHealthKitAvailable else {
             errorMessage = "HealthKit is not available on this device. Please run on a real iPhone paired with Apple Watch."
             return

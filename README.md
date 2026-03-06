@@ -184,6 +184,45 @@ Remove `-FIRDebugEnabled` before App Store submission.
 
 ---
 
+## Quality Gate
+
+This project uses [QualityGate](../QualityGate/) — an external framework for smoke builds, visual regression testing, and pre-commit hooks.
+
+### First-time setup (once per clone)
+
+```bash
+# Link QualityGate (if qg symlink is missing)
+ln -s ../QualityGate/bin/qg ./qg
+
+# Install git hooks
+./qg install-hooks
+```
+
+### Commands
+
+```bash
+./qg smoke       # validate project builds on simulator
+./qg capture     # run UI tests, save screenshots to visual-regression/current/
+./qg compare     # compare current screenshots against baseline
+./qg approve     # promote current screenshots as new baseline
+./qg gate        # full pipeline: smoke + capture + compare
+```
+
+### First-time baseline
+
+```bash
+./qg capture     # capture initial screenshots
+./qg approve     # promote as baseline
+```
+
+After this, `./qg gate` catches visual regressions before release.
+
+### Configuration
+
+Project settings are in `.qualitygate`. See `QualityGate/README.md` for full docs.
+
+---
+
 ## Troubleshooting
 
 | Problem | Fix |

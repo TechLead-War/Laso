@@ -2,6 +2,7 @@ import UIKit
 import UserNotifications
 import FirebaseCore
 import FirebaseCrashlytics
+import PostHog
 
 /// AppDelegate for background delivery registration and notification setup
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
@@ -10,16 +11,21 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        // Configure Firebase (Analytics + Firestore + Remote Config)
-        FirebaseApp.configure()
+        if !UITestMode.isEnabled {
+            // Configure Firebase (Analytics + Firestore + Remote Config)
+            FirebaseApp.configure()
 
-        // Configure Crashlytics
-        Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(true)
-        setupCrashMetadata()
+            // Configure Crashlytics
+            Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(true)
+            setupCrashMetadata()
 
-        // Fetch Remote Config (non-blocking — uses cached/default values until fetch completes)
-        Task {
-            await RemoteConfigManager.shared.fetchAndActivate()
+            // Fetch Remote Config (non-blocking — uses cached/default values until fetch completes)
+            Task {
+                await RemoteConfigManager.shared.fetchAndActivate()
+            }
+
+            // Configure PostHog Analytics
+            PostHogManager.shared.configure()
         }
 
         // Set up notification delegate

@@ -121,6 +121,7 @@ struct ConnectedDevicesView: View {
                 }
             }
         }
+        .accessibilityIdentifier("screen.connectedDevices")
         .navigationTitle("Connected Devices")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {

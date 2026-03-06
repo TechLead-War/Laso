@@ -144,7 +144,7 @@ struct ContentView: View {
         .onAppear {
             FeedbackPromptManager.shared.recordAppOpen()
             startSessionAnalytics()
-            if FeedbackPromptManager.shared.shouldShowFeedbackPrompt() {
+            if !UITestMode.isEnabled && FeedbackPromptManager.shared.shouldShowFeedbackPrompt() {
                 showFeedback = true
                 FeedbackPromptManager.shared.markPromptShown()
             }
@@ -232,7 +232,7 @@ struct ContentView: View {
                 showSettings: $showSettings
             )
         case .live:
-            if RemoteConfigManager.shared.killLiveTab {
+            if !UITestMode.isEnabled && RemoteConfigManager.shared.killLiveTab {
                 MaintenanceView(message: "Live monitoring is temporarily unavailable. We're working on a fix.")
             } else if FeatureGate.canAccess(.liveTab) {
                 LiveView(viewModel: liveViewModel, mlOrchestrator: dashboardViewModel.analysisEngine.mlOrchestrator)

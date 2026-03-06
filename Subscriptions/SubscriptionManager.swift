@@ -255,8 +255,10 @@ final class SubscriptionManager {
 
         if daysSinceInstall < SubscriptionConfig.trialDays {
             let remaining = SubscriptionConfig.trialDays - daysSinceInstall
+            let wasNotTrial = { if case .trial = self.status { return false }; return true }()
             status = .trial(daysRemaining: remaining)
         } else {
+            let wasNotExpired = { if case .expired = self.status { return false }; return true }()
             status = .expired
         }
     }

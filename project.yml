@@ -11,27 +11,50 @@ settings:
     SWIFT_VERSION: "5.9"
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
 
+packages:
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk
+    from: 11.0.0
+  PostHog:
+    url: https://github.com/PostHog/posthog-ios
+    from: 3.0.0
+
 targets:
   HealthPulse:
     type: application
     platform: iOS
+    dependencies:
+      - package: Firebase
+        product: FirebaseAnalytics
+      - package: Firebase
+        product: FirebaseRemoteConfig
+      - package: Firebase
+        product: FirebaseCrashlytics
+      - package: PostHog
+        product: PostHog
     sources:
-      - path: .
-        excludes:
-          - "project.yml"
-          - "README.md"
-          - "*.xcodeproj"
-          - "admin-panel"
-          - "build"
-          - ".git"
-          - ".claude"
-          - "node_modules"
-          - "*.md"
-          - "Test.swift"
+      - path: Analysis
+      - path: App
+      - path: Config
+      - path: Data
+      - path: Extensions
+      - path: Intents
+      - path: Models
+      - path: Notifications
+      - path: Security
+      - path: Subscriptions
+      - path: Tracking
+      - path: ViewModels
+      - path: Views
+      - path: WebExport
+      - path: Assets.xcassets
+      - path: GoogleService-Info.plist
+      - path: PrivacyInfo.xcprivacy
     info:
       path: Info.plist
       properties:
         CFBundleDisplayName: Laso
+        NSSiriUsageDescription: "Laso uses Siri to let you check your health score, log water, view sleep data, and track workouts hands-free."
         NSHealthShareUsageDescription: "Laso reads your health data from Apple Watch and iPhone to provide real-time vitals, personalized health scores, trend analysis, and actionable insights."
         NSHealthUpdateUsageDescription: "Laso requests write access to Apple Health to allow future features like logging workouts and health entries directly from the app."
         UIBackgroundModes: [processing]
@@ -57,3 +80,25 @@ targets:
           enabled: true
         com.apple.BackgroundModes:
           enabled: true
+
+  HealthPulseUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: UITests
+    dependencies:
+      - target: HealthPulse
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: true
+        PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.com.uitests
+        TEST_TARGET_NAME: HealthPulse
+
+schemes:
+  HealthPulse:
+    build:
+      targets:
+        HealthPulse: all
+    test:
+      targets:
+        - name: HealthPulseUITests

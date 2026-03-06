@@ -40,6 +40,8 @@ struct HomeView: View {
                 homeContent
             }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("screen.home")
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .fullScreenCover(isPresented: Binding(
@@ -173,6 +175,13 @@ struct HomeView: View {
                 if shouldShowEmptyState {
                     connectHealthView
                 } else if hasData {
+                    // AI model training progress — subtle pill
+                    DataConfidenceBadge(
+                        daysOfData: viewModel.dataDepth.daysOfData,
+                        metricsTracked: viewModel.dataDepth.metricsTracked
+                    )
+                    .padding(.top, 6)
+
                     Spacer(minLength: 8)
 
                     // 2. Recovery
@@ -724,6 +733,15 @@ struct HomeView: View {
                 }
 
                 Spacer()
+
+                ShareButton(
+                    cardType: .score(
+                        score: viewModel.overallScore.score,
+                        scoreChange: viewModel.scoreChangeFromLastWeek,
+                        streakDays: SessionTracker.shared.streakDays
+                    ),
+                    screen: .home
+                )
             }
         }
         .padding()

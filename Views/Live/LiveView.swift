@@ -48,6 +48,7 @@ struct LiveView: View {
             }
             .padding(.bottom, 20)
         }
+        .accessibilityIdentifier("screen.live")
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {

@@ -374,6 +374,7 @@ struct SettingsView: View {
                 .onAppear { aboutTracker.appeared() }
                 .onDisappear { aboutTracker.disappeared() }
             }
+            .accessibilityIdentifier("screen.settings")
             .navigationTitle("Settings")
             .onAppear {
                 AppAnalytics.shared.trackFeatureOpen(.settings)
@@ -393,6 +394,7 @@ struct SettingsView: View {
                         )
                         dismiss()
                     }
+                    .accessibilityIdentifier("settings.doneButton")
                 }
             }
             .onChange(of: preferences) { _, _ in

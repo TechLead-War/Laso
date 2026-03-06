@@ -31,10 +31,10 @@ struct NotificationPreferences: Codable, Equatable {
     var improvementAlertsEnabled: Bool = false
 
     /// Apple Watch not-worn reminder
-    var watchNotWornReminderEnabled: Bool = false
+    var watchNotWornReminderEnabled: Bool = true
 
     /// Low battery reminder
-    var lowBatteryReminderEnabled: Bool = false
+    var lowBatteryReminderEnabled: Bool = true
 
     var maxNotificationsPerDay: Int = 2
 

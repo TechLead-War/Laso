@@ -18,6 +18,11 @@ node_modules/
 
 # Build artifacts
 build/
+visual-regression/current/
+visual-regression/reports/
+
+# QualityGate (external framework symlink)
+qg
 
 # SPM cache
 .swiftpm/
@@ -27,3 +32,4 @@ values.txt
 
 # Claude Code worktrees
 .claude/worktrees/
+.env

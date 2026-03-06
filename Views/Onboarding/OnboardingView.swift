@@ -150,6 +150,7 @@ struct OnboardingView: View {
             }
             .padding(.bottom, 16)
         }
+        .accessibilityIdentifier("screen.onboarding")
         .background(Color(.systemGroupedBackground))
         .interactiveDismissDisabled()
         .sensoryFeedback(.selection, trigger: currentPage)
@@ -195,6 +196,7 @@ struct OnboardingView: View {
             stepsCompleted: totalPages
         )
         AppAnalytics.shared.trackFeatureClose(.onboarding)
+
         onComplete()
     }
 }
@@ -264,6 +266,10 @@ private struct ConnectHealthPage: View {
                     )
                     Task {
                         await healthKitManager.requestAuthorization()
+                        // PostHog: Track HealthKit authorization request (top of conversion funnel)
+                        PostHogManager.shared.capture(event: "healthkit_authorized", properties: [
+                            "healthkit_available": true,
+                        ])
                         onContinue()
                     }
                 } label: {
@@ -743,10 +749,20 @@ private struct CalibrationPage: View {
             guard !Task.isCancelled else { return }
             await MainActor.run {
                 stopDotTimer()
+                let elapsed = calibrationStartTime.map { Int(Date().timeIntervalSince($0)) } ?? 0
                 if let errorMessage {
                     state = .failed(errorMessage)
+                    // PostHog: Track calibration failure
+                    PostHogManager.shared.capture(event: "calibration_failed", properties: [
+                        "error_message": errorMessage,
+                        "elapsed_sec": elapsed,
+                    ])
                 } else {
                     state = .success
+                    // PostHog: Track successful calibration (user is now fully set up)
+                    PostHogManager.shared.capture(event: "calibration_completed", properties: [
+                        "elapsed_sec": elapsed,
+                    ])
                 }
             }
         }

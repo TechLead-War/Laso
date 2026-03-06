@@ -18,6 +18,7 @@ struct HealthPulseApp: App {
 
     /// Controls optional branded splash overlay.
     @State private var showSplash = true
+    private let isUITestMode: Bool
 
     private let subscriptionManager = SubscriptionManager.shared
     private var remoteConfig: RemoteConfigManager { .shared }
@@ -63,9 +64,13 @@ struct HealthPulseApp: App {
     }
 
     init() {
+        UITestMode.configureDefaults()
+        isUITestMode = UITestMode.isEnabled
+
         let hkManager = HealthKitManager()
         _healthKitManager = State(wrappedValue: hkManager)
         _deviceSourceManager = State(wrappedValue: DeviceSourceManager(healthStore: hkManager.healthStore))
+        _showSplash = State(initialValue: !isUITestMode)
 
         if let container = Self.createModelContainer() {
             _healthDataStore = State(wrappedValue: HealthDataStore(modelContainer: container))
@@ -155,10 +160,10 @@ struct HealthPulseApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
-                // 0. Force update or maintenance — blocks everything
-                if remoteConfig.requiresForceUpdate {
+                // 0. Force update or maintenance — blocks everything (skip in UI test mode)
+                if !isUITestMode && remoteConfig.requiresForceUpdate {
                     ForceUpdateView()
-                } else if remoteConfig.killSwitchEnabled {
+                } else if !isUITestMode && remoteConfig.killSwitchEnabled {
                     MaintenanceView(message: remoteConfig.killSwitchMessage)
                 } else {
                     ContentView(
@@ -203,6 +208,7 @@ struct HealthPulseApp: App {
                 }
             }
             .task {
+                guard !isUITestMode else { return }
                 // Run CloudKit restore and subscription configure in parallel
                 async let subscriptionTask: Void = subscriptionManager.configure()
 

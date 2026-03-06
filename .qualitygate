@@ -1,0 +1,10 @@
+# QualityGate configuration for HealthPulse
+
+QG_PROJECT="Laso.xcodeproj"
+QG_SCHEME="HealthPulse"
+QG_UI_TEST_BUNDLE="HealthPulseUITests"
+QG_CONFIGURATION="Debug"
+QG_BASELINE_DIR="visual-regression/baseline"
+QG_CURRENT_DIR="visual-regression/current"
+QG_REPORT_DIR="visual-regression/reports/latest"
+QG_DERIVED_DATA="build/quality-gate/DerivedData"

@@ -125,6 +125,20 @@ struct WeeklyReviewView: View {
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("Weekly Review")
         .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                if let review = viewModel.review {
+                    ShareButton(
+                        cardType: .score(
+                            score: review.currentScore,
+                            scoreChange: viewModel.scoreDelta,
+                            streakDays: SessionTracker.shared.streakDays
+                        ),
+                        screen: .weeklyReview
+                    )
+                }
+            }
+        }
         .onAppear {
             viewModel.load()
             AppAnalytics.shared.trackFeatureOpen(.weeklyReview, metadata: [
