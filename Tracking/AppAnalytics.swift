@@ -1436,6 +1436,34 @@ final class AppAnalytics {
         return cleaned.isEmpty ? "unknown" : String(cleaned.prefix(64))
     }
 
+    // MARK: - PostHog Event Whitelist (PMF-critical only, keeps free tier budget)
+
+    private static let postHogEvents: Set<String> = [
+        // Activation funnel
+        "onboarding_step_completed", "onboarding_completed", "onboarding_drop_off",
+        "activation_milestone", "activation_completed", "time_to_first_value",
+        // Retention
+        "session_start", "session_end", "return_session", "daily_active",
+        "retention_milestone", "streak_milestone", "streak_broken",
+        "inactive_period_detected",
+        // Core engagement
+        "core_action_completed", "screen_viewed",
+        "pull_to_refresh", "insight_tapped", "block_tapped",
+        // Subscription funnel
+        "trial_started", "trial_day_check", "trial_expired",
+        "paywall_viewed", "paywall_dismissed", "paywall_cta_tapped",
+        "subscription_purchased", "subscription_renewed", "subscription_cancelled",
+        "purchase_failed", "restore_attempted",
+        "billing_grace_started", "billing_grace_resolved",
+        "premium_feature_attempted", "pro_feature_funnel",
+        // Feedback & NPS
+        "nps_submitted", "feedback_submitted",
+        // Share / viral
+        "share_sheet_presented",
+        // Errors
+        "error_occurred",
+    ]
+
     fileprivate func logEvent(_ name: String, parameters: [String: Any]) {
         var enriched = parameters
         if enriched["session_id"] == nil {
@@ -1451,7 +1479,9 @@ final class AppAnalytics {
         let eventName = sanitizeEventName(name)
         let params = sanitizeParameters(enriched)
         Analytics.logEvent(eventName, parameters: params)
-        PostHogManager.shared.capture(event: eventName, properties: params)
+        if Self.postHogEvents.contains(eventName) {
+            PostHogManager.shared.capture(event: eventName, properties: params)
+        }
     }
 
     private func setUserProperty(_ name: String, value: String) {

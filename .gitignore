@@ -12,6 +12,7 @@ IDEFindNavigatorScopes.plist
 GoogleService-Info.plist
 **/serviceAccount.json
 laso-health-v1-firebase-adminsdk-*.json
+Config/firebase-adminsdk-*.json
 
 # Dependencies
 node_modules/
