@@ -266,4 +266,272 @@ enum AccelerateML {
         guard denominator > 0 else { return 0 }
         return numerator / denominator
     }
+
+    // MARK: - Matrix Multiply (BLAS)
+
+    /// Matrix multiplication using vDSP: C = A * B
+    /// A is (rows x cols), B is (cols x n), result C is (rows x n). All row-major.
+    static func matrixMultiply(A: [Double], B: [Double], rows: Int, cols: Int, n: Int) -> [Double] {
+        guard A.count >= rows * cols, B.count >= cols * n else { return [] }
+        var C = [Double](repeating: 0, count: rows * n)
+        vDSP_mmulD(A, 1, B, 1, &C, 1, vDSP_Length(rows), vDSP_Length(n), vDSP_Length(cols))
+        return C
+    }
+
+    // MARK: - Softmax
+
+    /// Numerically stable softmax: exp(x - max(x)) / sum(exp(x - max(x)))
+    static func softmax(_ values: [Double]) -> [Double] {
+        let n = values.count
+        guard n > 0 else { return [] }
+
+        // Find max for numerical stability
+        var maxVal: Double = 0
+        vDSP_maxvD(values, 1, &maxVal, vDSP_Length(n))
+
+        // Subtract max
+        var negMax = -maxVal
+        var shifted = [Double](repeating: 0, count: n)
+        vDSP_vsaddD(values, 1, &negMax, &shifted, 1, vDSP_Length(n))
+
+        // Exp
+        var expValues = [Double](repeating: 0, count: n)
+        vForce.exp(shifted, result: &expValues)
+
+        // Sum
+        var total: Double = 0
+        vDSP_sveD(expValues, 1, &total, vDSP_Length(n))
+
+        // Normalize
+        guard total > 0 else { return [Double](repeating: 1.0 / Double(n), count: n) }
+        var result = [Double](repeating: 0, count: n)
+        var invTotal = 1.0 / total
+        vDSP_vsmulD(expValues, 1, &invTotal, &result, 1, vDSP_Length(n))
+
+        return result
+    }
+
+    // MARK: - Log-Sum-Exp
+
+    /// Numerically stable log-sum-exp: log(sum(exp(x))) = max(x) + log(sum(exp(x - max(x))))
+    static func logSumExp(_ values: [Double]) -> Double {
+        let n = values.count
+        guard n > 0 else { return -.infinity }
+
+        var maxVal: Double = 0
+        vDSP_maxvD(values, 1, &maxVal, vDSP_Length(n))
+
+        var negMax = -maxVal
+        var shifted = [Double](repeating: 0, count: n)
+        vDSP_vsaddD(values, 1, &negMax, &shifted, 1, vDSP_Length(n))
+
+        var expValues = [Double](repeating: 0, count: n)
+        vForce.exp(shifted, result: &expValues)
+
+        var total: Double = 0
+        vDSP_sveD(expValues, 1, &total, vDSP_Length(n))
+
+        return maxVal + log(total)
+    }
+
+    // MARK: - Cumulative Sum
+
+    /// Cumulative sum using vDSP_vrsumD
+    static func cumulativeSum(_ values: [Double]) -> [Double] {
+        let n = values.count
+        guard n > 0 else { return [] }
+        var result = [Double](repeating: 0, count: n)
+        var one = 1.0
+        // vDSP_vrsumD computes running sum; input is multiplied by scalar
+        vDSP_vrsumD(values, 1, &one, &result, 1, vDSP_Length(n))
+        return result
+    }
+
+    // MARK: - Argmax / Argmin
+
+    /// Index of maximum value via vDSP_maxviD
+    static func argmax(_ values: [Double]) -> Int {
+        guard !values.isEmpty else { return 0 }
+        var maxVal: Double = 0
+        var maxIdx: vDSP_Length = 0
+        vDSP_maxviD(values, 1, &maxVal, &maxIdx, vDSP_Length(values.count))
+        return Int(maxIdx)
+    }
+
+    /// Index of minimum value via vDSP_minviD
+    static func argmin(_ values: [Double]) -> Int {
+        guard !values.isEmpty else { return 0 }
+        var minVal: Double = 0
+        var minIdx: vDSP_Length = 0
+        vDSP_minviD(values, 1, &minVal, &minIdx, vDSP_Length(values.count))
+        return Int(minIdx)
+    }
+
+    // MARK: - Multivariate Normal (Diagonal Covariance)
+
+    /// Log-likelihood of x under a multivariate normal with diagonal covariance.
+    /// diagVariance contains the diagonal elements of the covariance matrix.
+    /// Formula: -0.5 * [d*ln(2pi) + sum(ln(var_i)) + sum((x_i - mu_i)^2 / var_i)]
+    static func diagonalMVNLogLikelihood(x: [Double], mean: [Double], diagVariance: [Double]) -> Double {
+        let d = x.count
+        guard d == mean.count, d == diagVariance.count, d > 0 else { return -.infinity }
+
+        // (x - mean)
+        var diff = [Double](repeating: 0, count: d)
+        vDSP_vsubD(mean, 1, x, 1, &diff, 1, vDSP_Length(d))
+
+        // diff^2
+        var diffSquared = [Double](repeating: 0, count: d)
+        vDSP_vsqD(diff, 1, &diffSquared, 1, vDSP_Length(d))
+
+        // diff^2 / variance
+        var scaledDiff = [Double](repeating: 0, count: d)
+        vDSP_vdivD(diagVariance, 1, diffSquared, 1, &scaledDiff, 1, vDSP_Length(d))
+
+        // sum(diff^2 / variance)
+        var mahalanobis: Double = 0
+        vDSP_sveD(scaledDiff, 1, &mahalanobis, vDSP_Length(d))
+
+        // log(variance) for each dimension
+        var logVar = [Double](repeating: 0, count: d)
+        vForce.log(diagVariance, result: &logVar)
+
+        // sum(log(variance))
+        var logDetSum: Double = 0
+        vDSP_sveD(logVar, 1, &logDetSum, vDSP_Length(d))
+
+        let logLikelihood = -0.5 * (Double(d) * log(2.0 * .pi) + logDetSum + mahalanobis)
+        return logLikelihood
+    }
+
+    // MARK: - Weighted Mean
+
+    /// Weighted mean: sum(values * weights) / sum(weights)
+    static func weightedMean(_ values: [Double], weights: [Double]) -> Double {
+        let n = Swift.min(values.count, weights.count)
+        guard n > 0 else { return 0 }
+
+        var dotResult: Double = 0
+        vDSP_dotprD(values, 1, weights, 1, &dotResult, vDSP_Length(n))
+
+        var weightSum: Double = 0
+        vDSP_sveD(weights, 1, &weightSum, vDSP_Length(n))
+
+        guard weightSum > 0 else { return 0 }
+        return dotResult / weightSum
+    }
+
+    // MARK: - Outer Product
+
+    /// Outer product: result[i*b.count + j] = a[i] * b[j]. Returns flat row-major matrix.
+    static func outerProduct(_ a: [Double], _ b: [Double]) -> [Double] {
+        let m = a.count
+        let n = b.count
+        guard m > 0, n > 0 else { return [] }
+
+        // result[i*n + j] = a[i] * b[j]
+        var result = [Double](repeating: 0, count: m * n)
+        result.withUnsafeMutableBufferPointer { buf in
+            for i in 0..<m {
+                var scalar = a[i]
+                vDSP_vsmulD(b, 1, &scalar, buf.baseAddress! + i * n, 1, vDSP_Length(n))
+            }
+        }
+        return result
+    }
+
+    // MARK: - Linear System Solver (LAPACK)
+
+    /// Solve Ax = b for x using Gaussian elimination with partial pivoting.
+    /// A is n x n (row-major), b is length n. Returns x, or nil if singular.
+    static func solveLinearSystem(A: [Double], b: [Double], n: Int) -> [Double]? {
+        guard A.count >= n * n, b.count >= n, n > 0 else { return nil }
+
+        // Augmented matrix [A|b] — work in-place
+        var aug = [Double](repeating: 0, count: n * (n + 1))
+        for i in 0..<n {
+            for j in 0..<n {
+                aug[i * (n + 1) + j] = A[i * n + j]
+            }
+            aug[i * (n + 1) + n] = b[i]
+        }
+
+        // Forward elimination with partial pivoting
+        for col in 0..<n {
+            // Find pivot
+            var maxVal = abs(aug[col * (n + 1) + col])
+            var maxRow = col
+            for row in (col + 1)..<n {
+                let val = abs(aug[row * (n + 1) + col])
+                if val > maxVal { maxVal = val; maxRow = row }
+            }
+            guard maxVal > 1e-12 else { return nil } // Singular
+
+            // Swap rows
+            if maxRow != col {
+                for j in col...(n) {
+                    let tmp = aug[col * (n + 1) + j]
+                    aug[col * (n + 1) + j] = aug[maxRow * (n + 1) + j]
+                    aug[maxRow * (n + 1) + j] = tmp
+                }
+            }
+
+            // Eliminate below
+            let pivot = aug[col * (n + 1) + col]
+            for row in (col + 1)..<n {
+                let factor = aug[row * (n + 1) + col] / pivot
+                for j in col...(n) {
+                    aug[row * (n + 1) + j] -= factor * aug[col * (n + 1) + j]
+                }
+            }
+        }
+
+        // Back substitution
+        var x = [Double](repeating: 0, count: n)
+        for i in stride(from: n - 1, through: 0, by: -1) {
+            var sum = aug[i * (n + 1) + n]
+            for j in (i + 1)..<n {
+                sum -= aug[i * (n + 1) + j] * x[j]
+            }
+            x[i] = sum / aug[i * (n + 1) + i]
+        }
+        return x
+    }
+
+    // MARK: - Pearson Correlation
+
+    /// Pearson correlation coefficient between x and y using vDSP.
+    static func pearsonCorrelation(_ x: [Double], _ y: [Double]) -> Double {
+        let n = Swift.min(x.count, y.count)
+        guard n > 1 else { return 0 }
+
+        // Means
+        var meanX: Double = 0
+        var meanY: Double = 0
+        vDSP_meanvD(x, 1, &meanX, vDSP_Length(n))
+        vDSP_meanvD(y, 1, &meanY, vDSP_Length(n))
+
+        // Center: xc = x - meanX, yc = y - meanY
+        var negMeanX = -meanX
+        var negMeanY = -meanY
+        var xc = [Double](repeating: 0, count: n)
+        var yc = [Double](repeating: 0, count: n)
+        vDSP_vsaddD(x, 1, &negMeanX, &xc, 1, vDSP_Length(n))
+        vDSP_vsaddD(y, 1, &negMeanY, &yc, 1, vDSP_Length(n))
+
+        // Dot product of centered vectors
+        var numerator: Double = 0
+        vDSP_dotprD(xc, 1, yc, 1, &numerator, vDSP_Length(n))
+
+        // Sum of squares
+        var ssX: Double = 0
+        var ssY: Double = 0
+        vDSP_svesqD(xc, 1, &ssX, vDSP_Length(n))
+        vDSP_svesqD(yc, 1, &ssY, vDSP_Length(n))
+
+        let denominator = (ssX * ssY).squareRoot()
+        guard denominator > 0 else { return 0 }
+
+        return numerator / denominator
+    }
 }

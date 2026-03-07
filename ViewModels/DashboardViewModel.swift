@@ -75,6 +75,11 @@ final class DashboardViewModel {
         focusedInsights.first
     }
 
+    /// Single highest-impact daily action from ML
+    var dailyAction: DailyAction? {
+        analysisEngine.dailyAction
+    }
+
     var topInsights: [Insight] {
         Array(focusedInsights.prefix(3))
     }

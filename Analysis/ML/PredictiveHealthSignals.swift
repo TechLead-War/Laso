@@ -526,7 +526,7 @@ struct PredictiveHealthSignals {
                                  Double(Swift.min(hrvValues.count, window)) / Double(window) * 0.3)
 
         let explanation = buildFatigueExplanation(score: fatigueScore100, factors: factors)
-        let recommendation = buildFatigueRecommendation(riskLevel: riskLevel)
+        let recommendation = buildFatigueRecommendation(riskLevel: riskLevel, factors: factors, baselines: baselines)
 
         return FatigueSignal(
             riskLevel: riskLevel,
@@ -548,17 +548,39 @@ struct PredictiveHealthSignals {
         return parts.joined(separator: " ")
     }
 
-    private static func buildFatigueRecommendation(riskLevel: RiskLevel) -> String {
+    private static func buildFatigueRecommendation(
+        riskLevel: RiskLevel,
+        factors: [ContributingFactor],
+        baselines: [HealthMetric: UserBaseline]
+    ) -> String {
+        var parts: [String] = []
+
         switch riskLevel {
         case .critical:
-            return "Your fatigue level suggests overtraining is likely. Take at least 2 complete rest days. Prioritize 8+ hours of sleep, hydrate with at least 3 liters of water, and avoid high-intensity exercise until your HRV recovers to baseline."
+            parts.append("Your fatigue is critically elevated.")
+            if let hrvBaseline = baselines[.heartRateVariability] {
+                parts.append("Prioritize rest until your HRV recovers toward your baseline of \(formatted(hrvBaseline.mean, metric: .heartRateVariability)).")
+            }
+            parts.append("Take at least 2 complete rest days, sleep 8+ hours, and hydrate with 3+ liters of water.")
         case .high:
-            return "Fatigue is building up significantly. Take a rest day today and reduce training intensity by 50% for the next 3 days. Focus on sleep quality and consider a recovery-focused session like yoga or light walking."
+            parts.append("Fatigue is building significantly.")
+            for factor in factors.prefix(2) {
+                if let baseline = baselines[factor.metric] {
+                    parts.append("Your \(factor.metric.displayName) needs to recover toward \(formatted(baseline.mean, metric: factor.metric)).")
+                }
+            }
+            parts.append("Take a rest day and reduce training intensity by 50% for the next 3 days.")
         case .moderate:
-            return "Moderate fatigue detected. Consider easing up on training intensity this week. Ensure you are getting adequate sleep and monitor how your body responds over the next few days."
+            parts.append("Moderate fatigue detected.")
+            if let topFactor = factors.first, let baseline = baselines[topFactor.metric] {
+                parts.append("Focus on improving \(topFactor.metric.displayName) back toward \(formatted(baseline.mean, metric: topFactor.metric)).")
+            }
+            parts.append("Consider easing up on training intensity this week.")
         case .low:
-            return "Fatigue levels are within a healthy range. Continue your current routine and maintain good sleep habits."
+            parts.append("Fatigue levels are within a healthy range. Continue your current routine.")
         }
+
+        return parts.joined(separator: " ")
     }
 
     // MARK: - 2. Burnout Risk Detector
@@ -717,7 +739,7 @@ struct PredictiveHealthSignals {
                                  Double(Swift.min(rhrValues.count, window)) / Double(window) * 0.4)
 
         let explanation = buildBurnoutExplanation(score: rawScore, factors: factors)
-        let recommendation = buildBurnoutRecommendation(riskLevel: riskLevel)
+        let recommendation = buildBurnoutRecommendation(riskLevel: riskLevel, factors: factors, baselines: baselines)
 
         return BurnoutSignal(
             riskLevel: riskLevel,
@@ -743,17 +765,39 @@ struct PredictiveHealthSignals {
         return parts.joined(separator: " ")
     }
 
-    private static func buildBurnoutRecommendation(riskLevel: RiskLevel) -> String {
+    private static func buildBurnoutRecommendation(
+        riskLevel: RiskLevel,
+        factors: [ContributingFactor],
+        baselines: [HealthMetric: UserBaseline]
+    ) -> String {
+        var parts: [String] = []
+
         switch riskLevel {
         case .critical:
-            return "Multiple burnout indicators are elevated. Take a deload week: reduce training volume by 60%, prioritize 8+ hours of sleep, add recovery practices (gentle stretching, meditation), and consider speaking with a healthcare professional about your stress load."
+            parts.append("Multiple burnout indicators are elevated.")
+            for factor in factors.prefix(2) {
+                if let baseline = baselines[factor.metric] {
+                    parts.append("\(factor.metric.displayName) needs to return to \(formatted(baseline.mean, metric: factor.metric)).")
+                }
+            }
+            parts.append("Take a deload week: reduce volume by 60%, prioritize 8+ hours of sleep, and add recovery practices.")
         case .high:
-            return "You are showing clear signs of chronic overload. Reduce training intensity by 40% this week, schedule at least 3 rest days, and focus on sleep quality. Vary your workouts to break the monotony."
+            parts.append("Clear signs of chronic overload.")
+            if let topFactor = factors.first {
+                parts.append("Key issue: \(topFactor.description).")
+            }
+            parts.append("Reduce training intensity by 40% this week and schedule at least 3 rest days.")
         case .moderate:
-            return "Some early burnout signals are appearing. Add an extra rest day this week and try to vary your exercise routine. Prioritize activities you enjoy to maintain motivation."
+            parts.append("Some early burnout signals are appearing.")
+            if let topFactor = factors.first, let baseline = baselines[topFactor.metric] {
+                parts.append("Watch your \(topFactor.metric.displayName) — aim for \(formatted(baseline.mean, metric: topFactor.metric)).")
+            }
+            parts.append("Add an extra rest day and vary your exercise routine.")
         case .low:
-            return "No significant burnout risk detected. Maintain your current balance of training and recovery."
+            parts.append("No significant burnout risk. Maintain your current balance of training and recovery.")
         }
+
+        return parts.joined(separator: " ")
     }
 
     // MARK: - 3. Overtraining Syndrome (OTS) Early Warning
@@ -917,7 +961,7 @@ struct PredictiveHealthSignals {
                                  Double(Swift.min(calValues.count, 28)) / 28.0 * 0.4)
 
         let explanation = buildOvertrainingExplanation(score: rawScore, factors: factors, recovery: projectedRecovery)
-        let recommendation = buildOvertrainingRecommendation(riskLevel: riskLevel, recovery: projectedRecovery)
+        let recommendation = buildOvertrainingRecommendation(riskLevel: riskLevel, recovery: projectedRecovery, factors: factors, baselines: baselines)
 
         return OvertrainingSignal(
             riskLevel: riskLevel,
@@ -943,18 +987,41 @@ struct PredictiveHealthSignals {
         return parts.joined(separator: " ")
     }
 
-    private static func buildOvertrainingRecommendation(riskLevel: RiskLevel, recovery: Int?) -> String {
+    private static func buildOvertrainingRecommendation(
+        riskLevel: RiskLevel,
+        recovery: Int?,
+        factors: [ContributingFactor],
+        baselines: [HealthMetric: UserBaseline]
+    ) -> String {
         let recoveryText = recovery.map { " Full recovery is projected to take approximately \($0) days." } ?? ""
+        var parts: [String] = []
+
         switch riskLevel {
         case .critical:
-            return "Overtraining syndrome is likely. Immediately stop high-intensity training for at least 1 week. Focus exclusively on sleep (9+ hours), nutrition (increase protein by 20%), and only gentle walking.\(recoveryText)"
+            parts.append("Overtraining syndrome is likely.")
+            for factor in factors.prefix(2) {
+                if let baseline = baselines[factor.metric] {
+                    parts.append("\(factor.metric.displayName) at concerning levels — target: \(formatted(baseline.mean, metric: factor.metric)).")
+                }
+            }
+            parts.append("Stop high-intensity training for at least 1 week. Focus on sleep (9+ hours) and nutrition.\(recoveryText)")
         case .high:
-            return "Strong overtraining indicators detected. Reduce training volume by 50-60% for the next week. Prioritize recovery: sleep 8+ hours, increase protein intake, and limit sessions to light aerobic work.\(recoveryText)"
+            parts.append("Strong overtraining indicators detected.")
+            if let topFactor = factors.first, let baseline = baselines[topFactor.metric] {
+                parts.append("Your \(topFactor.metric.displayName) needs to recover to \(formatted(baseline.mean, metric: topFactor.metric)).")
+            }
+            parts.append("Reduce training volume by 50-60% for the next week.\(recoveryText)")
         case .moderate:
-            return "Early overtraining signals present. Reduce intensity by 30% this week and add an extra rest day. Monitor your HRV over the next 3-5 days to see if it recovers."
+            parts.append("Early overtraining signals present.")
+            if let topFactor = factors.first {
+                parts.append("Key signal: \(topFactor.description).")
+            }
+            parts.append("Reduce intensity by 30% this week and add an extra rest day.")
         case .low:
-            return "No significant overtraining risk. Your training load and recovery appear balanced."
+            parts.append("No significant overtraining risk. Your training load and recovery appear balanced.")
         }
+
+        return parts.joined(separator: " ")
     }
 
     // MARK: - 4. Insomnia Risk Predictor
@@ -1102,7 +1169,7 @@ struct PredictiveHealthSignals {
                                  Double(Swift.min(awakeValues.count + sleepValues.count, 28)) / 28.0 * 0.4)
 
         let explanation = buildInsomniaExplanation(score: rawScore, factors: factors)
-        let recommendation = buildInsomniaRecommendation(riskLevel: riskLevel, factors: factors)
+        let recommendation = buildInsomniaRecommendation(riskLevel: riskLevel, factors: factors, baselines: baselines)
 
         return InsomniaSignal(
             riskLevel: riskLevel,
@@ -1125,7 +1192,9 @@ struct PredictiveHealthSignals {
     }
 
     private static func buildInsomniaRecommendation(
-        riskLevel: RiskLevel, factors: [ContributingFactor]
+        riskLevel: RiskLevel,
+        factors: [ContributingFactor],
+        baselines: [HealthMetric: UserBaseline]
     ) -> String {
         var recommendations: [String] = []
 
@@ -1136,17 +1205,36 @@ struct PredictiveHealthSignals {
         case .critical, .high:
             recommendations.append("Tonight's sleep is at risk.")
             if hasCaffeineFactor {
-                recommendations.append("Avoid all caffeine after noon.")
+                if let baseline = baselines[.caffeineIntake] {
+                    recommendations.append("Your caffeine intake is above your usual \(formatted(baseline.mean, metric: .caffeineIntake)) — avoid all caffeine after noon.")
+                } else {
+                    recommendations.append("Avoid all caffeine after noon.")
+                }
             }
             if hasHRFactor {
-                recommendations.append("Try 10 minutes of deep breathing or meditation before bed to lower your heart rate.")
+                if let baseline = baselines[.restingHeartRate] {
+                    recommendations.append("Your resting heart rate is elevated above your baseline of \(formatted(baseline.mean, metric: .restingHeartRate)). Try 10 minutes of deep breathing or meditation before bed.")
+                } else {
+                    recommendations.append("Try 10 minutes of deep breathing or meditation before bed to lower your heart rate.")
+                }
+            }
+            for factor in factors.prefix(2) where factor.metric != .caffeineIntake && factor.metric != .restingHeartRate {
+                if let baseline = baselines[factor.metric] {
+                    recommendations.append("Your \(factor.metric.displayName) needs to return toward \(formatted(baseline.mean, metric: factor.metric)).")
+                }
             }
             recommendations.append("Dim lights 2 hours before bedtime, avoid screens for 1 hour, and keep your bedroom cool (18-20 C).")
-            recommendations.append("Consider a consistent bedtime within the next hour.")
         case .moderate:
             recommendations.append("Some factors suggest sleep may be disrupted tonight.")
             if hasCaffeineFactor {
-                recommendations.append("Cut off caffeine by early afternoon.")
+                if let baseline = baselines[.caffeineIntake] {
+                    recommendations.append("Cut off caffeine by early afternoon — your baseline is \(formatted(baseline.mean, metric: .caffeineIntake)).")
+                } else {
+                    recommendations.append("Cut off caffeine by early afternoon.")
+                }
+            }
+            if let topFactor = factors.first, let baseline = baselines[topFactor.metric] {
+                recommendations.append("Focus on bringing \(topFactor.metric.displayName) back toward \(formatted(baseline.mean, metric: topFactor.metric)).")
             }
             recommendations.append("Maintain a consistent bedtime and avoid stimulating activities in the evening.")
         case .low:
@@ -1327,7 +1415,7 @@ struct PredictiveHealthSignals {
         let explanation = buildImmuneExplanation(
             score: rawScore, factors: factors, consecutiveDays: maxConsecutive
         )
-        let recommendation = buildImmuneRecommendation(riskLevel: riskLevel)
+        let recommendation = buildImmuneRecommendation(riskLevel: riskLevel, factors: factors, baselines: baselines)
 
         return ImmuneSignal(
             riskLevel: riskLevel,
@@ -1352,17 +1440,39 @@ struct PredictiveHealthSignals {
         return parts.joined(separator: " ")
     }
 
-    private static func buildImmuneRecommendation(riskLevel: RiskLevel) -> String {
+    private static func buildImmuneRecommendation(
+        riskLevel: RiskLevel,
+        factors: [ContributingFactor],
+        baselines: [HealthMetric: UserBaseline]
+    ) -> String {
+        var parts: [String] = []
+
         switch riskLevel {
         case .critical:
-            return "Your body is showing strong signs of immune compromise. Cancel any intense workouts for the next 2-3 days. Prioritize sleep (9+ hours), hydrate aggressively (3+ liters), increase vitamin C and zinc intake, and avoid crowds or stressful situations if possible. Monitor for emerging symptoms."
+            parts.append("Your body is showing strong signs of immune compromise.")
+            for factor in factors.prefix(2) {
+                if let baseline = baselines[factor.metric] {
+                    parts.append("\(factor.metric.displayName) needs to recover to \(formatted(baseline.mean, metric: factor.metric)).")
+                }
+            }
+            parts.append("Cancel intense workouts for the next 2-3 days. Prioritize sleep (9+ hours), hydrate aggressively (3+ liters), and increase vitamin C and zinc intake.")
         case .high:
-            return "Multiple physiological markers suggest your immune system is under strain. Reduce exercise intensity to light walking only for the next 48 hours. Focus on sleep quality, hydration, and nutrition. If symptoms develop, rest completely."
+            parts.append("Multiple markers suggest your immune system is under strain.")
+            if let topFactor = factors.first, let baseline = baselines[topFactor.metric] {
+                parts.append("Your \(topFactor.metric.displayName) is at concerning levels — target: \(formatted(baseline.mean, metric: topFactor.metric)).")
+            }
+            parts.append("Reduce exercise to light walking only for the next 48 hours. Focus on sleep quality, hydration, and nutrition.")
         case .moderate:
-            return "Some early immune compromise indicators are present. Be extra diligent about sleep (aim for 8+ hours), stay well-hydrated, and consider reducing training intensity by 30% for a few days."
+            parts.append("Some early immune compromise indicators are present.")
+            if let topFactor = factors.first, let baseline = baselines[topFactor.metric] {
+                parts.append("Watch your \(topFactor.metric.displayName) — aim for \(formatted(baseline.mean, metric: topFactor.metric)).")
+            }
+            parts.append("Be extra diligent about sleep (8+ hours), stay well-hydrated, and consider reducing training intensity by 30%.")
         case .low:
-            return "No significant immune compromise indicators detected. Continue your normal routine with good sleep and nutrition habits."
+            parts.append("No significant immune compromise indicators. Continue your normal routine with good sleep and nutrition habits.")
         }
+
+        return parts.joined(separator: " ")
     }
 
     // MARK: - 6. Metabolic Inactivity Alert
@@ -1511,7 +1621,7 @@ struct PredictiveHealthSignals {
             score: rawScore, consecutiveDays: consecutiveInactiveDays, factors: factors
         )
         let recommendation = buildInactivityRecommendation(
-            riskLevel: riskLevel, consecutiveDays: consecutiveInactiveDays
+            riskLevel: riskLevel, consecutiveDays: consecutiveInactiveDays, factors: factors, baselines: baselines
         )
 
         return InactivitySignal(
@@ -1539,17 +1649,38 @@ struct PredictiveHealthSignals {
     }
 
     private static func buildInactivityRecommendation(
-        riskLevel: RiskLevel, consecutiveDays: Int
+        riskLevel: RiskLevel,
+        consecutiveDays: Int,
+        factors: [ContributingFactor],
+        baselines: [HealthMetric: UserBaseline]
     ) -> String {
+        var parts: [String] = []
+
         switch riskLevel {
         case .critical:
-            return "You've been inactive for \(consecutiveDays) days. Prolonged inactivity significantly impacts metabolic health. Start with a 15-minute walk today. Even brief movement breaks every hour can reverse the metabolic slowdown. Set a timer to stand and move for 2 minutes every 30 minutes."
+            parts.append("You've been inactive for \(consecutiveDays) days.")
+            for factor in factors.prefix(2) {
+                if let baseline = baselines[factor.metric] {
+                    parts.append("\(factor.metric.displayName) needs to return toward \(formatted(baseline.mean, metric: factor.metric)).")
+                }
+            }
+            parts.append("Start with a 15-minute walk today. Set a timer to stand and move for 2 minutes every 30 minutes.")
         case .high:
-            return "You've been inactive for \(consecutiveDays) days. Even a 15-minute walk can reverse the metabolic slowdown. Try to hit at least 4,000 steps today and take standing breaks every hour."
+            parts.append("You've been inactive for \(consecutiveDays) days.")
+            if let topFactor = factors.first, let baseline = baselines[topFactor.metric] {
+                parts.append("Your \(topFactor.metric.displayName) has dropped — aim for \(formatted(baseline.mean, metric: topFactor.metric)).")
+            }
+            parts.append("Even a 15-minute walk can reverse the metabolic slowdown. Try to hit at least 4,000 steps today.")
         case .moderate:
-            return "Your activity level has dropped below your usual pattern. Aim for a short walk or light exercise today. Small increases in daily movement add up significantly for metabolic health."
+            parts.append("Your activity level has dropped below your usual pattern.")
+            if let topFactor = factors.first, let baseline = baselines[topFactor.metric] {
+                parts.append("Your \(topFactor.metric.displayName) is below your baseline of \(formatted(baseline.mean, metric: topFactor.metric)).")
+            }
+            parts.append("Aim for a short walk or light exercise today.")
         case .low:
-            return "Activity levels look healthy. Keep up your current movement habits."
+            parts.append("Activity levels look healthy. Keep up your current movement habits.")
         }
+
+        return parts.joined(separator: " ")
     }
 }

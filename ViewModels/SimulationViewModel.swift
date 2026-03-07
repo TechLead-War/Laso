@@ -124,7 +124,7 @@ final class SimulationViewModel {
             ),
             latestValues: latestValues,
             todayVector: mlOrch.latestVector,
-            predictiveScorerWeights: scorerParams?.weights,
+            predictiveScorer: mlOrch.predictiveScorer.isReady ? mlOrch.predictiveScorer : nil,
             predictiveScorerKeys: scorerKeys,
             predictiveScorerConfidence: mlOrch.predictiveScorer.isReady
                 ? min(Double((scorerParams?.trainingCount ?? 0)) / 90.0, 1.0)

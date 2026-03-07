@@ -341,16 +341,16 @@ enum PersonalizationBlender {
     ///   - populationPrediction: Output from the population prior model (0-1).
     ///   - userDataDays: Number of days of user data available.
     ///   - personalModelAccuracy: Optional measured accuracy of the personal model.
-    ///   - rampCenterDays: Day count at which blending is 50/50 (default 30).
-    ///   - rampScale: Sigmoid steepness — smaller = sharper transition (default 8.0).
+    ///   - rampCenterDays: Day count at which blending is 50/50 (default 14).
+    ///   - rampScale: Sigmoid steepness — smaller = sharper transition (default 5.0).
     /// - Returns: Blended prediction and the personal weight used.
     static func blendPrediction(
         personalPrediction: Double,
         populationPrediction: Double,
         userDataDays: Int,
         personalModelAccuracy: Double? = nil,
-        rampCenterDays: Int = 30,
-        rampScale: Double = 8.0
+        rampCenterDays: Int = 14,
+        rampScale: Double = 5.0
     ) -> (blended: Double, personalWeight: Double) {
         var personalWeight = sigmoidWeight(
             days: userDataDays,
@@ -375,9 +375,9 @@ enum PersonalizationBlender {
 
     /// Blend a personalized baseline with population priors.
     ///
-    /// - When user has < 7 days: 100% population.
-    /// - When user has 7-60 days: sigmoid blend.
-    /// - When user has 60+ days: 100% personal.
+    /// - When user has < 3 days: 100% population.
+    /// - When user has 3-30 days: sigmoid blend.
+    /// - When user has 30+ days: 100% personal.
     ///
     /// - Parameters:
     ///   - personalBaseline: User's computed baseline (nil if insufficient data).
@@ -398,17 +398,17 @@ enum PersonalizationBlender {
         }
 
         // Below minimum threshold: pure population
-        guard userDataDays >= 7, let personal = personalBaseline else {
+        guard userDataDays >= 3, let personal = personalBaseline else {
             return (mean: prior.populationMean, stdDev: prior.populationStdDev, personalWeight: 0)
         }
 
         // Above full personalization threshold
-        if userDataDays >= 60 {
+        if userDataDays >= 30 {
             return (mean: personal.mean, stdDev: personal.standardDeviation, personalWeight: 1.0)
         }
 
-        // Sigmoid blend in the 7-60 day window
-        let w = sigmoidWeight(days: userDataDays, rampCenter: 30, rampScale: 8.0)
+        // Sigmoid blend in the 3-30 day window
+        let w = sigmoidWeight(days: userDataDays, rampCenter: 14, rampScale: 5.0)
 
         let blendedMean = w * personal.mean + (1.0 - w) * prior.populationMean
         let blendedStdDev = w * personal.standardDeviation + (1.0 - w) * prior.populationStdDev
@@ -627,28 +627,28 @@ enum PersonalizationBlender {
         let nextMilestone: String?
 
         switch userDataDays {
-        case ..<7:
+        case ..<3:
             level = .population
             description = "Your insights use general health benchmarks while we learn your patterns."
-            let remaining = 7 - userDataDays
+            let remaining = 3 - userDataDays
             nextMilestone = "Track \(remaining) more day\(remaining == 1 ? "" : "s") to begin personalizing insights."
 
-        case 7..<21:
+        case 3..<14:
             level = .emerging
             description = "Your insights are \(Int(percent))% personalized — we're learning your unique patterns."
-            let remaining = 21 - userDataDays
+            let remaining = 14 - userDataDays
             nextMilestone = "Track \(remaining) more day\(remaining == 1 ? "" : "s") for increasingly personal insights."
 
-        case 21..<45:
+        case 14..<21:
             level = .blended
             description = "Your insights are \(Int(percent))% personalized to your body."
-            let remaining = 45 - userDataDays
+            let remaining = 21 - userDataDays
             nextMilestone = "Track \(remaining) more day\(remaining == 1 ? "" : "s") for highly personalized predictions."
 
-        case 45..<60:
+        case 21..<30:
             level = .personalized
             description = "Your insights are \(Int(percent))% personalized — predictions are tailored to you."
-            let remaining = 60 - userDataDays
+            let remaining = 30 - userDataDays
             nextMilestone = "Track \(remaining) more day\(remaining == 1 ? "" : "s") for fully personalized insights."
 
         default:

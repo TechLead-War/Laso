@@ -213,9 +213,10 @@ final class AnalysisEngine {
         let newIllnessWarnings = IllnessEarlyWarning.evaluate(timeSeries: timeSeries, baselines: coreBaselines)
         allInsights.append(contentsOf: IllnessEarlyWarning.generateInsights(from: newIllnessWarnings))
 
-        // ML insights (if previously computed — we don't trigger ML here)
-        if mlOrchestrator.hasRunOnce {
-            allInsights.append(contentsOf: mlOrchestrator.generateInsights())
+        // ML insights (components have their own isReady guards)
+        let mlInsights = mlOrchestrator.generateInsights()
+        if !mlInsights.isEmpty {
+            allInsights.append(contentsOf: mlInsights)
         }
 
         allInsights.sort { $0.priorityScore > $1.priorityScore }

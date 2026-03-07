@@ -130,6 +130,7 @@ enum BlockType: String {
     case homeCoachGoal = "home_coach_goal"
     case homeRiskRow = "home_risk_row"
     case homeRecoveryInfoButton = "home_recovery_info_button"
+    case homeDailyAction = "home_daily_action"
     case dataConfidenceBadge = "data_confidence_badge"
     case shareCard = "share_card"
 

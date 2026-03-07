@@ -43,7 +43,7 @@ struct SimulationEngine {
         let latestValues: [HealthMetric: Double]
         // ML fields (optional — only available with 30+ days)
         let todayVector: DailyFeatureVector?
-        let predictiveScorerWeights: [Double]?
+        let predictiveScorer: PredictiveScorer?
         let predictiveScorerKeys: [FeatureKey]?
         let predictiveScorerConfidence: Double
         let welfordStats: [HealthMetric: FeatureEngine.WelfordState]?
@@ -241,59 +241,42 @@ struct SimulationEngine {
 
     // MARK: - ML-Based Path
 
-    /// Uses PredictiveScorer weights to estimate score delta via feature modification.
+    /// Uses PredictiveScorer (Gradient Boosted Trees) to estimate score delta via counterfactual prediction.
     /// Returns the estimated score delta, or nil if ML is not available.
     private static func simulateMLBased(
         deltas: [MetricDelta],
         state: SimulationState
     ) -> Double? {
         guard let vector = state.todayVector,
-              let weights = state.predictiveScorerWeights,
-              let keys = state.predictiveScorerKeys,
-              let welfordStats = state.welfordStats,
-              !weights.isEmpty else {
+              let scorer = state.predictiveScorer,
+              scorer.isReady,
+              let welfordStats = state.welfordStats else {
             return nil
         }
 
-        // Build the original feature array
-        var features = keys.map { key -> Double in
-            let v = vector.features[key] ?? FeatureKey.missingSentinel
-            return v == FeatureKey.missingSentinel ? 0.0 : v
-        }
-        features.append(contentsOf: vector.context.asArray)
-        features.append(1.0) // bias
+        // Get original prediction
+        guard let originalPrediction = scorer.predict(todayVector: vector) else { return nil }
+        let originalProb = originalPrediction.probability
 
-        guard features.count == weights.count else { return nil }
-
-        // Compute original P(bad day)
-        let originalLogit = zip(weights, features).reduce(0.0) { $0 + $1.0 * $1.1 }
-        let originalProb = 1.0 / (1.0 + exp(-originalLogit))
-
-        // Modify features for each delta
-        var modifiedFeatures = features
+        // Build modified vector with counterfactual values
+        var modifiedFeatures = vector.features
         for delta in deltas {
             guard let stats = welfordStats[delta.metric], stats.stdDev > 0 else { continue }
             let newZScore = stats.zScore(for: delta.newValue)
 
-            // Update raw z-score feature
-            let rawKey = FeatureKey(metric: delta.metric, type: .raw)
-            if let idx = keys.firstIndex(of: rawKey), idx < modifiedFeatures.count {
-                modifiedFeatures[idx] = newZScore
-            }
-
-            // Update baseline deviation feature
-            let devKey = FeatureKey(metric: delta.metric, type: .devBaseline)
-            if let idx = keys.firstIndex(of: devKey), idx < modifiedFeatures.count {
-                modifiedFeatures[idx] = newZScore
-            }
+            modifiedFeatures[FeatureKey(metric: delta.metric, type: .raw)] = newZScore
+            modifiedFeatures[FeatureKey(metric: delta.metric, type: .devBaseline)] = newZScore
         }
 
-        // Compute modified P(bad day)
-        let modifiedLogit = zip(weights, modifiedFeatures).reduce(0.0) { $0 + $1.0 * $1.1 }
-        let modifiedProb = 1.0 / (1.0 + exp(-modifiedLogit))
+        let modifiedVector = DailyFeatureVector(
+            date: vector.date, features: modifiedFeatures, context: vector.context
+        )
+
+        // Get counterfactual prediction from GBT
+        guard let modifiedPrediction = scorer.predict(todayVector: modifiedVector) else { return nil }
+        let modifiedProb = modifiedPrediction.probability
 
         // Convert probability delta to approximate score delta
-        // Lower P(bad day) → higher score, scaled by ~50 points full range
         let probDelta = originalProb - modifiedProb  // positive = improvement
         let scoreDelta = probDelta * 50.0
 

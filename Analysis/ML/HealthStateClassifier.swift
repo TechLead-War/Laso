@@ -1,13 +1,21 @@
 import Foundation
+import Accelerate
 
-/// K-means clustering on daily feature vectors to identify distinct health states.
-/// Auto-selects k (3-7) via silhouette score and auto-labels clusters by dominant feature patterns.
+/// Gaussian Mixture Model clustering on daily feature vectors to identify distinct health states.
+/// Uses EM algorithm with diagonal covariance and BIC model selection (k=2..7).
+/// Replaces K-means with soft probabilistic assignments for better state identification.
 final class HealthStateClassifier {
     /// Minimum days of data required
     static let minimumDays = 60
 
     /// Range of k values to try
-    private static let kRange = 3...7
+    private static let kRange = 2...7
+    /// EM convergence threshold
+    private static let emTolerance = 1e-6
+    /// Maximum EM iterations
+    private static let maxEMIterations = 100
+    /// Variance floor to prevent division by zero
+    private static let varianceFloor = 1e-6
 
     /// Current health state
     private(set) var currentState: HealthState?
@@ -15,17 +23,21 @@ final class HealthStateClassifier {
     private(set) var states: [HealthState] = []
     /// State transition matrix
     private(set) var transitionMatrix: [String: [String: Double]] = [:]
-    /// State history (date → state label)
+    /// State history (date -> state label)
     private(set) var stateHistory: [(date: Date, label: String)] = []
 
-    /// Trained centroids per cluster
-    private var centroids: [[Double]] = []
-    /// Cluster assignments for training data
+    // GMM parameters
+    private var means: [[Double]] = []         // k x d
+    private var variances: [[Double]] = []     // k x d (diagonal covariance)
+    private var mixingWeights: [Double] = []   // k
+    private var numComponents: Int = 0
+
+    /// Hard assignments for training data
     private var assignments: [Int] = []
     /// Feature keys used during training
     private var trainedKeys: [FeatureKey] = []
 
-    /// Last full retrain date — guards against retraining too frequently
+    /// Last full retrain date
     private var lastRetrainDate: Date?
 
     /// Whether a full retrain is needed (never trained, or >30 days since last)
@@ -50,30 +62,48 @@ final class HealthStateClassifier {
             row.map { $0 == FeatureKey.missingSentinel ? 0.0 : $0 }
         }
 
-        // Auto-select k via silhouette score
-        var bestSilhouette = -1.0
-        var bestCentroids: [[Double]] = []
+        // BIC model selection: try each k, pick lowest BIC
+        var bestBIC = Double.infinity
+        var bestMeans: [[Double]] = []
+        var bestVariances: [[Double]] = []
+        var bestWeights: [Double] = []
+        var bestK = 2
         var bestAssignments: [Int] = []
 
         for k in Self.kRange {
             guard k < cleanData.count else { break }
 
-            let (c, a) = kMeansPlusPlus(data: cleanData, k: k, dim: dim, maxIterations: 50)
-            let sil = silhouetteScore(data: cleanData, assignments: a, centroids: c)
+            let result = fitGMM(data: cleanData, k: k, dim: dim)
+            guard let result else { continue }
 
-            if sil > bestSilhouette {
-                bestSilhouette = sil
-                bestCentroids = c
-                bestAssignments = a
+            let bic = computeBIC(
+                logLikelihood: result.logLikelihood,
+                k: k, dim: dim, n: cleanData.count
+            )
+
+            if bic < bestBIC {
+                bestBIC = bic
+                bestMeans = result.means
+                bestVariances = result.variances
+                bestWeights = result.weights
+                bestK = k
+                bestAssignments = result.assignments
             }
         }
 
-        centroids = bestCentroids
+        guard !bestMeans.isEmpty else { return }
+
+        means = bestMeans
+        variances = bestVariances
+        mixingWeights = bestWeights
+        numComponents = bestK
         assignments = bestAssignments
 
         // Label clusters and build states
-        states = labelClusters(centroids: bestCentroids, data: cleanData,
-                               assignments: bestAssignments, orderedKeys: orderedKeys)
+        states = labelClusters(
+            means: bestMeans, data: cleanData,
+            assignments: bestAssignments, orderedKeys: orderedKeys
+        )
 
         // Build state history and transition matrix
         buildStateHistory(vectors: vectors, data: cleanData)
@@ -87,40 +117,135 @@ final class HealthStateClassifier {
         lastRetrainDate = Date()
     }
 
-    // MARK: - Classification
+    // MARK: - GMM Fitting (EM Algorithm)
 
-    /// Classify a single day into a health state
-    func classify(vector: DailyFeatureVector) -> HealthState? {
-        guard !centroids.isEmpty else { return nil }
-
-        let features = vector.toArray(orderedKeys: trainedKeys)
-            .map { $0 == FeatureKey.missingSentinel ? 0.0 : $0 }
-
-        let nearest = findNearestCentroid(features)
-        guard nearest < states.count else { return nil }
-
-        return states[nearest]
+    private struct GMMResult {
+        let means: [[Double]]
+        let variances: [[Double]]
+        let weights: [Double]
+        let assignments: [Int]
+        let logLikelihood: Double
     }
 
-    // MARK: - K-Means++ Implementation
-
-    private func kMeansPlusPlus(
-        data: [[Double]], k: Int, dim: Int, maxIterations: Int
-    ) -> (centroids: [[Double]], assignments: [Int]) {
+    private func fitGMM(data: [[Double]], k: Int, dim: Int) -> GMMResult? {
         let n = data.count
-        guard n > k else { return (data, Array(0..<n)) }
+        guard n > k, dim > 0 else { return nil }
 
-        // K-means++ initialization
-        var centroids: [[Double]] = []
+        // Initialize with K-means++ seeding for stable starting points
+        var currentMeans = kMeansPlusPlusInit(data: data, k: k, dim: dim)
+        var currentVariances = [[Double]](
+            repeating: [Double](repeating: 1.0, count: dim), count: k
+        )
+        var currentWeights = [Double](repeating: 1.0 / Double(k), count: k)
 
-        // First centroid: random
-        centroids.append(data[Int.random(in: 0..<n)])
+        // Responsibilities: n x k
+        var responsibilities = [[Double]](
+            repeating: [Double](repeating: 0, count: k), count: n
+        )
 
-        // Remaining centroids: weighted by distance squared
+        var prevLogLikelihood = -Double.infinity
+
+        for _ in 0..<Self.maxEMIterations {
+            // E-step: compute responsibilities
+            var totalLogLikelihood = 0.0
+
+            for i in 0..<n {
+                var logProbs = [Double](repeating: 0, count: k)
+
+                for j in 0..<k {
+                    let logPrior = log(max(currentWeights[j], 1e-300))
+                    let logLik = AccelerateML.diagonalMVNLogLikelihood(
+                        x: data[i], mean: currentMeans[j], diagVariance: currentVariances[j]
+                    )
+                    logProbs[j] = logPrior + logLik
+                }
+
+                // Normalize responsibilities using softmax (numerically stable)
+                let resp = AccelerateML.softmax(logProbs)
+                responsibilities[i] = resp
+
+                // Accumulate log-likelihood using log-sum-exp
+                totalLogLikelihood += AccelerateML.logSumExp(logProbs)
+            }
+
+            // Check convergence
+            let improvement = totalLogLikelihood - prevLogLikelihood
+            if improvement >= 0 && improvement < Self.emTolerance {
+                break
+            }
+            prevLogLikelihood = totalLogLikelihood
+
+            // M-step: update parameters
+            for j in 0..<k {
+                // Extract responsibilities for component j
+                let rj = (0..<n).map { responsibilities[$0][j] }
+
+                // Effective count
+                var Nj: Double = 0
+                vDSP_sveD(rj, 1, &Nj, vDSP_Length(n))
+                guard Nj > 1e-10 else { continue }
+
+                // Update weight
+                currentWeights[j] = Nj / Double(n)
+
+                // Update mean: weighted mean of data points
+                var newMean = [Double](repeating: 0, count: dim)
+                for d in 0..<dim {
+                    let colValues = (0..<n).map { data[$0][d] }
+                    newMean[d] = AccelerateML.weightedMean(colValues, weights: rj)
+                }
+                currentMeans[j] = newMean
+
+                // Update variance: weighted variance with floor
+                var newVar = [Double](repeating: 0, count: dim)
+                for d in 0..<dim {
+                    var weightedSumSqDiff: Double = 0
+                    for i in 0..<n {
+                        let diff = data[i][d] - newMean[d]
+                        weightedSumSqDiff += rj[i] * diff * diff
+                    }
+                    newVar[d] = max(weightedSumSqDiff / Nj, Self.varianceFloor)
+                }
+                currentVariances[j] = newVar
+            }
+        }
+
+        // Hard assignments via argmax of responsibilities
+        let hardAssignments = responsibilities.map { AccelerateML.argmax($0) }
+
+        return GMMResult(
+            means: currentMeans,
+            variances: currentVariances,
+            weights: currentWeights,
+            assignments: hardAssignments,
+            logLikelihood: prevLogLikelihood
+        )
+    }
+
+    // MARK: - BIC
+
+    /// BIC = -2 * logL + numParams * ln(n)
+    /// For diagonal GMM: numParams = k * (2*d + 1) - 1
+    /// (k means of dim d, k variances of dim d, k-1 free mixing weights)
+    private func computeBIC(logLikelihood: Double, k: Int, dim: Int, n: Int) -> Double {
+        let numParams = Double(k * (2 * dim + 1) - 1)
+        return -2.0 * logLikelihood + numParams * log(Double(n))
+    }
+
+    // MARK: - K-Means++ Initialization
+
+    private func kMeansPlusPlusInit(data: [[Double]], k: Int, dim: Int) -> [[Double]] {
+        let n = data.count
+        var centers: [[Double]] = []
+
+        // First center: random
+        centers.append(data[Int.random(in: 0..<n)])
+
+        // Remaining centers: weighted by distance squared
         for _ in 1..<k {
             var distances = [Double](repeating: Double.infinity, count: n)
             for i in 0..<n {
-                for c in centroids {
+                for c in centers {
                     let d = AccelerateML.squaredDistance(data[i], c)
                     distances[i] = Swift.min(distances[i], d)
                 }
@@ -129,7 +254,6 @@ final class HealthStateClassifier {
             let totalDist = AccelerateML.sum(distances)
             guard totalDist > 0 else { break }
 
-            // Weighted random selection
             let target = Double.random(in: 0..<totalDist)
             var cumSum: Double = 0
             var selected = 0
@@ -140,113 +264,35 @@ final class HealthStateClassifier {
                     break
                 }
             }
-            centroids.append(data[selected])
+            centers.append(data[selected])
         }
 
-        // K-means iterations
-        var assignments = [Int](repeating: 0, count: n)
-
-        for _ in 0..<maxIterations {
-            // Assign points to nearest centroid
-            var changed = false
-            for i in 0..<n {
-                let nearest = findNearest(point: data[i], centroids: centroids)
-                if nearest != assignments[i] {
-                    assignments[i] = nearest
-                    changed = true
-                }
-            }
-
-            guard changed else { break }
-
-            // Update centroids
-            var newCentroids = [[Double]](repeating: [Double](repeating: 0, count: dim), count: k)
-            var counts = [Int](repeating: 0, count: k)
-
-            for i in 0..<n {
-                let c = assignments[i]
-                counts[c] += 1
-                for d in 0..<dim {
-                    newCentroids[c][d] += data[i][d]
-                }
-            }
-
-            for c in 0..<k {
-                if counts[c] > 0 {
-                    for d in 0..<dim {
-                        newCentroids[c][d] /= Double(counts[c])
-                    }
-                    centroids[c] = newCentroids[c]
-                }
-            }
-        }
-
-        return (centroids, assignments)
+        return centers
     }
 
-    private func findNearest(point: [Double], centroids: [[Double]]) -> Int {
-        var minDist = Double.infinity
-        var nearest = 0
-        for (i, c) in centroids.enumerated() {
-            let d = AccelerateML.squaredDistance(point, c)
-            if d < minDist {
-                minDist = d
-                nearest = i
-            }
-        }
-        return nearest
-    }
+    // MARK: - Classification
 
-    private func findNearestCentroid(_ features: [Double]) -> Int {
-        findNearest(point: features, centroids: centroids)
-    }
+    /// Classify a single day into a health state using soft GMM assignment
+    func classify(vector: DailyFeatureVector) -> HealthState? {
+        guard !means.isEmpty, numComponents > 0 else { return nil }
 
-    // MARK: - Silhouette Score
+        let features = vector.toArray(orderedKeys: trainedKeys)
+            .map { $0 == FeatureKey.missingSentinel ? 0.0 : $0 }
 
-    private func silhouetteScore(data: [[Double]], assignments: [Int], centroids: [[Double]]) -> Double {
-        let n = data.count
-        let k = centroids.count
-        guard n > k, k > 1 else { return 0 }
-
-        var totalSilhouette: Double = 0
-        var count = 0
-
-        // Sample for performance (max 200 points)
-        let sampleIndices: [Int]
-        if n > 100 {
-            sampleIndices = Array((0..<n).shuffled().prefix(100))
-        } else {
-            sampleIndices = Array(0..<n)
+        // Compute log-posterior for each component
+        var logProbs = [Double](repeating: 0, count: numComponents)
+        for j in 0..<numComponents {
+            let logPrior = log(max(mixingWeights[j], 1e-300))
+            let logLik = AccelerateML.diagonalMVNLogLikelihood(
+                x: features, mean: means[j], diagVariance: variances[j]
+            )
+            logProbs[j] = logPrior + logLik
         }
 
-        for i in sampleIndices {
-            let cluster = assignments[i]
+        let nearest = AccelerateML.argmax(logProbs)
+        guard nearest < states.count else { return nil }
 
-            // a(i) = mean distance to same cluster
-            var sameCluster: [Int] = []
-            for j in 0..<n where assignments[j] == cluster && j != i {
-                sameCluster.append(j)
-            }
-            guard !sameCluster.isEmpty else { continue }
-
-            let a = sameCluster.map { AccelerateML.euclideanDistance(data[i], data[$0]) }.mean
-
-            // b(i) = min mean distance to other clusters
-            var minB = Double.infinity
-            for c in 0..<k where c != cluster {
-                let otherMembers = (0..<n).filter { assignments[$0] == c }
-                guard !otherMembers.isEmpty else { continue }
-                let meanDist = otherMembers.map { AccelerateML.euclideanDistance(data[i], data[$0]) }.mean
-                minB = Swift.min(minB, meanDist)
-            }
-
-            guard minB.isFinite else { continue }
-            let s = (minB - a) / max(a, minB)
-            totalSilhouette += s
-            count += 1
-        }
-
-        return count > 0 ? totalSilhouette / Double(count) : 0
+        return states[nearest]
     }
 
     // MARK: - Auto-Labeling
@@ -263,23 +309,23 @@ final class HealthStateClassifier {
     ]
 
     private func labelClusters(
-        centroids: [[Double]],
+        means: [[Double]],
         data: [[Double]],
         assignments: [Int],
         orderedKeys: [FeatureKey]
     ) -> [HealthState] {
         var states: [HealthState] = []
 
-        for (clusterIdx, centroid) in centroids.enumerated() {
+        for (clusterIdx, clusterMean) in means.enumerated() {
             var characteristics: [HealthState.StateCharacteristic] = []
 
             // Find dominant features for this cluster
             for labelInfo in Self.labelMetrics {
                 let key = FeatureKey(metric: labelInfo.metric, type: .raw)
                 guard let featureIdx = orderedKeys.firstIndex(of: key),
-                      featureIdx < centroid.count else { continue }
+                      featureIdx < clusterMean.count else { continue }
 
-                let zScore = centroid[featureIdx]
+                let zScore = clusterMean[featureIdx]
                 let level: HealthState.StateCharacteristic.Level
                 if zScore > 0.5 { level = .high }
                 else if zScore < -0.5 { level = .low }
@@ -298,7 +344,7 @@ final class HealthStateClassifier {
 
             states.append(HealthState(
                 label: label,
-                centroid: centroid,
+                centroid: clusterMean,
                 characteristics: characteristics,
                 daysInState: daysInState,
                 transitionProbabilities: [:] // Filled later
@@ -389,7 +435,7 @@ final class HealthStateClassifier {
 
     // MARK: - State
 
-    var isReady: Bool { !centroids.isEmpty }
+    var isReady: Bool { !means.isEmpty && numComponents > 0 }
 
     /// Most likely next state based on transition probabilities
     func predictNextState() -> (label: String, probability: Double)? {

@@ -233,11 +233,19 @@ enum UncertaintyEstimator {
 
     // MARK: - Confidence Gate
 
+    /// Confidence tier for gating decisions.
+    enum ConfidenceTier: String {
+        case confident = "confident"      // >= 0.4 effective confidence
+        case suggestive = "suggestive"    // >= 0.2 effective confidence
+        case gated = "gated"             // below 0.2
+    }
+
     /// Result of the confidence gate: should this prediction be shown?
     struct ConfidenceGate {
         let shouldShow: Bool
         let confidenceScore: Double         // 0-1 final confidence
         let reason: String?                 // Why it was gated (if shouldShow == false)
+        let tier: ConfidenceTier
     }
 
     /// Determine whether a prediction/insight should be shown to the user.
@@ -267,7 +275,8 @@ enum UncertaintyEstimator {
             return ConfidenceGate(
                 shouldShow: false,
                 confidenceScore: 0,
-                reason: "Insufficient data: \(dataSufficiency.recommendation)"
+                reason: "Insufficient data: \(dataSufficiency.recommendation)",
+                tier: .gated
             )
         }
 
@@ -276,9 +285,9 @@ enum UncertaintyEstimator {
 
         // If we have evaluation metrics, adjust confidence by model accuracy
         if let eval = evaluationMetrics {
-            // Penalize overconfident models: effective = raw * sqrt(accuracy)
-            // A model with 50% accuracy halves confidence; 90% barely reduces it.
-            let accuracyMultiplier = eval.accuracy.squareRoot()
+            // Softened accuracy penalty: pow(accuracy, 0.3)
+            // 60% accuracy only reduces confidence by ~15%; 90% barely reduces it.
+            let accuracyMultiplier = pow(eval.accuracy, 0.3)
             effectiveConfidence *= accuracyMultiplier
 
             // Further penalize badly calibrated models
@@ -287,25 +296,33 @@ enum UncertaintyEstimator {
             effectiveConfidence *= calibrationPenalty
         }
 
-        // Blend with data sufficiency (low data means lower effective confidence)
-        effectiveConfidence *= Swift.min(1.0, dataSufficiency.overallScore / 0.7)
-
         // Clamp
         effectiveConfidence = Swift.max(0, Swift.min(1.0, effectiveConfidence))
 
-        // Gate 2: Minimum confidence
-        guard effectiveConfidence >= minimumConfidence else {
+        // Tiered gating instead of binary threshold
+        let tier: ConfidenceTier
+        if effectiveConfidence >= minimumConfidence {
+            tier = .confident
+        } else if effectiveConfidence >= 0.2 {
+            tier = .suggestive
+        } else {
+            tier = .gated
+        }
+
+        guard tier != .gated else {
             return ConfidenceGate(
                 shouldShow: false,
                 confidenceScore: effectiveConfidence,
-                reason: "Model confidence too low (\(Int(effectiveConfidence * 100))%). Need at least \(Int(minimumConfidence * 100))%."
+                reason: "Model confidence too low (\(Int(effectiveConfidence * 100))%). Need at least 20%.",
+                tier: .gated
             )
         }
 
         return ConfidenceGate(
             shouldShow: true,
             confidenceScore: effectiveConfidence,
-            reason: nil
+            reason: tier == .suggestive ? "Suggestive — based on limited data." : nil,
+            tier: tier
         )
     }
 

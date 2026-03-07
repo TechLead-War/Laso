@@ -11,7 +11,6 @@ struct HomeView: View {
     @Binding var showSettings: Bool
     @Environment(\.scenePhase) private var scenePhase
 
-    @State private var livePulse = false
     @State private var homeRefreshTimer: Timer?
     @State private var weeklyReviewViewModel: WeeklyReviewViewModel?
     @State private var showScoreGuide = false
@@ -70,7 +69,6 @@ struct HomeView: View {
         }
         .sensoryFeedback(.success, trigger: viewModel.lastRefresh)
         .onAppear {
-            livePulse = true
             startHomeRefresh()
             AppAnalytics.shared.trackFeatureOpen(.home)
             showScoreGuideIfNeeded()
@@ -78,7 +76,6 @@ struct HomeView: View {
         .onDisappear {
             stopHomeRefresh()
             stopFirstLaunchDotTimer()
-            livePulse = false
             AppAnalytics.shared.trackFeatureClose(.home)
         }
         .onChange(of: scenePhase) { _, newPhase in
@@ -149,7 +146,7 @@ struct HomeView: View {
     }
 
     private var homeContent: some View {
-        GeometryReader { geo in
+        ScrollView {
             VStack(spacing: 0) {
                 // 1. Greeting header
                 CoachGreetingView(
@@ -180,10 +177,9 @@ struct HomeView: View {
                         metricsTracked: viewModel.dataDepth.metricsTracked
                     )
                     .padding(.top, 6)
+                    .padding(.bottom, 8)
 
-                    Spacer(minLength: 8)
-
-                    // 2. Recovery
+                    // 2. Today — recovery + daily action
                     todaySection
                         .onAppear { recoveryTracker.appeared() }
                         .onDisappear { recoveryTracker.disappeared() }
@@ -192,10 +188,9 @@ struct HomeView: View {
                     illnessWarningCard
                         .onAppear { illnessTracker.appeared() }
                         .onDisappear { illnessTracker.disappeared() }
+                        .padding(.top, 8)
 
-                    Spacer(minLength: 8)
-
-                    // 4. Today's Briefing — actionable insights only
+                    // 4. Key Insight
                     BodyInsightsSection(
                         viewModel: viewModel,
                         liveVM: liveViewModel,
@@ -215,17 +210,15 @@ struct HomeView: View {
                             navigationPath.append("insightsDetail")
                         }
                     )
+                    .padding(.top, 8)
                     .onAppear { bodyInsightsTracker.appeared() }
                     .onDisappear { bodyInsightsTracker.disappeared() }
 
-                    Spacer(minLength: 8)
-
                     // 5. Health Risks — moderate+ only
                     todayRisksSection
+                        .padding(.top, 8)
                         .onAppear { risksTracker.appeared() }
                         .onDisappear { risksTracker.disappeared() }
-
-                    Spacer(minLength: 8)
 
                     // 6. Weekly Review
                     WeeklyReviewEntryCard(
@@ -242,12 +235,11 @@ struct HomeView: View {
                         )
                         navigationPath.append("weeklyReview")
                     }
+                    .padding(.top, 8)
                     .onAppear { weeklyReviewTracker.appeared() }
                     .onDisappear { weeklyReviewTracker.disappeared() }
 
-                    Spacer(minLength: 8)
-
-                    // 7. Today — weekly goals with progress
+                    // 7. Focus goals
                     CoachGoalsSection(
                         goals: viewModel.coachGoals,
                         daysOfData: viewModel.dataDepth.daysOfData,
@@ -266,23 +258,23 @@ struct HomeView: View {
                             navigationPath.append(metric)
                         }
                     )
+                    .padding(.top, 8)
                     .onAppear { coachTracker.appeared() }
                     .onDisappear { coachTracker.disappeared() }
-
-                    Spacer(minLength: 4)
 
                     // Last updated footer
                     if let lastRefresh = viewModel.lastRefresh {
                         Text("Updated \(lastRefresh, style: .relative) ago")
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
-                            .padding(.bottom, 8)
+                            .padding(.top, 8)
+                            .padding(.bottom, 16)
                             .accessibilityLabel("Last updated \(lastRefresh, style: .relative) ago")
                     }
                 }
             }
-            .frame(minHeight: geo.size.height)
         }
+        .scrollIndicators(.hidden)
     }
 
     // MARK: - Empty State — Connect Health Data
@@ -586,175 +578,126 @@ struct HomeView: View {
 
     // MARK: - Today Section
 
+    @ViewBuilder
     private var todaySection: some View {
         VStack(spacing: 12) {
-            if let score = liveViewModel.recovery.readinessScore {
-                if liveViewModel.recovery.isReadinessDataFresh {
-                    recoveryCard(score: score)
-                } else {
-                    staleRecoveryCard
-                }
+            // Recovery readiness — only when fresh
+            if let score = liveViewModel.recovery.readinessScore,
+               liveViewModel.recovery.isReadinessDataFresh {
+                recoveryCard(score: score)
+            }
+
+            // Daily action from ML
+            if let action = viewModel.dailyAction {
+                dailyActionCard(action)
             }
         }
     }
 
-    private var staleRecoveryCard: some View {
-        HStack(spacing: 14) {
-            Image(systemName: DeviceMessaging.deviceIcon)
-                .font(.title2)
-                .foregroundStyle(.orange)
-                .frame(width: DS.iconSize, height: DS.iconSize)
-                .background(.orange.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.iconRadius))
+    // MARK: - Recovery Card
+
+    private func recoveryCard(score: Int) -> some View {
+        HStack(spacing: 16) {
+            HealthScoreRing(
+                score: score,
+                label: "Readiness",
+                size: 72,
+                lineWidth: 7
+            )
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("Recovery Unavailable")
-                    .font(.subheadline.weight(.semibold))
+                HStack(spacing: 6) {
+                    Text("Recovery")
+                        .font(.headline)
 
-                Text(DeviceMessaging.wearOvernightMessage)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
+                    Button {
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Recovery Info",
+                            type: .homeRecoveryInfoButton,
+                            screen: .home,
+                            metadata: [
+                                "destination": "recovery_info_sheet",
+                                "readiness_score": score
+                            ]
+                        )
+                        recoveryTracker.tapped(target: "recovery_info")
+                        showRecoveryInfo = true
+                    } label: {
+                        Image(systemName: "info.circle")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Text(Self.recoveryLabel(score))
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Self.recoveryColor(score))
+                    .contentTransition(.numericText())
+                    .animation(.easeInOut, value: score)
             }
 
             Spacer()
         }
         .padding(DS.cardPadding)
-        .cardStyle(tint: .orange)
-        .padding(.horizontal)
-    }
-
-    // MARK: - Timestamp Helpers
-
-    /// Shows whichever is more recent: last sync time or latest data timestamp.
-    /// After pull-to-refresh, this ensures the timestamp updates even if no new RHR data arrived.
-    private var mostRecentTimestamp: Date? {
-        let candidates = [
-            liveViewModel.recovery.latestRestingHeartRateTimestamp,
-            viewModel.lastRefresh,
-        ].compactMap { $0 }
-        return candidates.max()
-    }
-
-    // MARK: - Time-of-Day Helpers
-
-    private var currentHour: Int {
-        Calendar.current.component(.hour, from: Date())
-    }
-
-    private var dayPeriod: String {
-        switch currentHour {
-        case 5..<12: return "morning"
-        case 12..<17: return "afternoon"
-        case 17..<21: return "evening"
-        default: return "night"
-        }
-    }
-
-    private var timeGreeting: String {
-        switch dayPeriod {
-        case "morning": return "Rise & recover"
-        case "afternoon": return "Midday check-in"
-        case "evening": return "Wind down"
-        default: return "Rest up"
-        }
-    }
-
-    private func recoveryCard(score: Int) -> some View {
-        VStack(spacing: 16) {
-            // Live header: time-aware label + live indicator
-            HStack {
-                Text(timeGreeting)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .textCase(.uppercase)
-
-                Spacer()
-
-                HStack(spacing: 4) {
-                    Circle()
-                        .fill(liveViewModel.vitals.hasFreshData ? .green : .orange)
-                        .frame(width: 6, height: 6)
-                        .scaleEffect(liveViewModel.vitals.hasFreshData && livePulse ? 1.0 : 0.5)
-                        .opacity(liveViewModel.vitals.hasFreshData && livePulse ? 1.0 : 0.4)
-                        .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: livePulse)
-
-                    if let displayTs = mostRecentTimestamp {
-                        Text(displayTs, style: .relative)
-                            .font(.system(size: 9, weight: .medium).monospacedDigit())
-                            .foregroundStyle(.tertiary)
-                    } else {
-                        Text("Syncing")
-                            .font(.system(size: 9, weight: .medium))
-                            .foregroundStyle(.tertiary)
-                    }
-                }
-            }
-
-            // Hero: Score ring + Recovery status
-            HStack(spacing: 16) {
-                HealthScoreRing(
-                    score: score,
-                    label: "Readiness",
-                    size: 90,
-                    lineWidth: 9
-                )
-
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 6) {
-                        Text("Recovery")
-                            .font(.title3.weight(.semibold))
-
-                        Button {
-                            AppAnalytics.shared.trackBlockTap(
-                                title: "Recovery Info",
-                                type: .homeRecoveryInfoButton,
-                                screen: .home,
-                                metadata: [
-                                    "destination": "recovery_info_sheet",
-                                    "readiness_score": score
-                                ]
-                            )
-                            recoveryTracker.tapped(target: "recovery_info")
-                            showRecoveryInfo = true
-                        } label: {
-                            Image(systemName: "info.circle")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        .buttonStyle(.plain)
-                    }
-
-                    Text(Self.recoveryLabel(score))
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(Self.recoveryColor(score))
-                        .contentTransition(.numericText())
-                        .animation(.easeInOut, value: score)
-                }
-
-                Spacer()
-
-                ShareButton(
-                    cardType: .score(
-                        score: viewModel.overallScore.score,
-                        scoreChange: viewModel.scoreChangeFromLastWeek,
-                        streakDays: SessionTracker.shared.streakDays
-                    ),
-                    screen: .home
-                )
-            }
-        }
-        .padding()
-        .background(.background, in: RoundedRectangle(cornerRadius: 16))
+        .cardStyle()
         .padding(.horizontal)
         .onAppear {
             showRecoveryInfoIfNeeded()
         }
     }
 
+    // MARK: - Daily Action Card
+
+    private func dailyActionCard(_ action: DailyAction) -> some View {
+        Button {
+            AppAnalytics.shared.trackBlockTap(
+                title: action.actionTitle,
+                type: .homeDailyAction,
+                screen: .home,
+                metadata: [
+                    "metric": action.metric.rawValue,
+                    "source": action.source.rawValue,
+                    "impact": action.impactScore
+                ]
+            )
+            navigationPath.append(action.metric)
+        } label: {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    Image(systemName: action.metric.systemImageName)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 28, height: 28)
+                        .background(action.metric.category.color, in: RoundedRectangle(cornerRadius: 7))
+
+                    Text(action.actionTitle)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+
+                Text(action.whyThisMatters)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+            .padding(DS.cardPadding)
+            .cardStyle()
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal)
+    }
+
     private func showRecoveryInfoIfNeeded() {
         guard !UserDefaults.standard.bool(forKey: AppKeys.App.hasSeenRecoveryInfo) else { return }
         UserDefaults.standard.set(true, forKey: AppKeys.App.hasSeenRecoveryInfo)
-        // Slight delay so the card renders first
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
             showRecoveryInfo = true
         }

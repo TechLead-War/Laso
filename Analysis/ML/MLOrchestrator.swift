@@ -262,10 +262,8 @@ final class MLOrchestrator {
 
     /// Check thermal state and yield between components. Returns true if ML should stop.
     private func shouldStopForThermal(after component: String) -> Bool {
-        // Yield briefly between components
-        // Note: This is synchronous; for async context the caller uses try? await Task.sleep
-        if ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue {
-            logger.warning("Stopping ML analysis after \(component): thermal state serious or above")
+        if ProcessInfo.processInfo.thermalState == .critical {
+            logger.warning("Stopping ML analysis after \(component): thermal state critical")
             return true
         }
         return false
@@ -392,7 +390,7 @@ final class MLOrchestrator {
             // Cold start: use population-based prediction even without trained model
             let availableData = buildAvailableDataForColdStart(timeSeries: timeSeries)
             let coldStart = PersonalizationBlender.coldStartPrediction(availableData: availableData)
-            if coldStart.confidence > 0.1 {
+            if coldStart.confidence > 0.05 {
                 tomorrowRiskPrediction = MLPrediction(
                     target: "bad day tomorrow",
                     probability: coldStart.riskScore,
@@ -403,7 +401,7 @@ final class MLOrchestrator {
             }
         }
 
-        // Apply confidence gate to tomorrow prediction
+        // Apply confidence gate to tomorrow prediction — keep suggestive predictions
         if let prediction = tomorrowRiskPrediction, let sufficiency = dataSufficiency {
             let gate = UncertaintyEstimator.gate(
                 modelConfidence: prediction.confidence,
@@ -500,7 +498,7 @@ final class MLOrchestrator {
         }
 
         // Tomorrow prediction insight
-        if let prediction = tomorrowRiskPrediction, prediction.confidence >= 0.3 {
+        if let prediction = tomorrowRiskPrediction, prediction.confidence >= 0.15 {
             let severity: Severity = prediction.probability > 0.6 ? .warning : .info
             let topRisk = prediction.topFactors.first { $0.isRiskFactor }
             let topProtective = prediction.topFactors.first { !$0.isRiskFactor }
