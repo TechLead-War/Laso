@@ -4,6 +4,7 @@ import Observation
 
 /// Manages subscription state, purchases, and trial tracking via StoreKit 2.
 /// The app is gated: 7-day trial → then paid-only.
+@MainActor
 @Observable
 final class SubscriptionManager {
 
@@ -74,7 +75,7 @@ final class SubscriptionManager {
 
     // MARK: - Private
 
-    private var transactionListener: Task<Void, Error>?
+    @ObservationIgnored private var transactionListener: Task<Void, Error>?
     private let defaults = UserDefaults.standard
 
     private enum Key {
@@ -90,7 +91,8 @@ final class SubscriptionManager {
     }
 
     deinit {
-        transactionListener?.cancel()
+        let listener = transactionListener
+        listener?.cancel()
     }
 
     /// Call once at app launch to load products and check status.
@@ -270,16 +272,17 @@ final class SubscriptionManager {
             for await result in Transaction.updates {
                 guard case .verified(let transaction) = result else { continue }
                 await transaction.finish()
-                let previousStatus = self?.status
-                await self?.refreshStatus()
-                if let newStatus = self?.status {
-                    AppAnalytics.shared.updateSubscriptionProperties(status: newStatus)
-                }
-                // Detect renewals: was subscribed before, still subscribed after
-                if case .subscribed = previousStatus, case .subscribed = self?.status {
-                    AppAnalytics.shared.trackSubscriptionRenewed()
-                }
+                await self?.handleTransactionUpdate()
             }
+        }
+    }
+
+    private func handleTransactionUpdate() async {
+        let previousStatus = status
+        await refreshStatus()
+        AppAnalytics.shared.updateSubscriptionProperties(status: status)
+        if case .subscribed = previousStatus, case .subscribed = status {
+            AppAnalytics.shared.trackSubscriptionRenewed()
         }
     }
 

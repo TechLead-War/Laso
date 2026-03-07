@@ -210,14 +210,18 @@ final class LiveViewModel {
         fetchTodayCumulativeStats()
 
         // Medium tier: goals + mindful minutes (every 5 min)
-        if lastMediumFetch == nil || now.timeIntervalSince(lastMediumFetch!) >= Self.mediumInterval {
+        if let lastMedium = lastMediumFetch, now.timeIntervalSince(lastMedium) < Self.mediumInterval {
+            // Skip — not enough time elapsed
+        } else {
             fetchActivityGoals()
             fetchTodayMindfulMinutes()
             lastMediumFetch = now
         }
 
         // Slow tier: RHR, HRV, workout, sleep (every 10 min)
-        if lastSlowFetch == nil || now.timeIntervalSince(lastSlowFetch!) >= Self.slowInterval {
+        if let lastSlow = lastSlowFetch, now.timeIntervalSince(lastSlow) < Self.slowInterval {
+            // Skip — not enough time elapsed
+        } else {
             fetchLatestDailyValues()
             fetchLatestWorkout()
             fetchLastNightSleep()
@@ -240,12 +244,16 @@ final class LiveViewModel {
 
         let now = Date()
         fetchTodayCumulativeStats()
-        if lastMediumFetch == nil || now.timeIntervalSince(lastMediumFetch!) >= Self.mediumInterval {
+        if let lastMedium = lastMediumFetch, now.timeIntervalSince(lastMedium) < Self.mediumInterval {
+            // Skip — not enough time elapsed
+        } else {
             fetchActivityGoals()
             fetchTodayMindfulMinutes()
             lastMediumFetch = now
         }
-        if lastSlowFetch == nil || now.timeIntervalSince(lastSlowFetch!) >= Self.slowInterval {
+        if let lastSlow = lastSlowFetch, now.timeIntervalSince(lastSlow) < Self.slowInterval {
+            // Skip — not enough time elapsed
+        } else {
             fetchLatestDailyValues()
             fetchLatestBloodPressure()
             fetchLatestBodyTemperature()

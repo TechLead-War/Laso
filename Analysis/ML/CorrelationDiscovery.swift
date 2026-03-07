@@ -262,8 +262,9 @@ final class CorrelationDiscovery {
     /// Approximate F-distribution p-value (simplified)
     private func approximateFPValue(fStat: Double, df1: Int, df2: Int) -> Double {
         // Use Abramowitz and Stegun approximation for quick p-value
-        guard fStat > 0, df1 > 0, df2 > 0 else { return 1.0 }
+        guard fStat > 0, fStat.isFinite, df1 > 0, df2 > 0 else { return 1.0 }
         let x = Double(df2) / (Double(df2) + Double(df1) * fStat)
+        guard x > 0, x.isFinite else { return 1.0 }
         // Rough approximation: for large df2, F ~ chi-squared/df1
         // Use exponential approximation for quick evaluation
         let z = -0.5 * Double(df2) * log(x)

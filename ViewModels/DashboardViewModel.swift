@@ -528,6 +528,7 @@ final class DashboardViewModel {
         let cycleFlowSamples = await cycleFlowSamplesTask
         Task.detached(priority: .utility) { [weak self] in
             guard let self else { return }
+            try? Task.checkCancellation()
             self.analysisEngine.runDeferredEssentials(
                 timeSeries: ts,
                 cycleFlowSamples: cycleFlowSamples
@@ -543,6 +544,7 @@ final class DashboardViewModel {
 
             // Thermal break — let CPU cool after core + essentials
             try? await Task.sleep(for: .seconds(10))
+            guard !Task.isCancelled else { return }
 
             // Gate on thermal state — skip heavy work entirely if device is overheating
             if ThermalManager.shared.shouldThrottle {
@@ -552,7 +554,11 @@ final class DashboardViewModel {
 
             // Wait for ML analysis to complete before starting heavy cross-metric work
             // so we don't stack CPU-intensive phases on top of each other
+            var waitIterations = 0
             while analysisEngine.mlOrchestrator.isRunning {
+                guard !Task.isCancelled else { return }
+                waitIterations += 1
+                if waitIterations > 120 { break } // Safety: max 60s wait
                 try? await Task.sleep(for: .milliseconds(500))
             }
 

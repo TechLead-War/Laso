@@ -276,7 +276,7 @@ final class AdaptiveAnomalyDetector {
             }
         }
         guard count > 0 else { return 0 }
-        return (sumSq / Double(count) * Double(a.count)).squareRoot()
+        return (sumSq / Double(count)).squareRoot()
     }
 
     // MARK: - Feature Attribution

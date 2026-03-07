@@ -97,6 +97,10 @@ final class DeviceSourceManager {
                 }
 
                 Task { [healthStore, sampleType, metric] in
+                    guard !Task.isCancelled else {
+                        continuation.resume(returning: [])
+                        return
+                    }
                     var results: [(HKSource, HealthMetric, Date?)] = []
                     results.reserveCapacity(sources.count)
                     for source in sources {

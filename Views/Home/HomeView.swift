@@ -129,12 +129,11 @@ struct HomeView: View {
         homeRefreshTimer = nil
     }
 
-    /// Lazily created and reused WeeklyReviewViewModel to avoid re-allocation on every body render
-    private var weeklyReviewVM: WeeklyReviewViewModel {
+    /// Lazily created and reused WeeklyReviewViewModel
+    private func getOrCreateWeeklyReviewVM() -> WeeklyReviewViewModel {
         if let existing = weeklyReviewViewModel { return existing }
         let vm = WeeklyReviewViewModel(dashboardViewModel: viewModel)
-        // Can't mutate @State in a computed property body, so we dispatch
-        DispatchQueue.main.async { weeklyReviewViewModel = vm }
+        weeklyReviewViewModel = vm
         return vm
     }
 
@@ -230,7 +229,7 @@ struct HomeView: View {
 
                     // 6. Weekly Review
                     WeeklyReviewEntryCard(
-                        viewModel: weeklyReviewVM
+                        viewModel: getOrCreateWeeklyReviewVM()
                     ) {
                         AppAnalytics.shared.trackBlockTap(
                             title: "Weekly Review",

@@ -32,9 +32,10 @@ struct HealthPulseApp: App {
     }
 
     /// Show paywall only when onboarding is done and subscription is definitively expired.
-    /// Free year: paywall disabled for PMF signal.
+    /// Respects FeatureGate.freeYearActive — when active, paywall is disabled.
     private var shouldShowPaywall: Bool {
-        false
+        guard onboardingCompleted else { return false }
+        return subscriptionManager.shouldEnforcePaywall && !FeatureGate.hasFullAccess
     }
 
     /// Runs one-time initial calibration (historical sync + baseline analysis) during onboarding.
@@ -82,8 +83,10 @@ struct HealthPulseApp: App {
 
     /// Creates a ModelContainer with progressive fallback — uses Schema-based API and logs every failure.
     private static func createModelContainer() -> ModelContainer? {
-        let storeDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("HealthData", isDirectory: true)
+        guard let appSupportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            return nil
+        }
+        let storeDir = appSupportDir.appendingPathComponent("HealthData", isDirectory: true)
         try? FileManager.default.createDirectory(at: storeDir, withIntermediateDirectories: true)
         // Use completeUntilFirstUserAuthentication so App Intents (Siri) can access
         // the store when the device is locked (after first unlock).

@@ -96,7 +96,7 @@ final class FeatureEngine {
         // Build vectors for each day
         var vectors: [DailyFeatureVector] = []
 
-        for dayOffset in 0...totalDays {
+        for dayOffset in 0..<totalDays {
             guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) else { continue }
             let day = calendar.startOfDay(for: date)
 

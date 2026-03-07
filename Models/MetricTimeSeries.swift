@@ -131,10 +131,11 @@ struct MetricTimeSeries: Identifiable {
         return (Double(belowCount) / Double(samples.count)) * 100.0
     }
 
-    /// Number of years of data available (capped at 1 year)
+    /// Number of years of data available
     var yearsOfData: Int {
-        guard !samples.isEmpty else { return 0 }
-        return 1
+        guard let first = samples.first, let last = samples.last else { return 0 }
+        let years = Calendar.current.dateComponents([.year], from: first.date, to: last.date).year ?? 0
+        return Swift.max(1, years + 1)
     }
 
     /// Number of distinct calendar days with actual data points

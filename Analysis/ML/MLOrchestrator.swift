@@ -46,7 +46,12 @@ final class MLOrchestrator {
 
     // MARK: - Cached Feature Vectors
 
-    private var cachedVectors: [DailyFeatureVector] = []
+    private let vectorLock = NSLock()
+    private var _cachedVectors: [DailyFeatureVector] = []
+    private var cachedVectors: [DailyFeatureVector] {
+        get { vectorLock.withLock { _cachedVectors } }
+        set { vectorLock.withLock { _cachedVectors = newValue } }
+    }
 
     /// Latest feature vector (for simulation engine)
     var latestVector: DailyFeatureVector? { cachedVectors.last }

@@ -6,7 +6,9 @@ struct HealthKitQueryBuilder {
 
     /// Create a date predicate for the given range
     static func datePredicate(from startDate: Date, to endDate: Date) -> NSPredicate {
-        HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
+        let effectiveStart = min(startDate, endDate)
+        let effectiveEnd = max(startDate, endDate)
+        return HKQuery.predicateForSamples(withStart: effectiveStart, end: effectiveEnd, options: .strictStartDate)
     }
 
     /// Build a statistics collection query for daily aggregated data

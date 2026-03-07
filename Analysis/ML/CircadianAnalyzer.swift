@@ -193,7 +193,7 @@ final class CircadianAnalyzer {
               - a12 * (a21 * a33 - a23 * a31)
               + a13 * (a21 * a32 - a22 * a31)
 
-        guard abs(det) > 1e-10 else {
+        guard abs(det) > 1e-6 else {
             return CosinorResult(mesor: sumY / nD, amplitude: 0, acrophase: 0, rSquared: 0)
         }
 
@@ -212,6 +212,10 @@ final class CircadianAnalyzer {
         let mesor = detM / det
         let beta = detBeta / det
         let gamma = detGamma / det
+
+        guard mesor.isFinite, beta.isFinite, gamma.isFinite else {
+            return CosinorResult(mesor: sumY / nD, amplitude: 0, acrophase: 0, rSquared: 0)
+        }
 
         let amplitude = sqrt(beta * beta + gamma * gamma)
 

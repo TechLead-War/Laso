@@ -332,7 +332,7 @@ final class HealthDataStore {
         baselines: [HealthMetric: UserBaseline]
     ) {
         let today = Calendar.current.startOfDay(for: Date())
-        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today)!
+        guard let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today) else { return }
         let predicate = #Predicate<StoredAnalysisSnapshot> { $0.date >= today && $0.date < tomorrow }
         let descriptor = FetchDescriptor(predicate: predicate)
 

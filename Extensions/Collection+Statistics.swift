@@ -101,7 +101,7 @@ extension Array where Element == Double {
 
     /// Exponential smoothing with given alpha (0 < alpha <= 1)
     func exponentialSmoothing(alpha: Double) -> [Double] {
-        guard !isEmpty else { return [] }
+        guard !isEmpty, alpha > 0, alpha <= 1 else { return [] }
         var result: [Double] = [self[0]]
         for i in 1..<count {
             let smoothed = alpha * self[i] + (1.0 - alpha) * result[i - 1]

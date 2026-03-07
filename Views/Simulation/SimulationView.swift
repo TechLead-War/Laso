@@ -113,7 +113,7 @@ struct SimulationView: View {
 
             // Arrow with delta
             VStack(spacing: 2) {
-                Image(systemName: delta >= 0 ? "arrow.right" : "arrow.right")
+                Image(systemName: delta > 0 ? "arrow.up.right" : delta < 0 ? "arrow.down.right" : "arrow.right")
                     .font(.title3.weight(.bold))
                     .foregroundStyle(delta > 0 ? .green : delta < 0 ? .red : .secondary)
                 if delta != 0 {

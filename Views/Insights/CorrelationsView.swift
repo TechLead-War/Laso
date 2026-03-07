@@ -5,6 +5,9 @@ struct CorrelationsView: View {
     let correlations: [HealthCorrelation]
     let onTapMetric: (HealthMetric) -> Void
 
+    /// Guard against free-tier access via deep navigation
+    private var isGated: Bool { !FeatureGate.canAccess(.advancedAnalytics) }
+
     @State private var selectedFilter: CorrelationFilter = .all
     @State private var filtersTracker = SectionTracker(section: .correlationsFilters, tab: .correlations)
     @State private var listTracker = SectionTracker(section: .correlationsList, tab: .correlations)
@@ -21,6 +24,13 @@ struct CorrelationsView: View {
     }
 
     var body: some View {
+        if isGated {
+            ProFeatureOverlay(
+                feature: "Correlations",
+                icon: "arrow.triangle.branch",
+                description: "Discover how your health metrics influence each other."
+            )
+        }
         ScrollView {
             VStack(spacing: 16) {
                 // Filter chips

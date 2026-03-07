@@ -80,13 +80,15 @@ final class TimeSeriesForecaster {
         let oldSeasonal = state.seasonal[seasonIndex]
 
         // Holt-Winters multiplicative update
-        guard oldSeasonal != 0 else { return }
+        guard oldSeasonal != 0, newValue.isFinite else { return }
         let newLevel = state.alpha * (newValue / oldSeasonal) +
                        (1 - state.alpha) * (state.level + state.trend)
+        guard newLevel.isFinite, newLevel != 0 else { return }
         let newTrend = state.beta * (newLevel - state.level) +
                        (1 - state.beta) * state.trend
         let newSeasonal = state.gamma * (newValue / newLevel) +
                           (1 - state.gamma) * oldSeasonal
+        guard newTrend.isFinite, newSeasonal.isFinite else { return }
 
         // Track residual
         let predicted = state.forecast(stepsAhead: 1)

@@ -77,10 +77,10 @@ enum DeviceMessaging {
     }
 
     /// Notification body when device hasn't recorded data
-    static func notWornNotificationBody(hours: Int? = nil) -> String {
+    static func notWornNotificationBody(hours: Int? = nil, totalMinutes: Int? = nil) -> String {
         if let hours, hours > 0 {
-            let minutes = 0
-            return "Your \(deviceName) hasn't recorded data for \(hours)h \(minutes)m. \(wearToTrackMessage)"
+            let minutes = (totalMinutes ?? 0) - (hours * 60)
+            return "Your \(deviceName) hasn't recorded data for \(hours)h \(max(0, minutes))m. \(wearToTrackMessage)"
         }
         return "Your \(deviceName) hasn't recorded data recently. \(wearToTrackMessage)"
     }

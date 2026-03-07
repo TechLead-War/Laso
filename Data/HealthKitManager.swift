@@ -363,6 +363,7 @@ final class HealthKitManager {
                     }
                     if let value, value > 0 {
                         let hour = calendar.component(.hour, from: statistics.startDate)
+                        guard hour >= 0, hour < 24 else { return }
                         hourBins[hour].append(value)
                     }
                 }
