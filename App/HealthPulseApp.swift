@@ -65,6 +65,7 @@ struct HealthPulseApp: App {
     }
 
     init() {
+        print("hello")
         UITestMode.configureDefaults()
         isUITestMode = UITestMode.isEnabled
 
@@ -97,7 +98,8 @@ struct HealthPulseApp: App {
             StoredDailySample.self, StoredSyncMetadata.self,
             StoredAnalysisSnapshot.self, StoredMLModelState.self,
             StoredRecommendation.self, StoredNotificationEvent.self,
-            StoredAdherenceRecord.self, StoredECGFeatures.self
+            StoredAdherenceRecord.self, StoredECGFeatures.self,
+            StoredModelEvaluation.self
         ]
 
         // Schema version tracking — delete DB when model set changes to avoid hangs

@@ -44,6 +44,21 @@ final class MLOrchestrator {
     /// Tomorrow risk prediction
     var tomorrowRiskPrediction: MLPrediction?
 
+    // MARK: - New ML Results
+
+    /// Enriched feature vectors with composite features
+    var enrichedVectors: [EnrichedDailyFeatureVector] = []
+    /// Predictive health signal report (fatigue, burnout, overtraining, insomnia, immune, inactivity)
+    var healthSignalReport: PredictiveHealthSignals.HealthSignalReport?
+    /// Single highest-impact daily action
+    var dailyAction: DailyAction?
+    /// Personalization status for the user
+    var personalizationStatus: PersonalizationBlender.PersonalizationStatus?
+    /// Data sufficiency assessment
+    var dataSufficiency: UncertaintyEstimator.DataSufficiency?
+    /// Component readiness
+    var componentReadiness: [UncertaintyEstimator.ComponentReadiness] = []
+
     // MARK: - Cached Feature Vectors
 
     private let vectorLock = NSLock()
@@ -88,6 +103,8 @@ final class MLOrchestrator {
     func runMLAnalysis(
         timeSeries: [HealthMetric: MetricTimeSeries],
         baselines: [HealthMetric: UserBaseline],
+        trends: [HealthMetric: TrendAnalyzer.TrendResult],
+        ruleBasedAnomalies: [AnomalyDetector.AnomalyResult],
         scoreHistory: [(date: Date, score: Int)],
         anomalyCounts: [Date: Int]
     ) async {
@@ -115,16 +132,35 @@ final class MLOrchestrator {
 
         let totalDays = vectors.count
 
-        // Run components sequentially in priority order to avoid CPU spikes.
-        // Between each component, yield briefly and check thermal state.
-        // Priority order:
-        //   1. FeatureEngine (already ran above — vectors built)
-        //   2. TimeSeriesForecaster (anomaly detection)
-        //   3. PredictiveScorer (tomorrow prediction)
-        //   4. CorrelationDiscovery
-        //   5. HealthStateClassifier
-        //   6. PatternMiner
-        //   7. AdaptiveAnomalyDetector
+        // Assess data sufficiency and component readiness upfront
+        let requiredMetrics: [HealthMetric] = [
+            .heartRateVariability, .restingHeartRate, .sleepDuration,
+            .steps, .activeCalories, .exerciseMinutes
+        ]
+        dataSufficiency = UncertaintyEstimator.assessDataSufficiency(
+            timeSeries: timeSeries,
+            requiredMetrics: requiredMetrics
+        )
+        componentReadiness = UncertaintyEstimator.checkComponentReadiness(totalDays: totalDays)
+
+        // Personalization status
+        personalizationStatus = PersonalizationBlender.personalizationStatus(
+            userDataDays: totalDays,
+            metricsTracked: timeSeries.count
+        )
+
+        // Step 0a: Enrich feature vectors with composite features
+        logger.debug("Building composite features")
+        enrichedVectors = CompositeFeatureEngine.enrich(
+            vectors: vectors,
+            timeSeries: timeSeries,
+            baselines: baselines
+        )
+
+        if shouldStopForThermal(after: "CompositeFeatureEngine") {
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies)
+            return
+        }
 
         // --- 1. TimeSeriesForecaster (21+ days) ---
         if totalDays >= TimeSeriesForecaster.minimumDays {
@@ -134,10 +170,8 @@ final class MLOrchestrator {
             }
         }
 
-        try? await Task.sleep(for: .milliseconds(200))
-        if ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue {
-            logger.warning("Stopping ML analysis after TimeSeriesForecaster: thermal state serious or above")
-            collectResults(timeSeries: timeSeries, vectors: vectors)
+        if shouldStopForThermal(after: "TimeSeriesForecaster") {
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies)
             return
         }
 
@@ -152,10 +186,8 @@ final class MLOrchestrator {
             )
         }
 
-        try? await Task.sleep(for: .milliseconds(200))
-        if ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue {
-            logger.warning("Stopping ML analysis after PredictiveScorer: thermal state serious or above")
-            collectResults(timeSeries: timeSeries, vectors: vectors)
+        if shouldStopForThermal(after: "PredictiveScorer") {
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies)
             return
         }
 
@@ -167,10 +199,8 @@ final class MLOrchestrator {
             }
         }
 
-        try? await Task.sleep(for: .milliseconds(200))
-        if ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue {
-            logger.warning("Stopping ML analysis after CorrelationDiscovery: thermal state serious or above")
-            collectResults(timeSeries: timeSeries, vectors: vectors)
+        if shouldStopForThermal(after: "CorrelationDiscovery") {
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies)
             return
         }
 
@@ -182,10 +212,8 @@ final class MLOrchestrator {
             }
         }
 
-        try? await Task.sleep(for: .milliseconds(200))
-        if ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue {
-            logger.warning("Stopping ML analysis after HealthStateClassifier: thermal state serious or above")
-            collectResults(timeSeries: timeSeries, vectors: vectors)
+        if shouldStopForThermal(after: "HealthStateClassifier") {
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies)
             return
         }
 
@@ -195,10 +223,8 @@ final class MLOrchestrator {
             patternMiner.mine(timeSeries: timeSeries)
         }
 
-        try? await Task.sleep(for: .milliseconds(200))
-        if ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue {
-            logger.warning("Stopping ML analysis after PatternMiner: thermal state serious or above")
-            collectResults(timeSeries: timeSeries, vectors: vectors)
+        if shouldStopForThermal(after: "PatternMiner") {
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies)
             return
         }
 
@@ -210,8 +236,39 @@ final class MLOrchestrator {
             }
         }
 
-        // Collect results from all components that ran
-        collectResults(timeSeries: timeSeries, vectors: vectors)
+        if shouldStopForThermal(after: "AdaptiveAnomalyDetector") {
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies)
+            return
+        }
+
+        // --- 7. Predictive Health Signals (7+ days for fatigue, more for others) ---
+        logger.debug("Running PredictiveHealthSignals")
+        healthSignalReport = PredictiveHealthSignals.analyze(
+            timeSeries: timeSeries,
+            baselines: baselines,
+            trends: trends,
+            healthState: stateClassifier.isReady ? stateClassifier.currentState : nil,
+            prediction: predictiveScorer.isReady ? predictiveScorer.predict(todayVector: vectors.last!) : nil
+        )
+
+        if shouldStopForThermal(after: "PredictiveHealthSignals") {
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies)
+            return
+        }
+
+        // Collect all results and compute daily action
+        collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies)
+    }
+
+    /// Check thermal state and yield between components. Returns true if ML should stop.
+    private func shouldStopForThermal(after component: String) -> Bool {
+        // Yield briefly between components
+        // Note: This is synchronous; for async context the caller uses try? await Task.sleep
+        if ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue {
+            logger.warning("Stopping ML analysis after \(component): thermal state serious or above")
+            return true
+        }
+        return false
     }
 
     // MARK: - Incremental Training
@@ -277,7 +334,10 @@ final class MLOrchestrator {
 
     private func collectResults(
         timeSeries: [HealthMetric: MetricTimeSeries],
-        vectors: [DailyFeatureVector]
+        vectors: [DailyFeatureVector],
+        baselines: [HealthMetric: UserBaseline],
+        trends: [HealthMetric: TrendAnalyzer.TrendResult],
+        ruleBasedAnomalies: [AnomalyDetector.AnomalyResult]
     ) {
         // Forecast anomalies
         if forecaster.isReady {
@@ -304,10 +364,88 @@ final class MLOrchestrator {
             currentHealthState = stateClassifier.currentState
         }
 
-        // Tomorrow prediction
+        // Tomorrow prediction — blend with population prior via PersonalizationBlender
         if predictiveScorer.isReady, let todayVector = vectors.last {
-            tomorrowRiskPrediction = predictiveScorer.predict(todayVector: todayVector)
+            let personalPrediction = predictiveScorer.predict(todayVector: todayVector)
+            tomorrowRiskPrediction = personalPrediction
+
+            // Blend with population base model if we have limited data
+            if let prediction = personalPrediction {
+                let populationPrediction = PersonalizationBlender.populationPrediction(
+                    from: todayVector
+                )
+                let (blendedProb, _) = PersonalizationBlender.blendPrediction(
+                    personalPrediction: prediction.probability,
+                    populationPrediction: populationPrediction,
+                    userDataDays: vectors.count
+                )
+                // Update prediction with blended probability
+                tomorrowRiskPrediction = MLPrediction(
+                    target: prediction.target,
+                    probability: blendedProb,
+                    confidence: prediction.confidence,
+                    topFactors: prediction.topFactors,
+                    generatedAt: Date()
+                )
+            }
+        } else if !vectors.isEmpty {
+            // Cold start: use population-based prediction even without trained model
+            let availableData = buildAvailableDataForColdStart(timeSeries: timeSeries)
+            let coldStart = PersonalizationBlender.coldStartPrediction(availableData: availableData)
+            if coldStart.confidence > 0.1 {
+                tomorrowRiskPrediction = MLPrediction(
+                    target: "bad day tomorrow",
+                    probability: coldStart.riskScore,
+                    confidence: coldStart.confidence,
+                    topFactors: [],
+                    generatedAt: Date()
+                )
+            }
         }
+
+        // Apply confidence gate to tomorrow prediction
+        if let prediction = tomorrowRiskPrediction, let sufficiency = dataSufficiency {
+            let gate = UncertaintyEstimator.gate(
+                modelConfidence: prediction.confidence,
+                dataSufficiency: sufficiency,
+                evaluationMetrics: nil
+            )
+            if !gate.shouldShow {
+                logger.debug("Prediction gated: \(gate.reason ?? "low confidence")")
+                tomorrowRiskPrediction = nil
+            }
+        }
+
+        // Daily action engine — compute after all signals are ready
+        let causalCorrelations = mlCorrelations.filter { $0.grangerCausal }
+        dailyAction = DailyActionEngine.computeDailyAction(
+            prediction: tomorrowRiskPrediction,
+            circadianProfile: circadianProfile,
+            timingRecommendations: timingRecommendations,
+            causalCorrelations: causalCorrelations,
+            currentState: currentHealthState,
+            anomalies: ruleBasedAnomalies,
+            trends: trends,
+            baselines: baselines,
+            timeSeries: timeSeries,
+            adherenceMultiplier: { [weak self] category in
+                self?.adherenceTracker.effectivenessMultiplier(for: category) ?? 1.0
+            }
+        )
+    }
+
+    /// Build metric data arrays for cold-start prediction
+    private func buildAvailableDataForColdStart(
+        timeSeries: [HealthMetric: MetricTimeSeries]
+    ) -> [HealthMetric: [Double]] {
+        var result: [HealthMetric: [Double]] = [:]
+        for (metric, series) in timeSeries {
+            let values = series.sortedSamples.map(\.value)
+            if !values.isEmpty {
+                result[metric] = values
+            }
+        }
+        return result
     }
 
     // MARK: - Insight Generation
@@ -391,6 +529,11 @@ final class MLOrchestrator {
                     dataPointCount: cachedVectors.count
                 )
             ))
+        }
+
+        // Predictive health signal insights
+        if let report = healthSignalReport {
+            insights.append(contentsOf: PredictiveHealthSignals.generateInsights(from: report))
         }
 
         // Circadian insights

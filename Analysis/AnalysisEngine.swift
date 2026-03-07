@@ -43,6 +43,16 @@ final class AnalysisEngine {
     var currentHealthState: HealthState? { mlOrchestrator.currentHealthState }
     /// Periodic patterns discovered by ML
     var discoveredPatterns: [DiscoveredPattern] { mlOrchestrator.discoveredPatterns }
+    /// Single highest-impact daily action
+    var dailyAction: DailyAction? { mlOrchestrator.dailyAction }
+    /// Predictive health signal report
+    var healthSignalReport: PredictiveHealthSignals.HealthSignalReport? { mlOrchestrator.healthSignalReport }
+    /// Personalization status
+    var personalizationStatus: PersonalizationBlender.PersonalizationStatus? { mlOrchestrator.personalizationStatus }
+    /// Data sufficiency for ML components
+    var dataSufficiency: UncertaintyEstimator.DataSufficiency? { mlOrchestrator.dataSufficiency }
+    /// Component readiness
+    var componentReadiness: [UncertaintyEstimator.ComponentReadiness] { mlOrchestrator.componentReadiness }
 
     init() {
         baselines = persistence.loadBaselines()
@@ -301,6 +311,8 @@ final class AnalysisEngine {
         await mlOrchestrator.runMLAnalysis(
             timeSeries: timeSeries,
             baselines: baselines,
+            trends: trends,
+            ruleBasedAnomalies: anomalies,
             scoreHistory: scoreHistory,
             anomalyCounts: anomalyCounts
         )

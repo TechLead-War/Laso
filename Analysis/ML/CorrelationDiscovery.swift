@@ -90,10 +90,14 @@ final class CorrelationDiscovery {
                 let stability: Double
 
                 if abs(pearsonR) >= 0.25 {
-                    // 3. Granger causality (A → B)
-                    (grangerCausal, grangerP) = grangerCausality(
-                        cause: valuesA, effect: valuesB, maxLag: Self.maxGrangerLag
+                    // 3. Granger causality (A → B) using proper OLS + F-distribution
+                    let grangerResult = GrangerCausalityEngine.test(
+                        cause: valuesA, effect: valuesB,
+                        causeMetric: metricA, effectMetric: metricB,
+                        maxLag: Self.maxGrangerLag
                     )
+                    grangerCausal = grangerResult?.isCausal ?? false
+                    grangerP = grangerResult?.pValue ?? 1.0
 
                     // 4. Partial correlation (controlling for strongest confounder)
                     if metrics.count > 2 {
@@ -187,88 +191,6 @@ final class CorrelationDiscovery {
         }
 
         return max(mi, 0) // MI is non-negative
-    }
-
-    // MARK: - Granger Causality
-
-    /// Test if `cause` Granger-causes `effect` using F-test
-    private func grangerCausality(cause: [Double], effect: [Double], maxLag: Int) -> (causal: Bool, pValue: Double) {
-        let n = effect.count
-        guard n > maxLag + 2 else { return (false, 1.0) }
-
-        // Restricted model: effect[t] = sum(a_i * effect[t-i]) for i=1..maxLag
-        let restrictedSSE = autoregressiveSSE(series: effect, maxLag: maxLag)
-
-        // Unrestricted model: effect[t] = sum(a_i * effect[t-i]) + sum(b_i * cause[t-i])
-        let unrestrictedSSE = autoregressiveSSEWithExogenous(
-            series: effect, exogenous: cause, maxLag: maxLag
-        )
-
-        guard restrictedSSE > 0, unrestrictedSSE > 0, unrestrictedSSE < restrictedSSE else {
-            return (false, 1.0)
-        }
-
-        // F-test: F = ((SSE_r - SSE_u) / q) / (SSE_u / (n - 2*maxLag))
-        let q = Double(maxLag) // additional parameters
-        let dfDenom = Double(n - 2 * maxLag)
-        guard dfDenom > 0 else { return (false, 1.0) }
-
-        let fStat = ((restrictedSSE - unrestrictedSSE) / q) / (unrestrictedSSE / dfDenom)
-
-        // Approximate p-value using F-distribution (simplified)
-        let pValue = approximateFPValue(fStat: fStat, df1: Int(q), df2: Int(dfDenom))
-
-        return (pValue < 0.05, pValue)
-    }
-
-    /// SSE from autoregressive model: y[t] = sum(a_i * y[t-i])
-    private func autoregressiveSSE(series: [Double], maxLag: Int) -> Double {
-        let n = series.count
-        guard n > maxLag else { return 0 }
-
-        var sse: Double = 0
-        for t in maxLag..<n {
-            // Simple: predict as weighted average of lagged values
-            var predicted: Double = 0
-            for lag in 1...maxLag {
-                predicted += series[t - lag] / Double(maxLag)
-            }
-            let error = series[t] - predicted
-            sse += error * error
-        }
-        return sse
-    }
-
-    /// SSE from autoregressive model with exogenous variable
-    private func autoregressiveSSEWithExogenous(
-        series: [Double], exogenous: [Double], maxLag: Int
-    ) -> Double {
-        let n = Swift.min(series.count, exogenous.count)
-        guard n > maxLag else { return 0 }
-
-        var sse: Double = 0
-        for t in maxLag..<n {
-            var predicted: Double = 0
-            for lag in 1...maxLag {
-                predicted += series[t - lag] / Double(2 * maxLag)
-                predicted += exogenous[t - lag] / Double(2 * maxLag)
-            }
-            let error = series[t] - predicted
-            sse += error * error
-        }
-        return sse
-    }
-
-    /// Approximate F-distribution p-value (simplified)
-    private func approximateFPValue(fStat: Double, df1: Int, df2: Int) -> Double {
-        // Use Abramowitz and Stegun approximation for quick p-value
-        guard fStat > 0, fStat.isFinite, df1 > 0, df2 > 0 else { return 1.0 }
-        let x = Double(df2) / (Double(df2) + Double(df1) * fStat)
-        guard x > 0, x.isFinite else { return 1.0 }
-        // Rough approximation: for large df2, F ~ chi-squared/df1
-        // Use exponential approximation for quick evaluation
-        let z = -0.5 * Double(df2) * log(x)
-        return Swift.min(exp(-z + Double(df1) * 0.5), 1.0)
     }
 
     // MARK: - Partial Correlation

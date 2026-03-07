@@ -42,6 +42,12 @@
 		2D6F21E884E250A779F02690 /* CorrelationsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D167F26DB8AE80ABB616CF1 /* CorrelationsSection.swift */; };
 		2EACBFF11664D50541BEEA14 /* TimeSeriesForecaster.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8431050C5D036636922C00D2 /* TimeSeriesForecaster.swift */; };
 		2F829B9FC503134EA2F8038F /* AdherenceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7EEC0056E914FA04403B43 /* AdherenceTracker.swift */; };
+		A1B2C3D4E5F60718091A2B30 /* CompositeFeatureEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718091A2B31 /* CompositeFeatureEngine.swift */; };
+		A1B2C3D4E5F60718091A2B32 /* GrangerCausalityEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718091A2B33 /* GrangerCausalityEngine.swift */; };
+		A1B2C3D4E5F60718091A2B34 /* PersonalizationBlender.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718091A2B35 /* PersonalizationBlender.swift */; };
+		A1B2C3D4E5F60718091A2B36 /* PredictiveHealthSignals.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718091A2B37 /* PredictiveHealthSignals.swift */; };
+		A1B2C3D4E5F60718091A2B38 /* ContextualSignalEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718091A2B39 /* ContextualSignalEngine.swift */; };
+		DA11AC7E3B9F4D2E80C1F5A0 /* DailyActionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA11AC7E3B9F4D2E80C1F5A1 /* DailyActionEngine.swift */; };
 		2F86493CBEAF769199AC04F1 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD281CA396957983B12D0A3C /* DashboardViewModel.swift */; };
 		313CEBC55344992AA6D3E914 /* WeeklyReviewViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324946E490707B84DD4E1D1F /* WeeklyReviewViewModel.swift */; };
 		313DC6B3BAC38CA7F449FE7D /* HealthPulseVisualUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75495DEBF4DB887CAD5A6490 /* HealthPulseVisualUITests.swift */; };
@@ -190,6 +196,8 @@
 		FE76E020D0FBEBB4FB8F162F /* MetricDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21F5378F330A1811DDFAA869 /* MetricDetailViewModel.swift */; };
 		FE9E4402453D80F8B000FB51 /* ForceUpdateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 834077CC43963E51D67B67CF /* ForceUpdateView.swift */; };
 		FFFCC2E4DC4AFD9F8217F32B /* DeviceSetupGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FC2D8AD42E4826D27D5CBC8 /* DeviceSetupGuideView.swift */; };
+		F1A2B3C4D5E6F7890AB1CD02 /* ModelEvaluationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F7890AB1CD01 /* ModelEvaluationStore.swift */; };
+		F1A2B3C4D5E6F7890AB1CD04 /* UncertaintyEstimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F7890AB1CD03 /* UncertaintyEstimator.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -303,6 +311,12 @@
 		7D04140CFE173C0E32BBAE6D /* AppTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTab.swift; sourceTree = "<group>"; };
 		7DDF099BA868FC73C9F96B42 /* ReengagementScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReengagementScheduler.swift; sourceTree = "<group>"; };
 		7E7EEC0056E914FA04403B43 /* AdherenceTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherenceTracker.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718091A2B31 /* CompositeFeatureEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompositeFeatureEngine.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718091A2B33 /* GrangerCausalityEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrangerCausalityEngine.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718091A2B35 /* PersonalizationBlender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalizationBlender.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718091A2B37 /* PredictiveHealthSignals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictiveHealthSignals.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718091A2B39 /* ContextualSignalEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextualSignalEngine.swift; sourceTree = "<group>"; };
+		DA11AC7E3B9F4D2E80C1F5A1 /* DailyActionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyActionEngine.swift; sourceTree = "<group>"; };
 		7FC2D8AD42E4826D27D5CBC8 /* DeviceSetupGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceSetupGuideView.swift; sourceTree = "<group>"; };
 		801516F2D278ADFFFB3C5130 /* TrendBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendBadge.swift; sourceTree = "<group>"; };
 		815EE53103EFAF5ABCBB2E7C /* FeatureEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureEngine.swift; sourceTree = "<group>"; };
@@ -384,6 +398,8 @@
 		FF1B95F7225327D77ECBD985 /* TimeSeriesAligner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeSeriesAligner.swift; sourceTree = "<group>"; };
 		FF4A9064133A1DCA6830C757 /* StatisticsGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsGrid.swift; sourceTree = "<group>"; };
 		FF58BC6175F01D99EC835A0D /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
+		F1A2B3C4D5E6F7890AB1CD01 /* ModelEvaluationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelEvaluationStore.swift; sourceTree = "<group>"; };
+		F1A2B3C4D5E6F7890AB1CD03 /* UncertaintyEstimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UncertaintyEstimator.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -549,14 +565,22 @@
 				6FB5504157ADC79757B717BF /* AdaptiveAnomalyDetector.swift */,
 				7E7EEC0056E914FA04403B43 /* AdherenceTracker.swift */,
 				1CFC6AD2ED3E257FE9E1D7C3 /* CircadianAnalyzer.swift */,
+				A1B2C3D4E5F60718091A2B31 /* CompositeFeatureEngine.swift */,
+				A1B2C3D4E5F60718091A2B39 /* ContextualSignalEngine.swift */,
 				33866D4ABB0E2083C6979E2D /* CorrelationDiscovery.swift */,
+				DA11AC7E3B9F4D2E80C1F5A1 /* DailyActionEngine.swift */,
 				815EE53103EFAF5ABCBB2E7C /* FeatureEngine.swift */,
+				A1B2C3D4E5F60718091A2B33 /* GrangerCausalityEngine.swift */,
 				2331B1F2DE969D3FC1F49856 /* HealthStateClassifier.swift */,
 				9ABE331C4B795DEE98452B0C /* MLOrchestrator.swift */,
 				D8C3681D2C3CA017DE542FE5 /* MLTypes.swift */,
+				F1A2B3C4D5E6F7890AB1CD01 /* ModelEvaluationStore.swift */,
+				A1B2C3D4E5F60718091A2B35 /* PersonalizationBlender.swift */,
 				A145A890F4B1D41E135D4379 /* PatternMiner.swift */,
+				A1B2C3D4E5F60718091A2B37 /* PredictiveHealthSignals.swift */,
 				AB2D1C1A4A25CFAFEE8F113F /* PredictiveScorer.swift */,
 				8431050C5D036636922C00D2 /* TimeSeriesForecaster.swift */,
+				F1A2B3C4D5E6F7890AB1CD03 /* UncertaintyEstimator.swift */,
 			);
 			path = ML;
 			sourceTree = "<group>";
@@ -975,6 +999,7 @@
 				83162DFDFD610D12EBAD2204 /* AdaptiveAnomalyDetector.swift in Sources */,
 				26483DE087F1AD62B54AE5AD /* AdherenceRecord.swift in Sources */,
 				2F829B9FC503134EA2F8038F /* AdherenceTracker.swift in Sources */,
+				DA11AC7E3B9F4D2E80C1F5A0 /* DailyActionEngine.swift in Sources */,
 				BC5D2CB2F4DD408BBB0CC2FD /* AlertEvaluator.swift in Sources */,
 				099BF19D125B7D14164B3320 /* AnalysisEngine.swift in Sources */,
 				752AE6A2E42E9E62A8144A0B /* AnomalyDetector.swift in Sources */,
@@ -993,6 +1018,11 @@
 				56BC57CDA5E0105E1B5D245E /* CausalChainEngine.swift in Sources */,
 				D8887B179D85DCD6E0B86053 /* ChartJSBundle.swift in Sources */,
 				EB75F3529580DDC8D81C9737 /* CircadianAnalyzer.swift in Sources */,
+				A1B2C3D4E5F60718091A2B30 /* CompositeFeatureEngine.swift in Sources */,
+				A1B2C3D4E5F60718091A2B38 /* ContextualSignalEngine.swift in Sources */,
+				A1B2C3D4E5F60718091A2B32 /* GrangerCausalityEngine.swift in Sources */,
+				A1B2C3D4E5F60718091A2B34 /* PersonalizationBlender.swift in Sources */,
+				A1B2C3D4E5F60718091A2B36 /* PredictiveHealthSignals.swift in Sources */,
 				428F008520956A4BBAAE36A5 /* ClinicalIntelligence.swift in Sources */,
 				DEC8BC2D274368249BC4C9AB /* CloudBackupManager.swift in Sources */,
 				3500957BBC207E81B53B1961 /* CoachGoalsSection.swift in Sources */,
@@ -1071,6 +1101,8 @@
 				17607D0142680F2322C8BA6F /* LogWorkoutIntent.swift in Sources */,
 				E7FD0E0437B26FE0DD8733CD /* MLOrchestrator.swift in Sources */,
 				A0620AD84A0A51D681766741 /* MLTypes.swift in Sources */,
+				F1A2B3C4D5E6F7890AB1CD02 /* ModelEvaluationStore.swift in Sources */,
+				F1A2B3C4D5E6F7890AB1CD04 /* UncertaintyEstimator.swift in Sources */,
 				631DC356BD80DCD67B334956 /* MaintenanceView.swift in Sources */,
 				9E3ED2F641CA65C95F98317F /* MetricChartView.swift in Sources */,
 				9DE66A76E570205AD6E0FB8D /* MetricDetailView.swift in Sources */,
