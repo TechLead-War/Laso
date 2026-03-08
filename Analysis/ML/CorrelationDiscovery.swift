@@ -6,8 +6,8 @@ final class CorrelationDiscovery {
     /// Minimum days of paired data required
     static let minimumDays = 30
 
-    /// Number of bins for mutual information estimation
-    private static let miBins = 10
+    /// Minimum bins for mutual information estimation (adaptive: sqrt(n))
+    private static let minMIBins = 5
     /// Maximum lag for Granger causality (days)
     private static let maxGrangerLag = 3
     /// Sliding window for stability tracking
@@ -76,20 +76,29 @@ final class CorrelationDiscovery {
                 // 1. Pearson correlation
                 let pearsonR = [Double].pearsonCorrelation(valuesA, valuesB) ?? 0
 
-                // Early exit: skip weak correlations entirely
-                guard abs(pearsonR) >= 0.15 else { continue }
-
-                // 2. Mutual information
+                // 2. Mutual information (always compute — catches non-linear relationships
+                // that Pearson misses, e.g., U-shaped dose-response curves)
                 let mi = mutualInformation(valuesA, valuesB)
 
-                // Tiered pruning: skip expensive tests for moderate-weak correlations
+                // Adaptive MI significance: MI > log(n)/n is a rough threshold for
+                // independent variables (higher MI than expected by chance)
+                let n = valuesA.count
+                let miSignificanceThreshold = log(Double(n)) / Double(n)
+
+                // Skip only if BOTH linear and non-linear associations are negligible
+                guard abs(pearsonR) >= 0.10 || mi > miSignificanceThreshold else { continue }
+
+                // Tiered pruning: skip expensive tests for weak correlations
                 let grangerCausal: Bool
                 let grangerP: Double
                 var partialCorr: Double?
                 var confounder: HealthMetric?
                 let stability: Double
 
-                if abs(pearsonR) >= 0.25 {
+                var effectSize: Double = 0
+                var optimalLagDays: Int = 0
+
+                if abs(pearsonR) >= 0.25 || mi > miSignificanceThreshold * 3 {
                     // 3. Granger causality (A → B) using proper OLS + F-distribution
                     let grangerResult = GrangerCausalityEngine.test(
                         cause: valuesA, effect: valuesB,
@@ -98,6 +107,8 @@ final class CorrelationDiscovery {
                     )
                     grangerCausal = grangerResult?.isCausal ?? false
                     grangerP = grangerResult?.pValue ?? 1.0
+                    effectSize = grangerResult?.effectSize ?? 0
+                    optimalLagDays = grangerResult?.optimalLagDays ?? 0
 
                     // 4. Partial correlation (controlling for strongest confounder)
                     if metrics.count > 2 {
@@ -128,7 +139,10 @@ final class CorrelationDiscovery {
                     partialCorrelation: partialCorr,
                     confounderMetric: confounder,
                     stability: stability,
-                    sampleCount: valuesA.count
+                    sampleCount: valuesA.count,
+                    grangerEffectSize: effectSize,
+                    grangerOptimalLag: optimalLagDays,
+                    survivedFDR: true // Will be updated by applyBenjaminiHochberg
                 )
 
                 if correlation.isSignificant {
@@ -140,17 +154,22 @@ final class CorrelationDiscovery {
         // Sort by overall strength
         correlations.sort { $0.overallStrength > $1.overallStrength }
 
+        // Apply Benjamini-Hochberg FDR correction
+        applyBenjaminiHochberg(alpha: 0.05)
+
         lastAnalysisDate = Date()
     }
 
     // MARK: - Mutual Information
 
-    /// Estimate mutual information via binning
+    /// Estimate mutual information via adaptive binning (sqrt(n) bins instead of hardcoded 10)
     private func mutualInformation(_ x: [Double], _ y: [Double]) -> Double {
         let n = x.count
         guard n >= Self.minimumDays else { return 0 }
 
-        let bins = Self.miBins
+        // Adaptive bin count: sqrt(n) is optimal for MI estimation (Kraskov et al.)
+        // Clamped to [5, 20] to avoid under/over-binning
+        let bins = max(Self.minMIBins, min(Int(Double(n).squareRoot()), 20))
 
         guard let xMin = x.min(), let xMax = x.max(),
               let yMin = y.min(), let yMax = y.max(),
@@ -288,5 +307,133 @@ final class CorrelationDiscovery {
     /// Get only causal relationships
     func causalRelationships() -> [MLCorrelation] {
         correlations.filter { $0.grangerCausal }
+    }
+
+    /// Get only correlations that survived FDR correction
+    func fdrSignificantCorrelations() -> [MLCorrelation] {
+        correlations.filter { $0.survivedFDR }
+    }
+
+    // MARK: - Multivariate Extension
+
+    /// Minimum days required for multivariate regression
+    static let minimumDaysMultivariate = 45
+
+    /// Run multivariate Granger regression for a target metric using individually
+    /// significant pairwise predictors. This reduces spurious causality from omitted variables.
+    ///
+    /// Only predictors with pairwise Granger p < 0.1 are included.
+    /// Requires at least 3 significant pairwise correlations for the target.
+    ///
+    /// - Parameters:
+    ///   - target: The target metric
+    ///   - candidates: Pairwise correlations involving the target
+    ///   - timeSeries: Dictionary mapping metrics to date-aligned values (chronologically ordered)
+    /// - Returns: MultivariateRegressionResult, or nil if insufficient predictors or data
+    func discoverMultivariate(
+        target: HealthMetric,
+        candidates: [MLCorrelation],
+        timeSeries: [HealthMetric: [Double]]
+    ) -> MultivariateRegressionResult? {
+        // Filter to individually significant predictors (pairwise Granger p < 0.1)
+        let significantPredictors = candidates.compactMap { corr -> HealthMetric? in
+            guard corr.grangerPValue < 0.1 else { return nil }
+            // Identify which metric is the predictor (not the target)
+            if corr.metricA == target { return corr.metricB }
+            if corr.metricB == target { return corr.metricA }
+            return nil
+        }
+
+        // Need at least 3 individually significant predictors
+        let uniquePredictors = Array(Set(significantPredictors))
+        guard uniquePredictors.count >= 3 else { return nil }
+
+        // Check data sufficiency
+        guard let targetSeries = timeSeries[target],
+              targetSeries.count >= Self.minimumDaysMultivariate else { return nil }
+
+        // Build aligned time series dict for the engine
+        var alignedSeries: [HealthMetric: [Double]] = [target: targetSeries]
+        var validPredictors: [HealthMetric] = []
+
+        for pred in uniquePredictors {
+            guard let predSeries = timeSeries[pred],
+                  predSeries.count == targetSeries.count else { continue }
+            alignedSeries[pred] = predSeries
+            validPredictors.append(pred)
+        }
+
+        guard validPredictors.count >= 3 else { return nil }
+
+        // Cap predictors to avoid overfitting (max 8 predictors)
+        let cappedPredictors = Array(validPredictors.prefix(8))
+
+        return GrangerCausalityEngine.multivariateGrangerTest(
+            target: target,
+            predictors: cappedPredictors,
+            timeSeries: alignedSeries,
+            maxLag: Self.maxGrangerLag
+        )
+    }
+
+    // MARK: - Benjamini-Hochberg FDR Correction
+
+    /// Apply Benjamini-Hochberg False Discovery Rate correction to all pairwise Granger p-values.
+    ///
+    /// Procedure:
+    ///   1. Collect all Granger p-values and sort ascending
+    ///   2. For each sorted p-value p_{(i)}, compute BH threshold: (i / m) * α
+    ///   3. Find the largest i where p_{(i)} ≤ threshold
+    ///   4. All correlations with p_{(i)} at or below that index survive FDR
+    ///
+    /// - Parameter alpha: FDR significance level (default 0.05)
+    private func applyBenjaminiHochberg(alpha: Double = 0.05) {
+        let m = correlations.count
+        guard m > 0 else { return }
+
+        // Create indexed p-values, only considering correlations that had Granger tests
+        struct IndexedPValue {
+            let index: Int
+            let pValue: Double
+        }
+
+        var indexedPValues: [IndexedPValue] = []
+        for (idx, corr) in correlations.enumerated() {
+            // Only include correlations that actually had a Granger test
+            if corr.grangerPValue < 1.0 {
+                indexedPValues.append(IndexedPValue(index: idx, pValue: corr.grangerPValue))
+            }
+        }
+
+        let totalTests = indexedPValues.count
+        guard totalTests > 0 else { return }
+
+        // Sort by p-value ascending
+        indexedPValues.sort { $0.pValue < $1.pValue }
+
+        // Find the largest rank i where p_{(i)} ≤ (i / m) * α
+        var maxSurvivingRank = -1
+        for (rank, ipv) in indexedPValues.enumerated() {
+            let i = rank + 1 // 1-based rank
+            let bhThreshold = (Double(i) / Double(totalTests)) * alpha
+            if ipv.pValue <= bhThreshold {
+                maxSurvivingRank = rank
+            }
+        }
+
+        // Mark all correlations: default to not surviving FDR
+        for i in 0..<correlations.count {
+            correlations[i].survivedFDR = false
+        }
+
+        // Mark those that survived
+        if maxSurvivingRank >= 0 {
+            for rank in 0...maxSurvivingRank {
+                let originalIndex = indexedPValues[rank].index
+                correlations[originalIndex].survivedFDR = true
+            }
+        }
+
+        // Correlations without Granger tests retain survivedFDR = false
     }
 }

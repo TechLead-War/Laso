@@ -18,7 +18,7 @@ import Accelerate
 /// where q = p (number of restrictions), k_u = 2p + 1 (unrestricted model parameters), n = observations.
 struct GrangerCausalityEngine {
 
-    // MARK: - Result Type
+    // MARK: - Result Types
 
     /// Complete result from a Granger causality test
     struct GrangerResult {
@@ -42,6 +42,24 @@ struct GrangerCausalityEngine {
         let nObservations: Int
         /// Whether the input series were first-differenced for stationarity
         let wasFirstDifferenced: Bool
+        /// Cohen's f² effect size: (R²_unrestricted - R²_restricted) / (1 - R²_unrestricted)
+        let effectSize: Double
+        /// The optimal lag in days (same as optimalLag, explicit for clarity)
+        let optimalLagDays: Int
+        /// Directionality description: "A → B", "B → A", or "bidirectional"
+        let directionality: String
+    }
+
+    /// Report from rolling stability analysis of a Granger causal relationship
+    struct StabilityReport {
+        /// Results for each sliding window
+        let windowResults: [(startDate: Date, pValue: Double, fStat: Double, isCausal: Bool)]
+        /// Fraction of windows where the causal relationship is significant
+        let stabilityScore: Double
+        /// Coefficient of variation of F-statistics across windows
+        let effectSizeVariation: Double
+        /// Whether the relationship is stable (stabilityScore > 0.6)
+        let isStable: Bool
     }
 
     // MARK: - Public API
@@ -133,6 +151,20 @@ struct GrangerCausalityEngine {
         // p-value from F-distribution using regularized incomplete beta function
         let pValue = fDistributionSurvival(f: fStatistic, df1: Int(q), df2: Int(dfDenominator))
 
+        // Compute R² for restricted and unrestricted models for effect size
+        let yMean = y.reduce(0, +) / Double(n)
+        let sst = y.reduce(0.0) { $0 + ($1 - yMean) * ($1 - yMean) }
+        let rSquaredRestricted = sst > 0 ? 1.0 - restrictedSSE / sst : 0
+        let rSquaredUnrestricted = sst > 0 ? 1.0 - unrestrictedSSE / sst : 0
+
+        // Cohen's f² = (R²_unrestricted - R²_restricted) / (1 - R²_unrestricted)
+        let cohensF2: Double
+        if rSquaredUnrestricted < 1.0 && rSquaredUnrestricted > rSquaredRestricted {
+            cohensF2 = (rSquaredUnrestricted - rSquaredRestricted) / (1.0 - rSquaredUnrestricted)
+        } else {
+            cohensF2 = 0
+        }
+
         return GrangerResult(
             cause: causeMetric,
             effect: effectMetric,
@@ -143,11 +175,20 @@ struct GrangerCausalityEngine {
             sseRestricted: restrictedSSE,
             sseUnrestricted: unrestrictedSSE,
             nObservations: n,
-            wasFirstDifferenced: wasFirstDifferenced
+            wasFirstDifferenced: wasFirstDifferenced,
+            effectSize: cohensF2,
+            optimalLagDays: optimalLag,
+            directionality: "\(causeMetric.rawValue) → \(effectMetric.rawValue)"
         )
     }
 
     /// Test Granger causality in both directions: A->B and B->A.
+    ///
+    /// Results include a `directionality` field reflecting the bidirectional outcome:
+    /// - "A → B" if only A Granger-causes B
+    /// - "B → A" if only B Granger-causes A
+    /// - "bidirectional" if both directions are significant
+    /// - Original single-direction string if only one direction was tested
     ///
     /// - Parameters:
     ///   - seriesA: Time series A (ordered chronologically)
@@ -163,17 +204,330 @@ struct GrangerCausalityEngine {
         metricB: HealthMetric,
         maxLag: Int = 5
     ) -> (aToB: GrangerResult?, bToA: GrangerResult?) {
-        let aToB = test(
+        var aToB = test(
             cause: seriesA, effect: seriesB,
             causeMetric: metricA, effectMetric: metricB,
             maxLag: maxLag
         )
-        let bToA = test(
+        var bToA = test(
             cause: seriesB, effect: seriesA,
             causeMetric: metricB, effectMetric: metricA,
             maxLag: maxLag
         )
+
+        // Update directionality based on bidirectional results
+        let aCausesB = aToB?.isCausal ?? false
+        let bCausesA = bToA?.isCausal ?? false
+        let direction: String
+        if aCausesB && bCausesA {
+            direction = "bidirectional"
+        } else if aCausesB {
+            direction = "\(metricA.rawValue) → \(metricB.rawValue)"
+        } else if bCausesA {
+            direction = "\(metricB.rawValue) → \(metricA.rawValue)"
+        } else {
+            direction = "none"
+        }
+
+        if let result = aToB {
+            aToB = GrangerResult(
+                cause: result.cause, effect: result.effect,
+                fStatistic: result.fStatistic, pValue: result.pValue,
+                optimalLag: result.optimalLag, isCausal: result.isCausal,
+                sseRestricted: result.sseRestricted, sseUnrestricted: result.sseUnrestricted,
+                nObservations: result.nObservations, wasFirstDifferenced: result.wasFirstDifferenced,
+                effectSize: result.effectSize, optimalLagDays: result.optimalLagDays,
+                directionality: direction
+            )
+        }
+        if let result = bToA {
+            bToA = GrangerResult(
+                cause: result.cause, effect: result.effect,
+                fStatistic: result.fStatistic, pValue: result.pValue,
+                optimalLag: result.optimalLag, isCausal: result.isCausal,
+                sseRestricted: result.sseRestricted, sseUnrestricted: result.sseUnrestricted,
+                nObservations: result.nObservations, wasFirstDifferenced: result.wasFirstDifferenced,
+                effectSize: result.effectSize, optimalLagDays: result.optimalLagDays,
+                directionality: direction
+            )
+        }
+
         return (aToB: aToB, bToA: bToA)
+    }
+
+    // MARK: - Multivariate Granger Test
+
+    /// Multivariate lagged regression: test whether multiple predictors jointly Granger-cause a target.
+    ///
+    /// Builds a design matrix with columns:
+    ///   [intercept, target_lag1..target_lagP, pred1_lag1..pred1_lagP, pred2_lag1..pred2_lagP, ...]
+    ///
+    /// Uses BIC to select optimal lag from 1..maxLag. Fits via OLS normal equations solved
+    /// by AccelerateML.solveLinearSystem. Computes per-predictor t-statistics and p-values
+    /// via t-distribution CDF (regularizedIncompleteBeta with df = n - k - 1).
+    ///
+    /// - Parameters:
+    ///   - target: The target metric to predict
+    ///   - predictors: Array of predictor metrics
+    ///   - timeSeries: Dictionary mapping metrics to their time series values (chronologically ordered, same length)
+    ///   - maxLag: Maximum lag order to consider (default 5)
+    /// - Returns: MultivariateRegressionResult, or nil if insufficient data or degenerate input
+    static func multivariateGrangerTest(
+        target: HealthMetric,
+        predictors: [HealthMetric],
+        timeSeries: [HealthMetric: [Double]],
+        maxLag: Int = 5
+    ) -> MultivariateRegressionResult? {
+        guard let targetSeries = timeSeries[target] else { return nil }
+        let predSeries = predictors.compactMap { timeSeries[$0] }
+        guard predSeries.count == predictors.count else { return nil }
+
+        let seriesLength = targetSeries.count
+        let nPredictors = predictors.count
+        let minObservations = 2 * maxLag * (1 + nPredictors) + 10
+        guard seriesLength >= max(minObservations, 45) else { return nil }
+
+        // Check all series are same length and have variance
+        for s in predSeries {
+            guard s.count == seriesLength, hasVariance(s) else { return nil }
+        }
+        guard hasVariance(targetSeries) else { return nil }
+
+        // Stationarity check: first-difference all if any is non-stationary
+        var workTarget = targetSeries
+        var workPreds = predSeries
+
+        let anyNonStationary = !isStationary(workTarget) || workPreds.contains { !isStationary($0) }
+        if anyNonStationary {
+            workTarget = firstDifference(workTarget)
+            workPreds = workPreds.map { firstDifference($0) }
+
+            guard workTarget.count >= max(minObservations, 45),
+                  hasVariance(workTarget),
+                  workPreds.allSatisfy({ hasVariance($0) }) else { return nil }
+        }
+
+        // Select optimal lag via BIC
+        let optimalLag = selectMultivariateLag(
+            target: workTarget, predictors: workPreds, maxLag: maxLag
+        )
+
+        // Number of usable observations after lagging
+        let n = workTarget.count - optimalLag
+        // Total parameters: intercept + optimalLag (target lags) + nPredictors * optimalLag (predictor lags)
+        let k = 1 + optimalLag + nPredictors * optimalLag
+        guard n > k + 2 else { return nil }
+
+        // Build multivariate design matrix
+        let designMatrix = buildMultivariateDesignMatrix(
+            target: workTarget, predictors: workPreds, lag: optimalLag
+        )
+
+        // Dependent variable: target(t) for t = lag..end
+        let y = Array(workTarget[optimalLag...])
+        guard y.count == n else { return nil }
+
+        // Solve OLS: compute X'X, X'y, then β = (X'X)^{-1} X'y
+        let nCols = k
+        var xtx = [Double](repeating: 0, count: nCols * nCols)
+        for i in 0..<nCols {
+            for j in i..<nCols {
+                var dot: Double = 0
+                for row in 0..<n {
+                    dot += designMatrix[row * nCols + i] * designMatrix[row * nCols + j]
+                }
+                xtx[i * nCols + j] = dot
+                xtx[j * nCols + i] = dot
+            }
+        }
+
+        var xty = [Double](repeating: 0, count: nCols)
+        for i in 0..<nCols {
+            var dot: Double = 0
+            for row in 0..<n {
+                dot += designMatrix[row * nCols + i] * y[row]
+            }
+            xty[i] = dot
+        }
+
+        guard let beta = solveLinearSystem(a: xtx, b: xty, n: nCols) else { return nil }
+
+        // Compute residuals and SSE
+        var sse: Double = 0
+        var residuals = [Double](repeating: 0, count: n)
+        for row in 0..<n {
+            var predicted: Double = 0
+            for col in 0..<nCols {
+                predicted += designMatrix[row * nCols + col] * beta[col]
+            }
+            let residual = y[row] - predicted
+            residuals[row] = residual
+            sse += residual * residual
+        }
+        guard sse > 0 else { return nil }
+
+        // Total sum of squares
+        let yMean = y.reduce(0, +) / Double(n)
+        let sst = y.reduce(0.0) { $0 + ($1 - yMean) * ($1 - yMean) }
+        guard sst > 0 else { return nil }
+
+        // R² and adjusted R²
+        let rSquared = 1.0 - sse / sst
+        let adjustedRSquared = 1.0 - (1.0 - rSquared) * Double(n - 1) / Double(n - k - 1)
+
+        // Overall F-statistic: F = (R²/k_pred) / ((1-R²)/(n-k-1))
+        // where k_pred = number of predictor parameters (excluding intercept and target lags)
+        let kPred = Double(nPredictors * optimalLag)
+        let dfDenom = Double(n - k)
+        guard dfDenom > 0, kPred > 0 else { return nil }
+        let overallF = (rSquared / kPred) / ((1.0 - rSquared) / dfDenom)
+        let overallFPValue = fDistributionSurvival(f: overallF, df1: Int(kPred), df2: Int(dfDenom))
+
+        // Residual standard error
+        let sigma2 = sse / dfDenom
+        let residualStdError = sigma2.squareRoot()
+
+        // Compute (X'X)^{-1} for standard errors
+        // We need the diagonal of (X'X)^{-1}
+        let xtxInvDiag = computeXtXInverseDiagonal(xtx: xtx, n: nCols)
+
+        // Per-predictor statistics (for each predictor metric, summarize across its lags)
+        // Column layout: [intercept, target_lag1..target_lagP, pred1_lag1..pred1_lagP, ...]
+        var coefficients: [HealthMetric: Double] = [:]
+        var standardErrors: [HealthMetric: Double] = [:]
+        var tStatistics: [HealthMetric: Double] = [:]
+        var pValues: [HealthMetric: Double] = [:]
+        let dfResidual = n - k
+
+        for (predIdx, predMetric) in predictors.enumerated() {
+            // Column indices for this predictor's lags
+            let startCol = 1 + optimalLag + predIdx * optimalLag
+
+            // Find the lag with largest absolute coefficient
+            var bestLagCol = startCol
+            var bestAbsBeta: Double = 0
+            for lagIdx in 0..<optimalLag {
+                let col = startCol + lagIdx
+                if abs(beta[col]) > bestAbsBeta {
+                    bestAbsBeta = abs(beta[col])
+                    bestLagCol = col
+                }
+            }
+
+            let betaJ = beta[bestLagCol]
+            let seJ: Double
+            if let diagVal = xtxInvDiag?[bestLagCol], diagVal > 0 {
+                seJ = residualStdError * diagVal.squareRoot()
+            } else {
+                seJ = residualStdError // fallback
+            }
+
+            let tStat = seJ > 0 ? betaJ / seJ : 0
+            // p-value from t-distribution: P(|T| > |t|) with df = n - k
+            let tPValue = tDistributionSurvival(t: abs(tStat), df: dfResidual) * 2.0
+
+            coefficients[predMetric] = betaJ
+            standardErrors[predMetric] = seJ
+            tStatistics[predMetric] = tStat
+            pValues[predMetric] = min(tPValue, 1.0)
+        }
+
+        // BIC = n * ln(SSE/n) + k * ln(n)
+        let bicScore = Double(n) * log(sse / Double(n)) + Double(k) * log(Double(n))
+
+        return MultivariateRegressionResult(
+            targetMetric: target,
+            predictorMetrics: predictors,
+            optimalLag: optimalLag,
+            coefficients: coefficients,
+            standardErrors: standardErrors,
+            tStatistics: tStatistics,
+            pValues: pValues,
+            rSquared: rSquared,
+            adjustedRSquared: adjustedRSquared,
+            fStatistic: overallF,
+            fPValue: overallFPValue,
+            residualStdError: residualStdError,
+            observationCount: n,
+            bicScore: bicScore
+        )
+    }
+
+    // MARK: - Rolling Stability Test
+
+    /// Perform rolling window Granger causality analysis to assess temporal stability.
+    ///
+    /// Runs pairwise Granger tests on overlapping windows of the time series and reports
+    /// what fraction of windows show a significant causal relationship.
+    ///
+    /// - Parameters:
+    ///   - metricA: The putative cause metric
+    ///   - metricB: The putative effect metric
+    ///   - timeSeries: Dictionary mapping metrics to chronologically-ordered daily values
+    ///   - windowSize: Size of each window in days (default 60)
+    ///   - stepSize: Step between windows in days (default 20)
+    /// - Returns: StabilityReport, or nil if insufficient data
+    static func rollingStabilityTest(
+        metricA: HealthMetric,
+        metricB: HealthMetric,
+        timeSeries: [HealthMetric: [Double]],
+        windowSize: Int = 60,
+        stepSize: Int = 20
+    ) -> StabilityReport? {
+        guard let seriesA = timeSeries[metricA],
+              let seriesB = timeSeries[metricB],
+              seriesA.count == seriesB.count,
+              seriesA.count >= windowSize + stepSize else { return nil }
+
+        let n = seriesA.count
+        var windowResults: [(startDate: Date, pValue: Double, fStat: Double, isCausal: Bool)] = []
+        let calendar = Calendar.current
+        let baseDate = calendar.startOfDay(for: Date())
+
+        var start = 0
+        while start + windowSize <= n {
+            let windowA = Array(seriesA[start..<(start + windowSize)])
+            let windowB = Array(seriesB[start..<(start + windowSize)])
+
+            // Compute a synthetic start date (relative to current date, counting back)
+            let daysFromEnd = n - start
+            let windowStartDate = calendar.date(byAdding: .day, value: -daysFromEnd, to: baseDate) ?? baseDate
+
+            if let result = test(
+                cause: windowA, effect: windowB,
+                causeMetric: metricA, effectMetric: metricB,
+                maxLag: 3 // Use smaller lag for shorter windows
+            ) {
+                windowResults.append((
+                    startDate: windowStartDate,
+                    pValue: result.pValue,
+                    fStat: result.fStatistic,
+                    isCausal: result.isCausal
+                ))
+            }
+
+            start += stepSize
+        }
+
+        guard !windowResults.isEmpty else { return nil }
+
+        // Stability score: fraction of windows where causal
+        let causalCount = windowResults.filter(\.isCausal).count
+        let stabilityScore = Double(causalCount) / Double(windowResults.count)
+
+        // Effect size variation: coefficient of variation of F-statistics
+        let fStats = windowResults.map(\.fStat)
+        let fMean = fStats.reduce(0, +) / Double(fStats.count)
+        let fVariance = fStats.reduce(0.0) { $0 + ($1 - fMean) * ($1 - fMean) } / Double(fStats.count)
+        let fStdDev = fVariance.squareRoot()
+        let effectSizeVariation = fMean > 0 ? fStdDev / fMean : 0
+
+        return StabilityReport(
+            windowResults: windowResults,
+            stabilityScore: stabilityScore,
+            effectSizeVariation: effectSizeVariation,
+            isStable: stabilityScore > 0.6
+        )
     }
 
     // MARK: - Design Matrix Construction
@@ -299,75 +653,35 @@ struct GrangerCausalityEngine {
         return sse
     }
 
-    /// Solve A*x = b via Gaussian elimination with partial pivoting.
+    /// Solve A*x = b using AccelerateML's Gaussian elimination with partial pivoting.
+    ///
+    /// If the system is ill-conditioned (pivot < 1e-10), applies a ridge penalty
+    /// λ = 1e-6 to the diagonal of A and retries.
     ///
     /// A is n x n (row-major flat array), b is length n.
-    /// Returns the solution vector x, or nil if the matrix is singular.
+    /// Returns the solution vector x, or nil if the system is singular even after regularization.
     private static func solveLinearSystem(a: [Double], b: [Double], n: Int) -> [Double]? {
         guard a.count == n * n, b.count == n, n > 0 else { return nil }
 
-        // Build augmented matrix [A | b] of size n x (n+1)
-        var aug = [Double](repeating: 0, count: n * (n + 1))
+        // First attempt: direct solve via AccelerateML
+        if let solution = AccelerateML.solveLinearSystem(A: a, b: b, n: n),
+           solution.allSatisfy({ $0.isFinite }) {
+            return solution
+        }
+
+        // Ill-conditioned: add ridge penalty λ = 1e-6 to diagonal
+        var regularized = a
+        let lambda = 1e-6
         for i in 0..<n {
-            for j in 0..<n {
-                aug[i * (n + 1) + j] = a[i * n + j]
-            }
-            aug[i * (n + 1) + n] = b[i]
+            regularized[i * n + i] += lambda
         }
 
-        let cols = n + 1
-
-        // Forward elimination with partial pivoting
-        for col in 0..<n {
-            // Find pivot: row with largest absolute value in current column
-            var maxVal = abs(aug[col * cols + col])
-            var maxRow = col
-            for row in (col + 1)..<n {
-                let val = abs(aug[row * cols + col])
-                if val > maxVal {
-                    maxVal = val
-                    maxRow = row
-                }
-            }
-
-            // Check for singular matrix
-            if maxVal < 1e-14 { return nil }
-
-            // Swap rows if needed
-            if maxRow != col {
-                for j in 0..<cols {
-                    let temp = aug[col * cols + j]
-                    aug[col * cols + j] = aug[maxRow * cols + j]
-                    aug[maxRow * cols + j] = temp
-                }
-            }
-
-            // Eliminate below pivot
-            let pivot = aug[col * cols + col]
-            for row in (col + 1)..<n {
-                let factor = aug[row * cols + col] / pivot
-                for j in col..<cols {
-                    aug[row * cols + j] -= factor * aug[col * cols + j]
-                }
-            }
+        if let solution = AccelerateML.solveLinearSystem(A: regularized, b: b, n: n),
+           solution.allSatisfy({ $0.isFinite }) {
+            return solution
         }
 
-        // Back substitution
-        var x = [Double](repeating: 0, count: n)
-        for i in stride(from: n - 1, through: 0, by: -1) {
-            var sum = aug[i * cols + n]
-            for j in (i + 1)..<n {
-                sum -= aug[i * cols + j] * x[j]
-            }
-            let diag = aug[i * cols + i]
-            guard abs(diag) > 1e-14 else { return nil }
-            x[i] = sum / diag
-        }
-
-        // Sanity check: all coefficients must be finite
-        guard x.allSatisfy({ $0.isFinite }) else { return nil }
-
-        return x
+        return nil
     }
 
     // MARK: - BIC Lag Selection
@@ -616,6 +930,133 @@ struct GrangerCausalityEngine {
         }
 
         return f
+    }
+
+    // MARK: - Multivariate Helpers
+
+    /// Build design matrix for multivariate lagged regression.
+    ///
+    /// Column layout: [intercept, target_lag1..target_lagP, pred1_lag1..pred1_lagP, pred2_lag1..pred2_lagP, ...]
+    ///
+    /// Returns a flat row-major array with nRows = (N - lag), nCols = (1 + lag + predictors.count * lag)
+    private static func buildMultivariateDesignMatrix(
+        target: [Double], predictors: [[Double]], lag: Int
+    ) -> [Double] {
+        let n = target.count
+        let nPredictors = predictors.count
+        let nRows = n - lag
+        let nCols = 1 + lag + nPredictors * lag // intercept + target lags + predictor lags
+
+        var matrix = [Double](repeating: 0, count: nRows * nCols)
+
+        for t in 0..<nRows {
+            let rowOffset = t * nCols
+
+            // Intercept column (column 0)
+            matrix[rowOffset] = 1.0
+
+            // Target lag columns (columns 1..lag): target(t+lag-1), target(t+lag-2), ..., target(t)
+            for j in 0..<lag {
+                matrix[rowOffset + 1 + j] = target[t + lag - 1 - j]
+            }
+
+            // Predictor lag columns
+            for (pIdx, predSeries) in predictors.enumerated() {
+                let predOffset = 1 + lag + pIdx * lag
+                for j in 0..<lag {
+                    matrix[rowOffset + predOffset + j] = predSeries[t + lag - 1 - j]
+                }
+            }
+        }
+
+        return matrix
+    }
+
+    /// Select optimal lag for multivariate regression via BIC.
+    ///
+    /// BIC = n * ln(SSE/n) + k * ln(n)
+    ///
+    /// Tests lags 1..maxLag and returns the one with lowest BIC.
+    private static func selectMultivariateLag(
+        target: [Double], predictors: [[Double]], maxLag: Int
+    ) -> Int {
+        var bestLag = 1
+        var bestBIC = Double.infinity
+
+        for lag in 1...maxLag {
+            let n = target.count - lag
+            let k = 1 + lag + predictors.count * lag
+            guard n > k + 2 else { continue }
+
+            let design = buildMultivariateDesignMatrix(target: target, predictors: predictors, lag: lag)
+            let y = Array(target[lag...])
+
+            guard let sse = fitOLSAndComputeSSE(designMatrix: design, y: y, nRows: n),
+                  sse > 0 else { continue }
+
+            let nDouble = Double(n)
+            let kDouble = Double(k)
+            let bic = nDouble * log(sse / nDouble) + kDouble * log(nDouble)
+
+            if bic < bestBIC {
+                bestBIC = bic
+                bestLag = lag
+            }
+        }
+
+        return bestLag
+    }
+
+    /// Compute the diagonal of (X'X)^{-1} by solving (X'X) * e_j = e_j for each j.
+    ///
+    /// This gives the variance multipliers for computing standard errors of coefficients.
+    /// Returns an array of diagonal values, or nil if the system is singular.
+    private static func computeXtXInverseDiagonal(xtx: [Double], n: Int) -> [Double]? {
+        var diagonal = [Double](repeating: 0, count: n)
+
+        for j in 0..<n {
+            // Solve (X'X) * column_j = e_j where e_j is the j-th standard basis vector
+            var ej = [Double](repeating: 0, count: n)
+            ej[j] = 1.0
+
+            guard let col = solveLinearSystem(a: xtx, b: ej, n: n) else { return nil }
+            diagonal[j] = col[j]
+        }
+
+        return diagonal
+    }
+
+    // MARK: - t-Distribution P-Value
+
+    /// Compute the upper-tail probability of the t-distribution: P(T > t | df).
+    ///
+    /// Uses the relationship between the t-distribution and the F-distribution:
+    ///   If T ~ t(df), then T² ~ F(1, df)
+    ///   P(|T| > t) = P(F > t² | 1, df)
+    ///
+    /// For a one-tailed test, this returns P(T > t) = P(F > t²) / 2 when t > 0.
+    ///
+    /// - Parameters:
+    ///   - t: The t-statistic (assumed positive for one-tailed)
+    ///   - df: Degrees of freedom
+    /// - Returns: One-tailed p-value (upper tail)
+    static func tDistributionSurvival(t: Double, df: Int) -> Double {
+        guard t > 0, t.isFinite, df > 0 else { return 0.5 }
+
+        // t² is distributed as F(1, df)
+        let f = t * t
+        let x = Double(df) / (Double(df) + f)
+
+        guard x > 0, x < 1 else {
+            if x <= 0 { return 0.0 }
+            return 0.5
+        }
+
+        // P(|T| > t) = I_x(df/2, 1/2)
+        let twoTailed = regularizedIncompleteBeta(x: x, a: Double(df) / 2.0, b: 0.5)
+
+        // One-tailed: divide by 2
+        return twoTailed / 2.0
     }
 
     // MARK: - Utility

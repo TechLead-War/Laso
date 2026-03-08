@@ -48,6 +48,7 @@
 		A1B2C3D4E5F60718091A2B36 /* PredictiveHealthSignals.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718091A2B37 /* PredictiveHealthSignals.swift */; };
 		A1B2C3D4E5F60718091A2B38 /* ContextualSignalEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718091A2B39 /* ContextualSignalEngine.swift */; };
 		DA11AC7E3B9F4D2E80C1F5A0 /* DailyActionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA11AC7E3B9F4D2E80C1F5A1 /* DailyActionEngine.swift */; };
+		DA22BD8F4CA05E3F91D2G6B0 /* DecisionPolicyEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA22BD8F4CA05E3F91D2G6B1 /* DecisionPolicyEngine.swift */; };
 		2F86493CBEAF769199AC04F1 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD281CA396957983B12D0A3C /* DashboardViewModel.swift */; };
 		313CEBC55344992AA6D3E914 /* WeeklyReviewViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324946E490707B84DD4E1D1F /* WeeklyReviewViewModel.swift */; };
 		313DC6B3BAC38CA7F449FE7D /* HealthPulseVisualUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75495DEBF4DB887CAD5A6490 /* HealthPulseVisualUITests.swift */; };
@@ -198,6 +199,13 @@
 		FFFCC2E4DC4AFD9F8217F32B /* DeviceSetupGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FC2D8AD42E4826D27D5CBC8 /* DeviceSetupGuideView.swift */; };
 		F1A2B3C4D5E6F7890AB1CD02 /* ModelEvaluationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F7890AB1CD01 /* ModelEvaluationStore.swift */; };
 		F1A2B3C4D5E6F7890AB1CD04 /* UncertaintyEstimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F7890AB1CD03 /* UncertaintyEstimator.swift */; };
+		F1A2B3C4D5E6F7890AB1CD06 /* ConformalCalibrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F7890AB1CD05 /* ConformalCalibrator.swift */; };
+		F1A2B3C4D5E6F7890AB1CD08 /* MLEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F7890AB1CD07 /* MLEvaluator.swift */; };
+		F1A2B3C4D5E6F7890AB1CD10 /* InteractionEffectEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F7890AB1CD09 /* InteractionEffectEngine.swift */; };
+		F1A2B3C4D5E6F7890AB1CD12 /* TemporalSequenceMiner.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F7890AB1CD11 /* TemporalSequenceMiner.swift */; };
+		F1A2B3C4D5E6F7890AB1CD14 /* ChangePointDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F7890AB1CD13 /* ChangePointDetector.swift */; };
+		F1A2B3C4D5E6F7890AB1CD16 /* PersonalOptimizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F7890AB1CD15 /* PersonalOptimizer.swift */; };
+		F1A2B3C4D5E6F7890AB1CD18 /* CompoundInsightEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F7890AB1CD17 /* CompoundInsightEngine.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -317,6 +325,7 @@
 		A1B2C3D4E5F60718091A2B37 /* PredictiveHealthSignals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictiveHealthSignals.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60718091A2B39 /* ContextualSignalEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextualSignalEngine.swift; sourceTree = "<group>"; };
 		DA11AC7E3B9F4D2E80C1F5A1 /* DailyActionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyActionEngine.swift; sourceTree = "<group>"; };
+		DA22BD8F4CA05E3F91D2G6B1 /* DecisionPolicyEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecisionPolicyEngine.swift; sourceTree = "<group>"; };
 		7FC2D8AD42E4826D27D5CBC8 /* DeviceSetupGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceSetupGuideView.swift; sourceTree = "<group>"; };
 		801516F2D278ADFFFB3C5130 /* TrendBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendBadge.swift; sourceTree = "<group>"; };
 		815EE53103EFAF5ABCBB2E7C /* FeatureEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureEngine.swift; sourceTree = "<group>"; };
@@ -400,6 +409,13 @@
 		FF58BC6175F01D99EC835A0D /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
 		F1A2B3C4D5E6F7890AB1CD01 /* ModelEvaluationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelEvaluationStore.swift; sourceTree = "<group>"; };
 		F1A2B3C4D5E6F7890AB1CD03 /* UncertaintyEstimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UncertaintyEstimator.swift; sourceTree = "<group>"; };
+		F1A2B3C4D5E6F7890AB1CD05 /* ConformalCalibrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConformalCalibrator.swift; sourceTree = "<group>"; };
+		F1A2B3C4D5E6F7890AB1CD07 /* MLEvaluator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLEvaluator.swift; sourceTree = "<group>"; };
+		F1A2B3C4D5E6F7890AB1CD09 /* InteractionEffectEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionEffectEngine.swift; sourceTree = "<group>"; };
+		F1A2B3C4D5E6F7890AB1CD11 /* TemporalSequenceMiner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemporalSequenceMiner.swift; sourceTree = "<group>"; };
+		F1A2B3C4D5E6F7890AB1CD13 /* ChangePointDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePointDetector.swift; sourceTree = "<group>"; };
+		F1A2B3C4D5E6F7890AB1CD15 /* PersonalOptimizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalOptimizer.swift; sourceTree = "<group>"; };
+		F1A2B3C4D5E6F7890AB1CD17 /* CompoundInsightEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompoundInsightEngine.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -569,6 +585,7 @@
 				A1B2C3D4E5F60718091A2B39 /* ContextualSignalEngine.swift */,
 				33866D4ABB0E2083C6979E2D /* CorrelationDiscovery.swift */,
 				DA11AC7E3B9F4D2E80C1F5A1 /* DailyActionEngine.swift */,
+				DA22BD8F4CA05E3F91D2G6B1 /* DecisionPolicyEngine.swift */,
 				815EE53103EFAF5ABCBB2E7C /* FeatureEngine.swift */,
 				A1B2C3D4E5F60718091A2B33 /* GrangerCausalityEngine.swift */,
 				2331B1F2DE969D3FC1F49856 /* HealthStateClassifier.swift */,
@@ -581,6 +598,13 @@
 				AB2D1C1A4A25CFAFEE8F113F /* PredictiveScorer.swift */,
 				8431050C5D036636922C00D2 /* TimeSeriesForecaster.swift */,
 				F1A2B3C4D5E6F7890AB1CD03 /* UncertaintyEstimator.swift */,
+				F1A2B3C4D5E6F7890AB1CD05 /* ConformalCalibrator.swift */,
+				F1A2B3C4D5E6F7890AB1CD07 /* MLEvaluator.swift */,
+				F1A2B3C4D5E6F7890AB1CD09 /* InteractionEffectEngine.swift */,
+				F1A2B3C4D5E6F7890AB1CD11 /* TemporalSequenceMiner.swift */,
+				F1A2B3C4D5E6F7890AB1CD13 /* ChangePointDetector.swift */,
+				F1A2B3C4D5E6F7890AB1CD15 /* PersonalOptimizer.swift */,
+				F1A2B3C4D5E6F7890AB1CD17 /* CompoundInsightEngine.swift */,
 			);
 			path = ML;
 			sourceTree = "<group>";
@@ -1000,6 +1024,7 @@
 				26483DE087F1AD62B54AE5AD /* AdherenceRecord.swift in Sources */,
 				2F829B9FC503134EA2F8038F /* AdherenceTracker.swift in Sources */,
 				DA11AC7E3B9F4D2E80C1F5A0 /* DailyActionEngine.swift in Sources */,
+				DA22BD8F4CA05E3F91D2G6B0 /* DecisionPolicyEngine.swift in Sources */,
 				BC5D2CB2F4DD408BBB0CC2FD /* AlertEvaluator.swift in Sources */,
 				099BF19D125B7D14164B3320 /* AnalysisEngine.swift in Sources */,
 				752AE6A2E42E9E62A8144A0B /* AnomalyDetector.swift in Sources */,
@@ -1103,6 +1128,13 @@
 				A0620AD84A0A51D681766741 /* MLTypes.swift in Sources */,
 				F1A2B3C4D5E6F7890AB1CD02 /* ModelEvaluationStore.swift in Sources */,
 				F1A2B3C4D5E6F7890AB1CD04 /* UncertaintyEstimator.swift in Sources */,
+				F1A2B3C4D5E6F7890AB1CD06 /* ConformalCalibrator.swift in Sources */,
+				F1A2B3C4D5E6F7890AB1CD08 /* MLEvaluator.swift in Sources */,
+				F1A2B3C4D5E6F7890AB1CD10 /* InteractionEffectEngine.swift in Sources */,
+				F1A2B3C4D5E6F7890AB1CD12 /* TemporalSequenceMiner.swift in Sources */,
+				F1A2B3C4D5E6F7890AB1CD14 /* ChangePointDetector.swift in Sources */,
+				F1A2B3C4D5E6F7890AB1CD16 /* PersonalOptimizer.swift in Sources */,
+				F1A2B3C4D5E6F7890AB1CD18 /* CompoundInsightEngine.swift in Sources */,
 				631DC356BD80DCD67B334956 /* MaintenanceView.swift in Sources */,
 				9E3ED2F641CA65C95F98317F /* MetricChartView.swift in Sources */,
 				9DE66A76E570205AD6E0FB8D /* MetricDetailView.swift in Sources */,

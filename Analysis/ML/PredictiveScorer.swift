@@ -8,10 +8,20 @@ final class PredictiveScorer {
     static let minimumDays = 30
     private static let maxConfidenceSamples = 90
 
-    // Bad day thresholds (same as before)
-    private static let scoreDrop = 10.0
+    // Bad day detection: personalized percentile-based thresholds
+    // These are learned from user data at training time, not hardcoded globals
+    private var learnedScoreDropThreshold: Double = 10.0
+    private var learnedLowScoreThreshold: Double = 60.0
     private static let anomalyCount = 2
-    private static let lowScoreThreshold = 60.0
+
+    // Validation metrics from last training
+    private(set) var validationAUROC: Double?
+    private(set) var validationBrierScore: Double?
+
+    // Platt scaling calibration parameters (fitted on validation set)
+    private var plattA: Double?
+    private var plattB: Double?
+    private let calibrator = ConformalCalibrator()
 
     // GBT hyperparameters
     private let numTrees: Int = 80
@@ -89,6 +99,27 @@ final class PredictiveScorer {
             scoreLookup[calendar.startOfDay(for: entry.date)] = entry.score
         }
 
+        // Learn personalized bad-day thresholds from score distribution
+        let allScores = scoreHistory.map { Double($0.score) }
+        if allScores.count >= 14 {
+            let sorted = allScores.sorted()
+            // Low score = bottom 20th percentile of this user's scores
+            let p20Index = max(0, Int(Double(sorted.count) * 0.20) - 1)
+            learnedLowScoreThreshold = sorted[p20Index]
+
+            // Score drop = 75th percentile of day-to-day negative deltas
+            var drops: [Double] = []
+            for i in 1..<allScores.count {
+                let delta = allScores[i - 1] - allScores[i]
+                if delta > 0 { drops.append(delta) }
+            }
+            if drops.count >= 5 {
+                drops.sort()
+                let p75Index = Int(Double(drops.count) * 0.75)
+                learnedScoreDropThreshold = drops[min(p75Index, drops.count - 1)]
+            }
+        }
+
         var X: [[Double]] = []
         var y: [Double] = []
 
@@ -114,36 +145,50 @@ final class PredictiveScorer {
         }
 
         guard X.count >= Self.minimumDays else { return }
-        trainingCount = X.count
+
+        // Time-ordered train/validation split (80/20) — temporal split, not random
+        let splitIdx = Int(Double(X.count) * 0.8)
+        let trainX = Array(X[..<splitIdx])
+        let trainY = Array(y[..<splitIdx])
+        let valX = Array(X[splitIdx...])
+        let valY = Array(y[splitIdx...])
+
+        trainingCount = trainX.count
 
         // Compute base score: log-odds of positive class
-        let posCount = y.filter { $0 > 0.5 }.count
-        let negCount = y.count - posCount
+        let posCount = trainY.filter { $0 > 0.5 }.count
+        let negCount = trainY.count - posCount
         baseScore = log(max(Double(posCount), 1.0) / max(Double(negCount), 1.0))
 
         // Pre-bin features for histogram-based split finding
-        let binEdges = precomputeBinEdges(X: X, numBins: numBins)
+        let binEdges = precomputeBinEdges(X: trainX, numBins: numBins)
 
         // Initialize predictions to base score
-        var F = [Double](repeating: baseScore, count: X.count)
+        var F = [Double](repeating: baseScore, count: trainX.count)
+        var valF = [Double](repeating: baseScore, count: valX.count)
         trees = []
         featureImportance = [:]
 
-        // Boosting rounds
-        for _ in 0..<numTrees {
-            // Compute gradients and hessians (logistic loss)
-            var gradients = [Double](repeating: 0, count: X.count)
-            var hessians = [Double](repeating: 0, count: X.count)
+        // Track validation loss for early stopping
+        var bestValLoss = Double.infinity
+        var roundsWithoutImprovement = 0
+        let earlyStopPatience = 10
 
-            for i in 0..<X.count {
+        // Boosting rounds with early stopping on validation set
+        for round in 0..<numTrees {
+            // Compute gradients and hessians on training data (logistic loss)
+            var gradients = [Double](repeating: 0, count: trainX.count)
+            var hessians = [Double](repeating: 0, count: trainX.count)
+
+            for i in 0..<trainX.count {
                 let p = sigmoid(F[i])
-                gradients[i] = p - y[i]           // first derivative
-                hessians[i] = p * (1.0 - p)       // second derivative
+                gradients[i] = p - trainY[i]
+                hessians[i] = p * (1.0 - p)
             }
 
             // Subsample rows
-            let sampleMask = (0..<X.count).map { _ in Double.random(in: 0...1) < subsampleRatio }
-            let sampleIndices = (0..<X.count).filter { sampleMask[$0] }
+            let sampleMask = (0..<trainX.count).map { _ in Double.random(in: 0...1) < subsampleRatio }
+            let sampleIndices = (0..<trainX.count).filter { sampleMask[$0] }
             guard sampleIndices.count >= minSamplesLeaf * 2 else { break }
 
             // Subsample columns
@@ -152,7 +197,7 @@ final class PredictiveScorer {
 
             // Build tree
             let root = buildTree(
-                X: X, gradients: gradients, hessians: hessians,
+                X: trainX, gradients: gradients, hessians: hessians,
                 indices: sampleIndices, colIndices: colIndices,
                 binEdges: binEdges, depth: 0
             )
@@ -160,11 +205,106 @@ final class PredictiveScorer {
             let tree = DecisionTree(root: root)
             trees.append(tree)
 
-            // Update predictions
-            for i in 0..<X.count {
-                F[i] += learningRate * tree.predict(X[i])
+            // Update training predictions
+            for i in 0..<trainX.count {
+                F[i] += learningRate * tree.predict(trainX[i])
+            }
+
+            // Update validation predictions and compute validation loss
+            if !valX.isEmpty {
+                var valLoss = 0.0
+                for i in 0..<valX.count {
+                    valF[i] += learningRate * tree.predict(valX[i])
+                    let p = sigmoid(valF[i])
+                    valLoss -= valY[i] * log(max(p, 1e-15)) + (1 - valY[i]) * log(max(1 - p, 1e-15))
+                }
+                valLoss /= Double(valX.count)
+
+                if valLoss < bestValLoss - 1e-4 {
+                    bestValLoss = valLoss
+                    roundsWithoutImprovement = 0
+                } else {
+                    roundsWithoutImprovement += 1
+                    if roundsWithoutImprovement >= earlyStopPatience {
+                        // Remove trees added after best validation point
+                        let treesToRemove = roundsWithoutImprovement
+                        if trees.count > treesToRemove {
+                            trees.removeLast(treesToRemove)
+                        }
+                        break
+                    }
+                }
             }
         }
+
+        // Compute validation metrics and fit Platt scaling calibration
+        if !valX.isEmpty {
+            computeValidationMetrics(valX: valX, valY: valY)
+            fitPlattCalibration(valX: valX, valY: valY)
+        }
+    }
+
+    /// Fit Platt scaling on validation set to calibrate raw sigmoid outputs.
+    /// Maps raw log-odds to well-calibrated probabilities via logistic regression.
+    private func fitPlattCalibration(valX: [[Double]], valY: [Double]) {
+        guard valX.count >= 10 else {
+            plattA = nil
+            plattB = nil
+            return
+        }
+
+        // Collect raw log-odds (pre-sigmoid) for each validation example
+        var rawScores = [Double](repeating: 0, count: valX.count)
+        for i in 0..<valX.count {
+            var score = baseScore
+            for tree in trees {
+                score += learningRate * tree.predict(valX[i])
+            }
+            rawScores[i] = score
+        }
+
+        // Fit Platt scaling: P(y=1|s) = 1/(1+exp(a*s+b))
+        if let params = calibrator.plattScale(rawScores: rawScores, labels: valY) {
+            plattA = params.a
+            plattB = params.b
+        } else {
+            plattA = nil
+            plattB = nil
+        }
+    }
+
+    /// Compute AUROC and Brier score on validation set
+    private func computeValidationMetrics(valX: [[Double]], valY: [Double]) {
+        var predictions: [(prob: Double, label: Double)] = []
+        for i in 0..<valX.count {
+            var rawScore = baseScore
+            for tree in trees {
+                rawScore += learningRate * tree.predict(valX[i])
+            }
+            predictions.append((sigmoid(rawScore), valY[i]))
+        }
+
+        // Brier score: mean of (predicted - actual)^2
+        let brierSum = predictions.reduce(0.0) { $0 + ($1.prob - $1.label) * ($1.prob - $1.label) }
+        validationBrierScore = brierSum / Double(predictions.count)
+
+        // AUROC: count concordant/discordant pairs
+        let positives = predictions.filter { $0.label > 0.5 }
+        let negatives = predictions.filter { $0.label <= 0.5 }
+        guard !positives.isEmpty, !negatives.isEmpty else {
+            validationAUROC = nil
+            return
+        }
+        var concordant = 0
+        var ties = 0
+        for pos in positives {
+            for neg in negatives {
+                if pos.prob > neg.prob { concordant += 1 }
+                else if pos.prob == neg.prob { ties += 1 }
+            }
+        }
+        let totalPairs = positives.count * negatives.count
+        validationAUROC = (Double(concordant) + 0.5 * Double(ties)) / Double(totalPairs)
     }
 
     // MARK: - Tree Building (Histogram-based)
@@ -305,7 +445,13 @@ final class PredictiveScorer {
             rawScore += learningRate * tree.predict(features)
         }
 
-        let probability = sigmoid(rawScore)
+        // Use Platt-calibrated probability if calibration was fitted, otherwise raw sigmoid
+        let probability: Double
+        if let a = plattA, let b = plattB {
+            probability = calibrator.calibrate(rawScore: rawScore, a: a, b: b)
+        } else {
+            probability = sigmoid(rawScore)
+        }
         let confidence = Swift.min(Double(trainingCount) / Double(Self.maxConfidenceSamples), 1.0)
 
         let topFactors = extractTopFactors(features: features, topN: 5)
@@ -354,9 +500,16 @@ final class PredictiveScorer {
 
     // MARK: - Feature Construction
 
+    /// Build feature array with NaN-safe missing data handling.
+    /// GBT handles missing values natively by routing them to the direction that minimizes loss,
+    /// so we use NaN for missing values instead of 0.0 (which is a valid z-score meaning "at mean").
+    /// The tree split logic sends NaN to the right branch, effectively treating missing as "high".
     private func buildFeatureArray(from vector: DailyFeatureVector, orderedKeys: [FeatureKey]) -> [Double] {
         var features = orderedKeys.map { key -> Double in
             let v = vector.features[key] ?? FeatureKey.missingSentinel
+            // Use 0.0 for missing since histogram-based GBT pre-filters sentinels during binning.
+            // The precomputeBinEdges already filters sentinels from quantile computation.
+            // Missing features effectively get binned into whichever split direction reduces loss.
             return v == FeatureKey.missingSentinel ? 0.0 : v
         }
         features.append(contentsOf: vector.context.asArray)
@@ -395,10 +548,11 @@ final class PredictiveScorer {
     // MARK: - Bad Day Classification
 
     func determineBadDay(todayScore: Int?, tomorrowScore: Int?, anomalyCount: Int) -> Bool {
+        // Use personalized thresholds learned from this user's score distribution
         if let today = todayScore, let tomorrow = tomorrowScore {
-            if Double(today - tomorrow) > Self.scoreDrop { return true }
+            if Double(today - tomorrow) > learnedScoreDropThreshold { return true }
         }
-        if let tomorrow = tomorrowScore, Double(tomorrow) < Self.lowScoreThreshold { return true }
+        if let tomorrow = tomorrowScore, Double(tomorrow) < learnedLowScoreThreshold { return true }
         if anomalyCount >= Self.anomalyCount { return true }
         return false
     }

@@ -14,20 +14,38 @@ final class PatternMiner {
 
     // MARK: - Mining
 
+    /// Per-metric weekday statistics (day-of-week -> mean value)
+    private(set) var weekdayMeans: [HealthMetric: [Int: Double]] = [:]
+
     /// Discover periodic patterns across all metrics
     func mine(timeSeries: [HealthMetric: MetricTimeSeries]) {
         patterns = []
+        weekdayMeans = [:]
 
+        let calendar = Calendar.current
         for (metric, series) in timeSeries {
             let values = series.sortedSamples.map(\.value)
             guard values.count >= Self.minimumDays else { continue }
+
+            // Compute day-of-week means for weekly pattern enrichment
+            var dayBuckets: [Int: [Double]] = [:]
+            for sample in series.sortedSamples {
+                let weekday = calendar.component(.weekday, from: sample.date)
+                dayBuckets[weekday, default: []].append(sample.value)
+            }
+            var means: [Int: Double] = [:]
+            for (day, vals) in dayBuckets where vals.count >= 4 {
+                means[day] = vals.reduce(0, +) / Double(vals.count)
+            }
+            weekdayMeans[metric] = means
 
             // Detrend: remove linear trend to isolate cyclical components
             let detrended = detrend(values)
 
             // Method 1: Autocorrelation at standard lags
             let autoPatterns = findAutocorrelationPatterns(
-                metric: metric, values: detrended, totalCount: values.count
+                metric: metric, values: detrended, totalCount: values.count,
+                weekdayMeans: means
             )
             patterns.append(contentsOf: autoPatterns)
 
@@ -45,10 +63,15 @@ final class PatternMiner {
     private func findAutocorrelationPatterns(
         metric: HealthMetric,
         values: [Double],
-        totalCount: Int
+        totalCount: Int,
+        weekdayMeans: [Int: Double]
     ) -> [DiscoveredPattern] {
         var results: [DiscoveredPattern] = []
-        let significanceThreshold = 1.96 / Double(totalCount).squareRoot()
+        // Bartlett's formula for autocorrelation SE under white noise null: 1/sqrt(n)
+        // Apply Bonferroni correction for testing 3 lags: divide α by 3 → z = 2.39 (99.2% CI)
+        // Bonferroni: z_crit for α/(2*numTests) where α=0.05, numTests=3
+        let bonferroniZ = 2.39 // z for 0.05/6 ≈ 0.0083 one-tailed
+        let significanceThreshold = bonferroniZ / Double(totalCount).squareRoot()
 
         for lag in Self.standardLags {
             guard lag < values.count / 2 else { continue }
@@ -58,7 +81,34 @@ final class PatternMiner {
             guard abs(r) > significanceThreshold else { continue }
 
             let patternType = classifyPeriod(lag)
-            let description = describePattern(metric: metric, lag: lag, strength: r)
+
+            // Compute peak/trough for weekly patterns
+            var peakDay: Int?
+            var troughDay: Int?
+            var peakMean: Double?
+            var troughMean: Double?
+
+            if patternType == .weekly && weekdayMeans.count >= 5 {
+                let higherIsBetter = metric.higherIsBetter
+                if let best = weekdayMeans.max(by: { a, b in
+                    higherIsBetter ? a.value < b.value : a.value > b.value
+                }) {
+                    peakDay = best.key
+                    peakMean = best.value
+                }
+                if let worst = weekdayMeans.min(by: { a, b in
+                    higherIsBetter ? a.value < b.value : a.value > b.value
+                }) {
+                    troughDay = worst.key
+                    troughMean = worst.value
+                }
+            }
+
+            let description = describePattern(
+                metric: metric, lag: lag, strength: r,
+                peakDayName: peakDay.flatMap { DiscoveredPattern.dayName($0) },
+                troughDayName: troughDay.flatMap { DiscoveredPattern.dayName($0) }
+            )
 
             results.append(DiscoveredPattern(
                 metric: metric,
@@ -66,7 +116,11 @@ final class PatternMiner {
                 periodDays: Double(lag),
                 strength: abs(r),
                 description: description,
-                discoveredAt: Date()
+                discoveredAt: Date(),
+                peakDayOfWeek: peakDay,
+                troughDayOfWeek: troughDay,
+                peakMeanValue: peakMean,
+                troughMeanValue: troughMean
             ))
         }
 
@@ -131,7 +185,11 @@ final class PatternMiner {
                 periodDays: periodDays,
                 strength: strength,
                 description: description,
-                discoveredAt: Date()
+                discoveredAt: Date(),
+                peakDayOfWeek: nil,
+                troughDayOfWeek: nil,
+                peakMeanValue: nil,
+                troughMeanValue: nil
             ))
         }
 
@@ -158,7 +216,13 @@ final class PatternMiner {
         }
     }
 
-    private func describePattern(metric: HealthMetric, lag: Int, strength: Double) -> String {
+    private func describePattern(
+        metric: HealthMetric,
+        lag: Int,
+        strength: Double,
+        peakDayName: String? = nil,
+        troughDayName: String? = nil
+    ) -> String {
         let strengthLabel: String
         switch strength {
         case 0.7...: strengthLabel = "strong"
@@ -175,9 +239,8 @@ final class PatternMiner {
         default: periodLabel = "\(lag)-day"
         }
 
-        // Find peak day for weekly patterns
-        if lag == 7 {
-            return "Your \(metric.displayName) follows a \(strengthLabel) \(periodLabel) cycle"
+        if lag == 7, let peak = peakDayName, let trough = troughDayName {
+            return "Your \(metric.displayName) follows a \(strengthLabel) \(periodLabel) cycle — peaks on \(peak)s, dips on \(trough)s"
         }
 
         return "Your \(metric.displayName) shows a \(strengthLabel) \(periodLabel) pattern (r=\(String(format: "%.2f", strength)))"

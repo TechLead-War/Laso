@@ -172,17 +172,23 @@ enum CompositeFeatureEngine {
         let monotonyByDate = computeTrainingLoadMonotony(
             dateLookups: dateLookups, calendar: calendar
         )
+        // Use personal baselines for streak thresholds instead of hardcoded population values.
+        // Falls back to population defaults only when no baseline exists.
+        let sleepThreshold = baselines[.sleepDuration].map { max($0.mean - 0.5 * $0.standardDeviation, 5.0) } ?? 7.0
+        let stepThreshold = baselines[.steps].map { max($0.mean - 0.5 * $0.standardDeviation, 3000) } ?? 8000.0
+        let exerciseThreshold = baselines[.exerciseMinutes].map { max($0.mean - 0.5 * $0.standardDeviation, 10) } ?? 30.0
+
         let sleepStreakByDate = computeStreak(
             dateLookups: dateLookups, metric: .sleepDuration,
-            threshold: 7.0, calendar: calendar
+            threshold: sleepThreshold, calendar: calendar
         )
         let stepStreakByDate = computeStreak(
             dateLookups: dateLookups, metric: .steps,
-            threshold: 8000.0, calendar: calendar
+            threshold: stepThreshold, calendar: calendar
         )
         let exerciseStreakByDate = computeStreak(
             dateLookups: dateLookups, metric: .exerciseMinutes,
-            threshold: 30.0, calendar: calendar
+            threshold: exerciseThreshold, calendar: calendar
         )
 
         // Enrich each vector
