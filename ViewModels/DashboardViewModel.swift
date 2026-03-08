@@ -56,6 +56,85 @@ final class DashboardViewModel {
         analysisEngine.overallScore
     }
 
+    enum RecoveryState: String, CaseIterable {
+        case green, yellow, red
+
+        var label: String {
+            switch self {
+            case .green: "Fully Recovered"
+            case .yellow: "Moderate Recovery"
+            case .red: "Low Recovery"
+            }
+        }
+
+        var dayType: String {
+            switch self {
+            case .green: "Green Day — Push Hard"
+            case .yellow: "Yellow Day — Maintain"
+            case .red: "Red Day — Recover"
+            }
+        }
+
+        var strainGuidance: String {
+            switch self {
+            case .green: "High intensity training recommended. Your body is ready for a challenge."
+            case .yellow: "Moderate activity is ideal. Focus on technique over intensity."
+            case .red: "Prioritize rest and gentle movement. Your body needs recovery time."
+            }
+        }
+    }
+
+    var recoveryState: RecoveryState {
+        let score = overallScore.score
+        if score > 75 { return .green }
+        if score >= 50 { return .yellow }
+        return .red
+    }
+
+    var dayClassification: String {
+        recoveryState.dayType
+    }
+
+    var strainGuidance: String {
+        let trend = recentActivityTrendDirection
+
+        switch recoveryState {
+        case .green:
+            switch trend {
+            case .improving:
+                return "Recovery is high and activity is already trending up. Push hard, but avoid a major jump in strain."
+            case .declining:
+                return "Recovery is high while recent activity has trended down. Add a hard session to rebuild strain."
+            case .stable:
+                return "Recovery is high. Push hard today with a challenging workout."
+            case .none:
+                return "Recovery is high. Push hard today."
+            }
+        case .yellow:
+            switch trend {
+            case .improving:
+                return "Recovery is moderate and activity is trending up. Maintain strain and keep intensity controlled."
+            case .declining:
+                return "Recovery is moderate with activity easing off. Maintain with a steady, moderate session."
+            case .stable:
+                return "Recovery is moderate. Maintain your usual training load today."
+            case .none:
+                return "Recovery is moderate. Maintain a moderate strain today."
+            }
+        case .red:
+            switch trend {
+            case .improving:
+                return "Recovery is low after rising activity. Take a recovery day with light movement only."
+            case .declining:
+                return "Recovery is low. Keep strain very low and prioritize sleep, hydration, and mobility."
+            case .stable:
+                return "Recovery is low. Recover today with easy walking or stretching only."
+            case .none:
+                return "Recovery is low. Prioritize recovery and avoid hard training."
+            }
+        }
+    }
+
     var categoryScores: [HealthScore] {
         analysisEngine.categoryScores
     }
@@ -2125,5 +2204,23 @@ final class DashboardViewModel {
         let m = Int((hours - Double(h)) * 60)
         if h == 0 { return "\(m)m" }
         return "\(h)h \(String(format: "%02d", m))m"
+    }
+
+    private var recentActivityTrendDirection: TrendDirection? {
+        let metrics: [HealthMetric] = [
+            .exerciseMinutes, .activeCalories, .steps, .workoutDuration, .workoutCount, .distanceWalkingRunning
+        ]
+        let trends = metrics.compactMap { analysisEngine.trends[$0] }
+        guard !trends.isEmpty else { return nil }
+
+        let improvingCount = trends.filter { $0.direction == .improving }.count
+        let decliningCount = trends.filter { $0.direction == .declining }.count
+        if improvingCount > decliningCount { return .improving }
+        if decliningCount > improvingCount { return .declining }
+
+        let averageChange = trends.map(\.weekOverWeekChange).mean
+        if averageChange > 2 { return .improving }
+        if averageChange < -2 { return .declining }
+        return .stable
     }
 }

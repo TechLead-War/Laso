@@ -1,6 +1,9 @@
 import SwiftUI
 
-/// Section wrapper for the compact actionable recommendation cards (max 2)
+/// Section wrapper for prescriptive action cards on the Home screen.
+///
+/// Displays up to 2 cards in a direct, prescriptive format:
+/// bold action -> body-focused reason -> expected benefit.
 struct ActionCardsSection: View {
     let insights: [Insight]
     let onTapInsight: (HealthMetric) -> Void
@@ -9,7 +12,7 @@ struct ActionCardsSection: View {
         if !insights.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text("What To Do")
+                    Text("Your Next Move")
                         .font(.headline)
 
                     Spacer()
@@ -20,7 +23,7 @@ struct ActionCardsSection: View {
                             .foregroundStyle(.white)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 2)
-                            .background(alertCountColor, in: Capsule())
+                            .background(urgencyColor, in: Capsule())
                     }
                 }
                 .padding(.horizontal)
@@ -41,7 +44,8 @@ struct ActionCardsSection: View {
         }
     }
 
-    private var alertCountColor: Color {
+    /// Urgency color based on the most severe insight present
+    private var urgencyColor: Color {
         if insights.contains(where: { $0.severity == .critical }) {
             return .red
         } else if insights.contains(where: { $0.severity == .warning }) {

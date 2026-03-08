@@ -1,25 +1,36 @@
 import SwiftUI
 
-/// Greeting header with score, yesterday delta, streak badge, and settings button
+/// Context-aware greeting header that combines time of day with recovery state
+/// to deliver a prescriptive one-line message alongside date and streak badge.
 struct CoachGreetingView: View {
     let showSettings: Binding<Bool>
     var streakDays: Int = 0
     var scoreChangeFromYesterday: Int? = nil
     var currentScore: Int? = nil
+    var recoveryState: DashboardViewModel.RecoveryState? = nil
     var onTapScoreInfo: (() -> Void)? = nil
 
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                // Time-based greeting
-                Text(greeting)
+                // Context-aware prescription greeting
+                Text(contextGreeting)
                     .font(.title2.weight(.bold))
 
-                // Date subtitle with optional streak badge
-                HStack(spacing: 6) {
-                    Text(dateString)
+                // Recovery-aware subtitle
+                if let prescription = recoveryPrescription {
+                    Text(prescription)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                // Date + streak badge
+                HStack(spacing: 6) {
+                    Text(dateString)
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
 
                     if streakDays > 1 {
                         HStack(spacing: 2) {
@@ -34,6 +45,7 @@ struct CoachGreetingView: View {
                         .background(Color.orange.opacity(0.12), in: Capsule())
                     }
                 }
+                .padding(.top, 1)
             }
 
             Spacer()
@@ -78,13 +90,68 @@ struct CoachGreetingView: View {
         }
     }
 
-    private var greeting: String {
+    // MARK: - Context-Aware Greeting
+
+    private var timeOfDay: TimeOfDay {
         let hour = Calendar.current.component(.hour, from: Date())
         switch hour {
-        case 5..<12: return "Good Morning"
-        case 12..<17: return "Good Afternoon"
-        case 17..<22: return "Good Evening"
-        default: return "Good Night"
+        case 5..<12: return .morning
+        case 12..<17: return .afternoon
+        case 17..<22: return .evening
+        default: return .night
+        }
+    }
+
+    private enum TimeOfDay {
+        case morning, afternoon, evening, night
+    }
+
+    private var contextGreeting: String {
+        switch timeOfDay {
+        case .morning: return "Good Morning"
+        case .afternoon: return "Good Afternoon"
+        case .evening: return "Good Evening"
+        case .night: return "Good Night"
+        }
+    }
+
+    /// Prescriptive subtitle based on recovery state and time of day.
+    /// Returns nil when no recovery data is available (falls back to date-only).
+    private var recoveryPrescription: String? {
+        guard let state = recoveryState else { return nil }
+
+        switch (timeOfDay, state) {
+        // Morning prescriptions
+        case (.morning, .green):
+            return "Your body recovered well. Today's a green day."
+        case (.morning, .yellow):
+            return "Moderate recovery. Take it steady today."
+        case (.morning, .red):
+            return "Your body needs rest. Go easy today."
+
+        // Afternoon prescriptions
+        case (.afternoon, .green):
+            return "Recovery is strong. Great day to push hard."
+        case (.afternoon, .yellow):
+            return "Moderate recovery. Take it steady today."
+        case (.afternoon, .red):
+            return "Recovery is low. Prioritize rest this afternoon."
+
+        // Evening prescriptions
+        case (.evening, .green):
+            return "Strong recovery today. Wind down and keep it going."
+        case (.evening, .yellow):
+            return "Moderate day. Prioritize sleep tonight."
+        case (.evening, .red):
+            return "Your body needs rest. Prioritize sleep tonight."
+
+        // Late night
+        case (.night, .green):
+            return "Good recovery. Get some rest to keep it up."
+        case (.night, .yellow):
+            return "Get to bed soon for better recovery."
+        case (.night, .red):
+            return "Sleep is the best thing for you right now."
         }
     }
 
@@ -100,10 +167,33 @@ struct CoachGreetingView: View {
 }
 
 #Preview {
-    CoachGreetingView(
-        showSettings: .constant(false),
-        streakDays: 14,
-        scoreChangeFromYesterday: 3,
-        currentScore: 72
-    )
+    VStack(spacing: 20) {
+        CoachGreetingView(
+            showSettings: .constant(false),
+            streakDays: 14,
+            scoreChangeFromYesterday: 3,
+            currentScore: 82,
+            recoveryState: .green
+        )
+
+        Divider()
+
+        CoachGreetingView(
+            showSettings: .constant(false),
+            streakDays: 5,
+            scoreChangeFromYesterday: -2,
+            currentScore: 55,
+            recoveryState: .yellow
+        )
+
+        Divider()
+
+        CoachGreetingView(
+            showSettings: .constant(false),
+            streakDays: 0,
+            scoreChangeFromYesterday: -8,
+            currentScore: 35,
+            recoveryState: .red
+        )
+    }
 }

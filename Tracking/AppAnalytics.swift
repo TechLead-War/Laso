@@ -125,6 +125,7 @@ enum BlockType: String {
     case exploreDecliningMetric = "explore_declining_metric"
     case exploreSeeAllCorrelations = "explore_see_all_correlations"
     case exploreCorrelationPreview = "explore_correlation_preview"
+    case exploreTrendMetric = "explore_trend_metric"
 
     // Home extras
     case homeCoachGoal = "home_coach_goal"

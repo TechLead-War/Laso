@@ -99,7 +99,7 @@ struct HealthPulseApp: App {
             StoredAnalysisSnapshot.self, StoredMLModelState.self,
             StoredRecommendation.self, StoredNotificationEvent.self,
             StoredAdherenceRecord.self, StoredECGFeatures.self,
-            StoredModelEvaluation.self
+            StoredModelEvaluation.self, StoredJournalEntry.self
         ]
 
         // Schema version tracking — delete DB when model set changes to avoid hangs

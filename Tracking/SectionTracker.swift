@@ -17,6 +17,7 @@ enum AppSection: String {
     case exploreDecliningTrends = "explore_declining_trends"
     case exploreCorrelations = "explore_correlations"
     case exploreCategories = "explore_categories"
+    case exploreYourTrends = "explore_your_trends"
 
     // InsightsDetail (2)
     case insightsActionItems = "insights_action_items"
@@ -41,6 +42,7 @@ enum AppSection: String {
     case metricDetailHistory = "metric_detail_history"
     case metricDetailScoreImpact = "metric_detail_score_impact"
     case metricDetailInsights = "metric_detail_insights"
+    case metricDetailComparison = "metric_detail_comparison"
 
     // Correlations (2)
     case correlationsFilters = "correlations_filters"

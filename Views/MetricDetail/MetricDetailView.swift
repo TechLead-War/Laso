@@ -17,6 +17,7 @@ struct MetricDetailView: View {
     @State private var historyTracker = SectionTracker(section: .metricDetailHistory, tab: .metricDetail)
     @State private var scoreImpactTracker = SectionTracker(section: .metricDetailScoreImpact, tab: .metricDetail)
     @State private var insightsTracker = SectionTracker(section: .metricDetailInsights, tab: .metricDetail)
+    @State private var comparisonTracker = SectionTracker(section: .metricDetailComparison, tab: .metricDetail)
 
     var body: some View {
         ScrollView {
@@ -94,6 +95,13 @@ struct MetricDetailView: View {
                     contextualSummary
                         .onAppear { summaryTracker.appeared() }
                         .onDisappear { summaryTracker.disappeared() }
+
+                    // Month-over-Month Comparison
+                    if viewModel.monthComparison != nil {
+                        monthComparisonSection
+                            .onAppear { comparisonTracker.appeared() }
+                            .onDisappear { comparisonTracker.disappeared() }
+                    }
 
                     // Historical Context
                     if !viewModel.historicalFacts.isEmpty {
@@ -240,13 +248,43 @@ struct MetricDetailView: View {
     }
 
     private var chartSection: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 8) {
             MetricChartView(
                 samples: viewModel.chartSamples,
                 metric: viewModel.metric,
                 baseline: viewModel.baseline?.mean,
-                normalRange: viewModel.normalRange
+                normalRange: viewModel.normalRange,
+                trendLine: viewModel.trendLineSamples.isEmpty ? nil : viewModel.trendLineSamples,
+                forecastPoints: viewModel.forecastSamples.isEmpty ? nil : viewModel.forecastSamples
             )
+
+            // Chart legend when trend or forecast are shown
+            if !viewModel.trendLineSamples.isEmpty || !viewModel.forecastSamples.isEmpty {
+                HStack(spacing: 16) {
+                    if !viewModel.trendLineSamples.isEmpty {
+                        HStack(spacing: 4) {
+                            RoundedRectangle(cornerRadius: 1)
+                                .fill(.orange.opacity(0.7))
+                                .frame(width: 16, height: 2)
+                            Text("Trend")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    if !viewModel.forecastSamples.isEmpty {
+                        HStack(spacing: 4) {
+                            RoundedRectangle(cornerRadius: 1)
+                                .fill(viewModel.metric.category.color.opacity(0.5))
+                                .frame(width: 16, height: 2)
+                            Text("Forecast")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 4)
+            }
         }
         .padding(DS.cardPadding)
         .cardStyle()
@@ -304,6 +342,55 @@ struct MetricDetailView: View {
         .padding(.vertical, 16)
         .cardStyle()
         .padding(.horizontal)
+    }
+
+    // MARK: - Month Comparison
+
+    @ViewBuilder
+    private var monthComparisonSection: some View {
+        if let comp = viewModel.monthComparison {
+            VStack(alignment: .leading, spacing: 8) {
+                sectionHeader(icon: "calendar", title: "This Month vs Last Month")
+
+                HStack(spacing: 0) {
+                    // This month
+                    VStack(spacing: 6) {
+                        Text(viewModel.metric.formatValue(comp.thisMonthAvg))
+                            .font(.title3.weight(.bold).monospacedDigit())
+                        Text(comp.thisMonthLabel)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+
+                    // Arrow + change
+                    VStack(spacing: 4) {
+                        Image(systemName: comp.improving ? "arrow.up.right" : abs(comp.changePercent) < 2 ? "arrow.right" : "arrow.down.right")
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(comp.improving ? .green : abs(comp.changePercent) < 2 ? .secondary : .red)
+
+                        Text(TrendAnalyzer.formattedPercentChange(comp.changePercent))
+                            .font(.caption.weight(.bold).monospacedDigit())
+                            .foregroundStyle(comp.improving ? .green : abs(comp.changePercent) < 2 ? .secondary : .red)
+                    }
+                    .frame(maxWidth: .infinity)
+
+                    // Last month
+                    VStack(spacing: 6) {
+                        Text(viewModel.metric.formatValue(comp.lastMonthAvg))
+                            .font(.title3.weight(.bold).monospacedDigit())
+                            .foregroundStyle(.secondary)
+                        Text(comp.lastMonthLabel)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .padding(.vertical, 16)
+                .cardStyle()
+                .padding(.horizontal)
+            }
+        }
     }
 
     // MARK: - Shared Row Builder

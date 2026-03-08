@@ -75,7 +75,7 @@ struct WeeklyReviewEntryCard: View {
     }
 }
 
-// MARK: - Full Weekly Review Screen
+// MARK: - Full Weekly Review Screen (Whoop-style)
 
 struct WeeklyReviewView: View {
     let viewModel: WeeklyReviewViewModel
@@ -87,20 +87,37 @@ struct WeeklyReviewView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 24) {
+            VStack(spacing: 20) {
                 if let review = viewModel.review {
-                    scoreSection(review)
+                    // Weekly averages hero
+                    weeklyAveragesSection(review)
                         .onAppear { scoreTracker.appeared() }
                         .onDisappear { scoreTracker.disappeared() }
-                    if let coachPlan = review.coachPlan {
-                        progressiveCoachSection(coachPlan)
-                    }
-                    winsSection(review)
+
+                    // Best & worst days
+                    bestWorstDaysSection(review)
+
+                    // Personal records / wins
+                    personalRecordsSection(review)
                         .onAppear { winsTracker.appeared() }
                         .onDisappear { winsTracker.disappeared() }
+
+                    // Top insight of the week
+                    topInsightSection(review)
+
+                    // Watch outs
                     watchOutSection(review)
                         .onAppear { watchOutTracker.appeared() }
                         .onDisappear { watchOutTracker.disappeared() }
+
+                    // Progressive coach
+                    if let coachPlan = review.coachPlan {
+                        progressiveCoachSection(coachPlan)
+                    }
+
+                    // Next week outlook teaser
+                    nextWeekOutlookSection(review)
+
                 } else if viewModel.isLoading {
                     ProgressView()
                         .padding(.top, 40)
@@ -154,10 +171,11 @@ struct WeeklyReviewView: View {
         }
     }
 
-    // MARK: - Score Trend
+    // MARK: - Weekly Averages (Hero Section)
 
-    private func scoreSection(_ review: WeeklyReview) -> some View {
-        VStack(spacing: 12) {
+    private func weeklyAveragesSection(_ review: WeeklyReview) -> some View {
+        VStack(spacing: 16) {
+            // Score ring with gradient background
             HealthScoreRing(
                 score: review.currentScore,
                 label: "This Week",
@@ -178,21 +196,150 @@ struct WeeklyReviewView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+
+            Divider()
+                .padding(.horizontal, 20)
+
+            // Category score breakdown in a grid
+            weeklyScoreGrid(review)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 20)
         .padding(.horizontal)
-        .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
+        .background(DS.recoveryGradient(review.currentScore))
+        .clipShape(RoundedRectangle(cornerRadius: DS.cardRadius))
+        .overlay(
+            RoundedRectangle(cornerRadius: DS.cardRadius)
+                .strokeBorder(DS.scoreColor(review.currentScore).opacity(DS.strokeAlpha), lineWidth: 0.5)
+        )
         .padding(.horizontal)
     }
 
-    // MARK: - Wins
+    private func weeklyScoreGrid(_ review: WeeklyReview) -> some View {
+        let trend = review.scoreTrend
+        return HStack(spacing: 0) {
+            weeklyStatColumn(
+                label: "Score",
+                value: "\(review.currentScore)",
+                color: DS.scoreColor(review.currentScore)
+            )
 
-    private func winsSection(_ review: WeeklyReview) -> some View {
+            weeklyStatDivider
+
+            weeklyStatColumn(
+                label: "Trend",
+                value: trend == .improving ? "Up" : trend == .declining ? "Down" : "Stable",
+                color: trend == .improving ? .green : trend == .declining ? .red : .gray
+            )
+
+            weeklyStatDivider
+
+            weeklyStatColumn(
+                label: "Wins",
+                value: "\(review.wins.count)",
+                color: .green
+            )
+
+            weeklyStatDivider
+
+            weeklyStatColumn(
+                label: "Alerts",
+                value: "\(review.watchOuts.count)",
+                color: review.watchOuts.isEmpty ? .gray : .orange
+            )
+        }
+    }
+
+    private func weeklyStatColumn(label: String, value: String, color: Color) -> some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.title3.weight(.bold).monospacedDigit())
+                .foregroundStyle(color)
+            Text(label)
+                .font(.caption2.weight(.medium))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var weeklyStatDivider: some View {
+        Rectangle()
+            .fill(.quaternary)
+            .frame(width: 1, height: DS.dividerHeight)
+    }
+
+    // MARK: - Best & Worst Days
+
+    private func bestWorstDaysSection(_ review: WeeklyReview) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Highlights", systemImage: "calendar.day.timeline.left")
+                .font(.headline)
+                .padding(.horizontal)
+
+            HStack(spacing: 12) {
+                // Best day — top win
+                if let topWin = review.wins.first {
+                    dayHighlightCard(
+                        label: "Best Metric",
+                        metric: topWin.metric.displayName,
+                        change: topWin.changePercent,
+                        icon: "arrow.up.right.circle.fill",
+                        color: .green
+                    )
+                }
+
+                // Worst day — top decline
+                if let topDecline = review.watchOuts.first {
+                    dayHighlightCard(
+                        label: "Needs Attention",
+                        metric: topDecline.metric.displayName,
+                        change: topDecline.changePercent,
+                        icon: "arrow.down.right.circle.fill",
+                        color: .orange
+                    )
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    private func dayHighlightCard(label: String, metric: String, change: Double, icon: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.body)
+                    .foregroundStyle(color)
+                Text(label)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(color)
+                    .textCase(.uppercase)
+            }
+
+            Text(metric)
+                .font(.subheadline.weight(.semibold))
+                .lineLimit(1)
+
+            HStack(spacing: 3) {
+                Image(systemName: change >= 0 ? "arrow.up.right" : "arrow.down.right")
+                    .font(.caption2.weight(.bold))
+                Text(String(format: "%.1f%%", abs(change)))
+                    .font(.caption.weight(.semibold).monospacedDigit())
+            }
+            .foregroundStyle(color)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(DS.cardPadding)
+        .cardStyle(tint: color)
+    }
+
+    // MARK: - Personal Records / Wins
+
+    private func personalRecordsSection(_ review: WeeklyReview) -> some View {
         Group {
             if !review.wins.isEmpty {
                 VStack(alignment: .leading, spacing: 12) {
-                    Label("Wins", systemImage: "trophy.fill")
+                    Label("This Week's Wins", systemImage: "trophy.fill")
                         .font(.headline)
                         .foregroundStyle(.green)
                         .padding(.horizontal)
@@ -235,6 +382,48 @@ struct WeeklyReviewView: View {
             .background(.green.opacity(DS.badgeBg), in: Capsule())
         }
         .padding(.vertical, 4)
+    }
+
+    // MARK: - Top Insight of the Week
+
+    private func topInsightSection(_ review: WeeklyReview) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Key Discovery", systemImage: "lightbulb.fill")
+                .font(.headline)
+                .foregroundStyle(.yellow)
+                .padding(.horizontal)
+
+            VStack(alignment: .leading, spacing: 8) {
+                if let topWin = review.wins.first {
+                    Text("\(topWin.metric.displayName) improved by \(String(format: "%.1f%%", abs(topWin.changePercent))) this week.")
+                        .font(.subheadline.weight(.medium))
+
+                    Text("Consistency in \(topWin.metric.category.displayName) is paying off. Keep the momentum going into next week.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else if let topDecline = review.watchOuts.first {
+                    Text("\(topDecline.metric.displayName) dropped \(String(format: "%.1f%%", abs(topDecline.changePercent))) this week.")
+                        .font(.subheadline.weight(.medium))
+
+                    if let nudge = MetricChangeRow.nudgeFor(topDecline.metric) {
+                        Text(nudge)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    Text("A stable week across the board.")
+                        .font(.subheadline.weight(.medium))
+
+                    Text("No major changes detected. Consistency is a strength.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(DS.cardPadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .cardStyle(tint: .yellow)
+            .padding(.horizontal)
+        }
     }
 
     // MARK: - Watch Out
@@ -368,6 +557,67 @@ struct WeeklyReviewView: View {
         .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
         .padding(.horizontal)
     }
+
+    // MARK: - Next Week Outlook
+
+    private func nextWeekOutlookSection(_ review: WeeklyReview) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Next Week", systemImage: "arrow.right.circle.fill")
+                .font(.headline)
+                .foregroundStyle(.blue)
+                .padding(.horizontal)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text(nextWeekOutlookMessage(review))
+                    .font(.subheadline)
+                    .foregroundStyle(.primary)
+
+                if let coachPlan = review.coachPlan {
+                    HStack(spacing: 6) {
+                        Image(systemName: "figure.walk")
+                            .font(.caption)
+                            .foregroundStyle(.blue)
+                        Text("Step target: \(formatSteps(coachPlan.nextDailyStepTarget))/day")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                HStack(spacing: 4) {
+                    Image(systemName: "sparkles")
+                        .font(.caption2)
+                    Text("Powered by your personal health model")
+                        .font(.caption2)
+                }
+                .foregroundStyle(.tertiary)
+            }
+            .padding(DS.cardPadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .cardStyle(tint: .blue)
+            .padding(.horizontal)
+        }
+    }
+
+    private func nextWeekOutlookMessage(_ review: WeeklyReview) -> String {
+        let hasWins = !review.wins.isEmpty
+        let hasDeclines = !review.watchOuts.isEmpty
+
+        switch (hasWins, hasDeclines) {
+        case (true, false):
+            return "Strong momentum heading into next week. Keep building on your wins and maintain consistency."
+        case (true, true):
+            if let topDecline = review.watchOuts.first {
+                return "Good progress overall. Focus on \(topDecline.metric.displayName) next week to keep improving."
+            }
+            return "Mixed signals this week. Focus on consistency next week."
+        case (false, true):
+            return "A challenging week. Small, consistent improvements next week can make a big difference."
+        case (false, false):
+            return "A steady week. Next week is a chance to push for new improvements."
+        }
+    }
+
+    // MARK: - Helpers
 
     private func adherenceColor(for status: CoachAdherenceStatus) -> Color {
         switch status {

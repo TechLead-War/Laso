@@ -165,6 +165,86 @@ final class MetricDetailViewModel {
         return "\(n)\(suffix)"
     }
 
+    // MARK: - Trend Overlay Line
+
+    /// Moving average trend line for chart overlay, computed from selected time range
+    var trendLineSamples: [MetricSample] {
+        guard let series = timeSeries else { return [] }
+        let samples = series.samples(lastDays: selectedTimeRange)
+        guard samples.count >= 7 else { return [] }
+
+        // Compute 7-day rolling average for the trend line
+        let windowSize = min(7, max(3, samples.count / 5))
+        var trendPoints: [MetricSample] = []
+        for i in (windowSize - 1)..<samples.count {
+            let window = samples[(i - windowSize + 1)...i]
+            let avg = window.map(\.value).reduce(0, +) / Double(windowSize)
+            trendPoints.append(MetricSample(date: samples[i].date, value: avg))
+        }
+        return trendPoints
+    }
+
+    // MARK: - Forecast Points
+
+    /// Forecast extension from MLOrchestrator (1d, 3d, 7d horizons)
+    var forecastSamples: [MetricSample] {
+        guard let forecast = analysisEngine.mlOrchestrator.multiHorizonForecasts[metric] else { return [] }
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        return forecast.horizons.compactMap { horizon in
+            guard let futureDate = cal.date(byAdding: .day, value: horizon.horizon, to: today) else { return nil }
+            return MetricSample(date: futureDate, value: horizon.value)
+        }
+    }
+
+    // MARK: - This Month vs Last Month Comparison
+
+    struct MonthComparison {
+        let thisMonthAvg: Double
+        let lastMonthAvg: Double
+        let changePercent: Double
+        let thisMonthLabel: String
+        let lastMonthLabel: String
+        let improving: Bool
+    }
+
+    var monthComparison: MonthComparison? {
+        guard let series = timeSeries else { return nil }
+        let cal = Calendar.current
+        let now = Date()
+
+        // This month: from start of current month to today
+        guard let startOfThisMonth = cal.date(from: cal.dateComponents([.year, .month], from: now)) else { return nil }
+        let thisMonthSamples = series.samples(from: startOfThisMonth, to: now)
+
+        // Last month: full previous month
+        guard let startOfLastMonth = cal.date(byAdding: .month, value: -1, to: startOfThisMonth),
+              let endOfLastMonth = cal.date(byAdding: .day, value: -1, to: startOfThisMonth) else { return nil }
+        let lastMonthSamples = series.samples(from: startOfLastMonth, to: endOfLastMonth)
+
+        guard !thisMonthSamples.isEmpty, !lastMonthSamples.isEmpty else { return nil }
+
+        let thisAvg = thisMonthSamples.map(\.value).reduce(0, +) / Double(thisMonthSamples.count)
+        let lastAvg = lastMonthSamples.map(\.value).reduce(0, +) / Double(lastMonthSamples.count)
+        guard lastAvg != 0 else { return nil }
+
+        let change = ((thisAvg - lastAvg) / lastAvg) * 100
+        let improving = metric.higherIsBetter ? change > 0 : change < 0
+
+        let thisLabel = cal.monthSymbols[cal.component(.month, from: now) - 1]
+        let lastMonthDate = cal.date(byAdding: .month, value: -1, to: now) ?? now
+        let lastLabel = cal.monthSymbols[cal.component(.month, from: lastMonthDate) - 1]
+
+        return MonthComparison(
+            thisMonthAvg: thisAvg,
+            lastMonthAvg: lastAvg,
+            changePercent: change,
+            thisMonthLabel: thisLabel,
+            lastMonthLabel: lastLabel,
+            improving: improving
+        )
+    }
+
     // MARK: - Score Breakdown
 
     var scoreBreakdown: [ScoreComponent] {

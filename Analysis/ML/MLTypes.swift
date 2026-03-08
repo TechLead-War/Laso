@@ -446,6 +446,16 @@ struct PolicyDecision {
     /// When this decision was made
     let decidedAt: Date
 
+    // MARK: - Prescriptive Language
+
+    /// Bold single-sentence headline for the hero card
+    /// e.g. "Push hard today -- your recovery is excellent" or "Take it easy -- prioritize sleep tonight"
+    let prescriptiveHeadline: String
+    /// Computed optimal bedtime based on strain + sleep debt (e.g. "10:30 PM")
+    let targetSleepTime: String?
+    /// Suggested exertion level for the day ("High intensity OK" / "Light activity only" / "Moderate effort recommended")
+    let strainBudget: String?
+
     struct RankedIntervention {
         let candidate: InterventionCandidate
         /// Expected utility = uplift * confidence * adherence * novelty * (1 - effort_penalty)

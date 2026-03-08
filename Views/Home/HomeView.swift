@@ -148,12 +148,13 @@ struct HomeView: View {
     private var homeContent: some View {
         ScrollView {
             VStack(spacing: 0) {
-                // 1. Greeting header
+                // 1. Greeting header — context-aware with recovery state
                 CoachGreetingView(
                     showSettings: $showSettings,
                     streakDays: SessionTracker.shared.streakDays,
                     scoreChangeFromYesterday: viewModel.scoreChangeFromYesterday,
                     currentScore: hasData ? viewModel.overallScore.score : nil,
+                    recoveryState: hasData ? viewModel.recoveryState : nil,
                     onTapScoreInfo: { showScoreGuide = true }
                 )
                 .padding(.top, 12)
@@ -179,18 +180,34 @@ struct HomeView: View {
                     .padding(.top, 6)
                     .padding(.bottom, 8)
 
-                    // 2. Today — recovery + daily action
-                    todaySection
-                        .onAppear { recoveryTracker.appeared() }
-                        .onDisappear { recoveryTracker.disappeared() }
+                    // 1. HERO — Recovery score card (above the fold)
+                    RecoveryHeroCard(
+                        score: viewModel.overallScore.score,
+                        recoveryLabel: viewModel.recoveryState.label,
+                        dayType: viewModel.dayClassification,
+                        scoreDelta: viewModel.scoreChangeFromYesterday,
+                        onTap: { showScoreGuide = true }
+                    )
+                    .onAppear { recoveryTracker.appeared() }
+                    .onDisappear { recoveryTracker.disappeared() }
 
-                    // 3. Illness Warning (only when active)
+                    // 2. Primary action — prescriptive daily recommendation
+                    primaryActionCard
+                        .padding(.top, 12)
+
+                    // 3. Journal prompt — contextual check-in
+                    journalPromptCard
+                        .padding(.top, 8)
+
+                    // 4. Illness Warning (only when active)
                     illnessWarningCard
                         .onAppear { illnessTracker.appeared() }
                         .onDisappear { illnessTracker.disappeared() }
                         .padding(.top, 8)
 
-                    // 4. Key Insight
+                    // --- Below the fold ---
+
+                    // 5. Key Insights
                     BodyInsightsSection(
                         viewModel: viewModel,
                         liveVM: liveViewModel,
@@ -214,30 +231,11 @@ struct HomeView: View {
                     .onAppear { bodyInsightsTracker.appeared() }
                     .onDisappear { bodyInsightsTracker.disappeared() }
 
-                    // 5. Health Risks — moderate+ only
+                    // 6. Health Risks — moderate+ only
                     todayRisksSection
                         .padding(.top, 8)
                         .onAppear { risksTracker.appeared() }
                         .onDisappear { risksTracker.disappeared() }
-
-                    // 6. Weekly Review
-                    WeeklyReviewEntryCard(
-                        viewModel: getOrCreateWeeklyReviewVM()
-                    ) {
-                        AppAnalytics.shared.trackBlockTap(
-                            title: "Weekly Review",
-                            type: .weeklyReviewCard,
-                            screen: .home,
-                            metadata: [
-                                "destination": "weekly_review",
-                                "score": viewModel.overallScore.score
-                            ]
-                        )
-                        navigationPath.append("weeklyReview")
-                    }
-                    .padding(.top, 8)
-                    .onAppear { weeklyReviewTracker.appeared() }
-                    .onDisappear { weeklyReviewTracker.disappeared() }
 
                     // 7. Focus goals
                     CoachGoalsSection(
@@ -261,6 +259,25 @@ struct HomeView: View {
                     .padding(.top, 8)
                     .onAppear { coachTracker.appeared() }
                     .onDisappear { coachTracker.disappeared() }
+
+                    // 8. Weekly Review
+                    WeeklyReviewEntryCard(
+                        viewModel: getOrCreateWeeklyReviewVM()
+                    ) {
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Weekly Review",
+                            type: .weeklyReviewCard,
+                            screen: .home,
+                            metadata: [
+                                "destination": "weekly_review",
+                                "score": viewModel.overallScore.score
+                            ]
+                        )
+                        navigationPath.append("weeklyReview")
+                    }
+                    .padding(.top, 8)
+                    .onAppear { weeklyReviewTracker.appeared() }
+                    .onDisappear { weeklyReviewTracker.disappeared() }
 
                     // Last updated footer
                     if let lastRefresh = viewModel.lastRefresh {
@@ -576,105 +593,78 @@ struct HomeView: View {
         .cardStyle()
     }
 
-    // MARK: - Today Section
+    // MARK: - Primary Action Card
 
     @ViewBuilder
-    private var todaySection: some View {
-        VStack(spacing: 12) {
-            // Recovery readiness — only when fresh
-            if let score = liveViewModel.recovery.readinessScore,
-               liveViewModel.recovery.isReadinessDataFresh {
-                recoveryCard(score: score)
-            }
-
-            // Daily action from ML
-            if let action = viewModel.dailyAction {
-                dailyActionCard(action)
-            }
-        }
-    }
-
-    // MARK: - Recovery Card
-
-    private func recoveryCard(score: Int) -> some View {
-        HStack(spacing: 16) {
-            HealthScoreRing(
-                score: score,
-                label: "Readiness",
-                size: 72,
-                lineWidth: 7
-            )
-
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    Text("Recovery")
-                        .font(.headline)
-
-                    Button {
-                        AppAnalytics.shared.trackBlockTap(
-                            title: "Recovery Info",
-                            type: .homeRecoveryInfoButton,
-                            screen: .home,
-                            metadata: [
-                                "destination": "recovery_info_sheet",
-                                "readiness_score": score
-                            ]
-                        )
-                        recoveryTracker.tapped(target: "recovery_info")
-                        showRecoveryInfo = true
-                    } label: {
-                        Image(systemName: "info.circle")
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                Text(Self.recoveryLabel(score))
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Self.recoveryColor(score))
-                    .contentTransition(.numericText())
-                    .animation(.easeInOut, value: score)
-            }
-
-            Spacer()
-        }
-        .padding(DS.cardPadding)
-        .cardStyle()
-        .padding(.horizontal)
-        .onAppear {
-            showRecoveryInfoIfNeeded()
-        }
-    }
-
-    // MARK: - Daily Action Card
-
-    private func dailyActionCard(_ action: DailyAction) -> some View {
+    private var primaryActionCard: some View {
+        let action = viewModel.smartDailyAction(liveVM: liveViewModel)
         Button {
             AppAnalytics.shared.trackBlockTap(
-                title: action.actionTitle,
+                title: action.title,
                 type: .homeDailyAction,
                 screen: .home,
                 metadata: [
-                    "metric": action.metric.rawValue,
-                    "source": action.source.rawValue,
-                    "impact": action.impactScore
+                    "source": "smart_action",
+                    "recovery_state": viewModel.recoveryState.rawValue
                 ]
             )
-            navigationPath.append(action.metric)
         } label: {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 8) {
-                    Image(systemName: action.metric.systemImageName)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 28, height: 28)
-                        .background(action.metric.category.color, in: RoundedRectangle(cornerRadius: 7))
+            HStack(spacing: 12) {
+                Image(systemName: action.icon)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 40, height: 40)
+                    .background(DS.scoreColor(viewModel.overallScore.score), in: RoundedRectangle(cornerRadius: 10))
 
-                    Text(action.actionTitle)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(action.title)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(1)
+
+                    Text(action.subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(DS.cardPadding)
+            .cardStyle()
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal)
+    }
+
+    // MARK: - Journal Prompt Card
+
+    @ViewBuilder
+    private var journalPromptCard: some View {
+        let hour = Calendar.current.component(.hour, from: Date())
+        // Show journal prompt in the evening (after 6pm)
+        if hour >= 18 {
+            NavigationLink(value: "journalEntry") {
+                HStack(spacing: 12) {
+                    Image(systemName: "square.and.pencil")
+                        .font(.title3)
+                        .foregroundStyle(.purple)
+                        .frame(width: 36)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("How was today?")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.primary)
+
+                        Text("A quick check-in helps track patterns over time")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
 
                     Spacer()
 
@@ -682,17 +672,12 @@ struct HomeView: View {
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
-
-                Text(action.whyThisMatters)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
+                .padding(DS.cardPadding)
+                .cardStyle(tint: .purple)
             }
-            .padding(DS.cardPadding)
-            .cardStyle()
+            .buttonStyle(.plain)
+            .padding(.horizontal)
         }
-        .buttonStyle(.plain)
-        .padding(.horizontal)
     }
 
     private func showRecoveryInfoIfNeeded() {

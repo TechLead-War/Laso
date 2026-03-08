@@ -304,7 +304,10 @@ final class DecisionPolicyEngine {
             allCandidates: allRanked,
             rationale: rationale,
             decisionConfidence: min(1.0, decisionConfidence),
-            decidedAt: Date()
+            decidedAt: Date(),
+            prescriptiveHeadline: "",
+            targetSleepTime: nil,
+            strainBudget: nil
         )
 
         // Store decision
@@ -392,13 +395,25 @@ final class DecisionPolicyEngine {
             )
         }
 
+        // Generate prescriptive language with full context
+        let headline = generatePrescriptiveHeadline(
+            primaryCandidate: decision.primaryAction.candidate,
+            baselines: baselines,
+            timeSeries: timeSeries
+        )
+        let sleepTime = computeTargetSleepTime(baselines: baselines, timeSeries: timeSeries)
+        let strain = computeStrainBudget(baselines: baselines, timeSeries: timeSeries)
+
         decision = PolicyDecision(
             primaryAction: primaryWithLang,
             secondaryAction: secondaryWithLang,
             allCandidates: allWithLang,
             rationale: decision.rationale,
             decisionConfidence: decision.decisionConfidence,
-            decidedAt: decision.decidedAt
+            decidedAt: decision.decidedAt,
+            prescriptiveHeadline: headline,
+            targetSleepTime: sleepTime,
+            strainBudget: strain
         )
 
         // Update stored decision
@@ -1460,6 +1475,221 @@ final class DecisionPolicyEngine {
         case .caffeineIntake:              return 0.65
         default:                           return 0.50
         }
+    }
+
+    // MARK: - Prescriptive Language Generation
+
+    /// Generate a bold, body-focused prescriptive headline based on overall recovery state.
+    ///
+    /// The headline is direct and actionable:
+    /// - Green days: motivating, push-forward language
+    /// - Yellow days: balanced, moderate language
+    /// - Red days: protective, recovery-focused language
+    func generatePrescriptiveHeadline(
+        primaryCandidate: InterventionCandidate,
+        baselines: [HealthMetric: UserBaseline],
+        timeSeries: [HealthMetric: MetricTimeSeries]
+    ) -> String {
+        let recoveryScore = estimateRecoveryScore(baselines: baselines, timeSeries: timeSeries)
+
+        switch recoveryScore {
+        case .excellent:
+            return excellentDayHeadline(primaryCandidate: primaryCandidate)
+        case .good:
+            return goodDayHeadline(primaryCandidate: primaryCandidate)
+        case .moderate:
+            return moderateDayHeadline(primaryCandidate: primaryCandidate)
+        case .poor:
+            return poorDayHeadline(primaryCandidate: primaryCandidate)
+        case .depleted:
+            return depletedDayHeadline(primaryCandidate: primaryCandidate)
+        }
+    }
+
+    /// Compute a target bedtime based on sleep debt and current strain.
+    ///
+    /// Returns a formatted time string like "10:30 PM" or nil if insufficient data.
+    func computeTargetSleepTime(
+        baselines: [HealthMetric: UserBaseline],
+        timeSeries: [HealthMetric: MetricTimeSeries]
+    ) -> String? {
+        guard let sleepBaseline = baselines[.sleepDuration],
+              sleepBaseline.mean > 0 else { return nil }
+
+        let currentSleep = timeSeries[.sleepDuration]?.latestValue ?? sleepBaseline.mean
+        let sleepDebtHours = max(0, sleepBaseline.mean - currentSleep)
+
+        // Estimate strain from exercise + steps deviation
+        let strainFactor = estimateStrainFactor(baselines: baselines, timeSeries: timeSeries)
+
+        // Base wake time assumption: 7:00 AM
+        let baseWakeHour = 7.0
+
+        // Target sleep hours: baseline + debt recovery (cap at 1hr extra) + strain adjustment
+        let debtRecovery = min(1.0, sleepDebtHours * 0.5)
+        let strainAdjustment = strainFactor > 1.2 ? 0.5 : (strainFactor > 1.0 ? 0.25 : 0.0)
+        let targetSleepHours = sleepBaseline.mean + debtRecovery + strainAdjustment
+
+        // Compute bedtime from wake time
+        let bedtimeHour = baseWakeHour - targetSleepHours + 24.0
+        let normalizedHour = bedtimeHour.truncatingRemainder(dividingBy: 24.0)
+
+        let hour = Int(normalizedHour)
+        let minute = Int((normalizedHour - Double(hour)) * 60)
+        let roundedMinute = (minute / 15) * 15
+
+        let displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour)
+        let period = hour >= 12 ? "PM" : "AM"
+
+        return String(format: "%d:%02d %@", displayHour, roundedMinute, period)
+    }
+
+    /// Compute a strain budget suggestion based on recovery and recent exertion.
+    ///
+    /// Returns "High intensity OK", "Moderate effort recommended", or "Light activity only".
+    func computeStrainBudget(
+        baselines: [HealthMetric: UserBaseline],
+        timeSeries: [HealthMetric: MetricTimeSeries]
+    ) -> String? {
+        let recoveryScore = estimateRecoveryScore(baselines: baselines, timeSeries: timeSeries)
+
+        switch recoveryScore {
+        case .excellent, .good:
+            return "High intensity OK"
+        case .moderate:
+            return "Moderate effort recommended"
+        case .poor, .depleted:
+            return "Light activity only"
+        }
+    }
+
+    // MARK: - Recovery Score Estimation
+
+    private enum RecoveryLevel {
+        case excellent, good, moderate, poor, depleted
+    }
+
+    /// Estimate overall recovery from HRV, resting HR, and sleep relative to baselines.
+    private func estimateRecoveryScore(
+        baselines: [HealthMetric: UserBaseline],
+        timeSeries: [HealthMetric: MetricTimeSeries]
+    ) -> RecoveryLevel {
+        var signals: [Double] = []
+
+        // HRV: higher is better
+        if let bl = baselines[.heartRateVariability],
+           let current = timeSeries[.heartRateVariability]?.latestValue,
+           bl.standardDeviation > 0 {
+            let zScore = (current - bl.mean) / bl.standardDeviation
+            signals.append(min(2, max(-2, zScore)))
+        }
+
+        // Resting HR: lower is better
+        if let bl = baselines[.restingHeartRate],
+           let current = timeSeries[.restingHeartRate]?.latestValue,
+           bl.standardDeviation > 0 {
+            let zScore = (bl.mean - current) / bl.standardDeviation
+            signals.append(min(2, max(-2, zScore)))
+        }
+
+        // Sleep duration: higher is better (up to a point)
+        if let bl = baselines[.sleepDuration],
+           let current = timeSeries[.sleepDuration]?.latestValue,
+           bl.standardDeviation > 0 {
+            let zScore = (current - bl.mean) / bl.standardDeviation
+            signals.append(min(2, max(-2, zScore)))
+        }
+
+        guard !signals.isEmpty else { return .moderate }
+
+        let avgSignal = signals.reduce(0, +) / Double(signals.count)
+
+        if avgSignal > 0.8 { return .excellent }
+        if avgSignal > 0.2 { return .good }
+        if avgSignal > -0.3 { return .moderate }
+        if avgSignal > -0.8 { return .poor }
+        return .depleted
+    }
+
+    /// Estimate strain factor from exercise/activity deviation above baseline.
+    private func estimateStrainFactor(
+        baselines: [HealthMetric: UserBaseline],
+        timeSeries: [HealthMetric: MetricTimeSeries]
+    ) -> Double {
+        var factors: [Double] = []
+
+        if let bl = baselines[.activeCalories],
+           let current = timeSeries[.activeCalories]?.latestValue,
+           bl.mean > 0 {
+            factors.append(current / bl.mean)
+        }
+
+        if let bl = baselines[.exerciseMinutes],
+           let current = timeSeries[.exerciseMinutes]?.latestValue,
+           bl.mean > 0 {
+            factors.append(current / bl.mean)
+        }
+
+        guard !factors.isEmpty else { return 1.0 }
+        return factors.reduce(0, +) / Double(factors.count)
+    }
+
+    // MARK: - Headline Generators
+
+    private func excellentDayHeadline(primaryCandidate: InterventionCandidate) -> String {
+        let options = [
+            "Push hard today -- your body is fully recovered",
+            "Your recovery is excellent -- make today count",
+            "Green light -- your body is ready for a big effort",
+            "You recovered strong -- go all out today"
+        ]
+        return selectHeadline(from: options, candidate: primaryCandidate)
+    }
+
+    private func goodDayHeadline(primaryCandidate: InterventionCandidate) -> String {
+        let options = [
+            "Solid recovery -- you have room to push today",
+            "Your body bounced back well -- train with confidence",
+            "Good shape today -- build on your momentum",
+            "Recovery looks strong -- keep the intensity up"
+        ]
+        return selectHeadline(from: options, candidate: primaryCandidate)
+    }
+
+    private func moderateDayHeadline(primaryCandidate: InterventionCandidate) -> String {
+        let options = [
+            "Your body is recovering -- keep it moderate today",
+            "Stay steady today -- save the big effort for tomorrow",
+            "Moderate day -- listen to your body and pace yourself",
+            "Not fully recovered yet -- a moderate effort is ideal"
+        ]
+        return selectHeadline(from: options, candidate: primaryCandidate)
+    }
+
+    private func poorDayHeadline(primaryCandidate: InterventionCandidate) -> String {
+        let options = [
+            "Take it easy -- prioritize sleep tonight",
+            "Your body needs rest -- scale back and recover",
+            "Recovery is low -- protect your energy today",
+            "Ease off today -- your body is asking for a break"
+        ]
+        return selectHeadline(from: options, candidate: primaryCandidate)
+    }
+
+    private func depletedDayHeadline(primaryCandidate: InterventionCandidate) -> String {
+        let options = [
+            "Rest day -- your body is running on empty",
+            "Stop and recharge -- pushing now will set you back",
+            "Your body needs a full reset -- make rest the priority",
+            "Low reserves -- focus on sleep and recovery only"
+        ]
+        return selectHeadline(from: options, candidate: primaryCandidate)
+    }
+
+    /// Select a headline pseudo-randomly based on the candidate ID to avoid repetition.
+    private func selectHeadline(from options: [String], candidate: InterventionCandidate) -> String {
+        let hash = abs(candidate.id.hashValue)
+        return options[hash % options.count]
     }
 
     // MARK: - Helpers

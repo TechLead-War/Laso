@@ -39,6 +39,67 @@ enum DS {
     /// Standard badge padding
     static let badgeH: CGFloat = 6
     static let badgeV: CGFloat = 3
+
+    /// Score-based recovery color for consistent state visualization.
+    static func scoreColor(_ score: Int) -> Color {
+        switch recoveryTier(for: score) {
+        case .optimal:
+            return .green
+        case .good:
+            return .yellow
+        case .fair:
+            return .orange
+        case .poor:
+            return .red
+        }
+    }
+
+    /// Score-based gradient for hero card backgrounds.
+    static func recoveryGradient(_ score: Int) -> LinearGradient {
+        let tint = scoreColor(score)
+        return LinearGradient(
+            colors: [tint.opacity(0.28), tint.opacity(0.1)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    /// Human-readable recovery label from score bands.
+    static func scoreLabel(_ score: Int) -> String {
+        switch recoveryTier(for: score) {
+        case .optimal:
+            return "Optimal"
+        case .good:
+            return "Good"
+        case .fair:
+            return "Fair"
+        case .poor:
+            return "Poor"
+        }
+    }
+
+    private enum RecoveryTier {
+        case optimal
+        case good
+        case fair
+        case poor
+    }
+
+    private static func recoveryTier(for score: Int) -> RecoveryTier {
+        if score > 75 {
+            return .optimal
+        }
+
+        if score >= 50 {
+            return .good
+        }
+
+        if score >= 30 {
+            return .fair
+        }
+
+        return .poor
+    }
 }
 
 // MARK: - Unified Card Background

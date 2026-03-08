@@ -105,6 +105,7 @@
 		73F8BDC825ECE9394AACD8F5 /* ReengagementScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DDF099BA868FC73C9F96B42 /* ReengagementScheduler.swift */; };
 		7501D9CBF2A448DE80063DBB /* MetricSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 471F65CEA0995FC959298DB5 /* MetricSample.swift */; };
 		75177F557A972BC430E07CC5 /* RecoveryInfoSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CB1041CC7F94DC9C3925E1F /* RecoveryInfoSheet.swift */; };
+		A1B2C3D4E5F60718293A4B5C /* RecoveryHeroCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6E7F8091A2B3C4D5E6F7081 /* RecoveryHeroCard.swift */; };
 		752AE6A2E42E9E62A8144A0B /* AnomalyDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36DFE311801B14F79285B6BE /* AnomalyDetector.swift */; };
 		75BABCDD49E09CD51502A568 /* StatisticsGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF4A9064133A1DCA6830C757 /* StatisticsGrid.swift */; };
 		7846FF8C13F5A5F973D9CE6B /* InsightsDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8DC719D1A3501CD27378EF /* InsightsDetailView.swift */; };
@@ -206,6 +207,10 @@
 		F1A2B3C4D5E6F7890AB1CD14 /* ChangePointDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F7890AB1CD13 /* ChangePointDetector.swift */; };
 		F1A2B3C4D5E6F7890AB1CD16 /* PersonalOptimizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F7890AB1CD15 /* PersonalOptimizer.swift */; };
 		F1A2B3C4D5E6F7890AB1CD18 /* CompoundInsightEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F7890AB1CD17 /* CompoundInsightEngine.swift */; };
+		J1A2B3C4D5E6F7890AB1CD02 /* JournalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = J1A2B3C4D5E6F7890AB1CD01 /* JournalStore.swift */; };
+		J1A2B3C4D5E6F7890AB1CD04 /* JournalEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = J1A2B3C4D5E6F7890AB1CD03 /* JournalEntryView.swift */; };
+		J1A2B3C4D5E6F7890AB1CD06 /* JournalInsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = J1A2B3C4D5E6F7890AB1CD05 /* JournalInsightsView.swift */; };
+		J1A2B3C4D5E6F7890AB1CD08 /* JournalCorrelationAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = J1A2B3C4D5E6F7890AB1CD07 /* JournalCorrelationAnalyzer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -224,6 +229,9 @@
 		01767CB875BBCA9BA1BDAF32 /* IllnessEarlyWarning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IllnessEarlyWarning.swift; sourceTree = "<group>"; };
 		02994B309C3431858C57ED96 /* ScoreGuideSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreGuideSheet.swift; sourceTree = "<group>"; };
 		02AE5B60120F43F6784F9545 /* CloudBackupManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudBackupManager.swift; sourceTree = "<group>"; };
+		EZE39PPW14GQ8XW2VZMRS8P6 /* VitalityDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VitalityDetailView.swift; sourceTree = "<group>"; };
+		OUKFTEN9154U00PDP72WS1CG /* VitalityCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VitalityCard.swift; sourceTree = "<group>"; };
+		Y28QJE1L453W6U5KEZADYX6J /* VitalityScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VitalityScorer.swift; sourceTree = "<group>"; };
 		06436FDFEDA59F0EF24BE130 /* HTMLReportGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTMLReportGenerator.swift; sourceTree = "<group>"; };
 		07BC5E2346C0324D1E7FA015 /* HistoricalAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoricalAnalyzer.swift; sourceTree = "<group>"; };
 		0850D5D57CDB8B44C52F2713 /* MetricDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricDetailView.swift; sourceTree = "<group>"; };
@@ -337,6 +345,7 @@
 		89DEDDF62F1F20BB0014DC82 /* ECGIntelligence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ECGIntelligence.swift; sourceTree = "<group>"; };
 		8BD9EB755451B2B5B1EC5FD0 /* TrendDirection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendDirection.swift; sourceTree = "<group>"; };
 		8CB1041CC7F94DC9C3925E1F /* RecoveryInfoSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryInfoSheet.swift; sourceTree = "<group>"; };
+		D6E7F8091A2B3C4D5E6F7081 /* RecoveryHeroCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryHeroCard.swift; sourceTree = "<group>"; };
 		91C87E6D15D1DC03FFE03081 /* SleepSummaryIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepSummaryIntent.swift; sourceTree = "<group>"; };
 		9351B5CAD39C5A9B22417CA0 /* HealthScoreIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthScoreIntent.swift; sourceTree = "<group>"; };
 		94551AAF738AFDD14DE0495E /* FeatureGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGate.swift; sourceTree = "<group>"; };
@@ -416,6 +425,10 @@
 		F1A2B3C4D5E6F7890AB1CD13 /* ChangePointDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePointDetector.swift; sourceTree = "<group>"; };
 		F1A2B3C4D5E6F7890AB1CD15 /* PersonalOptimizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalOptimizer.swift; sourceTree = "<group>"; };
 		F1A2B3C4D5E6F7890AB1CD17 /* CompoundInsightEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompoundInsightEngine.swift; sourceTree = "<group>"; };
+		J1A2B3C4D5E6F7890AB1CD01 /* JournalStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalStore.swift; sourceTree = "<group>"; };
+		J1A2B3C4D5E6F7890AB1CD03 /* JournalEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalEntryView.swift; sourceTree = "<group>"; };
+		J1A2B3C4D5E6F7890AB1CD05 /* JournalInsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalInsightsView.swift; sourceTree = "<group>"; };
+		J1A2B3C4D5E6F7890AB1CD07 /* JournalCorrelationAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalCorrelationAnalyzer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -534,6 +547,7 @@
 				07BC5E2346C0324D1E7FA015 /* HistoricalAnalyzer.swift */,
 				01767CB875BBCA9BA1BDAF32 /* IllnessEarlyWarning.swift */,
 				AA6AA95BCF0971B533299AD2 /* InsightGenerator.swift */,
+				J1A2B3C4D5E6F7890AB1CD07 /* JournalCorrelationAnalyzer.swift */,
 				A1254D614EB28C2A16BA3436 /* MultiMetricClusterAnalyzer.swift */,
 				6CADAF64870E4AEE898A5248 /* NutritionCorrelationAnalyzer.swift */,
 				C4CE7C2FDBCFFE781B01B4B9 /* PersonalRecordAnalyzer.swift */,
@@ -547,6 +561,7 @@
 				53D06050FC363373F86388B7 /* SleepPerformanceAnalyzer.swift */,
 				FF1B95F7225327D77ECBD985 /* TimeSeriesAligner.swift */,
 				D831542D1DF88ADF75D61259 /* TrendAnalyzer.swift */,
+				Y28QJE1L453W6U5KEZADYX6J /* VitalityScorer.swift */,
 				84920AA0B0BAD65B323468E0 /* WeeklyPatternAnalyzer.swift */,
 				DD947BF688F7B5F398D7E9FD /* WorkoutEffectivenessAnalyzer.swift */,
 				27254B0198312DB917F5E12B /* ML */,
@@ -777,6 +792,7 @@
 				66CAEA3E5E6DE24B32AED244 /* HealthState */,
 				BFF98E839429BEFF5933C7BA /* Home */,
 				9E59F16F1EF2809C893B93A5 /* Insights */,
+				J1A2B3C4D5E6F7890AB1CD09 /* Journal */,
 				0F38783A6B04C705AEBEAD6B /* Live */,
 				B31FF732A52CAE7C2A13FA7D /* MetricDetail */,
 				0D2C929D22AD56E51E93CD22 /* Navigation */,
@@ -786,8 +802,18 @@
 				560F68BA074567B93E87F16B /* Settings */,
 				5FAF76B9F8D00B9511DC6C2C /* Simulation */,
 				622ECBA9D48B5BDDF8522E84 /* Subscription */,
+				YFMQPEM700JDZF6E81P2PIJX /* Vitality */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		J1A2B3C4D5E6F7890AB1CD09 /* Journal */ = {
+			isa = PBXGroup;
+			children = (
+				J1A2B3C4D5E6F7890AB1CD03 /* JournalEntryView.swift */,
+				J1A2B3C4D5E6F7890AB1CD05 /* JournalInsightsView.swift */,
+			);
+			path = Journal;
 			sourceTree = "<group>";
 		};
 		9E59F16F1EF2809C893B93A5 /* Insights */ = {
@@ -835,9 +861,11 @@
 				4E39C48FAFF0EE6BB872CB33 /* HomeView.swift */,
 				253DCE97A8955675B69DEA7A /* PatternCard.swift */,
 				A12DC96FEA93961AEC887B76 /* PeriodSummarySection.swift */,
+				D6E7F8091A2B3C4D5E6F7081 /* RecoveryHeroCard.swift */,
 				8CB1041CC7F94DC9C3925E1F /* RecoveryInfoSheet.swift */,
 				02994B309C3431858C57ED96 /* ScoreGuideSheet.swift */,
 				D029290D4EBFE40FBD860E42 /* SleepCard.swift */,
+				OUKFTEN9154U00PDP72WS1CG /* VitalityCard.swift */,
 				4F1B82AC2599B0303444D381 /* WeeklyReviewView.swift */,
 			);
 			path = Home;
@@ -892,6 +920,7 @@
 				A0FEFA8B2E9C3EAD5191FC58 /* HealthKitManager.swift */,
 				0E5897F9E01DF1DD783F450C /* HealthKitMetricRegistry.swift */,
 				187345F5C9D8A3E6D1B6FCB8 /* HealthKitQueryBuilder.swift */,
+				J1A2B3C4D5E6F7890AB1CD01 /* JournalStore.swift */,
 				1748830A3C5C9B2C4B821B16 /* PersistenceManager.swift */,
 				79D307F2173910B0A37FB5E9 /* SampleDataProvider.swift */,
 			);
@@ -906,6 +935,14 @@
 				5517C2ACFADFCD8A7A737000 /* ReportTemplate.swift */,
 			);
 			path = WebExport;
+			sourceTree = "<group>";
+		};
+		YFMQPEM700JDZF6E81P2PIJX /* Vitality */ = {
+			isa = PBXGroup;
+			children = (
+				EZE39PPW14GQ8XW2VZMRS8P6 /* VitalityDetailView.swift */,
+			);
+			path = Vitality;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1117,6 +1154,10 @@
 				7A60C76E99D1878A23B6A18E /* InsightGenerator.swift in Sources */,
 				7846FF8C13F5A5F973D9CE6B /* InsightsDetailView.swift in Sources */,
 				A235E71CE9C4228D6313D257 /* IntentDataProvider.swift in Sources */,
+				J1A2B3C4D5E6F7890AB1CD08 /* JournalCorrelationAnalyzer.swift in Sources */,
+				J1A2B3C4D5E6F7890AB1CD04 /* JournalEntryView.swift in Sources */,
+				J1A2B3C4D5E6F7890AB1CD06 /* JournalInsightsView.swift in Sources */,
+				J1A2B3C4D5E6F7890AB1CD02 /* JournalStore.swift in Sources */,
 				92BC5E8DB05B4444FA1C5ED7 /* IntentDonationManager.swift in Sources */,
 				829EFF9C34188BEA1476484F /* IntentSnippetViews.swift in Sources */,
 				EA9E497719A7EBA5BA531D54 /* LiveView.swift in Sources */,
@@ -1161,6 +1202,7 @@
 				1AE7730D05CAEC2DE91A44A1 /* ReadinessIntent.swift in Sources */,
 				50629F6A8BA3B33811580989 /* RecommendationEvaluator.swift in Sources */,
 				642B207288AEA3FFD5B0BC63 /* RecoveryAnalyzer.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5C /* RecoveryHeroCard.swift in Sources */,
 				75177F557A972BC430E07CC5 /* RecoveryInfoSheet.swift in Sources */,
 				73F8BDC825ECE9394AACD8F5 /* ReengagementScheduler.swift in Sources */,
 				416ED9C39BBC535E0006807D /* RemoteConfigManager.swift in Sources */,
@@ -1206,6 +1248,9 @@
 				313CEBC55344992AA6D3E914 /* WeeklyReviewViewModel.swift in Sources */,
 				C3157B583A0E63953F2C1A0A /* WeeklySummaryScheduler.swift in Sources */,
 				A2EBB41C493BD4BCF809BA7A /* WorkoutEffectivenessAnalyzer.swift in Sources */,
+				D8V19NE5BA08MR2QA3RVGH4E /* VitalityScorer.swift in Sources */,
+				0ANHQSXC4Y5OI8JPFRD89UUQ /* VitalityCard.swift in Sources */,
+				MSK27ROBLV9PGK8X5XKMZGDL /* VitalityDetailView.swift in Sources */,
 				4263A917A7F49FF7DC08BA1C /* WorkoutTypeAppEnum.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

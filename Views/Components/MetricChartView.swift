@@ -7,6 +7,8 @@ struct MetricChartView: View {
     let metric: HealthMetric
     let baseline: Double?
     let normalRange: RulesConfiguration.NormalRange?
+    let trendLine: [MetricSample]?
+    let forecastPoints: [MetricSample]?
 
     @State private var selectedDate: Date?
     @State private var isDragging = false
@@ -15,12 +17,16 @@ struct MetricChartView: View {
         samples: [MetricSample],
         metric: HealthMetric,
         baseline: Double? = nil,
-        normalRange: RulesConfiguration.NormalRange? = nil
+        normalRange: RulesConfiguration.NormalRange? = nil,
+        trendLine: [MetricSample]? = nil,
+        forecastPoints: [MetricSample]? = nil
     ) {
         self.samples = samples
         self.metric = metric
         self.baseline = baseline
         self.normalRange = normalRange
+        self.trendLine = trendLine
+        self.forecastPoints = forecastPoints
     }
 
     private var color: Color {
@@ -76,6 +82,22 @@ struct MetricChartView: View {
         if let baseline {
             minVal = min(minVal, baseline)
             maxVal = max(maxVal, baseline)
+        }
+
+        // Include forecast points in the visible range
+        if let forecastPoints, !forecastPoints.isEmpty {
+            let fMin = forecastPoints.map(\.value).min()!
+            let fMax = forecastPoints.map(\.value).max()!
+            minVal = min(minVal, fMin)
+            maxVal = max(maxVal, fMax)
+        }
+
+        // Include trend line in the visible range
+        if let trendLine, !trendLine.isEmpty {
+            let tMin = trendLine.map(\.value).min()!
+            let tMax = trendLine.map(\.value).max()!
+            minVal = min(minVal, tMin)
+            maxVal = max(maxVal, tMax)
         }
 
         let span = maxVal - minVal
@@ -159,6 +181,61 @@ struct MetricChartView: View {
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
+            }
+
+            // Trend overlay line (moving average)
+            if let trendLine, trendLine.count >= 2 {
+                ForEach(trendLine) { point in
+                    LineMark(
+                        x: .value("Date", point.date),
+                        y: .value("Trend", point.value),
+                        series: .value("Series", "trend")
+                    )
+                    .foregroundStyle(.orange.opacity(0.7))
+                    .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
+                    .interpolationMethod(.catmullRom)
+                }
+            }
+
+            // Forecast dashed extension
+            if let forecastPoints, !forecastPoints.isEmpty {
+                // Bridge from last data point to first forecast
+                if let lastSample = samples.last, let firstForecast = forecastPoints.first {
+                    let bridgePoints = [
+                        MetricSample(date: lastSample.date, value: lastSample.value),
+                        MetricSample(date: firstForecast.date, value: firstForecast.value)
+                    ]
+                    ForEach(bridgePoints) { point in
+                        LineMark(
+                            x: .value("Date", point.date),
+                            y: .value("Forecast", point.value),
+                            series: .value("Series", "forecast")
+                        )
+                        .foregroundStyle(color.opacity(0.5))
+                        .lineStyle(StrokeStyle(lineWidth: 2, dash: [4, 4]))
+                    }
+                }
+
+                ForEach(forecastPoints) { point in
+                    LineMark(
+                        x: .value("Date", point.date),
+                        y: .value("Forecast", point.value),
+                        series: .value("Series", "forecast")
+                    )
+                    .foregroundStyle(color.opacity(0.5))
+                    .lineStyle(StrokeStyle(lineWidth: 2, dash: [4, 4]))
+                    .interpolationMethod(.catmullRom)
+                }
+
+                // Forecast endpoint markers
+                ForEach(forecastPoints) { point in
+                    PointMark(
+                        x: .value("Date", point.date),
+                        y: .value("Forecast", point.value)
+                    )
+                    .foregroundStyle(color.opacity(0.4))
+                    .symbolSize(20)
+                }
             }
 
             // Selection indicator

@@ -719,13 +719,29 @@ final class MLOrchestrator {
                     )
                 }
 
+                // Generate prescriptive language
+                let headline = decisionPolicyEngine.generatePrescriptiveHeadline(
+                    primaryCandidate: decision.primaryAction.candidate,
+                    baselines: baselines,
+                    timeSeries: timeSeries
+                )
+                let sleepTime = decisionPolicyEngine.computeTargetSleepTime(
+                    baselines: baselines, timeSeries: timeSeries
+                )
+                let strainBudget = decisionPolicyEngine.computeStrainBudget(
+                    baselines: baselines, timeSeries: timeSeries
+                )
+
                 policyDecision = PolicyDecision(
                     primaryAction: primaryWithLang,
                     secondaryAction: secondaryWithLang,
                     allCandidates: allWithLang,
                     rationale: decision.rationale,
                     decisionConfidence: decision.decisionConfidence,
-                    decidedAt: decision.decidedAt
+                    decidedAt: decision.decidedAt,
+                    prescriptiveHeadline: headline,
+                    targetSleepTime: sleepTime,
+                    strainBudget: strainBudget
                 )
             }
         }
