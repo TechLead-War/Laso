@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <style>
+      text { font-family: -apple-system, system-ui, sans-serif; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="393" height="852" fill="#F2F2F7"/>
+
+  <!-- Status Bar (dimmed) -->
+  <g id="StatusBar" opacity="0.4">
+    <text x="36" y="20" font-size="15" font-weight="600" fill="#1C1C1E">9:41</text>
+    <g transform="translate(330,8)">
+      <rect x="0" y="2" width="4" height="10" rx="1" fill="#1C1C1E"/>
+      <rect x="6" y="4" width="4" height="8" rx="1" fill="#1C1C1E"/>
+      <rect x="12" y="6" width="4" height="6" rx="1" fill="#1C1C1E"/>
+      <rect x="18" y="8" width="4" height="4" rx="1" fill="#1C1C1E"/>
+    </g>
+    <g transform="translate(352,6)">
+      <rect x="0" y="2" width="22" height="11" rx="2" stroke="#1C1C1E" stroke-width="1" fill="none"/>
+      <rect x="22" y="5" width="2" height="5" rx="1" fill="#1C1C1E"/>
+      <rect x="2" y="4" width="16" height="7" rx="1" fill="#1C1C1E"/>
+    </g>
+  </g>
+
+  <!-- Centered Content -->
+  <g id="CenteredContent">
+    <!-- App Icon Placeholder -->
+    <g id="AppIcon" transform="translate(147,280)">
+      <rect width="100" height="100" rx="24" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+      <!-- HealthPulse logo area -->
+      <rect x="20" y="20" width="60" height="60" rx="12" fill="#007AFF" opacity="0.15"/>
+      <!-- Heart + pulse icon -->
+      <path d="M50,40 C50,32 42,28 38,34 C34,28 26,32 26,40 C26,52 38,58 38,58 C38,58 50,52 50,40 Z" fill="#007AFF" opacity="0.6" transform="translate(12,6) scale(0.7)"/>
+      <!-- Pulse line -->
+      <polyline points="28,54 38,54 42,42 48,62 54,48 60,54 72,54" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <!-- Headline -->
+    <text x="197" y="420" font-size="28" font-weight="700" fill="#1C1C1E" text-anchor="middle">Update Required</text>
+
+    <!-- Body text -->
+    <g id="BodyText">
+      <text x="197" y="456" font-size="17" fill="#8E8E93" text-anchor="middle">
+        <tspan x="197" dy="0">A new version of HealthPulse is available.</tspan>
+        <tspan x="197" dy="24">Please update to continue using the app.</tspan>
+      </text>
+    </g>
+
+    <!-- Update Now Button -->
+    <g id="UpdateButton">
+      <rect x="56" y="510" width="281" height="56" rx="16" fill="#007AFF"/>
+      <text x="197" y="544" font-size="18" font-weight="600" fill="#FFFFFF" text-anchor="middle">Update Now</text>
+    </g>
+
+    <!-- Version Info -->
+    <g id="VersionInfo">
+      <text x="197" y="596" font-size="14" fill="#8E8E93" text-anchor="middle">Current: 1.52  &#8594;  Required: 1.57</text>
+    </g>
+  </g>
+</svg>

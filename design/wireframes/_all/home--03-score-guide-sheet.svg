@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <clipPath id="screen-clip">
+      <rect width="393" height="852" rx="44"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background (dimmed main screen) -->
+  <g id="Background-Dimmed" clip-path="url(#screen-clip)">
+    <rect width="393" height="852" fill="#000000" opacity="0.4" rx="44"/>
+  </g>
+
+  <!-- Sheet -->
+  <g id="Score-Guide-Sheet">
+    <rect x="0" y="360" width="393" height="492" rx="16" fill="#FFFFFF"/>
+
+    <!-- Sheet Handle -->
+    <g id="Sheet-Handle">
+      <rect x="172" y="368" width="48" height="5" rx="2.5" fill="#E5E5EA"/>
+    </g>
+
+    <!-- Headline -->
+    <text x="196" y="412" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="22" font-weight="700" fill="#1C1C1E">How Your Score Works</text>
+
+    <!-- Score Ring -->
+    <g id="Score-Ring" transform="translate(196, 484)">
+      <circle cx="0" cy="0" r="50" fill="none" stroke="#E5E5EA" stroke-width="8"/>
+      <!-- Filled arc (~78%) -->
+      <circle cx="0" cy="0" r="50" fill="none" stroke="#007AFF" stroke-width="8" stroke-linecap="round"
+        stroke-dasharray="245 69" stroke-dashoffset="78.5" transform="rotate(-90)"/>
+      <text x="0" y="8" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="32" font-weight="700" fill="#1C1C1E">78</text>
+    </g>
+
+    <!-- Category Breakdown -->
+    <g id="Category-Breakdown">
+      <!-- Heart -->
+      <g id="Category-Heart">
+        <circle cx="40" cy="560" r="5" fill="#FF3B30"/>
+        <text x="56" y="564" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="500" fill="#1C1C1E">Heart</text>
+        <text x="340" y="564" text-anchor="end" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E">85</text>
+        <rect x="200" y="554" width="120" height="6" rx="3" fill="#E5E5EA"/>
+        <rect x="200" y="554" width="102" height="6" rx="3" fill="#FF3B30"/>
+      </g>
+
+      <!-- Sleep -->
+      <g id="Category-Sleep">
+        <circle cx="40" cy="596" r="5" fill="#007AFF"/>
+        <text x="56" y="600" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="500" fill="#1C1C1E">Sleep</text>
+        <text x="340" y="600" text-anchor="end" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E">72</text>
+        <rect x="200" y="590" width="120" height="6" rx="3" fill="#E5E5EA"/>
+        <rect x="200" y="590" width="86" height="6" rx="3" fill="#007AFF"/>
+      </g>
+
+      <!-- Activity -->
+      <g id="Category-Activity">
+        <circle cx="40" cy="632" r="5" fill="#34C759"/>
+        <text x="56" y="636" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="500" fill="#1C1C1E">Activity</text>
+        <text x="340" y="636" text-anchor="end" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E">68</text>
+        <rect x="200" y="626" width="120" height="6" rx="3" fill="#E5E5EA"/>
+        <rect x="200" y="626" width="82" height="6" rx="3" fill="#34C759"/>
+      </g>
+
+      <!-- Body -->
+      <g id="Category-Body">
+        <circle cx="40" cy="668" r="5" fill="#FF9500"/>
+        <text x="56" y="672" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="500" fill="#1C1C1E">Body</text>
+        <text x="340" y="672" text-anchor="end" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E">80</text>
+        <rect x="200" y="662" width="120" height="6" rx="3" fill="#E5E5EA"/>
+        <rect x="200" y="662" width="96" height="6" rx="3" fill="#FF9500"/>
+      </g>
+
+      <!-- Respiratory -->
+      <g id="Category-Respiratory">
+        <circle cx="40" cy="704" r="5" fill="#5856D6"/>
+        <text x="56" y="708" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="500" fill="#1C1C1E">Respiratory</text>
+        <text x="340" y="708" text-anchor="end" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E">90</text>
+        <rect x="200" y="698" width="120" height="6" rx="3" fill="#E5E5EA"/>
+        <rect x="200" y="698" width="108" height="6" rx="3" fill="#5856D6"/>
+      </g>
+    </g>
+
+    <!-- Explanation Text -->
+    <text x="196" y="748" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93">
+      <tspan x="196" dy="0">Each category contributes to your overall</tspan>
+      <tspan x="196" dy="18">health score based on your personal baselines.</tspan>
+    </text>
+
+    <!-- Got it Button -->
+    <g id="Got-It-Button">
+      <rect x="20" y="790" width="353" height="50" rx="12" fill="#007AFF"/>
+      <text x="196" y="821" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="17" font-weight="600" fill="#FFFFFF">Got it</text>
+    </g>
+  </g>
+</svg>

@@ -401,6 +401,17 @@ final class DashboardViewModel {
         )
     }
 
+    // MARK: - New Engines
+
+    let strainScorer = StrainScorer()
+    let stressScorer = StressScorer()
+    let sleepNeedCalculator = SleepNeedCalculator()
+    let sleepDebtTracker = SleepDebtTracker()
+    let menstrualCycleTracker = MenstrualCycleTracker()
+    let gamificationEngine = GamificationEngine()
+    let vitalityScorer = VitalityScorer()
+    let strainCoach = StrainCoach()
+
     init(healthKitManager: HealthKitManager, analysisEngine: AnalysisEngine, store: HealthDataStore) {
         self.healthKitManager = healthKitManager
         self.analysisEngine = analysisEngine
@@ -414,6 +425,7 @@ final class DashboardViewModel {
         errorMessage = nil
         hasCompletedInitialLoad = true
         updateCachedProperties()
+        computeNewEngines()
         lastAnalysisDate = Date()
     }
 
@@ -557,6 +569,9 @@ final class DashboardViewModel {
         // Update cached computed properties so views don't recompute on every render
         updateCachedProperties()
 
+        // Compute new engines (strain, stress, sleep coach, gamification, cycle)
+        computeNewEngines()
+
         // Mark analysis timestamp so subsequent no-change refreshes can skip
         lastAnalysisDate = Date()
 
@@ -610,6 +625,12 @@ final class DashboardViewModel {
 
         // Phase 2A: Essential insights — lightweight (~15K ops), runs immediately
         let cycleFlowSamples = await cycleFlowSamplesTask
+
+        // Compute menstrual cycle if applicable
+        if menstrualCycleTracker.isApplicable {
+            await menstrualCycleTracker.compute(from: healthKitManager)
+        }
+
         Task.detached(priority: .utility) { [weak self] in
             guard let self else { return }
             try? Task.checkCancellation()
@@ -898,6 +919,56 @@ final class DashboardViewModel {
                 store.saveRecommendation(insight)
             }
         }
+    }
+
+    // MARK: - New Engine Computation
+
+    private func computeNewEngines() {
+        let profile = UserProfileStore.shared.loadLocal()
+        let age = profile?.ageFromDateOfBirth ?? 30
+
+        // Strain
+        strainScorer.compute(
+            from: store,
+            age: age,
+            restingHR: analysisEngine.baselines[.restingHeartRate]?.mean
+        )
+
+        // Strain Coach
+        let _ = strainCoach.computeTarget(
+            recoveryState: recoveryState,
+            currentStrain: strainScorer.currentStrain,
+            recentStrainHistory: strainScorer.weeklyStrainHistory,
+            daysOfData: dataDepth.daysOfData
+        )
+
+        // Stress
+        stressScorer.compute(from: store)
+
+        // Sleep debt
+        sleepDebtTracker.compute(from: store)
+
+        // Sleep need
+        let debtHours = sleepDebtTracker.currentDebt?.totalDebtHours ?? 0
+        let need = sleepNeedCalculator.compute(
+            from: store,
+            currentStrain: strainScorer.currentStrain,
+            sleepDebt: debtHours,
+            targetWakeTime: nil
+        )
+        _ = need  // stored internally in sleepNeedCalculator
+
+        // Gamification
+        let sessionDays = SessionTracker.shared.daysSinceInstall
+        let scoreHistory = store.loadScoreHistory(days: 365).map { (date: $0.date, score: $0.score) }
+        gamificationEngine.compute(from: store, sessionDays: sessionDays, scores: scoreHistory)
+
+        // Vitality Age
+        vitalityScorer.compute(from: store, chronologicalAge: age)
+
+        // Menstrual cycle — only for female users
+        let isFemale = profile?.gender == .female
+        menstrualCycleTracker.isApplicable = isFemale
     }
 
     private func computeScoreChangeFromLastWeek() -> Int? {

@@ -1,0 +1,220 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <clipPath id="screenClip"><rect width="393" height="852" rx="44"/></clipPath>
+  </defs>
+
+  <g id="HealthStateTimelineView" clip-path="url(#screenClip)">
+    <rect width="393" height="852" fill="#F2F2F7" rx="44"/>
+
+    <!-- Status Bar -->
+    <g id="StatusBar">
+      <text x="36" y="22" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E">9:41</text>
+      <g transform="translate(330,10)">
+        <rect x="0" y="2" width="18" height="10" rx="2" stroke="#1C1C1E" stroke-width="1.2" fill="none"/>
+        <rect x="19" y="5" width="1.5" height="4" rx="0.75" fill="#1C1C1E"/>
+        <rect x="2" y="4" width="13" height="6" rx="1" fill="#1C1C1E"/>
+      </g>
+      <g transform="translate(296,8)">
+        <path d="M0 10 Q4 0 8 10 Q12 0 16 10 Q20 0 24 10" stroke="#1C1C1E" stroke-width="1.5" fill="none"/>
+      </g>
+      <g transform="translate(268,8)">
+        <rect x="0" y="8" width="4" height="4" rx="1" fill="#1C1C1E"/>
+        <rect x="6" y="5" width="4" height="7" rx="1" fill="#1C1C1E"/>
+        <rect x="12" y="2" width="4" height="10" rx="1" fill="#1C1C1E"/>
+        <rect x="18" y="0" width="4" height="12" rx="1" fill="#1C1C1E"/>
+      </g>
+    </g>
+
+    <!-- Navigation Bar -->
+    <g id="NavBar">
+      <g id="BackButton" transform="translate(16, 48)">
+        <path d="M10 2 L2 12 L10 22" stroke="#007AFF" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="18" y="16" font-family="-apple-system, system-ui, sans-serif" font-size="17" fill="#007AFF">Back</text>
+      </g>
+      <text x="197" y="64" font-family="-apple-system, system-ui, sans-serif" font-size="17" font-weight="600" fill="#1C1C1E" text-anchor="middle">Health States</text>
+    </g>
+
+    <!-- Current State Hero Card -->
+    <g id="CurrentStateHero" transform="translate(16, 86)">
+      <rect width="361" height="100" rx="16" fill="#34C759" opacity="0.12"/>
+      <rect width="361" height="100" rx="16" fill="none" stroke="#34C759" stroke-width="1.5" opacity="0.3"/>
+      <!-- State icon -->
+      <circle cx="44" cy="50" r="22" fill="#34C759" opacity="0.2"/>
+      <text x="44" y="56" font-family="-apple-system, system-ui, sans-serif" font-size="22" text-anchor="middle">✦</text>
+      <!-- State info -->
+      <text x="78" y="38" font-family="-apple-system, system-ui, sans-serif" font-size="11" font-weight="600" fill="#34C759" text-transform="uppercase" letter-spacing="1">CURRENT STATE</text>
+      <text x="78" y="60" font-family="-apple-system, system-ui, sans-serif" font-size="22" font-weight="700" fill="#34C759">Thriving</text>
+      <text x="78" y="80" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#1C1C1E" opacity="0.7">You've been in this state for 4 days</text>
+    </g>
+
+    <!-- Calendar Grid — March 2026 -->
+    <g id="CalendarGrid" transform="translate(16, 200)">
+      <text x="0" y="0" font-family="-apple-system, system-ui, sans-serif" font-size="20" font-weight="700" fill="#1C1C1E">March 2026</text>
+      <rect x="0" y="14" width="361" height="224" rx="16" fill="#FFFFFF"/>
+
+      <!-- Day headers -->
+      <g transform="translate(0, 36)">
+        <text x="29" y="0" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#8E8E93" text-anchor="middle">Sun</text>
+        <text x="80" y="0" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#8E8E93" text-anchor="middle">Mon</text>
+        <text x="131" y="0" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#8E8E93" text-anchor="middle">Tue</text>
+        <text x="182" y="0" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#8E8E93" text-anchor="middle">Wed</text>
+        <text x="233" y="0" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#8E8E93" text-anchor="middle">Thu</text>
+        <text x="284" y="0" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#8E8E93" text-anchor="middle">Fri</text>
+        <text x="335" y="0" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#8E8E93" text-anchor="middle">Sat</text>
+      </g>
+
+      <!-- Week 1: March 1 = Sunday -->
+      <g transform="translate(0, 56)">
+        <!-- Mar 1 Sun - Stressed -->
+        <rect x="17" y="0" width="24" height="24" rx="6" fill="#FFCC00" opacity="0.5"/>
+        <text x="29" y="17" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#1C1C1E" text-anchor="middle">1</text>
+        <!-- Mar 2 Mon - Baseline -->
+        <rect x="68" y="0" width="24" height="24" rx="6" fill="#8E8E93" opacity="0.2"/>
+        <text x="80" y="17" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#1C1C1E" text-anchor="middle">2</text>
+        <!-- Mar 3 Tue - Baseline -->
+        <rect x="119" y="0" width="24" height="24" rx="6" fill="#8E8E93" opacity="0.2"/>
+        <text x="131" y="17" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#1C1C1E" text-anchor="middle">3</text>
+        <!-- Mar 4 Wed - Recovering -->
+        <rect x="170" y="0" width="24" height="24" rx="6" fill="#007AFF" opacity="0.35"/>
+        <text x="182" y="17" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#1C1C1E" text-anchor="middle">4</text>
+        <!-- Mar 5 Thu - Thriving -->
+        <rect x="221" y="0" width="24" height="24" rx="6" fill="#34C759" opacity="0.5"/>
+        <text x="233" y="17" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#1C1C1E" text-anchor="middle">5</text>
+        <!-- Mar 6 Fri - Thriving -->
+        <rect x="272" y="0" width="24" height="24" rx="6" fill="#34C759" opacity="0.5"/>
+        <text x="284" y="17" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#1C1C1E" text-anchor="middle">6</text>
+        <!-- Mar 7 Sat - Thriving -->
+        <rect x="323" y="0" width="24" height="24" rx="6" fill="#34C759" opacity="0.5"/>
+        <text x="335" y="17" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#1C1C1E" text-anchor="middle">7</text>
+      </g>
+
+      <!-- Week 2 -->
+      <g transform="translate(0, 88)">
+        <!-- Mar 8 Sun - Thriving (Today) -->
+        <rect x="17" y="0" width="24" height="24" rx="6" fill="#34C759" opacity="0.5"/>
+        <rect x="17" y="0" width="24" height="24" rx="6" fill="none" stroke="#007AFF" stroke-width="2"/>
+        <text x="29" y="17" font-family="-apple-system, system-ui, sans-serif" font-size="12" font-weight="700" fill="#1C1C1E" text-anchor="middle">8</text>
+        <!-- Future days - empty -->
+        <rect x="68" y="0" width="24" height="24" rx="6" fill="#F2F2F7"/>
+        <text x="80" y="17" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#C7C7CC" text-anchor="middle">9</text>
+        <rect x="119" y="0" width="24" height="24" rx="6" fill="#F2F2F7"/>
+        <text x="131" y="17" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#C7C7CC" text-anchor="middle">10</text>
+        <rect x="170" y="0" width="24" height="24" rx="6" fill="#F2F2F7"/>
+        <text x="182" y="17" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#C7C7CC" text-anchor="middle">11</text>
+        <rect x="221" y="0" width="24" height="24" rx="6" fill="#F2F2F7"/>
+        <text x="233" y="17" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#C7C7CC" text-anchor="middle">12</text>
+        <rect x="272" y="0" width="24" height="24" rx="6" fill="#F2F2F7"/>
+        <text x="284" y="17" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#C7C7CC" text-anchor="middle">13</text>
+        <rect x="323" y="0" width="24" height="24" rx="6" fill="#F2F2F7"/>
+        <text x="335" y="17" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#C7C7CC" text-anchor="middle">14</text>
+      </g>
+
+      <!-- Show previous month context (Feb 23-28) above Week 1 — skip for clarity -->
+
+      <!-- Calendar Legend -->
+      <g transform="translate(20, 132)">
+        <rect x="0" y="0" width="12" height="12" rx="3" fill="#34C759" opacity="0.5"/>
+        <text x="18" y="11" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#8E8E93">Thriving</text>
+
+        <rect x="80" y="0" width="12" height="12" rx="3" fill="#007AFF" opacity="0.35"/>
+        <text x="98" y="11" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#8E8E93">Recovering</text>
+
+        <rect x="176" y="0" width="12" height="12" rx="3" fill="#FFCC00" opacity="0.5"/>
+        <text x="194" y="11" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#8E8E93">Stressed</text>
+
+        <rect x="252" y="0" width="12" height="12" rx="3" fill="#8E8E93" opacity="0.2"/>
+        <text x="270" y="11" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#8E8E93">Baseline</text>
+      </g>
+
+      <!-- Second row legend -->
+      <g transform="translate(20, 152)">
+        <rect x="0" y="0" width="12" height="12" rx="3" fill="#FF3B30" opacity="0.4"/>
+        <text x="18" y="11" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#8E8E93">Declining</text>
+
+        <rect x="80" y="0" width="12" height="12" rx="3" fill="none" stroke="#007AFF" stroke-width="1.5"/>
+        <text x="98" y="11" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#8E8E93">Today</text>
+      </g>
+    </g>
+
+    <!-- Distribution Bar -->
+    <g id="DistributionBar" transform="translate(16, 448)">
+      <text x="0" y="0" font-family="-apple-system, system-ui, sans-serif" font-size="20" font-weight="700" fill="#1C1C1E">Distribution</text>
+      <rect x="0" y="14" width="361" height="56" rx="16" fill="#FFFFFF"/>
+      <!-- Stacked bar -->
+      <g transform="translate(20, 26)">
+        <!-- Thriving 50% -->
+        <rect x="0" y="0" width="161" height="14" rx="7" fill="#34C759"/>
+        <!-- Recovering 12.5% -->
+        <rect x="161" y="0" width="40" height="14" fill="#007AFF"/>
+        <!-- Baseline 25% -->
+        <rect x="201" y="0" width="80" height="14" fill="#8E8E93" opacity="0.4"/>
+        <!-- Stressed 12.5% -->
+        <rect x="281" y="0" width="40" height="14" rx="7" fill="#FFCC00"/>
+        <!-- round right end -->
+      </g>
+      <!-- Percentages -->
+      <text x="100" y="58" font-family="-apple-system, system-ui, sans-serif" font-size="11" font-weight="600" fill="#34C759" text-anchor="middle">50%</text>
+      <text x="201" y="58" font-family="-apple-system, system-ui, sans-serif" font-size="11" font-weight="600" fill="#007AFF" text-anchor="middle">13%</text>
+      <text x="261" y="58" font-family="-apple-system, system-ui, sans-serif" font-size="11" font-weight="600" fill="#8E8E93" text-anchor="middle">25%</text>
+      <text x="321" y="58" font-family="-apple-system, system-ui, sans-serif" font-size="11" font-weight="600" fill="#FFCC00" text-anchor="middle">12%</text>
+    </g>
+
+    <!-- Transition Patterns -->
+    <g id="TransitionPatterns" transform="translate(16, 528)">
+      <text x="0" y="0" font-family="-apple-system, system-ui, sans-serif" font-size="20" font-weight="700" fill="#1C1C1E">Patterns</text>
+
+      <!-- Pattern Card 1 -->
+      <rect x="0" y="14" width="361" height="72" rx="16" fill="#FFFFFF"/>
+      <g transform="translate(20, 30)">
+        <!-- State transition visual -->
+        <rect x="0" y="6" width="10" height="10" rx="3" fill="#FFCC00" opacity="0.6"/>
+        <text x="16" y="14" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#8E8E93">→</text>
+        <rect x="28" y="6" width="10" height="10" rx="3" fill="#34C759" opacity="0.6"/>
+      </g>
+      <text x="66" y="44" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="500" fill="#1C1C1E">Stressed → Thriving</text>
+      <text x="20" y="66" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93">Usually happens after 2+ days of good sleep</text>
+
+      <!-- Pattern Card 2 -->
+      <rect x="0" y="96" width="361" height="72" rx="16" fill="#FFFFFF"/>
+      <g transform="translate(20, 112)">
+        <rect x="0" y="6" width="10" height="10" rx="3" fill="#8E8E93" opacity="0.4"/>
+        <text x="16" y="14" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#8E8E93">→</text>
+        <rect x="28" y="6" width="10" height="10" rx="3" fill="#34C759" opacity="0.6"/>
+      </g>
+      <text x="66" y="126" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="500" fill="#1C1C1E">Weekend recovery pattern</text>
+      <text x="20" y="148" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93">Transition to Thriving often begins on Saturdays</text>
+    </g>
+
+    <!-- State Descriptions -->
+    <g id="StateDescriptions" transform="translate(16, 718)">
+      <text x="0" y="0" font-family="-apple-system, system-ui, sans-serif" font-size="20" font-weight="700" fill="#1C1C1E">State Definitions</text>
+
+      <rect x="0" y="14" width="361" height="116" rx="16" fill="#FFFFFF"/>
+
+      <!-- Thriving -->
+      <rect x="20" y="26" width="10" height="10" rx="3" fill="#34C759"/>
+      <text x="38" y="35" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="600" fill="#1C1C1E">Thriving</text>
+      <text x="120" y="35" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#8E8E93">Above-average across key metrics</text>
+
+      <!-- Recovering -->
+      <rect x="20" y="50" width="10" height="10" rx="3" fill="#007AFF"/>
+      <text x="38" y="59" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="600" fill="#1C1C1E">Recovering</text>
+      <text x="130" y="59" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#8E8E93">Metrics trending upward</text>
+
+      <!-- Baseline -->
+      <rect x="20" y="74" width="10" height="10" rx="3" fill="#8E8E93" opacity="0.4"/>
+      <text x="38" y="83" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="600" fill="#1C1C1E">Baseline</text>
+      <text x="116" y="83" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#8E8E93">Normal range for your patterns</text>
+
+      <!-- Stressed -->
+      <rect x="20" y="98" width="10" height="10" rx="3" fill="#FFCC00"/>
+      <text x="38" y="107" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="600" fill="#1C1C1E">Stressed</text>
+      <text x="112" y="107" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#8E8E93">Elevated strain or reduced recovery</text>
+
+      <!-- Declining -->
+      <rect x="20" y="122" width="10" height="10" rx="3" fill="#FF3B30"/>
+      <text x="38" y="131" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="600" fill="#1C1C1E">Declining</text>
+      <text x="118" y="131" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#8E8E93">Multiple metrics below baseline</text>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <clipPath id="screenClip"><rect width="393" height="852" rx="44"/></clipPath>
+  </defs>
+
+  <g id="WeeklyReviewView" clip-path="url(#screenClip)">
+    <rect width="393" height="852" fill="#F2F2F7" rx="44"/>
+
+    <!-- Status Bar -->
+    <g id="StatusBar">
+      <text x="36" y="22" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E">9:41</text>
+      <g transform="translate(330,10)">
+        <rect x="0" y="2" width="18" height="10" rx="2" stroke="#1C1C1E" stroke-width="1.2" fill="none"/>
+        <rect x="19" y="5" width="1.5" height="4" rx="0.75" fill="#1C1C1E"/>
+        <rect x="2" y="4" width="13" height="6" rx="1" fill="#1C1C1E"/>
+      </g>
+      <g transform="translate(296,8)">
+        <path d="M0 10 Q4 0 8 10 Q12 0 16 10 Q20 0 24 10" stroke="#1C1C1E" stroke-width="1.5" fill="none"/>
+      </g>
+      <g transform="translate(268,8)">
+        <rect x="0" y="8" width="4" height="4" rx="1" fill="#1C1C1E"/>
+        <rect x="6" y="5" width="4" height="7" rx="1" fill="#1C1C1E"/>
+        <rect x="12" y="2" width="4" height="10" rx="1" fill="#1C1C1E"/>
+        <rect x="18" y="0" width="4" height="12" rx="1" fill="#1C1C1E"/>
+      </g>
+    </g>
+
+    <!-- Navigation Bar -->
+    <g id="NavBar">
+      <g id="BackButton" transform="translate(16, 48)">
+        <path d="M10 2 L2 12 L10 22" stroke="#007AFF" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="18" y="16" font-family="-apple-system, system-ui, sans-serif" font-size="17" fill="#007AFF">Back</text>
+      </g>
+      <text x="197" y="64" font-family="-apple-system, system-ui, sans-serif" font-size="17" font-weight="600" fill="#1C1C1E" text-anchor="middle">Weekly Review</text>
+    </g>
+
+    <!-- Week Header -->
+    <g id="WeekHeader" transform="translate(16, 86)">
+      <text x="181" y="16" font-family="-apple-system, system-ui, sans-serif" font-size="15" fill="#8E8E93" text-anchor="middle">Feb 24 — Mar 2, 2026</text>
+    </g>
+
+    <!-- Score Change Hero Card -->
+    <g id="ScoreChangeHero" transform="translate(16, 112)">
+      <rect width="361" height="140" rx="16" fill="#FFFFFF"/>
+      <!-- Arc/Arrow visualization -->
+      <g transform="translate(180, 50)">
+        <path d="M-60 40 Q-60 -20 0 -30 Q60 -20 60 40" stroke="#34C759" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.3"/>
+        <path d="M-60 40 Q-60 -20 0 -30 Q60 -20 60 40" stroke="#34C759" stroke-width="3" fill="none" stroke-linecap="round"
+              stroke-dasharray="226" stroke-dashoffset="40"/>
+        <!-- Arrow head -->
+        <polygon points="55,30 65,40 55,50" fill="#34C759"/>
+      </g>
+      <!-- Score numbers -->
+      <text x="88" y="106" font-family="-apple-system, system-ui, sans-serif" font-size="36" font-weight="300" fill="#8E8E93" text-anchor="middle">74</text>
+      <text x="148" y="106" font-family="-apple-system, system-ui, sans-serif" font-size="20" fill="#8E8E93" text-anchor="middle">→</text>
+      <text x="210" y="106" font-family="-apple-system, system-ui, sans-serif" font-size="36" font-weight="700" fill="#1C1C1E" text-anchor="middle">78</text>
+      <!-- Points change -->
+      <rect x="240" y="86" width="80" height="28" rx="14" fill="#34C759" opacity="0.12"/>
+      <text x="280" y="105" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#34C759" text-anchor="middle">+4 pts</text>
+      <!-- Label -->
+      <text x="180" y="132" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#34C759" text-anchor="middle">Good progress this week</text>
+    </g>
+
+    <!-- Wins Section -->
+    <g id="WinsSection" transform="translate(16, 268)">
+      <text x="24" y="0" font-family="-apple-system, system-ui, sans-serif" font-size="20" font-weight="700" fill="#1C1C1E">Wins</text>
+      <text x="0" y="-2" font-family="-apple-system, system-ui, sans-serif" font-size="18">🏆</text>
+
+      <rect x="0" y="14" width="361" height="120" rx="16" fill="#FFFFFF"/>
+      <!-- Win 1 -->
+      <circle cx="32" cy="42" r="10" fill="#34C759" opacity="0.12"/>
+      <path d="M27 42 L30 45 L37 38" stroke="#34C759" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="52" y="46" font-family="-apple-system, system-ui, sans-serif" font-size="15" fill="#1C1C1E">Hit 10k steps 4 days this week</text>
+
+      <!-- Win 2 -->
+      <circle cx="32" cy="74" r="10" fill="#34C759" opacity="0.12"/>
+      <path d="M27 74 L30 77 L37 70" stroke="#34C759" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="52" y="78" font-family="-apple-system, system-ui, sans-serif" font-size="15" fill="#1C1C1E">Best sleep week in a month</text>
+
+      <!-- Win 3 -->
+      <circle cx="32" cy="106" r="10" fill="#34C759" opacity="0.12"/>
+      <path d="M27 106 L30 109 L37 102" stroke="#34C759" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="52" y="110" font-family="-apple-system, system-ui, sans-serif" font-size="15" fill="#1C1C1E">HRV up 8% from last week</text>
+    </g>
+
+    <!-- Areas to Improve -->
+    <g id="GoalsSection" transform="translate(16, 418)">
+      <text x="0" y="0" font-family="-apple-system, system-ui, sans-serif" font-size="20" font-weight="700" fill="#1C1C1E">Goals</text>
+
+      <rect x="0" y="14" width="361" height="88" rx="16" fill="#FFFFFF"/>
+      <!-- Goal 1 -->
+      <circle cx="32" cy="42" r="10" fill="#FF9500" opacity="0.12"/>
+      <circle cx="32" cy="42" r="3" fill="#FF9500"/>
+      <text x="52" y="38" font-family="-apple-system, system-ui, sans-serif" font-size="15" fill="#1C1C1E">Increase water intake</text>
+      <text x="52" y="54" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93">Below target 4 out of 7 days</text>
+
+      <!-- Goal 2 -->
+      <circle cx="32" cy="78" r="10" fill="#FF9500" opacity="0.12"/>
+      <circle cx="32" cy="78" r="3" fill="#FF9500"/>
+      <text x="52" y="74" font-family="-apple-system, system-ui, sans-serif" font-size="15" fill="#1C1C1E">More consistent bedtime</text>
+      <text x="52" y="90" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93">Bedtime varied by 1h 45m this week</text>
+    </g>
+
+    <!-- Patterns Section -->
+    <g id="PatternsSection" transform="translate(16, 538)">
+      <text x="0" y="0" font-family="-apple-system, system-ui, sans-serif" font-size="20" font-weight="700" fill="#1C1C1E">Patterns</text>
+
+      <rect x="0" y="14" width="361" height="88" rx="16" fill="#FFFFFF"/>
+      <!-- Pattern icon -->
+      <circle cx="32" cy="44" r="14" fill="#007AFF" opacity="0.1"/>
+      <text x="32" y="49" font-family="-apple-system, system-ui, sans-serif" font-size="15" fill="#007AFF" text-anchor="middle">📊</text>
+      <!-- Pattern text -->
+      <text x="56" y="36" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="500" fill="#1C1C1E">Weekend activity drop-off</text>
+      <text x="56" y="54" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93">You average 40% fewer steps on weekends</text>
+      <text x="56" y="72" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93">compared to weekdays.</text>
+
+      <!-- Pattern card 2 -->
+      <rect x="0" y="112" width="361" height="72" rx="16" fill="#FFFFFF"/>
+      <circle cx="32" cy="140" r="14" fill="#007AFF" opacity="0.1"/>
+      <text x="32" y="145" font-family="-apple-system, system-ui, sans-serif" font-size="15" fill="#007AFF" text-anchor="middle">🔄</text>
+      <text x="56" y="136" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="500" fill="#1C1C1E">Recovery pattern detected</text>
+      <text x="56" y="154" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93">HRV rebounds 24h after rest days.</text>
+    </g>
+
+    <!-- Share Button -->
+    <g id="ShareButton" transform="translate(16, 748)">
+      <rect width="361" height="50" rx="12" fill="#007AFF"/>
+      <g transform="translate(150, 16)">
+        <rect x="8" y="10" width="14" height="10" rx="2" stroke="#FFFFFF" stroke-width="1.5" fill="none"/>
+        <path d="M15 4 L15 16 M11 8 L15 4 L19 8" stroke="#FFFFFF" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <text x="197" y="48" font-family="-apple-system, system-ui, sans-serif" font-size="17" font-weight="600" fill="#FFFFFF" text-anchor="middle">Share Weekly Review</text>
+    </g>
+  </g>
+</svg>

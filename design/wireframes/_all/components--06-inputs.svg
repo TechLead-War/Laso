@@ -1,0 +1,242 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+  <defs>
+    <style>
+      text { font-family: -apple-system, system-ui, sans-serif; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="800" fill="#F2F2F7" rx="12"/>
+
+  <!-- Title -->
+  <g id="Page-Title">
+    <text x="40" y="52" font-size="28" font-weight="700" fill="#1C1C1E">Inputs &amp; Controls</text>
+    <line x1="40" y1="68" x2="760" y2="68" stroke="#E5E5EA" stroke-width="1"/>
+  </g>
+
+  <!-- ==================== Toggle Row ==================== -->
+  <g id="ToggleRow">
+    <text x="40" y="110" font-size="16" font-weight="600" fill="#8E8E93">TOGGLE ROW</text>
+
+    <!-- Toggle ON -->
+    <g id="Toggle-On" transform="translate(40, 125)">
+      <rect x="0" y="0" width="340" height="48" rx="12" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="0.5"/>
+      <text x="16" y="29" font-size="15" fill="#1C1C1E">Enable Notifications</text>
+
+      <!-- iOS toggle - ON state -->
+      <g transform="translate(274, 10)">
+        <rect x="0" y="0" width="51" height="31" rx="15.5" fill="#34C759"/>
+        <circle cx="35" cy="15.5" r="13.5" fill="#FFFFFF"/>
+      </g>
+      <text x="345" y="28" font-size="10" fill="#34C759">ON</text>
+    </g>
+
+    <!-- Toggle OFF -->
+    <g id="Toggle-Off" transform="translate(420, 125)">
+      <rect x="0" y="0" width="340" height="48" rx="12" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="0.5"/>
+      <text x="16" y="29" font-size="15" fill="#1C1C1E">Background Refresh</text>
+
+      <!-- iOS toggle - OFF state -->
+      <g transform="translate(274, 10)">
+        <rect x="0" y="0" width="51" height="31" rx="15.5" fill="#E5E5EA"/>
+        <circle cx="16" cy="15.5" r="13.5" fill="#FFFFFF"/>
+      </g>
+      <text x="345" y="28" font-size="10" fill="#8E8E93">OFF</text>
+    </g>
+  </g>
+
+  <!-- ==================== Segmented Control ==================== -->
+  <g id="SegmentedControl">
+    <text x="40" y="210" font-size="16" font-weight="600" fill="#8E8E93">SEGMENTED CONTROL</text>
+
+    <g id="Segmented-Control-Component" transform="translate(40, 225)">
+      <!-- Background -->
+      <rect x="0" y="0" width="360" height="36" rx="8" fill="#E5E5EA" opacity="0.5"/>
+
+      <!-- Option 1 - selected -->
+      <rect x="2" y="2" width="118" height="32" rx="7" fill="#FFFFFF"/>
+      <text x="61" y="22" font-size="13" font-weight="600" fill="#1C1C1E" text-anchor="middle">Overview</text>
+
+      <!-- Option 2 -->
+      <text x="181" y="22" font-size="13" font-weight="500" fill="#8E8E93" text-anchor="middle">Insights</text>
+
+      <!-- Option 3 -->
+      <text x="300" y="22" font-size="13" font-weight="500" fill="#8E8E93" text-anchor="middle">History</text>
+    </g>
+
+    <!-- Annotations -->
+    <g transform="translate(440, 228)">
+      <text x="0" y="12" font-size="11" fill="#8E8E93">Height: 36pt, corner radius: 8pt (outer), 7pt (segment)</text>
+      <text x="0" y="28" font-size="11" fill="#8E8E93">Track: #E5E5EA 50% opacity</text>
+      <text x="0" y="44" font-size="11" fill="#8E8E93">Selected: white fill, semibold, subtle shadow</text>
+    </g>
+  </g>
+
+  <!-- ==================== Slider ==================== -->
+  <g id="Slider">
+    <text x="40" y="300" font-size="16" font-weight="600" fill="#8E8E93">SLIDER</text>
+
+    <g id="Slider-Component" transform="translate(40, 318)">
+      <!-- Min label -->
+      <text x="0" y="5" font-size="12" fill="#8E8E93">0</text>
+
+      <!-- Track -->
+      <rect x="24" y="-2" width="300" height="4" rx="2" fill="#E5E5EA"/>
+      <!-- Filled track -->
+      <rect x="24" y="-2" width="195" height="4" rx="2" fill="#007AFF"/>
+
+      <!-- Thumb -->
+      <circle cx="219" cy="0" r="14" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="0.5"/>
+
+      <!-- Max label -->
+      <text x="335" y="5" font-size="12" fill="#8E8E93">100</text>
+
+      <!-- Current value -->
+      <rect x="202" y="-30" width="34" height="22" rx="6" fill="#007AFF"/>
+      <text x="219" y="-14" font-size="11" font-weight="600" fill="#FFFFFF" text-anchor="middle">65</text>
+      <!-- Tooltip arrow -->
+      <polygon points="215,-8 219,-3 223,-8" fill="#007AFF"/>
+    </g>
+
+    <!-- Annotations -->
+    <g transform="translate(440, 305)">
+      <text x="0" y="12" font-size="11" fill="#8E8E93">Track: 4pt height, 2pt radius</text>
+      <text x="0" y="28" font-size="11" fill="#8E8E93">Thumb: 28pt diameter, white, subtle border</text>
+      <text x="0" y="44" font-size="11" fill="#8E8E93">Fill: accent #007AFF</text>
+    </g>
+  </g>
+
+  <!-- ==================== Text Field ==================== -->
+  <g id="TextField">
+    <text x="40" y="385" font-size="16" font-weight="600" fill="#8E8E93">TEXT FIELD</text>
+
+    <!-- Default state -->
+    <g id="TextField-Default" transform="translate(40, 400)">
+      <rect x="0" y="0" width="300" height="44" rx="10" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+      <text x="16" y="27" font-size="15" fill="#C7C7CC">Enter feedback...</text>
+      <text x="0" y="60" font-size="10" fill="#8E8E93">Default / Placeholder</text>
+    </g>
+
+    <!-- Focus state -->
+    <g id="TextField-Focus" transform="translate(380, 400)">
+      <rect x="0" y="0" width="300" height="44" rx="10" fill="#FFFFFF" stroke="#007AFF" stroke-width="2"/>
+      <text x="16" y="27" font-size="15" fill="#1C1C1E">Great app for track|</text>
+      <text x="0" y="60" font-size="10" fill="#8E8E93">Focused / Active</text>
+    </g>
+  </g>
+
+  <!-- ==================== Button Variants ==================== -->
+  <g id="Buttons">
+    <text x="40" y="500" font-size="16" font-weight="600" fill="#8E8E93">BUTTON VARIANTS</text>
+
+    <!-- Primary -->
+    <g id="Button-Primary" transform="translate(40, 515)">
+      <rect x="0" y="0" width="150" height="50" rx="12" fill="#007AFF"/>
+      <text x="75" y="30" font-size="17" font-weight="600" fill="#FFFFFF" text-anchor="middle">Get Started</text>
+      <text x="0" y="68" font-size="10" fill="#8E8E93">Primary (Filled)</text>
+    </g>
+
+    <!-- Secondary -->
+    <g id="Button-Secondary" transform="translate(210, 515)">
+      <rect x="0" y="0" width="130" height="50" rx="12" fill="none" stroke="#007AFF" stroke-width="1.5"/>
+      <text x="65" y="30" font-size="17" font-weight="600" fill="#007AFF" text-anchor="middle">Learn More</text>
+      <text x="0" y="68" font-size="10" fill="#8E8E93">Secondary (Outlined)</text>
+    </g>
+
+    <!-- Destructive -->
+    <g id="Button-Destructive" transform="translate(360, 515)">
+      <rect x="0" y="0" width="130" height="50" rx="12" fill="#FF3B30"/>
+      <text x="65" y="30" font-size="17" font-weight="600" fill="#FFFFFF" text-anchor="middle">Delete</text>
+      <text x="0" y="68" font-size="10" fill="#8E8E93">Destructive</text>
+    </g>
+
+    <!-- Text link -->
+    <g id="Button-TextLink" transform="translate(510, 515)">
+      <rect x="0" y="0" width="130" height="50" rx="12" fill="none"/>
+      <text x="65" y="30" font-size="17" font-weight="400" fill="#007AFF" text-anchor="middle">View Details</text>
+      <text x="0" y="68" font-size="10" fill="#8E8E93">Text / Link</text>
+    </g>
+  </g>
+
+  <!-- ==================== Category Picker Grid ==================== -->
+  <g id="CategoryPickerGrid">
+    <text x="40" y="625" font-size="16" font-weight="600" fill="#8E8E93">CATEGORY PICKER GRID</text>
+
+    <g id="Category-Grid" transform="translate(40, 640)">
+      <!-- Row 1 -->
+      <!-- Heart - selected -->
+      <rect x="0" y="0" width="110" height="40" rx="10" fill="#FF3B30" opacity="0.15" stroke="#FF3B30" stroke-width="1.5"/>
+      <text x="55" y="25" font-size="13" font-weight="600" fill="#FF3B30" text-anchor="middle">Heart</text>
+
+      <!-- Sleep - unselected -->
+      <rect x="122" y="0" width="110" height="40" rx="10" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+      <text x="177" y="25" font-size="13" font-weight="500" fill="#1C1C1E" text-anchor="middle">Sleep</text>
+
+      <!-- Activity - unselected -->
+      <rect x="244" y="0" width="110" height="40" rx="10" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+      <text x="299" y="25" font-size="13" font-weight="500" fill="#1C1C1E" text-anchor="middle">Activity</text>
+
+      <!-- Row 2 -->
+      <!-- Body - selected -->
+      <rect x="0" y="52" width="110" height="40" rx="10" fill="#FF9500" opacity="0.15" stroke="#FF9500" stroke-width="1.5"/>
+      <text x="55" y="77" font-size="13" font-weight="600" fill="#FF9500" text-anchor="middle">Body</text>
+
+      <!-- Respiratory - unselected -->
+      <rect x="122" y="52" width="110" height="40" rx="10" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+      <text x="177" y="77" font-size="13" font-weight="500" fill="#1C1C1E" text-anchor="middle">Respiratory</text>
+
+      <!-- Mindfulness - unselected -->
+      <rect x="244" y="52" width="110" height="40" rx="10" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+      <text x="299" y="77" font-size="13" font-weight="500" fill="#1C1C1E" text-anchor="middle">Mindfulness</text>
+    </g>
+
+    <!-- Annotations -->
+    <g transform="translate(440, 645)">
+      <text x="0" y="12" font-size="11" fill="#8E8E93">Grid: 3 columns, 12pt gap</text>
+      <text x="0" y="28" font-size="11" fill="#8E8E93">Cell: 110x40pt, 10pt radius</text>
+      <text x="0" y="44" font-size="11" fill="#8E8E93">Selected: category color tint bg + border</text>
+      <text x="0" y="60" font-size="11" fill="#8E8E93">Unselected: white, 1pt #E5E5EA border</text>
+    </g>
+  </g>
+
+  <!-- ==================== Filter Pills Row ==================== -->
+  <g id="FilterPills">
+    <text x="40" y="758" font-size="16" font-weight="600" fill="#8E8E93">FILTER PILLS ROW</text>
+
+    <g id="Filter-Pills-Row" transform="translate(40, 768)">
+      <!-- All - selected -->
+      <rect x="0" y="0" width="44" height="32" rx="16" fill="#007AFF"/>
+      <text x="22" y="21" font-size="13" font-weight="600" fill="#FFFFFF" text-anchor="middle">All</text>
+
+      <!-- Sleep -->
+      <rect x="54" y="0" width="62" height="32" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+      <text x="85" y="21" font-size="13" font-weight="500" fill="#1C1C1E" text-anchor="middle">Sleep</text>
+
+      <!-- Activity -->
+      <rect x="126" y="0" width="76" height="32" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+      <text x="164" y="21" font-size="13" font-weight="500" fill="#1C1C1E" text-anchor="middle">Activity</text>
+
+      <!-- Heart -->
+      <rect x="212" y="0" width="64" height="32" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+      <text x="244" y="21" font-size="13" font-weight="500" fill="#1C1C1E" text-anchor="middle">Heart</text>
+
+      <!-- Body -->
+      <rect x="286" y="0" width="58" height="32" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+      <text x="315" y="21" font-size="13" font-weight="500" fill="#1C1C1E" text-anchor="middle">Body</text>
+
+      <!-- Fade indicator for scroll -->
+      <rect x="350" y="0" width="40" height="32" fill="url(#fadeGrad)" opacity="0.6"/>
+    </g>
+  </g>
+
+  <!-- Gradient for scroll fade (defined outside g) -->
+  <defs>
+    <linearGradient id="fadeGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#F2F2F7" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#F2F2F7" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Footer -->
+  <text x="400" y="790" font-size="11" fill="#8E8E93" text-anchor="middle">HealthPulse Design System - Inputs &amp; Controls - v1.0</text>
+</svg>

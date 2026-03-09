@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <clipPath id="screen-clip">
+      <rect width="393" height="852" rx="44"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background (dimmed) -->
+  <g id="Background-Dimmed" clip-path="url(#screen-clip)">
+    <rect width="393" height="852" fill="#000000" opacity="0.4" rx="44"/>
+  </g>
+
+  <!-- Sheet -->
+  <g id="Recovery-Info-Sheet">
+    <rect x="0" y="200" width="393" height="652" rx="16" fill="#FFFFFF"/>
+
+    <!-- Sheet Handle -->
+    <g id="Sheet-Handle">
+      <rect x="172" y="208" width="48" height="5" rx="2.5" fill="#E5E5EA"/>
+    </g>
+
+    <!-- Headline -->
+    <text x="196" y="252" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="22" font-weight="700" fill="#1C1C1E">Understanding Readiness</text>
+
+    <!-- Readiness Gauge Illustration -->
+    <g id="Readiness-Gauge-Illustration" transform="translate(196, 330)">
+      <!-- Background arc -->
+      <path d="M -80 0 A 80 80 0 0 1 80 0" fill="none" stroke="#E5E5EA" stroke-width="12" stroke-linecap="round"/>
+      <!-- Green section (excellent) -->
+      <path d="M 24.7 -76.1 A 80 80 0 0 1 80 0" fill="none" stroke="#34C759" stroke-width="12" stroke-linecap="round"/>
+      <!-- Blue section (good) -->
+      <path d="M -24.7 -76.1 A 80 80 0 0 1 24.7 -76.1" fill="none" stroke="#007AFF" stroke-width="12" stroke-linecap="round"/>
+      <!-- Orange section (fair) -->
+      <path d="M -61.8 -50.9 A 80 80 0 0 1 -24.7 -76.1" fill="none" stroke="#FF9500" stroke-width="12" stroke-linecap="round"/>
+      <!-- Red section (low) -->
+      <path d="M -80 0 A 80 80 0 0 1 -61.8 -50.9" fill="none" stroke="#FF3B30" stroke-width="12" stroke-linecap="round"/>
+      <!-- Needle indicator -->
+      <line x1="0" y1="0" x2="35" y2="-62" stroke="#1C1C1E" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="0" cy="0" r="6" fill="#1C1C1E"/>
+    </g>
+
+    <!-- What it measures -->
+    <g id="What-It-Measures">
+      <text x="30" y="388" font-family="-apple-system, system-ui, sans-serif" font-size="17" font-weight="700" fill="#1C1C1E">What it measures</text>
+      <text x="30" y="412" font-family="-apple-system, system-ui, sans-serif" font-size="15" fill="#8E8E93">
+        <tspan x="30" dy="0">Your readiness is derived from HRV trends,</tspan>
+        <tspan x="30" dy="20">resting heart rate, and sleep quality to reflect</tspan>
+        <tspan x="30" dy="20">your body's recovery state.</tspan>
+      </text>
+    </g>
+
+    <!-- How it's calculated -->
+    <g id="How-Its-Calculated">
+      <text x="30" y="482" font-family="-apple-system, system-ui, sans-serif" font-size="17" font-weight="700" fill="#1C1C1E">How it's calculated</text>
+      <text x="30" y="506" font-family="-apple-system, system-ui, sans-serif" font-size="15" fill="#8E8E93">
+        <tspan x="30" dy="0">A weighted combination of your metrics</tspan>
+        <tspan x="30" dy="20">compared against your personal baselines.</tspan>
+      </text>
+    </g>
+
+    <!-- What the levels mean -->
+    <g id="Levels-Explanation">
+      <text x="30" y="566" font-family="-apple-system, system-ui, sans-serif" font-size="17" font-weight="700" fill="#1C1C1E">What the levels mean</text>
+
+      <!-- Excellent -->
+      <g id="Level-Excellent">
+        <circle cx="42" cy="594" r="6" fill="#34C759"/>
+        <text x="60" y="598" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E">Excellent</text>
+        <text x="170" y="598" font-family="-apple-system, system-ui, sans-serif" font-size="15" fill="#8E8E93">80 - 100</text>
+      </g>
+
+      <!-- Good -->
+      <g id="Level-Good">
+        <circle cx="42" cy="624" r="6" fill="#007AFF"/>
+        <text x="60" y="628" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E">Good</text>
+        <text x="170" y="628" font-family="-apple-system, system-ui, sans-serif" font-size="15" fill="#8E8E93">60 - 79</text>
+      </g>
+
+      <!-- Fair -->
+      <g id="Level-Fair">
+        <circle cx="42" cy="654" r="6" fill="#FF9500"/>
+        <text x="60" y="658" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E">Fair</text>
+        <text x="170" y="658" font-family="-apple-system, system-ui, sans-serif" font-size="15" fill="#8E8E93">40 - 59</text>
+      </g>
+
+      <!-- Low -->
+      <g id="Level-Low">
+        <circle cx="42" cy="684" r="6" fill="#FF3B30"/>
+        <text x="60" y="688" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E">Low</text>
+        <text x="170" y="688" font-family="-apple-system, system-ui, sans-serif" font-size="15" fill="#8E8E93">0 - 39</text>
+      </g>
+    </g>
+
+    <!-- Got it Button -->
+    <g id="Got-It-Button">
+      <rect x="20" y="720" width="353" height="50" rx="12" fill="#007AFF"/>
+      <text x="196" y="751" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="17" font-weight="600" fill="#FFFFFF">Got it</text>
+    </g>
+
+    <!-- Home indicator -->
+    <rect x="148" y="836" width="97" height="4" rx="2" fill="#1C1C1E" opacity="0.3"/>
+  </g>
+</svg>

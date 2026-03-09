@@ -1,0 +1,161 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <style>
+      text { font-family: -apple-system, system-ui, sans-serif; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="393" height="852" fill="#F2F2F7"/>
+
+  <!-- Status Bar -->
+  <g id="StatusBar">
+    <text x="36" y="22" font-size="15" font-weight="600" fill="#1C1C1E">9:41</text>
+    <g transform="translate(312, 10)">
+      <rect x="0" y="6" width="3" height="4" rx="1" fill="#1C1C1E"/>
+      <rect x="5" y="4" width="3" height="6" rx="1" fill="#1C1C1E"/>
+      <rect x="10" y="2" width="3" height="8" rx="1" fill="#1C1C1E"/>
+      <rect x="15" y="0" width="3" height="10" rx="1" fill="#1C1C1E"/>
+    </g>
+    <g transform="translate(338, 10)">
+      <path d="M4 8 L8 8 L6 4 Z" fill="#1C1C1E"/>
+      <circle cx="6" cy="9" r="1" fill="#1C1C1E"/>
+    </g>
+    <g transform="translate(354, 10)">
+      <rect x="0" y="1" width="22" height="10" rx="2" stroke="#1C1C1E" stroke-width="1" fill="none"/>
+      <rect x="22" y="4" width="2" height="4" rx="1" fill="#1C1C1E"/>
+      <rect x="2" y="3" width="18" height="6" rx="1" fill="#34C759"/>
+    </g>
+  </g>
+
+  <!-- Navigation Title -->
+  <g id="NavTitle">
+    <text x="20" y="68" font-size="34" font-weight="700" fill="#1C1C1E">Live</text>
+  </g>
+
+  <!-- Dimmed/Blurred Content Behind Overlay -->
+  <g id="DimmedContent" opacity="0.3">
+    <!-- Heart Rate Hero Card -->
+    <rect x="20" y="88" width="353" height="160" rx="16" fill="#FFFFFF"/>
+    <text x="40" y="116" font-size="15" font-weight="600" fill="#8E8E93">HEART RATE</text>
+    <polyline points="40,168 70,168 85,168 95,148 105,188 115,158 125,168 155,168 170,168 180,148 190,188 200,158 210,168 240,168 255,168 265,148 275,188 285,158 295,168 330,168 353,168" fill="none" stroke="#FF3B30" stroke-width="2.5"/>
+    <text x="40" y="220" font-size="48" font-weight="700" fill="#1C1C1E">72</text>
+    <text x="120" y="220" font-size="20" font-weight="500" fill="#8E8E93">BPM</text>
+
+    <!-- SpO2 Card -->
+    <rect x="20" y="260" width="170" height="100" rx="16" fill="#FFFFFF"/>
+    <text x="40" y="286" font-size="13" font-weight="600" fill="#8E8E93">SpO2</text>
+    <text x="40" y="330" font-size="28" font-weight="700" fill="#1C1C1E">98%</text>
+
+    <!-- Respiratory Rate Card -->
+    <rect x="203" y="260" width="170" height="100" rx="16" fill="#FFFFFF"/>
+    <text x="223" y="286" font-size="13" font-weight="600" fill="#8E8E93">RESPIRATORY</text>
+    <text x="223" y="330" font-size="28" font-weight="700" fill="#1C1C1E">16</text>
+
+    <!-- Activity Rings Card -->
+    <rect x="20" y="372" width="353" height="130" rx="16" fill="#FFFFFF"/>
+    <text x="40" y="400" font-size="15" font-weight="600" fill="#8E8E93">ACTIVITY</text>
+    <g transform="translate(90, 442)">
+      <circle cx="0" cy="0" r="36" fill="none" stroke="#FF3B30" stroke-width="8" opacity="0.6"/>
+      <circle cx="0" cy="0" r="26" fill="none" stroke="#34C759" stroke-width="8" opacity="0.6"/>
+      <circle cx="0" cy="0" r="16" fill="none" stroke="#007AFF" stroke-width="8" opacity="0.6"/>
+    </g>
+
+    <!-- BP Card -->
+    <rect x="20" y="514" width="170" height="100" rx="16" fill="#FFFFFF"/>
+    <text x="40" y="540" font-size="13" font-weight="600" fill="#8E8E93">BLOOD PRESSURE</text>
+    <text x="40" y="578" font-size="22" font-weight="700" fill="#1C1C1E">120/80</text>
+
+    <!-- Temp Card -->
+    <rect x="203" y="514" width="170" height="100" rx="16" fill="#FFFFFF"/>
+    <text x="223" y="540" font-size="13" font-weight="600" fill="#8E8E93">TEMPERATURE</text>
+    <text x="223" y="578" font-size="22" font-weight="700" fill="#1C1C1E">36.6°C</text>
+
+    <!-- Last Workout -->
+    <rect x="20" y="626" width="353" height="90" rx="16" fill="#FFFFFF"/>
+    <text x="40" y="660" font-size="15" font-weight="600" fill="#8E8E93">LAST WORKOUT</text>
+  </g>
+
+  <!-- Scrim overlay -->
+  <rect x="0" y="80" width="393" height="700" fill="#000000" opacity="0.25"/>
+
+  <!-- PRO Feature Overlay Card -->
+  <g id="ProOverlayCard">
+    <rect x="36" y="180" width="321" height="430" rx="24" fill="#FFFFFF"/>
+    <!-- Shadow simulation -->
+    <rect x="38" y="182" width="317" height="426" rx="24" fill="none" stroke="#00000010" stroke-width="4"/>
+
+    <!-- Lock Icon -->
+    <g transform="translate(180, 210)">
+      <rect x="0" y="10" width="32" height="24" rx="6" fill="#007AFF"/>
+      <path d="M6 10 V6 C6 -2 26 -2 26 6 V10" fill="none" stroke="#007AFF" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="16" cy="22" r="3" fill="#FFFFFF"/>
+      <rect x="14.5" y="22" width="3" height="5" rx="1" fill="#FFFFFF"/>
+    </g>
+
+    <!-- Headline -->
+    <text x="196" y="268" font-size="24" font-weight="700" fill="#1C1C1E" text-anchor="middle">Real-time Vitals</text>
+    <!-- Description -->
+    <text x="196" y="294" font-size="15" fill="#8E8E93" text-anchor="middle">Stream live health data from your</text>
+    <text x="196" y="312" font-size="15" fill="#8E8E93" text-anchor="middle">Apple Watch with Pro</text>
+
+    <!-- Feature List -->
+    <g id="FeatureList" transform="translate(72, 336)">
+      <!-- Feature 1 -->
+      <g transform="translate(0, 0)">
+        <circle cx="8" cy="-4" r="8" fill="#007AFF" opacity="0.12"/>
+        <text x="5" y="-1" font-size="10" fill="#007AFF">&#10003;</text>
+        <text x="24" y="0" font-size="15" fill="#1C1C1E">Live heart rate</text>
+      </g>
+      <!-- Feature 2 -->
+      <g transform="translate(0, 32)">
+        <circle cx="8" cy="-4" r="8" fill="#007AFF" opacity="0.12"/>
+        <text x="5" y="-1" font-size="10" fill="#007AFF">&#10003;</text>
+        <text x="24" y="0" font-size="15" fill="#1C1C1E">Blood oxygen monitoring</text>
+      </g>
+      <!-- Feature 3 -->
+      <g transform="translate(0, 64)">
+        <circle cx="8" cy="-4" r="8" fill="#007AFF" opacity="0.12"/>
+        <text x="5" y="-1" font-size="10" fill="#007AFF">&#10003;</text>
+        <text x="24" y="0" font-size="15" fill="#1C1C1E">Activity rings</text>
+      </g>
+      <!-- Feature 4 -->
+      <g transform="translate(0, 96)">
+        <circle cx="8" cy="-4" r="8" fill="#007AFF" opacity="0.12"/>
+        <text x="5" y="-1" font-size="10" fill="#007AFF">&#10003;</text>
+        <text x="24" y="0" font-size="15" fill="#1C1C1E">Blood pressure tracking</text>
+      </g>
+    </g>
+
+    <!-- Upgrade Button -->
+    <rect x="60" y="500" width="273" height="50" rx="12" fill="#007AFF"/>
+    <text x="196" y="531" font-size="17" font-weight="600" fill="#FFFFFF" text-anchor="middle">Upgrade to Pro</text>
+
+    <!-- Pricing -->
+    <text x="196" y="572" font-size="13" fill="#8E8E93" text-anchor="middle">Starting at $4.99/mo</text>
+  </g>
+
+  <!-- Tab Bar -->
+  <g id="TabBar">
+    <rect x="0" y="782" width="393" height="70" fill="#FFFFFF"/>
+    <line x1="0" y1="782" x2="393" y2="782" stroke="#E5E5EA" stroke-width="0.5"/>
+    <!-- Home Tab -->
+    <g id="TabHome" transform="translate(65, 796)">
+      <path d="M0 12 L8 4 L16 12 L16 20 L10 20 L10 14 L6 14 L6 20 L0 20 Z" fill="none" stroke="#8E8E93" stroke-width="1.5"/>
+      <text x="8" y="34" font-size="10" fill="#8E8E93" text-anchor="middle">Home</text>
+    </g>
+    <!-- Live Tab (Active) -->
+    <g id="TabLive" transform="translate(188, 796)">
+      <polyline points="0,12 4,6 6,14 8,4 10,16 12,8 16,12" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="8" y="34" font-size="10" fill="#007AFF" font-weight="600" text-anchor="middle">Live</text>
+    </g>
+    <!-- Explore Tab -->
+    <g id="TabExplore" transform="translate(311, 796)">
+      <rect x="0" y="10" width="4" height="10" rx="1" fill="#8E8E93"/>
+      <rect x="6" y="6" width="4" height="14" rx="1" fill="#8E8E93"/>
+      <rect x="12" y="2" width="4" height="18" rx="1" fill="#8E8E93"/>
+      <text x="8" y="34" font-size="10" fill="#8E8E93" text-anchor="middle">Explore</text>
+    </g>
+    <rect x="140" y="838" width="113" height="5" rx="2.5" fill="#1C1C1E"/>
+  </g>
+</svg>

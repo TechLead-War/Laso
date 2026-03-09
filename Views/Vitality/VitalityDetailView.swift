@@ -185,62 +185,62 @@ struct VitalityDetailView: View {
         .padding(.vertical, 11)
     }
 
+    private func gaugePosition(for component: VitalityComponent) -> Double {
+        let median = component.populationMedian
+        let current = component.currentValue
+        let isHigherBetter = component.healthMetric?.higherIsBetter ?? true
+        let range = median * 0.6
+        guard range > 0 else { return 0.5 }
+        let raw = (current - (median - range)) / (2 * range)
+        return isHigherBetter ? max(0, min(1, raw)) : max(0, min(1, 1 - raw))
+    }
+
     private func metricGauge(_ component: VitalityComponent) -> some View {
-        GeometryReader { geo in
-            let width = geo.size.width
-            let median = component.populationMedian
-            let current = component.currentValue
-            let isHigherBetter = component.healthMetric?.higherIsBetter ?? true
+        VStack(spacing: 4) {
+            GeometryReader { geo in
+                let width = geo.size.width
+                let position = gaugePosition(for: component)
 
-            // Compute position: 0.5 = at median, 0 = worst, 1 = best
-            let range = median * 0.6 // Show +/- 60% of median
-            let position: Double
-            if range > 0 {
-                let raw = (current - (median - range)) / (2 * range)
-                position = isHigherBetter ? max(0, min(1, raw)) : max(0, min(1, 1 - raw))
-            } else {
-                position = 0.5
+                ZStack(alignment: .leading) {
+                    // Background gradient bar
+                    LinearGradient(
+                        colors: [.red.opacity(0.3), .orange.opacity(0.3), .green.opacity(0.3)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                    .frame(height: 6)
+                    .clipShape(Capsule())
+
+                    // Median marker
+                    Rectangle()
+                        .fill(.secondary.opacity(0.5))
+                        .frame(width: 1, height: 10)
+                        .offset(x: width * 0.5)
+
+                    // User position marker
+                    Circle()
+                        .fill(metricColor(delta: component.delta(chronologicalAge: scorer.chronologicalAge)))
+                        .frame(width: 10, height: 10)
+                        .shadow(color: .black.opacity(0.15), radius: 2, y: 1)
+                        .offset(x: max(0, min(width - 10, width * position)))
+                }
             }
+            .frame(height: 12)
 
-            ZStack(alignment: .leading) {
-                // Background gradient bar
-                LinearGradient(
-                    colors: [.red.opacity(0.3), .orange.opacity(0.3), .green.opacity(0.3)],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-                .frame(height: 6)
-                .clipShape(Capsule())
-
-                // Median marker
-                Rectangle()
-                    .fill(.secondary.opacity(0.5))
-                    .frame(width: 1, height: 10)
-                    .offset(x: width * 0.5)
-
-                // User position marker
-                Circle()
-                    .fill(metricColor(delta: component.delta(chronologicalAge: scorer.chronologicalAge)))
-                    .frame(width: 10, height: 10)
-                    .shadow(color: .black.opacity(0.15), radius: 2, y: 1)
-                    .offset(x: max(0, min(width - 10, width * position)))
+            // Legend
+            HStack {
+                Text("Worse")
+                    .font(.system(size: 8))
+                    .foregroundStyle(.tertiary)
+                Spacer()
+                Text("Median for age \(scorer.chronologicalAge)")
+                    .font(.system(size: 8))
+                    .foregroundStyle(.tertiary)
+                Spacer()
+                Text("Better")
+                    .font(.system(size: 8))
+                    .foregroundStyle(.tertiary)
             }
-        }
-        .frame(height: 12)
-
-        // Legend
-        HStack {
-            Text("Worse")
-                .font(.system(size: 8))
-                .foregroundStyle(.tertiary)
-            Spacer()
-            Text("Median for age \(scorer.chronologicalAge)")
-                .font(.system(size: 8))
-                .foregroundStyle(.tertiary)
-            Spacer()
-            Text("Better")
-                .font(.system(size: 8))
-                .foregroundStyle(.tertiary)
         }
     }
 

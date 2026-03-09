@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <!-- Background -->
+  <g id="background">
+    <rect width="393" height="852" fill="#F2F2F7"/>
+  </g>
+
+  <!-- Status Bar -->
+  <g id="status-bar">
+    <text x="36" y="22" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E">9:41</text>
+    <g id="signal-bars" transform="translate(312, 10)">
+      <rect x="0" y="6" width="3" height="4" rx="0.5" fill="#1C1C1E"/>
+      <rect x="5" y="4" width="3" height="6" rx="0.5" fill="#1C1C1E"/>
+      <rect x="10" y="2" width="3" height="8" rx="0.5" fill="#1C1C1E"/>
+      <rect x="15" y="0" width="3" height="10" rx="0.5" fill="#1C1C1E"/>
+    </g>
+    <g id="wifi-icon" transform="translate(336, 10)">
+      <path d="M5 2 C7.5 0, 10.5 0, 13 2" stroke="#1C1C1E" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <path d="M7 5 C8.5 3.5, 9.5 3.5, 11 5" stroke="#1C1C1E" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <circle cx="9" cy="8" r="1.5" fill="#1C1C1E"/>
+    </g>
+    <g id="battery-icon" transform="translate(355, 10)">
+      <rect x="0" y="1" width="22" height="10" rx="2" stroke="#1C1C1E" stroke-width="1" fill="none"/>
+      <rect x="22" y="4" width="2" height="4" rx="1" fill="#1C1C1E"/>
+      <rect x="2" y="3" width="17" height="6" rx="1" fill="#1C1C1E"/>
+    </g>
+  </g>
+
+  <!-- Illustration Placeholder -->
+  <g id="illustration-placeholder" transform="translate(47, 100)">
+    <rect width="299" height="300" rx="24" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+    <!-- Shield + Lock icon -->
+    <g transform="translate(149.5, 120)">
+      <!-- Shield shape -->
+      <path d="M0,-48 L-40,-32 L-40,0 C-40,28,-8,48,0,54 C8,48,40,28,40,0 L40,-32 Z" stroke="#34C759" stroke-width="3" fill="none" stroke-linejoin="round"/>
+      <!-- Lock body -->
+      <rect x="-14" y="-6" width="28" height="22" rx="4" stroke="#34C759" stroke-width="2.5" fill="none"/>
+      <!-- Lock shackle -->
+      <path d="M-8,-6 L-8,-14 C-8,-22,8,-22,8,-14 L8,-6" stroke="#34C759" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <!-- Keyhole -->
+      <circle cx="0" cy="5" r="3.5" fill="#34C759"/>
+      <rect x="-1.5" y="6" width="3" height="6" rx="1" fill="#34C759"/>
+    </g>
+    <!-- Label -->
+    <text x="149.5" y="260" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93" text-anchor="middle">Illustration</text>
+  </g>
+
+  <!-- Headline -->
+  <g id="headline">
+    <text x="196.5" y="458" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="28" font-weight="700" fill="#1C1C1E" text-anchor="middle">Your data stays yours</text>
+  </g>
+
+  <!-- Body Text -->
+  <g id="body-text">
+    <text x="196.5" y="504" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="17" font-weight="400" fill="#8E8E93" text-anchor="middle">Everything runs on-device. No cloud</text>
+    <text x="196.5" y="528" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="17" font-weight="400" fill="#8E8E93" text-anchor="middle">processing, no sharing. Your health data</text>
+    <text x="196.5" y="552" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="17" font-weight="400" fill="#8E8E93" text-anchor="middle">never leaves your phone.</text>
+  </g>
+
+  <!-- Progress Dots (3 of 7 filled) -->
+  <g id="progress-dots" transform="translate(148.5, 612)">
+    <circle cx="0" cy="0" r="4" fill="#007AFF"/>
+    <circle cx="16" cy="0" r="4" fill="#007AFF"/>
+    <circle cx="32" cy="0" r="4" fill="#007AFF"/>
+    <circle cx="48" cy="0" r="4" fill="#E5E5EA"/>
+    <circle cx="64" cy="0" r="4" fill="#E5E5EA"/>
+    <circle cx="80" cy="0" r="4" fill="#E5E5EA"/>
+    <circle cx="96" cy="0" r="4" fill="#E5E5EA"/>
+  </g>
+
+  <!-- Continue Button -->
+  <g id="continue-button" transform="translate(32, 738)">
+    <rect width="329" height="56" rx="14" fill="#007AFF"/>
+    <text x="164.5" y="35" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="17" font-weight="600" fill="#FFFFFF" text-anchor="middle">Continue</text>
+  </g>
+
+  <!-- Home Indicator -->
+  <g id="home-indicator">
+    <rect x="128" y="832" width="137" height="5" rx="2.5" fill="#1C1C1E" opacity="0.2"/>
+  </g>
+</svg>

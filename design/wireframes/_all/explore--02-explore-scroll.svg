@@ -1,0 +1,202 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <style>
+      text { font-family: -apple-system, system-ui, sans-serif; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="393" height="852" fill="#F2F2F7"/>
+
+  <!-- Status Bar -->
+  <g id="StatusBar">
+    <text x="36" y="22" font-size="15" font-weight="600" fill="#1C1C1E">9:41</text>
+    <g transform="translate(312, 10)">
+      <rect x="0" y="6" width="3" height="4" rx="1" fill="#1C1C1E"/>
+      <rect x="5" y="4" width="3" height="6" rx="1" fill="#1C1C1E"/>
+      <rect x="10" y="2" width="3" height="8" rx="1" fill="#1C1C1E"/>
+      <rect x="15" y="0" width="3" height="10" rx="1" fill="#1C1C1E"/>
+    </g>
+    <g transform="translate(338, 10)">
+      <path d="M4 8 L8 8 L6 4 Z" fill="#1C1C1E"/>
+      <circle cx="6" cy="9" r="1" fill="#1C1C1E"/>
+    </g>
+    <g transform="translate(354, 10)">
+      <rect x="0" y="1" width="22" height="10" rx="2" stroke="#1C1C1E" stroke-width="1" fill="none"/>
+      <rect x="22" y="4" width="2" height="4" rx="1" fill="#1C1C1E"/>
+      <rect x="2" y="3" width="18" height="6" rx="1" fill="#34C759"/>
+    </g>
+  </g>
+
+  <!-- Inline Nav Title (scrolled state) -->
+  <g id="NavTitleInline">
+    <text x="196" y="24" font-size="17" font-weight="600" fill="#1C1C1E" text-anchor="middle">Explore</text>
+  </g>
+
+  <!-- Correlations Section -->
+  <g id="CorrelationsSection">
+    <g transform="translate(20, 56)">
+      <text x="0" y="0" font-size="20" font-weight="700" fill="#1C1C1E">Correlations</text>
+      <!-- PRO Badge -->
+      <rect x="130" y="-16" width="40" height="20" rx="6" fill="#007AFF"/>
+      <text x="150" y="-2" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">PRO</text>
+    </g>
+
+    <!-- Correlation Card 1 -->
+    <g id="CorrelationCard1">
+      <rect x="20" y="72" width="353" height="76" rx="16" fill="#FFFFFF"/>
+      <text x="40" y="100" font-size="16" font-weight="600" fill="#1C1C1E">Sleep Duration &#8596; HRV</text>
+      <!-- Strength indicator -->
+      <rect x="40" y="110" width="60" height="6" rx="3" fill="#E5E5EA"/>
+      <rect x="40" y="110" width="52" height="6" rx="3" fill="#34C759"/>
+      <text x="110" y="118" font-size="12" font-weight="500" fill="#34C759">Strong</text>
+      <!-- Correlation value -->
+      <text x="330" y="100" font-size="15" font-weight="600" fill="#8E8E93" text-anchor="end">r = 0.72</text>
+    </g>
+
+    <!-- Correlation Card 2 -->
+    <g id="CorrelationCard2">
+      <rect x="20" y="156" width="353" height="76" rx="16" fill="#FFFFFF"/>
+      <text x="40" y="184" font-size="16" font-weight="600" fill="#1C1C1E">Steps &#8596; Resting HR</text>
+      <!-- Strength indicator -->
+      <rect x="40" y="194" width="60" height="6" rx="3" fill="#E5E5EA"/>
+      <rect x="40" y="194" width="36" height="6" rx="3" fill="#FF9500"/>
+      <text x="110" y="202" font-size="12" font-weight="500" fill="#FF9500">Moderate</text>
+      <!-- Correlation value -->
+      <text x="330" y="184" font-size="15" font-weight="600" fill="#8E8E93" text-anchor="end">r = -0.48</text>
+    </g>
+
+    <!-- View All link -->
+    <text x="330" y="258" font-size="15" font-weight="500" fill="#007AFF" text-anchor="end">View All &#8594;</text>
+  </g>
+
+  <!-- Health State Timeline Card -->
+  <g id="HealthStateTimeline">
+    <rect x="20" y="274" width="353" height="72" rx="16" fill="#FFFFFF"/>
+    <!-- Calendar icon placeholder -->
+    <rect x="40" y="290" width="40" height="40" rx="10" fill="#007AFF" opacity="0.1"/>
+    <g transform="translate(48, 298)">
+      <!-- Calendar shape -->
+      <rect x="0" y="4" width="24" height="20" rx="3" fill="none" stroke="#007AFF" stroke-width="1.5"/>
+      <line x1="0" y1="10" x2="24" y2="10" stroke="#007AFF" stroke-width="1.5"/>
+      <line x1="6" y1="0" x2="6" y2="6" stroke="#007AFF" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="18" y1="0" x2="18" y2="6" stroke="#007AFF" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+    <text x="96" y="306" font-size="16" font-weight="600" fill="#1C1C1E">Health State Timeline</text>
+    <text x="96" y="326" font-size="13" fill="#8E8E93">See your ML-classified health states</text>
+    <!-- Chevron right -->
+    <path d="M354 310 L362 318 L354 326" fill="none" stroke="#8E8E93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Categories Section -->
+  <g id="CategoriesSection">
+    <text x="20" y="382" font-size="20" font-weight="700" fill="#1C1C1E">Categories</text>
+
+    <!-- Category Grid (2 columns) -->
+    <!-- Row 1 -->
+    <g id="CategoryHeart">
+      <rect x="20" y="398" width="170" height="90" rx="16" fill="#FFFFFF"/>
+      <!-- Mini score ring -->
+      <g transform="translate(52, 430)">
+        <circle cx="0" cy="0" r="14" fill="none" stroke="#E5E5EA" stroke-width="3"/>
+        <circle cx="0" cy="0" r="14" fill="none" stroke="#FF3B30" stroke-width="3" stroke-dasharray="74.8" stroke-dashoffset="11.2" stroke-linecap="round" transform="rotate(-90)"/>
+        <text x="0" y="5" font-size="11" font-weight="700" fill="#FF3B30" text-anchor="middle">85</text>
+      </g>
+      <text x="80" y="428" font-size="15" font-weight="600" fill="#1C1C1E">Heart</text>
+      <text x="80" y="446" font-size="12" fill="#34C759">Good</text>
+    </g>
+
+    <g id="CategorySleep">
+      <rect x="203" y="398" width="170" height="90" rx="16" fill="#FFFFFF"/>
+      <g transform="translate(235, 430)">
+        <circle cx="0" cy="0" r="14" fill="none" stroke="#E5E5EA" stroke-width="3"/>
+        <circle cx="0" cy="0" r="14" fill="none" stroke="#007AFF" stroke-width="3" stroke-dasharray="63.4" stroke-dashoffset="11.2" stroke-linecap="round" transform="rotate(-90)"/>
+        <text x="0" y="5" font-size="11" font-weight="700" fill="#007AFF" text-anchor="middle">72</text>
+      </g>
+      <text x="263" y="428" font-size="15" font-weight="600" fill="#1C1C1E">Sleep</text>
+      <text x="263" y="446" font-size="12" fill="#FF9500">Fair</text>
+    </g>
+
+    <!-- Row 2 -->
+    <g id="CategoryActivity">
+      <rect x="20" y="496" width="170" height="90" rx="16" fill="#FFFFFF"/>
+      <g transform="translate(52, 528)">
+        <circle cx="0" cy="0" r="14" fill="none" stroke="#E5E5EA" stroke-width="3"/>
+        <circle cx="0" cy="0" r="14" fill="none" stroke="#34C759" stroke-width="3" stroke-dasharray="59.8" stroke-dashoffset="11.2" stroke-linecap="round" transform="rotate(-90)"/>
+        <text x="0" y="5" font-size="11" font-weight="700" fill="#34C759" text-anchor="middle">68</text>
+      </g>
+      <text x="80" y="526" font-size="15" font-weight="600" fill="#1C1C1E">Activity</text>
+      <text x="80" y="544" font-size="12" fill="#FF9500">Fair</text>
+    </g>
+
+    <g id="CategoryBody">
+      <rect x="203" y="496" width="170" height="90" rx="16" fill="#FFFFFF"/>
+      <g transform="translate(235, 528)">
+        <circle cx="0" cy="0" r="14" fill="none" stroke="#E5E5EA" stroke-width="3"/>
+        <circle cx="0" cy="0" r="14" fill="none" stroke="#34C759" stroke-width="3" stroke-dasharray="70.4" stroke-dashoffset="11.2" stroke-linecap="round" transform="rotate(-90)"/>
+        <text x="0" y="5" font-size="11" font-weight="700" fill="#34C759" text-anchor="middle">80</text>
+      </g>
+      <text x="263" y="526" font-size="15" font-weight="600" fill="#1C1C1E">Body</text>
+      <text x="263" y="544" font-size="12" fill="#34C759">Good</text>
+    </g>
+
+    <!-- Row 3 -->
+    <g id="CategoryRespiratory">
+      <rect x="20" y="594" width="170" height="90" rx="16" fill="#FFFFFF"/>
+      <g transform="translate(52, 626)">
+        <circle cx="0" cy="0" r="14" fill="none" stroke="#E5E5EA" stroke-width="3"/>
+        <circle cx="0" cy="0" r="14" fill="none" stroke="#34C759" stroke-width="3" stroke-dasharray="79.2" stroke-dashoffset="11.2" stroke-linecap="round" transform="rotate(-90)"/>
+        <text x="0" y="5" font-size="11" font-weight="700" fill="#34C759" text-anchor="middle">90</text>
+      </g>
+      <text x="80" y="624" font-size="15" font-weight="600" fill="#1C1C1E">Respiratory</text>
+      <text x="80" y="642" font-size="12" fill="#34C759">Excellent</text>
+    </g>
+
+    <g id="CategoryMindfulness">
+      <rect x="203" y="594" width="170" height="90" rx="16" fill="#FFFFFF"/>
+      <g transform="translate(235, 626)">
+        <circle cx="0" cy="0" r="14" fill="none" stroke="#E5E5EA" stroke-width="3"/>
+        <circle cx="0" cy="0" r="14" fill="none" stroke="#FF9500" stroke-width="3" stroke-dasharray="57.2" stroke-dashoffset="11.2" stroke-linecap="round" transform="rotate(-90)"/>
+        <text x="0" y="5" font-size="11" font-weight="700" fill="#FF9500" text-anchor="middle">65</text>
+      </g>
+      <text x="263" y="624" font-size="15" font-weight="600" fill="#1C1C1E">Mindfulness</text>
+      <text x="263" y="642" font-size="12" fill="#FF9500">Fair</text>
+    </g>
+
+    <!-- Row 4 (single) -->
+    <g id="CategoryMobility">
+      <rect x="20" y="692" width="170" height="90" rx="16" fill="#FFFFFF"/>
+      <g transform="translate(52, 724)">
+        <circle cx="0" cy="0" r="14" fill="none" stroke="#E5E5EA" stroke-width="3"/>
+        <circle cx="0" cy="0" r="14" fill="none" stroke="#007AFF" stroke-width="3" stroke-dasharray="65.1" stroke-dashoffset="11.2" stroke-linecap="round" transform="rotate(-90)"/>
+        <text x="0" y="5" font-size="11" font-weight="700" fill="#007AFF" text-anchor="middle">74</text>
+      </g>
+      <text x="80" y="722" font-size="15" font-weight="600" fill="#1C1C1E">Mobility</text>
+      <text x="80" y="740" font-size="12" fill="#FF9500">Fair</text>
+    </g>
+  </g>
+
+  <!-- Tab Bar -->
+  <g id="TabBar">
+    <rect x="0" y="782" width="393" height="70" fill="#FFFFFF"/>
+    <line x1="0" y1="782" x2="393" y2="782" stroke="#E5E5EA" stroke-width="0.5"/>
+    <!-- Home Tab -->
+    <g id="TabHome" transform="translate(65, 796)">
+      <path d="M0 12 L8 4 L16 12 L16 20 L10 20 L10 14 L6 14 L6 20 L0 20 Z" fill="none" stroke="#8E8E93" stroke-width="1.5"/>
+      <text x="8" y="34" font-size="10" fill="#8E8E93" text-anchor="middle">Home</text>
+    </g>
+    <!-- Live Tab -->
+    <g id="TabLive" transform="translate(188, 796)">
+      <polyline points="0,12 4,6 6,14 8,4 10,16 12,8 16,12" fill="none" stroke="#8E8E93" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="8" y="34" font-size="10" fill="#8E8E93" text-anchor="middle">Live</text>
+    </g>
+    <!-- Explore Tab (Active) -->
+    <g id="TabExplore" transform="translate(311, 796)">
+      <rect x="0" y="10" width="4" height="10" rx="1" fill="#007AFF"/>
+      <rect x="6" y="6" width="4" height="14" rx="1" fill="#007AFF"/>
+      <rect x="12" y="2" width="4" height="18" rx="1" fill="#007AFF"/>
+      <text x="8" y="34" font-size="10" fill="#007AFF" font-weight="600" text-anchor="middle">Explore</text>
+    </g>
+    <rect x="140" y="838" width="113" height="5" rx="2.5" fill="#1C1C1E"/>
+  </g>
+</svg>

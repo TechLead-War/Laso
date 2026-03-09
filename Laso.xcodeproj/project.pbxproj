@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D8V19NE5BA08MR2QA3RVGH4E /* VitalityScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = Y28QJE1L453W6U5KEZADYX6J /* VitalityScorer.swift */; };
+		0ANHQSXC4Y5OI8JPFRD89UUQ /* VitalityCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = OUKFTEN9154U00PDP72WS1CG /* VitalityCard.swift */; };
+		MSK27ROBLV9PGK8X5XKMZGDL /* VitalityDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EZE39PPW14GQ8XW2VZMRS8P6 /* VitalityDetailView.swift */; };
 		028E5BC0B6D891898C09A82D /* HistoricalAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07BC5E2346C0324D1E7FA015 /* HistoricalAnalyzer.swift */; };
 		040CCB76FD801548C4B62E0D /* CategoryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E196EDFEDBDE989571053FC9 /* CategoryDetailView.swift */; };
 		083E3FE2D60FB7E9306B7840 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F48100E186931561B81D2F1 /* AppConstants.swift */; };
@@ -211,6 +214,34 @@
 		J1A2B3C4D5E6F7890AB1CD04 /* JournalEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = J1A2B3C4D5E6F7890AB1CD03 /* JournalEntryView.swift */; };
 		J1A2B3C4D5E6F7890AB1CD06 /* JournalInsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = J1A2B3C4D5E6F7890AB1CD05 /* JournalInsightsView.swift */; };
 		J1A2B3C4D5E6F7890AB1CD08 /* JournalCorrelationAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = J1A2B3C4D5E6F7890AB1CD07 /* JournalCorrelationAnalyzer.swift */; };
+		A3CC68383AA21A5717C4FDB1 /* CycleInsightAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 974B9969A7219562CF687402 /* CycleInsightAnalyzer.swift */; };
+		BD1CBBCBBDD9DE9D76279413 /* GamificationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBCC01F64B5B71FEFCE014B3 /* GamificationEngine.swift */; };
+		E9507F917C773CABF6D66539 /* MenstrualCycleTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9289D7724150CF47E4785EBE /* MenstrualCycleTracker.swift */; };
+		9E19ECFEC2163BF0578E9717 /* SleepDebtTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5DF84E2C1A6052440C7737C /* SleepDebtTracker.swift */; };
+		1BDDF3484A00D6E70CB5E47C /* SleepNeedCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3837B5FFA61ECC6F3074E98F /* SleepNeedCalculator.swift */; };
+		F5FFCF5740888E9EAD4D5F66 /* StrainCoach.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E6CA011D4AA452079C5FBB /* StrainCoach.swift */; };
+		5FC2413D14172D7226441DBD /* StrainScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11B3937F427F1831A3BD6753 /* StrainScorer.swift */; };
+		EE7F90A2EE0D3503595FC214 /* StressScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F441F092D74F8C2A8BD5F8CD /* StressScorer.swift */; };
+		233D47386487482192AA5876 /* WeeklyPlanEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64A32059615B38A1FB23667D /* WeeklyPlanEngine.swift */; };
+		CBB6625528ECBCD6660D5EE0 /* ExpandedJournalCategories.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EBDEDEF301D150D1423E9B3 /* ExpandedJournalCategories.swift */; };
+		FC2ADC0FED7D10A6B9946938 /* UserProfileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBA9117B348085216F4A2E87 /* UserProfileStore.swift */; };
+		6E905BAAF63E7FD42A7CA919 /* CycleDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A047346F2D8E052E449AE62 /* CycleDetailView.swift */; };
+		B25889FA413DF3AF50153869 /* CyclePhaseCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DD0A3EB085AA4B60CC1727 /* CyclePhaseCard.swift */; };
+		D8EE54C57154F218858B6565 /* LevelBadgeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89A9E4942BF70F5AA923C6EC /* LevelBadgeCard.swift */; };
+		73C651EBE332A2A6FA6D2BCC /* SleepCoachCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61166DA303121EF6474BF12D /* SleepCoachCard.swift */; };
+		CF105F585829642A2254C6C0 /* StrainCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499A172B966A60CA8034799E /* StrainCard.swift */; };
+		0EAA09F1BFE4B32CBA3ED7CD /* StressCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2D110C854BF91B0F6B84DE /* StressCard.swift */; };
+		CB0814214CC020268643A5D8 /* ExpandedJournalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77D639B12F63E80DDD82532E /* ExpandedJournalView.swift */; };
+		8FEF7E49E774D6E753BAB642 /* ProfileCaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BA8F172EAF73397B7093EEA /* ProfileCaptureView.swift */; };
+		384B83A11BDAEB19B409A2ED /* WeeklyPlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58A25F4F1F8C1BAAA944FA80 /* WeeklyPlanView.swift */; };
+		69BBC58A7D09ED52274B7AE2 /* AchievementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5ED5C13D6EABB090ABE5680 /* AchievementsView.swift */; };
+		9E5CD11793EA8A09A18432D6 /* PerformanceProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9DEDECA0F4FC01953A20A6 /* PerformanceProfileView.swift */; };
+		13D75828E99F6CEEC2C942F0 /* AnnualReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1954DFA87F33757A9CB00BE2 /* AnnualReportView.swift */; };
+		79C26BD972E07E61CF634158 /* MonthlyReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E026E83FFA0370F5111077AE /* MonthlyReviewView.swift */; };
+		44EDDF74AC0EAD38FB733F67 /* SleepCoachView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB67539E2482B2BF24B8909A /* SleepCoachView.swift */; };
+		86D2B35FEA5237FC4B310E31 /* StrainDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 900E71C9D57F0FBF482CEF36 /* StrainDetailView.swift */; };
+		F768916EE709A918D59EC9E9 /* BreathworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B04B41F4A7C55C44C2A0810 /* BreathworkView.swift */; };
+		813E25B67DCAE61C9E15DCB4 /* StressMonitorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A0297EA5E4F8776FC0A4A0 /* StressMonitorView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -429,6 +460,34 @@
 		J1A2B3C4D5E6F7890AB1CD03 /* JournalEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalEntryView.swift; sourceTree = "<group>"; };
 		J1A2B3C4D5E6F7890AB1CD05 /* JournalInsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalInsightsView.swift; sourceTree = "<group>"; };
 		J1A2B3C4D5E6F7890AB1CD07 /* JournalCorrelationAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalCorrelationAnalyzer.swift; sourceTree = "<group>"; };
+		974B9969A7219562CF687402 /* CycleInsightAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CycleInsightAnalyzer.swift; sourceTree = "<group>"; };
+		DBCC01F64B5B71FEFCE014B3 /* GamificationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamificationEngine.swift; sourceTree = "<group>"; };
+		9289D7724150CF47E4785EBE /* MenstrualCycleTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenstrualCycleTracker.swift; sourceTree = "<group>"; };
+		F5DF84E2C1A6052440C7737C /* SleepDebtTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepDebtTracker.swift; sourceTree = "<group>"; };
+		3837B5FFA61ECC6F3074E98F /* SleepNeedCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepNeedCalculator.swift; sourceTree = "<group>"; };
+		17E6CA011D4AA452079C5FBB /* StrainCoach.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrainCoach.swift; sourceTree = "<group>"; };
+		11B3937F427F1831A3BD6753 /* StrainScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrainScorer.swift; sourceTree = "<group>"; };
+		F441F092D74F8C2A8BD5F8CD /* StressScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StressScorer.swift; sourceTree = "<group>"; };
+		64A32059615B38A1FB23667D /* WeeklyPlanEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyPlanEngine.swift; sourceTree = "<group>"; };
+		6EBDEDEF301D150D1423E9B3 /* ExpandedJournalCategories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandedJournalCategories.swift; sourceTree = "<group>"; };
+		EBA9117B348085216F4A2E87 /* UserProfileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileStore.swift; sourceTree = "<group>"; };
+		9A047346F2D8E052E449AE62 /* CycleDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CycleDetailView.swift; sourceTree = "<group>"; };
+		84DD0A3EB085AA4B60CC1727 /* CyclePhaseCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CyclePhaseCard.swift; sourceTree = "<group>"; };
+		89A9E4942BF70F5AA923C6EC /* LevelBadgeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelBadgeCard.swift; sourceTree = "<group>"; };
+		61166DA303121EF6474BF12D /* SleepCoachCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepCoachCard.swift; sourceTree = "<group>"; };
+		499A172B966A60CA8034799E /* StrainCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrainCard.swift; sourceTree = "<group>"; };
+		DD2D110C854BF91B0F6B84DE /* StressCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StressCard.swift; sourceTree = "<group>"; };
+		77D639B12F63E80DDD82532E /* ExpandedJournalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandedJournalView.swift; sourceTree = "<group>"; };
+		0BA8F172EAF73397B7093EEA /* ProfileCaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileCaptureView.swift; sourceTree = "<group>"; };
+		58A25F4F1F8C1BAAA944FA80 /* WeeklyPlanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyPlanView.swift; sourceTree = "<group>"; };
+		B5ED5C13D6EABB090ABE5680 /* AchievementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementsView.swift; sourceTree = "<group>"; };
+		EE9DEDECA0F4FC01953A20A6 /* PerformanceProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceProfileView.swift; sourceTree = "<group>"; };
+		1954DFA87F33757A9CB00BE2 /* AnnualReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnualReportView.swift; sourceTree = "<group>"; };
+		E026E83FFA0370F5111077AE /* MonthlyReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthlyReviewView.swift; sourceTree = "<group>"; };
+		FB67539E2482B2BF24B8909A /* SleepCoachView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepCoachView.swift; sourceTree = "<group>"; };
+		900E71C9D57F0FBF482CEF36 /* StrainDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrainDetailView.swift; sourceTree = "<group>"; };
+		0B04B41F4A7C55C44C2A0810 /* BreathworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathworkView.swift; sourceTree = "<group>"; };
+		63A0297EA5E4F8776FC0A4A0 /* StressMonitorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StressMonitorView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -565,6 +624,15 @@
 				84920AA0B0BAD65B323468E0 /* WeeklyPatternAnalyzer.swift */,
 				DD947BF688F7B5F398D7E9FD /* WorkoutEffectivenessAnalyzer.swift */,
 				27254B0198312DB917F5E12B /* ML */,
+				974B9969A7219562CF687402 /* CycleInsightAnalyzer.swift */,
+				DBCC01F64B5B71FEFCE014B3 /* GamificationEngine.swift */,
+				9289D7724150CF47E4785EBE /* MenstrualCycleTracker.swift */,
+				F5DF84E2C1A6052440C7737C /* SleepDebtTracker.swift */,
+				3837B5FFA61ECC6F3074E98F /* SleepNeedCalculator.swift */,
+				17E6CA011D4AA452079C5FBB /* StrainCoach.swift */,
+				11B3937F427F1831A3BD6753 /* StrainScorer.swift */,
+				F441F092D74F8C2A8BD5F8CD /* StressScorer.swift */,
+				64A32059615B38A1FB23667D /* WeeklyPlanEngine.swift */,
 			);
 			path = Analysis;
 			sourceTree = "<group>";
@@ -708,6 +776,7 @@
 			isa = PBXGroup;
 			children = (
 				4F426A4AB40311B6E5C6A3CE /* OnboardingView.swift */,
+				0BA8F172EAF73397B7093EEA /* ProfileCaptureView.swift */,
 			);
 			path = Onboarding;
 			sourceTree = "<group>";
@@ -803,6 +872,13 @@
 				5FAF76B9F8D00B9511DC6C2C /* Simulation */,
 				622ECBA9D48B5BDDF8522E84 /* Subscription */,
 				YFMQPEM700JDZF6E81P2PIJX /* Vitality */,
+				19B2FA30E7BEC7D46293D946 /* CycleTracking */,
+				C7440DFB901BD19B73539080 /* Plan */,
+				D423EE7AA434ED359AAD6EAD /* Profile */,
+				1F323526B2DA55D4253DB382 /* Reports */,
+				B4AC58D9ACCC64EEDD03EC6F /* Sleep */,
+				B52B32CD22DA205FC67E3E7E /* Strain */,
+				00DFB0ADC40662C5BA57DC72 /* Stress */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -812,6 +888,7 @@
 			children = (
 				J1A2B3C4D5E6F7890AB1CD03 /* JournalEntryView.swift */,
 				J1A2B3C4D5E6F7890AB1CD05 /* JournalInsightsView.swift */,
+				77D639B12F63E80DDD82532E /* ExpandedJournalView.swift */,
 			);
 			path = Journal;
 			sourceTree = "<group>";
@@ -867,6 +944,11 @@
 				D029290D4EBFE40FBD860E42 /* SleepCard.swift */,
 				OUKFTEN9154U00PDP72WS1CG /* VitalityCard.swift */,
 				4F1B82AC2599B0303444D381 /* WeeklyReviewView.swift */,
+				84DD0A3EB085AA4B60CC1727 /* CyclePhaseCard.swift */,
+				89A9E4942BF70F5AA923C6EC /* LevelBadgeCard.swift */,
+				61166DA303121EF6474BF12D /* SleepCoachCard.swift */,
+				499A172B966A60CA8034799E /* StrainCard.swift */,
+				DD2D110C854BF91B0F6B84DE /* StressCard.swift */,
 			);
 			path = Home;
 			sourceTree = "<group>";
@@ -923,6 +1005,8 @@
 				J1A2B3C4D5E6F7890AB1CD01 /* JournalStore.swift */,
 				1748830A3C5C9B2C4B821B16 /* PersistenceManager.swift */,
 				79D307F2173910B0A37FB5E9 /* SampleDataProvider.swift */,
+				6EBDEDEF301D150D1423E9B3 /* ExpandedJournalCategories.swift */,
+				EBA9117B348085216F4A2E87 /* UserProfileStore.swift */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -943,6 +1027,65 @@
 				EZE39PPW14GQ8XW2VZMRS8P6 /* VitalityDetailView.swift */,
 			);
 			path = Vitality;
+			sourceTree = "<group>";
+		};
+		19B2FA30E7BEC7D46293D946 /* CycleTracking */ = {
+			isa = PBXGroup;
+			children = (
+				9A047346F2D8E052E449AE62 /* CycleDetailView.swift */,
+			);
+			path = CycleTracking;
+			sourceTree = "<group>";
+		};
+		C7440DFB901BD19B73539080 /* Plan */ = {
+			isa = PBXGroup;
+			children = (
+				58A25F4F1F8C1BAAA944FA80 /* WeeklyPlanView.swift */,
+			);
+			path = Plan;
+			sourceTree = "<group>";
+		};
+		D423EE7AA434ED359AAD6EAD /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				B5ED5C13D6EABB090ABE5680 /* AchievementsView.swift */,
+				EE9DEDECA0F4FC01953A20A6 /* PerformanceProfileView.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
+		1F323526B2DA55D4253DB382 /* Reports */ = {
+			isa = PBXGroup;
+			children = (
+				1954DFA87F33757A9CB00BE2 /* AnnualReportView.swift */,
+				E026E83FFA0370F5111077AE /* MonthlyReviewView.swift */,
+			);
+			path = Reports;
+			sourceTree = "<group>";
+		};
+		B4AC58D9ACCC64EEDD03EC6F /* Sleep */ = {
+			isa = PBXGroup;
+			children = (
+				FB67539E2482B2BF24B8909A /* SleepCoachView.swift */,
+			);
+			path = Sleep;
+			sourceTree = "<group>";
+		};
+		B52B32CD22DA205FC67E3E7E /* Strain */ = {
+			isa = PBXGroup;
+			children = (
+				900E71C9D57F0FBF482CEF36 /* StrainDetailView.swift */,
+			);
+			path = Strain;
+			sourceTree = "<group>";
+		};
+		00DFB0ADC40662C5BA57DC72 /* Stress */ = {
+			isa = PBXGroup;
+			children = (
+				0B04B41F4A7C55C44C2A0810 /* BreathworkView.swift */,
+				63A0297EA5E4F8776FC0A4A0 /* StressMonitorView.swift */,
+			);
+			path = Stress;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1252,6 +1395,34 @@
 				0ANHQSXC4Y5OI8JPFRD89UUQ /* VitalityCard.swift in Sources */,
 				MSK27ROBLV9PGK8X5XKMZGDL /* VitalityDetailView.swift in Sources */,
 				4263A917A7F49FF7DC08BA1C /* WorkoutTypeAppEnum.swift in Sources */,
+				A3CC68383AA21A5717C4FDB1 /* CycleInsightAnalyzer.swift in Sources */,
+				BD1CBBCBBDD9DE9D76279413 /* GamificationEngine.swift in Sources */,
+				E9507F917C773CABF6D66539 /* MenstrualCycleTracker.swift in Sources */,
+				9E19ECFEC2163BF0578E9717 /* SleepDebtTracker.swift in Sources */,
+				1BDDF3484A00D6E70CB5E47C /* SleepNeedCalculator.swift in Sources */,
+				F5FFCF5740888E9EAD4D5F66 /* StrainCoach.swift in Sources */,
+				5FC2413D14172D7226441DBD /* StrainScorer.swift in Sources */,
+				EE7F90A2EE0D3503595FC214 /* StressScorer.swift in Sources */,
+				233D47386487482192AA5876 /* WeeklyPlanEngine.swift in Sources */,
+				CBB6625528ECBCD6660D5EE0 /* ExpandedJournalCategories.swift in Sources */,
+				FC2ADC0FED7D10A6B9946938 /* UserProfileStore.swift in Sources */,
+				6E905BAAF63E7FD42A7CA919 /* CycleDetailView.swift in Sources */,
+				B25889FA413DF3AF50153869 /* CyclePhaseCard.swift in Sources */,
+				D8EE54C57154F218858B6565 /* LevelBadgeCard.swift in Sources */,
+				73C651EBE332A2A6FA6D2BCC /* SleepCoachCard.swift in Sources */,
+				CF105F585829642A2254C6C0 /* StrainCard.swift in Sources */,
+				0EAA09F1BFE4B32CBA3ED7CD /* StressCard.swift in Sources */,
+				CB0814214CC020268643A5D8 /* ExpandedJournalView.swift in Sources */,
+				8FEF7E49E774D6E753BAB642 /* ProfileCaptureView.swift in Sources */,
+				384B83A11BDAEB19B409A2ED /* WeeklyPlanView.swift in Sources */,
+				69BBC58A7D09ED52274B7AE2 /* AchievementsView.swift in Sources */,
+				9E5CD11793EA8A09A18432D6 /* PerformanceProfileView.swift in Sources */,
+				13D75828E99F6CEEC2C942F0 /* AnnualReportView.swift in Sources */,
+				79C26BD972E07E61CF634158 /* MonthlyReviewView.swift in Sources */,
+				44EDDF74AC0EAD38FB733F67 /* SleepCoachView.swift in Sources */,
+				86D2B35FEA5237FC4B310E31 /* StrainDetailView.swift in Sources */,
+				F768916EE709A918D59EC9E9 /* BreathworkView.swift in Sources */,
+				813E25B67DCAE61C9E15DCB4 /* StressMonitorView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

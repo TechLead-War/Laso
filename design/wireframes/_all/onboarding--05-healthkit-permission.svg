@@ -1,0 +1,165 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <!-- Background -->
+  <g id="background">
+    <rect width="393" height="852" fill="#F2F2F7"/>
+  </g>
+
+  <!-- Status Bar -->
+  <g id="status-bar">
+    <text x="36" y="22" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E">9:41</text>
+    <g id="signal-bars" transform="translate(312, 10)">
+      <rect x="0" y="6" width="3" height="4" rx="0.5" fill="#1C1C1E"/>
+      <rect x="5" y="4" width="3" height="6" rx="0.5" fill="#1C1C1E"/>
+      <rect x="10" y="2" width="3" height="8" rx="0.5" fill="#1C1C1E"/>
+      <rect x="15" y="0" width="3" height="10" rx="0.5" fill="#1C1C1E"/>
+    </g>
+    <g id="wifi-icon" transform="translate(336, 10)">
+      <path d="M5 2 C7.5 0, 10.5 0, 13 2" stroke="#1C1C1E" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <path d="M7 5 C8.5 3.5, 9.5 3.5, 11 5" stroke="#1C1C1E" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <circle cx="9" cy="8" r="1.5" fill="#1C1C1E"/>
+    </g>
+    <g id="battery-icon" transform="translate(355, 10)">
+      <rect x="0" y="1" width="22" height="10" rx="2" stroke="#1C1C1E" stroke-width="1" fill="none"/>
+      <rect x="22" y="4" width="2" height="4" rx="1" fill="#1C1C1E"/>
+      <rect x="2" y="3" width="17" height="6" rx="1" fill="#1C1C1E"/>
+    </g>
+  </g>
+
+  <!-- Apple Health Icon -->
+  <g id="health-icon" transform="translate(164.5, 70)">
+    <rect width="64" height="64" rx="14" fill="#FF3B30"/>
+    <!-- White heart -->
+    <g transform="translate(32, 28)">
+      <path d="M0-8 C-4-16,-15-13,-15-6 C-15,2,-4,10,0,14 C4,10,15,2,15-6 C15-13,4-16,0-8Z" fill="#FFFFFF"/>
+    </g>
+  </g>
+
+  <!-- Headline -->
+  <g id="headline">
+    <text x="196.5" y="170" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="28" font-weight="700" fill="#1C1C1E" text-anchor="middle">Connect Apple Health</text>
+  </g>
+
+  <!-- Body Text -->
+  <g id="body-text">
+    <text x="196.5" y="206" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="16" font-weight="400" fill="#8E8E93" text-anchor="middle">HealthPulse reads your health data to</text>
+    <text x="196.5" y="228" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="16" font-weight="400" fill="#8E8E93" text-anchor="middle">provide personalized insights.</text>
+  </g>
+
+  <!-- Permissions List -->
+  <g id="permissions-list" transform="translate(32, 264)">
+    <!-- Card background -->
+    <rect width="329" height="370" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="0.5"/>
+
+    <!-- Heart Rate -->
+    <g id="perm-heart-rate" transform="translate(20, 20)">
+      <circle cx="14" cy="14" r="14" fill="#FF3B30" opacity="0.12"/>
+      <text x="14" y="19" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="14" fill="#FF3B30" text-anchor="middle">&#9829;</text>
+      <text x="42" y="19" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="16" font-weight="500" fill="#1C1C1E">Heart Rate</text>
+      <!-- Checkmark -->
+      <g transform="translate(260, 6)">
+        <circle cx="8" cy="8" r="10" fill="#34C759"/>
+        <polyline points="3,8 7,12 13,4" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </g>
+
+    <!-- Separator -->
+    <line x1="20" y1="52" x2="309" y2="52" stroke="#E5E5EA" stroke-width="0.5"/>
+
+    <!-- Steps -->
+    <g id="perm-steps" transform="translate(20, 68)">
+      <circle cx="14" cy="14" r="14" fill="#FF9500" opacity="0.12"/>
+      <text x="14" y="19" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="14" fill="#FF9500" text-anchor="middle">&#9894;</text>
+      <text x="42" y="19" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="16" font-weight="500" fill="#1C1C1E">Steps</text>
+      <g transform="translate(260, 6)">
+        <circle cx="8" cy="8" r="10" fill="#34C759"/>
+        <polyline points="3,8 7,12 13,4" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </g>
+
+    <!-- Separator -->
+    <line x1="20" y1="100" x2="309" y2="100" stroke="#E5E5EA" stroke-width="0.5"/>
+
+    <!-- Sleep -->
+    <g id="perm-sleep" transform="translate(20, 116)">
+      <circle cx="14" cy="14" r="14" fill="#007AFF" opacity="0.12"/>
+      <text x="14" y="19" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="14" fill="#007AFF" text-anchor="middle">&#9790;</text>
+      <text x="42" y="19" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="16" font-weight="500" fill="#1C1C1E">Sleep</text>
+      <g transform="translate(260, 6)">
+        <circle cx="8" cy="8" r="10" fill="#34C759"/>
+        <polyline points="3,8 7,12 13,4" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </g>
+
+    <!-- Separator -->
+    <line x1="20" y1="148" x2="309" y2="148" stroke="#E5E5EA" stroke-width="0.5"/>
+
+    <!-- HRV -->
+    <g id="perm-hrv" transform="translate(20, 164)">
+      <circle cx="14" cy="14" r="14" fill="#FF3B30" opacity="0.12"/>
+      <text x="14" y="19" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="12" font-weight="600" fill="#FF3B30" text-anchor="middle">HRV</text>
+      <text x="42" y="19" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="16" font-weight="500" fill="#1C1C1E">Heart Rate Variability</text>
+      <g transform="translate(260, 6)">
+        <circle cx="8" cy="8" r="10" fill="#34C759"/>
+        <polyline points="3,8 7,12 13,4" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </g>
+
+    <!-- Separator -->
+    <line x1="20" y1="196" x2="309" y2="196" stroke="#E5E5EA" stroke-width="0.5"/>
+
+    <!-- Blood Oxygen -->
+    <g id="perm-spo2" transform="translate(20, 212)">
+      <circle cx="14" cy="14" r="14" fill="#007AFF" opacity="0.12"/>
+      <text x="14" y="19" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="11" font-weight="600" fill="#007AFF" text-anchor="middle">O&#8322;</text>
+      <text x="42" y="19" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="16" font-weight="500" fill="#1C1C1E">Blood Oxygen</text>
+      <g transform="translate(260, 6)">
+        <circle cx="8" cy="8" r="10" fill="#34C759"/>
+        <polyline points="3,8 7,12 13,4" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </g>
+
+    <!-- Separator -->
+    <line x1="20" y1="244" x2="309" y2="244" stroke="#E5E5EA" stroke-width="0.5"/>
+
+    <!-- Workouts -->
+    <g id="perm-workouts" transform="translate(20, 260)">
+      <circle cx="14" cy="14" r="14" fill="#34C759" opacity="0.12"/>
+      <text x="14" y="19" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="14" fill="#34C759" text-anchor="middle">&#9899;</text>
+      <text x="42" y="19" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="16" font-weight="500" fill="#1C1C1E">Workouts</text>
+      <g transform="translate(260, 6)">
+        <circle cx="8" cy="8" r="10" fill="#34C759"/>
+        <polyline points="3,8 7,12 13,4" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </g>
+
+    <!-- Separator -->
+    <line x1="20" y1="292" x2="309" y2="292" stroke="#E5E5EA" stroke-width="0.5"/>
+
+    <!-- Body Measurements -->
+    <g id="perm-body" transform="translate(20, 308)">
+      <circle cx="14" cy="14" r="14" fill="#FF9500" opacity="0.12"/>
+      <text x="14" y="19" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="14" fill="#FF9500" text-anchor="middle">&#9878;</text>
+      <text x="42" y="19" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="16" font-weight="500" fill="#1C1C1E">Body Measurements</text>
+      <g transform="translate(260, 6)">
+        <circle cx="8" cy="8" r="10" fill="#34C759"/>
+        <polyline points="3,8 7,12 13,4" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- Connect Button -->
+  <g id="connect-button" transform="translate(32, 666)">
+    <rect width="329" height="56" rx="14" fill="#007AFF"/>
+    <text x="164.5" y="35" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="17" font-weight="600" fill="#FFFFFF" text-anchor="middle">Connect Health Data</text>
+  </g>
+
+  <!-- Skip Link -->
+  <g id="skip-link">
+    <text x="196.5" y="750" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="15" font-weight="400" fill="#8E8E93" text-anchor="middle">Skip for now</text>
+  </g>
+
+  <!-- Home Indicator -->
+  <g id="home-indicator">
+    <rect x="128" y="832" width="137" height="5" rx="2.5" fill="#1C1C1E" opacity="0.2"/>
+  </g>
+</svg>

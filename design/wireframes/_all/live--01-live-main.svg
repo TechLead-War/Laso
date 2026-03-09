@@ -1,0 +1,181 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <style>
+      text { font-family: -apple-system, system-ui, sans-serif; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="393" height="852" fill="#F2F2F7"/>
+
+  <!-- Status Bar -->
+  <g id="StatusBar">
+    <text x="36" y="22" font-size="15" font-weight="600" fill="#1C1C1E">9:41</text>
+    <!-- Signal bars -->
+    <g transform="translate(312, 10)">
+      <rect x="0" y="6" width="3" height="4" rx="1" fill="#1C1C1E"/>
+      <rect x="5" y="4" width="3" height="6" rx="1" fill="#1C1C1E"/>
+      <rect x="10" y="2" width="3" height="8" rx="1" fill="#1C1C1E"/>
+      <rect x="15" y="0" width="3" height="10" rx="1" fill="#1C1C1E"/>
+    </g>
+    <!-- WiFi -->
+    <g transform="translate(338, 10)">
+      <path d="M4 8 L8 8 L6 4 Z" fill="#1C1C1E"/>
+      <circle cx="6" cy="9" r="1" fill="#1C1C1E"/>
+    </g>
+    <!-- Battery -->
+    <g transform="translate(354, 10)">
+      <rect x="0" y="1" width="22" height="10" rx="2" stroke="#1C1C1E" stroke-width="1" fill="none"/>
+      <rect x="22" y="4" width="2" height="4" rx="1" fill="#1C1C1E"/>
+      <rect x="2" y="3" width="18" height="6" rx="1" fill="#34C759"/>
+    </g>
+  </g>
+
+  <!-- Navigation Title -->
+  <g id="NavTitle">
+    <text x="20" y="68" font-size="34" font-weight="700" fill="#1C1C1E">Live</text>
+    <!-- Connected indicator -->
+    <circle cx="82" cy="60" r="5" fill="#34C759"/>
+    <text x="94" y="66" font-size="13" fill="#34C759" font-weight="500">Connected</text>
+  </g>
+
+  <!-- Heart Rate Hero Card -->
+  <g id="HeartRateHero">
+    <rect x="20" y="88" width="353" height="160" rx="16" fill="#FFFFFF"/>
+    <!-- Header -->
+    <text x="40" y="116" font-size="15" font-weight="600" fill="#8E8E93">HEART RATE</text>
+    <!-- Heart icon -->
+    <path d="M350 108 C346 100, 336 100, 336 108 C336 100, 326 100, 322 108 C318 116, 336 130, 336 130 C336 130, 354 116, 350 108Z" fill="#FF3B30" transform="scale(0.7) translate(160, 10)"/>
+    <!-- ECG Polyline -->
+    <polyline points="40,168 70,168 85,168 95,148 105,188 115,158 125,168 155,168 170,168 180,148 190,188 200,158 210,168 240,168 255,168 265,148 275,188 285,158 295,168 330,168 353,168" fill="none" stroke="#FF3B30" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- BPM Value -->
+    <text x="40" y="220" font-size="48" font-weight="700" fill="#1C1C1E">72</text>
+    <text x="120" y="220" font-size="20" font-weight="500" fill="#8E8E93">BPM</text>
+    <!-- Status -->
+    <rect x="280" y="200" width="72" height="28" rx="14" fill="#F2F2F7"/>
+    <text x="295" y="219" font-size="13" font-weight="600" fill="#34C759">Resting</text>
+  </g>
+
+  <!-- Vital Signs Row -->
+  <g id="VitalSignsRow">
+    <!-- SpO2 Card -->
+    <g id="SpO2Card">
+      <rect x="20" y="260" width="170" height="100" rx="16" fill="#FFFFFF"/>
+      <text x="40" y="286" font-size="13" font-weight="600" fill="#8E8E93">SpO2</text>
+      <!-- Circle indicator -->
+      <circle cx="160" cy="280" r="12" fill="none" stroke="#E5E5EA" stroke-width="3"/>
+      <circle cx="160" cy="280" r="12" fill="none" stroke="#007AFF" stroke-width="3" stroke-dasharray="72" stroke-dashoffset="4" transform="rotate(-90 160 280)"/>
+      <text x="40" y="330" font-size="28" font-weight="700" fill="#1C1C1E">98</text>
+      <text x="82" y="330" font-size="16" font-weight="500" fill="#8E8E93">%</text>
+    </g>
+    <!-- Respiratory Rate Card -->
+    <g id="RespiratoryRateCard">
+      <rect x="203" y="260" width="170" height="100" rx="16" fill="#FFFFFF"/>
+      <text x="223" y="286" font-size="13" font-weight="600" fill="#8E8E93">RESPIRATORY</text>
+      <!-- Breathing wave -->
+      <path d="M340 280 Q350 270 360 280 Q370 290 380 280" fill="none" stroke="#007AFF" stroke-width="2"/>
+      <text x="223" y="330" font-size="28" font-weight="700" fill="#1C1C1E">16</text>
+      <text x="262" y="330" font-size="14" font-weight="500" fill="#8E8E93">br/min</text>
+    </g>
+  </g>
+
+  <!-- Activity Rings Card -->
+  <g id="ActivityRings">
+    <rect x="20" y="372" width="353" height="130" rx="16" fill="#FFFFFF"/>
+    <text x="40" y="400" font-size="15" font-weight="600" fill="#8E8E93">ACTIVITY</text>
+    <!-- Rings -->
+    <g transform="translate(90, 442)">
+      <!-- Move ring (red) -->
+      <circle cx="0" cy="0" r="36" fill="none" stroke="#E5E5EA" stroke-width="8"/>
+      <circle cx="0" cy="0" r="36" fill="none" stroke="#FF3B30" stroke-width="8" stroke-dasharray="180" stroke-dashoffset="36" stroke-linecap="round" transform="rotate(-90)"/>
+      <!-- Exercise ring (green) -->
+      <circle cx="0" cy="0" r="26" fill="none" stroke="#E5E5EA" stroke-width="8"/>
+      <circle cx="0" cy="0" r="26" fill="none" stroke="#34C759" stroke-width="8" stroke-dasharray="140" stroke-dashoffset="56" stroke-linecap="round" transform="rotate(-90)"/>
+      <!-- Stand ring (blue) -->
+      <circle cx="0" cy="0" r="16" fill="none" stroke="#E5E5EA" stroke-width="8"/>
+      <circle cx="0" cy="0" r="16" fill="none" stroke="#007AFF" stroke-width="8" stroke-dasharray="85" stroke-dashoffset="15" stroke-linecap="round" transform="rotate(-90)"/>
+    </g>
+    <!-- Labels -->
+    <g transform="translate(170, 420)">
+      <circle cx="0" cy="6" r="4" fill="#FF3B30"/>
+      <text x="12" y="10" font-size="14" font-weight="500" fill="#1C1C1E">Move</text>
+      <text x="120" y="10" font-size="14" font-weight="600" fill="#FF3B30">420/500 cal</text>
+    </g>
+    <g transform="translate(170, 445)">
+      <circle cx="0" cy="6" r="4" fill="#34C759"/>
+      <text x="12" y="10" font-size="14" font-weight="500" fill="#1C1C1E">Exercise</text>
+      <text x="120" y="10" font-size="14" font-weight="600" fill="#34C759">24/30 min</text>
+    </g>
+    <g transform="translate(170, 470)">
+      <circle cx="0" cy="6" r="4" fill="#007AFF"/>
+      <text x="12" y="10" font-size="14" font-weight="500" fill="#1C1C1E">Stand</text>
+      <text x="120" y="10" font-size="14" font-weight="600" fill="#007AFF">10/12 hrs</text>
+    </g>
+  </g>
+
+  <!-- Blood Pressure / Temperature Row -->
+  <g id="BPTempRow">
+    <!-- Blood Pressure -->
+    <g id="BloodPressureCard">
+      <rect x="20" y="514" width="170" height="100" rx="16" fill="#FFFFFF"/>
+      <text x="40" y="540" font-size="13" font-weight="600" fill="#8E8E93">BLOOD PRESSURE</text>
+      <text x="40" y="578" font-size="22" font-weight="700" fill="#1C1C1E">120/80</text>
+      <text x="40" y="598" font-size="13" font-weight="500" fill="#34C759">Normal</text>
+      <text x="130" y="598" font-size="12" fill="#8E8E93">mmHg</text>
+    </g>
+    <!-- Temperature -->
+    <g id="TemperatureCard">
+      <rect x="203" y="514" width="170" height="100" rx="16" fill="#FFFFFF"/>
+      <text x="223" y="540" font-size="13" font-weight="600" fill="#8E8E93">TEMPERATURE</text>
+      <text x="223" y="578" font-size="22" font-weight="700" fill="#1C1C1E">36.6°C</text>
+      <text x="223" y="598" font-size="13" font-weight="500" fill="#34C759">Normal</text>
+      <!-- Thermometer icon -->
+      <rect x="345" y="530" width="8" height="24" rx="4" fill="none" stroke="#FF9500" stroke-width="1.5"/>
+      <circle cx="349" cy="560" r="6" fill="none" stroke="#FF9500" stroke-width="1.5"/>
+    </g>
+  </g>
+
+  <!-- Last Workout Card -->
+  <g id="LastWorkoutCard">
+    <rect x="20" y="626" width="353" height="90" rx="16" fill="#FFFFFF"/>
+    <text x="40" y="652" font-size="13" font-weight="600" fill="#8E8E93">LAST WORKOUT</text>
+    <!-- Running icon placeholder -->
+    <rect x="40" y="662" width="28" height="28" rx="8" fill="#34C759" opacity="0.15"/>
+    <text x="47" y="682" font-size="16">🏃</text>
+    <text x="78" y="678" font-size="16" font-weight="600" fill="#1C1C1E">Running — 32 min</text>
+    <text x="78" y="696" font-size="13" fill="#8E8E93">245 cal</text>
+    <text x="280" y="696" font-size="13" fill="#8E8E93">Today, 7:30 AM</text>
+  </g>
+
+  <!-- Status Footer -->
+  <g id="StatusFooter">
+    <circle cx="140" cy="738" r="4" fill="#34C759"/>
+    <text x="150" y="742" font-size="13" fill="#8E8E93">Apple Watch connected</text>
+    <text x="140" y="758" font-size="12" fill="#8E8E93">Last sync: Just now</text>
+  </g>
+
+  <!-- Tab Bar -->
+  <g id="TabBar">
+    <rect x="0" y="782" width="393" height="70" fill="#FFFFFF"/>
+    <line x1="0" y1="782" x2="393" y2="782" stroke="#E5E5EA" stroke-width="0.5"/>
+    <!-- Home Tab -->
+    <g id="TabHome" transform="translate(65, 796)">
+      <path d="M0 12 L8 4 L16 12 L16 20 L10 20 L10 14 L6 14 L6 20 L0 20 Z" fill="none" stroke="#8E8E93" stroke-width="1.5"/>
+      <text x="8" y="34" font-size="10" fill="#8E8E93" text-anchor="middle">Home</text>
+    </g>
+    <!-- Live Tab (Active) -->
+    <g id="TabLive" transform="translate(188, 796)">
+      <polyline points="0,12 4,6 6,14 8,4 10,16 12,8 16,12" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="8" y="34" font-size="10" fill="#007AFF" font-weight="600" text-anchor="middle">Live</text>
+    </g>
+    <!-- Explore Tab -->
+    <g id="TabExplore" transform="translate(311, 796)">
+      <rect x="0" y="10" width="4" height="10" rx="1" fill="#8E8E93"/>
+      <rect x="6" y="6" width="4" height="14" rx="1" fill="#8E8E93"/>
+      <rect x="12" y="2" width="4" height="18" rx="1" fill="#8E8E93"/>
+      <text x="8" y="34" font-size="10" fill="#8E8E93" text-anchor="middle">Explore</text>
+    </g>
+    <!-- Home indicator -->
+    <rect x="140" y="838" width="113" height="5" rx="2.5" fill="#1C1C1E"/>
+  </g>
+</svg>

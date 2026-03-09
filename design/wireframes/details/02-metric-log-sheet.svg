@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <clipPath id="screenClip"><rect width="393" height="852" rx="44"/></clipPath>
+  </defs>
+
+  <g id="MetricLogSheet" clip-path="url(#screenClip)">
+    <!-- Dimmed background -->
+    <rect width="393" height="852" fill="#000000" opacity="0.4" rx="44"/>
+
+    <!-- Sheet -->
+    <g id="Sheet" transform="translate(0, 340)">
+      <rect width="393" height="512" rx="16" fill="#F2F2F7"/>
+
+      <!-- Sheet Handle -->
+      <g id="SheetHandle">
+        <rect x="172" y="8" width="50" height="5" rx="2.5" fill="#C7C7CC"/>
+      </g>
+
+      <!-- Header -->
+      <g id="SheetHeader">
+        <text x="197" y="48" font-family="-apple-system, system-ui, sans-serif" font-size="17" font-weight="600" fill="#1C1C1E" text-anchor="middle">Log Weight</text>
+        <!-- Close Button -->
+        <g transform="translate(345, 28)">
+          <circle cx="14" cy="14" r="14" fill="#E5E5EA"/>
+          <path d="M9 9 L19 19 M19 9 L9 19" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"/>
+        </g>
+      </g>
+
+      <!-- Current Value Display -->
+      <g id="CurrentValue" transform="translate(16, 72)">
+        <rect width="361" height="60" rx="16" fill="#FFFFFF"/>
+        <text x="16" y="24" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93">Last recorded</text>
+        <text x="16" y="46" font-family="-apple-system, system-ui, sans-serif" font-size="22" font-weight="700" fill="#1C1C1E">76.2 kg</text>
+        <text x="345" y="40" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93" text-anchor="end">Mar 6, 2026</text>
+      </g>
+
+      <!-- Input Field -->
+      <g id="InputField" transform="translate(16, 152)">
+        <text x="0" y="0" font-family="-apple-system, system-ui, sans-serif" font-size="13" font-weight="600" fill="#8E8E93" text-transform="uppercase" letter-spacing="0.5">VALUE</text>
+        <rect x="0" y="12" width="361" height="56" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+        <text x="20" y="46" font-family="-apple-system, system-ui, sans-serif" font-size="20" fill="#C7C7CC">Enter value</text>
+        <text x="340" y="46" font-family="-apple-system, system-ui, sans-serif" font-size="17" font-weight="500" fill="#8E8E93" text-anchor="end">kg</text>
+        <!-- Cursor line -->
+        <line x1="20" y1="30" x2="20" y2="50" stroke="#007AFF" stroke-width="2"/>
+      </g>
+
+      <!-- Date Picker Row -->
+      <g id="DatePickerRow" transform="translate(16, 240)">
+        <text x="0" y="0" font-family="-apple-system, system-ui, sans-serif" font-size="13" font-weight="600" fill="#8E8E93" text-transform="uppercase" letter-spacing="0.5">DATE</text>
+        <rect x="0" y="12" width="361" height="50" rx="16" fill="#FFFFFF"/>
+        <text x="20" y="44" font-family="-apple-system, system-ui, sans-serif" font-size="17" fill="#1C1C1E">Date</text>
+        <text x="306" y="44" font-family="-apple-system, system-ui, sans-serif" font-size="17" fill="#007AFF" text-anchor="end">Today</text>
+        <path d="M326 38 L332 44 L338 38" stroke="#C7C7CC" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+
+      <!-- Notes Field (optional) -->
+      <g id="NotesField" transform="translate(16, 322)">
+        <text x="0" y="0" font-family="-apple-system, system-ui, sans-serif" font-size="13" font-weight="600" fill="#8E8E93" text-transform="uppercase" letter-spacing="0.5">NOTES (OPTIONAL)</text>
+        <rect x="0" y="12" width="361" height="50" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+        <text x="20" y="44" font-family="-apple-system, system-ui, sans-serif" font-size="17" fill="#C7C7CC">Add a note...</text>
+      </g>
+
+      <!-- Save Button -->
+      <g id="SaveButton" transform="translate(16, 408)">
+        <rect width="361" height="52" rx="12" fill="#007AFF"/>
+        <text x="180" y="33" font-family="-apple-system, system-ui, sans-serif" font-size="17" font-weight="600" fill="#FFFFFF" text-anchor="middle">Save</text>
+      </g>
+
+      <!-- Cancel Button -->
+      <g id="CancelButton" transform="translate(16, 470)">
+        <text x="180" y="14" font-family="-apple-system, system-ui, sans-serif" font-size="17" fill="#007AFF" text-anchor="middle">Cancel</text>
+      </g>
+    </g>
+  </g>
+</svg>

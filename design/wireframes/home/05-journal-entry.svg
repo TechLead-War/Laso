@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <clipPath id="screen-clip">
+      <rect width="393" height="852" rx="44"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background (dimmed) -->
+  <g id="Background-Dimmed" clip-path="url(#screen-clip)">
+    <rect width="393" height="852" fill="#000000" opacity="0.4" rx="44"/>
+  </g>
+
+  <!-- Sheet -->
+  <g id="Journal-Entry-Sheet">
+    <rect x="0" y="140" width="393" height="712" rx="16" fill="#FFFFFF"/>
+
+    <!-- Sheet Handle -->
+    <g id="Sheet-Handle">
+      <rect x="172" y="148" width="48" height="5" rx="2.5" fill="#E5E5EA"/>
+    </g>
+
+    <!-- Header -->
+    <g id="Sheet-Header">
+      <text x="196" y="192" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="22" font-weight="700" fill="#1C1C1E">Quick Log</text>
+      <!-- Close button -->
+      <g id="Close-Button">
+        <circle cx="355" cy="185" r="15" fill="#E5E5EA"/>
+        <line x1="349" y1="179" x2="361" y2="191" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"/>
+        <line x1="361" y1="179" x2="349" y2="191" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"/>
+      </g>
+    </g>
+
+    <!-- Category Picker Grid (2x3) -->
+    <g id="Category-Picker-Grid">
+      <text x="30" y="232" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#8E8E93">CATEGORY</text>
+
+      <!-- Row 1 -->
+      <!-- Mood (selected) -->
+      <g id="Category-Mood-Selected">
+        <rect x="20" y="248" width="113" height="64" rx="12" fill="#007AFF"/>
+        <text x="76" y="276" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="20">&#x1F60A;</text>
+        <text x="76" y="300" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="600" fill="#FFFFFF">Mood</text>
+      </g>
+      <!-- Energy -->
+      <g id="Category-Energy">
+        <rect x="140" y="248" width="113" height="64" rx="12" fill="#F2F2F7"/>
+        <text x="196" y="276" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="20">&#x26A1;</text>
+        <text x="196" y="300" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="600" fill="#1C1C1E">Energy</text>
+      </g>
+      <!-- Stress (selected) -->
+      <g id="Category-Stress-Selected">
+        <rect x="260" y="248" width="113" height="64" rx="12" fill="#007AFF"/>
+        <text x="316" y="276" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="20">&#x1F630;</text>
+        <text x="316" y="300" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="600" fill="#FFFFFF">Stress</text>
+      </g>
+
+      <!-- Row 2 -->
+      <!-- Exercise -->
+      <g id="Category-Exercise">
+        <rect x="20" y="320" width="113" height="64" rx="12" fill="#F2F2F7"/>
+        <text x="76" y="348" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="20">&#x1F3C3;</text>
+        <text x="76" y="372" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="600" fill="#1C1C1E">Exercise</text>
+      </g>
+      <!-- Nutrition -->
+      <g id="Category-Nutrition">
+        <rect x="140" y="320" width="113" height="64" rx="12" fill="#F2F2F7"/>
+        <text x="196" y="348" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="20">&#x1F957;</text>
+        <text x="196" y="372" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="600" fill="#1C1C1E">Nutrition</text>
+      </g>
+      <!-- Notes -->
+      <g id="Category-Notes">
+        <rect x="260" y="320" width="113" height="64" rx="12" fill="#F2F2F7"/>
+        <text x="316" y="348" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="20">&#x1F4DD;</text>
+        <text x="316" y="372" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="600" fill="#1C1C1E">Notes</text>
+      </g>
+    </g>
+
+    <!-- Value Input Section -->
+    <g id="Value-Input-Section">
+      <text x="30" y="424" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#8E8E93">INTENSITY</text>
+
+      <!-- Segmented Control (1-5 scale) -->
+      <g id="Segmented-Control">
+        <rect x="20" y="440" width="353" height="48" rx="12" fill="#F2F2F7"/>
+
+        <!-- Segment 1 -->
+        <rect x="24" y="444" width="65" height="40" rx="10" fill="none"/>
+        <text x="56" y="460" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="16" font-weight="500" fill="#8E8E93">1</text>
+        <text x="56" y="476" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="10" fill="#8E8E93">Low</text>
+
+        <!-- Segment 2 -->
+        <rect x="93" y="444" width="65" height="40" rx="10" fill="none"/>
+        <text x="125" y="460" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="16" font-weight="500" fill="#8E8E93">2</text>
+
+        <!-- Segment 3 (selected) -->
+        <rect x="162" y="444" width="65" height="40" rx="10" fill="#FFFFFF">
+          <animate attributeName="opacity" from="1" to="1" dur="0s"/>
+        </rect>
+        <text x="194" y="460" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="16" font-weight="600" fill="#007AFF">3</text>
+        <text x="194" y="476" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="10" font-weight="500" fill="#007AFF">Medium</text>
+
+        <!-- Segment 4 -->
+        <rect x="231" y="444" width="65" height="40" rx="10" fill="none"/>
+        <text x="263" y="460" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="16" font-weight="500" fill="#8E8E93">4</text>
+
+        <!-- Segment 5 -->
+        <rect x="300" y="444" width="65" height="40" rx="10" fill="none"/>
+        <text x="332" y="460" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="16" font-weight="500" fill="#8E8E93">5</text>
+        <text x="332" y="476" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="10" fill="#8E8E93">High</text>
+      </g>
+    </g>
+
+    <!-- Optional Notes Field -->
+    <g id="Notes-Field">
+      <text x="30" y="524" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#8E8E93">NOTES (OPTIONAL)</text>
+      <rect x="20" y="540" width="353" height="120" rx="12" fill="#F2F2F7"/>
+      <text x="36" y="566" font-family="-apple-system, system-ui, sans-serif" font-size="15" fill="#C7C7CC">Add any notes about how you're feeling...</text>
+      <!-- Text cursor -->
+      <line x1="36" y1="554" x2="36" y2="572" stroke="#007AFF" stroke-width="2" opacity="0.6"/>
+    </g>
+
+    <!-- Save Entry Button -->
+    <g id="Save-Entry-Button">
+      <rect x="20" y="690" width="353" height="54" rx="12" fill="#007AFF"/>
+      <text x="196" y="723" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="17" font-weight="600" fill="#FFFFFF">Save Entry</text>
+    </g>
+
+    <!-- Home indicator -->
+    <rect x="148" y="836" width="97" height="4" rx="2" fill="#1C1C1E" opacity="0.3"/>
+  </g>
+</svg>

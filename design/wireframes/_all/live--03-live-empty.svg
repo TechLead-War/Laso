@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <style>
+      text { font-family: -apple-system, system-ui, sans-serif; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="393" height="852" fill="#F2F2F7"/>
+
+  <!-- Status Bar -->
+  <g id="StatusBar">
+    <text x="36" y="22" font-size="15" font-weight="600" fill="#1C1C1E">9:41</text>
+    <g transform="translate(312, 10)">
+      <rect x="0" y="6" width="3" height="4" rx="1" fill="#1C1C1E"/>
+      <rect x="5" y="4" width="3" height="6" rx="1" fill="#1C1C1E"/>
+      <rect x="10" y="2" width="3" height="8" rx="1" fill="#1C1C1E"/>
+      <rect x="15" y="0" width="3" height="10" rx="1" fill="#1C1C1E"/>
+    </g>
+    <g transform="translate(338, 10)">
+      <path d="M4 8 L8 8 L6 4 Z" fill="#1C1C1E"/>
+      <circle cx="6" cy="9" r="1" fill="#1C1C1E"/>
+    </g>
+    <g transform="translate(354, 10)">
+      <rect x="0" y="1" width="22" height="10" rx="2" stroke="#1C1C1E" stroke-width="1" fill="none"/>
+      <rect x="22" y="4" width="2" height="4" rx="1" fill="#1C1C1E"/>
+      <rect x="2" y="3" width="18" height="6" rx="1" fill="#34C759"/>
+    </g>
+  </g>
+
+  <!-- Navigation Title -->
+  <g id="NavTitle">
+    <text x="20" y="68" font-size="34" font-weight="700" fill="#1C1C1E">Live</text>
+  </g>
+
+  <!-- Centered Empty State Content -->
+  <g id="EmptyState" transform="translate(196, 340)">
+    <!-- Apple Watch Placeholder -->
+    <g id="WatchIllustration" transform="translate(-40, -80)">
+      <!-- Watch band top -->
+      <rect x="18" y="-30" width="44" height="35" rx="8" fill="#E5E5EA"/>
+      <!-- Watch body -->
+      <rect x="0" y="0" width="80" height="96" rx="20" fill="#1C1C1E" opacity="0.08" stroke="#E5E5EA" stroke-width="2"/>
+      <!-- Watch screen -->
+      <rect x="8" y="8" width="64" height="80" rx="14" fill="#FFFFFF"/>
+      <!-- Screen content placeholder: small heart -->
+      <path d="M34 36 C32 30, 24 30, 24 36 C24 30, 16 30, 14 36 C10 44, 24 54, 24 54 C24 54, 38 44, 34 36Z" fill="none" stroke="#E5E5EA" stroke-width="1.5" transform="translate(16, 0)"/>
+      <!-- Small flat line on screen -->
+      <line x1="16" y1="65" x2="64" y2="65" stroke="#E5E5EA" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <!-- Watch band bottom -->
+      <rect x="18" y="91" width="44" height="35" rx="8" fill="#E5E5EA"/>
+      <!-- Crown/button -->
+      <rect x="78" y="30" width="6" height="16" rx="3" fill="#E5E5EA"/>
+    </g>
+
+    <!-- Pulse Animation Indicator (concentric circles) -->
+    <g id="PulseIndicator" transform="translate(0, 60)">
+      <circle cx="0" cy="0" r="16" fill="none" stroke="#007AFF" stroke-width="1.5" opacity="0.5"/>
+      <circle cx="0" cy="0" r="28" fill="none" stroke="#007AFF" stroke-width="1" opacity="0.3"/>
+      <circle cx="0" cy="0" r="40" fill="none" stroke="#007AFF" stroke-width="0.8" opacity="0.15"/>
+      <circle cx="0" cy="0" r="6" fill="#007AFF" opacity="0.6"/>
+    </g>
+
+    <!-- Headline -->
+    <text x="0" y="124" font-size="22" font-weight="600" fill="#1C1C1E" text-anchor="middle">Waiting for data...</text>
+
+    <!-- Body Text -->
+    <text x="0" y="152" font-size="15" fill="#8E8E93" text-anchor="middle">Wear your Apple Watch to see</text>
+    <text x="0" y="172" font-size="15" fill="#8E8E93" text-anchor="middle">real-time vitals</text>
+  </g>
+
+  <!-- Tab Bar -->
+  <g id="TabBar">
+    <rect x="0" y="782" width="393" height="70" fill="#FFFFFF"/>
+    <line x1="0" y1="782" x2="393" y2="782" stroke="#E5E5EA" stroke-width="0.5"/>
+    <!-- Home Tab -->
+    <g id="TabHome" transform="translate(65, 796)">
+      <path d="M0 12 L8 4 L16 12 L16 20 L10 20 L10 14 L6 14 L6 20 L0 20 Z" fill="none" stroke="#8E8E93" stroke-width="1.5"/>
+      <text x="8" y="34" font-size="10" fill="#8E8E93" text-anchor="middle">Home</text>
+    </g>
+    <!-- Live Tab (Active) -->
+    <g id="TabLive" transform="translate(188, 796)">
+      <polyline points="0,12 4,6 6,14 8,4 10,16 12,8 16,12" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="8" y="34" font-size="10" fill="#007AFF" font-weight="600" text-anchor="middle">Live</text>
+    </g>
+    <!-- Explore Tab -->
+    <g id="TabExplore" transform="translate(311, 796)">
+      <rect x="0" y="10" width="4" height="10" rx="1" fill="#8E8E93"/>
+      <rect x="6" y="6" width="4" height="14" rx="1" fill="#8E8E93"/>
+      <rect x="12" y="2" width="4" height="18" rx="1" fill="#8E8E93"/>
+      <text x="8" y="34" font-size="10" fill="#8E8E93" text-anchor="middle">Explore</text>
+    </g>
+    <rect x="140" y="838" width="113" height="5" rx="2.5" fill="#1C1C1E"/>
+  </g>
+</svg>

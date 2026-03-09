@@ -1,0 +1,160 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <style>
+      text { font-family: -apple-system, system-ui, sans-serif; }
+    </style>
+  </defs>
+
+  <!-- Background (sheet overlaying content) -->
+  <rect width="393" height="852" fill="#F2F2F7"/>
+
+  <!-- Sheet Handle Bar -->
+  <g id="SheetHandle">
+    <rect x="168" y="10" width="57" height="5" rx="2.5" fill="#E5E5EA"/>
+  </g>
+
+  <!-- Header Row -->
+  <g id="SheetHeader">
+    <!-- Beaker/experiment icon -->
+    <g transform="translate(20, 36)">
+      <rect x="0" y="0" width="36" height="36" rx="10" fill="#007AFF" opacity="0.12"/>
+      <!-- Beaker shape -->
+      <path d="M12 8 L12 18 L6 28 L30 28 L24 18 L24 8" fill="none" stroke="#007AFF" stroke-width="1.5" stroke-linejoin="round" transform="scale(0.7) translate(4, 2)"/>
+      <line x1="10" y1="10" x2="26" y2="10" stroke="#007AFF" stroke-width="1.5" transform="scale(0.7) translate(4, 2)"/>
+    </g>
+    <text x="66" y="60" font-size="24" font-weight="700" fill="#1C1C1E">What If?</text>
+    <!-- Reset button -->
+    <text x="350" y="60" font-size="15" font-weight="500" fill="#007AFF" text-anchor="end">Reset</text>
+  </g>
+
+  <!-- Score Comparison Hero -->
+  <g id="ScoreComparisonHero">
+    <rect x="20" y="84" width="353" height="160" rx="16" fill="#FFFFFF"/>
+
+    <!-- Current Score Ring -->
+    <g transform="translate(110, 164)">
+      <circle cx="0" cy="0" r="42" fill="none" stroke="#E5E5EA" stroke-width="8"/>
+      <circle cx="0" cy="0" r="42" fill="none" stroke="#8E8E93" stroke-width="8" stroke-dasharray="206" stroke-dashoffset="45" stroke-linecap="round" transform="rotate(-90)"/>
+      <text x="0" y="8" font-size="28" font-weight="700" fill="#1C1C1E" text-anchor="middle">78</text>
+    </g>
+    <text x="110" y="220" font-size="13" font-weight="500" fill="#8E8E93" text-anchor="middle">Current</text>
+
+    <!-- Arrow between rings -->
+    <g transform="translate(175, 160)">
+      <line x1="0" y1="0" x2="30" y2="0" stroke="#007AFF" stroke-width="2"/>
+      <polyline points="24,-5 30,0 24,5" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <!-- Predicted Score Ring -->
+    <g transform="translate(276, 164)">
+      <circle cx="0" cy="0" r="42" fill="none" stroke="#E5E5EA" stroke-width="8"/>
+      <circle cx="0" cy="0" r="42" fill="none" stroke="#34C759" stroke-width="8" stroke-dasharray="222" stroke-dashoffset="45" stroke-linecap="round" transform="rotate(-90)"/>
+      <text x="0" y="8" font-size="28" font-weight="700" fill="#34C759" text-anchor="middle">84</text>
+    </g>
+    <text x="276" y="220" font-size="13" font-weight="500" fill="#34C759" text-anchor="middle">Predicted (+6)</text>
+  </g>
+
+  <!-- ROI Recommendations -->
+  <g id="ROIRecommendations">
+    <text x="20" y="278" font-size="20" font-weight="700" fill="#1C1C1E">Best ROI</text>
+
+    <!-- ROI Card 1 -->
+    <g id="ROICard1">
+      <rect x="20" y="292" width="353" height="64" rx="16" fill="#FFFFFF"/>
+      <!-- Impact badge -->
+      <rect x="300" y="306" width="56" height="26" rx="8" fill="#34C759" opacity="0.12"/>
+      <text x="328" y="324" font-size="13" font-weight="700" fill="#34C759" text-anchor="middle">+3 pts</text>
+      <!-- Suggestion -->
+      <text x="40" y="320" font-size="16" font-weight="600" fill="#1C1C1E">+30 min sleep</text>
+      <text x="40" y="340" font-size="13" fill="#8E8E93">Biggest impact on your score</text>
+    </g>
+
+    <!-- ROI Card 2 -->
+    <g id="ROICard2">
+      <rect x="20" y="364" width="353" height="64" rx="16" fill="#FFFFFF"/>
+      <!-- Impact badge -->
+      <rect x="300" y="378" width="56" height="26" rx="8" fill="#34C759" opacity="0.12"/>
+      <text x="328" y="396" font-size="13" font-weight="700" fill="#34C759" text-anchor="middle">+2 pts</text>
+      <!-- Suggestion -->
+      <text x="40" y="392" font-size="16" font-weight="600" fill="#1C1C1E">+2,000 steps</text>
+      <text x="40" y="412" font-size="13" fill="#8E8E93">Improve activity score</text>
+    </g>
+  </g>
+
+  <!-- Metric Adjustment Sliders -->
+  <g id="MetricSliders">
+    <text x="20" y="466" font-size="20" font-weight="700" fill="#1C1C1E">Adjust Metrics</text>
+
+    <!-- Sleep Duration Slider -->
+    <g id="SliderSleep" transform="translate(20, 480)">
+      <rect x="0" y="0" width="353" height="66" rx="16" fill="#FFFFFF"/>
+      <text x="16" y="22" font-size="14" font-weight="600" fill="#1C1C1E">Sleep Duration</text>
+      <text x="260" y="22" font-size="13" fill="#8E8E93">7.4h</text>
+      <text x="310" y="22" font-size="13" font-weight="600" fill="#007AFF">7.9h</text>
+      <!-- Slider track -->
+      <rect x="16" y="38" width="321" height="4" rx="2" fill="#E5E5EA"/>
+      <!-- Slider fill -->
+      <rect x="16" y="38" width="210" height="4" rx="2" fill="#007AFF"/>
+      <!-- Slider thumb -->
+      <circle cx="226" cy="40" r="10" fill="#FFFFFF" stroke="#007AFF" stroke-width="2"/>
+    </g>
+
+    <!-- Steps Slider -->
+    <g id="SliderSteps" transform="translate(20, 554)">
+      <rect x="0" y="0" width="353" height="66" rx="16" fill="#FFFFFF"/>
+      <text x="16" y="22" font-size="14" font-weight="600" fill="#1C1C1E">Steps</text>
+      <text x="244" y="22" font-size="13" fill="#8E8E93">6,500</text>
+      <text x="302" y="22" font-size="13" font-weight="600" fill="#007AFF">8,500</text>
+      <!-- Slider track -->
+      <rect x="16" y="38" width="321" height="4" rx="2" fill="#E5E5EA"/>
+      <rect x="16" y="38" width="180" height="4" rx="2" fill="#007AFF"/>
+      <circle cx="196" cy="40" r="10" fill="#FFFFFF" stroke="#007AFF" stroke-width="2"/>
+    </g>
+
+    <!-- HRV Slider -->
+    <g id="SliderHRV" transform="translate(20, 628)">
+      <rect x="0" y="0" width="353" height="66" rx="16" fill="#FFFFFF"/>
+      <text x="16" y="22" font-size="14" font-weight="600" fill="#1C1C1E">HRV</text>
+      <text x="248" y="22" font-size="13" fill="#8E8E93">45ms</text>
+      <text x="304" y="22" font-size="13" font-weight="600" fill="#007AFF">52ms</text>
+      <!-- Slider track -->
+      <rect x="16" y="38" width="321" height="4" rx="2" fill="#E5E5EA"/>
+      <rect x="16" y="38" width="160" height="4" rx="2" fill="#007AFF"/>
+      <circle cx="176" cy="40" r="10" fill="#FFFFFF" stroke="#007AFF" stroke-width="2"/>
+    </g>
+
+    <!-- Resting HR Slider -->
+    <g id="SliderRestingHR" transform="translate(20, 702)">
+      <rect x="0" y="0" width="353" height="66" rx="16" fill="#FFFFFF"/>
+      <text x="16" y="22" font-size="14" font-weight="600" fill="#1C1C1E">Resting HR</text>
+      <text x="236" y="22" font-size="13" fill="#8E8E93">68bpm</text>
+      <text x="300" y="22" font-size="13" font-weight="600" fill="#007AFF">64bpm</text>
+      <!-- Slider track -->
+      <rect x="16" y="38" width="321" height="4" rx="2" fill="#E5E5EA"/>
+      <rect x="16" y="38" width="140" height="4" rx="2" fill="#007AFF"/>
+      <circle cx="156" cy="40" r="10" fill="#FFFFFF" stroke="#007AFF" stroke-width="2"/>
+    </g>
+  </g>
+
+  <!-- Impact Breakdown (mini bar chart) -->
+  <g id="ImpactBreakdown" transform="translate(20, 784)">
+    <text x="0" y="14" font-size="13" font-weight="600" fill="#8E8E93">IMPACT BY CATEGORY</text>
+    <g transform="translate(0, 26)">
+      <!-- Heart -->
+      <text x="0" y="10" font-size="11" fill="#8E8E93">Heart</text>
+      <rect x="70" y="2" width="120" height="10" rx="3" fill="#E5E5EA"/>
+      <rect x="70" y="2" width="72" height="10" rx="3" fill="#FF3B30"/>
+      <text x="198" y="12" font-size="11" fill="#1C1C1E">+3</text>
+      <!-- Sleep -->
+      <text x="0" y="28" font-size="11" fill="#8E8E93">Sleep</text>
+      <rect x="70" y="20" width="120" height="10" rx="3" fill="#E5E5EA"/>
+      <rect x="70" y="20" width="96" height="10" rx="3" fill="#007AFF"/>
+      <text x="198" y="30" font-size="11" fill="#1C1C1E">+4</text>
+      <!-- Activity -->
+      <text x="0" y="46" font-size="11" fill="#8E8E93">Activity</text>
+      <rect x="70" y="38" width="120" height="10" rx="3" fill="#E5E5EA"/>
+      <rect x="70" y="38" width="48" height="10" rx="3" fill="#34C759"/>
+      <text x="198" y="48" font-size="11" fill="#1C1C1E">+2</text>
+    </g>
+  </g>
+</svg>

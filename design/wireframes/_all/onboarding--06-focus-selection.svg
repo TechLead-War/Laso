@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <!-- Background -->
+  <g id="background">
+    <rect width="393" height="852" fill="#F2F2F7"/>
+  </g>
+
+  <!-- Status Bar -->
+  <g id="status-bar">
+    <text x="36" y="22" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E">9:41</text>
+    <g id="signal-bars" transform="translate(312, 10)">
+      <rect x="0" y="6" width="3" height="4" rx="0.5" fill="#1C1C1E"/>
+      <rect x="5" y="4" width="3" height="6" rx="0.5" fill="#1C1C1E"/>
+      <rect x="10" y="2" width="3" height="8" rx="0.5" fill="#1C1C1E"/>
+      <rect x="15" y="0" width="3" height="10" rx="0.5" fill="#1C1C1E"/>
+    </g>
+    <g id="wifi-icon" transform="translate(336, 10)">
+      <path d="M5 2 C7.5 0, 10.5 0, 13 2" stroke="#1C1C1E" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <path d="M7 5 C8.5 3.5, 9.5 3.5, 11 5" stroke="#1C1C1E" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <circle cx="9" cy="8" r="1.5" fill="#1C1C1E"/>
+    </g>
+    <g id="battery-icon" transform="translate(355, 10)">
+      <rect x="0" y="1" width="22" height="10" rx="2" stroke="#1C1C1E" stroke-width="1" fill="none"/>
+      <rect x="22" y="4" width="2" height="4" rx="1" fill="#1C1C1E"/>
+      <rect x="2" y="3" width="17" height="6" rx="1" fill="#1C1C1E"/>
+    </g>
+  </g>
+
+  <!-- Headline -->
+  <g id="headline">
+    <text x="196.5" y="80" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="28" font-weight="700" fill="#1C1C1E" text-anchor="middle">What matters most</text>
+    <text x="196.5" y="116" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="28" font-weight="700" fill="#1C1C1E" text-anchor="middle">to you?</text>
+  </g>
+
+  <!-- Subtitle -->
+  <g id="subtitle">
+    <text x="196.5" y="150" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="15" font-weight="400" fill="#8E8E93" text-anchor="middle">Select one or more areas to personalize your experience</text>
+  </g>
+
+  <!-- Focus Cards Grid (2 columns x 3 rows) -->
+  <g id="focus-cards-grid" transform="translate(24, 180)">
+
+    <!-- Row 1 -->
+    <!-- Sleep Quality (selected) -->
+    <g id="card-sleep-quality" transform="translate(0, 0)">
+      <rect width="165" height="150" rx="16" fill="#FFFFFF" stroke="#007AFF" stroke-width="2.5"/>
+      <!-- Selected indicator -->
+      <g transform="translate(133, 12)">
+        <circle cx="10" cy="10" r="10" fill="#007AFF"/>
+        <polyline points="5,10 9,14 15,6" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <!-- Icon placeholder -->
+      <g transform="translate(82.5, 52)">
+        <text x="0" y="0" font-size="36" text-anchor="middle" fill="#007AFF">&#9790;</text>
+      </g>
+      <!-- Label -->
+      <text x="82.5" y="116" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E" text-anchor="middle">Sleep Quality</text>
+      <text x="82.5" y="134" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="12" font-weight="400" fill="#8E8E93" text-anchor="middle">Duration &amp; patterns</text>
+    </g>
+
+    <!-- Heart Health (not selected) -->
+    <g id="card-heart-health" transform="translate(180, 0)">
+      <rect width="165" height="150" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+      <!-- Icon placeholder -->
+      <g transform="translate(82.5, 52)">
+        <text x="0" y="0" font-size="36" text-anchor="middle" fill="#FF3B30">&#9829;</text>
+      </g>
+      <!-- Label -->
+      <text x="82.5" y="116" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E" text-anchor="middle">Heart Health</text>
+      <text x="82.5" y="134" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="12" font-weight="400" fill="#8E8E93" text-anchor="middle">HR, HRV &amp; trends</text>
+    </g>
+
+    <!-- Row 2 -->
+    <!-- Fitness (selected) -->
+    <g id="card-fitness" transform="translate(0, 166)">
+      <rect width="165" height="150" rx="16" fill="#FFFFFF" stroke="#007AFF" stroke-width="2.5"/>
+      <!-- Selected indicator -->
+      <g transform="translate(133, 12)">
+        <circle cx="10" cy="10" r="10" fill="#007AFF"/>
+        <polyline points="5,10 9,14 15,6" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <!-- Icon placeholder -->
+      <g transform="translate(82.5, 52)">
+        <text x="0" y="0" font-size="36" text-anchor="middle" fill="#34C759">&#9899;</text>
+      </g>
+      <!-- Label -->
+      <text x="82.5" y="116" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E" text-anchor="middle">Fitness</text>
+      <text x="82.5" y="134" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="12" font-weight="400" fill="#8E8E93" text-anchor="middle">Activity &amp; workouts</text>
+    </g>
+
+    <!-- Weight Management (not selected) -->
+    <g id="card-weight" transform="translate(180, 166)">
+      <rect width="165" height="150" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+      <!-- Icon placeholder -->
+      <g transform="translate(82.5, 52)">
+        <text x="0" y="0" font-size="36" text-anchor="middle" fill="#FF9500">&#9878;</text>
+      </g>
+      <!-- Label -->
+      <text x="82.5" y="116" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E" text-anchor="middle">Weight</text>
+      <text x="82.5" y="134" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="12" font-weight="400" fill="#8E8E93" text-anchor="middle">Management</text>
+    </g>
+
+    <!-- Row 3 -->
+    <!-- Stress & Recovery (not selected) -->
+    <g id="card-stress" transform="translate(0, 332)">
+      <rect width="165" height="150" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+      <!-- Icon placeholder -->
+      <g transform="translate(82.5, 52)">
+        <text x="0" y="0" font-size="36" text-anchor="middle" fill="#AF52DE">&#10052;</text>
+      </g>
+      <!-- Label -->
+      <text x="82.5" y="116" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E" text-anchor="middle">Stress &amp;</text>
+      <text x="82.5" y="134" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="12" font-weight="600" fill="#1C1C1E" text-anchor="middle">Recovery</text>
+    </g>
+
+    <!-- Overall Wellness (not selected) -->
+    <g id="card-wellness" transform="translate(180, 332)">
+      <rect width="165" height="150" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+      <!-- Icon placeholder -->
+      <g transform="translate(82.5, 52)">
+        <text x="0" y="0" font-size="36" text-anchor="middle" fill="#007AFF">&#9733;</text>
+      </g>
+      <!-- Label -->
+      <text x="82.5" y="116" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E" text-anchor="middle">Overall</text>
+      <text x="82.5" y="134" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="12" font-weight="600" fill="#1C1C1E" text-anchor="middle">Wellness</text>
+    </g>
+  </g>
+
+  <!-- Selection count -->
+  <g id="selection-count">
+    <text x="196.5" y="710" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="14" font-weight="500" fill="#8E8E93" text-anchor="middle">2 selected</text>
+  </g>
+
+  <!-- Continue Button -->
+  <g id="continue-button" transform="translate(32, 738)">
+    <rect width="329" height="56" rx="14" fill="#007AFF"/>
+    <text x="164.5" y="35" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="17" font-weight="600" fill="#FFFFFF" text-anchor="middle">Continue</text>
+  </g>
+
+  <!-- Home Indicator -->
+  <g id="home-indicator">
+    <rect x="128" y="832" width="137" height="5" rx="2.5" fill="#1C1C1E" opacity="0.2"/>
+  </g>
+</svg>

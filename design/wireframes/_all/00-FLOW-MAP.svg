@@ -1,0 +1,554 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4800 3400" fill="none">
+  <style>
+    text { font-family: -apple-system, system-ui, sans-serif; }
+    .title { font-size: 48px; font-weight: 700; fill: #1C1C1E; }
+    .subtitle { font-size: 28px; font-weight: 600; fill: #1C1C1E; }
+    .label { font-size: 18px; font-weight: 600; fill: #FFFFFF; }
+    .file { font-size: 14px; fill: #8E8E93; }
+    .screen-name { font-size: 16px; font-weight: 600; fill: #1C1C1E; text-anchor: middle; }
+    .screen-type { font-size: 12px; fill: #8E8E93; text-anchor: middle; }
+    .arrow-label { font-size: 13px; fill: #007AFF; font-weight: 500; }
+    .flow-num { font-size: 20px; font-weight: 700; fill: #FFFFFF; }
+    .note { font-size: 14px; fill: #636366; font-style: italic; }
+  </style>
+
+  <!-- Background -->
+  <rect width="4800" height="3400" fill="#F8F8FA"/>
+
+  <!-- Title -->
+  <text x="80" y="70" class="title">HealthPulse — Complete Screen Flow Map</text>
+  <text x="80" y="110" class="note">Drag this into Figma first. Use it as a reference to arrange all 45 SVG wireframes.</text>
+  <text x="80" y="140" class="note">Each box = one SVG file. Arrows show navigation flow. Colors = flow groups.</text>
+
+  <!-- Legend -->
+  <g id="legend" transform="translate(2800, 30)">
+    <rect x="0" y="0" width="1950" height="120" rx="12" fill="#FFFFFF" stroke="#E5E5EA"/>
+    <text x="20" y="30" style="font-size:16px;font-weight:700;fill:#1C1C1E">Legend</text>
+    <rect x="20" y="50" width="16" height="16" rx="4" fill="#5856D6"/> <text x="44" y="63" style="font-size:13px;fill:#1C1C1E">Onboarding</text>
+    <rect x="170" y="50" width="16" height="16" rx="4" fill="#007AFF"/> <text x="194" y="63" style="font-size:13px;fill:#1C1C1E">Home Tab</text>
+    <rect x="310" y="50" width="16" height="16" rx="4" fill="#34C759"/> <text x="334" y="63" style="font-size:13px;fill:#1C1C1E">Live Tab</text>
+    <rect x="440" y="50" width="16" height="16" rx="4" fill="#FF9500"/> <text x="464" y="63" style="font-size:13px;fill:#1C1C1E">Explore Tab</text>
+    <rect x="590" y="50" width="16" height="16" rx="4" fill="#FF3B30"/> <text x="614" y="63" style="font-size:13px;fill:#1C1C1E">Detail Screens</text>
+    <rect x="760" y="50" width="16" height="16" rx="4" fill="#8E8E93"/> <text x="784" y="63" style="font-size:13px;fill:#1C1C1E">Settings</text>
+    <rect x="890" y="50" width="16" height="16" rx="4" fill="#AF52DE"/> <text x="914" y="63" style="font-size:13px;fill:#1C1C1E">Utility/System</text>
+    <rect x="1060" y="50" width="16" height="16" rx="4" fill="#636366"/> <text x="1084" y="63" style="font-size:13px;fill:#1C1C1E">Components</text>
+
+    <text x="20" y="100" style="font-size:13px;fill:#8E8E93">→ solid arrow = navigation push</text>
+    <text x="350" y="100" style="font-size:13px;fill:#8E8E93">⤵ dashed arrow = sheet/modal</text>
+    <text x="700" y="100" style="font-size:13px;fill:#8E8E93">▣ fullScreenCover = blocking overlay</text>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- FLOW 1: ONBOARDING (Purple) -->
+  <!-- ============================================ -->
+  <g id="flow-1-onboarding">
+    <rect x="60" y="170" width="280" height="36" rx="8" fill="#5856D6"/>
+    <text x="74" y="195" class="label">FLOW 1: ONBOARDING (First Launch)</text>
+
+    <!-- Screen boxes -->
+    <g id="onboarding-01">
+      <rect x="60" y="220" width="160" height="90" rx="10" fill="#FFFFFF" stroke="#5856D6" stroke-width="2"/>
+      <text x="140" y="255" class="screen-name">Welcome</text>
+      <text x="140" y="275" class="screen-type">01-welcome.svg</text>
+      <text x="140" y="295" class="screen-type">fullScreenCover</text>
+    </g>
+    <line x1="220" y1="265" x2="260" y2="265" stroke="#5856D6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+
+    <g id="onboarding-02">
+      <rect x="260" y="220" width="160" height="90" rx="10" fill="#FFFFFF" stroke="#5856D6" stroke-width="2"/>
+      <text x="340" y="255" class="screen-name">Culture 1</text>
+      <text x="340" y="275" class="screen-type">02-culture-1.svg</text>
+      <text x="340" y="295" class="screen-type">"Health is personal"</text>
+    </g>
+    <line x1="420" y1="265" x2="460" y2="265" stroke="#5856D6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+
+    <g id="onboarding-03">
+      <rect x="460" y="220" width="160" height="90" rx="10" fill="#FFFFFF" stroke="#5856D6" stroke-width="2"/>
+      <text x="540" y="255" class="screen-name">Culture 2</text>
+      <text x="540" y="275" class="screen-type">03-culture-2.svg</text>
+      <text x="540" y="295" class="screen-type">"Intelligence grows"</text>
+    </g>
+    <line x1="620" y1="265" x2="660" y2="265" stroke="#5856D6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+
+    <g id="onboarding-04">
+      <rect x="660" y="220" width="160" height="90" rx="10" fill="#FFFFFF" stroke="#5856D6" stroke-width="2"/>
+      <text x="740" y="255" class="screen-name">Culture 3</text>
+      <text x="740" y="275" class="screen-type">04-culture-3.svg</text>
+      <text x="740" y="295" class="screen-type">"Data stays yours"</text>
+    </g>
+    <line x1="820" y1="265" x2="860" y2="265" stroke="#5856D6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+
+    <g id="onboarding-05">
+      <rect x="860" y="220" width="180" height="90" rx="10" fill="#FFFFFF" stroke="#5856D6" stroke-width="2"/>
+      <text x="950" y="255" class="screen-name">HealthKit Permission</text>
+      <text x="950" y="275" class="screen-type">05-healthkit-permission.svg</text>
+      <text x="950" y="295" class="screen-type">Connect Apple Health</text>
+    </g>
+    <line x1="1040" y1="265" x2="1080" y2="265" stroke="#5856D6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+
+    <g id="onboarding-06">
+      <rect x="1080" y="220" width="160" height="90" rx="10" fill="#FFFFFF" stroke="#5856D6" stroke-width="2"/>
+      <text x="1160" y="255" class="screen-name">Focus Selection</text>
+      <text x="1160" y="275" class="screen-type">06-focus-selection.svg</text>
+      <text x="1160" y="295" class="screen-type">Pick health goals</text>
+    </g>
+    <line x1="1240" y1="265" x2="1280" y2="265" stroke="#5856D6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+
+    <g id="onboarding-07">
+      <rect x="1280" y="220" width="160" height="90" rx="10" fill="#FFFFFF" stroke="#5856D6" stroke-width="2"/>
+      <text x="1360" y="255" class="screen-name">Calibration</text>
+      <text x="1360" y="275" class="screen-type">07-calibration.svg</text>
+      <text x="1360" y="295" class="screen-type">Analyzing data...</text>
+    </g>
+    <line x1="1440" y1="265" x2="1480" y2="265" stroke="#5856D6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+
+    <g id="onboarding-08">
+      <rect x="1480" y="220" width="160" height="90" rx="10" fill="#FFFFFF" stroke="#5856D6" stroke-width="2"/>
+      <text x="1560" y="255" class="screen-name">Discovery</text>
+      <text x="1560" y="275" class="screen-type">08-discovery.svg</text>
+      <text x="1560" y="295" class="screen-type">Personalized stats</text>
+    </g>
+
+    <!-- Arrow down to main app -->
+    <line x1="1560" y1="310" x2="1560" y2="350" stroke="#5856D6" stroke-width="2" stroke-dasharray="6,4"/>
+    <text x="1570" y="340" class="arrow-label">→ enters main app</text>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- FLOW 2: PAYWALL (Purple) -->
+  <!-- ============================================ -->
+  <g id="flow-2-paywall" transform="translate(1700, 170)">
+    <rect x="0" y="0" width="320" height="36" rx="8" fill="#5856D6"/>
+    <text x="14" y="25" class="label">FLOW 2: PAYWALL (Trial Expired)</text>
+
+    <g id="paywall">
+      <rect x="0" y="50" width="320" height="90" rx="10" fill="#FFFFFF" stroke="#5856D6" stroke-width="2"/>
+      <text x="160" y="80" class="screen-name">Paywall</text>
+      <text x="160" y="100" class="screen-type">09-paywall.svg</text>
+      <text x="160" y="120" class="screen-type">fullScreenCover · Pricing · Subscribe</text>
+    </g>
+    <text x="0" y="165" class="note">Shown when 7-day trial expires and user is not subscribed.</text>
+    <text x="0" y="185" class="note">Blocks entire app. Must subscribe or restore.</text>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- MAIN APP: 3-TAB STRUCTURE -->
+  <!-- ============================================ -->
+  <g id="main-app-entry">
+    <rect x="60" y="380" width="200" height="50" rx="12" fill="#1C1C1E"/>
+    <text x="100" y="412" style="font-size:22px;font-weight:700;fill:#FFFFFF">ContentView</text>
+    <text x="270" y="412" class="note">3-tab NavigationStack — root of the app after onboarding</text>
+
+    <!-- Three arrows to tabs -->
+    <line x1="100" y1="430" x2="100" y2="480" stroke="#007AFF" stroke-width="3"/>
+    <line x1="160" y1="430" x2="900" y2="480" stroke="#34C759" stroke-width="3"/>
+    <line x1="200" y1="430" x2="1800" y2="480" stroke="#FF9500" stroke-width="3"/>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- TAB 1: HOME (Blue) -->
+  <!-- ============================================ -->
+  <g id="flow-3-home">
+    <rect x="60" y="480" width="240" height="36" rx="8" fill="#007AFF"/>
+    <text x="74" y="505" class="label">TAB 1: HOME (Today)</text>
+
+    <!-- Home Main -->
+    <g id="home-main">
+      <rect x="60" y="530" width="200" height="100" rx="10" fill="#FFFFFF" stroke="#007AFF" stroke-width="2.5"/>
+      <text x="160" y="560" class="screen-name">Home Main</text>
+      <text x="160" y="580" class="screen-type">home--01-home-main.svg</text>
+      <text x="160" y="600" class="screen-type">Recovery, Vitality, Sleep</text>
+      <text x="160" y="617" class="screen-type">Period Summary</text>
+    </g>
+
+    <!-- Home Scroll -->
+    <line x1="160" y1="630" x2="160" y2="660" stroke="#007AFF" stroke-width="2"/>
+    <text x="170" y="652" class="arrow-label">scroll ↓</text>
+    <g id="home-scroll">
+      <rect x="60" y="660" width="200" height="100" rx="10" fill="#FFFFFF" stroke="#007AFF" stroke-width="2.5"/>
+      <text x="160" y="690" class="screen-name">Home Scroll</text>
+      <text x="160" y="710" class="screen-type">home--02-home-scroll.svg</text>
+      <text x="160" y="730" class="screen-type">Risks, Coach, Correlations</text>
+      <text x="160" y="747" class="screen-type">Weekly Review card</text>
+    </g>
+
+    <!-- Sheets from Home (dashed) -->
+    <!-- Score Guide -->
+    <line x1="260" y1="560" x2="340" y2="560" stroke="#007AFF" stroke-width="1.5" stroke-dasharray="6,4"/>
+    <g id="home-score-guide">
+      <rect x="340" y="530" width="200" height="80" rx="10" fill="#EBF3FF" stroke="#007AFF" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="440" y="560" class="screen-name">Score Guide</text>
+      <text x="440" y="578" class="screen-type">home--03-score-guide-sheet.svg</text>
+      <text x="440" y="596" class="screen-type">SHEET · first-time tutorial</text>
+    </g>
+
+    <!-- Recovery Info -->
+    <line x1="260" y1="590" x2="340" y2="630" stroke="#007AFF" stroke-width="1.5" stroke-dasharray="6,4"/>
+    <g id="home-recovery-info">
+      <rect x="340" y="620" width="200" height="80" rx="10" fill="#EBF3FF" stroke="#007AFF" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="440" y="650" class="screen-name">Recovery Info</text>
+      <text x="440" y="668" class="screen-type">home--04-recovery-info-sheet.svg</text>
+      <text x="440" y="686" class="screen-type">SHEET · readiness explained</text>
+    </g>
+
+    <!-- Journal Entry -->
+    <line x1="260" y1="700" x2="340" y2="720" stroke="#007AFF" stroke-width="1.5" stroke-dasharray="6,4"/>
+    <g id="home-journal">
+      <rect x="340" y="710" width="200" height="80" rx="10" fill="#EBF3FF" stroke="#007AFF" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="440" y="740" class="screen-name">Journal Entry</text>
+      <text x="440" y="758" class="screen-type">home--05-journal-entry.svg</text>
+      <text x="440" y="776" class="screen-type">SHEET · quick log</text>
+    </g>
+
+    <!-- Journal Insights (push from journal) -->
+    <line x1="540" y1="750" x2="580" y2="750" stroke="#007AFF" stroke-width="1.5"/>
+    <g id="home-journal-insights">
+      <rect x="580" y="710" width="200" height="80" rx="10" fill="#FFFFFF" stroke="#007AFF" stroke-width="1.5"/>
+      <text x="680" y="740" class="screen-name">Journal Insights</text>
+      <text x="680" y="758" class="screen-type">home--06-journal-insights.svg</text>
+      <text x="680" y="776" class="screen-type">PUSH · correlations</text>
+    </g>
+
+    <!-- Vitality Detail (push from vitality card) -->
+    <line x1="260" y1="750" x2="340" y2="820" stroke="#007AFF" stroke-width="1.5"/>
+    <g id="home-vitality">
+      <rect x="340" y="800" width="200" height="80" rx="10" fill="#FFFFFF" stroke="#007AFF" stroke-width="1.5"/>
+      <text x="440" y="830" class="screen-name">Vitality Detail</text>
+      <text x="440" y="848" class="screen-type">home--07-vitality-detail.svg</text>
+      <text x="440" y="866" class="screen-type">PUSH · vitality age</text>
+    </g>
+
+    <!-- Navigation to shared detail screens -->
+    <line x1="160" y1="760" x2="160" y2="920" stroke="#FF3B30" stroke-width="2" stroke-dasharray="8,4"/>
+    <text x="35" y="860" style="font-size:13px;fill:#FF3B30;font-weight:600;writing-mode:tb">PUSH to Details ↓</text>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- TAB 2: LIVE (Green) -->
+  <!-- ============================================ -->
+  <g id="flow-4-live">
+    <rect x="850" y="480" width="240" height="36" rx="8" fill="#34C759"/>
+    <text x="864" y="505" class="label">TAB 2: LIVE (PRO Only)</text>
+
+    <!-- Live Main -->
+    <g id="live-main">
+      <rect x="850" y="530" width="200" height="100" rx="10" fill="#FFFFFF" stroke="#34C759" stroke-width="2.5"/>
+      <text x="950" y="560" class="screen-name">Live Dashboard</text>
+      <text x="950" y="580" class="screen-type">live--01-live-main.svg</text>
+      <text x="950" y="600" class="screen-type">Heart rate, SpO2, rings</text>
+      <text x="950" y="617" class="screen-type">BP, temp, workout</text>
+    </g>
+
+    <!-- PRO Overlay (conditional) -->
+    <line x1="1050" y1="580" x2="1120" y2="580" stroke="#34C759" stroke-width="1.5" stroke-dasharray="6,4"/>
+    <g id="live-pro">
+      <rect x="1120" y="530" width="220" height="100" rx="10" fill="#F0FFF4" stroke="#34C759" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="1230" y="560" class="screen-name">PRO Overlay</text>
+      <text x="1230" y="580" class="screen-type">live--02-live-pro-overlay.svg</text>
+      <text x="1230" y="600" class="screen-type">OVERLAY · free users see this</text>
+      <text x="1230" y="617" class="screen-type">instead of live dashboard</text>
+    </g>
+
+    <!-- Empty State -->
+    <line x1="950" y1="630" x2="950" y2="660" stroke="#34C759" stroke-width="1.5" stroke-dasharray="6,4"/>
+    <g id="live-empty">
+      <rect x="850" y="660" width="200" height="80" rx="10" fill="#F0FFF4" stroke="#34C759" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="950" y="690" class="screen-name">Waiting State</text>
+      <text x="950" y="708" class="screen-type">live--03-live-empty.svg</text>
+      <text x="950" y="726" class="screen-type">No Apple Watch data</text>
+    </g>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- TAB 3: EXPLORE (Orange) -->
+  <!-- ============================================ -->
+  <g id="flow-5-explore">
+    <rect x="1700" y="480" width="240" height="36" rx="8" fill="#FF9500"/>
+    <text x="1714" y="505" class="label">TAB 3: EXPLORE (Analytics)</text>
+
+    <!-- Explore Main -->
+    <g id="explore-main">
+      <rect x="1700" y="530" width="200" height="100" rx="10" fill="#FFFFFF" stroke="#FF9500" stroke-width="2.5"/>
+      <text x="1800" y="560" class="screen-name">Explore Main</text>
+      <text x="1800" y="580" class="screen-type">explore--01-explore-main.svg</text>
+      <text x="1800" y="600" class="screen-type">Score hero, trends</text>
+      <text x="1800" y="617" class="screen-type">Time range selector</text>
+    </g>
+
+    <!-- Explore Scroll -->
+    <line x1="1800" y1="630" x2="1800" y2="660" stroke="#FF9500" stroke-width="2"/>
+    <text x="1810" y="652" class="arrow-label">scroll ↓</text>
+    <g id="explore-scroll">
+      <rect x="1700" y="660" width="200" height="100" rx="10" fill="#FFFFFF" stroke="#FF9500" stroke-width="2.5"/>
+      <text x="1800" y="690" class="screen-name">Explore Scroll</text>
+      <text x="1800" y="710" class="screen-type">explore--02-explore-scroll.svg</text>
+      <text x="1800" y="730" class="screen-type">Correlations, categories</text>
+      <text x="1800" y="747" class="screen-type">Health state link</text>
+    </g>
+
+    <!-- Simulation Sheet -->
+    <line x1="1900" y1="710" x2="1960" y2="710" stroke="#FF9500" stroke-width="1.5" stroke-dasharray="6,4"/>
+    <g id="explore-simulation">
+      <rect x="1960" y="660" width="220" height="100" rx="10" fill="#FFF8F0" stroke="#FF9500" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="2070" y="690" class="screen-name">Simulation</text>
+      <text x="2070" y="710" class="screen-type">explore--03-simulation.svg</text>
+      <text x="2070" y="730" class="screen-type">SHEET · PRO · What-If</text>
+      <text x="2070" y="747" class="screen-type">Sliders + predicted score</text>
+    </g>
+
+    <!-- Navigation to shared detail screens -->
+    <line x1="1800" y1="760" x2="1800" y2="920" stroke="#FF3B30" stroke-width="2" stroke-dasharray="8,4"/>
+    <text x="1810" y="860" style="font-size:13px;fill:#FF3B30;font-weight:600">PUSH to Details ↓</text>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- SHARED DETAIL SCREENS (Red) -->
+  <!-- ============================================ -->
+  <g id="flow-6-details">
+    <rect x="60" y="930" width="460" height="36" rx="8" fill="#FF3B30"/>
+    <text x="74" y="955" class="label">SHARED DETAIL SCREENS (Pushed from Home or Explore tabs)</text>
+
+    <!-- Row 1 -->
+    <g id="detail-metric">
+      <rect x="60" y="980" width="220" height="100" rx="10" fill="#FFFFFF" stroke="#FF3B30" stroke-width="2"/>
+      <text x="170" y="1010" class="screen-name">Metric Detail</text>
+      <text x="170" y="1030" class="screen-type">details--01-metric-detail.svg</text>
+      <text x="170" y="1050" class="screen-type">Chart, stats, baselines</text>
+      <text x="170" y="1067" class="screen-type">PUSH via HealthMetric</text>
+    </g>
+
+    <!-- Metric Log Sheet from Metric Detail -->
+    <line x1="280" y1="1030" x2="340" y2="1030" stroke="#FF3B30" stroke-width="1.5" stroke-dasharray="6,4"/>
+    <g id="detail-metric-log">
+      <rect x="340" y="980" width="200" height="80" rx="10" fill="#FFF0F0" stroke="#FF3B30" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="440" y="1010" class="screen-name">Metric Log</text>
+      <text x="440" y="1028" class="screen-type">details--02-metric-log-sheet.svg</text>
+      <text x="440" y="1046" class="screen-type">SHEET · log weight/water</text>
+    </g>
+
+    <g id="detail-category">
+      <rect x="600" y="980" width="220" height="100" rx="10" fill="#FFFFFF" stroke="#FF3B30" stroke-width="2"/>
+      <text x="710" y="1010" class="screen-name">Category Detail</text>
+      <text x="710" y="1030" class="screen-type">details--03-category-detail.svg</text>
+      <text x="710" y="1050" class="screen-type">Score ring, all metrics</text>
+      <text x="710" y="1067" class="screen-type">PUSH via HealthCategory</text>
+    </g>
+
+    <g id="detail-risk">
+      <rect x="880" y="980" width="220" height="100" rx="10" fill="#FFFFFF" stroke="#FF3B30" stroke-width="2"/>
+      <text x="990" y="1010" class="screen-name">Risk Detail</text>
+      <text x="990" y="1030" class="screen-type">details--04-risk-detail.svg</text>
+      <text x="990" y="1050" class="screen-type">Gauge, factors, focus</text>
+      <text x="990" y="1067" class="screen-type">PUSH via HealthRiskType</text>
+    </g>
+
+    <!-- Row 2 -->
+    <g id="detail-insights">
+      <rect x="60" y="1110" width="220" height="100" rx="10" fill="#FFFFFF" stroke="#FF3B30" stroke-width="2"/>
+      <text x="170" y="1140" class="screen-name">Insights Detail</text>
+      <text x="170" y="1160" class="screen-type">details--05-insights-detail.svg</text>
+      <text x="170" y="1180" class="screen-type">Action Items + All tabs</text>
+      <text x="170" y="1197" class="screen-type">PUSH via "insightsDetail"</text>
+    </g>
+
+    <g id="detail-weekly">
+      <rect x="340" y="1110" width="220" height="100" rx="10" fill="#FFFFFF" stroke="#FF3B30" stroke-width="2"/>
+      <text x="450" y="1140" class="screen-name">Weekly Review</text>
+      <text x="450" y="1160" class="screen-type">details--06-weekly-review.svg</text>
+      <text x="450" y="1180" class="screen-type">Score change, wins, goals</text>
+      <text x="450" y="1197" class="screen-type">PUSH via "weeklyReview"</text>
+    </g>
+
+    <g id="detail-correlations">
+      <rect x="620" y="1110" width="220" height="100" rx="10" fill="#FFFFFF" stroke="#FF3B30" stroke-width="2"/>
+      <text x="730" y="1140" class="screen-name">Correlations</text>
+      <text x="730" y="1160" class="screen-type">details--07-correlations.svg</text>
+      <text x="730" y="1180" class="screen-type">PRO · All pairs + filters</text>
+      <text x="730" y="1197" class="screen-type">PUSH via "correlationsDetail"</text>
+    </g>
+
+    <g id="detail-healthstate">
+      <rect x="900" y="1110" width="220" height="100" rx="10" fill="#FFFFFF" stroke="#FF3B30" stroke-width="2"/>
+      <text x="1010" y="1140" class="screen-name">Health State Timeline</text>
+      <text x="1010" y="1160" class="screen-type">details--08-health-state-timeline.svg</text>
+      <text x="1010" y="1180" class="screen-type">ML states, calendar, transitions</text>
+      <text x="1010" y="1197" class="screen-type">PUSH via "healthStateTimeline"</text>
+    </g>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- SETTINGS FLOW (Gray) -->
+  <!-- ============================================ -->
+  <g id="flow-7-settings">
+    <rect x="2300" y="480" width="350" height="36" rx="8" fill="#8E8E93"/>
+    <text x="2314" y="505" class="label">SETTINGS (Sheet from Home tab gear icon)</text>
+
+    <g id="settings-main">
+      <rect x="2300" y="530" width="220" height="100" rx="10" fill="#FFFFFF" stroke="#8E8E93" stroke-width="2"/>
+      <text x="2410" y="560" class="screen-name">Settings Main</text>
+      <text x="2410" y="580" class="screen-type">settings--01-settings-main.svg</text>
+      <text x="2410" y="600" class="screen-type">SHEET · iOS grouped list</text>
+      <text x="2410" y="617" class="screen-type">Notifs, alerts, export, about</text>
+    </g>
+
+    <line x1="2410" y1="630" x2="2410" y2="660" stroke="#8E8E93" stroke-width="2"/>
+    <text x="2420" y="652" class="arrow-label">push</text>
+
+    <g id="settings-devices">
+      <rect x="2300" y="660" width="220" height="100" rx="10" fill="#FFFFFF" stroke="#8E8E93" stroke-width="2"/>
+      <text x="2410" y="690" class="screen-name">Connected Devices</text>
+      <text x="2410" y="710" class="screen-type">settings--02-connected-devices.svg</text>
+      <text x="2410" y="730" class="screen-type">PUSH · active/inactive/new</text>
+      <text x="2410" y="747" class="screen-type">Scan, device list</text>
+    </g>
+
+    <line x1="2410" y1="760" x2="2410" y2="790" stroke="#8E8E93" stroke-width="2"/>
+    <text x="2420" y="782" class="arrow-label">push</text>
+
+    <g id="settings-device-detail">
+      <rect x="2300" y="790" width="220" height="100" rx="10" fill="#FFFFFF" stroke="#8E8E93" stroke-width="2"/>
+      <text x="2410" y="820" class="screen-name">Device Detail</text>
+      <text x="2410" y="840" class="screen-type">settings--03-device-detail.svg</text>
+      <text x="2410" y="860" class="screen-type">PUSH · metrics, disconnect</text>
+      <text x="2410" y="877" class="screen-type">Device info + setup</text>
+    </g>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- UTILITY / SYSTEM SCREENS (Purple) -->
+  <!-- ============================================ -->
+  <g id="flow-8-utility">
+    <rect x="2700" y="480" width="350" height="36" rx="8" fill="#AF52DE"/>
+    <text x="2714" y="505" class="label">UTILITY / SYSTEM SCREENS</text>
+
+    <g id="utility-feedback">
+      <rect x="2700" y="530" width="220" height="80" rx="10" fill="#FFFFFF" stroke="#AF52DE" stroke-width="2"/>
+      <text x="2810" y="560" class="screen-name">Feedback Sheet</text>
+      <text x="2810" y="578" class="screen-type">utility--01-feedback-sheet.svg</text>
+      <text x="2810" y="596" class="screen-type">SHEET · bug/feature/general</text>
+    </g>
+
+    <g id="utility-force-update">
+      <rect x="2700" y="630" width="220" height="80" rx="10" fill="#FFFFFF" stroke="#AF52DE" stroke-width="2"/>
+      <text x="2810" y="660" class="screen-name">Force Update</text>
+      <text x="2810" y="678" class="screen-type">utility--02-force-update.svg</text>
+      <text x="2810" y="696" class="screen-type">BLOCKER · update required</text>
+    </g>
+
+    <g id="utility-maintenance">
+      <rect x="2700" y="730" width="220" height="80" rx="10" fill="#FFFFFF" stroke="#AF52DE" stroke-width="2"/>
+      <text x="2810" y="760" class="screen-name">Maintenance</text>
+      <text x="2810" y="778" class="screen-type">utility--03-maintenance.svg</text>
+      <text x="2810" y="796" class="screen-type">BLOCKER · service down</text>
+    </g>
+
+    <g id="utility-loading">
+      <rect x="2700" y="830" width="220" height="80" rx="10" fill="#FFFFFF" stroke="#AF52DE" stroke-width="2"/>
+      <text x="2810" y="860" class="screen-name">Loading</text>
+      <text x="2810" y="878" class="screen-type">utility--04-loading.svg</text>
+      <text x="2810" y="896" class="screen-type">Generic spinner state</text>
+    </g>
+
+    <g id="utility-billing">
+      <rect x="2700" y="930" width="220" height="80" rx="10" fill="#FFFFFF" stroke="#AF52DE" stroke-width="2"/>
+      <text x="2810" y="960" class="screen-name">Billing Banner</text>
+      <text x="2810" y="978" class="screen-type">utility--05-billing-grace-banner.svg</text>
+      <text x="2810" y="996" class="screen-type">BANNER · payment failed</text>
+    </g>
+
+    <text x="2700" y="1050" class="note">Force Update + Maintenance block the entire app.</text>
+    <text x="2700" y="1070" class="note">Billing banner is non-blocking overlay on Home.</text>
+    <text x="2700" y="1090" class="note">Feedback sheet triggered by FeedbackPromptManager.</text>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- COMPONENT DESIGN SYSTEM (Dark Gray) -->
+  <!-- ============================================ -->
+  <g id="flow-9-components">
+    <rect x="60" y="1320" width="460" height="36" rx="8" fill="#636366"/>
+    <text x="74" y="1345" class="label">DESIGN SYSTEM — REUSABLE COMPONENTS (reference sheets)</text>
+
+    <g id="comp-rings">
+      <rect x="60" y="1370" width="190" height="80" rx="10" fill="#FFFFFF" stroke="#636366" stroke-width="1.5"/>
+      <text x="155" y="1400" class="screen-name">Score Rings</text>
+      <text x="155" y="1418" class="screen-type">components--01-score-rings.svg</text>
+      <text x="155" y="1436" class="screen-type">Small/Med/Large + colors</text>
+    </g>
+
+    <g id="comp-badges">
+      <rect x="270" y="1370" width="190" height="80" rx="10" fill="#FFFFFF" stroke="#636366" stroke-width="1.5"/>
+      <text x="365" y="1400" class="screen-name">Badges</text>
+      <text x="365" y="1418" class="screen-type">components--02-badges.svg</text>
+      <text x="365" y="1436" class="screen-type">Severity, trend, PRO, etc.</text>
+    </g>
+
+    <g id="comp-cards">
+      <rect x="480" y="1370" width="190" height="80" rx="10" fill="#FFFFFF" stroke="#636366" stroke-width="1.5"/>
+      <text x="575" y="1400" class="screen-name">Cards</text>
+      <text x="575" y="1418" class="screen-type">components--03-cards.svg</text>
+      <text x="575" y="1436" class="screen-type">Insight, action, pattern</text>
+    </g>
+
+    <g id="comp-charts">
+      <rect x="690" y="1370" width="190" height="80" rx="10" fill="#FFFFFF" stroke="#636366" stroke-width="1.5"/>
+      <text x="785" y="1400" class="screen-name">Charts</text>
+      <text x="785" y="1418" class="screen-type">components--04-charts.svg</text>
+      <text x="785" y="1436" class="screen-type">Line chart, gauge, rings</text>
+    </g>
+
+    <g id="comp-nav">
+      <rect x="900" y="1370" width="190" height="80" rx="10" fill="#FFFFFF" stroke="#636366" stroke-width="1.5"/>
+      <text x="995" y="1400" class="screen-name">Navigation</text>
+      <text x="995" y="1418" class="screen-type">components--05-navigation.svg</text>
+      <text x="995" y="1436" class="screen-type">Status bar, tab bar, nav</text>
+    </g>
+
+    <g id="comp-inputs">
+      <rect x="1110" y="1370" width="190" height="80" rx="10" fill="#FFFFFF" stroke="#636366" stroke-width="1.5"/>
+      <text x="1205" y="1400" class="screen-name">Inputs</text>
+      <text x="1205" y="1418" class="screen-type">components--06-inputs.svg</text>
+      <text x="1205" y="1436" class="screen-type">Toggles, sliders, buttons</text>
+    </g>
+
+    <g id="comp-shareable">
+      <rect x="1320" y="1370" width="190" height="80" rx="10" fill="#FFFFFF" stroke="#636366" stroke-width="1.5"/>
+      <text x="1415" y="1400" class="screen-name">Shareable Cards</text>
+      <text x="1415" y="1418" class="screen-type">components--07-shareable-cards.svg</text>
+      <text x="1415" y="1436" class="screen-type">Social sharing cards</text>
+    </g>
+  </g>
+
+  <!-- ============================================ -->
+  <!-- PLACEMENT INSTRUCTIONS -->
+  <!-- ============================================ -->
+  <g id="instructions" transform="translate(60, 1500)">
+    <rect x="0" y="0" width="1600" height="340" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="2"/>
+    <text x="30" y="40" style="font-size:24px;font-weight:700;fill:#1C1C1E">How to Arrange in Figma</text>
+
+    <text x="30" y="80" style="font-size:16px;font-weight:600;fill:#1C1C1E">Step 1: Create Pages</text>
+    <text x="30" y="105" style="font-size:14px;fill:#636366">Create these Figma pages: "Flow Map", "Onboarding", "Home", "Live", "Explore", "Details", "Settings", "Utility", "Components"</text>
+
+    <text x="30" y="145" style="font-size:16px;font-weight:600;fill:#1C1C1E">Step 2: Import Flow Map</text>
+    <text x="30" y="170" style="font-size:14px;fill:#636366">Drag 00-FLOW-MAP.svg into the "Flow Map" page. This is your master reference.</text>
+
+    <text x="30" y="210" style="font-size:16px;font-weight:600;fill:#1C1C1E">Step 3: Import Screen Groups</text>
+    <text x="30" y="235" style="font-size:14px;fill:#636366">For each page, drag the matching SVG files. Arrange left-to-right in numbered order:</text>
+    <text x="50" y="260" style="font-size:14px;fill:#636366">• "Onboarding" page: drag all onboarding--*.svg files (01 through 09, left to right)</text>
+    <text x="50" y="280" style="font-size:14px;fill:#636366">• "Home" page: place 01-home-main and 02-home-scroll side by side, then sheets below them</text>
+    <text x="50" y="300" style="font-size:14px;fill:#636366">• "Details" page: arrange all 8 detail screens in a 4x2 grid</text>
+    <text x="50" y="320" style="font-size:14px;fill:#636366">• "Components" page: all 7 component sheets in a row — these are your design system reference</text>
+  </g>
+
+  <!-- Arrow markers -->
+  <defs>
+    <marker id="arrowPurple" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8" fill="none" stroke="#5856D6" stroke-width="1.5"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8" fill="none" stroke="#007AFF" stroke-width="1.5"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8" fill="none" stroke="#FF3B30" stroke-width="1.5"/>
+    </marker>
+  </defs>
+</svg>

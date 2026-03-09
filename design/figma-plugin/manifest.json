@@ -1,0 +1,13 @@
+{
+  "name": "HealthPulse Design System",
+  "id": "healthpulse-design-system",
+  "api": "1.0.0",
+  "main": "code.js",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "editorType": ["figma"],
+  "menu": [
+    { "name": "Generate All Screens", "command": "generate-all" },
+    { "name": "Clear Current Page", "command": "clear-page" }
+  ]
+}

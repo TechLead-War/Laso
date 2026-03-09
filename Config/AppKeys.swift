@@ -120,4 +120,61 @@ enum AppKeys {
         static let alertCooldownPrefix = "healthpulse.alertCooldown."
         static let notificationLog     = "healthpulse.notificationLog"
     }
+
+    // MARK: - User Profile
+
+    enum Profile {
+        static let name             = "laso.profile.name"
+        static let email            = "laso.profile.email"
+        static let gender           = "laso.profile.gender"
+        static let dateOfBirth      = "laso.profile.date_of_birth"
+        static let profileCompleted = "laso.profile.completed"
+        static let deviceId         = "laso.profile.device_id"
+    }
+
+    // MARK: - Strain
+
+    enum Strain {
+        static let lastStrainDate = "laso.strain.last_date"
+        static let todayStrain    = "laso.strain.today"
+    }
+
+    // MARK: - Sleep Coach
+
+    enum SleepCoach {
+        static let targetWakeTime   = "laso.sleep_coach.target_wake_time"
+        static let performanceLevel = "laso.sleep_coach.performance_level"
+        static let sleepDebt        = "laso.sleep_coach.debt"
+    }
+
+    // MARK: - Stress
+
+    enum Stress {
+        static let lastStressUpdate = "laso.stress.last_update"
+    }
+
+    // MARK: - Weekly Plan
+
+    enum Plan {
+        static let activeGoal    = "laso.plan.active_goal"
+        static let planStartDate = "laso.plan.start_date"
+        static let planData      = "laso.plan.data"
+    }
+
+    // MARK: - Gamification
+
+    enum Gamification {
+        static let unlockedAchievements   = "laso.gamification.unlocked"
+        static let longestActivityStreak  = "laso.gamification.longest_activity_streak"
+        static let longestSleepStreak     = "laso.gamification.longest_sleep_streak"
+        static let longestRecoveryStreak  = "laso.gamification.longest_recovery_streak"
+        static let longestMasterStreak    = "laso.gamification.longest_master_streak"
+    }
+
+    // MARK: - Cycle Tracking
+
+    enum Cycle {
+        static let trackingEnabled   = "laso.cycle.tracking_enabled"
+        static let lastCycleComputed = "laso.cycle.last_computed"
+    }
 }

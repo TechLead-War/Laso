@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <linearGradient id="discovery-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#007AFF" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#34C759" stop-opacity="0.08"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <g id="background">
+    <rect width="393" height="852" fill="#F2F2F7"/>
+  </g>
+
+  <!-- Status Bar -->
+  <g id="status-bar">
+    <text x="36" y="22" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E">9:41</text>
+    <g id="signal-bars" transform="translate(312, 10)">
+      <rect x="0" y="6" width="3" height="4" rx="0.5" fill="#1C1C1E"/>
+      <rect x="5" y="4" width="3" height="6" rx="0.5" fill="#1C1C1E"/>
+      <rect x="10" y="2" width="3" height="8" rx="0.5" fill="#1C1C1E"/>
+      <rect x="15" y="0" width="3" height="10" rx="0.5" fill="#1C1C1E"/>
+    </g>
+    <g id="wifi-icon" transform="translate(336, 10)">
+      <path d="M5 2 C7.5 0, 10.5 0, 13 2" stroke="#1C1C1E" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <path d="M7 5 C8.5 3.5, 9.5 3.5, 11 5" stroke="#1C1C1E" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <circle cx="9" cy="8" r="1.5" fill="#1C1C1E"/>
+    </g>
+    <g id="battery-icon" transform="translate(355, 10)">
+      <rect x="0" y="1" width="22" height="10" rx="2" stroke="#1C1C1E" stroke-width="1" fill="none"/>
+      <rect x="22" y="4" width="2" height="4" rx="1" fill="#1C1C1E"/>
+      <rect x="2" y="3" width="17" height="6" rx="1" fill="#1C1C1E"/>
+    </g>
+  </g>
+
+  <!-- Skip link (top right) -->
+  <g id="skip-nav">
+    <text x="357" y="62" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="16" font-weight="400" fill="#8E8E93" text-anchor="end">Skip</text>
+  </g>
+
+  <!-- Discovery Card -->
+  <g id="discovery-card" transform="translate(24, 100)">
+    <!-- Card background with gradient -->
+    <rect width="345" height="560" rx="24" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="0.5"/>
+    <!-- Decorative gradient background -->
+    <rect width="345" height="560" rx="24" fill="url(#discovery-gradient)"/>
+
+    <!-- Decorative background elements -->
+    <g id="decorative-bg" opacity="0.15">
+      <circle cx="60" cy="100" r="80" fill="#007AFF" opacity="0.1"/>
+      <circle cx="280" cy="200" r="100" fill="#34C759" opacity="0.08"/>
+      <circle cx="172" cy="380" r="120" fill="#007AFF" opacity="0.05"/>
+    </g>
+
+    <!-- Category label -->
+    <g id="category-badge" transform="translate(120, 140)">
+      <rect width="105" height="30" rx="15" fill="#007AFF" opacity="0.12"/>
+      <text x="52.5" y="20" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="13" font-weight="600" fill="#007AFF" text-anchor="middle">Activity</text>
+    </g>
+
+    <!-- Large stat number -->
+    <g id="stat-number">
+      <text x="172.5" y="280" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="72" font-weight="800" fill="#1C1C1E" text-anchor="middle">2,847</text>
+    </g>
+
+    <!-- Stat label -->
+    <g id="stat-label">
+      <text x="172.5" y="320" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="18" font-weight="400" fill="#8E8E93" text-anchor="middle">average daily steps last month</text>
+    </g>
+
+    <!-- Mini chart placeholder -->
+    <g id="mini-chart" transform="translate(50, 360)">
+      <polyline points="0,60 30,52 60,48 90,35 120,40 150,28 180,22 210,30 245,18"
+                stroke="#007AFF" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Dot on last point -->
+      <circle cx="245" cy="18" r="5" fill="#007AFF"/>
+      <!-- Trend arrow -->
+      <g transform="translate(100, 440)">
+        <text x="72.5" y="0" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="14" font-weight="500" fill="#34C759" text-anchor="middle">Trending up 12%</text>
+      </g>
+    </g>
+
+    <!-- Comparison context -->
+    <g id="comparison" transform="translate(50, 480)">
+      <rect width="245" height="44" rx="10" fill="#F2F2F7"/>
+      <text x="122.5" y="27" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="13" font-weight="400" fill="#8E8E93" text-anchor="middle">That's more active than 60% of your weeks</text>
+    </g>
+  </g>
+
+  <!-- Page Dots (1 of 4) -->
+  <g id="page-dots" transform="translate(170, 686)">
+    <circle cx="0" cy="0" r="4" fill="#007AFF"/>
+    <circle cx="14" cy="0" r="4" fill="#E5E5EA"/>
+    <circle cx="28" cy="0" r="4" fill="#E5E5EA"/>
+    <circle cx="42" cy="0" r="4" fill="#E5E5EA"/>
+  </g>
+
+  <!-- Swipe hint -->
+  <g id="swipe-hint">
+    <text x="196.5" y="720" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="13" font-weight="400" fill="#8E8E93" text-anchor="middle" opacity="0.6">Swipe to see more discoveries</text>
+  </g>
+
+  <!-- Next Button -->
+  <g id="next-button" transform="translate(32, 738)">
+    <rect width="329" height="56" rx="14" fill="#007AFF"/>
+    <text x="164.5" y="35" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="17" font-weight="600" fill="#FFFFFF" text-anchor="middle">Next</text>
+  </g>
+
+  <!-- Home Indicator -->
+  <g id="home-indicator">
+    <rect x="128" y="832" width="137" height="5" rx="2.5" fill="#1C1C1E" opacity="0.2"/>
+  </g>
+</svg>

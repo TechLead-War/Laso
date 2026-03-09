@@ -88,33 +88,7 @@ struct ContentView: View {
                     }
                 }
                 .navigationDestination(for: String.self) { route in
-                    if route == "insightsDetail" {
-                        InsightsDetailView(
-                            insightsByCategory: dashboardViewModel.actionableInsightsByCategory,
-                            onTapMetric: { metric in
-                                navigationPath.append(metric)
-                            },
-                            headlineSummary: dashboardViewModel.topCausalChain?.narrative ?? dashboardViewModel.headlineInsight?.recommendation,
-                            store: healthDataStore
-                        )
-                    } else if route == "weeklyReview" {
-                        WeeklyReviewView(
-                            viewModel: WeeklyReviewViewModel(dashboardViewModel: dashboardViewModel)
-                        )
-                    } else if route == "correlationsDetail" {
-                        CorrelationsView(
-                            correlations: dashboardViewModel.correlations,
-                            onTapMetric: { metric in
-                                navigationPath.append(metric)
-                            }
-                        )
-                    } else if route == "healthStateTimeline" {
-                        HealthStateTimelineView(
-                            viewModel: HealthStateTimelineViewModel(
-                                mlOrchestrator: dashboardViewModel.analysisEngine.mlOrchestrator
-                            )
-                        )
-                    }
+                    stringRouteDestination(for: route)
                 }
         }
         .sheet(isPresented: $showSettings) {
@@ -249,6 +223,183 @@ struct ContentView: View {
                 navigationPath: $navigationPath
             )
         }
+    }
+
+    // MARK: - String Route Destinations
+
+    @ViewBuilder
+    private func stringRouteDestination(for route: String) -> some View {
+        switch route {
+        case "insightsDetail":
+            InsightsDetailView(
+                insightsByCategory: dashboardViewModel.actionableInsightsByCategory,
+                onTapMetric: { metric in navigationPath.append(metric) },
+                headlineSummary: dashboardViewModel.topCausalChain?.narrative ?? dashboardViewModel.headlineInsight?.recommendation,
+                store: healthDataStore
+            )
+        case "weeklyReview":
+            WeeklyReviewView(viewModel: WeeklyReviewViewModel(dashboardViewModel: dashboardViewModel))
+        case "correlationsDetail":
+            CorrelationsView(
+                correlations: dashboardViewModel.correlations,
+                onTapMetric: { metric in navigationPath.append(metric) }
+            )
+        case "healthStateTimeline":
+            HealthStateTimelineView(
+                viewModel: HealthStateTimelineViewModel(mlOrchestrator: dashboardViewModel.analysisEngine.mlOrchestrator)
+            )
+        case "vitalityDetail":
+            VitalityDetailView(scorer: dashboardViewModel.vitalityScorer)
+        case "strainDetail":
+            strainDetailDestination
+        case "stressMonitor":
+            stressMonitorDestination
+        case "sleepCoach":
+            sleepCoachDestination
+        case "cycleDetail":
+            cycleDetailDestination
+        case "achievements":
+            achievementsDestination
+        default:
+            EmptyView()
+        }
+    }
+
+    @ViewBuilder
+    private var strainDetailDestination: some View {
+        let scorer = dashboardViewModel.strainScorer
+        let coach = dashboardViewModel.strainCoach
+        let target = coach.currentTarget
+        let balance: StrainBalance = {
+            switch coach.strainBalance {
+            case .undertraining: return .under
+            case .optimal: return .optimal
+            case .overreaching: return .overreaching
+            }
+        }()
+        StrainDetailView(
+            strainValue: scorer.currentStrain,
+            strainLevel: scorer.strainLevel,
+            zoneMinutes: scorer.zoneMinutes,
+            targetStrainRange: (target?.minStrain ?? 10)...(target?.maxStrain ?? 14),
+            trainingZone: target?.zone.displayName ?? "Maintain Fitness",
+            guidanceText: target?.guidance ?? "Stay active and listen to your body",
+            weekHistory: scorer.weeklyStrainHistory.map {
+                DailyStrainPoint(date: $0.date, strain: $0.strain, level: StrainLevel(strain: $0.strain))
+            },
+            strainBalance: balance
+        )
+    }
+
+    @ViewBuilder
+    private var stressMonitorDestination: some View {
+        if let stress = dashboardViewModel.stressScorer.currentStress {
+            let history = dashboardViewModel.stressScorer.dailyStressHistory
+            let weekScores = history.suffix(7).map {
+                DailyStressPoint(dayLabel: $0.date.formatted(.dateTime.weekday(.abbreviated)), score: $0.score)
+            }
+            let prevWeek = history.count > 7 ? Array(history.dropLast(7).suffix(7)) : [(date: Date, score: Double)]()
+            let prevAvg = prevWeek.isEmpty
+                ? (dashboardViewModel.stressScorer.weeklyAverage ?? 0)
+                : prevWeek.map(\.score).reduce(0, +) / Double(prevWeek.count)
+            StressMonitorView(
+                stressScore: stress.score,
+                stressLevel: stress.level.displayName,
+                levelColor: stress.level.color,
+                hrvDeviation: stress.hrvDeviation,
+                hrElevation: stress.hrElevation,
+                weeklyScores: weekScores,
+                weeklyAverage: dashboardViewModel.stressScorer.weeklyAverage ?? 0,
+                previousWeekAverage: prevAvg
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var sleepCoachDestination: some View {
+        if let need = dashboardViewModel.sleepNeedCalculator.currentNeed {
+            let debt = dashboardViewModel.sleepDebtTracker.currentDebt
+            let baseline = debt?.personalBaseline ?? need.totalHoursNeeded
+            let dailyHistory = (debt?.dailyDeficits ?? []).suffix(7).map { entry in
+                SleepCoachView.DayEntry(date: entry.date, actual: max(0, baseline - entry.deficit), needed: baseline)
+            }
+            SleepCoachView(
+                baseHoursNeeded: need.totalHoursNeeded,
+                bedtime: need.recommendedBedtime.map { $0.formatted(date: .omitted, time: .shortened) },
+                wakeTime: need.recommendedWakeTime.map { $0.formatted(date: .omitted, time: .shortened) },
+                debtHours: debt?.totalDebtHours ?? 0,
+                dailyHistory: dailyHistory,
+                consistencyScore: Int(dashboardViewModel.sleepNeedCalculator.sleepConsistencyScore)
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var cycleDetailDestination: some View {
+        if let cycle = dashboardViewModel.menstrualCycleTracker.currentCycle {
+            let trackerPhase = cycle.currentPhase
+            let phaseDuration = trackerPhase.dayRange.count
+            let dayInPhase = max(1, cycle.dayInCycle - trackerPhase.dayRange.lowerBound + 1)
+            // Convert MenstrualCycleTracker.CyclePhase → CycleDetailView's CyclePhase
+            let viewPhase: CyclePhase = {
+                switch trackerPhase {
+                case .menstrual: return .menstrual
+                case .follicular: return .follicular
+                case .ovulation: return .ovulatory
+                case .luteal: return .luteal
+                }
+            }()
+            CycleDetailView(
+                currentPhase: viewPhase,
+                dayInCycle: cycle.dayInCycle,
+                cycleLength: cycle.cycleLength,
+                daysUntilPeriod: cycle.daysUntilNextPeriod ?? 0,
+                dayInPhase: dayInPhase,
+                phaseDuration: phaseDuration,
+                cycleHistory: dashboardViewModel.menstrualCycleTracker.cycleHistory.map {
+                    CycleHistoryEntry(startDate: $0.startDate, length: $0.length)
+                },
+                nextPeriodDate: cycle.nextPeriodEstimate
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var achievementsDestination: some View {
+        let engine = dashboardViewModel.gamificationEngine
+        let streaks = engine.streaks
+        let achievementItems: [AchievementItem] = engine.achievements.map { a in
+            let cat: AchievementItem.AchievementCategory = {
+                switch a.category {
+                case .streak: return .streak
+                case .milestone: return .milestone
+                case .record: return .milestone
+                case .consistency: return .consistency
+                }
+            }()
+            return AchievementItem(
+                id: a.id, title: a.title, description: a.description,
+                icon: a.icon, requirement: a.description, category: cat,
+                unlockDate: a.unlockedDate
+            )
+        }
+        AchievementsView(
+            levelInfo: LevelInfo.from(daysTracked: engine.totalDaysTracked),
+            streaks: [
+                StreakInfo(id: "activity", name: "Activity", icon: "figure.run", current: streaks.activityStreak, best: streaks.longestActivityStreak),
+                StreakInfo(id: "sleep", name: "Sleep", icon: "moon.fill", current: streaks.sleepStreak, best: streaks.longestSleepStreak),
+                StreakInfo(id: "recovery", name: "Recovery", icon: "heart.fill", current: streaks.recoveryStreak, best: streaks.longestRecoveryStreak),
+                StreakInfo(id: "checkIn", name: "Check-In", icon: "checkmark.circle.fill", current: streaks.checkInStreak, best: streaks.longestCheckInStreak),
+                StreakInfo(id: "master", name: "Master", icon: "crown.fill", current: streaks.masterStreak, best: streaks.longestMasterStreak),
+            ],
+            achievements: achievementItems,
+            stats: AchievementsStats(
+                totalDaysTracked: engine.totalDaysTracked,
+                totalUnlocked: engine.achievements.filter(\.isUnlocked).count,
+                totalAchievements: engine.achievements.count,
+                longestStreakEver: max(streaks.longestActivityStreak, streaks.longestSleepStreak, streaks.longestRecoveryStreak, streaks.longestCheckInStreak, streaks.longestMasterStreak)
+            )
+        )
     }
 
     // MARK: - Session Analytics

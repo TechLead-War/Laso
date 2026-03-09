@@ -102,6 +102,8 @@ enum BlockType: String {
     case onboardingCultureContinue = "onboarding_culture_continue"
     case onboardingCalibrationRetry = "onboarding_calibration_retry"
     case onboardingCalibrationSkip = "onboarding_calibration_skip"
+    case onboardingProfileContinue = "onboarding_profile_continue"
+    case onboardingProfileSkip = "onboarding_profile_skip"
     case scoreGuideGotIt = "score_guide_got_it"
 
     // Navigation

@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <style>
+      text { font-family: -apple-system, system-ui, sans-serif; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="393" height="852" fill="#F2F2F7"/>
+
+  <!-- Status Bar -->
+  <g id="StatusBar">
+    <text x="36" y="20" font-size="15" font-weight="600" fill="#1C1C1E">9:41</text>
+    <g transform="translate(330,8)">
+      <rect x="0" y="2" width="4" height="10" rx="1" fill="#1C1C1E"/>
+      <rect x="6" y="4" width="4" height="8" rx="1" fill="#1C1C1E"/>
+      <rect x="12" y="6" width="4" height="6" rx="1" fill="#1C1C1E"/>
+      <rect x="18" y="8" width="4" height="4" rx="1" fill="#1C1C1E"/>
+    </g>
+    <g transform="translate(352,6)">
+      <rect x="0" y="2" width="22" height="11" rx="2" stroke="#1C1C1E" stroke-width="1" fill="none"/>
+      <rect x="22" y="5" width="2" height="5" rx="1" fill="#1C1C1E"/>
+      <rect x="2" y="4" width="16" height="7" rx="1" fill="#1C1C1E"/>
+    </g>
+  </g>
+
+  <!-- Sheet Handle Bar -->
+  <g id="SheetHandle">
+    <rect x="172" y="6" width="50" height="5" rx="2.5" fill="#C7C7CC"/>
+  </g>
+
+  <!-- Header -->
+  <g id="Header">
+    <text x="197" y="56" font-size="20" font-weight="700" fill="#1C1C1E" text-anchor="middle">Send Feedback</text>
+    <!-- Close button -->
+    <g id="CloseButton" transform="translate(349,36)">
+      <circle cx="14" cy="14" r="14" fill="#E5E5EA"/>
+      <line x1="9" y1="9" x2="19" y2="19" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"/>
+      <line x1="19" y1="9" x2="9" y2="19" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- Category Picker -->
+  <g id="CategoryPicker">
+    <text x="24" y="96" font-size="13" fill="#8E8E93" letter-spacing="0.5">CATEGORY</text>
+    <g id="PillButtons" transform="translate(16,106)">
+      <!-- Bug (selected) -->
+      <rect x="0" y="0" width="64" height="36" rx="18" fill="#007AFF"/>
+      <text x="32" y="23" font-size="15" font-weight="500" fill="#FFFFFF" text-anchor="middle">Bug</text>
+      <!-- Feature Request -->
+      <rect x="72" y="0" width="130" height="36" rx="18" fill="none" stroke="#E5E5EA" stroke-width="1.5"/>
+      <text x="137" y="23" font-size="15" font-weight="500" fill="#1C1C1E" text-anchor="middle">Feature Request</text>
+      <!-- General -->
+      <rect x="210" y="0" width="80" height="36" rx="18" fill="none" stroke="#E5E5EA" stroke-width="1.5"/>
+      <text x="250" y="23" font-size="15" font-weight="500" fill="#1C1C1E" text-anchor="middle">General</text>
+      <!-- Other -->
+      <rect x="298" y="0" width="64" height="36" rx="18" fill="none" stroke="#E5E5EA" stroke-width="1.5"/>
+      <text x="330" y="23" font-size="15" font-weight="500" fill="#1C1C1E" text-anchor="middle">Other</text>
+    </g>
+  </g>
+
+  <!-- Text Area -->
+  <g id="TextArea">
+    <text x="24" y="178" font-size="13" fill="#8E8E93" letter-spacing="0.5">YOUR FEEDBACK</text>
+    <rect x="16" y="186" width="361" height="220" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+    <text x="32" y="214" font-size="17" fill="#C7C7CC">Tell us what's on your mind...</text>
+    <!-- Text area lines hint -->
+    <line x1="32" y1="230" x2="200" y2="230" stroke="#F2F2F7" stroke-width="1"/>
+    <line x1="32" y1="254" x2="240" y2="254" stroke="#F2F2F7" stroke-width="1"/>
+    <line x1="32" y1="278" x2="180" y2="278" stroke="#F2F2F7" stroke-width="1"/>
+    <line x1="32" y1="302" x2="220" y2="302" stroke="#F2F2F7" stroke-width="1"/>
+    <line x1="32" y1="326" x2="160" y2="326" stroke="#F2F2F7" stroke-width="1"/>
+  </g>
+
+  <!-- Submit Button -->
+  <g id="SubmitButton">
+    <rect x="16" y="430" width="361" height="52" rx="12" fill="#007AFF"/>
+    <text x="197" y="462" font-size="17" font-weight="600" fill="#FFFFFF" text-anchor="middle">Submit</text>
+  </g>
+
+  <!-- Footer text -->
+  <g id="FooterText">
+    <text x="197" y="510" font-size="13" fill="#8E8E93" text-anchor="middle">Your feedback helps us improve HealthPulse</text>
+  </g>
+</svg>

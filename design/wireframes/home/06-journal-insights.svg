@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <clipPath id="screen-clip">
+      <rect width="393" height="852" rx="44"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <g id="Background" clip-path="url(#screen-clip)">
+    <rect width="393" height="852" fill="#F2F2F7" rx="44"/>
+  </g>
+
+  <!-- Status Bar -->
+  <g id="Status-Bar">
+    <text x="36" y="22" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E">9:41</text>
+    <circle cx="298" cy="17" r="3" fill="#1C1C1E"/>
+    <circle cx="308" cy="17" r="3" fill="#1C1C1E"/>
+    <circle cx="318" cy="17" r="3" fill="#1C1C1E"/>
+    <circle cx="328" cy="17" r="3" fill="#8E8E93"/>
+    <path d="M340 13 Q345 9 350 13" stroke="#1C1C1E" stroke-width="1.5" fill="none"/>
+    <path d="M342 16 Q345 13 348 16" stroke="#1C1C1E" stroke-width="1.5" fill="none"/>
+    <circle cx="345" cy="18" r="1.2" fill="#1C1C1E"/>
+    <rect x="355" y="11" width="22" height="12" rx="3" stroke="#1C1C1E" stroke-width="1" fill="none"/>
+    <rect x="377" y="15" width="2" height="4" rx="1" fill="#1C1C1E"/>
+    <rect x="357" y="13" width="16" height="8" rx="1.5" fill="#34C759"/>
+  </g>
+
+  <!-- Navigation Bar -->
+  <g id="Nav-Bar">
+    <rect x="0" y="36" width="393" height="52" fill="#F2F2F7"/>
+    <!-- Back chevron -->
+    <g id="Back-Button">
+      <path d="M 16 62 L 8 62" fill="none" stroke="#007AFF" stroke-width="0" />
+      <path d="M 14 54 L 6 62 L 14 70" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="24" y="67" font-family="-apple-system, system-ui, sans-serif" font-size="17" fill="#007AFF">Home</text>
+    </g>
+    <text x="196" y="67" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="17" font-weight="600" fill="#1C1C1E">Journal Insights</text>
+    <line x1="0" y1="88" x2="393" y2="88" stroke="#E5E5EA" stroke-width="0.5"/>
+  </g>
+
+  <!-- Summary Card -->
+  <g id="Summary-Card">
+    <rect x="20" y="104" width="353" height="90" rx="16" fill="#FFFFFF"/>
+    <!-- Calendar icon -->
+    <g id="Calendar-Icon">
+      <rect x="40" y="126" width="28" height="26" rx="5" fill="none" stroke="#007AFF" stroke-width="1.5"/>
+      <line x1="40" y1="134" x2="68" y2="134" stroke="#007AFF" stroke-width="1.5"/>
+      <line x1="48" y1="122" x2="48" y2="128" stroke="#007AFF" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="60" y1="122" x2="60" y2="128" stroke="#007AFF" stroke-width="1.5" stroke-linecap="round"/>
+      <text x="54" y="148" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="10" font-weight="700" fill="#007AFF">12</text>
+    </g>
+    <text x="82" y="140" font-family="-apple-system, system-ui, sans-serif" font-size="28" font-weight="700" fill="#1C1C1E">12</text>
+    <text x="116" y="140" font-family="-apple-system, system-ui, sans-serif" font-size="16" fill="#8E8E93">entries this month</text>
+    <text x="82" y="164" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#8E8E93">Avg. 3x per week | Most logged: Mood</text>
+  </g>
+
+  <!-- Discovered Patterns Section -->
+  <g id="Discovered-Patterns">
+    <text x="20" y="224" font-family="-apple-system, system-ui, sans-serif" font-size="20" font-weight="700" fill="#1C1C1E">Discovered Patterns</text>
+
+    <!-- Pattern Card 1 -->
+    <g id="Pattern-Card-1">
+      <rect x="20" y="240" width="353" height="100" rx="16" fill="#FFFFFF"/>
+      <!-- Correlation icon -->
+      <circle cx="50" cy="276" r="18" fill="#FF3B3015"/>
+      <text x="50" y="282" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="18">&#x1F4A4;</text>
+      <!-- Content -->
+      <text x="78" y="272" font-family="-apple-system, system-ui, sans-serif" font-size="16" font-weight="600" fill="#1C1C1E">High stress days → 23% less sleep</text>
+      <text x="78" y="294" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93">Logged stress level 4-5 correlates with shorter sleep</text>
+      <!-- Confidence badge -->
+      <rect x="78" y="308" width="44" height="20" rx="10" fill="#FF3B3020"/>
+      <text x="100" y="322" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="11" font-weight="600" fill="#FF3B30">High</text>
+      <text x="132" y="322" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#8E8E93">confidence</text>
+    </g>
+
+    <!-- Pattern Card 2 -->
+    <g id="Pattern-Card-2">
+      <rect x="20" y="352" width="353" height="100" rx="16" fill="#FFFFFF"/>
+      <!-- Correlation icon -->
+      <circle cx="50" cy="388" r="18" fill="#34C75915"/>
+      <text x="50" y="394" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="18">&#x1F4AA;</text>
+      <!-- Content -->
+      <text x="78" y="384" font-family="-apple-system, system-ui, sans-serif" font-size="16" font-weight="600" fill="#1C1C1E">Exercise days → 15% better HRV</text>
+      <text x="78" y="406" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93">Days with logged exercise show improved HRV next day</text>
+      <!-- Confidence badge -->
+      <rect x="78" y="420" width="44" height="20" rx="10" fill="#34C75920"/>
+      <text x="100" y="434" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="11" font-weight="600" fill="#34C759">High</text>
+      <text x="132" y="434" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#8E8E93">confidence</text>
+    </g>
+
+    <!-- Pattern Card 3 -->
+    <g id="Pattern-Card-3">
+      <rect x="20" y="464" width="353" height="100" rx="16" fill="#FFFFFF"/>
+      <!-- Correlation icon -->
+      <circle cx="50" cy="500" r="18" fill="#FF950015"/>
+      <text x="50" y="506" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="18">&#x1F60A;</text>
+      <!-- Content -->
+      <text x="78" y="496" font-family="-apple-system, system-ui, sans-serif" font-size="16" font-weight="600" fill="#1C1C1E">Good mood → 8% more steps</text>
+      <text x="78" y="518" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93">Positive mood entries correlated with higher activity</text>
+      <!-- Confidence badge -->
+      <rect x="78" y="532" width="64" height="20" rx="10" fill="#FF950020"/>
+      <text x="110" y="546" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="11" font-weight="600" fill="#FF9500">Medium</text>
+      <text x="152" y="546" font-family="-apple-system, system-ui, sans-serif" font-size="11" fill="#8E8E93">confidence</text>
+    </g>
+  </g>
+
+  <!-- Empty State Note -->
+  <g id="Empty-State-Note">
+    <rect x="20" y="588" width="353" height="80" rx="16" fill="#FFFFFF"/>
+    <text x="196" y="620" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#8E8E93">
+      <tspan x="196" dy="0">Patterns appear after 7+ journal entries.</tspan>
+      <tspan x="196" dy="20">Keep logging to discover more insights.</tspan>
+    </text>
+  </g>
+
+  <!-- No Tab Bar (pushed view) -->
+  <!-- Home indicator -->
+  <rect x="148" y="840" width="97" height="4" rx="2" fill="#1C1C1E"/>
+</svg>

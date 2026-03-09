@@ -1,0 +1,288 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1200">
+  <defs>
+    <style>
+      text { font-family: -apple-system, system-ui, sans-serif; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="1200" fill="#F2F2F7" rx="12"/>
+
+  <!-- Title -->
+  <g id="Page-Title">
+    <text x="40" y="52" font-size="28" font-weight="700" fill="#1C1C1E">Cards</text>
+    <line x1="40" y1="68" x2="760" y2="68" stroke="#E5E5EA" stroke-width="1"/>
+  </g>
+
+  <!-- ==================== InsightCard ==================== -->
+  <g id="InsightCard">
+    <text x="40" y="110" font-size="16" font-weight="600" fill="#8E8E93">INSIGHT CARD</text>
+
+    <!-- Default State -->
+    <g id="InsightCard-Default" transform="translate(40, 125)">
+      <text x="0" y="0" font-size="11" font-weight="500" fill="#8E8E93">Default</text>
+      <rect x="0" y="10" width="340" height="130" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="0.5"/>
+
+      <!-- Severity badge top-left -->
+      <rect x="16" y="26" width="66" height="24" rx="12" fill="#FF9500"/>
+      <text x="49" y="42" font-size="11" font-weight="600" fill="#FFFFFF" text-anchor="middle">Warning</text>
+
+      <!-- Category badge top-right -->
+      <rect x="258" y="26" width="66" height="24" rx="12" fill="#FF3B3018"/>
+      <text x="291" y="42" font-size="11" font-weight="600" fill="#FF3B30" text-anchor="middle">Heart</text>
+
+      <!-- Title -->
+      <text x="16" y="74" font-size="15" font-weight="600" fill="#1C1C1E">Elevated Resting Heart Rate</text>
+
+      <!-- Description -->
+      <text x="16" y="94" font-size="13" fill="#8E8E93">Your resting HR has been 12% above</text>
+      <text x="16" y="110" font-size="13" fill="#8E8E93">baseline for 3 consecutive days.</text>
+
+      <!-- Action link -->
+      <text x="16" y="130" font-size="13" font-weight="600" fill="#007AFF">View Details</text>
+    </g>
+
+    <!-- Expanded State -->
+    <g id="InsightCard-Expanded" transform="translate(420, 125)">
+      <text x="0" y="0" font-size="11" font-weight="500" fill="#8E8E93">Expanded</text>
+      <rect x="0" y="10" width="340" height="200" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="0.5"/>
+
+      <!-- Severity badge -->
+      <rect x="16" y="26" width="66" height="24" rx="12" fill="#FF9500"/>
+      <text x="49" y="42" font-size="11" font-weight="600" fill="#FFFFFF" text-anchor="middle">Warning</text>
+
+      <!-- Category badge -->
+      <rect x="258" y="26" width="66" height="24" rx="12" fill="#FF3B3018"/>
+      <text x="291" y="42" font-size="11" font-weight="600" fill="#FF3B30" text-anchor="middle">Heart</text>
+
+      <!-- Title -->
+      <text x="16" y="74" font-size="15" font-weight="600" fill="#1C1C1E">Elevated Resting Heart Rate</text>
+
+      <!-- Description -->
+      <text x="16" y="94" font-size="13" fill="#8E8E93">Your resting HR has been 12% above</text>
+      <text x="16" y="110" font-size="13" fill="#8E8E93">baseline for 3 consecutive days.</text>
+
+      <!-- Expanded content -->
+      <line x1="16" y1="122" x2="324" y2="122" stroke="#E5E5EA" stroke-width="0.5"/>
+      <text x="16" y="142" font-size="12" font-weight="500" fill="#1C1C1E">Baseline: 62 bpm</text>
+      <text x="16" y="160" font-size="12" font-weight="500" fill="#1C1C1E">Current: 69 bpm</text>
+      <text x="16" y="178" font-size="12" fill="#8E8E93">Consider rest if trend continues.</text>
+
+      <!-- Action link -->
+      <text x="16" y="200" font-size="13" font-weight="600" fill="#007AFF">View Heart Rate Details</text>
+    </g>
+  </g>
+
+  <!-- ==================== ActionCard ==================== -->
+  <g id="ActionCard">
+    <text x="40" y="370" font-size="16" font-weight="600" fill="#8E8E93">ACTION CARD</text>
+
+    <g id="ActionCard-Default" transform="translate(40, 385)">
+      <rect x="0" y="0" width="720" height="76" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="0.5"/>
+
+      <!-- Icon circle -->
+      <circle cx="42" cy="38" r="22" fill="#007AFF18"/>
+      <text x="42" y="43" font-size="18" text-anchor="middle" fill="#007AFF">&#9829;</text>
+
+      <!-- Text content -->
+      <text x="76" y="30" font-size="15" font-weight="600" fill="#1C1C1E">Increase daily walking by 15 minutes</text>
+      <text x="76" y="50" font-size="13" fill="#8E8E93">Your step count is 23% below your weekly average</text>
+
+      <!-- Deviation badge -->
+      <g transform="translate(590, 22)">
+        <rect x="0" y="0" width="60" height="24" rx="12" fill="#FF3B3020" stroke="#FF3B30" stroke-width="1"/>
+        <text x="30" y="16" font-size="11" font-weight="600" fill="#FF3B30" text-anchor="middle">-23%</text>
+      </g>
+
+      <!-- Chevron -->
+      <text x="690" y="42" font-size="16" fill="#8E8E93">&#8250;</text>
+    </g>
+
+    <!-- Second ActionCard variant -->
+    <g id="ActionCard-Positive" transform="translate(40, 475)">
+      <rect x="0" y="0" width="720" height="76" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="0.5"/>
+
+      <!-- Icon circle -->
+      <circle cx="42" cy="38" r="22" fill="#34C75918"/>
+      <text x="42" y="44" font-size="18" text-anchor="middle" fill="#34C759">&#9790;</text>
+
+      <!-- Text content -->
+      <text x="76" y="30" font-size="15" font-weight="600" fill="#1C1C1E">Keep up your sleep consistency</text>
+      <text x="76" y="50" font-size="13" fill="#8E8E93">7-day average: 7h 42m with 92% consistency</text>
+
+      <!-- Positive badge -->
+      <g transform="translate(586, 22)">
+        <rect x="0" y="0" width="64" height="24" rx="12" fill="#34C75920" stroke="#34C759" stroke-width="1"/>
+        <text x="32" y="16" font-size="11" font-weight="600" fill="#34C759" text-anchor="middle">+12%</text>
+      </g>
+
+      <!-- Chevron -->
+      <text x="690" y="42" font-size="16" fill="#8E8E93">&#8250;</text>
+    </g>
+  </g>
+
+  <!-- ==================== PatternCard ==================== -->
+  <g id="PatternCard">
+    <text x="40" y="600" font-size="16" font-weight="600" fill="#8E8E93">PATTERN CARD</text>
+
+    <g id="PatternCard-Default" transform="translate(40, 615)">
+      <rect x="0" y="0" width="340" height="140" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="0.5"/>
+
+      <!-- Pattern icon -->
+      <g transform="translate(16, 16)">
+        <circle cx="16" cy="16" r="16" fill="#5856D618"/>
+        <!-- Wave icon -->
+        <path d="M8,16 Q12,10 16,16 Q20,22 24,16" fill="none" stroke="#5856D6" stroke-width="1.5" stroke-linecap="round"/>
+      </g>
+
+      <!-- Confidence indicator -->
+      <g transform="translate(252, 16)">
+        <rect x="0" y="4" width="72" height="22" rx="11" fill="none" stroke="#34C759" stroke-width="1"/>
+        <circle cx="14" cy="15" r="3.5" fill="#34C759"/>
+        <text x="44" y="19" font-size="10" font-weight="600" fill="#34C759" text-anchor="middle">High</text>
+      </g>
+
+      <!-- Title -->
+      <text x="16" y="68" font-size="15" font-weight="600" fill="#1C1C1E">Weekly Cycle Detected</text>
+
+      <!-- Description -->
+      <text x="16" y="88" font-size="13" fill="#8E8E93">Your heart rate variability follows a</text>
+      <text x="16" y="104" font-size="13" fill="#8E8E93">7-day cycle with weekend recovery peaks.</text>
+
+      <!-- Period -->
+      <text x="16" y="128" font-size="12" font-weight="500" fill="#5856D6">Period: 7 days  |  Strength: 0.82</text>
+    </g>
+
+    <!-- Second PatternCard -->
+    <g id="PatternCard-Seasonal" transform="translate(420, 615)">
+      <rect x="0" y="0" width="340" height="140" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="0.5"/>
+
+      <!-- Pattern icon -->
+      <g transform="translate(16, 16)">
+        <circle cx="16" cy="16" r="16" fill="#FF950018"/>
+        <!-- Calendar icon -->
+        <rect x="6" y="8" width="20" height="16" rx="2" fill="none" stroke="#FF9500" stroke-width="1.2"/>
+        <line x1="6" y1="14" x2="26" y2="14" stroke="#FF9500" stroke-width="1.2"/>
+        <line x1="12" y1="6" x2="12" y2="10" stroke="#FF9500" stroke-width="1.2" stroke-linecap="round"/>
+        <line x1="20" y1="6" x2="20" y2="10" stroke="#FF9500" stroke-width="1.2" stroke-linecap="round"/>
+      </g>
+
+      <!-- Confidence indicator -->
+      <g transform="translate(234, 16)">
+        <rect x="0" y="4" width="90" height="22" rx="11" fill="none" stroke="#FFCC00" stroke-width="1"/>
+        <circle cx="14" cy="15" r="3.5" fill="#FFCC00"/>
+        <text x="52" y="19" font-size="10" font-weight="600" fill="#FFCC00" text-anchor="middle">Medium</text>
+      </g>
+
+      <!-- Title -->
+      <text x="16" y="68" font-size="15" font-weight="600" fill="#1C1C1E">Seasonal Pattern</text>
+
+      <!-- Description -->
+      <text x="16" y="88" font-size="13" fill="#8E8E93">Activity levels tend to dip in winter</text>
+      <text x="16" y="104" font-size="13" fill="#8E8E93">months based on 8 months of data.</text>
+
+      <!-- Period -->
+      <text x="16" y="128" font-size="12" font-weight="500" fill="#FF9500">Period: ~90 days  |  Strength: 0.61</text>
+    </g>
+  </g>
+
+  <!-- ==================== CorrelationCard ==================== -->
+  <g id="CorrelationCard">
+    <text x="40" y="800" font-size="16" font-weight="600" fill="#8E8E93">CORRELATION CARD</text>
+
+    <g id="CorrelationCard-Strong" transform="translate(40, 815)">
+      <rect x="0" y="0" width="340" height="150" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="0.5"/>
+
+      <!-- Metric pair header -->
+      <g transform="translate(16, 20)">
+        <!-- Left metric -->
+        <rect x="0" y="0" width="100" height="28" rx="8" fill="#007AFF18"/>
+        <text x="50" y="18" font-size="12" font-weight="600" fill="#007AFF" text-anchor="middle">Sleep Duration</text>
+
+        <!-- Arrow connector -->
+        <text x="118" y="19" font-size="16" fill="#8E8E93" text-anchor="middle">&#8596;</text>
+
+        <!-- Right metric -->
+        <rect x="136" y="0" width="70" height="28" rx="8" fill="#FF3B3018"/>
+        <text x="171" y="18" font-size="12" font-weight="600" fill="#FF3B30" text-anchor="middle">HRV</text>
+
+        <!-- Strength badge -->
+        <rect x="232" y="2" width="68" height="24" rx="12" fill="#34C75920" stroke="#34C759" stroke-width="1"/>
+        <text x="266" y="18" font-size="10" font-weight="600" fill="#34C759" text-anchor="middle">Strong</text>
+      </g>
+
+      <!-- R-value -->
+      <text x="16" y="72" font-size="13" font-weight="500" fill="#1C1C1E">r = 0.78  |  p &lt; 0.001</text>
+
+      <!-- Description -->
+      <text x="16" y="96" font-size="13" fill="#8E8E93">Higher sleep duration strongly correlates</text>
+      <text x="16" y="112" font-size="13" fill="#8E8E93">with improved heart rate variability.</text>
+
+      <!-- Granger indicator -->
+      <text x="16" y="140" font-size="12" font-weight="500" fill="#5856D6">Granger causal (Sleep &#8594; HRV, lag 1d)</text>
+    </g>
+
+    <g id="CorrelationCard-Moderate" transform="translate(420, 815)">
+      <rect x="0" y="0" width="340" height="150" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="0.5"/>
+
+      <!-- Metric pair header -->
+      <g transform="translate(16, 20)">
+        <!-- Left metric -->
+        <rect x="0" y="0" width="66" height="28" rx="8" fill="#34C75918"/>
+        <text x="33" y="18" font-size="12" font-weight="600" fill="#34C759" text-anchor="middle">Steps</text>
+
+        <!-- Arrow connector -->
+        <text x="84" y="19" font-size="16" fill="#8E8E93" text-anchor="middle">&#8596;</text>
+
+        <!-- Right metric -->
+        <rect x="102" y="0" width="110" height="28" rx="8" fill="#007AFF18"/>
+        <text x="157" y="18" font-size="12" font-weight="600" fill="#007AFF" text-anchor="middle">Sleep Quality</text>
+
+        <!-- Strength badge -->
+        <rect x="232" y="2" width="82" height="24" rx="12" fill="#FF950020" stroke="#FF9500" stroke-width="1"/>
+        <text x="273" y="18" font-size="10" font-weight="600" fill="#FF9500" text-anchor="middle">Moderate</text>
+      </g>
+
+      <!-- R-value -->
+      <text x="16" y="72" font-size="13" font-weight="500" fill="#1C1C1E">r = 0.52  |  p = 0.003</text>
+
+      <!-- Description -->
+      <text x="16" y="96" font-size="13" fill="#8E8E93">Days with higher step counts show</text>
+      <text x="16" y="112" font-size="13" fill="#8E8E93">moderately better sleep quality scores.</text>
+
+      <!-- No Granger -->
+      <text x="16" y="140" font-size="12" font-weight="500" fill="#8E8E93">No significant causal direction detected</text>
+    </g>
+  </g>
+
+  <!-- ==================== Card Specs ==================== -->
+  <g id="Card-Specs">
+    <text x="40" y="1010" font-size="16" font-weight="600" fill="#8E8E93">CARD SPECIFICATIONS</text>
+
+    <g transform="translate(40, 1025)">
+      <rect x="0" y="0" width="720" height="140" rx="12" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+
+      <text x="20" y="28" font-size="12" font-weight="600" fill="#8E8E93">Property</text>
+      <text x="200" y="28" font-size="12" font-weight="600" fill="#8E8E93">Value</text>
+      <line x1="20" y1="38" x2="700" y2="38" stroke="#E5E5EA" stroke-width="0.5"/>
+
+      <text x="20" y="58" font-size="12" fill="#1C1C1E">Corner radius</text>
+      <text x="200" y="58" font-size="12" fill="#1C1C1E">16pt</text>
+
+      <text x="20" y="78" font-size="12" fill="#1C1C1E">Background</text>
+      <text x="200" y="78" font-size="12" fill="#1C1C1E">#FFFFFF with 0.5pt #E5E5EA border (or shadow: 0 2 8 rgba(0,0,0,0.08))</text>
+
+      <text x="20" y="98" font-size="12" fill="#1C1C1E">Internal padding</text>
+      <text x="200" y="98" font-size="12" fill="#1C1C1E">16pt all sides</text>
+
+      <text x="20" y="118" font-size="12" fill="#1C1C1E">Card spacing</text>
+      <text x="200" y="118" font-size="12" fill="#1C1C1E">12pt between cards in a list</text>
+
+      <text x="20" y="138" font-size="12" fill="#1C1C1E">Title font</text>
+      <text x="200" y="138" font-size="12" fill="#1C1C1E">15pt semibold #1C1C1E  |  Body: 13pt regular #8E8E93</text>
+    </g>
+  </g>
+
+  <!-- Footer -->
+  <text x="400" y="1185" font-size="11" fill="#8E8E93" text-anchor="middle">HealthPulse Design System - Cards - v1.0</text>
+</svg>

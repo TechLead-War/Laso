@@ -15,8 +15,6 @@ struct HomeView: View {
     @State private var weeklyReviewViewModel: WeeklyReviewViewModel?
     @State private var showScoreGuide = false
     @State private var showRecoveryInfo = false
-    @AppStorage(AppKeys.Dismissals.siriTip) private var siriTipDismissed = false
-
     // Section trackers
     @State private var recoveryTracker = SectionTracker(section: .homeRecovery, tab: .home)
     @State private var illnessTracker = SectionTracker(section: .homeIllness, tab: .home)
@@ -159,28 +157,12 @@ struct HomeView: View {
                 )
                 .padding(.top, 12)
 
-                // Siri Shortcut discovery tip
-                if !siriTipDismissed {
-                    SiriTipView(intent: HealthScoreIntent(), isVisible: Binding(
-                        get: { !siriTipDismissed },
-                        set: { if !$0 { siriTipDismissed = true } }
-                    ))
-                    .padding(.horizontal, 16)
-                    .padding(.top, 12)
-                }
-
                 if shouldShowEmptyState {
                     connectHealthView
                 } else if hasData {
-                    // AI model training progress — subtle pill
-                    DataConfidenceBadge(
-                        daysOfData: viewModel.dataDepth.daysOfData,
-                        metricsTracked: viewModel.dataDepth.metricsTracked
-                    )
-                    .padding(.top, 6)
-                    .padding(.bottom, 8)
+                    // ── Above the fold (matches design: Recovery → Vitality + Sleep) ──
 
-                    // 1. HERO — Recovery score card (above the fold)
+                    // 1. Recovery Hero — readiness score
                     RecoveryHeroCard(
                         score: viewModel.overallScore.score,
                         recoveryLabel: viewModel.recoveryState.label,
@@ -191,23 +173,118 @@ struct HomeView: View {
                     .onAppear { recoveryTracker.appeared() }
                     .onDisappear { recoveryTracker.disappeared() }
 
-                    // 2. Primary action — prescriptive daily recommendation
-                    primaryActionCard
-                        .padding(.top, 12)
+                    // 2. Vitality Age card
+                    VitalityCard(
+                        scorer: viewModel.vitalityScorer,
+                        onTap: {
+                            AppAnalytics.shared.trackBlockTap(
+                                title: "Vitality Age",
+                                type: .recoveryCard,
+                                screen: .home,
+                                metadata: ["destination": "vitality_detail"]
+                            )
+                            navigationPath.append("vitalityDetail")
+                        }
+                    )
+                    .padding(.horizontal)
+                    .padding(.top, 12)
 
-                    // 3. Journal prompt — contextual check-in
-                    journalPromptCard
+                    // 3. Sleep Coach Card
+                    if let sleepNeed = viewModel.sleepNeedCalculator.currentNeed {
+                        SleepCoachCard(
+                            hoursNeeded: sleepNeed.totalHoursNeeded,
+                            bedtime: sleepNeed.recommendedBedtime.map {
+                                $0.formatted(date: .omitted, time: .shortened)
+                            },
+                            debtHours: {
+                                guard let debt = viewModel.sleepDebtTracker.currentDebt,
+                                      debt.totalDebtHours > 0.5 else { return nil }
+                                return debt.totalDebtHours
+                            }(),
+                            onTap: {
+                                AppAnalytics.shared.trackBlockTap(
+                                    title: "Sleep Coach",
+                                    type: .sleepCard,
+                                    screen: .home,
+                                    metadata: ["destination": "sleep_coach"]
+                                )
+                                navigationPath.append("sleepCoach")
+                            }
+                        )
                         .padding(.top, 8)
+                    }
 
-                    // 4. Illness Warning (only when active)
+                    // 4. Strain Card
+                    StrainCard(
+                        strainValue: viewModel.strainScorer.currentStrain,
+                        strainLevel: viewModel.strainScorer.strainLevel,
+                        zoneMinutes: viewModel.strainScorer.zoneMinutes,
+                        onTap: {
+                            AppAnalytics.shared.trackBlockTap(
+                                title: "Strain",
+                                type: .recoveryCard,
+                                screen: .home,
+                                metadata: ["destination": "strain_detail"]
+                            )
+                            navigationPath.append("strainDetail")
+                        }
+                    )
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+
+                    // 5. Stress Card
+                    if let stress = viewModel.stressScorer.currentStress {
+                        StressCard(
+                            stressScore: stress.score,
+                            stressLevel: stress.level.displayName,
+                            levelColor: stress.level.color,
+                            trend: viewModel.stressScorer.stressTrend.rawValue,
+                            onTap: {
+                                AppAnalytics.shared.trackBlockTap(
+                                    title: "Stress",
+                                    type: .recoveryCard,
+                                    screen: .home,
+                                    metadata: ["destination": "stress_monitor"]
+                                )
+                                navigationPath.append("stressMonitor")
+                            }
+                        )
+                        .padding(.horizontal)
+                        .padding(.top, 8)
+                    }
+
+                    // 6. Cycle Phase Card (female users with cycle data)
+                    if let cycle = viewModel.menstrualCycleTracker.currentCycle {
+                        CyclePhaseCard(
+                            phaseName: cycle.currentPhase.displayName,
+                            phaseIcon: cycle.currentPhase.icon,
+                            phaseColor: cycle.currentPhase.color,
+                            dayInCycle: cycle.dayInCycle,
+                            cycleLength: cycle.cycleLength,
+                            daysUntilPeriod: cycle.daysUntilNextPeriod ?? 0,
+                            onTap: {
+                                AppAnalytics.shared.trackBlockTap(
+                                    title: "Cycle Phase",
+                                    type: .recoveryCard,
+                                    screen: .home,
+                                    metadata: ["destination": "cycle_detail"]
+                                )
+                                navigationPath.append("cycleDetail")
+                            }
+                        )
+                        .padding(.horizontal)
+                        .padding(.top, 8)
+                    }
+
+                    // ── Below the fold (matches design: Insights → Risks → Coach → Review) ──
+
+                    // 7. Illness Warning (only when active)
                     illnessWarningCard
                         .onAppear { illnessTracker.appeared() }
                         .onDisappear { illnessTracker.disappeared() }
                         .padding(.top, 8)
 
-                    // --- Below the fold ---
-
-                    // 5. Key Insights
+                    // 8. Body Insights
                     BodyInsightsSection(
                         viewModel: viewModel,
                         liveVM: liveViewModel,
@@ -231,13 +308,32 @@ struct HomeView: View {
                     .onAppear { bodyInsightsTracker.appeared() }
                     .onDisappear { bodyInsightsTracker.disappeared() }
 
-                    // 6. Health Risks — moderate+ only
+                    // 9. Health Risks — "Needs Attention"
                     todayRisksSection
                         .padding(.top, 8)
                         .onAppear { risksTracker.appeared() }
                         .onDisappear { risksTracker.disappeared() }
 
-                    // 7. Focus goals
+                    // 10. Weekly Review
+                    WeeklyReviewEntryCard(
+                        viewModel: getOrCreateWeeklyReviewVM()
+                    ) {
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Weekly Review",
+                            type: .weeklyReviewCard,
+                            screen: .home,
+                            metadata: [
+                                "destination": "weekly_review",
+                                "score": viewModel.overallScore.score
+                            ]
+                        )
+                        navigationPath.append("weeklyReview")
+                    }
+                    .padding(.top, 8)
+                    .onAppear { weeklyReviewTracker.appeared() }
+                    .onDisappear { weeklyReviewTracker.disappeared() }
+
+                    // 11. Coach Goals
                     CoachGoalsSection(
                         goals: viewModel.coachGoals,
                         daysOfData: viewModel.dataDepth.daysOfData,
@@ -260,24 +356,38 @@ struct HomeView: View {
                     .onAppear { coachTracker.appeared() }
                     .onDisappear { coachTracker.disappeared() }
 
-                    // 8. Weekly Review
-                    WeeklyReviewEntryCard(
-                        viewModel: getOrCreateWeeklyReviewVM()
-                    ) {
-                        AppAnalytics.shared.trackBlockTap(
-                            title: "Weekly Review",
-                            type: .weeklyReviewCard,
-                            screen: .home,
-                            metadata: [
-                                "destination": "weekly_review",
-                                "score": viewModel.overallScore.score
-                            ]
-                        )
-                        navigationPath.append("weeklyReview")
-                    }
+                    // 12. Primary action — daily recommendation
+                    primaryActionCard
+                        .padding(.top, 8)
+
+                    // 13. Level & Streaks
+                    LevelBadgeCard(
+                        level: viewModel.gamificationEngine.currentLevel,
+                        totalDaysTracked: viewModel.gamificationEngine.totalDaysTracked,
+                        progressToNext: viewModel.gamificationEngine.progressToNextLevel,
+                        streaks: viewModel.gamificationEngine.streaks,
+                        onTap: {
+                            AppAnalytics.shared.trackBlockTap(
+                                title: "Level Badge",
+                                type: .recoveryCard,
+                                screen: .home,
+                                metadata: ["destination": "achievements"]
+                            )
+                            navigationPath.append("achievements")
+                        }
+                    )
                     .padding(.top, 8)
-                    .onAppear { weeklyReviewTracker.appeared() }
-                    .onDisappear { weeklyReviewTracker.disappeared() }
+
+                    // 14. Journal prompt — contextual check-in (evening only)
+                    journalPromptCard
+                        .padding(.top, 8)
+
+                    // AI confidence pill — subtle, near footer
+                    DataConfidenceBadge(
+                        daysOfData: viewModel.dataDepth.daysOfData,
+                        metricsTracked: viewModel.dataDepth.metricsTracked
+                    )
+                    .padding(.top, 8)
 
                     // Last updated footer
                     if let lastRefresh = viewModel.lastRefresh {

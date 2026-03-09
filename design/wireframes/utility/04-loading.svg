@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <style>
+      text { font-family: -apple-system, system-ui, sans-serif; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="393" height="852" fill="#F2F2F7"/>
+
+  <!-- Status Bar -->
+  <g id="StatusBar">
+    <text x="36" y="20" font-size="15" font-weight="600" fill="#1C1C1E">9:41</text>
+    <g transform="translate(330,8)">
+      <rect x="0" y="2" width="4" height="10" rx="1" fill="#1C1C1E"/>
+      <rect x="6" y="4" width="4" height="8" rx="1" fill="#1C1C1E"/>
+      <rect x="12" y="6" width="4" height="6" rx="1" fill="#1C1C1E"/>
+      <rect x="18" y="8" width="4" height="4" rx="1" fill="#1C1C1E"/>
+    </g>
+    <g transform="translate(352,6)">
+      <rect x="0" y="2" width="22" height="11" rx="2" stroke="#1C1C1E" stroke-width="1" fill="none"/>
+      <rect x="22" y="5" width="2" height="5" rx="1" fill="#1C1C1E"/>
+      <rect x="2" y="4" width="16" height="7" rx="1" fill="#1C1C1E"/>
+    </g>
+  </g>
+
+  <!-- Centered Content -->
+  <g id="CenteredContent">
+    <!-- Pulsing concentric circles (outer to inner, fading out) -->
+    <g id="PulseIndicator" transform="translate(197,380)">
+      <circle cx="0" cy="0" r="80" fill="none" stroke="#007AFF" stroke-width="1" opacity="0.08"/>
+      <circle cx="0" cy="0" r="64" fill="none" stroke="#007AFF" stroke-width="1" opacity="0.12"/>
+      <circle cx="0" cy="0" r="48" fill="none" stroke="#007AFF" stroke-width="1.5" opacity="0.18"/>
+      <circle cx="0" cy="0" r="32" fill="none" stroke="#007AFF" stroke-width="1.5" opacity="0.25"/>
+    </g>
+
+    <!-- Loading Spinner -->
+    <g id="Spinner" transform="translate(197,380)">
+      <!-- Spinner track -->
+      <circle cx="0" cy="0" r="20" fill="none" stroke="#E5E5EA" stroke-width="3"/>
+      <!-- Spinner arc (active portion) -->
+      <path d="M0,-20 A20,20 0 0,1 17.32,10" fill="none" stroke="#007AFF" stroke-width="3" stroke-linecap="round"/>
+      <!-- Secondary arc segment -->
+      <path d="M-17.32,10 A20,20 0 0,1 -10,-17.32" fill="none" stroke="#007AFF" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+    </g>
+
+    <!-- Loading Text -->
+    <text x="197" y="436" font-size="17" fill="#8E8E93" text-anchor="middle">Loading your health data...</text>
+  </g>
+</svg>

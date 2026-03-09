@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <clipPath id="screenClip"><rect width="393" height="852" rx="44"/></clipPath>
+  </defs>
+
+  <g id="CategoryDetailView" clip-path="url(#screenClip)">
+    <rect width="393" height="852" fill="#F2F2F7" rx="44"/>
+
+    <!-- Status Bar -->
+    <g id="StatusBar">
+      <text x="36" y="22" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E">9:41</text>
+      <g transform="translate(330,10)">
+        <rect x="0" y="2" width="18" height="10" rx="2" stroke="#1C1C1E" stroke-width="1.2" fill="none"/>
+        <rect x="19" y="5" width="1.5" height="4" rx="0.75" fill="#1C1C1E"/>
+        <rect x="2" y="4" width="13" height="6" rx="1" fill="#1C1C1E"/>
+      </g>
+      <g transform="translate(296,8)">
+        <path d="M0 10 Q4 0 8 10 Q12 0 16 10 Q20 0 24 10" stroke="#1C1C1E" stroke-width="1.5" fill="none"/>
+      </g>
+      <g transform="translate(268,8)">
+        <rect x="0" y="8" width="4" height="4" rx="1" fill="#1C1C1E"/>
+        <rect x="6" y="5" width="4" height="7" rx="1" fill="#1C1C1E"/>
+        <rect x="12" y="2" width="4" height="10" rx="1" fill="#1C1C1E"/>
+        <rect x="18" y="0" width="4" height="12" rx="1" fill="#1C1C1E"/>
+      </g>
+    </g>
+
+    <!-- Navigation Bar -->
+    <g id="NavBar">
+      <g id="BackButton" transform="translate(16, 48)">
+        <path d="M10 2 L2 12 L10 22" stroke="#007AFF" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="18" y="16" font-family="-apple-system, system-ui, sans-serif" font-size="17" fill="#007AFF">Back</text>
+      </g>
+      <text x="197" y="64" font-family="-apple-system, system-ui, sans-serif" font-size="17" font-weight="600" fill="#1C1C1E" text-anchor="middle">Sleep</text>
+    </g>
+
+    <!-- Category Score Ring -->
+    <g id="CategoryScoreRing" transform="translate(197, 152)">
+      <!-- Background ring -->
+      <circle cx="0" cy="0" r="60" fill="none" stroke="#E5E5EA" stroke-width="10"/>
+      <!-- Progress ring (approx 72%) -->
+      <circle cx="0" cy="0" r="60" fill="none" stroke="#007AFF" stroke-width="10"
+              stroke-dasharray="271.4 376.99" stroke-dashoffset="94.25"
+              transform="rotate(-90)" stroke-linecap="round"/>
+      <!-- Score text -->
+      <text x="0" y="-6" font-family="-apple-system, system-ui, sans-serif" font-size="36" font-weight="700" fill="#1C1C1E" text-anchor="middle">72</text>
+      <text x="0" y="16" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93" text-anchor="middle">Sleep Score</text>
+    </g>
+    <!-- Score change -->
+    <text x="197" y="232" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="500" fill="#34C759" text-anchor="middle">+3 from last week</text>
+
+    <!-- Analytics Summary Card -->
+    <g id="AnalyticsSummary" transform="translate(16, 252)">
+      <rect width="361" height="100" rx="16" fill="#FFFFFF"/>
+      <!-- Row 1 -->
+      <text x="20" y="32" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#8E8E93">Avg Duration</text>
+      <text x="341" y="32" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E" text-anchor="end">7h 24m</text>
+      <line x1="20" y1="44" x2="341" y2="44" stroke="#E5E5EA" stroke-width="0.5"/>
+      <!-- Row 2 -->
+      <text x="20" y="64" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#8E8E93">Avg Quality</text>
+      <text x="341" y="64" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#34C759" text-anchor="end">Good</text>
+      <line x1="20" y1="76" x2="341" y2="76" stroke="#E5E5EA" stroke-width="0.5"/>
+      <!-- Row 3 -->
+      <text x="20" y="94" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#8E8E93">Consistency</text>
+      <text x="341" y="94" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E" text-anchor="end">78%</text>
+    </g>
+
+    <!-- Time Range Pills -->
+    <g id="TimeRangePills" transform="translate(16, 368)">
+      <rect x="0" y="0" width="110" height="34" rx="17" fill="#007AFF"/>
+      <text x="55" y="22" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="600" fill="#FFFFFF" text-anchor="middle">30d</text>
+      <rect x="120" y="0" width="110" height="34" rx="17" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+      <text x="175" y="22" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="500" fill="#8E8E93" text-anchor="middle">90d</text>
+      <rect x="240" y="0" width="110" height="34" rx="17" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+      <text x="295" y="22" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="500" fill="#8E8E93" text-anchor="middle">180d</text>
+    </g>
+
+    <!-- Historical Highlights -->
+    <g id="HistoricalHighlights" transform="translate(16, 418)">
+      <text x="0" y="0" font-family="-apple-system, system-ui, sans-serif" font-size="20" font-weight="700" fill="#1C1C1E">Highlights</text>
+      <rect x="0" y="14" width="361" height="52" rx="16" fill="#FFFFFF"/>
+      <text x="20" y="34" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="500" fill="#1C1C1E">Best week: Feb 12–18</text>
+      <text x="20" y="52" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93">8h avg duration — your highest this quarter</text>
+
+      <rect x="0" y="76" width="361" height="52" rx="16" fill="#FFFFFF"/>
+      <text x="20" y="96" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="500" fill="#1C1C1E">Improving trend</text>
+      <text x="20" y="114" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#34C759">Your sleep has improved 12% since December</text>
+    </g>
+
+    <!-- All Metrics in Category -->
+    <g id="MetricsList" transform="translate(16, 562)">
+      <text x="0" y="0" font-family="-apple-system, system-ui, sans-serif" font-size="20" font-weight="700" fill="#1C1C1E">Metrics</text>
+      <rect x="0" y="14" width="361" height="240" rx="16" fill="#FFFFFF"/>
+
+      <!-- Metric Row 1 -->
+      <text x="20" y="46" font-family="-apple-system, system-ui, sans-serif" font-size="16" fill="#1C1C1E">Sleep Duration</text>
+      <text x="268" y="46" font-family="-apple-system, system-ui, sans-serif" font-size="16" font-weight="600" fill="#1C1C1E" text-anchor="end">7h 24m</text>
+      <text x="290" y="46" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#34C759">↑</text>
+      <path d="M330 40 L338 46 L330 52" stroke="#C7C7CC" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="20" y1="60" x2="341" y2="60" stroke="#E5E5EA" stroke-width="0.5"/>
+
+      <!-- Metric Row 2 -->
+      <text x="20" y="90" font-family="-apple-system, system-ui, sans-serif" font-size="16" fill="#1C1C1E">Sleep Quality</text>
+      <text x="268" y="90" font-family="-apple-system, system-ui, sans-serif" font-size="16" font-weight="600" fill="#1C1C1E" text-anchor="end">Good</text>
+      <text x="290" y="90" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#8E8E93">→</text>
+      <path d="M330 84 L338 90 L330 96" stroke="#C7C7CC" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="20" y1="104" x2="341" y2="104" stroke="#E5E5EA" stroke-width="0.5"/>
+
+      <!-- Metric Row 3 -->
+      <text x="20" y="134" font-family="-apple-system, system-ui, sans-serif" font-size="16" fill="#1C1C1E">Time in Bed</text>
+      <text x="268" y="134" font-family="-apple-system, system-ui, sans-serif" font-size="16" font-weight="600" fill="#1C1C1E" text-anchor="end">8h 12m</text>
+      <text x="290" y="134" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#8E8E93">→</text>
+      <path d="M330 128 L338 134 L330 140" stroke="#C7C7CC" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="20" y1="148" x2="341" y2="148" stroke="#E5E5EA" stroke-width="0.5"/>
+
+      <!-- Metric Row 4 -->
+      <text x="20" y="178" font-family="-apple-system, system-ui, sans-serif" font-size="16" fill="#1C1C1E">Deep Sleep</text>
+      <text x="268" y="178" font-family="-apple-system, system-ui, sans-serif" font-size="16" font-weight="600" fill="#1C1C1E" text-anchor="end">1h 45m</text>
+      <text x="290" y="178" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#FF3B30">↓</text>
+      <path d="M330 172 L338 178 L330 184" stroke="#C7C7CC" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="20" y1="192" x2="341" y2="192" stroke="#E5E5EA" stroke-width="0.5"/>
+
+      <!-- Metric Row 5 -->
+      <text x="20" y="222" font-family="-apple-system, system-ui, sans-serif" font-size="16" fill="#1C1C1E">REM Sleep</text>
+      <text x="268" y="222" font-family="-apple-system, system-ui, sans-serif" font-size="16" font-weight="600" fill="#1C1C1E" text-anchor="end">1h 32m</text>
+      <text x="290" y="222" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#34C759">↑</text>
+      <path d="M330 216 L338 222 L330 228" stroke="#C7C7CC" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+</svg>

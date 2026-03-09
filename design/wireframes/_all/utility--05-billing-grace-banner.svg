@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <style>
+      text { font-family: -apple-system, system-ui, sans-serif; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="393" height="852" fill="#F2F2F7"/>
+
+  <!-- Status Bar -->
+  <g id="StatusBar">
+    <text x="36" y="20" font-size="15" font-weight="600" fill="#1C1C1E">9:41</text>
+    <g transform="translate(330,8)">
+      <rect x="0" y="2" width="4" height="10" rx="1" fill="#1C1C1E"/>
+      <rect x="6" y="4" width="4" height="8" rx="1" fill="#1C1C1E"/>
+      <rect x="12" y="6" width="4" height="6" rx="1" fill="#1C1C1E"/>
+      <rect x="18" y="8" width="4" height="4" rx="1" fill="#1C1C1E"/>
+    </g>
+    <g transform="translate(352,6)">
+      <rect x="0" y="2" width="22" height="11" rx="2" stroke="#1C1C1E" stroke-width="1" fill="none"/>
+      <rect x="22" y="5" width="2" height="5" rx="1" fill="#1C1C1E"/>
+      <rect x="2" y="4" width="16" height="7" rx="1" fill="#1C1C1E"/>
+    </g>
+  </g>
+
+  <!-- Billing Grace Period Banner -->
+  <g id="BillingGraceBanner">
+    <rect x="0" y="30" width="393" height="52" fill="#FF9500"/>
+    <g transform="translate(16,46)">
+      <!-- Warning icon -->
+      <circle cx="10" cy="8" r="10" fill="none" stroke="#FFFFFF" stroke-width="1.5" opacity="0.8"/>
+      <text x="10" y="13" font-size="14" font-weight="700" fill="#FFFFFF" text-anchor="middle">!</text>
+    </g>
+    <text x="36" y="56" font-size="14" font-weight="500" fill="#FFFFFF">Your subscription renewal failed.</text>
+    <text x="36" y="72" font-size="13" fill="#FFFFFF" opacity="0.9">Update payment method.</text>
+    <!-- Fix link -->
+    <g id="FixLink" transform="translate(330,46)">
+      <text x="0" y="14" font-size="15" font-weight="600" fill="#FFFFFF" text-decoration="underline">Fix &#8594;</text>
+    </g>
+  </g>
+
+  <!-- Simplified/Dimmed Home View Background -->
+  <g id="HomeViewBackground" opacity="0.6">
+    <!-- Nav area -->
+    <g id="HomeNav">
+      <text x="24" y="112" font-size="34" font-weight="700" fill="#1C1C1E">Home</text>
+      <text x="24" y="134" font-size="15" fill="#8E8E93">Sunday, Mar 8</text>
+    </g>
+
+    <!-- Health Score Card -->
+    <g id="HealthScoreCard">
+      <rect x="16" y="152" width="361" height="140" rx="16" fill="#FFFFFF"/>
+      <text x="32" y="180" font-size="15" font-weight="600" fill="#8E8E93">HEALTH SCORE</text>
+      <!-- Score circle -->
+      <g transform="translate(197,232)">
+        <circle cx="0" cy="0" r="36" fill="none" stroke="#E5E5EA" stroke-width="6"/>
+        <path d="M0,-36 A36,36 0 1,1 -25.46,-25.46" fill="none" stroke="#34C759" stroke-width="6" stroke-linecap="round"/>
+        <text x="0" y="8" font-size="28" font-weight="700" fill="#1C1C1E" text-anchor="middle">82</text>
+      </g>
+      <text x="310" y="180" font-size="14" fill="#34C759" text-anchor="end">+3 this week</text>
+    </g>
+
+    <!-- Today's Metrics Cards (simplified) -->
+    <g id="MetricCards">
+      <!-- Heart Rate -->
+      <rect x="16" y="304" width="175" height="100" rx="16" fill="#FFFFFF"/>
+      <text x="32" y="330" font-size="13" font-weight="500" fill="#8E8E93">HEART RATE</text>
+      <text x="32" y="362" font-size="28" font-weight="700" fill="#1C1C1E">72</text>
+      <text x="80" y="362" font-size="15" fill="#8E8E93">bpm</text>
+      <rect x="32" y="376" width="140" height="4" rx="2" fill="#E5E5EA"/>
+      <rect x="32" y="376" width="90" height="4" rx="2" fill="#FF3B30" opacity="0.6"/>
+
+      <!-- Steps -->
+      <rect x="202" y="304" width="175" height="100" rx="16" fill="#FFFFFF"/>
+      <text x="218" y="330" font-size="13" font-weight="500" fill="#8E8E93">STEPS</text>
+      <text x="218" y="362" font-size="28" font-weight="700" fill="#1C1C1E">8,432</text>
+      <rect x="218" y="376" width="140" height="4" rx="2" fill="#E5E5EA"/>
+      <rect x="218" y="376" width="112" height="4" rx="2" fill="#007AFF" opacity="0.6"/>
+
+      <!-- Sleep -->
+      <rect x="16" y="416" width="175" height="100" rx="16" fill="#FFFFFF"/>
+      <text x="32" y="442" font-size="13" font-weight="500" fill="#8E8E93">SLEEP</text>
+      <text x="32" y="474" font-size="28" font-weight="700" fill="#1C1C1E">7h 24m</text>
+      <rect x="32" y="488" width="140" height="4" rx="2" fill="#E5E5EA"/>
+      <rect x="32" y="488" width="126" height="4" rx="2" fill="#34C759" opacity="0.6"/>
+
+      <!-- HRV -->
+      <rect x="202" y="416" width="175" height="100" rx="16" fill="#FFFFFF"/>
+      <text x="218" y="442" font-size="13" font-weight="500" fill="#8E8E93">HRV</text>
+      <text x="218" y="474" font-size="28" font-weight="700" fill="#1C1C1E">48</text>
+      <text x="264" y="474" font-size="15" fill="#8E8E93">ms</text>
+      <rect x="218" y="488" width="140" height="4" rx="2" fill="#E5E5EA"/>
+      <rect x="218" y="488" width="98" height="4" rx="2" fill="#FF9500" opacity="0.6"/>
+    </g>
+
+    <!-- Insights section placeholder -->
+    <g id="InsightsPreview">
+      <text x="24" y="548" font-size="20" font-weight="700" fill="#1C1C1E">Key Insights</text>
+      <rect x="16" y="560" width="361" height="60" rx="16" fill="#FFFFFF"/>
+      <rect x="32" y="576" width="200" height="12" rx="4" fill="#E5E5EA"/>
+      <rect x="32" y="596" width="280" height="10" rx="4" fill="#F2F2F7"/>
+    </g>
+  </g>
+
+  <!-- Tab Bar -->
+  <g id="TabBar">
+    <rect x="0" y="788" width="393" height="64" fill="#FFFFFF"/>
+    <line x1="0" y1="788" x2="393" y2="788" stroke="#E5E5EA" stroke-width="0.5"/>
+    <!-- Home (active) -->
+    <g transform="translate(40,798)">
+      <rect x="0" y="0" width="20" height="16" rx="2" fill="#007AFF"/>
+      <rect x="6" y="4" width="8" height="8" rx="1" fill="#FFFFFF"/>
+      <text x="10" y="32" font-size="10" fill="#007AFF" text-anchor="middle">Home</text>
+    </g>
+    <!-- Live -->
+    <g transform="translate(118,798)" opacity="0.5">
+      <circle cx="10" cy="8" r="8" fill="none" stroke="#8E8E93" stroke-width="1.5"/>
+      <circle cx="10" cy="8" r="3" fill="#8E8E93"/>
+      <text x="10" y="32" font-size="10" fill="#8E8E93" text-anchor="middle">Live</text>
+    </g>
+    <!-- Explore -->
+    <g transform="translate(192,798)" opacity="0.5">
+      <rect x="0" y="0" width="20" height="16" rx="4" fill="none" stroke="#8E8E93" stroke-width="1.5"/>
+      <line x1="6" y1="6" x2="14" y2="6" stroke="#8E8E93" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="6" y1="10" x2="14" y2="10" stroke="#8E8E93" stroke-width="1.5" stroke-linecap="round"/>
+      <text x="10" y="32" font-size="10" fill="#8E8E93" text-anchor="middle">Explore</text>
+    </g>
+    <!-- Insights -->
+    <g transform="translate(268,798)" opacity="0.5">
+      <path d="M10,0 L14,12 L20,14 L14,16 L10,28" fill="none" stroke="#8E8E93" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" transform="scale(0.6) translate(4,-2)"/>
+      <text x="10" y="32" font-size="10" fill="#8E8E93" text-anchor="middle">Insights</text>
+    </g>
+    <!-- Settings -->
+    <g transform="translate(342,798)" opacity="0.5">
+      <circle cx="10" cy="8" r="7" fill="none" stroke="#8E8E93" stroke-width="1.5"/>
+      <circle cx="10" cy="8" r="2.5" fill="#8E8E93"/>
+      <text x="10" y="32" font-size="10" fill="#8E8E93" text-anchor="middle">Settings</text>
+    </g>
+  </g>
+</svg>

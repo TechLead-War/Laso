@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <linearGradient id="pro-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#007AFF"/>
+      <stop offset="100%" stop-color="#5856D6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <g id="background">
+    <rect width="393" height="852" fill="#F2F2F7"/>
+  </g>
+
+  <!-- Status Bar -->
+  <g id="status-bar">
+    <text x="36" y="22" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E">9:41</text>
+    <g id="signal-bars" transform="translate(312, 10)">
+      <rect x="0" y="6" width="3" height="4" rx="0.5" fill="#1C1C1E"/>
+      <rect x="5" y="4" width="3" height="6" rx="0.5" fill="#1C1C1E"/>
+      <rect x="10" y="2" width="3" height="8" rx="0.5" fill="#1C1C1E"/>
+      <rect x="15" y="0" width="3" height="10" rx="0.5" fill="#1C1C1E"/>
+    </g>
+    <g id="wifi-icon" transform="translate(336, 10)">
+      <path d="M5 2 C7.5 0, 10.5 0, 13 2" stroke="#1C1C1E" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <path d="M7 5 C8.5 3.5, 9.5 3.5, 11 5" stroke="#1C1C1E" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <circle cx="9" cy="8" r="1.5" fill="#1C1C1E"/>
+    </g>
+    <g id="battery-icon" transform="translate(355, 10)">
+      <rect x="0" y="1" width="22" height="10" rx="2" stroke="#1C1C1E" stroke-width="1" fill="none"/>
+      <rect x="22" y="4" width="2" height="4" rx="1" fill="#1C1C1E"/>
+      <rect x="2" y="3" width="17" height="6" rx="1" fill="#1C1C1E"/>
+    </g>
+  </g>
+
+  <!-- Close button (X) -->
+  <g id="close-button" transform="translate(20, 50)">
+    <circle cx="16" cy="16" r="16" fill="#E5E5EA"/>
+    <line x1="10" y1="10" x2="22" y2="22" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"/>
+    <line x1="22" y1="10" x2="10" y2="22" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- Pro Badge -->
+  <g id="pro-badge" transform="translate(155, 52)">
+    <rect width="83" height="28" rx="14" fill="url(#pro-gradient)"/>
+    <text x="41.5" y="19" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="1.5">PRO</text>
+  </g>
+
+  <!-- Headline -->
+  <g id="headline">
+    <text x="196.5" y="128" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="28" font-weight="700" fill="#1C1C1E" text-anchor="middle">Unlock HealthPulse Pro</text>
+  </g>
+
+  <!-- Subtitle -->
+  <g id="subtitle">
+    <text x="196.5" y="156" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="15" font-weight="400" fill="#8E8E93" text-anchor="middle">Get the most out of your health data</text>
+  </g>
+
+  <!-- Feature List -->
+  <g id="feature-list" transform="translate(40, 184)">
+    <!-- Feature 1 -->
+    <g id="feature-realtime" transform="translate(0, 0)">
+      <circle cx="16" cy="16" r="16" fill="#007AFF" opacity="0.12"/>
+      <polyline points="10,16 14,20 22,12" stroke="#007AFF" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="44" y="14" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="16" font-weight="600" fill="#1C1C1E">Real-time vitals</text>
+      <text x="44" y="32" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="13" font-weight="400" fill="#8E8E93">Live heart rate, HRV, and respiratory data</text>
+    </g>
+
+    <!-- Feature 2 -->
+    <g id="feature-correlations" transform="translate(0, 56)">
+      <circle cx="16" cy="16" r="16" fill="#007AFF" opacity="0.12"/>
+      <polyline points="10,16 14,20 22,12" stroke="#007AFF" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="44" y="14" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="16" font-weight="600" fill="#1C1C1E">Advanced correlations</text>
+      <text x="44" y="32" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="13" font-weight="400" fill="#8E8E93">Discover hidden connections in your data</text>
+    </g>
+
+    <!-- Feature 3 -->
+    <g id="feature-simulation" transform="translate(0, 112)">
+      <circle cx="16" cy="16" r="16" fill="#007AFF" opacity="0.12"/>
+      <polyline points="10,16 14,20 22,12" stroke="#007AFF" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="44" y="14" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="16" font-weight="600" fill="#1C1C1E">What-if simulation</text>
+      <text x="44" y="32" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="13" font-weight="400" fill="#8E8E93">Predict how changes affect your health</text>
+    </g>
+
+    <!-- Feature 4 -->
+    <g id="feature-timeline" transform="translate(0, 168)">
+      <circle cx="16" cy="16" r="16" fill="#007AFF" opacity="0.12"/>
+      <polyline points="10,16 14,20 22,12" stroke="#007AFF" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="44" y="14" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="16" font-weight="600" fill="#1C1C1E">Health state timeline</text>
+      <text x="44" y="32" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="13" font-weight="400" fill="#8E8E93">Track your health states over time</text>
+    </g>
+
+    <!-- Feature 5 -->
+    <g id="feature-export" transform="translate(0, 224)">
+      <circle cx="16" cy="16" r="16" fill="#007AFF" opacity="0.12"/>
+      <polyline points="10,16 14,20 22,12" stroke="#007AFF" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="44" y="14" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="16" font-weight="600" fill="#1C1C1E">Data export</text>
+      <text x="44" y="32" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="13" font-weight="400" fill="#8E8E93">Export reports to share with your doctor</text>
+    </g>
+  </g>
+
+  <!-- Pricing Cards -->
+  <g id="pricing-cards" transform="translate(24, 476)">
+
+    <!-- Monthly Plan (outlined / not selected) -->
+    <g id="plan-monthly" transform="translate(0, 0)">
+      <rect width="165" height="120" rx="16" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1.5"/>
+      <text x="82.5" y="36" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="13" font-weight="500" fill="#8E8E93" text-anchor="middle">Monthly</text>
+      <text x="82.5" y="68" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="28" font-weight="700" fill="#1C1C1E" text-anchor="middle">$4.99</text>
+      <text x="82.5" y="90" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="13" font-weight="400" fill="#8E8E93" text-anchor="middle">per month</text>
+    </g>
+
+    <!-- Yearly Plan (filled / selected) -->
+    <g id="plan-yearly" transform="translate(180, 0)">
+      <!-- Save badge -->
+      <g id="save-badge" transform="translate(95, -12)">
+        <rect width="72" height="24" rx="12" fill="#34C759"/>
+        <text x="36" y="16" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">Save 50%</text>
+      </g>
+      <rect width="165" height="120" rx="16" fill="#FFFFFF" stroke="#007AFF" stroke-width="2.5"/>
+      <!-- Selected radio -->
+      <g transform="translate(72, 8)">
+        <circle cx="10.5" cy="10" r="10" fill="none" stroke="#007AFF" stroke-width="2"/>
+        <circle cx="10.5" cy="10" r="5" fill="#007AFF"/>
+      </g>
+      <text x="82.5" y="46" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="13" font-weight="600" fill="#007AFF" text-anchor="middle">Yearly</text>
+      <text x="82.5" y="78" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="28" font-weight="700" fill="#1C1C1E" text-anchor="middle">$29.99</text>
+      <text x="82.5" y="100" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="13" font-weight="400" fill="#8E8E93" text-anchor="middle">per year ($2.50/mo)</text>
+    </g>
+  </g>
+
+  <!-- Start Free Trial Button -->
+  <g id="trial-button" transform="translate(32, 634)">
+    <rect width="329" height="56" rx="14" fill="url(#pro-gradient)"/>
+    <text x="164.5" y="35" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="17" font-weight="700" fill="#FFFFFF" text-anchor="middle">Start Free Trial</text>
+  </g>
+
+  <!-- Trial subtext -->
+  <g id="trial-subtext">
+    <text x="196.5" y="714" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="13" font-weight="400" fill="#8E8E93" text-anchor="middle">7-day free trial, cancel anytime</text>
+  </g>
+
+  <!-- Legal fine print -->
+  <g id="legal-text">
+    <text x="196.5" y="744" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="11" font-weight="400" fill="#8E8E93" text-anchor="middle" opacity="0.6">Payment charged after trial. Recurring unless cancelled.</text>
+  </g>
+
+  <!-- Restore Purchases -->
+  <g id="restore-purchases">
+    <text x="196.5" y="784" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="14" font-weight="500" fill="#007AFF" text-anchor="middle">Restore Purchases</text>
+  </g>
+
+  <!-- Terms links -->
+  <g id="terms-links">
+    <text x="142" y="812" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="11" font-weight="400" fill="#8E8E93" text-anchor="end">Terms of Service</text>
+    <text x="196.5" y="812" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="11" font-weight="400" fill="#8E8E93" text-anchor="middle">|</text>
+    <text x="251" y="812" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="11" font-weight="400" fill="#8E8E93" text-anchor="start">Privacy Policy</text>
+  </g>
+
+  <!-- Home Indicator -->
+  <g id="home-indicator">
+    <rect x="128" y="832" width="137" height="5" rx="2.5" fill="#1C1C1E" opacity="0.2"/>
+  </g>
+</svg>

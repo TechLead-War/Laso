@@ -1,0 +1,150 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <defs>
+    <clipPath id="screenClip"><rect width="393" height="852" rx="44"/></clipPath>
+  </defs>
+
+  <g id="InsightsDetailView" clip-path="url(#screenClip)">
+    <rect width="393" height="852" fill="#F2F2F7" rx="44"/>
+
+    <!-- Status Bar -->
+    <g id="StatusBar">
+      <text x="36" y="22" font-family="-apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E">9:41</text>
+      <g transform="translate(330,10)">
+        <rect x="0" y="2" width="18" height="10" rx="2" stroke="#1C1C1E" stroke-width="1.2" fill="none"/>
+        <rect x="19" y="5" width="1.5" height="4" rx="0.75" fill="#1C1C1E"/>
+        <rect x="2" y="4" width="13" height="6" rx="1" fill="#1C1C1E"/>
+      </g>
+      <g transform="translate(296,8)">
+        <path d="M0 10 Q4 0 8 10 Q12 0 16 10 Q20 0 24 10" stroke="#1C1C1E" stroke-width="1.5" fill="none"/>
+      </g>
+      <g transform="translate(268,8)">
+        <rect x="0" y="8" width="4" height="4" rx="1" fill="#1C1C1E"/>
+        <rect x="6" y="5" width="4" height="7" rx="1" fill="#1C1C1E"/>
+        <rect x="12" y="2" width="4" height="10" rx="1" fill="#1C1C1E"/>
+        <rect x="18" y="0" width="4" height="12" rx="1" fill="#1C1C1E"/>
+      </g>
+    </g>
+
+    <!-- Navigation Bar -->
+    <g id="NavBar">
+      <g id="BackButton" transform="translate(16, 48)">
+        <path d="M10 2 L2 12 L10 22" stroke="#007AFF" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="18" y="16" font-family="-apple-system, system-ui, sans-serif" font-size="17" fill="#007AFF">Back</text>
+      </g>
+      <text x="197" y="64" font-family="-apple-system, system-ui, sans-serif" font-size="17" font-weight="600" fill="#1C1C1E" text-anchor="middle">Insights</text>
+    </g>
+
+    <!-- Segmented Control -->
+    <g id="SegmentedControl" transform="translate(16, 86)">
+      <rect width="361" height="36" rx="8" fill="#E5E5EA" opacity="0.6"/>
+      <!-- Selected segment -->
+      <rect x="4" y="3" width="176" height="30" rx="7" fill="#FFFFFF"/>
+      <text x="92" y="24" font-family="-apple-system, system-ui, sans-serif" font-size="13" font-weight="600" fill="#1C1C1E" text-anchor="middle">Action Items</text>
+      <text x="272" y="24" font-family="-apple-system, system-ui, sans-serif" font-size="13" font-weight="500" fill="#8E8E93" text-anchor="middle">All Insights</text>
+    </g>
+
+    <!-- Filter Pills -->
+    <g id="FilterPills" transform="translate(16, 134)">
+      <rect x="0" y="0" width="44" height="30" rx="15" fill="#007AFF"/>
+      <text x="22" y="20" font-family="-apple-system, system-ui, sans-serif" font-size="13" font-weight="600" fill="#FFFFFF" text-anchor="middle">All</text>
+
+      <rect x="52" y="0" width="58" height="30" rx="15" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+      <text x="81" y="20" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93" text-anchor="middle">Sleep</text>
+
+      <rect x="118" y="0" width="68" height="30" rx="15" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+      <text x="152" y="20" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93" text-anchor="middle">Activity</text>
+
+      <rect x="194" y="0" width="58" height="30" rx="15" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+      <text x="223" y="20" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93" text-anchor="middle">Heart</text>
+
+      <rect x="260" y="0" width="54" height="30" rx="15" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+      <text x="287" y="20" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93" text-anchor="middle">Body</text>
+    </g>
+
+    <!-- Insight Card 1 — Critical -->
+    <g id="InsightCard-Critical" transform="translate(16, 180)">
+      <rect width="361" height="140" rx="16" fill="#FFFFFF"/>
+      <!-- Severity Badge -->
+      <rect x="16" y="16" width="64" height="22" rx="11" fill="#FF3B30" opacity="0.12"/>
+      <text x="48" y="31" font-family="-apple-system, system-ui, sans-serif" font-size="11" font-weight="700" fill="#FF3B30" text-anchor="middle">Critical</text>
+      <!-- Category Badge -->
+      <rect x="289" y="16" width="56" height="22" rx="11" fill="#FF3B30" opacity="0.08"/>
+      <text x="317" y="31" font-family="-apple-system, system-ui, sans-serif" font-size="11" font-weight="600" fill="#FF3B30" text-anchor="middle">Heart</text>
+      <!-- Title -->
+      <text x="16" y="58" font-family="-apple-system, system-ui, sans-serif" font-size="16" font-weight="600" fill="#1C1C1E">Elevated resting heart rate</text>
+      <!-- Description -->
+      <text x="16" y="78" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#8E8E93">Your resting HR has been above your baseline</text>
+      <text x="16" y="94" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#8E8E93">for 5 consecutive days. Consider reducing</text>
+      <text x="16" y="110" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#8E8E93">stress and improving sleep quality.</text>
+      <!-- Action link -->
+      <text x="16" y="130" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="500" fill="#007AFF">View Heart Rate Details →</text>
+    </g>
+
+    <!-- Insight Card 2 — Warning -->
+    <g id="InsightCard-Warning" transform="translate(16, 334)">
+      <rect width="361" height="130" rx="16" fill="#FFFFFF"/>
+      <!-- Severity Badge -->
+      <rect x="16" y="16" width="66" height="22" rx="11" fill="#FF9500" opacity="0.12"/>
+      <text x="49" y="31" font-family="-apple-system, system-ui, sans-serif" font-size="11" font-weight="700" fill="#FF9500" text-anchor="middle">Warning</text>
+      <!-- Category Badge -->
+      <rect x="289" y="16" width="56" height="22" rx="11" fill="#5856D6" opacity="0.08"/>
+      <text x="317" y="31" font-family="-apple-system, system-ui, sans-serif" font-size="11" font-weight="600" fill="#5856D6" text-anchor="middle">Sleep</text>
+      <!-- Title -->
+      <text x="16" y="58" font-family="-apple-system, system-ui, sans-serif" font-size="16" font-weight="600" fill="#1C1C1E">Sleep duration declining</text>
+      <!-- Description -->
+      <text x="16" y="78" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#8E8E93">Sleep duration has decreased for 3 consecutive</text>
+      <text x="16" y="94" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#8E8E93">days, averaging 5h 48m vs your 7h baseline.</text>
+      <!-- Action link -->
+      <text x="16" y="120" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="500" fill="#007AFF">View Sleep Details →</text>
+    </g>
+
+    <!-- Insight Card 3 — Info -->
+    <g id="InsightCard-Info" transform="translate(16, 478)">
+      <rect width="361" height="110" rx="16" fill="#FFFFFF"/>
+      <!-- Severity Badge -->
+      <rect x="16" y="16" width="42" height="22" rx="11" fill="#007AFF" opacity="0.12"/>
+      <text x="37" y="31" font-family="-apple-system, system-ui, sans-serif" font-size="11" font-weight="700" fill="#007AFF" text-anchor="middle">Info</text>
+      <!-- Category Badge -->
+      <rect x="281" y="16" width="64" height="22" rx="11" fill="#34C759" opacity="0.08"/>
+      <text x="313" y="31" font-family="-apple-system, system-ui, sans-serif" font-size="11" font-weight="600" fill="#34C759" text-anchor="middle">Activity</text>
+      <!-- Title -->
+      <text x="16" y="58" font-family="-apple-system, system-ui, sans-serif" font-size="16" font-weight="600" fill="#1C1C1E">Above average step count</text>
+      <!-- Description -->
+      <text x="16" y="78" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#8E8E93">Your step count is 18% above your 30-day</text>
+      <text x="16" y="94" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#8E8E93">average. Keep up the great work!</text>
+    </g>
+
+    <!-- Insight Card 4 — Warning -->
+    <g id="InsightCard-Warning2" transform="translate(16, 602)">
+      <rect width="361" height="130" rx="16" fill="#FFFFFF"/>
+      <!-- Severity Badge -->
+      <rect x="16" y="16" width="66" height="22" rx="11" fill="#FF9500" opacity="0.12"/>
+      <text x="49" y="31" font-family="-apple-system, system-ui, sans-serif" font-size="11" font-weight="700" fill="#FF9500" text-anchor="middle">Warning</text>
+      <!-- Category Badge -->
+      <rect x="289" y="16" width="56" height="22" rx="11" fill="#FF9500" opacity="0.08"/>
+      <text x="317" y="31" font-family="-apple-system, system-ui, sans-serif" font-size="11" font-weight="600" fill="#FF9500" text-anchor="middle">Body</text>
+      <!-- Title -->
+      <text x="16" y="58" font-family="-apple-system, system-ui, sans-serif" font-size="16" font-weight="600" fill="#1C1C1E">Weight trend increasing</text>
+      <!-- Description -->
+      <text x="16" y="78" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#8E8E93">Gradual upward trend detected over the past</text>
+      <text x="16" y="94" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#8E8E93">2 weeks (+1.2 kg). Monitor closely.</text>
+      <!-- Action link -->
+      <text x="16" y="120" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="500" fill="#007AFF">View Weight Details →</text>
+    </g>
+
+    <!-- Insight Card 5 — Info -->
+    <g id="InsightCard-Info2" transform="translate(16, 746)">
+      <rect width="361" height="90" rx="16" fill="#FFFFFF"/>
+      <!-- Severity Badge -->
+      <rect x="16" y="16" width="42" height="22" rx="11" fill="#007AFF" opacity="0.12"/>
+      <text x="37" y="31" font-family="-apple-system, system-ui, sans-serif" font-size="11" font-weight="700" fill="#007AFF" text-anchor="middle">Info</text>
+      <!-- Category Badge -->
+      <rect x="289" y="16" width="56" height="22" rx="11" fill="#5856D6" opacity="0.08"/>
+      <text x="317" y="31" font-family="-apple-system, system-ui, sans-serif" font-size="11" font-weight="600" fill="#5856D6" text-anchor="middle">Sleep</text>
+      <!-- Title -->
+      <text x="16" y="58" font-family="-apple-system, system-ui, sans-serif" font-size="16" font-weight="600" fill="#1C1C1E">New personal best: Deep sleep</text>
+      <!-- Description -->
+      <text x="16" y="78" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#8E8E93">2h 15m deep sleep — your best in 90 days!</text>
+    </g>
+  </g>
+</svg>

@@ -77,55 +77,65 @@ struct OnboardingView: View {
 
     private let totalPages = 7
     private let stepNames = [
-        "culture_you_vs_you", "culture_engine", "culture_actionable", "culture_privacy",
+        "welcome", "culture_personal", "culture_intelligence", "culture_privacy",
         "connect_health", "focus_selection", "initial_calibration"
     ]
 
     var body: some View {
         ZStack(alignment: .bottom) {
             TabView(selection: $currentPage) {
-                CulturePage(
-                    icon: "person.fill.checkmark",
-                    color: .purple,
-                    title: "You vs You",
-                    message: "We never compare you to world averages or country norms. We only compare you to yourself — if something drops, we catch it."
-                ) { withAnimation(.smooth(duration: 0.4)) { currentPage = 1 } }
+                // Page 0: Welcome
+                WelcomePage {
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Get Started",
+                        type: .onboardingGetStarted,
+                        screen: .onboarding,
+                        metadata: ["step_name": "welcome"]
+                    )
+                    withAnimation(.smooth(duration: 0.4)) { currentPage = 1 }
+                }
                 .tag(0)
 
+                // Page 1: Culture — Health is personal
                 CulturePage(
-                    icon: "cpu.fill",
-                    color: .orange,
-                    title: "Gets Smarter Over Time",
-                    message: "An engine runs entirely on your device, learning your patterns. Over time, the insights rival a professional health coach."
+                    icon: "heart.fill",
+                    color: .red,
+                    title: "We believe health\nis personal",
+                    message: "No two bodies are the same. HealthPulse learns your unique patterns, rhythms, and thresholds to give you insights that truly matter."
                 ) { withAnimation(.smooth(duration: 0.4)) { currentPage = 2 } }
                 .tag(1)
 
+                // Page 2: Culture — Intelligence grows
                 CulturePage(
-                    icon: "sparkles",
-                    color: .blue,
-                    title: "Only What Matters",
-                    message: "We don't show things already in good shape. You only see what needs your attention — no noise, no vanity stats."
+                    icon: "cpu.fill",
+                    color: .purple,
+                    title: "Intelligence that\ngrows with you",
+                    message: "Our on-device ML engine learns more every day. From forecasting trends to detecting anomalies, your insights get smarter over time."
                 ) { withAnimation(.smooth(duration: 0.4)) { currentPage = 3 } }
                 .tag(2)
 
+                // Page 3: Culture — Data stays yours
                 CulturePage(
                     icon: "lock.shield.fill",
                     color: .green,
-                    title: "Your Data Stays Here",
-                    message: "Your health data never leaves your device. No cloud uploads, no names, no tracking. Everything is completely private."
+                    title: "Your data stays yours",
+                    message: "All analysis runs on your device. Your health data is encrypted at rest and never leaves your phone. No cloud. No compromise."
                 ) { withAnimation(.smooth(duration: 0.4)) { currentPage = 4 } }
                 .tag(3)
 
+                // Page 4: Connect Apple Health
                 ConnectHealthPage(healthKitManager: healthKitManager) {
                     withAnimation(.smooth(duration: 0.4)) { currentPage = 5 }
                 }
                 .tag(4)
 
+                // Page 5: Focus Selection
                 FocusPage(selectedFocuses: $selectedFocuses) {
                     withAnimation(.smooth(duration: 0.4)) { currentPage = 6 }
                 }
                 .tag(5)
 
+                // Page 6: Calibration
                 CalibrationPage(
                     isActive: currentPage == 6,
                     healthKitManager: healthKitManager,
@@ -136,19 +146,22 @@ struct OnboardingView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
 
-            // Progress dots
-            HStack(spacing: 6) {
-                ForEach(0..<totalPages, id: \.self) { index in
-                    Circle()
-                        .fill(index <= currentPage ? Color.accentColor : Color.secondary.opacity(0.2))
-                        .frame(
-                            width: index == currentPage ? 8 : 6,
-                            height: index == currentPage ? 8 : 6
-                        )
-                        .animation(.spring(response: 0.4), value: currentPage)
+            // Progress dots (visible on pages 1–6, hidden on Welcome)
+            if currentPage > 0 {
+                HStack(spacing: 6) {
+                    ForEach(0..<6, id: \.self) { index in
+                        let dotPage = index + 1 // maps dot 0 → page 1, dot 5 → page 6
+                        Circle()
+                            .fill(dotPage <= currentPage ? Color.accentColor : Color.secondary.opacity(0.2))
+                            .frame(
+                                width: dotPage == currentPage ? 8 : 6,
+                                height: dotPage == currentPage ? 8 : 6
+                            )
+                            .animation(.spring(response: 0.4), value: currentPage)
+                    }
                 }
+                .padding(.bottom, 16)
             }
-            .padding(.bottom, 16)
         }
         .accessibilityIdentifier("screen.onboarding")
         .background(Color(.systemGroupedBackground))
@@ -207,48 +220,58 @@ private struct ConnectHealthPage: View {
     let healthKitManager: HealthKitManager
     let onContinue: () -> Void
 
+    private let permissions = [
+        "Heart Rate",
+        "Steps",
+        "Sleep Analysis",
+        "Heart Rate Variability",
+        "Blood Oxygen",
+        "Workouts",
+        "Body Measurements"
+    ]
+
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
 
-            Image("LaunchIcon")
-                .resizable()
-                .frame(width: 64, height: 64)
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .padding(.bottom, 24)
-
+            // Apple Health icon
             Image(systemName: "heart.text.clipboard")
                 .font(.system(size: 44, weight: .medium))
                 .foregroundStyle(.red)
-                .frame(width: 88, height: 88)
-                .background(Color.red.opacity(0.12), in: Circle())
-                .padding(.bottom, 28)
+                .frame(width: 70, height: 70)
+                .background(Color.red.opacity(0.12), in: RoundedRectangle(cornerRadius: 16))
+                .padding(.bottom, 20)
 
             VStack(spacing: 10) {
-                Text("Your health, understood.")
+                Text("Connect Apple Health")
                     .font(.title2.weight(.bold))
 
-                Text("Laso turns your Apple Watch data into clear health scores and insights — privately, on your device.")
+                Text("HealthPulse reads your health data to build\npersonalized insights and track your progress.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
             }
+            .padding(.bottom, 20)
 
+            // Permission checklist
             VStack(spacing: 0) {
-                benefitRow(icon: "waveform.path.ecg", color: .red, text: "Scores, trends, and live vitals")
-                Divider().padding(.leading, 52)
-                benefitRow(icon: "cross.case.fill", color: .blue, text: "Safety Triage Engine: clear monitor vs seek-care guidance")
-                Divider().padding(.leading, 52)
-                benefitRow(icon: "figure.walk.motion", color: .green, text: "Progressive Coach: starts at 4K steps and adapts weekly")
-                Divider().padding(.leading, 52)
-                benefitRow(icon: "calendar.badge.clock", color: .pink, text: "Cycle Phase Analyzer: phase-aware energy and recovery insights")
-                Divider().padding(.leading, 52)
-                benefitRow(icon: "lock.fill", color: .orange, text: "All health data stays on your device")
+                ForEach(permissions, id: \.self) { permission in
+                    HStack(spacing: 12) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 20))
+                            .foregroundStyle(.green)
+
+                        Text(permission)
+                            .font(.body.weight(.medium))
+
+                        Spacer()
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 10)
+                }
             }
-            .background(.background, in: RoundedRectangle(cornerRadius: 16))
-            .padding(.horizontal)
-            .padding(.top, 24)
+            .padding(.vertical, 8)
 
             Spacer()
             Spacer()
@@ -266,20 +289,36 @@ private struct ConnectHealthPage: View {
                     )
                     Task {
                         await healthKitManager.requestAuthorization()
-                        // PostHog: Track HealthKit authorization request (top of conversion funnel)
                         PostHogManager.shared.capture(event: "healthkit_authorized", properties: [
                             "healthkit_available": true,
                         ])
                         onContinue()
                     }
                 } label: {
-                    Text("Connect Apple Health")
+                    Text("Connect Health Data")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
                 .font(.headline)
                 .padding(.horizontal, 24)
+
+                Button("Skip for now") {
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "Skip for now",
+                        type: .onboardingContinueAnyway,
+                        screen: .onboarding,
+                        metadata: [
+                            "step_name": "connect_health",
+                            "healthkit_available": 1,
+                            "skipped": 1
+                        ]
+                    )
+                    onContinue()
+                }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .padding(.top, 12)
                 .padding(.bottom, 48)
             } else {
                 VStack(spacing: 12) {
@@ -311,23 +350,6 @@ private struct ConnectHealthPage: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private func benefitRow(icon: String, color: Color, text: String) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 16))
-                .foregroundStyle(color)
-                .frame(width: 24)
-
-            Text(text)
-                .font(.subheadline)
-                .foregroundStyle(.primary)
-
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
     }
 }
 
@@ -806,6 +828,48 @@ private struct CalibrationPage: View {
     private func stopDotTimer() {
         dotTimer?.invalidate()
         dotTimer = nil
+    }
+}
+
+// MARK: - Welcome Page
+
+private struct WelcomePage: View {
+    let onContinue: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            Image("LaunchIcon")
+                .resizable()
+                .frame(width: 100, height: 100)
+                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                .padding(.bottom, 24)
+
+            Text("HealthPulse")
+                .font(.system(size: 32, weight: .bold))
+                .padding(.bottom, 8)
+
+            Text("Your health, understood.")
+                .font(.title3)
+                .foregroundStyle(.secondary)
+
+            Spacer()
+            Spacer()
+
+            Button {
+                onContinue()
+            } label: {
+                Text("Get Started")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .font(.headline)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 48)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

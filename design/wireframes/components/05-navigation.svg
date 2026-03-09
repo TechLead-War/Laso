@@ -1,0 +1,199 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 600">
+  <defs>
+    <style>
+      text { font-family: -apple-system, system-ui, sans-serif; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="393" height="600" fill="#F2F2F7" rx="12"/>
+
+  <!-- Title -->
+  <g id="Page-Title">
+    <text x="20" y="36" font-size="20" font-weight="700" fill="#1C1C1E">Navigation</text>
+    <line x1="20" y1="48" x2="373" y2="48" stroke="#E5E5EA" stroke-width="1"/>
+  </g>
+
+  <!-- ==================== Status Bar ==================== -->
+  <g id="StatusBar">
+    <text x="20" y="78" font-size="12" font-weight="600" fill="#8E8E93">STATUS BAR</text>
+
+    <g id="StatusBar-Component" transform="translate(0, 88)">
+      <rect x="0" y="0" width="393" height="54" fill="#F2F2F7"/>
+
+      <!-- Dynamic Island area -->
+      <rect x="122" y="8" width="149" height="34" rx="17" fill="#1C1C1E"/>
+
+      <!-- Time -->
+      <text x="32" y="30" font-size="15" font-weight="600" fill="#1C1C1E">9:41</text>
+
+      <!-- Signal bars -->
+      <g transform="translate(310, 18)">
+        <rect x="0" y="6" width="3" height="6" rx="1" fill="#1C1C1E"/>
+        <rect x="5" y="4" width="3" height="8" rx="1" fill="#1C1C1E"/>
+        <rect x="10" y="2" width="3" height="10" rx="1" fill="#1C1C1E"/>
+        <rect x="15" y="0" width="3" height="12" rx="1" fill="#1C1C1E"/>
+      </g>
+
+      <!-- WiFi icon -->
+      <g transform="translate(338, 17)">
+        <path d="M0,10 Q6,-2 12,10" fill="none" stroke="#1C1C1E" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M2,8 Q6,1 10,8" fill="none" stroke="#1C1C1E" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="6" cy="10" r="1.5" fill="#1C1C1E"/>
+      </g>
+
+      <!-- Battery -->
+      <g transform="translate(356, 19)">
+        <rect x="0" y="0" width="25" height="12" rx="3" fill="none" stroke="#1C1C1E" stroke-width="1"/>
+        <rect x="25" y="3" width="2" height="5" rx="1" fill="#1C1C1E"/>
+        <rect x="2" y="2" width="18" height="8" rx="1.5" fill="#34C759"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- ==================== Navigation Bar - Large Title ==================== -->
+  <g id="NavBar-LargeTitle">
+    <text x="20" y="172" font-size="12" font-weight="600" fill="#8E8E93">NAV BAR - LARGE TITLE</text>
+
+    <g id="NavBar-Large-Component" transform="translate(0, 182)">
+      <rect x="0" y="0" width="393" height="52" fill="#F2F2F7"/>
+      <text x="20" y="40" font-size="34" font-weight="700" fill="#1C1C1E">Home</text>
+    </g>
+  </g>
+
+  <!-- ==================== Navigation Bar - Standard ==================== -->
+  <g id="NavBar-Standard">
+    <text x="20" y="258" font-size="12" font-weight="600" fill="#8E8E93">NAV BAR - STANDARD WITH BACK</text>
+
+    <g id="NavBar-Standard-Component" transform="translate(0, 268)">
+      <rect x="0" y="0" width="393" height="44" fill="#F2F2F7"/>
+      <line x1="0" y1="44" x2="393" y2="44" stroke="#E5E5EA" stroke-width="0.5"/>
+
+      <!-- Back button -->
+      <text x="12" y="28" font-size="20" fill="#007AFF">&#8249;</text>
+      <text x="28" y="28" font-size="17" fill="#007AFF">Back</text>
+
+      <!-- Title -->
+      <text x="196" y="28" font-size="17" font-weight="600" fill="#1C1C1E" text-anchor="middle">Heart Rate</text>
+
+      <!-- Share icon (right) -->
+      <g transform="translate(355, 10)">
+        <rect x="4" y="10" width="16" height="14" rx="2" fill="none" stroke="#007AFF" stroke-width="1.5"/>
+        <line x1="12" y1="2" x2="12" y2="16" stroke="#007AFF" stroke-width="1.5" stroke-linecap="round"/>
+        <polyline points="8,6 12,2 16,6" fill="none" stroke="#007AFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- ==================== Sheet Header ==================== -->
+  <g id="SheetHeader">
+    <text x="20" y="340" font-size="12" font-weight="600" fill="#8E8E93">SHEET HEADER</text>
+
+    <g id="Sheet-Header-Component" transform="translate(0, 350)">
+      <rect x="0" y="0" width="393" height="56" fill="#FFFFFF" rx="16"/>
+
+      <!-- Handle bar -->
+      <rect x="172" y="8" width="49" height="5" rx="2.5" fill="#E5E5EA"/>
+
+      <!-- Title -->
+      <text x="196" y="40" font-size="17" font-weight="600" fill="#1C1C1E" text-anchor="middle">Metric Details</text>
+
+      <!-- Close button -->
+      <g transform="translate(349, 22)">
+        <circle cx="12" cy="12" r="14" fill="#E5E5EA"/>
+        <line x1="7" y1="7" x2="17" y2="17" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"/>
+        <line x1="17" y1="7" x2="7" y2="17" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- ==================== Custom Tab Bar ==================== -->
+  <g id="CustomTabBar">
+    <text x="20" y="440" font-size="12" font-weight="600" fill="#8E8E93">CUSTOM TAB BAR</text>
+
+    <g id="TabBar-Component" transform="translate(0, 452)">
+      <rect x="0" y="0" width="393" height="83" fill="#FFFFFF"/>
+      <line x1="0" y1="0" x2="393" y2="0" stroke="#E5E5EA" stroke-width="0.5"/>
+
+      <!-- Home tab - selected -->
+      <g id="Tab-Home-Selected" transform="translate(65, 12)">
+        <!-- House icon -->
+        <g transform="translate(0, 0)">
+          <path d="M0,14 L12,2 L24,14" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="4" y="14" width="16" height="12" rx="1" fill="none" stroke="#007AFF" stroke-width="2"/>
+          <rect x="9" y="18" width="6" height="8" rx="1" fill="#007AFF"/>
+        </g>
+        <text x="12" y="42" font-size="10" font-weight="600" fill="#007AFF" text-anchor="middle">Home</text>
+      </g>
+
+      <!-- Live tab - unselected -->
+      <g id="Tab-Live-Unselected" transform="translate(184, 12)">
+        <!-- Waveform icon -->
+        <g transform="translate(0, 2)">
+          <line x1="2" y1="12" x2="2" y2="12" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"/>
+          <line x1="6" y1="6" x2="6" y2="18" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"/>
+          <line x1="10" y1="2" x2="10" y2="22" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"/>
+          <line x1="14" y1="8" x2="14" y2="16" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"/>
+          <line x1="18" y1="4" x2="18" y2="20" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"/>
+          <line x1="22" y1="10" x2="22" y2="14" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"/>
+        </g>
+        <text x="12" y="42" font-size="10" font-weight="400" fill="#8E8E93" text-anchor="middle">Live</text>
+      </g>
+
+      <!-- Explore tab - unselected -->
+      <g id="Tab-Explore-Unselected" transform="translate(303, 12)">
+        <!-- Chart icon -->
+        <g transform="translate(0, 2)">
+          <rect x="2" y="12" width="5" height="10" rx="1" fill="#8E8E93"/>
+          <rect x="10" y="6" width="5" height="16" rx="1" fill="#8E8E93"/>
+          <rect x="18" y="2" width="5" height="20" rx="1" fill="#8E8E93"/>
+        </g>
+        <text x="12" y="42" font-size="10" font-weight="400" fill="#8E8E93" text-anchor="middle">Explore</text>
+      </g>
+
+      <!-- Safe area indicator -->
+      <rect x="140" y="72" width="113" height="5" rx="2.5" fill="#1C1C1E"/>
+    </g>
+
+    <!-- Tab bar selected variant 2: Live selected -->
+    <g id="TabBar-LiveSelected" transform="translate(0, 544)">
+      <text x="20" y="0" font-size="10" font-weight="500" fill="#8E8E93">Alternate: Live tab selected</text>
+
+      <rect x="0" y="8" width="393" height="44" fill="#FFFFFF"/>
+      <line x1="0" y1="8" x2="393" y2="8" stroke="#E5E5EA" stroke-width="0.5"/>
+
+      <!-- Home - unselected -->
+      <g transform="translate(65, 16)">
+        <path d="M0,14 L12,2 L24,14" fill="none" stroke="#8E8E93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="4" y="14" width="16" height="12" rx="1" fill="none" stroke="#8E8E93" stroke-width="2"/>
+        <text x="12" y="42" font-size="10" font-weight="400" fill="#8E8E93" text-anchor="middle">Home</text>
+      </g>
+
+      <!-- Live - selected -->
+      <g transform="translate(184, 16)">
+        <g transform="translate(0, 2)">
+          <line x1="2" y1="12" x2="2" y2="12" stroke="#007AFF" stroke-width="2" stroke-linecap="round"/>
+          <line x1="6" y1="6" x2="6" y2="18" stroke="#007AFF" stroke-width="2" stroke-linecap="round"/>
+          <line x1="10" y1="2" x2="10" y2="22" stroke="#007AFF" stroke-width="2" stroke-linecap="round"/>
+          <line x1="14" y1="8" x2="14" y2="16" stroke="#007AFF" stroke-width="2" stroke-linecap="round"/>
+          <line x1="18" y1="4" x2="18" y2="20" stroke="#007AFF" stroke-width="2" stroke-linecap="round"/>
+          <line x1="22" y1="10" x2="22" y2="14" stroke="#007AFF" stroke-width="2" stroke-linecap="round"/>
+        </g>
+        <text x="12" y="42" font-size="10" font-weight="600" fill="#007AFF" text-anchor="middle">Live</text>
+      </g>
+
+      <!-- Explore - unselected -->
+      <g transform="translate(303, 16)">
+        <g transform="translate(0, 2)">
+          <rect x="2" y="12" width="5" height="10" rx="1" fill="#8E8E93"/>
+          <rect x="10" y="6" width="5" height="16" rx="1" fill="#8E8E93"/>
+          <rect x="18" y="2" width="5" height="20" rx="1" fill="#8E8E93"/>
+        </g>
+        <text x="12" y="42" font-size="10" font-weight="400" fill="#8E8E93" text-anchor="middle">Explore</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- Footer -->
+  <text x="196" y="592" font-size="9" fill="#8E8E93" text-anchor="middle">HealthPulse Design System - Navigation - v1.0</text>
+</svg>

@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 852" width="393" height="852">
+  <!-- Background -->
+  <g id="background">
+    <rect width="393" height="852" fill="#F2F2F7"/>
+  </g>
+
+  <!-- Status Bar -->
+  <g id="status-bar">
+    <text x="36" y="22" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="15" font-weight="600" fill="#1C1C1E">9:41</text>
+    <g id="signal-bars" transform="translate(312, 10)">
+      <rect x="0" y="6" width="3" height="4" rx="0.5" fill="#1C1C1E"/>
+      <rect x="5" y="4" width="3" height="6" rx="0.5" fill="#1C1C1E"/>
+      <rect x="10" y="2" width="3" height="8" rx="0.5" fill="#1C1C1E"/>
+      <rect x="15" y="0" width="3" height="10" rx="0.5" fill="#1C1C1E"/>
+    </g>
+    <g id="wifi-icon" transform="translate(336, 10)">
+      <path d="M5 2 C7.5 0, 10.5 0, 13 2" stroke="#1C1C1E" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <path d="M7 5 C8.5 3.5, 9.5 3.5, 11 5" stroke="#1C1C1E" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <circle cx="9" cy="8" r="1.5" fill="#1C1C1E"/>
+    </g>
+    <g id="battery-icon" transform="translate(355, 10)">
+      <rect x="0" y="1" width="22" height="10" rx="2" stroke="#1C1C1E" stroke-width="1" fill="none"/>
+      <rect x="22" y="4" width="2" height="4" rx="1" fill="#1C1C1E"/>
+      <rect x="2" y="3" width="17" height="6" rx="1" fill="#1C1C1E"/>
+    </g>
+  </g>
+
+  <!-- Illustration Placeholder -->
+  <g id="illustration-placeholder" transform="translate(47, 100)">
+    <rect width="299" height="300" rx="24" fill="#FFFFFF" stroke="#E5E5EA" stroke-width="1"/>
+    <!-- Heart + Pulse illustration -->
+    <g transform="translate(149.5, 120)">
+      <!-- Heart shape -->
+      <path d="M0-30 C-12-52,-48-44,-48-20 C-48,4,-12,28,0,48 C12,28,48,4,48-20 C48-44,12-52,0-30Z" fill="none" stroke="#FF3B30" stroke-width="3" opacity="0.6"/>
+      <!-- Pulse line -->
+      <polyline points="-60,0 -30,0 -15,-30 0,20 15,-15 30,5 45,0 60,0" stroke="#007AFF" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <!-- Label -->
+    <text x="149.5" y="260" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="13" fill="#8E8E93" text-anchor="middle">Illustration</text>
+  </g>
+
+  <!-- Headline -->
+  <g id="headline">
+    <text x="196.5" y="458" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="28" font-weight="700" fill="#1C1C1E" text-anchor="middle">We believe health</text>
+    <text x="196.5" y="494" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="28" font-weight="700" fill="#1C1C1E" text-anchor="middle">is personal</text>
+  </g>
+
+  <!-- Body Text -->
+  <g id="body-text">
+    <text x="196.5" y="536" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="17" font-weight="400" fill="#8E8E93" text-anchor="middle">No two bodies are the same.</text>
+    <text x="196.5" y="560" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="17" font-weight="400" fill="#8E8E93" text-anchor="middle">HealthPulse learns your unique patterns.</text>
+  </g>
+
+  <!-- Progress Dots (1 of 7 filled) -->
+  <g id="progress-dots" transform="translate(148.5, 620)">
+    <circle cx="0" cy="0" r="4" fill="#007AFF"/>
+    <circle cx="16" cy="0" r="4" fill="#E5E5EA"/>
+    <circle cx="32" cy="0" r="4" fill="#E5E5EA"/>
+    <circle cx="48" cy="0" r="4" fill="#E5E5EA"/>
+    <circle cx="64" cy="0" r="4" fill="#E5E5EA"/>
+    <circle cx="80" cy="0" r="4" fill="#E5E5EA"/>
+    <circle cx="96" cy="0" r="4" fill="#E5E5EA"/>
+  </g>
+
+  <!-- Continue Button -->
+  <g id="continue-button" transform="translate(32, 738)">
+    <rect width="329" height="56" rx="14" fill="#007AFF"/>
+    <text x="164.5" y="35" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="17" font-weight="600" fill="#FFFFFF" text-anchor="middle">Continue</text>
+  </g>
+
+  <!-- Home Indicator -->
+  <g id="home-indicator">
+    <rect x="128" y="832" width="137" height="5" rx="2.5" fill="#1C1C1E" opacity="0.2"/>
+  </g>
+</svg>
