@@ -71,14 +71,20 @@ struct OnboardingView: View {
     @State private var onboardingStartDate = Date()
     @State private var stepStartDate = Date()
 
+    // Profile capture state
+    @State private var profileName: String?
+    @State private var profileEmail: String?
+    @State private var profileGender: Gender = .preferNotToSay
+    @State private var profileAge: Int?
+
     let healthKitManager: HealthKitManager
     let runCalibration: () async -> String?
     let onComplete: () -> Void
 
-    private let totalPages = 7
+    private let totalPages = 8
     private let stepNames = [
         "welcome", "culture_personal", "culture_intelligence", "culture_privacy",
-        "connect_health", "focus_selection", "initial_calibration"
+        "profile_capture", "connect_health", "focus_selection", "initial_calibration"
     ]
 
     var body: some View {
@@ -123,34 +129,44 @@ struct OnboardingView: View {
                 ) { withAnimation(.smooth(duration: 0.4)) { currentPage = 4 } }
                 .tag(3)
 
-                // Page 4: Connect Apple Health
-                ConnectHealthPage(healthKitManager: healthKitManager) {
+                // Page 4: Profile Capture (name, email, age, gender + silent device ID)
+                ProfileCaptureView { name, email, gender, age in
+                    profileName = name
+                    profileEmail = email
+                    profileGender = gender
+                    profileAge = age
                     withAnimation(.smooth(duration: 0.4)) { currentPage = 5 }
                 }
                 .tag(4)
 
-                // Page 5: Focus Selection
-                FocusPage(selectedFocuses: $selectedFocuses) {
+                // Page 5: Connect Apple Health
+                ConnectHealthPage(healthKitManager: healthKitManager) {
                     withAnimation(.smooth(duration: 0.4)) { currentPage = 6 }
                 }
                 .tag(5)
 
-                // Page 6: Calibration
+                // Page 6: Focus Selection
+                FocusPage(selectedFocuses: $selectedFocuses) {
+                    withAnimation(.smooth(duration: 0.4)) { currentPage = 7 }
+                }
+                .tag(6)
+
+                // Page 7: Calibration
                 CalibrationPage(
-                    isActive: currentPage == 6,
+                    isActive: currentPage == 7,
                     healthKitManager: healthKitManager,
                     runCalibration: runCalibration,
                     onComplete: finishOnboarding
                 )
-                .tag(6)
+                .tag(7)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
 
-            // Progress dots (visible on pages 1–6, hidden on Welcome)
+            // Progress dots (visible on pages 1–7, hidden on Welcome)
             if currentPage > 0 {
                 HStack(spacing: 6) {
-                    ForEach(0..<6, id: \.self) { index in
-                        let dotPage = index + 1 // maps dot 0 → page 1, dot 5 → page 6
+                    ForEach(0..<7, id: \.self) { index in
+                        let dotPage = index + 1 // maps dot 0 → page 1, dot 6 → page 7
                         Circle()
                             .fill(dotPage <= currentPage ? Color.accentColor : Color.secondary.opacity(0.2))
                             .frame(
@@ -199,6 +215,9 @@ struct OnboardingView: View {
         let focuses = selectedFocuses.isEmpty ? Set(HealthFocus.allCases) : selectedFocuses
         PersistenceManager().saveHealthFocuses(focuses)
 
+        // Save user profile to local + Firestore
+        saveUserProfile(focuses: focuses)
+
         // Notification permission is requested from the main app after the
         // dashboard loads — asking here interrupts the onboarding→app transition.
 
@@ -211,6 +230,38 @@ struct OnboardingView: View {
         AppAnalytics.shared.trackFeatureClose(.onboarding)
 
         onComplete()
+    }
+
+    private func saveUserProfile(focuses: Set<HealthFocus>) {
+        // Convert age to approximate date of birth
+        let dateOfBirth: Date
+        if let age = profileAge {
+            dateOfBirth = Calendar.current.date(byAdding: .year, value: -age, to: Date()) ?? Date()
+        } else {
+            dateOfBirth = Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
+        }
+
+        let profile = UserProfileStore.shared.makeProfile(
+            name: profileName ?? "",
+            email: profileEmail ?? "",
+            gender: profileGender,
+            dateOfBirth: dateOfBirth,
+            healthFocuses: focuses.map(\.rawValue)
+        )
+        UserProfileStore.shared.save(profile)
+
+        // Persist individual fields for quick access
+        if let name = profileName {
+            UserDefaults.standard.set(name, forKey: AppKeys.Profile.name)
+        }
+        if let email = profileEmail {
+            UserDefaults.standard.set(email, forKey: AppKeys.Profile.email)
+        }
+        UserDefaults.standard.set(profileGender.rawValue, forKey: AppKeys.Profile.gender)
+        if let age = profileAge {
+            UserDefaults.standard.set(age, forKey: AppKeys.Profile.dateOfBirth)
+        }
+        UserDefaults.standard.set(true, forKey: AppKeys.Profile.profileCompleted)
     }
 }
 

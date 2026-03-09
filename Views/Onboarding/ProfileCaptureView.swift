@@ -1,23 +1,20 @@
 import SwiftUI
+import UIKit
 
 // MARK: - ProfileCaptureView
 
 struct ProfileCaptureView: View {
-    let onComplete: (_ name: String?, _ email: String?, _ gender: Gender, _ dateOfBirth: Date?) -> Void
+    let onComplete: (_ name: String?, _ email: String?, _ gender: Gender, _ age: Int?) -> Void
 
     @State private var name = ""
     @State private var email = ""
     @State private var gender: Gender = .preferNotToSay
-    @State private var dateOfBirth: Date = Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
-    @State private var hasSelectedDateOfBirth = false
+    @State private var ageText = ""
     @State private var buttonTapCount = 0
 
-    private var minDate: Date {
-        Calendar.current.date(byAdding: .year, value: -100, to: Date()) ?? Date()
-    }
-
-    private var maxDate: Date {
-        Calendar.current.date(byAdding: .year, value: -13, to: Date()) ?? Date()
+    private var parsedAge: Int? {
+        guard let value = Int(ageText), value >= 13, value <= 120 else { return nil }
+        return value
     }
 
     var body: some View {
@@ -43,7 +40,7 @@ struct ProfileCaptureView: View {
                 Text("About You")
                     .font(.title2.weight(.bold))
 
-                Text("This helps us personalize insights for your body. Everything stays private.")
+                Text("This helps us personalize insights for your body. Everything stays on your device.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -54,14 +51,14 @@ struct ProfileCaptureView: View {
 
             // Form fields
             VStack(spacing: 0) {
-                // First name
+                // Name
                 fieldRow {
                     HStack {
                         Text("Name")
                             .font(.subheadline)
                             .foregroundStyle(.primary)
                         Spacer()
-                        TextField("Optional", text: $name)
+                        TextField("Your name", text: $name)
                             .font(.subheadline)
                             .multilineTextAlignment(.trailing)
                             .textContentType(.givenName)
@@ -78,13 +75,30 @@ struct ProfileCaptureView: View {
                             .font(.subheadline)
                             .foregroundStyle(.primary)
                         Spacer()
-                        TextField("Optional", text: $email)
+                        TextField("your@email.com", text: $email)
                             .font(.subheadline)
                             .multilineTextAlignment(.trailing)
                             .textContentType(.emailAddress)
                             .keyboardType(.emailAddress)
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
+                    }
+                }
+
+                Divider().padding(.leading, 16)
+
+                // Age
+                fieldRow {
+                    HStack {
+                        Text("Age")
+                            .font(.subheadline)
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        TextField("e.g. 28", text: $ageText)
+                            .font(.subheadline)
+                            .multilineTextAlignment(.trailing)
+                            .keyboardType(.numberPad)
+                            .frame(width: 80)
                     }
                 }
 
@@ -98,31 +112,6 @@ struct ProfileCaptureView: View {
                         }
                     }
                     .font(.subheadline)
-                }
-
-                Divider().padding(.leading, 16)
-
-                // Date of birth
-                fieldRow {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Date of Birth")
-                            .font(.subheadline)
-                            .foregroundStyle(.primary)
-
-                        DatePicker(
-                            "Date of Birth",
-                            selection: $dateOfBirth,
-                            in: minDate...maxDate,
-                            displayedComponents: .date
-                        )
-                        .datePickerStyle(.wheel)
-                        .labelsHidden()
-                        .frame(height: 120)
-                        .clipped()
-                        .onChange(of: dateOfBirth) { _, _ in
-                            hasSelectedDateOfBirth = true
-                        }
-                    }
                 }
             }
             .background(.background, in: RoundedRectangle(cornerRadius: 16))
@@ -140,6 +129,7 @@ struct ProfileCaptureView: View {
                         "step_name": "profile_capture"
                     ]
                 )
+                saveDeviceIdSilently()
                 onComplete(nil, nil, .preferNotToSay, nil)
             } label: {
                 Text("Skip")
@@ -151,25 +141,28 @@ struct ProfileCaptureView: View {
             // Continue button
             Button {
                 buttonTapCount += 1
+                let trimmedName = name.trimmingCharacters(in: .whitespaces)
+                let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
+
                 AppAnalytics.shared.trackBlockTap(
                     title: "Continue Profile",
                     type: .onboardingProfileContinue,
                     screen: .onboarding,
                     metadata: [
                         "step_name": "profile_capture",
-                        "has_name": name.trimmingCharacters(in: .whitespaces).isEmpty ? 0 : 1,
-                        "has_email": email.trimmingCharacters(in: .whitespaces).isEmpty ? 0 : 1,
+                        "has_name": trimmedName.isEmpty ? 0 : 1,
+                        "has_email": trimmedEmail.isEmpty ? 0 : 1,
                         "gender": gender.rawValue,
-                        "has_dob": hasSelectedDateOfBirth ? 1 : 0
+                        "has_age": parsedAge != nil ? 1 : 0
                     ]
                 )
-                let trimmedName = name.trimmingCharacters(in: .whitespaces)
-                let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
+
+                saveDeviceIdSilently()
                 onComplete(
                     trimmedName.isEmpty ? nil : trimmedName,
                     trimmedEmail.isEmpty ? nil : trimmedEmail,
                     gender,
-                    hasSelectedDateOfBirth ? dateOfBirth : nil
+                    parsedAge
                 )
             } label: {
                 Text("Continue")
@@ -189,5 +182,11 @@ struct ProfileCaptureView: View {
         content()
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
+    }
+
+    /// Silently persist device ID without any user-facing prompt
+    private func saveDeviceIdSilently() {
+        let deviceId = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
+        UserDefaults.standard.set(deviceId, forKey: AppKeys.Profile.deviceId)
     }
 }

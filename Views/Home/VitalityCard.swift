@@ -8,11 +8,7 @@ struct VitalityCard: View {
 
     var body: some View {
         Button(action: onTap) {
-            if scorer.isReady {
-                readyContent
-            } else {
-                buildingContent
-            }
+            readyContent
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
@@ -72,48 +68,19 @@ struct VitalityCard: View {
         .cardStyle(tint: accentColor)
     }
 
-    // MARK: - Building State
+    // MARK: - Data Maturity Indicator
 
-    private var buildingContent: some View {
-        HStack(spacing: 0) {
-            RoundedRectangle(cornerRadius: DS.accentRadius)
-                .fill(.gray)
-                .frame(width: 4)
-                .padding(.vertical, 6)
-
-            HStack(spacing: 12) {
-                Image(systemName: "heart.text.clipboard")
-                    .font(.title3)
-                    .foregroundStyle(.secondary)
-                    .frame(width: DS.iconSize, height: DS.iconSize)
-                    .background(Color.gray.opacity(DS.badgeBg), in: Circle())
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Vitality Age")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .textCase(.uppercase)
-
-                    Text("Building your profile...")
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.primary)
-
-                    Text("Needs \(VitalityScorer.minimumDaysRequired) days of data")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.tertiary)
-            }
-            .padding(.leading, DS.accentLeading)
-            .padding(.trailing, DS.accentTrailing)
-            .padding(.vertical, DS.accentVertical)
+    /// Subtle indicator when data is still building
+    @ViewBuilder
+    private var maturityIndicator: some View {
+        if !scorer.isFullyMature {
+            Text("Refining")
+                .font(.system(size: 9, weight: .bold))
+                .foregroundStyle(.white.opacity(0.7))
+                .padding(.horizontal, 5)
+                .padding(.vertical, 2)
+                .background(Color.white.opacity(0.15), in: Capsule())
         }
-        .cardStyle(tint: .gray)
     }
 
     // MARK: - Subviews
@@ -185,19 +152,16 @@ struct VitalityCard: View {
     }
 
     private var accessibilityDescription: String {
-        if scorer.isReady {
-            let delta = scorer.delta
-            let comparison: String
-            if delta < 0 {
-                comparison = "\(abs(delta)) years younger than your age"
-            } else if delta > 0 {
-                comparison = "\(delta) years older than your age"
-            } else {
-                comparison = "matching your age"
-            }
-            return "Vitality Age \(scorer.vitalityAge), \(comparison), trend \(scorer.paceLabel)"
+        let delta = scorer.delta
+        let comparison: String
+        if delta < 0 {
+            comparison = "\(abs(delta)) years younger than your age"
+        } else if delta > 0 {
+            comparison = "\(delta) years older than your age"
         } else {
-            return "Vitality Age, building your profile, needs \(VitalityScorer.minimumDaysRequired) days of data"
+            comparison = "matching your age"
         }
+        let maturity = scorer.isFullyMature ? "" : ", refining estimate"
+        return "Vitality Age \(scorer.vitalityAge), \(comparison), trend \(scorer.paceLabel)\(maturity)"
     }
 }

@@ -245,8 +245,15 @@ final class VitalityScorer {
 
     // MARK: - Minimum Data Requirement
 
-    /// Minimum days of data required for a valid computation
+    /// Minimum days of data recommended for full-confidence computation.
+    /// The orb and vitality age are always shown regardless of data maturity.
     static let minimumDaysRequired = 14
+
+    /// Days of data available at last compute — 0 means no data yet.
+    private(set) var availableDays: Int = 0
+
+    /// Whether the vitality age has reached full data maturity (≥ 14 days).
+    var isFullyMature: Bool { availableDays >= Self.minimumDaysRequired }
 
     // MARK: - Compute
 
@@ -259,14 +266,9 @@ final class VitalityScorer {
         self.chronologicalAge = chronologicalAge
         let allSeries = store.loadAllTimeSeries()
 
-        // Check minimum data requirement: at least 14 days of ANY data
-        let totalDays = allSeries.values.map(\.daysOfData).max() ?? 0
-        guard totalDays >= Self.minimumDaysRequired else {
-            isReady = false
-            componentAges = []
-            vitalityAge = 0
-            return
-        }
+        availableDays = allSeries.values.map(\.daysOfData).max() ?? 0
+        // Always mark as ready — the orb is always shown.
+        // With no data, vitality age defaults to chronological age.
 
         var components: [VitalityComponent] = []
         var weightedAgeSum: Double = 0
@@ -442,11 +444,11 @@ final class VitalityScorer {
             totalWeight += w
         }
 
-        // Need at least 2 metrics for a meaningful result
-        guard components.count >= 2, totalWeight > 0 else {
-            isReady = false
-            componentAges = []
-            vitalityAge = 0
+        // If fewer than 2 metrics available, default to chronological age
+        if components.count < 2 || totalWeight <= 0 {
+            vitalityAge = chronologicalAge
+            componentAges = components
+            isReady = true
             return
         }
 

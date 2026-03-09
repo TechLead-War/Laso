@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(git rev-parse --show-toplevel)"
 
 if [[ -x "$ROOT_DIR/qg" ]]; then
-    "$ROOT_DIR/qg" smoke
+    "$ROOT_DIR/qg" gate
 else
     printf '[pre-commit] qg not found — skipping quality gate\n'
 fi

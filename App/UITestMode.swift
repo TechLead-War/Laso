@@ -1,4 +1,4 @@
-import Foundation
+import UIKit
 
 enum UITestMode {
     private static let launchFlag = "--ui-test-mode"
@@ -15,6 +15,10 @@ enum UITestMode {
 
     static func configureDefaults() {
         guard isEnabled else { return }
+
+        // Disable all animations for deterministic screenshot captures
+        UIView.setAnimationsEnabled(false)
+
         let defaults = UserDefaults.standard
 
         if ProcessInfo.processInfo.arguments.contains(resetDefaultsFlag) {

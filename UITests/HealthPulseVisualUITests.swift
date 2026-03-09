@@ -20,7 +20,7 @@ final class HealthPulseVisualUITests: XCTestCase {
 
     func testOnboardingEntryLight() throws {
         let app = launchApp(theme: .light, showOnboarding: true)
-        XCTAssertTrue(app.staticTexts["You vs You"].waitForExistence(timeout: 12))
+        XCTAssertTrue(app.staticTexts["HealthPulse"].waitForExistence(timeout: 12))
         ScreenshotStore.capture(app: app, theme: Theme.light.rawValue, profile: "onboarding", step: "entry")
     }
 
