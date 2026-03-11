@@ -453,6 +453,134 @@ struct HealthKitMetricRegistry {
                 strategy: .workoutQuery,
                 statisticsOption: .cumulativeSum
             )
+
+        // MARK: - Hearing
+        case .headphoneAudioExposure:
+            return MetricConfig(
+                sampleType: HKQuantityType(.headphoneAudioExposure),
+                quantityType: HKQuantityType(.headphoneAudioExposure),
+                unit: .decibelAWeightedSoundPressureLevel(),
+                strategy: .quantitySample,
+                statisticsOption: .discreteAverage
+            )
+        case .environmentalAudioExposure:
+            return MetricConfig(
+                sampleType: HKQuantityType(.environmentalAudioExposure),
+                quantityType: HKQuantityType(.environmentalAudioExposure),
+                unit: .decibelAWeightedSoundPressureLevel(),
+                strategy: .quantitySample,
+                statisticsOption: .discreteAverage
+            )
+
+        // MARK: - Running Dynamics
+        case .runningPower:
+            return MetricConfig(
+                sampleType: HKQuantityType(.runningPower),
+                quantityType: HKQuantityType(.runningPower),
+                unit: .watt(),
+                strategy: .quantitySample,
+                statisticsOption: .discreteAverage
+            )
+        case .runningGroundContactTime:
+            return MetricConfig(
+                sampleType: HKQuantityType(.runningGroundContactTime),
+                quantityType: HKQuantityType(.runningGroundContactTime),
+                unit: .secondUnit(with: .milli),
+                strategy: .quantitySample,
+                statisticsOption: .discreteAverage
+            )
+        case .runningVerticalOscillation:
+            return MetricConfig(
+                sampleType: HKQuantityType(.runningVerticalOscillation),
+                quantityType: HKQuantityType(.runningVerticalOscillation),
+                unit: .meterUnit(with: .centi),
+                strategy: .quantitySample,
+                statisticsOption: .discreteAverage
+            )
+        case .runningStrideLength:
+            return MetricConfig(
+                sampleType: HKQuantityType(.runningStrideLength),
+                quantityType: HKQuantityType(.runningStrideLength),
+                unit: .meter(),
+                strategy: .quantitySample,
+                statisticsOption: .discreteAverage
+            )
+
+        // MARK: - Respiratory (additional)
+        case .forcedExpiratoryVolume1:
+            return MetricConfig(
+                sampleType: HKQuantityType(.forcedExpiratoryVolume1),
+                quantityType: HKQuantityType(.forcedExpiratoryVolume1),
+                unit: .liter(),
+                strategy: .quantitySample,
+                statisticsOption: .discreteAverage
+            )
+
+        // MARK: - Sleep (additional)
+        case .sleepBreathingDisturbances:
+            if #available(iOS 18.0, *) {
+                return MetricConfig(
+                    sampleType: HKQuantityType(.appleSleepingBreathingDisturbances),
+                    quantityType: HKQuantityType(.appleSleepingBreathingDisturbances),
+                    unit: HKUnit.count().unitDivided(by: .hour()),
+                    strategy: .quantitySample,
+                    statisticsOption: .discreteAverage
+                )
+            } else {
+                return MetricConfig(
+                    sampleType: nil,
+                    quantityType: nil,
+                    unit: HKUnit.count().unitDivided(by: .hour()),
+                    strategy: .quantitySample,
+                    statisticsOption: .discreteAverage
+                )
+            }
+
+        // MARK: - Mobility (additional)
+        case .walkingSteadiness:
+            return MetricConfig(
+                sampleType: HKQuantityType(.appleWalkingSteadiness),
+                quantityType: HKQuantityType(.appleWalkingSteadiness),
+                unit: .percent(),
+                strategy: .quantitySample,
+                statisticsOption: .discreteAverage
+            )
+        case .numberOfTimesFallen:
+            return MetricConfig(
+                sampleType: HKQuantityType(.numberOfTimesFallen),
+                quantityType: HKQuantityType(.numberOfTimesFallen),
+                unit: .count(),
+                strategy: .statisticsDaily,
+                statisticsOption: .cumulativeSum
+            )
+
+        // MARK: - Metabolic (additional)
+        case .insulinDelivery:
+            return MetricConfig(
+                sampleType: HKQuantityType(.insulinDelivery),
+                quantityType: HKQuantityType(.insulinDelivery),
+                unit: .internationalUnit(),
+                strategy: .statisticsDaily,
+                statisticsOption: .cumulativeSum
+            )
+
+        // MARK: - Water Sports
+        case .underwaterDepth:
+            return MetricConfig(
+                sampleType: HKQuantityType(.underwaterDepth),
+                quantityType: HKQuantityType(.underwaterDepth),
+                unit: .meter(),
+                strategy: .quantitySample,
+                statisticsOption: .discreteAverage
+            )
+        case .waterTemperature:
+            return MetricConfig(
+                sampleType: HKQuantityType(.waterTemperature),
+                quantityType: HKQuantityType(.waterTemperature),
+                unit: .degreeCelsius(),
+                strategy: .quantitySample,
+                statisticsOption: .discreteAverage
+            )
         }
     }
 

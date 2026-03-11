@@ -553,11 +553,16 @@ final class DashboardViewModel {
 
         let ts = healthKitManager.timeSeries
         async let cycleFlowSamplesTask = healthKitManager.fetchMenstrualFlowSamples(days: 365)
+        // Fetch raw per-sample HR for today — needed for accurate strain zone classification.
+        // The stored time series only has daily averages, losing per-minute granularity.
+        async let todayRawHRTask = healthKitManager.fetchTodayRawHeartRateSamples()
 
         // Phase 1: Core analysis — scores, trends, baselines (blocks until done, UI needs these)
         await Task.detached(priority: .userInitiated) { [analysisEngine] in
             analysisEngine.runCoreAnalysis(timeSeries: ts)
         }.value
+
+        let todayRawHR = await todayRawHRTask
 
         // Persist today's analysis snapshot for historical score tracking
         store.saveAnalysisSnapshot(
@@ -570,7 +575,7 @@ final class DashboardViewModel {
         updateCachedProperties()
 
         // Compute new engines (strain, stress, sleep coach, gamification, cycle)
-        computeNewEngines()
+        computeNewEngines(todayRawHR: todayRawHR)
 
         // Mark analysis timestamp so subsequent no-change refreshes can skip
         lastAnalysisDate = Date()
@@ -923,15 +928,17 @@ final class DashboardViewModel {
 
     // MARK: - New Engine Computation
 
-    private func computeNewEngines() {
+    private func computeNewEngines(todayRawHR: [MetricSample] = []) {
         let profile = UserProfileStore.shared.loadLocal()
         let age = profile?.ageFromDateOfBirth ?? 30
 
-        // Strain
+        // Strain — pass raw per-sample HR for accurate zone classification.
+        // The stored time series only has daily averages, which yields ~1 zone minute.
         strainScorer.compute(
             from: store,
             age: age,
-            restingHR: analysisEngine.baselines[.restingHeartRate]?.mean
+            restingHR: analysisEngine.baselines[.restingHeartRate]?.mean,
+            todayHRSamples: todayRawHR
         )
 
         // Strain Coach
@@ -966,9 +973,12 @@ final class DashboardViewModel {
         // Vitality Age
         vitalityScorer.compute(from: store, chronologicalAge: age)
 
-        // Menstrual cycle — only for female users
+        // Menstrual cycle — female users + explicit onboarding opt-in.
+        // Backward compatibility: if preference is absent (older installs), keep prior behavior.
         let isFemale = profile?.gender == .female
-        menstrualCycleTracker.isApplicable = isFemale
+        let cyclePreference = UserDefaults.standard.object(forKey: AppKeys.Cycle.trackingEnabled) as? Bool
+        let cycleTrackingEnabled = cyclePreference ?? true
+        menstrualCycleTracker.isApplicable = isFemale && cycleTrackingEnabled
     }
 
     private func computeScoreChangeFromLastWeek() -> Int? {

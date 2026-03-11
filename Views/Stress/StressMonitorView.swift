@@ -27,6 +27,12 @@ struct StressMonitorView: View {
         .background(Color(.systemGroupedBackground))
         .navigationTitle("Stress Monitor")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.stressMonitor)
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.stressMonitor)
+        }
     }
 
     // MARK: - Hero Gauge

@@ -190,6 +190,12 @@ struct VitalityComponent: Identifiable {
     }
 }
 
+enum VitalityPersonalizationStatus: String {
+    case buildingProfile = "Building your profile"
+    case earlyEstimate = "Early estimate"
+    case personalized = "Personalized"
+}
+
 // MARK: - VitalityScorer
 
 /// Computes a "Vitality Age" representing how old the user's body is performing,
@@ -207,6 +213,19 @@ final class VitalityScorer {
 
     /// Difference: positive = older than chronological, negative = younger
     var delta: Int { vitalityAge - chronologicalAge }
+
+    /// Raw biological age from the existing vitality model before confidence ramping.
+    private(set) var computedBiologicalAge: Int = 0
+
+    /// 0...1 personalization confidence used to blend chronological and computed age.
+    private(set) var personalizationProgress: Double = 0
+
+    /// Human-readable status for trust-aware vitality UI.
+    var personalizationStatus: VitalityPersonalizationStatus {
+        if personalizationProgress >= 1 { return .personalized }
+        if availableDays <= Self.zeroDeltaDaysBeforeRamp || personalizationProgress <= 0 { return .buildingProfile }
+        return .earlyEstimate
+    }
 
     /// 90-day pace of aging trend.
     /// < 1.0 = aging slower than calendar time, > 1.0 = aging faster.
@@ -245,15 +264,17 @@ final class VitalityScorer {
 
     // MARK: - Minimum Data Requirement
 
-    /// Minimum days of data recommended for full-confidence computation.
-    /// The orb and vitality age are always shown regardless of data maturity.
-    static let minimumDaysRequired = 14
+    /// Full personalization target for vitality age confidence.
+    static let minimumDaysRequired = 30
+
+    /// Days held at chronological age before allowing vitality divergence.
+    private static let zeroDeltaDaysBeforeRamp = 7
 
     /// Days of data available at last compute — 0 means no data yet.
     private(set) var availableDays: Int = 0
 
-    /// Whether the vitality age has reached full data maturity (≥ 14 days).
-    var isFullyMature: Bool { availableDays >= Self.minimumDaysRequired }
+    /// Whether vitality age is fully personalized for presentation.
+    var isFullyMature: Bool { personalizationProgress >= 1 }
 
     // MARK: - Compute
 
@@ -266,7 +287,9 @@ final class VitalityScorer {
         self.chronologicalAge = chronologicalAge
         let allSeries = store.loadAllTimeSeries()
 
-        availableDays = allSeries.values.map(\.daysOfData).max() ?? 0
+        availableDays = usableDaysForPersonalization(from: allSeries)
+        personalizationProgress = personalizationProgress(for: availableDays)
+        computedBiologicalAge = chronologicalAge
         // Always mark as ready — the orb is always shown.
         // With no data, vitality age defaults to chronological age.
 
@@ -446,15 +469,24 @@ final class VitalityScorer {
 
         // If fewer than 2 metrics available, default to chronological age
         if components.count < 2 || totalWeight <= 0 {
+            computedBiologicalAge = chronologicalAge
             vitalityAge = chronologicalAge
-            componentAges = components
+            personalizationProgress = 0
+            componentAges = components.sorted { $0.metricAge > $1.metricAge }
             isReady = true
+            history = []
+            paceOfAging = 1.0
             return
         }
 
         // Normalize weights if not all metrics are available
         let computedAge = Int((weightedAgeSum / totalWeight).rounded())
-        vitalityAge = max(18, min(95, computedAge))
+        computedBiologicalAge = max(18, min(95, computedAge))
+        vitalityAge = blendedBiologicalAge(
+            chronologicalAge: chronologicalAge,
+            computedBiologicalAge: computedBiologicalAge,
+            progress: personalizationProgress
+        )
         componentAges = components.sorted { $0.metricAge > $1.metricAge }
         isReady = true
 
@@ -484,6 +516,57 @@ final class VitalityScorer {
     var paceIsPositive: Bool { paceOfAging < 1.0 }
 
     // MARK: - Private Helpers
+
+    /// Metrics used in vitality age computation and their minimum sample count
+    /// before we consider their day count usable for personalization ramping.
+    /// Thresholds are 1 because the data pipeline stores daily aggregates —
+    /// each StoredDailySample already represents a full day of data.
+    private static let usableDataSampleThresholds: [HealthMetric: Int] = [
+        .vo2Max: 1,
+        .restingHeartRate: 1,
+        .heartRateVariability: 1,
+        .sleepDuration: 1,
+        .sleepAwake: 1,
+        .sleepDeep: 1,
+        .walkingSpeed: 1,
+        .steps: 1,
+        .exerciseMinutes: 1,
+        .bodyFatPercentage: 1,
+        .bmi: 1
+    ]
+
+    /// Best-effort "usable days of health data" for vitality personalization.
+    /// Uses existing per-metric `daysOfData` and only counts metrics with enough samples.
+    private func usableDaysForPersonalization(from allSeries: [HealthMetric: MetricTimeSeries]) -> Int {
+        var maxUsableDays = 0
+        for (metric, minSamples) in Self.usableDataSampleThresholds {
+            guard let series = allSeries[metric], series.totalDataPoints >= minSamples else { continue }
+            maxUsableDays = max(maxUsableDays, series.daysOfData)
+        }
+        return maxUsableDays
+    }
+
+    /// Personalization stays at 0 for the first 7 usable days,
+    /// then ramps linearly to 1.0 by day 30.
+    private func personalizationProgress(for usableDays: Int) -> Double {
+        if usableDays <= Self.zeroDeltaDaysBeforeRamp { return 0 }
+        if usableDays >= Self.minimumDaysRequired { return 1 }
+
+        let rampDays = Self.minimumDaysRequired - Self.zeroDeltaDaysBeforeRamp
+        let progressedDays = usableDays - Self.zeroDeltaDaysBeforeRamp
+        return max(0, min(1, Double(progressedDays) / Double(rampDays)))
+    }
+
+    /// Blend from chronological age to computed biological age based on personalization progress.
+    private func blendedBiologicalAge(
+        chronologicalAge: Int,
+        computedBiologicalAge: Int,
+        progress: Double
+    ) -> Int {
+        let rawDelta = Double(computedBiologicalAge - chronologicalAge)
+        let blended = Double(chronologicalAge) + (rawDelta * max(0, min(1, progress)))
+        return max(18, min(95, Int(blended.rounded())))
+    }
 
     /// Get the average value from the most recent N days, requiring at least 3 data points
     private func recentAverage(_ series: MetricTimeSeries, days: Int) -> Double? {

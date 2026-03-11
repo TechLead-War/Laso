@@ -184,6 +184,12 @@ struct BreathworkView: View {
             tick()
         }
         .sensoryFeedback(.impact(flexibility: .soft, intensity: 0.6), trigger: phaseTransitionTrigger)
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.breathwork)
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.breathwork)
+        }
         .alert("End Session?", isPresented: $showStopConfirmation) {
             Button("End", role: .destructive) { endSession() }
             Button("Continue", role: .cancel) { }

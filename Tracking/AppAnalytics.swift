@@ -1,6 +1,4 @@
 import Foundation
-import FirebaseAnalytics
-import FirebaseCrashlytics
 
 /// All trackable screens in the app.
 enum AppFeature: String, Hashable {
@@ -27,6 +25,21 @@ enum AppFeature: String, Hashable {
     case healthStateTimeline = "health_state_timeline"
     case metricLog = "metric_log"
     case proOverlay = "pro_overlay"
+    case achievements
+    case performanceProfile = "performance_profile"
+    case weeklyPlan = "weekly_plan"
+    case journalEntry = "journal_entry"
+    case expandedJournal = "expanded_journal"
+    case journalInsights = "journal_insights"
+    case annualReport = "annual_report"
+    case monthlyReview = "monthly_review"
+    case sleepCoach = "sleep_coach"
+    case breathwork
+    case stressMonitor = "stress_monitor"
+    case strainDetail = "strain_detail"
+    case vitalityDetail = "vitality_detail"
+    case cycleDetail = "cycle_detail"
+    case deviceSetupGuide = "device_setup_guide"
 }
 
 /// Actionable block/card types — only user-initiated taps and meaningful interactions.
@@ -274,7 +287,7 @@ enum BlockType: String {
 //
 // ──────────────────────────────────────────────────────────────────────────────
 
-/// Central analytics facade. Firebase Analytics backend.
+/// Central analytics facade. PostHog backend (sole analytics platform).
 /// Focused on PMF metrics: activation, retention, monetization, and value delivery.
 final class AppAnalytics {
     static let shared = AppAnalytics()
@@ -295,27 +308,19 @@ final class AppAnalytics {
     private init() {}
 
     // ══════════════════════════════════════════════════════════════════════
-    // MARK: - Crashlytics
+    // MARK: - Error Tracking (PostHog)
     // ══════════════════════════════════════════════════════════════════════
 
-    /// Record a non-fatal error to Crashlytics for monitoring without crashing.
+    /// Record a non-fatal error to PostHog for monitoring.
     func recordNonFatal(_ error: Error, context: String, metadata: [String: Any] = [:]) {
-        let crashlytics = Crashlytics.crashlytics()
-        crashlytics.log("\(context): \(error.localizedDescription)")
-        for (key, value) in metadata {
-            crashlytics.setCustomValue("\(value)", forKey: key)
-        }
-        crashlytics.record(error: error)
+        PostHogManager.shared.captureError(error, context: context, metadata: metadata)
     }
 
-    /// Log a breadcrumb message to Crashlytics (visible in crash reports).
+    /// Log a breadcrumb as a lightweight PostHog event.
     func logBreadcrumb(_ message: String) {
-        Crashlytics.crashlytics().log(message)
-    }
-
-    /// Set the Crashlytics user identifier for crash attribution.
-    func setCrashlyticsUser(_ userId: String) {
-        Crashlytics.crashlytics().setUserID(userId)
+        PostHogManager.shared.capture(event: "app_breadcrumb", properties: [
+            "message": String(message.prefix(200))
+        ])
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -544,9 +549,9 @@ final class AppAnalytics {
         for (k, v) in metadata { params[k] = v }
         logEvent("screen_viewed", parameters: params)
 
-        Analytics.logEvent(AnalyticsEventScreenView, parameters: [
-            AnalyticsParameterScreenName: feature.rawValue,
-            AnalyticsParameterScreenClass: screenClassName(for: feature)
+        PostHogManager.shared.screen(feature.rawValue, properties: [
+            "tab": session.currentTab,
+            "depth": session.currentDepth
         ])
 
         if let previousScreen, previousScreen != feature.rawValue {
@@ -1053,13 +1058,6 @@ final class AppAnalytics {
         ])
     }
 
-    func trackThemeChanged(from fromTheme: String, to toTheme: String) {
-        logEvent("theme_changed", parameters: [
-            "from_theme": fromTheme,
-            "to_theme": toTheme
-        ])
-    }
-
     func trackNotificationSent(type: String) {
         logEvent("notification_sent", parameters: [
             "type": type
@@ -1331,8 +1329,8 @@ final class AppAnalytics {
     // MARK: - 15. Dashboard Metrics (Retention/Stickiness/Engagement)
     // ══════════════════════════════════════════════════════════════════════
 
-    /// Fires once per calendar day to power DAU/WAU/MAU in Firebase.
-    /// Call from session start — deduplicated by Firebase's unique user counting.
+    /// Fires once per calendar day to power DAU/WAU/MAU in PostHog.
+    /// Call from session start — deduplicated by PostHog's unique user counting.
     func trackDailyActiveUser() {
         logEvent("daily_active", parameters: [
             "session_source": session.currentSessionSource.rawValue,
@@ -1440,33 +1438,7 @@ final class AppAnalytics {
         return cleaned.isEmpty ? "unknown" : String(cleaned.prefix(64))
     }
 
-    // MARK: - PostHog Event Whitelist (PMF-critical only, keeps free tier budget)
-
-    private static let postHogEvents: Set<String> = [
-        // Activation funnel
-        "onboarding_step_completed", "onboarding_completed", "onboarding_drop_off",
-        "activation_milestone", "activation_completed", "time_to_first_value",
-        // Retention
-        "session_start", "session_end", "return_session", "daily_active",
-        "retention_milestone", "streak_milestone", "streak_broken",
-        "inactive_period_detected",
-        // Core engagement
-        "core_action_completed", "screen_viewed",
-        "pull_to_refresh", "insight_tapped", "block_tapped",
-        // Subscription funnel
-        "trial_started", "trial_day_check", "trial_expired",
-        "paywall_viewed", "paywall_dismissed", "paywall_cta_tapped",
-        "subscription_purchased", "subscription_renewed", "subscription_cancelled",
-        "purchase_failed", "restore_attempted",
-        "billing_grace_started", "billing_grace_resolved",
-        "premium_feature_attempted", "pro_feature_funnel",
-        // Feedback & NPS
-        "nps_submitted", "feedback_submitted",
-        // Share / viral
-        "share_sheet_presented",
-        // Errors
-        "error_occurred",
-    ]
+    // MARK: - PostHog Backend (all events)
 
     fileprivate func logEvent(_ name: String, parameters: [String: Any]) {
         var enriched = parameters
@@ -1482,42 +1454,10 @@ final class AppAnalytics {
 
         let eventName = sanitizeEventName(name)
         let params = sanitizeParameters(enriched)
-        Analytics.logEvent(eventName, parameters: params)
-        if Self.postHogEvents.contains(eventName) {
-            PostHogManager.shared.capture(event: eventName, properties: params)
-        }
+        PostHogManager.shared.capture(event: eventName, properties: params)
     }
 
     private func setUserProperty(_ name: String, value: String) {
-        Analytics.setUserProperty(value, forName: name)
         PostHogManager.shared.setUserProperty(name: name, value: value)
-    }
-
-    private func screenClassName(for feature: AppFeature) -> String {
-        switch feature {
-        case .home: return "HomeView"
-        case .live: return "LiveView"
-        case .explore: return "ExploreView"
-        case .categoryDetail: return "CategoryDetailView"
-        case .metricDetail: return "MetricDetailView"
-        case .riskDetail: return "HealthRiskDetailView"
-        case .settings: return "SettingsView"
-        case .connectedDevices: return "ConnectedDevicesView"
-        case .deviceDetail: return "DeviceDetailView"
-        case .insightsDetail: return "InsightsDetailView"
-        case .correlations: return "CorrelationsView"
-        case .feedback: return "FeedbackSheet"
-        case .onboarding: return "OnboardingView"
-        case .weeklyReview: return "WeeklyReviewView"
-        case .metricAlertPicker: return "MetricAlertPickerView"
-        case .paywall: return "PaywallView"
-        case .discovery: return "DiscoveryView"
-        case .scoreGuide: return "ScoreGuideSheet"
-        case .recoveryInfo: return "RecoveryInfoSheet"
-        case .simulation: return "SimulationView"
-        case .healthStateTimeline: return "HealthStateTimelineView"
-        case .metricLog: return "MetricLogSheet"
-        case .proOverlay: return "ProFeatureOverlay"
-        }
     }
 }

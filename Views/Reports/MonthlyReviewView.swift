@@ -47,6 +47,12 @@ struct MonthlyReviewView: View {
                 )
             }
         }
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.monthlyReview)
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.monthlyReview)
+        }
     }
 
     // MARK: - Computed Helpers

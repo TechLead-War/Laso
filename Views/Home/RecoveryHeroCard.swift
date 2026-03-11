@@ -99,6 +99,7 @@ struct RecoveryHeroCard: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Recovery score \(score). \(recoveryLabel). \(dayType).")
         .accessibilityHint("Opens score breakdown")
+        .accessibilityIdentifier("home.recoveryCard")
     }
 }
 

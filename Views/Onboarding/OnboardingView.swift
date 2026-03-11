@@ -66,7 +66,16 @@ enum HealthFocus: String, Codable, Identifiable, Hashable, CaseIterable {
 // MARK: - OnboardingView
 
 struct OnboardingView: View {
-    @State private var currentPage = 0
+    private enum OnboardingStep: String, Hashable {
+        case welcome
+        case valueProposition = "value_proposition"
+        case profileCapture = "profile_capture"
+        case connectHealth = "connect_health"
+        case cycleOptIn = "cycle_opt_in"
+        case focusCalibration = "focus_calibration"
+    }
+
+    @State private var currentStep: OnboardingStep = .welcome
     @State private var selectedFocuses: Set<HealthFocus> = []
     @State private var onboardingStartDate = Date()
     @State private var stepStartDate = Date()
@@ -74,22 +83,38 @@ struct OnboardingView: View {
     // Profile capture state
     @State private var profileName: String?
     @State private var profileEmail: String?
-    @State private var profileGender: Gender = .preferNotToSay
+    @State private var profileGender: Gender?
     @State private var profileAge: Int?
 
     let healthKitManager: HealthKitManager
     let runCalibration: () async -> String?
     let onComplete: () -> Void
 
-    private let totalPages = 8
-    private let stepNames = [
-        "welcome", "culture_personal", "culture_intelligence", "culture_privacy",
-        "profile_capture", "connect_health", "focus_selection", "initial_calibration"
-    ]
+    private var includesCycleStep: Bool {
+        profileGender == .female
+    }
+
+    private var flowSteps: [OnboardingStep] {
+        var steps: [OnboardingStep] = [
+            .welcome,
+            .valueProposition,
+            .profileCapture,
+            .connectHealth
+        ]
+        if includesCycleStep {
+            steps.append(.cycleOptIn)
+        }
+        steps.append(.focusCalibration)
+        return steps
+    }
+
+    private var progressSteps: [OnboardingStep] {
+        flowSteps.filter { $0 != .welcome }
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            TabView(selection: $currentPage) {
+            TabView(selection: $currentStep) {
                 // Page 0: Welcome
                 WelcomePage {
                     AppAnalytics.shared.trackBlockTap(
@@ -98,82 +123,75 @@ struct OnboardingView: View {
                         screen: .onboarding,
                         metadata: ["step_name": "welcome"]
                     )
-                    withAnimation(.smooth(duration: 0.4)) { currentPage = 1 }
+                    withAnimation(.smooth(duration: 0.4)) { currentStep = .valueProposition }
                 }
-                .tag(0)
+                .tag(OnboardingStep.welcome)
 
-                // Page 1: Culture — Health is personal
-                CulturePage(
-                    icon: "heart.fill",
-                    color: .red,
-                    title: "We believe health\nis personal",
-                    message: "No two bodies are the same. HealthPulse learns your unique patterns, rhythms, and thresholds to give you insights that truly matter."
-                ) { withAnimation(.smooth(duration: 0.4)) { currentPage = 2 } }
-                .tag(1)
+                // Page 1: Value proposition
+                ValuePropositionPage {
+                    withAnimation(.smooth(duration: 0.4)) { currentStep = .profileCapture }
+                }
+                .tag(OnboardingStep.valueProposition)
 
-                // Page 2: Culture — Intelligence grows
-                CulturePage(
-                    icon: "cpu.fill",
-                    color: .purple,
-                    title: "Intelligence that\ngrows with you",
-                    message: "Our on-device ML engine learns more every day. From forecasting trends to detecting anomalies, your insights get smarter over time."
-                ) { withAnimation(.smooth(duration: 0.4)) { currentPage = 3 } }
-                .tag(2)
-
-                // Page 3: Culture — Data stays yours
-                CulturePage(
-                    icon: "lock.shield.fill",
-                    color: .green,
-                    title: "Your data stays yours",
-                    message: "All analysis runs on your device. Your health data is encrypted at rest and never leaves your phone. No cloud. No compromise."
-                ) { withAnimation(.smooth(duration: 0.4)) { currentPage = 4 } }
-                .tag(3)
-
-                // Page 4: Profile Capture (name, email, age, gender + silent device ID)
+                // Page 2: Profile capture
                 ProfileCaptureView { name, email, gender, age in
                     profileName = name
                     profileEmail = email
                     profileGender = gender
                     profileAge = age
-                    withAnimation(.smooth(duration: 0.4)) { currentPage = 5 }
+                    if gender != .female {
+                        persistCyclePreference(false, trackAnalytics: false)
+                    }
+                    withAnimation(.smooth(duration: 0.4)) { currentStep = .connectHealth }
                 }
-                .tag(4)
+                .tag(OnboardingStep.profileCapture)
 
-                // Page 5: Connect Apple Health
+                // Page 3: Connect Apple Health
                 ConnectHealthPage(healthKitManager: healthKitManager) {
-                    withAnimation(.smooth(duration: 0.4)) { currentPage = 6 }
+                    withAnimation(.smooth(duration: 0.4)) {
+                        currentStep = includesCycleStep ? .cycleOptIn : .focusCalibration
+                    }
                 }
-                .tag(5)
+                .tag(OnboardingStep.connectHealth)
 
-                // Page 6: Focus Selection
-                FocusPage(selectedFocuses: $selectedFocuses) {
-                    withAnimation(.smooth(duration: 0.4)) { currentPage = 7 }
+                if includesCycleStep {
+                    // Page 4: Female-only cycle tracking opt-in
+                    CycleTrackingOptInPage(
+                        onEnable: {
+                            persistCyclePreference(true, trackAnalytics: true)
+                            withAnimation(.smooth(duration: 0.4)) { currentStep = .focusCalibration }
+                        },
+                        onSkip: {
+                            persistCyclePreference(false, trackAnalytics: true)
+                            withAnimation(.smooth(duration: 0.4)) { currentStep = .focusCalibration }
+                        }
+                    )
+                    .tag(OnboardingStep.cycleOptIn)
                 }
-                .tag(6)
 
-                // Page 7: Calibration
-                CalibrationPage(
-                    isActive: currentPage == 7,
+                // Page 5 (or 4): Focus + Calibration
+                FocusCalibrationPage(
+                    isActive: currentStep == .focusCalibration,
+                    selectedFocuses: $selectedFocuses,
                     healthKitManager: healthKitManager,
                     runCalibration: runCalibration,
                     onComplete: finishOnboarding
                 )
-                .tag(7)
+                .tag(OnboardingStep.focusCalibration)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
 
-            // Progress dots (visible on pages 1–7, hidden on Welcome)
-            if currentPage > 0 {
+            // Progress dots (visible on non-welcome steps)
+            if let currentProgressIndex = progressSteps.firstIndex(of: currentStep) {
                 HStack(spacing: 6) {
-                    ForEach(0..<7, id: \.self) { index in
-                        let dotPage = index + 1 // maps dot 0 → page 1, dot 6 → page 7
+                    ForEach(0..<progressSteps.count, id: \.self) { index in
                         Circle()
-                            .fill(dotPage <= currentPage ? Color.accentColor : Color.secondary.opacity(0.2))
+                            .fill(index <= currentProgressIndex ? Color.accentColor : Color.secondary.opacity(0.2))
                             .frame(
-                                width: dotPage == currentPage ? 8 : 6,
-                                height: dotPage == currentPage ? 8 : 6
+                                width: index == currentProgressIndex ? 8 : 6,
+                                height: index == currentProgressIndex ? 8 : 6
                             )
-                            .animation(.spring(response: 0.4), value: currentPage)
+                            .animation(.spring(response: 0.4), value: currentStep)
                     }
                 }
                 .padding(.bottom, 16)
@@ -182,18 +200,19 @@ struct OnboardingView: View {
         .accessibilityIdentifier("screen.onboarding")
         .background(Color(.systemGroupedBackground))
         .interactiveDismissDisabled()
-        .sensoryFeedback(.selection, trigger: currentPage)
+        .sensoryFeedback(.selection, trigger: currentStep)
         .onAppear {
             onboardingStartDate = Date()
             stepStartDate = Date()
             AppAnalytics.shared.trackFeatureOpen(.onboarding)
         }
-        .onChange(of: currentPage) { oldPage, newPage in
+        .onChange(of: currentStep) { oldStep, newStep in
+            guard oldStep != newStep else { return }
             // Track step completion for the step we just left
             let stepDuration = Int(Date().timeIntervalSince(stepStartDate))
             AppAnalytics.shared.trackOnboardingStepCompleted(
-                step: oldPage,
-                stepName: stepNames[oldPage],
+                step: stepIndex(for: oldStep),
+                stepName: oldStep.rawValue,
                 durationSec: stepDuration
             )
             stepStartDate = Date()
@@ -203,8 +222,8 @@ struct OnboardingView: View {
             if !UserDefaults.standard.bool(forKey: AppKeys.App.onboardingCompleted) {
                 let totalDuration = Int(Date().timeIntervalSince(onboardingStartDate))
                 AppAnalytics.shared.trackOnboardingDropOff(
-                    lastStep: currentPage,
-                    lastStepName: stepNames[currentPage],
+                    lastStep: stepIndex(for: currentStep),
+                    lastStepName: currentStep.rawValue,
                     durationSec: totalDuration
                 )
             }
@@ -225,7 +244,7 @@ struct OnboardingView: View {
         AppAnalytics.shared.trackOnboardingCompleted(
             focuses: focuses.map(\.rawValue),
             durationSec: totalDuration,
-            stepsCompleted: totalPages
+            stepsCompleted: flowSteps.count
         )
         AppAnalytics.shared.trackFeatureClose(.onboarding)
 
@@ -233,6 +252,8 @@ struct OnboardingView: View {
     }
 
     private func saveUserProfile(focuses: Set<HealthFocus>) {
+        let finalGender = profileGender ?? .preferNotToSay
+
         // Convert age to approximate date of birth
         let dateOfBirth: Date
         if let age = profileAge {
@@ -244,7 +265,7 @@ struct OnboardingView: View {
         let profile = UserProfileStore.shared.makeProfile(
             name: profileName ?? "",
             email: profileEmail ?? "",
-            gender: profileGender,
+            gender: finalGender,
             dateOfBirth: dateOfBirth,
             healthFocuses: focuses.map(\.rawValue)
         )
@@ -257,11 +278,22 @@ struct OnboardingView: View {
         if let email = profileEmail {
             UserDefaults.standard.set(email, forKey: AppKeys.Profile.email)
         }
-        UserDefaults.standard.set(profileGender.rawValue, forKey: AppKeys.Profile.gender)
+        UserDefaults.standard.set(finalGender.rawValue, forKey: AppKeys.Profile.gender)
         if let age = profileAge {
             UserDefaults.standard.set(age, forKey: AppKeys.Profile.dateOfBirth)
         }
         UserDefaults.standard.set(true, forKey: AppKeys.Profile.profileCompleted)
+    }
+
+    private func stepIndex(for step: OnboardingStep) -> Int {
+        flowSteps.firstIndex(of: step) ?? 0
+    }
+
+    private func persistCyclePreference(_ enabled: Bool, trackAnalytics: Bool) {
+        UserDefaults.standard.set(enabled, forKey: AppKeys.Cycle.trackingEnabled)
+        if trackAnalytics {
+            AppAnalytics.shared.trackSettingChanged(name: "cycle_tracking_enabled", value: enabled)
+        }
     }
 }
 
@@ -339,10 +371,12 @@ private struct ConnectHealthPage: View {
                         ]
                     )
                     Task {
-                        await healthKitManager.requestAuthorization()
-                        PostHogManager.shared.capture(event: "healthkit_authorized", properties: [
-                            "healthkit_available": true,
-                        ])
+                        if !UITestMode.isEnabled {
+                            await healthKitManager.requestAuthorization()
+                            PostHogManager.shared.capture(event: "healthkit_authorized", properties: [
+                                "healthkit_available": true,
+                            ])
+                        }
                         onContinue()
                     }
                 } label: {
@@ -404,7 +438,113 @@ private struct ConnectHealthPage: View {
     }
 }
 
-// MARK: - Page 5: Focus
+// MARK: - Page 4: Cycle Opt-In
+
+private struct CycleTrackingOptInPage: View {
+    let onEnable: () -> Void
+    let onSkip: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            Text("Laso")
+                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .foregroundStyle(.secondary)
+                .padding(.bottom, 32)
+
+            Image(systemName: "calendar.badge.clock")
+                .font(.system(size: 44, weight: .medium))
+                .foregroundStyle(.pink)
+                .frame(width: 88, height: 88)
+                .background(Color.pink.opacity(0.12), in: Circle())
+                .padding(.bottom, 28)
+
+            VStack(spacing: 10) {
+                Text("Enable Cycle Tracking?")
+                    .font(.title2.weight(.bold))
+
+                Text("Use menstrual flow data from Apple Health for cycle-aware insights and recommendations.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+            }
+
+            Spacer()
+            Spacer()
+
+            Button {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Enable Cycle Tracking",
+                    type: .onboardingGetStarted,
+                    screen: .onboarding,
+                    metadata: [
+                        "step_name": "cycle_opt_in",
+                        "enabled": 1
+                    ]
+                )
+                onEnable()
+            } label: {
+                Text("Enable")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .font(.headline)
+            .padding(.horizontal, 24)
+
+            Button("Not now") {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Cycle Tracking Not Now",
+                    type: .onboardingContinueAnyway,
+                    screen: .onboarding,
+                    metadata: [
+                        "step_name": "cycle_opt_in",
+                        "enabled": 0
+                    ]
+                )
+                onSkip()
+            }
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .padding(.top, 12)
+            .padding(.bottom, 48)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+// MARK: - Page 5: Focus + Calibration
+
+private struct FocusCalibrationPage: View {
+    let isActive: Bool
+    @Binding var selectedFocuses: Set<HealthFocus>
+    let healthKitManager: HealthKitManager
+    let runCalibration: () async -> String?
+    let onComplete: () -> Void
+
+    @State private var hasStartedCalibration = false
+
+    var body: some View {
+        Group {
+            if hasStartedCalibration {
+                CalibrationPage(
+                    isActive: isActive,
+                    healthKitManager: healthKitManager,
+                    runCalibration: runCalibration,
+                    onComplete: onComplete
+                )
+            } else {
+                FocusPage(selectedFocuses: $selectedFocuses) {
+                    hasStartedCalibration = true
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Focus Selection
 
 private struct FocusPage: View {
     @Binding var selectedFocuses: Set<HealthFocus>
@@ -446,7 +586,7 @@ private struct FocusPage: View {
                             type: .onboardingFocusChip,
                             screen: .onboarding,
                             metadata: [
-                                "step_name": "focus_selection",
+                                "step_name": "focus_calibration",
                                 "focus_id": focus.rawValue,
                                 "is_selected": selectedFocuses.contains(focus) ? 1 : 0,
                                 "selected_count": selectedFocuses.count
@@ -485,7 +625,7 @@ private struct FocusPage: View {
                     type: .onboardingGetStarted,
                     screen: .onboarding,
                     metadata: [
-                        "step_name": "focus_selection",
+                        "step_name": "focus_calibration",
                         "selected_focuses_count": selectedFocuses.count
                     ]
                 )
@@ -504,7 +644,7 @@ private struct FocusPage: View {
     }
 }
 
-// MARK: - Page 6: Initial Calibration
+// MARK: - Initial Calibration
 
 private struct CalibrationPage: View {
     enum CalibrationState: Equatable {
@@ -620,7 +760,7 @@ private struct CalibrationPage: View {
                     type: .onboardingGetStarted,
                     screen: .onboarding,
                     metadata: [
-                        "step_name": "initial_calibration",
+                        "step_name": "focus_calibration",
                         "calibration_state": "success"
                     ]
                 )
@@ -641,7 +781,7 @@ private struct CalibrationPage: View {
                         type: .onboardingCalibrationRetry,
                         screen: .onboarding,
                         metadata: [
-                            "step_name": "initial_calibration",
+                            "step_name": "focus_calibration",
                             "calibration_state": "failed"
                         ]
                     )
@@ -661,7 +801,7 @@ private struct CalibrationPage: View {
                         type: .onboardingCalibrationSkip,
                         screen: .onboarding,
                         metadata: [
-                            "step_name": "initial_calibration",
+                            "step_name": "focus_calibration",
                             "calibration_state": "failed"
                         ]
                     )
@@ -924,57 +1064,72 @@ private struct WelcomePage: View {
     }
 }
 
-// MARK: - Culture Page
+// MARK: - Value Proposition Page
 
-private struct CulturePage: View {
-    let icon: String
-    let color: Color
-    let title: String
-    let message: String
+private struct ValuePropositionPage: View {
     let onContinue: () -> Void
+
+    private let bullets: [(icon: String, title: String, message: String)] = [
+        ("person.fill", "Personalized baseline", "Insights adapt to your body and your trends."),
+        ("shield.fill", "Private by default", "Analysis runs on-device and your data stays local."),
+        ("chart.line.uptrend.xyaxis", "Actionable guidance", "Daily focus areas help you improve faster.")
+    ]
 
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
 
-            // Branding
             Text("Laso")
                 .font(.system(size: 15, weight: .semibold, design: .rounded))
                 .foregroundStyle(.secondary)
                 .padding(.bottom, 32)
 
-            // Icon
-            Image(systemName: icon)
-                .font(.system(size: 44, weight: .medium))
-                .foregroundStyle(color)
-                .frame(width: 88, height: 88)
-                .background(color.opacity(0.12), in: Circle())
-                .padding(.bottom, 28)
-
-            // Title + Message
             VStack(spacing: 10) {
-                Text(title)
+                Text("What You Get")
                     .font(.title2.weight(.bold))
 
-                Text(message)
+                Text("A quick setup, then practical health insights tailored to you.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
-                    .fixedSize(horizontal: false, vertical: true)
             }
+            .padding(.bottom, 24)
+
+            VStack(spacing: 14) {
+                ForEach(Array(bullets.enumerated()), id: \.offset) { _, item in
+                    HStack(alignment: .top, spacing: 12) {
+                        Image(systemName: item.icon)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.accentColor)
+                            .frame(width: 24, height: 24)
+                            .background(Color.accentColor.opacity(0.12), in: Circle())
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(item.title)
+                                .font(.subheadline.weight(.semibold))
+                            Text(item.message)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                    }
+                }
+            }
+            .padding(20)
+            .background(.background, in: RoundedRectangle(cornerRadius: 16))
+            .padding(.horizontal, 24)
 
             Spacer()
             Spacer()
 
             Button {
                 AppAnalytics.shared.trackBlockTap(
-                    title: title,
+                    title: "Continue",
                     type: .onboardingCultureContinue,
                     screen: .onboarding,
                     metadata: [
-                        "step_name": "culture_page",
-                        "page_title": title
+                        "step_name": "value_proposition"
                     ]
                 )
                 onContinue()

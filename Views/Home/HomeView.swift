@@ -14,7 +14,6 @@ struct HomeView: View {
     @State private var homeRefreshTimer: Timer?
     @State private var weeklyReviewViewModel: WeeklyReviewViewModel?
     @State private var showScoreGuide = false
-    @State private var showRecoveryInfo = false
     // Section trackers
     @State private var recoveryTracker = SectionTracker(section: .homeRecovery, tab: .home)
     @State private var illnessTracker = SectionTracker(section: .homeIllness, tab: .home)
@@ -54,10 +53,6 @@ struct HomeView: View {
         .sheet(isPresented: $showScoreGuide) {
             ScoreGuideSheet()
         }
-        .sheet(isPresented: $showRecoveryInfo) {
-            RecoveryInfoSheet()
-                .presentationDetents([.medium])
-        }
         .refreshable {
             AppAnalytics.shared.trackPullToRefresh(screen: .home)
             AppAnalytics.shared.trackActivationMilestone(.firstPullToRefresh)
@@ -69,7 +64,6 @@ struct HomeView: View {
         .onAppear {
             startHomeRefresh()
             AppAnalytics.shared.trackFeatureOpen(.home)
-            showScoreGuideIfNeeded()
         }
         .onDisappear {
             stopHomeRefresh()
@@ -82,13 +76,6 @@ struct HomeView: View {
             } else {
                 stopHomeRefresh()
                 stopFirstLaunchDotTimer()
-            }
-        }
-        .onChange(of: viewModel.isLoading) { _, isLoading in
-            if !isLoading {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    showScoreGuideIfNeeded()
-                }
             }
         }
     }
@@ -112,12 +99,6 @@ struct HomeView: View {
         homeRefreshTimer = timer
     }
 
-    private func showScoreGuideIfNeeded() {
-        guard hasData,
-              !viewModel.showDiscovery,
-              !UserDefaults.standard.bool(forKey: AppKeys.App.hasSeenScoreGuide) else { return }
-        showScoreGuide = true
-    }
 
     private func stopHomeRefresh() {
         homeRefreshTimer?.invalidate()
@@ -790,14 +771,6 @@ struct HomeView: View {
         }
     }
 
-    private func showRecoveryInfoIfNeeded() {
-        guard !UserDefaults.standard.bool(forKey: AppKeys.App.hasSeenRecoveryInfo) else { return }
-        UserDefaults.standard.set(true, forKey: AppKeys.App.hasSeenRecoveryInfo)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            showRecoveryInfo = true
-        }
-    }
-
     static func recoveryLabel(_ score: Int) -> String {
         switch score {
         case 80...100: return "Fully Recovered"
@@ -948,7 +921,7 @@ struct HomeView: View {
 #Preview {
     let hkManager = HealthKitManager()
     let container = try! ModelContainer(
-        for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self,
+        for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self, StoredDailyStrain.self,
         configurations: ModelConfiguration(isStoredInMemoryOnly: true)
     )
     NavigationStack {

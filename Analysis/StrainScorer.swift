@@ -109,7 +109,10 @@ final class StrainScorer {
     ///   - age: The user's age in years (used to estimate max heart rate).
     ///   - restingHR: Optional resting heart rate in bpm. If nil, falls back to
     ///     the most recent resting HR from HealthKit data.
-    func compute(from store: HealthDataStore, age: Int, restingHR: Double?) {
+    ///   - todayHRSamples: Raw per-sample heart rate data for today. The sync pipeline
+    ///     stores daily averages, which loses per-minute granularity needed for HR zone
+    ///     classification. Pass raw samples from HealthKit for accurate zone computation.
+    func compute(from store: HealthDataStore, age: Int, restingHR: Double?, todayHRSamples: [MetricSample] = []) {
         let allSeries = store.loadAllTimeSeries()
 
         // Resolve resting heart rate: parameter > HealthKit > population default
@@ -135,7 +138,11 @@ final class StrainScorer {
         let hasBaseline = (calorieSeries?.daysOfData ?? 0) >= Self.minimumDaysForBaseline
 
         // --- Heart Rate Zone Distribution ---
-        let hrSamples = allSeries[.heartRate]?.samples(lastDays: 1) ?? []
+        // Prefer raw per-sample HR for accurate zone classification;
+        // fall back to daily-aggregated stored data if raw samples unavailable.
+        let hrSamples = !todayHRSamples.isEmpty
+            ? todayHRSamples
+            : (allSeries[.heartRate]?.samples(lastDays: 1) ?? [])
         let zones = computeZoneMinutes(
             hrSamples: hrSamples,
             restingHR: effectiveRestingHR,
@@ -178,10 +185,18 @@ final class StrainScorer {
 
         isReady = true
 
+        // Persist today's computed strain so historical displays can rely on stored snapshots.
+        store.saveDailyStrain(
+            date: Date(),
+            strain: currentStrain,
+            level: strainLevel.rawValue,
+            hrZoneMinutes: (1...5).map { zones[$0] ?? 0.0 }
+        )
+
         // --- Weekly History ---
         computeWeeklyHistory(
             from: allSeries,
-            age: age,
+            store: store,
             restingHR: effectiveRestingHR,
             maxHR: maxHR,
             calorieBaseline: hasBaseline ? calorieBaseline : 400.0
@@ -310,16 +325,17 @@ final class StrainScorer {
         return calorieLoad + zoneLoad + durationLoad + movementLoad
     }
 
-    /// Build rolling 7-day strain history by recomputing strain for each past day.
+    /// Build rolling strain history from persisted snapshots, with day-level recompute fallback for missing dates.
     private func computeWeeklyHistory(
         from allSeries: [HealthMetric: MetricTimeSeries],
-        age: Int,
+        store: HealthDataStore,
         restingHR: Double,
         maxHR: Double,
         calorieBaseline: Double
     ) {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
+        let lookbackDays = 7
         var history: [(date: Date, strain: Double)] = []
 
         let hrReserve = maxHR - restingHR
@@ -328,43 +344,71 @@ final class StrainScorer {
             return
         }
 
-        for dayOffset in (1...7).reversed() {
+        let persistedHistory = store.loadDailyStrainHistory(lookbackDays: lookbackDays)
+        var persistedByDate: [Date: Double] = [:]
+        for entry in persistedHistory {
+            persistedByDate[calendar.startOfDay(for: entry.date)] = entry.strain
+        }
+
+        for dayOffset in (0...lookbackDays).reversed() {
             guard let targetDate = calendar.date(byAdding: .day, value: -dayOffset, to: today) else {
                 continue
             }
-            let nextDate = calendar.date(byAdding: .day, value: 1, to: targetDate) ?? today
 
-            // Extract samples for this specific day
-            let dayCals = sumSamples(allSeries[.activeCalories], from: targetDate, to: nextDate)
-            let dayExercise = sumSamples(allSeries[.exerciseMinutes], from: targetDate, to: nextDate)
-            let dayWorkout = sumSamples(allSeries[.workoutDuration], from: targetDate, to: nextDate)
-            let daySteps = sumSamples(allSeries[.steps], from: targetDate, to: nextDate)
-            let dayDistance = sumSamples(allSeries[.distanceWalkingRunning], from: targetDate, to: nextDate)
+            if let persisted = persistedByDate[targetDate] {
+                history.append((date: targetDate, strain: persisted))
+                continue
+            }
 
-            // HR zone distribution for this day
-            let dayHRSamples = allSeries[.heartRate]?.samples(from: targetDate, to: nextDate) ?? []
-            let dayZones = computeZoneMinutes(hrSamples: dayHRSamples, restingHR: restingHR, maxHR: maxHR)
+            if dayOffset == 0 {
+                history.append((date: targetDate, strain: currentStrain))
+                continue
+            }
 
-            let load = computeNormalizedLoad(
-                calories: dayCals,
-                calorieBaseline: calorieBaseline,
-                zoneMinutes: dayZones,
-                exerciseMinutes: dayExercise,
-                workoutMinutes: dayWorkout,
-                steps: daySteps,
-                distance: dayDistance
+            let fallbackStrain = computeFallbackStrainForDay(
+                targetDate,
+                allSeries: allSeries,
+                restingHR: restingHR,
+                maxHR: maxHR,
+                calorieBaseline: calorieBaseline
             )
-
-            let logNumerator = log(1.0 + load)
-            let logDenominator = log(1.0 + Self.maxExpectedLoad)
-            let strain = min(21.0, max(0.0, 21.0 * logNumerator / logDenominator))
-
-            history.append((date: targetDate, strain: strain))
+            history.append((date: targetDate, strain: fallbackStrain))
         }
 
-        // Append today
-        history.append((date: today, strain: currentStrain))
         weeklyStrainHistory = history
+    }
+
+    /// Recompute strain for a specific day when a persisted record is unavailable.
+    private func computeFallbackStrainForDay(
+        _ targetDate: Date,
+        allSeries: [HealthMetric: MetricTimeSeries],
+        restingHR: Double,
+        maxHR: Double,
+        calorieBaseline: Double
+    ) -> Double {
+        let nextDate = Calendar.current.date(byAdding: .day, value: 1, to: targetDate) ?? targetDate
+
+        let dayCals = sumSamples(allSeries[.activeCalories], from: targetDate, to: nextDate)
+        let dayExercise = sumSamples(allSeries[.exerciseMinutes], from: targetDate, to: nextDate)
+        let dayWorkout = sumSamples(allSeries[.workoutDuration], from: targetDate, to: nextDate)
+        let daySteps = sumSamples(allSeries[.steps], from: targetDate, to: nextDate)
+        let dayDistance = sumSamples(allSeries[.distanceWalkingRunning], from: targetDate, to: nextDate)
+        let dayHRSamples = allSeries[.heartRate]?.samples(from: targetDate, to: nextDate) ?? []
+        let dayZones = computeZoneMinutes(hrSamples: dayHRSamples, restingHR: restingHR, maxHR: maxHR)
+
+        let load = computeNormalizedLoad(
+            calories: dayCals,
+            calorieBaseline: calorieBaseline,
+            zoneMinutes: dayZones,
+            exerciseMinutes: dayExercise,
+            workoutMinutes: dayWorkout,
+            steps: daySteps,
+            distance: dayDistance
+        )
+
+        let logNumerator = log(1.0 + load)
+        let logDenominator = log(1.0 + Self.maxExpectedLoad)
+        return min(21.0, max(0.0, 21.0 * logNumerator / logDenominator))
     }
 
     /// Sum all sample values for a metric within a date range

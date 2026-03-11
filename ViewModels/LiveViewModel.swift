@@ -33,6 +33,9 @@ final class LiveViewModel {
     private var bloodOxygenQuery: HKAnchoredObjectQuery?
     private var respiratoryRateQuery: HKAnchoredObjectQuery?
     private var refreshTimer: Timer?
+    private var activityObserverQueries: [HKObserverQuery] = []
+    private var lastCumulativeFetch: Date = .distantPast
+    private static let cumulativeThrottleInterval: TimeInterval = 3
     private var respiratoryAvailabilityWorkItem: DispatchWorkItem?
 
     /// Throttle UI-facing property updates to max 1 per second to reduce GPU work.
@@ -61,7 +64,6 @@ final class LiveViewModel {
     }
 
     /// Live polling cadence and chart density controls (CPU/GPU protection).
-    private static let liveActivityRefreshInterval: TimeInterval = 30
     private static let heartRateBucketSize: TimeInterval = 10
     private static let maxHeartRatePoints = 180
     private static let readinessBaselineWindowDays = 42
@@ -238,35 +240,17 @@ final class LiveViewModel {
         // Reset flags from previous session so fresh data takes priority
         vitals.respiratoryRateUnavailable = false
 
+        // Priority 1: Real-time vital streams — anchored queries deliver samples instantly
         startHeartRateStream()
         startBloodOxygenStream()
         startRespiratoryRateStream()
 
-        let now = Date()
+        // Priority 2: Cumulative activity — observer queries push updates in real time
         fetchTodayCumulativeStats()
-        if let lastMedium = lastMediumFetch, now.timeIntervalSince(lastMedium) < Self.mediumInterval {
-            // Skip — not enough time elapsed
-        } else {
-            fetchActivityGoals()
-            fetchTodayMindfulMinutes()
-            lastMediumFetch = now
-        }
-        if let lastSlow = lastSlowFetch, now.timeIntervalSince(lastSlow) < Self.slowInterval {
-            // Skip — not enough time elapsed
-        } else {
-            fetchLatestDailyValues()
-            fetchLatestBloodPressure()
-            fetchLatestBodyTemperature()
-            fetchLatestWorkout()
-            fetchTodayHeartRateRange()
-            fetchLastNightSleep()
-            lastSlowFetch = now
-        }
-        computeReadinessScore()
+        startActivityObservers()
 
-        // Run fallback fetches immediately in parallel with anchored queries.
-        // This ensures the user sees last-known values right away, even if the
-        // anchored query's narrow window (30 min) has no recent samples.
+        // Priority 3: Fallback latest vitals — ensures data appears immediately even if
+        // the anchored query's narrow window (30 min) has no recent samples
         fetchFallbackHeartRate()
         fetchFallbackBloodOxygen()
         fetchFallbackRespiratoryRate()
@@ -280,37 +264,37 @@ final class LiveViewModel {
         respiratoryAvailabilityWorkItem = availabilityWorkItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: availabilityWorkItem)
 
-        // Refresh cumulative stats every 30 seconds while the Live screen is visible.
-        // If the device is thermally constrained, back off to 60 seconds.
-        let interval = ThermalManager.shared.shouldThrottle ? 60.0 : Self.liveActivityRefreshInterval
-        let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
-            guard let self else { return }
-            guard self.isStreaming else { return }
-            Task { @MainActor in
-                self.fetchTodayCumulativeStats()
+        // Priority 4: Deferred slow-changing data — don't compete with real-time queries
+        let now = Date()
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(300))
+            guard let self, self.isStreaming else { return }
+
+            if let lastMedium = self.lastMediumFetch, now.timeIntervalSince(lastMedium) < Self.mediumInterval {
+                // Skip — not enough time elapsed
+            } else {
+                self.fetchActivityGoals()
+                self.fetchTodayMindfulMinutes()
+                self.lastMediumFetch = Date()
             }
+            if let lastSlow = self.lastSlowFetch, now.timeIntervalSince(lastSlow) < Self.slowInterval {
+                // Skip — not enough time elapsed
+            } else {
+                self.fetchLatestDailyValues()
+                self.fetchLatestBloodPressure()
+                self.fetchLatestBodyTemperature()
+                self.fetchLatestWorkout()
+                self.fetchTodayHeartRateRange()
+                self.fetchLastNightSleep()
+                self.lastSlowFetch = Date()
+            }
+            self.computeReadinessScore()
         }
-        timer.tolerance = min(8, interval * 0.2)
-        refreshTimer = timer
     }
 
     func stopStreaming() {
         isStreaming = false
-
-        for query in [heartRateQuery, bloodOxygenQuery, respiratoryRateQuery].compactMap({ $0 }) {
-            healthStore.stop(query)
-        }
-        heartRateQuery = nil
-        bloodOxygenQuery = nil
-        respiratoryRateQuery = nil
-
-        refreshTimer?.invalidate()
-        refreshTimer = nil
-        respiratoryAvailabilityWorkItem?.cancel()
-        respiratoryAvailabilityWorkItem = nil
-        pendingUIUpdateWorkItem?.cancel()
-        pendingUIUpdateWorkItem = nil
-        pendingHeartRateUpdate = nil
+        stopAllQueries()
 
         // Clear stale vital data so fresh queries populate on next startStreaming().
         // Without this, old values block fallback fetches and the UI stays stuck on
@@ -322,6 +306,69 @@ final class LiveViewModel {
         vitals.currentRespiratoryRate = nil
         vitals.respiratoryRateTimestamp = nil
         vitals.respiratoryRateUnavailable = false
+    }
+
+    /// Restart streaming without clearing displayed data — keeps the UI populated
+    /// while new queries spin up. Used on foreground return to avoid a blank flash.
+    func restartStreaming() {
+        stopAllQueries()
+        isStreaming = false
+        startStreaming()
+    }
+
+    private func stopAllQueries() {
+        for query in [heartRateQuery, bloodOxygenQuery, respiratoryRateQuery].compactMap({ $0 }) {
+            healthStore.stop(query)
+        }
+        heartRateQuery = nil
+        bloodOxygenQuery = nil
+        respiratoryRateQuery = nil
+
+        for query in activityObserverQueries {
+            healthStore.stop(query)
+        }
+        activityObserverQueries.removeAll()
+
+        refreshTimer?.invalidate()
+        refreshTimer = nil
+        respiratoryAvailabilityWorkItem?.cancel()
+        respiratoryAvailabilityWorkItem = nil
+        pendingUIUpdateWorkItem?.cancel()
+        pendingUIUpdateWorkItem = nil
+        pendingHeartRateUpdate = nil
+    }
+
+    // MARK: - Activity Observer Queries (Real-Time Push)
+
+    /// Sets up HKObserverQuery for each cumulative activity type so HealthKit pushes
+    /// updates as soon as new samples arrive (e.g. Apple Watch syncs steps).
+    /// Replaces 30-second timer polling with instant, event-driven updates.
+    private func startActivityObservers() {
+        let startOfDay = Calendar.current.startOfDay(for: Date())
+        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: nil, options: .strictStartDate)
+
+        let identifiers: [HKQuantityTypeIdentifier] = [
+            .stepCount, .activeEnergyBurned, .appleExerciseTime,
+            .appleStandTime, .distanceWalkingRunning, .flightsClimbed
+        ]
+
+        for identifier in identifiers {
+            let type = HKQuantityType(identifier)
+            let observerQuery = HKObserverQuery(sampleType: type, predicate: predicate) { [weak self] _, completionHandler, error in
+                defer { completionHandler() }
+                guard error == nil, let self, self.isStreaming else { return }
+
+                Task { @MainActor in
+                    // Throttle: coalesce rapid-fire notifications to at most once per 3 seconds
+                    let now = Date()
+                    guard now.timeIntervalSince(self.lastCumulativeFetch) >= Self.cumulativeThrottleInterval else { return }
+                    self.lastCumulativeFetch = now
+                    self.fetchTodayCumulativeStats()
+                }
+            }
+            healthStore.execute(observerQuery)
+            activityObserverQueries.append(observerQuery)
+        }
     }
 
     // MARK: - Heart Rate Stream

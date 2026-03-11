@@ -185,9 +185,13 @@ struct AchievementsView: View {
         .navigationTitle("Your Progress")
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.achievements)
             withAnimation(.easeOut(duration: 1.0).delay(0.2)) {
                 ringProgress = levelInfo.progressToNext
             }
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.achievements)
         }
     }
 

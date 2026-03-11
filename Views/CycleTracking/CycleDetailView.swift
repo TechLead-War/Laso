@@ -183,6 +183,12 @@ struct CycleDetailView: View {
         .background(Color(.systemGroupedBackground))
         .navigationTitle("Cycle Tracking")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.cycleDetail)
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.cycleDetail)
+        }
     }
 
     // MARK: - Cycle Wheel

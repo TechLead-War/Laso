@@ -54,6 +54,12 @@ struct JournalEntryView: View {
                         .transition(.opacity.combined(with: .scale(scale: 0.8)))
                 }
             }
+            .onAppear {
+                AppAnalytics.shared.trackFeatureOpen(.journalEntry)
+            }
+            .onDisappear {
+                AppAnalytics.shared.trackFeatureClose(.journalEntry)
+            }
         }
     }
 

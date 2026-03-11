@@ -15,7 +15,6 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var selectedTab: AppTab = .home
     @State private var showSettings = false
-    @State private var showFeedback = false
     @State private var navigationPath = NavigationPath()
     @State private var connectivityMonitor = ConnectivityMonitor.shared
 
@@ -99,9 +98,6 @@ struct ContentView: View {
                 healthDataStore: healthDataStore
             )
         }
-        .sheet(isPresented: $showFeedback) {
-            FeedbackSheet()
-        }
         .task(id: onboardingCompleted) {
             guard onboardingCompleted else { return }
 
@@ -116,12 +112,7 @@ struct ContentView: View {
             }
         }
         .onAppear {
-            FeedbackPromptManager.shared.recordAppOpen()
             startSessionAnalytics()
-            if !UITestMode.isEnabled && FeedbackPromptManager.shared.shouldShowFeedbackPrompt() {
-                showFeedback = true
-                FeedbackPromptManager.shared.markPromptShown()
-            }
         }
         .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .active && oldPhase != .active {
@@ -449,7 +440,7 @@ struct ContentView: View {
 #Preview {
     let hkManager = HealthKitManager()
     let container = try! ModelContainer(
-        for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self,
+        for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self, StoredDailyStrain.self,
         configurations: ModelConfiguration(isStoredInMemoryOnly: true)
     )
     ContentView(

@@ -146,6 +146,8 @@ struct MultiMetricClusterAnalyzer {
             return "Multiple mobility metrics declining together. Prioritize stretching, balance exercises, and regular walking to maintain functional fitness."
         case .nutrition:
             return "Multiple nutrition metrics changing together. Review your dietary habits and consider tracking meals for a few days to identify patterns."
+        case .hearing:
+            return "Multiple hearing metrics shifting together. Reduce headphone volume, limit prolonged exposure to loud environments, and consider using noise-cancelling headphones."
         }
     }
 }

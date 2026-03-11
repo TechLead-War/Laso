@@ -58,6 +58,12 @@ struct ExpandedJournalView: View {
                         .transition(.opacity.combined(with: .scale(scale: 0.8)))
                 }
             }
+            .onAppear {
+                AppAnalytics.shared.trackFeatureOpen(.expandedJournal)
+            }
+            .onDisappear {
+                AppAnalytics.shared.trackFeatureClose(.expandedJournal)
+            }
         }
     }
 

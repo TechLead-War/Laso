@@ -34,6 +34,7 @@ struct BodyInsightsSection: View {
                 }
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("home.insightsCard")
         }
     }
 

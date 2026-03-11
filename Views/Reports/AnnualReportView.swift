@@ -110,6 +110,12 @@ struct AnnualReportView: View {
                 ShareSheetRepresentable(items: [image])
             }
         }
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.annualReport)
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.annualReport)
+        }
     }
 
     // MARK: - 1. Hero Section

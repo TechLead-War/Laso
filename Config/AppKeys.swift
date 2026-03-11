@@ -8,7 +8,6 @@ enum AppKeys {
 
     enum App {
         static let onboardingCompleted = "healthpulse.onboardingCompleted"
-        static let appTheme            = "healthpulse.appTheme"
         static let hasSeenDiscovery    = "healthpulse.hasSeenDiscovery"
         static let hasSeenScoreGuide   = "healthpulse.hasSeenScoreGuide"
         static let hasSeenRecoveryInfo = "healthpulse.hasSeenRecoveryInfo"

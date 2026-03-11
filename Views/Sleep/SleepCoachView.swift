@@ -57,6 +57,12 @@ struct SleepCoachView: View {
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("Sleep Coach")
         .navigationBarTitleDisplayMode(.large)
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.sleepCoach)
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.sleepCoach)
+        }
     }
 
     // MARK: - 1. Hero Section

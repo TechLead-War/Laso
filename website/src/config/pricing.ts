@@ -1,5 +1,5 @@
 /**
- * Pricing configuration — single source of truth.
+ * Pricing configuration - single source of truth.
  *
  * Used by: landing page, terms page, anywhere pricing is displayed.
  * Mirrors the iOS app's SubscriptionConfig.regionPricing.

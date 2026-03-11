@@ -48,6 +48,22 @@ final class StoredAnalysisSnapshot {
     }
 }
 
+/// Daily persisted strain snapshot for historical charting and coaching context
+@Model
+final class StoredDailyStrain {
+    var date: Date
+    var strain: Double
+    var level: String
+    var hrZoneMinutesJSON: Data
+
+    init(date: Date, strain: Double, level: String, hrZoneMinutesJSON: Data) {
+        self.date = date
+        self.strain = strain
+        self.level = level
+        self.hrZoneMinutesJSON = hrZoneMinutesJSON
+    }
+}
+
 /// Tracks a recommendation shown to the user and its outcome
 @Model
 final class StoredRecommendation {
@@ -120,6 +136,13 @@ final class StoredMLModelState {
 /// Enables years of historical data storage, incremental HealthKit sync, and score history.
 @Observable
 final class HealthDataStore {
+    struct DailyStrainRecord {
+        let date: Date
+        let strain: Double
+        let level: String
+        let hrZoneMinutes: [Double]
+    }
+
     let modelContainer: ModelContainer?
     private let modelContext: ModelContext?
 
@@ -425,6 +448,83 @@ final class HealthDataStore {
 
         // Filter to metrics with enough history
         return result.filter { $0.value.count >= minCount }
+    }
+
+    // MARK: - Daily Strain Snapshots
+
+    /// Save or update a day's strain record (upsert by calendar day, dedups any legacy duplicates)
+    func saveDailyStrain(
+        date: Date = Date(),
+        strain: Double,
+        level: String,
+        hrZoneMinutes: [Double]
+    ) {
+        let calendar = Calendar.current
+        let dayStart = calendar.startOfDay(for: date)
+        guard let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart) else { return }
+
+        let predicate = #Predicate<StoredDailyStrain> { $0.date >= dayStart && $0.date < dayEnd }
+        let descriptor = FetchDescriptor(
+            predicate: predicate,
+            sortBy: [SortDescriptor(\.date)]
+        )
+
+        let encodedZones = Self.encodeJSON(hrZoneMinutes) ?? Data()
+        let existing = (try? modelContext?.fetch(descriptor)) ?? []
+
+        if let primary = existing.first {
+            primary.date = dayStart
+            primary.strain = strain
+            primary.level = level
+            primary.hrZoneMinutesJSON = encodedZones
+
+            if existing.count > 1 {
+                for duplicate in existing.dropFirst() {
+                    modelContext?.delete(duplicate)
+                }
+            }
+        } else {
+            modelContext?.insert(StoredDailyStrain(
+                date: dayStart,
+                strain: strain,
+                level: level,
+                hrZoneMinutesJSON: encodedZones
+            ))
+        }
+
+        try? modelContext?.save()
+    }
+
+    /// Load persisted strain history from [today-lookbackDays, today], sorted ascending.
+    func loadDailyStrainHistory(lookbackDays: Int = 7) -> [DailyStrainRecord] {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let startDate = calendar.date(byAdding: .day, value: -max(lookbackDays, 0), to: today) ?? today
+        guard let endDate = calendar.date(byAdding: .day, value: 1, to: today) else { return [] }
+
+        let predicate = #Predicate<StoredDailyStrain> { $0.date >= startDate && $0.date < endDate }
+        let descriptor = FetchDescriptor(
+            predicate: predicate,
+            sortBy: [SortDescriptor(\.date)]
+        )
+
+        let records = (try? modelContext?.fetch(descriptor)) ?? []
+        if records.isEmpty { return [] }
+
+        // Dedup by normalized day key so historical charts remain stable even if old duplicates exist.
+        var dedupedByDay: [String: DailyStrainRecord] = [:]
+        for record in records {
+            let day = calendar.startOfDay(for: record.date)
+            let key = Self.dayFormatter.string(from: day)
+            dedupedByDay[key] = DailyStrainRecord(
+                date: day,
+                strain: record.strain,
+                level: record.level,
+                hrZoneMinutes: Self.decodeJSON([Double].self, from: record.hrZoneMinutesJSON) ?? []
+            )
+        }
+
+        return dedupedByDay.values.sorted { $0.date < $1.date }
     }
 
     // MARK: - ML Model State

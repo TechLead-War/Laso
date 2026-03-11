@@ -1,0 +1,163 @@
+{
+  "version": "2.1",
+  "generated": "2026-03-10",
+  "description": "Complete screenshot manifest for all HealthPulse flows",
+  "device": "iPhone 17 Pro",
+  "iosVersion": "26.2",
+  "themes": ["dark", "light"],
+  "flows": {
+    "onboarding": {
+      "label": "Onboarding",
+      "screens": [
+        {
+          "step": "welcome",
+          "title": "Welcome",
+          "description": "App logo, tagline, and Get Started button"
+        },
+        {
+          "step": "value-proposition",
+          "title": "Value Proposition",
+          "description": "Three key value props: personalized baseline, private by default, actionable guidance"
+        },
+        {
+          "step": "profile-capture",
+          "title": "Profile Capture",
+          "description": "Name, email, gender, and age input form"
+        },
+        {
+          "step": "connect-health",
+          "title": "Connect Apple Health",
+          "description": "HealthKit permissions checklist with Connect/Skip buttons"
+        },
+        {
+          "step": "focus-selection",
+          "title": "Focus Selection",
+          "description": "Health focus area chips: Sleep, Fitness, Heart Health, Weight & Body, Recovery"
+        }
+      ]
+    },
+    "main": {
+      "label": "Main Tabs",
+      "screens": [
+        {
+          "step": "home",
+          "title": "Home (Today)",
+          "description": "Recovery hero card, vitality, sleep coach, strain, stress, body insights, risks, weekly review, achievements"
+        },
+        {
+          "step": "live",
+          "title": "Live",
+          "description": "Real-time heart rate, SpO2, activity rings, quick stats, readiness"
+        },
+        {
+          "step": "explore",
+          "title": "Explore",
+          "description": "Score hero, data summary, trends, needs attention, correlations, categories"
+        }
+      ]
+    },
+    "detail": {
+      "label": "Detail Screens",
+      "note": "Requires health data on device. Cards are data-dependent and won't appear on empty simulator.",
+      "screens": [
+        {
+          "step": "recovery-hero",
+          "title": "Score Guide",
+          "description": "Score breakdown explaining recovery calculation",
+          "navigateFrom": "home.recoveryCard",
+          "requiresData": true
+        },
+        {
+          "step": "vitality-detail",
+          "title": "Vitality Detail",
+          "description": "Vitality age score, biological age comparison, component breakdown",
+          "navigateFrom": "home.vitalityCard",
+          "requiresData": true
+        },
+        {
+          "step": "sleep-coach",
+          "title": "Sleep Coach",
+          "description": "Sleep need, recommended bedtime/wake time, sleep debt, daily history, consistency score",
+          "navigateFrom": "home.sleepCoachCard",
+          "requiresData": true
+        },
+        {
+          "step": "strain-detail",
+          "title": "Strain Detail",
+          "description": "Strain score, HR zone breakdown, weekly history, training zone guidance",
+          "navigateFrom": "home.strainCard",
+          "requiresData": true
+        },
+        {
+          "step": "stress-monitor",
+          "title": "Stress Monitor",
+          "description": "Stress score, HRV deviation, HR elevation, weekly trends, previous week comparison",
+          "navigateFrom": "home.stressCard",
+          "requiresData": true
+        },
+        {
+          "step": "cycle-detail",
+          "title": "Cycle Detail",
+          "description": "Current phase, day in cycle, cycle progress, history, next period estimate",
+          "navigateFrom": "home.cycleCard",
+          "requiresData": true,
+          "conditional": true
+        },
+        {
+          "step": "insights-detail",
+          "title": "Insights Detail",
+          "description": "Action Items and All Insights tabs with category badges and metric pills",
+          "navigateFrom": "home.insightsCard",
+          "requiresData": true
+        },
+        {
+          "step": "weekly-review",
+          "title": "Weekly Review",
+          "description": "Weekly score summary, wins, losses, coach plan, category breakdown",
+          "navigateFrom": "home.weeklyReviewCard",
+          "requiresData": true
+        },
+        {
+          "step": "achievements",
+          "title": "Achievements",
+          "description": "Level badge, progress bar, streak counters, achievement list with unlock dates",
+          "navigateFrom": "home.levelBadgeCard",
+          "requiresData": true
+        }
+      ]
+    },
+    "settings": {
+      "label": "Settings",
+      "screens": [
+        {
+          "step": "main",
+          "title": "Settings Main",
+          "description": "Connected devices, notifications, alerts, export, data storage, about"
+        },
+        {
+          "step": "connected-devices",
+          "title": "Connected Devices",
+          "description": "Active, inactive, and discoverable devices with connection status"
+        }
+      ]
+    }
+  },
+  "screenshotPattern": "<ios_version>-<device>-<theme>-<locale>-<profile>-<step>.png",
+  "profiles": ["onboarding", "main", "detail", "settings"],
+  "capturedScreens": {
+    "total": 10,
+    "dataIndependent": 10,
+    "dataDependent": 9,
+    "note": "Detail screens (9) require HealthKit data on the simulator to capture"
+  },
+  "testMethods": [
+    { "name": "testOnboardingDark", "appearance": "Dark", "screens": 5 },
+    { "name": "testOnboardingLight", "appearance": "Light", "screens": 5 },
+    { "name": "testMainFlowDark", "appearance": "Dark", "screens": 3 },
+    { "name": "testMainFlowLight", "appearance": "Light", "screens": 3 },
+    { "name": "testHomeDetailsDark", "appearance": "Dark", "screens": "0-9 (data-dependent)" },
+    { "name": "testHomeDetailsLight", "appearance": "Light", "screens": "0-9 (data-dependent)" },
+    { "name": "testSettingsDark", "appearance": "Dark", "screens": 2 },
+    { "name": "testSettingsLight", "appearance": "Light", "screens": 2 }
+  ]
+}

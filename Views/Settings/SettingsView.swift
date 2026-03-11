@@ -5,7 +5,6 @@ import AppIntents
 /// Settings view for notification preferences, heart rate alerts, per-metric toggles, and export
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage(AppKeys.App.appTheme) private var appTheme: String = "system"
     @State private var preferences: NotificationPreferences
     @State private var showExportSheet = false
     @State private var showMetricAlertPicker = false
@@ -15,7 +14,6 @@ struct SettingsView: View {
     @State private var alertsTracker = SectionTracker(section: .settingsAlerts, tab: .settings)
     @State private var metricAlertsTracker = SectionTracker(section: .settingsMetricAlerts, tab: .settings)
     @State private var exportTracker = SectionTracker(section: .settingsExport, tab: .settings)
-    @State private var appearanceTracker = SectionTracker(section: .settingsAppearance, tab: .settings)
     @State private var dataStorageTracker = SectionTracker(section: .settingsDataStorage, tab: .settings)
     @State private var aboutTracker = SectionTracker(section: .settingsAbout, tab: .settings)
 
@@ -296,23 +294,6 @@ struct SettingsView: View {
                 .onAppear { exportTracker.appeared() }
                 .onDisappear { exportTracker.disappeared() }
 
-                // Appearance
-                Section("Appearance") {
-                    Picker("Theme", selection: $appTheme) {
-                        Label("System", systemImage: "gearshape")
-                            .tag("system")
-                        Label("Light", systemImage: "sun.max.fill")
-                            .tag("light")
-                        Label("Dark", systemImage: "moon.fill")
-                            .tag("dark")
-                    }
-                    .onChange(of: appTheme) { oldTheme, newTheme in
-                        AppAnalytics.shared.trackThemeChanged(from: oldTheme, to: newTheme)
-                    }
-                }
-                .onAppear { appearanceTracker.appeared() }
-                .onDisappear { appearanceTracker.disappeared() }
-
                 // Data Storage
                 Section {
                     HStack {
@@ -483,7 +464,7 @@ struct ShareSheet: UIViewControllerRepresentable {
     let hkManager = HealthKitManager()
     let engine = AnalysisEngine()
     let container = try! ModelContainer(
-        for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self,
+        for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self, StoredDailyStrain.self,
         configurations: ModelConfiguration(isStoredInMemoryOnly: true)
     )
     SettingsView(

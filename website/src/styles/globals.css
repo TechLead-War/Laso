@@ -98,3 +98,72 @@
   -webkit-user-select: none;
   user-select: none;
 }
+
+/* Vitality orb canvas handles all visuals via JS */
+.vitality-orb-stage {
+  position: relative;
+  width: min(92vw, 430px);
+  aspect-ratio: 1 / 1;
+  overflow: visible;
+  isolation: isolate;
+}
+
+.vitality-orb-stage::before {
+  content: '';
+  position: absolute;
+  inset: -22%;
+  border-radius: 999px;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(0, 113, 227, 0.22) 0%, rgba(6, 182, 212, 0.16) 44%, rgba(5, 20, 46, 0) 78%);
+  filter: blur(30px);
+  z-index: 0;
+}
+
+.vitality-orb-canvas {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.vitality-orb-label {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transform: translateY(1px);
+}
+
+.vitality-orb-age {
+  color: rgba(255, 255, 255, 0.97);
+  font-size: clamp(3rem, 10vw, 4rem);
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  text-shadow:
+    0 0 16px rgba(6, 182, 212, 0.28),
+    0 0 2px rgba(255, 255, 255, 0.45);
+}
+
+.vitality-orb-title {
+  margin-top: 8px;
+  color: rgba(231, 248, 255, 0.93);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-shadow: 0 0 10px rgba(0, 113, 227, 0.22);
+}
+
+.vitality-orb-delta {
+  margin-top: 4px;
+  color: rgba(52, 211, 153, 0.96);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+  text-shadow: 0 0 14px rgba(52, 211, 153, 0.3);
+}

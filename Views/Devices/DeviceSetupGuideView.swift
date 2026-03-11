@@ -35,7 +35,7 @@ struct DeviceSetupGuideView: View {
                         AppAnalytics.shared.trackBlockTap(
                             title: "Open App Store — \(device.displayName)",
                             type: .appStoreLink,
-                            screen: .deviceDetail,
+                            screen: .deviceSetupGuide,
                             metadata: [
                                 "device_id": device.rawValue,
                                 "destination": "app_store"
@@ -47,6 +47,16 @@ struct DeviceSetupGuideView: View {
         }
         .padding()
         .background(.background, in: RoundedRectangle(cornerRadius: 14))
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.deviceSetupGuide, metadata: [
+                "device": device.rawValue
+            ])
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.deviceSetupGuide, metadata: [
+                "device": device.rawValue
+            ])
+        }
     }
 }
 

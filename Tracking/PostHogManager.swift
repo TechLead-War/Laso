@@ -1,9 +1,8 @@
 import Foundation
 import PostHog
 
-/// Lightweight wrapper around the PostHog iOS SDK.
-/// All events and user properties flow through here so PostHog
-/// can be swapped or disabled without touching call-sites.
+/// Central PostHog wrapper — sole analytics backend.
+/// All events, user properties, screen views, and error tracking flow through here.
 final class PostHogManager {
 
     static let shared = PostHogManager()
@@ -14,7 +13,7 @@ final class PostHogManager {
 
     // MARK: - Configuration
 
-    /// Call once at app launch (after Firebase, inside AppDelegate).
+    /// Call once at app launch (inside AppDelegate).
     func configure() {
         guard !UITestMode.isEnabled else { return }
         guard !isConfigured else { return }
@@ -31,7 +30,18 @@ final class PostHogManager {
     /// Capture a named event with optional properties.
     func capture(event: String, properties: [String: Any]? = nil) {
         guard isConfigured else { return }
+        #if DEBUG
+        print("[PostHog] \(event)", properties?.keys.sorted().joined(separator: ", ") ?? "")
+        #endif
         PostHogSDK.shared.capture(event, properties: properties)
+    }
+
+    // MARK: - Screen Views
+
+    /// Record a screen view event with the PostHog `$screen` semantic.
+    func screen(_ screenName: String, properties: [String: Any]? = nil) {
+        guard isConfigured else { return }
+        PostHogSDK.shared.screen(screenName, properties: properties)
     }
 
     // MARK: - User Identity
@@ -42,10 +52,31 @@ final class PostHogManager {
         PostHogSDK.shared.identify(userId, userProperties: properties)
     }
 
-    /// Set a single user property (person property in PostHog).
+    /// Set a single person property.
     func setUserProperty(name: String, value: String) {
         guard isConfigured else { return }
         PostHogSDK.shared.capture("$set", properties: nil, userProperties: [name: value])
+    }
+
+    /// Set multiple person properties at once.
+    func setUserProperties(_ properties: [String: Any]) {
+        guard isConfigured else { return }
+        PostHogSDK.shared.capture("$set", properties: nil, userProperties: properties)
+    }
+
+    // MARK: - Error Tracking
+
+    /// Capture a non-fatal error as a PostHog event for monitoring.
+    func captureError(_ error: Error, context: String, metadata: [String: Any] = [:]) {
+        guard isConfigured else { return }
+        var props: [String: Any] = [
+            "error_message": error.localizedDescription,
+            "error_context": context,
+            "error_domain": (error as NSError).domain,
+            "error_code": (error as NSError).code
+        ]
+        for (k, v) in metadata { props[k] = v }
+        PostHogSDK.shared.capture("app_error_recorded", properties: props)
     }
 
     // MARK: - Flush

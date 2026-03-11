@@ -30,7 +30,7 @@ struct VitalityDetailView: View {
                     dataMaturityBanner
                 }
 
-                if !scorer.componentAges.isEmpty {
+                if scorer.personalizationStatus != .buildingProfile && !scorer.componentAges.isEmpty {
                     metricContributionSection
                 }
 
@@ -38,7 +38,7 @@ struct VitalityDetailView: View {
                     trendSection
                 }
 
-                if !scorer.topImprovementOpportunities.isEmpty {
+                if scorer.personalizationStatus != .buildingProfile && !scorer.topImprovementOpportunities.isEmpty {
                     improvementSection
                 }
 
@@ -51,9 +51,13 @@ struct VitalityDetailView: View {
         .navigationTitle("Vitality Age")
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.vitalityDetail)
             withAnimation(.linear(duration: 18).repeatForever(autoreverses: false)) {
                 orbPhase = .pi * 2
             }
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.vitalityDetail)
         }
     }
 
@@ -120,18 +124,27 @@ struct VitalityDetailView: View {
             HStack(spacing: 8) {
                 badge(text: "Actual age \(scorer.chronologicalAge)", tint: .white.opacity(0.36), foreground: .white)
 
-                badge(
-                    text: "90d \(scorer.paceLabel)",
-                    tint: paceTint.opacity(0.26),
-                    foreground: paceTint,
-                    icon: paceIcon
-                )
+                if scorer.personalizationStatus == .personalized {
+                    badge(
+                        text: "90d \(scorer.paceLabel)",
+                        tint: paceTint.opacity(0.26),
+                        foreground: paceTint,
+                        icon: paceIcon
+                    )
 
-                badge(
-                    text: paceStateText,
-                    tint: paceTint.opacity(0.26),
-                    foreground: paceTint
-                )
+                    badge(
+                        text: paceStateText,
+                        tint: paceTint.opacity(0.26),
+                        foreground: paceTint
+                    )
+                } else {
+                    badge(
+                        text: scorer.personalizationStatus.rawValue,
+                        tint: personalizationTint.opacity(0.24),
+                        foreground: personalizationTint,
+                        icon: personalizationIcon
+                    )
+                }
             }
 
             Text(heroNarrative)
@@ -413,10 +426,10 @@ struct VitalityDetailView: View {
                 .foregroundStyle(vitalityWhoopGreen)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Refining your estimate")
+                Text(scorer.personalizationStatus.rawValue)
                     .font(.subheadline.weight(.semibold))
 
-                Text("\(scorer.availableDays) of \(VitalityScorer.minimumDaysRequired) days collected — accuracy improves daily")
+                Text(dataMaturityDescription)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -494,6 +507,19 @@ struct VitalityDetailView: View {
     }
 
     private var heroNarrative: String {
+        if scorer.personalizationStatus == .buildingProfile {
+            return "We are building your profile. For now, your vitality age stays aligned with your chronological age."
+        }
+        if scorer.personalizationStatus == .earlyEstimate {
+            if scorer.delta < 0 {
+                return "Early estimate: your body currently appears about \(abs(scorer.delta)) years younger. Confidence improves as more data is collected."
+            }
+            if scorer.delta > 0 {
+                return "Early estimate: your body currently appears about \(scorer.delta) years older. Confidence improves as more data is collected."
+            }
+            return "Early estimate: your vitality age is currently aligned with your chronological age."
+        }
+
         if scorer.delta < 0 {
             return "Your body is performing about \(abs(scorer.delta)) years younger than your chronological age."
         }
@@ -504,7 +530,10 @@ struct VitalityDetailView: View {
     }
 
     private var heroComponents: [VitalityComponent] {
-        Array(
+        if scorer.personalizationStatus == .buildingProfile {
+            return []
+        }
+        return Array(
             scorer.componentAges
                 .sorted {
                     abs($0.delta(chronologicalAge: scorer.chronologicalAge)) >
@@ -515,6 +544,9 @@ struct VitalityDetailView: View {
     }
 
     private var deltaBadgeText: String {
+        if scorer.personalizationStatus == .buildingProfile {
+            return "Building your profile"
+        }
         if scorer.delta < 0 { return "\(abs(scorer.delta)) years younger" }
         if scorer.delta > 0 { return "\(scorer.delta) years older" }
         return "On track"
@@ -608,6 +640,32 @@ struct VitalityDetailView: View {
             return .secondary
         }
         return deltaColor(for: last - first)
+    }
+
+    private var personalizationIcon: String {
+        switch scorer.personalizationStatus {
+        case .buildingProfile: return "hourglass"
+        case .earlyEstimate: return "clock.arrow.circlepath"
+        case .personalized: return "checkmark.circle.fill"
+        }
+    }
+
+    private var personalizationTint: Color {
+        switch scorer.personalizationStatus {
+        case .buildingProfile: return .white.opacity(0.8)
+        case .earlyEstimate: return .cyan
+        case .personalized: return vitalityWhoopGreen
+        }
+    }
+
+    private var dataMaturityDescription: String {
+        let days = scorer.availableDays
+        let target = VitalityScorer.minimumDaysRequired
+
+        if scorer.personalizationStatus == .buildingProfile {
+            return "\(days) of \(target) days of usable data. Biological age is held at your actual age while we build your profile."
+        }
+        return "\(days) of \(target) days of usable data. This is an early estimate and will keep personalizing as more data arrives."
     }
 }
 

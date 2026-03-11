@@ -8,7 +8,6 @@ struct HealthPulseApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     @AppStorage(AppKeys.App.onboardingCompleted) private var onboardingCompleted = false
-    @AppStorage(AppKeys.App.appTheme) private var appTheme: String = "system"
     @AppStorage(AppKeys.App.pendingCalibrationHydration) private var pendingCalibrationHydration = false
 
     @State private var healthKitManager: HealthKitManager
@@ -22,14 +21,6 @@ struct HealthPulseApp: App {
 
     private let subscriptionManager = SubscriptionManager.shared
     private var remoteConfig: RemoteConfigManager { .shared }
-
-    private var colorScheme: ColorScheme? {
-        switch appTheme {
-        case "dark": return .dark
-        case "light": return .light
-        default: return nil
-        }
-    }
 
     /// Show paywall only when onboarding is done and subscription is definitively expired.
     /// Respects FeatureGate.freeYearActive — when active, paywall is disabled.
@@ -96,7 +87,7 @@ struct HealthPulseApp: App {
 
         let allModels: [any PersistentModel.Type] = [
             StoredDailySample.self, StoredSyncMetadata.self,
-            StoredAnalysisSnapshot.self, StoredMLModelState.self,
+            StoredAnalysisSnapshot.self, StoredDailyStrain.self, StoredMLModelState.self,
             StoredRecommendation.self, StoredNotificationEvent.self,
             StoredAdherenceRecord.self, StoredECGFeatures.self,
             StoredModelEvaluation.self, StoredJournalEntry.self
@@ -139,9 +130,9 @@ struct HealthPulseApp: App {
         // 3–6. Progressive in-memory fallbacks with fewer models
         let fallbackSets: [[any PersistentModel.Type]] = [
             allModels,
-            [StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self, StoredRecommendation.self, StoredNotificationEvent.self],
-            [StoredDailySample.self, StoredSyncMetadata.self],
-            [StoredDailySample.self]
+            [StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self, StoredDailyStrain.self, StoredRecommendation.self, StoredNotificationEvent.self],
+            [StoredDailySample.self, StoredSyncMetadata.self, StoredDailyStrain.self],
+            [StoredDailySample.self, StoredDailyStrain.self]
         ]
 
         for (i, models) in fallbackSets.enumerated() {
@@ -155,7 +146,7 @@ struct HealthPulseApp: App {
 
         // All Schema-based attempts failed — try the simplest possible call as last resort
         do {
-            return try ModelContainer(for: StoredDailySample.self)
+            return try ModelContainer(for: StoredDailySample.self, StoredDailyStrain.self)
         } catch {
             print("[HealthPulse] All ModelContainer attempts failed: \(error)")
             return nil
@@ -177,7 +168,6 @@ struct HealthPulseApp: App {
                         deviceSourceManager: deviceSourceManager,
                         healthDataStore: healthDataStore
                     )
-                    .preferredColorScheme(colorScheme)
                     // 1. Onboarding (first launch)
                     .fullScreenCover(isPresented: Binding(
                         get: { !onboardingCompleted },
@@ -244,14 +234,8 @@ struct HealthPulseApp: App {
                     showSplash = false
                 }
 
-                // Request notification permission after a brief pause so the user
-                // sees their dashboard before the system alert appears.
-                try? await Task.sleep(for: .seconds(3))
-                let granted = await NotificationManager.shared.requestAuthorizationIfNeeded()
-                if granted {
-                    ReengagementScheduler.reschedule()
-                }
             }
+            .preferredColorScheme(isUITestMode ? UITestMode.preferredColorScheme : .dark)
         }
     }
 

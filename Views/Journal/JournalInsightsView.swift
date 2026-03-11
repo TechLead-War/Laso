@@ -21,6 +21,12 @@ struct JournalInsightsView: View {
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("Journal Insights")
         .navigationBarTitleDisplayMode(.large)
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.journalInsights)
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.journalInsights)
+        }
     }
 
     // MARK: - Discoveries Section

@@ -74,6 +74,26 @@ struct RulesConfiguration {
         case .bloodGlucose: return NormalRange(low: 70, high: 140)
         case .workoutCount: return NormalRange(low: 0, high: 3)
         case .workoutDuration: return NormalRange(low: 0, high: 120)
+        // Hearing
+        case .headphoneAudioExposure: return NormalRange(low: 40, high: 80)  // dB(A)
+        case .environmentalAudioExposure: return NormalRange(low: 40, high: 80)  // dB(A)
+        // Running dynamics
+        case .runningPower: return NormalRange(low: 150, high: 400)  // Watts
+        case .runningGroundContactTime: return NormalRange(low: 200, high: 300)  // ms
+        case .runningVerticalOscillation: return NormalRange(low: 6, high: 13)  // cm
+        case .runningStrideLength: return NormalRange(low: 1.0, high: 2.0)  // meters
+        // Respiratory (additional)
+        case .forcedExpiratoryVolume1: return NormalRange(low: 2.0, high: 5.0)  // liters
+        // Sleep (additional)
+        case .sleepBreathingDisturbances: return NormalRange(low: 0, high: 5)  // events/hr
+        // Mobility (additional)
+        case .walkingSteadiness: return NormalRange(low: 50, high: 100)  // %
+        case .numberOfTimesFallen: return NormalRange(low: 0, high: 0)  // ideally zero
+        // Metabolic (additional)
+        case .insulinDelivery: return NormalRange(low: 0, high: 60)  // IU/day
+        // Water sports
+        case .underwaterDepth: return NormalRange(low: 0, high: 40)  // meters
+        case .waterTemperature: return NormalRange(low: 15, high: 30)  // °C
         }
     }
 

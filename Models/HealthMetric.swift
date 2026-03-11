@@ -20,6 +20,7 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
     case sleepDeep
     case sleepCore
     case sleepAwake
+    case sleepBreathingDisturbances
 
     // MARK: - Activity
     case steps
@@ -33,6 +34,12 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
     case distanceSwimming
     case swimmingStrokeCount
     case appleMoveTime
+    case runningPower
+    case runningGroundContactTime
+    case runningVerticalOscillation
+    case runningStrideLength
+    case underwaterDepth
+    case waterTemperature
 
     // MARK: - Body & Vitals
     case weight
@@ -51,6 +58,7 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
     case respiratoryRate
     case peakExpiratoryFlowRate
     case forcedVitalCapacity
+    case forcedExpiratoryVolume1
 
     // MARK: - Mindfulness
     case mindfulMinutes
@@ -65,6 +73,8 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
     case stairAscentSpeed
     case stairDescentSpeed
     case sixMinuteWalkTestDistance
+    case walkingSteadiness
+    case numberOfTimesFallen
 
     // MARK: - Nutrition
     case waterIntake
@@ -79,10 +89,15 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
 
     // MARK: - Metabolic
     case bloodGlucose
+    case insulinDelivery
 
     // MARK: - Workouts
     case workoutCount
     case workoutDuration
+
+    // MARK: - Hearing
+    case headphoneAudioExposure
+    case environmentalAudioExposure
 
     var displayName: String {
         switch self {
@@ -98,6 +113,7 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .sleepDeep: return "Deep Sleep"
         case .sleepCore: return "Core Sleep"
         case .sleepAwake: return "Awake Time"
+        case .sleepBreathingDisturbances: return "Breathing Disturbances"
         case .steps: return "Steps"
         case .activeCalories: return "Active Calories"
         case .basalCalories: return "Basal Calories"
@@ -109,6 +125,12 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .distanceSwimming: return "Swimming Distance"
         case .swimmingStrokeCount: return "Swimming Strokes"
         case .appleMoveTime: return "Move Time"
+        case .runningPower: return "Running Power"
+        case .runningGroundContactTime: return "Ground Contact Time"
+        case .runningVerticalOscillation: return "Vertical Oscillation"
+        case .runningStrideLength: return "Running Stride"
+        case .underwaterDepth: return "Dive Depth"
+        case .waterTemperature: return "Water Temperature"
         case .weight: return "Weight"
         case .bmi: return "BMI"
         case .bodyFatPercentage: return "Body Fat %"
@@ -123,6 +145,7 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .respiratoryRate: return "Respiratory Rate"
         case .peakExpiratoryFlowRate: return "Peak Flow Rate"
         case .forcedVitalCapacity: return "Forced Vital Capacity"
+        case .forcedExpiratoryVolume1: return "FEV1"
         case .mindfulMinutes: return "Mindful Minutes"
         case .timeInDaylight: return "Time in Daylight"
         case .electrodermalActivity: return "Electrodermal Activity"
@@ -133,6 +156,8 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .stairAscentSpeed: return "Stair Ascent Speed"
         case .stairDescentSpeed: return "Stair Descent Speed"
         case .sixMinuteWalkTestDistance: return "6-Min Walk Distance"
+        case .walkingSteadiness: return "Walking Steadiness"
+        case .numberOfTimesFallen: return "Falls Detected"
         case .waterIntake: return "Water Intake"
         case .caffeineIntake: return "Caffeine"
         case .proteinIntake: return "Protein"
@@ -143,8 +168,11 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .carbohydrateIntake: return "Carbs"
         case .fatIntake: return "Fat"
         case .bloodGlucose: return "Blood Glucose"
+        case .insulinDelivery: return "Insulin Delivery"
         case .workoutCount: return "Workout Count"
         case .workoutDuration: return "Workout Duration"
+        case .headphoneAudioExposure: return "Headphone Audio"
+        case .environmentalAudioExposure: return "Environmental Sound"
         }
     }
 
@@ -157,6 +185,7 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .peripheralPerfusionIndex: return "%"
         case .sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .sleepAwake:
             return "hrs"
+        case .sleepBreathingDisturbances: return "events/hr"
         case .steps: return "steps"
         case .activeCalories, .basalCalories: return "kcal"
         case .exerciseMinutes: return "min"
@@ -165,6 +194,12 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .flightsClimbed: return "flights"
         case .swimmingStrokeCount: return "strokes"
         case .appleMoveTime: return "min"
+        case .runningPower: return "W"
+        case .runningGroundContactTime: return "ms"
+        case .runningVerticalOscillation: return "cm"
+        case .runningStrideLength: return "m"
+        case .underwaterDepth: return "m"
+        case .waterTemperature: return "°C"
         case .weight, .leanBodyMass: return "kg"
         case .bmi: return ""
         case .bodyFatPercentage: return "%"
@@ -177,6 +212,7 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .respiratoryRate: return "br/min"
         case .peakExpiratoryFlowRate: return "L/min"
         case .forcedVitalCapacity: return "L"
+        case .forcedExpiratoryVolume1: return "L"
         case .mindfulMinutes: return "min"
         case .timeInDaylight: return "min"
         case .electrodermalActivity: return "μS"
@@ -186,6 +222,8 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .walkingDoubleSupportPercentage: return "%"
         case .stairAscentSpeed, .stairDescentSpeed: return "m/s"
         case .sixMinuteWalkTestDistance: return "m"
+        case .walkingSteadiness: return "%"
+        case .numberOfTimesFallen: return ""
         case .waterIntake: return "mL"
         case .caffeineIntake: return "mg"
         case .proteinIntake: return "g"
@@ -196,8 +234,11 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .carbohydrateIntake: return "g"
         case .fatIntake: return "g"
         case .bloodGlucose: return "mg/dL"
+        case .insulinDelivery: return "IU"
         case .workoutCount: return ""
         case .workoutDuration: return "min"
+        case .headphoneAudioExposure: return "dB"
+        case .environmentalAudioExposure: return "dB"
         }
     }
 
@@ -207,32 +248,37 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
              .walkingHeartRateAverage, .heartRateRecovery,
              .atrialFibrillationBurden, .peripheralPerfusionIndex:
             return .heart
-        case .sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .sleepAwake:
+        case .sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .sleepAwake,
+             .sleepBreathingDisturbances:
             return .sleep
         case .steps, .activeCalories, .basalCalories, .exerciseMinutes, .standHours,
              .distanceWalkingRunning, .flightsClimbed,
-             .distanceCycling, .distanceSwimming, .swimmingStrokeCount, .appleMoveTime:
+             .distanceCycling, .distanceSwimming, .swimmingStrokeCount, .appleMoveTime,
+             .runningPower, .runningGroundContactTime, .runningVerticalOscillation,
+             .runningStrideLength, .underwaterDepth, .waterTemperature:
             return .activity
         case .weight, .bmi, .bodyFatPercentage, .bloodPressureSystolic,
              .bloodPressureDiastolic, .bodyTemperature,
              .appleSleepingWristTemperature, .leanBodyMass, .waistCircumference,
-             .bloodGlucose:
+             .bloodGlucose, .insulinDelivery:
             return .body
         case .waterIntake, .caffeineIntake, .proteinIntake, .fiberIntake,
              .sugarIntake, .sodiumIntake, .totalCaloriesIntake,
              .carbohydrateIntake, .fatIntake:
             return .nutrition
         case .vo2Max, .bloodOxygen, .respiratoryRate,
-             .peakExpiratoryFlowRate, .forcedVitalCapacity:
+             .peakExpiratoryFlowRate, .forcedVitalCapacity, .forcedExpiratoryVolume1:
             return .respiratory
         case .mindfulMinutes, .timeInDaylight, .electrodermalActivity:
             return .mindfulness
         case .walkingSpeed, .walkingStepLength, .walkingAsymmetry,
              .walkingDoubleSupportPercentage, .stairAscentSpeed, .stairDescentSpeed,
-             .sixMinuteWalkTestDistance:
+             .sixMinuteWalkTestDistance, .walkingSteadiness, .numberOfTimesFallen:
             return .mobility
         case .workoutCount, .workoutDuration:
             return .activity
+        case .headphoneAudioExposure, .environmentalAudioExposure:
+            return .hearing
         }
     }
 
@@ -247,7 +293,9 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
              .leanBodyMass, .peakExpiratoryFlowRate, .forcedVitalCapacity,
              .mindfulMinutes, .timeInDaylight, .waterIntake,
              .stairAscentSpeed, .stairDescentSpeed, .sixMinuteWalkTestDistance,
-             .proteinIntake, .fiberIntake:
+             .proteinIntake, .fiberIntake,
+             .runningPower, .runningStrideLength,
+             .forcedExpiratoryVolume1, .walkingSteadiness, .underwaterDepth:
             return true
         case .heartRate, .restingHeartRate, .walkingHeartRateAverage,
              .sleepAwake, .walkingAsymmetry, .bmi, .bodyFatPercentage,
@@ -258,7 +306,12 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
              .appleSleepingWristTemperature, .waistCircumference,
              .bloodGlucose,
              .sugarIntake, .sodiumIntake, .caffeineIntake,
-             .totalCaloriesIntake, .carbohydrateIntake, .fatIntake:
+             .totalCaloriesIntake, .carbohydrateIntake, .fatIntake,
+             .sleepBreathingDisturbances,
+             .runningGroundContactTime, .runningVerticalOscillation,
+             .numberOfTimesFallen, .insulinDelivery,
+             .headphoneAudioExposure, .environmentalAudioExposure,
+             .waterTemperature:
             return false
         case .weight:
             return false // context-dependent, default to false
@@ -269,7 +322,9 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
     func formatValue(_ value: Double) -> String {
         switch self {
         case .steps, .activeCalories, .basalCalories, .flightsClimbed, .waterIntake,
-             .caffeineIntake, .sodiumIntake, .totalCaloriesIntake:
+             .caffeineIntake, .sodiumIntake, .totalCaloriesIntake,
+             .runningPower, .runningGroundContactTime, .numberOfTimesFallen,
+             .headphoneAudioExposure, .environmentalAudioExposure:
             return String(format: "%.0f", value)
         case .heartRate, .restingHeartRate, .walkingHeartRateAverage, .heartRateRecovery,
              .bloodPressureSystolic, .bloodPressureDiastolic, .bloodGlucose,
@@ -292,8 +347,10 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .respiratoryRate: return "wind"
         case .peakExpiratoryFlowRate: return "gauge.with.dots.needle.33percent"
         case .forcedVitalCapacity: return "chart.bar.fill"
+        case .forcedExpiratoryVolume1: return "lungs.fill"
         case .sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .sleepAwake:
             return "bed.double.fill"
+        case .sleepBreathingDisturbances: return "nose"
         case .steps, .distanceWalkingRunning:
             return "figure.walk"
         case .activeCalories, .basalCalories: return "flame.fill"
@@ -303,6 +360,12 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .distanceCycling: return "figure.outdoor.cycle"
         case .distanceSwimming, .swimmingStrokeCount: return "figure.pool.swim"
         case .appleMoveTime: return "figure.walk.motion"
+        case .runningPower: return "bolt.fill"
+        case .runningGroundContactTime: return "shoe.fill"
+        case .runningVerticalOscillation: return "arrow.up.arrow.down"
+        case .runningStrideLength: return "ruler"
+        case .underwaterDepth: return "water.waves"
+        case .waterTemperature: return "thermometer.variable.and.figure"
         case .weight, .bmi, .bodyFatPercentage: return "scalemass.fill"
         case .bloodPressureSystolic, .bloodPressureDiastolic: return "waveform.path.ecg"
         case .bodyTemperature: return "thermometer.medium"
@@ -318,6 +381,8 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .stairAscentSpeed: return "figure.stairs"
         case .stairDescentSpeed: return "figure.stairs"
         case .sixMinuteWalkTestDistance: return "figure.walk.diamond.fill"
+        case .walkingSteadiness: return "figure.fall"
+        case .numberOfTimesFallen: return "figure.fall"
         case .waterIntake: return "drop.fill"
         case .caffeineIntake: return "cup.and.saucer.fill"
         case .proteinIntake: return "fork.knife"
@@ -328,7 +393,10 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         case .carbohydrateIntake: return "chart.pie.fill"
         case .fatIntake: return "drop.halffull"
         case .bloodGlucose: return "drop.fill"
+        case .insulinDelivery: return "syringe.fill"
         case .workoutCount, .workoutDuration: return "dumbbell.fill"
+        case .headphoneAudioExposure: return "headphones"
+        case .environmentalAudioExposure: return "ear.badge.waveform"
         }
     }
 }

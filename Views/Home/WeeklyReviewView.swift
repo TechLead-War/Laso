@@ -63,6 +63,7 @@ struct WeeklyReviewEntryCard: View {
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("Weekly Review. Score \(review.currentScore). \(viewModel.winsCount) wins.")
                 .accessibilityHint("Opens your weekly review")
+                .accessibilityIdentifier("home.weeklyReviewCard")
             }
         }
         .onAppear {
@@ -640,7 +641,7 @@ struct WeeklyReviewView: View {
 
 #Preview {
     let container = try! ModelContainer(
-        for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self,
+        for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self, StoredDailyStrain.self,
         configurations: ModelConfiguration(isStoredInMemoryOnly: true)
     )
     NavigationStack {

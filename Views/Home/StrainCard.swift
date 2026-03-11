@@ -75,6 +75,7 @@ struct StrainCard: View {
         .accessibilityLabel("Today's strain \(String(format: "%.1f", strainValue)), \(strainLevel.displayName)")
         .accessibilityHint("View strain details")
         .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("home.strainCard")
     }
 
     // MARK: - Strain Ring

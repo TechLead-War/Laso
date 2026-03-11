@@ -54,7 +54,6 @@ enum AppSection: String {
     case settingsAlerts = "settings_alerts"
     case settingsMetricAlerts = "settings_metric_alerts"
     case settingsExport = "settings_export"
-    case settingsAppearance = "settings_appearance"
     case settingsDataStorage = "settings_data_storage"
     case settingsAbout = "settings_about"
 

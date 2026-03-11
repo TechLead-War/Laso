@@ -47,6 +47,7 @@ struct LevelBadgeCard: View {
         .accessibilityLabel(accessibilityDescription)
         .accessibilityHint("View achievements and progress")
         .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("home.levelBadgeCard")
         .onAppear {
             withAnimation(.easeOut(duration: 0.6)) {
                 animatedProgress = progressToNext

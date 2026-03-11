@@ -58,6 +58,7 @@ struct SleepCoachCard: View {
         .accessibilityLabel(accessibilityDescription)
         .accessibilityHint("View sleep coach details")
         .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("home.sleepCoachCard")
     }
 
     // MARK: - Subviews

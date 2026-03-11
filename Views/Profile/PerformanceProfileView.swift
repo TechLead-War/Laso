@@ -125,6 +125,12 @@ struct PerformanceProfileView: View {
                 ProfileShareSheet(items: [image])
             }
         }
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.performanceProfile)
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.performanceProfile)
+        }
     }
 
     // MARK: - 1. Header

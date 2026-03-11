@@ -15,6 +15,7 @@ struct VitalityCard: View {
         .accessibilityLabel(accessibilityDescription)
         .accessibilityHint("View vitality age details")
         .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("home.vitalityCard")
     }
 
     // MARK: - Ready State
@@ -45,14 +46,11 @@ struct VitalityCard: View {
                         deltaBadge
                     }
 
-                    // Pace indicator
-                    HStack(spacing: 4) {
-                        Image(systemName: paceIcon)
-                            .font(.caption2.weight(.bold))
-                        Text(scorer.paceLabel)
-                            .font(.caption2.weight(.medium))
+                    if scorer.personalizationStatus == .personalized {
+                        paceIndicator
+                    } else {
+                        personalizationIndicator
                     }
-                    .foregroundStyle(paceColor)
                 }
 
                 Spacer()
@@ -70,17 +68,24 @@ struct VitalityCard: View {
 
     // MARK: - Data Maturity Indicator
 
-    /// Subtle indicator when data is still building
-    @ViewBuilder
-    private var maturityIndicator: some View {
-        if !scorer.isFullyMature {
-            Text("Refining")
-                .font(.system(size: 9, weight: .bold))
-                .foregroundStyle(.white.opacity(0.7))
-                .padding(.horizontal, 5)
-                .padding(.vertical, 2)
-                .background(Color.white.opacity(0.15), in: Capsule())
+    private var personalizationIndicator: some View {
+        HStack(spacing: 4) {
+            Image(systemName: personalizationIcon)
+                .font(.caption2.weight(.bold))
+            Text(scorer.personalizationStatus.rawValue)
+                .font(.caption2.weight(.medium))
         }
+        .foregroundStyle(personalizationColor)
+    }
+
+    private var paceIndicator: some View {
+        HStack(spacing: 4) {
+            Image(systemName: paceIcon)
+                .font(.caption2.weight(.bold))
+            Text(scorer.paceLabel)
+                .font(.caption2.weight(.medium))
+        }
+        .foregroundStyle(paceColor)
     }
 
     // MARK: - Subviews
@@ -151,6 +156,22 @@ struct VitalityCard: View {
         return .red
     }
 
+    private var personalizationIcon: String {
+        switch scorer.personalizationStatus {
+        case .buildingProfile: return "hourglass"
+        case .earlyEstimate: return "clock.arrow.circlepath"
+        case .personalized: return "checkmark.circle"
+        }
+    }
+
+    private var personalizationColor: Color {
+        switch scorer.personalizationStatus {
+        case .buildingProfile: return .secondary
+        case .earlyEstimate: return .blue
+        case .personalized: return .green
+        }
+    }
+
     private var accessibilityDescription: String {
         let delta = scorer.delta
         let comparison: String
@@ -161,7 +182,10 @@ struct VitalityCard: View {
         } else {
             comparison = "matching your age"
         }
-        let maturity = scorer.isFullyMature ? "" : ", refining estimate"
-        return "Vitality Age \(scorer.vitalityAge), \(comparison), trend \(scorer.paceLabel)\(maturity)"
+
+        if scorer.personalizationStatus == .personalized {
+            return "Vitality Age \(scorer.vitalityAge), \(comparison), trend \(scorer.paceLabel), \(scorer.personalizationStatus.rawValue)"
+        }
+        return "Vitality Age \(scorer.vitalityAge), \(comparison), \(scorer.personalizationStatus.rawValue)"
     }
 }

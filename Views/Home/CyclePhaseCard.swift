@@ -77,6 +77,7 @@ struct CyclePhaseCard: View {
         .accessibilityLabel("\(phaseName), day \(dayInCycle) of \(cycleLength), \(daysUntilPeriod) days until next period")
         .accessibilityHint("View cycle tracking details")
         .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("home.cycleCard")
     }
 
     // MARK: - Period Countdown Badge

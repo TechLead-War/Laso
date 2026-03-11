@@ -8,13 +8,23 @@ struct ProfileCaptureView: View {
 
     @State private var name = ""
     @State private var email = ""
-    @State private var gender: Gender = .preferNotToSay
+    @State private var gender: Gender?
     @State private var ageText = ""
     @State private var buttonTapCount = 0
+    @State private var showValidationErrors = false
+    @FocusState private var isAgeFieldFocused: Bool
 
     private var parsedAge: Int? {
         guard let value = Int(ageText), value >= 13, value <= 120 else { return nil }
         return value
+    }
+
+    private var shouldShowAgeError: Bool {
+        (showValidationErrors || !ageText.isEmpty) && parsedAge == nil
+    }
+
+    private var shouldShowGenderError: Bool {
+        showValidationErrors && gender == nil
     }
 
     var body: some View {
@@ -46,6 +56,10 @@ struct ProfileCaptureView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
                     .fixedSize(horizontal: false, vertical: true)
+
+                Text("Age and gender are required.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             .padding(.bottom, 24)
 
@@ -90,7 +104,7 @@ struct ProfileCaptureView: View {
                 // Age
                 fieldRow {
                     HStack {
-                        Text("Age")
+                        Text("Age *")
                             .font(.subheadline)
                             .foregroundStyle(.primary)
                         Spacer()
@@ -98,6 +112,7 @@ struct ProfileCaptureView: View {
                             .font(.subheadline)
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.numberPad)
+                            .focused($isAgeFieldFocused)
                             .frame(width: 80)
                     }
                 }
@@ -107,42 +122,44 @@ struct ProfileCaptureView: View {
                 // Gender
                 fieldRow {
                     Picker("Gender", selection: $gender) {
+                        Text("Select").tag(Optional<Gender>.none)
                         ForEach(Gender.allCases) { option in
-                            Text(option.displayName).tag(option)
+                            Text(option.displayName).tag(Optional(option))
                         }
                     }
                     .font(.subheadline)
+                    .pickerStyle(.menu)
                 }
             }
             .background(.background, in: RoundedRectangle(cornerRadius: 16))
             .padding(.horizontal)
 
-            Spacer()
-
-            // Skip button
-            Button {
-                AppAnalytics.shared.trackBlockTap(
-                    title: "Skip Profile",
-                    type: .onboardingProfileSkip,
-                    screen: .onboarding,
-                    metadata: [
-                        "step_name": "profile_capture"
-                    ]
-                )
-                saveDeviceIdSilently()
-                onComplete(nil, nil, .preferNotToSay, nil)
-            } label: {
-                Text("Skip")
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.secondary)
+            if shouldShowAgeError || shouldShowGenderError {
+                VStack(alignment: .leading, spacing: 4) {
+                    if shouldShowAgeError {
+                        Text("Enter a valid age between 13 and 120.")
+                    }
+                    if shouldShowGenderError {
+                        Text("Select a gender to continue.")
+                    }
+                }
+                .font(.caption)
+                .foregroundStyle(.red)
+                .padding(.top, 8)
+                .padding(.horizontal, 24)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.bottom, 12)
+
+            Spacer()
 
             // Continue button
             Button {
                 buttonTapCount += 1
+                showValidationErrors = true
                 let trimmedName = name.trimmingCharacters(in: .whitespaces)
                 let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
+                let requiredGender = gender
+                let requiredAge = parsedAge
 
                 AppAnalytics.shared.trackBlockTap(
                     title: "Continue Profile",
@@ -152,17 +169,20 @@ struct ProfileCaptureView: View {
                         "step_name": "profile_capture",
                         "has_name": trimmedName.isEmpty ? 0 : 1,
                         "has_email": trimmedEmail.isEmpty ? 0 : 1,
-                        "gender": gender.rawValue,
-                        "has_age": parsedAge != nil ? 1 : 0
+                        "gender": requiredGender?.rawValue ?? "missing",
+                        "has_age": requiredAge != nil ? 1 : 0
                     ]
                 )
 
+                guard let requiredGender, let requiredAge else { return }
+
+                isAgeFieldFocused = false
                 saveDeviceIdSilently()
                 onComplete(
                     trimmedName.isEmpty ? nil : trimmedName,
                     trimmedEmail.isEmpty ? nil : trimmedEmail,
-                    gender,
-                    parsedAge
+                    requiredGender,
+                    requiredAge
                 )
             } label: {
                 Text("Continue")

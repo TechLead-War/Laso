@@ -92,6 +92,12 @@ struct WeeklyPlanView: View {
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("Weekly Plan")
         .navigationBarTitleDisplayMode(.large)
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.weeklyPlan)
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.weeklyPlan)
+        }
     }
 
     // MARK: - Goal Selector (No Active Plan)

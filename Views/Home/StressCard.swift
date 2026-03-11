@@ -65,6 +65,7 @@ struct StressCard: View {
         .accessibilityLabel("Stress level \(String(format: "%.1f", stressScore)), \(stressLevel), trending \(trend)")
         .accessibilityHint("View stress monitor details")
         .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("home.stressCard")
     }
 
     // MARK: - Trend Indicator

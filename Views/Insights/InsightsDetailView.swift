@@ -39,7 +39,7 @@ struct InsightsDetailView: View {
             case .sleep: return [.sleep]
             case .activity: return [.activity]
             case .heart: return [.heart]
-            case .body: return [.body, .respiratory, .mindfulness, .mobility]
+            case .body: return [.body, .respiratory, .mindfulness, .mobility, .hearing]
             }
         }
 

@@ -443,6 +443,44 @@ final class HealthKitManager {
         return phaseDays.isEmpty ? nil : phaseDays
     }
 
+    // MARK: - Raw Intra-Day Heart Rate (for Strain Zone Classification)
+
+    /// Fetch today's individual heart rate samples (not daily-aggregated).
+    /// The sync pipeline stores daily averages, which loses the per-minute granularity
+    /// needed for accurate HR zone classification in the strain scorer.
+    func fetchTodayRawHeartRateSamples() async -> [MetricSample] {
+        let startOfDay = Calendar.current.startOfDay(for: Date())
+        let type = HKQuantityType(.heartRate)
+        let unit = HKUnit.count().unitDivided(by: .minute())
+
+        return await withCheckedContinuation { continuation in
+            let predicate = HKQuery.predicateForSamples(
+                withStart: startOfDay,
+                end: Date(),
+                options: .strictStartDate
+            )
+            let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
+
+            let query = HKSampleQuery(
+                sampleType: type,
+                predicate: predicate,
+                limit: HKObjectQueryNoLimit,
+                sortDescriptors: [sort]
+            ) { _, results, error in
+                guard let results = results as? [HKQuantitySample], error == nil else {
+                    continuation.resume(returning: [])
+                    return
+                }
+                let samples = results.map { sample in
+                    MetricSample(date: sample.startDate, value: sample.quantity.doubleValue(for: unit))
+                }
+                continuation.resume(returning: samples)
+            }
+
+            self.healthStore.execute(query)
+        }
+    }
+
     // MARK: - Private Query Methods
 
     private func fetchStatisticsDaily(metric: HealthMetric, from startDate: Date, to endDate: Date) async -> MetricTimeSeries? {

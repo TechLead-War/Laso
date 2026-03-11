@@ -214,7 +214,7 @@ struct MetricChangeRow: View {
 
 #Preview {
     let container = try! ModelContainer(
-        for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self,
+        for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self, StoredDailyStrain.self,
         configurations: ModelConfiguration(isStoredInMemoryOnly: true)
     )
     PeriodSummarySection(

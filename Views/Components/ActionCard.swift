@@ -171,6 +171,8 @@ struct ActionCard: View {
             return "Your movement quality is \(devPct)% \(direction) your usual"
         case .nutrition:
             return "Your intake is \(devPct)% \(direction) what works best for you"
+        case .hearing:
+            return "Your audio exposure is \(devPct)% \(direction) safe hearing levels"
         }
     }
 
@@ -193,6 +195,8 @@ struct ActionCard: View {
             return "this week"
         case .nutrition:
             return "today"
+        case .hearing:
+            return "this week"
         }
     }
 }

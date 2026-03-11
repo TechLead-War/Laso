@@ -93,6 +93,12 @@ struct StrainDetailView: View {
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("Strain")
         .navigationBarTitleDisplayMode(.large)
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.strainDetail)
+        }
+        .onDisappear {
+            AppAnalytics.shared.trackFeatureClose(.strainDetail)
+        }
     }
 
     // MARK: - 1. Hero Section
