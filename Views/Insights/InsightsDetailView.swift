@@ -1,26 +1,18 @@
 import SwiftUI
 
-/// Full-screen view showing all analysis insights organized by type,
-/// with both actionable items and data discoveries.
+/// Full-screen view showing all analysis insights — explains why things are happening.
+/// The Today screen tells you what to do; this screen tells you why.
 struct InsightsDetailView: View {
     let insightsByCategory: [(category: InsightCategory, insights: [Insight])]
     let onTapMetric: (HealthMetric) -> Void
     var headlineSummary: String?
 
-    @State private var selectedTab: InsightTab = .actionItems
     @State private var selectedFilter: FocusFilter = .all
 
     // Section trackers
-    @State private var sectionTracker = SectionTracker(section: .insightsActionItems, tab: .insightsDetail)
+    @State private var sectionTracker = SectionTracker(section: .insightsAllInsights, tab: .insightsDetail)
 
     var store: HealthDataStore?
-
-    enum InsightTab: String, CaseIterable, Identifiable {
-        case actionItems = "Action Items"
-        case allInsights = "All Insights"
-
-        var id: String { rawValue }
-    }
 
     // MARK: - Focus Filters
 
@@ -58,44 +50,23 @@ struct InsightsDetailView: View {
 
     private var allInsights: [Insight] {
         insightsByCategory.flatMap(\.insights)
-            .filter { InsightGenerator.actionabilityScore($0) >= 20 }
             .sorted { lhs, rhs in
-                let lScore = InsightGenerator.actionabilityScore(lhs)
-                let rScore = InsightGenerator.actionabilityScore(rhs)
-                if lScore != rScore { return lScore > rScore }
+                if lhs.severity != rhs.severity { return lhs.severity > rhs.severity }
                 return lhs.priorityScore > rhs.priorityScore
             }
     }
 
-    private var actionableItems: [Insight] {
-        allInsights
-            .filter { $0.severity == .critical || $0.severity == .warning }
-            .filter { !isGenericAdvice($0.recommendation) }
-    }
-
-    /// High-confidence actionable items — must also pass actionability threshold
-    private var highConfidenceActions: [Insight] {
-        guard let topScore = actionableItems.first?.priorityScore, topScore > 0 else { return [] }
-        let threshold = topScore * 0.4
-        let filtered = actionableItems.filter {
-            $0.priorityScore >= threshold && InsightGenerator.actionabilityScore($0) >= 40
-        }
-        return Array(filtered.prefix(5))
-    }
-
-    /// Currently displayed items based on tab and filter
+    /// Currently displayed items based on filter
     private var displayedItems: [Insight] {
-        let base = selectedTab == .actionItems ? highConfidenceActions : allInsights
-        if selectedFilter == .all { return base }
+        if selectedFilter == .all { return allInsights }
         let cats = selectedFilter.categories
-        return base.filter { cats.contains($0.metric.category) }
+        return allInsights.filter { cats.contains($0.metric.category) }
     }
 
     private func count(for filter: FocusFilter) -> Int {
-        let base = selectedTab == .actionItems ? highConfidenceActions : allInsights
-        if filter == .all { return base.count }
+        if filter == .all { return allInsights.count }
         let cats = filter.categories
-        return base.filter { cats.contains($0.metric.category) }.count
+        return allInsights.filter { cats.contains($0.metric.category) }.count
     }
 
     // MARK: - Body
@@ -110,15 +81,6 @@ struct InsightsDetailView: View {
                         .foregroundStyle(.secondary)
                         .padding(.horizontal)
                 }
-
-                // Tab picker: Action Items vs All Insights
-                Picker("View", selection: $selectedTab) {
-                    ForEach(InsightTab.allCases) { tab in
-                        Text(tab.rawValue).tag(tab)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
 
                 // Filter chips
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -146,7 +108,7 @@ struct InsightsDetailView: View {
                             store?.recordRecommendationTapped(insightId: insight.id)
                             onTapMetric(insight.metric)
                         } label: {
-                            EnrichedInsightCard(insight: insight, showCategory: selectedTab == .allInsights)
+                            EnrichedInsightCard(insight: insight, showCategory: true)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .buttonStyle(.plain)
@@ -155,16 +117,14 @@ struct InsightsDetailView: View {
                 } else {
                     VStack(spacing: 12) {
                         Spacer().frame(height: 40)
-                        Image(systemName: selectedTab == .actionItems ? "checkmark.circle.fill" : "magnifyingglass")
+                        Image(systemName: "magnifyingglass")
                             .font(.system(size: 48))
-                            .foregroundStyle(selectedTab == .actionItems ? .green : .secondary)
-                        Text(selectedTab == .actionItems ? "You're all good" : "No insights yet")
+                            .foregroundStyle(.secondary)
+                        Text("No insights yet")
                             .font(.title3.weight(.semibold))
-                        Text(selectedTab == .actionItems
-                             ? (selectedFilter == .all
-                                ? "Nothing needs your attention right now."
-                                : "Nothing in \(selectedFilter.rawValue) needs attention.")
-                             : "More data will unlock deeper insights over time.")
+                        Text(selectedFilter == .all
+                             ? "More data will unlock deeper insights over time."
+                             : "No \(selectedFilter.rawValue.lowercased()) insights right now.")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -182,8 +142,7 @@ struct InsightsDetailView: View {
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.insightsDetail, metadata: [
-                "total_count": allInsights.count,
-                "actionable_count": highConfidenceActions.count
+                "total_count": allInsights.count
             ])
             AppAnalytics.shared.trackActivationMilestone(.firstInsightViewed)
             AppAnalytics.shared.trackCoreAction(.viewedInsight, screen: .insightsDetail)
@@ -192,14 +151,6 @@ struct InsightsDetailView: View {
         .onDisappear {
             AppAnalytics.shared.trackFeatureClose(.insightsDetail)
             sectionTracker.disappeared()
-        }
-        .onChange(of: selectedTab) { _, newTab in
-            sectionTracker.disappeared()
-            sectionTracker = SectionTracker(
-                section: newTab == .actionItems ? .insightsActionItems : .insightsAllInsights,
-                tab: .insightsDetail
-            )
-            sectionTracker.appeared()
         }
         .onChange(of: selectedFilter) { oldFilter, newFilter in
             if oldFilter != newFilter {
@@ -225,7 +176,6 @@ struct InsightsDetailView: View {
                 type: .trendFilter,
                 screen: .insightsDetail,
                 metadata: [
-                    "insight_tab": selectedTab.rawValue,
                     "filter": filter.rawValue,
                     "results_count": count
                 ]
@@ -249,15 +199,6 @@ struct InsightsDetailView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - Helpers
-
-    private func isGenericAdvice(_ text: String) -> Bool {
-        let lower = text.lowercased()
-        let genericStarters = ["monitor ", "track ", "continue ", "keep an eye", "your .* is healthy", "your .* is normal"]
-        return genericStarters.contains { starter in
-            lower.hasPrefix(starter) || lower.range(of: "^" + starter, options: .regularExpression) != nil
-        }
-    }
 }
 
 /// Enriched insight card showing category badge, action text, and quantified impact

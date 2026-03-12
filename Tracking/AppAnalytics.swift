@@ -27,7 +27,6 @@ enum AppFeature: String, Hashable {
     case proOverlay = "pro_overlay"
     case achievements
     case performanceProfile = "performance_profile"
-    case weeklyPlan = "weekly_plan"
     case journalEntry = "journal_entry"
     case expandedJournal = "expanded_journal"
     case journalInsights = "journal_insights"
@@ -143,7 +142,6 @@ enum BlockType: String {
     case exploreTrendMetric = "explore_trend_metric"
 
     // Home extras
-    case homeCoachGoal = "home_coach_goal"
     case homeRiskRow = "home_risk_row"
     case homeRecoveryInfoButton = "home_recovery_info_button"
     case homeDailyAction = "home_daily_action"

@@ -64,9 +64,7 @@ final class MLOrchestrator {
     var enrichedVectors: [EnrichedDailyFeatureVector] = []
     /// Predictive health signal report (fatigue, burnout, overtraining, insomnia, immune, inactivity)
     var healthSignalReport: PredictiveHealthSignals.HealthSignalReport?
-    /// Single highest-impact daily action (legacy, kept for backward compat)
-    var dailyAction: DailyAction?
-    /// Policy-based recommendation decision (replaces dailyAction as primary)
+    /// Policy-based recommendation decision — single source of truth for daily action
     var policyDecision: PolicyDecision?
     /// Personalization status for the user
     var personalizationStatus: PersonalizationBlender.PersonalizationStatus?
@@ -746,21 +744,6 @@ final class MLOrchestrator {
             }
         }
 
-        // Legacy daily action (kept for backward compat during transition)
-        dailyAction = DailyActionEngine.computeDailyAction(
-            prediction: tomorrowRiskPrediction,
-            circadianProfile: circadianProfile,
-            timingRecommendations: timingRecommendations,
-            causalCorrelations: causalCorrelations,
-            currentState: currentHealthState,
-            anomalies: ruleBasedAnomalies,
-            trends: trends,
-            baselines: baselines,
-            timeSeries: timeSeries,
-            adherenceMultiplier: { [weak self] category in
-                self?.adherenceTracker.effectivenessMultiplier(for: category) ?? 1.0
-            }
-        )
     }
 
     /// Run multivariate Granger on metrics with 3+ significant pairwise correlations

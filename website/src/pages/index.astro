@@ -144,11 +144,11 @@ const jsonLd = [
         iOS Early Access Open
       </div>
       <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-apple-dark text-balance max-w-4xl mx-auto leading-[1.08]">
-        Your wearable tells you what happened.
-        <span class="gradient-text">Laso tells you what to do.</span>
+        Health scores that are
+        <span class="gradient-text">actually about you.</span>
       </h1>
       <p class="mt-5 text-lg md:text-xl text-apple-secondary max-w-2xl mx-auto text-balance leading-relaxed">
-        Recovery score. Strain target. Sleep debt. Stress. Illness prediction. Biological age. All from your existing wearable, updated every morning.
+        Laso learns what's normal for your body and tells you what to do about it. Recovery, strain, sleep, stress, illness risk. All from the wearable you already own.
       </p>
       <div class="mt-8 max-w-md mx-auto">
         <form id="hero-form" class="flex flex-col sm:flex-row gap-3">
@@ -189,10 +189,10 @@ const jsonLd = [
     <section data-section="brief" class="bg-apple-gray py-20 md:py-28 px-5">
       <div class="max-w-4xl mx-auto">
         <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
-          Your daily recovery score, strain target, and sleep analysis in 30 seconds.
+          Every morning, five numbers that actually mean something.
         </h2>
         <p class="section-reveal mt-4 text-center text-apple-secondary text-[15px] md:text-base max-w-xl mx-auto">
-          Open Laso every morning. Five numbers. One clear decision.
+          Each one is compared to your own history. Not an age group average, not a generic benchmark. Your data, your baseline.
         </p>
 
         <div class="mt-14 grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -202,7 +202,7 @@ const jsonLd = [
             </div>
             <p class="text-2xl font-bold text-emerald-600">84</p>
             <p class="text-xs font-medium text-apple-dark mt-1">Recovery</p>
-            <p class="text-[11px] text-apple-secondary mt-0.5">Push hard today</p>
+            <p class="text-[11px] text-apple-secondary mt-0.5">Above your baseline</p>
           </div>
 
           <div class="section-reveal bg-white rounded-2xl p-5 text-center" style="transition-delay:60ms">
@@ -211,7 +211,7 @@ const jsonLd = [
             </div>
             <p class="text-2xl font-bold text-indigo-600">7h 42m</p>
             <p class="text-xs font-medium text-apple-dark mt-1">Sleep</p>
-            <p class="text-[11px] text-apple-secondary mt-0.5">96% of target</p>
+            <p class="text-[11px] text-apple-secondary mt-0.5">96% of your need</p>
           </div>
 
           <div class="section-reveal bg-white rounded-2xl p-5 text-center" style="transition-delay:120ms">
@@ -229,7 +229,7 @@ const jsonLd = [
             </div>
             <p class="text-2xl font-bold text-yellow-600">Low</p>
             <p class="text-xs font-medium text-apple-dark mt-1">Stress</p>
-            <p class="text-[11px] text-apple-secondary mt-0.5">Below baseline</p>
+            <p class="text-[11px] text-apple-secondary mt-0.5">Below your normal</p>
           </div>
 
           <div class="section-reveal bg-white rounded-2xl p-5 text-center col-span-2 md:col-span-1" style="transition-delay:240ms">
@@ -242,18 +242,90 @@ const jsonLd = [
           </div>
         </div>
 
-        <p class="section-reveal mt-6 text-xs text-apple-secondary/50 text-center">Sample daily brief. All values generated from your own wearable data.</p>
+        <p class="section-reveal mt-6 text-xs text-apple-secondary/50 text-center">Sample daily brief. All values based on your personal data.</p>
+      </div>
+    </section>
+
+    <!-- ════════ YOU ARE THE BASELINE ════════ -->
+    <section data-section="baseline" class="py-20 md:py-28 px-5">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
+          Why most health apps get it wrong.
+        </h2>
+        <p class="section-reveal mt-4 text-center text-apple-secondary text-[15px] md:text-base max-w-xl mx-auto">
+          They compare you to a population average. So someone with a naturally low HRV gets told they're "below average" every single day, even when they're feeling great. Laso compares you to you.
+        </p>
+
+        <div class="mt-14 grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          <!-- Other Apps -->
+          <div class="section-reveal rounded-2xl border border-gray-200 bg-white p-6 md:p-7 relative overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-1 bg-gray-300"></div>
+            <p class="text-xs font-semibold text-apple-secondary uppercase tracking-wider mb-5">Typical health app</p>
+            <div class="space-y-4">
+              <div>
+                <div class="flex items-baseline justify-between mb-1.5">
+                  <span class="text-sm font-medium text-apple-dark">Your HRV</span>
+                  <span class="text-lg font-bold text-apple-dark">42 ms</span>
+                </div>
+                <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div class="h-full bg-red-400 rounded-full" style="width: 62%"></div>
+                </div>
+                <div class="flex items-center justify-between mt-1.5">
+                  <span class="text-[11px] text-apple-secondary">Population avg: <strong>55 ms</strong></span>
+                  <span class="text-[11px] font-semibold text-red-500">Below Average</span>
+                </div>
+              </div>
+              <div class="border-t border-gray-100 pt-4">
+                <div class="flex items-start gap-2">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5" class="w-4 h-4 mt-0.5 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/></svg>
+                  <p class="text-sm text-apple-secondary">"Try meditation and reduce stress."</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Laso -->
+          <div class="section-reveal rounded-2xl border border-emerald-200 bg-white p-6 md:p-7 relative overflow-hidden" style="transition-delay:120ms">
+            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-cyan-400"></div>
+            <p class="text-xs font-semibold text-apple-blue uppercase tracking-wider mb-5">Laso</p>
+            <div class="space-y-4">
+              <div>
+                <div class="flex items-baseline justify-between mb-1.5">
+                  <span class="text-sm font-medium text-apple-dark">Your HRV</span>
+                  <span class="text-lg font-bold text-apple-dark">42 ms</span>
+                </div>
+                <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div class="h-full bg-emerald-500 rounded-full" style="width: 88%"></div>
+                </div>
+                <div class="flex items-center justify-between mt-1.5">
+                  <span class="text-[11px] text-apple-secondary">Your baseline: <strong>38 ms</strong></span>
+                  <span class="text-[11px] font-semibold text-emerald-600">+10% Above Your Normal</span>
+                </div>
+              </div>
+              <div class="border-t border-emerald-100 pt-4">
+                <div class="flex items-start gap-2">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" class="w-4 h-4 mt-0.5 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                  <p class="text-sm text-apple-dark font-medium">"Recovery is high. Good day to push it. Aim for strain 12-16."</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="section-reveal mt-8 text-center text-sm text-apple-secondary max-w-lg mx-auto">
+          Same person. Same number. One app says you're behind. The other knows this is actually a good week for you.
+        </p>
       </div>
     </section>
 
     <!-- ════════ DAILY ACTIONS ════════ -->
-    <section data-section="actions" class="py-20 md:py-28 px-5">
+    <section data-section="actions" class="bg-apple-gray py-20 md:py-28 px-5">
       <div class="max-w-4xl mx-auto">
         <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
-          Not just data. Specific actions you can take today.
+          It tells you what to do, not just what happened.
         </h2>
         <p class="section-reveal mt-4 text-center text-apple-secondary text-[15px] md:text-base max-w-xl mx-auto">
-          Laso analyzes your metrics and tells you exactly what to do next. Here's what a real morning looks like.
+          Here's what a morning with Laso actually looks like.
         </p>
 
         <div class="mt-12 max-w-2xl mx-auto space-y-4">
@@ -262,8 +334,8 @@ const jsonLd = [
               <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z"/></svg>
             </div>
             <div>
-              <p class="text-[15px] font-semibold text-apple-dark">"Recovery is 84. Push hard today."</p>
-              <p class="text-sm text-apple-secondary mt-1">Your body is fully recovered. Target strain 12-16. Great day for high-intensity intervals or a long run.</p>
+              <p class="text-[15px] font-semibold text-apple-dark">"Recovery 84. Good day to go hard."</p>
+              <p class="text-sm text-apple-secondary mt-1">Your HRV is up 14% from where it usually sits. Laso sets your strain target to 12-16. Go run, lift, whatever you want.</p>
             </div>
           </div>
 
@@ -272,8 +344,8 @@ const jsonLd = [
               <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/></svg>
             </div>
             <div>
-              <p class="text-[15px] font-semibold text-apple-dark">"You owe 45 min of sleep debt. Bed by 10:30pm tonight."</p>
-              <p class="text-sm text-apple-secondary mt-1">Your personalized sleep need is 7h 50m. Going to bed 20 minutes earlier for the next 3 nights clears your debt.</p>
+              <p class="text-[15px] font-semibold text-apple-dark">"You're 45 min short on sleep. Bed by 10:30 tonight."</p>
+              <p class="text-sm text-apple-secondary mt-1">Laso figured out you need 7h 50m, not the usual "8 hours everyone says." Go to bed 20 min earlier for 3 nights and you're caught up.</p>
             </div>
           </div>
 
@@ -282,8 +354,8 @@ const jsonLd = [
               <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
             </div>
             <div>
-              <p class="text-[15px] font-semibold text-apple-dark">"HRV dropped 15% over 3 days. Scale back."</p>
-              <p class="text-sm text-apple-secondary mt-1">Early signs of overtraining. Laso recommends a recovery day: keep strain below 8 and prioritize Zone 1-2 movement.</p>
+              <p class="text-[15px] font-semibold text-apple-dark">"Your HRV has been dropping for 3 days. Take it easy."</p>
+              <p class="text-sm text-apple-secondary mt-1">Down 15% from your normal. That usually means you're overdoing it. Keep strain under 8 today, walk or stretch, and check back tomorrow.</p>
             </div>
           </div>
 
@@ -292,14 +364,14 @@ const jsonLd = [
               <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/></svg>
             </div>
             <div>
-              <p class="text-[15px] font-semibold text-apple-dark">"Immune dip detected. You might get sick in 2-3 days."</p>
-              <p class="text-sm text-apple-secondary mt-1">RHR up, HRV down, sleep quality declining. Laso recommends extra sleep, hydration, and skipping tomorrow's workout.</p>
+              <p class="text-[15px] font-semibold text-apple-dark">"Heads up. You might be getting sick."</p>
+              <p class="text-sm text-apple-secondary mt-1">Resting HR is up 6 bpm, HRV is dropping, and your sleep quality tanked. Laso has seen this pattern before in your data. Get extra sleep tonight and skip the workout tomorrow.</p>
             </div>
           </div>
         </div>
 
-        <p class="section-reveal mt-8 text-center text-sm text-apple-secondary">
-          These aren't generic tips. Every recommendation is computed from <strong class="text-apple-dark">your</strong> baselines, <strong class="text-apple-dark">your</strong> trends, and <strong class="text-apple-dark">your</strong> recovery state.
+        <p class="section-reveal mt-8 text-center text-sm text-apple-secondary max-w-lg mx-auto">
+          None of this is generic. Every line comes from your own data and your own trends.
         </p>
       </div>
     </section>
@@ -308,7 +380,7 @@ const jsonLd = [
     <section data-section="differentiation" class="py-20 md:py-28 px-5">
       <div class="max-w-4xl mx-auto">
         <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
-          Better insights than dedicated hardware. At a fraction of the cost.
+          Your Apple Watch already collects the data. Laso actually does something with it.
         </h2>
 
         <div class="mt-14 grid md:grid-cols-3 gap-6">
@@ -318,9 +390,9 @@ const jsonLd = [
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3"/>
               </svg>
             </div>
-            <h3 class="text-lg font-semibold text-apple-dark">No new hardware</h3>
+            <h3 class="text-lg font-semibold text-apple-dark">You are the baseline</h3>
             <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">
-              Works with the Apple Watch, Oura, Garmin, or WHOOP you already own. No $30/month band. No second device on your wrist.
+              Laso builds a 30-day picture of your body. When something changes, it's compared to where you normally are. Not where a 30-year-old male is supposed to be.
             </p>
           </div>
 
@@ -330,9 +402,9 @@ const jsonLd = [
                 <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>
               </svg>
             </div>
-            <h3 class="text-lg font-semibold text-apple-dark">Intelligence, not dashboards</h3>
+            <h3 class="text-lg font-semibold text-apple-dark">It connects the dots</h3>
             <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">
-              Other apps show you charts. Laso cross-analyzes 86 metrics using causal inference to tell you exactly what to change and why it matters.
+              Most apps show you 86 metrics and leave you to figure out what they mean. Laso runs causal analysis across all of them and tells you which ones are actually affecting your recovery and sleep.
             </p>
           </div>
 
@@ -342,9 +414,9 @@ const jsonLd = [
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/>
               </svg>
             </div>
-            <h3 class="text-lg font-semibold text-apple-dark">Completely private</h3>
+            <h3 class="text-lg font-semibold text-apple-dark">Nothing leaves your phone</h3>
             <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">
-              Every analysis runs on your iPhone. No cloud. No account. AES-256 encrypted with Secure Enclave keys. Your data never leaves your device.
+              All the analysis happens on your iPhone. No cloud. No account. No one sees your health data. WHOOP and Oura upload everything to their servers. Laso doesn't.
             </p>
           </div>
         </div>
@@ -358,25 +430,23 @@ const jsonLd = [
           <div>
             <p class="text-apple-blue text-sm font-semibold mb-3">Vitality Age</p>
             <h2 class="text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark leading-snug">
-              Your biological age,<br/>measured every day.
+              Your biological age,<br/>updated daily.
             </h2>
             <p class="mt-4 text-[15px] text-apple-secondary leading-relaxed">
-              Computed daily from 9 metrics including VO2 Max, HRV, resting heart rate,
-              sleep efficiency, walking speed, and body composition. No blood draws. No lab visits.
-              Just open the app and see if you're aging faster or slower than time.
+              Laso looks at 9 things — VO2 Max, HRV, resting heart rate, sleep quality, walking speed, and more — and computes how old your body actually is. No blood test. No lab visit. Just open the app.
             </p>
             <div class="mt-5 space-y-2">
               <div class="flex items-center gap-3">
                 <span class="w-1.5 h-1.5 bg-apple-blue rounded-full"></span>
-                <p class="text-sm text-apple-dark"><strong>Pace of aging:</strong> are you gaining or losing ground?</p>
+                <p class="text-sm text-apple-dark">Updates every day so you can see if what you're doing is working</p>
               </div>
               <div class="flex items-center gap-3">
                 <span class="w-1.5 h-1.5 bg-apple-blue rounded-full"></span>
-                <p class="text-sm text-apple-dark"><strong>Top opportunities:</strong> which 2–3 metrics to focus on</p>
+                <p class="text-sm text-apple-dark">Shows you the 2-3 things that would move it the most</p>
               </div>
               <div class="flex items-center gap-3">
                 <span class="w-1.5 h-1.5 bg-apple-blue rounded-full"></span>
-                <p class="text-sm text-apple-dark"><strong>90-day trend:</strong> long-term trajectory, not daily noise</p>
+                <p class="text-sm text-apple-dark">90-day trend so you're looking at the big picture, not daily noise</p>
               </div>
             </div>
           </div>
@@ -400,7 +470,7 @@ const jsonLd = [
     <section id="features" data-section="features" class="py-20 md:py-28 px-5">
       <div class="max-w-5xl mx-auto">
         <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
-          Strain tracking, sleep coaching, and illness prediction in one app.
+          Recovery, strain, sleep, and illness prediction. One app.
         </h2>
 
         <div class="mt-14 grid md:grid-cols-3 gap-6">
@@ -413,10 +483,10 @@ const jsonLd = [
               <h3 class="text-lg font-semibold text-apple-dark">Train with precision</h3>
             </div>
             <ul class="space-y-2.5 text-sm text-apple-secondary">
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-orange-400 rounded-full mt-2 shrink-0"></span>Strain score (0–21) adjusted to your recovery state</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-orange-400 rounded-full mt-2 shrink-0"></span>What-if simulation: "If I run 10K today, what happens?"</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-orange-400 rounded-full mt-2 shrink-0"></span>Overtraining detection with projected recovery days</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-orange-400 rounded-full mt-2 shrink-0"></span>Workout effectiveness: VO2 response, calorie efficiency</li>
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-orange-400 rounded-full mt-2 shrink-0"></span>Strain score (0-21) with a daily target based on how recovered you are</li>
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-orange-400 rounded-full mt-2 shrink-0"></span>What-if simulation: see what a 10K run would do to tomorrow's recovery</li>
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-orange-400 rounded-full mt-2 shrink-0"></span>Catches overtraining before you feel it</li>
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-orange-400 rounded-full mt-2 shrink-0"></span>Tracks which workouts actually help vs. which ones just wreck you</li>
             </ul>
           </div>
 
@@ -429,10 +499,10 @@ const jsonLd = [
               <h3 class="text-lg font-semibold text-apple-dark">Sleep with purpose</h3>
             </div>
             <ul class="space-y-2.5 text-sm text-apple-secondary">
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-indigo-400 rounded-full mt-2 shrink-0"></span>Your personalized sleep need, not a generic 8 hours</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-indigo-400 rounded-full mt-2 shrink-0"></span>Sleep debt tracking with payoff timeline</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-indigo-400 rounded-full mt-2 shrink-0"></span>Recommended bedtime and wake time</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-indigo-400 rounded-full mt-2 shrink-0"></span>Sleep-to-performance correlation analysis</li>
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-indigo-400 rounded-full mt-2 shrink-0"></span>Figures out how much sleep you actually need (it's probably not 8 hours)</li>
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-indigo-400 rounded-full mt-2 shrink-0"></span>Tracks sleep debt and tells you how to pay it off</li>
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-indigo-400 rounded-full mt-2 shrink-0"></span>Suggests bedtime based on your patterns</li>
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-indigo-400 rounded-full mt-2 shrink-0"></span>Shows how your sleep actually affects your next-day performance</li>
             </ul>
           </div>
 
@@ -445,10 +515,10 @@ const jsonLd = [
               <h3 class="text-lg font-semibold text-apple-dark">Catch problems early</h3>
             </div>
             <ul class="space-y-2.5 text-sm text-apple-secondary">
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>Illness prediction 2–3 days before symptoms</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>6 signals: fatigue, burnout, overtraining, insomnia, immune dip, inactivity</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>Baseline drift detection over 30+ days</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>HRV-derived stress score with guided breathwork</li>
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>Illness prediction 2-3 days before you feel anything</li>
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>Watches for fatigue, burnout, overtraining, insomnia, immune dips</li>
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>Picks up slow changes you wouldn't notice yourself</li>
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>HRV-based stress score with guided breathwork when it's high</li>
             </ul>
           </div>
         </div>
@@ -547,10 +617,10 @@ const jsonLd = [
     <section id="early-access" data-section="early-access" class="py-20 md:py-28 px-5">
       <div class="max-w-2xl mx-auto text-center">
         <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-balance">
-          Stop guessing. Start knowing.
+          Try it free for 7 days.
         </h2>
         <p class="section-reveal mt-4 text-apple-secondary text-[15px] md:text-base leading-relaxed max-w-lg mx-auto">
-          Free to sign up. 7-day trial when we launch. No credit card required.
+          You already have the wearable. Laso does the rest. No credit card needed.
         </p>
         <div class="section-reveal mt-10 max-w-md mx-auto">
           <form id="early-access-form" class="flex flex-col sm:flex-row gap-3">
@@ -591,7 +661,7 @@ const jsonLd = [
     <section data-section="faq" class="py-20 md:py-28 px-5">
       <div class="max-w-3xl mx-auto">
         <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
-          Frequently asked questions about health tracking with Laso.
+          Questions you might have.
         </h2>
 
         <div class="mt-14 space-y-6">
@@ -601,7 +671,7 @@ const jsonLd = [
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-apple-secondary transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             </summary>
             <div class="px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
-              A recovery score (0–100) measures how ready your body is to perform. Laso calculates it from HRV (heart rate variability), resting heart rate, sleep quality, sleep duration, respiratory rate, and recent strain load. Unlike generic averages, Laso builds personal baselines calibrated to your body using on-device machine learning, so your score reflects your unique physiology, not population norms.
+              It's a number from 0 to 100 that tells you how ready your body is today. Laso calculates it from your HRV, resting heart rate, sleep quality, sleep duration, respiratory rate, and how hard you've been training. The important part: it's based on your own baseline, not a population average. So if your HRV is naturally 42ms, Laso doesn't tell you you're "below average" like other apps do. It tells you whether 42 is good or bad for you specifically.
             </div>
           </details>
 
@@ -661,7 +731,7 @@ const jsonLd = [
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-apple-secondary transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             </summary>
             <div class="px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
-              Three key differences: (1) No new hardware: Laso works with the wearable you already own, while WHOOP requires their band. (2) Broader analysis: Laso cross-analyzes 86 metrics using causal inference, covering recovery, strain, sleep, stress, illness prediction, and biological age in one app. (3) Complete privacy: all analysis runs on-device with no cloud processing, unlike WHOOP and Oura which require cloud accounts.
+              Three things. First, Laso compares you to yourself, not to population averages. Your 30-day history is the benchmark, so the scores actually mean something. Second, it works with whatever wearable you already have. No buying a WHOOP band for $30/month. Third, everything runs on your phone. WHOOP and Oura upload your data to their servers. Laso doesn't send anything anywhere.
             </div>
           </details>
         </div>

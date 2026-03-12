@@ -43,8 +43,6 @@ final class AnalysisEngine {
     var currentHealthState: HealthState? { mlOrchestrator.currentHealthState }
     /// Periodic patterns discovered by ML
     var discoveredPatterns: [DiscoveredPattern] { mlOrchestrator.discoveredPatterns }
-    /// Single highest-impact daily action
-    var dailyAction: DailyAction? { mlOrchestrator.dailyAction }
     /// Predictive health signal report
     var healthSignalReport: PredictiveHealthSignals.HealthSignalReport? { mlOrchestrator.healthSignalReport }
     /// Personalization status

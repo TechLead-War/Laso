@@ -20,7 +20,7 @@ struct HomeView: View {
     @State private var bodyInsightsTracker = SectionTracker(section: .homeBodyInsights, tab: .home)
     @State private var risksTracker = SectionTracker(section: .homeRisks, tab: .home)
     @State private var weeklyReviewTracker = SectionTracker(section: .homeWeeklyReview, tab: .home)
-    @State private var coachTracker = SectionTracker(section: .homeCoach, tab: .home)
+
 
     var body: some View {
         Group {
@@ -154,7 +154,11 @@ struct HomeView: View {
                     .onAppear { recoveryTracker.appeared() }
                     .onDisappear { recoveryTracker.disappeared() }
 
-                    // 2. Vitality Age card
+                    // 2. Today's Action — single source of truth for what to do
+                    primaryActionCard
+                        .padding(.top, 8)
+
+                    // 3. Vitality Age card
                     VitalityCard(
                         scorer: viewModel.vitalityScorer,
                         onTap: {
@@ -170,7 +174,7 @@ struct HomeView: View {
                     .padding(.horizontal)
                     .padding(.top, 12)
 
-                    // 3. Sleep Coach Card
+                    // 4. Sleep Coach Card
                     if let sleepNeed = viewModel.sleepNeedCalculator.currentNeed {
                         SleepCoachCard(
                             hoursNeeded: sleepNeed.totalHoursNeeded,
@@ -195,7 +199,7 @@ struct HomeView: View {
                         .padding(.top, 8)
                     }
 
-                    // 4. Strain Card
+                    // 5. Strain Card
                     StrainCard(
                         strainValue: viewModel.strainScorer.currentStrain,
                         strainLevel: viewModel.strainScorer.strainLevel,
@@ -213,7 +217,7 @@ struct HomeView: View {
                     .padding(.horizontal)
                     .padding(.top, 8)
 
-                    // 5. Stress Card
+                    // 6. Stress Card
                     if let stress = viewModel.stressScorer.currentStress {
                         StressCard(
                             stressScore: stress.score,
@@ -234,7 +238,7 @@ struct HomeView: View {
                         .padding(.top, 8)
                     }
 
-                    // 6. Cycle Phase Card (female users with cycle data)
+                    // 7. Cycle Phase Card (female users with cycle data)
                     if let cycle = viewModel.menstrualCycleTracker.currentCycle {
                         CyclePhaseCard(
                             phaseName: cycle.currentPhase.displayName,
@@ -257,15 +261,15 @@ struct HomeView: View {
                         .padding(.top, 8)
                     }
 
-                    // ── Below the fold (matches design: Insights → Risks → Coach → Review) ──
+                    // ── Below the fold ──
 
-                    // 7. Illness Warning (only when active)
+                    // 8. Illness Warning (only when active)
                     illnessWarningCard
                         .onAppear { illnessTracker.appeared() }
                         .onDisappear { illnessTracker.disappeared() }
                         .padding(.top, 8)
 
-                    // 8. Body Insights
+                    // 9. Body Insights
                     BodyInsightsSection(
                         viewModel: viewModel,
                         liveVM: liveViewModel,
@@ -289,13 +293,13 @@ struct HomeView: View {
                     .onAppear { bodyInsightsTracker.appeared() }
                     .onDisappear { bodyInsightsTracker.disappeared() }
 
-                    // 9. Health Risks — "Needs Attention"
+                    // 10. Health Risks — "Needs Attention"
                     todayRisksSection
                         .padding(.top, 8)
                         .onAppear { risksTracker.appeared() }
                         .onDisappear { risksTracker.disappeared() }
 
-                    // 10. Weekly Review
+                    // 11. Weekly Review
                     WeeklyReviewEntryCard(
                         viewModel: getOrCreateWeeklyReviewVM()
                     ) {
@@ -314,34 +318,7 @@ struct HomeView: View {
                     .onAppear { weeklyReviewTracker.appeared() }
                     .onDisappear { weeklyReviewTracker.disappeared() }
 
-                    // 11. Coach Goals
-                    CoachGoalsSection(
-                        goals: viewModel.coachGoals,
-                        daysOfData: viewModel.dataDepth.daysOfData,
-                        timeSeries: viewModel.healthKitManager.timeSeries,
-                        onTapGoal: { metric in
-                            AppAnalytics.shared.trackBlockTap(
-                                title: metric.displayName,
-                                type: .homeCoachGoal,
-                                screen: .home,
-                                metadata: [
-                                    "metric_id": metric.rawValue,
-                                    "metric_category": metric.category.rawValue
-                                ]
-                            )
-                            coachTracker.tapped(target: metric.rawValue)
-                            navigationPath.append(metric)
-                        }
-                    )
-                    .padding(.top, 8)
-                    .onAppear { coachTracker.appeared() }
-                    .onDisappear { coachTracker.disappeared() }
-
-                    // 12. Primary action — daily recommendation
-                    primaryActionCard
-                        .padding(.top, 8)
-
-                    // 13. Level & Streaks
+                    // 12. Level & Streaks
                     LevelBadgeCard(
                         level: viewModel.gamificationEngine.currentLevel,
                         totalDaysTracked: viewModel.gamificationEngine.totalDaysTracked,
@@ -359,7 +336,7 @@ struct HomeView: View {
                     )
                     .padding(.top, 8)
 
-                    // 14. Journal prompt — contextual check-in (evening only)
+                    // 13. Journal prompt — contextual check-in (evening only)
                     journalPromptCard
                         .padding(.top, 8)
 
@@ -686,7 +663,7 @@ struct HomeView: View {
         .cardStyle()
     }
 
-    // MARK: - Primary Action Card
+    // MARK: - Today's Action Card (single source of truth)
 
     @ViewBuilder
     private var primaryActionCard: some View {
@@ -697,35 +674,43 @@ struct HomeView: View {
                 type: .homeDailyAction,
                 screen: .home,
                 metadata: [
-                    "source": "smart_action",
+                    "source": action.source,
                     "recovery_state": viewModel.recoveryState.rawValue
                 ]
             )
         } label: {
-            HStack(spacing: 12) {
-                Image(systemName: action.icon)
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 40, height: 40)
-                    .background(DS.scoreColor(viewModel.overallScore.score), in: RoundedRectangle(cornerRadius: 10))
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(action.title)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
-
-                    Text(action.subtitle)
-                        .font(.caption)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 4) {
+                    Image(systemName: "sparkle")
+                        .font(.caption2.weight(.bold))
                         .foregroundStyle(.secondary)
-                        .lineLimit(2)
+                    Text("Today's Action")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .textCase(.uppercase)
                 }
 
-                Spacer()
+                HStack(spacing: 12) {
+                    Image(systemName: action.icon)
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 40, height: 40)
+                        .background(DS.scoreColor(viewModel.overallScore.score), in: RoundedRectangle(cornerRadius: 10))
 
-                Image(systemName: "chevron.right")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(action.title)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.primary)
+                            .lineLimit(2)
+
+                        Text(action.subtitle)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+
+                    Spacer()
+                }
             }
             .padding(DS.cardPadding)
             .cardStyle()

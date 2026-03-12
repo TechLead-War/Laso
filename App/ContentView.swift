@@ -223,7 +223,7 @@ struct ContentView: View {
         switch route {
         case "insightsDetail":
             InsightsDetailView(
-                insightsByCategory: dashboardViewModel.actionableInsightsByCategory,
+                insightsByCategory: dashboardViewModel.insightsByCategory,
                 onTapMetric: { metric in navigationPath.append(metric) },
                 headlineSummary: dashboardViewModel.topCausalChain?.narrative ?? dashboardViewModel.headlineInsight?.recommendation,
                 store: healthDataStore
