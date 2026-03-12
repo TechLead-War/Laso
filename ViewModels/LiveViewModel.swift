@@ -38,6 +38,11 @@ final class LiveViewModel {
     private static let cumulativeThrottleInterval: TimeInterval = 3
     private var respiratoryAvailabilityWorkItem: DispatchWorkItem?
 
+    /// Persistent observer for background delivery — survives app backgrounding so HealthKit
+    /// keeps syncing Apple Watch data to iPhone even when Laso is suspended.
+    private var backgroundHRObserver: HKObserverQuery?
+    private var backgroundDeliveryRegistered = false
+
     /// Throttle UI-facing property updates to max 1 per second to reduce GPU work.
     private var lastUIUpdateTime: Date = .distantPast
     private var pendingHeartRateUpdate: PendingHRUpdate?
@@ -79,6 +84,50 @@ final class LiveViewModel {
 
     init(healthKitManager: HealthKitManager) {
         self.healthKitManager = healthKitManager
+    }
+
+    // MARK: - Background Delivery
+
+    /// Register for background delivery of vital signs so HealthKit syncs Apple Watch data
+    /// to iPhone even when Laso is suspended. Also starts a persistent observer query for
+    /// heart rate that survives app backgrounding. Called once per app session.
+    func registerBackgroundDelivery() {
+        guard !backgroundDeliveryRegistered, HKHealthStore.isHealthDataAvailable() else { return }
+        backgroundDeliveryRegistered = true
+
+        let vitalTypes: [(HKQuantityTypeIdentifier, HKUpdateFrequency)] = [
+            (.heartRate, .immediate),
+            (.oxygenSaturation, .immediate),
+            (.respiratoryRate, .hourly)
+        ]
+
+        for (identifier, frequency) in vitalTypes {
+            let type = HKQuantityType(identifier)
+            healthStore.enableBackgroundDelivery(for: type, frequency: frequency) { _, _ in }
+        }
+
+        // Persistent observer query for heart rate — tells HealthKit to keep syncing
+        // Apple Watch HR data to iPhone. Fires even when app is suspended.
+        let heartRateType = HKQuantityType(.heartRate)
+        let observer = HKObserverQuery(sampleType: heartRateType, predicate: nil) { [weak self] _, completionHandler, error in
+            defer { completionHandler() }
+            guard error == nil, let self else { return }
+
+            // If actively streaming, the anchored query handles updates.
+            // Otherwise, pre-fetch latest HR so it's ready when Live tab opens.
+            if !self.isStreaming {
+                let unit = HKUnit.count().unitDivided(by: .minute())
+                self.fetchLatestSampleWithDate(.heartRate, unit: unit, maxAge: 24 * 3600) { [weak self] value, date in
+                    Task { @MainActor in
+                        self?.vitals.currentHeartRate = value
+                        self?.vitals.heartRateTimestamp = date
+                        self?.lastUpdate = Date()
+                    }
+                }
+            }
+        }
+        healthStore.execute(observer)
+        backgroundHRObserver = observer
     }
 
     // MARK: - Heart Rate Zone (needs healthStore for age)
@@ -237,6 +286,9 @@ final class LiveViewModel {
         guard !isStreaming, HKHealthStore.isHealthDataAvailable() else { return }
         isStreaming = true
 
+        // Register background delivery once so HealthKit syncs Apple Watch data to iPhone
+        registerBackgroundDelivery()
+
         // Reset flags from previous session so fresh data takes priority
         vitals.respiratoryRateUnavailable = false
 
@@ -314,6 +366,22 @@ final class LiveViewModel {
         stopAllQueries()
         isStreaming = false
         startStreaming()
+
+        // Force-fetch latest HR immediately to bridge any gap from the background period.
+        // The anchored query may take a moment to deliver; this ensures instant display.
+        let unit = HKUnit.count().unitDivided(by: .minute())
+        fetchLatestSampleWithDate(.heartRate, unit: unit, maxAge: 24 * 3600) { [weak self] value, date in
+            Task { @MainActor in
+                guard let self, self.isStreaming else { return }
+                // Only apply if anchored query hasn't already delivered something newer
+                if self.vitals.currentHeartRate == nil ||
+                   (self.vitals.heartRateTimestamp ?? .distantPast) < date {
+                    self.vitals.currentHeartRate = value
+                    self.vitals.heartRateTimestamp = date
+                    self.lastUpdate = Date()
+                }
+            }
+        }
     }
 
     private func stopAllQueries() {
@@ -377,9 +445,10 @@ final class LiveViewModel {
         let heartRateType = HKQuantityType(.heartRate)
         let unit = HKUnit.count().unitDivided(by: .minute())
 
-        // Start from 30 minutes ago to populate mini chart
-        let thirtyMinAgo = Date().addingTimeInterval(-30 * 60)
-        let predicate = HKQuery.predicateForSamples(withStart: thirtyMinAgo, end: nil, options: .strictStartDate)
+        // Start from 2 hours ago to catch data that synced from Apple Watch while app was backgrounded.
+        // The chart trims to 30 minutes anyway, but this ensures we pick up the latest HR value.
+        let lookbackStart = Date().addingTimeInterval(-2 * 3600)
+        let predicate = HKQuery.predicateForSamples(withStart: lookbackStart, end: nil, options: .strictStartDate)
 
         let query = HKAnchoredObjectQuery(
             type: heartRateType,

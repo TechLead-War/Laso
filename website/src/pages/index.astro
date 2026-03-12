@@ -1,21 +1,131 @@
 ---
 import Base from '../layouts/Base.astro'
 import '../styles/globals.css'
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Laso",
+    "alternateName": "Laso Health",
+    "applicationCategory": "HealthApplication",
+    "operatingSystem": "iOS",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "description": "Free 7-day trial, then $29.99/year"
+    },
+    "description": "Health intelligence app that turns Apple Watch, Oura, Garmin, and WHOOP data into daily recovery scores, strain targets, sleep debt tracking, stress monitoring, illness prediction, and biological age. All processed on-device.",
+    "featureList": [
+      "Recovery score based on HRV, resting heart rate, and sleep quality",
+      "Strain tracking with recovery-adjusted daily targets",
+      "Personalized sleep need and sleep debt tracking",
+      "HRV-derived stress monitoring with guided breathwork",
+      "Illness prediction 2-3 days before symptoms",
+      "Biological age (Vitality Age) computed from 9 key health metrics",
+      "86 health metrics across 8 categories",
+      "What-if workout simulation",
+      "Overtraining and burnout detection",
+      "Menstrual cycle tracking with phase-specific training guidance",
+      "On-device machine learning with personal baselines",
+      "AES-256 encrypted, no cloud processing"
+    ],
+    "url": "https://lasohealth.fit",
+    "image": "https://lasohealth.fit/og-image.png"
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Laso Health",
+    "url": "https://lasohealth.fit",
+    "logo": "https://lasohealth.fit/favicon.svg",
+    "sameAs": [
+      "https://twitter.com/lasohealth"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "email": "support@lasohealth.fit",
+      "contactType": "customer support"
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is a recovery score and how does Laso calculate it?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A recovery score (0–100) measures how ready your body is to perform. Laso calculates it from HRV (heart rate variability), resting heart rate, sleep quality, sleep duration, respiratory rate, and recent strain load. Unlike generic averages, Laso builds personal baselines calibrated to your body using on-device machine learning, so your score reflects your unique physiology."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does strain tracking work in Laso?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Laso calculates a strain score from 0 to 21 based on heart rate zone distribution throughout the day. It then sets a personalized daily strain target based on your current recovery level. If recovery is high, Laso recommends a higher strain range so you can push harder. If recovery is low, the target drops so you can recover. The app also includes what-if simulation: you can preview how a planned workout would affect your recovery the next day."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What devices work with Laso?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Laso works with over 50 devices that sync to Apple Health, including Apple Watch, Oura Ring, Garmin, WHOOP, Fitbit, Polar, Samsung Galaxy Watch, COROS, Suunto, Withings, Ultrahuman Ring Air, Dexcom, Eight Sleep, and more. If your device writes data to Apple Health, Laso can read and analyze it. iPhone built-in sensors for steps and activity tracking also work without any wearable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does illness prediction work?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Laso monitors multiple health metrics simultaneously: HRV, resting heart rate, sleep patterns, respiratory rate, body temperature, and activity levels. When several of these metrics deviate from your personal baselines in a pattern consistent with immune system activation, Laso flags a potential illness signal 2 to 3 days before symptoms appear. The app also tracks 6 predictive health signals: fatigue, burnout, overtraining, insomnia risk, immune dip, and inactivity patterns."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is Vitality Age and how is it different from biological age?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Vitality Age is Laso's biological age metric, computed daily from 9 key health indicators: VO2 Max, HRV, resting heart rate, sleep efficiency, deep sleep percentage, walking speed, daily steps, exercise minutes, and body composition. Unlike lab-based biological age tests that require blood draws, Vitality Age updates every day using data from your wearable. It shows whether you're aging faster or slower than your chronological age, tracks your 90-day trajectory, and identifies which 2–3 metrics to focus on to improve."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is my health data private with Laso?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Every analysis in Laso runs entirely on your iPhone. No health data is sent to the cloud. All stored data is AES-256 encrypted with keys stored in the Secure Enclave. You don't even need to create an account to use the app. Laso reads data from Apple Health and processes it locally using on-device machine learning. No one sees your health data but you."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How is Laso different from WHOOP or Oura?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Three key differences: (1) No new hardware: Laso works with the wearable you already own (Apple Watch, Oura, Garmin, etc.), while WHOOP requires their $30/month band. (2) Broader analysis: Laso cross-analyzes 86 health metrics using causal inference (Granger causality), not just correlations. It covers recovery, strain, sleep, stress, illness prediction, biological age, and more in one app. (3) Complete privacy: all analysis runs on-device with no cloud processing, unlike WHOOP and Oura which require cloud accounts."
+        }
+      }
+    ]
+  }
+]
 ---
 
 <Base
-  title="Laso - Recovery, Readiness, and Health Intelligence"
-  description="Laso turns Apple Health and wearable data into daily readiness, recovery, sleep, strain, stress, risk signals, and long-term trends with actionable guidance."
+  title="Laso.Recovery Score, Strain Tracking, Sleep Coaching & Health Intelligence for Apple Watch, Oura, Garmin"
+  description="Laso turns Apple Watch, Oura, Garmin, and WHOOP data into daily recovery scores, strain targets, sleep debt tracking, illness prediction, and biological age. 86 health metrics analyzed on-device. Private. No new hardware needed."
+  jsonLd={jsonLd}
 >
   <div class="min-h-screen bg-white">
-
+    <header>
     <!-- ════════ NAV ════════ -->
     <nav aria-label="Main navigation" class="nav-blur fixed top-0 inset-x-0 z-50 border-b border-gray-100/60">
       <div class="max-w-6xl mx-auto px-5 h-12 flex items-center justify-between">
         <a href="#" class="text-[22px] font-bold tracking-tight text-apple-dark hover:opacity-80 transition-opacity">Laso</a>
         <div class="hidden sm:flex items-center gap-7">
-          <a href="#how-it-works" class="text-[13px] font-medium text-apple-secondary hover:text-apple-dark transition-colors">How it works</a>
-          <a href="#why-laso" class="text-[13px] font-medium text-apple-secondary hover:text-apple-dark transition-colors">Why Laso</a>
           <a href="#features" class="text-[13px] font-medium text-apple-secondary hover:text-apple-dark transition-colors">Features</a>
           <a href="#devices" class="text-[13px] font-medium text-apple-secondary hover:text-apple-dark transition-colors">Devices</a>
         </div>
@@ -24,7 +134,9 @@ import '../styles/globals.css'
         </a>
       </div>
     </nav>
+    </header>
 
+    <main>
     <!-- ════════ HERO ════════ -->
     <section data-section="hero" class="hero-gradient pt-32 pb-16 md:pt-44 md:pb-24 px-5 text-center">
       <div class="inline-flex items-center gap-2 bg-apple-blue/10 text-apple-blue text-sm font-medium rounded-full px-4 py-1.5 mb-6">
@@ -36,7 +148,7 @@ import '../styles/globals.css'
         <span class="gradient-text">Laso tells you what to do.</span>
       </h1>
       <p class="mt-5 text-lg md:text-xl text-apple-secondary max-w-2xl mx-auto text-balance leading-relaxed">
-        Recovery score, strain coach, sleep debt, stress monitor, illness prediction, and Vitality Age. 86 health metrics, one daily brief.
+        Recovery score. Strain target. Sleep debt. Stress. Illness prediction. Biological age. All from your existing wearable, updated every morning.
       </p>
       <div class="mt-8 max-w-md mx-auto">
         <form id="hero-form" class="flex flex-col sm:flex-row gap-3">
@@ -54,7 +166,22 @@ import '../styles/globals.css'
           </button>
         </form>
         <p class="hero-success mt-3 text-sm text-emerald-600 font-medium hidden">You're in! We'll be in touch soon.</p>
-        <p class="mt-3 text-[13px] text-apple-secondary/60">Free to join. <strong class="text-apple-dark"><span class="signup-counter">0</span> have joined</strong>. We'll notify you when it's ready.</p>
+        <p class="mt-3 text-[13px] text-apple-secondary/60">Free 7-day trial. <strong class="text-apple-dark"><span class="signup-counter">0</span> have joined</strong>.</p>
+      </div>
+      <!-- Hero trust strip -->
+      <div class="mt-8 flex flex-wrap justify-center gap-5 text-[13px] text-apple-secondary/70">
+        <span class="flex items-center gap-1.5">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
+          100% on-device
+        </span>
+        <span class="flex items-center gap-1.5">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3"/></svg>
+          50+ devices supported
+        </span>
+        <span class="flex items-center gap-1.5">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+          No account required
+        </span>
       </div>
     </section>
 
@@ -62,13 +189,13 @@ import '../styles/globals.css'
     <section data-section="brief" class="bg-apple-gray py-20 md:py-28 px-5">
       <div class="max-w-4xl mx-auto">
         <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
-          Open Laso. Know exactly how to train today.
+          Your daily recovery score, strain target, and sleep analysis in 30 seconds.
         </h2>
         <p class="section-reveal mt-4 text-center text-apple-secondary text-[15px] md:text-base max-w-xl mx-auto">
-          Five answers in 30 seconds. Every morning, before you decide anything.
+          Open Laso every morning. Five numbers. One clear decision.
         </p>
 
-        <div class="mt-14 grid md:grid-cols-5 gap-4">
+        <div class="mt-14 grid grid-cols-2 md:grid-cols-5 gap-4">
           <div class="section-reveal bg-white rounded-2xl p-5 text-center">
             <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-3">
               <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
@@ -105,7 +232,7 @@ import '../styles/globals.css'
             <p class="text-[11px] text-apple-secondary mt-0.5">Below baseline</p>
           </div>
 
-          <div class="section-reveal bg-white rounded-2xl p-5 text-center" style="transition-delay:240ms">
+          <div class="section-reveal bg-white rounded-2xl p-5 text-center col-span-2 md:col-span-1" style="transition-delay:240ms">
             <div class="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center mx-auto mb-3">
               <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="1.5" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
             </div>
@@ -119,8 +246,113 @@ import '../styles/globals.css'
       </div>
     </section>
 
+    <!-- ════════ DAILY ACTIONS ════════ -->
+    <section data-section="actions" class="py-20 md:py-28 px-5">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
+          Not just data. Specific actions you can take today.
+        </h2>
+        <p class="section-reveal mt-4 text-center text-apple-secondary text-[15px] md:text-base max-w-xl mx-auto">
+          Laso analyzes your metrics and tells you exactly what to do next. Here's what a real morning looks like.
+        </p>
+
+        <div class="mt-12 max-w-2xl mx-auto space-y-4">
+          <div class="section-reveal flex items-start gap-4 bg-white rounded-2xl border border-gray-100 p-5">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0 mt-0.5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z"/></svg>
+            </div>
+            <div>
+              <p class="text-[15px] font-semibold text-apple-dark">"Recovery is 84. Push hard today."</p>
+              <p class="text-sm text-apple-secondary mt-1">Your body is fully recovered. Target strain 12-16. Great day for high-intensity intervals or a long run.</p>
+            </div>
+          </div>
+
+          <div class="section-reveal flex items-start gap-4 bg-white rounded-2xl border border-gray-100 p-5" style="transition-delay:80ms">
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0 mt-0.5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/></svg>
+            </div>
+            <div>
+              <p class="text-[15px] font-semibold text-apple-dark">"You owe 45 min of sleep debt. Bed by 10:30pm tonight."</p>
+              <p class="text-sm text-apple-secondary mt-1">Your personalized sleep need is 7h 50m. Going to bed 20 minutes earlier for the next 3 nights clears your debt.</p>
+            </div>
+          </div>
+
+          <div class="section-reveal flex items-start gap-4 bg-white rounded-2xl border border-gray-100 p-5" style="transition-delay:160ms">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0 mt-0.5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
+            </div>
+            <div>
+              <p class="text-[15px] font-semibold text-apple-dark">"HRV dropped 15% over 3 days. Scale back."</p>
+              <p class="text-sm text-apple-secondary mt-1">Early signs of overtraining. Laso recommends a recovery day: keep strain below 8 and prioritize Zone 1-2 movement.</p>
+            </div>
+          </div>
+
+          <div class="section-reveal flex items-start gap-4 bg-white rounded-2xl border border-gray-100 p-5" style="transition-delay:240ms">
+            <div class="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0 mt-0.5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/></svg>
+            </div>
+            <div>
+              <p class="text-[15px] font-semibold text-apple-dark">"Immune dip detected. You might get sick in 2-3 days."</p>
+              <p class="text-sm text-apple-secondary mt-1">RHR up, HRV down, sleep quality declining. Laso recommends extra sleep, hydration, and skipping tomorrow's workout.</p>
+            </div>
+          </div>
+        </div>
+
+        <p class="section-reveal mt-8 text-center text-sm text-apple-secondary">
+          These aren't generic tips. Every recommendation is computed from <strong class="text-apple-dark">your</strong> baselines, <strong class="text-apple-dark">your</strong> trends, and <strong class="text-apple-dark">your</strong> recovery state.
+        </p>
+      </div>
+    </section>
+
+    <!-- ════════ WHAT MAKES LASO DIFFERENT ════════ -->
+    <section data-section="differentiation" class="py-20 md:py-28 px-5">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
+          Better insights than dedicated hardware. At a fraction of the cost.
+        </h2>
+
+        <div class="mt-14 grid md:grid-cols-3 gap-6">
+          <div class="section-reveal rounded-2xl border border-gray-100 p-7">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center mb-5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" class="w-7 h-7">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-apple-dark">No new hardware</h3>
+            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">
+              Works with the Apple Watch, Oura, Garmin, or WHOOP you already own. No $30/month band. No second device on your wrist.
+            </p>
+          </div>
+
+          <div class="section-reveal rounded-2xl border border-gray-100 p-7" style="transition-delay:100ms">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-400 flex items-center justify-center mb-5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" class="w-7 h-7">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-apple-dark">Intelligence, not dashboards</h3>
+            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">
+              Other apps show you charts. Laso cross-analyzes 86 metrics using causal inference to tell you exactly what to change and why it matters.
+            </p>
+          </div>
+
+          <div class="section-reveal rounded-2xl border border-gray-100 p-7" style="transition-delay:200ms">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-400 flex items-center justify-center mb-5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" class="w-7 h-7">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-apple-dark">Completely private</h3>
+            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">
+              Every analysis runs on your iPhone. No cloud. No account. AES-256 encrypted with Secure Enclave keys. Your data never leaves your device.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ════════ VITALITY AGE ════════ -->
-    <section data-section="vitality" class="py-20 md:py-28 px-5">
+    <section data-section="vitality" class="bg-apple-gray py-20 md:py-28 px-5">
       <div class="max-w-4xl mx-auto">
         <div class="section-reveal md:grid md:grid-cols-2 md:gap-14 items-center">
           <div>
@@ -129,9 +361,9 @@ import '../styles/globals.css'
               Your biological age,<br/>measured every day.
             </h2>
             <p class="mt-4 text-[15px] text-apple-secondary leading-relaxed">
-              Laso computes your Vitality Age from 9 key metrics: VO2 Max, HRV, resting heart rate,
-              sleep efficiency, deep sleep, walking speed, daily steps, exercise minutes, and body composition.
-              It tells you whether you're aging faster or slower than time.
+              Computed daily from 9 metrics including VO2 Max, HRV, resting heart rate,
+              sleep efficiency, walking speed, and body composition. No blood draws. No lab visits.
+              Just open the app and see if you're aging faster or slower than time.
             </p>
             <div class="mt-5 space-y-2">
               <div class="flex items-center gap-3">
@@ -149,7 +381,7 @@ import '../styles/globals.css'
             </div>
           </div>
 
-          <!-- Vitality Age Orb - Cinematic plasma style -->
+          <!-- Vitality Age Orb -->
           <div class="mt-10 md:mt-0 flex justify-center">
             <div class="vitality-orb-stage">
               <canvas id="vitality-orb" class="vitality-orb-canvas" width="700" height="700" aria-hidden="true"></canvas>
@@ -164,248 +396,80 @@ import '../styles/globals.css'
       </div>
     </section>
 
-    <!-- ════════ HOW IT WORKS ════════ -->
-    <section id="how-it-works" data-section="how-it-works" class="bg-apple-gray py-20 md:py-28 px-5">
-      <div class="max-w-4xl mx-auto">
+    <!-- ════════ FEATURES.3 CORE OUTCOMES ════════ -->
+    <section id="features" data-section="features" class="py-20 md:py-28 px-5">
+      <div class="max-w-5xl mx-auto">
         <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
-          How it works.
-        </h2>
-        <p class="section-reveal mt-4 text-center text-apple-secondary text-[15px] md:text-base max-w-lg mx-auto">
-          Connect your device. Laso handles the rest.
-        </p>
-
-        <div class="mt-14 grid md:grid-cols-4 gap-8 md:gap-6">
-          <div class="section-reveal text-center">
-            <div class="w-12 h-12 rounded-full bg-apple-dark text-white flex items-center justify-center text-lg font-semibold mx-auto">1</div>
-            <h3 class="mt-4 text-lg font-semibold text-apple-dark">Connect</h3>
-            <p class="mt-2 text-sm text-apple-secondary leading-relaxed">Grant Apple Health access. Works with 52 devices: Apple Watch, Oura, Garmin, Whoop, and more.</p>
-          </div>
-          <div class="section-reveal text-center" style="transition-delay:100ms">
-            <div class="w-12 h-12 rounded-full bg-apple-dark text-white flex items-center justify-center text-lg font-semibold mx-auto">2</div>
-            <h3 class="mt-4 text-lg font-semibold text-apple-dark">Calibrate</h3>
-            <p class="mt-2 text-sm text-apple-secondary leading-relaxed">Personal baselines build from day 1. HRV, resting HR, sleep patterns, strain capacity, all calibrated to your body.</p>
-          </div>
-          <div class="section-reveal text-center" style="transition-delay:200ms">
-            <div class="w-12 h-12 rounded-full bg-apple-dark text-white flex items-center justify-center text-lg font-semibold mx-auto">3</div>
-            <h3 class="mt-4 text-lg font-semibold text-apple-dark">Train</h3>
-            <p class="mt-2 text-sm text-apple-secondary leading-relaxed">Check your daily brief. Recovery, strain target, sleep debt, stress level, risk signals, plus one clear action.</p>
-          </div>
-          <div class="section-reveal text-center" style="transition-delay:300ms">
-            <div class="w-12 h-12 rounded-full bg-apple-dark text-white flex items-center justify-center text-lg font-semibold mx-auto">4</div>
-            <h3 class="mt-4 text-lg font-semibold text-apple-dark">Improve</h3>
-            <p class="mt-2 text-sm text-apple-secondary leading-relaxed">Weekly reviews, trend detection, Vitality Age tracking, and annual reports show your progress over months and years.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ════════ WHY LASO ════════ -->
-    <section id="why-laso" data-section="why-laso" class="py-20 md:py-28 px-5">
-      <div class="max-w-4xl mx-auto">
-        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
-          Why Laso.
+          Strain tracking, sleep coaching, and illness prediction in one app.
         </h2>
 
         <div class="mt-14 grid md:grid-cols-3 gap-6">
-          <div class="section-reveal rounded-2xl border border-gray-100 p-7 text-center">
-            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center mx-auto mb-5">
-              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" class="w-7 h-7">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/>
-              </svg>
-            </div>
-            <h3 class="text-lg font-semibold text-apple-dark">86 metrics, connected</h3>
-            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">
-              Sleep changes HRV. HRV changes recovery. Recovery changes strain capacity. Laso cross-analyzes everything using Granger causality, not just correlations.
-            </p>
-          </div>
-
-          <div class="section-reveal rounded-2xl border border-gray-100 p-7 text-center" style="transition-delay:100ms">
-            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500 to-pink-400 flex items-center justify-center mx-auto mb-5">
-              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" class="w-7 h-7">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
-              </svg>
-            </div>
-            <h3 class="text-lg font-semibold text-apple-dark">Illness prediction</h3>
-            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">
-              Multi-metric pattern detection catches illness signals up to 2–3 days before symptoms. Plus 6 predictive alerts: fatigue, burnout, overtraining, insomnia, immune dip, inactivity.
-            </p>
-          </div>
-
-          <div class="section-reveal rounded-2xl border border-gray-100 p-7 text-center" style="transition-delay:200ms">
-            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-400 flex items-center justify-center mx-auto mb-5">
-              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" class="w-7 h-7">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
-              </svg>
-            </div>
-            <h3 class="text-lg font-semibold text-apple-dark">Your baselines, not averages</h3>
-            <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">
-              On-device ML builds your personal normal from day 1. Sleep targets, strain ranges, stress thresholds, all calibrated to you. Gets smarter with every week of data.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ════════ FEATURES ════════ -->
-    <section id="features" data-section="features" class="bg-apple-gray py-20 md:py-28 px-5">
-      <div class="max-w-5xl mx-auto">
-        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
-          What you can do with Laso.
-        </h2>
-
-        <div class="mt-14 grid md:grid-cols-2 gap-5">
-          <!-- Train Smarter -->
-          <div class="section-reveal bg-white rounded-2xl p-7">
-            <div class="flex items-center gap-3 mb-4">
+          <!-- Train with precision -->
+          <div class="section-reveal bg-apple-gray rounded-2xl p-7">
+            <div class="flex items-center gap-3 mb-5">
               <div class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z"/></svg>
               </div>
-              <h3 class="text-lg font-semibold text-apple-dark">Train smarter</h3>
+              <h3 class="text-lg font-semibold text-apple-dark">Train with precision</h3>
             </div>
-            <ul class="space-y-2 text-sm text-apple-secondary">
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-orange-400 rounded-full mt-2 shrink-0"></span>Strain score (0–21) with heart rate zone weighting</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-orange-400 rounded-full mt-2 shrink-0"></span>Daily strain target adjusted to your recovery state</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-orange-400 rounded-full mt-2 shrink-0"></span>What-if simulation: "If I run 10K today, what happens to recovery?"</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-orange-400 rounded-full mt-2 shrink-0"></span>Workout effectiveness scoring: VO2 response, calorie efficiency</li>
+            <ul class="space-y-2.5 text-sm text-apple-secondary">
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-orange-400 rounded-full mt-2 shrink-0"></span>Strain score (0–21) adjusted to your recovery state</li>
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-orange-400 rounded-full mt-2 shrink-0"></span>What-if simulation: "If I run 10K today, what happens?"</li>
               <li class="flex items-start gap-2"><span class="w-1 h-1 bg-orange-400 rounded-full mt-2 shrink-0"></span>Overtraining detection with projected recovery days</li>
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-orange-400 rounded-full mt-2 shrink-0"></span>Workout effectiveness: VO2 response, calorie efficiency</li>
             </ul>
           </div>
 
-          <!-- Sleep Better -->
-          <div class="section-reveal bg-white rounded-2xl p-7" style="transition-delay:80ms">
-            <div class="flex items-center gap-3 mb-4">
+          <!-- Sleep with purpose -->
+          <div class="section-reveal bg-apple-gray rounded-2xl p-7" style="transition-delay:100ms">
+            <div class="flex items-center gap-3 mb-5">
               <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/></svg>
               </div>
-              <h3 class="text-lg font-semibold text-apple-dark">Sleep better</h3>
+              <h3 class="text-lg font-semibold text-apple-dark">Sleep with purpose</h3>
             </div>
-            <ul class="space-y-2 text-sm text-apple-secondary">
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-indigo-400 rounded-full mt-2 shrink-0"></span>Personalized sleep need (not generic 8 hours)</li>
+            <ul class="space-y-2.5 text-sm text-apple-secondary">
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-indigo-400 rounded-full mt-2 shrink-0"></span>Your personalized sleep need, not a generic 8 hours</li>
               <li class="flex items-start gap-2"><span class="w-1 h-1 bg-indigo-400 rounded-full mt-2 shrink-0"></span>Sleep debt tracking with payoff timeline</li>
               <li class="flex items-start gap-2"><span class="w-1 h-1 bg-indigo-400 rounded-full mt-2 shrink-0"></span>Recommended bedtime and wake time</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-indigo-400 rounded-full mt-2 shrink-0"></span>Sleep stage breakdown: REM, deep, core, awake</li>
               <li class="flex items-start gap-2"><span class="w-1 h-1 bg-indigo-400 rounded-full mt-2 shrink-0"></span>Sleep-to-performance correlation analysis</li>
             </ul>
           </div>
 
-          <!-- Manage Stress -->
-          <div class="section-reveal bg-white rounded-2xl p-7" style="transition-delay:80ms">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-10 h-10 rounded-xl bg-yellow-50 flex items-center justify-center">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z"/></svg>
-              </div>
-              <h3 class="text-lg font-semibold text-apple-dark">Manage stress</h3>
-            </div>
-            <ul class="space-y-2 text-sm text-apple-secondary">
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-yellow-400 rounded-full mt-2 shrink-0"></span>HRV-derived stress score with personal baseline</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-yellow-400 rounded-full mt-2 shrink-0"></span>Guided breathwork: Cyclic Sighing (Stanford) + Box Breathing</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-yellow-400 rounded-full mt-2 shrink-0"></span>Stress trend tracking (daily, weekly)</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-yellow-400 rounded-full mt-2 shrink-0"></span>Key stress drivers: which signals are elevated</li>
-            </ul>
-          </div>
-
-          <!-- Catch Problems Early -->
-          <div class="section-reveal bg-white rounded-2xl p-7" style="transition-delay:160ms">
-            <div class="flex items-center gap-3 mb-4">
+          <!-- Catch problems before they start -->
+          <div class="section-reveal bg-apple-gray rounded-2xl p-7" style="transition-delay:200ms">
+            <div class="flex items-center gap-3 mb-5">
               <div class="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
               </div>
               <h3 class="text-lg font-semibold text-apple-dark">Catch problems early</h3>
             </div>
-            <ul class="space-y-2 text-sm text-apple-secondary">
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>Illness prediction: multi-metric pattern detection, 2–3 days ahead</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>6 predictive signals: fatigue, burnout, overtraining, insomnia, immune dip, inactivity</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>Baseline drift detection: gradual shifts over 30+ days</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>Severity levels with actionable recommendations</li>
-            </ul>
-          </div>
-
-          <!-- Track Your Cycle -->
-          <div class="section-reveal bg-white rounded-2xl p-7" style="transition-delay:160ms">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-10 h-10 rounded-xl bg-pink-50 flex items-center justify-center">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/></svg>
-              </div>
-              <h3 class="text-lg font-semibold text-apple-dark">Track your cycle</h3>
-            </div>
-            <ul class="space-y-2 text-sm text-apple-secondary">
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-pink-400 rounded-full mt-2 shrink-0"></span>4-phase model: menstrual, follicular, ovulation, luteal</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-pink-400 rounded-full mt-2 shrink-0"></span>Phase-specific training guidance: when to push, when to recover</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-pink-400 rounded-full mt-2 shrink-0"></span>Sleep and nutrition impact per phase</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-pink-400 rounded-full mt-2 shrink-0"></span>Automatic tracking from HealthKit, no manual logging</li>
-            </ul>
-          </div>
-
-          <!-- See Your Progress -->
-          <div class="section-reveal bg-white rounded-2xl p-7" style="transition-delay:240ms">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg>
-              </div>
-              <h3 class="text-lg font-semibold text-apple-dark">See your progress</h3>
-            </div>
-            <ul class="space-y-2 text-sm text-apple-secondary">
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-blue-400 rounded-full mt-2 shrink-0"></span>Weekly, monthly, and annual review reports</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-blue-400 rounded-full mt-2 shrink-0"></span>20+ achievements and 5 active streaks</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-blue-400 rounded-full mt-2 shrink-0"></span>Personal records tracking across all metrics</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-blue-400 rounded-full mt-2 shrink-0"></span>Journal with behavior-to-health correlation discovery</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-blue-400 rounded-full mt-2 shrink-0"></span>Year-over-year comparisons and seasonal patterns</li>
+            <ul class="space-y-2.5 text-sm text-apple-secondary">
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>Illness prediction 2–3 days before symptoms</li>
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>6 signals: fatigue, burnout, overtraining, insomnia, immune dip, inactivity</li>
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>Baseline drift detection over 30+ days</li>
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>HRV-derived stress score with guided breathwork</li>
             </ul>
           </div>
         </div>
-      </div>
-    </section>
 
-    <!-- ════════ 86 METRICS ACROSS 8 CATEGORIES ════════ -->
-    <section data-section="metrics" class="py-20 md:py-28 px-5">
-      <div class="max-w-5xl mx-auto text-center">
-        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-balance">
-          86 metrics across 8 categories.
-        </h2>
-        <p class="section-reveal mt-4 text-apple-secondary text-[15px] md:text-base max-w-xl mx-auto">
-          Every signal your wearable captures, analyzed together.
-        </p>
-
-        <div class="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
-          <div class="section-reveal bg-apple-gray rounded-2xl p-5 text-center">
-            <span class="w-3 h-3 bg-red-500 rounded-full inline-block mb-2"></span>
-            <p class="text-sm font-semibold text-apple-dark">Heart</p>
-            <p class="text-xs text-apple-secondary mt-1">HR, HRV, resting HR, walking HR, HR recovery, AFib, perfusion</p>
+        <!-- Secondary capabilities strip -->
+        <div class="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+          <div class="section-reveal text-center py-4">
+            <p class="text-sm font-semibold text-apple-dark">Cycle Tracking</p>
+            <p class="text-xs text-apple-secondary mt-1">4-phase model with phase-specific training guidance</p>
           </div>
-          <div class="section-reveal bg-apple-gray rounded-2xl p-5 text-center" style="transition-delay:40ms">
-            <span class="w-3 h-3 bg-indigo-500 rounded-full inline-block mb-2"></span>
-            <p class="text-sm font-semibold text-apple-dark">Sleep</p>
-            <p class="text-xs text-apple-secondary mt-1">Duration, REM, deep, core, awake time</p>
+          <div class="section-reveal text-center py-4" style="transition-delay:60ms">
+            <p class="text-sm font-semibold text-apple-dark">Journal</p>
+            <p class="text-xs text-apple-secondary mt-1">Log behaviors, discover which ones drive your metrics</p>
           </div>
-          <div class="section-reveal bg-apple-gray rounded-2xl p-5 text-center" style="transition-delay:80ms">
-            <span class="w-3 h-3 bg-green-500 rounded-full inline-block mb-2"></span>
-            <p class="text-sm font-semibold text-apple-dark">Activity</p>
-            <p class="text-xs text-apple-secondary mt-1">Steps, calories, exercise, distance, cycling, swimming, flights</p>
+          <div class="section-reveal text-center py-4" style="transition-delay:120ms">
+            <p class="text-sm font-semibold text-apple-dark">Weekly Reviews</p>
+            <p class="text-xs text-apple-secondary mt-1">Trends, PRs, streaks, and year-over-year comparisons</p>
           </div>
-          <div class="section-reveal bg-apple-gray rounded-2xl p-5 text-center" style="transition-delay:120ms">
-            <span class="w-3 h-3 bg-orange-500 rounded-full inline-block mb-2"></span>
-            <p class="text-sm font-semibold text-apple-dark">Body</p>
-            <p class="text-xs text-apple-secondary mt-1">Weight, BMI, body fat, blood pressure, temperature, glucose</p>
-          </div>
-          <div class="section-reveal bg-apple-gray rounded-2xl p-5 text-center" style="transition-delay:160ms">
-            <span class="w-3 h-3 bg-teal-500 rounded-full inline-block mb-2"></span>
-            <p class="text-sm font-semibold text-apple-dark">Respiratory</p>
-            <p class="text-xs text-apple-secondary mt-1">VO2 Max, SpO2, respiratory rate, peak flow, vital capacity</p>
-          </div>
-          <div class="section-reveal bg-apple-gray rounded-2xl p-5 text-center" style="transition-delay:200ms">
-            <span class="w-3 h-3 bg-cyan-500 rounded-full inline-block mb-2"></span>
-            <p class="text-sm font-semibold text-apple-dark">Mindfulness</p>
-            <p class="text-xs text-apple-secondary mt-1">Mindful minutes, daylight exposure, electrodermal activity</p>
-          </div>
-          <div class="section-reveal bg-apple-gray rounded-2xl p-5 text-center" style="transition-delay:240ms">
-            <span class="w-3 h-3 bg-purple-500 rounded-full inline-block mb-2"></span>
-            <p class="text-sm font-semibold text-apple-dark">Mobility</p>
-            <p class="text-xs text-apple-secondary mt-1">Walking speed, step length, asymmetry, stair speed, 6-min walk</p>
-          </div>
-          <div class="section-reveal bg-apple-gray rounded-2xl p-5 text-center" style="transition-delay:280ms">
-            <span class="w-3 h-3 bg-amber-600 rounded-full inline-block mb-2"></span>
-            <p class="text-sm font-semibold text-apple-dark">Nutrition</p>
-            <p class="text-xs text-apple-secondary mt-1">Water, caffeine, protein, fiber, sugar, sodium, macros</p>
+          <div class="section-reveal text-center py-4" style="transition-delay:180ms">
+            <p class="text-sm font-semibold text-apple-dark">86 Metrics</p>
+            <p class="text-xs text-apple-secondary mt-1">Heart, sleep, activity, body, respiratory, mobility, and more</p>
           </div>
         </div>
       </div>
@@ -414,16 +478,16 @@ import '../styles/globals.css'
     <!-- ════════ DEVICES ════════ -->
     <section id="devices" data-section="devices" class="bg-apple-gray py-20 md:py-28 px-5">
       <div class="max-w-5xl mx-auto text-center">
-        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-balance">
-          52 devices. One app.
+        <h2 class="section-reveal text-2xl md:text-3xl font-semibold tracking-tight text-apple-dark text-balance">
+          Compatible with Apple Watch, Oura, Garmin, WHOOP, and 30+ more devices.
         </h2>
-        <p class="section-reveal mt-4 text-[15px] md:text-base text-apple-secondary max-w-xl mx-auto">
-          If it syncs to Apple Health, Laso can read it. No extra apps. No manual setup.
+        <p class="section-reveal mt-3 text-[15px] text-apple-secondary max-w-lg mx-auto">
+          If it syncs to Apple Health, Laso can read and analyze it. No extra apps. No manual setup.
         </p>
 
-        <!-- Smartwatches -->
-        <div class="mt-12">
-          <p class="section-reveal text-xs font-medium text-apple-secondary/70 uppercase tracking-wider mb-3">Smartwatches</p>
+        <!-- Smartwatches & Sports Watches -->
+        <div class="mt-10">
+          <p class="section-reveal text-xs font-medium text-apple-secondary/70 uppercase tracking-wider mb-3">Smartwatches &amp; Sports Watches</p>
           <div class="flex flex-wrap justify-center gap-2.5">
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark"><span class="w-2 h-2 bg-blue-500 rounded-full"></span> Apple Watch</span>
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:20ms"><span class="w-2 h-2 bg-cyan-500 rounded-full"></span> Garmin</span>
@@ -434,14 +498,14 @@ import '../styles/globals.css'
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:120ms"><span class="w-2 h-2 bg-indigo-500 rounded-full"></span> Suunto</span>
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:140ms"><span class="w-2 h-2 bg-green-500 rounded-full"></span> Google Pixel Watch</span>
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:160ms"><span class="w-2 h-2 bg-red-400 rounded-full"></span> Huawei Watch</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:180ms"><span class="w-2 h-2 bg-green-500 rounded-full"></span> Amazfit</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:200ms"><span class="w-2 h-2 bg-gray-500 rounded-full"></span> TicWatch</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:220ms"><span class="w-2 h-2 bg-gray-500 rounded-full"></span> Fossil</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:240ms"><span class="w-2 h-2 bg-orange-500 rounded-full"></span> Wahoo</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:260ms"><span class="w-2 h-2 bg-gray-500 rounded-full"></span> Casio G-Shock</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:280ms"><span class="w-2 h-2 bg-gray-700 rounded-full"></span> TAG Heuer</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:300ms"><span class="w-2 h-2 bg-green-400 rounded-full"></span> Xiaomi Band</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:320ms"><span class="w-2 h-2 bg-blue-400 rounded-full"></span> Noise</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:180ms"><span class="w-2 h-2 bg-red-500 rounded-full"></span> Amazfit</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:200ms"><span class="w-2 h-2 bg-green-400 rounded-full"></span> Xiaomi Smart Band</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:220ms"><span class="w-2 h-2 bg-orange-500 rounded-full"></span> Wahoo</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:240ms"><span class="w-2 h-2 bg-purple-500 rounded-full"></span> TicWatch</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:260ms"><span class="w-2 h-2 bg-purple-500 rounded-full"></span> Fossil</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:280ms"><span class="w-2 h-2 bg-yellow-500 rounded-full"></span> Casio G-Shock</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:300ms"><span class="w-2 h-2 bg-gray-700 rounded-full"></span> TAG Heuer</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:320ms"><span class="w-2 h-2 bg-red-400 rounded-full"></span> Noise</span>
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:340ms"><span class="w-2 h-2 bg-red-400 rounded-full"></span> boAt</span>
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:360ms"><span class="w-2 h-2 bg-orange-400 rounded-full"></span> Fire-Boltt</span>
           </div>
@@ -454,8 +518,8 @@ import '../styles/globals.css'
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark"><span class="w-2 h-2 bg-emerald-500 rounded-full"></span> Oura Ring</span>
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:30ms"><span class="w-2 h-2 bg-emerald-500 rounded-full"></span> Ultrahuman Ring Air</span>
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:60ms"><span class="w-2 h-2 bg-pink-500 rounded-full"></span> RingConn</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:90ms"><span class="w-2 h-2 bg-blue-500 rounded-full"></span> Circular Ring</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:120ms"><span class="w-2 h-2 bg-orange-500 rounded-full"></span> Whoop</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:90ms"><span class="w-2 h-2 bg-emerald-500 rounded-full"></span> Circular Ring</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:120ms"><span class="w-2 h-2 bg-orange-500 rounded-full"></span> WHOOP</span>
           </div>
         </div>
 
@@ -465,54 +529,28 @@ import '../styles/globals.css'
           <div class="flex flex-wrap justify-center gap-2.5">
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark"><span class="w-2 h-2 bg-green-500 rounded-full"></span> Withings</span>
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:30ms"><span class="w-2 h-2 bg-teal-500 rounded-full"></span> Omron</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:60ms"><span class="w-2 h-2 bg-blue-500 rounded-full"></span> Renpho</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:60ms"><span class="w-2 h-2 bg-teal-500 rounded-full"></span> Renpho</span>
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:90ms"><span class="w-2 h-2 bg-green-500 rounded-full"></span> Dexcom</span>
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:120ms"><span class="w-2 h-2 bg-green-400 rounded-full"></span> Freestyle Libre</span>
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:150ms"><span class="w-2 h-2 bg-cyan-500 rounded-full"></span> Eight Sleep</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:180ms"><span class="w-2 h-2 bg-red-500 rounded-full"></span> Peloton</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:210ms"><span class="w-2 h-2 bg-yellow-500 rounded-full"></span> Myzone</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:240ms"><span class="w-2 h-2 bg-blue-500 rounded-full"></span> Biostrap</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:180ms"><span class="w-2 h-2 bg-purple-500 rounded-full"></span> Biostrap</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:210ms"><span class="w-2 h-2 bg-red-500 rounded-full"></span> Myzone</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:240ms"><span class="w-2 h-2 bg-red-500 rounded-full"></span> Peloton</span>
           </div>
         </div>
 
-        <p class="section-reveal mt-8 text-[13px] text-apple-secondary/60">Plus iPhone built-in sensors for steps, distance, and activity tracking.</p>
-      </div>
-    </section>
-
-    <!-- ════════ PRIVACY ════════ -->
-    <section data-section="privacy" class="py-16 md:py-20 px-5">
-      <div class="max-w-3xl mx-auto">
-        <div class="section-reveal flex flex-wrap justify-center gap-6 md:gap-10 text-center">
-          <div class="flex items-center gap-2">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/>
-            </svg>
-            <p class="text-sm font-medium text-apple-dark">100% on-device analysis</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/>
-            </svg>
-            <p class="text-sm font-medium text-apple-dark">AES-256 encrypted</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" class="w-5 h-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"/>
-            </svg>
-            <p class="text-sm font-medium text-apple-dark">No cloud. No account needed.</p>
-          </div>
-        </div>
+        <p class="section-reveal mt-8 text-[13px] text-apple-secondary/60">Plus iPhone built-in sensors for steps, distance, and activity tracking. No wearable required.</p>
       </div>
     </section>
 
     <!-- ════════ EARLY ACCESS CTA ════════ -->
-    <section id="early-access" data-section="early-access" class="bg-apple-gray py-20 md:py-28 px-5">
+    <section id="early-access" data-section="early-access" class="py-20 md:py-28 px-5">
       <div class="max-w-2xl mx-auto text-center">
         <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-balance">
-          Start training with better data.
+          Stop guessing. Start knowing.
         </h2>
         <p class="section-reveal mt-4 text-apple-secondary text-[15px] md:text-base leading-relaxed max-w-lg mx-auto">
-          Join early access. Free to sign up.
+          Free to sign up. 7-day trial when we launch. No credit card required.
         </p>
         <div class="section-reveal mt-10 max-w-md mx-auto">
           <form id="early-access-form" class="flex flex-col sm:flex-row gap-3">
@@ -530,10 +568,10 @@ import '../styles/globals.css'
             </button>
           </form>
           <p class="ea-success mt-3 text-sm text-emerald-600 font-medium hidden">You're in! We'll be in touch soon.</p>
-          <p class="mt-3 text-[13px] text-apple-secondary/60">Free to join. <strong class="text-apple-dark"><span class="signup-counter">0</span> have joined</strong>. We'll notify you when it's ready.</p>
+          <p class="mt-3 text-[13px] text-apple-secondary/60"><strong class="text-apple-dark"><span class="signup-counter">0</span> have joined</strong>. We'll notify you when it's ready.</p>
         </div>
         <div class="section-reveal mt-10 flex flex-wrap justify-center gap-3">
-          <a href="mailto:hello@lasohealth.com" class="inline-flex items-center gap-2 bg-white rounded-full px-5 py-2.5 text-sm font-medium text-apple-dark hover:bg-gray-100 transition-colors">
+          <a href="mailto:hello@lasohealth.fit" class="inline-flex items-center gap-2 bg-white rounded-full px-5 py-2.5 text-sm font-medium text-apple-dark hover:bg-gray-100 transition-colors">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/>
             </svg>
@@ -549,6 +587,89 @@ import '../styles/globals.css'
       </div>
     </section>
 
+    <!-- ════════ FAQ ════════ -->
+    <section data-section="faq" class="py-20 md:py-28 px-5">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
+          Frequently asked questions about health tracking with Laso.
+        </h2>
+
+        <div class="mt-14 space-y-6">
+          <details class="section-reveal group border border-gray-100 rounded-2xl">
+            <summary class="flex items-center justify-between cursor-pointer px-6 py-5 text-[15px] font-semibold text-apple-dark select-none">
+              What is a recovery score and how does Laso calculate it?
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-apple-secondary transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            </summary>
+            <div class="px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
+              A recovery score (0–100) measures how ready your body is to perform. Laso calculates it from HRV (heart rate variability), resting heart rate, sleep quality, sleep duration, respiratory rate, and recent strain load. Unlike generic averages, Laso builds personal baselines calibrated to your body using on-device machine learning, so your score reflects your unique physiology, not population norms.
+            </div>
+          </details>
+
+          <details class="section-reveal group border border-gray-100 rounded-2xl" style="transition-delay:60ms">
+            <summary class="flex items-center justify-between cursor-pointer px-6 py-5 text-[15px] font-semibold text-apple-dark select-none">
+              How does strain tracking work?
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-apple-secondary transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            </summary>
+            <div class="px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
+              Laso calculates a strain score from 0 to 21 based on heart rate zone distribution throughout the day. It sets a personalized daily strain target based on your current recovery level: higher recovery means you can push harder, lower recovery means you should hold back. The app also includes what-if simulation so you can preview how a planned workout would affect your recovery the next day.
+            </div>
+          </details>
+
+          <details class="section-reveal group border border-gray-100 rounded-2xl" style="transition-delay:120ms">
+            <summary class="flex items-center justify-between cursor-pointer px-6 py-5 text-[15px] font-semibold text-apple-dark select-none">
+              How does illness prediction work?
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-apple-secondary transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            </summary>
+            <div class="px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
+              Laso monitors HRV, resting heart rate, sleep patterns, respiratory rate, body temperature, and activity levels simultaneously. When several of these metrics deviate from your personal baselines in a pattern consistent with immune system activation, Laso flags a potential illness signal 2 to 3 days before symptoms appear. It also tracks 6 predictive health signals: fatigue, burnout, overtraining, insomnia risk, immune dip, and inactivity patterns.
+            </div>
+          </details>
+
+          <details class="section-reveal group border border-gray-100 rounded-2xl" style="transition-delay:180ms">
+            <summary class="flex items-center justify-between cursor-pointer px-6 py-5 text-[15px] font-semibold text-apple-dark select-none">
+              What is Vitality Age?
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-apple-secondary transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            </summary>
+            <div class="px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
+              Vitality Age is Laso's biological age metric, computed daily from 9 key health indicators: VO2 Max, HRV, resting heart rate, sleep efficiency, deep sleep percentage, walking speed, daily steps, exercise minutes, and body composition. Unlike lab-based biological age tests, Vitality Age updates every day from your wearable data. It shows whether you're aging faster or slower than your chronological age, tracks your 90-day trend, and identifies which 2–3 metrics to focus on.
+            </div>
+          </details>
+
+          <details class="section-reveal group border border-gray-100 rounded-2xl" style="transition-delay:240ms">
+            <summary class="flex items-center justify-between cursor-pointer px-6 py-5 text-[15px] font-semibold text-apple-dark select-none">
+              What devices are compatible with Laso?
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-apple-secondary transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            </summary>
+            <div class="px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
+              Laso works with over 50 devices that sync to Apple Health, including Apple Watch, Oura Ring, Garmin, WHOOP, Fitbit, Polar, Samsung Galaxy Watch, COROS, Suunto, Withings, Ultrahuman Ring Air, Dexcom, Eight Sleep, Peloton, and more. If your device writes data to Apple Health, Laso can read and analyze it. iPhone built-in sensors for steps, distance, and activity tracking work without any wearable.
+            </div>
+          </details>
+
+          <details class="section-reveal group border border-gray-100 rounded-2xl" style="transition-delay:300ms">
+            <summary class="flex items-center justify-between cursor-pointer px-6 py-5 text-[15px] font-semibold text-apple-dark select-none">
+              Is my health data private?
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-apple-secondary transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            </summary>
+            <div class="px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
+              Yes. Every analysis in Laso runs entirely on your iPhone. No health data is ever sent to a server. All stored data is AES-256 encrypted with keys in the Secure Enclave. You don't need an account to use the app. No one sees your health data but you.
+            </div>
+          </details>
+
+          <details class="section-reveal group border border-gray-100 rounded-2xl" style="transition-delay:360ms">
+            <summary class="flex items-center justify-between cursor-pointer px-6 py-5 text-[15px] font-semibold text-apple-dark select-none">
+              How is Laso different from WHOOP or Oura?
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-apple-secondary transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            </summary>
+            <div class="px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
+              Three key differences: (1) No new hardware: Laso works with the wearable you already own, while WHOOP requires their band. (2) Broader analysis: Laso cross-analyzes 86 metrics using causal inference, covering recovery, strain, sleep, stress, illness prediction, and biological age in one app. (3) Complete privacy: all analysis runs on-device with no cloud processing, unlike WHOOP and Oura which require cloud accounts.
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    </main>
+
     <!-- ════════ FOOTER ════════ -->
     <footer class="border-t border-gray-100 py-8 px-5">
       <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-apple-secondary">
@@ -556,7 +677,7 @@ import '../styles/globals.css'
         <div class="flex items-center gap-5">
           <a href="/privacy" class="hover:text-apple-dark transition-colors">Privacy</a>
           <a href="/terms" class="hover:text-apple-dark transition-colors">Terms</a>
-          <a href="mailto:support@lasohealth.com" class="hover:text-apple-dark transition-colors">Contact</a>
+          <a href="mailto:support@lasohealth.fit" class="hover:text-apple-dark transition-colors">Contact</a>
         </div>
       </div>
     </footer>
@@ -827,6 +948,19 @@ import '../styles/globals.css'
       }
     })
 
+    // ── Source protection ──
+    document.addEventListener('contextmenu', (e) => e.preventDefault())
+    document.addEventListener('keydown', (e) => {
+      if (
+        (e.ctrlKey && e.key === 'u') ||
+        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) ||
+        (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) ||
+        (e.metaKey && e.key === 'u') ||
+        e.key === 'F12'
+      ) { e.preventDefault() }
+    })
+    document.addEventListener('dragstart', (e) => e.preventDefault())
+
     // ── Vitality Orb - neon plasma ring replica ──
     ;(function initVitalityOrb() {
       const canvas = document.getElementById('vitality-orb') as HTMLCanvasElement | null
@@ -935,7 +1069,6 @@ import '../styles/globals.css'
         ctx.arc(cx - R * 0.03, cy + R * 0.02, R * 0.55, 0, TAU)
         ctx.fill()
 
-        // Keep center mostly blank/dark while preserving edge energy.
         ctx.globalCompositeOperation = 'source-over'
         ctx.filter = 'blur(0px)'
         const centerVoid = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 0.72)
@@ -1083,7 +1216,6 @@ import '../styles/globals.css'
       }
 
       function drawInnerVoid(t: number) {
-        // Strongly organic inner mass (non-circular) with asymmetric cavities.
         ctx.save()
         const driftX = Math.sin(t * 0.63) * R * 0.032
         const driftY = Math.cos(t * 0.47) * R * 0.026
@@ -1137,7 +1269,6 @@ import '../styles/globals.css'
         ctx.fillStyle = pocket
         ctx.fill()
 
-        // Faint internal non-uniform flow lines.
         ctx.globalCompositeOperation = 'lighter'
         ctx.filter = 'blur(10px)'
         traceBlob(R * 0.62, R * 0.022, 1.2, 0.5, 0.08, -0.05, driftX * 0.3, driftY * 0.3, 360)
@@ -1150,7 +1281,6 @@ import '../styles/globals.css'
         ctx.lineWidth = R * 0.03
         ctx.stroke()
 
-        // Small energy knot.
         ctx.filter = 'blur(16px)'
         const energy = ctx.createRadialGradient(
           cx - R * 0.15 + driftX * 0.5,
@@ -1170,12 +1300,26 @@ import '../styles/globals.css'
       }
 
       function frame() {
-        time += 0.006
+        time += 0.0066
+        resizeCanvas()
+
+        // Breathing scale: orb gently pulses size up/down
+        const breathe = 1 + 0.018 * Math.sin(time * 0.9)
         ctx.clearRect(0, 0, W, H)
+        ctx.save()
+        ctx.translate(cx, cy)
+        ctx.scale(breathe, breathe)
+        ctx.translate(-cx, -cy)
+
+        // Glow pulse: atmosphere fades in/out
+        const glowPulse = 0.7 + 0.3 * Math.sin(time * 1.1)
+        ctx.globalAlpha = glowPulse
         drawAtmosphere(time)
+        ctx.globalAlpha = 1
         drawOuterShell(time)
         drawRings(time)
         drawInnerVoid(time)
+        ctx.restore()
         animId = requestAnimationFrame(frame)
       }
 

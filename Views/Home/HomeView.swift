@@ -125,7 +125,7 @@ struct HomeView: View {
     }
 
     private var homeContent: some View {
-        ScrollView {
+        ScrollView(.vertical) {
             VStack(spacing: 0) {
                 // 1. Greeting header — context-aware with recovery state
                 CoachGreetingView(
@@ -381,7 +381,9 @@ struct HomeView: View {
                     }
                 }
             }
+            .frame(maxWidth: .infinity)
         }
+        .scrollBounceBehavior(.basedOnSize)
         .scrollIndicators(.hidden)
     }
 

@@ -112,18 +112,15 @@ final class StrainScorer {
     ///   - todayHRSamples: Raw per-sample heart rate data for today. The sync pipeline
     ///     stores daily averages, which loses per-minute granularity needed for HR zone
     ///     classification. Pass raw samples from HealthKit for accurate zone computation.
-    func compute(from store: HealthDataStore, age: Int, restingHR: Double?, todayHRSamples: [MetricSample] = []) {
-        let allSeries = store.loadAllTimeSeries()
+    func compute(from store: HealthDataStore, age: Int, restingHR: Double?, todayHRSamples: [MetricSample] = [], timeSeries: [HealthMetric: MetricTimeSeries]? = nil) {
+        // Prefer in-memory time series from HealthKitManager (freshest data)
+        // over re-reading from SwiftData (may lag behind)
+        let allSeries = timeSeries ?? store.loadAllTimeSeries()
 
         // Resolve resting heart rate: parameter > HealthKit > population default
         let effectiveRestingHR = resolveRestingHR(restingHR, from: allSeries)
-        let maxHR = 220.0 - Double(age)
-
-        // Guard: need a valid HR range
-        guard maxHR > effectiveRestingHR else {
-            isReady = false
-            return
-        }
+        let maxHR = 220.0 - Double(max(1, min(age, 150)))
+        let validHRRange = maxHR > effectiveRestingHR
 
         // --- Active Calories ---
         let calorieSeries = allSeries[.activeCalories]
@@ -140,14 +137,18 @@ final class StrainScorer {
         // --- Heart Rate Zone Distribution ---
         // Prefer raw per-sample HR for accurate zone classification;
         // fall back to daily-aggregated stored data if raw samples unavailable.
-        let hrSamples = !todayHRSamples.isEmpty
-            ? todayHRSamples
-            : (allSeries[.heartRate]?.samples(lastDays: 1) ?? [])
-        let zones = computeZoneMinutes(
-            hrSamples: hrSamples,
-            restingHR: effectiveRestingHR,
-            maxHR: maxHR
-        )
+        // Only compute if we have a valid HR range; otherwise zones stay at zero.
+        var zones: [Int: Double] = [1: 0, 2: 0, 3: 0, 4: 0, 5: 0]
+        if validHRRange {
+            let hrSamples = !todayHRSamples.isEmpty
+                ? todayHRSamples
+                : (allSeries[.heartRate]?.samples(lastDays: 1) ?? [])
+            zones = computeZoneMinutes(
+                hrSamples: hrSamples,
+                restingHR: effectiveRestingHR,
+                maxHR: maxHR
+            )
+        }
         zoneMinutes = zones
 
         // --- Exercise Duration ---
@@ -205,7 +206,9 @@ final class StrainScorer {
 
     // MARK: - Private Helpers
 
-    /// Resolve resting heart rate from parameter, HealthKit, or population default
+    /// Resolve resting heart rate from parameter, HealthKit, or population default.
+    /// Always clamps to physiological range (30–120 bpm) to prevent bad sensor data
+    /// from invalidating the HR reserve calculation.
     private func resolveRestingHR(_ provided: Double?, from allSeries: [HealthMetric: MetricTimeSeries]) -> Double {
         if let provided, provided > 30, provided < 120 {
             return provided
@@ -213,10 +216,11 @@ final class StrainScorer {
         if let rhSeries = allSeries[.restingHeartRate] {
             let recent = rhSeries.samples(lastDays: 14)
             if recent.count >= 3 {
-                return recent.mean(of: \.value)
+                let mean = recent.mean(of: \.value)
+                if mean > 30, mean < 120 { return mean }
             }
-            if let latest = rhSeries.sortedSamples.last {
-                return latest.value
+            if let latest = rhSeries.sortedSamples.last?.value, latest > 30, latest < 120 {
+                return latest
             }
         }
         return 65.0 // Population average fallback
@@ -338,11 +342,7 @@ final class StrainScorer {
         let lookbackDays = 7
         var history: [(date: Date, strain: Double)] = []
 
-        let hrReserve = maxHR - restingHR
-        guard hrReserve > 0 else {
-            weeklyStrainHistory = []
-            return
-        }
+        let validHR = maxHR > restingHR
 
         let persistedHistory = store.loadDailyStrainHistory(lookbackDays: lookbackDays)
         var persistedByDate: [Date: Double] = [:]
@@ -393,8 +393,11 @@ final class StrainScorer {
         let dayWorkout = sumSamples(allSeries[.workoutDuration], from: targetDate, to: nextDate)
         let daySteps = sumSamples(allSeries[.steps], from: targetDate, to: nextDate)
         let dayDistance = sumSamples(allSeries[.distanceWalkingRunning], from: targetDate, to: nextDate)
-        let dayHRSamples = allSeries[.heartRate]?.samples(from: targetDate, to: nextDate) ?? []
-        let dayZones = computeZoneMinutes(hrSamples: dayHRSamples, restingHR: restingHR, maxHR: maxHR)
+        var dayZones: [Int: Double] = [1: 0, 2: 0, 3: 0, 4: 0, 5: 0]
+        if maxHR > restingHR {
+            let dayHRSamples = allSeries[.heartRate]?.samples(from: targetDate, to: nextDate) ?? []
+            dayZones = computeZoneMinutes(hrSamples: dayHRSamples, restingHR: restingHR, maxHR: maxHR)
+        }
 
         let load = computeNormalizedLoad(
             calories: dayCals,

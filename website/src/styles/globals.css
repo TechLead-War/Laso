@@ -8,10 +8,20 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-text-size-adjust: 100%;
+    overscroll-behavior: none;
   }
   body {
     color: #1d1d1f;
     background: #ffffff;
+    -webkit-user-select: none;
+    user-select: none;
+    overscroll-behavior: none;
+    overflow-x: hidden;
+    position: relative;
+  }
+  input, textarea, button {
+    -webkit-user-select: text;
+    user-select: text;
   }
   ::selection {
     background: #0071e3;
@@ -141,7 +151,7 @@
 
 .vitality-orb-age {
   color: rgba(255, 255, 255, 0.97);
-  font-size: clamp(3rem, 10vw, 4rem);
+  font-size: clamp(4rem, 14vw, 5.5rem);
   line-height: 1;
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -153,17 +163,31 @@
 .vitality-orb-title {
   margin-top: 8px;
   color: rgba(231, 248, 255, 0.93);
-  font-size: 0.82rem;
+  font-size: clamp(0.95rem, 2.5vw, 1.1rem);
   font-weight: 600;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   text-shadow: 0 0 10px rgba(0, 113, 227, 0.22);
 }
 
 .vitality-orb-delta {
-  margin-top: 4px;
+  margin-top: 6px;
   color: rgba(52, 211, 153, 0.96);
-  font-size: 0.72rem;
+  font-size: clamp(0.85rem, 2.2vw, 1rem);
   font-weight: 600;
   letter-spacing: 0.015em;
   text-shadow: 0 0 14px rgba(52, 211, 153, 0.3);
+}
+
+/* Mobile responsive overrides */
+@media (max-width: 480px) {
+  .vitality-orb-stage {
+    width: min(82vw, 340px);
+  }
+}
+
+@media (max-width: 374px) {
+  .vitality-orb-stage {
+    width: min(88vw, 300px);
+  }
 }

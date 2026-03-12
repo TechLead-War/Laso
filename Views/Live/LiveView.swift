@@ -76,7 +76,9 @@ struct LiveView: View {
                 } else {
                     viewModel.startStreaming()
                 }
-            } else if newPhase == .inactive || newPhase == .background {
+            } else if newPhase == .background {
+                // Only stop streaming on full background — not on .inactive (which fires
+                // for brief interruptions like notification banners or control center).
                 if viewModel.isStreaming {
                     viewModel.stopStreaming()
                 }

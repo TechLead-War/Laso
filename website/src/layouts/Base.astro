@@ -2,11 +2,12 @@
 interface Props {
   title: string
   description: string
+  jsonLd?: Record<string, unknown>[] | Record<string, unknown>
 }
-const { title, description } = Astro.props
+const { title, description, jsonLd } = Astro.props
 const GA_ID = 'G-XXXXXXXXXX' // ← replace with your GA4 Measurement ID
 const META_PIXEL_ID = 'XXXXXXXXXXXXXXXX' // ← replace with your Meta Pixel ID
-const canonicalURL = new URL(Astro.url.pathname, 'https://lasohealth.com')
+const canonicalURL = new URL(Astro.url.pathname, 'https://lasohealth.fit')
 ---
 <!doctype html>
 <html lang="en">
@@ -16,32 +17,48 @@ const canonicalURL = new URL(Astro.url.pathname, 'https://lasohealth.com')
   <meta name="theme-color" content="#ffffff" />
   <title>{title}</title>
   <meta name="description" content={description} />
-  <meta name="keywords" content="health app,apple watch,recovery score,readiness,sleep coach,strain tracking,stress monitor,health risks,journal correlations,cycle tracking,HealthKit,Laso" />
+  <meta name="keywords" content="health tracking app,recovery score app,apple watch recovery score,sleep tracking app,sleep debt tracker,strain tracking app,strain score,HRV tracking,HRV-based recovery,readiness score,biological age app,vitality age,health metrics app,illness prediction app,overtraining detection,stress monitor app,wearable data analysis,on-device health analytics,private health tracking,HealthKit app,apple watch health app,oura alternative,whoop alternative app,garmin health analytics,sleep coaching app,health risk prediction,fitness recovery app,workout recovery tracker,body composition tracker,VO2 max tracker,resting heart rate tracker,heart rate variability app,personal health baselines,health trend analysis,cycle tracking app,menstrual cycle training,Laso,Laso Health" />
   <meta name="author" content="Laso Health" />
-  <meta name="robots" content="index, follow" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
   <link rel="canonical" href={canonicalURL.href} />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="sitemap" href="/sitemap-index.xml" />
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="en_US" />
-  <meta property="og:site_name" content="Laso" />
+  <meta property="og:site_name" content="Laso — Health Intelligence App" />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
   <meta property="og:url" content={canonicalURL.href} />
-  <meta property="og:image" content="https://lasohealth.com/og-image.png" />
+  <meta property="og:image" content="https://lasohealth.fit/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Laso — Recovery score, strain tracking, sleep coaching, and health intelligence from your wearable" />
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@lasohealth" />
+  <meta name="twitter:creator" content="@lasohealth" />
   <meta name="twitter:title" content={title} />
   <meta name="twitter:description" content={description} />
-  <meta name="twitter:image" content="https://lasohealth.com/og-image.png" />
+  <meta name="twitter:image" content="https://lasohealth.fit/og-image.png" />
+  <meta name="twitter:image:alt" content="Laso — Recovery score, strain tracking, sleep coaching, and health intelligence from your wearable" />
 
   <!-- Apple -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Laso" />
   <meta name="apple-itunes-app" content="app-id=YOUR_APP_ID" />
+
+  <!-- JSON-LD Structured Data -->
+  {jsonLd && (
+    Array.isArray(jsonLd)
+      ? jsonLd.map((item) => (
+          <script type="application/ld+json" set:html={JSON.stringify(item)} />
+        ))
+      : <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  )}
 
   <!-- GA4 -->
   <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>

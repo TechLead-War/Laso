@@ -33,6 +33,7 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>processing</string>
+		<string>health-update</string>
 	</array>
 	<key>UILaunchScreen</key>
 	<dict>

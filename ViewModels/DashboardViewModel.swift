@@ -932,13 +932,14 @@ final class DashboardViewModel {
         let profile = UserProfileStore.shared.loadLocal()
         let age = profile?.ageFromDateOfBirth ?? 30
 
-        // Strain — pass raw per-sample HR for accurate zone classification.
-        // The stored time series only has daily averages, which yields ~1 zone minute.
+        // Strain — pass raw per-sample HR for accurate zone classification,
+        // and in-memory time series for freshest data (avoids SwiftData read lag).
         strainScorer.compute(
             from: store,
             age: age,
             restingHR: analysisEngine.baselines[.restingHeartRate]?.mean,
-            todayHRSamples: todayRawHR
+            todayHRSamples: todayRawHR,
+            timeSeries: healthKitManager.timeSeries
         )
 
         // Strain Coach

@@ -420,21 +420,50 @@ struct VitalityDetailView: View {
     // MARK: - Data Maturity Banner
 
     private var dataMaturityBanner: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "sparkles")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(vitalityWhoopGreen)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                Image(systemName: personalizationIcon)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(personalizationTint)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(scorer.personalizationStatus.rawValue)
-                    .font(.subheadline.weight(.semibold))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(scorer.personalizationStatus.rawValue)
+                        .font(.subheadline.weight(.semibold))
 
-                Text(dataMaturityDescription)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    Text(dataMaturityDescription)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer(minLength: 0)
             }
 
-            Spacer(minLength: 0)
+            // Progress bar
+            let days = scorer.availableDays
+            let target = VitalityScorer.minimumDaysRequired
+            let progress = min(1.0, Double(days) / Double(target))
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(Color(.systemFill))
+                        .frame(height: 6)
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(vitalityWhoopGreen)
+                        .frame(width: geo.size.width * progress, height: 6)
+                }
+            }
+            .frame(height: 6)
+
+            HStack {
+                Text("\(days) of \(target) days")
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text("\(Int(progress * 100))%")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(vitalityWhoopGreen)
+            }
         }
         .padding(14)
         .background(vitalityWhoopGreen.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
@@ -659,13 +688,10 @@ struct VitalityDetailView: View {
     }
 
     private var dataMaturityDescription: String {
-        let days = scorer.availableDays
-        let target = VitalityScorer.minimumDaysRequired
-
         if scorer.personalizationStatus == .buildingProfile {
-            return "\(days) of \(target) days of usable data. Biological age is held at your actual age while we build your profile."
+            return "Your vitality age matches your real age while we learn your baseline. Keep wearing your device."
         }
-        return "\(days) of \(target) days of usable data. This is an early estimate and will keep personalizing as more data arrives."
+        return "Early estimate. Accuracy improves each day as we learn your patterns."
     }
 }
 
