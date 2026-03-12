@@ -165,7 +165,7 @@ struct SampleDataProvider {
                 metric: .restingHeartRate,
                 title: "Resting Heart Rate Elevated",
                 summary: "Your resting heart rate has been 8% above your baseline for the past 3 days.",
-                recommendation: "Consider reducing caffeine intake and ensuring 7-8 hours of sleep. If persistent, consult your physician.",
+                recommendation: "Consider reducing caffeine intake and ensuring 7-8 hours of sleep. If this persists, you may want to speak with a healthcare provider.",
                 severity: .warning,
                 trend: .declining,
                 currentValue: 70,

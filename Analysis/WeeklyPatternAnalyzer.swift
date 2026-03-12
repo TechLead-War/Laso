@@ -69,7 +69,7 @@ struct WeeklyPatternAnalyzer {
                 metric: entry.metric,
                 title: "Weakest Day: \(weakestName)",
                 summary: "\(weakestName) is your least active day with \(String(format: "%.0f", weakest.avg)) avg \(entry.label) — \(String(format: "%.0f", deficit))% below your daily average. \(strongestName) is your strongest (\(String(format: "%.0f", strongest.avg))).",
-                recommendation: "Schedule a walk or light activity on \(weakestName)s to close the gap. Even 15 minutes can make a difference.",
+                recommendation: "\(weakestName) averages \(String(format: "%.0f", weakest.avg)) \(entry.label) — \(String(format: "%.0f", deficit))% below your daily mean of \(String(format: "%.0f", overallAvg)). Your strongest day is \(strongestName) at \(String(format: "%.0f", strongest.avg)).",
                 severity: deficit >= 25 ? .warning : .info,
                 trend: .stable,
                 currentValue: weakest.avg,
@@ -137,8 +137,8 @@ struct WeeklyPatternAnalyzer {
                 title: "\(entry.metric.displayName): Weekday vs Weekend",
                 summary: "Your \(entry.label) is \(String(format: "%.0f", abs(gap)))% higher on \(moreActive). Weekday avg: \(String(format: "%.0f", weekdayAvg)) \(entry.unit), weekend avg: \(String(format: "%.0f", weekendAvg)) \(entry.unit).",
                 recommendation: gap > 20 ?
-                    "Try adding a weekend activity — a hike, bike ride, or long walk can close the gap." :
-                    "Your \(entry.label) levels are fairly balanced across the week. Keep it up!",
+                    "Weekend \(entry.label) averages \(String(format: "%.0f", weekendAvg)) \(entry.unit) vs \(String(format: "%.0f", weekdayAvg)) \(entry.unit) on weekdays — a \(String(format: "%.0f", abs(gap)))% gap." :
+                    "Weekday avg: \(String(format: "%.0f", weekdayAvg)) \(entry.unit), weekend avg: \(String(format: "%.0f", weekendAvg)) \(entry.unit) — \(String(format: "%.0f", abs(gap)))% difference.",
                 severity: abs(gap) >= 30 ? .warning : .info,
                 trend: .stable,
                 currentValue: weekendAvg,
@@ -181,11 +181,11 @@ struct WeeklyPatternAnalyzer {
                 metric: metric,
                 title: "\(metric.displayName) Consistency",
                 summary: isConsistent ?
-                    "Your \(metric.displayName.lowercased()) is consistent across the week (variation: \(String(format: "%.0f", cv))%). Balanced activity supports better recovery." :
-                    "Your \(metric.displayName.lowercased()) varies \(String(format: "%.0f", cv))% across the week. Large swings can impact recovery and sleep.",
+                    "Your \(metric.displayName.lowercased()) is consistent across the week with a coefficient of variation of \(String(format: "%.0f", cv))%." :
+                    "Your \(metric.displayName.lowercased()) varies \(String(format: "%.0f", cv))% across the week (coefficient of variation).",
                 recommendation: isConsistent ?
-                    "Great balance! Consistency is better for your body than feast-or-famine patterns." :
-                    "Try to maintain a baseline level every day, even on rest days. Small efforts count.",
+                    "Day-to-day variation is \(String(format: "%.0f", cv))% (coefficient of variation) — your \(metric.displayName.lowercased()) is distributed evenly across the week." :
+                    "Day-to-day variation is \(String(format: "%.0f", cv))% (coefficient of variation). Your \(metric.displayName.lowercased()) swings significantly between your most and least active days.",
                 severity: cv > 35 ? .warning : .info,
                 trend: isConsistent ? .improving : .stable,
                 currentValue: cv,

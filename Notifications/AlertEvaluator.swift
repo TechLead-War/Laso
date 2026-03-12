@@ -136,7 +136,7 @@ struct AlertEvaluator {
                 // Fallback for milder spikes that do not cross triage thresholds.
                 sendHeartRateAlert(
                     title: "Resting Heart Rate Elevated",
-                    body: "Your resting heart rate (\(Int(latestRHR)) bpm) is significantly above your recent average (\(Int(avg7d)) bpm). Consider rest or consult your doctor if persistent.",
+                    body: "Your resting heart rate (\(Int(latestRHR)) bpm) is significantly above your recent average (\(Int(avg7d)) bpm). Rest and recheck \u{2014} if it stays elevated, consider speaking with a healthcare provider.",
                     identifier: "healthpulse.spike.rhr.elevated",
                     maxPerDay: maxPerDay
                 )
@@ -165,14 +165,14 @@ struct AlertEvaluator {
                 } else if latestHR >= spikeThreshold {
                     sendHeartRateAlert(
                         title: "High Heart Rate Detected",
-                        body: "Your heart rate reached \(Int(latestHR)) bpm (threshold: \(Int(spikeThreshold)) bpm). If you weren't exercising, consider medical attention.",
+                        body: "Your heart rate reached \(Int(latestHR)) bpm (threshold: \(Int(spikeThreshold)) bpm). If you weren't exercising, you may want to check with a healthcare provider.",
                         identifier: "healthpulse.spike.hr.high",
                         maxPerDay: maxPerDay
                     )
                 } else if latestHR <= dropThreshold {
                     sendHeartRateAlert(
                         title: "Low Heart Rate Detected",
-                        body: "Your heart rate dropped to \(Int(latestHR)) bpm (threshold: \(Int(dropThreshold)) bpm). Seek medical attention if you feel dizzy or faint.",
+                        body: "Your heart rate dropped to \(Int(latestHR)) bpm (threshold: \(Int(dropThreshold)) bpm). If you feel dizzy or faint, consider contacting a healthcare provider.",
                         identifier: "healthpulse.spike.hr.low",
                         maxPerDay: maxPerDay
                     )
@@ -215,7 +215,7 @@ struct AlertEvaluator {
             } else if latestSpO2 < RemoteConfigManager.shared.spo2CriticalThreshold {
                 sendHeartRateAlert(
                     title: "Blood Oxygen Critically Low",
-                    body: "Your blood oxygen is \(String(format: "%.1f", latestSpO2))%. Values below 92% may require immediate medical attention.",
+                    body: "Your blood oxygen is \(String(format: "%.1f", latestSpO2))%. Values below 92% are unusually low \u{2014} consider speaking with a healthcare provider.",
                     identifier: "healthpulse.spike.spo2.critical",
                     maxPerDay: maxPerDay
                 )

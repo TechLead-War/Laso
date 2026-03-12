@@ -52,8 +52,8 @@ struct RecoveryAnalyzer {
                     title: "Post-Workout HRV Recovery",
                     summary: "Your HRV takes an average of \(String(format: "%.1f", avgRecovery)) days to return to baseline after workouts. Post-workout HRV averages ~\(postWorkoutAvg)ms vs your \(baselineStr)ms baseline.",
                     recommendation: avgRecovery > 2 ?
-                        "Add 1 extra rest day per week and reduce workout intensity by 20% on back-to-back training days. Your recovery time suggests your body needs more time between sessions." :
-                        "Your recovery is strong at \(String(format: "%.1f", avgRecovery)) days \u{2014} keep your current training-to-rest ratio.",
+                        "HRV recovery is averaging \(String(format: "%.1f", avgRecovery)) days — above your typical baseline window. Post-workout HRV drops to ~\(postWorkoutAvg)ms before recovering to \(baselineStr)ms." :
+                        "Your HRV returns to baseline in \(String(format: "%.1f", avgRecovery)) days on average — post-workout HRV ~\(postWorkoutAvg)ms recovering to your \(baselineStr)ms baseline.",
                     severity: avgRecovery > 3 ? .warning : .info,
                     trend: trend,
                     currentValue: avgRecovery,
@@ -78,8 +78,8 @@ struct RecoveryAnalyzer {
             insights.append(Insight(
                 metric: .workoutDuration,
                 title: "Rest Day Deficit",
-                summary: "You're averaging \(String(format: "%.1f", weeklyRest)) rest days per week. With \(highIntensityCount) high-intensity sessions this month, you need more recovery time.",
-                recommendation: "Schedule at least \(recommendedRest) rest days per week, especially after high-intensity sessions.",
+                summary: "You're averaging \(String(format: "%.1f", weeklyRest)) rest days per week with \(highIntensityCount) high-intensity sessions in the last 28 days (\(workoutCount28) workout days, \(restDays28) rest days).",
+                recommendation: "You're averaging \(String(format: "%.1f", weeklyRest)) rest days/week with \(highIntensityCount) high-intensity sessions in the last 28 days. That's \(workoutCount28) workout days to \(restDays28) rest days.",
                 severity: .warning,
                 trend: .declining,
                 currentValue: weeklyRest,
@@ -118,8 +118,8 @@ struct RecoveryAnalyzer {
                 title: isAllThree ? "Overtraining Warning" : "Early Overtraining Signal",
                 summary: "\(signals.count) of 3 overtraining indicators present: \(signalText).\(isAllThree ? "" : " A third declining signal would confirm overtraining.")",
                 recommendation: isAllThree
-                    ? "Take 2-3 complete rest days starting tomorrow. Focus on sleep (8+ hrs), hydration (3L water), and light walking only. Resume training at 60% intensity."
-                    : "Reduce training volume by 40-50% this week. Prioritize 8+ hrs sleep and track whether HRV stabilizes within 3 days.",
+                    ? "All 3 overtraining indicators are present simultaneously: \(signalText). Your recovery metrics indicate sustained strain across multiple systems."
+                    : "2 of 3 overtraining indicators are trending in the same direction: \(signalText). This pattern has preceded extended recovery periods in your data.",
                 severity: isAllThree ? .critical : .warning,
                 trend: .declining,
                 currentValue: Double(signals.count),

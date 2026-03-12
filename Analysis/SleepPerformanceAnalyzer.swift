@@ -60,7 +60,7 @@ struct SleepPerformanceAnalyzer {
                 metric: .sleepDuration,
                 title: "Sleep Drives \(performanceMetric.displayName)",
                 summary: "On 7+ hour sleep nights, your next-day \(performanceMetric.displayName.lowercased()) is \(String(format: "%.0f", abs(percentDiff)))% \(percentDiff > 0 ? "higher" : "lower") (\(String(format: "%.0f", avgGood)) vs \(String(format: "%.0f", avgPoor)) \(performanceMetric.unit)).",
-                recommendation: "Prioritize 7+ hours of sleep to maximize your \(performanceMetric.displayName.lowercased()). Even one good night makes a measurable difference.",
+                recommendation: "Your data shows a \(String(format: "%.0f", abs(percentDiff)))% difference in next-day \(performanceMetric.displayName.lowercased()) between 7+ hr sleep nights (\(String(format: "%.0f", avgGood)) \(performanceMetric.unit)) and <6 hr nights (\(String(format: "%.0f", avgPoor)) \(performanceMetric.unit)) across \(goodSleep.count + poorSleep.count) measured nights.",
                 severity: abs(percentDiff) >= 25 ? .warning : .info,
                 trend: .stable,
                 currentValue: avgGood,
@@ -128,7 +128,7 @@ struct SleepPerformanceAnalyzer {
             metric: .sleepDeep,
             title: "Sleep Quality → Activity",
             summary: "High-quality sleep nights (>30% deep+REM) lead to \(String(format: "%.0f", abs(diff)))% \(diff > 0 ? "more" : "fewer") active calories the next day.",
-            recommendation: "Boost deep sleep with a cool bedroom (65-68°F), no alcohol 3hrs before bed, and consistent bedtime.",
+            recommendation: "Nights with >30% deep+REM correlate with \(String(format: "%.0f", abs(diff)))% \(diff > 0 ? "higher" : "lower") next-day active calories (\(String(format: "%.0f", avgHigh)) vs \(String(format: "%.0f", avgLow)) kcal) across \(highQualityCals.count + lowQualityCals.count) measured nights.",
             severity: .info,
             trend: .stable,
             currentValue: avgHigh,
@@ -198,7 +198,7 @@ struct SleepPerformanceAnalyzer {
         let gapNote: String
         if hasWeekdayWeekendData && abs(weekdayAvg - weekendAvg) > 0.5 {
             let shorter = weekdayAvg < weekendAvg ? "weekday" : "weekend"
-            gapNote = " Your \(shorter) sleep is \(String(format: "%.1f", abs(weekdayAvg - weekendAvg))) hrs shorter \u{2014} closing this gap will improve your circadian rhythm."
+            gapNote = " Your \(shorter) sleep is \(String(format: "%.1f", abs(weekdayAvg - weekendAvg))) hrs shorter than your \(weekdayAvg < weekendAvg ? "weekend" : "weekday") average."
         } else {
             gapNote = ""
         }
@@ -208,8 +208,8 @@ struct SleepPerformanceAnalyzer {
             title: "Sleep Consistency",
             summary: summaryParts.joined(separator: ". ") + ".",
             recommendation: isConsistent ?
-                "Consistent sleep schedule at \(String(format: "%.1f", mean)) hrs avg \u{2014} this directly improves deep sleep and recovery.\(gapNote)" :
-                "Set a fixed bedtime and wake time 7 days a week. Aim for \u{00B1}30 min variation max.\(gapNote)",
+                "Sleep variation is \u{00B1}\(String(format: "%.0f", stdDev * 60)) min around your \(String(format: "%.1f", mean)) hr average (CV: \(String(format: "%.0f", cv * 100))%).\(gapNote)" :
+                "Sleep varies by \u{00B1}\(String(format: "%.1f", stdDev)) hrs night to night (CV: \(String(format: "%.0f", cv * 100))%). Weekday avg: \(String(format: "%.1f", weekdayAvg)) hrs, weekend avg: \(String(format: "%.1f", weekendAvg)) hrs.\(gapNote)",
             severity: severity,
             trend: isConsistent ? .improving : .declining,
             currentValue: cv * 100,

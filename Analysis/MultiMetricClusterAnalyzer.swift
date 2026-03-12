@@ -78,7 +78,7 @@ struct MultiMetricClusterAnalyzer {
                 metric: sorted[0].metric,
                 title: "\(category.displayName): Multiple Metrics Declining",
                 summary: "\(decliningMetrics.count) metrics declining together in \(category.displayName): \(metricDetails).",
-                recommendation: recommendationForCluster(category: category, count: decliningMetrics.count),
+                recommendation: recommendationForCluster(category: category, count: decliningMetrics.count, avgDeviation: avgDeviation, metrics: sorted.map(\.metric)),
                 severity: worstSeverity >= .warning ? .critical : .warning,
                 trend: .declining,
                 currentValue: avgDeviation,
@@ -115,8 +115,8 @@ struct MultiMetricClusterAnalyzer {
         return Insight(
             metric: .restingHeartRate,
             title: "Widespread Health Decline",
-            summary: "\(totalDeclining) metrics across \(categoriesWithDecline.count) categories are declining: \(categoryNames). This may indicate a systemic issue like poor sleep, high stress, or illness.",
-            recommendation: "When declines span multiple categories, look for a root cause: Are you sleeping enough? Under unusual stress? Coming down with something? Address the root cause rather than individual metrics.",
+            summary: "\(totalDeclining) metrics across \(categoriesWithDecline.count) categories are declining: \(categoryNames).",
+            recommendation: "\(totalDeclining) metrics declining across \(categoriesWithDecline.count) categories: \(categoryNames).",
             severity: .warning,
             trend: .declining,
             currentValue: Double(totalDeclining),
@@ -128,26 +128,28 @@ struct MultiMetricClusterAnalyzer {
 
     // MARK: - Cluster Recommendations
 
-    private static func recommendationForCluster(category: HealthCategory, count: Int) -> String {
+    private static func recommendationForCluster(category: HealthCategory, count: Int, avgDeviation: Double, metrics: [HealthMetric]) -> String {
+        let devStr = String(format: "%.0f", avgDeviation)
+        let metricNames = metrics.prefix(4).map(\.displayName).joined(separator: ", ")
         switch category {
         case .heart:
-            return "Multiple heart metrics declining together warrants attention. Prioritize stress reduction, quality sleep, and moderate cardio. If symptoms persist, consult your doctor."
+            return "Multiple heart metrics declining simultaneously \u{2014} \(count) metrics affected: \(metricNames). Avg \(devStr)% below baseline."
         case .sleep:
-            return "Your sleep profile is deteriorating across \(count) dimensions. Set a strict bedtime, reduce screen time 1 hour before bed, and keep your bedroom cool and dark."
+            return "Sleep deteriorating across \(count) dimensions \u{2014} \(metricNames). Avg \(devStr)% below baseline."
         case .activity:
-            return "Activity levels are dropping across the board. Start with a 15-minute walk daily and build from there. Consistency matters more than intensity."
+            return "Activity declining across \(count) metrics \u{2014} \(metricNames). Avg \(devStr)% below baseline."
         case .body:
-            return "Multiple body composition metrics shifting together. Review your nutrition habits and ensure you're eating enough protein and maintaining consistent meal timing."
+            return "Body composition metrics shifting \u{2014} \(count) metrics affected: \(metricNames). Avg \(devStr)% from baseline."
         case .respiratory:
-            return "Multiple respiratory metrics declining simultaneously. Monitor for illness symptoms. If you're congested or coughing, rest and hydrate."
+            return "Respiratory metrics elevated \u{2014} \(count) metrics affected: \(metricNames). Avg \(devStr)% from baseline."
         case .mindfulness:
-            return "Stress and mindfulness metrics are declining together. Build in 10 minutes of intentional breathing or meditation daily."
+            return "Mindfulness metrics declining \u{2014} \(count) metrics affected: \(metricNames). Avg \(devStr)% below baseline."
         case .mobility:
-            return "Multiple mobility metrics declining together. Prioritize stretching, balance exercises, and regular walking to maintain functional fitness."
+            return "Mobility metrics declining across \(count) indicators \u{2014} \(metricNames). Avg \(devStr)% below baseline."
         case .nutrition:
-            return "Multiple nutrition metrics changing together. Review your dietary habits and consider tracking meals for a few days to identify patterns."
+            return "Nutrition metrics shifted from baseline \u{2014} \(count) metrics affected: \(metricNames). Avg \(devStr)% from baseline."
         case .hearing:
-            return "Multiple hearing metrics shifting together. Reduce headphone volume, limit prolonged exposure to loud environments, and consider using noise-cancelling headphones."
+            return "Hearing metrics changed \u{2014} \(count) metrics affected: \(metricNames). Avg \(devStr)% from baseline."
         }
     }
 }

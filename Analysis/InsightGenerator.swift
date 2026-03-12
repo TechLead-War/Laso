@@ -128,14 +128,17 @@ struct InsightGenerator {
 
             let currentValue = baseline.mean * (1.0 + trendResult.weekOverWeekChange / 100.0)
             let isPositiveReversal = (trendResult.direction == .improving)
+            let formatted = formatValue(currentValue, metric: metric)
+            let previousFormatted = formatValue(baseline.mean, metric: metric)
+            let rateDescription = trendResult.rateOfChange.displayLabel
 
             insights.append(Insight(
                 metric: metric,
                 title: "\(metric.displayName) \(isPositiveReversal ? "Turning Around" : "Reversing Course")",
                 summary: "Your \(metric.displayName.lowercased()) trend has reversed direction in the past week. \(isPositiveReversal ? "Previous decline is now recovering." : "Previous improvement is now declining.")",
                 recommendation: isPositiveReversal
-                    ? "Good news — your \(metric.displayName.lowercased()) is recovering. Keep doing what you changed recently."
-                    : "Your \(metric.displayName.lowercased()) was improving but is now declining. Review any recent changes to your routine.",
+                    ? "your \(metric.displayName.lowercased()) is recovering — now \(formatted) \(metric.unit) vs \(previousFormatted) \(metric.unit) previously"
+                    : "your \(metric.displayName.lowercased()) reversed direction — was improving, now declining at \(rateDescription) rate",
                 severity: isPositiveReversal ? .info : .warning,
                 trend: trendResult.direction,
                 currentValue: currentValue,
@@ -550,6 +553,7 @@ struct InsightGenerator {
             metric: metric,
             severity: severity,
             trend: trend,
+            deviationPercent: deviationPercent,
             lever: lever
         ) {
             parts.append(priority)
@@ -595,11 +599,14 @@ struct InsightGenerator {
         metric: HealthMetric,
         severity: Severity,
         trend: TrendDirection,
+        deviationPercent: Double,
         lever: CorrelatedFactor?
     ) -> String? {
         guard severity >= .warning || trend == .declining || lever != nil else { return nil }
         let actionMetric = lever?.metric ?? metric
-        return "Priority today: \(actionProtocol(for: actionMetric, severity: severity))."
+        let actionDeviation = lever.map { abs($0.effectPercent) } ?? abs(deviationPercent)
+        let direction = deviationPercent > 0 ? "above" : "below"
+        return "Priority today: \(actionProtocol(for: actionMetric, severity: severity, deviation: actionDeviation, direction: direction))."
     }
 
     private static func followUpSentence(severity: Severity, context: InsightContext?) -> String? {
@@ -626,36 +633,37 @@ struct InsightGenerator {
         return "early"
     }
 
-    private static func actionProtocol(for metric: HealthMetric, severity: Severity) -> String {
+    private static func actionProtocol(for metric: HealthMetric, severity: Severity, deviation: Double, direction: String) -> String {
+        let dev = Int(abs(deviation))
         switch metric {
         case .sleepDuration, .sleepDeep, .sleepREM, .sleepCore, .sleepAwake:
-            return "protect an 8-hour sleep window tonight and cut screens 60 minutes before bed"
+            return "your sleep metrics are \(dev)% off your baseline"
         case .steps, .activeCalories, .exerciseMinutes, .appleMoveTime, .distanceWalkingRunning, .standHours:
-            return "add two 10-minute brisk walks today and hit at least 30 active minutes"
+            return "your activity is \(dev)% \(direction) your recent average"
         case .heartRateVariability:
-            return "do 10 minutes of slow breathing and finish dinner at least 3 hours before bedtime"
+            return "your HRV is trending \(direction) — \(dev)% from baseline"
         case .restingHeartRate, .heartRate, .walkingHeartRateAverage:
-            return "avoid caffeine after 2 PM and do a 10-minute wind-down breathing session before sleep"
+            return "your resting heart rate shifted \(dev)% from baseline"
         case .mindfulMinutes, .electrodermalActivity:
-            return "run one 10-minute mindfulness session now and one before bed"
+            return "your mindfulness time is \(dev)% \(direction) your average"
         case .timeInDaylight:
-            return "get 20 minutes of outdoor light before noon"
+            return "your daylight exposure is \(dev)% \(direction) your average"
         case .bloodPressureSystolic, .bloodPressureDiastolic:
             return severity >= .warning
-                ? "cap sodium under 2300mg today and complete a 20-minute easy walk"
-                : "check blood pressure at the same time tomorrow morning"
+                ? "your blood pressure reading is outside your typical range"
+                : "recheck to confirm — single readings can vary"
         case .bloodOxygen, .atrialFibrillationBurden, .bodyTemperature, .respiratoryRate:
             return severity >= .warning
-                ? "repeat the measurement now and contact a clinician if it stays abnormal"
-                : "recheck this metric later today after rest"
+                ? "this reading is outside your typical range — monitor for changes"
+                : "recheck this metric to confirm the trend"
         case .weight, .bmi, .bodyFatPercentage, .waistCircumference:
-            return "anchor meals around protein and fiber today and avoid late-night snacking"
+            return "your body metrics shifted \(dev)% from baseline"
         case .vo2Max, .heartRateRecovery:
-            return "schedule one 25-minute zone-2 cardio session today or tomorrow"
+            return "your VO2 max is trending \(direction) — \(dev)% from baseline"
         case .walkingSpeed, .walkingStepLength, .walkingAsymmetry, .walkingDoubleSupportPercentage, .stairAscentSpeed, .stairDescentSpeed, .sixMinuteWalkTestDistance:
-            return "add a 10-minute mobility and balance block before your next walk"
+            return "your mobility metrics are \(dev)% off baseline"
         default:
-            return "run one small habit experiment today and compare tomorrow's metric response"
+            return "your \(metric.displayName.lowercased()) is \(dev)% from your baseline"
         }
     }
 

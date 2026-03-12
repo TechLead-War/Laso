@@ -146,7 +146,7 @@ struct PersonalRecordAnalyzer {
                 metric: metric,
                 title: "New \(windowLabel) PR: \(metric.displayName)",
                 summary: "Your \(windowLabel) average \(metric.displayName.lowercased()) hit a personal record: \(String(format: "%.1f", currentAvg)) \(metric.unit). Previous best: \(String(format: "%.1f", bestPrevious)) \(metric.unit) (\(String(format: "%.1f", improvement))% improvement).\(recordAgeNote)",
-                recommendation: "You're at your all-time \(windowLabel) best! Keep the momentum going while ensuring adequate recovery.",
+                recommendation: "New \(windowLabel) record for \(metric.displayName.lowercased()): \(String(format: "%.1f", currentAvg)) \(metric.unit), surpassing previous best of \(String(format: "%.1f", bestPrevious)) \(metric.unit).",
                 severity: .info,
                 trend: .improving,
                 currentValue: currentAvg,
@@ -190,10 +190,10 @@ struct PersonalRecordAnalyzer {
             insights.append(Insight(
                 metric: tracked.metric,
                 title: "\(currentStreak)-Day \(label) Streak",
-                summary: "You've hit \(label.lowercased()) for \(currentStreak) consecutive days. Keep the streak alive!",
+                summary: "You've hit \(label.lowercased()) for \(currentStreak) consecutive days.",
                 recommendation: currentStreak >= 7 ?
-                    "Incredible consistency! This streak is building lasting habits." :
-                    "You're building momentum — aim for 7 days to lock in the habit.",
+                    "\(currentStreak)-day streak of \(label.lowercased()). This is your longest active run." :
+                    "Current streak: \(currentStreak) consecutive days of \(label.lowercased()).",
                 severity: .info,
                 trend: .improving,
                 currentValue: Double(currentStreak),
@@ -235,8 +235,8 @@ struct PersonalRecordAnalyzer {
             insights.append(Insight(
                 metric: tracked.metric,
                 title: "Milestone: \(label)",
-                summary: "You achieved \(label.lowercased()) for the first time this week! This is a significant milestone in your health journey.",
-                recommendation: "Celebrate this achievement! Now work on making it consistent.",
+                summary: "You achieved \(label.lowercased()) for the first time this week.",
+                recommendation: "First recorded instance of \(label.lowercased()) in your data.",
                 severity: .info,
                 trend: .improving,
                 currentValue: threshold,

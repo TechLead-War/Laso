@@ -277,7 +277,7 @@ struct ClinicalIntelligence {
             metric: .respiratoryRate,
             title: "Abnormal Respiratory Rate",
             summary: "Your respiratory rate (\(String(format: "%.1f", latest)) br/min) is classified as \(stage.rawValue). Normal range is 12-20 breaths per minute.",
-            recommendation: "Persistent abnormal respiratory rate warrants medical attention. \(medicalDisclaimer)",
+            recommendation: "If your respiratory rate stays outside normal range, consider speaking with a healthcare provider. \(medicalDisclaimer)",
             severity: stage == .severe ? .critical : .warning,
             trend: slopePerMonth > 0 ? .declining : .stable,
             currentValue: latest,

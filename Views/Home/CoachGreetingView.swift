@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Context-aware greeting header that combines time of day with recovery state
-/// to deliver a prescriptive one-line message alongside date and streak badge.
+/// to deliver a data-driven one-line observation alongside date and streak badge.
 struct CoachGreetingView: View {
     let showSettings: Binding<Bool>
     var streakDays: Int = 0
@@ -13,11 +13,11 @@ struct CoachGreetingView: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                // Context-aware prescription greeting
+                // Context-aware greeting
                 Text(contextGreeting)
                     .font(.title2.weight(.bold))
 
-                // Recovery-aware subtitle
+                // Recovery-aware observation
                 if let prescription = recoveryPrescription {
                     Text(prescription)
                         .font(.subheadline)
@@ -115,43 +115,43 @@ struct CoachGreetingView: View {
         }
     }
 
-    /// Prescriptive subtitle based on recovery state and time of day.
+    /// Data-driven subtitle based on recovery state and time of day.
     /// Returns nil when no recovery data is available (falls back to date-only).
     private var recoveryPrescription: String? {
         guard let state = recoveryState else { return nil }
 
         switch (timeOfDay, state) {
-        // Morning prescriptions
+        // Morning observations
         case (.morning, .green):
-            return "Your body recovered well. Today's a green day."
+            return "Recovery metrics are above your baseline today."
         case (.morning, .yellow):
-            return "Moderate recovery. Take it steady today."
+            return "Recovery metrics are near your baseline."
         case (.morning, .red):
-            return "Your body needs rest. Go easy today."
+            return "Recovery metrics are below your baseline today."
 
-        // Afternoon prescriptions
+        // Afternoon observations
         case (.afternoon, .green):
-            return "Recovery is strong. Great day to push hard."
+            return "Recovery metrics are strong — above baseline this afternoon."
         case (.afternoon, .yellow):
-            return "Moderate recovery. Take it steady today."
+            return "Recovery metrics are sitting near your baseline."
         case (.afternoon, .red):
-            return "Recovery is low. Prioritize rest this afternoon."
+            return "Recovery metrics are below baseline this afternoon."
 
-        // Evening prescriptions
+        // Evening observations
         case (.evening, .green):
-            return "Strong recovery today. Wind down and keep it going."
+            return "Recovery metrics stayed above baseline today."
         case (.evening, .yellow):
-            return "Moderate day. Prioritize sleep tonight."
+            return "Recovery metrics are moderate this evening."
         case (.evening, .red):
-            return "Your body needs rest. Prioritize sleep tonight."
+            return "Recovery metrics are low this evening."
 
         // Late night
         case (.night, .green):
-            return "Good recovery. Get some rest to keep it up."
+            return "Recovery metrics look solid tonight."
         case (.night, .yellow):
-            return "Get to bed soon for better recovery."
+            return "Recovery metrics are moderate tonight."
         case (.night, .red):
-            return "Sleep is the best thing for you right now."
+            return "Recovery metrics are low tonight."
         }
     }
 

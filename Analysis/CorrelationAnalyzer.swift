@@ -211,27 +211,16 @@ struct CorrelationAnalyzer {
         }
     }
 
-    /// Build a specific, actionable recommendation based on the correlation data
+    /// Build a data-driven observation based on the correlation data
     private static func buildCorrelationRecommendation(_ result: HealthCorrelation) -> String {
         let aName = result.metricA.displayName.lowercased()
         let bName = result.metricB.displayName.lowercased()
         let diffPct = String(format: "%.0f", result.effectPercentDiff)
+        let formattedAbove = result.metricB.formatValue(result.avgBAbove)
+        let formattedBelow = result.metricB.formatValue(result.avgBBelow)
+        let lagNote = result.dayOffset > 0 ? " (next-day effect)" : ""
 
-        // Build metric-specific recommendations with concrete numbers
-        switch (result.metricA, result.metricB) {
-        case (.sleepDuration, .heartRateVariability), (.sleepDuration, .restingHeartRate):
-            return "Prioritize 7+ hrs sleep to sustain better \(bName). Your data shows \(diffPct)% improvement in \(bName) on above-average sleep nights."
-        case (.sleepDeep, .heartRateVariability), (.sleepREM, .heartRateVariability):
-            return "Boost \(aName) with a cool bedroom (65-68\u{00B0}F), no alcohol 3hrs before bed, and consistent bedtimes. Each improvement raises your next-day HRV by ~\(diffPct)%."
-        case (.exerciseMinutes, .heartRateVariability), (.exerciseMinutes, .sleepDeep):
-            return "Your exercise directly improves your \(bName) — \(diffPct)% better on active days. Aim for 30+ min of moderate exercise to maximize this effect."
-        case (.mindfulMinutes, .heartRateVariability), (.mindfulMinutes, .restingHeartRate):
-            return "Even 10 min of daily mindfulness raises your \(bName) by \(diffPct)%. Start with a guided breathing session to lock in this habit."
-        case (.steps, .sleepDuration), (.activeCalories, .sleepDeep):
-            return "Higher \(aName) leads to \(diffPct)% better \(bName). A 20-min walk after dinner is the easiest way to boost both activity and sleep."
-        default:
-            return "Improving your \(aName) directly impacts your \(bName) by \(diffPct)%. Focus on \(aName) as a lever to improve \(bName)."
-        }
+        return "Your data shows \(diffPct)% difference in \(bName) on above-average vs below-average \(aName) days: \(formattedAbove) vs \(formattedBelow) \(result.metricB.unit)\(lagNote). Based on \(result.sampleCount) days."
     }
 
     /// Legacy entry point — kept for backward compatibility

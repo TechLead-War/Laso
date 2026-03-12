@@ -13,7 +13,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net; connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://firestore.googleapis.com https://us-central1-laso-health-v1.cloudfunctions.net https://www.facebook.com https://connect.facebook.net; img-src 'self' data: https://www.facebook.com; style-src 'self' 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com;"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://firestore.googleapis.com https://us-central1-laso-health-v1.cloudfunctions.net; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com;"
         }
       ]
     }

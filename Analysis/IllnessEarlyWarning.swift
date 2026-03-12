@@ -483,44 +483,44 @@ struct IllnessEarlyWarning {
         }
     }
 
-    /// Generate specific, actionable recommendations based on the signals present.
+    /// Generate data-driven observations about the signals present.
     private static func generateRecommendation(
         signals: [MetricSignal],
         daysElevated: Int,
         severity: Severity
     ) -> String {
-        var recommendations: [String] = []
+        var observations: [String] = []
 
-        // Core recommendation always present
-        recommendations.append("Your body is showing signs of strain across \(signals.count) metrics over \(daysElevated) consecutive days.")
+        // Core observation always present
+        observations.append("Your body is showing strain across \(signals.count) metrics over \(daysElevated) consecutive days.")
 
-        // Rest priority
+        // Rest priority — state data, not prescription
         if severity >= .warning {
-            recommendations.append("Prioritize rest — consider reducing workout intensity by 50% or taking a full rest day.")
+            observations.append("Your body is showing strain across \(signals.count) metrics simultaneously.")
         } else {
-            recommendations.append("Consider scaling back intense exercise for the next day or two.")
+            observations.append("Multiple metrics shifted from baseline simultaneously.")
         }
 
-        // Hydration — always relevant for immune response
-        recommendations.append("Focus on hydration (aim for at least 8 glasses of water today) and nutrient-dense meals.")
+        // Hydration — state data observation
+        observations.append("Your multi-metric pattern is consistent with early immune response.")
 
-        // Sleep-specific advice if HRV or RHR are signaling
+        // Sleep-specific observation if HRV or RHR are signaling
         let hasCardiacSignal = signals.contains { $0.metric == .restingHeartRate || $0.metric == .heartRateVariability }
         if hasCardiacSignal {
-            recommendations.append("Your cardiac metrics suggest your autonomic nervous system is under load. Aim for 8+ hours of sleep tonight and avoid alcohol or caffeine after noon.")
+            observations.append("Your cardiac metrics indicate autonomic strain.")
         }
 
-        // Activity-specific advice
+        // Activity-specific observation
         let hasActivityDecline = signals.contains { $0.metric == .steps }
         if hasActivityDecline {
-            recommendations.append("Light movement like a short walk is fine, but avoid high-intensity training until your metrics return to baseline.")
+            observations.append("Your activity metrics haven't returned to baseline yet.")
         }
 
-        // Critical-level escalation
+        // Critical-level: state the severity of the data pattern
         if severity == .critical {
-            recommendations.append("If you notice any symptoms — fatigue, sore throat, congestion — give yourself permission to fully rest. This is not the time to push through.")
+            observations.append("This is a sustained multi-metric deviation — \(signals.count) signals active for \(daysElevated) consecutive days.")
         }
 
-        return recommendations.joined(separator: " ")
+        return observations.joined(separator: " ")
     }
 }

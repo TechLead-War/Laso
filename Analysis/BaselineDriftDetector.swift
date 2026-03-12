@@ -134,8 +134,8 @@ struct BaselineDriftDetector {
             title: "\(metric.displayName) Baseline Shifted Over \(drift.label.capitalized)",
             summary: "Your \(metric.displayName.lowercased()) baseline has \(direction) \(absDrift)% over the last \(drift.label) (\(oldFormatted) \u{2192} \(newFormatted) \(metric.unit)).\(coDriftNote)",
             recommendation: improving
-                ? "Your \(metric.displayName.lowercased()) baseline improved \(absDrift)% over \(drift.label) \u{2014} this reflects genuine long-term progress."
-                : "Your \(metric.displayName.lowercased()) has been gradually worsening over \(drift.label). Reverse this with daily improvements \u{2014} even small changes compound over time.",
+                ? "\(metric.displayName) baseline shifted \(direction) \(absDrift)% over \(drift.label): \(oldFormatted) \u{2192} \(newFormatted) \(metric.unit)."
+                : "\(metric.displayName) baseline shifted \(direction) \(absDrift)% over \(drift.label): \(oldFormatted) \u{2192} \(newFormatted) \(metric.unit).",
             severity: improving ? .info : .warning,
             trend: improving ? .improving : .declining,
             currentValue: current.mean,

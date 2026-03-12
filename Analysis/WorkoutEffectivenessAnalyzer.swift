@@ -65,8 +65,8 @@ struct WorkoutEffectivenessAnalyzer {
             title: "Workout Consistency",
             summary: "\(Int(consistencyScore))% of the last 4 weeks had 3+ workout days (avg \(String(format: "%.1f", weeklyAvg))/week). Breakdown: \(weekBreakdown).",
             recommendation: consistencyScore >= 75 ?
-                "Excellent consistency at \(String(format: "%.1f", weeklyAvg)) sessions/week. Maintain this routine for long-term fitness gains." :
-                "Aim for at least 3 workout days per week. Schedule workouts as recurring calendar events at the same time each day.",
+                "\(Int(consistencyScore))% of weeks hit 3+ sessions at \(String(format: "%.1f", weeklyAvg)) avg/week. Breakdown: \(weekBreakdown)." :
+                "Your weekly average is \(String(format: "%.1f", weeklyAvg)) sessions — \(weeksWithTarget) of the last 4 weeks reached 3+ workout days. Breakdown: \(weekBreakdown).",
             severity: severity,
             trend: trend,
             currentValue: consistencyScore,
@@ -112,8 +112,8 @@ struct WorkoutEffectivenessAnalyzer {
             title: "VO2 Max Response",
             summary: "Your VO2 Max \(change > 0 ? "improved" : "decreased") \(String(format: "%.1f", abs(change)))% over the last 30 days (\(String(format: "%.1f", olderAvg)) \u{2192} \(String(format: "%.1f", recentAvg)) \(HealthMetric.vo2Max.unit)).\(weeklyProgression)",
             recommendation: change > 0 ?
-                "VO2 Max is up \(String(format: "%.1f", abs(change)))% \u{2014} your cardiovascular fitness is responding to training. Maintain current intensity and add 1 zone 2 session per week for continued gains." :
-                "VO2 Max dropped \(String(format: "%.1f", abs(change)))%. Add 20 min of zone 2 cardio (conversational pace) 3x per week to reverse this. Consistency matters more than intensity.",
+                "VO2 Max trending up \(String(format: "%.1f", abs(change)))% over 30 days (\(String(format: "%.1f", olderAvg)) \u{2192} \(String(format: "%.1f", recentAvg)) \(HealthMetric.vo2Max.unit)).\(weeklyProgression)" :
+                "VO2 Max declined \(String(format: "%.1f", abs(change)))% over 30 days (\(String(format: "%.1f", olderAvg)) \u{2192} \(String(format: "%.1f", recentAvg)) \(HealthMetric.vo2Max.unit)).\(weeklyProgression)",
             severity: abs(change) > 5 ? .warning : .info,
             trend: trend,
             currentValue: recentAvg,
@@ -150,8 +150,8 @@ struct WorkoutEffectivenessAnalyzer {
             title: "Calorie Efficiency",
             summary: "You're burning \(String(format: "%.1f", efficiency7d)) kcal/min this week vs \(String(format: "%.1f", efficiency30d)) kcal/min over 30 days (\(change > 0 ? "+" : "")\(String(format: "%.0f", change))%).",
             recommendation: change > 0 ?
-                "Your workout intensity is increasing — great for fitness gains. Monitor recovery to avoid overtraining." :
-                "Try increasing workout intensity with intervals or resistance training to boost calorie burn.",
+                "Calorie efficiency up \(String(format: "%.0f", change))% this week — burning \(String(format: "%.1f", efficiency7d)) kcal/min vs your 30-day average of \(String(format: "%.1f", efficiency30d)) kcal/min." :
+                "Calorie efficiency down \(String(format: "%.0f", abs(change)))% this week — \(String(format: "%.1f", efficiency7d)) kcal/min vs your 30-day average of \(String(format: "%.1f", efficiency30d)) kcal/min.",
             severity: .info,
             trend: trend,
             currentValue: efficiency7d,

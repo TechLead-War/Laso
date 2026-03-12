@@ -237,89 +237,91 @@ struct CycleInsightAnalyzer {
         }
     }
 
-    // MARK: - Phase-Specific Recommendations
+    // MARK: - Phase-Specific Data Observations
 
     private static func menstrualRecommendation(metric: HealthMetric, percentDiff: Double) -> String {
+        let changeStr = String(format: "%.0f%%", abs(percentDiff))
+        let direction = percentDiff > 0 ? "higher" : "lower"
         switch metric {
         case .heartRateVariability:
-            return "Light exercise and extra rest support recovery when HRV is lower during menstruation. Focus on gentle movement like walking or yoga."
+            return "Your HRV typically runs \(changeStr) \(direction) during menstruation compared to your cycle average."
         case .restingHeartRate:
-            if percentDiff > 0 {
-                return "A higher resting heart rate during menstruation is common. Prioritize hydration, reduce caffeine, and allow more recovery time."
-            }
-            return "Your resting heart rate stays lower during menstruation, suggesting good cardiovascular adaptation. Maintain your current recovery routine."
+            return "Your resting heart rate runs \(changeStr) \(direction) during menstruation compared to your cycle average."
         case .sleepDuration:
-            return "If sleep dips during your period, try going to bed 30 minutes earlier and keeping your room cool. Magnesium-rich foods may help."
+            return "Your sleep duration is \(changeStr) \(direction) during menstruation compared to your cycle average."
         case .sleepDeep:
-            return "Deep sleep can be affected by menstrual discomfort. A consistent bedtime routine and avoiding screens before bed can help protect sleep quality."
+            return "Your deep sleep is \(changeStr) \(direction) during menstruation compared to your cycle average."
         case .activeCalories:
-            return "Lower calorie burn during menstruation is expected. Focus on gentle movement and listen to your body rather than pushing for intensity."
+            return "Your active calorie burn is \(changeStr) \(direction) during menstruation compared to your cycle average."
         case .exerciseMinutes:
-            return "Light exercise like walking, stretching, or yoga during menstruation supports recovery without overloading your system."
+            return "Your exercise minutes are \(changeStr) \(direction) during menstruation compared to your cycle average."
         case .steps:
-            return "Reduced activity during menstruation is normal. Short walks throughout the day can maintain circulation without adding fatigue."
+            return "Your step count is \(changeStr) \(direction) during menstruation compared to your cycle average."
         default:
-            return "During menstruation, prioritize recovery and listen to your body. Light activity and extra rest support your cycle."
+            return "Your \(metric.displayName) is \(changeStr) \(direction) during menstruation compared to your cycle average."
         }
     }
 
     private static func follicularRecommendation(metric: HealthMetric, percentDiff: Double) -> String {
+        let changeStr = String(format: "%.0f%%", abs(percentDiff))
+        let direction = percentDiff > 0 ? "higher" : "lower"
         switch metric {
         case .heartRateVariability:
-            return "Rising HRV in the follicular phase signals readiness. This is a great window for progressive training and challenging workouts."
+            return "Your HRV typically peaks during your follicular phase — \(changeStr) \(direction) than your cycle average."
         case .restingHeartRate:
-            return "Your cardiovascular system is well-recovered in this phase. Take advantage for higher-intensity sessions."
+            return "Your resting heart rate is \(changeStr) \(direction) during your follicular phase compared to your cycle average."
         case .sleepDuration, .sleepDeep:
-            return "Sleep quality often improves in the follicular phase. Use this energy boost for focused training and skill work."
+            return "Your \(metric.displayName.lowercased()) is \(changeStr) \(direction) during your follicular phase compared to your cycle average."
         case .activeCalories, .exerciseMinutes:
-            return "Energy peaks during your follicular phase. Great time for intense training, progressive overload, and trying new activities."
+            return "Your \(metric.displayName.lowercased()) is \(changeStr) \(direction) during your follicular phase — your highest-output phase in your data."
         case .steps:
-            return "Higher natural activity in this phase supports fitness goals. Consider adding extra walks or active commuting."
+            return "Your step count is \(changeStr) \(direction) during your follicular phase compared to your cycle average."
         default:
-            return "The follicular phase is your performance window. Schedule demanding workouts and high-focus tasks here."
+            return "Your \(metric.displayName) is \(changeStr) \(direction) during your follicular phase compared to your cycle average."
         }
     }
 
     private static func ovulationRecommendation(metric: HealthMetric, percentDiff: Double) -> String {
+        let changeStr = String(format: "%.0f%%", abs(percentDiff))
+        let direction = percentDiff > 0 ? "higher" : "lower"
         switch metric {
         case .heartRateVariability:
-            return "HRV can shift around ovulation. Monitor readiness and adjust intensity based on how you feel day to day."
+            return "Your HRV shifts \(changeStr) \(direction) around ovulation compared to your cycle average."
         case .restingHeartRate:
-            return "Heart rate changes near ovulation are normal hormonal responses. Stay hydrated and maintain consistent sleep timing."
+            return "Your resting heart rate is \(changeStr) \(direction) around ovulation compared to your cycle average."
         case .activeCalories:
-            return "You burn more calories around ovulation. Leverage this for challenging workouts and ensure adequate fueling."
+            return "Your active calorie burn is \(changeStr) \(direction) around ovulation compared to your cycle average."
         case .exerciseMinutes:
-            return "Peak energy around ovulation supports longer training sessions. Schedule your key workouts in this window."
+            return "Your exercise minutes are \(changeStr) \(direction) around ovulation compared to your cycle average."
         case .steps:
-            return "Higher natural movement around ovulation is common. Channel this energy into purposeful activity."
+            return "Your step count is \(changeStr) \(direction) around ovulation compared to your cycle average."
         case .sleepDuration, .sleepDeep:
-            return "Protect sleep quality around ovulation by maintaining your bedtime routine, even when energy feels high."
+            return "Your \(metric.displayName.lowercased()) is \(changeStr) \(direction) around ovulation compared to your cycle average."
         default:
-            return "Ovulation often brings peak performance capacity. Schedule important workouts and protect recovery with good sleep."
+            return "Your \(metric.displayName) is \(changeStr) \(direction) around ovulation compared to your cycle average."
         }
     }
 
     private static func lutealRecommendation(metric: HealthMetric, percentDiff: Double) -> String {
+        let changeStr = String(format: "%.0f%%", abs(percentDiff))
+        let direction = percentDiff > 0 ? "higher" : "lower"
         switch metric {
         case .heartRateVariability:
-            return "Lower HRV in the luteal phase is a normal progesterone response. Favor moderate intensity and prioritize recovery."
+            return "Your HRV runs \(changeStr) \(direction) in your luteal phase compared to your cycle average."
         case .restingHeartRate:
-            if percentDiff > 0 {
-                return "Elevated resting heart rate in the luteal phase is expected. Reduce training intensity and focus on stress management."
-            }
-            return "Your resting heart rate stays stable in the luteal phase, which is a positive sign. Keep up your recovery practices."
+            return "Your resting heart rate is \(changeStr) \(direction) in your luteal phase compared to your cycle average."
         case .sleepDuration:
-            return "Sleep quality can drop in your luteal phase. Consider earlier bedtimes, limit evening screen time, and try calming activities before sleep."
+            return "Your sleep duration is \(changeStr) \(direction) in your luteal phase compared to your cycle average."
         case .sleepDeep:
-            return "Deep sleep often decreases in the luteal phase. A cool sleeping environment and consistent wind-down routine can help preserve sleep quality."
+            return "Your deep sleep is \(changeStr) \(direction) in your luteal phase compared to your cycle average."
         case .activeCalories:
-            return "Your basal metabolic rate increases slightly in the luteal phase. Ensure adequate nutrition and avoid extreme calorie restriction."
+            return "Your active calorie burn is \(changeStr) \(direction) in your luteal phase compared to your cycle average."
         case .exerciseMinutes:
-            return "Favor steady-state cardio and moderate strength work over high-intensity intervals in the luteal phase. Your body recovers more slowly."
+            return "Your exercise minutes are \(changeStr) \(direction) in your luteal phase compared to your cycle average."
         case .steps:
-            return "If daily activity drops in the luteal phase, short walks after meals can maintain movement without adding stress."
+            return "Your step count is \(changeStr) \(direction) in your luteal phase compared to your cycle average."
         default:
-            return "The luteal phase favors moderate activity, earlier bedtimes, and steady routines. Adjust expectations and listen to your body."
+            return "Your \(metric.displayName) is \(changeStr) \(direction) in your luteal phase compared to your cycle average."
         }
     }
 }

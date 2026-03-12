@@ -351,9 +351,36 @@ struct SettingsView: View {
                         Text("Health Data On-Device")
                             .foregroundStyle(.secondary)
                     }
+
+                    Link(destination: URL(string: AppSecrets.URLs.privacyPolicy)!) {
+                        HStack {
+                            Label("Privacy Policy", systemImage: "hand.raised.fill")
+                            Spacer()
+                            Image(systemName: "arrow.up.right")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    Link(destination: URL(string: AppSecrets.URLs.termsOfUse)!) {
+                        HStack {
+                            Label("Terms of Use", systemImage: "doc.text.fill")
+                            Spacer()
+                            Image(systemName: "arrow.up.right")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 }
                 .onAppear { aboutTracker.appeared() }
                 .onDisappear { aboutTracker.disappeared() }
+
+                // Medical Disclaimer
+                Section {
+                    Text("Laso provides health insights for wellness and informational purposes only. It is not a medical device and does not provide medical diagnosis or treatment. Always consult a qualified healthcare provider before making health-related decisions.")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
             }
             .accessibilityIdentifier("screen.settings")
             .navigationTitle("Settings")

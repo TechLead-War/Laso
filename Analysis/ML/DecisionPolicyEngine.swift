@@ -520,98 +520,140 @@ final class DecisionPolicyEngine {
         let title: String
         switch candidate.actionType {
         case .sleepEarlier:
-            title = "Get to bed 30 minutes earlier tonight" + deviationContext()
+            if let current = currentValue, let bl = baseline, bl.mean > 0 {
+                let deficit = bl.mean - current
+                if deficit > 0 {
+                    title = "Your sleep is averaging \(metric.formatValue(current))h — \(String(format: "%.1f", deficit))h below your \(metric.formatValue(bl.mean))h baseline"
+                } else {
+                    title = "Your sleep metrics shifted from baseline" + deviationContext()
+                }
+            } else {
+                title = "Your sleep metrics shifted from baseline" + deviationContext()
+            }
         case .sleepLater:
-            title = "Allow yourself to sleep in tomorrow"
+            if let current = currentValue, let bl = baseline, bl.mean > 0 {
+                title = "Your sleep has been averaging \(metric.formatValue(current))h vs your \(metric.formatValue(bl.mean))h baseline"
+            } else {
+                title = "Your sleep metrics suggest a deficit"
+            }
         case .extendSleep:
             if let bl = baseline, bl.mean > 0 {
                 let targetHrs = bl.mean + 0.5
                 if let current = currentValue, current < bl.mean {
-                    title = "Aim for \(String(format: "%.1f", targetHrs))h sleep tonight — you've been averaging \(metric.formatValue(current))h"
+                    title = "Your sleep is averaging \(metric.formatValue(current))h — your baseline is \(String(format: "%.1f", bl.mean))h"
                 } else {
-                    title = "Aim for \(String(format: "%.1f", targetHrs)) hours of sleep tonight"
+                    title = "Your sleep baseline is \(String(format: "%.1f", bl.mean))h — you're currently on track"
                 }
             } else {
-                title = "Extend your sleep by 30 minutes tonight"
+                title = "Your sleep metrics are below baseline"
             }
         case .reduceScreenTime:
-            title = "Cut screen time 1 hour before bed" + deviationContext()
+            if let current = currentValue, let bl = baseline, bl.mean > 0 {
+                let pct = Int(abs(bl.deviationPercent(for: current)))
+                title = "Your \(metric.displayName.lowercased()) is \(pct)% off baseline" + deviationContext()
+            } else {
+                title = "Your evening metrics shifted from baseline" + deviationContext()
+            }
         case .reduceEvening:
-            title = "Wind down your evening routine earlier"
+            if let current = currentValue, let bl = baseline, bl.mean > 0 {
+                title = "Your evening \(metric.displayName.lowercased()) is at \(metric.formatValue(current)) \(metric.unit) vs \(metric.formatValue(bl.mean)) baseline"
+            } else {
+                title = "Your evening metrics are off baseline"
+            }
         case .activeRecovery:
             if let current = currentValue, let bl = baseline {
                 let pct = Int(abs(bl.deviationPercent(for: current)))
                 if pct >= 15 {
-                    title = "Do 15 minutes of light movement — your \(metric.displayName.lowercased()) needs recovery (\(pct)% off baseline)"
+                    title = "Your \(metric.displayName.lowercased()) is \(pct)% off baseline — recovery mode"
                 } else {
-                    title = "Do 15 minutes of light movement today"
+                    title = "Your \(metric.displayName.lowercased()) is near baseline — light active recovery zone"
                 }
             } else {
-                title = "Do 15 minutes of light movement today"
+                title = "Your recovery metrics suggest active recovery"
             }
         case .intensifyExercise:
-            title = "Push harder in today's workout"
+            if let current = currentValue, let bl = baseline, bl.mean > 0 {
+                title = "Your \(metric.displayName.lowercased()) is \(Int(abs(bl.deviationPercent(for: current))))% above baseline — recovery metrics are strong"
+            } else {
+                title = "Recovery metrics are above baseline — capacity is high"
+            }
         case .reduceExercise:
             if let current = currentValue, let bl = baseline, bl.mean > 0 {
-                title = "Take a recovery day — your \(metric.displayName.lowercased()) is \(Int(abs(bl.deviationPercent(for: current))))% off baseline"
+                title = "Your \(metric.displayName.lowercased()) is \(Int(abs(bl.deviationPercent(for: current))))% off baseline (\(metric.formatValue(current)) vs \(metric.formatValue(bl.mean)) \(metric.unit))"
             } else {
-                title = "Take a recovery day from intense exercise"
+                title = "Your recovery metrics are below baseline"
             }
         case .shiftCaffeineTiming:
-            title = "Have your last caffeine before noon today"
+            if let current = currentValue, let bl = baseline, bl.mean > 0 {
+                title = "Your \(metric.displayName.lowercased()) is \(metric.formatValue(current)) \(metric.unit) — baseline is \(metric.formatValue(bl.mean))"
+            } else {
+                title = "Your sleep-related metrics shifted from baseline"
+            }
         case .reduceCaffeine:
             if let current = currentValue, let bl = baseline {
-                title = "Cut caffeine from \(metric.formatValue(current)) to ~\(metric.formatValue(bl.mean * 0.5)) \(metric.unit) today"
+                title = "Your \(metric.displayName.lowercased()) is at \(metric.formatValue(current)) \(metric.unit) — baseline is \(metric.formatValue(bl.mean))"
             } else {
-                title = "Cut caffeine intake by half today"
+                title = "Your caffeine-related metrics are off baseline"
             }
         case .breathingSession:
             if let current = currentValue, let bl = baseline, metric == .heartRateVariability {
                 let diff = Int(bl.mean - current)
                 if diff > 5 {
-                    title = "Do a 5-minute breathing exercise — your HRV is \(diff) \(metric.unit) below baseline"
+                    title = "Your HRV is \(diff) \(metric.unit) below baseline (\(metric.formatValue(current)) vs \(metric.formatValue(bl.mean)))"
                 } else {
-                    title = "Do a 5-minute breathing exercise now"
+                    title = "Your HRV is near baseline at \(metric.formatValue(current)) \(metric.unit)"
                 }
             } else {
-                title = "Do a 5-minute breathing exercise now"
+                title = "Your autonomic metrics are shifted from baseline"
             }
         case .meditation:
-            title = "Take 10 minutes for meditation today"
-        case .adjustMealTiming:
-            title = "Finish eating 3 hours before bed"
-        case .hydration:
-            if let bl = baseline {
-                let target = Int(bl.mean + 250)
-                title = "Drink \(target) mL of water today"
+            if let current = currentValue, let bl = baseline, bl.mean > 0 {
+                title = "Your stress-related metrics are \(Int(abs(bl.deviationPercent(for: current))))% off baseline"
             } else {
-                title = "Drink an extra glass of water every 2 hours"
+                title = "Your stress-related metrics shifted from baseline"
+            }
+        case .adjustMealTiming:
+            if let current = currentValue, let bl = baseline, bl.mean > 0 {
+                title = "Your \(metric.displayName.lowercased()) is at \(metric.formatValue(current)) \(metric.unit) — baseline is \(metric.formatValue(bl.mean))"
+            } else {
+                title = "Your sleep metrics suggest a digestion-related pattern"
+            }
+        case .hydration:
+            if let bl = baseline, let current = currentValue {
+                title = "Your hydration-related \(metric.displayName.lowercased()) is at \(metric.formatValue(current)) — baseline is \(metric.formatValue(bl.mean)) \(metric.unit)"
+            } else if let bl = baseline {
+                title = "Your hydration baseline is \(metric.formatValue(bl.mean)) \(metric.unit)"
+            } else {
+                title = "Your hydration-related metrics are off baseline"
             }
         case .increaseSteps:
             if let bl = baseline {
-                let target = Int(bl.mean * 1.1)
-                let rounded = (target / 500) * 500
+                let rounded = (Int(bl.mean) / 500) * 500
                 if let current = currentValue {
                     let gap = rounded - Int(current)
                     if gap > 1000 {
-                        title = "Walk \(Self.formatted(rounded)) steps today — \(Self.formatted(gap)) more than yesterday"
+                        title = "Your steps are at \(Self.formatted(Int(current))) — \(Self.formatted(gap)) below your \(Self.formatted(rounded)) baseline"
                     } else {
-                        title = "Walk \(Self.formatted(rounded)) steps today"
+                        title = "Your steps are near your \(Self.formatted(rounded)) baseline"
                     }
                 } else {
-                    title = "Walk \(Self.formatted(rounded)) steps today"
+                    title = "Your step baseline is \(Self.formatted(rounded)) per day"
                 }
             } else {
-                title = "Take an extra 20-minute walk today"
+                title = "Your activity metrics are below baseline"
             }
         case .reduceSteps:
             if let current = currentValue, let bl = baseline, current > bl.mean * 1.3 {
-                title = "Ease up today — your activity (\(metric.formatValue(current))) is \(Int(bl.deviationPercent(for: current)))% above your baseline"
+                title = "Your activity is at \(metric.formatValue(current)) — \(Int(bl.deviationPercent(for: current)))% above your \(metric.formatValue(bl.mean)) baseline"
             } else {
-                title = "Reduce activity and let your body recover"
+                title = "Your activity metrics are elevated above baseline"
             }
         case .napRecommendation:
-            title = "Take a 20-minute nap between 1-3 PM"
+            if let current = currentValue, let bl = baseline, bl.mean > 0 {
+                title = "Your sleep deficit is \(metric.formatValue(abs(bl.mean - current)))h below your \(metric.formatValue(bl.mean))h baseline"
+            } else {
+                title = "Your sleep metrics indicate a deficit"
+            }
         }
 
         return title + effectivenessSuffix
@@ -1645,50 +1687,50 @@ final class DecisionPolicyEngine {
 
     private func excellentDayHeadline(primaryCandidate: InterventionCandidate) -> String {
         let options = [
-            "Push hard today -- your body is fully recovered",
-            "Your recovery is excellent -- make today count",
-            "Green light -- your body is ready for a big effort",
-            "You recovered strong -- go all out today"
+            "Recovery metrics are well above baseline",
+            "All key metrics recovered -- above baseline across the board",
+            "Full recovery -- metrics are in the green",
+            "Recovery metrics at their strongest this week"
         ]
         return selectHeadline(from: options, candidate: primaryCandidate)
     }
 
     private func goodDayHeadline(primaryCandidate: InterventionCandidate) -> String {
         let options = [
-            "Solid recovery -- you have room to push today",
-            "Your body bounced back well -- train with confidence",
-            "Good shape today -- build on your momentum",
-            "Recovery looks strong -- keep the intensity up"
+            "Recovery metrics are above baseline",
+            "Metrics bounced back -- sitting above baseline",
+            "Good recovery signal -- most metrics above baseline",
+            "Recovery metrics trending positive"
         ]
         return selectHeadline(from: options, candidate: primaryCandidate)
     }
 
     private func moderateDayHeadline(primaryCandidate: InterventionCandidate) -> String {
         let options = [
-            "Your body is recovering -- keep it moderate today",
-            "Stay steady today -- save the big effort for tomorrow",
-            "Moderate day -- listen to your body and pace yourself",
-            "Not fully recovered yet -- a moderate effort is ideal"
+            "Recovery metrics are near baseline",
+            "Metrics are mixed -- some above, some below baseline",
+            "Moderate recovery -- metrics hovering around baseline",
+            "Recovery metrics are partially restored"
         ]
         return selectHeadline(from: options, candidate: primaryCandidate)
     }
 
     private func poorDayHeadline(primaryCandidate: InterventionCandidate) -> String {
         let options = [
-            "Take it easy -- prioritize sleep tonight",
-            "Your body needs rest -- scale back and recover",
-            "Recovery is low -- protect your energy today",
-            "Ease off today -- your body is asking for a break"
+            "Recovery metrics are below baseline",
+            "Multiple metrics sitting below baseline",
+            "Recovery is low -- metrics are off baseline",
+            "Several metrics are below your normal range"
         ]
         return selectHeadline(from: options, candidate: primaryCandidate)
     }
 
     private func depletedDayHeadline(primaryCandidate: InterventionCandidate) -> String {
         let options = [
-            "Rest day -- your body is running on empty",
-            "Stop and recharge -- pushing now will set you back",
-            "Your body needs a full reset -- make rest the priority",
-            "Low reserves -- focus on sleep and recovery only"
+            "Recovery metrics are significantly below baseline",
+            "Metrics show deep deficit -- well below baseline",
+            "Multiple metrics at their lowest this week",
+            "Low recovery signal across all key metrics"
         ]
         return selectHeadline(from: options, candidate: primaryCandidate)
     }

@@ -148,7 +148,7 @@ struct SafetyTriageEngine {
                     currentValue: currentValue,
                     baselineValue: baseline,
                     reason: "Resting heart rate is \(formattedValue(currentValue, metric: metric)), which is severely elevated.",
-                    action: "Contact a doctor now. If you feel chest pain, shortness of breath, dizziness, or faintness, seek emergency care immediately."
+                    action: "Consider contacting a healthcare provider. If you experience chest pain, shortness of breath, or faintness, please get checked promptly."
                 )
             }
             if let baseline {
@@ -160,7 +160,7 @@ struct SafetyTriageEngine {
                         currentValue: currentValue,
                         baselineValue: baseline,
                         reason: "Resting heart rate jumped \(String(format: "%.0f", rise))% above your usual baseline.",
-                        action: "Contact a doctor promptly and repeat the reading at rest."
+                        action: "Repeat the reading at rest. If it stays elevated, consider speaking with a healthcare provider."
                     )
                 }
                 if rise >= 30, currentValue >= 95 {
@@ -170,7 +170,7 @@ struct SafetyTriageEngine {
                         currentValue: currentValue,
                         baselineValue: baseline,
                         reason: "Resting heart rate is \(String(format: "%.0f", rise))% above your baseline.",
-                        action: "Recheck after 10-15 minutes of rest. If this persists, contact your clinician."
+                        action: "Recheck after 10-15 minutes of rest. If it persists, you may want to speak with a healthcare provider."
                     )
                 }
             }
@@ -181,7 +181,7 @@ struct SafetyTriageEngine {
                     currentValue: currentValue,
                     baselineValue: baseline,
                     reason: "Resting heart rate is \(formattedValue(currentValue, metric: metric)), above the typical resting range.",
-                    action: "Repeat the reading while fully at rest. Contact your clinician if this remains elevated."
+                    action: "Repeat the reading while fully at rest. If it stays elevated, consider speaking with a healthcare provider."
                 )
             }
 
@@ -193,7 +193,7 @@ struct SafetyTriageEngine {
                     currentValue: currentValue,
                     baselineValue: baseline,
                     reason: "Heart rate is \(formattedValue(currentValue, metric: metric)), a high-risk value when not exercising.",
-                    action: "Contact a doctor now. If symptoms are present, seek emergency care."
+                    action: "Consider contacting a healthcare provider. If you have symptoms, please get checked promptly."
                 )
             }
             if currentValue >= 120 || currentValue <= 45 {
@@ -203,7 +203,7 @@ struct SafetyTriageEngine {
                     currentValue: currentValue,
                     baselineValue: baseline,
                     reason: "Heart rate is \(formattedValue(currentValue, metric: metric)), outside your usual safe zone.",
-                    action: "Recheck after resting. If this value persists or symptoms develop, contact your clinician."
+                    action: "Recheck after resting. If this persists or you develop symptoms, consider speaking with a healthcare provider."
                 )
             }
 
@@ -215,7 +215,7 @@ struct SafetyTriageEngine {
                     currentValue: currentValue,
                     baselineValue: baseline,
                     reason: "Blood oxygen is \(formattedValue(currentValue, metric: metric)), below the 90% critical threshold.",
-                    action: "Contact a doctor now. If you have shortness of breath, confusion, or chest pain, seek emergency care immediately."
+                    action: "Consider contacting a healthcare provider. If you experience shortness of breath, confusion, or chest pain, please get checked promptly."
                 )
             }
             if currentValue < 93 {
@@ -225,7 +225,7 @@ struct SafetyTriageEngine {
                     currentValue: currentValue,
                     baselineValue: baseline,
                     reason: "Blood oxygen is \(formattedValue(currentValue, metric: metric)), below normal range.",
-                    action: "Repeat the reading now and monitor closely. Contact your clinician if readings stay low."
+                    action: "Repeat the reading and monitor closely. If readings stay low, consider speaking with a healthcare provider."
                 )
             }
 
@@ -237,7 +237,7 @@ struct SafetyTriageEngine {
                     currentValue: currentValue,
                     baselineValue: baseline,
                     reason: "Respiratory rate is \(formattedValue(currentValue, metric: metric)), which can indicate acute distress.",
-                    action: "Seek urgent medical care now, especially if breathing feels difficult."
+                    action: "If breathing feels difficult, consider contacting a healthcare provider promptly."
                 )
             }
             if currentValue >= 22 || currentValue <= 10 {
@@ -247,7 +247,7 @@ struct SafetyTriageEngine {
                     currentValue: currentValue,
                     baselineValue: baseline,
                     reason: "Respiratory rate is \(formattedValue(currentValue, metric: metric)), outside normal resting range.",
-                    action: "Recheck in 15 minutes while resting. Contact your clinician if this persists."
+                    action: "Recheck in 15 minutes while resting. If this persists, consider speaking with a healthcare provider."
                 )
             }
 
@@ -259,7 +259,7 @@ struct SafetyTriageEngine {
                     currentValue: currentValue,
                     baselineValue: baseline,
                     reason: "Systolic blood pressure is \(formattedValue(currentValue, metric: metric)), in crisis range.",
-                    action: "Seek urgent care now. If severe symptoms are present, call emergency services."
+                    action: "If you have symptoms, consider contacting a healthcare provider promptly."
                 )
             }
             if currentValue >= 140 {
@@ -269,7 +269,7 @@ struct SafetyTriageEngine {
                     currentValue: currentValue,
                     baselineValue: baseline,
                     reason: "Systolic blood pressure is \(formattedValue(currentValue, metric: metric)), above normal.",
-                    action: "Recheck after resting for 5 minutes. Contact your clinician if repeated values stay high."
+                    action: "Recheck after resting for 5 minutes. If repeated values stay high, consider speaking with a healthcare provider."
                 )
             }
 
@@ -281,7 +281,7 @@ struct SafetyTriageEngine {
                     currentValue: currentValue,
                     baselineValue: baseline,
                     reason: "Diastolic blood pressure is \(formattedValue(currentValue, metric: metric)), in crisis range.",
-                    action: "Seek urgent care now. If severe symptoms are present, call emergency services."
+                    action: "If you have symptoms, consider contacting a healthcare provider promptly."
                 )
             }
             if currentValue >= 90 {
@@ -291,7 +291,7 @@ struct SafetyTriageEngine {
                     currentValue: currentValue,
                     baselineValue: baseline,
                     reason: "Diastolic blood pressure is \(formattedValue(currentValue, metric: metric)), above normal.",
-                    action: "Recheck after resting for 5 minutes. Contact your clinician if repeated values stay high."
+                    action: "Recheck after resting for 5 minutes. If repeated values stay high, consider speaking with a healthcare provider."
                 )
             }
 
@@ -303,7 +303,7 @@ struct SafetyTriageEngine {
                     currentValue: currentValue,
                     baselineValue: baseline,
                     reason: "Body temperature is \(formattedValue(currentValue, metric: metric)), a high-risk reading.",
-                    action: "Contact a doctor now for guidance. Seek emergency care for severe symptoms."
+                    action: "Consider contacting a healthcare provider. If you have severe symptoms, please get checked promptly."
                 )
             }
             if currentValue >= 37.8 || currentValue <= 35.5 {
@@ -313,7 +313,7 @@ struct SafetyTriageEngine {
                     currentValue: currentValue,
                     baselineValue: baseline,
                     reason: "Body temperature is \(formattedValue(currentValue, metric: metric)), outside your expected range.",
-                    action: "Hydrate, rest, and recheck in 1-2 hours. Contact your clinician if this persists."
+                    action: "Hydrate, rest, and recheck in 1-2 hours. If this persists, consider speaking with a healthcare provider."
                 )
             }
 
@@ -325,7 +325,7 @@ struct SafetyTriageEngine {
                     currentValue: currentValue,
                     baselineValue: baseline,
                     reason: "AFib burden is \(formattedValue(currentValue, metric: metric)), a high-risk level.",
-                    action: "Contact your cardiologist now for urgent guidance."
+                    action: "Consider contacting your cardiologist to discuss these readings."
                 )
             }
             if currentValue >= 1 {
@@ -335,7 +335,7 @@ struct SafetyTriageEngine {
                     currentValue: currentValue,
                     baselineValue: baseline,
                     reason: "AFib burden is \(formattedValue(currentValue, metric: metric)), above normal target.",
-                    action: "Track repeat readings and contact your cardiology team if this continues."
+                    action: "Track repeat readings. If this continues, consider sharing the data with your cardiologist."
                 )
             }
 
@@ -352,7 +352,7 @@ struct SafetyTriageEngine {
                     currentValue: currentValue,
                     baselineValue: baseline,
                     reason: "\(metric.displayName) moved \(String(format: "%.0f", deviation))% away from your baseline.",
-                    action: "Recheck this metric soon. If values remain far from baseline or you feel unwell, contact your clinician."
+                    action: "Recheck this metric soon. If values remain far from baseline or you feel unwell, consider speaking with a healthcare provider."
                 )
             }
         }
