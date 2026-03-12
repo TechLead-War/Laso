@@ -155,10 +155,14 @@ final class MLOrchestrator {
         anomalyCounts: [Date: Int],
         focusCategories: Set<HealthCategory> = []
     ) async {
-        // Bail out entirely if device is critically overheated
-        if ProcessInfo.processInfo.thermalState == .critical {
+        // Bail out entirely if device is already under thermal pressure
+        let thermalState = ProcessInfo.processInfo.thermalState
+        if thermalState == .critical {
             logger.warning("Skipping ML analysis: device thermal state is critical")
             return
+        }
+        if thermalState == .serious {
+            logger.info("ML analysis starting under serious thermal state — will throttle between components")
         }
 
         isRunning = true
@@ -215,7 +219,7 @@ final class MLOrchestrator {
             baselines: baselines
         )
 
-        if shouldStopForThermal(after: "CompositeFeatureEngine") {
+        if await shouldStopForThermal(after: "CompositeFeatureEngine") {
             collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
@@ -229,24 +233,26 @@ final class MLOrchestrator {
             }
         }
 
-        if shouldStopForThermal(after: "TimeSeriesForecaster") {
+        if await shouldStopForThermal(after: "TimeSeriesForecaster") {
             collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
 
         // --- 2. PredictiveScorer (30+ days) ---
         if totalDays >= PredictiveScorer.minimumDays {
-            logger.debug("Running PredictiveScorer")
-            predictiveScorer.train(
-                vectors: vectors,
-                orderedKeys: orderedKeys,
-                scoreHistory: scoreHistory,
-                anomalyCounts: anomalyCounts
-            )
-            componentsRunCount += 1
+            if !predictiveScorer.isReady || needsFullRetrain {
+                logger.debug("Running PredictiveScorer")
+                predictiveScorer.train(
+                    vectors: vectors,
+                    orderedKeys: orderedKeys,
+                    scoreHistory: scoreHistory,
+                    anomalyCounts: anomalyCounts
+                )
+                componentsRunCount += 1
+            }
         }
 
-        if shouldStopForThermal(after: "PredictiveScorer") {
+        if await shouldStopForThermal(after: "PredictiveScorer") {
             collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
@@ -260,7 +266,7 @@ final class MLOrchestrator {
             }
         }
 
-        if shouldStopForThermal(after: "CorrelationDiscovery") {
+        if await shouldStopForThermal(after: "CorrelationDiscovery") {
             collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
@@ -274,19 +280,21 @@ final class MLOrchestrator {
             }
         }
 
-        if shouldStopForThermal(after: "HealthStateClassifier") {
+        if await shouldStopForThermal(after: "HealthStateClassifier") {
             collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
 
         // --- 5. PatternMiner (60+ days) ---
         if totalDays >= PatternMiner.minimumDays {
-            logger.debug("Running PatternMiner")
-            patternMiner.mine(timeSeries: timeSeries)
-            componentsRunCount += 1
+            if !patternMiner.isReady || needsFullRetrain {
+                logger.debug("Running PatternMiner")
+                patternMiner.mine(timeSeries: timeSeries)
+                componentsRunCount += 1
+            }
         }
 
-        if shouldStopForThermal(after: "PatternMiner") {
+        if await shouldStopForThermal(after: "PatternMiner") {
             collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
@@ -300,7 +308,7 @@ final class MLOrchestrator {
             }
         }
 
-        if shouldStopForThermal(after: "AdaptiveAnomalyDetector") {
+        if await shouldStopForThermal(after: "AdaptiveAnomalyDetector") {
             collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
@@ -318,7 +326,10 @@ final class MLOrchestrator {
                 modelVersion: 2, featureSchemaVersion: 1, calibrationVersion: 1,
                 trainedAt: Date(), dataPointsUsed: totalDays
             )
+            var forecastIdx = 0
             for (metric, _) in timeSeries {
+                forecastIdx += 1
+                if forecastIdx % 10 == 0 { await Task.yield() }
                 if let forecast = forecaster.forecast(metric: metric, horizons: [1, 3, 7]) {
                     multiHorizonForecasts[metric] = forecast
 
@@ -345,7 +356,7 @@ final class MLOrchestrator {
             multivariateResults = runMultivariateGranger(timeSeries: timeSeries)
         }
 
-        if shouldStopForThermal(after: "MultivariateGranger") {
+        if await shouldStopForThermal(after: "MultivariateGranger") {
             collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
@@ -360,7 +371,7 @@ final class MLOrchestrator {
             prediction: predictiveScorer.isReady ? predictiveScorer.predict(todayVector: vectors.last!) : nil
         )
 
-        if shouldStopForThermal(after: "PredictiveHealthSignals") {
+        if await shouldStopForThermal(after: "PredictiveHealthSignals") {
             collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
@@ -394,7 +405,7 @@ final class MLOrchestrator {
             doseResponseCurves = interactionEngine.doseResponseCurves
         }
 
-        if shouldStopForThermal(after: "InteractionEffectEngine") {
+        if await shouldStopForThermal(after: "InteractionEffectEngine") {
             collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
@@ -412,7 +423,7 @@ final class MLOrchestrator {
             compoundingEffects = temporalMiner.compoundingEffects
         }
 
-        if shouldStopForThermal(after: "TemporalSequenceMiner") {
+        if await shouldStopForThermal(after: "TemporalSequenceMiner") {
             collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
@@ -425,7 +436,7 @@ final class MLOrchestrator {
             regimeComparisons = changePointDetector.regimeComparisons
         }
 
-        if shouldStopForThermal(after: "ChangePointDetector") {
+        if await shouldStopForThermal(after: "ChangePointDetector") {
             collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
@@ -444,7 +455,7 @@ final class MLOrchestrator {
             scoreSensitivities = personalOptimizer.sensitivities
         }
 
-        if shouldStopForThermal(after: "PersonalOptimizer") {
+        if await shouldStopForThermal(after: "PersonalOptimizer") {
             collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
@@ -473,11 +484,20 @@ final class MLOrchestrator {
     }
 
     /// Check thermal state and yield between components. Returns true if ML should stop.
-    private func shouldStopForThermal(after component: String) -> Bool {
-        if ProcessInfo.processInfo.thermalState == .critical {
+    /// Also yields CPU between components and adds a cooldown pause at `.serious` state.
+    private func shouldStopForThermal(after component: String) async -> Bool {
+        let state = ProcessInfo.processInfo.thermalState
+        if state == .critical {
             logger.warning("Stopping ML analysis after \(component): thermal state critical")
             return true
         }
+        if state == .serious {
+            // Device is hot but not critical — pause briefly to let it cool
+            logger.info("Thermal cooldown after \(component): state is serious, pausing 2s")
+            try? await Task.sleep(for: .seconds(2))
+        }
+        // Always yield between components so the system can schedule other work
+        await Task.yield()
         return false
     }
 
