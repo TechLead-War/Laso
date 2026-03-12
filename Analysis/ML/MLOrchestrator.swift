@@ -162,9 +162,20 @@ final class MLOrchestrator {
         }
 
         isRunning = true
+        let pipelineStart = Date()
+        var componentsRunCount = 0
         defer {
             isRunning = false
             hasRunOnce = true
+            if componentsRunCount > 0 {
+                let pipelineDurationMs = Int(Date().timeIntervalSince(pipelineStart) * 1000)
+                let totalDataPoints = timeSeries.values.reduce(0) { $0 + $1.samples.count }
+                AppAnalytics.shared.trackMLAnalysisPerformance(
+                    durationMs: pipelineDurationMs,
+                    componentsRun: componentsRunCount,
+                    dataPointsUsed: totalDataPoints
+                )
+            }
         }
 
         // Step 0: Build feature vectors (required by most components)
@@ -214,6 +225,7 @@ final class MLOrchestrator {
             if forecaster.needsRetrain || !forecaster.isReady {
                 logger.debug("Running TimeSeriesForecaster")
                 forecaster.fit(timeSeries: timeSeries)
+                componentsRunCount += 1
             }
         }
 
@@ -231,6 +243,7 @@ final class MLOrchestrator {
                 scoreHistory: scoreHistory,
                 anomalyCounts: anomalyCounts
             )
+            componentsRunCount += 1
         }
 
         if shouldStopForThermal(after: "PredictiveScorer") {
@@ -243,6 +256,7 @@ final class MLOrchestrator {
             if correlationDiscovery.needsRetrain || !correlationDiscovery.isReady {
                 logger.debug("Running CorrelationDiscovery")
                 correlationDiscovery.discover(timeSeries: timeSeries)
+                componentsRunCount += 1
             }
         }
 
@@ -256,6 +270,7 @@ final class MLOrchestrator {
             if stateClassifier.needsRetrain || !stateClassifier.isReady {
                 logger.debug("Running HealthStateClassifier")
                 stateClassifier.train(vectors: vectors, orderedKeys: orderedKeys)
+                componentsRunCount += 1
             }
         }
 
@@ -268,6 +283,7 @@ final class MLOrchestrator {
         if totalDays >= PatternMiner.minimumDays {
             logger.debug("Running PatternMiner")
             patternMiner.mine(timeSeries: timeSeries)
+            componentsRunCount += 1
         }
 
         if shouldStopForThermal(after: "PatternMiner") {
@@ -280,6 +296,7 @@ final class MLOrchestrator {
             if anomalyDetector.needsRetrain || !anomalyDetector.isReady {
                 logger.debug("Running AdaptiveAnomalyDetector")
                 anomalyDetector.train(vectors: vectors, orderedKeys: orderedKeys, baselines: baselines)
+                componentsRunCount += 1
             }
         }
 

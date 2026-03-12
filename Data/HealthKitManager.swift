@@ -97,6 +97,7 @@ final class HealthKitManager {
             isAuthorized = true
         } catch {
             self.error = "Authorization failed: \(error.localizedDescription)"
+            AppAnalytics.shared.trackError(type: "healthkit_authorization", screen: .home, message: error.localizedDescription)
         }
     }
 

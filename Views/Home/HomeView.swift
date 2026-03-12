@@ -14,6 +14,7 @@ struct HomeView: View {
     @State private var homeRefreshTimer: Timer?
     @State private var weeklyReviewViewModel: WeeklyReviewViewModel?
     @State private var showScoreGuide = false
+    @State private var maxScrollDepth: Int = 0
     // Section trackers
     @State private var recoveryTracker = SectionTracker(section: .homeRecovery, tab: .home)
     @State private var illnessTracker = SectionTracker(section: .homeIllness, tab: .home)
@@ -68,6 +69,9 @@ struct HomeView: View {
         .onDisappear {
             stopHomeRefresh()
             stopFirstLaunchDotTimer()
+            if maxScrollDepth > 0 {
+                AppAnalytics.shared.trackScrollDepth(screen: .home, maxDepthPercent: maxScrollDepth)
+            }
             AppAnalytics.shared.trackFeatureClose(.home)
         }
         .onChange(of: scenePhase) { _, newPhase in
@@ -151,7 +155,7 @@ struct HomeView: View {
                         scoreDelta: viewModel.scoreChangeFromYesterday,
                         onTap: { showScoreGuide = true }
                     )
-                    .onAppear { recoveryTracker.appeared() }
+                    .onAppear { recoveryTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 10) }
                     .onDisappear { recoveryTracker.disappeared() }
 
                     // 2. Today's Action — single source of truth for what to do
@@ -290,13 +294,13 @@ struct HomeView: View {
                         }
                     )
                     .padding(.top, 8)
-                    .onAppear { bodyInsightsTracker.appeared() }
+                    .onAppear { bodyInsightsTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 60) }
                     .onDisappear { bodyInsightsTracker.disappeared() }
 
                     // 10. Health Risks — "Needs Attention"
                     todayRisksSection
                         .padding(.top, 8)
-                        .onAppear { risksTracker.appeared() }
+                        .onAppear { risksTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 75) }
                         .onDisappear { risksTracker.disappeared() }
 
                     // 11. Weekly Review
@@ -315,7 +319,7 @@ struct HomeView: View {
                         navigationPath.append("weeklyReview")
                     }
                     .padding(.top, 8)
-                    .onAppear { weeklyReviewTracker.appeared() }
+                    .onAppear { weeklyReviewTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 90) }
                     .onDisappear { weeklyReviewTracker.disappeared() }
 
                     // 12. Level & Streaks
@@ -608,6 +612,11 @@ struct HomeView: View {
                                 "risk_id": risk.riskType.rawValue,
                                 "risk_grade": risk.riskGrade.rawValue
                             ]
+                        )
+                        AppAnalytics.shared.trackInsightEngagement(
+                            category: "health_risk",
+                            metric: risk.riskType.rawValue,
+                            action: "tap_risk"
                         )
                         risksTracker.tapped(target: risk.riskType.rawValue)
                         navigationPath.append(risk.riskType)
@@ -902,6 +911,9 @@ struct HomeView: View {
         }
         .padding()
         .accessibilityElement(children: .combine)
+        .onAppear {
+            AppAnalytics.shared.trackError(type: "data_load_failed", screen: .home, message: message)
+        }
     }
 }
 

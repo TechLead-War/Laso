@@ -105,6 +105,11 @@ struct InsightsDetailView: View {
                                 metric: insight.metric.rawValue,
                                 screen: .insightsDetail
                             )
+                            AppAnalytics.shared.trackInsightEngagement(
+                                category: insight.category.rawValue,
+                                metric: insight.metric.rawValue,
+                                action: "tap_detail"
+                            )
                             store?.recordRecommendationTapped(insightId: insight.id)
                             onTapMetric(insight.metric)
                         } label: {

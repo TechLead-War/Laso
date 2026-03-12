@@ -8,6 +8,7 @@ struct ExploreView: View {
     @Binding var navigationPath: NavigationPath
     @State private var showScoreGuide = false
     @State private var trendTimeframe: Int = 30
+    @State private var maxScrollDepth: Int = 0
 
     // Section trackers
     @State private var scoreHeroTracker = SectionTracker(section: .exploreScoreHero, tab: .explore)
@@ -25,7 +26,7 @@ struct ExploreView: View {
                     // 1. Score Hero with trend
                     scoreHeroSection
                         .padding(.horizontal)
-                        .onAppear { scoreHeroTracker.appeared() }
+                        .onAppear { scoreHeroTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 15) }
                         .onDisappear { scoreHeroTracker.disappeared() }
 
                     // 2. Data depth bar — Metrics, Data Points, Days
@@ -44,7 +45,7 @@ struct ExploreView: View {
                     // 3. Needs Attention — negative factors only
                     scoreBreakdownSection
                         .padding(.horizontal)
-                        .onAppear { needsAttentionTracker.appeared() }
+                        .onAppear { needsAttentionTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 45) }
                         .onDisappear { needsAttentionTracker.disappeared() }
 
                     // 4. Declining metrics from history
@@ -63,14 +64,14 @@ struct ExploreView: View {
                     // 5. Correlations preview
                     if FeatureGate.canAccess(.advancedAnalytics), !viewModel.topCorrelations.isEmpty {
                         correlationsPreview
-                            .onAppear { correlationsTracker.appeared() }
+                            .onAppear { correlationsTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 75) }
                             .onDisappear { correlationsTracker.disappeared() }
                     }
 
                     // 6. Categories — worst first
                     categoriesSection
                         .padding(.horizontal)
-                        .onAppear { categoriesTracker.appeared() }
+                        .onAppear { categoriesTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 90) }
                         .onDisappear { categoriesTracker.disappeared() }
                 } else {
                     emptyState
@@ -93,7 +94,12 @@ struct ExploreView: View {
             AppAnalytics.shared.trackActivationMilestone(.firstScoreSeen)
             AppAnalytics.shared.trackCoreAction(.viewedScore, screen: .explore)
         }
-        .onDisappear { AppAnalytics.shared.trackFeatureClose(.explore) }
+        .onDisappear {
+            if maxScrollDepth > 0 {
+                AppAnalytics.shared.trackScrollDepth(screen: .explore, maxDepthPercent: maxScrollDepth)
+            }
+            AppAnalytics.shared.trackFeatureClose(.explore)
+        }
         .sheet(isPresented: $showScoreGuide) {
             ScoreGuideSheet()
         }
@@ -418,6 +424,11 @@ struct ExploreView: View {
                                     "metric_category": factor.metric.category.rawValue
                                 ]
                             )
+                            AppAnalytics.shared.trackInsightEngagement(
+                                category: factor.metric.category.rawValue,
+                                metric: factor.metric.rawValue,
+                                action: "tap_needs_attention"
+                            )
                             needsAttentionTracker.tapped(target: factor.metric.rawValue)
                             navigationPath.append(factor.metric)
                         } label: {
@@ -518,6 +529,11 @@ struct ExploreView: View {
                             "metric_category": highlight.metric.category.rawValue,
                             "highlight_type": highlight.typeLabel
                         ]
+                    )
+                    AppAnalytics.shared.trackInsightEngagement(
+                        category: highlight.metric.category.rawValue,
+                        metric: highlight.metric.rawValue,
+                        action: "tap_declining_trend"
                     )
                     decliningTrendsTracker.tapped(target: highlight.metric.rawValue)
                     navigationPath.append(highlight.metric)

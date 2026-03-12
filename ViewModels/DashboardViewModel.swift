@@ -441,13 +441,16 @@ final class DashboardViewModel {
 
         guard healthKitManager.isHealthKitAvailable else {
             errorMessage = "HealthKit is not available on this device. Please run on a real iPhone paired with Apple Watch."
+            AppAnalytics.shared.trackError(type: "healthkit_unavailable", screen: .home)
             return
         }
 
         await healthKitManager.requestAuthorization()
 
         guard healthKitManager.isAuthorized else {
-            errorMessage = healthKitManager.error ?? "HealthKit authorization required"
+            let msg = healthKitManager.error ?? "HealthKit authorization required"
+            errorMessage = msg
+            AppAnalytics.shared.trackError(type: "healthkit_auth_failed", screen: .home, message: msg)
             return
         }
 

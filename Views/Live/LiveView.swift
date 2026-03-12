@@ -11,6 +11,7 @@ struct LiveView: View {
     @State private var previousZone: LiveViewModel.HeartRateZone?
     @State private var hasTrackedFirstData = false
     @State private var lastAnimationTime: Date = .distantPast
+    @State private var maxScrollDepth: Int = 0
 
     // Section trackers
     @State private var headerTracker = SectionTracker(section: .liveHeader, tab: .live)
@@ -64,6 +65,9 @@ struct LiveView: View {
         }
         .onDisappear {
             viewModel.stopStreaming()
+            if maxScrollDepth > 0 {
+                AppAnalytics.shared.trackScrollDepth(screen: .live, maxDepthPercent: maxScrollDepth)
+            }
             AppAnalytics.shared.trackFeatureClose(.live)
             AppAnalytics.shared.trackStreamingStopped()
         }
@@ -441,7 +445,7 @@ struct LiveView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(heartRateAccessibilityLabel)
         .sensoryFeedback(.warning, trigger: viewModel.vitals.heartRateStatus == .elevated)
-        .onAppear { heartRateTracker.appeared() }
+        .onAppear { heartRateTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 20) }
         .onDisappear { heartRateTracker.disappeared() }
         .onTapGesture {
             AppAnalytics.shared.trackBlockTap(
@@ -607,7 +611,7 @@ struct LiveView: View {
             )
         }
         .padding(.horizontal)
-        .onAppear { vitalsTracker.appeared() }
+        .onAppear { vitalsTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 45) }
         .onDisappear { vitalsTracker.disappeared() }
     }
 
@@ -848,7 +852,7 @@ struct LiveView: View {
 
             } // end else (has activity)
         }
-        .onAppear { activityTracker.appeared() }
+        .onAppear { activityTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 65) }
         .onDisappear { activityTracker.disappeared() }
     }
 
@@ -1103,7 +1107,7 @@ struct LiveView: View {
                     workoutTracker.tapped(target: "last_workout")
                 }
             }
-            .onAppear { workoutTracker.appeared() }
+            .onAppear { workoutTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 90) }
             .onDisappear { workoutTracker.disappeared() }
         }
     }
