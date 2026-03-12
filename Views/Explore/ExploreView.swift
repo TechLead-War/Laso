@@ -7,7 +7,6 @@ struct ExploreView: View {
     let viewModel: DashboardViewModel
     @Binding var navigationPath: NavigationPath
     @State private var showScoreGuide = false
-    @State private var showSimulation = false
     @State private var trendTimeframe: Int = 30
 
     // Section trackers
@@ -55,13 +54,7 @@ struct ExploreView: View {
                             .onDisappear { decliningTrendsTracker.disappeared() }
                     }
 
-                    // 4b. What-If Simulation teaser
-                    if FeatureGate.canAccess(.simulation) {
-                        simulationTeaser
-                            .padding(.horizontal)
-                    }
-
-                    // 4c. Health State Timeline link
+                    // 4b. Health State Timeline link
                     if viewModel.analysisEngine.mlOrchestrator.stateClassifier.isReady {
                         healthStateLink
                             .padding(.horizontal)
@@ -104,9 +97,6 @@ struct ExploreView: View {
         .sheet(isPresented: $showScoreGuide) {
             ScoreGuideSheet()
         }
-        .sheet(isPresented: $showSimulation) {
-            SimulationView(viewModel: SimulationViewModel(analysisEngine: viewModel.analysisEngine))
-        }
         .refreshable {
             AppAnalytics.shared.trackPullToRefresh(screen: .explore)
             await viewModel.refresh()
@@ -117,48 +107,6 @@ struct ExploreView: View {
 
     private var hasScoreData: Bool {
         !viewModel.analysisEngine.categoryScores.isEmpty
-    }
-
-    // MARK: - Simulation Teaser
-
-    private var simulationTeaser: some View {
-        Button {
-            AppAnalytics.shared.trackBlockTap(
-                title: "What If?",
-                type: .exploreSimulationTeaser,
-                screen: .explore,
-                metadata: [
-                    "destination": "simulation_sheet",
-                    "score": viewModel.overallScore.score
-                ]
-            )
-            showSimulation = true
-        } label: {
-            HStack(spacing: 12) {
-                Image(systemName: "wand.and.stars")
-                    .font(.title3)
-                    .foregroundStyle(.cyan)
-                    .frame(width: DS.iconSize, height: DS.iconSize)
-                    .background(Color.cyan.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.iconRadius))
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("What If?")
-                        .font(.subheadline.weight(.semibold))
-                    Text("See how changes could improve your score")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary)
-            }
-            .padding(DS.cardPadding)
-            .cardStyle()
-        }
-        .buttonStyle(.plain)
     }
 
     // MARK: - Health State Link
@@ -700,17 +648,25 @@ struct ExploreView: View {
         .cardStyle()
     }
 
-    // MARK: - 6. Categories (worst-first)
+    // MARK: - 6. Categories (focused first, then worst-first)
 
-    /// Categories sorted by score ascending — weakest areas first
+    /// Categories sorted: user's onboarding focuses first, then by score ascending (worst first).
     private var sortedCategories: [(category: HealthCategory, score: Int?)] {
-        HealthCategory.allCases.map { cat in
+        let focuses = viewModel.focusCategories
+        return HealthCategory.allCases.map { cat in
             (category: cat, score: viewModel.analysisEngine.score(for: cat)?.score)
         }
         .sorted { a, b in
-            // Categories with scores come first, sorted ascending (worst first)
-            guard let aScore = a.score else { return false }
-            guard let bScore = b.score else { return true }
+            let aHasScore = a.score != nil
+            let bHasScore = b.score != nil
+            // No-data categories always last
+            if aHasScore != bHasScore { return aHasScore }
+            guard let aScore = a.score, let bScore = b.score else { return false }
+            // Focused categories come first
+            let aFocused = focuses.contains(a.category)
+            let bFocused = focuses.contains(b.category)
+            if aFocused != bFocused { return aFocused }
+            // Within same tier, worst score first
             return aScore < bScore
         }
     }

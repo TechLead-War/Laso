@@ -153,8 +153,8 @@ final class HealthDataStore {
         return f
     }()
 
-    private static let encoderKey = "HealthPulse.HealthDataStore.encoder"
-    private static let decoderKey = "HealthPulse.HealthDataStore.decoder"
+    private static let encoderKey = "Laso.HealthDataStore.encoder"
+    private static let decoderKey = "Laso.HealthDataStore.decoder"
 
     private static func threadEncoder() -> JSONEncoder {
         let dictionary = Thread.current.threadDictionary

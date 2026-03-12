@@ -1,6 +1,6 @@
 import XCTest
 
-final class HealthPulseVisualUITests: XCTestCase {
+final class LasoVisualUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
@@ -52,7 +52,7 @@ final class HealthPulseVisualUITests: XCTestCase {
         let app = launchApp(showOnboarding: true, appearance: appearance)
 
         // 1. Welcome
-        XCTAssertTrue(app.staticTexts["HealthPulse"].waitForExistence(timeout: 12))
+        XCTAssertTrue(app.staticTexts["Laso"].waitForExistence(timeout: 12))
         ScreenshotStore.capture(app: app, theme: theme, profile: "onboarding", step: "welcome")
 
         // 2. Value Proposition

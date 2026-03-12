@@ -16,7 +16,7 @@
   <rect width="4800" height="3400" fill="#F8F8FA"/>
 
   <!-- Title -->
-  <text x="80" y="70" class="title">HealthPulse — Complete Screen Flow Map</text>
+  <text x="80" y="70" class="title">Laso — Complete Screen Flow Map</text>
   <text x="80" y="110" class="note">Drag this into Figma first. Use it as a reference to arrange all 45 SVG wireframes.</text>
   <text x="80" y="140" class="note">Each box = one SVG file. Arrows show navigation flow. Colors = flow groups.</text>
 

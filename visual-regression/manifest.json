@@ -1,7 +1,7 @@
 {
   "version": "2.1",
   "generated": "2026-03-10",
-  "description": "Complete screenshot manifest for all HealthPulse flows",
+  "description": "Complete screenshot manifest for all Laso flows",
   "device": "iPhone 17 Pro",
   "iosVersion": "26.2",
   "themes": ["dark", "light"],

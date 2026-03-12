@@ -121,8 +121,8 @@ struct ProfileCaptureView: View {
 
                 // Gender
                 fieldRow {
-                    Picker("Gender", selection: $gender) {
-                        Text("Select").tag(Optional<Gender>.none)
+                    Picker("Gender *", selection: $gender) {
+                        Text("Select gender").tag(Optional<Gender>.none)
                         ForEach(Gender.allCases) { option in
                             Text(option.displayName).tag(Optional(option))
                         }

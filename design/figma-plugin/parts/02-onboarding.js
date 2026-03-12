@@ -55,7 +55,7 @@ function buildWelcomeScreen(page, x) {
   });
 
   // App name
-  createText(phone, "HealthPulse", 0, 340, {
+  createText(phone, "Laso", 0, 340, {
     size: 32,
     weight: "bold",
     color: C.black,
@@ -116,7 +116,7 @@ function buildCultureScreen1(page, x) {
   });
 
   // Body text
-  createText(phone, "No two bodies are the same. HealthPulse learns\nyour unique patterns, rhythms, and thresholds\nto give you insights that truly matter.", 0, 470, {
+  createText(phone, "No two bodies are the same. Laso learns\nyour unique patterns, rhythms, and thresholds\nto give you insights that truly matter.", 0, 470, {
     size: 16,
     weight: "regular",
     color: C.secondary,
@@ -281,7 +281,7 @@ function buildHealthKitPermissionScreen(page, x) {
   });
 
   // Body text
-  createText(phone, "HealthPulse reads your health data to build\npersonalized insights and track your progress.", 0, 230, {
+  createText(phone, "Laso reads your health data to build\npersonalized insights and track your progress.", 0, 230, {
     size: 15,
     weight: "regular",
     color: C.secondary,
@@ -631,7 +631,7 @@ function buildPaywallScreen(page, x) {
   addStatusBar(phone);
 
   // Headline
-  createText(phone, "Unlock HealthPulse Pro", 0, 70, {
+  createText(phone, "Unlock Laso Pro", 0, 70, {
     size: 26,
     weight: "bold",
     color: C.black,

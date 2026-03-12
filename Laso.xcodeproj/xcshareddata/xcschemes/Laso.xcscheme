@@ -16,8 +16,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "AAF1174C80A8B9E1615BF94C"
-               BuildableName = "HealthPulse.app"
-               BlueprintName = "HealthPulse"
+               BuildableName = "Laso.app"
+               BlueprintName = "Laso"
                ReferencedContainer = "container:Laso.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -33,8 +33,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "AAF1174C80A8B9E1615BF94C"
-            BuildableName = "HealthPulse.app"
-            BlueprintName = "HealthPulse"
+            BuildableName = "Laso.app"
+            BlueprintName = "Laso"
             ReferencedContainer = "container:Laso.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -45,8 +45,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "0BCB334E3454D93383DB993C"
-               BuildableName = "HealthPulseUITests.xctest"
-               BlueprintName = "HealthPulseUITests"
+               BuildableName = "LasoUITests.xctest"
+               BlueprintName = "LasoUITests"
                ReferencedContainer = "container:Laso.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -69,8 +69,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "AAF1174C80A8B9E1615BF94C"
-            BuildableName = "HealthPulse.app"
-            BlueprintName = "HealthPulse"
+            BuildableName = "Laso.app"
+            BlueprintName = "Laso"
             ReferencedContainer = "container:Laso.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -98,8 +98,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "AAF1174C80A8B9E1615BF94C"
-            BuildableName = "HealthPulse.app"
-            BlueprintName = "HealthPulse"
+            BuildableName = "Laso.app"
+            BlueprintName = "Laso"
             ReferencedContainer = "container:Laso.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

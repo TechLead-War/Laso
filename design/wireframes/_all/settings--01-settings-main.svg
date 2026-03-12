@@ -147,7 +147,7 @@
     </g>
     <line x1="32" y1="814" x2="361" y2="814" stroke="#E5E5EA" stroke-width="0.5"/>
     <g id="Row-RateApp">
-      <text x="32" y="838" font-size="17" fill="#1C1C1E">Rate HealthPulse</text>
+      <text x="32" y="838" font-size="17" fill="#1C1C1E">Rate Laso</text>
       <path d="M365,832 l5,5 l-5,5" stroke="#C7C7CC" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </g>
   </g>

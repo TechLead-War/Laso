@@ -1,7 +1,7 @@
 import AppIntents
 
 /// Provides suggested shortcuts that appear in the Shortcuts app and Spotlight.
-struct HealthPulseShortcutsProvider: AppShortcutsProvider {
+struct LasoShortcutsProvider: AppShortcutsProvider {
 
     static var shortcutTileColor: ShortcutTileColor { .navy }
 

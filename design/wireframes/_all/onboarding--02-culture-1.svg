@@ -48,7 +48,7 @@
   <!-- Body Text -->
   <g id="body-text">
     <text x="196.5" y="536" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="17" font-weight="400" fill="#8E8E93" text-anchor="middle">No two bodies are the same.</text>
-    <text x="196.5" y="560" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="17" font-weight="400" fill="#8E8E93" text-anchor="middle">HealthPulse learns your unique patterns.</text>
+    <text x="196.5" y="560" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="17" font-weight="400" fill="#8E8E93" text-anchor="middle">Laso learns your unique patterns.</text>
   </g>
 
   <!-- Progress Dots (1 of 7 filled) -->

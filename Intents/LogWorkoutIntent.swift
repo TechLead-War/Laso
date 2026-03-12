@@ -64,7 +64,7 @@ struct LogWorkoutIntent: AppIntent {
             }
         } else {
             return .result(
-                dialog: "Failed to log the workout. Make sure HealthPulse has write access to Apple Health."
+                dialog: "Failed to log the workout. Make sure Laso has write access to Apple Health."
             ) {
                 IntentSnippetViews.ErrorSnippet(message: "Could not save workout")
             }

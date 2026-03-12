@@ -14,7 +14,7 @@ struct ForceUpdateView: View {
             Text("Update Required")
                 .font(.title.bold())
 
-            Text("A new version of HealthPulse is available with important fixes. Please update to continue.")
+            Text("A new version of Laso is available with important fixes. Please update to continue.")
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

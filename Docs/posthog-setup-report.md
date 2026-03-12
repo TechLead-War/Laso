@@ -1,7 +1,7 @@
 <wizard-report>
 # PostHog post-wizard report
 
-The wizard has completed a deep integration of PostHog analytics into HealthPulse. The existing `PostHogManager.swift` wrapper was updated to read credentials from Xcode scheme environment variables (replacing the hardcoded placeholder). The PostHog iOS SDK (`posthog-ios` v3.45.0) was added as a Swift Package Manager dependency via `project.pbxproj`. Eight business-critical events covering the full user lifecycle — from first HealthKit connection through onboarding, calibration, trial, and subscription — were instrumented across four files.
+The wizard has completed a deep integration of PostHog analytics into Laso. The existing `PostHogManager.swift` wrapper was updated to read credentials from Xcode scheme environment variables (replacing the hardcoded placeholder). The PostHog iOS SDK (`posthog-ios` v3.45.0) was added as a Swift Package Manager dependency via `project.pbxproj`. Eight business-critical events covering the full user lifecycle — from first HealthKit connection through onboarding, calibration, trial, and subscription — were instrumented across four files.
 
 | Event | Description | File |
 |---|---|---|
@@ -18,7 +18,7 @@ The wizard has completed a deep integration of PostHog analytics into HealthPuls
 
 - **`Tracking/PostHogManager.swift`** — Replaced hardcoded placeholder keys with `PostHogEnv` enum reading from `ProcessInfo.processInfo.environment`. Added `fatalError` guard so misconfiguration is caught immediately at launch.
 - **`Laso.xcodeproj/project.pbxproj`** — Added `XCRemoteSwiftPackageReference` for `posthog-ios` (≥ 3.45.0), `XCSwiftPackageProductDependency` for `PostHog`, and `PBXBuildFile` linking it into the Frameworks phase.
-- **`Laso.xcodeproj/xcshareddata/xcschemes/HealthPulse.xcscheme`** — Added `POSTHOG_API_KEY` and `POSTHOG_HOST` as Run scheme environment variables.
+- **`Laso.xcodeproj/xcshareddata/xcschemes/Laso.xcscheme`** — Added `POSTHOG_API_KEY` and `POSTHOG_HOST` as Run scheme environment variables.
 - **`Views/Onboarding/OnboardingView.swift`** — 4 events: `onboarding_completed`, `healthkit_authorized`, `calibration_completed`, `calibration_failed`.
 - **`Subscriptions/SubscriptionManager.swift`** — 3 events: `subscription_purchased`, `trial_started`, `subscription_expired`.
 - **`Views/Components/ProFeatureOverlay.swift`** — 1 event: `pro_feature_upgrade_tapped`.

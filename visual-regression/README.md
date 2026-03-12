@@ -61,7 +61,7 @@ Example: `ios26_2-iphone_17_pro-dark-en_in-main-home.png`
 ```bash
 xcodebuild build-for-testing \
   -project Laso.xcodeproj \
-  -scheme HealthPulse \
+  -scheme Laso \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   -derivedDataPath build/visual-tests/DerivedData
 ```
@@ -72,7 +72,7 @@ xcodebuild build-for-testing \
 xcodebuild test-without-building \
   -xctestrun build/visual-tests/DerivedData/Build/Products/*.xctestrun \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
-  -only-testing:HealthPulseUITests
+  -only-testing:LasoUITests
 ```
 
 3. Approve current as new baseline:

@@ -41,7 +41,7 @@
 
   <!-- Body Text -->
   <g id="body-text">
-    <text x="196.5" y="206" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="16" font-weight="400" fill="#8E8E93" text-anchor="middle">HealthPulse reads your health data to</text>
+    <text x="196.5" y="206" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="16" font-weight="400" fill="#8E8E93" text-anchor="middle">Laso reads your health data to</text>
     <text x="196.5" y="228" font-family="SF Pro Display, -apple-system, system-ui, sans-serif" font-size="16" font-weight="400" fill="#8E8E93" text-anchor="middle">provide personalized insights.</text>
   </g>
 

@@ -329,7 +329,7 @@ private struct ConnectHealthPage: View {
                 Text("Connect Apple Health")
                     .font(.title2.weight(.bold))
 
-                Text("HealthPulse reads your health data to build\npersonalized insights and track your progress.")
+                Text("Laso reads your health data to build\npersonalized insights and track your progress.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -1037,7 +1037,7 @@ private struct WelcomePage: View {
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 .padding(.bottom, 24)
 
-            Text("HealthPulse")
+            Text("Laso")
                 .font(.system(size: 32, weight: .bold))
                 .padding(.bottom, 8)
 
@@ -1069,10 +1069,10 @@ private struct WelcomePage: View {
 private struct ValuePropositionPage: View {
     let onContinue: () -> Void
 
-    private let bullets: [(icon: String, title: String, message: String)] = [
-        ("person.fill", "Personalized baseline", "Insights adapt to your body and your trends."),
-        ("shield.fill", "Private by default", "Analysis runs on-device and your data stays local."),
-        ("chart.line.uptrend.xyaxis", "Actionable guidance", "Daily focus areas help you improve faster.")
+    private let bullets: [(icon: String, title: String)] = [
+        ("person.fill", "Personalized to your body"),
+        ("shield.fill", "Private and on-device"),
+        ("chart.line.uptrend.xyaxis", "Actionable daily guidance")
     ]
 
     var body: some View {
@@ -1084,34 +1084,22 @@ private struct ValuePropositionPage: View {
                 .foregroundStyle(.secondary)
                 .padding(.bottom, 32)
 
-            VStack(spacing: 10) {
-                Text("What You Get")
-                    .font(.title2.weight(.bold))
-
-                Text("A quick setup, then practical health insights tailored to you.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-            }
-            .padding(.bottom, 24)
+            Text("What You Get")
+                .font(.title2.weight(.bold))
+                .padding(.bottom, 24)
 
             VStack(spacing: 14) {
                 ForEach(Array(bullets.enumerated()), id: \.offset) { _, item in
-                    HStack(alignment: .top, spacing: 12) {
+                    HStack(spacing: 12) {
                         Image(systemName: item.icon)
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Color.accentColor)
                             .frame(width: 24, height: 24)
                             .background(Color.accentColor.opacity(0.12), in: Circle())
 
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(item.title)
-                                .font(.subheadline.weight(.semibold))
-                            Text(item.message)
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
+                        Text(item.title)
+                            .font(.subheadline.weight(.medium))
+
                         Spacer()
                     }
                 }

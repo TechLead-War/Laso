@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Centralized design tokens for visual consistency across HealthPulse.
+/// Centralized design tokens for visual consistency across Laso.
 enum DS {
     /// Card corner radius — unified across all cards
     static let cardRadius: CGFloat = 16

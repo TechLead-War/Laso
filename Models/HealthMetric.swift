@@ -1,7 +1,7 @@
 import Foundation
 import HealthKit
 
-/// All health metrics tracked by HealthPulse from Apple Watch / HealthKit
+/// All health metrics tracked by Laso from Apple Watch / HealthKit
 enum HealthMetric: String, CaseIterable, Identifiable, Codable {
     var id: String { rawValue }
 

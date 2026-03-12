@@ -14,8 +14,8 @@ final class PersistenceManager {
     private let preferencesKey = AppKeys.Data.preferences
     private let lastAnalysisKey = AppKeys.Data.lastAnalysis
 
-    private static let encoderKey = "HealthPulse.PersistenceManager.encoder"
-    private static let decoderKey = "HealthPulse.PersistenceManager.decoder"
+    private static let encoderKey = "Laso.PersistenceManager.encoder"
+    private static let decoderKey = "Laso.PersistenceManager.decoder"
 
     /// Only non-sensitive keys sync to iCloud
     private static let syncKeys: Set<String> = [

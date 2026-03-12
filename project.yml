@@ -20,7 +20,7 @@ packages:
     from: 3.0.0
 
 targets:
-  HealthPulse:
+  Laso:
     type: application
     platform: iOS
     dependencies:
@@ -65,7 +65,7 @@ targets:
     settings:
       base:
         INFOPLIST_FILE: Info.plist
-        CODE_SIGN_ENTITLEMENTS: HealthPulse.entitlements
+        CODE_SIGN_ENTITLEMENTS: Laso.entitlements
         PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.com
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
@@ -81,24 +81,24 @@ targets:
         com.apple.BackgroundModes:
           enabled: true
 
-  HealthPulseUITests:
+  LasoUITests:
     type: bundle.ui-testing
     platform: iOS
     sources:
       - path: UITests
     dependencies:
-      - target: HealthPulse
+      - target: Laso
     settings:
       base:
         GENERATE_INFOPLIST_FILE: true
         PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.com.uitests
-        TEST_TARGET_NAME: HealthPulse
+        TEST_TARGET_NAME: Laso
 
 schemes:
-  HealthPulse:
+  Laso:
     build:
       targets:
-        HealthPulse: all
+        Laso: all
     test:
       targets:
-        - name: HealthPulseUITests
+        - name: LasoUITests

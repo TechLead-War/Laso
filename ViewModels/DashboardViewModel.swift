@@ -552,8 +552,11 @@ final class DashboardViewModel {
         async let todayRawHRTask = healthKitManager.fetchTodayRawHeartRateSamples()
 
         // Phase 1: Core analysis — scores, trends, baselines (blocks until done, UI needs these)
-        await Task.detached(priority: .userInitiated) { [analysisEngine] in
-            analysisEngine.runCoreAnalysis(timeSeries: ts)
+        // Pass user's onboarding focus categories so focused areas weigh more in scoring.
+        let focuses = cachedFocusCategories.isEmpty ? persistence.loadHealthFocuses() : []
+        let focusCats = focuses.isEmpty ? cachedFocusCategories : HealthFocus.categories(for: focuses)
+        await Task.detached(priority: .userInitiated) { [analysisEngine, focusCats] in
+            analysisEngine.runCoreAnalysis(timeSeries: ts, focusCategories: focusCats)
         }.value
 
         let todayRawHR = await todayRawHRTask
@@ -868,10 +871,14 @@ final class DashboardViewModel {
 
         guard !RemoteConfigManager.shared.killMLPipeline else { return }
 
+        let focusCats = cachedFocusCategories.isEmpty
+            ? HealthFocus.categories(for: persistence.loadHealthFocuses())
+            : cachedFocusCategories
         await analysisEngine.runMLAnalysis(
             timeSeries: timeSeries,
             scoreHistory: scoreHistory,
-            anomalyCounts: anomalyCounts
+            anomalyCounts: anomalyCounts,
+            focusCategories: focusCats
         )
         await MainActor.run { updateCachedProperties() }
     }
@@ -1014,7 +1021,15 @@ final class DashboardViewModel {
                 ))
             }
         }
-        movers.sort { abs($0.changePercent) > abs($1.changePercent) }
+        let focuses = focusCategories
+        movers.sort { a, b in
+            if !focuses.isEmpty {
+                let aFocused = focuses.contains(a.metric.category)
+                let bFocused = focuses.contains(b.metric.category)
+                if aFocused != bFocused { return aFocused }
+            }
+            return abs(a.changePercent) > abs(b.changePercent)
+        }
         return TrendsSummary(
             improving: improving,
             stable: stable,

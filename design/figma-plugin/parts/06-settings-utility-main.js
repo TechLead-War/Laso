@@ -226,7 +226,7 @@ function buildFeedbackSheet(page, x) {
   addButton(phone, 'Submit', 20, 360, 353, 52, { color: C.accent });
 
   // Footer text
-  createText(phone, 'Your feedback helps us improve HealthPulse', 0, 430, {
+  createText(phone, 'Your feedback helps us improve Laso', 0, 430, {
     size: 12, color: C.secondary, width: PHONE_W, align: 'CENTER',
   });
 
@@ -251,7 +251,7 @@ function buildForceUpdate(page, x) {
   });
 
   // Body text
-  createText(phone, 'A new version of HealthPulse is available. Please update to continue using the app.', 47, 410, {
+  createText(phone, 'A new version of Laso is available. Please update to continue using the app.', 47, 410, {
     size: 16, color: C.secondary, width: 300, align: 'CENTER', lineHeight: 22,
   });
 
@@ -285,7 +285,7 @@ function buildMaintenance(page, x) {
   });
 
   // Body text
-  createText(phone, 'HealthPulse is undergoing scheduled maintenance. Your data is safe.', 47, 430, {
+  createText(phone, 'Laso is undergoing scheduled maintenance. Your data is safe.', 47, 430, {
     size: 16, color: C.secondary, width: 300, align: 'CENTER', lineHeight: 22,
   });
 
@@ -425,7 +425,7 @@ async function loadFonts() {
 // ============================================
 
 function buildAllOnOnePage(page) {
-  page.name = 'HealthPulse — All Screens';
+  page.name = 'Laso — All Screens';
   const rowH = PHONE_H + 120; // space between rows
   let y = 0;
 
@@ -524,7 +524,7 @@ figma.on('run', async ({ command }) => {
   var page = figma.currentPage;
 
   if (command === 'generate-all' || !command) {
-    figma.notify('Generating all HealthPulse screens...');
+    figma.notify('Generating all Laso screens...');
     // Clear page
     while (page.children.length > 0) { page.children[0].remove(); }
     buildAllOnOnePage(page);

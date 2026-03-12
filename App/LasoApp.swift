@@ -4,7 +4,7 @@ import AppIntents
 
 /// Main entry point for the Laso app
 @main
-struct HealthPulseApp: App {
+struct LasoApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     @AppStorage(AppKeys.App.onboardingCompleted) private var onboardingCompleted = false
@@ -68,7 +68,7 @@ struct HealthPulseApp: App {
         if let container = Self.createModelContainer() {
             _healthDataStore = State(wrappedValue: HealthDataStore(modelContainer: container))
         } else {
-            print("[HealthPulse] Running without SwiftData — all persistence disabled")
+            print("[Laso] Running without SwiftData — all persistence disabled")
             _healthDataStore = State(wrappedValue: HealthDataStore())
         }
     }
@@ -98,7 +98,7 @@ struct HealthPulseApp: App {
         let currentSchemaVersion = allModels.count
         let storedSchemaVersion = UserDefaults.standard.integer(forKey: schemaVersionKey)
         if storedSchemaVersion != 0 && storedSchemaVersion != currentSchemaVersion {
-            print("[HealthPulse] Schema changed (\(storedSchemaVersion) → \(currentSchemaVersion)), deleting DB")
+            print("[Laso] Schema changed (\(storedSchemaVersion) → \(currentSchemaVersion)), deleting DB")
             for suffix in ["", "-wal", "-shm"] {
                 try? FileManager.default.removeItem(atPath: dbURL.path + suffix)
             }
@@ -111,7 +111,7 @@ struct HealthPulseApp: App {
             UserDefaults.standard.set(currentSchemaVersion, forKey: schemaVersionKey)
             return container
         } catch {
-            print("[HealthPulse] Step 1 (disk, all models) failed: \(error)")
+            print("[Laso] Step 1 (disk, all models) failed: \(error)")
         }
 
         // 2. Delete corrupt database, retry disk
@@ -124,7 +124,7 @@ struct HealthPulseApp: App {
             UserDefaults.standard.set(currentSchemaVersion, forKey: schemaVersionKey)
             return container
         } catch {
-            print("[HealthPulse] Step 2 (clean disk, all models) failed: \(error)")
+            print("[Laso] Step 2 (clean disk, all models) failed: \(error)")
         }
 
         // 3–6. Progressive in-memory fallbacks with fewer models
@@ -140,7 +140,7 @@ struct HealthPulseApp: App {
                 let config = ModelConfiguration(isStoredInMemoryOnly: true)
                 return try ModelContainer(for: Schema(models), configurations: [config])
             } catch {
-                print("[HealthPulse] Step \(i + 3) (in-memory, \(models.count) model\(models.count == 1 ? "" : "s")) failed: \(error)")
+                print("[Laso] Step \(i + 3) (in-memory, \(models.count) model\(models.count == 1 ? "" : "s")) failed: \(error)")
             }
         }
 
@@ -148,7 +148,7 @@ struct HealthPulseApp: App {
         do {
             return try ModelContainer(for: StoredDailySample.self, StoredDailyStrain.self)
         } catch {
-            print("[HealthPulse] All ModelContainer attempts failed: \(error)")
+            print("[Laso] All ModelContainer attempts failed: \(error)")
             return nil
         }
     }
@@ -220,7 +220,7 @@ struct HealthPulseApp: App {
                 NotificationManager.shared.store = healthDataStore
 
                 // Register Siri shortcuts so the system can discover them immediately.
-                HealthPulseShortcutsProvider.updateAppShortcutParameters()
+                LasoShortcutsProvider.updateAppShortcutParameters()
 
                 WatchMonitor.shared.configure(healthStore: healthKitManager.healthStore)
                 WatchMonitor.shared.startMonitoring()

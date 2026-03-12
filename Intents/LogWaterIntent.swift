@@ -50,7 +50,7 @@ struct LogWaterIntent: AppIntent {
             }
         } else {
             return .result(
-                dialog: "Failed to log water. Make sure HealthPulse has write access to Apple Health."
+                dialog: "Failed to log water. Make sure Laso has write access to Apple Health."
             ) {
                 IntentSnippetViews.ErrorSnippet(message: "Could not save to Apple Health")
             }

@@ -16,28 +16,28 @@ extension Date {
     }
 
     private static var shortDateFormatter: DateFormatter {
-        FormatterCache.formatter(key: "HealthPulse.Date.short") { formatter in
+        FormatterCache.formatter(key: "Laso.Date.short") { formatter in
             formatter.dateStyle = .short
             formatter.timeStyle = .none
         }
     }
 
     private static var mediumDateFormatter: DateFormatter {
-        FormatterCache.formatter(key: "HealthPulse.Date.medium") { formatter in
+        FormatterCache.formatter(key: "Laso.Date.medium") { formatter in
             formatter.dateStyle = .medium
             formatter.timeStyle = .none
         }
     }
 
     private static var shortTimeFormatter: DateFormatter {
-        FormatterCache.formatter(key: "HealthPulse.Date.time.short") { formatter in
+        FormatterCache.formatter(key: "Laso.Date.time.short") { formatter in
             formatter.dateStyle = .none
             formatter.timeStyle = .short
         }
     }
 
     private static var weekdayNameFormatter: DateFormatter {
-        FormatterCache.formatter(key: "HealthPulse.Date.weekdayName") { formatter in
+        FormatterCache.formatter(key: "Laso.Date.weekdayName") { formatter in
             formatter.dateFormat = "EEEE"
         }
     }

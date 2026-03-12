@@ -64,9 +64,10 @@ final class AnalysisEngine {
     /// - `runDeferredHeavy`: correlations, historical, cross-metric anomalies, causal chains
     func runFullAnalysis(
         timeSeries: [HealthMetric: MetricTimeSeries],
-        cycleFlowSamples: [HealthKitManager.MenstrualFlowSample] = []
+        cycleFlowSamples: [HealthKitManager.MenstrualFlowSample] = [],
+        focusCategories: Set<HealthCategory> = []
     ) {
-        runCoreAnalysis(timeSeries: timeSeries)
+        runCoreAnalysis(timeSeries: timeSeries, focusCategories: focusCategories)
         runDeferredEssentials(timeSeries: timeSeries, cycleFlowSamples: cycleFlowSamples)
         runDeferredHeavy(timeSeries: timeSeries)
     }
@@ -76,7 +77,8 @@ final class AnalysisEngine {
     /// Computes baselines, trends, anomalies, and scores — the minimum needed to render the UI.
     /// All computation uses local variables; @Observable properties are batch-updated at the end
     /// to minimize UI re-render cascades.
-    func runCoreAnalysis(timeSeries: [HealthMetric: MetricTimeSeries]) {
+    /// `focusCategories` from onboarding are used to boost focused categories in scoring weights.
+    func runCoreAnalysis(timeSeries: [HealthMetric: MetricTimeSeries], focusCategories: Set<HealthCategory> = []) {
         isAnalyzing = true
 
         // Step 1: Update baselines
@@ -138,11 +140,12 @@ final class AnalysisEngine {
             newCategoryScores.append(HealthScorer.scoreCategory(category: category, metricScores: metricScores))
         }
 
-        // Step 6: Overall score with adaptive weights
+        // Step 6: Overall score with adaptive weights (boosted by onboarding focus selection)
         let adaptiveWeights = HealthScorer.adaptiveCategoryWeights(
             categoryScores: newCategoryScores,
             anomalies: newAnomalies,
-            baselines: newBaselines
+            baselines: newBaselines,
+            focusCategories: focusCategories
         )
         let newOverallScore = HealthScorer.overallScore(categoryScores: newCategoryScores, weights: adaptiveWeights)
         let newScoreExplanation = HealthScorer.explainOverallScore(
@@ -305,7 +308,8 @@ final class AnalysisEngine {
     func runMLAnalysis(
         timeSeries: [HealthMetric: MetricTimeSeries],
         scoreHistory: [(date: Date, score: Int)],
-        anomalyCounts: [Date: Int]
+        anomalyCounts: [Date: Int],
+        focusCategories: Set<HealthCategory> = []
     ) async {
         await mlOrchestrator.runMLAnalysis(
             timeSeries: timeSeries,
@@ -313,7 +317,8 @@ final class AnalysisEngine {
             trends: trends,
             ruleBasedAnomalies: anomalies,
             scoreHistory: scoreHistory,
-            anomalyCounts: anomalyCounts
+            anomalyCounts: anomalyCounts,
+            focusCategories: focusCategories
         )
 
         // After ML completes, regenerate ML insights and deduplicate

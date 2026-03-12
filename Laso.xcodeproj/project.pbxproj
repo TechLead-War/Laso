@@ -52,7 +52,7 @@
 		DA22BD8F4CA05E3F91D2G6B0 /* DecisionPolicyEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA22BD8F4CA05E3F91D2G6B1 /* DecisionPolicyEngine.swift */; };
 		2F86493CBEAF769199AC04F1 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD281CA396957983B12D0A3C /* DashboardViewModel.swift */; };
 		313CEBC55344992AA6D3E914 /* WeeklyReviewViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324946E490707B84DD4E1D1F /* WeeklyReviewViewModel.swift */; };
-		313DC6B3BAC38CA7F449FE7D /* HealthPulseVisualUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75495DEBF4DB887CAD5A6490 /* HealthPulseVisualUITests.swift */; };
+		313DC6B3BAC38CA7F449FE7D /* LasoVisualUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75495DEBF4DB887CAD5A6490 /* LasoVisualUITests.swift */; };
 		31E2B64EB0A2CA4F7031A958 /* CognitiveEnergyAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C106E60A0DB2F03B5DA77DA2 /* CognitiveEnergyAnalyzer.swift */; };
 		3232F287CD8399F46204F71B /* SleepPerformanceAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D06050FC363373F86388B7 /* SleepPerformanceAnalyzer.swift */; };
 		343A4859877D130FA78FBB9E /* AppSecrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71322141C4559D9785F935D5 /* AppSecrets.swift */; };
@@ -136,7 +136,7 @@
 		A5537549B1A9AEA9AD715D2B /* CategoryDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2039A71BE618E89C7492947 /* CategoryDetailViewModel.swift */; };
 		A83908D9EE2AE59D575C250C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A260467379612091A6B0F24B /* AppDelegate.swift */; };
 		A8D1835C963232B16200F723 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B27511DF0C37B24FFB1B7F /* SettingsView.swift */; };
-		B0AD35A8AABE8CB40A1EB52F /* HealthPulseShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61CE6B4AFA8C01BDD405324C /* HealthPulseShortcutsProvider.swift */; };
+		B0AD35A8AABE8CB40A1EB52F /* LasoShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61CE6B4AFA8C01BDD405324C /* LasoShortcutsProvider.swift */; };
 		B1B058D5605793D0334F6246 /* ConnectedDevicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7C4FCD29CB2B4CEFA78075D /* ConnectedDevicesView.swift */; };
 		B2DCC40E0F854D326925D6E0 /* ECGDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FC02137953D6F64ACF21561 /* ECGDataManager.swift */; };
 		B39586B3D4F0020ABA76CA69 /* HealthDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7130F0F3DD993835196E4E7A /* HealthDataStore.swift */; };
@@ -184,7 +184,7 @@
 		F1D421183BEF1A23FF75DF09 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4F0ADF675FBAD032C37D2E17 /* Assets.xcassets */; };
 		F4990990B73BA8871062FDD4 /* AccelerateHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC181F9F410EE06EF2F68AFE /* AccelerateHelpers.swift */; };
 		F5FA5EF9B3781F27C78D1887 /* ExploreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52A881BAB817D61DEBA208CA /* ExploreView.swift */; };
-		F6025BFDFF8FE702319AE9A7 /* HealthPulseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBA4A8AA9CB8C8329773FDB /* HealthPulseApp.swift */; };
+		F6025BFDFF8FE702319AE9A7 /* LasoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBBA4A8AA9CB8C8329773FDB /* LasoApp.swift */; };
 		F6CB2E7FEEA9CB71736BFBFD /* PatternMiner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A145A890F4B1D41E135D4379 /* PatternMiner.swift */; };
 		F7703F7060CB7156928452F5 /* BodyInsightsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A04A40A58D658CFA52E90DC /* BodyInsightsSection.swift */; };
 		F78C661EB4BBD16D4F8B478E /* PeriodSummarySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12DC96FEA93961AEC887B76 /* PeriodSummarySection.swift */; };
@@ -244,7 +244,7 @@
 			containerPortal = A0999A277A055E4CFCBB5F7A /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = AAF1174C80A8B9E1615BF94C;
-			remoteInfo = HealthPulse;
+			remoteInfo = Laso;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -320,14 +320,14 @@
 		52A881BAB817D61DEBA208CA /* ExploreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreView.swift; sourceTree = "<group>"; };
 		52C5FA0AC1DF45B09601C7C0 /* HealthRiskEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthRiskEngine.swift; sourceTree = "<group>"; };
 		53D06050FC363373F86388B7 /* SleepPerformanceAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepPerformanceAnalyzer.swift; sourceTree = "<group>"; };
-		53F1575B053EE79EFD5547C7 /* HealthPulseUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = HealthPulseUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		53F1575B053EE79EFD5547C7 /* LasoUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LasoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		53F23397F3B267A963D256F0 /* WebExportViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebExportViewModel.swift; sourceTree = "<group>"; };
 		5517C2ACFADFCD8A7A737000 /* ReportTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportTemplate.swift; sourceTree = "<group>"; };
 		5AE023120456B0FF10708544 /* MetricChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricChartView.swift; sourceTree = "<group>"; };
 		5E8DC719D1A3501CD27378EF /* InsightsDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsDetailView.swift; sourceTree = "<group>"; };
 		5F0CCA39B472BA8A587D407C /* HealthCorrelation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthCorrelation.swift; sourceTree = "<group>"; };
-		61CE6B4AFA8C01BDD405324C /* HealthPulseShortcutsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthPulseShortcutsProvider.swift; sourceTree = "<group>"; };
-		65E5978C39EAFBDCEECA6DA6 /* HealthPulse.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HealthPulse.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		61CE6B4AFA8C01BDD405324C /* LasoShortcutsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LasoShortcutsProvider.swift; sourceTree = "<group>"; };
+		65E5978C39EAFBDCEECA6DA6 /* Laso.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Laso.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		65EE05D65292F035A0354D5E /* SupportedDevice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportedDevice.swift; sourceTree = "<group>"; };
 		670DF6F2B9F16744B1F8F38B /* HealthScore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthScore.swift; sourceTree = "<group>"; };
 		676B12F5791E1D1C96B6B526 /* ClinicalIntelligence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClinicalIntelligence.swift; sourceTree = "<group>"; };
@@ -342,7 +342,7 @@
 		71322141C4559D9785F935D5 /* AppSecrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSecrets.swift; sourceTree = "<group>"; };
 		72C7797A9CFF63F8498BE063 /* LogWorkoutIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogWorkoutIntent.swift; sourceTree = "<group>"; };
 		743488A17157D9A55F3B5AC4 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
-		75495DEBF4DB887CAD5A6490 /* HealthPulseVisualUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthPulseVisualUITests.swift; sourceTree = "<group>"; };
+		75495DEBF4DB887CAD5A6490 /* LasoVisualUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LasoVisualUITests.swift; sourceTree = "<group>"; };
 		75B27511DF0C37B24FFB1B7F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		78C6606C2681C87AEFCAB5FE /* WatchMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchMonitor.swift; sourceTree = "<group>"; };
 		79D307F2173910B0A37FB5E9 /* SampleDataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleDataProvider.swift; sourceTree = "<group>"; };
@@ -432,7 +432,7 @@
 		F7C4FCD29CB2B4CEFA78075D /* ConnectedDevicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectedDevicesView.swift; sourceTree = "<group>"; };
 		F8C1527381776AC0BAFBA9FD /* MetricTimeSeries.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricTimeSeries.swift; sourceTree = "<group>"; };
 		F985734F3416CA9FC9FDBECB /* SubscriptionConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionConfig.swift; sourceTree = "<group>"; };
-		FBBA4A8AA9CB8C8329773FDB /* HealthPulseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthPulseApp.swift; sourceTree = "<group>"; };
+		FBBA4A8AA9CB8C8329773FDB /* LasoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LasoApp.swift; sourceTree = "<group>"; };
 		FBEF954BF9638721771548FD /* CorrelationAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrelationAnalyzer.swift; sourceTree = "<group>"; };
 		FF1B95F7225327D77ECBD985 /* TimeSeriesAligner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeSeriesAligner.swift; sourceTree = "<group>"; };
 		FF4A9064133A1DCA6830C757 /* StatisticsGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsGrid.swift; sourceTree = "<group>"; };
@@ -628,7 +628,7 @@
 			children = (
 				A260467379612091A6B0F24B /* AppDelegate.swift */,
 				CFAEA2D55EB2FBC71714A653 /* ContentView.swift */,
-				FBBA4A8AA9CB8C8329773FDB /* HealthPulseApp.swift */,
+				FBBA4A8AA9CB8C8329773FDB /* LasoApp.swift */,
 				0CFF25C948BA03E6AB0505B9 /* UITestMode.swift */,
 			);
 			path = App;
@@ -637,7 +637,7 @@
 		271D0BEB103A2E585A7F0C71 /* UITests */ = {
 			isa = PBXGroup;
 			children = (
-				75495DEBF4DB887CAD5A6490 /* HealthPulseVisualUITests.swift */,
+				75495DEBF4DB887CAD5A6490 /* LasoVisualUITests.swift */,
 				E83E824E4B450A188976B915 /* ScreenshotStore.swift */,
 			);
 			path = UITests;
@@ -692,7 +692,7 @@
 		45AE2A419181359990E719C2 /* Intents */ = {
 			isa = PBXGroup;
 			children = (
-				61CE6B4AFA8C01BDD405324C /* HealthPulseShortcutsProvider.swift */,
+				61CE6B4AFA8C01BDD405324C /* LasoShortcutsProvider.swift */,
 				9351B5CAD39C5A9B22417CA0 /* HealthScoreIntent.swift */,
 				E243948FF36A4942AF4A3858 /* IntentDataProvider.swift */,
 				1FEE577D88DC91DADF429EB0 /* IntentDonationManager.swift */,
@@ -821,8 +821,8 @@
 		85D693CEA74B6AE4E9169174 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				65E5978C39EAFBDCEECA6DA6 /* HealthPulse.app */,
-				53F1575B053EE79EFD5547C7 /* HealthPulseUITests.xctest */,
+				65E5978C39EAFBDCEECA6DA6 /* Laso.app */,
+				53F1575B053EE79EFD5547C7 /* LasoUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1065,9 +1065,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		0BCB334E3454D93383DB993C /* HealthPulseUITests */ = {
+		0BCB334E3454D93383DB993C /* LasoUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = E9D074997D00A463518D7AC7 /* Build configuration list for PBXNativeTarget "HealthPulseUITests" */;
+			buildConfigurationList = E9D074997D00A463518D7AC7 /* Build configuration list for PBXNativeTarget "LasoUITests" */;
 			buildPhases = (
 				3BAC107B122F8C54574FE294 /* Sources */,
 			);
@@ -1076,16 +1076,16 @@
 			dependencies = (
 				8B9F3629F0B22123BA9BB0F3 /* PBXTargetDependency */,
 			);
-			name = HealthPulseUITests;
+			name = LasoUITests;
 			packageProductDependencies = (
 			);
-			productName = HealthPulseUITests;
-			productReference = 53F1575B053EE79EFD5547C7 /* HealthPulseUITests.xctest */;
+			productName = LasoUITests;
+			productReference = 53F1575B053EE79EFD5547C7 /* LasoUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		AAF1174C80A8B9E1615BF94C /* HealthPulse */ = {
+		AAF1174C80A8B9E1615BF94C /* Laso */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A821E9D0E5B8B38615243BCF /* Build configuration list for PBXNativeTarget "HealthPulse" */;
+			buildConfigurationList = A821E9D0E5B8B38615243BCF /* Build configuration list for PBXNativeTarget "Laso" */;
 			buildPhases = (
 				0C59E4C92ACCE1A18AAB3B33 /* Sources */,
 				BCFD628216D2227F4107402C /* Resources */,
@@ -1095,15 +1095,15 @@
 			);
 			dependencies = (
 			);
-			name = HealthPulse;
+			name = Laso;
 			packageProductDependencies = (
 				F953AA6E791D9D17B406F513 /* FirebaseAnalytics */,
 				2DF742629FCFC6435A08CA20 /* FirebaseRemoteConfig */,
 				95A2B614CC8C132DD2405795 /* FirebaseCrashlytics */,
 				E56165FF1F64923EB147E374 /* PostHog */,
 			);
-			productName = HealthPulse;
-			productReference = 65E5978C39EAFBDCEECA6DA6 /* HealthPulse.app */;
+			productName = Laso;
+			productReference = 65E5978C39EAFBDCEECA6DA6 /* Laso.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -1147,8 +1147,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				AAF1174C80A8B9E1615BF94C /* HealthPulse */,
-				0BCB334E3454D93383DB993C /* HealthPulseUITests */,
+				AAF1174C80A8B9E1615BF94C /* Laso */,
+				0BCB334E3454D93383DB993C /* LasoUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -1247,8 +1247,8 @@
 				FD40DB932CA77AD50E94E81D /* HealthKitMetricRegistry.swift in Sources */,
 				1978792F2C4D3FD0F8E045F8 /* HealthKitQueryBuilder.swift in Sources */,
 				CF149AA3FA82691B8EEFEC90 /* HealthMetric.swift in Sources */,
-				F6025BFDFF8FE702319AE9A7 /* HealthPulseApp.swift in Sources */,
-				B0AD35A8AABE8CB40A1EB52F /* HealthPulseShortcutsProvider.swift in Sources */,
+				F6025BFDFF8FE702319AE9A7 /* LasoApp.swift in Sources */,
+				B0AD35A8AABE8CB40A1EB52F /* LasoShortcutsProvider.swift in Sources */,
 				2AAB4484DFD986DB9CAA005F /* HealthRisk.swift in Sources */,
 				FDFFF8E745468E620577E132 /* HealthRiskDetailView.swift in Sources */,
 				DF2F2BDB18160AE458E6911A /* HealthRiskEngine.swift in Sources */,
@@ -1398,7 +1398,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				313DC6B3BAC38CA7F449FE7D /* HealthPulseVisualUITests.swift in Sources */,
+				313DC6B3BAC38CA7F449FE7D /* LasoVisualUITests.swift in Sources */,
 				7A96B26D8516AC925ECA0F21 /* ScreenshotStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1408,7 +1408,7 @@
 /* Begin PBXTargetDependency section */
 		8B9F3629F0B22123BA9BB0F3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = AAF1174C80A8B9E1615BF94C /* HealthPulse */;
+			target = AAF1174C80A8B9E1615BF94C /* Laso */;
 			targetProxy = 4B036D4600E5AAE5E6FA90D1 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -1490,7 +1490,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.com.uitests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = HealthPulse;
+				TEST_TARGET_NAME = Laso;
 			};
 			name = Release;
 		};
@@ -1555,7 +1555,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = HealthPulse.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Laso.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = S2MAH8X8JM;
@@ -1586,7 +1586,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.com.uitests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = HealthPulse;
+				TEST_TARGET_NAME = Laso;
 			};
 			name = Debug;
 		};
@@ -1595,7 +1595,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = HealthPulse.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Laso.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = S2MAH8X8JM;
@@ -1616,7 +1616,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A821E9D0E5B8B38615243BCF /* Build configuration list for PBXNativeTarget "HealthPulse" */ = {
+		A821E9D0E5B8B38615243BCF /* Build configuration list for PBXNativeTarget "Laso" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A6CCEBEE7074ACC9E76CC5BE /* Debug */,
@@ -1634,7 +1634,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		E9D074997D00A463518D7AC7 /* Build configuration list for PBXNativeTarget "HealthPulseUITests" */ = {
+		E9D074997D00A463518D7AC7 /* Build configuration list for PBXNativeTarget "LasoUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				87A47F29811D0E8AAC8CA6C4 /* Debug */,

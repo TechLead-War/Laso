@@ -270,7 +270,7 @@ final class RemoteConfigManager {
 
     var killSwitchMessage: String {
         let value = stringValue(forKey: "kill_switch_message")
-        return value.isEmpty ? "HealthPulse is temporarily unavailable. Please try again later." : value
+        return value.isEmpty ? "Laso is temporarily unavailable. Please try again later." : value
     }
 
     /// Kill switch for Live tab streaming

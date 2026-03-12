@@ -204,7 +204,7 @@ final class DecisionPolicyEngine {
     /// - Selects top candidate as primary
     /// - Selects best remaining candidate targeting a different metric as secondary
     /// - Generates rationale and confidence
-    func decide(candidates: [InterventionCandidate]) -> PolicyDecision? {
+    func decide(candidates: [InterventionCandidate], focusCategories: Set<HealthCategory> = []) -> PolicyDecision? {
         guard !candidates.isEmpty else { return nil }
 
         // Score and filter suppressed candidates
@@ -212,16 +212,23 @@ final class DecisionPolicyEngine {
 
         for candidate in candidates {
             guard !isSuppressed(candidate) else { continue }
-            let utility = scoreCandidate(candidate)
+            var utility = scoreCandidate(candidate)
             let novelty = noveltyFactor(for: candidate.actionType)
+            // Boost utility for candidates targeting user's focus areas
+            if !focusCategories.isEmpty && focusCategories.contains(candidate.targetMetric.category) {
+                utility *= 1.3
+            }
             scored.append((candidate, utility, novelty))
         }
 
         // If all were suppressed, allow the original list through without suppression
         if scored.isEmpty {
             for candidate in candidates {
-                let utility = scoreCandidate(candidate)
+                var utility = scoreCandidate(candidate)
                 let novelty = noveltyFactor(for: candidate.actionType)
+                if !focusCategories.isEmpty && focusCategories.contains(candidate.targetMetric.category) {
+                    utility *= 1.3
+                }
                 scored.append((candidate, utility, novelty))
             }
         }

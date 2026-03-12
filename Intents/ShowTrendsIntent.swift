@@ -5,7 +5,7 @@ import SwiftUI
 struct ShowTrendsIntent: AppIntent {
     static var title: LocalizedStringResource = "Show Health Trends"
     static var description = IntentDescription(
-        "Opens HealthPulse to the Explore tab showing your health trends and analysis.",
+        "Opens Laso to the Explore tab showing your health trends and analysis.",
         categoryName: "Health"
     )
 
@@ -20,7 +20,7 @@ struct ShowTrendsIntent: AppIntent {
             )
         }
 
-        return .result(dialog: "Opening your health trends in HealthPulse.")
+        return .result(dialog: "Opening your health trends in Laso.")
     }
 }
 

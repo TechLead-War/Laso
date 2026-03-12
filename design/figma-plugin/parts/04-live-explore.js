@@ -257,7 +257,7 @@ function buildLiveProOverlay(page, x) {
   });
 
   // Description
-  createText(overlay, 'Unlock live health monitoring\nwith HealthPulse Pro', 20, 115, {
+  createText(overlay, 'Unlock live health monitoring\nwith Laso Pro', 20, 115, {
     size: 14,
     color: C.secondary,
     width: 260,

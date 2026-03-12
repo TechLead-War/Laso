@@ -152,7 +152,8 @@ final class MLOrchestrator {
         trends: [HealthMetric: TrendAnalyzer.TrendResult],
         ruleBasedAnomalies: [AnomalyDetector.AnomalyResult],
         scoreHistory: [(date: Date, score: Int)],
-        anomalyCounts: [Date: Int]
+        anomalyCounts: [Date: Int],
+        focusCategories: Set<HealthCategory> = []
     ) async {
         // Bail out entirely if device is critically overheated
         if ProcessInfo.processInfo.thermalState == .critical {
@@ -204,7 +205,7 @@ final class MLOrchestrator {
         )
 
         if shouldStopForThermal(after: "CompositeFeatureEngine") {
-            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory)
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
 
@@ -217,7 +218,7 @@ final class MLOrchestrator {
         }
 
         if shouldStopForThermal(after: "TimeSeriesForecaster") {
-            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory)
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
 
@@ -233,7 +234,7 @@ final class MLOrchestrator {
         }
 
         if shouldStopForThermal(after: "PredictiveScorer") {
-            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory)
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
 
@@ -246,7 +247,7 @@ final class MLOrchestrator {
         }
 
         if shouldStopForThermal(after: "CorrelationDiscovery") {
-            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory)
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
 
@@ -259,7 +260,7 @@ final class MLOrchestrator {
         }
 
         if shouldStopForThermal(after: "HealthStateClassifier") {
-            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory)
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
 
@@ -270,7 +271,7 @@ final class MLOrchestrator {
         }
 
         if shouldStopForThermal(after: "PatternMiner") {
-            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory)
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
 
@@ -283,7 +284,7 @@ final class MLOrchestrator {
         }
 
         if shouldStopForThermal(after: "AdaptiveAnomalyDetector") {
-            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory)
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
 
@@ -328,7 +329,7 @@ final class MLOrchestrator {
         }
 
         if shouldStopForThermal(after: "MultivariateGranger") {
-            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory)
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
 
@@ -343,7 +344,7 @@ final class MLOrchestrator {
         )
 
         if shouldStopForThermal(after: "PredictiveHealthSignals") {
-            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory)
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
 
@@ -377,7 +378,7 @@ final class MLOrchestrator {
         }
 
         if shouldStopForThermal(after: "InteractionEffectEngine") {
-            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory)
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
 
@@ -395,7 +396,7 @@ final class MLOrchestrator {
         }
 
         if shouldStopForThermal(after: "TemporalSequenceMiner") {
-            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory)
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
 
@@ -408,7 +409,7 @@ final class MLOrchestrator {
         }
 
         if shouldStopForThermal(after: "ChangePointDetector") {
-            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory)
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
 
@@ -427,7 +428,7 @@ final class MLOrchestrator {
         }
 
         if shouldStopForThermal(after: "PersonalOptimizer") {
-            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory)
+            collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
             return
         }
 
@@ -451,7 +452,7 @@ final class MLOrchestrator {
         compoundInsights = compoundInsightEngine.insights
 
         // Collect all results and compute policy decision
-        collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory)
+        collectResults(timeSeries: timeSeries, vectors: vectors, baselines: baselines, trends: trends, ruleBasedAnomalies: ruleBasedAnomalies, scoreHistory: scoreHistory, focusCategories: focusCategories)
     }
 
     /// Check thermal state and yield between components. Returns true if ML should stop.
@@ -530,7 +531,8 @@ final class MLOrchestrator {
         baselines: [HealthMetric: UserBaseline],
         trends: [HealthMetric: TrendAnalyzer.TrendResult],
         ruleBasedAnomalies: [AnomalyDetector.AnomalyResult],
-        scoreHistory: [(date: Date, score: Int)]
+        scoreHistory: [(date: Date, score: Int)],
+        focusCategories: Set<HealthCategory> = []
     ) {
         // Forecast anomalies
         if forecaster.isReady {
@@ -676,7 +678,7 @@ final class MLOrchestrator {
                 }
             }
 
-            if let decision = decisionPolicyEngine.decide(candidates: enrichedCandidates) {
+            if let decision = decisionPolicyEngine.decide(candidates: enrichedCandidates, focusCategories: focusCategories) {
                 // Attach natural language with full timeSeries context
                 let primaryLang = decisionPolicyEngine.generateLanguage(
                     for: decision.primaryAction.candidate,

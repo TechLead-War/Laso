@@ -198,15 +198,16 @@ struct HealthScorer {
     // MARK: - Adaptive Category Weights
 
     /// Compute dynamic per-category weights based on baseline volatility, data richness,
-    /// and anomaly density. Categories that carry more signal get higher weight.
+    /// anomaly density, and user focus preferences from onboarding.
     ///
     /// Weight formula per category:
-    ///   rawWeight = volatilityFactor + richnessFactor + anomalyFactor
+    ///   rawWeight = volatilityFactor + richnessFactor + anomalyFactor + focusBoost
     /// All weights are normalized to sum to 1.0, with a 0.05 floor per category.
     static func adaptiveCategoryWeights(
         categoryScores: [HealthScore],
         anomalies: [AnomalyDetector.AnomalyResult],
-        baselines: [HealthMetric: UserBaseline]
+        baselines: [HealthMetric: UserBaseline],
+        focusCategories: Set<HealthCategory> = []
     ) -> [HealthCategory: Double] {
         let presentCategories = categoryScores.compactMap(\.category)
         guard !presentCategories.isEmpty else { return [:] }
@@ -251,7 +252,11 @@ struct HealthScorer {
             // Scale: 0 anomalies → 0.5, 50% density → 1.25, 100% density → 2.0
             let anomalyFactor = 0.5 + anomalyDensity * 1.5
 
-            rawWeights[category] = volatilityFactor + richnessFactor + anomalyFactor
+            // --- Factor 4: User focus boost (from onboarding selection) ---
+            // Categories the user cares about get a 40% boost to their weight.
+            let focusBoost: Double = focusCategories.contains(category) ? 1.2 : 0.0
+
+            rawWeights[category] = volatilityFactor + richnessFactor + anomalyFactor + focusBoost
         }
 
         // Apply minimum floor of 0.05 per category, then normalize to sum to 1.0

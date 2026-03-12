@@ -586,7 +586,7 @@ function buildWelcomeScreen(page, x) {
   });
 
   // App name
-  createText(phone, "HealthPulse", 0, 340, {
+  createText(phone, "Laso", 0, 340, {
     size: 32,
     weight: "bold",
     color: C.black,
@@ -647,7 +647,7 @@ function buildCultureScreen1(page, x) {
   });
 
   // Body text
-  createText(phone, "No two bodies are the same. HealthPulse learns\nyour unique patterns, rhythms, and thresholds\nto give you insights that truly matter.", 0, 470, {
+  createText(phone, "No two bodies are the same. Laso learns\nyour unique patterns, rhythms, and thresholds\nto give you insights that truly matter.", 0, 470, {
     size: 16,
     weight: "regular",
     color: C.secondary,
@@ -812,7 +812,7 @@ function buildHealthKitPermissionScreen(page, x) {
   });
 
   // Body text
-  createText(phone, "HealthPulse reads your health data to build\npersonalized insights and track your progress.", 0, 230, {
+  createText(phone, "Laso reads your health data to build\npersonalized insights and track your progress.", 0, 230, {
     size: 15,
     weight: "regular",
     color: C.secondary,
@@ -1162,7 +1162,7 @@ function buildPaywallScreen(page, x) {
   addStatusBar(phone);
 
   // Headline
-  createText(phone, "Unlock HealthPulse Pro", 0, 70, {
+  createText(phone, "Unlock Laso Pro", 0, 70, {
     size: 26,
     weight: "bold",
     color: C.black,
@@ -1964,7 +1964,7 @@ function buildLiveProOverlay(page, x) {
   });
 
   // Description
-  createText(overlay, 'Unlock live health monitoring\nwith HealthPulse Pro', 20, 115, {
+  createText(overlay, 'Unlock live health monitoring\nwith Laso Pro', 20, 115, {
     size: 14,
     color: C.secondary,
     width: 260,
@@ -3097,7 +3097,7 @@ function buildFeedbackSheet(page, x) {
   addButton(phone, 'Submit', 20, 360, 353, 52, { color: C.accent });
 
   // Footer text
-  createText(phone, 'Your feedback helps us improve HealthPulse', 0, 430, {
+  createText(phone, 'Your feedback helps us improve Laso', 0, 430, {
     size: 12, color: C.secondary, width: PHONE_W, align: 'CENTER',
   });
 
@@ -3122,7 +3122,7 @@ function buildForceUpdate(page, x) {
   });
 
   // Body text
-  createText(phone, 'A new version of HealthPulse is available. Please update to continue using the app.', 47, 410, {
+  createText(phone, 'A new version of Laso is available. Please update to continue using the app.', 47, 410, {
     size: 16, color: C.secondary, width: 300, align: 'CENTER', lineHeight: 22,
   });
 
@@ -3156,7 +3156,7 @@ function buildMaintenance(page, x) {
   });
 
   // Body text
-  createText(phone, 'HealthPulse is undergoing scheduled maintenance. Your data is safe.', 47, 430, {
+  createText(phone, 'Laso is undergoing scheduled maintenance. Your data is safe.', 47, 430, {
     size: 16, color: C.secondary, width: 300, align: 'CENTER', lineHeight: 22,
   });
 
@@ -3314,7 +3314,7 @@ function yieldToFigma() {
 }
 
 async function buildAllOnOnePage(page) {
-  page.name = 'HealthPulse — All Screens';
+  page.name = 'Laso — All Screens';
   const rowH = PHONE_H + 120; // space between rows
   let y = 0;
 
@@ -3360,7 +3360,7 @@ figma.on('run', async ({ command }) => {
     var page = figma.currentPage;
 
     if (command === 'generate-all' || !command) {
-      figma.notify('Generating all HealthPulse screens...');
+      figma.notify('Generating all Laso screens...');
       // Clear page
       while (page.children.length > 0) { page.children[0].remove(); }
       await buildAllOnOnePage(page);
@@ -3374,7 +3374,7 @@ figma.on('run', async ({ command }) => {
     }
   } catch (err) {
     figma.notify('Plugin error: ' + String(err), { error: true, timeout: 10000 });
-    console.error('HealthPulse Design System error:', err);
+    console.error('Laso Design System error:', err);
   } finally {
     figma.closePlugin();
   }
