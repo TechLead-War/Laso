@@ -5,6 +5,9 @@
 const PHONE_W = 393;
 const PHONE_H = 852;
 const SCREEN_GAP = 100;
+const FLOW_W = 1280;
+const FLOW_H = 980;
+const FLOW_GAP = 160;
 
 const C = {
   bg:        { r: 0.949, g: 0.949, b: 0.969 },
@@ -1703,6 +1706,84 @@ function createHomeScreens(page) {
   // No tab bar (pushed view)
   screens.push(s7);
 
+  // ------------------------------------------
+  // Screen 8: Home Source Waiting
+  // ------------------------------------------
+  const s8 = createPhoneFrame(page, 'Home – Source Waiting', sx(7), 0);
+  addStatusBar(s8);
+
+  createText(s8, 'Good morning, Alex', 20, 66, { size: 16, weight: 'semi', color: C.primary });
+  createRect(s8, 'Gear Icon', PHONE_W - 52, 62, 28, 28, { color: C.secondary, radius: 8 });
+  createRect(s8, 'Journal Icon', PHONE_W - 88, 62, 28, 28, { color: C.secondary, radius: 8 });
+
+  const sourceHero = addCard(s8, 'Source Waiting Hero', 20, 108, 353, 142, { shadow: true });
+  createCircle(sourceHero, 'Hero Icon BG', 16, 18, 48, { color: C.accent, opacity: 0.14 });
+  createRect(sourceHero, 'Hero Icon', 30, 32, 20, 20, { color: C.accent, radius: 6 });
+  createText(sourceHero, 'Apple Health is connected', 76, 18, { size: 18, weight: 'semi', color: C.primary, width: 236 });
+  createText(sourceHero, 'Laso is waiting for the first synced samples to finish building your Home dashboard.', 76, 48, {
+    size: 13,
+    color: C.secondary,
+    width: 246,
+    lineHeight: 18,
+  });
+  addBadge(sourceHero, 'Authorized', 16, 98, C.green, C.white);
+  createText(sourceHero, 'Pending first sync', 112, 100, { size: 12, color: C.secondary });
+
+  const stat1 = addCard(s8, 'Pending Stat', 20, 268, 108, 72, { shadow: true });
+  createText(stat1, 'Pending', 12, 12, { size: 12, weight: 'medium', color: C.secondary });
+  createText(stat1, '1st sync', 12, 34, { size: 18, weight: 'bold', color: C.primary });
+
+  const stat2 = addCard(s8, 'Metric Stat', 142, 268, 108, 72, { shadow: true });
+  createText(stat2, 'Coverage', 12, 12, { size: 12, weight: 'medium', color: C.secondary });
+  createText(stat2, '0 / 58', 12, 34, { size: 18, weight: 'bold', color: C.primary });
+
+  const stat3 = addCard(s8, 'Source Stat', 264, 268, 109, 72, { shadow: true });
+  createText(stat3, 'Source', 12, 12, { size: 12, weight: 'medium', color: C.secondary });
+  createText(stat3, 'Health app', 12, 34, { size: 16, weight: 'bold', color: C.primary });
+
+  const nextCard = addCard(s8, 'What Happens Next', 20, 360, 353, 190, { shadow: true });
+  createText(nextCard, 'What Happens Next', 16, 14, { size: 15, weight: 'semi', color: C.primary });
+
+  createCircle(nextCard, 'Check 1', 18, 48, 12, { color: C.green });
+  createText(nextCard, 'Keep Apple Health up to date', 40, 41, { size: 13, weight: 'semi', color: C.primary, width: 260 });
+  createText(nextCard, 'Steps, workouts, and sleep will appear here after the next Apple Health sync.', 40, 60, {
+    size: 12,
+    color: C.secondary,
+    width: 286,
+    lineHeight: 17,
+  });
+
+  createCircle(nextCard, 'Check 2', 18, 102, 12, { color: C.green });
+  createText(nextCard, 'Refresh after the next sync', 40, 95, { size: 13, weight: 'semi', color: C.primary, width: 260 });
+  createText(nextCard, 'Use refresh any time you want Laso to check for new imported samples.', 40, 114, {
+    size: 12,
+    color: C.secondary,
+    width: 286,
+    lineHeight: 17,
+  });
+
+  createCircle(nextCard, 'Check 3', 18, 156, 12, { color: C.green });
+  createText(nextCard, 'Your dashboard fills in automatically', 40, 149, { size: 13, weight: 'semi', color: C.primary, width: 260 });
+  createText(nextCard, 'Recovery, trends, and source coverage appear as soon as enough data lands.', 40, 168, {
+    size: 12,
+    color: C.secondary,
+    width: 286,
+    lineHeight: 17,
+  });
+
+  addButton(s8, 'Refresh', 20, 575, 353, 50, { color: C.accent, radius: 14, size: 17 });
+  addButton(s8, 'Manage Sources', 20, 639, 353, 48, { outlined: true, radius: 14, size: 16 });
+
+  createText(s8, 'Apple Health → Laso', 0, 705, {
+    size: 12,
+    color: C.secondary,
+    width: PHONE_W,
+    align: 'CENTER',
+  });
+
+  addTabBar(s8, 'home');
+  screens.push(s8);
+
   return screens;
 }
 // ============================================
@@ -1720,7 +1801,8 @@ function createLiveScreens(page) {
 
   screens.push(buildLiveMain(page, 0));
   screens.push(buildLiveProOverlay(page, gap));
-  screens.push(buildLiveEmpty(page, gap * 2));
+  screens.push(buildLiveWearableWaiting(page, gap * 2));
+  screens.push(buildLiveNoWearable(page, gap * 3));
 
   return screens;
 }
@@ -1899,7 +1981,7 @@ function buildLiveMain(page, x) {
 
   // ---- Status Footer ----
   createCircle(phone, 'Status Dot', 20, 738, 8, { color: C.green });
-  createText(phone, 'Apple Watch connected', 34, 734, { size: 12, color: C.secondary });
+  createText(phone, 'Primary wearable connected', 34, 734, { size: 12, color: C.secondary });
   createText(phone, 'Last sync: Just now', 240, 734, { size: 12, color: C.secondary, align: 'RIGHT', width: 133 });
 
   // Tab bar
@@ -2010,17 +2092,17 @@ function buildLiveProOverlay(page, x) {
 // --------------------------------------------------
 // Screen 3: Live Empty
 // --------------------------------------------------
-function buildLiveEmpty(page, x) {
-  const phone = createPhoneFrame(page, 'Live - Empty', x, 0);
+function buildLiveWearableWaiting(page, x) {
+  const phone = createPhoneFrame(page, 'Live - Wearable Waiting', x, 0);
   addStatusBar(phone);
 
   // Large title
   addLargeTitle(phone, 'Live', 62);
 
-  // Gray dot (disconnected)
-  createCircle(phone, 'Offline Dot', 70, 72, 10, { color: C.secondary });
+  // Amber dot (waiting)
+  createCircle(phone, 'Waiting Dot', 70, 72, 10, { color: C.orange });
 
-  // Watch icon placeholder
+  // Wearable illustration
   const watchX = (PHONE_W - 100) / 2;
   const watchY = 260;
 
@@ -2071,7 +2153,7 @@ function buildLiveEmpty(page, x) {
   });
 
   // Waiting text
-  createText(phone, 'Waiting for data...', 0, 450, {
+  createText(phone, 'Waiting for Live Data', 0, 450, {
     size: 20,
     weight: 'semi',
     color: C.primary,
@@ -2079,14 +2161,66 @@ function buildLiveEmpty(page, x) {
     align: 'CENTER',
   });
 
-  createText(phone, 'Wear your Apple Watch to see\nreal-time vitals', 56, 480, {
+  createText(phone, 'Wear your Apple Watch or reopen its\ncompanion app so fresh samples reach Apple Health.', 46, 480, {
     size: 14,
     color: C.secondary,
-    width: 280,
+    width: 300,
+    align: 'CENTER',
+    lineHeight: 20,
+  });
+
+  const tipCard = addCard(phone, 'Waiting Tips', 24, 560, 345, 132, { shadow: true });
+  createText(tipCard, 'What to check', 16, 12, { size: 14, weight: 'semi', color: C.primary });
+  createText(tipCard, '• Wear your watch and keep it nearby', 16, 40, { size: 13, color: C.secondary });
+  createText(tipCard, '• Keep Bluetooth enabled on iPhone', 16, 62, { size: 13, color: C.secondary });
+  createText(tipCard, '• Start a quick workout to generate a fresh sample', 16, 84, { size: 13, color: C.secondary, width: 300 });
+  createText(tipCard, '• Fresh samples usually appear within a minute', 16, 108, { size: 13, color: C.secondary, width: 300 });
+
+  // Tab bar
+  addTabBar(phone, 'live');
+
+  return phone;
+}
+
+function buildLiveNoWearable(page, x) {
+  const phone = createPhoneFrame(page, 'Live - No Wearable', x, 0);
+  addStatusBar(phone);
+  addLargeTitle(phone, 'Live', 62);
+
+  createCircle(phone, 'Offline Dot', 70, 72, 10, { color: C.secondary });
+
+  const hero = addCard(phone, 'No Wearable Hero', 48, 220, 297, 180, { shadow: true });
+  createCircle(hero, 'Hero Icon BG', 110, 20, 76, { color: C.accent, opacity: 0.12 });
+  createRect(hero, 'Hero Icon', 134, 44, 28, 28, { color: C.accent, radius: 10 });
+  createText(hero, 'Live monitoring needs\na wearable', 0, 104, {
+    size: 22,
+    weight: 'bold',
+    color: C.primary,
+    width: 297,
     align: 'CENTER',
   });
 
-  // Tab bar
+  createText(phone, 'You can still use Home and Explore with regular Apple Health data, but real-time heart rate, oxygen, and breathing updates need a wearable source.', 44, 430, {
+    size: 14,
+    color: C.secondary,
+    width: 305,
+    align: 'CENTER',
+    lineHeight: 20,
+  });
+
+  const tipCard = addCard(phone, 'No Wearable Tips', 24, 520, 345, 160, { shadow: true });
+  createText(tipCard, 'How to unlock Live', 16, 12, { size: 14, weight: 'semi', color: C.primary });
+  createText(tipCard, '• Connect Apple Watch, Oura, Garmin, Whoop, or another supported source', 16, 40, {
+    size: 13,
+    color: C.secondary,
+    width: 310,
+    lineHeight: 18,
+  });
+  createText(tipCard, '• Enable Apple Health sharing in the companion app', 16, 86, { size: 13, color: C.secondary, width: 310 });
+  createText(tipCard, '• Return after the first wearable sync', 16, 110, { size: 13, color: C.secondary, width: 310 });
+  createText(tipCard, '• Manage sources from Settings any time', 16, 132, { size: 13, color: C.secondary, width: 310 });
+
+  addButton(phone, 'Manage Sources', 24, 708, 345, 48, { outlined: true, radius: 14, size: 16 });
   addTabBar(phone, 'live');
 
   return phone;
@@ -2887,8 +3021,9 @@ function createSettingsScreens(page) {
   const gap = PHONE_W + SCREEN_GAP;
 
   screens.push(buildSettingsMain(page, 0));
-  screens.push(buildConnectedDevices(page, gap));
-  screens.push(buildDeviceDetail(page, gap * 2));
+  screens.push(buildConnectedDevicesHealthOnly(page, gap));
+  screens.push(buildConnectedDevices(page, gap * 2));
+  screens.push(buildDeviceDetail(page, gap * 3));
 
   return screens;
 }
@@ -2959,50 +3094,121 @@ function buildSettingsMain(page, x) {
 }
 
 // --------------------------------------------------
-// Settings Screen 2: Connected Devices
+// Settings Screen 2: Connected Devices (Health Only)
+// --------------------------------------------------
+function buildConnectedDevicesHealthOnly(page, x) {
+  const phone = createPhoneFrame(page, 'Settings - Connected Devices (Health Only)', x, 0);
+  addStatusBar(phone);
+  addNavBar(phone, 'Connected Devices');
+
+  const hero = addCard(phone, 'Health Only Hero', 20, 110, 353, 150, { shadow: true });
+  createRect(hero, 'Health Icon BG', 16, 18, 52, 52, { color: C.accent, radius: 16, opacity: 0.12 });
+  createRect(hero, 'Health Icon', 30, 32, 24, 24, { color: C.accent, radius: 8 });
+  createText(hero, 'Apple Health is connected', 82, 20, { size: 18, weight: 'semi', color: C.primary, width: 220 });
+  createText(hero, 'We will list each wearable, app, and accessory here after it writes its first samples into Apple Health.', 82, 48, {
+    size: 13,
+    color: C.secondary,
+    width: 236,
+    lineHeight: 18,
+  });
+
+  const pill1 = addCard(hero, 'Health Ready Pill', 16, 100, 102, 34, { radius: 17 });
+  createText(pill1, 'Health ready', 0, 9, { size: 12, weight: 'semi', color: C.primary, width: 102, align: 'CENTER' });
+  const pill2 = addCard(hero, 'Coverage Pill', 126, 100, 94, 34, { radius: 17 });
+  createText(pill2, '0 / 58', 0, 9, { size: 12, weight: 'semi', color: C.primary, width: 94, align: 'CENTER' });
+  const pill3 = addCard(hero, 'Sync Pill', 228, 100, 109, 34, { radius: 17 });
+  createText(pill3, 'First sync pending', 0, 9, { size: 12, weight: 'semi', color: C.primary, width: 109, align: 'CENTER' });
+
+  createText(phone, 'COMPATIBLE SOURCES', 20, 282, { size: 12, weight: 'semi', color: C.secondary });
+
+  const source1 = addCard(phone, 'Apple Watch Setup', 20, 302, 353, 78, { shadow: true });
+  createRect(source1, 'Icon BG', 12, 17, 44, 44, { color: C.accent, radius: 12, opacity: 0.1 });
+  createRect(source1, 'Icon', 22, 27, 24, 24, { color: C.accent, radius: 7 });
+  createText(source1, 'Apple Watch', 68, 18, { size: 15, weight: 'semi', color: C.primary });
+  createText(source1, 'Best option for live vitals and readiness', 68, 40, { size: 12, color: C.secondary });
+  addButton(source1, 'Setup', 271, 24, 70, 30, { color: C.accent, radius: 10, size: 13 });
+
+  const source2 = addCard(phone, 'Oura Setup', 20, 392, 353, 78, { shadow: true });
+  createRect(source2, 'Icon BG', 12, 17, 44, 44, { color: C.green, radius: 12, opacity: 0.1 });
+  createRect(source2, 'Icon', 22, 27, 24, 24, { color: C.green, radius: 12 });
+  createText(source2, 'Oura Ring', 68, 18, { size: 15, weight: 'semi', color: C.primary });
+  createText(source2, 'Sleep, HRV, temperature, and recovery', 68, 40, { size: 12, color: C.secondary });
+  addButton(source2, 'Setup', 271, 24, 70, 30, { color: C.accent, radius: 10, size: 13 });
+
+  const source3 = addCard(phone, 'Garmin Setup', 20, 482, 353, 78, { shadow: true });
+  createRect(source3, 'Icon BG', 12, 17, 44, 44, { color: C.orange, radius: 12, opacity: 0.1 });
+  createRect(source3, 'Icon', 22, 27, 24, 24, { color: C.orange, radius: 8 });
+  createText(source3, 'Garmin', 68, 18, { size: 15, weight: 'semi', color: C.primary });
+  createText(source3, 'Activity, cardio fitness, and wearable health data', 68, 40, { size: 12, color: C.secondary, width: 180 });
+  addButton(source3, 'Setup', 271, 24, 70, 30, { color: C.accent, radius: 10, size: 13 });
+
+  const nextCard = addCard(phone, 'Next Steps Card', 20, 590, 353, 156, { shadow: true });
+  createText(nextCard, 'What Happens Next', 16, 12, { size: 15, weight: 'semi', color: C.primary });
+  createText(nextCard, '1. Connect a wearable in its companion app', 16, 42, { size: 13, color: C.secondary, width: 310 });
+  createText(nextCard, '2. Enable Apple Health sharing', 16, 68, { size: 13, color: C.secondary, width: 310 });
+  createText(nextCard, '3. Return after the first sync to unlock live and device-aware screens', 16, 94, {
+    size: 13,
+    color: C.secondary,
+    width: 310,
+    lineHeight: 18,
+  });
+  createText(nextCard, '4. Home and Explore continue working with Apple Health data in the meantime', 16, 128, {
+    size: 13,
+    color: C.secondary,
+    width: 310,
+    lineHeight: 18,
+  });
+
+  return phone;
+}
+
+// --------------------------------------------------
+// Settings Screen 3: Connected Devices
 // --------------------------------------------------
 function buildConnectedDevices(page, x) {
   const phone = createPhoneFrame(page, 'Settings - Connected Devices', x, 0);
   addStatusBar(phone);
   addNavBar(phone, 'Connected Devices');
 
-  // Scan banner
-  const scanBanner = addCard(phone, 'Scan Banner', 20, 110, 353, 36, { radius: 10 });
-  createCircle(scanBanner, 'Green Dot', 12, 11, 10, { color: C.green });
-  createText(scanBanner, 'Scanning...', 30, 9, { size: 13, weight: 'medium', color: C.primary });
-  // Spinner placeholder
-  createCircle(scanBanner, 'Spinner', 325, 9, 16, {
-    fills: [],
-    stroke: C.accent,
-    strokeWeight: 2,
-  });
+  const hero = addCard(phone, 'Sources Hero', 20, 110, 353, 126, { shadow: true });
+  createRect(hero, 'Hero Icon BG', 16, 18, 52, 52, { color: C.accent, radius: 16, opacity: 0.12 });
+  createRect(hero, 'Hero Icon', 30, 32, 24, 24, { color: C.accent, radius: 8 });
+  createText(hero, 'Apple Watch is active', 82, 20, { size: 18, weight: 'semi', color: C.primary });
+  createText(hero, '12 metrics are arriving through Apple Health.', 82, 48, { size: 13, color: C.secondary, width: 220 });
 
-  // Section: ACTIVE DEVICES
-  createText(phone, 'ACTIVE DEVICES', 20, 165, { size: 12, weight: 'semi', color: C.secondary });
+  const summary1 = addCard(hero, 'Summary 1', 16, 88, 102, 26, { radius: 13 });
+  createText(summary1, '2 sources', 0, 6, { size: 11, weight: 'semi', color: C.primary, width: 102, align: 'CENTER' });
+  const summary2 = addCard(hero, 'Summary 2', 126, 88, 102, 26, { radius: 13 });
+  createText(summary2, '18 / 58 metrics', 0, 6, { size: 11, weight: 'semi', color: C.primary, width: 102, align: 'CENTER' });
+  const summary3 = addCard(hero, 'Summary 3', 236, 88, 101, 26, { radius: 13 });
+  createText(summary3, 'Just now', 0, 6, { size: 11, weight: 'semi', color: C.primary, width: 101, align: 'CENTER' });
+
+  // Section: ACTIVE SOURCES
+  createText(phone, 'ACTIVE SOURCES', 20, 258, { size: 12, weight: 'semi', color: C.secondary });
 
   // Device card 1: Apple Watch
-  const device1 = addCard(phone, 'Apple Watch Card', 20, 185, 353, 80, { shadow: true });
+  const device1 = addCard(phone, 'Apple Watch Card', 20, 278, 353, 80, { shadow: true });
   // Device icon placeholder
   createRect(device1, 'Device Icon BG', 12, 18, 44, 44, { color: C.accent, radius: 12, opacity: 0.1 });
   createRect(device1, 'Device Icon', 21, 27, 26, 26, { color: C.accent, radius: 6 });
   createText(device1, 'Apple Watch Series 9', 68, 16, { size: 15, weight: 'semi', color: C.primary });
-  addBadge(device1, 'Connected', 68, 40, C.green, C.white);
-  createText(device1, '12 metrics', 160, 43, { size: 12, color: C.secondary });
+  addBadge(device1, 'Active', 68, 40, C.green, C.white);
+  createText(device1, 'Apple Health · 12 metrics', 140, 43, { size: 12, color: C.secondary });
   createText(device1, '\u203A', 329, 28, { size: 18, color: C.secondary });
 
   // Device card 2: Oura Ring
-  const device2 = addCard(phone, 'Oura Ring Card', 20, 275, 353, 80, { shadow: true });
+  const device2 = addCard(phone, 'Oura Ring Card', 20, 368, 353, 80, { shadow: true });
   createRect(device2, 'Device Icon BG', 12, 18, 44, 44, { color: C.accent, radius: 12, opacity: 0.1 });
   createRect(device2, 'Device Icon', 21, 27, 26, 26, { color: C.accent, radius: 6 });
   createText(device2, 'Oura Ring Gen 3', 68, 16, { size: 15, weight: 'semi', color: C.primary });
-  addBadge(device2, 'Connected', 68, 40, C.green, C.white);
-  createText(device2, '6 metrics', 160, 43, { size: 12, color: C.secondary });
+  addBadge(device2, 'Active', 68, 40, C.green, C.white);
+  createText(device2, 'Oura · 6 metrics', 140, 43, { size: 12, color: C.secondary });
   createText(device2, '\u203A', 329, 28, { size: 18, color: C.secondary });
 
-  // Section: INACTIVE
-  createText(phone, 'INACTIVE', 20, 370, { size: 12, weight: 'semi', color: C.secondary });
+  // Section: CONNECTED BUT INACTIVE
+  createText(phone, 'CONNECTED BUT INACTIVE', 20, 468, { size: 12, weight: 'semi', color: C.secondary });
 
-  const device3 = addCard(phone, 'Withings Card', 20, 390, 353, 80, { shadow: true });
+  const device3 = addCard(phone, 'Withings Card', 20, 488, 353, 80, { shadow: true });
   createRect(device3, 'Device Icon BG', 12, 18, 44, 44, { color: C.secondary, radius: 12, opacity: 0.1 });
   createRect(device3, 'Device Icon', 21, 27, 26, 26, { color: C.secondary, radius: 6 });
   createText(device3, 'Withings Scale', 68, 16, { size: 15, weight: 'semi', color: C.primary });
@@ -3010,10 +3216,10 @@ function buildConnectedDevices(page, x) {
   createText(device3, 'Last seen: 3 days ago', 68, 58, { size: 12, color: C.secondary });
   createText(device3, '\u203A', 329, 28, { size: 18, color: C.secondary });
 
-  // Section: DISCOVERABLE
-  createText(phone, 'DISCOVERABLE', 20, 490, { size: 12, weight: 'semi', color: C.secondary });
+  // Section: COMPATIBLE SOURCES
+  createText(phone, 'COMPATIBLE SOURCES', 20, 588, { size: 12, weight: 'semi', color: C.secondary });
 
-  const device4 = addCard(phone, 'Whoop Card', 20, 510, 353, 80, { shadow: true });
+  const device4 = addCard(phone, 'Whoop Card', 20, 608, 353, 80, { shadow: true });
   createRect(device4, 'Device Icon BG', 12, 18, 44, 44, { color: C.secondary, radius: 12, opacity: 0.1 });
   createRect(device4, 'Device Icon', 21, 27, 26, 26, { color: C.secondary, radius: 6 });
   createText(device4, 'Whoop 4.0', 68, 24, { size: 15, weight: 'semi', color: C.primary });
@@ -3023,7 +3229,7 @@ function buildConnectedDevices(page, x) {
 }
 
 // --------------------------------------------------
-// Settings Screen 3: Device Detail
+// Settings Screen 4: Device Detail
 // --------------------------------------------------
 function buildDeviceDetail(page, x) {
   const phone = createPhoneFrame(page, 'Settings - Device Detail', x, 0);
@@ -3254,6 +3460,672 @@ function buildBillingGraceBanner(page, x) {
   return phone;
 }
 
+// ============================================
+// FLOW DIAGRAM BOARDS
+// ============================================
+
+function createFlowBoards(page) {
+  const boards = [];
+  const bx = function(index) { return index * (FLOW_W + FLOW_GAP); };
+
+  boards.push(buildFlowAppEntry(page, bx(0)));
+  boards.push(buildFlowHome(page, bx(1)));
+  boards.push(buildFlowLive(page, bx(2)));
+  boards.push(buildFlowExplore(page, bx(3)));
+  boards.push(buildFlowSources(page, bx(4)));
+  boards.push(buildFlowSystem(page, bx(5)));
+
+  return boards;
+}
+
+function buildFlowAppEntry(page, x) {
+  const board = createFlowBoard(page, 'Flow – App Entry & Onboarding', x, 0);
+  addFlowBoardHeader(board, 'App Entry & Onboarding', 'Maps the launch sequence, Apple Health consent, personalization, and the first post-onboarding landing states.', C.purple);
+  addFlowLegend(board, [
+    { label: 'Entry', color: C.primary, bg: C.white },
+    { label: 'Screen', color: C.accent, bg: C.white },
+    { label: 'Health-only', color: C.orange, bg: C.white },
+    { label: 'Wearable ready', color: C.green, bg: C.white },
+  ], 640, 46);
+
+  addFlowLane(board, 'Story setup', 32, 152, 1216, 108, C.purple);
+  addFlowLane(board, 'Data setup', 32, 292, 1216, 130, C.accent);
+  addFlowLane(board, 'Monetization', 32, 456, 1216, 108, C.orange);
+  addFlowLane(board, 'Outcomes', 32, 614, 1216, 178, C.green);
+
+  const launch = addFlowNode(board, 'App launch', 'User opens Laso and enters the onboarding journey.', 48, 168, 160, 74, {
+    accent: C.primary,
+    kind: 'ENTRY',
+    kindBg: fill(C.bg)[0].color ? C.bg : C.bg,
+  });
+  const welcome = addFlowNode(board, 'Onboarding - Welcome', 'Start CTA into the brand and product promise.', 236, 160, 190, 88, {
+    accent: C.purple,
+    kind: 'SCREEN',
+    kindBg: C.bg,
+  });
+  const culture1 = addFlowNode(board, 'Onboarding - Culture 1', 'Health is personal.', 454, 160, 170, 88, {
+    accent: C.purple,
+    kind: 'SCREEN',
+    kindBg: C.bg,
+  });
+  const culture2 = addFlowNode(board, 'Onboarding - Culture 2', 'Intelligence grows with usage.', 652, 160, 170, 88, {
+    accent: C.purple,
+    kind: 'SCREEN',
+    kindBg: C.bg,
+  });
+  const culture3 = addFlowNode(board, 'Onboarding - Culture 3', 'Privacy and ownership framing.', 850, 160, 170, 88, {
+    accent: C.purple,
+    kind: 'SCREEN',
+    kindBg: C.bg,
+  });
+  const health = addFlowNode(board, 'Onboarding - HealthKit Permission', 'Request Apple Health access so Laso can ingest Health data.', 44, 312, 230, 92, {
+    accent: C.accent,
+    kind: 'SCREEN',
+    kindBg: C.bg,
+  });
+  const focus = addFlowNode(board, 'Onboarding - Focus Selection', 'Choose goals like recovery, sleep, heart, or fitness.', 314, 312, 210, 92, {
+    accent: C.accent,
+    kind: 'SCREEN',
+    kindBg: C.bg,
+  });
+  const calibration = addFlowNode(board, 'Onboarding - Calibration', 'Set up the first baselines and explain how learning improves.', 564, 312, 210, 92, {
+    accent: C.accent,
+    kind: 'SCREEN',
+    kindBg: C.bg,
+  });
+  const discovery = addFlowNode(board, 'Onboarding - Discovery', 'Reveal starter insights and explain what will unlock next.', 814, 312, 180, 92, {
+    accent: C.accent,
+    kind: 'SCREEN',
+    kindBg: C.bg,
+  });
+  const paywall = addFlowNode(board, 'Onboarding - Paywall', 'Subscription handoff before the main product loops.', 1034, 312, 180, 92, {
+    accent: C.orange,
+    kind: 'SCREEN',
+    kindBg: C.bg,
+  });
+
+  const homeWaiting = addFlowNode(board, 'Home – Source Waiting', 'Health access is granted, but Laso is still waiting for the first imported samples.', 160, 644, 260, 96, {
+    accent: C.orange,
+    kind: 'HEALTH ONLY',
+    kindBg: C.bg,
+    footer: 'No wearable required',
+  });
+  const homeMain = addFlowNode(board, 'Home – Main', 'The main dashboard once enough health data is available.', 500, 644, 240, 96, {
+    accent: C.green,
+    kind: 'READY',
+    kindBg: C.bg,
+    footer: 'Existing data or completed first sync',
+  });
+  const liveNoWearable = addFlowNode(board, 'Live - No Wearable', 'Live stays visible, but explains that real-time vitals need a wearable source.', 820, 644, 280, 96, {
+    accent: C.orange,
+    kind: 'HEALTH ONLY',
+    kindBg: C.bg,
+    footer: 'Home + Explore continue to work',
+  });
+
+  const right = function(node) { return node.x + node.width; };
+  const centerY = function(node) { return node.y + node.height / 2; };
+  const centerX = function(node) { return node.x + node.width / 2; };
+
+  addFlowArrow(board, right(launch), centerY(launch), welcome.x, centerY(welcome), { color: C.primary });
+  addFlowArrow(board, right(welcome), centerY(welcome), culture1.x, centerY(culture1), { color: C.purple });
+  addFlowArrow(board, right(culture1), centerY(culture1), culture2.x, centerY(culture2), { color: C.purple });
+  addFlowArrow(board, right(culture2), centerY(culture2), culture3.x, centerY(culture3), { color: C.purple });
+  addFlowArrow(board, centerX(culture3), culture3.y + culture3.height, centerX(health), health.y, {
+    color: C.accent,
+    verticalFirst: true,
+    label: 'Continue',
+  });
+  addFlowArrow(board, right(health), centerY(health), focus.x, centerY(focus), { color: C.accent });
+  addFlowArrow(board, right(focus), centerY(focus), calibration.x, centerY(calibration), { color: C.accent });
+  addFlowArrow(board, right(calibration), centerY(calibration), discovery.x, centerY(discovery), { color: C.accent });
+  addFlowArrow(board, right(discovery), centerY(discovery), paywall.x, centerY(paywall), { color: C.orange });
+
+  addFlowArrow(board, centerX(paywall), paywall.y + paywall.height, centerX(homeWaiting), homeWaiting.y, {
+    color: C.orange,
+    verticalFirst: true,
+    label: 'Apple Health connected,\nfirst sync pending',
+  });
+  addFlowArrow(board, centerX(paywall), paywall.y + paywall.height, centerX(homeMain), homeMain.y, {
+    color: C.green,
+    verticalFirst: true,
+    label: 'Existing data or completed sync',
+  });
+  addFlowArrow(board, centerX(homeWaiting), homeWaiting.y + homeWaiting.height / 2, liveNoWearable.x, liveNoWearable.y + liveNoWearable.height / 2, {
+    color: C.orange,
+    label: 'Live tab without a wearable',
+  });
+
+  return board;
+}
+
+function buildFlowHome(page, x) {
+  const board = createFlowBoard(page, 'Flow – Home & Coaching', x, 0);
+  addFlowBoardHeader(board, 'Home & Daily Coaching', 'Shows how the waiting state resolves into the main dashboard, coaching surfaces, journal loop, and weekly / vitality deep dives.', C.accent);
+  addFlowLegend(board, [
+    { label: 'Dashboard', color: C.accent, bg: C.white },
+    { label: 'Guide', color: C.green, bg: C.white },
+    { label: 'Entry sheet', color: C.orange, bg: C.white },
+    { label: 'Detail', color: C.purple, bg: C.white },
+  ], 650, 46);
+
+  addFlowLane(board, 'Primary dashboard', 32, 152, 1216, 128, C.accent);
+  addFlowLane(board, 'Guidance & review', 32, 320, 1216, 138, C.green);
+  addFlowLane(board, 'Journal loop', 32, 500, 1216, 130, C.orange);
+  addFlowLane(board, 'Long-form detail', 32, 670, 1216, 128, C.purple);
+
+  const sourceWaiting = addFlowNode(board, 'Home – Source Waiting', 'Authorized Apple Health path before the first sync completes.', 48, 176, 220, 88, {
+    accent: C.orange,
+    kind: 'WAITING',
+    kindBg: C.bg,
+  });
+  const homeMain = addFlowNode(board, 'Home – Main', 'Primary dashboard with readiness, trends, and action cards.', 318, 176, 220, 88, {
+    accent: C.accent,
+    kind: 'SCREEN',
+    kindBg: C.bg,
+  });
+  const homeScrolled = addFlowNode(board, 'Home – Scrolled', 'Body insights, risks, weekly review, and coach recommendations.', 588, 176, 230, 88, {
+    accent: C.accent,
+    kind: 'SCREEN',
+    kindBg: C.bg,
+  });
+  const weeklyReview = addFlowNode(board, 'Detail – Weekly Review', 'Expanded weekly summary and watch-outs.', 868, 176, 230, 88, {
+    accent: C.purple,
+    kind: 'DETAIL',
+    kindBg: C.bg,
+  });
+
+  const scoreGuide = addFlowNode(board, 'Home – Score Guide', 'Explain the score system and category breakdown.', 318, 344, 220, 88, {
+    accent: C.green,
+    kind: 'GUIDE',
+    kindBg: C.bg,
+  });
+  const recoveryInfo = addFlowNode(board, 'Home – Recovery Info', 'Explain readiness and recovery factors.', 588, 344, 230, 88, {
+    accent: C.green,
+    kind: 'GUIDE',
+    kindBg: C.bg,
+  });
+  const vitality = addFlowNode(board, 'Home – Vitality Detail', 'Break down vitality age contributors and improvement levers.', 868, 344, 230, 88, {
+    accent: C.purple,
+    kind: 'DETAIL',
+    kindBg: C.bg,
+  });
+
+  const journalEntry = addFlowNode(board, 'Home – Journal Entry', 'Quick mood, energy, stress, and notes capture.', 318, 528, 220, 88, {
+    accent: C.orange,
+    kind: 'ENTRY',
+    kindBg: C.bg,
+  });
+  const journalInsights = addFlowNode(board, 'Home – Journal Insights', 'Correlate journal tags with sleep, HRV, and activity.', 588, 528, 230, 88, {
+    accent: C.orange,
+    kind: 'DETAIL',
+    kindBg: C.bg,
+  });
+
+  const right = function(node) { return node.x + node.width; };
+  const centerY = function(node) { return node.y + node.height / 2; };
+  const centerX = function(node) { return node.x + node.width / 2; };
+
+  addFlowArrow(board, right(sourceWaiting), centerY(sourceWaiting), homeMain.x, centerY(homeMain), {
+    color: C.accent,
+    label: 'First sync completes',
+  });
+  addFlowArrow(board, right(homeMain), centerY(homeMain), homeScrolled.x, centerY(homeScrolled), { color: C.accent });
+  addFlowArrow(board, right(homeScrolled), centerY(homeScrolled), weeklyReview.x, centerY(weeklyReview), { color: C.purple, label: 'Weekly review card' });
+  addFlowArrow(board, centerX(homeMain), homeMain.y + homeMain.height, centerX(scoreGuide), scoreGuide.y, {
+    color: C.green,
+    label: 'Tap score info',
+  });
+  addFlowArrow(board, centerX(homeScrolled), homeScrolled.y + homeScrolled.height, centerX(recoveryInfo), recoveryInfo.y, {
+    color: C.green,
+    verticalFirst: true,
+    label: 'Tap readiness explainer',
+  });
+  addFlowArrow(board, centerX(homeScrolled), homeScrolled.y + homeScrolled.height, centerX(vitality), vitality.y, {
+    color: C.purple,
+    verticalFirst: true,
+    label: 'Open vitality card',
+  });
+  addFlowArrow(board, centerX(homeMain), homeMain.y + homeMain.height, centerX(journalEntry), journalEntry.y, {
+    color: C.orange,
+    label: 'Quick log',
+  });
+  addFlowArrow(board, right(journalEntry), centerY(journalEntry), journalInsights.x, centerY(journalInsights), {
+    color: C.orange,
+    label: 'After enough entries',
+  });
+
+  return board;
+}
+
+function buildFlowLive(page, x) {
+  const board = createFlowBoard(page, 'Flow – Live Monitoring', x, 0);
+  addFlowBoardHeader(board, 'Live Monitoring: With Watch vs Without', 'Makes the entitlement branch, no-wearable state, wearable waiting state, and full live dashboard explicit.', C.green);
+  addFlowLegend(board, [
+    { label: 'Entitlement', color: C.orange, bg: C.white },
+    { label: 'Health-only', color: C.secondary, bg: C.white },
+    { label: 'Wearable waiting', color: C.yellow, bg: C.white },
+    { label: 'Live ready', color: C.green, bg: C.white },
+  ], 630, 46);
+
+  addFlowLane(board, 'Entry', 32, 152, 1216, 104, C.orange);
+  addFlowLane(board, 'No wearable path', 32, 300, 1216, 170, C.secondary);
+  addFlowLane(board, 'Wearable path', 32, 520, 1216, 210, C.green);
+
+  const liveTab = addFlowNode(board, 'Live tab opened', 'User selects the Live tab from the main navigation.', 500, 170, 240, 72, {
+    accent: C.orange,
+    kind: 'ENTRY',
+    kindBg: C.bg,
+  });
+  const proOverlay = addFlowNode(board, 'Live - PRO Overlay', 'Subscription gate for Live when the feature is locked.', 60, 186, 220, 88, {
+    accent: C.orange,
+    kind: 'LOCKED',
+    kindBg: C.bg,
+  });
+
+  const liveNoWearable = addFlowNode(board, 'Live - No Wearable', 'Explain that Home and Explore work, but live vitals need a wearable source.', 60, 342, 250, 96, {
+    accent: C.secondary,
+    kind: 'HEALTH ONLY',
+    kindBg: C.bg,
+  });
+  const connectedHealthOnly = addFlowNode(board, 'Settings - Connected Devices (Health Only)', 'Apple Health is connected and compatible sources are still in setup state.', 360, 342, 300, 96, {
+    accent: C.secondary,
+    kind: 'SETTINGS',
+    kindBg: C.bg,
+  });
+  const deviceDetail = addFlowNode(board, 'Settings - Device Detail', 'Guide setup and explain the sync path for a wearable source.', 720, 342, 240, 96, {
+    accent: C.accent,
+    kind: 'DETAIL',
+    kindBg: C.bg,
+  });
+
+  const liveWaiting = addFlowNode(board, 'Live - Wearable Waiting', 'A wearable is connected but fresh live samples are still pending.', 830, 566, 260, 96, {
+    accent: C.yellow,
+    kind: 'WAITING',
+    kindBg: C.bg,
+  });
+  const liveMain = addFlowNode(board, 'Live - Main', 'Real-time vitals, activity rings, workouts, and status footer.', 520, 676, 220, 96, {
+    accent: C.green,
+    kind: 'LIVE READY',
+    kindBg: C.bg,
+  });
+
+  const right = function(node) { return node.x + node.width; };
+  const left = function(node) { return node.x; };
+  const centerY = function(node) { return node.y + node.height / 2; };
+  const centerX = function(node) { return node.x + node.width / 2; };
+
+  addFlowArrow(board, liveTab.x, centerY(liveTab), right(proOverlay), centerY(proOverlay), {
+    color: C.orange,
+    label: 'Not subscribed',
+  });
+  addFlowArrow(board, centerX(liveTab), liveTab.y + liveTab.height, centerX(liveNoWearable), liveNoWearable.y, {
+    color: C.secondary,
+    verticalFirst: true,
+    label: 'No wearable source detected',
+  });
+  addFlowArrow(board, right(liveNoWearable), centerY(liveNoWearable), connectedHealthOnly.x, centerY(connectedHealthOnly), {
+    color: C.secondary,
+    label: 'Manage sources',
+  });
+  addFlowArrow(board, right(connectedHealthOnly), centerY(connectedHealthOnly), deviceDetail.x, centerY(deviceDetail), {
+    color: C.accent,
+    label: 'Choose a source',
+  });
+  addFlowArrow(board, centerX(deviceDetail), deviceDetail.y + deviceDetail.height, centerX(liveWaiting), liveWaiting.y, {
+    color: C.yellow,
+    verticalFirst: true,
+    label: 'First wearable sync',
+  });
+  addFlowArrow(board, centerX(liveTab), liveTab.y + liveTab.height, centerX(liveWaiting), liveWaiting.y, {
+    color: C.yellow,
+    label: 'Wearable connected,\nwaiting for fresh data',
+  });
+  addFlowArrow(board, centerX(liveWaiting), liveWaiting.y + liveWaiting.height, centerX(liveMain), liveMain.y, {
+    color: C.green,
+    label: 'Fresh samples arrive',
+  });
+
+  return board;
+}
+
+function buildFlowExplore(page, x) {
+  const board = createFlowBoard(page, 'Flow – Explore & Details', x, 0);
+  addFlowBoardHeader(board, 'Explore, Analysis & Drilldowns', 'Covers the Explore tab and every downstream detail screen: metric, log, category, risk, insights, correlations, and health states.', C.orange);
+  addFlowLegend(board, [
+    { label: 'Explore', color: C.orange, bg: C.white },
+    { label: 'Tap-through', color: C.accent, bg: C.white },
+    { label: 'Detail', color: C.purple, bg: C.white },
+    { label: 'Advanced', color: C.green, bg: C.white },
+  ], 640, 46);
+
+  addFlowLane(board, 'Explore surfaces', 32, 152, 1216, 110, C.orange);
+  addFlowLane(board, 'Primary drilldowns', 32, 318, 1216, 132, C.accent);
+  addFlowLane(board, 'Advanced analytics', 32, 502, 1216, 156, C.green);
+
+  const exploreMain = addFlowNode(board, 'Explore - Main', 'Hero score, categories, trends, and attention areas.', 60, 170, 220, 88, {
+    accent: C.orange,
+    kind: 'SCREEN',
+    kindBg: C.bg,
+  });
+  const exploreScroll = addFlowNode(board, 'Explore - Scroll', 'Extended list content and deeper trend sections.', 330, 170, 220, 88, {
+    accent: C.orange,
+    kind: 'SCREEN',
+    kindBg: C.bg,
+  });
+  const exploreSimulation = addFlowNode(board, 'Explore - Simulation', 'What-if preview / simulation state for score movement.', 600, 170, 250, 88, {
+    accent: C.orange,
+    kind: 'SCREEN',
+    kindBg: C.bg,
+  });
+
+  const category = addFlowNode(board, 'Detail – Category', 'Category score breakdown, highlights, and metric list.', 220, 344, 230, 96, {
+    accent: C.purple,
+    kind: 'DETAIL',
+    kindBg: C.bg,
+  });
+  const metric = addFlowNode(board, 'Detail – Metric', 'Metric trend chart, stats, and contextual insights.', 500, 344, 220, 96, {
+    accent: C.purple,
+    kind: 'DETAIL',
+    kindBg: C.bg,
+  });
+  const metricLog = addFlowNode(board, 'Detail – Metric Log', 'Sheet for adding or editing manual metric values.', 770, 344, 240, 96, {
+    accent: C.purple,
+    kind: 'SHEET',
+    kindBg: C.bg,
+  });
+  const risk = addFlowNode(board, 'Detail – Risk', 'Risk gauge, contributing factors, and focus actions.', 1030, 344, 190, 96, {
+    accent: C.purple,
+    kind: 'DETAIL',
+    kindBg: C.bg,
+  });
+
+  const insights = addFlowNode(board, 'Detail – Insights', 'All action items and insight groups.', 80, 536, 220, 96, {
+    accent: C.green,
+    kind: 'ADVANCED',
+    kindBg: C.bg,
+  });
+  const correlations = addFlowNode(board, 'Detail – Correlations', 'Correlated behaviors and metric relationships.', 360, 536, 240, 96, {
+    accent: C.green,
+    kind: 'ADVANCED',
+    kindBg: C.bg,
+  });
+  const healthStates = addFlowNode(board, 'Detail – Health States', 'Long-range state classification and transitions.', 660, 536, 250, 96, {
+    accent: C.green,
+    kind: 'ADVANCED',
+    kindBg: C.bg,
+  });
+
+  const right = function(node) { return node.x + node.width; };
+  const centerY = function(node) { return node.y + node.height / 2; };
+  const centerX = function(node) { return node.x + node.width / 2; };
+
+  addFlowArrow(board, right(exploreMain), centerY(exploreMain), exploreScroll.x, centerY(exploreScroll), { color: C.orange });
+  addFlowArrow(board, right(exploreScroll), centerY(exploreScroll), exploreSimulation.x, centerY(exploreSimulation), { color: C.orange, label: 'Scenario preview' });
+  addFlowArrow(board, centerX(exploreMain), exploreMain.y + exploreMain.height, centerX(category), category.y, {
+    color: C.accent,
+    label: 'Tap category',
+  });
+  addFlowArrow(board, centerX(exploreScroll), exploreScroll.y + exploreScroll.height, centerX(metric), metric.y, {
+    color: C.accent,
+    label: 'Tap metric',
+  });
+  addFlowArrow(board, right(metric), centerY(metric), metricLog.x, centerY(metricLog), {
+    color: C.purple,
+    label: 'Log / edit value',
+  });
+  addFlowArrow(board, centerX(exploreSimulation), exploreSimulation.y + exploreSimulation.height, centerX(healthStates), healthStates.y, {
+    color: C.green,
+    label: '30+ day branch',
+  });
+  addFlowArrow(board, centerX(exploreScroll), exploreScroll.y + exploreScroll.height, centerX(correlations), correlations.y, {
+    color: C.green,
+    verticalFirst: true,
+    label: 'See all correlations',
+  });
+  addFlowArrow(board, centerX(exploreMain), exploreMain.y + exploreMain.height, centerX(insights), insights.y, {
+    color: C.green,
+    verticalFirst: true,
+    label: 'All insights',
+  });
+  addFlowArrow(board, centerX(exploreMain), exploreMain.y + exploreMain.height, centerX(risk), risk.y, {
+    color: C.purple,
+    verticalFirst: true,
+    label: 'Risk card tap',
+  });
+  addFlowArrow(board, right(category), centerY(category), metric.x, centerY(metric), {
+    color: C.purple,
+    label: 'Metric in category',
+  });
+
+  return board;
+}
+
+function buildFlowSources(page, x) {
+  const board = createFlowBoard(page, 'Flow – Sources & Device Management', x, 0);
+  addFlowBoardHeader(board, 'Sources, Devices & Sync Management', 'Connects the device management surfaces with the waiting and connected states used across Home and Live.', C.secondary);
+  addFlowLegend(board, [
+    { label: 'Settings', color: C.secondary, bg: C.white },
+    { label: 'Health-only', color: C.orange, bg: C.white },
+    { label: 'Connected', color: C.green, bg: C.white },
+    { label: 'Outcome', color: C.accent, bg: C.white },
+  ], 650, 46);
+
+  addFlowLane(board, 'Entry points', 32, 152, 1216, 112, C.secondary);
+  addFlowLane(board, 'Source management', 32, 320, 1216, 152, C.accent);
+  addFlowLane(board, 'Outcomes', 32, 528, 1216, 166, C.green);
+
+  const settingsMain = addFlowNode(board, 'Settings - Main', 'Main settings sheet with the device management entry row.', 60, 170, 220, 88, {
+    accent: C.secondary,
+    kind: 'SCREEN',
+    kindBg: C.bg,
+  });
+  const homeWaiting = addFlowNode(board, 'Home – Source Waiting', 'Home empty state shown after Apple Health access but before source sync.', 330, 170, 240, 88, {
+    accent: C.orange,
+    kind: 'HEALTH ONLY',
+    kindBg: C.bg,
+  });
+  const healthKit = addFlowNode(board, 'Onboarding - HealthKit Permission', 'Original permission source that unlocks all later source states.', 620, 170, 260, 88, {
+    accent: C.accent,
+    kind: 'ENTRY',
+    kindBg: C.bg,
+  });
+
+  const connectedDevicesHealth = addFlowNode(board, 'Settings - Connected Devices (Health Only)', 'No wearable detected yet; compatible sources and next steps are shown.', 60, 352, 300, 104, {
+    accent: C.orange,
+    kind: 'HEALTH ONLY',
+    kindBg: C.bg,
+  });
+  const connectedDevices = addFlowNode(board, 'Settings - Connected Devices', 'Connected-first source list with active, inactive, and compatible sources.', 410, 352, 280, 104, {
+    accent: C.green,
+    kind: 'CONNECTED',
+    kindBg: C.bg,
+  });
+  const deviceDetail = addFlowNode(board, 'Settings - Device Detail', 'Per-source metrics, sync path, and setup guidance.', 760, 352, 240, 104, {
+    accent: C.accent,
+    kind: 'DETAIL',
+    kindBg: C.bg,
+  });
+
+  const homeMain = addFlowNode(board, 'Home – Main', 'Dashboard after enough data has landed.', 180, 562, 220, 96, {
+    accent: C.accent,
+    kind: 'OUTCOME',
+    kindBg: C.bg,
+  });
+  const liveWaiting = addFlowNode(board, 'Live - Wearable Waiting', 'Wearable path is configured, waiting for fresh live samples.', 460, 562, 260, 96, {
+    accent: C.yellow,
+    kind: 'WAITING',
+    kindBg: C.bg,
+  });
+  const liveMain = addFlowNode(board, 'Live - Main', 'Full live monitoring once the wearable is streaming.', 800, 562, 220, 96, {
+    accent: C.green,
+    kind: 'LIVE READY',
+    kindBg: C.bg,
+  });
+
+  const right = function(node) { return node.x + node.width; };
+  const centerY = function(node) { return node.y + node.height / 2; };
+  const centerX = function(node) { return node.x + node.width / 2; };
+
+  addFlowArrow(board, centerX(settingsMain), settingsMain.y + settingsMain.height, centerX(connectedDevices), connectedDevices.y, {
+    color: C.secondary,
+    label: 'Manage devices',
+  });
+  addFlowArrow(board, centerX(homeWaiting), homeWaiting.y + homeWaiting.height, centerX(connectedDevicesHealth), connectedDevicesHealth.y, {
+    color: C.orange,
+    label: 'Manage sources',
+  });
+  addFlowArrow(board, centerX(healthKit), healthKit.y + healthKit.height, centerX(connectedDevicesHealth), connectedDevicesHealth.y, {
+    color: C.accent,
+    label: 'Permission granted',
+  });
+  addFlowArrow(board, right(connectedDevicesHealth), centerY(connectedDevicesHealth), connectedDevices.x, centerY(connectedDevices), {
+    color: C.green,
+    label: 'First source sync',
+  });
+  addFlowArrow(board, right(connectedDevices), centerY(connectedDevices), deviceDetail.x, centerY(deviceDetail), {
+    color: C.accent,
+    label: 'Open source',
+  });
+  addFlowArrow(board, centerX(connectedDevicesHealth), connectedDevicesHealth.y + connectedDevicesHealth.height, centerX(homeMain), homeMain.y, {
+    color: C.accent,
+    verticalFirst: true,
+    label: 'Home remains usable',
+  });
+  addFlowArrow(board, centerX(deviceDetail), deviceDetail.y + deviceDetail.height, centerX(liveWaiting), liveWaiting.y, {
+    color: C.yellow,
+    label: 'Source is configured',
+  });
+  addFlowArrow(board, right(homeMain), centerY(homeMain), liveWaiting.x, centerY(liveWaiting), {
+    color: C.yellow,
+    label: 'Open Live',
+  });
+  addFlowArrow(board, right(liveWaiting), centerY(liveWaiting), liveMain.x, centerY(liveMain), {
+    color: C.green,
+    label: 'Fresh samples arrive',
+  });
+
+  return board;
+}
+
+function buildFlowSystem(page, x) {
+  const board = createFlowBoard(page, 'Flow – System, Billing & Support States', x, 0);
+  addFlowBoardHeader(board, 'System States, Billing & Support', 'Captures utility screens, monetization re-entry, grace periods, support, loading, and remote / version gates.', C.red);
+  addFlowLegend(board, [
+    { label: 'Monetization', color: C.orange, bg: C.white },
+    { label: 'System', color: C.red, bg: C.white },
+    { label: 'Support', color: C.accent, bg: C.white },
+    { label: 'Recovery', color: C.green, bg: C.white },
+  ], 640, 46);
+
+  addFlowLane(board, 'Upgrade & billing', 32, 152, 1216, 128, C.orange);
+  addFlowLane(board, 'Support & maintenance', 32, 338, 1216, 152, C.red);
+  addFlowLane(board, 'Recovery path', 32, 548, 1216, 170, C.green);
+
+  const onboardingPaywall = addFlowNode(board, 'Onboarding - Paywall', 'Initial monetization screen reached from onboarding.', 60, 176, 230, 88, {
+    accent: C.orange,
+    kind: 'PAYWALL',
+    kindBg: C.bg,
+  });
+  const livePro = addFlowNode(board, 'Live - PRO Overlay', 'Locked Live entry point that routes back to upgrade.', 360, 176, 220, 88, {
+    accent: C.orange,
+    kind: 'LOCKED',
+    kindBg: C.bg,
+  });
+  const billingGrace = addFlowNode(board, 'Utility - Billing Grace Banner', 'Grace-period banner layered over the Home experience.', 650, 176, 260, 88, {
+    accent: C.orange,
+    kind: 'BILLING',
+    kindBg: C.bg,
+  });
+  const loading = addFlowNode(board, 'Utility - Loading', 'Temporary loading state while data and services initialize.', 980, 176, 220, 88, {
+    accent: C.green,
+    kind: 'SYSTEM',
+    kindBg: C.bg,
+  });
+
+  const settingsMain = addFlowNode(board, 'Settings - Main', 'Support and settings entry point from the app shell.', 80, 378, 220, 96, {
+    accent: C.secondary,
+    kind: 'SCREEN',
+    kindBg: C.bg,
+  });
+  const feedback = addFlowNode(board, 'Utility - Feedback Sheet', 'Collect bug reports, feature requests, and general feedback.', 380, 378, 240, 96, {
+    accent: C.accent,
+    kind: 'SUPPORT',
+    kindBg: C.bg,
+  });
+  const maintenance = addFlowNode(board, 'Utility - Maintenance', 'Remote-config kill switch maintenance state.', 700, 378, 220, 96, {
+    accent: C.red,
+    kind: 'SYSTEM',
+    kindBg: C.bg,
+  });
+  const forceUpdate = addFlowNode(board, 'Utility - Force Update', 'Required update gate when the minimum version changes.', 980, 378, 220, 96, {
+    accent: C.red,
+    kind: 'SYSTEM',
+    kindBg: C.bg,
+  });
+
+  const homeMain = addFlowNode(board, 'Home – Main', 'Normal recovery point after loading, billing repair, or support actions.', 200, 584, 220, 96, {
+    accent: C.green,
+    kind: 'RECOVERY',
+    kindBg: C.bg,
+  });
+  const liveMain = addFlowNode(board, 'Live - Main', 'Live recovers once subscription and source conditions are satisfied.', 500, 584, 220, 96, {
+    accent: C.green,
+    kind: 'RECOVERY',
+    kindBg: C.bg,
+  });
+  const exploreMain = addFlowNode(board, 'Explore - Main', 'Explore returns after loading and version gates clear.', 800, 584, 220, 96, {
+    accent: C.green,
+    kind: 'RECOVERY',
+    kindBg: C.bg,
+  });
+
+  const right = function(node) { return node.x + node.width; };
+  const centerY = function(node) { return node.y + node.height / 2; };
+  const centerX = function(node) { return node.x + node.width / 2; };
+
+  addFlowArrow(board, right(livePro), centerY(livePro), onboardingPaywall.x, centerY(onboardingPaywall), {
+    color: C.orange,
+    label: 'Upgrade CTA',
+  });
+  addFlowArrow(board, right(onboardingPaywall), centerY(onboardingPaywall), billingGrace.x, centerY(billingGrace), {
+    color: C.orange,
+    label: 'Renewal / grace scenarios',
+  });
+  addFlowArrow(board, centerX(settingsMain), settingsMain.y + settingsMain.height, centerX(feedback), feedback.y + feedback.height / 2, {
+    color: C.accent,
+    label: 'Support action',
+  });
+  addFlowArrow(board, right(billingGrace), centerY(billingGrace), loading.x, centerY(loading), {
+    color: C.green,
+    label: 'Repair billing & reload',
+  });
+  addFlowArrow(board, right(feedback), centerY(feedback), maintenance.x, centerY(maintenance), {
+    color: C.red,
+    label: 'Service incident / escalation',
+  });
+  addFlowArrow(board, right(maintenance), centerY(maintenance), forceUpdate.x, centerY(forceUpdate), {
+    color: C.red,
+    label: 'Hard gate branch',
+  });
+  addFlowArrow(board, centerX(loading), loading.y + loading.height, centerX(homeMain), homeMain.y, {
+    color: C.green,
+    label: 'App finishes loading',
+  });
+  addFlowArrow(board, centerX(billingGrace), billingGrace.y + billingGrace.height, centerX(liveMain), liveMain.y, {
+    color: C.green,
+    verticalFirst: true,
+    label: 'Billing fixed',
+  });
+  addFlowArrow(board, centerX(forceUpdate), forceUpdate.y + forceUpdate.height, centerX(exploreMain), exploreMain.y, {
+    color: C.green,
+    verticalFirst: true,
+    label: 'Updated app resumes',
+  });
+
+  return board;
+}
+
 
 // ============================================
 // SECTION LABEL
@@ -3278,6 +4150,228 @@ function addSectionLabel(parent, text, x, y, color) {
   t.y = 9;
   label.appendChild(t);
   return label;
+}
+
+// ============================================
+// FLOW DIAGRAM HELPERS
+// ============================================
+
+function createFlowBoard(parent, name, x, y) {
+  const board = createFrame(parent, name, x, y, FLOW_W, FLOW_H, {
+    color: C.bg,
+    radius: 28,
+    stroke: C.border,
+    strokeWeight: 1,
+  });
+  return board;
+}
+
+function addFlowBoardHeader(parent, title, subtitle, accentColor) {
+  const header = createFrame(parent, 'Flow Header', 32, 28, FLOW_W - 64, 92, {
+    color: C.white,
+    radius: 22,
+    stroke: C.border,
+    strokeWeight: 1,
+  });
+
+  createRect(header, 'Accent Bar', 18, 18, 8, 56, {
+    color: accentColor || C.accent,
+    radius: 4,
+  });
+  createText(header, title, 42, 18, {
+    size: 28,
+    weight: 'bold',
+    color: C.primary,
+    width: 700,
+  });
+  createText(header, subtitle, 42, 56, {
+    size: 13,
+    color: C.secondary,
+    width: 760,
+    lineHeight: 18,
+  });
+
+  return header;
+}
+
+function addFlowLegend(parent, items, x, y) {
+  items.forEach(function(item, index) {
+    const pillX = x + index * 150;
+    const pill = createFrame(parent, 'Legend ' + item.label, pillX, y, 138, 34, {
+      color: item.bg || C.white,
+      radius: 17,
+      stroke: item.stroke || C.border,
+      strokeWeight: 1,
+    });
+    createCircle(pill, 'Legend Dot', 10, 9, 16, { color: item.color });
+    createText(pill, item.label, 34, 8, {
+      size: 12,
+      weight: 'medium',
+      color: C.primary,
+      width: 92,
+    });
+  });
+}
+
+function addFlowLane(parent, title, x, y, w, h, color) {
+  const lane = createFrame(parent, title + ' Lane', x, y, w, h, {
+    color: color,
+    radius: 22,
+  });
+  lane.opacity = 0.12;
+
+  const label = createFrame(parent, title + ' Label', x + 20, y - 18, Math.max(120, title.length * 9 + 36), 32, {
+    color: C.white,
+    radius: 16,
+    stroke: color,
+    strokeWeight: 1,
+  });
+  createText(label, title, 16, 7, {
+    size: 12,
+    weight: 'semi',
+    color: C.primary,
+  });
+
+  return lane;
+}
+
+function addFlowNode(parent, title, subtitle, x, y, w, h, options) {
+  const opts = options || {};
+  const node = createFrame(parent, title + ' Node', x, y, w, h, {
+    color: opts.bg || C.white,
+    radius: opts.radius || 20,
+    stroke: opts.stroke || C.border,
+    strokeWeight: 1.5,
+  });
+
+  if (opts.accent) {
+    createRect(node, 'Node Accent', 0, 0, 8, h, {
+      color: opts.accent,
+      radius: 4,
+    });
+  }
+
+  if (opts.kind) {
+    const tagW = Math.max(70, opts.kind.length * 7 + 18);
+    const tag = createFrame(node, 'Kind Tag', w - tagW - 14, 12, tagW, 24, {
+      color: opts.kindBg || C.bg,
+      radius: 12,
+    });
+    createText(tag, opts.kind, 0, 6, {
+      size: 11,
+      weight: 'semi',
+      color: opts.kindColor || C.secondary,
+      width: tagW,
+      align: 'CENTER',
+    });
+  }
+
+  createText(node, title, 18, 16, {
+    size: 16,
+    weight: 'bold',
+    color: C.primary,
+    width: w - 36,
+    lineHeight: 20,
+  });
+  createText(node, subtitle, 18, 44, {
+    size: 12,
+    color: C.secondary,
+    width: w - 36,
+    lineHeight: 18,
+  });
+
+  if (opts.footer) {
+    createText(node, opts.footer, 18, h - 26, {
+      size: 11,
+      weight: 'medium',
+      color: opts.footerColor || C.tertiary,
+      width: w - 36,
+    });
+  }
+
+  return node;
+}
+
+function addFlowPill(parent, text, x, y, color, options) {
+  const opts = options || {};
+  const w = opts.width || Math.max(120, text.length * 7 + 24);
+  const pill = createFrame(parent, text + ' Pill', x, y, w, 28, {
+    color: color,
+    radius: 14,
+  });
+  pill.opacity = opts.opacity !== undefined ? opts.opacity : 0.16;
+  createText(pill, text, 0, 6, {
+    size: 11,
+    weight: 'semi',
+    color: opts.textColor || C.primary,
+    width: w,
+    align: 'CENTER',
+  });
+  return pill;
+}
+
+function addFlowSegment(parent, x, y, w, h, color) {
+  const safeW = Math.max(2, w);
+  const safeH = Math.max(2, h);
+  return createRect(parent, 'Flow Segment', x, y, safeW, safeH, {
+    color: color || C.accent,
+    radius: 2,
+  });
+}
+
+function addFlowArrowHead(parent, x, y, direction, color) {
+  const head = 8;
+  const strokeColor = color || C.accent;
+  if (direction === 'right') {
+    createLine(parent, 'Arrow Head', x - head, y - head / 1.5, x, y, { color: strokeColor, weight: 2 });
+    createLine(parent, 'Arrow Head', x - head, y + head / 1.5, x, y, { color: strokeColor, weight: 2 });
+  } else if (direction === 'left') {
+    createLine(parent, 'Arrow Head', x + head, y - head / 1.5, x, y, { color: strokeColor, weight: 2 });
+    createLine(parent, 'Arrow Head', x + head, y + head / 1.5, x, y, { color: strokeColor, weight: 2 });
+  } else if (direction === 'down') {
+    createLine(parent, 'Arrow Head', x - head / 1.5, y - head, x, y, { color: strokeColor, weight: 2 });
+    createLine(parent, 'Arrow Head', x + head / 1.5, y - head, x, y, { color: strokeColor, weight: 2 });
+  } else {
+    createLine(parent, 'Arrow Head', x - head / 1.5, y + head, x, y, { color: strokeColor, weight: 2 });
+    createLine(parent, 'Arrow Head', x + head / 1.5, y + head, x, y, { color: strokeColor, weight: 2 });
+  }
+}
+
+function addFlowArrow(parent, x1, y1, x2, y2, options) {
+  const opts = options || {};
+  const color = opts.color || C.accent;
+  const thickness = opts.thickness || 3;
+  const verticalFirst = opts.verticalFirst === true;
+
+  var endDirection = 'right';
+
+  if (x1 === x2) {
+    addFlowSegment(parent, x1 - thickness / 2, Math.min(y1, y2), thickness, Math.abs(y2 - y1), color);
+    endDirection = y2 >= y1 ? 'down' : 'up';
+  } else if (y1 === y2) {
+    addFlowSegment(parent, Math.min(x1, x2), y1 - thickness / 2, Math.abs(x2 - x1), thickness, color);
+    endDirection = x2 >= x1 ? 'right' : 'left';
+  } else if (verticalFirst) {
+    addFlowSegment(parent, x1 - thickness / 2, Math.min(y1, y2), thickness, Math.abs(y2 - y1), color);
+    addFlowSegment(parent, Math.min(x1, x2), y2 - thickness / 2, Math.abs(x2 - x1), thickness, color);
+    endDirection = x2 >= x1 ? 'right' : 'left';
+  } else {
+    addFlowSegment(parent, Math.min(x1, x2), y1 - thickness / 2, Math.abs(x2 - x1), thickness, color);
+    addFlowSegment(parent, x2 - thickness / 2, Math.min(y1, y2), thickness, Math.abs(y2 - y1), color);
+    endDirection = y2 >= y1 ? 'down' : 'up';
+  }
+
+  addFlowArrowHead(parent, x2, y2, endDirection, color);
+
+  if (opts.label) {
+    createText(parent, opts.label, (x1 + x2) / 2 - 80, (y1 + y2) / 2 - 24, {
+      size: 11,
+      weight: 'medium',
+      color: opts.labelColor || C.secondary,
+      width: 160,
+      align: 'CENTER',
+    });
+  }
 }
 
 // ============================================
@@ -3314,18 +4408,18 @@ function yieldToFigma() {
 }
 
 async function buildAllOnOnePage(page) {
-  page.name = 'Laso — All Screens';
-  const rowH = PHONE_H + 120; // space between rows
+  page.name = 'Laso — Screens & Flows';
   let y = 0;
 
   var rows = [
     { label: 'ONBOARDING (9 screens)',       color: C.purple,    count: 9, create: createOnboardingScreens },
-    { label: 'HOME TAB (7 screens)',          color: C.accent,    count: 7, create: createHomeScreens },
-    { label: 'LIVE TAB (3 screens)',          color: C.green,     count: 3, create: createLiveScreens },
+    { label: 'HOME TAB (8 screens)',          color: C.accent,    count: 8, create: createHomeScreens },
+    { label: 'LIVE TAB (4 screens)',          color: C.green,     count: 4, create: createLiveScreens },
     { label: 'EXPLORE TAB (3 screens)',       color: C.orange,    count: 3, create: createExploreScreens },
     { label: 'DETAIL SCREENS (8 screens)',    color: C.red,       count: 8, create: createDetailScreens },
-    { label: 'SETTINGS (3 screens)',          color: C.secondary, count: 3, create: createSettingsScreens },
+    { label: 'SETTINGS (4 screens)',          color: C.secondary, count: 4, create: createSettingsScreens },
     { label: 'UTILITY & SYSTEM (5 screens)',  color: C.purple,    count: 5, create: createUtilityScreens },
+    { label: 'FLOW DIAGRAMS (6 boards)',      color: C.primary,   count: 6, create: createFlowBoards, itemW: FLOW_W, itemH: FLOW_H, itemGap: FLOW_GAP, isFlow: true },
   ];
 
   for (var i = 0; i < rows.length; i++) {
@@ -3337,15 +4431,37 @@ async function buildAllOnOnePage(page) {
     var wrap = figma.createFrame();
     wrap.name = row.label.split(' (')[0];
     wrap.x = 0; wrap.y = y;
-    wrap.resize(row.count * (PHONE_W + SCREEN_GAP), PHONE_H);
+    const itemW = row.itemW || PHONE_W;
+    const itemH = row.itemH || PHONE_H;
+    const itemGap = row.itemGap || SCREEN_GAP;
+    wrap.resize(row.count * (itemW + itemGap), itemH);
     wrap.fills = []; wrap.clipsContent = false;
     page.appendChild(wrap);
     row.create(wrap);
-    y += PHONE_H + 120;
+    y += itemH + 120;
 
     // Yield after each row so Figma can flush the node tree
     await yieldToFigma();
   }
+
+  return rows;
+}
+
+async function buildFlowPage(page) {
+  page.name = 'Laso — Flow Diagrams';
+
+  addSectionLabel(page, 'FLOW DIAGRAMS (6 boards)', 0, 0, C.primary);
+
+  var wrap = figma.createFrame();
+  wrap.name = 'FLOW DIAGRAMS';
+  wrap.x = 0;
+  wrap.y = 50;
+  wrap.resize(6 * (FLOW_W + FLOW_GAP), FLOW_H);
+  wrap.fills = [];
+  wrap.clipsContent = false;
+  page.appendChild(wrap);
+
+  createFlowBoards(wrap);
 }
 
 // ============================================
@@ -3360,12 +4476,25 @@ figma.on('run', async ({ command }) => {
     var page = figma.currentPage;
 
     if (command === 'generate-all' || !command) {
-      figma.notify('Generating all Laso screens...');
+      figma.notify('Generating all Laso screens and flows...');
       // Clear page
       while (page.children.length > 0) { page.children[0].remove(); }
-      await buildAllOnOnePage(page);
+      var rows = await buildAllOnOnePage(page);
       figma.viewport.scrollAndZoomIntoView(page.children);
-      figma.notify('Done! 38 screens in 7 rows.');
+      var screenCount = 0;
+      var flowCount = 0;
+      for (var i = 0; i < rows.length; i++) {
+        if (rows[i].isFlow) flowCount += rows[i].count;
+        else screenCount += rows[i].count;
+      }
+      figma.notify('Done! ' + screenCount + ' screens + ' + flowCount + ' flow boards in ' + rows.length + ' rows.');
+
+    } else if (command === 'generate-flows') {
+      figma.notify('Generating Laso flow diagrams...');
+      while (page.children.length > 0) { page.children[0].remove(); }
+      await buildFlowPage(page);
+      figma.viewport.scrollAndZoomIntoView(page.children);
+      figma.notify('Done! 6 flow boards ready for review.');
 
     } else if (command === 'clear-page') {
       var count = page.children.length;

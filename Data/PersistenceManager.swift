@@ -130,54 +130,45 @@ final class PersistenceManager {
         return decoder
     }
 
-    private func encodeJSON<T: Encodable>(_ value: T) -> Data? {
-        try? Self.threadEncoder().encode(value)
+    // MARK: - Generic Encrypted Persistence
+
+    private func saveEncryptedValue<T: Encodable>(_ value: T, forKey key: String) {
+        guard let data = try? Self.threadEncoder().encode(value) else { return }
+        saveEncrypted(data, forKey: key)
     }
 
-    private func decodeJSON<T: Decodable>(_ type: T.Type, from data: Data) -> T? {
-        try? Self.threadDecoder().decode(type, from: data)
+    private func loadEncryptedValue<T: Decodable>(_ type: T.Type, forKey key: String) -> T? {
+        guard let data = loadEncrypted(forKey: key) else { return nil }
+        return try? Self.threadDecoder().decode(type, from: data)
     }
 
-    // MARK: - Baselines (Encrypted)
+    // MARK: - Baselines
 
     func saveBaselines(_ baselines: [HealthMetric: UserBaseline]) {
         let dict = Dictionary(uniqueKeysWithValues: baselines.map { ($0.key.rawValue, $0.value) })
-        if let data = encodeJSON(dict) {
-            saveEncrypted(data, forKey: baselinesKey)
-        }
+        saveEncryptedValue(dict, forKey: baselinesKey)
     }
 
     func loadBaselines() -> [HealthMetric: UserBaseline] {
-        guard let data = loadEncrypted(forKey: baselinesKey),
-              let dict = decodeJSON([String: UserBaseline].self, from: data) else {
-            return [:]
-        }
-        var result: [HealthMetric: UserBaseline] = [:]
-        for (key, value) in dict {
-            if let metric = HealthMetric(rawValue: key) {
-                result[metric] = value
+        guard let dict = loadEncryptedValue([String: UserBaseline].self, forKey: baselinesKey) else { return [:] }
+        return dict.reduce(into: [:]) { result, pair in
+            if let metric = HealthMetric(rawValue: pair.key) {
+                result[metric] = pair.value
             }
         }
-        return result
     }
 
-    // MARK: - Preferences (Encrypted)
+    // MARK: - Preferences
 
     func savePreferences(_ preferences: NotificationPreferences) {
-        if let data = encodeJSON(preferences) {
-            saveEncrypted(data, forKey: preferencesKey)
-        }
+        saveEncryptedValue(preferences, forKey: preferencesKey)
     }
 
     func loadPreferences() -> NotificationPreferences {
-        guard let data = loadEncrypted(forKey: preferencesKey),
-              let prefs = decodeJSON(NotificationPreferences.self, from: data) else {
-            return .default
-        }
-        return prefs
+        loadEncryptedValue(NotificationPreferences.self, forKey: preferencesKey) ?? .default
     }
 
-    // MARK: - Last Analysis Date (Non-sensitive)
+    // MARK: - Last Analysis Date
 
     func saveLastAnalysisDate(_ date: Date) {
         defaults.set(date.timeIntervalSince1970, forKey: lastAnalysisKey)
@@ -185,11 +176,10 @@ final class PersistenceManager {
 
     func loadLastAnalysisDate() -> Date? {
         let interval = defaults.double(forKey: lastAnalysisKey)
-        guard interval > 0 else { return nil }
-        return Date(timeIntervalSince1970: interval)
+        return interval > 0 ? Date(timeIntervalSince1970: interval) : nil
     }
 
-    // MARK: - Weekly Score Tracking (Encrypted)
+    // MARK: - Weekly Score Tracking
 
     private let previousWeekScoreKey = AppKeys.Data.previousWeekScore
     private let currentScoreKey = AppKeys.Data.currentScore
@@ -197,30 +187,20 @@ final class PersistenceManager {
     private let progressiveCoachStateKey = AppKeys.Data.progressiveCoachState
 
     func recordWeeklyScore(_ score: Int) {
-        let calendar = Calendar.current
         let now = Date()
-
         if let savedDate = scoreDate(),
-           !calendar.isDate(savedDate, equalTo: now, toGranularity: .weekOfYear) {
-            if let currentData = loadEncrypted(forKey: currentScoreKey),
-               let oldScore = decodeJSON(Int.self, from: currentData),
-               oldScore > 0 {
-                if let data = encodeJSON(oldScore) {
-                    saveEncrypted(data, forKey: previousWeekScoreKey)
-                }
-            }
+           !Calendar.current.isDate(savedDate, equalTo: now, toGranularity: .weekOfYear),
+           let oldScore = loadEncryptedValue(Int.self, forKey: currentScoreKey),
+           oldScore > 0 {
+            saveEncryptedValue(oldScore, forKey: previousWeekScoreKey)
         }
-
-        if let data = encodeJSON(score) {
-            saveEncrypted(data, forKey: currentScoreKey)
-        }
+        saveEncryptedValue(score, forKey: currentScoreKey)
         defaults.set(now.timeIntervalSince1970, forKey: scoreDateKey)
     }
 
     func loadPreviousWeekScore() -> Int? {
-        guard let data = loadEncrypted(forKey: previousWeekScoreKey),
-              let val = decodeJSON(Int.self, from: data) else { return nil }
-        return val > 0 ? val : nil
+        guard let val = loadEncryptedValue(Int.self, forKey: previousWeekScoreKey), val > 0 else { return nil }
+        return val
     }
 
     private func scoreDate() -> Date? {
@@ -228,32 +208,26 @@ final class PersistenceManager {
         return interval > 0 ? Date(timeIntervalSince1970: interval) : nil
     }
 
-    // MARK: - Progressive Coach (Encrypted)
+    // MARK: - Progressive Coach
 
     func saveProgressiveCoachState(_ state: ProgressiveCoachState) {
-        if let data = encodeJSON(state) {
-            saveEncrypted(data, forKey: progressiveCoachStateKey)
-        }
+        saveEncryptedValue(state, forKey: progressiveCoachStateKey)
     }
 
     func loadProgressiveCoachState() -> ProgressiveCoachState? {
-        guard let data = loadEncrypted(forKey: progressiveCoachStateKey) else { return nil }
-        return decodeJSON(ProgressiveCoachState.self, from: data)
+        loadEncryptedValue(ProgressiveCoachState.self, forKey: progressiveCoachStateKey)
     }
 
-    // MARK: - Health Focuses (Encrypted)
+    // MARK: - Health Focuses
 
     private let healthFocusesKey = AppKeys.Data.healthFocuses
 
     func saveHealthFocuses(_ focuses: Set<HealthFocus>) {
-        if let data = encodeJSON(Array(focuses)) {
-            saveEncrypted(data, forKey: healthFocusesKey)
-        }
+        saveEncryptedValue(Array(focuses), forKey: healthFocusesKey)
     }
 
     func loadHealthFocuses() -> Set<HealthFocus> {
-        guard let data = loadEncrypted(forKey: healthFocusesKey),
-              let array = decodeJSON([HealthFocus].self, from: data) else {
+        guard let array = loadEncryptedValue([HealthFocus].self, forKey: healthFocusesKey) else {
             return Set(HealthFocus.allCases)
         }
         return Set(array)

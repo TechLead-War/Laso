@@ -175,7 +175,7 @@ struct MetricDetailView: View {
             Text("No Data Yet")
                 .font(.title3.weight(.semibold))
 
-            Text("We don't have enough \(viewModel.metric.displayName.lowercased()) data to show trends. Make sure your device is syncing to Apple Health.")
+            Text("We don't have enough \(viewModel.metric.displayName.lowercased()) data to show trends yet. Keep your Health data syncing and check back after the next import.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

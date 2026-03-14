@@ -2,7 +2,6 @@ import Foundation
 import HealthKit
 import Observation
 
-/// Manages all HealthKit interactions: authorization, queries, and background delivery
 @Observable
 final class HealthKitManager {
     let healthStore = HKHealthStore()
@@ -58,7 +57,6 @@ final class HealthKitManager {
         let totalChangedSamples: Int
     }
 
-    /// Raw menstrual flow sample used for cycle-phase analytics.
     struct MenstrualFlowSample: Sendable {
         let startDate: Date
         let endDate: Date
@@ -74,12 +72,10 @@ final class HealthKitManager {
         }
     }
 
-    /// Check if HealthKit is available on this device
     var isHealthKitAvailable: Bool {
         HKHealthStore.isHealthDataAvailable()
     }
 
-    /// Request authorization for all tracked metrics
     func requestAuthorization() async {
         guard isHealthKitAvailable else {
             error = "HealthKit is not available on this device"
@@ -107,7 +103,6 @@ final class HealthKitManager {
         }
     }
 
-    /// Fetch all metrics for the given number of days (legacy, in-memory only)
     func fetchAllMetrics(days: Int = 365) async {
         isLoading = true
         defer { isLoading = false }
@@ -133,10 +128,6 @@ final class HealthKitManager {
         lastRefresh = Date()
     }
 
-    /// Load stored data from SwiftData, then incrementally sync new data from HealthKit.
-    /// - First launch: fetches HealthKit history (up to 1 year)
-    /// - Subsequent launches: fetches only data since last sync (with 1-day overlap)
-    /// - Returns a `SyncResult` indicating which metrics had new data
     @MainActor
     @discardableResult
     func loadAndSync(store: HealthDataStore) async -> SyncResult {
@@ -153,19 +144,15 @@ final class HealthKitManager {
             latestMetric: nil
         )
 
-        // Phase 1: Instantly load stored data so the UI has something to show
-        // Skip if we already have data (e.g. pull-to-refresh) to avoid redundant @Observable mutation
         if timeSeries.isEmpty {
             timeSeries = store.loadAllTimeSeries()
         }
 
-        // Phase 2: Gather sync dates before entering the task group (ModelContext is not thread-safe)
         let syncDates = store.allSyncDates()
         let isFirstSync = syncDates.isEmpty
         let endDate = Date()
         syncProgress?.phase = .fetching
 
-        // Phase 3: Fetch new data from HealthKit in parallel
         var newData: [(HealthMetric, MetricTimeSeries)] = []
         var fetchedMetrics = Set<HealthMetric>()
 
@@ -175,10 +162,8 @@ final class HealthKitManager {
                 group.addTask { [self] in
                     let startDate: Date
                     if let lastSync {
-                        // Incremental: fetch from last sync minus 1 day for overlap safety
                         startDate = Calendar.current.date(byAdding: .day, value: -1, to: lastSync) ?? lastSync
                     } else {
-                        // First sync: fetch up to 1 year of HealthKit history
                         startDate = Calendar.current.date(byAdding: .year, value: -1, to: endDate) ?? endDate
                     }
                     let series = await self.fetchMetric(metric, from: startDate, to: endDate)
@@ -191,24 +176,20 @@ final class HealthKitManager {
                 syncProgress?.latestMetric = metric
                 guard let series else { continue }
                 fetchedMetrics.insert(metric)
-                if !series.samples.isEmpty {
-                    newData.append((metric, series))
-                }
-                if !series.samples.isEmpty {
-                    syncProgress?.metricsWithSamples += 1
-                    syncProgress?.samplesDiscovered += series.samples.count
-                    if let seriesOldest = series.samples.first?.date {
-                        if let existingOldest = syncProgress?.oldestSampleDate {
-                            syncProgress?.oldestSampleDate = min(existingOldest, seriesOldest)
-                        } else {
-                            syncProgress?.oldestSampleDate = seriesOldest
-                        }
+                guard !series.samples.isEmpty else { continue }
+                newData.append((metric, series))
+                syncProgress?.metricsWithSamples += 1
+                syncProgress?.samplesDiscovered += series.samples.count
+                if let seriesOldest = series.samples.first?.date {
+                    if let existingOldest = syncProgress?.oldestSampleDate {
+                        syncProgress?.oldestSampleDate = min(existingOldest, seriesOldest)
+                    } else {
+                        syncProgress?.oldestSampleDate = seriesOldest
                     }
                 }
             }
         }
 
-        // Phase 4: Save new data to SwiftData (sequential, main actor)
         syncProgress?.phase = .saving
         let persisted = persistFetchedData(
             newData: newData,
@@ -217,7 +198,6 @@ final class HealthKitManager {
             endDate: endDate
         )
 
-        // Phase 5: Finalize in-memory state incrementally
         syncProgress?.phase = .finalizing
         finalizeInMemoryTimeSeries(
             isFirstSync: isFirstSync,
@@ -259,7 +239,6 @@ final class HealthKitManager {
         )
     }
 
-    /// Persist fetched series and return a summary of actual changes written to storage.
     private func persistFetchedData(
         newData: [(HealthMetric, MetricTimeSeries)],
         fetchedMetrics: Set<HealthMetric>,
@@ -292,7 +271,6 @@ final class HealthKitManager {
         )
     }
 
-    /// Apply persisted sync results to in-memory time series without full-store reloads.
     private func finalizeInMemoryTimeSeries(
         isFirstSync: Bool,
         newData: [(HealthMetric, MetricTimeSeries)],
@@ -326,7 +304,6 @@ final class HealthKitManager {
         }
     }
 
-    /// Merge incremental daily samples into an in-memory series with day-level deduplication.
     private func mergeSeries(
         metric: HealthMetric,
         existing: MetricTimeSeries?,
@@ -343,7 +320,6 @@ final class HealthKitManager {
         )
     }
 
-    /// Fetch a single metric's time series
     func fetchMetric(_ metric: HealthMetric, from startDate: Date, to endDate: Date) async -> MetricTimeSeries? {
         let config = HealthKitMetricRegistry.config(for: metric)
 
@@ -362,8 +338,6 @@ final class HealthKitManager {
         }
     }
 
-    /// Fetch menstrual flow category samples for cycle-phase analysis.
-    /// Returns empty when data is unavailable or permission is denied.
     func fetchMenstrualFlowSamples(days: Int = 365) async -> [MenstrualFlowSample] {
         guard isAuthorized,
               let menstrualType = HKObjectType.categoryType(forIdentifier: .menstrualFlow) else {
@@ -404,8 +378,6 @@ final class HealthKitManager {
 
     // MARK: - Hourly Data (Circadian Analysis)
 
-    /// Fetch hourly-binned samples for circadian rhythm analysis.
-    /// Returns 24 arrays (one per hour), each containing the daily values for that hour slot.
     func fetchHourlySamples(_ metric: HealthMetric, days: Int = 30) async -> [[Double]]? {
         let config = HealthKitMetricRegistry.config(for: metric)
         guard let quantityType = config.quantityType else { return nil }
@@ -464,7 +436,6 @@ final class HealthKitManager {
         }
     }
 
-    /// Fetch menstrual cycle phase data for cycle-aware circadian analysis.
     struct CyclePhaseDay {
         let date: Date
         let phase: CyclePhase
@@ -528,9 +499,6 @@ final class HealthKitManager {
 
     // MARK: - Raw Intra-Day Heart Rate (for Strain Zone Classification)
 
-    /// Fetch today's individual heart rate samples (not daily-aggregated).
-    /// The sync pipeline stores daily averages, which loses the per-minute granularity
-    /// needed for accurate HR zone classification in the strain scorer.
     func fetchTodayRawHeartRateSamples() async -> [MetricSample] {
         let startOfDay = Calendar.current.startOfDay(for: Date())
         let type = HKQuantityType(.heartRate)
@@ -630,7 +598,6 @@ final class HealthKitManager {
                     return
                 }
 
-                // Aggregate to daily averages
                 var dailyValues: [Date: [Double]] = [:]
                 for sample in results {
                     let day = sample.startDate.startOfDay
@@ -666,7 +633,6 @@ final class HealthKitManager {
                     return
                 }
 
-                // Group by night and sum durations per sleep stage
                 var dailyDurations: [Date: Double] = [:]
                 let asleepStageValues: Set<Int> = [
                     HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue,
@@ -676,7 +642,6 @@ final class HealthKitManager {
                 ]
 
                 for sample in results {
-                    // Attribute each sleep segment to the wake-up day to avoid overnight splits.
                     let day = sample.endDate.startOfDay
                     let duration = sample.endDate.timeIntervalSince(sample.startDate) / 3600.0 // hours
 
@@ -728,7 +693,6 @@ final class HealthKitManager {
                     return
                 }
 
-                // Group by day
                 var dailyValues: [Date: (count: Int, duration: Double)] = [:]
                 for workout in workouts {
                     let day = workout.startDate.startOfDay
@@ -753,10 +717,8 @@ final class HealthKitManager {
 
     // MARK: - Write Support
 
-    /// Metrics the user can log from the app
     static let writableMetrics: Set<HealthMetric> = [.weight, .waterIntake, .mindfulMinutes]
 
-    /// Save a body weight sample to HealthKit
     func saveWeight(_ kg: Double, date: Date = Date()) async throws {
         let quantity = HKQuantity(unit: .gramUnit(with: .kilo), doubleValue: kg)
         let sample = HKQuantitySample(
@@ -768,7 +730,6 @@ final class HealthKitManager {
         try await healthStore.save(sample)
     }
 
-    /// Save a water intake sample to HealthKit (input in mL, stored in liters)
     func saveWaterIntake(milliliters: Double, date: Date = Date()) async throws {
         let liters = milliliters / 1000.0
         let quantity = HKQuantity(unit: .liter(), doubleValue: liters)
@@ -781,7 +742,6 @@ final class HealthKitManager {
         try await healthStore.save(sample)
     }
 
-    /// Save a mindful session to HealthKit
     func saveMindfulSession(minutes: Double) async throws {
         let endDate = Date()
         let startDate = endDate.addingTimeInterval(-minutes * 60)
@@ -794,7 +754,6 @@ final class HealthKitManager {
         try await healthStore.save(sample)
     }
 
-    /// Re-fetch a single metric from HealthKit and update SwiftData + timeSeries
     @MainActor
     func refreshMetric(_ metric: HealthMetric, store: HealthDataStore) async {
         let endDate = Date()
@@ -823,7 +782,6 @@ final class HealthKitManager {
                     return
                 }
 
-                // Group by day and sum session durations in minutes
                 var dailyMinutes: [Date: Double] = [:]
                 for sample in results {
                     let day = sample.startDate.startOfDay

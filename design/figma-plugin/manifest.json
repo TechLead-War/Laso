@@ -7,7 +7,8 @@
   "enableProposedApi": false,
   "editorType": ["figma"],
   "menu": [
-    { "name": "Generate All Screens", "command": "generate-all" },
+    { "name": "Generate Screens + Flow Diagrams", "command": "generate-all" },
+    { "name": "Generate Flow Diagrams Only", "command": "generate-flows" },
     { "name": "Clear Current Page", "command": "clear-page" }
   ]
 }

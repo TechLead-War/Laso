@@ -14,7 +14,7 @@ struct SleepSummaryIntent: AppIntent {
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         guard let sleep = await IntentDataProvider.fetchLastNightSleep() else {
             return .result(
-                dialog: "I couldn't find sleep data for last night. Make sure you wore your Apple Watch to bed and it's synced."
+                dialog: "I couldn't find sleep data for last night. Make sure your sleep data synced to Apple Health."
             ) {
                 IntentSnippetViews.ErrorSnippet(message: "No sleep data for last night")
             }

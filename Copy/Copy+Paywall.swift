@@ -6,7 +6,7 @@ extension Copy {
         // MARK: - Header
 
         static let unlockTitle = "Unlock Laso"
-        static let unlockSubtitle = "Your personal health intelligence,\npowered by your Apple Watch data."
+        static let unlockSubtitle = "Your personal health intelligence,\npowered by Apple Health and wearable data."
 
         // MARK: - Features
 

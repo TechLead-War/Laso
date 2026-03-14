@@ -25,6 +25,7 @@ struct OnboardingView: View {
     @State private var profileAge: Int?
 
     let healthKitManager: HealthKitManager
+    let appStateStore: AppStateStore
     let runCalibration: () async -> String?
     let onComplete: () -> Void
 
@@ -157,7 +158,7 @@ struct OnboardingView: View {
         }
         .onDisappear {
             // If onboarding disappears without completion, track drop-off
-            if !UserDefaults.standard.bool(forKey: AppKeys.App.onboardingCompleted) {
+            if !appStateStore.onboardingCompleted {
                 let totalDuration = Int(Date().timeIntervalSince(onboardingStartDate))
                 AppAnalytics.shared.trackOnboardingDropOff(
                     lastStep: stepIndex(for: currentStep),

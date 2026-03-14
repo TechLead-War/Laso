@@ -130,7 +130,7 @@ struct WeeklyReviewView: View {
                             .foregroundStyle(.secondary)
                         Text("Not enough data yet")
                             .font(.title3.weight(.semibold))
-                        Text("Wear your watch for a few days and check back.")
+                        Text("Keep syncing health data for a few days and check back.")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)

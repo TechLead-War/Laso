@@ -14,7 +14,7 @@ struct ReadinessIntent: AppIntent {
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         guard let readiness = await IntentDataProvider.fetchReadiness() else {
             return .result(
-                dialog: "I couldn't calculate your readiness. Make sure your Apple Watch has recorded recent HRV and resting heart rate data."
+                dialog: "I couldn't calculate your readiness. Make sure Apple Health has recent HRV and resting heart rate data."
             ) {
                 IntentSnippetViews.ErrorSnippet(message: "No readiness data available")
             }

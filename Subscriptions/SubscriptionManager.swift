@@ -2,8 +2,6 @@ import Foundation
 import StoreKit
 import Observation
 
-/// Manages subscription state, purchases, and trial tracking via StoreKit 2.
-/// The app is gated: 7-day trial → then paid-only.
 @MainActor
 @Observable
 final class SubscriptionManager {
@@ -23,12 +21,10 @@ final class SubscriptionManager {
         case unknown
         case trial(daysRemaining: Int)
         case subscribed(expirationDate: Date)
-        /// Apple is retrying the payment — user keeps full access silently
         case billingGrace(daysSinceExpiry: Int)
         case expired
     }
 
-    /// Whether the user can access the app right now.
     var hasAccess: Bool {
         switch status {
         case .trial, .subscribed, .billingGrace: return true
@@ -36,41 +32,34 @@ final class SubscriptionManager {
         }
     }
 
-    /// Paywall is enforced only after status is definitively expired.
     var shouldEnforcePaywall: Bool {
         if case .expired = status { return true }
         return false
     }
 
-    /// True when we're in a silent billing retry grace period.
     var isBillingGrace: Bool {
         if case .billingGrace = status { return true }
         return false
     }
 
-    /// Formatted trial text for UI (e.g., "5 days left").
     var trialText: String? {
         guard case .trial(let days) = status else { return nil }
         return days == 1 ? "1 day left in trial" : "\(days) days left in trial"
     }
 
-    /// Days into the billing grace period, if applicable.
     var billingGraceDays: Int? {
         if case .billingGrace(let days) = status { return days }
         return nil
     }
 
-    /// Yearly product (primary offering).
     var yearlyProduct: Product? {
         products.first { $0.id == SubscriptionConfig.yearlyProductID }
     }
 
-    /// Monthly product (anchor for comparison).
     var monthlyProduct: Product? {
         products.first { $0.id == SubscriptionConfig.monthlyProductID }
     }
 
-    /// Maximum days to silently grant access during billing retry (covers a salary cycle).
     static let billingGraceDays = 30
 
     // MARK: - Private
@@ -95,7 +84,6 @@ final class SubscriptionManager {
         listener?.cancel()
     }
 
-    /// Call once at app launch to load products and check status.
     func configure() async {
         await loadProducts()
         await refreshStatus()
@@ -203,7 +191,6 @@ final class SubscriptionManager {
         resolveTrialStatus()
     }
 
-    /// Checks StoreKit 2 subscription status for billing retry or grace period states.
     private func isInBillingRetry() async -> Bool {
         for productID in SubscriptionConfig.allProductIDs {
             guard let product = products.first(where: { $0.id == productID }),
@@ -226,7 +213,6 @@ final class SubscriptionManager {
         return false
     }
 
-    /// Starts the grace period timer if not already started, returns days since grace began.
     private func startOrContinueGrace() -> Int {
         if let existing = defaults.object(forKey: Key.graceStartDate) as? Date {
             return Calendar.current.dateComponents([.day], from: existing, to: Date()).day ?? 0
@@ -237,7 +223,6 @@ final class SubscriptionManager {
         return 0
     }
 
-    /// Clears grace period state when subscription is restored or grace expires.
     private func clearGraceState() {
         if let graceStart = defaults.object(forKey: Key.graceStartDate) as? Date {
             let wasActive = isBillingGrace

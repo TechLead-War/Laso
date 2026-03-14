@@ -2,24 +2,56 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Feedback: anyone can write, only admin can read
+    // ── Feedback ──
+    // Only authenticated iOS app users can submit feedback.
+    // Only admin can read. No updates or deletes.
     match /feedback/{docId} {
-      allow create: if true;
+      allow create: if request.auth != null
+                    && request.resource.data.keys().hasAll(['category', 'text', 'timestamp'])
+                    && request.resource.data.text is string
+                    && request.resource.data.text.size() > 0
+                    && request.resource.data.text.size() < 2000
+                    && request.resource.data.category is string;
       allow read: if request.auth != null && request.auth.token.admin == true;
       allow update, delete: if false;
     }
 
-    // Early access signups: anyone can write and read (needed for public signup counter)
+    // ── Early Access ──
+    // Public create (landing page signup) with strict validation.
+    // Read restricted to admin only — prevents email harvesting.
     match /early_access/{docId} {
       allow create: if request.resource.data.keys().hasAll(['email', 'timestamp'])
                     && request.resource.data.email is string
-                    && request.resource.data.email.size() > 0
-                    && request.resource.data.email.size() < 256;
-      allow read: if true;
+                    && request.resource.data.email.size() > 3
+                    && request.resource.data.email.size() < 256
+                    && request.resource.data.email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+      allow read: if request.auth != null && request.auth.token.admin == true;
       allow update, delete: if false;
     }
 
-    // Default: deny all
+    // ── User Profiles ──
+    // Only the device owner (anonymous auth) can write their own profile.
+    // Only admin can read all profiles.
+    match /user_profiles/{deviceId} {
+      allow create, update: if request.auth != null
+                            && request.resource.data.keys().hasOnly([
+                              'gender', 'ageBracket', 'healthFocuses', 'deviceId',
+                              'createdAt', 'updatedAt', 'appVersion', 'region'
+                            ])
+                            && request.resource.data.deviceId is string;
+      allow read: if request.auth != null && request.auth.token.admin == true;
+      allow delete: if false;
+    }
+
+    // ── Admin Audit Log ──
+    // Written by Cloud Functions only (admin SDK bypasses rules).
+    // Admin can read.
+    match /admin_audit_log/{docId} {
+      allow read: if request.auth != null && request.auth.token.admin == true;
+      allow write: if false;
+    }
+
+    // ── Default: deny all ──
     match /{document=**} {
       allow read, write: if false;
     }

@@ -17,8 +17,8 @@ struct FeatureGate {
     }
 
     /// Whether free-year mode is active (all features unlocked for PMF signal).
-    /// Set to `false` before going to a paid model.
-    private static let freeYearActive = true
+    /// Controlled via Remote Config — flip from admin panel without an app update.
+    private static var freeYearActive: Bool { config.freeYearActive }
 
     /// Whether the user can access a specific feature.
     static func canAccess(_ feature: RemoteConfigManager.FeatureKey) -> Bool {

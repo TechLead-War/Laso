@@ -9,6 +9,10 @@ import SwiftUI
 @Observable
 final class LiveViewModel {
     let healthKitManager: HealthKitManager
+    private let readinessStore: ReadinessStore
+    private let heartRateTimelineReducer: LiveHeartRateTimelineReducer
+    private let refreshPlanner: LiveRefreshPlanner
+    private let sleepSummaryBuilder: LiveSleepSummaryBuilder
     private var healthStore: HKHealthStore { healthKitManager.healthStore }
 
     // MARK: - Grouped Observable Sub-Objects
@@ -20,7 +24,7 @@ final class LiveViewModel {
     /// Today's cumulative activity stats and goals
     let activity = ActivityData()
     /// Recovery metrics (RHR, HRV, readiness, stress)
-    let recovery = RecoveryData()
+    let recovery: RecoveryData
     /// Most recent workout info
     let workout = WorkoutData()
 
@@ -32,7 +36,6 @@ final class LiveViewModel {
     private var heartRateQuery: HKAnchoredObjectQuery?
     private var bloodOxygenQuery: HKAnchoredObjectQuery?
     private var respiratoryRateQuery: HKAnchoredObjectQuery?
-    private var refreshTimer: Timer?
     private var activityObserverQueries: [HKObserverQuery] = []
     private var lastCumulativeFetch: Date = .distantPast
     private static let cumulativeThrottleInterval: TimeInterval = 3
@@ -48,42 +51,36 @@ final class LiveViewModel {
     private var pendingHeartRateUpdate: PendingHRUpdate?
     private var pendingUIUpdateWorkItem: DispatchWorkItem?
 
-    private struct PendingHRUpdate {
-        var merged: [(date: Date, value: Double)]
-        var latestValue: Double
-        var latestTimestamp: Date
+    private enum ReadinessMetric {
+        case heartRateVariability
+        case restingHeartRate
     }
 
-    private struct RecoveryBaselineStats {
-        let mean: Double
-        let median: Double
-        let standardDeviation: Double
-        let iqr: Double
-        let sampleCount: Int
-    }
-
-    private struct RecoverySignal {
-        let score: Double        // 0-100
-        let weight: Double       // relative importance
-        let confidence: Double   // 0-1 data quality/freshness factor
-    }
-
-    /// Live polling cadence and chart density controls (CPU/GPU protection).
-    private static let heartRateBucketSize: TimeInterval = 10
-    private static let maxHeartRatePoints = 180
     private static let readinessBaselineWindowDays = 42
     private static let readinessBaselineGapDays = 2
-    private static let readinessBaselineMinSamples = 10
     private static let readinessBaselineRefreshInterval: TimeInterval = 6 * 3600
-    private static let readinessSmoothingAlpha = 0.7
 
-    private var readinessBaselines: [HKQuantityTypeIdentifier: RecoveryBaselineStats] = [:]
+    private var readinessBaselines: [ReadinessMetric: ReadinessScorer.BaselineStats] = [:]
     private var lastReadinessBaselineRefresh: Date?
     private var readinessBaselineRefreshTask: Task<Void, Never>?
     private var smoothedReadinessScore: Double?
+    private var refreshState = LiveRefreshPlanner.State()
 
-    init(healthKitManager: HealthKitManager) {
+    private typealias PendingHRUpdate = LiveHeartRateTimelineReducer.PendingUpdate
+
+    init(
+        healthKitManager: HealthKitManager,
+        readinessStore: ReadinessStore = ReadinessStore(),
+        heartRateTimelineReducer: LiveHeartRateTimelineReducer = LiveHeartRateTimelineReducer(),
+        refreshPlanner: LiveRefreshPlanner = LiveRefreshPlanner(),
+        sleepSummaryBuilder: LiveSleepSummaryBuilder = LiveSleepSummaryBuilder()
+    ) {
         self.healthKitManager = healthKitManager
+        self.readinessStore = readinessStore
+        self.heartRateTimelineReducer = heartRateTimelineReducer
+        self.refreshPlanner = refreshPlanner
+        self.sleepSummaryBuilder = sleepSummaryBuilder
+        recovery = RecoveryData(readinessStore: readinessStore)
     }
 
     // MARK: - Background Delivery
@@ -149,37 +146,6 @@ final class LiveViewModel {
         return result
     }
 
-    enum HeartRateZone: String {
-        case rest = "Rest"
-        case warmUp = "Warm Up"
-        case fatBurn = "Fat Burn"
-        case cardio = "Cardio"
-        case peak = "Peak"
-        case extreme = "Extreme"
-
-        var color: Color {
-            switch self {
-            case .rest: return .gray
-            case .warmUp: return .blue
-            case .fatBurn: return .green
-            case .cardio: return .yellow
-            case .peak: return .orange
-            case .extreme: return .red
-            }
-        }
-
-        var index: Int {
-            switch self {
-            case .rest: return 0
-            case .warmUp: return 1
-            case .fatBurn: return 2
-            case .cardio: return 3
-            case .peak: return 4
-            case .extreme: return 5
-            }
-        }
-    }
-
     var currentHeartRateZone: HeartRateZone {
         guard let hr = vitals.currentHeartRate else { return .rest }
         let maxHR = estimatedMaxHR
@@ -199,45 +165,13 @@ final class LiveViewModel {
         return min(hr / estimatedMaxHR, 1.0)
     }
 
-    enum VitalStatus: Equatable {
-        case normal, elevated, low, critical, unknown
-
-        var label: String {
-            switch self {
-            case .normal: return "Normal"
-            case .elevated: return "Elevated"
-            case .low: return "Low"
-            case .critical: return "Critical"
-            case .unknown: return "No Data"
-            }
-        }
-
-        var color: Color {
-            switch self {
-            case .normal: return .green
-            case .elevated: return .orange
-            case .low: return .yellow
-            case .critical: return .red
-            case .unknown: return .gray
-            }
-        }
-    }
-
     // MARK: - Readiness + Today Quick Fetch (for Home tab, no streams)
-
-    /// Timestamps for tiered Home polling — avoids querying slow-changing data every tick
-    private var lastSlowFetch: Date?   // RHR, HRV, workout, sleep
-    private var lastMediumFetch: Date?  // goals, mindful minutes
-
-    /// Tiered polling intervals (seconds)
-    private static let fastInterval: TimeInterval = 60     // steps, calories, exercise, stand, distance, flights
-    private static let mediumInterval: TimeInterval = 300   // goals, mindful minutes
-    private static let slowInterval: TimeInterval = 600     // RHR, HRV, workout, sleep
 
     /// Full fetch — calls all tiers unconditionally (used on first appear and manual refresh).
     /// Also pre-fetches latest vitals so the Live tab opens instantly with data.
     func fetchHomeData() {
         guard HKHealthStore.isHealthDataAvailable() else { return }
+        let now = Date()
         fetchLatestDailyValues()
         fetchTodayCumulativeStats()
         fetchActivityGoals()
@@ -248,36 +182,28 @@ final class LiveViewModel {
         fetchFallbackHeartRate()
         fetchFallbackBloodOxygen()
         fetchFallbackRespiratoryRate()
-        lastSlowFetch = Date()
-        lastMediumFetch = Date()
+        refreshPlanner.markFullRefresh(at: now, state: &refreshState)
     }
 
     /// Tiered fetch — only queries data whose refresh interval has elapsed
     func fetchHomeDataTiered() {
         guard HKHealthStore.isHealthDataAvailable() else { return }
         let now = Date()
+        let decision = refreshPlanner.decisionForTieredRefresh(now: now, state: refreshState)
 
-        // Fast tier: always fetch (steps, calories, exercise, stand, distance, flights)
-        fetchTodayCumulativeStats()
-
-        // Medium tier: goals + mindful minutes (every 5 min)
-        if let lastMedium = lastMediumFetch, now.timeIntervalSince(lastMedium) < Self.mediumInterval {
-            // Skip — not enough time elapsed
-        } else {
+        if decision.shouldFetchFast {
+            fetchTodayCumulativeStats()
+        }
+        if decision.shouldFetchMedium {
             fetchActivityGoals()
             fetchTodayMindfulMinutes()
-            lastMediumFetch = now
         }
-
-        // Slow tier: RHR, HRV, workout, sleep (every 10 min)
-        if let lastSlow = lastSlowFetch, now.timeIntervalSince(lastSlow) < Self.slowInterval {
-            // Skip — not enough time elapsed
-        } else {
+        if decision.shouldFetchSlow {
             fetchLatestDailyValues()
             fetchLatestWorkout()
             fetchLastNightSleep()
-            lastSlowFetch = now
         }
+        refreshPlanner.apply(decision, at: now, state: &refreshState)
     }
 
     // MARK: - Start / Stop
@@ -322,24 +248,24 @@ final class LiveViewModel {
             try? await Task.sleep(for: .milliseconds(300))
             guard let self, self.isStreaming else { return }
 
-            if let lastMedium = self.lastMediumFetch, now.timeIntervalSince(lastMedium) < Self.mediumInterval {
-                // Skip — not enough time elapsed
-            } else {
+            let decision = self.refreshPlanner.decisionForDeferredStreamingRefresh(
+                now: now,
+                state: self.refreshState
+            )
+
+            if decision.shouldFetchMedium {
                 self.fetchActivityGoals()
                 self.fetchTodayMindfulMinutes()
-                self.lastMediumFetch = Date()
             }
-            if let lastSlow = self.lastSlowFetch, now.timeIntervalSince(lastSlow) < Self.slowInterval {
-                // Skip — not enough time elapsed
-            } else {
+            if decision.shouldFetchSlow {
                 self.fetchLatestDailyValues()
                 self.fetchLatestBloodPressure()
                 self.fetchLatestBodyTemperature()
                 self.fetchLatestWorkout()
                 self.fetchTodayHeartRateRange()
                 self.fetchLastNightSleep()
-                self.lastSlowFetch = Date()
             }
+            self.refreshPlanner.apply(decision, at: now, state: &self.refreshState)
             self.computeReadinessScore()
         }
     }
@@ -397,8 +323,6 @@ final class LiveViewModel {
         }
         activityObserverQueries.removeAll()
 
-        refreshTimer?.invalidate()
-        refreshTimer = nil
         respiratoryAvailabilityWorkItem?.cancel()
         respiratoryAvailabilityWorkItem = nil
         pendingUIUpdateWorkItem?.cancel()
@@ -471,64 +395,19 @@ final class LiveViewModel {
         guard isStreaming else { return }
         guard let quantitySamples = samples as? [HKQuantitySample], !quantitySamples.isEmpty else { return }
         let sortedSamples = quantitySamples.sorted { $0.startDate < $1.startDate }
-        let latestSample = sortedSamples.last
-
-        // Pre-bucket off-main to avoid multiple @Observable writes per sample.
-        var bucketedPoints: [(date: Date, value: Double)] = []
-        bucketedPoints.reserveCapacity(sortedSamples.count)
-        for sample in sortedSamples {
-            let value = sample.quantity.doubleValue(for: unit)
-            let bucketedDate = Self.bucketDate(sample.startDate, by: Self.heartRateBucketSize)
-            if let last = bucketedPoints.last, last.date == bucketedDate {
-                bucketedPoints[bucketedPoints.count - 1] = (date: bucketedDate, value: value)
-            } else {
-                bucketedPoints.append((date: bucketedDate, value: value))
-            }
+        let points = sortedSamples.map { sample in
+            (date: sample.startDate, value: sample.quantity.doubleValue(for: unit))
         }
+        guard let latestSample = points.last else { return }
 
         Task { @MainActor in
-            // Merge new bucketed points into the existing (or pending) chart data.
             let base = pendingHeartRateUpdate?.merged ?? vitals.recentHeartRates
-            var merged = base
-            merged.reserveCapacity(merged.count + bucketedPoints.count)
-
-            for point in bucketedPoints {
-                if let last = merged.last, last.date == point.date {
-                    merged[merged.count - 1] = point
-                } else {
-                    merged.append(point)
-                }
-            }
-
-            // Keep only last 30 minutes
-            let cutoff = Date().addingTimeInterval(-30 * 60)
-            if let firstKeptIndex = merged.firstIndex(where: { $0.date >= cutoff }) {
-                if firstKeptIndex > 0 {
-                    merged.removeFirst(firstKeptIndex)
-                }
-            } else {
-                merged.removeAll()
-            }
-
-            // Hard cap to avoid unbounded chart work in long sessions.
-            if merged.count > Self.maxHeartRatePoints {
-                merged.removeFirst(merged.count - Self.maxHeartRatePoints)
-            }
-
-            // Buffer the processed data
-            if let latest = latestSample {
-                pendingHeartRateUpdate = PendingHRUpdate(
-                    merged: merged,
-                    latestValue: latest.quantity.doubleValue(for: unit),
-                    latestTimestamp: latest.startDate
-                )
-            } else {
-                pendingHeartRateUpdate = PendingHRUpdate(
-                    merged: merged,
-                    latestValue: pendingHeartRateUpdate?.latestValue ?? 0,
-                    latestTimestamp: pendingHeartRateUpdate?.latestTimestamp ?? Date()
-                )
-            }
+            pendingHeartRateUpdate = heartRateTimelineReducer.reduce(
+                existing: base,
+                incoming: points,
+                latestSample: latestSample,
+                now: Date()
+            )
 
             // Throttle: only push to @Observable properties at most once per second
             let now = Date()
@@ -562,25 +441,10 @@ final class LiveViewModel {
 
         let merged = update.merged
         vitals.recentHeartRates = merged
-
-        // Compute session stats
-        if merged.isEmpty {
-            vitals.heartRateMin30 = nil
-            vitals.heartRateMax30 = nil
-            vitals.heartRateAvg30 = nil
-        } else {
-            var minValue = Double.greatestFiniteMagnitude
-            var maxValue = -Double.greatestFiniteMagnitude
-            var sum = 0.0
-            for point in merged {
-                minValue = min(minValue, point.value)
-                maxValue = max(maxValue, point.value)
-                sum += point.value
-            }
-            vitals.heartRateMin30 = minValue
-            vitals.heartRateMax30 = maxValue
-            vitals.heartRateAvg30 = sum / Double(merged.count)
-        }
+        let stats = heartRateTimelineReducer.sessionStats(for: merged)
+        vitals.heartRateMin30 = stats.minimum
+        vitals.heartRateMax30 = stats.maximum
+        vitals.heartRateAvg30 = stats.average
 
         // Set current to most recent
         vitals.currentHeartRate = update.latestValue
@@ -852,117 +716,48 @@ final class LiveViewModel {
     // MARK: - Readiness Score
 
     func computeReadinessScore() {
-        let now = Date()
-        var signals: [RecoverySignal] = []
-
-        if let hrv = recovery.latestHRV {
-            let baseline = readinessBaselines[.heartRateVariabilitySDNN]
-            let score = Self.hrvScore(current: hrv, baseline: baseline)
-            let age = recovery.latestHRVTimestamp.map { now.timeIntervalSince($0) } ?? (72 * 3600)
-            let freshness = Self.freshnessConfidence(age: age, maxAge: 48 * 3600)
-            let baselineConfidence = baseline.map { min(1.0, Double($0.sampleCount) / 21.0) } ?? 0.55
-            signals.append(RecoverySignal(score: score, weight: 0.40, confidence: freshness * baselineConfidence))
-        }
-
-        if let rhr = recovery.latestRestingHeartRate {
-            let baseline = readinessBaselines[.restingHeartRate]
-            let score = Self.rhrScore(current: rhr, baseline: baseline)
-            let age = recovery.latestRestingHeartRateTimestamp.map { now.timeIntervalSince($0) } ?? (72 * 3600)
-            let freshness = Self.freshnessConfidence(age: age, maxAge: 48 * 3600)
-            let baselineConfidence = baseline.map { min(1.0, Double($0.sampleCount) / 21.0) } ?? 0.55
-            signals.append(RecoverySignal(score: score, weight: 0.35, confidence: freshness * baselineConfidence))
-        }
-
-        let sleepHours = sleep.lastNightSleepDuration / 3600.0
-        if sleepHours > 0 {
-            let score = Self.sleepDurationScore(hours: sleepHours)
-            let confidence = min(1.0, max(0.5, sleepHours / 7.0))
-            signals.append(RecoverySignal(score: score, weight: 0.15, confidence: confidence))
-        }
-
-        if sleep.hasSleepStageBreakdown, sleep.lastNightSleepDuration > 0 {
-            let score = Self.sleepStageScore(
-                deep: sleep.lastNightDeepSleep,
-                rem: sleep.lastNightREMSleep,
-                total: sleep.lastNightSleepDuration
-            )
-            signals.append(RecoverySignal(score: score, weight: 0.06, confidence: 0.85))
-        }
-
-        if let workoutDate = workout.lastWorkoutTimestamp,
-           let workoutDuration = workout.lastWorkoutDuration {
-            let hoursSinceWorkout = now.timeIntervalSince(workoutDate) / 3600.0
-            let score = Self.workoutRecoveryScore(
-                hoursSinceWorkout: hoursSinceWorkout,
-                durationMinutes: workoutDuration,
-                calories: workout.lastWorkoutCalories
-            )
-            let confidence = min(1.0, max(0.4, 1.0 - (max(0.0, hoursSinceWorkout - 36.0) / 24.0)))
-            signals.append(RecoverySignal(score: score, weight: 0.04, confidence: confidence))
-        }
-
-        guard !signals.isEmpty else {
-            recovery.readinessScore = nil
-            recovery.readinessConfidence = nil
-            smoothedReadinessScore = nil
-            return
-        }
-
-        let effectiveWeightTotal = signals.reduce(0.0) { $0 + ($1.weight * $1.confidence) }
-        guard effectiveWeightTotal > 0 else {
-            recovery.readinessScore = nil
-            recovery.readinessConfidence = nil
-            smoothedReadinessScore = nil
-            return
-        }
-
-        let weightedScore = signals.reduce(0.0) { partial, signal in
-            partial + (signal.score * signal.weight * signal.confidence)
-        } / effectiveWeightTotal
-
-        // Pull uncertain outputs toward neutral when data is sparse/stale.
-        let totalConfiguredWeight = signals.reduce(0.0) { $0 + $1.weight }
-        let confidence = min(1.0, effectiveWeightTotal / max(totalConfiguredWeight, 0.0001))
-        var score = 50 + (weightedScore - 50) * (0.35 + 0.65 * confidence)
-
-        if let bestAge = Self.freshestCardiacAgeHours(
+        let input = ReadinessScorer.Input(
+            now: Date(),
+            hrv: recovery.latestHRV,
             hrvTimestamp: recovery.latestHRVTimestamp,
-            rhrTimestamp: recovery.latestRestingHeartRateTimestamp,
-            now: now
-        ), bestAge > 24 {
-            // Extra penalty for stale autonomic signals.
-            score -= min(12.0, (bestAge - 24.0) * 0.5)
+            hrvBaseline: readinessBaselines[.heartRateVariability],
+            restingHeartRate: recovery.latestRestingHeartRate,
+            restingHeartRateTimestamp: recovery.latestRestingHeartRateTimestamp,
+            restingHeartRateBaseline: readinessBaselines[.restingHeartRate],
+            sleepDuration: sleep.lastNightSleepDuration,
+            deepSleep: sleep.lastNightDeepSleep,
+            remSleep: sleep.lastNightREMSleep,
+            hasSleepStageBreakdown: sleep.hasSleepStageBreakdown,
+            workoutTimestamp: workout.lastWorkoutTimestamp,
+            workoutDurationMinutes: workout.lastWorkoutDuration,
+            workoutCalories: workout.lastWorkoutCalories,
+            previousSmoothedScore: smoothedReadinessScore
+        )
+
+        guard let assessment = ReadinessScorer.assess(input) else {
+            recovery.readinessScore = nil
+            recovery.readinessConfidence = nil
+            smoothedReadinessScore = nil
+            return
         }
 
-        let clamped = Self.clamp(score, min: 0, max: 100)
-        if let previous = smoothedReadinessScore {
-            smoothedReadinessScore = previous + Self.readinessSmoothingAlpha * (clamped - previous)
-        } else {
-            smoothedReadinessScore = clamped
-        }
-
-        let finalScore = Int(Self.clamp(smoothedReadinessScore ?? clamped, min: 0, max: 100).rounded())
-        recovery.readinessScore = finalScore
-        recovery.readinessConfidence = Int((confidence * 100).rounded())
-
-        // Persist for background refresh seeding
-        UserDefaults.standard.set(finalScore, forKey: AppKeys.Readiness.cachedScore)
-        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: AppKeys.Readiness.cachedTimestamp)
+        smoothedReadinessScore = assessment.smoothedScore
+        recovery.readinessScore = assessment.score
+        recovery.readinessConfidence = assessment.confidence
+        readinessStore.saveCachedScore(assessment.score)
     }
 
     // MARK: - Last Night's Sleep Fetch
 
     func fetchLastNightSleep() {
         let sleepType = HKCategoryType(.sleepAnalysis)
-        let calendar = Calendar.current
+        guard let window = sleepSummaryBuilder.queryWindow(containing: Date()) else { return }
 
-        let now = Date()
-        let startOfToday = calendar.startOfDay(for: now)
-        guard let yesterday = calendar.date(byAdding: .day, value: -1, to: startOfToday),
-              let yesterdayEvening = calendar.date(bySettingHour: 18, minute: 0, second: 0, of: yesterday),
-              let todayNoon = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: startOfToday) else { return }
-
-        let predicate = HKQuery.predicateForSamples(withStart: yesterdayEvening, end: todayNoon, options: .strictStartDate)
+        let predicate = HKQuery.predicateForSamples(
+            withStart: window.start,
+            end: window.end,
+            options: .strictStartDate
+        )
 
         let query = HKSampleQuery(
             sampleType: sleepType,
@@ -970,43 +765,12 @@ final class LiveViewModel {
             limit: HKObjectQueryNoLimit,
             sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)]
         ) { [weak self] _, results, _ in
-            guard let samples = results as? [HKCategorySample] else { return }
-
-            var deep: TimeInterval = 0
-            var rem: TimeInterval = 0
-            var core: TimeInterval = 0
-            var awake: TimeInterval = 0
-            var total: TimeInterval = 0
-
-            for sample in samples {
-                let duration = sample.endDate.timeIntervalSince(sample.startDate)
-                guard let value = HKCategoryValueSleepAnalysis(rawValue: sample.value) else { continue }
-                switch value {
-                case .asleepDeep:
-                    deep += duration
-                    total += duration
-                case .asleepREM:
-                    rem += duration
-                    total += duration
-                case .asleepCore:
-                    core += duration
-                    total += duration
-                case .awake:
-                    awake += duration
-                case .asleepUnspecified, .inBed:
-                    total += duration
-                @unknown default:
-                    break
-                }
-            }
+            guard let self, let samples = results as? [HKCategorySample] else { return }
+            let summary = self.sleepSummaryBuilder.summarize(samples: samples)
 
             Task { @MainActor in
-                self?.sleep.lastNightSleepDuration = total
-                self?.sleep.lastNightDeepSleep = deep
-                self?.sleep.lastNightREMSleep = rem
-                self?.sleep.lastNightCoreSleep = core
-                self?.sleep.lastNightAwakeTime = awake
-                self?.computeReadinessScore()
+                self.sleep.apply(summary: summary)
+                self.computeReadinessScore()
             }
         }
 
@@ -1144,15 +908,15 @@ final class LiveViewModel {
                 unit: HKUnit.secondUnit(with: .milli)
             )
 
-            let rhrBaseline = Self.makeBaseline(values: await rhrValues, minimumSD: 2.0)
-            let hrvBaseline = Self.makeBaseline(values: await hrvValues, minimumSD: 4.0)
+            let rhrBaseline = ReadinessScorer.makeBaseline(values: await rhrValues, minimumSD: 2.0)
+            let hrvBaseline = ReadinessScorer.makeBaseline(values: await hrvValues, minimumSD: 4.0)
 
             await MainActor.run {
                 if let rhrBaseline {
                     self.readinessBaselines[.restingHeartRate] = rhrBaseline
                 }
                 if let hrvBaseline {
-                    self.readinessBaselines[.heartRateVariabilitySDNN] = hrvBaseline
+                    self.readinessBaselines[.heartRateVariability] = hrvBaseline
                 }
                 self.lastReadinessBaselineRefresh = Date()
                 self.readinessBaselineRefreshTask = nil
@@ -1205,389 +969,6 @@ final class LiveViewModel {
             }
 
             healthStore.execute(query)
-        }
-    }
-
-    private static func makeBaseline(values: [Double], minimumSD: Double) -> RecoveryBaselineStats? {
-        let clean = values.filter { $0.isFinite && $0 > 0 }
-        guard clean.count >= readinessBaselineMinSamples else { return nil }
-
-        let q1 = clean.percentile(25)
-        let q3 = clean.percentile(75)
-        let iqr = max(0.001, q3 - q1)
-        let lower = q1 - 1.5 * iqr
-        let upper = q3 + 1.5 * iqr
-        let trimmed = clean.filter { $0 >= lower && $0 <= upper }
-        let usable = trimmed.count >= readinessBaselineMinSamples ? trimmed : clean
-
-        let mean = usable.mean
-        let median = usable.median
-        let adaptiveFloor = max(minimumSD, abs(mean) * 0.05, iqr * 0.3)
-        let sd = max(usable.standardDeviation, adaptiveFloor)
-
-        return RecoveryBaselineStats(
-            mean: mean,
-            median: median,
-            standardDeviation: sd,
-            iqr: iqr,
-            sampleCount: usable.count
-        )
-    }
-
-    private static func hrvScore(current: Double, baseline: RecoveryBaselineStats?) -> Double {
-        if let baseline {
-            let z = (current - baseline.median) / baseline.standardDeviation
-            let normalized = tanh(z / 1.8)
-            return clamp(55 + normalized * 35, min: 0, max: 100)
-        }
-
-        // Population fallback when personal baseline is unavailable.
-        return clamp((current - 15) / 55 * 100, min: 0, max: 100)
-    }
-
-    private static func rhrScore(current: Double, baseline: RecoveryBaselineStats?) -> Double {
-        if let baseline {
-            let z = (baseline.median - current) / baseline.standardDeviation
-            let normalized = tanh(z / 1.8)
-            return clamp(55 + normalized * 35, min: 0, max: 100)
-        }
-
-        // Population fallback when personal baseline is unavailable.
-        return clamp((85 - current) / 40 * 100, min: 0, max: 100)
-    }
-
-    private static func sleepDurationScore(hours: Double) -> Double {
-        if hours < 7.5 {
-            let deficit = 7.5 - hours
-            let penalty = deficit * 13 + deficit * deficit * 4
-            return clamp(100 - penalty, min: 10, max: 100)
-        } else {
-            let excess = hours - 7.5
-            let penalty = excess * 7 + excess * excess * 2
-            return clamp(100 - penalty, min: 35, max: 100)
-        }
-    }
-
-    private static func sleepStageScore(deep: TimeInterval, rem: TimeInterval, total: TimeInterval) -> Double {
-        guard total > 0 else { return 50 }
-        let restorativeRatio = (deep + rem) / total
-        return clamp((restorativeRatio - 0.16) / 0.24 * 100, min: 0, max: 100)
-    }
-
-    private static func workoutRecoveryScore(
-        hoursSinceWorkout: Double,
-        durationMinutes: Double,
-        calories: Double?
-    ) -> Double {
-        let workoutLoad = min(1.0, max(durationMinutes / 75.0, (calories ?? 0) / 600.0))
-        if hoursSinceWorkout < 6 {
-            return 85 - workoutLoad * 35
-        }
-        if hoursSinceWorkout < 18 {
-            return 92 - workoutLoad * 25
-        }
-        return 96 - workoutLoad * 12
-    }
-
-    private static func freshnessConfidence(age: TimeInterval, maxAge: TimeInterval) -> Double {
-        guard age.isFinite else { return 0.35 }
-        let ratio = clamp(age / maxAge, min: 0, max: 2)
-        return clamp(1.0 - ratio * 0.65, min: 0.35, max: 1.0)
-    }
-
-    private static func freshestCardiacAgeHours(
-        hrvTimestamp: Date?,
-        rhrTimestamp: Date?,
-        now: Date
-    ) -> Double? {
-        let ages = [hrvTimestamp, rhrTimestamp]
-            .compactMap { $0 }
-            .map { now.timeIntervalSince($0) / 3600.0 }
-            .filter { $0.isFinite && $0 >= 0 }
-        return ages.min()
-    }
-
-    private static func clamp(_ value: Double, min lower: Double, max upper: Double) -> Double {
-        Swift.max(lower, Swift.min(upper, value))
-    }
-
-    private static func bucketDate(_ date: Date, by interval: TimeInterval) -> Date {
-        let t = date.timeIntervalSince1970
-        return Date(timeIntervalSince1970: floor(t / interval) * interval)
-    }
-}
-
-// MARK: - Observable Sub-Object Definitions
-
-extension LiveViewModel {
-
-    /// Real-time vitals — HR, SpO2, respiratory rate, blood pressure, body temperature
-    @Observable
-    final class VitalsData {
-        // Heart rate
-        var currentHeartRate: Double?
-        var heartRateTimestamp: Date?
-        var recentHeartRates: [(date: Date, value: Double)] = []
-        var heartRateMin30: Double?
-        var heartRateMax30: Double?
-        var heartRateAvg30: Double?
-        var todayHeartRateMin: Double?
-        var todayHeartRateMax: Double?
-
-        // Blood oxygen
-        var currentBloodOxygen: Double?
-        var bloodOxygenTimestamp: Date?
-
-        // Respiratory rate
-        var currentRespiratoryRate: Double?
-        var respiratoryRateTimestamp: Date?
-        var respiratoryRateUnavailable = false
-
-        // Wrist temperature
-        var currentWristTemperature: Double?
-        var wristTemperatureTimestamp: Date?
-
-        // Blood pressure
-        var latestSystolic: Double?
-        var latestDiastolic: Double?
-        var bloodPressureTimestamp: Date?
-
-        // Body temperature
-        var latestBodyTemp: Double?
-        var bodyTempTimestamp: Date?
-
-        // MARK: - Freshness & Status (computed from vitals only)
-
-        private static let freshnessThreshold: TimeInterval = 30 * 60
-
-        var heartRateStatus: LiveViewModel.VitalStatus {
-            guard let hr = currentHeartRate else { return .unknown }
-            if hr > 120 { return .elevated }
-            if hr < 45 { return .low }
-            return .normal
-        }
-
-        var bloodOxygenStatus: LiveViewModel.VitalStatus {
-            guard let spo2 = currentBloodOxygen else { return .unknown }
-            if spo2 < 92 { return .critical }
-            if spo2 < 95 { return .low }
-            return .normal
-        }
-
-        var respiratoryRateStatus: LiveViewModel.VitalStatus {
-            guard let rr = currentRespiratoryRate else { return .unknown }
-            if rr > 24 { return .elevated }
-            if rr < 10 { return .low }
-            return .normal
-        }
-
-        var bloodPressureStatus: LiveViewModel.VitalStatus {
-            guard let sys = latestSystolic else { return .unknown }
-            if sys >= 140 { return .critical }
-            if sys >= 130 { return .elevated }
-            if sys < 90 { return .low }
-            return .normal
-        }
-
-        var isHeartRateFresh: Bool {
-            guard let ts = heartRateTimestamp else { return false }
-            return Date().timeIntervalSince(ts) < Self.freshnessThreshold
-        }
-
-        var isBloodOxygenFresh: Bool {
-            guard let ts = bloodOxygenTimestamp else { return false }
-            return Date().timeIntervalSince(ts) < Self.freshnessThreshold
-        }
-
-        var isRespiratoryRateFresh: Bool {
-            guard let ts = respiratoryRateTimestamp else { return false }
-            return Date().timeIntervalSince(ts) < Self.freshnessThreshold
-        }
-
-        var hasAnyData: Bool {
-            currentHeartRate != nil || currentBloodOxygen != nil || currentRespiratoryRate != nil
-        }
-
-        var hasFreshData: Bool {
-            isHeartRateFresh || isBloodOxygenFresh || isRespiratoryRateFresh
-        }
-
-        var hasRecentData: Bool {
-            let twoHours: TimeInterval = 2 * 3600
-            let now = Date()
-            if let ts = heartRateTimestamp, now.timeIntervalSince(ts) < twoHours { return true }
-            if let ts = bloodOxygenTimestamp, now.timeIntervalSince(ts) < twoHours { return true }
-            if let ts = respiratoryRateTimestamp, now.timeIntervalSince(ts) < twoHours { return true }
-            return false
-        }
-
-        var isStale: Bool { hasAnyData && !hasRecentData }
-        var isAging: Bool { hasAnyData && !hasFreshData && hasRecentData }
-
-        var mostRecentTimestamp: Date? {
-            [heartRateTimestamp, bloodOxygenTimestamp, respiratoryRateTimestamp]
-                .compactMap { $0 }
-                .max()
-        }
-    }
-
-    /// Last night's sleep data
-    @Observable
-    final class SleepData {
-        var lastNightSleepDuration: TimeInterval = 0
-        var lastNightDeepSleep: TimeInterval = 0
-        var lastNightREMSleep: TimeInterval = 0
-        var lastNightCoreSleep: TimeInterval = 0
-        var lastNightAwakeTime: TimeInterval = 0
-
-        var hasSleepData: Bool { lastNightSleepDuration > 0 }
-
-        var hasSleepStageBreakdown: Bool {
-            lastNightDeepSleep > 0 || lastNightREMSleep > 0 || lastNightCoreSleep > 0
-        }
-
-        var sleepQualityLabel: String {
-            let hours = lastNightSleepDuration / 3600
-            if hours >= 7.5 { return "Great" }
-            if hours >= 6.5 { return "Good" }
-            if hours >= 5.5 { return "Fair" }
-            return "Poor"
-        }
-    }
-
-    /// Today's cumulative activity and goals
-    @Observable
-    final class ActivityData {
-        var todaySteps: Double = 0
-        var todayActiveCalories: Double = 0
-        var todayExerciseMinutes: Double = 0
-        var todayStandHours: Double = 0
-        var todayDistance: Double = 0
-        var todayFlightsClimbed: Double = 0
-        var todayMindfulMinutes: Double = 0
-
-        var moveGoal: Double = 500
-        var exerciseGoal: Double = 30
-        var standGoal: Double = 12
-
-        var moveProgress: Double { min(todayActiveCalories / moveGoal, 1.0) }
-        var exerciseProgress: Double { min(todayExerciseMinutes / exerciseGoal, 1.0) }
-        var standProgress: Double { min(todayStandHours / standGoal, 1.0) }
-
-        var hasAnyData: Bool {
-            todaySteps > 0 || todayActiveCalories > 0 || todayExerciseMinutes > 0
-        }
-    }
-
-    /// Recovery metrics — RHR, HRV, readiness score, stress
-    @Observable
-    final class RecoveryData {
-        var latestRestingHeartRate: Double?
-        var latestRestingHeartRateTimestamp: Date?
-        var latestHRV: Double?
-        var latestHRVTimestamp: Date?
-        var latestHeartRateRecovery: Double?
-        var readinessScore: Int?
-        var readinessConfidence: Int?
-
-        init() {
-            // Seed from cached score so the hero card shows a value immediately on cold launch
-            let cached = UserDefaults.standard.integer(forKey: AppKeys.Readiness.cachedScore)
-            if cached > 0 {
-                readinessScore = cached
-            }
-        }
-
-        var isReadinessDataFresh: Bool {
-            let fortyEightHours: TimeInterval = 48 * 3600
-            let now = Date()
-            let rhrFresh = latestRestingHeartRateTimestamp.map { now.timeIntervalSince($0) < fortyEightHours } ?? false
-            let hrvFresh = latestHRVTimestamp.map { now.timeIntervalSince($0) < fortyEightHours } ?? false
-            // Fresh if at least one metric is available (matches partial score logic)
-            return rhrFresh || hrvFresh
-        }
-
-        var stressLevel: Int? {
-            guard let hrv = latestHRV, let rhr = latestRestingHeartRate else { return nil }
-            let hrvStress = min(max((60 - hrv) / 40.0 * 50, 0), 50)
-            let rhrStress = min(max((rhr - 50) / 30.0 * 50, 0), 50)
-            return Int(hrvStress + rhrStress)
-        }
-
-        var stressLabel: String {
-            guard let level = stressLevel else { return "No Data" }
-            switch level {
-            case 0..<20: return "Relaxed"
-            case 20..<40: return "Low"
-            case 40..<60: return "Moderate"
-            case 60..<80: return "High"
-            default: return "Very High"
-            }
-        }
-
-        var stressColor: String {
-            guard let level = stressLevel else { return "gray" }
-            switch level {
-            case 0..<20: return "green"
-            case 20..<40: return "green"
-            case 40..<60: return "yellow"
-            case 60..<80: return "orange"
-            default: return "red"
-            }
-        }
-    }
-
-    /// Most recent workout info
-    @Observable
-    final class WorkoutData {
-        var lastWorkoutType: String?
-        var lastWorkoutDuration: Double?
-        var lastWorkoutCalories: Double?
-        var lastWorkoutTimestamp: Date?
-    }
-}
-
-// MARK: - Workout Activity Type Name
-
-extension HKWorkoutActivityType {
-    var displayName: String {
-        switch self {
-        case .running: return "Running"
-        case .cycling: return "Cycling"
-        case .walking: return "Walking"
-        case .swimming: return "Swimming"
-        case .hiking: return "Hiking"
-        case .yoga: return "Yoga"
-        case .functionalStrengthTraining: return "Strength"
-        case .traditionalStrengthTraining: return "Strength"
-        case .highIntensityIntervalTraining: return "HIIT"
-        case .elliptical: return "Elliptical"
-        case .rowing: return "Rowing"
-        case .dance: return "Dance"
-        case .coreTraining: return "Core"
-        case .pilates: return "Pilates"
-        case .crossTraining: return "Cross Training"
-        case .mixedCardio: return "Mixed Cardio"
-        case .stairClimbing: return "Stair Climbing"
-        default: return "Workout"
-        }
-    }
-
-    var systemImageName: String {
-        switch self {
-        case .running: return "figure.run"
-        case .cycling: return "figure.outdoor.cycle"
-        case .walking: return "figure.walk"
-        case .swimming: return "figure.pool.swim"
-        case .hiking: return "figure.hiking"
-        case .yoga: return "figure.yoga"
-        case .functionalStrengthTraining, .traditionalStrengthTraining: return "dumbbell.fill"
-        case .highIntensityIntervalTraining: return "bolt.heart.fill"
-        case .elliptical: return "figure.elliptical"
-        case .rowing: return "figure.rower"
-        case .dance: return "figure.dance"
-        case .stairClimbing: return "figure.stairs"
-        default: return "figure.mixed.cardio"
         }
     }
 }

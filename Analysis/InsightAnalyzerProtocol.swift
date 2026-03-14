@@ -1,36 +1,13 @@
 import Foundation
 
-// MARK: - InsightAnalyzer Protocol
-
-/// Unified interface for all insight-producing analyzers.
-///
-/// Conforming types receive a single `AnalysisContext` containing all available
-/// data and return `[Insight]`. This replaces the previous pattern where each
-/// analyzer had a unique parameter signature, making orchestration and
-/// coordination impossible without hard-coding every call site.
-///
-/// Conformance is added via extensions so existing static methods stay intact.
 protocol InsightAnalyzer {
-    /// Stable identifier for logging and debugging
     static var analyzerID: String { get }
-
-    /// The primary InsightCategory this analyzer produces
     static var insightCategory: InsightCategory { get }
-
-    /// Generate insights from the shared analysis context.
-    /// Each analyzer pulls only the data it needs from the context.
     static func generateInsights(context: AnalysisContext) -> [Insight]
 }
 
-// MARK: - AnalysisContext
-
-/// All data available for insight generation, passed to every `InsightAnalyzer`.
-///
-/// Core fields (timeSeries, baselines, trends, anomalies) are always populated.
-/// Heavy fields (correlations, historicalContext, etc.) are empty during Phase 2A
-/// and filled after Phase 2B computation completes.
-/// Specialized fields (cycleFlowSamples, scoreHistory, etc.) are populated when
-/// the data source is available.
+/// Shared data bag passed to every InsightAnalyzer.
+/// Core fields are always populated; heavy fields are empty until Phase 2B completes.
 struct AnalysisContext {
 
     // MARK: Core (always available after Phase 1)

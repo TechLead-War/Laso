@@ -68,18 +68,8 @@ final class EncryptedStore {
         loadSyncKeyFromKeychain() != nil
     }
 
-    /// Get or create the iCloud-synced AES-256 key for CloudKit encryption.
-    /// Stored with kSecAttrSynchronizable so iCloud Keychain replicates it across devices.
     func getOrCreateSyncKey() -> SymmetricKey? {
-        if let existingKeyData = loadSyncKeyFromKeychain() {
-            return SymmetricKey(data: existingKeyData)
-        }
-        let newKey = SymmetricKey(size: .bits256)
-        let keyData = newKey.withUnsafeBytes { Data($0) }
-        if saveSyncKeyToKeychain(keyData) {
-            return newKey
-        }
-        return nil
+        resolveKey(account: syncKeychainAccount, accessible: kSecAttrAccessibleAfterFirstUnlock, synchronizable: true)
     }
 
     /// Encrypt data using the iCloud-synced key (for CloudKit backup payloads)
@@ -95,93 +85,60 @@ final class EncryptedStore {
         return decrypt(data, using: key)
     }
 
-    private func loadSyncKeyFromKeychain() -> Data? {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: syncKeychainAccount,
-            kSecAttrSynchronizable as String: true,
-            kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitOne
-        ]
-        var result: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
-        guard status == errSecSuccess else { return nil }
-        return result as? Data
-    }
-
-    private func saveSyncKeyToKeychain(_ keyData: Data) -> Bool {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: syncKeychainAccount,
-            kSecValueData as String: keyData,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
-            kSecAttrSynchronizable as String: true
-        ]
-        var status = SecItemAdd(query as CFDictionary, nil)
-
-        if status == errSecDuplicateItem {
-            let searchQuery: [String: Any] = [
-                kSecClass as String: kSecClassGenericPassword,
-                kSecAttrAccount as String: syncKeychainAccount,
-                kSecAttrSynchronizable as String: true
-            ]
-            let updateAttributes: [String: Any] = [
-                kSecValueData as String: keyData
-            ]
-            status = SecItemUpdate(searchQuery as CFDictionary, updateAttributes as CFDictionary)
-        }
-
-        return status == errSecSuccess
-    }
-
-    // MARK: - Keychain Key Management (device-local)
+    // MARK: - Keychain Key Management
 
     private func getOrCreateKey() -> SymmetricKey? {
-        if let existingKeyData = loadKeyFromKeychain() {
-            return SymmetricKey(data: existingKeyData)
-        }
-        let newKey = SymmetricKey(size: .bits256)
-        let keyData = newKey.withUnsafeBytes { Data($0) }
-        if saveKeyToKeychain(keyData) {
-            return newKey
-        }
-        return nil
+        resolveKey(account: keychainAccount, accessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly, synchronizable: false)
     }
 
     private func loadKeyFromKeychain() -> Data? {
-        let query: [String: Any] = [
+        loadFromKeychain(account: keychainAccount, synchronizable: false)
+    }
+
+    private func loadSyncKeyFromKeychain() -> Data? {
+        loadFromKeychain(account: syncKeychainAccount, synchronizable: true)
+    }
+
+    private func resolveKey(account: String, accessible: CFString, synchronizable: Bool) -> SymmetricKey? {
+        if let data = loadFromKeychain(account: account, synchronizable: synchronizable) {
+            return SymmetricKey(data: data)
+        }
+        let newKey = SymmetricKey(size: .bits256)
+        let keyData = newKey.withUnsafeBytes { Data($0) }
+        return upsertKeychain(account: account, data: keyData, accessible: accessible, synchronizable: synchronizable) ? newKey : nil
+    }
+
+    private func loadFromKeychain(account: String, synchronizable: Bool) -> Data? {
+        var query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: keychainAccount,
+            kSecAttrAccount as String: account,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
+        if synchronizable { query[kSecAttrSynchronizable as String] = true }
         var result: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
-        guard status == errSecSuccess else { return nil }
+        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess else { return nil }
         return result as? Data
     }
 
-    private func saveKeyToKeychain(_ keyData: Data) -> Bool {
-        let query: [String: Any] = [
+    private func upsertKeychain(account: String, data: Data, accessible: CFString, synchronizable: Bool) -> Bool {
+        var query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: keychainAccount,
-            kSecValueData as String: keyData,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+            kSecAttrAccount as String: account,
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: accessible
         ]
+        if synchronizable { query[kSecAttrSynchronizable as String] = true }
+
         var status = SecItemAdd(query as CFDictionary, nil)
-
-        // Handle duplicate: update the existing key instead
         if status == errSecDuplicateItem {
-            let searchQuery: [String: Any] = [
+            var searchQuery: [String: Any] = [
                 kSecClass as String: kSecClassGenericPassword,
-                kSecAttrAccount as String: keychainAccount
+                kSecAttrAccount as String: account
             ]
-            let updateAttributes: [String: Any] = [
-                kSecValueData as String: keyData
-            ]
-            status = SecItemUpdate(searchQuery as CFDictionary, updateAttributes as CFDictionary)
+            if synchronizable { searchQuery[kSecAttrSynchronizable as String] = true }
+            status = SecItemUpdate(searchQuery as CFDictionary, [kSecValueData as String: data] as CFDictionary)
         }
-
         return status == errSecSuccess
     }
 }

@@ -57,6 +57,14 @@ enum AppConstants {
         static let preferencesCacheDuration: TimeInterval = 300
     }
 
+    // MARK: - Background Tasks
+
+    enum BackgroundTask {
+        static let readinessRefresh = "com.lasohealth.com.background-refresh"
+        static let earliestBeginInterval: TimeInterval = 30 * 60
+        static let completionDelay: TimeInterval = 5
+    }
+
     // MARK: - Data Requirements (Minimum days for ML/Analysis)
 
     enum DataRequirements {

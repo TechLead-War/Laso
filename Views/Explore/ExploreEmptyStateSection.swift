@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ExploreEmptyStateSection: View {
     let hasAnyHealthData: Bool
+    let isAuthorized: Bool
     var onConnectHealth: (() -> Void)? = nil
 
     var body: some View {
@@ -16,13 +17,11 @@ struct ExploreEmptyStateSection: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
 
-                    Text(hasAnyHealthData ? Copy.Explore.almostThere : Copy.Explore.noDataYet)
+                    Text(titleText)
                         .font(.title3.weight(.medium))
                         .foregroundStyle(.primary)
 
-                    Text(hasAnyHealthData
-                         ? Copy.Explore.almostThereBody
-                         : Copy.Explore.noDataYetBody)
+                    Text(bodyText)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -30,7 +29,7 @@ struct ExploreEmptyStateSection: View {
                 Spacer()
             }
 
-            if !hasAnyHealthData, let onConnectHealth {
+            if !isAuthorized, let onConnectHealth {
                 Button(action: onConnectHealth) {
                     Label("Connect Apple Health", systemImage: "heart.fill")
                         .font(.subheadline.weight(.semibold))
@@ -42,5 +41,22 @@ struct ExploreEmptyStateSection: View {
         }
         .padding(16)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+    }
+
+    private var titleText: String {
+        if hasAnyHealthData {
+            return Copy.Explore.almostThere
+        }
+        return isAuthorized ? "Syncing your first insights" : Copy.Explore.noDataYet
+    }
+
+    private var bodyText: String {
+        if hasAnyHealthData {
+            return Copy.Explore.almostThereBody
+        }
+        if isAuthorized {
+            return "Apple Health is already connected. Explore will populate after the next batch of imported samples is analyzed."
+        }
+        return Copy.Explore.noDataYetBody
     }
 }

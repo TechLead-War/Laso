@@ -2,21 +2,21 @@ import SwiftUI
 
 struct LiveStaleVitalsPrompt: View {
     let vitals: LiveViewModel.VitalsData
+    let primaryDevice: SupportedDevice?
 
     var body: some View {
         VStack(spacing: 16) {
-            // Wear your watch — subtle nudge
             HStack(spacing: 14) {
-                Image(systemName: DeviceMessaging.deviceIcon)
+                Image(systemName: primaryDevice?.systemImageName ?? "waveform.path.ecg")
                     .font(.title2)
                     .foregroundStyle(.secondary)
                     .frame(width: 40)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(DeviceMessaging.wearPromptTitle)
+                    Text(promptTitle)
                         .font(.subheadline.weight(.semibold))
 
-                    Text(DeviceMessaging.staleVitalsMessage)
+                    Text(promptBody)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
@@ -99,42 +99,56 @@ struct LiveStaleVitalsPrompt: View {
         }
         .frame(maxWidth: .infinity)
     }
+
+    private var promptTitle: String {
+        if let primaryDevice {
+            return "\(primaryDevice.displayName) data is stale"
+        }
+        return "Live vitals need a wearable source"
+    }
+
+    private var promptBody: String {
+        if let primaryDevice {
+            return "\(primaryDevice.displayName) has not written a fresh sample recently. Reopen its companion app or wear the device again to refresh live vitals."
+        }
+        return "Apple Health still has your last readings, but live heart rate, oxygen, and breathing updates need a wearable that syncs into Health."
+    }
 }
 
 struct LiveWaitingForDataView: View {
     let isStreaming: Bool
+    let primaryDevice: SupportedDevice?
+    let hasLiveSource: Bool
 
     var body: some View {
         VStack(spacing: 24) {
             Spacer().frame(height: 40)
 
-            Image(systemName: DeviceMessaging.deviceIcon)
+            Image(systemName: primaryDevice?.systemImageName ?? "waveform.path.ecg")
                 .font(.system(size: 56))
                 .foregroundStyle(.secondary)
                 .symbolEffect(.pulse, isActive: isStreaming)
 
             VStack(spacing: 8) {
-                Text("Waiting for Live Data")
+                Text(titleText)
                     .font(.title3.weight(.semibold))
 
-                Text(DeviceMessaging.ensurePairedMessage)
+                Text(bodyText)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
 
-                Text("Data usually appears within a minute")
+                Text(footnoteText)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .padding(.top, 2)
             }
 
-            // Tips
             VStack(alignment: .leading, spacing: 12) {
-                tipRow(icon: DeviceMessaging.deviceIcon, text: "Wear your \(DeviceMessaging.deviceName) snugly")
-                tipRow(icon: "bluetooth", text: "Keep Bluetooth enabled on iPhone")
-                tipRow(icon: "heart.fill", text: "Open a workout or check your heart rate on the Watch")
-                tipRow(icon: "arrow.clockwise", text: "Recent data may take a moment to sync")
+                ForEach(tips, id: \.text) { tip in
+                    tipRow(icon: tip.icon, text: tip.text)
+                }
             }
             .padding(DS.cardPadding)
             .cardStyle()
@@ -143,7 +157,7 @@ struct LiveWaitingForDataView: View {
             Spacer()
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Waiting for live data from \(DeviceMessaging.deviceName). Make sure your device is paired and worn.")
+        .accessibilityLabel(accessibilityLabel)
     }
 
     private func tipRow(icon: String, text: String) -> some View {
@@ -156,5 +170,51 @@ struct LiveWaitingForDataView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
+    }
+
+    private var titleText: String {
+        if hasLiveSource {
+            return "Waiting for Live Data"
+        }
+        return "Live monitoring needs a wearable"
+    }
+
+    private var bodyText: String {
+        if let primaryDevice {
+            return "\(primaryDevice.displayName) is connected. Wear it or reopen its companion app so fresh samples can reach Apple Health."
+        }
+        return "You can still use Laso with regular Health data, but live heart rate, oxygen, and respiratory updates need a wearable source."
+    }
+
+    private var footnoteText: String {
+        if hasLiveSource {
+            return "Fresh samples usually appear within a minute"
+        }
+        return "Connect a wearable source to unlock the Live tab"
+    }
+
+    private var tips: [(icon: String, text: String)] {
+        if let primaryDevice {
+            return [
+                (primaryDevice.systemImageName, "Wear your \(primaryDevice.displayName) and keep it nearby"),
+                ("bluetooth", "Keep Bluetooth enabled on iPhone"),
+                ("heart.fill", "Open the companion app or start a quick workout to generate a fresh sample"),
+                ("arrow.clockwise", "Recent data may take a moment to sync")
+            ]
+        }
+
+        return [
+            ("sensor.fill", "Connect a supported wearable through its companion app"),
+            ("square.and.arrow.down.on.square", "Enable Apple Health sharing in the companion app"),
+            ("heart.fill", "Use Home and Explore normally while Laso waits for live vitals"),
+            ("arrow.clockwise", "Return after the first wearable sync")
+        ]
+    }
+
+    private var accessibilityLabel: String {
+        if let primaryDevice {
+            return "Waiting for live data from \(primaryDevice.displayName)."
+        }
+        return "Live monitoring needs a wearable source."
     }
 }

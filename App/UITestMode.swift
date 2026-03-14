@@ -33,25 +33,27 @@ enum UITestMode {
         UIWindow.appearance().overrideUserInterfaceStyle = requestedAppearance
 
         let defaults = UserDefaults.standard
+        let appStateStore = AppStateStore(userDefaults: defaults, cloudStore: nil)
 
         if ProcessInfo.processInfo.arguments.contains(resetDefaultsFlag) {
             let keysToReset = [
-                AppKeys.App.onboardingCompleted,
-                AppKeys.App.hasSeenDiscovery,
                 AppKeys.App.hasSeenScoreGuide,
                 AppKeys.App.hasSeenRecoveryInfo,
-                AppKeys.App.pendingCalibrationHydration,
                 AppKeys.Dismissals.siriTip
             ]
             for key in keysToReset {
                 defaults.removeObject(forKey: key)
             }
+
+            appStateStore.setOnboardingCompleted(false)
+            appStateStore.setHasSeenDiscovery(false)
+            appStateStore.setPendingCalibrationHydration(false)
         }
 
-        defaults.set(!shouldShowOnboarding, forKey: AppKeys.App.onboardingCompleted)
-        defaults.set(true, forKey: AppKeys.App.hasSeenDiscovery)
+        appStateStore.setOnboardingCompleted(!shouldShowOnboarding)
+        appStateStore.markDiscoverySeen()
+        appStateStore.setPendingCalibrationHydration(false)
         defaults.set(true, forKey: AppKeys.App.hasSeenScoreGuide)
-        defaults.set(false, forKey: AppKeys.App.pendingCalibrationHydration)
         defaults.set(true, forKey: AppKeys.Dismissals.siriTip)
     }
 }

@@ -89,7 +89,7 @@ struct HealthRiskEngine {
                 status: .unmeasured,
                 currentValue: 0,
                 optimalRange: optimalRangeString(for: metric),
-                explanation: "No recent data available. Wear your \(DeviceMessaging.deviceName) to track this metric."
+                explanation: "No recent data available. Keep Apple Health syncing to track this metric."
             )
         }
 

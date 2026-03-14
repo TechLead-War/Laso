@@ -258,7 +258,8 @@ struct ExploreView: View {
                     }
                 } else {
                     ExploreEmptyStateSection(
-                        hasAnyHealthData: hasAnyHealthData
+                        hasAnyHealthData: hasAnyHealthData,
+                        isAuthorized: viewModel.healthKitManager.isAuthorized
                     )
                     .padding(.horizontal)
                 }

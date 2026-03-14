@@ -9,12 +9,17 @@ final class DashboardViewModel {
     let healthKitManager: HealthKitManager
     let analysisEngine: AnalysisEngine
     let store: HealthDataStore
-    private let persistence = PersistenceManager()
+    private let persistence: PersistenceManager
+    private let appStateStore: AppStateStore
+    private let intentCacheStore: IntentCacheStore
+    private let smartActionAdvisor: DashboardSmartActionAdvisor
+    private let housekeepingService: DashboardHousekeepingService
+    private let derivedStateBuilder: DashboardDerivedStateBuilder
 
     // MARK: - Nested Observable State Groups
 
     /// UI state: loading, errors, discovery, time period selection
-    let ui = UIState()
+    let ui: UIState
     /// Score-related state: overall score, category scores, score changes, recovery
     let scores = ScoreState()
     /// Trend-related state: trends summary
@@ -44,6 +49,8 @@ final class DashboardViewModel {
 
     @Observable
     final class UIState {
+        private let appStateStore: AppStateStore
+
         var isLoading = false
         var hasCompletedInitialLoad = false
         var errorMessage: String?
@@ -52,8 +59,12 @@ final class DashboardViewModel {
         var syncPhase: SyncPhase = .idle
         var selectedPeriod: TimePeriod = .sevenDays
 
+        init(appStateStore: AppStateStore) {
+            self.appStateStore = appStateStore
+        }
+
         var isFirstLaunchSync: Bool {
-            !UserDefaults.standard.bool(forKey: AppKeys.App.hasSeenDiscovery)
+            !appStateStore.hasSeenDiscovery
         }
     }
 
@@ -451,7 +462,24 @@ final class DashboardViewModel {
     let brainHealthScorer = BrainHealthScorer()
     let strainCoach = StrainCoach()
 
-    init(healthKitManager: HealthKitManager, analysisEngine: AnalysisEngine, store: HealthDataStore) {
+    init(
+        healthKitManager: HealthKitManager,
+        analysisEngine: AnalysisEngine,
+        store: HealthDataStore,
+        persistence: PersistenceManager = PersistenceManager(),
+        appStateStore: AppStateStore = AppStateStore(),
+        intentCacheStore: IntentCacheStore = IntentCacheStore(),
+        smartActionAdvisor: DashboardSmartActionAdvisor = DashboardSmartActionAdvisor(),
+        housekeepingService: DashboardHousekeepingService? = nil,
+        derivedStateBuilder: DashboardDerivedStateBuilder = DashboardDerivedStateBuilder()
+    ) {
+        self.persistence = persistence
+        self.appStateStore = appStateStore
+        self.intentCacheStore = intentCacheStore
+        self.smartActionAdvisor = smartActionAdvisor
+        self.housekeepingService = housekeepingService ?? DashboardHousekeepingService(persistenceManager: persistence)
+        self.derivedStateBuilder = derivedStateBuilder
+        ui = UIState(appStateStore: appStateStore)
         self.healthKitManager = healthKitManager
         self.analysisEngine = analysisEngine
         self.store = store
@@ -485,7 +513,7 @@ final class DashboardViewModel {
         }
 
         guard healthKitManager.isHealthKitAvailable else {
-            ui.errorMessage = "HealthKit is not available on this device. Please run on a real iPhone paired with Apple Watch."
+            ui.errorMessage = "HealthKit is not available on this device. Please run on a real iPhone with the Health app enabled."
             AppAnalytics.shared.trackError(type: "healthkit_unavailable", screen: .home)
             return
         }
@@ -520,7 +548,7 @@ final class DashboardViewModel {
                 ui.showDiscovery = true
             } else {
                 // Do not keep users in perpetual "first launch sync" when data is still sparse.
-                UserDefaults.standard.set(true, forKey: AppKeys.App.hasSeenDiscovery)
+                appStateStore.markDiscoverySeen()
             }
             ui.syncPhase = .complete
         }
@@ -529,7 +557,7 @@ final class DashboardViewModel {
     /// Dismiss the discovery view and mark as seen
     func dismissDiscovery() {
         ui.showDiscovery = false
-        UserDefaults.standard.set(true, forKey: AppKeys.App.hasSeenDiscovery)
+        appStateStore.markDiscoverySeen()
     }
 
     /// True when the initial load finished but no health data is available despite authorization.
@@ -815,113 +843,26 @@ final class DashboardViewModel {
 
         guard runHousekeeping else { return }
 
-        // CloudKit backup (throttled to once per 6 hours)
-        let persistence = PersistenceManager()
-        await CloudBackupManager.shared.backupIfNeeded(store: store, persistence: persistence)
-
-        // Evaluate recommendation outcomes and prune old records
-        let currentTimeSeries = healthKitManager.timeSeries
-        RecommendationEvaluator.evaluatePending(store: store, timeSeries: currentTimeSeries)
-        store.pruneOldRecommendations()
-        store.pruneOldNotificationEvents()
-
-        // Analytics tracking
-        AppAnalytics.shared.trackAnalysisCompleted(
-            score: currentScore,
-            insightsCount: analysisEngine.insights.count,
-            anomaliesCount: currentAnomalies.count,
-            risksCount: analysisEngine.healthRisks.count,
-            correlationsCount: currentCorrelations.count,
-            illnessWarningsCount: analysisEngine.illnessWarnings.count,
-            metricsAnalyzed: metricsCount
-        )
-
-        // Schedule notifications
-        let prefs = persistence.loadPreferences()
-        let notificationsEnabled =
-            prefs.dailySummaryEnabled ||
-            prefs.eveningSummaryEnabled ||
-            prefs.weeklySummaryEnabled ||
-            prefs.criticalAlertsEnabled ||
-            prefs.warningAlertsEnabled ||
-            prefs.heartRateSpikeAlertsEnabled ||
-            prefs.trendReversalAlertsEnabled ||
-            prefs.improvementAlertsEnabled ||
-            prefs.watchNotWornReminderEnabled ||
-            prefs.lowBatteryReminderEnabled
-        let notificationsAuthorized = notificationsEnabled
-            ? await NotificationManager.shared.requestAuthorizationIfNeeded()
-            : false
-        let previousScore = persistence.loadPreviousWeekScore()
-        let scoreChange = previousScore.map { currentScore - $0 } ?? 0
-        persistence.recordWeeklyScore(currentScore)
-
-        AppAnalytics.shared.trackWeeklyScoreChange(
-            newScore: currentScore,
-            previousScore: previousScore,
-            delta: scoreChange
-        )
-
-        let anomalyCount = currentAnomalies.filter { $0.severity >= .warning }.count
-        let categoryBreakdown = currentCategoryScores.compactMap { score -> String? in
-            guard let cat = score.category else { return nil }
-            return "\(cat.shortName): \(score.score)"
-        }.joined(separator: " | ")
-
-        let topAnomaly: (metricName: String, changePercent: Double)? = currentAnomalies
-            .filter { $0.severity >= .warning }
-            .max(by: { $0.severity < $1.severity })
-            .map { (metricName: $0.metric.displayName, changePercent: $0.deviationPercent) }
-
-        // Optimize daily summary timing based on notification engagement data
-        var optimizedPrefs = prefs
-        let notifEvents = store.loadNotificationEvents(days: 30)
-        if notifEvents.count >= 14 {
-            let optimalHour = NotificationOptimizer.optimalHour(events: notifEvents)
-            optimizedPrefs.dailySummaryTime.hour = optimalHour
-        }
-
-        DailySummaryScheduler.schedule(
-            score: currentScore,
-            anomalyCount: anomalyCount,
-            topInsights: Array(analysisEngine.insights.prefix(3)),
-            categoryBreakdown: categoryBreakdown,
-            preferences: optimizedPrefs,
-            topAnomaly: topAnomaly,
-            scoreChangeFromYesterday: scores.cachedScoreChangeFromYesterday,
-            streakDays: SessionTracker.shared.streakDays
-        )
-
-        DailySummaryScheduler.scheduleEvening(
-            score: currentScore,
-            strainLevel: strainScorer.strainLabel,
-            preferences: prefs
-        )
-
         let periodSummary7d = await MainActor.run { self.periodSummary(for: .sevenDays) }
-        let topTrends: [(metric: String, direction: String, change: Double)] = currentTrends
-            .sorted { abs($0.value.weekOverWeekChange) > abs($1.value.weekOverWeekChange) }
-            .prefix(5)
-            .map { (metric: $0.key.displayName, direction: $0.value.direction.symbol, change: $0.value.weekOverWeekChange) }
-
-        WeeklySummaryScheduler.schedule(
-            score: currentScore,
-            scoreChange: scoreChange,
-            improvedCount: periodSummary7d.improvedCount,
-            declinedCount: periodSummary7d.declinedCount,
-            topTrends: topTrends,
-            preferences: prefs
-        )
-
-        if notificationsAuthorized {
-            AlertEvaluator.evaluate(
-                anomalies: currentAnomalies,
-                trends: currentTrends,
-                timeSeries: timeSeries,
+        await housekeepingService.perform(
+            store: store,
+            payload: DashboardHousekeepingService.Payload(
+                currentScore: currentScore,
+                currentAnomalies: currentAnomalies,
+                currentTrends: currentTrends,
                 previousTrends: prevTrends,
-                preferences: prefs
+                currentCategoryScores: currentCategoryScores,
+                metricsCount: metricsCount,
+                timeSeries: timeSeries,
+                insights: analysisEngine.insights,
+                healthRisksCount: analysisEngine.healthRisks.count,
+                correlationsCount: currentCorrelations.count,
+                illnessWarningsCount: analysisEngine.illnessWarnings.count,
+                strainLabel: strainScorer.strainLabel,
+                scoreChangeFromYesterday: scores.cachedScoreChangeFromYesterday,
+                periodSummary: periodSummary7d
             )
-        }
+        )
     }
 
     // MARK: - ML Pipeline
@@ -1015,10 +956,11 @@ final class DashboardViewModel {
                 return "\(cat.shortName) \(s.score)"
             }
         let summaryText = topAreas.isEmpty ? "" : "Areas to watch: \(topAreas.joined(separator: ", "))."
-        let defaults = UserDefaults.standard
-        defaults.set(score, forKey: AppKeys.Intent.score)
-        defaults.set(overallScore.grade, forKey: AppKeys.Intent.grade)
-        defaults.set(summaryText, forKey: AppKeys.Intent.summary)
+        intentCacheStore.saveHealthSummary(
+            score: score,
+            grade: overallScore.grade,
+            summary: summaryText
+        )
 
         // Save shown recommendations for outcome tracking
         let insightsToSave = insights.cachedFocusedInsights.prefix(10)
@@ -1097,74 +1039,37 @@ final class DashboardViewModel {
     }
 
     private func computeScoreChangeFromLastWeek() -> Int? {
-        let history = store.loadScoreHistory(days: 14)
-        guard history.count >= 2 else { return nil }
-        let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
-        let oldEntries = history.filter { $0.date <= weekAgo }
-        guard let oldScore = oldEntries.last?.score else { return nil }
-        let delta = overallScore.score - oldScore
-        return delta == 0 ? nil : delta
+        derivedStateBuilder.scoreChangeFromLastWeek(
+            currentScore: overallScore.score,
+            history: store.loadScoreHistory(days: 14)
+        )
     }
 
     private func computeScoreChangeFromYesterday() -> Int? {
-        let history = store.loadScoreHistory(days: 3)
-        guard history.count >= 2 else { return nil }
-        let cal = Calendar.current
-        let yesterday = cal.startOfDay(for: cal.date(byAdding: .day, value: -1, to: Date()) ?? Date())
-        let today = cal.startOfDay(for: Date())
-        let yesterdayEntries = history.filter { $0.date >= yesterday && $0.date < today }
-        guard let yesterdayScore = yesterdayEntries.last?.score else { return nil }
-        let delta = overallScore.score - yesterdayScore
-        return delta == 0 ? nil : delta
+        derivedStateBuilder.scoreChangeFromYesterday(
+            currentScore: overallScore.score,
+            history: store.loadScoreHistory(days: 3)
+        )
     }
 
     private func computeTrendsSummary() -> TrendsSummary {
-        var improving = 0, stable = 0, declining = 0
-        var movers: [MetricMover] = []
-
-        for (metric, trend) in analysisEngine.trends {
-            switch trend.direction {
-            case .improving: improving += 1
-            case .stable: stable += 1
-            case .declining: declining += 1
-            }
-            if abs(trend.weekOverWeekChange) > 3 {
-                movers.append(MetricMover(
+        derivedStateBuilder.trendsSummary(
+            trends: analysisEngine.trends.map { metric, trend in
+                DashboardDerivedStateBuilder.TrendSnapshot(
                     metric: metric,
-                    changePercent: trend.weekOverWeekChange,
-                    improving: trend.direction == .improving
-                ))
-            }
-        }
-        let focuses = insights.focusCategories
-        movers.sort { a, b in
-            if !focuses.isEmpty {
-                let aFocused = focuses.contains(a.metric.category)
-                let bFocused = focuses.contains(b.metric.category)
-                if aFocused != bFocused { return aFocused }
-            }
-            return abs(a.changePercent) > abs(b.changePercent)
-        }
-        return TrendsSummary(
-            improving: improving,
-            stable: stable,
-            declining: declining,
-            topMovers: Array(movers.prefix(5))
+                    direction: trend.direction,
+                    weekOverWeekChange: trend.weekOverWeekChange
+                )
+            },
+            focusCategories: insights.focusCategories
         )
     }
 
     private func computeTopCorrelations() -> [HealthCorrelation] {
-        let focuses = insights.focusCategories
-        if focuses.isEmpty {
-            return Array(analysisEngine.correlations.prefix(5))
-        }
-        let sorted = analysisEngine.correlations.sorted { a, b in
-            let aRelevant = focuses.contains(a.metricA.category) || focuses.contains(a.metricB.category)
-            let bRelevant = focuses.contains(b.metricA.category) || focuses.contains(b.metricB.category)
-            if aRelevant != bRelevant { return aRelevant }
-            return abs(a.correlation) > abs(b.correlation)
-        }
-        return Array(sorted.prefix(5))
+        derivedStateBuilder.topCorrelations(
+            from: analysisEngine.correlations,
+            focusCategories: insights.focusCategories
+        )
     }
 
     private func computeHistoricalHighlights() -> [HistoricalHighlight] {
@@ -1273,168 +1178,30 @@ final class DashboardViewModel {
     /// Single source of truth for what to do today.
     /// Weighs ML policy decision, recovery, strain, goals, trends, and risks — outputs one clear recommendation.
     func smartDailyAction(liveVM: LiveViewModel) -> SmartAction {
-        // Priority 0: Use ML policy decision when available (weighs all signals holistically)
-        if let decision = analysisEngine.mlOrchestrator.policyDecision,
-           decision.decisionConfidence >= 0.3 {
-            return SmartAction(
-                icon: iconForActionType(decision.primaryAction.candidate.actionType),
-                title: decision.prescriptiveHeadline,
-                subtitle: decision.primaryAction.description,
-                source: "policy_engine"
+        let recommendation = smartActionAdvisor.recommend(
+            live: DashboardSmartActionAdvisor.LiveSnapshot(
+                hour: Calendar.current.component(.hour, from: Date()),
+                stressLevel: liveVM.recovery.stressLevel,
+                readinessScore: liveVM.recovery.readinessScore,
+                hasSleepData: liveVM.sleep.hasSleepData,
+                sleepHours: liveVM.sleep.lastNightSleepDuration / 3600,
+                deepSleepMinutes: liveVM.sleep.lastNightDeepSleep / 60,
+                exerciseMinutes: liveVM.activity.todayExerciseMinutes,
+                exerciseGoal: liveVM.activity.exerciseGoal,
+                latestRestingHeartRate: liveVM.recovery.latestRestingHeartRate
+            ),
+            analysis: DashboardSmartActionAdvisor.AnalysisSnapshot(
+                policyDecision: analysisEngine.mlOrchestrator.policyDecision,
+                restingHeartRateBaselineMean: analysisEngine.baselines[.restingHeartRate]?.mean,
+                userFocuses: persistence.loadHealthFocuses()
             )
-        }
-
-        let hour = Calendar.current.component(.hour, from: Date())
-        let stress = liveVM.recovery.stressLevel
-        let readiness = liveVM.recovery.readinessScore
-        let sleepHours = liveVM.sleep.lastNightSleepDuration / 3600
-        let exerciseMin = liveVM.activity.todayExerciseMinutes
-        let exerciseGoal = liveVM.activity.exerciseGoal
-        let focuses = persistence.loadHealthFocuses()
-
-        // Priority 1: High stress
-        if let s = stress, s >= 60 {
-            return SmartAction(
-                icon: "wind",
-                title: "Take 5 min to breathe",
-                subtitle: "Stress is elevated — box breathing (4-4-4-4) can lower it fast"
-            )
-        }
-
-        // Priority 2: Poor sleep
-        if liveVM.sleep.hasSleepData && sleepHours < 5.5 {
-            return SmartAction(
-                icon: "moon.zzz.fill",
-                title: "Go easy today",
-                subtitle: "Only \(formatHoursMinutes(sleepHours)) of sleep — skip intense workouts"
-            )
-        }
-
-        // Priority 3: Low recovery
-        if let r = readiness, r < 40 {
-            return SmartAction(
-                icon: "figure.mind.and.body",
-                title: "Prioritize recovery",
-                subtitle: "Readiness is \(r)% — stretching or yoga only today"
-            )
-        }
-
-        // Priority 4: Focus-aware actions based on onboarding priorities
-        if let focusAction = focusAwareAction(liveVM: liveVM, focuses: focuses) {
-            return focusAction
-        }
-
-        // Priority 5: Exercise goal already met
-        if exerciseMin >= exerciseGoal {
-            return SmartAction(
-                icon: "checkmark.seal.fill",
-                title: "Exercise goal reached!",
-                subtitle: "\(Int(exerciseMin)) min today — stay active and hydrate"
-            )
-        }
-
-        // Priority 6: Good recovery + exercise remaining
-        if let r = readiness, r >= 60 {
-            let remaining = Int(exerciseGoal - exerciseMin)
-            return SmartAction(
-                icon: "bolt.heart.fill",
-                title: "You have \(remaining) min to go",
-                subtitle: "Recovery is strong — a run or workout would be great"
-            )
-        }
-
-        // Priority 7: Evening wind-down
-        if hour >= 20 {
-            return SmartAction(
-                icon: "moon.fill",
-                title: "Wind down for sleep",
-                subtitle: "Dim screens and skip caffeine for better rest"
-            )
-        }
-
-        // Default: walk
-        return SmartAction(
-            icon: "figure.walk",
-            title: "Take a 15 min walk",
-            subtitle: "A short walk boosts mood and energy"
         )
-    }
-
-    /// Generate a focus-specific action based on user's onboarding health priorities
-    private func focusAwareAction(liveVM: LiveViewModel, focuses: Set<HealthFocus>) -> SmartAction? {
-        guard !focuses.isEmpty else { return nil }
-
-        let sleepHours = liveVM.sleep.lastNightSleepDuration / 3600
-        let exerciseMin = liveVM.activity.todayExerciseMinutes
-        let exerciseGoal = liveVM.activity.exerciseGoal
-
-        if focuses.contains(.sleep) && liveVM.sleep.hasSleepData {
-            let deepSleepMin = liveVM.sleep.lastNightDeepSleep / 60
-            if deepSleepMin < 45 {
-                return SmartAction(
-                    icon: "moon.zzz.fill",
-                    title: "Boost your deep sleep",
-                    subtitle: "Only \(Int(deepSleepMin)) min of deep sleep — try cutting caffeine after 2 PM"
-                )
-            }
-            if sleepHours < 7 {
-                return SmartAction(
-                    icon: "bed.double.fill",
-                    title: "Get to bed 30 min earlier",
-                    subtitle: "\(formatHoursMinutes(sleepHours)) last night — aim for 7+ hours"
-                )
-            }
-        }
-
-        if focuses.contains(.fitness) && exerciseMin < exerciseGoal {
-            let remaining = Int(exerciseGoal - exerciseMin)
-            return SmartAction(
-                icon: "figure.run",
-                title: "You're \(remaining) min from your goal",
-                subtitle: "A brisk walk or quick workout would close the gap"
-            )
-        }
-
-        if focuses.contains(.heartHealth) {
-            if let rhr = liveVM.recovery.latestRestingHeartRate, let baseline = analysisEngine.baselines[.restingHeartRate]?.mean, rhr > baseline * 1.05 {
-                return SmartAction(
-                    icon: "heart.fill",
-                    title: "Your resting HR is trending up",
-                    subtitle: "Try 10 min of meditation or deep breathing to bring it down"
-                )
-            }
-        }
-
-        if focuses.contains(.recovery) {
-            if let r = liveVM.recovery.readinessScore, r < 60 {
-                return SmartAction(
-                    icon: "figure.mind.and.body",
-                    title: "Focus on recovery today",
-                    subtitle: "Readiness is \(r)% — light stretching and hydration will help"
-                )
-            }
-        }
-
-        return nil
-    }
-
-    /// Map ML action types to SF Symbols
-    private func iconForActionType(_ type: InterventionCandidate.ActionType) -> String {
-        switch type {
-        case .sleepEarlier, .sleepLater, .extendSleep: return "moon.zzz.fill"
-        case .reduceScreenTime, .reduceEvening: return "moon.fill"
-        case .activeRecovery: return "figure.mind.and.body"
-        case .intensifyExercise: return "bolt.heart.fill"
-        case .reduceExercise: return "figure.cooldown"
-        case .shiftCaffeineTiming, .reduceCaffeine: return "cup.and.saucer.fill"
-        case .breathingSession: return "wind"
-        case .meditation: return "brain.head.profile"
-        case .adjustMealTiming: return "fork.knife"
-        case .hydration: return "drop.fill"
-        case .increaseSteps: return "figure.walk"
-        case .reduceSteps: return "figure.stand"
-        case .napRecommendation: return "bed.double.fill"
-        }
+        return SmartAction(
+            icon: recommendation.icon,
+            title: recommendation.title,
+            subtitle: recommendation.subtitle,
+            source: recommendation.source
+        )
     }
 
     struct SmartAction {
@@ -1442,13 +1209,6 @@ final class DashboardViewModel {
         let title: String
         let subtitle: String
         var source: String = "context_rules"
-    }
-
-    func formatHoursMinutes(_ hours: Double) -> String {
-        let h = Int(hours)
-        let m = Int((hours - Double(h)) * 60)
-        if h == 0 { return "\(m)m" }
-        return "\(h)h \(String(format: "%02d", m))m"
     }
 
     private var recentActivityTrendDirection: TrendDirection? {

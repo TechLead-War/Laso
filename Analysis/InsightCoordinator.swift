@@ -1,25 +1,11 @@
 import Foundation
 
-/// Orchestrates insights from all analyzers to produce a coherent, non-contradictory set.
-///
-/// The coordinator solves the core problem: 20+ independent analyzers each producing
-/// advice that can directly contradict each other. For example, RecoveryAnalyzer says
-/// "take a rest day" while WorkoutEffectivenessAnalyzer says "exercise more consistently."
-///
-/// Resolution strategy:
-/// 1. Infer behavioral directives for insights that don't have one explicitly set
-/// 2. Detect conflicting directive pairs (rest vs exercise, reduce vs push harder)
-/// 3. Resolve conflicts: safety > performance, higher severity wins, then evidence depth
-/// 4. Deduplicate: max 2 insights per metric (best causal chain + best other)
-/// 5. Cap total count to avoid overwhelming the user
+/// Resolves contradictions, deduplicates, and caps insights from 20+ independent analyzers.
+/// Resolution order: safety > severity > evidence depth.
 struct InsightCoordinator {
 
-    /// Maximum insights shown to the user after coordination
     private static let maxInsights = 15
 
-    // MARK: - Public API
-
-    /// Coordinate a set of insights: infer directives, resolve contradictions, deduplicate.
     static func coordinate(_ insights: [Insight]) -> [Insight] {
         guard !insights.isEmpty else { return [] }
 
@@ -45,103 +31,74 @@ struct InsightCoordinator {
 
     // MARK: - Directive Inference
 
-    /// Infer what behavioral direction an insight pushes the user toward.
-    /// Uses category, title, recommendation text, severity, and trend as signals.
     static func inferDirective(for insight: Insight) -> InsightDirective {
-        // Fast paths by category
+        // Category-level fast paths
         switch insight.category {
-        case .illnessWarning:
-            return .rest
-        case .clinicalTrajectory:
-            return insight.severity >= .warning ? .seekMedical : .informational
-        case .personalRecord:
-            return .maintain
-        case .cyclePhase:
-            return .informational
-        default:
-            break
+        case .illnessWarning: return .rest
+        case .clinicalTrajectory: return insight.severity >= .warning ? .seekMedical : .informational
+        case .personalRecord: return .maintain
+        case .cyclePhase: return .informational
+        case .multiMetricCluster where insight.severity >= .warning: return .rest
+        case .recovery where insight.severity >= .warning: return .rest
+        default: break
+        }
+
+        // Cognitive/energy sub-types
+        if insight.category == .cognitiveEnergy {
+            if let d = cognitiveDirective(for: insight) { return d }
         }
 
         let title = insight.title.lowercased()
         let rec = insight.recommendation.lowercased()
 
-        // Medical — always check first
-        if rec.contains("consult") || rec.contains("healthcare provider") || rec.contains("doctor") {
-            return .seekMedical
-        }
-
-        // Recovery / rest (check before exercise — "rest day" is unambiguous)
-        if title.contains("overtraining") || title.contains("rest day") ||
-            title.contains("recovery day") || title.contains("rest deficit") ||
-            rec.contains("rest day") || rec.contains("genuine rest") {
-            return .rest
-        }
-
-        // Multi-metric compound decline → rest
-        if insight.category == .multiMetricCluster && insight.severity >= .warning {
-            return .rest
-        }
-
-        // Recovery category warnings → rest
-        if insight.category == .recovery && insight.severity >= .warning {
-            return .rest
-        }
-
-        // Cognitive/energy sub-types
-        if insight.category == .cognitiveEnergy {
-            if title.contains("mental fatigue") || title.contains("recovery day") { return .rest }
-            if title.contains("sleep debt") || title.contains("cognitive readiness") && insight.trend == .declining {
-                return .sleepMore
+        // Text-based rules (ordered by priority: medical > rest > sleep > activity > intensity)
+        for rule in Self.textRules {
+            if rule.matches(title: title, rec: rec, trend: insight.trend) {
+                return rule.directive
             }
-            if title.contains("physical energy") { return .increaseActivity }
         }
 
-        // Sleep directives
-        if title.contains("sleep debt") || (rec.contains("extend") && rec.contains("sleep")) ||
-            rec.contains("bedtime alarm") || rec.contains("more sleep") ||
-            (rec.contains("extra hour") && rec.contains("sleep")) {
-            return .sleepMore
-        }
-        if title.contains("sleep consistency") || rec.contains("consistent bedtime") ||
-            title.contains("bedtime") {
-            return .sleepBetter
-        }
-
-        // Activity push
-        if title.contains("workout consistency") && insight.trend == .declining {
-            return .increaseActivity
-        }
-        if rec.contains("20-min walk") || rec.contains("20 min walk") || rec.contains("more active") {
-            return .increaseActivity
-        }
-
-        // Intensity directives
-        if rec.contains("push harder") || rec.contains("increase intensity") ||
-            rec.contains("progressive overload") {
-            return .pushHarder
-        }
-        if rec.contains("lower intensity") || rec.contains("lighter sessions") ||
-            rec.contains("reduce intensity") {
-            return .reduceIntensity
-        }
-
-        // Improving trend info → maintain
-        if insight.trend == .improving && insight.severity == .info {
-            return .maintain
-        }
-
+        if insight.trend == .improving && insight.severity == .info { return .maintain }
         return .informational
+    }
+
+    // MARK: - Text Rule Table
+
+    private struct TextRule {
+        let directive: InsightDirective
+        let titleKeywords: [String]
+        let recKeywords: [String]
+        let requiredTrend: TrendDirection?
+
+        func matches(title: String, rec: String, trend: TrendDirection?) -> Bool {
+            let titleMatch = titleKeywords.isEmpty || titleKeywords.contains(where: { title.contains($0) })
+            let recMatch = recKeywords.isEmpty || recKeywords.contains(where: { rec.contains($0) })
+            let trendMatch = requiredTrend == nil || trend == requiredTrend
+            return (titleKeywords.isEmpty ? recMatch : recKeywords.isEmpty ? titleMatch : titleMatch || recMatch) && trendMatch
+        }
+    }
+
+    private static let textRules: [TextRule] = [
+        TextRule(directive: .seekMedical, titleKeywords: [], recKeywords: ["consult", "healthcare provider", "doctor"], requiredTrend: nil),
+        TextRule(directive: .rest, titleKeywords: ["overtraining", "rest day", "recovery day", "rest deficit"], recKeywords: ["rest day", "genuine rest"], requiredTrend: nil),
+        TextRule(directive: .sleepMore, titleKeywords: ["sleep debt"], recKeywords: ["bedtime alarm", "more sleep"], requiredTrend: nil),
+        TextRule(directive: .sleepBetter, titleKeywords: ["sleep consistency", "bedtime"], recKeywords: ["consistent bedtime"], requiredTrend: nil),
+        TextRule(directive: .increaseActivity, titleKeywords: ["workout consistency"], recKeywords: [], requiredTrend: .declining),
+        TextRule(directive: .increaseActivity, titleKeywords: [], recKeywords: ["20-min walk", "20 min walk", "more active"], requiredTrend: nil),
+        TextRule(directive: .pushHarder, titleKeywords: [], recKeywords: ["push harder", "increase intensity", "progressive overload"], requiredTrend: nil),
+        TextRule(directive: .reduceIntensity, titleKeywords: [], recKeywords: ["lower intensity", "lighter sessions", "reduce intensity"], requiredTrend: nil),
+    ]
+
+    private static func cognitiveDirective(for insight: Insight) -> InsightDirective? {
+        let title = insight.title.lowercased()
+        if title.contains("mental fatigue") || title.contains("recovery day") { return .rest }
+        if (title.contains("sleep debt") || title.contains("cognitive readiness")) && insight.trend == .declining { return .sleepMore }
+        if title.contains("physical energy") { return .increaseActivity }
+        return nil
     }
 
     // MARK: - Conflict Resolution
 
-    /// Resolve contradicting insights by suppressing the lower-priority side.
-    ///
-    /// Rules:
-    /// - Only resolves when at least one side is warning+ severity (info vs info coexist)
-    /// - Directive resolution priority determines the winner (safety > performance)
-    /// - Within the same priority, higher severity wins
-    /// - Within the same severity, higher priorityScore wins
     private static func resolveConflicts(_ insights: [Insight]) -> [Insight] {
         var suppressed = Set<UUID>()
 

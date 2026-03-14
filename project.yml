@@ -30,12 +30,17 @@ targets:
         product: FirebaseRemoteConfig
       - package: Firebase
         product: FirebaseCrashlytics
+      - package: Firebase
+        product: FirebaseAuth
+      - package: Firebase
+        product: FirebaseFirestore
       - package: PostHog
         product: PostHog
     sources:
       - path: Analysis
       - path: App
       - path: Config
+      - path: Copy
       - path: Data
       - path: Extensions
       - path: Intents
@@ -94,6 +99,19 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.com.uitests
         TEST_TARGET_NAME: Laso
 
+  LasoTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests
+    dependencies:
+      - target: Laso
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: true
+        PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.com.tests
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Laso.app/Laso"
+
 schemes:
   Laso:
     build:
@@ -101,4 +119,5 @@ schemes:
         Laso: all
     test:
       targets:
+        - name: LasoTests
         - name: LasoUITests

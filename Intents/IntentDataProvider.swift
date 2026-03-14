@@ -11,18 +11,21 @@ enum IntentDataProvider {
     /// Reads the cached health score (written by DashboardViewModel after each analysis)
     /// and fetches live readiness from HealthKit. Returns nil only if the app has never run analysis.
     static func fetchCurrentHealthScore() async -> (score: Int, grade: String, summary: String, readinessScore: Int?, readinessLabel: String?)? {
-        let defaults = UserDefaults.standard
-        let score = defaults.integer(forKey: AppKeys.Intent.score)
-        guard score > 0 else { return nil }
+        let cacheStore = IntentCacheStore()
+        guard let snapshot = cacheStore.loadHealthSummary() else { return nil }
 
-        let grade = defaults.string(forKey: AppKeys.Intent.grade) ?? "?"
-        let areas = defaults.string(forKey: AppKeys.Intent.summary) ?? ""
-        let summary = "\(scoreLabel(for: score)). \(areas)".trimmingCharacters(in: .whitespaces)
+        let summary = "\(scoreLabel(for: snapshot.score)). \(snapshot.summary)".trimmingCharacters(in: .whitespaces)
 
         // Fetch live readiness in parallel
         let readiness = await fetchReadiness()
 
-        return (score, grade, summary, readiness?.readinessScore, readiness.map { readinessLabel(for: $0.readinessScore) })
+        return (
+            snapshot.score,
+            snapshot.grade,
+            summary,
+            readiness?.readinessScore,
+            readiness.map { readinessLabel(for: $0.readinessScore) }
+        )
     }
 
     private static func readinessLabel(for score: Int) -> String {
@@ -105,7 +108,7 @@ enum IntentDataProvider {
 
     // MARK: - Readiness
 
-    /// Fetches readiness data from HealthKit (RHR + HRV based).
+    /// Fetches readiness data from HealthKit using the shared readiness scorer.
     /// Returns (readinessScore, stressLevel, stressLabel) or nil.
     static func fetchReadiness() async -> (readinessScore: Int, stressLevel: Int, stressLabel: String)? {
         guard HKHealthStore.isHealthDataAvailable() else { return nil }
@@ -129,26 +132,19 @@ enum IntentDataProvider {
 
         guard let rhr = await rhrResult, let hrv = await hrvResult else { return nil }
 
-        // Readiness: same formula as LiveViewModel.computeReadinessScore
-        let hrvScore = min(max((hrv - 20) / 40.0 * 50, 0), 50)
-        let rhrScore = min(max((80 - rhr) / 30.0 * 50, 0), 50)
-        let readiness = Int(hrvScore + rhrScore)
+        let readinessInput = ReadinessScorer.Input(
+            now: now,
+            hrv: hrv,
+            hrvTimestamp: now,
+            restingHeartRate: rhr,
+            restingHeartRateTimestamp: now
+        )
+        guard let readiness = ReadinessScorer.assess(readinessInput) else { return nil }
 
-        // Stress: same formula as RecoveryData.stressLevel
-        let hrvStress = min(max((60 - hrv) / 40.0 * 50, 0), 50)
-        let rhrStress = min(max((rhr - 50) / 30.0 * 50, 0), 50)
-        let stress = Int(hrvStress + rhrStress)
+        let stress = ReadinessScorer.stressLevel(hrv: hrv, restingHeartRate: rhr) ?? 0
+        let stressLabel = ReadinessScorer.stressLabel(for: stress)
 
-        let stressLabel: String
-        switch stress {
-        case 0..<20: stressLabel = "Relaxed"
-        case 20..<40: stressLabel = "Low"
-        case 40..<60: stressLabel = "Moderate"
-        case 60..<80: stressLabel = "High"
-        default: stressLabel = "Very High"
-        }
-
-        return (readiness, stress, stressLabel)
+        return (readiness.score, stress, stressLabel)
     }
 
     // MARK: - Water Logging
@@ -200,9 +196,7 @@ enum IntentDataProvider {
 
     /// Returns a brief trends summary from the cached intent data.
     static func fetchTrendsSummary() async -> String? {
-        let summary = UserDefaults.standard.string(forKey: AppKeys.Intent.summary)
-        guard let summary, !summary.isEmpty else { return nil }
-        return summary
+        IntentCacheStore().loadTrendsSummary()
     }
 
     // MARK: - Helpers

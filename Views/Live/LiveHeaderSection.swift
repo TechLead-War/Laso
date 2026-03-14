@@ -6,6 +6,7 @@ struct LiveHeaderSection: View {
     let isAging: Bool
     let isStale: Bool
     let hasAnyVitalData: Bool
+    let primaryDevice: SupportedDevice?
     let currentHeartRate: Double?
     var headerTracker: SectionTracker
 
@@ -34,7 +35,7 @@ struct LiveHeaderSection: View {
                     .controlSize(.small)
                     .tint(.secondary)
             } else {
-                Image(systemName: "applewatch.radiowaves.left.and.right")
+                Image(systemName: primaryDevice?.systemImageName ?? "waveform.path.ecg")
                     .font(.title2)
                     .foregroundStyle(.secondary)
                     .symbolEffect(.pulse, isActive: hasFreshData)
@@ -51,12 +52,14 @@ struct LiveHeaderSection: View {
             return "Streaming"
         } else if isAging {
             return "Updating..."
+        } else if isStreaming && primaryDevice == nil {
+            return "Looking for a live source"
         } else if isStreaming {
             return "Refreshing..."
         } else if isStale {
-            return "Wear your watch"
+            return primaryDevice == nil ? "Live source needed" : "Waiting for \(primaryDevice?.displayName ?? "device")"
         } else {
-            return "Connecting..."
+            return primaryDevice == nil ? "Wearable not detected" : "Connecting..."
         }
     }
 }

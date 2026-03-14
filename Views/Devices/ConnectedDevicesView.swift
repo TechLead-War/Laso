@@ -6,26 +6,50 @@ struct ConnectedDevicesView: View {
 
     var body: some View {
         List {
-            // Scan status + metric coverage
             Section {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(viewModel.connectedCountText)
-                            .font(.subheadline.weight(.semibold))
-                        Text(viewModel.metricCoverageText)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack(alignment: .top, spacing: 12) {
+                        Image(systemName: viewModel.statusSymbolName)
+                            .font(.title2)
+                            .foregroundStyle(viewModel.primaryDevice?.iconColor ?? .blue)
+                            .frame(width: 36, height: 36)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(viewModel.statusHeadline)
+                                .font(.headline)
+                            Text(viewModel.statusDetail)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+
+                        Spacer()
+
+                        if viewModel.isScanning {
+                            ProgressView()
+                        }
                     }
-                    Spacer()
-                    if viewModel.isScanning {
-                        ProgressView()
+
+                    HStack(spacing: 12) {
+                        summaryPill(
+                            title: viewModel.connectedCountText,
+                            detail: viewModel.activitySummaryText
+                        )
+                        summaryPill(
+                            title: viewModel.metricCoverageText,
+                            detail: "Coverage"
+                        )
+                        summaryPill(
+                            title: viewModel.lastSyncSummaryText,
+                            detail: "Last sync"
+                        )
                     }
                 }
             }
+            .listRowInsets(EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16))
 
-            // Active Devices
             if !viewModel.activeDevices.isEmpty {
-                Section("Active Devices") {
+                Section("Active Sources") {
                     ForEach(viewModel.activeDevices) { info in
                         NavigationLink {
                             DeviceDetailView(device: info.device, deviceInfo: info)
@@ -49,7 +73,6 @@ struct ConnectedDevicesView: View {
                 }
             }
 
-            // Inactive Devices
             if !viewModel.inactiveDevices.isEmpty {
                 Section {
                     ForEach(viewModel.inactiveDevices) { info in
@@ -73,13 +96,12 @@ struct ConnectedDevicesView: View {
                         })
                     }
                 } header: {
-                    Text("Inactive Devices")
+                    Text("Connected But Inactive")
                 } footer: {
-                    Text("These devices have been detected but haven't synced data in the last 7 days.")
+                    Text("These sources were detected before, but they haven't written data to Apple Health in the last 7 days.")
                 }
             }
 
-            // Add More Devices
             if !viewModel.unconnectedDevices.isEmpty {
                 Section {
                     ForEach(viewModel.unconnectedDevices) { device in
@@ -95,7 +117,7 @@ struct ConnectedDevicesView: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(device.displayName)
                                         .font(.subheadline.weight(.medium))
-                                    Text("\(device.supportedMetrics.count) metrics available")
+                                    Text("\(device.supportedMetrics.count) metrics via \(device.companionAppName)")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
@@ -115,9 +137,9 @@ struct ConnectedDevicesView: View {
                         })
                     }
                 } header: {
-                    Text("Add More Devices")
+                    Text(viewModel.availableSourcesTitle)
                 } footer: {
-                    Text("Tap a device to see setup instructions for syncing with Apple Health.")
+                    Text(viewModel.availableSourcesFooter)
                 }
             }
         }
@@ -149,20 +171,42 @@ struct ConnectedDevicesView: View {
                 .foregroundStyle(info.device.iconColor)
                 .frame(width: 28)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(info.device.displayName)
-                    .font(.subheadline.weight(.medium))
-                Text("\(info.metricCount) metrics \u{00B7} \(info.lastSyncText)")
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Text(info.device.displayName)
+                        .font(.subheadline.weight(.medium))
+                    Text(info.isActive ? "Active" : "Idle")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(info.isActive ? .green : .orange)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background((info.isActive ? Color.green : Color.orange).opacity(0.12), in: Capsule())
+                }
+
+                Text(info.sourceName)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Text("\(info.metricCount) metrics \u{00B7} Last sync \(info.lastSyncText)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
             Spacer()
-
-            Circle()
-                .fill(info.isActive ? .green : .orange)
-                .frame(width: 8, height: 8)
         }
+    }
+
+    private func summaryPill(title: String, detail: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+            Text(detail)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
     }
 }
 

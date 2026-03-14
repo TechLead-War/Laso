@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 import AppIntents
 
 /// Main entry point for the Laso app
@@ -7,25 +6,20 @@ import AppIntents
 struct LasoApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
-    @AppStorage(AppKeys.App.onboardingCompleted) private var onboardingCompleted = false
-    @AppStorage(AppKeys.App.pendingCalibrationHydration) private var pendingCalibrationHydration = false
-
-    @State private var healthKitManager: HealthKitManager
-    @State private var analysisEngine = AnalysisEngine()
-    @State private var deviceSourceManager: DeviceSourceManager
-    @State private var healthDataStore: HealthDataStore
+    @State private var container: AppContainer
 
     /// Controls optional branded splash overlay.
     @State private var showSplash = true
     private let isUITestMode: Bool
 
-    private let subscriptionManager = SubscriptionManager.shared
-    private var remoteConfig: RemoteConfigManager { .shared }
+    private var appStateStore: AppStateStore { container.appStateStore }
+    private var subscriptionManager: SubscriptionManager { container.subscriptionManager }
+    private var remoteConfig: RemoteConfigManager { container.remoteConfigManager }
 
     /// Show paywall only when onboarding is done and subscription is definitively expired.
     /// Respects FeatureGate.freeYearActive — when active, paywall is disabled.
     private var shouldShowPaywall: Bool {
-        guard onboardingCompleted else { return false }
+        guard appStateStore.onboardingCompleted else { return false }
         return subscriptionManager.shouldEnforcePaywall && !FeatureGate.hasFullAccess
     }
 
@@ -33,11 +27,7 @@ struct LasoApp: App {
     /// Returns an error message when calibration fails; nil indicates success.
     @MainActor
     private func performInitialCalibration() async -> String? {
-        let calibrator = DashboardViewModel(
-            healthKitManager: healthKitManager,
-            analysisEngine: analysisEngine,
-            store: healthDataStore
-        )
+        let calibrator = container.makeDashboardViewModel()
         await calibrator.load(
             skipDiscovery: true,
             awaitDeferredAnalysis: true,
@@ -50,137 +40,49 @@ struct LasoApp: App {
         }
 
         // Calibration has already done the first full analysis; avoid showing Day-0 discovery later.
-        UserDefaults.standard.set(true, forKey: AppKeys.App.hasSeenDiscovery)
-        pendingCalibrationHydration = true
+        appStateStore.markDiscoverySeen()
+        appStateStore.setPendingCalibrationHydration(true)
         return nil
     }
+
+    /// Integrity check failure reason, if any. Set once at launch.
+    private let integrityFailure: String?
 
     init() {
         UITestMode.configureDefaults()
         isUITestMode = UITestMode.isEnabled
-
-        let hkManager = HealthKitManager()
-        _healthKitManager = State(wrappedValue: hkManager)
-        _deviceSourceManager = State(wrappedValue: DeviceSourceManager(healthStore: hkManager.healthStore))
+        _container = State(wrappedValue: AppContainer())
         _showSplash = State(initialValue: !isUITestMode)
-
-        if let container = Self.createModelContainer() {
-            _healthDataStore = State(wrappedValue: HealthDataStore(modelContainer: container))
-        } else {
-            print("[Laso] Running without SwiftData — all persistence disabled")
-            _healthDataStore = State(wrappedValue: HealthDataStore())
-        }
-    }
-
-    /// Creates a ModelContainer with progressive fallback — uses Schema-based API and logs every failure.
-    private static func createModelContainer() -> ModelContainer? {
-        guard let appSupportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
-            return nil
-        }
-        let storeDir = appSupportDir.appendingPathComponent("HealthData", isDirectory: true)
-        try? FileManager.default.createDirectory(at: storeDir, withIntermediateDirectories: true)
-        // Use completeUntilFirstUserAuthentication so App Intents (Siri) can access
-        // the store when the device is locked (after first unlock).
-        try? (storeDir as NSURL).setResourceValue(URLFileProtection.completeUntilFirstUserAuthentication, forKey: .fileProtectionKey)
-        let dbURL = storeDir.appendingPathComponent("health.store")
-
-        let allModels: [any PersistentModel.Type] = [
-            StoredDailySample.self, StoredSyncMetadata.self,
-            StoredAnalysisSnapshot.self, StoredDailyStrain.self, StoredMLModelState.self,
-            StoredRecommendation.self, StoredNotificationEvent.self,
-            StoredAdherenceRecord.self, StoredECGFeatures.self,
-            StoredModelEvaluation.self, StoredJournalEntry.self
-        ]
-
-        // Schema version tracking — delete DB when model set changes to avoid hangs
-        let schemaVersionKey = AppConstants.Schema.versionKey
-        let currentSchemaVersion = allModels.count
-        let storedSchemaVersion = UserDefaults.standard.integer(forKey: schemaVersionKey)
-        if storedSchemaVersion != 0 && storedSchemaVersion != currentSchemaVersion {
-            print("[Laso] Schema changed (\(storedSchemaVersion) → \(currentSchemaVersion)), deleting DB")
-            for suffix in ["", "-wal", "-shm"] {
-                try? FileManager.default.removeItem(atPath: dbURL.path + suffix)
-            }
-        }
-
-        // 1. Disk-based with all models (happy path)
-        do {
-            let config = ModelConfiguration(url: dbURL)
-            let container = try ModelContainer(for: Schema(allModels), configurations: [config])
-            UserDefaults.standard.set(currentSchemaVersion, forKey: schemaVersionKey)
-            return container
-        } catch {
-            print("[Laso] Step 1 (disk, all models) failed: \(error)")
-        }
-
-        // 2. Delete corrupt database, retry disk
-        for suffix in ["", "-wal", "-shm"] {
-            try? FileManager.default.removeItem(atPath: dbURL.path + suffix)
-        }
-        do {
-            let config = ModelConfiguration(url: dbURL)
-            let container = try ModelContainer(for: Schema(allModels), configurations: [config])
-            UserDefaults.standard.set(currentSchemaVersion, forKey: schemaVersionKey)
-            return container
-        } catch {
-            print("[Laso] Step 2 (clean disk, all models) failed: \(error)")
-        }
-
-        // 3–6. Progressive in-memory fallbacks with fewer models
-        let fallbackSets: [[any PersistentModel.Type]] = [
-            allModels,
-            [StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self, StoredDailyStrain.self, StoredRecommendation.self, StoredNotificationEvent.self],
-            [StoredDailySample.self, StoredSyncMetadata.self, StoredDailyStrain.self],
-            [StoredDailySample.self, StoredDailyStrain.self]
-        ]
-
-        for (i, models) in fallbackSets.enumerated() {
-            do {
-                let config = ModelConfiguration(isStoredInMemoryOnly: true)
-                return try ModelContainer(for: Schema(models), configurations: [config])
-            } catch {
-                print("[Laso] Step \(i + 3) (in-memory, \(models.count) model\(models.count == 1 ? "" : "s")) failed: \(error)")
-            }
-        }
-
-        // All Schema-based attempts failed — try the simplest possible call as last resort
-        do {
-            return try ModelContainer(for: StoredDailySample.self, StoredDailyStrain.self)
-        } catch {
-            print("[Laso] All ModelContainer attempts failed: \(error)")
-            return nil
-        }
+        integrityFailure = AppIntegrityGuard.performChecks()
     }
 
     var body: some Scene {
         WindowGroup {
             ZStack {
+                // -1. Integrity failure — blocks everything on compromised devices
+                if let failure = integrityFailure {
+                    CompromisedEnvironmentView(reason: failure)
+                }
                 // 0. Force update or maintenance — blocks everything (skip in UI test mode)
-                if !isUITestMode && remoteConfig.requiresForceUpdate {
+                else if !isUITestMode && remoteConfig.requiresForceUpdate {
                     ForceUpdateView()
                 } else if !isUITestMode && remoteConfig.killSwitchEnabled {
                     MaintenanceView(message: remoteConfig.killSwitchMessage)
                 } else {
-                    ContentView(
-                        healthKitManager: healthKitManager,
-                        analysisEngine: analysisEngine,
-                        deviceSourceManager: deviceSourceManager,
-                        healthDataStore: healthDataStore
-                    )
+                    ContentView(container: container)
                     // 1. Onboarding (first launch)
                     .fullScreenCover(isPresented: Binding(
-                        get: { !onboardingCompleted },
+                        get: { !appStateStore.onboardingCompleted },
                         set: { if !$0 {
-                            onboardingCompleted = true
-                            NSUbiquitousKeyValueStore.default.set(true, forKey: AppKeys.App.onboardingCompleted)
+                            appStateStore.markOnboardingCompleted()
                         }}
                     )) {
                         OnboardingView(
-                            healthKitManager: healthKitManager,
+                            healthKitManager: container.healthKitManager,
+                            appStateStore: appStateStore,
                             runCalibration: performInitialCalibration
                         ) {
-                            onboardingCompleted = true
-                            NSUbiquitousKeyValueStore.default.set(true, forKey: AppKeys.App.onboardingCompleted)
+                            appStateStore.markOnboardingCompleted()
                         }
                     }
                     // 2. Paywall (trial expired + not subscribed)
@@ -203,37 +105,10 @@ struct LasoApp: App {
             }
             .task {
                 guard !isUITestMode else { return }
-                // Run CloudKit restore and subscription configure in parallel
-                async let subscriptionTask: Void = subscriptionManager.configure()
-
-                if !healthDataStore.hasRestorableState {
-                    let persistence = PersistenceManager()
-                    _ = await CloudBackupManager.shared.restore(
-                        store: healthDataStore, persistence: persistence
-                    )
-                }
-
-                // Wait for both to complete concurrently
-                _ = await subscriptionTask
-
-                NotificationManager.shared.store = healthDataStore
-
-                // Register Siri shortcuts so the system can discover them immediately.
-                LasoShortcutsProvider.updateAppShortcutParameters()
-
-                WatchMonitor.shared.configure(healthStore: healthKitManager.healthStore)
-                WatchMonitor.shared.startMonitoring()
-
-                // Cancel stale weekly summary notifications that may have been
-                // registered with older, more aggressive defaults.
-                WeeklySummaryScheduler.cancel()
-
-                // Prune expired data (runs at most once per day)
-                if let container = healthDataStore.modelContainer {
-                    let retentionContext = ModelContext(container)
-                    DataRetentionManager().pruneIfNeeded(context: retentionContext)
-                    healthDataStore.invalidateTimeSeriesCache()
-                }
+                await container.startupCoordinator.runInitialSetup(
+                    healthDataStore: container.healthDataStore,
+                    healthKitManager: container.healthKitManager
+                )
 
                 // Dismiss splash once background init is done
                 withAnimation(.easeOut(duration: 0.3)) {

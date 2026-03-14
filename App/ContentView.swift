@@ -5,13 +5,8 @@ import Observation
 
 /// Root view with custom three-tab navigation and NavigationStack
 struct ContentView: View {
-    let healthKitManager: HealthKitManager
-    let analysisEngine: AnalysisEngine
-    let deviceSourceManager: DeviceSourceManager
-    let healthDataStore: HealthDataStore
+    let container: AppContainer
 
-    @AppStorage(AppKeys.App.onboardingCompleted) private var onboardingCompleted = false
-    @AppStorage(AppKeys.App.pendingCalibrationHydration) private var pendingCalibrationHydration = false
     @Environment(\.scenePhase) private var scenePhase
     @State private var selectedTab: AppTab = .home
     @State private var showSettings = false
@@ -22,26 +17,23 @@ struct ContentView: View {
     @State private var liveViewModel: LiveViewModel
     @State private var webExportViewModel: WebExportViewModel
 
-    init(
-        healthKitManager: HealthKitManager,
-        analysisEngine: AnalysisEngine,
-        deviceSourceManager: DeviceSourceManager,
-        healthDataStore: HealthDataStore
-    ) {
-        self.healthKitManager = healthKitManager
-        self.analysisEngine = analysisEngine
-        self.deviceSourceManager = deviceSourceManager
-        self.healthDataStore = healthDataStore
-        _dashboardViewModel = State(wrappedValue: DashboardViewModel(healthKitManager: healthKitManager, analysisEngine: analysisEngine, store: healthDataStore))
-        _liveViewModel = State(wrappedValue: LiveViewModel(healthKitManager: healthKitManager))
-        _webExportViewModel = State(wrappedValue: WebExportViewModel(healthKitManager: healthKitManager, analysisEngine: analysisEngine))
+    init(container: AppContainer) {
+        self.container = container
+        _dashboardViewModel = State(wrappedValue: container.makeDashboardViewModel())
+        _liveViewModel = State(wrappedValue: container.makeLiveViewModel())
+        _webExportViewModel = State(wrappedValue: container.makeWebExportViewModel())
     }
 
     var body: some View {
         mainApp
     }
 
-    private var subscriptionManager: SubscriptionManager { .shared }
+    private var healthKitManager: HealthKitManager { container.healthKitManager }
+    private var analysisEngine: AnalysisEngine { container.analysisEngine }
+    private var deviceSourceManager: DeviceSourceManager { container.deviceSourceManager }
+    private var healthDataStore: HealthDataStore { container.healthDataStore }
+    private var appStateStore: AppStateStore { container.appStateStore }
+    private var subscriptionManager: SubscriptionManager { container.subscriptionManager }
 
     private var mainApp: some View {
         NavigationStack(path: $navigationPath) {
@@ -98,15 +90,16 @@ struct ContentView: View {
                 healthDataStore: healthDataStore
             )
         }
-        .task(id: onboardingCompleted) {
-            guard onboardingCompleted else { return }
+        .task(id: appStateStore.onboardingCompleted) {
+            guard appStateStore.onboardingCompleted else { return }
 
-            if pendingCalibrationHydration && healthKitManager.lastRefresh != nil {
+            if appStateStore.pendingCalibrationHydration && healthKitManager.lastRefresh != nil {
                 dashboardViewModel.hydrateFromCalibration()
-                pendingCalibrationHydration = false
+                appStateStore.setPendingCalibrationHydration(false)
             } else {
                 await dashboardViewModel.load()
             }
+            await refreshDeviceSourcesIfNeeded()
             if selectedTab == .home {
                 liveViewModel.fetchHomeData()
             }
@@ -118,6 +111,7 @@ struct ContentView: View {
             if newPhase == .active && oldPhase != .active {
                 startSessionAnalytics()
                 WatchMonitor.shared.evaluateWatchStatus()
+                Task { await refreshDeviceSourcesIfNeeded() }
                 if selectedTab == .home {
                     // Refresh home data only when Home is visible.
                     liveViewModel.fetchHomeData()
@@ -126,7 +120,7 @@ struct ContentView: View {
                 }
             } else if newPhase == .background {
                 AppAnalytics.shared.trackSessionEnd()
-                AppDelegate.scheduleBackgroundRefresh()
+                container.backgroundRefreshCoordinator.schedule()
             }
         }
         .onChange(of: connectivityMonitor.isOnline) { wasOnline, isOnline in
@@ -137,7 +131,7 @@ struct ContentView: View {
             )
 
             guard wasOnline == false, isOnline == true else { return }
-            guard onboardingCompleted, scenePhase == .active else { return }
+            guard appStateStore.onboardingCompleted, scenePhase == .active else { return }
 
             Task {
                 let shouldRunSync = selectedTab == .home && !ThermalManager.shared.shouldThrottle
@@ -146,9 +140,9 @@ struct ContentView: View {
 
                 if shouldRunSync && shouldRunBackup {
                     async let syncTask: Bool = dashboardViewModel.refreshAfterConnectivityRestoreIfNeeded()
-                    async let backupTask: Void = CloudBackupManager.shared.backupIfNeeded(
+                    async let backupTask: Void = container.cloudBackupManager.backupIfNeeded(
                         store: healthDataStore,
-                        persistence: PersistenceManager()
+                        persistence: container.persistenceManager
                     )
                     didSync = await syncTask
                     _ = await backupTask
@@ -157,9 +151,9 @@ struct ContentView: View {
                 } else {
                     didSync = false
                     if shouldRunBackup {
-                        await CloudBackupManager.shared.backupIfNeeded(
+                        await container.cloudBackupManager.backupIfNeeded(
                             store: healthDataStore,
-                            persistence: PersistenceManager()
+                            persistence: container.persistenceManager
                         )
                     }
                 }
@@ -186,6 +180,13 @@ struct ContentView: View {
         }
     }
 
+    private func refreshDeviceSourcesIfNeeded() async {
+        guard healthKitManager.isAuthorized,
+              deviceSourceManager.connectedDevices.isEmpty,
+              !deviceSourceManager.isScanning else { return }
+        await deviceSourceManager.scanSources()
+    }
+
     @ViewBuilder
     private var tabContent: some View {
         switch selectedTab {
@@ -201,7 +202,11 @@ struct ContentView: View {
             if !UITestMode.isEnabled && RemoteConfigManager.shared.killLiveTab {
                 MaintenanceView(message: "Live monitoring is temporarily unavailable. We're working on a fix.")
             } else if FeatureGate.canAccess(.liveTab) {
-                LiveView(viewModel: liveViewModel, mlOrchestrator: dashboardViewModel.analysisEngine.mlOrchestrator)
+                LiveView(
+                    viewModel: liveViewModel,
+                    mlOrchestrator: dashboardViewModel.analysisEngine.mlOrchestrator,
+                    deviceSourceManager: deviceSourceManager
+                )
             } else {
                 ProFeatureOverlay(
                     feature: "Live Vitals",
@@ -453,17 +458,7 @@ struct ContentView: View {
 }
 
 #Preview {
-    let hkManager = HealthKitManager()
-    let container = try! ModelContainer(
-        for: StoredDailySample.self, StoredSyncMetadata.self, StoredAnalysisSnapshot.self, StoredDailyStrain.self,
-        configurations: ModelConfiguration(isStoredInMemoryOnly: true)
-    )
-    ContentView(
-        healthKitManager: hkManager,
-        analysisEngine: AnalysisEngine(),
-        deviceSourceManager: DeviceSourceManager(healthStore: hkManager.healthStore),
-        healthDataStore: HealthDataStore(modelContainer: container)
-    )
+    ContentView(container: AppContainer())
 }
 
 /// Tracks internet reachability and transition timing for online recovery workflows.

@@ -31,6 +31,28 @@ struct SettingsView: View {
         self._preferences = State(initialValue: PersistenceManager().loadPreferences())
     }
 
+    private var devicesStatusText: String {
+        let count = deviceSourceManager.connectedDevices.count
+        if count > 0 {
+            return Copy.Settings.connectedCount(count)
+        }
+        if deviceSourceManager.isScanning {
+            return "Checking sources"
+        }
+        if healthKitManager.isAuthorized {
+            return "Health access enabled"
+        }
+        return Copy.Settings.setUpADevice
+    }
+
+    private var devicesStatusIcon: String {
+        deviceSourceManager.connectedDevices.first?.device.systemImageName ?? "heart.text.square.fill"
+    }
+
+    private var hasAppleWatchSource: Bool {
+        deviceSourceManager.connectedDevices.contains { $0.device == .appleWatch }
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -48,11 +70,11 @@ struct SettingsView: View {
                             Label {
                                 Text(Copy.Settings.manageDevices)
                             } icon: {
-                                Image(systemName: "applewatch")
+                                Image(systemName: devicesStatusIcon)
                                     .foregroundStyle(.blue)
                             }
                             Spacer()
-                            Text(deviceSourceManager.connectedDevices.isEmpty ? Copy.Settings.setUpADevice : Copy.Settings.connectedCount(deviceSourceManager.connectedDevices.count))
+                            Text(devicesStatusText)
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         }
@@ -157,30 +179,32 @@ struct SettingsView: View {
                 }
 
                 // Apple Watch Reminders
-                Section {
-                    Toggle(Copy.Settings.watchNotWornReminder, isOn: $preferences.watchNotWornReminderEnabled)
-                        .onChange(of: preferences.watchNotWornReminderEnabled) { _, newValue in
-                            AppAnalytics.shared.trackSettingChanged(name: "watch_not_worn_reminder", value: newValue)
+                if hasAppleWatchSource {
+                    Section {
+                        Toggle(Copy.Settings.watchNotWornReminder, isOn: $preferences.watchNotWornReminderEnabled)
+                            .onChange(of: preferences.watchNotWornReminderEnabled) { _, newValue in
+                                AppAnalytics.shared.trackSettingChanged(name: "watch_not_worn_reminder", value: newValue)
+                            }
+                        if preferences.watchNotWornReminderEnabled {
+                            Text(Copy.Settings.watchNotWornDescription)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
-                    if preferences.watchNotWornReminderEnabled {
-                        Text(Copy.Settings.watchNotWornDescription)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
 
-                    Toggle(Copy.Settings.lowBatteryReminder, isOn: $preferences.lowBatteryReminderEnabled)
-                        .onChange(of: preferences.lowBatteryReminderEnabled) { _, newValue in
-                            AppAnalytics.shared.trackSettingChanged(name: "low_battery_reminder", value: newValue)
+                        Toggle(Copy.Settings.lowBatteryReminder, isOn: $preferences.lowBatteryReminderEnabled)
+                            .onChange(of: preferences.lowBatteryReminderEnabled) { _, newValue in
+                                AppAnalytics.shared.trackSettingChanged(name: "low_battery_reminder", value: newValue)
+                            }
+                        if preferences.lowBatteryReminderEnabled {
+                            Text(Copy.Settings.lowBatteryDescription)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
-                    if preferences.lowBatteryReminderEnabled {
-                        Text(Copy.Settings.lowBatteryDescription)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                    } header: {
+                        Label(Copy.Settings.appleWatch, systemImage: "applewatch")
+                    } footer: {
+                        Text(Copy.Settings.watchRemindersFooter)
                     }
-                } header: {
-                    Label(Copy.Settings.appleWatch, systemImage: "applewatch")
-                } footer: {
-                    Text(Copy.Settings.watchRemindersFooter)
                 }
 
                 // General Alerts
@@ -387,6 +411,12 @@ struct SettingsView: View {
             .onAppear {
                 AppAnalytics.shared.trackFeatureOpen(.settings)
                 AppAnalytics.shared.trackActivationMilestone(.firstSettingsVisit)
+            }
+            .task {
+                guard healthKitManager.isAuthorized,
+                      deviceSourceManager.connectedDevices.isEmpty,
+                      !deviceSourceManager.isScanning else { return }
+                await deviceSourceManager.scanSources()
             }
             .onDisappear { AppAnalytics.shared.trackFeatureClose(.settings) }
             .toolbar {

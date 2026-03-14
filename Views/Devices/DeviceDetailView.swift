@@ -47,6 +47,10 @@ struct DeviceDetailView: View {
                 .font(.title2.weight(.bold))
 
             statusBadge
+
+            Text(sourceSubtitle)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
         }
         .padding(.top)
     }
@@ -61,24 +65,34 @@ struct DeviceDetailView: View {
                     .padding(.vertical, 4)
                     .background(info.isActive ? .green : .orange, in: Capsule())
             } else {
-                Text("Not Connected")
+                Text("Available Source")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
-                    .background(.secondary, in: Capsule())
+                    .background(.blue, in: Capsule())
             }
         }
     }
 
     private func connectedContent(_ info: ConnectedDeviceInfo) -> some View {
         VStack(spacing: 16) {
-            // Summary
             HStack(spacing: 0) {
                 VStack(spacing: 4) {
                     Text("\(info.metricCount)")
                         .font(.title2.weight(.bold).monospacedDigit())
                     Text("Metrics")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+
+                Divider().frame(height: 40)
+
+                VStack(spacing: 4) {
+                    Text(info.sourceName)
+                        .font(.title3.weight(.semibold))
+                    Text("Source App")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -99,9 +113,20 @@ struct DeviceDetailView: View {
             .background(.background, in: RoundedRectangle(cornerRadius: 14))
             .padding(.horizontal)
 
-            // Metrics by category
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Sync Path")
+                    .font(.subheadline.weight(.semibold))
+                Text(syncPathDescription(for: info))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding()
+            .background(.background, in: RoundedRectangle(cornerRadius: 14))
+            .padding(.horizontal)
+
             VStack(alignment: .leading, spacing: 12) {
-                Text("Tracked Metrics")
+                Text("Imported Metrics")
                     .font(.subheadline.weight(.semibold))
                     .padding(.horizontal)
 
@@ -137,9 +162,8 @@ struct DeviceDetailView: View {
             .background(.background, in: RoundedRectangle(cornerRadius: 14))
             .padding(.horizontal)
 
-            // Source info
             VStack(alignment: .leading, spacing: 6) {
-                Text("Source")
+                Text("Data Source")
                     .font(.subheadline.weight(.semibold))
                 HStack {
                     Text("App: \(info.sourceName)")
@@ -162,25 +186,83 @@ struct DeviceDetailView: View {
 
     private var notConnectedContent: some View {
         VStack(spacing: 16) {
-            // Expected metrics
             VStack(alignment: .leading, spacing: 8) {
                 Text("\(device.supportedMetrics.count) metrics available")
                     .font(.subheadline.weight(.semibold))
                     .padding(.horizontal)
 
-                Text("Connect this device to start tracking these health metrics automatically.")
+                Text(notConnectedDescription)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(.background, in: RoundedRectangle(cornerRadius: 14))
             .padding(.horizontal)
 
-            // Setup guide
+            VStack(alignment: .leading, spacing: 8) {
+                Text("How It Fits Your Setup")
+                    .font(.subheadline.weight(.semibold))
+                Text(setupFitDescription)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding()
+            .background(.background, in: RoundedRectangle(cornerRadius: 14))
+            .padding(.horizontal)
+
             DeviceSetupGuideView(device: device)
                 .padding(.horizontal)
+        }
+    }
+
+    private var sourceSubtitle: String {
+        if let sourceName = deviceInfo?.sourceName {
+            return sourceName
+        }
+        switch device {
+        case .appleWatch:
+            return "Watch app + Apple Health"
+        case .iPhone:
+            return "iPhone sensors + Apple Health"
+        default:
+            return "\(device.companionAppName) + Apple Health"
+        }
+    }
+
+    private func syncPathDescription(for info: ConnectedDeviceInfo) -> String {
+        switch device {
+        case .appleWatch:
+            return "Apple Watch records samples, Apple Health keeps them synced to iPhone, and Laso imports them automatically on refresh."
+        case .iPhone:
+            return "iPhone sensors write to Apple Health directly, and Laso imports those samples automatically on refresh."
+        default:
+            return "\(device.displayName) writes to \(info.sourceName), Apple Health receives the samples, and Laso imports them automatically on refresh."
+        }
+    }
+
+    private var notConnectedDescription: String {
+        switch device {
+        case .appleWatch:
+            return "Apple Watch starts appearing here after it records health samples and syncs them into Apple Health."
+        case .iPhone:
+            return "iPhone motion and activity metrics appear here after Apple Health records the first samples."
+        default:
+            return "\(device.displayName) can feed data into Laso once \(device.companionAppName) is allowed to write to Apple Health."
+        }
+    }
+
+    private var setupFitDescription: String {
+        switch device {
+        case .appleWatch:
+            return "Apple Watch is the best source for live heart rate, oxygen, and readiness signals. Keep it connected if you want real-time vitals."
+        case .iPhone:
+            return "iPhone-only tracking still gives Laso steps, distance, workouts, and other Health data even without a wearable."
+        default:
+            return "Your main device can stay connected. Add \(device.displayName) only if you want broader metric coverage or a different source app."
         }
     }
 }

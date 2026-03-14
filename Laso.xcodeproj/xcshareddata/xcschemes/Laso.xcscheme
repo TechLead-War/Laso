@@ -15,7 +15,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AAF1174C80A8B9E1615BF94C"
+               BlueprintIdentifier = "08AD24A007F4503B8999A065"
                BuildableName = "Laso.app"
                BlueprintName = "Laso"
                ReferencedContainer = "container:Laso.xcodeproj">
@@ -32,7 +32,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "AAF1174C80A8B9E1615BF94C"
+            BlueprintIdentifier = "08AD24A007F4503B8999A065"
             BuildableName = "Laso.app"
             BlueprintName = "Laso"
             ReferencedContainer = "container:Laso.xcodeproj">
@@ -44,7 +44,18 @@
             parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "0BCB334E3454D93383DB993C"
+               BlueprintIdentifier = "12B932B2BF8CDB1A1FD8B93A"
+               BuildableName = "LasoTests.xctest"
+               BlueprintName = "LasoTests"
+               ReferencedContainer = "container:Laso.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "1029A915F9487DD209F51551"
                BuildableName = "LasoUITests.xctest"
                BlueprintName = "LasoUITests"
                ReferencedContainer = "container:Laso.xcodeproj">
@@ -68,24 +79,12 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "AAF1174C80A8B9E1615BF94C"
+            BlueprintIdentifier = "08AD24A007F4503B8999A065"
             BuildableName = "Laso.app"
             BlueprintName = "Laso"
             ReferencedContainer = "container:Laso.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <EnvironmentVariables>
-         <EnvironmentVariable
-            key = "POSTHOG_API_KEY"
-            value = "phc_bBp1OaF9TabDqJ9iA9uxbObl8YAIIIYn049Tt8AS7km"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-         <EnvironmentVariable
-            key = "POSTHOG_HOST"
-            value = "https://eu.i.posthog.com"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-      </EnvironmentVariables>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -97,7 +96,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "AAF1174C80A8B9E1615BF94C"
+            BlueprintIdentifier = "08AD24A007F4503B8999A065"
             BuildableName = "Laso.app"
             BlueprintName = "Laso"
             ReferencedContainer = "container:Laso.xcodeproj">

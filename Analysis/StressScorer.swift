@@ -147,7 +147,7 @@ final class StressScorer {
     /// Human-readable description of current stress state with actionable advice
     var stressDescription: String {
         guard let stress = currentStress else {
-            return "Not enough data to assess stress. Wear your Apple Watch consistently for at least 14 days to establish your personal baseline."
+            return "Not enough data to assess stress. Keep heart rate and HRV data syncing consistently for at least 14 days to establish your personal baseline."
         }
 
         let scoreText = String(format: "%.1f", stress.score)

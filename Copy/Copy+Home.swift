@@ -134,8 +134,11 @@ extension Copy {
 
             // Recovery & Readiness
             static let recoveryAndReadiness = "Recovery & Readiness"
-            static func readinessDescription(deviceName: String) -> String {
-                "Your Readiness score (0\u{2013}100) tells you how recovered your body is. It\u{2019}s calculated from two signals your \(deviceName) measures while you sleep:"
+            static func readinessDescription(deviceName: String?) -> String {
+                if let deviceName {
+                    return "Your Readiness score (0\u{2013}100) tells you how recovered your body is. It\u{2019}s calculated from two signals your \(deviceName) measures while you sleep:"
+                }
+                return "Your Readiness score (0\u{2013}100) tells you how recovered your body is. It\u{2019}s calculated from HRV and resting heart rate samples that Apple Health collects overnight:"
             }
             static let hrvName = "Heart Rate Variability (HRV)"
             static let hrvDetail = "Higher HRV means better recovery and lower stress."

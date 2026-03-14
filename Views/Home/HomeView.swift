@@ -2,7 +2,6 @@ import SwiftUI
 import SwiftData
 import AppIntents
 
-/// Main home screen composing visual hero, key metrics, period trends, categories, and compact alerts
 struct HomeView: View {
     let viewModel: DashboardViewModel
     let liveViewModel: LiveViewModel
@@ -11,8 +10,8 @@ struct HomeView: View {
     @Binding var showSettings: Bool
     @Environment(\.scenePhase) private var scenePhase
 
-    @State private var homeRefreshTimer: Timer?
-    @State private var readinessRefreshTimer: Timer?
+    @State private var homeRefreshTimer = RepeatTimer()
+    @State private var readinessRefreshTimer = RepeatTimer()
     @State private var weeklyReviewViewModel: WeeklyReviewViewModel?
     @State private var showScoreGuide = false
     @State private var maxScrollDepth: Int = 0
@@ -96,24 +95,19 @@ struct HomeView: View {
     /// If timeSeries is empty (bad initial sync), retries the full sync instead of lightweight fetches.
     private static let minHomeRefreshInterval: TimeInterval = 60
     private func startHomeRefresh() {
-        homeRefreshTimer?.invalidate()
         let requestedInterval = TimeInterval(RemoteConfigManager.shared.homeRefreshIntervalSeconds)
         let interval = max(requestedInterval, Self.minHomeRefreshInterval)
-        let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
+        homeRefreshTimer.start(interval: interval) {
             if viewModel.needsSyncRetry {
                 Task { await viewModel.retrySyncIfNeeded() }
             } else {
                 liveViewModel.fetchHomeDataTiered()
             }
         }
-        timer.tolerance = min(10, interval * 0.2)
-        homeRefreshTimer = timer
     }
 
-
     private func stopHomeRefresh() {
-        homeRefreshTimer?.invalidate()
-        homeRefreshTimer = nil
+        homeRefreshTimer.stop()
     }
 
     // MARK: - Live Readiness Score (30-minute refresh)
@@ -135,17 +129,13 @@ struct HomeView: View {
     private static let readinessRefreshInterval: TimeInterval = 30 * 60
 
     private func startReadinessRefresh() {
-        readinessRefreshTimer?.invalidate()
-        let timer = Timer.scheduledTimer(withTimeInterval: Self.readinessRefreshInterval, repeats: true) { _ in
+        readinessRefreshTimer.start(interval: Self.readinessRefreshInterval, tolerance: 60) {
             liveViewModel.fetchHomeData()
         }
-        timer.tolerance = 60
-        readinessRefreshTimer = timer
     }
 
     private func stopReadinessRefresh() {
-        readinessRefreshTimer?.invalidate()
-        readinessRefreshTimer = nil
+        readinessRefreshTimer.stop()
     }
 
     /// Lazily created and reused WeeklyReviewViewModel
@@ -184,7 +174,7 @@ struct HomeView: View {
                 if shouldShowEmptyState {
                     connectHealthView
                 } else if hasData {
-                    // ── Above the fold (matches design: Recovery → Vitality + Sleep) ──
+                    // ── Above the fold ──
 
                     // 1. Recovery Hero — live readiness score (updates every 30 min)
                     RecoveryHeroCard(
@@ -198,57 +188,29 @@ struct HomeView: View {
                     .onAppear { recoveryTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 10) }
                     .onDisappear { recoveryTracker.disappeared() }
 
-                    // 2. Illness Warning (promoted to top when active)
-                    illnessWarningCard
-                        .onAppear { illnessTracker.appeared() }
-                        .onDisappear { illnessTracker.disappeared() }
-                        .padding(.top, 8)
-
-                    // 3. Today's Action — single source of truth for what to do
+                    // 2. Today's Action — single source of truth for what to do
                     primaryActionCard
                         .padding(.top, 8)
 
-                    // 3a. Health Risks — critical alerts near top (NNG eyetracking)
-                    todayRisksSection
+                    // 3. Compact alert banner (illness + health risks)
+                    compactAlertBanner
                         .padding(.top, 8)
-                        .onAppear { risksTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 20) }
-                        .onDisappear { risksTracker.disappeared() }
+                        .onAppear { illnessTracker.appeared(); risksTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 20) }
+                        .onDisappear { illnessTracker.disappeared(); risksTracker.disappeared() }
 
-                    // 3b. Vitality Age card
-                    VitalityCard(
-                        scorer: viewModel.vitalityScorer,
-                        onTap: {
-                            AppAnalytics.shared.trackBlockTap(
-                                title: "Vitality Age",
-                                type: .recoveryCard,
-                                screen: .home,
-                                metadata: ["destination": "vitality_detail"]
-                            )
-                            navigationPath.append(Route.vitalityDetail)
-                        }
-                    )
-                    .padding(.horizontal)
+                    // 4. Metric Strip — horizontal scroll replacing 6 vertical cards
+                    MetricStripView(tiles: buildMetricTiles()) { tile in
+                        AppAnalytics.shared.trackBlockTap(
+                            title: tile.label,
+                            type: .recoveryCard,
+                            screen: .home,
+                            metadata: ["destination": tile.id]
+                        )
+                        navigationPath.append(tile.route)
+                    }
                     .padding(.top, 12)
 
-                    // 3c. Sleep Card
-                    SleepCard(
-                        liveVM: liveViewModel,
-                        sleepBaseline: viewModel.analysisEngine.baselines[.sleepDuration].map { $0.mean / 3600 },
-                        sleepInsight: nil,
-                        onTap: {
-                            AppAnalytics.shared.trackBlockTap(
-                                title: "Sleep",
-                                type: .recoveryCard,
-                                screen: .home,
-                                metadata: ["destination": "sleep_coach"]
-                            )
-                            navigationPath.append(Route.sleepCoach)
-                        }
-                    )
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-
-                    // 4. Level & Streaks — gamification progress above fold (Endowed Progress)
+                    // 5. Level & Streaks — gamification (Endowed Progress)
                     LevelBadgeCard(
                         level: viewModel.gamificationEngine.currentLevel,
                         totalDaysTracked: viewModel.gamificationEngine.totalDaysTracked,
@@ -266,95 +228,9 @@ struct HomeView: View {
                     )
                     .padding(.top, 8)
 
-                    // 5. Brain Health Card
-                    if let brain = viewModel.brainHealthScorer.currentScore {
-                        BrainHealthCard(
-                            score: brain.score,
-                            stateLabel: brain.state.displayName,
-                            stateColor: brain.state.color,
-                            headline: brain.headline,
-                            onTap: {
-                                AppAnalytics.shared.trackBlockTap(
-                                    title: "Brain Health",
-                                    type: .homeBrainHealthCard,
-                                    screen: .home,
-                                    metadata: [
-                                        "destination": "brain_health",
-                                        "score": brain.score
-                                    ]
-                                )
-                                navigationPath.append(Route.brainHealth)
-                            }
-                        )
-                        .padding(.horizontal)
-                        .padding(.top, 8)
-                    }
-
-                    // 6. Strain Card
-                    StrainCard(
-                        strainValue: viewModel.strainScorer.currentStrain,
-                        strainLevel: viewModel.strainScorer.strainLevel,
-                        zoneMinutes: viewModel.strainScorer.zoneMinutes,
-                        onTap: {
-                            AppAnalytics.shared.trackBlockTap(
-                                title: "Strain",
-                                type: .recoveryCard,
-                                screen: .home,
-                                metadata: ["destination": "strain_detail"]
-                            )
-                            navigationPath.append(Route.strainDetail)
-                        }
-                    )
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-
-                    // 7. Stress Card
-                    if let stress = viewModel.stressScorer.currentStress {
-                        StressCard(
-                            stressScore: stress.score,
-                            stressLevel: stress.level.displayName,
-                            levelColor: stress.level.color,
-                            trend: viewModel.stressScorer.stressTrend.rawValue,
-                            onTap: {
-                                AppAnalytics.shared.trackBlockTap(
-                                    title: "Stress",
-                                    type: .recoveryCard,
-                                    screen: .home,
-                                    metadata: ["destination": "stress_monitor"]
-                                )
-                                navigationPath.append(Route.stressMonitor)
-                            }
-                        )
-                        .padding(.horizontal)
-                        .padding(.top, 8)
-                    }
-
-                    // 8. Cycle Phase Card (female users with cycle data)
-                    if let cycle = viewModel.menstrualCycleTracker.currentCycle {
-                        CyclePhaseCard(
-                            phaseName: cycle.currentPhase.displayName,
-                            phaseIcon: cycle.currentPhase.icon,
-                            phaseColor: cycle.currentPhase.color,
-                            dayInCycle: cycle.dayInCycle,
-                            cycleLength: cycle.cycleLength,
-                            daysUntilPeriod: cycle.daysUntilNextPeriod ?? 0,
-                            onTap: {
-                                AppAnalytics.shared.trackBlockTap(
-                                    title: "Cycle Phase",
-                                    type: .recoveryCard,
-                                    screen: .home,
-                                    metadata: ["destination": "cycle_detail"]
-                                )
-                                navigationPath.append(Route.cycleDetail)
-                            }
-                        )
-                        .padding(.horizontal)
-                        .padding(.top, 8)
-                    }
-
                     // ── Below the fold ──
 
-                    // 9. Body Insights
+                    // 6. Body Insights
                     BodyInsightsSection(
                         viewModel: viewModel,
                         liveVM: liveViewModel,
@@ -375,10 +251,10 @@ struct HomeView: View {
                         }
                     )
                     .padding(.top, 8)
-                    .onAppear { bodyInsightsTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 60) }
+                    .onAppear { bodyInsightsTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 50) }
                     .onDisappear { bodyInsightsTracker.disappeared() }
 
-                    // 10. Weekly Review
+                    // 7. Weekly Review
                     WeeklyReviewEntryCard(
                         viewModel: getOrCreateWeeklyReviewVM()
                     ) {
@@ -414,139 +290,15 @@ struct HomeView: View {
         .scrollIndicators(.hidden)
     }
 
-    // MARK: - Empty State — Connect Health Data
+    // MARK: - Empty State — Waiting For First Sync
 
     private var connectHealthView: some View {
-        VStack(spacing: 28) {
-            Spacer().frame(height: 20)
-
-            Image(systemName: "heart.text.clipboard")
-                .font(.system(size: 56))
-                .foregroundStyle(.tint)
-
-            VStack(spacing: 8) {
-                Text(Copy.Home.connectHealthData)
-                    .font(.title3.weight(.semibold))
-
-                Text(Copy.Home.connectHealthDescription)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
-            }
-
-            // Primary CTA above fold
-            Button {
-                AppAnalytics.shared.trackBlockTap(
-                    title: "Refresh",
-                    type: .emptyStateRefresh,
-                    screen: .home,
-                    metadata: [
-                        "source": "empty_state"
-                    ]
-                )
-                Task { await viewModel.refresh() }
-            } label: {
-                Label(Copy.Home.refresh, systemImage: "arrow.clockwise")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .padding(.horizontal, 24)
-
-            // Supported devices — dynamic from SupportedDevice
-            VStack(alignment: .leading, spacing: 14) {
-                Text(Copy.Home.worksWith)
-                    .font(.subheadline.weight(.semibold))
-                    .padding(.horizontal)
-
-                ForEach(SupportedDevice.discoverableDevices.prefix(6)) { device in
-                    deviceRow(
-                        icon: device.systemImageName,
-                        name: device.displayName,
-                        detail: device == .appleWatch
-                            ? Copy.Home.syncsAutomatically
-                            : Copy.Home.viaApp(device.companionAppName),
-                        color: device.iconColor
-                    )
-                }
-            }
-            .padding()
-            .background(.background, in: RoundedRectangle(cornerRadius: 16))
-            .padding(.horizontal)
-
-            // How to connect
-            VStack(alignment: .leading, spacing: 14) {
-                Text(Copy.Home.howToConnect)
-                    .font(.subheadline.weight(.semibold))
-                    .padding(.horizontal)
-
-                stepRow(number: 1, text: Copy.Home.connectStep1)
-                stepRow(number: 2, text: Copy.Home.connectStep2)
-                stepRow(number: 3, text: Copy.Home.connectStep3)
-                stepRow(number: 4, text: Copy.Home.connectStep4)
-            }
-            .padding()
-            .background(.background, in: RoundedRectangle(cornerRadius: 16))
-            .padding(.horizontal)
-
-            // Manage Devices link
-            NavigationLink {
-                ConnectedDevicesView(
-                    viewModel: ConnectedDevicesViewModel(
-                        deviceSourceManager: deviceSourceManager,
-                        healthKitManager: viewModel.healthKitManager
-                    )
-                )
-            } label: {
-                Label(Copy.Home.manageDevices, systemImage: "gear")
-                    .font(.subheadline.weight(.medium))
-            }
-            .buttonStyle(.bordered)
-            .simultaneousGesture(TapGesture().onEnded {
-                AppAnalytics.shared.trackBlockTap(
-                    title: "Manage Devices",
-                    type: .emptyStateManageDevices,
-                    screen: .home,
-                    metadata: [
-                        "destination": "connected_devices",
-                        "source": "empty_state"
-                    ]
-                )
-            })
-
-            Spacer()
-        }
-    }
-
-    private func deviceRow(icon: String, name: String, detail: String, color: Color = .blue) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.body)
-                .foregroundStyle(color)
-                .frame(width: 28)
-            VStack(alignment: .leading, spacing: 1) {
-                Text(name)
-                    .font(.subheadline.weight(.medium))
-                Text(detail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-        }
-    }
-
-    private func stepRow(number: Int, text: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Text("\(number)")
-                .font(.caption.weight(.bold))
-                .foregroundStyle(.white)
-                .frame(width: 22, height: 22)
-                .background(.blue, in: Circle())
-            Text(text)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        HomeConnectHealthView(
+            deviceSourceManager: deviceSourceManager,
+            healthKitManager: viewModel.healthKitManager
+        ) {
+            await viewModel.refresh()
+            liveViewModel.fetchHomeData()
         }
     }
 
@@ -586,70 +338,56 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Illness Warning Card
+    // MARK: - Compact Alert Banner (illness + health risks merged)
 
     @ViewBuilder
-    private var illnessWarningCard: some View {
-        if let warning = viewModel.analysis.topIllnessWarning {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 8) {
-                    Image(systemName: "shield.lefthalf.filled.badge.checkmark")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(.red)
-                    Text(Copy.Home.earlyWarning)
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(.red)
-                    Spacer()
-                    // severity badge
-                    Text(warning.severity == .critical ? Copy.Home.severityHigh : warning.severity == .warning ? Copy.Home.severityModerate : Copy.Home.severityLow)
-                        .font(.caption2.weight(.bold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, DS.badgeH)
-                        .padding(.vertical, DS.badgeV)
-                        .background(warning.severity == .critical ? .red : warning.severity == .warning ? .orange : .yellow, in: Capsule())
-                }
-
-                Text(warning.narrative)
-                    .font(.subheadline)
-                    .foregroundStyle(.primary)
-                    .lineLimit(4)
-
-                // Show active signals as pills
-                HStack(spacing: 6) {
-                    ForEach(warning.activeSignals, id: \.metric) { signal in
-                        HStack(spacing: 3) {
-                            Image(systemName: signal.metric.systemImageName)
-                                .font(.caption2)
-                            Text(signal.metric.displayName)
-                                .font(.caption2.weight(.medium))
-                        }
-                        .foregroundStyle(.red)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(.red.opacity(0.1), in: Capsule())
-                    }
-                }
-            }
-            .padding(14)
-            .background(.background, in: RoundedRectangle(cornerRadius: 16))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .strokeBorder(.red.opacity(0.2), lineWidth: 1)
-            )
-            .padding(.horizontal)
-        }
-    }
-
-    // MARK: - Today Health Risks Section
-
-    @ViewBuilder
-    private var todayRisksSection: some View {
+    private var compactAlertBanner: some View {
+        let warning = viewModel.analysis.topIllnessWarning
         let risks = viewModel.analysis.todayHealthRisks
-        if !risks.isEmpty {
-            VStack(alignment: .leading, spacing: 10) {
-                Text(Copy.Home.healthRisks)
-                    .font(.headline)
-                    .padding(.horizontal)
+
+        if warning != nil || !risks.isEmpty {
+            VStack(spacing: 6) {
+                if let warning {
+                    Button {
+                        navigationPath.append(Route.insightsDetail)
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: "shield.lefthalf.filled.badge.checkmark")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(.red)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(Copy.Home.earlyWarning)
+                                    .font(.caption.weight(.bold))
+                                    .foregroundStyle(.red)
+                                Text(warning.narrative)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
+
+                            Spacer()
+
+                            Text(warning.severity == .critical ? Copy.Home.severityHigh : warning.severity == .warning ? Copy.Home.severityModerate : Copy.Home.severityLow)
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, DS.badgeH)
+                                .padding(.vertical, DS.badgeV)
+                                .background(warning.severity == .critical ? .red : warning.severity == .warning ? .orange : .yellow, in: Capsule())
+
+                            Image(systemName: "chevron.right")
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                        }
+                        .padding(10)
+                        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .strokeBorder(.red.opacity(0.2), lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
 
                 ForEach(risks.prefix(2)) { risk in
                     Button {
@@ -662,63 +400,112 @@ struct HomeView: View {
                                 "risk_grade": risk.riskGrade.rawValue
                             ]
                         )
-                        AppAnalytics.shared.trackInsightEngagement(
-                            category: "health_risk",
-                            metric: risk.riskType.rawValue,
-                            action: "tap_risk"
-                        )
                         risksTracker.tapped(target: risk.riskType.rawValue)
                         navigationPath.append(risk.riskType)
                     } label: {
-                        riskRow(risk)
+                        HStack(spacing: 10) {
+                            Image(systemName: risk.riskType.systemImageName)
+                                .font(.subheadline)
+                                .foregroundStyle(risk.riskGrade.color)
+                                .frame(width: 28, height: 28)
+                                .background(risk.riskGrade.color.opacity(0.12), in: RoundedRectangle(cornerRadius: 7))
+
+                            Text(risk.riskType.displayName)
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(.primary)
+
+                            Spacer()
+
+                            Text(risk.riskGrade.displayName)
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(risk.riskGrade.color)
+
+                            Image(systemName: "chevron.right")
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                        }
+                        .padding(10)
+                        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .strokeBorder(risk.riskGrade.color.opacity(DS.strokeAlpha), lineWidth: 1)
+                        )
                     }
                     .buttonStyle(.plain)
-                    .padding(.horizontal)
                 }
             }
+            .padding(.horizontal)
         }
     }
 
-    private func riskRow(_ risk: HealthRisk) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: risk.riskType.systemImageName)
-                .font(.title3)
-                .foregroundStyle(risk.riskGrade.color)
-                .frame(width: 36, height: 36)
-                .background(risk.riskGrade.color.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+    // MARK: - Metric Strip Tile Builder
 
-            VStack(alignment: .leading, spacing: 3) {
-                Text(risk.riskType.displayName)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.primary)
+    private func buildMetricTiles() -> [MetricTile] {
+        var tiles: [MetricTile] = []
 
-                Text(risk.riskGrade.displayName)
-                    .font(.caption2.weight(.bold))
-                    .foregroundStyle(risk.riskGrade.color)
-            }
+        // Vitality
+        let vDelta = viewModel.vitalityScorer.delta
+        let vBadge: String
+        if vDelta < 0 { vBadge = "\(abs(vDelta))y younger" }
+        else if vDelta > 0 { vBadge = "\(vDelta)y older" }
+        else { vBadge = "On track" }
+        let vColor: Color = vDelta <= 0 ? .green : (vDelta <= 3 ? .orange : .red)
+        tiles.append(MetricTile(
+            id: "vitality_detail", icon: "figure.run", label: "Vitality",
+            value: "\(viewModel.vitalityScorer.vitalityAge)",
+            badge: vBadge, color: vColor, route: .vitalityDetail
+        ))
 
-            Spacer()
-
-            // Mini gauge
-            ZStack {
-                Circle()
-                    .stroke(Color(.systemGray5), lineWidth: 3)
-                    .frame(width: 32, height: 32)
-                Circle()
-                    .trim(from: 0, to: Double(risk.level) / 100.0)
-                    .stroke(risk.riskGrade.color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
-                    .frame(width: 32, height: 32)
-                Text("\(risk.level)")
-                    .font(.caption2.weight(.bold).monospacedDigit())
-            }
-
-            Image(systemName: "chevron.right")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+        // Sleep
+        if liveViewModel.sleep.hasSleepData {
+            let sleepHours = liveViewModel.sleep.lastNightSleepDuration / 3600
+            let h = Int(sleepHours)
+            let m = Int((sleepHours - Double(h)) * 60)
+            let sleepValue = h == 0 ? "\(m)m" : "\(h)h \(String(format: "%02d", m))m"
+            let qualityLabel = liveViewModel.sleep.sleepQualityLabel
+            let sleepTileColor: Color = qualityLabel == "Great" || qualityLabel == "Good" ? .indigo : .orange
+            tiles.append(MetricTile(
+                id: "sleep_coach", icon: "moon.fill", label: "Sleep",
+                value: sleepValue, badge: qualityLabel, color: sleepTileColor, route: .sleepCoach
+            ))
         }
-        .padding(DS.cardPadding)
-        .cardStyle()
+
+        // Strain
+        let strain = viewModel.strainScorer
+        tiles.append(MetricTile(
+            id: "strain_detail", icon: "flame.fill", label: "Strain",
+            value: String(format: "%.1f", strain.currentStrain),
+            badge: strain.strainLevel.displayName, color: strain.strainLevel.color, route: .strainDetail
+        ))
+
+        // Brain Health
+        if let brain = viewModel.brainHealthScorer.currentScore {
+            let brainColor: Color = brain.score >= 80 ? .green : brain.score >= 65 ? .blue : brain.score >= 45 ? .gray : .orange
+            tiles.append(MetricTile(
+                id: "brain_health", icon: "brain", label: "Brain",
+                value: "\(brain.score)", badge: brain.state.displayName, color: brainColor, route: .brainHealth
+            ))
+        }
+
+        // Stress
+        if let stress = viewModel.stressScorer.currentStress {
+            tiles.append(MetricTile(
+                id: "stress_monitor", icon: "waveform.path.ecg", label: "Stress",
+                value: String(format: "%.1f", stress.score),
+                badge: stress.level.displayName, color: stress.level.color, route: .stressMonitor
+            ))
+        }
+
+        // Cycle
+        if let cycle = viewModel.menstrualCycleTracker.currentCycle {
+            tiles.append(MetricTile(
+                id: "cycle_detail", icon: cycle.currentPhase.icon, label: "Cycle",
+                value: "Day \(cycle.dayInCycle)",
+                badge: cycle.currentPhase.displayName, color: cycle.currentPhase.color, route: .cycleDetail
+            ))
+        }
+
+        return tiles
     }
 
     // MARK: - Today's Action Card (single source of truth)
@@ -863,7 +650,7 @@ struct HomeView: View {
     @State private var firstLaunchIconScale: CGFloat = 0.8
     @State private var firstLaunchDotCount = 0
     @State private var firstLaunchAppeared = false
-    @State private var firstLaunchDotTimer: Timer?
+    @State private var firstLaunchDotTimer = RepeatTimer()
 
     private var firstLaunchPhase: (icon: String, text: String, color: Color) {
         switch viewModel.ui.syncPhase {
@@ -934,21 +721,17 @@ struct HomeView: View {
     }
 
     private func startFirstLaunchDotTimer() {
-        stopFirstLaunchDotTimer()
-        let timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
+        firstLaunchDotTimer.start(interval: 0.5, tolerance: 0.1) {
             guard firstLaunchAppeared else {
-                timer.invalidate()
+                firstLaunchDotTimer.stop()
                 return
             }
             firstLaunchDotCount = (firstLaunchDotCount % 3) + 1
         }
-        timer.tolerance = 0.1
-        firstLaunchDotTimer = timer
     }
 
     private func stopFirstLaunchDotTimer() {
-        firstLaunchDotTimer?.invalidate()
-        firstLaunchDotTimer = nil
+        firstLaunchDotTimer.stop()
     }
 
     private func errorView(_ message: String) -> some View {

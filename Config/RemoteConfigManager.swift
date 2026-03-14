@@ -299,6 +299,13 @@ final class RemoteConfigManager {
         intValue(forKey: "retention_model_evaluation_days")
     }
 
+    // MARK: - Monetization
+
+    /// Whether free-year mode is active (bypasses all subscription gating for PMF signal).
+    var freeYearActive: Bool {
+        boolValue(forKey: "free_year_active")
+    }
+
     // MARK: - Kill Switches
 
     /// Master kill switch — disables the entire app with a maintenance message
@@ -429,8 +436,8 @@ extension RemoteConfigManager {
         "free_periods":             "7d,30d" as NSString,
 
         // Pricing
-        "pricing_pro_monthly_display_price": "$5.99" as NSString,
-        "pricing_pro_yearly_display_price":  "$29.99" as NSString,
+        "pricing_pro_monthly_display_price": "₹499" as NSString,
+        "pricing_pro_yearly_display_price":  "₹2,499" as NSString,
         "pricing_pro_monthly_product_id":    "com.lasohealth.monthly" as NSString,
         "pricing_pro_yearly_product_id":     "com.lasohealth.yearly" as NSString,
         "pricing_pro_trial_days":            7 as NSNumber,
@@ -481,6 +488,9 @@ extension RemoteConfigManager {
         "retention_ecg_features_days":        730 as NSNumber,   // 2 years (clinical value)
         "retention_journal_entry_days":       365 as NSNumber,   // 1 year
         "retention_model_evaluation_days":    180 as NSNumber,   // 6 months
+
+        // Monetization
+        "free_year_active":          true as NSNumber,
 
         // Kill switches (all off by default)
         "kill_switch_enabled":       false as NSNumber,

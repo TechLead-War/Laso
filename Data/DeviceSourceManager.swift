@@ -16,6 +16,7 @@ final class DeviceSourceManager {
 
     /// Scan all HealthKit sample types for contributing sources
     func scanSources() async {
+        guard !isScanning else { return }
         isScanning = true
         defer { isScanning = false }
 

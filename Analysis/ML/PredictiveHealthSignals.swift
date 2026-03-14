@@ -504,7 +504,7 @@ struct PredictiveHealthSignals {
             return FatigueSignal(
                 riskLevel: .low, score: 0, confidence: 0,
                 explanation: "Insufficient data to assess fatigue accumulation. At least 7 days of HRV and resting heart rate data are needed.",
-                recommendation: "Continue wearing your Apple Watch to build a fatigue baseline.",
+                recommendation: "Keep recent HRV and resting heart rate data syncing into Apple Health to build a fatigue baseline.",
                 contributingFactors: []
             )
         }
@@ -1265,7 +1265,7 @@ struct PredictiveHealthSignals {
             return ImmuneSignal(
                 riskLevel: .low, score: 0, confidence: 0,
                 explanation: "Insufficient baseline data for immune system monitoring. Heart rate and HRV baselines are required.",
-                recommendation: "Continue wearing your Apple Watch consistently to build baselines.",
+                recommendation: "Keep heart rate and HRV data syncing consistently to build baselines.",
                 contributingFactors: []
             )
         }
@@ -1278,7 +1278,7 @@ struct PredictiveHealthSignals {
             return ImmuneSignal(
                 riskLevel: .low, score: 0, confidence: 0,
                 explanation: "Need at least 7 days of recent heart rate data to assess immune status.",
-                recommendation: "Ensure you are wearing your Apple Watch during sleep for consistent readings.",
+                recommendation: "Ensure your overnight heart rate data continues syncing for consistent readings.",
                 contributingFactors: []
             )
         }

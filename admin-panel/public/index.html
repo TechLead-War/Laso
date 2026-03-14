@@ -8,11 +8,12 @@
 </head>
 <body>
 
-  <!-- Login Screen -->
+  <!-- ═══ Login Screen ═══ -->
   <div id="login-screen">
     <div class="login-card">
+      <div class="login-logo">L</div>
       <h1>Laso Admin</h1>
-      <p>Remote Config Management</p>
+      <p>Sign in to manage your app</p>
       <input type="email" id="login-email" placeholder="Email" autocomplete="email" />
       <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" />
       <button id="login-btn">Sign In</button>
@@ -20,79 +21,448 @@
     </div>
   </div>
 
-  <!-- Dashboard -->
-  <div id="dashboard">
-    <div class="header">
-      <h1>Laso Remote Config</h1>
-      <div class="header-actions">
-        <span class="user-email" id="user-email"></span>
-        <button class="btn btn-primary" id="save-btn" disabled>Save &amp; Publish</button>
-        <button class="btn btn-secondary" id="logout-btn">Sign Out</button>
+  <!-- ═══ App Shell ═══ -->
+  <div id="app-shell">
+
+    <!-- Sidebar -->
+    <nav id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">L</div>
+        <span class="sidebar-title">Laso Admin</span>
       </div>
-    </div>
 
-    <!-- Feature Access -->
-    <div class="config-section" id="section-features">
-      <h2>Feature Access</h2>
-      <!-- Rows injected by JS -->
-    </div>
-
-    <!-- Limits -->
-    <div class="config-section" id="section-limits">
-      <h2>Free Tier Limits</h2>
-    </div>
-
-    <!-- Pricing -->
-    <div class="config-section" id="section-pricing">
-      <h2>Pricing</h2>
-    </div>
-
-    <!-- Alert Thresholds -->
-    <div class="config-section" id="section-alerts">
-      <h2>Alert Thresholds</h2>
-    </div>
-
-    <!-- Watch Monitor -->
-    <div class="config-section" id="section-watch">
-      <h2>Watch Monitor</h2>
-    </div>
-
-    <!-- Notifications -->
-    <div class="config-section" id="section-notifications">
-      <h2>Notification Optimizer</h2>
-    </div>
-
-    <!-- Analysis -->
-    <div class="config-section" id="section-analysis">
-      <h2>Analysis Thresholds</h2>
-    </div>
-
-    <!-- Feedback & System Config -->
-    <div class="config-section" id="section-system">
-      <h2>Feedback &amp; System Config</h2>
-    </div>
-
-    <!-- User Feedback (from Firestore) -->
-    <div class="config-section" id="section-feedback">
-      <h2>User Feedback</h2>
-      <div class="feedback-controls">
-        <button class="btn btn-secondary" id="load-feedback-btn">Load Feedback</button>
-        <span class="feedback-count" id="feedback-count"></span>
+      <div class="sidebar-nav">
+        <a class="nav-item active" href="#dashboard" data-page="dashboard">
+          <span class="nav-icon">&#9632;</span> Dashboard
+        </a>
+        <a class="nav-item" href="#features" data-page="features">
+          <span class="nav-icon">&#9881;</span> Feature Flags
+        </a>
+        <a class="nav-item" href="#config" data-page="config">
+          <span class="nav-icon">&#9881;</span> Configuration
+        </a>
+        <a class="nav-item" href="#operations" data-page="operations">
+          <span class="nav-icon">&#9888;</span> Operations
+        </a>
+        <a class="nav-item" href="#feedback" data-page="feedback">
+          <span class="nav-icon">&#9993;</span> Feedback
+        </a>
+        <a class="nav-item" href="#users" data-page="users">
+          <span class="nav-icon">&#9786;</span> Users
+        </a>
+        <a class="nav-item" href="#audit" data-page="audit">
+          <span class="nav-icon">&#9998;</span> Audit Log
+        </a>
       </div>
-      <div id="feedback-summary"></div>
-      <div id="feedback-list"></div>
+
+      <div class="sidebar-footer">
+        <span class="sidebar-email" id="sidebar-email"></span>
+        <button class="sidebar-logout" id="logout-btn">Sign Out</button>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content">
+
+      <!-- ═══ Page: Dashboard ═══ -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-header">
+          <h1>Dashboard</h1>
+          <span class="page-subtitle" id="dashboard-timestamp"></span>
+        </div>
+
+        <!-- Live Status Banner -->
+        <div id="dashboard-status-banner" class="status-banner status-ok">
+          <div class="status-banner-dot"></div>
+          <span class="status-banner-text">All systems operational</span>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-grid stats-grid-5" id="dashboard-stats">
+          <div class="stat-card stat-card-accent">
+            <div class="stat-icon">&#9632;</div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-total-users">--</div>
+              <div class="stat-label">Total Users</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">&#9993;</div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-recent-feedback">--</div>
+              <div class="stat-label">Feedback (7d)</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">&#9993;</div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-total-feedback">--</div>
+              <div class="stat-label">All Feedback</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">&#9881;</div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-config-keys">69</div>
+              <div class="stat-label">Config Keys</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">&#9888;</div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-active-kills">--</div>
+              <div class="stat-label">Active Kill Switches</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Two-Column Layout -->
+        <div class="dashboard-grid">
+          <!-- Left Column -->
+          <div class="dashboard-col">
+
+            <!-- System Health -->
+            <div class="card">
+              <div class="card-header">
+                <h2>System Health</h2>
+                <span class="card-header-action" id="health-refresh-btn">Refresh</span>
+              </div>
+              <div class="card-body card-body-tight">
+                <div id="health-indicators"></div>
+              </div>
+            </div>
+
+            <!-- Current Config Snapshot -->
+            <div class="card">
+              <div class="card-header">
+                <h2>Active Configuration</h2>
+              </div>
+              <div class="card-body card-body-tight" id="dashboard-config-snapshot">
+                <div class="empty-state">Loading...</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right Column -->
+          <div class="dashboard-col">
+
+            <!-- Recent Feedback -->
+            <div class="card">
+              <div class="card-header">
+                <h2>Recent Feedback</h2>
+                <a class="card-header-action" href="#feedback">View all</a>
+              </div>
+              <div class="card-body card-body-tight" id="dashboard-recent-feedback">
+                <div class="empty-state">Loading...</div>
+              </div>
+            </div>
+
+            <!-- Recent Audit Log -->
+            <div class="card">
+              <div class="card-header">
+                <h2>Recent Admin Activity</h2>
+                <a class="card-header-action" href="#audit">View all</a>
+              </div>
+              <div class="card-body card-body-tight" id="dashboard-recent-audit">
+                <div class="empty-state">Loading...</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ Page: Feature Flags ═══ -->
+      <div class="page" id="page-features">
+        <div class="page-header">
+          <h1>Feature Flags</h1>
+          <span class="page-subtitle">Control feature access by subscription tier</span>
+        </div>
+
+        <!-- Feature Access Matrix -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Feature Access</h2>
+          </div>
+          <div class="card-body" id="section-features">
+            <!-- Rows injected by JS -->
+          </div>
+        </div>
+
+        <!-- Monetization -->
+        <div class="card card-warning">
+          <div class="card-header">
+            <h2>Monetization</h2>
+            <span class="card-badge badge-warning">Caution</span>
+          </div>
+          <div class="card-hint">Controls the free-year bypass. When enabled, all users get full access regardless of subscription.</div>
+          <div class="card-body" id="section-monetization">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+        <!-- Free Tier Limits -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Free Tier Limits</h2>
+          </div>
+          <div class="card-body" id="section-limits">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ Page: Configuration ═══ -->
+      <div class="page" id="page-config">
+        <div class="page-header">
+          <h1>Configuration</h1>
+          <span class="page-subtitle">Thresholds, intervals, and system settings</span>
+        </div>
+
+        <div class="card collapsible">
+          <div class="card-header" data-collapse="section-pricing">
+            <h2>Pricing</h2>
+            <span class="collapse-icon">&#9660;</span>
+          </div>
+          <div class="card-body" id="section-pricing"></div>
+        </div>
+
+        <div class="card collapsible">
+          <div class="card-header" data-collapse="section-alerts">
+            <h2>Alert Thresholds</h2>
+            <span class="collapse-icon">&#9660;</span>
+          </div>
+          <div class="card-body" id="section-alerts"></div>
+        </div>
+
+        <div class="card collapsible">
+          <div class="card-header" data-collapse="section-watch">
+            <h2>Watch Monitor</h2>
+            <span class="collapse-icon">&#9660;</span>
+          </div>
+          <div class="card-body" id="section-watch"></div>
+        </div>
+
+        <div class="card collapsible">
+          <div class="card-header" data-collapse="section-notifications">
+            <h2>Notification Optimizer</h2>
+            <span class="collapse-icon">&#9660;</span>
+          </div>
+          <div class="card-body" id="section-notifications"></div>
+        </div>
+
+        <div class="card collapsible">
+          <div class="card-header" data-collapse="section-analysis">
+            <h2>Analysis Thresholds</h2>
+            <span class="collapse-icon">&#9660;</span>
+          </div>
+          <div class="card-body" id="section-analysis"></div>
+        </div>
+
+        <div class="card collapsible">
+          <div class="card-header" data-collapse="section-system">
+            <h2>Feedback &amp; System</h2>
+            <span class="collapse-icon">&#9660;</span>
+          </div>
+          <div class="card-body" id="section-system"></div>
+        </div>
+
+        <div class="card collapsible">
+          <div class="card-header" data-collapse="section-retention">
+            <h2>Data Retention</h2>
+            <span class="collapse-icon">&#9660;</span>
+          </div>
+          <div class="card-body" id="section-retention"></div>
+        </div>
+      </div>
+
+      <!-- ═══ Page: Operations ═══ -->
+      <div class="page" id="page-operations">
+        <div class="page-header">
+          <h1>Operations</h1>
+          <span class="page-subtitle">Kill switches and forced updates</span>
+        </div>
+
+        <!-- Kill Switches -->
+        <div class="card card-danger">
+          <div class="card-header">
+            <h2>Kill Switches</h2>
+            <span class="card-badge badge-danger">Danger</span>
+          </div>
+          <div class="card-hint card-hint-danger">These immediately disable features for all users.</div>
+          <div class="card-body" id="section-kill-switches">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+        <!-- Force Update -->
+        <div class="card card-danger">
+          <div class="card-header">
+            <h2>Force Update</h2>
+            <span class="card-badge badge-danger">Danger</span>
+          </div>
+          <div class="card-hint card-hint-danger">Users below this version will see a blocking update screen.</div>
+          <div class="card-body" id="section-force-update">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ Page: Feedback ═══ -->
+      <div class="page" id="page-feedback">
+        <div class="page-header">
+          <h1>Feedback</h1>
+          <span class="page-subtitle">User feedback from the app</span>
+        </div>
+
+        <!-- Feedback Controls -->
+        <div class="card">
+          <div class="card-body">
+            <div class="feedback-toolbar">
+              <div class="feedback-filters">
+                <select id="feedback-category-filter" class="filter-select">
+                  <option value="">All Categories</option>
+                </select>
+                <input type="text" id="feedback-search" class="filter-input" placeholder="Search feedback..." />
+                <select id="feedback-sort" class="filter-select">
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="days-asc">Days (Low to High)</option>
+                  <option value="days-desc">Days (High to Low)</option>
+                </select>
+              </div>
+              <div class="feedback-actions">
+                <button class="btn btn-secondary" id="load-feedback-btn">Load Feedback</button>
+                <button class="btn btn-secondary" id="export-feedback-btn" disabled>Export CSV</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary Pills -->
+        <div class="feedback-summary-grid" id="feedback-summary"></div>
+
+        <!-- Feedback Count -->
+        <div class="feedback-meta-bar">
+          <span id="feedback-count"></span>
+        </div>
+
+        <!-- Feedback List -->
+        <div id="feedback-list"></div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="feedback-pagination"></div>
+      </div>
+
+      <!-- ═══ Page: Users ═══ -->
+      <div class="page" id="page-users">
+        <div class="page-header">
+          <h1>Users</h1>
+          <span class="page-subtitle">Demographics and app version distribution</span>
+        </div>
+
+        <div class="page-actions">
+          <button class="btn btn-secondary" id="load-users-btn">Load User Data</button>
+        </div>
+
+        <div class="stats-grid" id="user-stats">
+          <div class="stat-card">
+            <div class="stat-label">Total Users</div>
+            <div class="stat-value" id="user-stat-total">--</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Most Common Gender</div>
+            <div class="stat-value" id="user-stat-gender">--</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Most Common Age</div>
+            <div class="stat-value" id="user-stat-age">--</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Top Region</div>
+            <div class="stat-value" id="user-stat-region">--</div>
+          </div>
+        </div>
+
+        <!-- Charts Row 1 -->
+        <div class="charts-row">
+          <div class="card chart-card">
+            <div class="card-header"><h2>Gender Distribution</h2></div>
+            <div class="card-body" id="chart-gender"><div class="empty-state">Load user data to view</div></div>
+          </div>
+          <div class="card chart-card">
+            <div class="card-header"><h2>Age Distribution</h2></div>
+            <div class="card-body" id="chart-age"><div class="empty-state">Load user data to view</div></div>
+          </div>
+        </div>
+
+        <!-- Charts Row 2 -->
+        <div class="charts-row">
+          <div class="card chart-card">
+            <div class="card-header"><h2>Top Regions</h2></div>
+            <div class="card-body" id="chart-region"><div class="empty-state">Load user data to view</div></div>
+          </div>
+          <div class="card chart-card">
+            <div class="card-header"><h2>Health Focus Areas</h2></div>
+            <div class="card-body" id="chart-focus"><div class="empty-state">Load user data to view</div></div>
+          </div>
+        </div>
+
+        <!-- App Version Chart -->
+        <div class="card">
+          <div class="card-header"><h2>App Version Distribution</h2></div>
+          <div class="card-body" id="chart-version"><div class="empty-state">Load user data to view</div></div>
+        </div>
+      </div>
+
+      <!-- ═══ Page: Audit Log ═══ -->
+      <div class="page" id="page-audit">
+        <div class="page-header">
+          <h1>Audit Log</h1>
+          <span class="page-subtitle">Admin actions and configuration changes</span>
+        </div>
+
+        <div class="page-actions">
+          <button class="btn btn-secondary" id="load-audit-btn">Load Audit Log</button>
+        </div>
+
+        <div id="audit-list"></div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ═══ Floating Save Bar ═══ -->
+  <div class="save-bar" id="save-bar">
+    <span class="save-bar-text">You have unsaved changes</span>
+    <div class="save-bar-actions">
+      <button class="btn btn-secondary" id="discard-btn">Discard</button>
+      <button class="btn btn-primary" id="save-btn">Save &amp; Publish</button>
     </div>
   </div>
 
-  <!-- Toast -->
+  <!-- ═══ Confirmation Modal ═══ -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <h3 id="modal-title">Confirm Action</h3>
+      <p id="modal-description">Are you sure?</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="modal-cancel">Cancel</button>
+        <button class="btn btn-danger" id="modal-confirm">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Toast ═══ -->
   <div class="toast" id="toast"></div>
 
-  <!-- Loading -->
+  <!-- ═══ Loading Overlay ═══ -->
   <div class="loading-overlay" id="loading">
     <div class="spinner"></div>
   </div>
 
-  <!-- Firebase SDK (compat for simplicity) -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>

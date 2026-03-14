@@ -4,6 +4,7 @@ import SwiftUI
 struct LiveView: View {
     let viewModel: LiveViewModel
     let mlOrchestrator: MLOrchestrator?
+    let deviceSourceManager: DeviceSourceManager
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var pulseScale: CGFloat = 1.0
@@ -21,6 +22,28 @@ struct LiveView: View {
     @State private var bpTempTracker = SectionTracker(section: .liveBloodPressureTemperature, tab: .live)
     @State private var workoutTracker = SectionTracker(section: .liveWorkout, tab: .live)
 
+    private let liveMetrics: Set<HealthMetric> = [.heartRate, .bloodOxygen, .respiratoryRate]
+
+    private var primaryLiveSource: ConnectedDeviceInfo? {
+        deviceSourceManager.connectedDevices.first { info in
+            info.device != .iPhone &&
+            info.device != .generic &&
+            !info.metricsProvided.isDisjoint(with: liveMetrics)
+        }
+    }
+
+    private var primaryLiveDevice: SupportedDevice? {
+        primaryLiveSource?.device
+    }
+
+    private var hasLiveSource: Bool {
+        primaryLiveSource != nil
+    }
+
+    private var hasSupplementalSections: Bool {
+        viewModel.activity.hasAnyData || viewModel.workout.lastWorkoutType != nil
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -30,16 +53,38 @@ struct LiveView: View {
                     isAging: viewModel.vitals.isAging,
                     isStale: viewModel.vitals.isStale,
                     hasAnyVitalData: viewModel.vitals.hasAnyData,
+                    primaryDevice: primaryLiveDevice,
                     currentHeartRate: viewModel.vitals.currentHeartRate,
                     headerTracker: headerTracker
                 )
 
-                if !viewModel.vitals.hasAnyData && !viewModel.activity.hasAnyData && viewModel.lastUpdate == nil && !viewModel.isStreaming {
-                    // No data at all and not streaming — full empty state
-                    LiveWaitingForDataView(isStreaming: viewModel.isStreaming)
+                if !viewModel.vitals.hasAnyData {
+                    LiveWaitingForDataView(
+                        isStreaming: viewModel.isStreaming,
+                        primaryDevice: primaryLiveDevice,
+                        hasLiveSource: hasLiveSource
+                    )
+                    if hasSupplementalSections {
+                        LiveActivitySection(
+                            activity: viewModel.activity,
+                            activityTracker: activityTracker,
+                            quickStatsTracker: quickStatsTracker,
+                            maxScrollDepth: $maxScrollDepth
+                        )
+                        LiveWorkoutSection(
+                            workout: viewModel.workout,
+                            workoutTracker: workoutTracker,
+                            maxScrollDepth: $maxScrollDepth
+                        )
+                    }
+                    if hasSupplementalSections || viewModel.lastUpdate != nil {
+                        LiveStatusFooter(lastUpdate: viewModel.lastUpdate)
+                    }
                 } else if viewModel.vitals.isStale && !viewModel.isStreaming {
-                    // Stale vitals with no active stream — show wear-your-watch prompt
-                    LiveStaleVitalsPrompt(vitals: viewModel.vitals)
+                    LiveStaleVitalsPrompt(
+                        vitals: viewModel.vitals,
+                        primaryDevice: primaryLiveDevice
+                    )
                     LiveActivitySection(
                         activity: viewModel.activity,
                         activityTracker: activityTracker,
@@ -142,5 +187,9 @@ struct LiveView: View {
 }
 
 #Preview {
-    LiveView(viewModel: LiveViewModel(healthKitManager: HealthKitManager()), mlOrchestrator: nil)
+    LiveView(
+        viewModel: LiveViewModel(healthKitManager: HealthKitManager()),
+        mlOrchestrator: nil,
+        deviceSourceManager: DeviceSourceManager(healthStore: .init())
+    )
 }

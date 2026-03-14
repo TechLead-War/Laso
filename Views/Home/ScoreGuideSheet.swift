@@ -100,7 +100,7 @@ struct ScoreGuideSheet: View {
                             .padding(.horizontal)
 
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(Copy.Home.ScoreGuide.readinessDescription(deviceName: DeviceMessaging.deviceName))
+                            Text(Copy.Home.ScoreGuide.readinessDescription(deviceName: DeviceMessaging.optionalDeviceName))
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
 
