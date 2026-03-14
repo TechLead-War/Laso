@@ -20,68 +20,56 @@ enum DeviceMessaging {
     /// Icon name appropriate for the device (SF Symbols)
     static var deviceIcon: String { primary.systemImageName }
 
+    // MARK: - Device Type Classification
+
+    private static var deviceType: Copy.Devices.DeviceType {
+        switch primary {
+        case .ouraRing, .ultrahumanRing, .ringConn, .circularRing:
+            return .ring
+        case .eightSleep:
+            return .sleepTracker
+        case .appleWatch:
+            return .watch
+        default:
+            return .other
+        }
+    }
+
     // MARK: - Contextual Messages
 
-    /// "Wear your [device] overnight to update your readiness score."
     static var wearOvernightMessage: String {
-        switch primary {
-        case .ouraRing, .ultrahumanRing, .ringConn, .circularRing:
-            return "Wear your \(deviceName) to bed to update your readiness score."
-        case .eightSleep:
-            return "Sleep on your \(deviceName) to update your readiness score."
-        default:
-            return "Wear your \(deviceName) overnight to update your readiness score."
-        }
+        Copy.Devices.wearOvernight(deviceName: deviceName, deviceType: deviceType)
     }
 
-    /// "Wear your [device] to keep tracking" — for stale data prompts
     static var wearToTrackMessage: String {
-        switch primary {
-        case .ouraRing, .ultrahumanRing, .ringConn, .circularRing:
-            return "Put on your \(deviceName) to resume tracking."
-        case .eightSleep:
-            return "Your \(deviceName) tracks data while you sleep."
-        default:
-            return "Put on your \(deviceName) to resume live tracking."
-        }
+        Copy.Devices.wearToTrack(deviceName: deviceName, deviceType: deviceType)
     }
 
-    /// "Your vitals are out of date. Put on your [device] to resume live tracking."
     static var staleVitalsMessage: String {
-        "Your vitals are out of date. \(wearToTrackMessage)"
+        Copy.Devices.staleVitals(wearToTrackMessage: wearToTrackMessage)
     }
 
-    /// Title for stale/wear prompts: "Wear Your [device short]"
     static var wearPromptTitle: String {
-        switch primary {
-        case .ouraRing, .ultrahumanRing, .ringConn, .circularRing:
-            return "Wear Your Ring"
-        case .eightSleep:
-            return "Check Your Eight Sleep"
-        default:
-            return "Wear Your \(deviceName)"
-        }
+        Copy.Devices.wearPromptTitle(deviceName: deviceName, deviceType: deviceType)
     }
 
-    /// "Make sure your [device] is paired and worn."
     static var ensurePairedMessage: String {
         let companion = primary.companionAppName
         switch primary {
         case .appleWatch:
-            return "Make sure your Apple Watch is paired and worn. Heart rate and other vitals will appear here automatically."
+            return Copy.Devices.ensurePairedAppleWatch()
         case .ouraRing, .ultrahumanRing, .ringConn, .circularRing:
-            return "Make sure your \(deviceName) is connected via \(companion). Vitals sync when your ring is nearby."
+            return Copy.Devices.ensurePairedRing(deviceName: deviceName, companionApp: companion)
         default:
-            return "Make sure your \(deviceName) is syncing via \(companion). Vitals will appear here after the next sync."
+            return Copy.Devices.ensurePairedGeneric(deviceName: deviceName, companionApp: companion)
         }
     }
 
-    /// Notification body when device hasn't recorded data
     static func notWornNotificationBody(hours: Int? = nil, totalMinutes: Int? = nil) -> String {
         if let hours, hours > 0 {
             let minutes = (totalMinutes ?? 0) - (hours * 60)
-            return "Your \(deviceName) hasn't recorded data for \(hours)h \(max(0, minutes))m. \(wearToTrackMessage)"
+            return Copy.Devices.notWornBody(deviceName: deviceName, hours: hours, minutes: minutes, wearToTrack: wearToTrackMessage)
         }
-        return "Your \(deviceName) hasn't recorded data recently. \(wearToTrackMessage)"
+        return Copy.Devices.notWornBodyRecent(deviceName: deviceName, wearToTrack: wearToTrackMessage)
     }
 }

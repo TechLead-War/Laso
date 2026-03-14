@@ -55,9 +55,8 @@ final class CloudBackupManager {
             return
         }
 
-        // Backup is enabled by default (nil = true). Only disabled if explicitly set to false.
-        if UserDefaults.standard.object(forKey: AppKeys.Backup.backupEnabled) != nil,
-           !UserDefaults.standard.bool(forKey: AppKeys.Backup.backupEnabled) {
+        // Backup is opt-in — disabled by default. User must explicitly enable it in Settings.
+        guard UserDefaults.standard.bool(forKey: AppKeys.Backup.backupEnabled) else {
             backupStatus = .disabled
             return
         }

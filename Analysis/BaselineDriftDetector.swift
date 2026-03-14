@@ -131,7 +131,7 @@ struct BaselineDriftDetector {
 
         return Insight(
             metric: metric,
-            title: "\(metric.displayName) Baseline Shifted Over \(drift.label.capitalized)",
+            title: Copy.Analysis.BaselineDrift.title(metricName: metric.displayName, period: drift.label.capitalized),
             summary: "Your \(metric.displayName.lowercased()) baseline has \(direction) \(absDrift)% over the last \(drift.label) (\(oldFormatted) \u{2192} \(newFormatted) \(metric.unit)).\(coDriftNote)",
             recommendation: improving
                 ? "\(metric.displayName) baseline shifted \(direction) \(absDrift)% over \(drift.label): \(oldFormatted) \u{2192} \(newFormatted) \(metric.unit)."
@@ -142,6 +142,21 @@ struct BaselineDriftDetector {
             baselineValue: drift.oldMean,
             deviationPercent: drift.percent,
             category: .baselineDrift
+        )
+    }
+}
+
+// MARK: - InsightAnalyzer Conformance
+
+extension BaselineDriftDetector: InsightAnalyzer {
+    static var analyzerID: String { "baselineDrift" }
+    static var insightCategory: InsightCategory { .baselineDrift }
+
+    static func generateInsights(context: AnalysisContext) -> [Insight] {
+        generateInsights(
+            currentBaselines: context.baselines,
+            baselineHistory: context.baselineHistory,
+            correlations: context.correlations
         )
     }
 }

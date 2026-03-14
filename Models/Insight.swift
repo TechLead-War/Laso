@@ -22,6 +22,7 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
     case causalChain         // "Cause & Effect"
     case crossMetricAnomaly  // "Cross-Metric"
     case cognitiveEnergy     // "Cognitive & Energy"
+    case brainHealth         // "Brain Health"
     case cyclePhase          // "Cycle Phase"
     case mlPattern           // "ML Pattern"
     case mlState             // "ML State"
@@ -50,6 +51,7 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .causalChain: return "Cause & Effect"
         case .crossMetricAnomaly: return "Cross-Metric"
         case .cognitiveEnergy: return "Cognitive & Energy"
+        case .brainHealth: return "Brain Health"
         case .cyclePhase: return "Cycle Phase"
         case .mlPattern: return "ML Pattern"
         case .mlState: return "ML State"
@@ -80,6 +82,7 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .causalChain: return "arrow.triangle.turn.up.right.diamond.fill"
         case .crossMetricAnomaly: return "circle.grid.cross.fill"
         case .cognitiveEnergy: return "brain.head.profile"
+        case .brainHealth: return "brain"
         case .cyclePhase: return "calendar.badge.clock"
         case .mlPattern: return "waveform.path.ecg.rectangle"
         case .mlState: return "gauge.with.dots.needle.67percent"
@@ -110,6 +113,7 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .causalChain: return .indigo
         case .crossMetricAnomaly: return .purple
         case .cognitiveEnergy: return .orange
+        case .brainHealth: return .purple
         case .cyclePhase: return .pink
         case .mlPattern: return .teal
         case .mlState: return .mint
@@ -212,6 +216,9 @@ struct Insight: Identifiable {
     let deviationPercent: Double
     let generatedAt: Date
     let category: InsightCategory
+    /// Behavioral direction this insight pushes the user toward.
+    /// Used by `InsightCoordinator` to detect and resolve conflicting advice.
+    var directive: InsightDirective
     let relatedMetrics: [HealthMetric]
     var context: InsightContext?
 
@@ -252,6 +259,7 @@ struct Insight: Identifiable {
         deviationPercent: Double,
         generatedAt: Date = Date(),
         category: InsightCategory = .anomaly,
+        directive: InsightDirective = .informational,
         relatedMetrics: [HealthMetric] = [],
         context: InsightContext? = nil
     ) {
@@ -267,6 +275,7 @@ struct Insight: Identifiable {
         self.deviationPercent = deviationPercent
         self.generatedAt = generatedAt
         self.category = category
+        self.directive = directive
         self.relatedMetrics = relatedMetrics
         self.context = context
     }

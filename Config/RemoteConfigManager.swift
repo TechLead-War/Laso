@@ -261,6 +261,44 @@ final class RemoteConfigManager {
         intValue(forKey: "feedback_days_before_first_prompt")
     }
 
+    // MARK: - Data Retention (days)
+
+    var retentionDailySampleDays: Int {
+        intValue(forKey: "retention_daily_sample_days")
+    }
+
+    var retentionAnalysisSnapshotDays: Int {
+        intValue(forKey: "retention_analysis_snapshot_days")
+    }
+
+    var retentionDailyStrainDays: Int {
+        intValue(forKey: "retention_daily_strain_days")
+    }
+
+    var retentionRecommendationDays: Int {
+        intValue(forKey: "retention_recommendation_days")
+    }
+
+    var retentionNotificationEventDays: Int {
+        intValue(forKey: "retention_notification_event_days")
+    }
+
+    var retentionAdherenceRecordDays: Int {
+        intValue(forKey: "retention_adherence_record_days")
+    }
+
+    var retentionECGFeaturesDays: Int {
+        intValue(forKey: "retention_ecg_features_days")
+    }
+
+    var retentionJournalEntryDays: Int {
+        intValue(forKey: "retention_journal_entry_days")
+    }
+
+    var retentionModelEvaluationDays: Int {
+        intValue(forKey: "retention_model_evaluation_days")
+    }
+
     // MARK: - Kill Switches
 
     /// Master kill switch — disables the entire app with a maintenance message
@@ -432,6 +470,17 @@ extension RemoteConfigManager {
         // UI intervals
         "home_refresh_interval_seconds":       60 as NSNumber,
         "feedback_days_before_first_prompt":   5 as NSNumber,
+
+        // Data retention (days)
+        "retention_daily_sample_days":        730 as NSNumber,   // 2 years
+        "retention_analysis_snapshot_days":   365 as NSNumber,   // 1 year
+        "retention_daily_strain_days":        365 as NSNumber,   // 1 year
+        "retention_recommendation_days":      90 as NSNumber,
+        "retention_notification_event_days":  90 as NSNumber,
+        "retention_adherence_record_days":    90 as NSNumber,
+        "retention_ecg_features_days":        730 as NSNumber,   // 2 years (clinical value)
+        "retention_journal_entry_days":       365 as NSNumber,   // 1 year
+        "retention_model_evaluation_days":    180 as NSNumber,   // 6 months
 
         // Kill switches (all off by default)
         "kill_switch_enabled":       false as NSNumber,

@@ -74,7 +74,7 @@ struct ScoreTrajectoryAnalyzer {
 
         return Insight(
             metric: .restingHeartRate, // Representative metric for overall health
-            title: improving ? "Health Score Trending Up" : "Health Score Declining",
+            title: improving ? Copy.Analysis.ScoreTrajectory.healthScoreTrendingUp : Copy.Analysis.ScoreTrajectory.healthScoreDeclining,
             summary: "Your overall health score has \(improving ? "improved" : "declined") \(absChange)% over the last \(days) days. Current average: \(currentScore).\(categoryDriverText)",
             recommendation: improving
                 ? "Health score averaged \(currentScore) over the last \(days) days, up \(absChange)% from earlier in the period.\(categoryDriverText)"
@@ -119,8 +119,8 @@ struct ScoreTrajectoryAnalyzer {
         if accelerating && isImproving {
             return Insight(
                 metric: .restingHeartRate,
-                title: "Improvement Accelerating",
-                summary: "Your health gains are picking up speed. This week's improvement was stronger than last week's.",
+                title: Copy.Analysis.ScoreTrajectory.improvementAccelerating,
+                summary: Copy.Analysis.ScoreTrajectory.gainsPickingUpSpeed,
                 recommendation: "Week-over-week score change accelerated: \(String(format: "%.1f", change1to2)) pts to \(String(format: "%.1f", change2to3)) pts. Current average: \(String(format: "%.0f", avg3)).",
                 severity: .info,
                 trend: .improving,
@@ -132,8 +132,8 @@ struct ScoreTrajectoryAnalyzer {
         } else if !accelerating && !isImproving {
             return Insight(
                 metric: .restingHeartRate,
-                title: "Decline Accelerating",
-                summary: "Your health score is dropping faster this week than last. Multiple areas may need attention.",
+                title: Copy.Analysis.ScoreTrajectory.declineAccelerating,
+                summary: Copy.Analysis.ScoreTrajectory.droppingFaster,
                 recommendation: "Weekly decline rate increased from \(String(format: "%.1f", abs(change1to2))) pts to \(String(format: "%.1f", abs(change2to3))) pts. Score dropped from \(String(format: "%.0f", avg1)) to \(String(format: "%.0f", avg3)) over 3 weeks.",
                 severity: .warning,
                 trend: .declining,
@@ -162,7 +162,7 @@ struct ScoreTrajectoryAnalyzer {
             let avg = Double(recent.map(\.score).reduce(0, +)) / Double(recent.count)
             return Insight(
                 metric: .restingHeartRate,
-                title: "Consistently Strong Health",
+                title: Copy.Analysis.ScoreTrajectory.consistentlyStrongHealth,
                 summary: "Your health score has been 85+ for \(highDays) of the last \(recent.count) days. This is excellent.",
                 recommendation: "Score at 85+ for \(highDays) of the last \(recent.count) days, averaging \(String(format: "%.0f", avg)).",
                 severity: .info,
@@ -178,7 +178,7 @@ struct ScoreTrajectoryAnalyzer {
             let avg = Double(recent.map(\.score).reduce(0, +)) / Double(recent.count)
             return Insight(
                 metric: .restingHeartRate,
-                title: "Extended Low Score Period",
+                title: Copy.Analysis.ScoreTrajectory.extendedLowScorePeriod,
                 summary: "Your health score has been below 60 for \(lowDays) of the last \(recent.count) days.",
                 recommendation: "Score below 60 for \(lowDays) of the last \(recent.count) days, averaging \(String(format: "%.0f", avg)).",
                 severity: .warning,
@@ -191,5 +191,16 @@ struct ScoreTrajectoryAnalyzer {
         }
 
         return nil
+    }
+}
+
+// MARK: - InsightAnalyzer Conformance
+
+extension ScoreTrajectoryAnalyzer: InsightAnalyzer {
+    static var analyzerID: String { "scoreTrajectory" }
+    static var insightCategory: InsightCategory { .scoreTrajectory }
+
+    static func generateInsights(context: AnalysisContext) -> [Insight] {
+        generateInsights(scoreHistory: context.scoreHistory, categoryScores: context.categoryScores)
     }
 }

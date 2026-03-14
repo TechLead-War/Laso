@@ -45,7 +45,7 @@ struct LasoApp: App {
             runHousekeeping: false
         )
 
-        if let error = calibrator.errorMessage {
+        if let error = calibrator.ui.errorMessage {
             return error
         }
 
@@ -56,7 +56,6 @@ struct LasoApp: App {
     }
 
     init() {
-        print("hello")
         UITestMode.configureDefaults()
         isUITestMode = UITestMode.isEnabled
 
@@ -228,6 +227,12 @@ struct LasoApp: App {
                 // Cancel stale weekly summary notifications that may have been
                 // registered with older, more aggressive defaults.
                 WeeklySummaryScheduler.cancel()
+
+                // Prune expired data (runs at most once per day)
+                if let container = healthDataStore.modelContainer {
+                    let retentionContext = ModelContext(container)
+                    DataRetentionManager().pruneIfNeeded(context: retentionContext)
+                }
 
                 // Dismiss splash once background init is done
                 withAnimation(.easeOut(duration: 0.3)) {

@@ -55,7 +55,7 @@ struct SleepCoachView: View {
             .padding(.bottom, 24)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
-        .navigationTitle("Sleep Coach")
+        .navigationTitle(Copy.SleepCoach.title)
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.sleepCoach)
@@ -86,13 +86,13 @@ struct SleepCoachView: View {
                         .foregroundStyle(.indigo)
                     Text(formatDuration(adjustedNeed))
                         .font(.system(size: 28, weight: .bold, design: .rounded))
-                    Text("tonight")
+                    Text(Copy.SleepCoach.tonight)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
 
-            Text("Recommended sleep for \(performanceLevel.rawValue.lowercased()) performance")
+            Text(Copy.SleepCoach.recommendedSleep(level: performanceLevel.rawValue.lowercased()))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -107,9 +107,9 @@ struct SleepCoachView: View {
 
     private var performancePicker: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionHeader(icon: "slider.horizontal.3", title: "Performance Level")
+            sectionHeader(icon: "slider.horizontal.3", title: Copy.SleepCoach.performanceLevel)
 
-            Picker("Performance", selection: $performanceLevel) {
+            Picker(Copy.SleepCoach.performanceLabel, selection: $performanceLevel) {
                 ForEach(PerformanceLevel.allCases) { level in
                     Text(level.rawValue).tag(level)
                 }
@@ -125,14 +125,14 @@ struct SleepCoachView: View {
         HStack(spacing: 12) {
             scheduleItem(
                 icon: "moon.zzz.fill",
-                label: "Bedtime",
+                label: Copy.SleepCoach.bedtime,
                 value: bedtime ?? "--:--",
                 color: .indigo
             )
 
             scheduleItem(
                 icon: "sunrise.fill",
-                label: "Wake Up",
+                label: Copy.SleepCoach.wakeUp,
                 value: wakeTime ?? "--:--",
                 color: .orange
             )
@@ -163,12 +163,12 @@ struct SleepCoachView: View {
 
     private var debtSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionHeader(icon: "exclamationmark.triangle.fill", title: "Sleep Debt")
+            sectionHeader(icon: "exclamationmark.triangle.fill", title: Copy.SleepCoach.sleepDebt)
 
             VStack(spacing: 12) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Current Debt")
+                        Text(Copy.SleepCoach.currentDebt)
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.secondary)
                             .textCase(.uppercase)
@@ -184,7 +184,7 @@ struct SleepCoachView: View {
                         debtLevelBadge
 
                         if debtHours > 0 {
-                            Text("\(daysToPayOff) days to pay off")
+                            Text(Copy.SleepCoach.daysToPayOff(daysToPayOff))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -224,10 +224,10 @@ struct SleepCoachView: View {
 
     private var historySection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionHeader(icon: "chart.bar.fill", title: "14-Day History")
+            sectionHeader(icon: "chart.bar.fill", title: Copy.SleepCoach.fourteenDayHistory)
 
             if dailyHistory.isEmpty {
-                Text("Not enough data yet")
+                Text(Copy.SleepCoach.notEnoughDataYet)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -284,7 +284,7 @@ struct SleepCoachView: View {
 
     private var consistencySection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionHeader(icon: "target", title: "Consistency")
+            sectionHeader(icon: "target", title: Copy.SleepCoach.consistency)
 
             HStack(spacing: 20) {
                 // Ring
@@ -325,7 +325,7 @@ struct SleepCoachView: View {
 
     private var tipsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionHeader(icon: "lightbulb.fill", title: debtHours > 2 ? "Paying Off Debt" : "Sleep Tips")
+            sectionHeader(icon: "lightbulb.fill", title: debtHours > 2 ? Copy.SleepCoach.payingOffDebtTitle : Copy.SleepCoach.sleepTips)
 
             VStack(spacing: 0) {
                 ForEach(Array(currentTips.enumerated()), id: \.offset) { index, tip in
@@ -391,32 +391,32 @@ struct SleepCoachView: View {
         if debtHours > 2 {
             return [
                 SleepTip(icon: "plus.circle.fill", color: .indigo,
-                         title: "Add 30-60 min per night",
-                         detail: "Go to bed slightly earlier rather than sleeping in late to preserve your rhythm."),
+                         title: Copy.SleepCoach.tipAddSleepTitle,
+                         detail: Copy.SleepCoach.tipAddSleepDetail),
                 SleepTip(icon: "calendar.badge.clock", color: .orange,
-                         title: "Be patient",
-                         detail: "Pay off debt gradually over \(daysToPayOff) days. Avoid marathon sleep sessions."),
+                         title: Copy.SleepCoach.tipBePatientTitle,
+                         detail: Copy.SleepCoach.tipBePatientDetail(days: daysToPayOff)),
                 SleepTip(icon: "cup.and.saucer.fill", color: .brown,
-                         title: "Cut caffeine after 2 PM",
-                         detail: "Caffeine has a 6-hour half-life and can reduce deep sleep even if you fall asleep fine."),
+                         title: Copy.SleepCoach.tipCutCaffeineTitle,
+                         detail: Copy.SleepCoach.tipCutCaffeineDetail),
                 SleepTip(icon: "iphone.slash", color: .red,
-                         title: "Screen curfew",
-                         detail: "Stop screens 45 minutes before bed. Blue light suppresses melatonin production.")
+                         title: Copy.SleepCoach.tipScreenCurfewTitle,
+                         detail: Copy.SleepCoach.tipScreenCurfewDetail)
             ]
         } else {
             return [
                 SleepTip(icon: "clock.fill", color: .indigo,
-                         title: "Keep a consistent schedule",
-                         detail: "Go to bed and wake up at the same time daily, even on weekends."),
+                         title: Copy.SleepCoach.tipConsistentScheduleTitle,
+                         detail: Copy.SleepCoach.tipConsistentScheduleDetail),
                 SleepTip(icon: "thermometer.snowflake", color: .cyan,
-                         title: "Cool your bedroom",
-                         detail: "Optimal sleep temperature is 65-68\u{00B0}F (18-20\u{00B0}C). Your body needs to cool down to sleep."),
+                         title: Copy.SleepCoach.tipCoolBedroomTitle,
+                         detail: Copy.SleepCoach.tipCoolBedroomDetail),
                 SleepTip(icon: "sun.max.fill", color: .orange,
-                         title: "Morning sunlight",
-                         detail: "Get 10-15 minutes of bright light within an hour of waking to anchor your circadian rhythm."),
+                         title: Copy.SleepCoach.tipMorningSunlightTitle,
+                         detail: Copy.SleepCoach.tipMorningSunlightDetail),
                 SleepTip(icon: "figure.walk", color: .green,
-                         title: "Exercise timing",
-                         detail: "Regular exercise improves sleep quality, but finish vigorous workouts 3+ hours before bed.")
+                         title: Copy.SleepCoach.tipExerciseTimingTitle,
+                         detail: Copy.SleepCoach.tipExerciseTimingDetail)
             ]
         }
     }
@@ -444,10 +444,10 @@ struct SleepCoachView: View {
     }
 
     private var debtLevelInfo: (String, Color) {
-        if debtHours <= 0.5 { return ("Clear", .green) }
-        if debtHours <= 2 { return ("Low", .blue) }
-        if debtHours <= 5 { return ("Moderate", .orange) }
-        return ("High", .red)
+        if debtHours <= 0.5 { return (Copy.SleepCoach.debtClear, .green) }
+        if debtHours <= 2 { return (Copy.SleepCoach.debtLow, .blue) }
+        if debtHours <= 5 { return (Copy.SleepCoach.debtModerate, .orange) }
+        return (Copy.SleepCoach.debtHigh, .red)
     }
 
     private var daysToPayOff: Int {
@@ -467,11 +467,11 @@ struct SleepCoachView: View {
 
     private var debtTrendLabel: String {
         let recent = dailyHistory.suffix(3)
-        guard recent.count >= 2 else { return "Tracking" }
+        guard recent.count >= 2 else { return Copy.SleepCoach.tracking }
         let avgDelta = recent.map { $0.actual - $0.needed }.reduce(0, +) / Double(recent.count)
-        if avgDelta > 0.25 { return "Paying off" }
-        if avgDelta < -0.25 { return "Accumulating" }
-        return "Stable"
+        if avgDelta > 0.25 { return Copy.SleepCoach.payingOff }
+        if avgDelta < -0.25 { return Copy.SleepCoach.accumulating }
+        return Copy.SleepCoach.stable
     }
 
     private var debtTrendColor: Color {
@@ -491,23 +491,23 @@ struct SleepCoachView: View {
     }
 
     private var consistencyLabel: String {
-        if consistencyScore >= 80 { return "Excellent" }
-        if consistencyScore >= 60 { return "Good" }
-        if consistencyScore >= 40 { return "Needs Work" }
-        return "Irregular"
+        if consistencyScore >= 80 { return Copy.SleepCoach.excellent }
+        if consistencyScore >= 60 { return Copy.SleepCoach.good }
+        if consistencyScore >= 40 { return Copy.SleepCoach.needsWork }
+        return Copy.SleepCoach.irregular
     }
 
     private var consistencyDescription: String {
         if consistencyScore >= 80 {
-            return "Your sleep schedule is very consistent. This helps maintain a strong circadian rhythm."
+            return Copy.SleepCoach.consistencyExcellent
         }
         if consistencyScore >= 60 {
-            return "Fairly consistent schedule. Try to reduce variability on weekends for better results."
+            return Copy.SleepCoach.consistencyGood
         }
         if consistencyScore >= 40 {
-            return "Your sleep timing varies quite a bit. More consistency could improve sleep quality."
+            return Copy.SleepCoach.consistencyNeedsWork
         }
-        return "Highly variable sleep schedule. Your body struggles to establish a rhythm. Try fixing your wake time first."
+        return Copy.SleepCoach.consistencyIrregular
     }
 
     // MARK: - Formatting Helpers

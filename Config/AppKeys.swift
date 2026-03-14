@@ -104,6 +104,13 @@ enum AppKeys {
         static let lastSubscribedDate = "laso.billing.last_subscribed_date"
     }
 
+    // MARK: - Readiness
+
+    enum Readiness {
+        static let cachedScore     = "laso.readiness.cached_score"
+        static let cachedTimestamp = "laso.readiness.cached_timestamp"
+    }
+
     // MARK: - Backup
 
     enum Backup {
@@ -175,5 +182,11 @@ enum AppKeys {
     enum Cycle {
         static let trackingEnabled   = "laso.cycle.tracking_enabled"
         static let lastCycleComputed = "laso.cycle.last_computed"
+    }
+
+    // MARK: - Data Retention
+
+    enum Retention {
+        static let lastPruneDate = "laso.retention.last_prune_date"
     }
 }

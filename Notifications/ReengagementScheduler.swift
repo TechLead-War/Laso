@@ -25,11 +25,11 @@ enum ReengagementScheduler {
 
         let lastScore = UserDefaults.standard.integer(forKey: AppKeys.Data.currentScore)
         if lastScore > 0 {
-            content.title = "Your Health Snapshot"
-            content.body = "Your last health score was \(lastScore)/100. Check in to see what's changed."
+            content.title = Copy.Notifications.healthSnapshot
+            content.body = Copy.Notifications.lastScoreBody(score: lastScore)
         } else {
-            content.title = "Your Health Insights Are Ready"
-            content.body = "It's been a few days — open Laso to see your latest health trends."
+            content.title = Copy.Notifications.insightsReady
+            content.body = Copy.Notifications.insightsReadyBody
         }
 
         let trigger = UNTimeIntervalNotificationTrigger(

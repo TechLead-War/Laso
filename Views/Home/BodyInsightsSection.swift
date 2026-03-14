@@ -10,13 +10,13 @@ struct BodyInsightsSection: View {
 
     /// Section shows only if there's an actual card to display
     private var hasAnyContent: Bool {
-        viewModel.topCausalChain != nil || viewModel.headlineInsight != nil
+        viewModel.analysis.topCausalChain != nil || viewModel.insights.headlineInsight != nil
     }
 
     var body: some View {
         if hasAnyContent {
             Button {
-                let source: String = viewModel.topCausalChain != nil ? "causal_chain" : "headline_insight"
+                let source: String = viewModel.analysis.topCausalChain != nil ? "causal_chain" : "headline_insight"
                 AppAnalytics.shared.trackBlockTap(
                     title: "Briefing Card",
                     type: .seeAllInsights,
@@ -27,9 +27,9 @@ struct BodyInsightsSection: View {
                 )
                 onTapSeeAll()
             } label: {
-                if let chain = viewModel.topCausalChain {
+                if let chain = viewModel.analysis.topCausalChain {
                     compactCausalCard(chain)
-                } else if let headline = viewModel.headlineInsight {
+                } else if let headline = viewModel.insights.headlineInsight {
                     compactInsightCard(headline)
                 }
             }

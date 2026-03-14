@@ -5,6 +5,7 @@ import SwiftUI
 /// of HomeView as the single most important piece of daily information.
 struct RecoveryHeroCard: View {
     let score: Int
+    let dailyScore: Int?
     let recoveryLabel: String
     let dayType: String
     let scoreDelta: Int?
@@ -35,7 +36,7 @@ struct RecoveryHeroCard: View {
                 // Score ring — hero size
                 HealthScoreRing(
                     score: score,
-                    label: "Recovery",
+                    label: "Readiness",
                     size: 120,
                     lineWidth: 12
                 )
@@ -74,6 +75,13 @@ struct RecoveryHeroCard: View {
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
                         .background(scoreColor.opacity(DS.badgeBg), in: Capsule())
+
+                    // Daily baseline reference
+                    if let daily = dailyScore, daily != score {
+                        Text("Daily baseline: \(daily)")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    }
                 }
 
                 Spacer(minLength: 0)
@@ -97,7 +105,7 @@ struct RecoveryHeroCard: View {
         )
         .shadow(color: scoreColor.opacity(0.15), radius: 12, y: 4)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Recovery score \(score). \(recoveryLabel). \(dayType).")
+        .accessibilityLabel("Readiness score \(score). \(recoveryLabel). \(dayType).")
         .accessibilityHint("Opens score breakdown")
         .accessibilityIdentifier("home.recoveryCard")
     }
@@ -107,6 +115,7 @@ struct RecoveryHeroCard: View {
     VStack(spacing: 20) {
         RecoveryHeroCard(
             score: 82,
+            dailyScore: 78,
             recoveryLabel: "Fully Recovered",
             dayType: "Green Day — Push Hard",
             scoreDelta: 5
@@ -114,6 +123,7 @@ struct RecoveryHeroCard: View {
 
         RecoveryHeroCard(
             score: 58,
+            dailyScore: 78,
             recoveryLabel: "Moderate Recovery",
             dayType: "Yellow Day — Maintain",
             scoreDelta: -3
@@ -121,6 +131,7 @@ struct RecoveryHeroCard: View {
 
         RecoveryHeroCard(
             score: 32,
+            dailyScore: 78,
             recoveryLabel: "Low Recovery",
             dayType: "Red Day — Recover",
             scoreDelta: -12

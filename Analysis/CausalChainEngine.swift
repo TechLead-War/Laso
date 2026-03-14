@@ -613,10 +613,10 @@ struct CausalChainEngine {
         let affectedName = chain.affectedMetric.displayName
         if chain.links.count == 1 {
             let causeName = chain.links[0].causeMetric.displayName
-            return "\(causeName) May Be Affecting Your \(affectedName)"
+            return Copy.Analysis.CausalChain.singleCauseTitle(cause: causeName, affected: affectedName)
         } else {
             let rootCauseName = chain.links[0].causeMetric.displayName
-            return "Why Your \(affectedName) Changed: \(rootCauseName) Connection"
+            return Copy.Analysis.CausalChain.chainTitle(affected: affectedName, rootCause: rootCauseName)
         }
     }
 
@@ -696,5 +696,16 @@ struct CausalChainEngine {
     /// Check if a metric pair is trivially correlated (just math, not insight)
     private static func isTrivialPair(_ a: HealthMetric, _ b: HealthMetric) -> Bool {
         trivialPairs.contains([a, b])
+    }
+}
+
+// MARK: - InsightAnalyzer Conformance
+
+extension CausalChainEngine: InsightAnalyzer {
+    static var analyzerID: String { "causalChain" }
+    static var insightCategory: InsightCategory { .causalChain }
+
+    static func generateInsights(context: AnalysisContext) -> [Insight] {
+        generateInsights(from: context.causalChains)
     }
 }

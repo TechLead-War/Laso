@@ -90,20 +90,22 @@ struct VitalityCard: View {
 
     // MARK: - Subviews
 
+    private static let orbSize: CGFloat = DS.iconSize + 12
+
     private var vitalityRing: some View {
         ZStack {
             Circle()
-                .stroke(accentColor.opacity(0.2), lineWidth: 4)
-                .frame(width: DS.iconSize + 8, height: DS.iconSize + 8)
+                .stroke(accentColor.opacity(0.2), lineWidth: 5)
+                .frame(width: Self.orbSize, height: Self.orbSize)
 
             Circle()
                 .trim(from: 0, to: ringProgress)
-                .stroke(accentColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                .frame(width: DS.iconSize + 8, height: DS.iconSize + 8)
+                .stroke(accentColor, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                .frame(width: Self.orbSize, height: Self.orbSize)
                 .rotationEffect(.degrees(-90))
 
             Image(systemName: "figure.run")
-                .font(.body.weight(.semibold))
+                .font(.title3.weight(.semibold))
                 .foregroundStyle(accentColor)
         }
     }

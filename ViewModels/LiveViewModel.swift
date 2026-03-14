@@ -944,6 +944,10 @@ final class LiveViewModel {
         let finalScore = Int(Self.clamp(smoothedReadinessScore ?? clamped, min: 0, max: 100).rounded())
         recovery.readinessScore = finalScore
         recovery.readinessConfidence = Int((confidence * 100).rounded())
+
+        // Persist for background refresh seeding
+        UserDefaults.standard.set(finalScore, forKey: AppKeys.Readiness.cachedScore)
+        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: AppKeys.Readiness.cachedTimestamp)
     }
 
     // MARK: - Last Night's Sleep Fetch
@@ -1485,6 +1489,14 @@ extension LiveViewModel {
         var latestHeartRateRecovery: Double?
         var readinessScore: Int?
         var readinessConfidence: Int?
+
+        init() {
+            // Seed from cached score so the hero card shows a value immediately on cold launch
+            let cached = UserDefaults.standard.integer(forKey: AppKeys.Readiness.cachedScore)
+            if cached > 0 {
+                readinessScore = cached
+            }
+        }
 
         var isReadinessDataFresh: Bool {
             let fortyEightHours: TimeInterval = 48 * 3600

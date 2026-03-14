@@ -2,7 +2,8 @@ import Foundation
 import Observation
 import os
 
-/// ViewModel for the main dashboard showing overall score, top insights, and category cards
+/// ViewModel for the main dashboard showing overall score, top insights, and category cards.
+/// Properties are grouped into nested @Observable sub-objects to reduce unnecessary SwiftUI re-renders.
 @Observable
 final class DashboardViewModel {
     let healthKitManager: HealthKitManager
@@ -10,9 +11,21 @@ final class DashboardViewModel {
     let store: HealthDataStore
     private let persistence = PersistenceManager()
 
-    var isLoading = false
-    var hasCompletedInitialLoad = false
-    var errorMessage: String?
+    // MARK: - Nested Observable State Groups
+
+    /// UI state: loading, errors, discovery, time period selection
+    let ui = UIState()
+    /// Score-related state: overall score, category scores, score changes, recovery
+    let scores = ScoreState()
+    /// Trend-related state: trends summary
+    let trends = TrendState()
+    /// Insight-related state: focused insights, headline, focus categories
+    let insights = InsightState()
+    /// Anomaly-related state: anomalous metrics, alert counts
+    let anomalies = AnomalyState()
+    /// Analysis-related state: historical highlights, data depth, correlations, risks, illness, causal chains
+    let analysis = AnalysisState()
+
     private var isSyncRetryInProgress = false
     private var lastSyncRetryAttempt: Date?
 
@@ -23,36 +36,119 @@ final class DashboardViewModel {
     private static let connectivityRecoveryMinInterval: TimeInterval = 900  // 15 minutes
     private var lastConnectivityRecoverySync: Date?
 
-    // MARK: - Cached Properties (updated on refresh, not on every view render)
-    private(set) var cachedScoreChangeFromLastWeek: Int?
-    private(set) var cachedScoreChangeFromYesterday: Int?
-    private(set) var cachedTrendsSummary: TrendsSummary?
-    private(set) var cachedHistoricalHighlights: [HistoricalHighlight] = []
-    private(set) var cachedTopCorrelations: [HealthCorrelation] = []
-    private(set) var cachedFocusCategories: Set<HealthCategory> = []
-    private(set) var cachedFocusedInsights: [Insight] = []
-
-    // MARK: - Discovery (Day 0)
-    var discoveries: [Discovery] = []
-    var showDiscovery = false
-    var syncPhase: SyncPhase = .idle
-
-    enum SyncPhase {
-        case idle, importing, analyzing, discovering, complete
-    }
-
-    var isFirstLaunchSync: Bool {
-        !UserDefaults.standard.bool(forKey: AppKeys.App.hasSeenDiscovery)
-    }
-
-    /// Selected time period — shared across all Home screen sections
-    var selectedPeriod: TimePeriod = .sevenDays
-
     /// Previous trend directions — used for trend reversal detection
     private var previousTrends: [HealthMetric: TrendDirection] = [:]
 
-    var overallScore: HealthScore {
-        analysisEngine.overallScore
+    // MARK: - Nested @Observable Classes
+
+    @Observable
+    final class UIState {
+        var isLoading = false
+        var hasCompletedInitialLoad = false
+        var errorMessage: String?
+        var discoveries: [Discovery] = []
+        var showDiscovery = false
+        var syncPhase: SyncPhase = .idle
+        var selectedPeriod: TimePeriod = .sevenDays
+
+        var isFirstLaunchSync: Bool {
+            !UserDefaults.standard.bool(forKey: AppKeys.App.hasSeenDiscovery)
+        }
+    }
+
+    @Observable
+    final class ScoreState {
+        fileprivate(set) var cachedScoreChangeFromLastWeek: Int?
+        fileprivate(set) var cachedScoreChangeFromYesterday: Int?
+        /// Set by parent after each analysis refresh
+        fileprivate(set) var overallScore: HealthScore = HealthScore(score: 0)
+        fileprivate(set) var categoryScores: [HealthScore] = []
+
+        var scoreChangeFromLastWeek: Int? { cachedScoreChangeFromLastWeek }
+        var scoreChangeFromYesterday: Int? { cachedScoreChangeFromYesterday }
+
+        var recoveryState: RecoveryState {
+            let score = overallScore.score
+            if score > 75 { return .green }
+            if score >= 50 { return .yellow }
+            return .red
+        }
+
+        var dayClassification: String {
+            recoveryState.dayType
+        }
+
+        /// Score explanation for transparency
+        fileprivate(set) var scoreExplanation: HealthScorer.ScoreExplanation?
+    }
+
+    @Observable
+    final class TrendState {
+        fileprivate(set) var cachedTrendsSummary: TrendsSummary?
+
+        var trendsSummary: TrendsSummary {
+            cachedTrendsSummary ?? TrendsSummary(improving: 0, stable: 0, declining: 0, topMovers: [])
+        }
+
+        /// Trends summary for Today section (alias)
+        var todayTrendsSummary: TrendsSummary {
+            trendsSummary
+        }
+    }
+
+    @Observable
+    final class InsightState {
+        fileprivate(set) var cachedFocusCategories: Set<HealthCategory> = []
+        fileprivate(set) var cachedFocusedInsights: [Insight] = []
+
+        var focusCategories: Set<HealthCategory> { cachedFocusCategories }
+        var focusedInsights: [Insight] { cachedFocusedInsights }
+
+        var headlineInsight: Insight? { focusedInsights.first }
+        var topInsights: [Insight] { Array(focusedInsights.prefix(3)) }
+        var allInsights: [Insight] { focusedInsights }
+
+        /// Insights grouped by InsightCategory, filtered by focus areas, excluding empty categories
+        var insightsByCategory: [(category: InsightCategory, insights: [Insight])] {
+            let focused = focusedInsights
+            return InsightCategory.allCases.compactMap { category in
+                let matching = focused.filter { $0.category == category }
+                guard !matching.isEmpty else { return nil }
+                return (category: category, insights: matching)
+            }
+        }
+    }
+
+    @Observable
+    final class AnomalyState {
+        fileprivate(set) var anomalousMetrics: [AnomalyDetector.AnomalyResult] = []
+        fileprivate(set) var criticalAlertCount: Int = 0
+        fileprivate(set) var warningAlertCount: Int = 0
+    }
+
+    @Observable
+    final class AnalysisState {
+        fileprivate(set) var cachedHistoricalHighlights: [HistoricalHighlight] = []
+        fileprivate(set) var cachedTopCorrelations: [HealthCorrelation] = []
+
+        var historicalHighlights: [HistoricalHighlight] { cachedHistoricalHighlights }
+        var topCorrelations: [HealthCorrelation] { cachedTopCorrelations }
+
+        fileprivate(set) var correlations: [HealthCorrelation] = []
+        fileprivate(set) var healthRisks: [HealthRisk] = []
+        fileprivate(set) var topHealthRisks: [HealthRisk] = []
+        fileprivate(set) var todayHealthRisks: [HealthRisk] = []
+        fileprivate(set) var illnessWarnings: [IllnessEarlyWarning.Warning] = []
+        fileprivate(set) var hasIllnessWarning: Bool = false
+        fileprivate(set) var topIllnessWarning: IllnessEarlyWarning.Warning?
+        fileprivate(set) var crossMetricAnomalies: [CrossMetricAnomalyDetector.CrossMetricAnomaly] = []
+        fileprivate(set) var causalChains: [CausalChain] = []
+        fileprivate(set) var topCausalChain: CausalChain?
+        fileprivate(set) var dataDepth: (metricsTracked: Int, totalDataPoints: Int, daysOfData: Int) = (0, 0, 0)
+    }
+
+    enum SyncPhase {
+        case idle, importing, analyzing, discovering, complete
     }
 
     enum RecoveryState: String, CaseIterable {
@@ -60,39 +156,33 @@ final class DashboardViewModel {
 
         var label: String {
             switch self {
-            case .green: "Fully Recovered"
-            case .yellow: "Moderate Recovery"
-            case .red: "Low Recovery"
+            case .green: Copy.Home.fullyRecovered
+            case .yellow: Copy.Home.moderateRecovery
+            case .red: Copy.Home.lowRecovery
             }
         }
 
         var dayType: String {
             switch self {
-            case .green: "Green Day — Push Hard"
-            case .yellow: "Yellow Day — Maintain"
-            case .red: "Red Day — Recover"
+            case .green: Copy.Home.greenDayPushHard
+            case .yellow: Copy.Home.yellowDayMaintain
+            case .red: Copy.Home.redDayRecover
             }
         }
 
         var strainGuidance: String {
             switch self {
-            case .green: "High intensity training recommended. Your body is ready for a challenge."
-            case .yellow: "Moderate activity is ideal. Focus on technique over intensity."
-            case .red: "Prioritize rest and gentle movement. Your body needs recovery time."
+            case .green: Copy.Home.greenStrainGuidance
+            case .yellow: Copy.Home.yellowStrainGuidance
+            case .red: Copy.Home.redStrainGuidance
             }
         }
     }
 
-    var recoveryState: RecoveryState {
-        let score = overallScore.score
-        if score > 75 { return .green }
-        if score >= 50 { return .yellow }
-        return .red
-    }
+    // MARK: - Convenience accessors (kept for backward compat with internal methods)
 
-    var dayClassification: String {
-        recoveryState.dayType
-    }
+    var overallScore: HealthScore { scores.overallScore }
+    var recoveryState: RecoveryState { scores.recoveryState }
 
     var strainGuidance: String {
         let trend = recentActivityTrendDirection
@@ -101,95 +191,48 @@ final class DashboardViewModel {
         case .green:
             switch trend {
             case .improving:
-                return "Recovery is high and activity is already trending up. Push hard, but avoid a major jump in strain."
+                return Copy.Home.greenImproving
             case .declining:
-                return "Recovery is high while recent activity has trended down. Add a hard session to rebuild strain."
+                return Copy.Home.greenDeclining
             case .stable:
-                return "Recovery is high. Push hard today with a challenging workout."
+                return Copy.Home.greenStable
             case .none:
-                return "Recovery is high. Push hard today."
+                return Copy.Home.greenNone
             }
         case .yellow:
             switch trend {
             case .improving:
-                return "Recovery is moderate and activity is trending up. Maintain strain and keep intensity controlled."
+                return Copy.Home.yellowImproving
             case .declining:
-                return "Recovery is moderate with activity easing off. Maintain with a steady, moderate session."
+                return Copy.Home.yellowDeclining
             case .stable:
-                return "Recovery is moderate. Maintain your usual training load today."
+                return Copy.Home.yellowStable
             case .none:
-                return "Recovery is moderate. Maintain a moderate strain today."
+                return Copy.Home.yellowNone
             }
         case .red:
             switch trend {
             case .improving:
-                return "Recovery is low after rising activity. Take a recovery day with light movement only."
+                return Copy.Home.redImproving
             case .declining:
-                return "Recovery is low. Keep strain very low and prioritize sleep, hydration, and mobility."
+                return Copy.Home.redDeclining
             case .stable:
-                return "Recovery is low. Recover today with easy walking or stretching only."
+                return Copy.Home.redStable
             case .none:
-                return "Recovery is low. Prioritize recovery and avoid hard training."
+                return Copy.Home.redNone
             }
         }
     }
 
-    var categoryScores: [HealthScore] {
-        analysisEngine.categoryScores
-    }
-
-    /// User's selected health focuses — cached to avoid Keychain+AES-GCM decrypt per access
-    var focusCategories: Set<HealthCategory> {
-        cachedFocusCategories
-    }
-
-    /// Insights filtered to user's focus areas + any critical/warning severity — cached
-    var focusedInsights: [Insight] {
-        cachedFocusedInsights
-    }
-
-    /// The single most important insight for today's briefing headline
-    var headlineInsight: Insight? {
-        focusedInsights.first
-    }
-
-    var topInsights: [Insight] {
-        Array(focusedInsights.prefix(3))
-    }
-
-    var allInsights: [Insight] {
-        focusedInsights
-    }
-
-    /// All significant correlations discovered across metrics
-    var correlations: [HealthCorrelation] {
-        analysisEngine.correlations
-    }
-
-    /// Top correlations for the home screen section, sorted by focus relevance
-    var topCorrelations: [HealthCorrelation] {
-        cachedTopCorrelations
-    }
-
-    /// Health risks sorted by level (highest risk first)
-    var healthRisks: [HealthRisk] {
-        analysisEngine.healthRisks
-    }
-
-    /// Top risks that need attention (moderate or higher)
-    var topHealthRisks: [HealthRisk] {
-        analysisEngine.healthRisks.filter { $0.riskGrade != .low }
-    }
-
     /// Top 3 actionable insights for the compact card display, filtered by selected period
     var topActionableInsights: [Insight] {
-        topActionableInsights(for: selectedPeriod)
+        topActionableInsights(for: ui.selectedPeriod)
     }
 
     /// Period-aware insights: only include metrics that have data in the selected period, filtered by focus areas
     func topActionableInsights(for period: TimePeriod) -> [Insight] {
         let days = period.days
-        let categories = focusCategories
+        let categories = insights.focusCategories
         let metricsWithData = Set(
             healthKitManager.timeSeries
                 .filter { !$0.value.samples(lastDays: days).isEmpty }
@@ -230,7 +273,7 @@ final class DashboardViewModel {
     }
 
     var keyMetricSnapshots: [MetricSnapshot] {
-        keyMetricSnapshots(for: selectedPeriod)
+        keyMetricSnapshots(for: ui.selectedPeriod)
     }
 
     /// Period-aware key metric snapshots: shows period average and period-over-period change
@@ -334,7 +377,7 @@ final class DashboardViewModel {
     /// Period summary filtered to only metrics matching user's health focuses
     func focusFilteredPeriodSummary(for period: TimePeriod) -> PeriodSummary {
         let base = periodSummary(for: period)
-        let categories = focusCategories
+        let categories = insights.focusCategories
         guard !categories.isEmpty else { return base }
         return PeriodSummary(
             topImproved: base.topImproved.filter { categories.contains($0.metric.category) },
@@ -404,6 +447,7 @@ final class DashboardViewModel {
     let menstrualCycleTracker = MenstrualCycleTracker()
     let gamificationEngine = GamificationEngine()
     let vitalityScorer = VitalityScorer()
+    let brainHealthScorer = BrainHealthScorer()
     let strainCoach = StrainCoach()
 
     init(healthKitManager: HealthKitManager, analysisEngine: AnalysisEngine, store: HealthDataStore) {
@@ -415,9 +459,9 @@ final class DashboardViewModel {
     /// Use results produced by onboarding calibration without re-running heavy first-load work.
     /// Assumes shared `healthKitManager` + `analysisEngine` were already populated.
     func hydrateFromCalibration() {
-        isLoading = false
-        errorMessage = nil
-        hasCompletedInitialLoad = true
+        ui.isLoading = false
+        ui.errorMessage = nil
+        ui.hasCompletedInitialLoad = true
         updateCachedProperties()
         computeNewEngines()
         lastAnalysisDate = Date()
@@ -431,16 +475,16 @@ final class DashboardViewModel {
         forceHeavyDeferred: Bool = false,
         runHousekeeping: Bool = true
     ) async {
-        isLoading = true
-        defer { isLoading = false }
+        ui.isLoading = true
+        defer { ui.isLoading = false }
 
         if UITestMode.isEnabled {
-            hasCompletedInitialLoad = true
+            ui.hasCompletedInitialLoad = true
             return
         }
 
         guard healthKitManager.isHealthKitAvailable else {
-            errorMessage = "HealthKit is not available on this device. Please run on a real iPhone paired with Apple Watch."
+            ui.errorMessage = "HealthKit is not available on this device. Please run on a real iPhone paired with Apple Watch."
             AppAnalytics.shared.trackError(type: "healthkit_unavailable", screen: .home)
             return
         }
@@ -449,7 +493,7 @@ final class DashboardViewModel {
 
         guard healthKitManager.isAuthorized else {
             let msg = healthKitManager.error ?? "HealthKit authorization required"
-            errorMessage = msg
+            ui.errorMessage = msg
             AppAnalytics.shared.trackError(type: "healthkit_auth_failed", screen: .home, message: msg)
             return
         }
@@ -459,38 +503,38 @@ final class DashboardViewModel {
             forceHeavyDeferred: forceHeavyDeferred,
             runHousekeeping: runHousekeeping
         )
-        hasCompletedInitialLoad = true
+        ui.hasCompletedInitialLoad = true
 
         // Day 0 discovery generation — after refresh so all data is available.
         // Skipped when onboarding already provides a dedicated calibration flow.
-        if isFirstLaunchSync && !skipDiscovery {
-            syncPhase = .discovering
+        if ui.isFirstLaunchSync && !skipDiscovery {
+            ui.syncPhase = .discovering
             let results = DiscoveryEngine.generateDiscoveries(
                 timeSeries: healthKitManager.timeSeries,
                 correlations: analysisEngine.correlations,
                 historicalContext: analysisEngine.historicalContext
             )
             if results.count >= DiscoveryEngine.minimumDiscoveriesRequired {
-                discoveries = results
-                showDiscovery = true
+                ui.discoveries = results
+                ui.showDiscovery = true
             } else {
                 // Do not keep users in perpetual "first launch sync" when data is still sparse.
                 UserDefaults.standard.set(true, forKey: AppKeys.App.hasSeenDiscovery)
             }
-            syncPhase = .complete
+            ui.syncPhase = .complete
         }
     }
 
     /// Dismiss the discovery view and mark as seen
     func dismissDiscovery() {
-        showDiscovery = false
+        ui.showDiscovery = false
         UserDefaults.standard.set(true, forKey: AppKeys.App.hasSeenDiscovery)
     }
 
     /// True when the initial load finished but no health data is available despite authorization.
     /// Used by Home timer and scene-phase recovery to trigger automatic retries.
     var needsSyncRetry: Bool {
-        hasCompletedInitialLoad && healthKitManager.timeSeries.isEmpty && healthKitManager.isAuthorized
+        ui.hasCompletedInitialLoad && healthKitManager.timeSeries.isEmpty && healthKitManager.isAuthorized
     }
 
     /// Retry the full sync if Home is stuck in empty state.
@@ -511,9 +555,9 @@ final class DashboardViewModel {
     /// Re-sync after connectivity is restored, throttled to avoid repeated heavy work.
     /// Returns true when a refresh was actually triggered.
     func refreshAfterConnectivityRestoreIfNeeded() async -> Bool {
-        guard hasCompletedInitialLoad else { return false }
+        guard ui.hasCompletedInitialLoad else { return false }
         guard healthKitManager.isAuthorized else { return false }
-        guard !isLoading, !isSyncRetryInProgress else { return false }
+        guard !ui.isLoading, !isSyncRetryInProgress else { return false }
 
         if let lastRecovery = lastConnectivityRecoverySync,
            Date().timeIntervalSince(lastRecovery) < Self.connectivityRecoveryMinInterval {
@@ -537,16 +581,20 @@ final class DashboardViewModel {
         let prevTrends = previousTrends
 
         // Load stored data + incrementally sync new data from HealthKit
-        if isFirstLaunchSync { syncPhase = .importing }
+        if ui.isFirstLaunchSync { ui.syncPhase = .importing }
         let syncResult = await healthKitManager.loadAndSync(store: store)
 
-        // Skip full analysis if no new data AND we analyzed within the last 5 minutes
-        let recentlyAnalyzed = lastAnalysisDate.map { Date().timeIntervalSince($0) < Self.analysisMinInterval } ?? false
-        if !syncResult.hasNewData && recentlyAnalyzed && !syncResult.isFirstSync {
+        // Skip full analysis only if no new data, analyzed within 5 minutes, AND same calendar day
+        let now = Date()
+        let recentlyAnalyzed = lastAnalysisDate.map { now.timeIntervalSince($0) < Self.analysisMinInterval } ?? false
+        let sameDay = lastAnalysisDate.map { Calendar.current.isDate($0, inSameDayAs: now) } ?? false
+        if !syncResult.hasNewData && recentlyAnalyzed && sameDay && !syncResult.isFirstSync {
+            // Still refresh lightweight cached properties (data depth, scores display)
+            updateCachedProperties()
             return
         }
 
-        if isFirstLaunchSync { syncPhase = .analyzing }
+        if ui.isFirstLaunchSync { ui.syncPhase = .analyzing }
 
         let ts = healthKitManager.timeSeries
         async let cycleFlowSamplesTask = healthKitManager.fetchMenstrualFlowSamples(days: 365)
@@ -556,8 +604,8 @@ final class DashboardViewModel {
 
         // Phase 1: Core analysis — scores, trends, baselines (blocks until done, UI needs these)
         // Pass user's onboarding focus categories so focused areas weigh more in scoring.
-        let focuses = cachedFocusCategories.isEmpty ? persistence.loadHealthFocuses() : []
-        let focusCats = focuses.isEmpty ? cachedFocusCategories : HealthFocus.categories(for: focuses)
+        let focuses = insights.cachedFocusCategories.isEmpty ? persistence.loadHealthFocuses() : []
+        let focusCats = focuses.isEmpty ? insights.cachedFocusCategories : HealthFocus.categories(for: focuses)
         await Task.detached(priority: .userInitiated) { [analysisEngine, focusCats] in
             analysisEngine.runCoreAnalysis(timeSeries: ts, focusCategories: focusCats)
         }.value
@@ -727,7 +775,7 @@ final class DashboardViewModel {
         }
         if !extraInsights.isEmpty {
             analysisEngine.insights.append(contentsOf: extraInsights)
-            analysisEngine.insights = AnalysisEngine.deduplicateInsights(analysisEngine.insights)
+            analysisEngine.insights = InsightCoordinator.coordinate(analysisEngine.insights)
         }
 
         // Circadian analysis (weekly, hourly data fetch)
@@ -824,7 +872,7 @@ final class DashboardViewModel {
             categoryBreakdown: categoryBreakdown,
             preferences: optimizedPrefs,
             topAnomaly: topAnomaly,
-            scoreChangeFromYesterday: cachedScoreChangeFromYesterday,
+            scoreChangeFromYesterday: scores.cachedScoreChangeFromYesterday,
             streakDays: SessionTracker.shared.streakDays
         )
 
@@ -874,9 +922,9 @@ final class DashboardViewModel {
 
         guard !RemoteConfigManager.shared.killMLPipeline else { return }
 
-        let focusCats = cachedFocusCategories.isEmpty
+        let focusCats = insights.cachedFocusCategories.isEmpty
             ? HealthFocus.categories(for: persistence.loadHealthFocuses())
-            : cachedFocusCategories
+            : insights.cachedFocusCategories
         await analysisEngine.runMLAnalysis(
             timeSeries: timeSeries,
             scoreHistory: scoreHistory,
@@ -891,19 +939,50 @@ final class DashboardViewModel {
     private func updateCachedProperties() {
         // Cache focus categories first (Keychain + AES-GCM decrypt — do once, not per view access)
         let focuses = persistence.loadHealthFocuses()
-        cachedFocusCategories = HealthFocus.categories(for: focuses)
+        insights.cachedFocusCategories = HealthFocus.categories(for: focuses)
 
         // Cache focused insights (depends on focus categories)
-        let categories = cachedFocusCategories
-        cachedFocusedInsights = analysisEngine.insights.filter { insight in
+        let categories = insights.cachedFocusCategories
+        insights.cachedFocusedInsights = analysisEngine.insights.filter { insight in
             insight.severity >= .warning || categories.contains(insight.metric.category)
         }
 
-        cachedScoreChangeFromLastWeek = computeScoreChangeFromLastWeek()
-        cachedScoreChangeFromYesterday = computeScoreChangeFromYesterday()
-        cachedTrendsSummary = computeTrendsSummary()
-        cachedHistoricalHighlights = computeHistoricalHighlights()
-        cachedTopCorrelations = computeTopCorrelations()
+        // Update score state
+        scores.overallScore = analysisEngine.overallScore
+        scores.categoryScores = analysisEngine.categoryScores
+        scores.cachedScoreChangeFromLastWeek = computeScoreChangeFromLastWeek()
+        scores.cachedScoreChangeFromYesterday = computeScoreChangeFromYesterday()
+        scores.scoreExplanation = analysisEngine.scoreExplanation
+
+        // Update trend state
+        trends.cachedTrendsSummary = computeTrendsSummary()
+
+        // Update analysis state
+        analysis.cachedHistoricalHighlights = computeHistoricalHighlights()
+        analysis.cachedTopCorrelations = computeTopCorrelations()
+        analysis.correlations = analysisEngine.correlations
+        analysis.healthRisks = analysisEngine.healthRisks
+        analysis.topHealthRisks = analysisEngine.healthRisks.filter { $0.riskGrade != .low }
+        analysis.todayHealthRisks = analysisEngine.healthRisks.filter { $0.riskGrade != .low }
+        analysis.illnessWarnings = analysisEngine.illnessWarnings
+        analysis.hasIllnessWarning = !analysisEngine.illnessWarnings.isEmpty
+        analysis.topIllnessWarning = analysisEngine.illnessWarnings.first
+        analysis.crossMetricAnomalies = analysisEngine.crossMetricAnomalies
+        analysis.causalChains = analysisEngine.causalChains
+        analysis.topCausalChain = analysisEngine.causalChains.first
+
+        // Update data depth
+        let series = healthKitManager.timeSeries
+        let metrics = series.count
+        let points = series.values.reduce(0) { $0 + $1.totalDataPoints }
+        let maxDays = series.values.map(\.daysOfData).max() ?? 0
+        analysis.dataDepth = (metrics, points, maxDays)
+
+        // Update anomaly state
+        anomalies.anomalousMetrics = analysisEngine.anomalies.filter { $0.severity >= .warning }
+        anomalies.criticalAlertCount = analysisEngine.anomalies.filter { $0.severity == .critical }.count
+        anomalies.warningAlertCount = analysisEngine.anomalies.filter { $0.severity == .warning }.count
+
         // Cache lightweight score data for Siri intents (avoids SwiftData conflicts)
         let score = overallScore.score
         let topAreas = analysisEngine.categoryScores
@@ -920,7 +999,7 @@ final class DashboardViewModel {
         defaults.set(summaryText, forKey: AppKeys.Intent.summary)
 
         // Save shown recommendations for outcome tracking
-        let insightsToSave = cachedFocusedInsights.prefix(10)
+        let insightsToSave = insights.cachedFocusedInsights.prefix(10)
         Task { @MainActor [store] in
             for insight in insightsToSave {
                 store.saveRecommendation(insight)
@@ -949,11 +1028,14 @@ final class DashboardViewModel {
             recoveryState: recoveryState,
             currentStrain: strainScorer.currentStrain,
             recentStrainHistory: strainScorer.weeklyStrainHistory,
-            daysOfData: dataDepth.daysOfData
+            daysOfData: analysis.dataDepth.daysOfData
         )
 
         // Stress
         stressScorer.compute(from: store)
+
+        // Brain Health — pass in-memory timeSeries for guaranteed freshness
+        brainHealthScorer.compute(from: store, timeSeries: healthKitManager.timeSeries)
 
         // Sleep debt
         sleepDebtTracker.compute(from: store)
@@ -973,8 +1055,8 @@ final class DashboardViewModel {
         let scoreHistory = store.loadScoreHistory(days: 365).map { (date: $0.date, score: $0.score) }
         gamificationEngine.compute(from: store, sessionDays: sessionDays, scores: scoreHistory)
 
-        // Vitality Age
-        vitalityScorer.compute(from: store, chronologicalAge: age)
+        // Vitality Age — pass in-memory timeSeries for guaranteed freshness
+        vitalityScorer.compute(from: store, chronologicalAge: age, timeSeries: healthKitManager.timeSeries)
 
         // Menstrual cycle — female users + explicit onboarding opt-in.
         // Backward compatibility: if preference is absent (older installs), keep prior behavior.
@@ -1024,7 +1106,7 @@ final class DashboardViewModel {
                 ))
             }
         }
-        let focuses = focusCategories
+        let focuses = insights.focusCategories
         movers.sort { a, b in
             if !focuses.isEmpty {
                 let aFocused = focuses.contains(a.metric.category)
@@ -1042,7 +1124,7 @@ final class DashboardViewModel {
     }
 
     private func computeTopCorrelations() -> [HealthCorrelation] {
-        let focuses = focusCategories
+        let focuses = insights.focusCategories
         if focuses.isEmpty {
             return Array(analysisEngine.correlations.prefix(5))
         }
@@ -1057,7 +1139,7 @@ final class DashboardViewModel {
 
     private func computeHistoricalHighlights() -> [HistoricalHighlight] {
         var highlights: [HistoricalHighlight] = []
-        let focuses = focusCategories
+        let focuses = insights.focusCategories
 
         // Week-over-week comparison for the Home/Coach screen
         for (metric, series) in healthKitManager.timeSeries {
@@ -1102,34 +1184,7 @@ final class DashboardViewModel {
     }
 
 
-    // MARK: - Computed Analytics for Views
-
-    /// All anomalous metrics across all categories
-    var anomalousMetrics: [AnomalyDetector.AnomalyResult] {
-        analysisEngine.anomalies.filter { $0.severity >= .warning }
-    }
-
-    /// Number of critical alerts currently active
-    var criticalAlertCount: Int {
-        analysisEngine.anomalies.filter { $0.severity == .critical }.count
-    }
-
-    /// Number of warning alerts currently active
-    var warningAlertCount: Int {
-        analysisEngine.anomalies.filter { $0.severity == .warning }.count
-    }
-
-    // MARK: - Explore Tab Data
-
-    /// Score delta from stored history (comparing to 7 days ago) — cached on refresh
-    var scoreChangeFromLastWeek: Int? {
-        cachedScoreChangeFromLastWeek
-    }
-
-    /// Score delta from stored history (comparing to yesterday) — cached on refresh
-    var scoreChangeFromYesterday: Int? {
-        cachedScoreChangeFromYesterday
-    }
+    // MARK: - Struct Definitions (kept at DashboardViewModel level for external type references)
 
     /// Global trends summary across all tracked metrics
     struct TrendsSummary {
@@ -1144,10 +1199,6 @@ final class DashboardViewModel {
         let metric: HealthMetric
         let changePercent: Double
         let improving: Bool
-    }
-
-    var trendsSummary: TrendsSummary {
-        cachedTrendsSummary ?? TrendsSummary(improving: 0, stable: 0, declining: 0, topMovers: [])
     }
 
     /// Historical highlights computed from deep analysis context
@@ -1186,78 +1237,6 @@ final class DashboardViewModel {
             case .seasonal: return "Seasonal"
             case .longTermTrajectory: return "Long-Term"
             }
-        }
-    }
-
-    var historicalHighlights: [HistoricalHighlight] {
-        cachedHistoricalHighlights
-    }
-
-    /// Data depth summary — how much data powers the analysis
-    var dataDepth: (metricsTracked: Int, totalDataPoints: Int, daysOfData: Int) {
-        let series = healthKitManager.timeSeries
-        let metrics = series.count
-        let points = series.values.reduce(0) { $0 + $1.totalDataPoints }
-        let maxDays = series.values.map(\.daysOfData).max() ?? 0
-        return (metrics, points, maxDays)
-    }
-
-    // MARK: - New Intelligence Features
-
-    /// Active illness early warnings
-    var illnessWarnings: [IllnessEarlyWarning.Warning] {
-        analysisEngine.illnessWarnings
-    }
-
-    /// Whether there's an active illness early warning
-    var hasIllnessWarning: Bool {
-        !analysisEngine.illnessWarnings.isEmpty
-    }
-
-    /// The most severe illness warning (for Today section hero)
-    var topIllnessWarning: IllnessEarlyWarning.Warning? {
-        analysisEngine.illnessWarnings.first
-    }
-
-    /// Cross-metric anomalies detected
-    var crossMetricAnomalies: [CrossMetricAnomalyDetector.CrossMetricAnomaly] {
-        analysisEngine.crossMetricAnomalies
-    }
-
-    /// Causal chains explaining metric changes
-    var causalChains: [CausalChain] {
-        analysisEngine.causalChains
-    }
-
-    /// Top causal chain for the today section
-    var topCausalChain: CausalChain? {
-        analysisEngine.causalChains.first
-    }
-
-    /// Score explanation for transparency
-    var scoreExplanation: HealthScorer.ScoreExplanation? {
-        analysisEngine.scoreExplanation
-    }
-
-    /// Trends summary for Today section (moved from Explore)
-    var todayTrendsSummary: TrendsSummary {
-        trendsSummary
-    }
-
-    /// Health risks for Today section (moved from Explore)
-    var todayHealthRisks: [HealthRisk] {
-        analysisEngine.healthRisks.filter { $0.riskGrade != .low }
-    }
-
-    // MARK: - Body Insights
-
-    /// Insights grouped by InsightCategory, filtered by focus areas, excluding empty categories
-    var insightsByCategory: [(category: InsightCategory, insights: [Insight])] {
-        let focused = focusedInsights
-        return InsightCategory.allCases.compactMap { category in
-            let matching = focused.filter { $0.category == category }
-            guard !matching.isEmpty else { return nil }
-            return (category: category, insights: matching)
         }
     }
 

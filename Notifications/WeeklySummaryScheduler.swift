@@ -20,7 +20,7 @@ struct WeeklySummaryScheduler {
         }
 
         let changeText = scoreChange >= 0 ? "+\(scoreChange)" : "\(scoreChange)"
-        let title = "Weekly Report: \(score)/100 (\(changeText))"
+        let title = Copy.Notifications.weeklyReportTitle(score: score, change: changeText)
 
         var bodyParts: [String] = []
 
@@ -28,10 +28,10 @@ struct WeeklySummaryScheduler {
         if improvedCount > 0 || declinedCount > 0 {
             var statusParts: [String] = []
             if improvedCount > 0 {
-                statusParts.append("\(improvedCount) improved")
+                statusParts.append(Copy.Notifications.improvedCount(improvedCount))
             }
             if declinedCount > 0 {
-                statusParts.append("\(declinedCount) declined")
+                statusParts.append(Copy.Notifications.declinedCount(declinedCount))
             }
             bodyParts.append(statusParts.joined(separator: ", ") + ".")
         }
@@ -42,7 +42,7 @@ struct WeeklySummaryScheduler {
             return "\(trend.metric) \(trend.direction)\(sign)\(String(format: "%.0f", trend.change))%"
         }
         if !movers.isEmpty {
-            bodyParts.append("Top movers: " + movers.joined(separator: ", "))
+            bodyParts.append(Copy.Notifications.topMovers + movers.joined(separator: ", "))
         }
 
         let body = bodyParts.joined(separator: " ")

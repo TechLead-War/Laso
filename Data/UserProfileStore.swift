@@ -107,19 +107,16 @@ final class UserProfileStore {
         // Always cache locally first
         saveLocal(profile)
 
-        // Prepare Firestore document data
+        // Prepare Firestore document data — anonymized only (no PII: name, email, DOB excluded)
         let data: [String: Any] = [
-            "name": profile.name,
-            "email": profile.email,
             "gender": profile.gender.rawValue,
-            "dateOfBirth": profile.dateOfBirth.timeIntervalSince1970,
+            "ageBracket": profile.ageBracket,
             "healthFocuses": profile.healthFocuses,
             "deviceId": profile.deviceId,
             "createdAt": profile.createdAt.timeIntervalSince1970,
             "updatedAt": profile.updatedAt.timeIntervalSince1970,
             "appVersion": profile.appVersion,
-            "region": profile.region,
-            "ageBracket": profile.ageBracket
+            "region": profile.region
         ]
 
 #if canImport(FirebaseFirestore)

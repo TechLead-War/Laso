@@ -6,21 +6,116 @@ import Observation
 final class AnalysisEngine {
     private let persistence = PersistenceManager()
 
-    var baselines: [HealthMetric: UserBaseline] = [:]
-    var trends: [HealthMetric: TrendAnalyzer.TrendResult] = [:]
-    var anomalies: [AnomalyDetector.AnomalyResult] = []
-    var insights: [Insight] = []
-    var healthRisks: [HealthRisk] = []
-    var overallScore: HealthScore = HealthScore(score: 100)
-    var categoryScores: [HealthScore] = []
-    var correlations: [HealthCorrelation] = []
-    var historicalContext: [HealthMetric: HistoricalAnalyzer.HistoricalContext] = [:]
-    var illnessWarnings: [IllnessEarlyWarning.Warning] = []
-    var crossMetricAnomalies: [CrossMetricAnomalyDetector.CrossMetricAnomaly] = []
-    var causalChains: [CausalChain] = []
-    var scoreExplanation: HealthScorer.ScoreExplanation?
+    // MARK: - Nested Observable State Groups
+
+    let baselineState = BaselineState()
+    let trendState = TrendState()
+    let anomalyState = AnomalyState()
+    let scoreState = ScoreState()
+    let insightState = InsightState()
+    let correlationState = CorrelationState()
+    let historicalState = HistoricalState()
+
     var isAnalyzing = false
     var lastAnalysis: Date?
+
+    // MARK: - Nested @Observable Classes
+
+    @Observable
+    final class BaselineState {
+        var baselines: [HealthMetric: UserBaseline] = [:]
+    }
+
+    @Observable
+    final class TrendState {
+        var trends: [HealthMetric: TrendAnalyzer.TrendResult] = [:]
+    }
+
+    @Observable
+    final class AnomalyState {
+        var anomalies: [AnomalyDetector.AnomalyResult] = []
+        var crossMetricAnomalies: [CrossMetricAnomalyDetector.CrossMetricAnomaly] = []
+    }
+
+    @Observable
+    final class ScoreState {
+        var overallScore: HealthScore = HealthScore(score: 100)
+        var categoryScores: [HealthScore] = []
+        var scoreExplanation: HealthScorer.ScoreExplanation?
+    }
+
+    @Observable
+    final class InsightState {
+        var insights: [Insight] = []
+        var healthRisks: [HealthRisk] = []
+        var illnessWarnings: [IllnessEarlyWarning.Warning] = []
+        var causalChains: [CausalChain] = []
+    }
+
+    @Observable
+    final class CorrelationState {
+        var correlations: [HealthCorrelation] = []
+    }
+
+    @Observable
+    final class HistoricalState {
+        var historicalContext: [HealthMetric: HistoricalAnalyzer.HistoricalContext] = [:]
+    }
+
+    // MARK: - Convenience Accessors (keep short call-sites working)
+
+    var baselines: [HealthMetric: UserBaseline] {
+        get { baselineState.baselines }
+        set { baselineState.baselines = newValue }
+    }
+    var trends: [HealthMetric: TrendAnalyzer.TrendResult] {
+        get { trendState.trends }
+        set { trendState.trends = newValue }
+    }
+    var anomalies: [AnomalyDetector.AnomalyResult] {
+        get { anomalyState.anomalies }
+        set { anomalyState.anomalies = newValue }
+    }
+    var crossMetricAnomalies: [CrossMetricAnomalyDetector.CrossMetricAnomaly] {
+        get { anomalyState.crossMetricAnomalies }
+        set { anomalyState.crossMetricAnomalies = newValue }
+    }
+    var overallScore: HealthScore {
+        get { scoreState.overallScore }
+        set { scoreState.overallScore = newValue }
+    }
+    var categoryScores: [HealthScore] {
+        get { scoreState.categoryScores }
+        set { scoreState.categoryScores = newValue }
+    }
+    var scoreExplanation: HealthScorer.ScoreExplanation? {
+        get { scoreState.scoreExplanation }
+        set { scoreState.scoreExplanation = newValue }
+    }
+    var insights: [Insight] {
+        get { insightState.insights }
+        set { insightState.insights = newValue }
+    }
+    var healthRisks: [HealthRisk] {
+        get { insightState.healthRisks }
+        set { insightState.healthRisks = newValue }
+    }
+    var illnessWarnings: [IllnessEarlyWarning.Warning] {
+        get { insightState.illnessWarnings }
+        set { insightState.illnessWarnings = newValue }
+    }
+    var causalChains: [CausalChain] {
+        get { insightState.causalChains }
+        set { insightState.causalChains = newValue }
+    }
+    var correlations: [HealthCorrelation] {
+        get { correlationState.correlations }
+        set { correlationState.correlations = newValue }
+    }
+    var historicalContext: [HealthMetric: HistoricalAnalyzer.HistoricalContext] {
+        get { historicalState.historicalContext }
+        set { historicalState.historicalContext = newValue }
+    }
 
     // MARK: - Deferred Analysis Caching
 
@@ -166,53 +261,65 @@ final class AnalysisEngine {
         persistence.saveLastAnalysisDate(Date())
     }
 
+    // MARK: - Analyzer Registry
+
+    /// Essential-phase analyzers — lightweight, run immediately after core analysis.
+    private static let essentialAnalyzers: [any InsightAnalyzer.Type] = [
+        InsightGenerator.self,
+        RecoveryAnalyzer.self,
+        WorkoutEffectivenessAnalyzer.self,
+        SleepPerformanceAnalyzer.self,
+        WeeklyPatternAnalyzer.self,
+        PersonalRecordAnalyzer.self,
+        CyclePhaseAnalyzer.self,
+        MultiMetricClusterAnalyzer.self,
+        ClinicalIntelligence.self,
+        IllnessEarlyWarning.self,
+    ]
+
+    /// Heavy-phase analyzers — expensive, run with TTL caching.
+    private static let heavyAnalyzers: [any InsightAnalyzer.Type] = [
+        CorrelationAnalyzer.self,
+        HistoricalAnalyzer.self,
+        CognitiveEnergyAnalyzer.self,
+        CrossMetricAnomalyDetector.self,
+        NutritionCorrelationAnalyzer.self,
+        CausalChainEngine.self,
+    ]
+
     // MARK: - Phase 2A: Deferred Essentials (lightweight, runs immediately after core)
 
-    /// Runs lightweight insight generators, health risks, and illness warnings.
-    /// These are cheap (~15K operations total) and provide Home tab content quickly.
+    /// Runs all essential insight analyzers via the unified `InsightAnalyzer` protocol,
+    /// then coordinates the results to remove contradictions before showing to the user.
     func runDeferredEssentials(
         timeSeries: [HealthMetric: MetricTimeSeries],
         cycleFlowSamples: [HealthKitManager.MenstrualFlowSample] = []
     ) {
-        let coreBaselines = baselines
-        let coreTrends = trends
-        let coreAnomalies = anomalies
-
-        // ── Lightweight insight generators (no correlations/historical needed) ──
-        var allInsights = InsightGenerator.generate(
-            anomalies: coreAnomalies,
-            trends: coreTrends,
-            baselines: coreBaselines,
-            historicalContext: [:],
-            correlations: [],
-            timeSeries: timeSeries
-        )
-        allInsights.append(contentsOf: RecoveryAnalyzer.generateInsights(
-            timeSeries: timeSeries, baselines: coreBaselines, trends: coreTrends
-        ))
-        allInsights.append(contentsOf: WorkoutEffectivenessAnalyzer.generateInsights(timeSeries: timeSeries))
-        allInsights.append(contentsOf: SleepPerformanceAnalyzer.generateInsights(timeSeries: timeSeries))
-        allInsights.append(contentsOf: WeeklyPatternAnalyzer.generateInsights(timeSeries: timeSeries))
-        allInsights.append(contentsOf: PersonalRecordAnalyzer.generateInsights(timeSeries: timeSeries))
-        allInsights.append(contentsOf: CyclePhaseAnalyzer.generateInsights(
-            timeSeries: timeSeries,
-            menstrualFlowSamples: cycleFlowSamples
-        ))
-        allInsights.append(contentsOf: MultiMetricClusterAnalyzer.generateInsights(
-            anomalies: coreAnomalies, trends: coreTrends, baselines: coreBaselines
-        ))
-
-        // ── Clinical intelligence (lightweight, single-metric) ──
-        allInsights.append(contentsOf: ClinicalIntelligence.generateInsights(
-            timeSeries: timeSeries, baselines: coreBaselines, trends: coreTrends
-        ))
-
-        // ── Lightweight secondary analyzers ──
+        // Pre-compute results needed by specific analyzers and stored on engine
         let newHealthRisks = HealthRiskEngine.assessAllRisks(
-            timeSeries: timeSeries, baselines: coreBaselines, trends: coreTrends, anomalies: coreAnomalies
+            timeSeries: timeSeries, baselines: baselines, trends: trends, anomalies: anomalies
         )
-        let newIllnessWarnings = IllnessEarlyWarning.evaluate(timeSeries: timeSeries, baselines: coreBaselines)
-        allInsights.append(contentsOf: IllnessEarlyWarning.generateInsights(from: newIllnessWarnings))
+        let newIllnessWarnings = IllnessEarlyWarning.evaluate(
+            timeSeries: timeSeries, baselines: baselines
+        )
+
+        // Build shared context for all essential analyzers
+        let context = AnalysisContext(
+            timeSeries: timeSeries,
+            baselines: baselines,
+            trends: trends,
+            anomalies: anomalies,
+            cycleFlowSamples: cycleFlowSamples,
+            illnessWarnings: newIllnessWarnings
+        )
+
+        // Run all essential analyzers through unified protocol.
+        // Insights are collected without intermediate dedup — a single dedup pass
+        // happens via InsightCoordinator.coordinate() at the end.
+        var allInsights: [Insight] = []
+        for analyzer in Self.essentialAnalyzers {
+            allInsights.append(contentsOf: analyzer.generateInsights(context: context))
+        }
 
         // ML insights (components have their own isReady guards)
         let mlInsights = mlOrchestrator.generateInsights()
@@ -220,7 +327,8 @@ final class AnalysisEngine {
             allInsights.append(contentsOf: mlInsights)
         }
 
-        allInsights.sort { $0.priorityScore > $1.priorityScore }
+        // Single coordination pass: infer directives, resolve contradictions, deduplicate
+        allInsights = InsightCoordinator.coordinate(allInsights)
 
         // ── Batch apply essentials ──
         insights = allInsights
@@ -231,54 +339,50 @@ final class AnalysisEngine {
     // MARK: - Phase 2B: Deferred Heavy (expensive, runs with delay)
 
     /// Runs correlations, historical analysis, cross-metric anomaly detection, and causal chains.
-    /// These are the CPU-heavy operations (~300K+ operations) that should run with thermal breaks.
-    /// Skips computation if results are fresh (within TTL) and `force` is false.
+    /// Heavy analysis results are stored on the engine, then all heavy-phase analyzers run
+    /// through the unified protocol. The full insight set (essential + heavy) is re-coordinated.
     func runDeferredHeavy(timeSeries: [HealthMetric: MetricTimeSeries], force: Bool = false) {
         guard force || needsHeavyAnalysis else {
             isAnalyzing = false
             return
         }
 
-        let coreBaselines = baselines
-        let coreTrends = trends
-        let coreAnomalies = anomalies
-
-        // ── Heavy cross-metric analysis ──
+        // ── Heavy cross-metric computation (results stored on engine) ──
         let newCorrelations = CorrelationAnalyzer.analyzeAll(timeSeries: timeSeries)
         let newHistoricalContext = HistoricalAnalyzer.analyzeAll(
-            timeSeries: timeSeries,
-            baselines: coreBaselines
+            timeSeries: timeSeries, baselines: baselines
         )
         let newCrossMetricAnomalies = CrossMetricAnomalyDetector.detect(
-            timeSeries: timeSeries, baselines: coreBaselines
+            timeSeries: timeSeries, baselines: baselines
         )
-
-        // ── Insights that need correlations/historical ──
-        var heavyInsights: [Insight] = []
-        heavyInsights.append(contentsOf: CorrelationAnalyzer.generateInsights(from: newCorrelations))
-        heavyInsights.append(contentsOf: HistoricalAnalyzer.generateInsights(
-            historicalContext: newHistoricalContext, baselines: coreBaselines
-        ))
-        heavyInsights.append(contentsOf: CognitiveEnergyAnalyzer.generateInsights(
-            timeSeries: timeSeries, baselines: coreBaselines, trends: coreTrends, correlations: newCorrelations
-        ))
-        heavyInsights.append(contentsOf: CrossMetricAnomalyDetector.generateInsights(from: newCrossMetricAnomalies))
-
-        // ── Nutrition correlation analysis ──
-        let nutritionCorrelations = NutritionCorrelationAnalyzer.analyze(timeSeries: timeSeries)
-        heavyInsights.append(contentsOf: NutritionCorrelationAnalyzer.generateInsights(from: nutritionCorrelations))
-
-        // ── Causal chains (needs correlations) ──
         let newCausalChains = CausalChainEngine.buildChains(
-            correlations: newCorrelations, anomalies: coreAnomalies,
-            trends: coreTrends, timeSeries: timeSeries, baselines: coreBaselines
+            correlations: newCorrelations, anomalies: anomalies,
+            trends: trends, timeSeries: timeSeries, baselines: baselines
         )
-        heavyInsights.append(contentsOf: CausalChainEngine.generateInsights(from: newCausalChains))
 
-        // Merge heavy insights into the existing insights from essentials (deduplicated)
+        // Build context with heavy results included
+        let context = AnalysisContext(
+            timeSeries: timeSeries,
+            baselines: baselines,
+            trends: trends,
+            anomalies: anomalies,
+            correlations: newCorrelations,
+            historicalContext: newHistoricalContext,
+            crossMetricAnomalies: newCrossMetricAnomalies,
+            causalChains: newCausalChains
+        )
+
+        // Run all heavy analyzers through unified protocol
+        var heavyInsights: [Insight] = []
+        for analyzer in Self.heavyAnalyzers {
+            heavyInsights.append(contentsOf: analyzer.generateInsights(context: context))
+        }
+
+        // Merge heavy insights with essentials and re-coordinate the full set.
+        // This single InsightCoordinator.coordinate() pass handles all dedup.
         var mergedInsights = insights
         mergedInsights.append(contentsOf: heavyInsights)
-        mergedInsights = Self.deduplicateInsights(mergedInsights)
+        mergedInsights = InsightCoordinator.coordinate(mergedInsights)
 
         // ── Batch apply heavy results ──
         correlations = newCorrelations
@@ -321,10 +425,11 @@ final class AnalysisEngine {
             focusCategories: focusCategories
         )
 
-        // After ML completes, regenerate ML insights and deduplicate
+        // After ML completes, regenerate ML insights and re-coordinate.
+        // Single dedup pass via InsightCoordinator.coordinate().
         let mlInsights = mlOrchestrator.generateInsights()
         insights.append(contentsOf: mlInsights)
-        insights = Self.deduplicateInsights(insights)
+        insights = InsightCoordinator.coordinate(insights)
 
         // Incremental training for next run
         mlOrchestrator.trainIncremental(
@@ -362,7 +467,7 @@ final class AnalysisEngine {
 
     /// Get insights for a specific category
     func insights(for category: HealthCategory) -> [Insight] {
-        Self.deduplicateInsights(insights.filter { $0.metric.category == category })
+        InsightCoordinator.coordinate(insights.filter { $0.metric.category == category })
     }
 
     // MARK: - Global Insight Deduplication

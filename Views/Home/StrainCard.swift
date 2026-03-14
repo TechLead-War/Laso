@@ -78,24 +78,29 @@ struct StrainCard: View {
         .accessibilityIdentifier("home.strainCard")
     }
 
-    // MARK: - Strain Ring
+    // MARK: - Strain Icon
 
     private var strainRing: some View {
         ZStack {
+            // Gauge-style arc background
             Circle()
-                .stroke(strainLevel.color.opacity(0.2), lineWidth: 4)
-                .frame(width: DS.iconSize + 8, height: DS.iconSize + 8)
+                .trim(from: 0.15, to: 0.85)
+                .stroke(strainLevel.color.opacity(0.15), style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                .frame(width: DS.iconSize + 12, height: DS.iconSize + 12)
+                .rotationEffect(.degrees(90))
 
+            // Filled arc showing progress
             Circle()
-                .trim(from: 0, to: animatedProgress)
-                .stroke(strainLevel.color, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                .frame(width: DS.iconSize + 8, height: DS.iconSize + 8)
-                .rotationEffect(.degrees(-90))
+                .trim(from: 0.15, to: 0.15 + animatedProgress * 0.7)
+                .stroke(strainLevel.color, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                .frame(width: DS.iconSize + 12, height: DS.iconSize + 12)
+                .rotationEffect(.degrees(90))
                 .animation(.easeInOut(duration: 0.8), value: animatedProgress)
 
             Image(systemName: "flame.fill")
-                .font(.body.weight(.semibold))
+                .font(.title3.weight(.semibold))
                 .foregroundStyle(strainLevel.color)
+                .offset(y: -1)
         }
         .onAppear { animatedProgress = progress }
         .onChange(of: strainValue) { animatedProgress = progress }

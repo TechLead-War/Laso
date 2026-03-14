@@ -169,23 +169,23 @@ struct VitalityComponent: Identifiable {
         guard let hm = healthMetric else { return "" }
         switch hm {
         case .vo2Max:
-            return "Add 2-3 sessions of vigorous cardio per week (running, cycling, swimming) to boost aerobic capacity."
+            return Copy.Vitality.improveVO2Max
         case .restingHeartRate:
-            return "Regular aerobic exercise and stress management can lower resting heart rate over time."
+            return Copy.Vitality.improveRHR
         case .heartRateVariability:
-            return "Prioritize sleep quality, practice deep breathing, and maintain consistent exercise to improve HRV."
+            return Copy.Vitality.improveHRV
         case .sleepDuration, .sleepDeep:
-            return "Aim for 7-9 hours of sleep with a consistent schedule. Limit screens and caffeine before bed."
+            return Copy.Vitality.improveSleep
         case .walkingSpeed:
-            return "Walking speed reflects overall fitness. Regular walking, strength training, and balance work can help."
+            return Copy.Vitality.improveWalkingSpeed
         case .steps:
-            return "Increase daily movement — take walking meetings, use stairs, and add a daily walk to your routine."
+            return Copy.Vitality.improveSteps
         case .exerciseMinutes:
-            return "Build up to 150+ minutes of moderate exercise per week through activities you enjoy."
+            return Copy.Vitality.improveExercise
         case .bmi, .bodyFatPercentage:
-            return "Focus on sustainable nutrition and regular exercise. Small consistent changes have the biggest impact."
+            return Copy.Vitality.improveBodyComp
         default:
-            return "Track this metric consistently and look for patterns in your data."
+            return Copy.Vitality.improveDefault
         }
     }
 }
@@ -278,14 +278,15 @@ final class VitalityScorer {
 
     // MARK: - Compute
 
-    /// Compute vitality age from the health data store.
+    /// Compute vitality age from health metric time series.
     ///
     /// - Parameters:
-    ///   - store: The on-device health data store containing metric time series.
+    ///   - store: The on-device health data store (used for historical trend computation).
     ///   - chronologicalAge: The user's actual age in years.
-    func compute(from store: HealthDataStore, chronologicalAge: Int) {
+    ///   - timeSeries: Fresh in-memory time series from HealthKitManager.
+    func compute(from store: HealthDataStore, chronologicalAge: Int, timeSeries: [HealthMetric: MetricTimeSeries]? = nil) {
         self.chronologicalAge = chronologicalAge
-        let allSeries = store.loadAllTimeSeries()
+        let allSeries = timeSeries ?? store.loadAllTimeSeries()
 
         availableDays = usableDaysForPersonalization(from: allSeries)
         personalizationProgress = personalizationProgress(for: availableDays)

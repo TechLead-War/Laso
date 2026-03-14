@@ -18,13 +18,13 @@ struct StressCard: View {
                     .frame(width: 4)
                     .padding(.vertical, 6)
 
-                HStack(spacing: 12) {
-                    // Stress icon
-                    Image(systemName: "brain.head.profile")
-                        .font(.body.weight(.semibold))
+                HStack(spacing: 14) {
+                    // Stress icon — waveform in capsule, distinct from Brain Health
+                    Image(systemName: "waveform.path.ecg")
+                        .font(.callout.weight(.semibold))
                         .foregroundStyle(.white)
-                        .frame(width: DS.iconSize, height: DS.iconSize)
-                        .background(levelColor, in: Circle())
+                        .frame(width: DS.iconSize + 14, height: DS.iconSize)
+                        .background(levelColor, in: Capsule())
 
                     // Center text
                     VStack(alignment: .leading, spacing: 4) {

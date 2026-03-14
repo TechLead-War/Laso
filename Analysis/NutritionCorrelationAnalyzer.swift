@@ -140,9 +140,9 @@ struct NutritionCorrelationAnalyzer {
         correlations.prefix(5).map { corr in
             Insight(
                 metric: corr.nutritionMetric,
-                title: "\(corr.nutritionMetric.displayName) Affects \(corr.outcomeMetric.displayName)",
+                title: Copy.Analysis.NutritionCorrelation.affects(nutrition: corr.nutritionMetric.displayName, outcome: corr.outcomeMetric.displayName),
                 summary: corr.actionableInsight,
-                recommendation: "Monitor your \(corr.nutritionMetric.displayName) intake to optimize \(corr.outcomeMetric.displayName).",
+                recommendation: Copy.Analysis.NutritionCorrelation.monitorToOptimize(nutrition: corr.nutritionMetric.displayName, outcome: corr.outcomeMetric.displayName),
                 severity: abs(corr.correlation) > 0.4 ? .warning : .info,
                 trend: .stable,
                 currentValue: corr.correlation,
@@ -237,5 +237,17 @@ struct NutritionCorrelationAnalyzer {
         }
 
         return text
+    }
+}
+
+// MARK: - InsightAnalyzer Conformance
+
+extension NutritionCorrelationAnalyzer: InsightAnalyzer {
+    static var analyzerID: String { "nutritionCorrelation" }
+    static var insightCategory: InsightCategory { .nutritionCorrelation }
+
+    static func generateInsights(context: AnalysisContext) -> [Insight] {
+        let correlations = analyze(timeSeries: context.timeSeries)
+        return generateInsights(from: correlations)
     }
 }

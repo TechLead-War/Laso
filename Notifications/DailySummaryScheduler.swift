@@ -30,29 +30,29 @@ struct DailySummaryScheduler {
             let arrow = delta > 0 ? "\u{2191}" : "\u{2193}"  // ↑ or ↓
             titleSuffix = " \(arrow)\(abs(delta))"
         }
-        let title = "Health Score: \(score)/100 (\(grade))\(titleSuffix)"
+        let title = Copy.Notifications.dailySummaryTitle(score: score, grade: grade, suffix: titleSuffix)
 
         var bodyParts: [String] = []
 
         // Specific anomaly callout
         if let anomaly = topAnomaly {
             let direction = anomaly.changePercent > 0 ? "up" : "down"
-            bodyParts.append("\(anomaly.metricName) \(direction) \(String(format: "%.0f", abs(anomaly.changePercent)))%.")
+            bodyParts.append(Copy.Notifications.anomalyCallout(metric: anomaly.metricName, direction: direction, percent: String(format: "%.0f", abs(anomaly.changePercent))))
         } else if anomalyCount > 0 {
-            bodyParts.append("\(anomalyCount) metric\(anomalyCount == 1 ? "" : "s") need\(anomalyCount == 1 ? "s" : "") attention.")
+            bodyParts.append(Copy.Notifications.metricsNeedAttention(anomalyCount))
         } else {
-            bodyParts.append("All metrics looking healthy!")
+            bodyParts.append(Copy.Notifications.allMetricsHealthy)
         }
 
         // Top insight action
         if let top = topInsights.first {
             let shortRec = firstSentence(top.recommendation)
-            bodyParts.append("Action: \(shortRec)")
+            bodyParts.append(Copy.Notifications.actionPrefix(shortRec))
         }
 
         // Streak mention
         if streakDays > 1 {
-            bodyParts.append("\(streakDays)-day streak!")
+            bodyParts.append(Copy.Notifications.streakDays(streakDays))
         }
 
         // Category breakdown (compact)

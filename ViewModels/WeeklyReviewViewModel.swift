@@ -28,7 +28,7 @@ final class WeeklyReviewViewModel {
             return
         }
 
-        let score = dashboardViewModel.overallScore.score
+        let score = dashboardViewModel.scores.overallScore.score
         let previousScore = persistence.loadPreviousWeekScore()
 
         let scoreTrend: TrendDirection
@@ -228,11 +228,11 @@ final class WeeklyReviewViewModel {
     ) -> String {
         switch adherence {
         case .keepingUp:
-            return "You are consistently hitting your \(formatSteps(currentTarget))/day target. Next week, we will progress to \(formatSteps(nextTarget))/day."
+            return Copy.Reports.WeeklyReview.keepingUp(currentTarget: formatSteps(currentTarget), nextTarget: formatSteps(nextTarget))
         case .plateauing:
-            return "You are close to your \(formatSteps(currentTarget))/day target. We will hold steady this week and build consistency before increasing."
+            return Copy.Reports.WeeklyReview.plateauing(currentTarget: formatSteps(currentTarget))
         case .struggling:
-            return "This week looked tough at \(formatSteps(currentTarget))/day. We will reduce next week to \(formatSteps(nextTarget))/day so the plan stays realistic."
+            return Copy.Reports.WeeklyReview.struggling(currentTarget: formatSteps(currentTarget), nextTarget: formatSteps(nextTarget))
         }
     }
 

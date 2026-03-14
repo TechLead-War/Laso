@@ -18,12 +18,12 @@ enum UserLevel: Int, CaseIterable, Comparable {
 
     var displayName: String {
         switch self {
-        case .newcomer:  "Newcomer"
-        case .explorer:  "Explorer"
-        case .committed: "Committed"
-        case .dedicated: "Dedicated"
-        case .champion:  "Champion"
-        case .legend:    "Legend"
+        case .newcomer:  Copy.Achievements.newcomer
+        case .explorer:  Copy.Achievements.explorer
+        case .committed: Copy.Achievements.committed
+        case .dedicated: Copy.Achievements.dedicated
+        case .champion:  Copy.Achievements.champion
+        case .legend:    Copy.Achievements.legend
         }
     }
 
@@ -68,12 +68,12 @@ enum UserLevel: Int, CaseIterable, Comparable {
 
     var description: String {
         switch self {
-        case .newcomer:  "Just getting started — build the habit"
-        case .explorer:  "First week down — exploring your data"
-        case .committed: "A full month of tracking — you're committed"
-        case .dedicated: "Three months strong — dedicated to your health"
-        case .champion:  "Half a year — you're a health champion"
-        case .legend:    "A full year and beyond — legendary consistency"
+        case .newcomer:  Copy.Achievements.newcomerDescription
+        case .explorer:  Copy.Achievements.explorerDescription
+        case .committed: Copy.Achievements.committedDescription
+        case .dedicated: Copy.Achievements.dedicatedDescription
+        case .champion:  Copy.Achievements.championDescription
+        case .legend:    Copy.Achievements.legendDescription
         }
     }
 
@@ -555,8 +555,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "first_green_day",
-            title: "First Green Day",
-            description: "Achieve your first health score above 75",
+            title: Copy.Achievements.firstGreenDayTitle,
+            description: Copy.Achievements.firstGreenDayDescription,
             icon: "checkmark.circle.fill",
             category: .milestone
         ) { _, _, _, _, _, scoresByDay, _, _, _ in
@@ -565,8 +565,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "first_week",
-            title: "First Week",
-            description: "Track your health for 7 consecutive days",
+            title: Copy.Achievements.firstWeekTitle,
+            description: Copy.Achievements.firstWeekDescription,
             icon: "calendar.badge.checkmark",
             category: .milestone
         ) { sessionDays, _, _, _, _, _, _, _, _ in
@@ -575,8 +575,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "data_scholar",
-            title: "Data Scholar",
-            description: "Accumulate 60+ days of health data",
+            title: Copy.Achievements.dataScholarTitle,
+            description: Copy.Achievements.dataScholarDescription,
             icon: "books.vertical.fill",
             category: .milestone
         ) { sessionDays, _, _, _, _, _, _, _, _ in
@@ -585,8 +585,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "centurion",
-            title: "Centurion",
-            description: "100 days of health tracking",
+            title: Copy.Achievements.centurionTitle,
+            description: Copy.Achievements.centurionDescription,
             icon: "laurel.leading",
             category: .milestone
         ) { sessionDays, _, _, _, _, _, _, _, _ in
@@ -595,8 +595,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "half_year_hero",
-            title: "Half Year Hero",
-            description: "Track your health for 180 days",
+            title: Copy.Achievements.halfYearHeroTitle,
+            description: Copy.Achievements.halfYearHeroDescription,
             icon: "star.circle.fill",
             category: .milestone
         ) { sessionDays, _, _, _, _, _, _, _, _ in
@@ -605,8 +605,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "year_one",
-            title: "Year One",
-            description: "A full year of health tracking — legendary",
+            title: Copy.Achievements.yearOneTitle,
+            description: Copy.Achievements.yearOneDescription,
             icon: "crown.fill",
             category: .milestone
         ) { sessionDays, _, _, _, _, _, _, _, _ in
@@ -617,8 +617,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "streak_7_activity",
-            title: "Week Warrior",
-            description: "7-day activity streak (10K steps or 30min exercise daily)",
+            title: Copy.Achievements.weekWarriorTitle,
+            description: Copy.Achievements.weekWarriorDescription,
             icon: "figure.run",
             category: .streak
         ) { _, streaks, _, _, _, _, _, _, _ in
@@ -627,8 +627,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "streak_30_activity",
-            title: "Iron Will",
-            description: "30-day activity streak — unstoppable",
+            title: Copy.Achievements.ironWillTitle,
+            description: Copy.Achievements.ironWillDescription,
             icon: "bolt.shield.fill",
             category: .streak
         ) { _, streaks, _, _, _, _, _, _, _ in
@@ -637,8 +637,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "streak_100_activity",
-            title: "Hundred Day Hammer",
-            description: "100-day activity streak — relentless",
+            title: Copy.Achievements.hundredDayHammerTitle,
+            description: Copy.Achievements.hundredDayHammerDescription,
             icon: "flame.circle.fill",
             category: .streak
         ) { _, streaks, _, _, _, _, _, _, _ in
@@ -647,8 +647,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "sleep_champion",
-            title: "Sleep Champion",
-            description: "7 consecutive nights with 8+ hours of sleep",
+            title: Copy.Achievements.sleepChampionTitle,
+            description: Copy.Achievements.sleepChampionDescription,
             icon: "moon.stars.fill",
             category: .streak
         ) { _, _, _, _, sleepByDay, _, _, _, _ in
@@ -658,8 +658,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "streak_30_sleep",
-            title: "Dream Machine",
-            description: "30-day sleep streak — consistent 7+ hour nights",
+            title: Copy.Achievements.dreamMachineTitle,
+            description: Copy.Achievements.dreamMachineDescription,
             icon: "bed.double.fill",
             category: .streak
         ) { _, streaks, _, _, _, _, _, _, _ in
@@ -668,8 +668,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "streak_7_recovery",
-            title: "Recovery Pro",
-            description: "7 consecutive green recovery days",
+            title: Copy.Achievements.recoveryProTitle,
+            description: Copy.Achievements.recoveryProDescription,
             icon: "heart.circle.fill",
             category: .streak
         ) { _, streaks, _, _, _, _, _, _, _ in
@@ -678,8 +678,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "streak_30_recovery",
-            title: "Zen Master",
-            description: "30-day recovery streak — peak balance",
+            title: Copy.Achievements.zenMasterTitle,
+            description: Copy.Achievements.zenMasterDescription,
             icon: "sparkles",
             category: .streak
         ) { _, streaks, _, _, _, _, _, _, _ in
@@ -688,8 +688,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "perfect_week",
-            title: "Perfect Week",
-            description: "All 7 days in a week with green recovery scores",
+            title: Copy.Achievements.perfectWeekTitle,
+            description: Copy.Achievements.perfectWeekDescription,
             icon: "checkmark.seal.fill",
             category: .streak
         ) { _, _, _, _, _, scoresByDay, _, calendar, today in
@@ -699,8 +699,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "streak_7_master",
-            title: "Triple Threat",
-            description: "7-day master streak — activity, sleep, and recovery all green",
+            title: Copy.Achievements.tripleThreatTitle,
+            description: Copy.Achievements.tripleThreatDescription,
             icon: "trophy.fill",
             category: .streak
         ) { _, streaks, _, _, _, _, _, _, _ in
@@ -709,8 +709,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "streak_30_master",
-            title: "Absolute Legend",
-            description: "30-day master streak — perfection across all pillars",
+            title: Copy.Achievements.absoluteLegendTitle,
+            description: Copy.Achievements.absoluteLegendDescription,
             icon: "medal.fill",
             category: .streak
         ) { _, streaks, _, _, _, _, _, _, _ in
@@ -721,8 +721,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "marathon_month",
-            title: "Marathon Month",
-            description: "Total monthly steps exceed 300,000",
+            title: Copy.Achievements.marathonMonthTitle,
+            description: Copy.Achievements.marathonMonthDescription,
             icon: "figure.walk",
             category: .record
         ) { _, _, stepsByDay, _, _, _, _, calendar, today in
@@ -731,8 +731,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "peak_performer",
-            title: "Peak Performer",
-            description: "Achieve a health score of 95 or higher",
+            title: Copy.Achievements.peakPerformerTitle,
+            description: Copy.Achievements.peakPerformerDescription,
             icon: "chart.line.uptrend.xyaxis",
             category: .record
         ) { _, _, _, _, _, scoresByDay, _, _, _ in
@@ -741,8 +741,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "step_king",
-            title: "Step King",
-            description: "Hit 20,000 steps in a single day",
+            title: Copy.Achievements.stepKingTitle,
+            description: Copy.Achievements.stepKingDescription,
             icon: "shoeprints.fill",
             category: .record
         ) { _, _, stepsByDay, _, _, _, _, _, _ in
@@ -753,8 +753,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "night_owl_reformed",
-            title: "Night Owl Reformed",
-            description: "Improve sleep consistency — 14 days averaging 7+ hours after previously averaging under 6.5",
+            title: Copy.Achievements.nightOwlReformedTitle,
+            description: Copy.Achievements.nightOwlReformedDescription,
             icon: "sunrise.fill",
             category: .consistency
         ) { _, _, _, _, sleepByDay, _, _, _, _ in
@@ -763,8 +763,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "steady_hand",
-            title: "Steady Hand",
-            description: "Keep your health score within 10 points for 14 consecutive days",
+            title: Copy.Achievements.steadyHandTitle,
+            description: Copy.Achievements.steadyHandDescription,
             icon: "waveform.path.ecg",
             category: .consistency
         ) { _, _, _, _, _, scoresByDay, _, _, _ in
@@ -773,8 +773,8 @@ final class GamificationEngine {
 
         AchievementDef(
             id: "checkin_14",
-            title: "Daily Devotee",
-            description: "14-day check-in streak — health is a daily practice",
+            title: Copy.Achievements.dailyDevoteeTitle,
+            description: Copy.Achievements.dailyDevoteeDescription,
             icon: "app.badge.checkmark",
             category: .consistency
         ) { _, streaks, _, _, _, _, _, _, _ in

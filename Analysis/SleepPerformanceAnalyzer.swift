@@ -58,7 +58,7 @@ struct SleepPerformanceAnalyzer {
 
             return Insight(
                 metric: .sleepDuration,
-                title: "Sleep Drives \(performanceMetric.displayName)",
+                title: Copy.Analysis.Sleep.sleepDrives(performanceMetric.displayName),
                 summary: "On 7+ hour sleep nights, your next-day \(performanceMetric.displayName.lowercased()) is \(String(format: "%.0f", abs(percentDiff)))% \(percentDiff > 0 ? "higher" : "lower") (\(String(format: "%.0f", avgGood)) vs \(String(format: "%.0f", avgPoor)) \(performanceMetric.unit)).",
                 recommendation: "Your data shows a \(String(format: "%.0f", abs(percentDiff)))% difference in next-day \(performanceMetric.displayName.lowercased()) between 7+ hr sleep nights (\(String(format: "%.0f", avgGood)) \(performanceMetric.unit)) and <6 hr nights (\(String(format: "%.0f", avgPoor)) \(performanceMetric.unit)) across \(goodSleep.count + poorSleep.count) measured nights.",
                 severity: abs(percentDiff) >= 25 ? .warning : .info,
@@ -126,7 +126,7 @@ struct SleepPerformanceAnalyzer {
 
         return Insight(
             metric: .sleepDeep,
-            title: "Sleep Quality → Activity",
+            title: Copy.Analysis.Sleep.sleepQualityToActivity,
             summary: "High-quality sleep nights (>30% deep+REM) lead to \(String(format: "%.0f", abs(diff)))% \(diff > 0 ? "more" : "fewer") active calories the next day.",
             recommendation: "Nights with >30% deep+REM correlate with \(String(format: "%.0f", abs(diff)))% \(diff > 0 ? "higher" : "lower") next-day active calories (\(String(format: "%.0f", avgHigh)) vs \(String(format: "%.0f", avgLow)) kcal) across \(highQualityCals.count + lowQualityCals.count) measured nights.",
             severity: .info,
@@ -205,7 +205,7 @@ struct SleepPerformanceAnalyzer {
 
         return Insight(
             metric: .sleepDuration,
-            title: "Sleep Consistency",
+            title: Copy.Analysis.Sleep.sleepConsistency,
             summary: summaryParts.joined(separator: ". ") + ".",
             recommendation: isConsistent ?
                 "Sleep variation is \u{00B1}\(String(format: "%.0f", stdDev * 60)) min around your \(String(format: "%.1f", mean)) hr average (CV: \(String(format: "%.0f", cv * 100))%).\(gapNote)" :
@@ -218,5 +218,16 @@ struct SleepPerformanceAnalyzer {
             category: .sleepPerformance,
             relatedMetrics: [.sleepDuration, .sleepDeep]
         )
+    }
+}
+
+// MARK: - InsightAnalyzer Conformance
+
+extension SleepPerformanceAnalyzer: InsightAnalyzer {
+    static var analyzerID: String { "sleepPerformance" }
+    static var insightCategory: InsightCategory { .sleepPerformance }
+
+    static func generateInsights(context: AnalysisContext) -> [Insight] {
+        generateInsights(timeSeries: context.timeSeries)
     }
 }

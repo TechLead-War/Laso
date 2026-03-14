@@ -152,12 +152,12 @@ struct CognitiveEnergyAnalyzer {
             recommendation = "Priority: extend tonight's sleep by 45 min. Your \(topComponent) is the biggest factor pulling your cognitive readiness down. A single night of 8+ hr sleep typically improves next-day HRV and deep sleep."
         } else {
             summary = "Your cognitive readiness is strong at \(finalScore)/100. HRV, sleep quality, and recovery markers are all above baseline."
-            recommendation = "Your brain is primed for demanding work today. Take advantage of this high-readiness state for complex tasks."
+            recommendation = Copy.Analysis.CognitiveEnergy.brainPrimedForWork
         }
 
         return Insight(
             metric: .heartRateVariability,
-            title: isLow ? "Low Cognitive Readiness" : "Strong Cognitive Readiness",
+            title: isLow ? Copy.Analysis.CognitiveEnergy.lowCognitiveReadiness : Copy.Analysis.CognitiveEnergy.strongCognitiveReadiness,
             summary: summary,
             recommendation: recommendation,
             severity: severity,
@@ -196,7 +196,7 @@ struct CognitiveEnergyAnalyzer {
 
         return Insight(
             metric: .sleepDuration,
-            title: "Sleep Debt Accumulating",
+            title: Copy.Analysis.CognitiveEnergy.sleepDebtAccumulating,
             summary: "You've accumulated \(debtStr) hours of sleep debt this week (averaging \(avgStr) hrs vs your \(baselineStr) hr baseline). Cognitive impairment compounds with each deficit day \u{2014} reaction time and decision-making are most affected.",
             recommendation: "You need ~1 extra hour per night for \(catchUpNights) nights to clear this debt. Set a bedtime alarm for 45 min before your target sleep time tonight.",
             severity: cumulativeDebt >= 5.0 ? .warning : .info,
@@ -257,7 +257,7 @@ struct CognitiveEnergyAnalyzer {
 
         return Insight(
             metric: .heartRateVariability,
-            title: "Mental Fatigue Pattern Detected",
+            title: Copy.Analysis.CognitiveEnergy.mentalFatiguePatternDetected,
             summary: summary,
             recommendation: "Three actions ranked by impact: \(actions.joined(separator: ". ")).",
             severity: .warning,
@@ -326,7 +326,7 @@ struct CognitiveEnergyAnalyzer {
 
         return Insight(
             metric: .steps,
-            title: "Low Physical Energy",
+            title: Copy.Analysis.CognitiveEnergy.lowPhysicalEnergy,
             summary: "Your physical energy indicators are low: \(signalText). You're likely feeling fatigued and heavy.",
             recommendation: recommendation,
             severity: signals.count >= 3 ? .warning : .info,
@@ -394,9 +394,9 @@ struct CognitiveEnergyAnalyzer {
 
         return Insight(
             metric: .heartRateVariability,
-            title: "Recovery Day Needed",
+            title: Copy.Analysis.CognitiveEnergy.recoveryDayNeeded,
             summary: "You've been highly active for \(consecutiveHighDays) days straight and your recovery markers are strained \u{2014} \(signalText). Without recovery, both mental sharpness and physical performance decline.",
-            recommendation: "Take a genuine rest day tomorrow. Light walking only, no intense exercise. Your patterns show HRV typically rebounds within 48 hrs of reduced intensity.",
+            recommendation: Copy.Analysis.CognitiveEnergy.recoveryDayRecommendation,
             severity: .warning,
             trend: .declining,
             currentValue: Double(consecutiveHighDays),
@@ -441,7 +441,7 @@ struct CognitiveEnergyAnalyzer {
 
         return Insight(
             metric: .timeInDaylight,
-            title: "Daylight-Sleep-Cognition Chain",
+            title: Copy.Analysis.CognitiveEnergy.daylightSleepCognitionChain,
             summary: "Your daylight exposure dropped \(daylightChange)% and \(deepDeclining ? "deep sleep" : "sleep duration") declined \(deepChange)% in the same window. These are connected \u{2014} natural light sets your circadian clock, which drives sleep architecture and next-day cognitive clarity.",
             recommendation: "Get 20+ min of outdoor light before noon tomorrow.\(effectNote) This single change impacts your sleep timing, deep sleep percentage, and next-day mental sharpness.",
             severity: .info,
@@ -530,5 +530,21 @@ struct CognitiveEnergyAnalyzer {
 
         let diff = (deepOnHighDaylight - deepOnLowDaylight) / deepOnLowDaylight * 100
         return diff >= 8 ? diff : nil
+    }
+}
+
+// MARK: - InsightAnalyzer Conformance
+
+extension CognitiveEnergyAnalyzer: InsightAnalyzer {
+    static var analyzerID: String { "cognitiveEnergy" }
+    static var insightCategory: InsightCategory { .cognitiveEnergy }
+
+    static func generateInsights(context: AnalysisContext) -> [Insight] {
+        generateInsights(
+            timeSeries: context.timeSeries,
+            baselines: context.baselines,
+            trends: context.trends,
+            correlations: context.correlations
+        )
     }
 }

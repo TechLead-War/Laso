@@ -464,7 +464,7 @@ struct IllnessEarlyWarning {
             signalSummary = allButLast.joined(separator: ", ") + ", and " + last + "."
         }
 
-        let patternNote = "This multi-metric pattern — where several physiological markers shift unfavorably at the same time — has historically been associated with the early stages of immune response."
+        let patternNote = Copy.Analysis.IllnessWarning.multiMetricPattern
 
         return signalSummary + " " + patternNote
     }
@@ -475,11 +475,11 @@ struct IllnessEarlyWarning {
     private static func insightTitle(for warning: Warning) -> String {
         switch warning.severity {
         case .critical:
-            return "Body Showing Signs of Significant Strain"
+            return Copy.Analysis.IllnessWarning.significantStrain
         case .warning:
-            return "Multiple Metrics Suggest Physical Strain"
+            return Copy.Analysis.IllnessWarning.multipleMetricStrain
         case .info:
-            return "Early Signs of Physiological Strain"
+            return Copy.Analysis.IllnessWarning.earlyPhysiologicalStrain
         }
     }
 
@@ -498,22 +498,22 @@ struct IllnessEarlyWarning {
         if severity >= .warning {
             observations.append("Your body is showing strain across \(signals.count) metrics simultaneously.")
         } else {
-            observations.append("Multiple metrics shifted from baseline simultaneously.")
+            observations.append(Copy.Analysis.IllnessWarning.multipleMetricsShifted)
         }
 
-        // Hydration — state data observation
-        observations.append("Your multi-metric pattern is consistent with early immune response.")
+        // State data observation
+        observations.append(Copy.Analysis.IllnessWarning.consistentWithPhysiologicalStrain)
 
         // Sleep-specific observation if HRV or RHR are signaling
         let hasCardiacSignal = signals.contains { $0.metric == .restingHeartRate || $0.metric == .heartRateVariability }
         if hasCardiacSignal {
-            observations.append("Your cardiac metrics indicate autonomic strain.")
+            observations.append(Copy.Analysis.IllnessWarning.cardiacMetricsStrain)
         }
 
         // Activity-specific observation
         let hasActivityDecline = signals.contains { $0.metric == .steps }
         if hasActivityDecline {
-            observations.append("Your activity metrics haven't returned to baseline yet.")
+            observations.append(Copy.Analysis.IllnessWarning.activityNotReturned)
         }
 
         // Critical-level: state the severity of the data pattern
@@ -522,5 +522,16 @@ struct IllnessEarlyWarning {
         }
 
         return observations.joined(separator: " ")
+    }
+}
+
+// MARK: - InsightAnalyzer Conformance
+
+extension IllnessEarlyWarning: InsightAnalyzer {
+    static var analyzerID: String { "illnessEarlyWarning" }
+    static var insightCategory: InsightCategory { .illnessWarning }
+
+    static func generateInsights(context: AnalysisContext) -> [Insight] {
+        generateInsights(from: context.illnessWarnings)
     }
 }

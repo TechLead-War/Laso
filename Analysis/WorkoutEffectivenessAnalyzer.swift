@@ -62,7 +62,7 @@ struct WorkoutEffectivenessAnalyzer {
 
         return Insight(
             metric: .workoutDuration,
-            title: "Workout Consistency",
+            title: Copy.Analysis.Workout.workoutConsistency,
             summary: "\(Int(consistencyScore))% of the last 4 weeks had 3+ workout days (avg \(String(format: "%.1f", weeklyAvg))/week). Breakdown: \(weekBreakdown).",
             recommendation: consistencyScore >= 75 ?
                 "\(Int(consistencyScore))% of weeks hit 3+ sessions at \(String(format: "%.1f", weeklyAvg)) avg/week. Breakdown: \(weekBreakdown)." :
@@ -109,7 +109,7 @@ struct WorkoutEffectivenessAnalyzer {
 
         return Insight(
             metric: .vo2Max,
-            title: "VO2 Max Response",
+            title: Copy.Analysis.Workout.vo2MaxResponse,
             summary: "Your VO2 Max \(change > 0 ? "improved" : "decreased") \(String(format: "%.1f", abs(change)))% over the last 30 days (\(String(format: "%.1f", olderAvg)) \u{2192} \(String(format: "%.1f", recentAvg)) \(HealthMetric.vo2Max.unit)).\(weeklyProgression)",
             recommendation: change > 0 ?
                 "VO2 Max trending up \(String(format: "%.1f", abs(change)))% over 30 days (\(String(format: "%.1f", olderAvg)) \u{2192} \(String(format: "%.1f", recentAvg)) \(HealthMetric.vo2Max.unit)).\(weeklyProgression)" :
@@ -147,7 +147,7 @@ struct WorkoutEffectivenessAnalyzer {
 
         return Insight(
             metric: .activeCalories,
-            title: "Calorie Efficiency",
+            title: Copy.Analysis.Workout.calorieEfficiency,
             summary: "You're burning \(String(format: "%.1f", efficiency7d)) kcal/min this week vs \(String(format: "%.1f", efficiency30d)) kcal/min over 30 days (\(change > 0 ? "+" : "")\(String(format: "%.0f", change))%).",
             recommendation: change > 0 ?
                 "Calorie efficiency up \(String(format: "%.0f", change))% this week — burning \(String(format: "%.1f", efficiency7d)) kcal/min vs your 30-day average of \(String(format: "%.1f", efficiency30d)) kcal/min." :
@@ -160,5 +160,16 @@ struct WorkoutEffectivenessAnalyzer {
             category: .workoutEffectiveness,
             relatedMetrics: [.activeCalories, .exerciseMinutes]
         )
+    }
+}
+
+// MARK: - InsightAnalyzer Conformance
+
+extension WorkoutEffectivenessAnalyzer: InsightAnalyzer {
+    static var analyzerID: String { "workoutEffectiveness" }
+    static var insightCategory: InsightCategory { .workoutEffectiveness }
+
+    static func generateInsights(context: AnalysisContext) -> [Insight] {
+        generateInsights(timeSeries: context.timeSeries)
     }
 }

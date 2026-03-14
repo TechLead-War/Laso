@@ -12,6 +12,7 @@ struct HomeView: View {
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var homeRefreshTimer: Timer?
+    @State private var readinessRefreshTimer: Timer?
     @State private var weeklyReviewViewModel: WeeklyReviewViewModel?
     @State private var showScoreGuide = false
     @State private var maxScrollDepth: Int = 0
@@ -25,13 +26,13 @@ struct HomeView: View {
 
     var body: some View {
         Group {
-            if viewModel.isLoading {
-                if viewModel.isFirstLaunchSync {
+            if viewModel.ui.isLoading {
+                if viewModel.ui.isFirstLaunchSync {
                     firstLaunchLoadingView
                 } else {
-                    LoadingView("Analyzing your health data...")
+                    LoadingView(Copy.Home.analyzingHealthData)
                 }
-            } else if let error = viewModel.errorMessage {
+            } else if let error = viewModel.ui.errorMessage {
                 errorView(error)
             } else {
                 homeContent
@@ -42,12 +43,12 @@ struct HomeView: View {
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .fullScreenCover(isPresented: Binding(
-            get: { viewModel.showDiscovery },
+            get: { viewModel.ui.showDiscovery },
             set: { if !$0 { viewModel.dismissDiscovery() } }
         )) {
             DiscoveryView(
-                discoveries: viewModel.discoveries,
-                dataDepth: viewModel.dataDepth,
+                discoveries: viewModel.ui.discoveries,
+                dataDepth: viewModel.analysis.dataDepth,
                 onDismiss: { viewModel.dismissDiscovery() }
             )
         }
@@ -64,10 +65,12 @@ struct HomeView: View {
         .sensoryFeedback(.success, trigger: viewModel.lastRefresh)
         .onAppear {
             startHomeRefresh()
+            startReadinessRefresh()
             AppAnalytics.shared.trackFeatureOpen(.home)
         }
         .onDisappear {
             stopHomeRefresh()
+            stopReadinessRefresh()
             stopFirstLaunchDotTimer()
             if maxScrollDepth > 0 {
                 AppAnalytics.shared.trackScrollDepth(screen: .home, maxDepthPercent: maxScrollDepth)
@@ -77,8 +80,12 @@ struct HomeView: View {
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
                 startHomeRefresh()
+                startReadinessRefresh()
+                // Immediately refresh readiness on foreground return
+                liveViewModel.fetchHomeData()
             } else {
                 stopHomeRefresh()
+                stopReadinessRefresh()
                 stopFirstLaunchDotTimer()
             }
         }
@@ -109,6 +116,38 @@ struct HomeView: View {
         homeRefreshTimer = nil
     }
 
+    // MARK: - Live Readiness Score (30-minute refresh)
+
+    /// Live readiness score — falls back to daily score when no readiness data is available
+    private var liveReadinessScore: Int {
+        liveViewModel.recovery.readinessScore ?? viewModel.overallScore.score
+    }
+
+    /// Delta from the daily baseline score (positive = above baseline, negative = below)
+    private var readinessDelta: Int? {
+        guard let readiness = liveViewModel.recovery.readinessScore else {
+            return viewModel.scores.scoreChangeFromYesterday
+        }
+        let delta = readiness - viewModel.overallScore.score
+        return delta == 0 ? nil : delta
+    }
+
+    private static let readinessRefreshInterval: TimeInterval = 30 * 60
+
+    private func startReadinessRefresh() {
+        readinessRefreshTimer?.invalidate()
+        let timer = Timer.scheduledTimer(withTimeInterval: Self.readinessRefreshInterval, repeats: true) { _ in
+            liveViewModel.fetchHomeData()
+        }
+        timer.tolerance = 60
+        readinessRefreshTimer = timer
+    }
+
+    private func stopReadinessRefresh() {
+        readinessRefreshTimer?.invalidate()
+        readinessRefreshTimer = nil
+    }
+
     /// Lazily created and reused WeeklyReviewViewModel
     private func getOrCreateWeeklyReviewVM() -> WeeklyReviewViewModel {
         if let existing = weeklyReviewViewModel { return existing }
@@ -125,7 +164,7 @@ struct HomeView: View {
     /// has completed AND there is genuinely no data. This prevents the empty state
     /// from flashing during startup before HealthKit data has been loaded.
     private var shouldShowEmptyState: Bool {
-        viewModel.hasCompletedInitialLoad && !hasData
+        viewModel.ui.hasCompletedInitialLoad && !hasData
     }
 
     private var homeContent: some View {
@@ -135,8 +174,8 @@ struct HomeView: View {
                 CoachGreetingView(
                     showSettings: $showSettings,
                     streakDays: SessionTracker.shared.streakDays,
-                    scoreChangeFromYesterday: viewModel.scoreChangeFromYesterday,
-                    currentScore: hasData ? viewModel.overallScore.score : nil,
+                    scoreChangeFromYesterday: viewModel.scores.scoreChangeFromYesterday,
+                    currentScore: hasData ? liveReadinessScore : nil,
                     recoveryState: hasData ? viewModel.recoveryState : nil,
                     onTapScoreInfo: { showScoreGuide = true }
                 )
@@ -147,12 +186,13 @@ struct HomeView: View {
                 } else if hasData {
                     // ── Above the fold (matches design: Recovery → Vitality + Sleep) ──
 
-                    // 1. Recovery Hero — readiness score
+                    // 1. Recovery Hero — live readiness score (updates every 30 min)
                     RecoveryHeroCard(
-                        score: viewModel.overallScore.score,
-                        recoveryLabel: viewModel.recoveryState.label,
-                        dayType: viewModel.dayClassification,
-                        scoreDelta: viewModel.scoreChangeFromYesterday,
+                        score: liveReadinessScore,
+                        dailyScore: viewModel.overallScore.score,
+                        recoveryLabel: HomeView.recoveryLabel(liveReadinessScore),
+                        dayType: viewModel.scores.dayClassification,
+                        scoreDelta: readinessDelta,
                         onTap: { showScoreGuide = true }
                     )
                     .onAppear { recoveryTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 10) }
@@ -172,38 +212,37 @@ struct HomeView: View {
                                 screen: .home,
                                 metadata: ["destination": "vitality_detail"]
                             )
-                            navigationPath.append("vitalityDetail")
+                            navigationPath.append(Route.vitalityDetail)
                         }
                     )
                     .padding(.horizontal)
                     .padding(.top, 12)
 
-                    // 4. Sleep Coach Card
-                    if let sleepNeed = viewModel.sleepNeedCalculator.currentNeed {
-                        SleepCoachCard(
-                            hoursNeeded: sleepNeed.totalHoursNeeded,
-                            bedtime: sleepNeed.recommendedBedtime.map {
-                                $0.formatted(date: .omitted, time: .shortened)
-                            },
-                            debtHours: {
-                                guard let debt = viewModel.sleepDebtTracker.currentDebt,
-                                      debt.totalDebtHours > 0.5 else { return nil }
-                                return debt.totalDebtHours
-                            }(),
+                    // 3b. Brain Health Card
+                    if let brain = viewModel.brainHealthScorer.currentScore {
+                        BrainHealthCard(
+                            score: brain.score,
+                            stateLabel: brain.state.displayName,
+                            stateColor: brain.state.color,
+                            headline: brain.headline,
                             onTap: {
                                 AppAnalytics.shared.trackBlockTap(
-                                    title: "Sleep Coach",
-                                    type: .sleepCard,
+                                    title: "Brain Health",
+                                    type: .homeBrainHealthCard,
                                     screen: .home,
-                                    metadata: ["destination": "sleep_coach"]
+                                    metadata: [
+                                        "destination": "brain_health",
+                                        "score": brain.score
+                                    ]
                                 )
-                                navigationPath.append("sleepCoach")
+                                navigationPath.append(Route.brainHealth)
                             }
                         )
+                        .padding(.horizontal)
                         .padding(.top, 8)
                     }
 
-                    // 5. Strain Card
+                    // 4. Strain Card
                     StrainCard(
                         strainValue: viewModel.strainScorer.currentStrain,
                         strainLevel: viewModel.strainScorer.strainLevel,
@@ -215,7 +254,7 @@ struct HomeView: View {
                                 screen: .home,
                                 metadata: ["destination": "strain_detail"]
                             )
-                            navigationPath.append("strainDetail")
+                            navigationPath.append(Route.strainDetail)
                         }
                     )
                     .padding(.horizontal)
@@ -235,7 +274,7 @@ struct HomeView: View {
                                     screen: .home,
                                     metadata: ["destination": "stress_monitor"]
                                 )
-                                navigationPath.append("stressMonitor")
+                                navigationPath.append(Route.stressMonitor)
                             }
                         )
                         .padding(.horizontal)
@@ -258,7 +297,7 @@ struct HomeView: View {
                                     screen: .home,
                                     metadata: ["destination": "cycle_detail"]
                                 )
-                                navigationPath.append("cycleDetail")
+                                navigationPath.append(Route.cycleDetail)
                             }
                         )
                         .padding(.horizontal)
@@ -290,7 +329,7 @@ struct HomeView: View {
                             navigationPath.append(metric)
                         },
                         onTapSeeAll: {
-                            navigationPath.append("insightsDetail")
+                            navigationPath.append(Route.insightsDetail)
                         }
                     )
                     .padding(.top, 8)
@@ -316,7 +355,7 @@ struct HomeView: View {
                                 "score": viewModel.overallScore.score
                             ]
                         )
-                        navigationPath.append("weeklyReview")
+                        navigationPath.append(Route.weeklyReview)
                     }
                     .padding(.top, 8)
                     .onAppear { weeklyReviewTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 90) }
@@ -335,19 +374,8 @@ struct HomeView: View {
                                 screen: .home,
                                 metadata: ["destination": "achievements"]
                             )
-                            navigationPath.append("achievements")
+                            navigationPath.append(Route.achievements)
                         }
-                    )
-                    .padding(.top, 8)
-
-                    // 13. Journal prompt — contextual check-in (evening only)
-                    journalPromptCard
-                        .padding(.top, 8)
-
-                    // AI confidence pill — subtle, near footer
-                    DataConfidenceBadge(
-                        daysOfData: viewModel.dataDepth.daysOfData,
-                        metricsTracked: viewModel.dataDepth.metricsTracked
                     )
                     .padding(.top, 8)
 
@@ -379,10 +407,10 @@ struct HomeView: View {
                 .foregroundStyle(.tint)
 
             VStack(spacing: 8) {
-                Text("Connect Your Health Data")
+                Text(Copy.Home.connectHealthData)
                     .font(.title3.weight(.semibold))
 
-                Text("Laso reads from Apple Health, which syncs with your wearable automatically. No extra setup needed.")
+                Text(Copy.Home.connectHealthDescription)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -391,7 +419,7 @@ struct HomeView: View {
 
             // Supported devices — dynamic from SupportedDevice
             VStack(alignment: .leading, spacing: 14) {
-                Text("Works with")
+                Text(Copy.Home.worksWith)
                     .font(.subheadline.weight(.semibold))
                     .padding(.horizontal)
 
@@ -400,8 +428,8 @@ struct HomeView: View {
                         icon: device.systemImageName,
                         name: device.displayName,
                         detail: device == .appleWatch
-                            ? "Syncs automatically"
-                            : "Via \(device.companionAppName) app",
+                            ? Copy.Home.syncsAutomatically
+                            : Copy.Home.viaApp(device.companionAppName),
                         color: device.iconColor
                     )
                 }
@@ -412,14 +440,14 @@ struct HomeView: View {
 
             // How to connect
             VStack(alignment: .leading, spacing: 14) {
-                Text("How to connect")
+                Text(Copy.Home.howToConnect)
                     .font(.subheadline.weight(.semibold))
                     .padding(.horizontal)
 
-                stepRow(number: 1, text: "Open the Settings app on your iPhone")
-                stepRow(number: 2, text: "Tap Health → Data Access & Devices")
-                stepRow(number: 3, text: "Enable your wearable's companion app")
-                stepRow(number: 4, text: "Come back here — data appears automatically")
+                stepRow(number: 1, text: Copy.Home.connectStep1)
+                stepRow(number: 2, text: Copy.Home.connectStep2)
+                stepRow(number: 3, text: Copy.Home.connectStep3)
+                stepRow(number: 4, text: Copy.Home.connectStep4)
             }
             .padding()
             .background(.background, in: RoundedRectangle(cornerRadius: 16))
@@ -434,7 +462,7 @@ struct HomeView: View {
                     )
                 )
             } label: {
-                Label("Manage Devices", systemImage: "gear")
+                Label(Copy.Home.manageDevices, systemImage: "gear")
                     .font(.subheadline.weight(.medium))
             }
             .buttonStyle(.bordered)
@@ -461,7 +489,7 @@ struct HomeView: View {
                 )
                 Task { await viewModel.refresh() }
             } label: {
-                Label("Refresh", systemImage: "arrow.clockwise")
+                Label(Copy.Home.refresh, systemImage: "arrow.clockwise")
                     .font(.subheadline.weight(.medium))
             }
             .buttonStyle(.borderedProminent)
@@ -541,18 +569,18 @@ struct HomeView: View {
 
     @ViewBuilder
     private var illnessWarningCard: some View {
-        if let warning = viewModel.topIllnessWarning {
+        if let warning = viewModel.analysis.topIllnessWarning {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
                     Image(systemName: "shield.lefthalf.filled.badge.checkmark")
                         .font(.body.weight(.semibold))
                         .foregroundStyle(.red)
-                    Text("Early Warning")
+                    Text(Copy.Home.earlyWarning)
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(.red)
                     Spacer()
                     // severity badge
-                    Text(warning.severity == .critical ? "High" : warning.severity == .warning ? "Moderate" : "Low")
+                    Text(warning.severity == .critical ? Copy.Home.severityHigh : warning.severity == .warning ? Copy.Home.severityModerate : Copy.Home.severityLow)
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(.white)
                         .padding(.horizontal, DS.badgeH)
@@ -595,10 +623,10 @@ struct HomeView: View {
 
     @ViewBuilder
     private var todayRisksSection: some View {
-        let risks = viewModel.todayHealthRisks
+        let risks = viewModel.analysis.todayHealthRisks
         if !risks.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Health Risks")
+                Text(Copy.Home.healthRisks)
                     .font(.headline)
                     .padding(.horizontal)
 
@@ -693,7 +721,7 @@ struct HomeView: View {
                     Image(systemName: "sparkle")
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(.secondary)
-                    Text("Today's Action")
+                    Text(Copy.Home.todaysAction)
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
                         .textCase(.uppercase)
@@ -735,7 +763,7 @@ struct HomeView: View {
         let hour = Calendar.current.component(.hour, from: Date())
         // Show journal prompt in the evening (after 6pm)
         if hour >= 18 {
-            NavigationLink(value: "journalEntry") {
+            NavigationLink(value: Route.journalEntry) {
                 HStack(spacing: 12) {
                     Image(systemName: "square.and.pencil")
                         .font(.title3)
@@ -743,11 +771,11 @@ struct HomeView: View {
                         .frame(width: 36)
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("How was today?")
+                        Text(Copy.Home.howWasToday)
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.primary)
 
-                        Text("A quick check-in helps track patterns over time")
+                        Text(Copy.Home.journalSubtitle)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
@@ -769,11 +797,11 @@ struct HomeView: View {
 
     static func recoveryLabel(_ score: Int) -> String {
         switch score {
-        case 80...100: return "Fully Recovered"
-        case 60..<80: return "Well Recovered"
-        case 40..<60: return "Moderate"
-        case 20..<40: return "Fatigued"
-        default: return "Strained"
+        case 80...100: return Copy.Home.fullyRecovered
+        case 60..<80: return Copy.Home.wellRecovered
+        case 40..<60: return Copy.Home.moderate
+        case 20..<40: return Copy.Home.fatigued
+        default: return Copy.Home.strained
         }
     }
 
@@ -795,17 +823,17 @@ struct HomeView: View {
     @State private var firstLaunchDotTimer: Timer?
 
     private var firstLaunchPhase: (icon: String, text: String, color: Color) {
-        switch viewModel.syncPhase {
+        switch viewModel.ui.syncPhase {
         case .idle, .importing:
-            return ("brain.head.profile", "Syncing your last 1 years of health data", .purple)
+            return ("brain.head.profile", Copy.Home.syncingHealthData, .purple)
         case .analyzing:
-            let points = viewModel.dataDepth.totalDataPoints
-            let label = points > 0 ? "Analyzing \(points) data points" : "Analyzing your data"
+            let points = viewModel.analysis.dataDepth.totalDataPoints
+            let label = points > 0 ? Copy.Home.analyzingDataPoints(points) : Copy.Home.analyzingYourData
             return ("brain.head.profile", label, .purple)
         case .discovering:
-            return ("sparkles", "Discovering patterns", .orange)
+            return ("sparkles", Copy.Home.discoveringPatterns, .orange)
         case .complete:
-            return ("checkmark.circle.fill", "Ready", .green)
+            return ("checkmark.circle.fill", Copy.Home.ready, .green)
         }
     }
 
@@ -841,9 +869,9 @@ struct HomeView: View {
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(.primary)
                     .contentTransition(.numericText())
-                    .animation(.easeInOut(duration: 0.3), value: viewModel.syncPhase)
+                    .animation(.easeInOut(duration: 0.3), value: viewModel.ui.syncPhase)
 
-                Text("This only happens once")
+                Text(Copy.Home.thisOnlyHappensOnce)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             }
@@ -887,7 +915,7 @@ struct HomeView: View {
                 .foregroundStyle(.orange)
                 .accessibilityHidden(true)
 
-            Text("Unable to Load Data")
+            Text(Copy.Home.unableToLoadData)
                 .font(.headline)
 
             Text(message)
@@ -895,7 +923,7 @@ struct HomeView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
-            Button("Try Again") {
+            Button(Copy.Home.tryAgain) {
                 AppAnalytics.shared.trackBlockTap(
                     title: "Try Again",
                     type: .errorRetry,

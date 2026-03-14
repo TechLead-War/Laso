@@ -13,10 +13,10 @@ struct RecoveryInfoSheet: View {
                         .font(.system(size: 40))
                         .foregroundStyle(.purple)
 
-                    Text("How Recovery Works")
+                    Text(Copy.Home.RecoveryInfo.title)
                         .font(.title3.weight(.semibold))
 
-                    Text("Your Readiness score (0\u{2013}100) tells you how recovered your body is, based on two signals measured while you sleep.")
+                    Text(Copy.Home.RecoveryInfo.description)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -28,15 +28,15 @@ struct RecoveryInfoSheet: View {
                     factorRow(
                         icon: "waveform.path.ecg",
                         color: .purple,
-                        name: "Heart Rate Variability",
-                        detail: "Higher HRV means better recovery and lower stress."
+                        name: Copy.Home.RecoveryInfo.hrvName,
+                        detail: Copy.Home.RecoveryInfo.hrvDetail
                     )
                     Divider().padding(.leading, 52)
                     factorRow(
                         icon: "heart.fill",
                         color: .red,
-                        name: "Resting Heart Rate",
-                        detail: "Lower resting HR means your heart is recovering well."
+                        name: Copy.Home.RecoveryInfo.restingHRName,
+                        detail: Copy.Home.RecoveryInfo.restingHRDetail
                     )
                 }
                 .background(.background, in: RoundedRectangle(cornerRadius: 16))
@@ -54,7 +54,7 @@ struct RecoveryInfoSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
+                    Button(Copy.Buttons.done) {
                         AppAnalytics.shared.trackBlockTap(
                             title: "Done",
                             type: .recoveryInfoDone,

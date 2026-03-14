@@ -49,7 +49,7 @@ struct RecoveryAnalyzer {
 
                 insights.append(Insight(
                     metric: .heartRateVariability,
-                    title: "Post-Workout HRV Recovery",
+                    title: Copy.Analysis.Recovery.postWorkoutHRVRecovery,
                     summary: "Your HRV takes an average of \(String(format: "%.1f", avgRecovery)) days to return to baseline after workouts. Post-workout HRV averages ~\(postWorkoutAvg)ms vs your \(baselineStr)ms baseline.",
                     recommendation: avgRecovery > 2 ?
                         "HRV recovery is averaging \(String(format: "%.1f", avgRecovery)) days — above your typical baseline window. Post-workout HRV drops to ~\(postWorkoutAvg)ms before recovering to \(baselineStr)ms." :
@@ -77,7 +77,7 @@ struct RecoveryAnalyzer {
             let weeklyRest = Double(restDays28) / 4.0
             insights.append(Insight(
                 metric: .workoutDuration,
-                title: "Rest Day Deficit",
+                title: Copy.Analysis.Recovery.restDayDeficit,
                 summary: "You're averaging \(String(format: "%.1f", weeklyRest)) rest days per week with \(highIntensityCount) high-intensity sessions in the last 28 days (\(workoutCount28) workout days, \(restDays28) rest days).",
                 recommendation: "You're averaging \(String(format: "%.1f", weeklyRest)) rest days/week with \(highIntensityCount) high-intensity sessions in the last 28 days. That's \(workoutCount28) workout days to \(restDays28) rest days.",
                 severity: .warning,
@@ -115,7 +115,7 @@ struct RecoveryAnalyzer {
 
             insights.append(Insight(
                 metric: .heartRateVariability,
-                title: isAllThree ? "Overtraining Warning" : "Early Overtraining Signal",
+                title: isAllThree ? Copy.Analysis.Recovery.overtrainingWarning : Copy.Analysis.Recovery.earlyOvertrainingSignal,
                 summary: "\(signals.count) of 3 overtraining indicators present: \(signalText).\(isAllThree ? "" : " A third declining signal would confirm overtraining.")",
                 recommendation: isAllThree
                     ? "All 3 overtraining indicators are present simultaneously: \(signalText). Your recovery metrics indicate sustained strain across multiple systems."
@@ -205,5 +205,20 @@ struct RecoveryAnalyzer {
             }
         }
         return recoveryDays
+    }
+}
+
+// MARK: - InsightAnalyzer Conformance
+
+extension RecoveryAnalyzer: InsightAnalyzer {
+    static var analyzerID: String { "recovery" }
+    static var insightCategory: InsightCategory { .recovery }
+
+    static func generateInsights(context: AnalysisContext) -> [Insight] {
+        generateInsights(
+            timeSeries: context.timeSeries,
+            baselines: context.baselines,
+            trends: context.trends
+        )
     }
 }

@@ -946,12 +946,12 @@ final class DecisionPolicyEngine {
 
         let timeframe: String
         switch candidate.timeToBenefit {
-        case .immediate: timeframe = "today"
-        case .nextDay: timeframe = "by tomorrow"
-        case .twoDays: timeframe = "within 2 days"
-        case .threeDays: timeframe = "within 3 days"
-        case .oneWeek: timeframe = "over the next week"
-        case .twoWeeks: timeframe = "over the next 2 weeks"
+        case .immediate: timeframe = Copy.Policy.timeframeToday
+        case .nextDay: timeframe = Copy.Policy.timeframeByTomorrow
+        case .twoDays: timeframe = Copy.Policy.timeframeWithin2Days
+        case .threeDays: timeframe = Copy.Policy.timeframeWithin3Days
+        case .oneWeek: timeframe = Copy.Policy.timeframeOverNextWeek
+        case .twoWeeks: timeframe = Copy.Policy.timeframeOver2Weeks
         }
 
         // Best case: concrete numeric benefit from baseline statistics
@@ -1604,11 +1604,11 @@ final class DecisionPolicyEngine {
 
         switch recoveryScore {
         case .excellent, .good:
-            return "High intensity OK"
+            return Copy.Policy.highIntensityOK
         case .moderate:
-            return "Moderate effort recommended"
+            return Copy.Policy.moderateEffort
         case .poor, .depleted:
-            return "Light activity only"
+            return Copy.Policy.lightActivityOnly
         }
     }
 
@@ -1686,52 +1686,27 @@ final class DecisionPolicyEngine {
     // MARK: - Headline Generators
 
     private func excellentDayHeadline(primaryCandidate: InterventionCandidate) -> String {
-        let options = [
-            "Recovery metrics are well above baseline",
-            "All key metrics recovered -- above baseline across the board",
-            "Full recovery -- metrics are in the green",
-            "Recovery metrics at their strongest this week"
-        ]
+        let options = Copy.Policy.excellentHeadlines
         return selectHeadline(from: options, candidate: primaryCandidate)
     }
 
     private func goodDayHeadline(primaryCandidate: InterventionCandidate) -> String {
-        let options = [
-            "Recovery metrics are above baseline",
-            "Metrics bounced back -- sitting above baseline",
-            "Good recovery signal -- most metrics above baseline",
-            "Recovery metrics trending positive"
-        ]
+        let options = Copy.Policy.goodHeadlines
         return selectHeadline(from: options, candidate: primaryCandidate)
     }
 
     private func moderateDayHeadline(primaryCandidate: InterventionCandidate) -> String {
-        let options = [
-            "Recovery metrics are near baseline",
-            "Metrics are mixed -- some above, some below baseline",
-            "Moderate recovery -- metrics hovering around baseline",
-            "Recovery metrics are partially restored"
-        ]
+        let options = Copy.Policy.moderateHeadlines
         return selectHeadline(from: options, candidate: primaryCandidate)
     }
 
     private func poorDayHeadline(primaryCandidate: InterventionCandidate) -> String {
-        let options = [
-            "Recovery metrics are below baseline",
-            "Multiple metrics sitting below baseline",
-            "Recovery is low -- metrics are off baseline",
-            "Several metrics are below your normal range"
-        ]
+        let options = Copy.Policy.poorHeadlines
         return selectHeadline(from: options, candidate: primaryCandidate)
     }
 
     private func depletedDayHeadline(primaryCandidate: InterventionCandidate) -> String {
-        let options = [
-            "Recovery metrics are significantly below baseline",
-            "Metrics show deep deficit -- well below baseline",
-            "Multiple metrics at their lowest this week",
-            "Low recovery signal across all key metrics"
-        ]
+        let options = Copy.Policy.depletedHeadlines
         return selectHeadline(from: options, candidate: primaryCandidate)
     }
 
@@ -1745,25 +1720,25 @@ final class DecisionPolicyEngine {
 
     private func sourceDescription(_ source: InterventionCandidate.InterventionSource) -> String {
         switch source {
-        case .predictiveModel: return "predictive model (GBT risk scorer)"
-        case .causalDiscovery: return "Granger causal analysis"
-        case .circadianTiming: return "circadian rhythm analysis"
-        case .stateTransition: return "health state classification"
-        case .anomalyResponse: return "anomaly detection"
-        case .trendReversal: return "trend analysis"
-        case .baselineRecovery: return "baseline deviation detection"
-        case .counterfactual: return "counterfactual simulation"
+        case .predictiveModel: return Copy.Policy.sourcePredictive
+        case .causalDiscovery: return Copy.Policy.sourceCausal
+        case .circadianTiming: return Copy.Policy.sourceCircadian
+        case .stateTransition: return Copy.Policy.sourceState
+        case .anomalyResponse: return Copy.Policy.sourceAnomaly
+        case .trendReversal: return Copy.Policy.sourceTrend
+        case .baselineRecovery: return Copy.Policy.sourceBaseline
+        case .counterfactual: return Copy.Policy.sourceCounterfactual
         }
     }
 
     private func timeBenefitDescription(_ time: InterventionCandidate.TimeToBenefit) -> String {
         switch time {
-        case .immediate: return "the same day"
-        case .nextDay: return "tomorrow"
-        case .twoDays: return "2 days"
-        case .threeDays: return "3 days"
-        case .oneWeek: return "about a week"
-        case .twoWeeks: return "about 2 weeks"
+        case .immediate: return Copy.Policy.benefitImmediate
+        case .nextDay: return Copy.Policy.benefitNextDay
+        case .twoDays: return Copy.Policy.benefitTwoDays
+        case .threeDays: return Copy.Policy.benefitThreeDays
+        case .oneWeek: return Copy.Policy.benefitOneWeek
+        case .twoWeeks: return Copy.Policy.benefitTwoWeeks
         }
     }
 

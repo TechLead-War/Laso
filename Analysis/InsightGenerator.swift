@@ -147,8 +147,9 @@ struct InsightGenerator {
             ))
         }
 
-        // Deduplicate and sort by priority
-        return deduplicate(insights).sorted { $0.priorityScore > $1.priorityScore }
+        // Sort by priority — deduplication is handled by InsightCoordinator.coordinate()
+        // at the end of the full pipeline, so no intermediate dedup here.
+        return insights.sorted { $0.priorityScore > $1.priorityScore }
     }
 
     // MARK: - Deduplication
@@ -611,59 +612,59 @@ struct InsightGenerator {
 
     private static func followUpSentence(severity: Severity, context: InsightContext?) -> String? {
         if let days = context?.projectedDaysToThreshold, days <= 7 {
-            return "Follow-up: recheck in 48 hours to confirm this is stabilizing before it reaches warning range."
+            return Copy.Insights.recheckIn48Hours
         }
         if severity >= .warning {
-            return "Follow-up: review this trend again in 3 days to verify the direction has improved."
+            return Copy.Insights.reviewIn3Days
         }
         return nil
     }
 
     private static func leadTimeLabel(for dayOffset: Int) -> String {
-        if dayOffset <= 0 { return "same-day signal" }
-        if dayOffset == 1 { return "next-day signal" }
-        return "\(dayOffset)-day lead signal"
+        if dayOffset <= 0 { return Copy.Insights.sameDaySignal }
+        if dayOffset == 1 { return Copy.Insights.nextDaySignal }
+        return Copy.Insights.dayLeadSignal(dayOffset)
     }
 
     private static func evidenceLabel(context: InsightContext?, sampleCount: Int) -> String {
         let confidence = context?.confidenceLevel ?? 0
         let points = max(sampleCount, context?.dataPointCount ?? 0)
-        if confidence >= 0.75 && points >= 90 { return "high" }
-        if confidence >= 0.50 && points >= 45 { return "medium" }
-        return "early"
+        if confidence >= 0.75 && points >= 90 { return Copy.Insights.evidenceHigh }
+        if confidence >= 0.50 && points >= 45 { return Copy.Insights.evidenceMedium }
+        return Copy.Insights.evidenceEarly
     }
 
     private static func actionProtocol(for metric: HealthMetric, severity: Severity, deviation: Double, direction: String) -> String {
         let dev = Int(abs(deviation))
         switch metric {
         case .sleepDuration, .sleepDeep, .sleepREM, .sleepCore, .sleepAwake:
-            return "your sleep metrics are \(dev)% off your baseline"
+            return Copy.Insights.sleepMetricsOff(dev: dev)
         case .steps, .activeCalories, .exerciseMinutes, .appleMoveTime, .distanceWalkingRunning, .standHours:
-            return "your activity is \(dev)% \(direction) your recent average"
+            return Copy.Insights.activityDeviation(dev: dev, direction: direction)
         case .heartRateVariability:
-            return "your HRV is trending \(direction) — \(dev)% from baseline"
+            return Copy.Insights.hrvTrending(direction: direction, dev: dev)
         case .restingHeartRate, .heartRate, .walkingHeartRateAverage:
-            return "your resting heart rate shifted \(dev)% from baseline"
+            return Copy.Insights.rhrShifted(dev: dev)
         case .mindfulMinutes, .electrodermalActivity:
-            return "your mindfulness time is \(dev)% \(direction) your average"
+            return Copy.Insights.mindfulnessDeviation(dev: dev, direction: direction)
         case .timeInDaylight:
-            return "your daylight exposure is \(dev)% \(direction) your average"
+            return Copy.Insights.daylightDeviation(dev: dev, direction: direction)
         case .bloodPressureSystolic, .bloodPressureDiastolic:
             return severity >= .warning
-                ? "your blood pressure reading is outside your typical range"
-                : "recheck to confirm — single readings can vary"
+                ? Copy.Insights.bpOutsideRange
+                : Copy.Insights.recheckSingleReading
         case .bloodOxygen, .atrialFibrillationBurden, .bodyTemperature, .respiratoryRate:
             return severity >= .warning
-                ? "this reading is outside your typical range — monitor for changes"
-                : "recheck this metric to confirm the trend"
+                ? Copy.Insights.readingOutsideRange
+                : Copy.Insights.recheckMetricTrend
         case .weight, .bmi, .bodyFatPercentage, .waistCircumference:
-            return "your body metrics shifted \(dev)% from baseline"
+            return Copy.Insights.bodyMetricsShifted(dev: dev)
         case .vo2Max, .heartRateRecovery:
-            return "your VO2 max is trending \(direction) — \(dev)% from baseline"
+            return Copy.Insights.vo2MaxTrending(direction: direction, dev: dev)
         case .walkingSpeed, .walkingStepLength, .walkingAsymmetry, .walkingDoubleSupportPercentage, .stairAscentSpeed, .stairDescentSpeed, .sixMinuteWalkTestDistance:
-            return "your mobility metrics are \(dev)% off baseline"
+            return Copy.Insights.mobilityMetricsOff(dev: dev)
         default:
-            return "your \(metric.displayName.lowercased()) is \(dev)% from your baseline"
+            return Copy.Insights.genericMetricDeviation(metricName: metric.displayName.lowercased(), dev: dev)
         }
     }
 
@@ -678,9 +679,9 @@ struct InsightGenerator {
         let ratePrefix = rateOfChange >= .moderate ? "\(rateOfChange.displayLabel.capitalized) " : ""
         let inflectionSuffix: String
         switch inflection {
-        case .accelerating where trend == .declining: inflectionSuffix = " & Accelerating"
-        case .decelerating where trend == .declining: inflectionSuffix = " (Slowing)"
-        case .reversing: inflectionSuffix = " — Reversing"
+        case .accelerating where trend == .declining: inflectionSuffix = Copy.Insights.andAccelerating
+        case .decelerating where trend == .declining: inflectionSuffix = Copy.Insights.slowing
+        case .reversing: inflectionSuffix = Copy.Insights.dashReversing
         default: inflectionSuffix = ""
         }
 
@@ -688,7 +689,7 @@ struct InsightGenerator {
         case (.declining, .critical): return "\(metricName) Critically Low\(inflectionSuffix)"
         case (.declining, .warning): return "\(metricName) \(ratePrefix)Needs Attention\(inflectionSuffix)"
         case (.declining, .info): return "\(metricName) \(ratePrefix)Declining\(inflectionSuffix)"
-        case (.improving, _): return "\(metricName) \(ratePrefix)Improving\(inflection == .accelerating ? " & Gaining Momentum" : "")"
+        case (.improving, _): return "\(metricName) \(ratePrefix)Improving\(inflection == .accelerating ? Copy.Insights.andGainingMomentum : "")"
         case (.stable, .critical): return "\(metricName) Outside Safe Range"
         case (.stable, .warning): return "\(metricName) Elevated"
         case (.stable, .info): return "\(metricName) Stable"
@@ -712,9 +713,9 @@ struct InsightGenerator {
 
         let inflectionNote: String
         switch inflection {
-        case .accelerating: inflectionNote = " The rate of change is accelerating."
-        case .decelerating: inflectionNote = " The decline is slowing — a recovery may be starting."
-        case .reversing: inflectionNote = " The trend has recently reversed direction."
+        case .accelerating: inflectionNote = Copy.Insights.accelerating
+        case .decelerating: inflectionNote = Copy.Insights.decelerating
+        case .reversing: inflectionNote = Copy.Insights.reversing
         case .steady: inflectionNote = ""
         }
 
@@ -783,16 +784,16 @@ struct InsightGenerator {
 
         // Known causal relationships (metric being affected → likely cause description)
         let causalMap: [HealthMetric: String] = [
-            .heartRateVariability: "Based on your history, this level typically follows nights with less than 6 hours of sleep.",
-            .restingHeartRate: "Based on your history, elevated resting heart rate often follows periods of reduced sleep or high stress.",
-            .bloodOxygen: "Based on your history, lower blood oxygen typically correlates with disrupted sleep patterns.",
-            .sleepDuration: "Based on your history, shorter sleep often follows days with low physical activity or late exercise.",
-            .sleepDeep: "Based on your history, deep sleep decreases often correlate with higher stress or inconsistent bedtimes.",
-            .vo2Max: "Based on your history, VO2 Max changes tend to follow shifts in exercise consistency over 2-4 weeks.",
-            .activeCalories: "Based on your history, lower calorie burn typically follows reduced step count and exercise minutes.",
-            .exerciseMinutes: "Based on your history, exercise dips often cluster with disrupted sleep patterns.",
-            .bodyTemperature: "Based on your history, temperature shifts often accompany changes in sleep duration and HRV.",
-            .respiratoryRate: "Based on your history, respiratory rate changes often track with sleep quality and stress levels.",
+            .heartRateVariability: Copy.Insights.causalHintHRV,
+            .restingHeartRate: Copy.Insights.causalHintRHR,
+            .bloodOxygen: Copy.Insights.causalHintBloodOxygen,
+            .sleepDuration: Copy.Insights.causalHintSleepDuration,
+            .sleepDeep: Copy.Insights.causalHintSleepDeep,
+            .vo2Max: Copy.Insights.causalHintVO2Max,
+            .activeCalories: Copy.Insights.causalHintActiveCalories,
+            .exerciseMinutes: Copy.Insights.causalHintExercise,
+            .bodyTemperature: Copy.Insights.causalHintBodyTemp,
+            .respiratoryRate: Copy.Insights.causalHintRespiratoryRate,
         ]
 
         // Only add causal hint if historical context confirms sufficient data depth
@@ -806,5 +807,23 @@ struct InsightGenerator {
 
     private static func formatValue(_ value: Double, metric: HealthMetric) -> String {
         metric.formatValue(value)
+    }
+}
+
+// MARK: - InsightAnalyzer Conformance
+
+extension InsightGenerator: InsightAnalyzer {
+    static var analyzerID: String { "insightGenerator" }
+    static var insightCategory: InsightCategory { .anomaly }
+
+    static func generateInsights(context: AnalysisContext) -> [Insight] {
+        generate(
+            anomalies: context.anomalies,
+            trends: context.trends,
+            baselines: context.baselines,
+            historicalContext: context.historicalContext,
+            correlations: context.correlations,
+            timeSeries: context.timeSeries
+        )
     }
 }

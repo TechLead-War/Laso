@@ -8,14 +8,14 @@ struct PeriodSummarySection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Trends")
+            Text(Copy.Home.trends)
                 .font(.headline)
                 .padding(.horizontal)
 
             // Period picker
             Picker("Period", selection: Binding(
-                get: { viewModel.selectedPeriod },
-                set: { viewModel.selectedPeriod = $0 }
+                get: { viewModel.ui.selectedPeriod },
+                set: { viewModel.ui.selectedPeriod = $0 }
             )) {
                 ForEach(DashboardViewModel.TimePeriod.allCases) { period in
                     Text(period.rawValue).tag(period)
@@ -23,9 +23,9 @@ struct PeriodSummarySection: View {
             }
             .pickerStyle(.segmented)
             .padding(.horizontal)
-            .sensoryFeedback(.selection, trigger: viewModel.selectedPeriod)
+            .sensoryFeedback(.selection, trigger: viewModel.ui.selectedPeriod)
             .accessibilityLabel("Time period selector")
-            .onChange(of: viewModel.selectedPeriod) { oldPeriod, newPeriod in
+            .onChange(of: viewModel.ui.selectedPeriod) { oldPeriod, newPeriod in
                 AppAnalytics.shared.trackBlockTap(
                     title: newPeriod.rawValue,
                     type: .periodSelector,
@@ -37,7 +37,7 @@ struct PeriodSummarySection: View {
                 )
             }
 
-            let summary = viewModel.focusFilteredPeriodSummary(for: viewModel.selectedPeriod)
+            let summary = viewModel.focusFilteredPeriodSummary(for: viewModel.ui.selectedPeriod)
 
             // Metric rows — declined first, then improved, capped at 4
             let allChanges = (summary.topDeclined + summary.topImproved)
@@ -58,7 +58,7 @@ struct PeriodSummarySection: View {
                                 metadata: [
                                     "metric_id": change.metric.rawValue,
                                     "metric_category": change.metric.category.rawValue,
-                                    "period": viewModel.selectedPeriod.rawValue
+                                    "period": viewModel.ui.selectedPeriod.rawValue
                                 ]
                             )
                             onTapMetric(change.metric)

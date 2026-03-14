@@ -19,8 +19,8 @@ struct PaywallView: View {
     private var yearly: Product? { subscriptionManager.yearlyProduct }
     private var monthly: Product? { subscriptionManager.monthlyProduct }
     private var callToActionTitle: String {
-        guard let product = selectedProduct else { return "Subscribe" }
-        return product.subscription?.introductoryOffer != nil ? "Start Free Trial" : "Subscribe Now"
+        guard let product = selectedProduct else { return Copy.Buttons.subscribe }
+        return product.subscription?.introductoryOffer != nil ? Copy.Paywall.startFreeTrial : Copy.Paywall.subscribeNow
     }
 
     /// Monthly cost if paying yearly, for "save X%" label.
@@ -93,10 +93,10 @@ struct PaywallView: View {
                 .frame(width: 80, height: 80)
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
-            Text("Unlock Laso")
+            Text(Copy.Paywall.unlockTitle)
                 .font(.largeTitle.weight(.bold))
 
-            Text("Your personal health intelligence,\npowered by your Apple Watch data.")
+            Text(Copy.Paywall.unlockSubtitle)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -107,11 +107,11 @@ struct PaywallView: View {
 
     private var features: some View {
         VStack(alignment: .leading, spacing: 14) {
-            featureRow(icon: "waveform.path.ecg", text: "Live vitals & 58+ health metrics")
-            featureRow(icon: "brain.head.profile", text: "Personalized insights & root cause analysis")
-            featureRow(icon: "chart.line.uptrend.xyaxis", text: "Trends, correlations & weekly reports")
-            featureRow(icon: "bell.badge.fill", text: "Smart alerts with custom thresholds")
-            featureRow(icon: "lock.shield.fill", text: "Health data stays on-device; anonymous usage analytics and optional feedback improve Laso")
+            featureRow(icon: "waveform.path.ecg", text: Copy.Paywall.featureLiveVitals)
+            featureRow(icon: "brain.head.profile", text: Copy.Paywall.featureInsights)
+            featureRow(icon: "chart.line.uptrend.xyaxis", text: Copy.Paywall.featureTrends)
+            featureRow(icon: "bell.badge.fill", text: Copy.Paywall.featureAlerts)
+            featureRow(icon: "lock.shield.fill", text: Copy.Paywall.featurePrivacy)
         }
         .padding(20)
         .background(.background, in: RoundedRectangle(cornerRadius: 16))
@@ -137,7 +137,7 @@ struct PaywallView: View {
             if let yearly {
                 pricingOption(
                     product: yearly,
-                    label: "Yearly",
+                    label: Copy.Paywall.yearly,
                     detail: yearlyDetail(yearly),
                     badge: savingsBadge
                 )
@@ -146,26 +146,26 @@ struct PaywallView: View {
             if let monthly {
                 pricingOption(
                     product: monthly,
-                    label: "Monthly",
-                    detail: monthly.displayPrice + "/month",
+                    label: Copy.Paywall.monthly,
+                    detail: Copy.Paywall.perMonth(monthly.displayPrice),
                     badge: nil
                 )
             }
 
             if subscriptionManager.products.isEmpty {
-                ProgressView("Loading prices...")
+                ProgressView(Copy.Settings.loadingPrices)
                     .padding()
             }
         }
     }
 
     private func yearlyDetail(_ product: Product) -> String {
-        product.displayPrice + "/year"
+        Copy.Paywall.perYear(product.displayPrice)
     }
 
     private var savingsBadge: String? {
         guard let pct = yearlySavingsPercent, pct > 0 else { return nil }
-        return "Save \(pct)%"
+        return Copy.Paywall.savePercent(pct)
     }
 
     private func pricingOption(
@@ -307,7 +307,7 @@ struct PaywallView: View {
                 if isRestoring {
                     ProgressView()
                 } else {
-                    Text("Restore Purchases")
+                    Text(Copy.Buttons.restorePurchases)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -327,14 +327,14 @@ struct PaywallView: View {
                     footerTracker.tapped(target: "retry_loading_plans")
                     Task { await subscriptionManager.loadProducts() }
                 } label: {
-                    Text("Retry loading plans")
+                    Text(Copy.Settings.retryLoadingPlans)
                         .font(.subheadline.weight(.medium))
                 }
                 .buttonStyle(.plain)
             }
 
             HStack(spacing: 16) {
-                Link("Terms of Use", destination: URL(string: AppSecrets.URLs.termsOfUse)!)
+                Link(Copy.Privacy.termsOfUse, destination: URL(string: AppSecrets.URLs.termsOfUse)!)
                     .simultaneousGesture(TapGesture().onEnded {
                         AppAnalytics.shared.trackBlockTap(
                             title: "Terms of Use",
@@ -348,7 +348,7 @@ struct PaywallView: View {
                     })
                 Text("\u{00B7}")
                     .foregroundStyle(.quaternary)
-                Link("Privacy Policy", destination: URL(string: AppSecrets.URLs.privacyPolicy)!)
+                Link(Copy.Privacy.privacyPolicy, destination: URL(string: AppSecrets.URLs.privacyPolicy)!)
                     .simultaneousGesture(TapGesture().onEnded {
                         AppAnalytics.shared.trackBlockTap(
                             title: "Privacy Policy",

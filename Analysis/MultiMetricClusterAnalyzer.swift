@@ -76,7 +76,7 @@ struct MultiMetricClusterAnalyzer {
 
             let insight = Insight(
                 metric: sorted[0].metric,
-                title: "\(category.displayName): Multiple Metrics Declining",
+                title: Copy.Analysis.MultiMetricCluster.categoryDeclining(category.displayName),
                 summary: "\(decliningMetrics.count) metrics declining together in \(category.displayName): \(metricDetails).",
                 recommendation: recommendationForCluster(category: category, count: decliningMetrics.count, avgDeviation: avgDeviation, metrics: sorted.map(\.metric)),
                 severity: worstSeverity >= .warning ? .critical : .warning,
@@ -114,7 +114,7 @@ struct MultiMetricClusterAnalyzer {
 
         return Insight(
             metric: .restingHeartRate,
-            title: "Widespread Health Decline",
+            title: Copy.Analysis.MultiMetricCluster.widespreadHealthDecline,
             summary: "\(totalDeclining) metrics across \(categoriesWithDecline.count) categories are declining: \(categoryNames).",
             recommendation: "\(totalDeclining) metrics declining across \(categoriesWithDecline.count) categories: \(categoryNames).",
             severity: .warning,
@@ -151,5 +151,20 @@ struct MultiMetricClusterAnalyzer {
         case .hearing:
             return "Hearing metrics changed \u{2014} \(count) metrics affected: \(metricNames). Avg \(devStr)% from baseline."
         }
+    }
+}
+
+// MARK: - InsightAnalyzer Conformance
+
+extension MultiMetricClusterAnalyzer: InsightAnalyzer {
+    static var analyzerID: String { "multiMetricCluster" }
+    static var insightCategory: InsightCategory { .multiMetricCluster }
+
+    static func generateInsights(context: AnalysisContext) -> [Insight] {
+        generateInsights(
+            anomalies: context.anomalies,
+            trends: context.trends,
+            baselines: context.baselines
+        )
     }
 }

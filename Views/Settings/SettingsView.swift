@@ -35,7 +35,7 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 // Connected Devices
-                Section("Connected Devices") {
+                Section(Copy.Settings.connectedDevices) {
                     NavigationLink {
                         ConnectedDevicesView(
                             viewModel: ConnectedDevicesViewModel(
@@ -46,13 +46,13 @@ struct SettingsView: View {
                     } label: {
                         HStack {
                             Label {
-                                Text("Manage Devices")
+                                Text(Copy.Settings.manageDevices)
                             } icon: {
                                 Image(systemName: "applewatch")
                                     .foregroundStyle(.blue)
                             }
                             Spacer()
-                            Text(deviceSourceManager.connectedDevices.isEmpty ? "Set up a device" : "\(deviceSourceManager.connectedDevices.count) connected")
+                            Text(deviceSourceManager.connectedDevices.isEmpty ? Copy.Settings.setUpADevice : Copy.Settings.connectedCount(deviceSourceManager.connectedDevices.count))
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         }
@@ -74,15 +74,15 @@ struct SettingsView: View {
                 .onDisappear { devicesTracker.disappeared() }
 
                 // Notifications
-                Section("Daily Summary") {
-                    Toggle("Enable Daily Summary", isOn: $preferences.dailySummaryEnabled)
+                Section(Copy.Settings.dailySummary) {
+                    Toggle(Copy.Settings.enableDailySummary, isOn: $preferences.dailySummaryEnabled)
                         .onChange(of: preferences.dailySummaryEnabled) { _, newValue in
                             AppAnalytics.shared.trackSettingChanged(name: "daily_summary_enabled", value: newValue)
                         }
 
                     if preferences.dailySummaryEnabled {
                         DatePicker(
-                            "Summary Time",
+                            Copy.Settings.summaryTime,
                             selection: Binding(
                                 get: {
                                     Calendar.current.date(from: preferences.dailySummaryTime) ?? Date()
@@ -105,8 +105,8 @@ struct SettingsView: View {
                 .onAppear { notificationsTracker.appeared() }
                 .onDisappear { notificationsTracker.disappeared() }
 
-                Section("Weekly Summary") {
-                    Toggle("Enable Weekly Report", isOn: $preferences.weeklySummaryEnabled)
+                Section(Copy.Settings.weeklySummary) {
+                    Toggle(Copy.Settings.enableWeeklyReport, isOn: $preferences.weeklySummaryEnabled)
                         .onChange(of: preferences.weeklySummaryEnabled) { _, newValue in
                             AppAnalytics.shared.trackSettingChanged(name: "weekly_summary_enabled", value: newValue)
                         }
@@ -114,16 +114,16 @@ struct SettingsView: View {
 
                 // Heart Rate Spike/Drop Alerts
                 Section {
-                    Toggle("Heart Rate Spike Alerts", isOn: $preferences.heartRateSpikeAlertsEnabled)
+                    Toggle(Copy.Settings.heartRateSpikeAlerts, isOn: $preferences.heartRateSpikeAlertsEnabled)
                         .onChange(of: preferences.heartRateSpikeAlertsEnabled) { _, newValue in
                             AppAnalytics.shared.trackSettingChanged(name: "heart_rate_spike_alerts", value: newValue)
                         }
 
                     if preferences.heartRateSpikeAlertsEnabled {
                         HStack {
-                            Text("High HR Threshold")
+                            Text(Copy.Settings.highHRThreshold)
                             Spacer()
-                            Text("\(Int(preferences.heartRateSpikeThreshold)) bpm")
+                            Text(Copy.Settings.bpmValue(Int(preferences.heartRateSpikeThreshold)))
                                 .foregroundStyle(.secondary)
                         }
                         Slider(
@@ -136,9 +136,9 @@ struct SettingsView: View {
                         }
 
                         HStack {
-                            Text("Low HR Threshold")
+                            Text(Copy.Settings.lowHRThreshold)
                             Spacer()
-                            Text("\(Int(preferences.heartRateDropThreshold)) bpm")
+                            Text(Copy.Settings.bpmValue(Int(preferences.heartRateDropThreshold)))
                                 .foregroundStyle(.secondary)
                         }
                         Slider(
@@ -151,59 +151,59 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Text("Heart Rate Alerts")
+                    Text(Copy.Settings.heartRateAlerts)
                 } footer: {
-                    Text("Get notified when your heart rate goes above or below your thresholds while not exercising.")
+                    Text(Copy.Settings.heartRateAlertsFooter)
                 }
 
                 // Apple Watch Reminders
                 Section {
-                    Toggle("Watch Not Worn Reminder", isOn: $preferences.watchNotWornReminderEnabled)
+                    Toggle(Copy.Settings.watchNotWornReminder, isOn: $preferences.watchNotWornReminderEnabled)
                         .onChange(of: preferences.watchNotWornReminderEnabled) { _, newValue in
                             AppAnalytics.shared.trackSettingChanged(name: "watch_not_worn_reminder", value: newValue)
                         }
                     if preferences.watchNotWornReminderEnabled {
-                        Text("Get notified if your Apple Watch hasn't recorded data for over 1 hour.")
+                        Text(Copy.Settings.watchNotWornDescription)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
 
-                    Toggle("Low Battery Reminder", isOn: $preferences.lowBatteryReminderEnabled)
+                    Toggle(Copy.Settings.lowBatteryReminder, isOn: $preferences.lowBatteryReminderEnabled)
                         .onChange(of: preferences.lowBatteryReminderEnabled) { _, newValue in
                             AppAnalytics.shared.trackSettingChanged(name: "low_battery_reminder", value: newValue)
                         }
                     if preferences.lowBatteryReminderEnabled {
-                        Text("Get a one-time alert when your watch battery drops below 10%.")
+                        Text(Copy.Settings.lowBatteryDescription)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                 } header: {
-                    Label("Apple Watch", systemImage: "applewatch")
+                    Label(Copy.Settings.appleWatch, systemImage: "applewatch")
                 } footer: {
-                    Text("These reminders help you keep your watch on and charged so you never miss health data.")
+                    Text(Copy.Settings.watchRemindersFooter)
                 }
 
                 // General Alerts
-                Section("Alerts") {
-                    Toggle("Critical Alerts", isOn: $preferences.criticalAlertsEnabled)
+                Section(Copy.Settings.alerts) {
+                    Toggle(Copy.Settings.criticalAlerts, isOn: $preferences.criticalAlertsEnabled)
                         .onChange(of: preferences.criticalAlertsEnabled) { _, newValue in
                             AppAnalytics.shared.trackSettingChanged(name: "critical_alerts", value: newValue)
                         }
-                    Toggle("Warning Alerts", isOn: $preferences.warningAlertsEnabled)
+                    Toggle(Copy.Settings.warningAlerts, isOn: $preferences.warningAlertsEnabled)
                         .onChange(of: preferences.warningAlertsEnabled) { _, newValue in
                             AppAnalytics.shared.trackSettingChanged(name: "warning_alerts", value: newValue)
                         }
-                    Toggle("Trend Reversal Alerts", isOn: $preferences.trendReversalAlertsEnabled)
+                    Toggle(Copy.Settings.trendReversalAlerts, isOn: $preferences.trendReversalAlertsEnabled)
                         .onChange(of: preferences.trendReversalAlertsEnabled) { _, newValue in
                             AppAnalytics.shared.trackSettingChanged(name: "trend_reversal_alerts", value: newValue)
                         }
-                    Toggle("Improvement Celebrations", isOn: $preferences.improvementAlertsEnabled)
+                    Toggle(Copy.Settings.improvementCelebrations, isOn: $preferences.improvementAlertsEnabled)
                         .onChange(of: preferences.improvementAlertsEnabled) { _, newValue in
                             AppAnalytics.shared.trackSettingChanged(name: "improvement_alerts", value: newValue)
                         }
 
                     Stepper(
-                        "Max \(preferences.maxNotificationsPerDay)/day",
+                        Copy.Settings.maxPerDay(preferences.maxNotificationsPerDay),
                         value: $preferences.maxNotificationsPerDay,
                         in: 1...15
                     )
@@ -220,9 +220,9 @@ struct SettingsView: View {
                         MetricAlertPickerView(selectedMetrics: $preferences)
                     } label: {
                         HStack {
-                            Text("Warning Alert Metrics")
+                            Text(Copy.Settings.warningAlertMetrics)
                             Spacer()
-                            Text("\(preferences.warningAlertMetrics.count) selected")
+                            Text(Copy.Settings.selectedCount(preferences.warningAlertMetrics.count))
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -239,15 +239,15 @@ struct SettingsView: View {
                         metricAlertsTracker.tapped(target: "warning_alert_metrics")
                     })
                 } header: {
-                    Text("Metric Alerts")
+                    Text(Copy.Settings.metricAlerts)
                 } footer: {
-                    Text("Choose which metrics trigger warning-level notifications when they deviate from your baseline.")
+                    Text(Copy.Settings.metricAlertsFooter)
                 }
                 .onAppear { metricAlertsTracker.appeared() }
                 .onDisappear { metricAlertsTracker.disappeared() }
 
                 // Export
-                Section("Data Export") {
+                Section(Copy.Settings.dataExport) {
                     if FeatureGate.canAccess(.exportReport) {
                         Button {
                             AppAnalytics.shared.trackBlockTap(
@@ -266,11 +266,11 @@ struct SettingsView: View {
                                 showExportSheet = true
                             }
                         } label: {
-                            Label("Generate Web Report", systemImage: "globe")
+                            Label(Copy.Settings.generateWebReport, systemImage: "globe")
                         }
 
                         if webExportViewModel.isExporting {
-                            ProgressView("Generating report...")
+                            ProgressView(Copy.Settings.generatingReport)
                         }
                         if let error = webExportViewModel.error {
                             Text(error)
@@ -279,10 +279,10 @@ struct SettingsView: View {
                         }
                     } else {
                         HStack {
-                            Label("Generate Web Report", systemImage: "globe")
+                            Label(Copy.Settings.generateWebReport, systemImage: "globe")
                                 .foregroundStyle(.secondary)
                             Spacer()
-                            Text("PRO")
+                            Text(Copy.Labels.pro)
                                 .font(.caption2.weight(.bold))
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
@@ -297,7 +297,7 @@ struct SettingsView: View {
                 // Data Storage
                 Section {
                     HStack {
-                        Label("Stored Samples", systemImage: "internaldrive")
+                        Label(Copy.Settings.storedSamples, systemImage: "internaldrive")
                         Spacer()
                         Text("\(healthDataStore.totalStoredSamples)")
                             .foregroundStyle(.secondary)
@@ -305,23 +305,23 @@ struct SettingsView: View {
                     }
 
                     HStack {
-                        Label("Data History", systemImage: "calendar.badge.clock")
+                        Label(Copy.Settings.dataHistory, systemImage: "calendar.badge.clock")
                         Spacer()
                         Text(healthDataStore.dataSpanDescription)
                             .foregroundStyle(.secondary)
                     }
 
                     HStack {
-                        Label("Metrics Tracked", systemImage: "chart.bar.xaxis")
+                        Label(Copy.Settings.metricsTracked, systemImage: "chart.bar.xaxis")
                         Spacer()
                         Text("\(healthDataStore.metricsWithData)")
                             .foregroundStyle(.secondary)
                             .monospacedDigit()
                     }
                 } header: {
-                    Text("On-Device Data")
+                    Text(Copy.Settings.onDeviceData)
                 } footer: {
-                    Text("All your health data is stored securely on this device. The longer you use the app, the better your insights become.")
+                    Text(Copy.Settings.dataStorageFooter)
                 }
                 .onAppear { dataStorageTracker.appeared() }
                 .onDisappear { dataStorageTracker.disappeared() }
@@ -331,30 +331,30 @@ struct SettingsView: View {
                     ShortcutsLink()
                     SiriTipView(intent: HealthScoreIntent())
                 } header: {
-                    Text("Siri & Shortcuts")
+                    Text(Copy.Settings.siriAndShortcuts)
                 } footer: {
-                    Text("Say \"Hey Siri, what's my health score in Laso\" to check your score hands-free.")
+                    Text(Copy.Settings.siriFooter)
                 }
 
                 // About
-                Section("About") {
+                Section(Copy.Settings.about) {
                     HStack {
-                        Text("Version")
+                        Text(Copy.Labels.version)
                         Spacer()
                         Text("1.0.0")
                             .foregroundStyle(.secondary)
                     }
 
                     HStack {
-                        Text("Data Privacy")
+                        Text(Copy.Settings.dataPrivacy)
                         Spacer()
-                        Text("Health Data On-Device")
+                        Text(Copy.Privacy.healthDataOnDevice)
                             .foregroundStyle(.secondary)
                     }
 
                     Link(destination: URL(string: AppSecrets.URLs.privacyPolicy)!) {
                         HStack {
-                            Label("Privacy Policy", systemImage: "hand.raised.fill")
+                            Label(Copy.Privacy.privacyPolicy, systemImage: "hand.raised.fill")
                             Spacer()
                             Image(systemName: "arrow.up.right")
                                 .font(.caption)
@@ -364,7 +364,7 @@ struct SettingsView: View {
 
                     Link(destination: URL(string: AppSecrets.URLs.termsOfUse)!) {
                         HStack {
-                            Label("Terms of Use", systemImage: "doc.text.fill")
+                            Label(Copy.Privacy.termsOfUse, systemImage: "doc.text.fill")
                             Spacer()
                             Image(systemName: "arrow.up.right")
                                 .font(.caption)
@@ -377,13 +377,13 @@ struct SettingsView: View {
 
                 // Medical Disclaimer
                 Section {
-                    Text("Laso provides health insights for wellness and informational purposes only. It is not a medical device and does not provide medical diagnosis or treatment. Always consult a qualified healthcare provider before making health-related decisions.")
+                    Text(Copy.medicalDisclaimer)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
             }
             .accessibilityIdentifier("screen.settings")
-            .navigationTitle("Settings")
+            .navigationTitle(Copy.Settings.settings)
             .onAppear {
                 AppAnalytics.shared.trackFeatureOpen(.settings)
                 AppAnalytics.shared.trackActivationMilestone(.firstSettingsVisit)
@@ -391,7 +391,7 @@ struct SettingsView: View {
             .onDisappear { AppAnalytics.shared.trackFeatureClose(.settings) }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
+                    Button(Copy.Buttons.done) {
                         AppAnalytics.shared.trackBlockTap(
                             title: "Done",
                             type: .settingsDoneButton,
@@ -469,7 +469,7 @@ struct MetricAlertPickerView: View {
                 }
             }
         }
-        .navigationTitle("Alert Metrics")
+        .navigationTitle(Copy.Settings.alertMetrics)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { AppAnalytics.shared.trackFeatureOpen(.metricAlertPicker) }
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.metricAlertPicker) }

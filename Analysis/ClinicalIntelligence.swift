@@ -9,9 +9,9 @@ struct ClinicalIntelligence {
     enum BPStage: String, Comparable {
         case normal = "Normal"
         case elevated = "Elevated"
-        case hypertensionS1 = "Hypertension Stage 1"
-        case hypertensionS2 = "Hypertension Stage 2"
-        case crisis = "Hypertensive Crisis"
+        case hypertensionS1 = "Above Range"
+        case hypertensionS2 = "High"
+        case crisis = "Very High"
 
         static func < (lhs: BPStage, rhs: BPStage) -> Bool {
             lhs.order < rhs.order
@@ -30,8 +30,8 @@ struct ClinicalIntelligence {
 
     enum GlucoseStage: String, Comparable {
         case normal = "Normal"
-        case prediabetic = "Prediabetic"
-        case diabetic = "Diabetic"
+        case prediabetic = "Above Range"
+        case diabetic = "High"
 
         static func < (lhs: GlucoseStage, rhs: GlucoseStage) -> Bool {
             lhs.order < rhs.order
@@ -47,10 +47,10 @@ struct ClinicalIntelligence {
     }
 
     enum RespiratoryStage: String {
-        case bradypnea = "Bradypnea"
+        case bradypnea = "Below Range"
         case normal = "Normal"
-        case tachypnea = "Tachypnea"
-        case severe = "Severe Tachypnea"
+        case tachypnea = "Above Range"
+        case severe = "Well Above Range"
     }
 
     // MARK: - Classification (AHA/ACC 2017)
@@ -83,15 +83,15 @@ struct ClinicalIntelligence {
 
     /// Next threshold values for trajectory projection
     private static let systolicThresholds: [(threshold: Double, label: String)] = [
-        (120, "Elevated"), (130, "Hypertension S1"), (140, "Hypertension S2"), (180, "Crisis")
+        (120, "Elevated"), (130, "Above Range"), (140, "High"), (180, "Very High")
     ]
 
     private static let diastolicThresholds: [(threshold: Double, label: String)] = [
-        (80, "Hypertension S1"), (90, "Hypertension S2"), (120, "Crisis")
+        (80, "Above Range"), (90, "High"), (120, "Very High")
     ]
 
     private static let glucoseThresholds: [(threshold: Double, label: String)] = [
-        (100, "Prediabetic"), (126, "Diabetic")
+        (100, "Above Range"), (126, "High")
     ]
 
     // MARK: - Insight Generation
@@ -162,9 +162,9 @@ struct ClinicalIntelligence {
 
             insights.append(Insight(
                 metric: .bloodPressureSystolic,
-                title: "Blood Pressure Trending Up",
+                title: Copy.Analysis.Clinical.bloodPressureTrendingUp,
                 summary: "Your systolic BP has been rising \(String(format: "%.1f", slopePerMonth)) mmHg/month over the past \(recent90.count) days. Current stage: \(currentStage.rawValue). \(nextStageInfo)",
-                recommendation: "Consider reducing sodium intake, increasing aerobic exercise, and monitoring stress levels. \(medicalDisclaimer)",
+                recommendation: "\(Copy.Analysis.Clinical.bpRecommendation) \(Copy.Analysis.Clinical.medicalDisclaimer)",
                 severity: severity,
                 trend: .declining,
                 currentValue: latestSys,
@@ -186,9 +186,9 @@ struct ClinicalIntelligence {
             if pulsePressure > 60 {
                 insights.append(Insight(
                     metric: .bloodPressureSystolic,
-                    title: "Elevated Pulse Pressure",
+                    title: Copy.Analysis.Clinical.elevatedPulsePressure,
                     summary: "Your pulse pressure (\(Int(pulsePressure)) mmHg) is above the normal range of 40-60 mmHg, which may indicate arterial stiffness.",
-                    recommendation: "Wide pulse pressure can be an independent cardiovascular risk factor. \(medicalDisclaimer)",
+                    recommendation: "\(Copy.Analysis.Clinical.pulsePressureRecommendation) \(Copy.Analysis.Clinical.medicalDisclaimer)",
                     severity: .warning,
                     trend: .declining,
                     currentValue: pulsePressure,
@@ -236,9 +236,9 @@ struct ClinicalIntelligence {
 
         return Insight(
             metric: .bloodGlucose,
-            title: "Blood Glucose Trending Up",
+            title: Copy.Analysis.Clinical.bloodGlucoseTrendingUp,
             summary: "Your fasting glucose has been rising \(String(format: "%.1f", slopePerMonth)) mg/dL per month. Current: \(String(format: "%.0f", latest)) mg/dL (\(currentStage.rawValue)). \(nextInfo)",
-            recommendation: "Focus on reducing refined carbohydrates, increasing fiber intake, and maintaining regular physical activity. \(medicalDisclaimer)",
+            recommendation: "\(Copy.Analysis.Clinical.glucoseRecommendation) \(Copy.Analysis.Clinical.medicalDisclaimer)",
             severity: severity,
             trend: .declining,
             currentValue: latest,
@@ -275,9 +275,9 @@ struct ClinicalIntelligence {
 
         return Insight(
             metric: .respiratoryRate,
-            title: "Abnormal Respiratory Rate",
+            title: Copy.Analysis.Clinical.abnormalRespiratoryRate,
             summary: "Your respiratory rate (\(String(format: "%.1f", latest)) br/min) is classified as \(stage.rawValue). Normal range is 12-20 breaths per minute.",
-            recommendation: "If your respiratory rate stays outside normal range, consider speaking with a healthcare provider. \(medicalDisclaimer)",
+            recommendation: "\(Copy.Analysis.Clinical.respiratoryRecommendation) \(Copy.Analysis.Clinical.medicalDisclaimer)",
             severity: stage == .severe ? .critical : .warning,
             trend: slopePerMonth > 0 ? .declining : .stable,
             currentValue: latest,
@@ -332,5 +332,20 @@ struct ClinicalIntelligence {
         return nil
     }
 
-    private static let medicalDisclaimer = "This is informational only — consult your healthcare provider for clinical decisions."
+    private static let medicalDisclaimer = Copy.Analysis.Clinical.medicalDisclaimer
+}
+
+// MARK: - InsightAnalyzer Conformance
+
+extension ClinicalIntelligence: InsightAnalyzer {
+    static var analyzerID: String { "clinicalIntelligence" }
+    static var insightCategory: InsightCategory { .clinicalTrajectory }
+
+    static func generateInsights(context: AnalysisContext) -> [Insight] {
+        generateInsights(
+            timeSeries: context.timeSeries,
+            baselines: context.baselines,
+            trends: context.trends
+        )
+    }
 }

@@ -37,6 +37,7 @@ enum AppFeature: String, Hashable {
     case stressMonitor = "stress_monitor"
     case strainDetail = "strain_detail"
     case vitalityDetail = "vitality_detail"
+    case brainHealth = "brain_health"
     case cycleDetail = "cycle_detail"
     case deviceSetupGuide = "device_setup_guide"
 }
@@ -145,6 +146,7 @@ enum BlockType: String {
     case homeRiskRow = "home_risk_row"
     case homeRecoveryInfoButton = "home_recovery_info_button"
     case homeDailyAction = "home_daily_action"
+    case homeBrainHealthCard = "home_brain_health_card"
     case dataConfidenceBadge = "data_confidence_badge"
     case shareCard = "share_card"
 

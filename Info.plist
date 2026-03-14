@@ -35,6 +35,8 @@
 		<string>processing</string>
 		<string>health-update</string>
 	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>

@@ -74,7 +74,7 @@ struct ContentView: View {
                     )
                 }
                 .navigationDestination(for: HealthRiskType.self) { riskType in
-                    if let risk = dashboardViewModel.healthRisks.first(where: { $0.riskType == riskType }) {
+                    if let risk = dashboardViewModel.analysis.healthRisks.first(where: { $0.riskType == riskType }) {
                         HealthRiskDetailView(risk: risk) { metric in
                             navigationPath.append(metric)
                         }
@@ -86,8 +86,8 @@ struct ContentView: View {
                         )
                     }
                 }
-                .navigationDestination(for: String.self) { route in
-                    stringRouteDestination(for: route)
+                .navigationDestination(for: Route.self) { route in
+                    routeDestination(for: route)
                 }
         }
         .sheet(isPresented: $showSettings) {
@@ -126,6 +126,7 @@ struct ContentView: View {
                 }
             } else if newPhase == .background {
                 AppAnalytics.shared.trackSessionEnd()
+                AppDelegate.scheduleBackgroundRefresh()
             }
         }
         .onChange(of: connectivityMonitor.isOnline) { wasOnline, isOnline in
@@ -216,43 +217,45 @@ struct ContentView: View {
         }
     }
 
-    // MARK: - String Route Destinations
+    // MARK: - Route Destinations
 
     @ViewBuilder
-    private func stringRouteDestination(for route: String) -> some View {
+    private func routeDestination(for route: Route) -> some View {
         switch route {
-        case "insightsDetail":
+        case .insightsDetail:
             InsightsDetailView(
-                insightsByCategory: dashboardViewModel.insightsByCategory,
+                insightsByCategory: dashboardViewModel.insights.insightsByCategory,
                 onTapMetric: { metric in navigationPath.append(metric) },
-                headlineSummary: dashboardViewModel.topCausalChain?.narrative ?? dashboardViewModel.headlineInsight?.recommendation,
+                headlineSummary: dashboardViewModel.analysis.topCausalChain?.narrative ?? dashboardViewModel.insights.headlineInsight?.recommendation,
                 store: healthDataStore
             )
-        case "weeklyReview":
+        case .weeklyReview:
             WeeklyReviewView(viewModel: WeeklyReviewViewModel(dashboardViewModel: dashboardViewModel))
-        case "correlationsDetail":
+        case .correlationsDetail:
             CorrelationsView(
-                correlations: dashboardViewModel.correlations,
+                correlations: dashboardViewModel.analysis.correlations,
                 onTapMetric: { metric in navigationPath.append(metric) }
             )
-        case "healthStateTimeline":
+        case .healthStateTimeline:
             HealthStateTimelineView(
                 viewModel: HealthStateTimelineViewModel(mlOrchestrator: dashboardViewModel.analysisEngine.mlOrchestrator)
             )
-        case "vitalityDetail":
+        case .vitalityDetail:
             VitalityDetailView(scorer: dashboardViewModel.vitalityScorer)
-        case "strainDetail":
+        case .strainDetail:
             strainDetailDestination
-        case "stressMonitor":
+        case .stressMonitor:
             stressMonitorDestination
-        case "sleepCoach":
-            sleepCoachDestination
-        case "cycleDetail":
-            cycleDetailDestination
-        case "achievements":
-            achievementsDestination
-        default:
+        case .brainHealth:
+            brainHealthDestination
+        case .sleepCoach:
             EmptyView()
+        case .cycleDetail:
+            cycleDetailDestination
+        case .achievements:
+            achievementsDestination
+        case .journalEntry:
+            JournalEntryView()
         }
     }
 
@@ -302,6 +305,18 @@ struct ContentView: View {
                 weeklyScores: weekScores,
                 weeklyAverage: dashboardViewModel.stressScorer.weeklyAverage ?? 0,
                 previousWeekAverage: prevAvg
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var brainHealthDestination: some View {
+        if let brain = dashboardViewModel.brainHealthScorer.currentScore {
+            BrainHealthDetailView(
+                brainScore: brain,
+                weeklyHistory: dashboardViewModel.brainHealthScorer.weeklyHistory,
+                weeklyAverage: dashboardViewModel.brainHealthScorer.weeklyAverage,
+                trend: dashboardViewModel.brainHealthScorer.brainHealthTrend
             )
         }
     }

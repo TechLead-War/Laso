@@ -214,10 +214,10 @@ struct HistoricalAnalyzer {
 
         return Insight(
             metric: metric,
-            title: "\(metric.displayName) \(absChange)% \(improving ? "Better" : "Worse") Than Last \(monthName)",
+            title: Copy.Analysis.Historical.yearOverYear(metric: metric.displayName, change: absChange, comparison: improving ? "Better" : "Worse", month: monthName),
             summary: "Compared to \(monthName) last year (\(lastYearFormatted) \(metric.unit)), your \(metric.displayName.lowercased()) is \(absChange)% \(yoyChange > 0 ? "higher" : "lower").",
             recommendation: improving
-                ? "You're in better shape this year. Your long-term trajectory is positive."
+                ? Copy.Analysis.Historical.betterShapeLongTerm
                 : "Your \(metric.displayName.lowercased()) has declined since last year. Consider what changed in your routine over the past 12 months.",
             severity: improving ? .info : .warning,
             trend: improving ? .improving : .declining,
@@ -246,11 +246,11 @@ struct HistoricalAnalyzer {
 
         return Insight(
             metric: metric,
-            title: "\(metric.displayName) Near All-Time \(isNearHigh ? "High" : "Low")",
+            title: Copy.Analysis.Historical.nearAllTime(metric: metric.displayName, extreme: isNearHigh ? "High" : "Low"),
             summary: "Your \(metric.displayName.lowercased()) is in the \(isNearHigh ? "top" : "bottom") 5% of all values recorded over the past year (\(ctx.totalDataPoints) data points).",
             recommendation: goodExtreme
-                ? "This is exceptional — you're at a personal best level. Whatever you're doing, it's working across your entire history."
-                : "This level is rare in your history. It may warrant attention if it persists beyond a few days.",
+                ? Copy.Analysis.Historical.exceptionalPersonalBest
+                : Copy.Analysis.Historical.rareLevelMayWarrantAttention,
             severity: goodExtreme ? .info : .warning,
             trend: goodExtreme ? .improving : .declining,
             currentValue: isNearHigh ? high : low,
@@ -272,10 +272,10 @@ struct HistoricalAnalyzer {
 
         return Insight(
             metric: metric,
-            title: "\(metric.displayName) \(improving ? "Above" : "Below") \(monthName) Average",
+            title: Copy.Analysis.Historical.seasonalComparison(metric: metric.displayName, comparison: improving ? "Above" : "Below", month: monthName),
             summary: "Your \(metric.displayName.lowercased()) is \(absDev)% \(isAbove ? "above" : "below") your typical \(monthName) levels (historical average: \(metric.formatValue(seasonalAvg)) \(metric.unit) over the past year).",
             recommendation: improving
-                ? "You're outperforming your seasonal norm. This suggests genuine improvement beyond seasonal patterns."
+                ? Copy.Analysis.Historical.outperformingSeasonalNorm
                 : "This is worse than your usual \(monthName) levels. While some seasonal variation is normal, a \(absDev)% deviation is significant.",
             severity: improving ? .info : .warning,
             trend: improving ? .improving : .declining,
@@ -296,11 +296,11 @@ struct HistoricalAnalyzer {
 
         return Insight(
             metric: metric,
-            title: "\(metric.displayName) \(improving ? "Up" : "Down") \(absChange)% Over \(periodLabel.capitalized)",
+            title: Copy.Analysis.Historical.longTermTrajectory(metric: metric.displayName, direction: improving ? "Up" : "Down", change: absChange, period: periodLabel.capitalized),
             summary: "Looking at \(ctx.totalDataPoints) data points over \(periodLabel), your \(metric.displayName.lowercased()) has \(changePercent > 0 ? "increased" : "decreased") \(absChange)% overall.",
             recommendation: improving
-                ? "This long-term improvement is the most reliable signal. Short-term dips don't erase months of positive change."
-                : "A sustained decline suggests something structural has changed. Consider consulting a healthcare provider if this trend continues.",
+                ? Copy.Analysis.Historical.longTermImprovementReliable
+                : Copy.Analysis.Historical.sustainedDeclineStructural,
             severity: improving ? .info : .warning,
             trend: improving ? .improving : .declining,
             currentValue: ctx.longTermChangePercent ?? 0,
@@ -318,9 +318,9 @@ struct HistoricalAnalyzer {
 
         return Insight(
             metric: metric,
-            title: "\(metric.displayName) at \(monthsAgo)-Month \(ctx.allTimePercentile > 50 ? "High" : "Low")",
+            title: Copy.Analysis.Historical.rarityTitle(metric: metric.displayName, months: monthsAgo, extreme: ctx.allTimePercentile > 50 ? "High" : "Low"),
             summary: "Your current \(metric.displayName.lowercased()) level hasn't been seen in \(monthsAgo) months. It occurred only \(ctx.occurrencesInLastYear ?? 0) times in the past year.",
-            recommendation: "Unusual values that persist for days are more meaningful than single-day spikes. Monitor over the next few days.",
+            recommendation: Copy.Analysis.Historical.unusualValuesMonitor,
             severity: .info,
             trend: .stable,
             currentValue: Double(daysSince),
@@ -328,5 +328,16 @@ struct HistoricalAnalyzer {
             deviationPercent: 0,
             category: .baselineDrift
         )
+    }
+}
+
+// MARK: - InsightAnalyzer Conformance
+
+extension HistoricalAnalyzer: InsightAnalyzer {
+    static var analyzerID: String { "historical" }
+    static var insightCategory: InsightCategory { .trend }
+
+    static func generateInsights(context: AnalysisContext) -> [Insight] {
+        generateInsights(historicalContext: context.historicalContext, baselines: context.baselines)
     }
 }

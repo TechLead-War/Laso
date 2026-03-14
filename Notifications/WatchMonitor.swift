@@ -196,7 +196,7 @@ final class WatchMonitor {
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: thresholdSeconds, repeats: false)
         NotificationManager.shared.scheduleNotification(
             title: DeviceMessaging.wearPromptTitle,
-            body: "\(DeviceMessaging.deviceName) hasn't recorded data for a while. \(DeviceMessaging.wearToTrackMessage)",
+            body: Copy.Notifications.watchNotWornScheduled(device: DeviceMessaging.deviceName, wearToTrack: DeviceMessaging.wearToTrackMessage),
             identifier: scheduledNotWornIdentifier,
             trigger: trigger,
             maxPerDay: 1
@@ -230,9 +230,9 @@ final class WatchMonitor {
 
         let body: String
         if hours >= 1 {
-            body = "\(DeviceMessaging.deviceName) hasn't recorded data for \(hours)h \(minutes)m. \(DeviceMessaging.wearToTrackMessage)"
+            body = Copy.Notifications.watchNotWornHours(device: DeviceMessaging.deviceName, hours: hours, minutes: minutes, wearToTrack: DeviceMessaging.wearToTrackMessage)
         } else {
-            body = "\(DeviceMessaging.deviceName) hasn't recorded data recently. \(DeviceMessaging.wearToTrackMessage)"
+            body = Copy.Notifications.watchNotWornRecent(device: DeviceMessaging.deviceName, wearToTrack: DeviceMessaging.wearToTrackMessage)
         }
 
         NotificationManager.shared.scheduleNotification(
@@ -261,8 +261,8 @@ final class WatchMonitor {
             guard !defaults.bool(forKey: lowBatteryAlertShownKey) else { return }
 
             NotificationManager.shared.scheduleNotification(
-                title: "Watch Battery Low",
-                body: "Your \(DeviceMessaging.deviceName) battery is at \(Int(level * 100))%. Charge it soon to avoid missing health data.",
+                title: Copy.Notifications.watchBatteryLow,
+                body: Copy.Notifications.watchBatteryBody(device: DeviceMessaging.deviceName, percent: Int(level * 100)),
                 identifier: AppConstants.NotificationID.watchLowBattery,
                 maxPerDay: 1
             )

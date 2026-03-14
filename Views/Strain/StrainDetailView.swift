@@ -26,9 +26,9 @@ enum StrainBalance: String {
 
     var description: String {
         switch self {
-        case .under: return "Your strain is below your target range. Consider increasing activity to maintain fitness."
-        case .optimal: return "You're training within your ideal strain range for your current recovery."
-        case .overreaching: return "Your strain exceeds your recovery capacity. Prioritize rest and lighter sessions."
+        case .under: return Copy.Strain.underTrainingDescription
+        case .optimal: return Copy.Strain.optimalDescription
+        case .overreaching: return Copy.Strain.overreachingDescription
         }
     }
 }
@@ -91,7 +91,7 @@ struct StrainDetailView: View {
             .padding(.bottom, 24)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
-        .navigationTitle("Strain")
+        .navigationTitle(Copy.Strain.title)
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.strainDetail)
@@ -122,7 +122,7 @@ struct StrainDetailView: View {
                     Text(String(format: "%.1f", strainValue))
                         .font(.system(size: 40, weight: .bold, design: .rounded))
 
-                    Text("of 21")
+                    Text(Copy.Strain.of21)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -178,7 +178,7 @@ struct StrainDetailView: View {
 
     private var balanceSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionHeader(icon: "scale.3d", title: "Strain Balance")
+            sectionHeader(icon: "scale.3d", title: Copy.Strain.strainBalance)
 
             HStack(spacing: 12) {
                 Image(systemName: strainBalance.icon)
@@ -208,7 +208,7 @@ struct StrainDetailView: View {
 
     private var coachSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionHeader(icon: "figure.run", title: "Strain Coach")
+            sectionHeader(icon: "figure.run", title: Copy.Strain.strainCoach)
 
             VStack(spacing: 12) {
                 // Target strain range
@@ -220,7 +220,7 @@ struct StrainDetailView: View {
                         .background(.tint, in: Circle())
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Target Strain")
+                        Text(Copy.Strain.targetStrain)
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.secondary)
                             .textCase(.uppercase)
@@ -261,7 +261,7 @@ struct StrainDetailView: View {
                         .background(.pink, in: Circle())
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Recommended Zone")
+                        Text(Copy.Strain.recommendedZone)
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.secondary)
                             .textCase(.uppercase)
@@ -299,7 +299,7 @@ struct StrainDetailView: View {
 
     private var zoneBreakdownSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionHeader(icon: "heart.text.square.fill", title: "Heart Rate Zones")
+            sectionHeader(icon: "heart.text.square.fill", title: Copy.Strain.heartRateZones)
 
             VStack(spacing: 0) {
                 ForEach(1...5, id: \.self) { zone in
@@ -355,7 +355,7 @@ struct StrainDetailView: View {
                 }
                 .frame(height: 6)
 
-                Text("\(Int(fraction * 100))% of total time")
+                Text(Copy.Strain.percentOfTotal(Int(fraction * 100)))
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
@@ -368,7 +368,7 @@ struct StrainDetailView: View {
 
     private var historySection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionHeader(icon: "calendar", title: "7-Day History")
+            sectionHeader(icon: "calendar", title: Copy.Strain.sevenDayHistory)
 
             VStack(alignment: .leading, spacing: 8) {
                 Chart {
@@ -425,7 +425,7 @@ struct StrainDetailView: View {
                 // Average
                 let avgStrain = weekHistory.map(\.strain).reduce(0, +) / max(Double(weekHistory.count), 1)
                 HStack(spacing: 6) {
-                    Text("7-Day Average:")
+                    Text(Copy.Strain.sevenDayAverage)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Text(String(format: "%.1f", avgStrain))
@@ -452,7 +452,7 @@ struct StrainDetailView: View {
                 .font(.caption)
                 .foregroundStyle(.tertiary)
 
-            Text("Strain is calculated from cardiovascular load using heart rate data. It is not a medical measurement. Consult your doctor before making changes to your exercise routine.")
+            Text(Copy.Strain.strainDisclaimer)
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
         }
@@ -485,12 +485,12 @@ struct StrainDetailView: View {
 
     private func zoneName(_ zone: Int) -> String {
         switch zone {
-        case 1: return "Active Recovery"
-        case 2: return "Fat Burn"
-        case 3: return "Aerobic"
-        case 4: return "Threshold"
-        case 5: return "Anaerobic"
-        default: return "Zone \(zone)"
+        case 1: return Copy.Strain.activeRecovery
+        case 2: return Copy.Strain.fatBurn
+        case 3: return Copy.Strain.aerobic
+        case 4: return Copy.Strain.threshold
+        case 5: return Copy.Strain.anaerobic
+        default: return Copy.Strain.zoneDefault(zone)
         }
     }
 

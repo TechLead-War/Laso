@@ -14,29 +14,29 @@ struct PersonalRecordAnalyzer {
 
     private static let trackedMetrics: [TrackedMetric] = [
         TrackedMetric(metric: .steps, lowerIsBetter: false,
-                      milestoneThreshold: 10000, milestoneLabel: "10K Step Day",
-                      streakThreshold: 8000, streakLabel: "8K+ Steps"),
+                      milestoneThreshold: 10000, milestoneLabel: Copy.Analysis.PersonalRecord.tenKStepDay,
+                      streakThreshold: 8000, streakLabel: Copy.Analysis.PersonalRecord.eightKPlusSteps),
         TrackedMetric(metric: .activeCalories, lowerIsBetter: false,
                       milestoneThreshold: nil, milestoneLabel: nil,
                       streakThreshold: nil, streakLabel: nil),
         TrackedMetric(metric: .exerciseMinutes, lowerIsBetter: false,
                       milestoneThreshold: nil, milestoneLabel: nil,
-                      streakThreshold: 30, streakLabel: "30+ Min Exercise"),
+                      streakThreshold: 30, streakLabel: Copy.Analysis.PersonalRecord.thirtyPlusMinExercise),
         TrackedMetric(metric: .vo2Max, lowerIsBetter: false,
                       milestoneThreshold: nil, milestoneLabel: nil,
                       streakThreshold: nil, streakLabel: nil),
         TrackedMetric(metric: .heartRateVariability, lowerIsBetter: false,
-                      milestoneThreshold: 50, milestoneLabel: "HRV Above 50ms",
+                      milestoneThreshold: 50, milestoneLabel: Copy.Analysis.PersonalRecord.hrvAbove50ms,
                       streakThreshold: nil, streakLabel: nil),
         TrackedMetric(metric: .sleepDuration, lowerIsBetter: false,
-                      milestoneThreshold: 8, milestoneLabel: "8-Hour Sleep Night",
-                      streakThreshold: 7, streakLabel: "7+ Hr Sleep"),
+                      milestoneThreshold: 8, milestoneLabel: Copy.Analysis.PersonalRecord.eightHourSleepNight,
+                      streakThreshold: 7, streakLabel: Copy.Analysis.PersonalRecord.sevenPlusHrSleep),
         TrackedMetric(metric: .restingHeartRate, lowerIsBetter: true,
                       milestoneThreshold: nil, milestoneLabel: nil,
                       streakThreshold: nil, streakLabel: nil),
         TrackedMetric(metric: .standHours, lowerIsBetter: false,
                       milestoneThreshold: nil, milestoneLabel: nil,
-                      streakThreshold: 10, streakLabel: "10+ Stand Hours"),
+                      streakThreshold: 10, streakLabel: Copy.Analysis.PersonalRecord.tenPlusStandHours),
     ]
 
     /// Analyze personal records, milestones, and streaks
@@ -144,7 +144,7 @@ struct PersonalRecordAnalyzer {
             // It's a new PR with real improvement
             return Insight(
                 metric: metric,
-                title: "New \(windowLabel) PR: \(metric.displayName)",
+                title: Copy.Analysis.PersonalRecord.newPR(windowLabel: windowLabel, metricName: metric.displayName),
                 summary: "Your \(windowLabel) average \(metric.displayName.lowercased()) hit a personal record: \(String(format: "%.1f", currentAvg)) \(metric.unit). Previous best: \(String(format: "%.1f", bestPrevious)) \(metric.unit) (\(String(format: "%.1f", improvement))% improvement).\(recordAgeNote)",
                 recommendation: "New \(windowLabel) record for \(metric.displayName.lowercased()): \(String(format: "%.1f", currentAvg)) \(metric.unit), surpassing previous best of \(String(format: "%.1f", bestPrevious)) \(metric.unit).",
                 severity: .info,
@@ -189,8 +189,8 @@ struct PersonalRecordAnalyzer {
 
             insights.append(Insight(
                 metric: tracked.metric,
-                title: "\(currentStreak)-Day \(label) Streak",
-                summary: "You've hit \(label.lowercased()) for \(currentStreak) consecutive days.",
+                title: Copy.Analysis.PersonalRecord.streakTitle(days: currentStreak, label: label),
+                summary: Copy.Analysis.PersonalRecord.streakSummary(label: label, days: currentStreak),
                 recommendation: currentStreak >= 7 ?
                     "\(currentStreak)-day streak of \(label.lowercased()). This is your longest active run." :
                     "Current streak: \(currentStreak) consecutive days of \(label.lowercased()).",
@@ -234,9 +234,9 @@ struct PersonalRecordAnalyzer {
 
             insights.append(Insight(
                 metric: tracked.metric,
-                title: "Milestone: \(label)",
-                summary: "You achieved \(label.lowercased()) for the first time this week.",
-                recommendation: "First recorded instance of \(label.lowercased()) in your data.",
+                title: Copy.Analysis.PersonalRecord.milestoneTitle(label),
+                summary: Copy.Analysis.PersonalRecord.milestoneSummary(label),
+                recommendation: Copy.Analysis.PersonalRecord.milestoneRecommendation(label),
                 severity: .info,
                 trend: .improving,
                 currentValue: threshold,
@@ -248,5 +248,16 @@ struct PersonalRecordAnalyzer {
         }
 
         return insights
+    }
+}
+
+// MARK: - InsightAnalyzer Conformance
+
+extension PersonalRecordAnalyzer: InsightAnalyzer {
+    static var analyzerID: String { "personalRecord" }
+    static var insightCategory: InsightCategory { .personalRecord }
+
+    static func generateInsights(context: AnalysisContext) -> [Insight] {
+        generateInsights(timeSeries: context.timeSeries)
     }
 }

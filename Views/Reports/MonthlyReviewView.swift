@@ -100,7 +100,7 @@ struct MonthlyReviewView: View {
                 }
                 .foregroundStyle(delta >= 0 ? .green : .red)
             } else {
-                Text("First month — no comparison yet")
+                Text(Copy.Reports.firstMonthNoComparison)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -339,7 +339,7 @@ struct MonthlyReviewView: View {
                     }
                 }
             } else {
-                Text("Not enough data")
+                Text(Copy.Reports.notEnoughData)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -440,7 +440,7 @@ struct MonthlyReviewView: View {
 
                     if !positive.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Helped Recovery")
+                            Text(Copy.Reports.helpedRecovery)
                                 .font(.caption.weight(.bold))
                                 .foregroundStyle(.green)
                                 .textCase(.uppercase)
@@ -462,7 +462,7 @@ struct MonthlyReviewView: View {
 
                     if !negative.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Hurt Recovery")
+                            Text(Copy.Reports.hurtRecovery)
                                 .font(.caption.weight(.bold))
                                 .foregroundStyle(.orange)
                                 .textCase(.uppercase)

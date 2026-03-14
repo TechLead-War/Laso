@@ -13,10 +13,10 @@ enum CyclePhase: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .menstrual:  return "Menstrual Phase"
-        case .follicular: return "Follicular Phase"
-        case .ovulatory:  return "Ovulatory Phase"
-        case .luteal:     return "Luteal Phase"
+        case .menstrual:  return Copy.CycleTracking.menstrualPhase
+        case .follicular: return Copy.CycleTracking.follicularPhase
+        case .ovulatory:  return Copy.CycleTracking.ovulatoryPhase
+        case .luteal:     return Copy.CycleTracking.lutealPhase
         }
     }
 
@@ -40,79 +40,55 @@ enum CyclePhase: String, CaseIterable, Identifiable {
 
     var description: String {
         switch self {
-        case .menstrual:
-            return "Your body is shedding the uterine lining. Hormone levels are at their lowest, which can affect energy and mood."
-        case .follicular:
-            return "Estrogen rises steadily as follicles develop. Energy and mood typically improve as your body prepares for ovulation."
-        case .ovulatory:
-            return "An egg is released from the ovary. Estrogen peaks and testosterone briefly surges, often boosting energy and confidence."
-        case .luteal:
-            return "Progesterone rises to prepare the uterine lining. You may notice changes in appetite, sleep, and mood as the cycle nears its end."
+        case .menstrual:  return Copy.CycleTracking.menstrualDescription
+        case .follicular: return Copy.CycleTracking.follicularDescription
+        case .ovulatory:  return Copy.CycleTracking.ovulatoryDescription
+        case .luteal:     return Copy.CycleTracking.lutealDescription
         }
     }
 
     var energyImpact: String {
         switch self {
-        case .menstrual:
-            return "Energy tends to be lower. Light movement can help ease discomfort, but listen to your body and rest when needed."
-        case .follicular:
-            return "Rising estrogen boosts energy and endurance. A great time for challenging workouts and learning new skills."
-        case .ovulatory:
-            return "Peak energy and strength. You may hit personal records during this window as hormones support performance."
-        case .luteal:
-            return "Energy gradually declines, especially in the late luteal phase. Shift toward moderate, steady-state activities."
+        case .menstrual:  return Copy.CycleTracking.menstrualEnergy
+        case .follicular: return Copy.CycleTracking.follicularEnergy
+        case .ovulatory:  return Copy.CycleTracking.ovulatoryEnergy
+        case .luteal:     return Copy.CycleTracking.lutealEnergy
         }
     }
 
     var recoveryImpact: String {
         switch self {
-        case .menstrual:
-            return "Recovery may be slower due to inflammation. Prioritize sleep, hydration, and gentle movement like yoga or walking."
-        case .follicular:
-            return "Recovery is typically efficient. Your body responds well to training stimulus and adapts quickly."
-        case .ovulatory:
-            return "Good recovery capacity, but monitor intensity. The hormonal peak can mask fatigue signals."
-        case .luteal:
-            return "Recovery slows as progesterone rises. Allow extra rest between intense sessions and focus on sleep quality."
+        case .menstrual:  return Copy.CycleTracking.menstrualRecovery
+        case .follicular: return Copy.CycleTracking.follicularRecovery
+        case .ovulatory:  return Copy.CycleTracking.ovulatoryRecovery
+        case .luteal:     return Copy.CycleTracking.lutealRecovery
         }
     }
 
     var sleepImpact: String {
         switch self {
-        case .menstrual:
-            return "Sleep can be disrupted by cramps or discomfort. Melatonin production may be affected by low hormone levels."
-        case .follicular:
-            return "Sleep quality generally improves. Rising estrogen supports deeper, more restorative sleep cycles."
-        case .ovulatory:
-            return "Sleep is typically good, though some may experience a slight rise in body temperature affecting sleep onset."
-        case .luteal:
-            return "Progesterone raises core body temperature, which can reduce sleep quality. Keep the room cool and allow extra wind-down time."
+        case .menstrual:  return Copy.CycleTracking.menstrualSleep
+        case .follicular: return Copy.CycleTracking.follicularSleep
+        case .ovulatory:  return Copy.CycleTracking.ovulatorySleep
+        case .luteal:     return Copy.CycleTracking.lutealSleep
         }
     }
 
     var nutritionTips: String {
         switch self {
-        case .menstrual:
-            return "Focus on iron-rich foods (leafy greens, red meat, lentils) and anti-inflammatory choices. Stay well hydrated."
-        case .follicular:
-            return "Support rising energy with complex carbs and lean protein. Fermented foods can support gut health during this phase."
-        case .ovulatory:
-            return "Lighter meals with plenty of fiber and antioxidants. Cruciferous vegetables help metabolize the estrogen peak."
-        case .luteal:
-            return "Increased caloric needs — add healthy fats and magnesium-rich foods. Dark chocolate and nuts can help with cravings."
+        case .menstrual:  return Copy.CycleTracking.menstrualNutrition
+        case .follicular: return Copy.CycleTracking.follicularNutrition
+        case .ovulatory:  return Copy.CycleTracking.ovulatoryNutrition
+        case .luteal:     return Copy.CycleTracking.lutealNutrition
         }
     }
 
     var exerciseRecommendation: String {
         switch self {
-        case .menstrual:
-            return "Gentle yoga, walking, light stretching, or swimming. Reduce intensity and focus on movement that feels good."
-        case .follicular:
-            return "High-intensity training, strength work, HIIT, and skill-based activities. Your body is primed for performance gains."
-        case .ovulatory:
-            return "Peak performance window — heavy lifts, sprint intervals, competitive sports. Push toward personal records."
-        case .luteal:
-            return "Moderate cardio, Pilates, strength maintenance. Taper intensity in the late luteal phase as energy declines."
+        case .menstrual:  return Copy.CycleTracking.menstrualExercise
+        case .follicular: return Copy.CycleTracking.follicularExercise
+        case .ovulatory:  return Copy.CycleTracking.ovulatoryExercise
+        case .luteal:     return Copy.CycleTracking.lutealExercise
         }
     }
 
@@ -181,7 +157,7 @@ struct CycleDetailView: View {
             .padding(.vertical)
         }
         .background(Color(.systemGroupedBackground))
-        .navigationTitle("Cycle Tracking")
+        .navigationTitle(Copy.CycleTracking.title)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.cycleDetail)
@@ -210,10 +186,10 @@ struct CycleDetailView: View {
                         .font(.title.weight(.semibold))
                         .foregroundStyle(currentPhase.color)
 
-                    Text("Day \(dayInCycle)")
+                    Text(Copy.CycleTracking.dayOfCycle(dayInCycle))
                         .font(.title2.weight(.bold).monospacedDigit())
 
-                    Text("of \(cycleLength)")
+                    Text(Copy.CycleTracking.ofTotal(cycleLength))
                         .font(.caption.weight(.medium))
                         .foregroundStyle(.secondary)
                 }
@@ -277,7 +253,7 @@ struct CycleDetailView: View {
                     Text(currentPhase.displayName)
                         .font(.headline.weight(.bold))
 
-                    Text("Day \(dayInPhase) of \(phaseDuration)")
+                    Text(Copy.CycleTracking.dayOfPhase(dayInPhase, duration: phaseDuration))
                         .font(.subheadline.weight(.medium).monospacedDigit())
                         .foregroundStyle(.secondary)
                 }
@@ -289,7 +265,7 @@ struct CycleDetailView: View {
                         Text("\(daysUntilPeriod)")
                             .font(.title3.weight(.bold).monospacedDigit())
                             .foregroundStyle(currentPhase.color)
-                        Text("days to\nperiod")
+                        Text(Copy.CycleTracking.daysToPeriod)
                             .font(.caption2.weight(.medium))
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.trailing)
@@ -311,34 +287,34 @@ struct CycleDetailView: View {
 
     private var phaseImpactSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text("How This Phase Affects You")
+            Text(Copy.CycleTracking.howThisPhaseAffectsYou)
                 .font(.headline.weight(.bold))
                 .padding(.horizontal)
 
             impactCard(
                 icon: "bolt.fill",
-                title: "Energy & Performance",
+                title: Copy.CycleTracking.energyAndPerformance,
                 description: currentPhase.energyImpact,
                 color: .orange
             )
 
             impactCard(
                 icon: "arrow.counterclockwise.circle.fill",
-                title: "Recovery",
+                title: Copy.CycleTracking.recovery,
                 description: currentPhase.recoveryImpact,
                 color: .green
             )
 
             impactCard(
                 icon: "moon.fill",
-                title: "Sleep",
+                title: Copy.CycleTracking.sleep,
                 description: currentPhase.sleepImpact,
                 color: .indigo
             )
 
             impactCard(
                 icon: "carrot.fill",
-                title: "Nutrition Tips",
+                title: Copy.CycleTracking.nutritionTips,
                 description: currentPhase.nutritionTips,
                 color: .teal
             )
@@ -374,7 +350,7 @@ struct CycleDetailView: View {
 
     private var exerciseSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text("Exercise Recommendation")
+            Text(Copy.CycleTracking.exerciseRecommendation)
                 .font(.headline.weight(.bold))
                 .padding(.horizontal)
 
@@ -386,7 +362,7 @@ struct CycleDetailView: View {
                     .background(currentPhase.color.gradient, in: RoundedRectangle(cornerRadius: DS.iconRadius))
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Recommended for \(currentPhase.displayName)")
+                    Text(Copy.CycleTracking.recommendedFor(phase: currentPhase.displayName))
                         .font(.subheadline.weight(.semibold))
 
                     Text(currentPhase.exerciseRecommendation)
@@ -396,7 +372,7 @@ struct CycleDetailView: View {
 
                     // Intensity indicator
                     HStack(spacing: 4) {
-                        Text("Intensity:")
+                        Text(Copy.CycleTracking.intensity)
                             .font(.caption2.weight(.medium))
                             .foregroundStyle(.tertiary)
 
@@ -430,7 +406,7 @@ struct CycleDetailView: View {
 
     private var cycleHistorySection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text("Cycle History")
+            Text(Copy.CycleTracking.cycleHistory)
                 .font(.headline.weight(.bold))
                 .padding(.horizontal)
 
@@ -441,7 +417,7 @@ struct CycleDetailView: View {
                         Image(systemName: "calendar.badge.clock")
                             .font(.title2)
                             .foregroundStyle(.tertiary)
-                        Text("Not enough cycle data yet")
+                        Text(Copy.CycleTracking.notEnoughCycleData)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -465,7 +441,7 @@ struct CycleDetailView: View {
                         Image(systemName: "chart.bar.fill")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        Text("Average cycle length: \(avg) days")
+                        Text(Copy.CycleTracking.averageCycleLength(avg))
                             .font(.caption.weight(.medium))
                             .foregroundStyle(.secondary)
                     }
@@ -497,7 +473,7 @@ struct CycleDetailView: View {
                 Text(entry.startDate, format: .dateTime.month(.wide).day().year())
                     .font(.subheadline.weight(.medium))
 
-                Text("\(entry.length) days")
+                Text(Copy.CycleTracking.daysCount(entry.length))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -540,7 +516,7 @@ struct CycleDetailView: View {
 
     private var nextPeriodSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text("Next Period Estimate")
+            Text(Copy.CycleTracking.nextPeriodEstimate)
                 .font(.headline.weight(.bold))
                 .padding(.horizontal)
 
@@ -560,7 +536,7 @@ struct CycleDetailView: View {
                     VStack(spacing: 0) {
                         Text("\(daysUntilPeriod)")
                             .font(.title3.weight(.bold).monospacedDigit())
-                        Text("days")
+                        Text(Copy.CycleTracking.days)
                             .font(.system(size: 9, weight: .medium))
                             .foregroundStyle(.secondary)
                     }
@@ -568,7 +544,7 @@ struct CycleDetailView: View {
 
                 VStack(alignment: .leading, spacing: 6) {
                     if let date = nextPeriodDate {
-                        Text("Estimated Start")
+                        Text(Copy.CycleTracking.estimatedStart)
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.secondary)
                             .textCase(.uppercase)
@@ -576,16 +552,16 @@ struct CycleDetailView: View {
                         Text(date, format: .dateTime.weekday(.wide).month(.abbreviated).day())
                             .font(.subheadline.weight(.bold))
 
-                        Text("Based on your \(cycleLength)-day average cycle")
+                        Text(Copy.CycleTracking.basedOnCycleLength(cycleLength))
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                     } else {
-                        Text("Estimated Start")
+                        Text(Copy.CycleTracking.estimatedStart)
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.secondary)
                             .textCase(.uppercase)
 
-                        Text("In about \(daysUntilPeriod) days")
+                        Text(Copy.CycleTracking.inAboutDays(daysUntilPeriod))
                             .font(.subheadline.weight(.bold))
                     }
                 }

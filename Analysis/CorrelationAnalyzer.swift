@@ -233,9 +233,9 @@ struct CorrelationAnalyzer {
 
     /// Strength label based on |r|
     private static func strengthLabel(for absR: Double) -> String {
-        if absR >= 0.6 { return "Strong" }
-        if absR >= 0.4 { return "Moderate" }
-        return "Mild"
+        if absR >= 0.6 { return Copy.Analysis.Correlation.strong }
+        if absR >= 0.4 { return Copy.Analysis.Correlation.moderate }
+        return Copy.Analysis.Correlation.mild
     }
 
     /// Pearson correlation on aligned pairs without intermediate arrays.
@@ -337,5 +337,16 @@ struct CorrelationAnalyzer {
         let summary = "When your \(metricA.displayName.lowercased()) is above average, your \(metricB.displayName.lowercased()) averages \(formattedAbove)\(metricB.unit) vs \(formattedBelow)\(metricB.unit) (\(absPercent)% \(direction))."
 
         return EffectResult(percentDiff: abs(percentDiff), summary: summary, avgBAbove: avgBAbove, avgBBelow: avgBBelow)
+    }
+}
+
+// MARK: - InsightAnalyzer Conformance
+
+extension CorrelationAnalyzer: InsightAnalyzer {
+    static var analyzerID: String { "correlation" }
+    static var insightCategory: InsightCategory { .correlation }
+
+    static func generateInsights(context: AnalysisContext) -> [Insight] {
+        generateInsights(from: context.correlations)
     }
 }

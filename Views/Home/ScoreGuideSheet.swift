@@ -11,12 +11,12 @@ struct ScoreGuideSheet: View {
                 VStack(spacing: 28) {
                     // MARK: - Hero
                     VStack(spacing: 16) {
-                        HealthScoreRing(score: 76, label: "Health Score", size: 120, lineWidth: 12)
+                        HealthScoreRing(score: 76, label: Copy.Home.ScoreGuide.healthScore, size: 120, lineWidth: 12)
 
-                        Text("This is your Health Score")
+                        Text(Copy.Home.ScoreGuide.title)
                             .font(.title3.weight(.semibold))
 
-                        Text("A single number from 0 to 100 that reflects how your body is doing right now, based on your own data.")
+                        Text(Copy.Home.ScoreGuide.description)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -26,10 +26,10 @@ struct ScoreGuideSheet: View {
 
                     // MARK: - What does it mean?
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("What does it mean?")
+                        Text(Copy.Home.ScoreGuide.whatDoesItMean)
                             .font(.headline)
 
-                        Text("Your score rises when your metrics are steady or improving compared to your personal baseline. It drops when something changes. This isn't a medical diagnosis — think of it as a daily check-in with your body.")
+                        Text(Copy.Home.ScoreGuide.whatDoesItMeanBody)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -37,37 +37,37 @@ struct ScoreGuideSheet: View {
 
                     // MARK: - Score Levels
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Score levels")
+                        Text(Copy.Home.ScoreGuide.scoreLevels)
                             .font(.headline)
                             .padding(.horizontal)
 
                         VStack(spacing: 0) {
                             scoreLevelRow(
-                                range: "80–100",
-                                label: "Excellent",
+                                range: Copy.Home.ScoreGuide.excellentRange,
+                                label: Copy.Home.ScoreGuide.excellentLabel,
                                 color: .green,
-                                description: "Everything looks great — keep doing what you're doing."
+                                description: Copy.Home.ScoreGuide.excellentDescription
                             )
                             Divider().padding(.leading, 52)
                             scoreLevelRow(
-                                range: "60–79",
-                                label: "Good",
+                                range: Copy.Home.ScoreGuide.goodRange,
+                                label: Copy.Home.ScoreGuide.goodLabel,
                                 color: .yellow,
-                                description: "Most things are on track with minor areas to watch."
+                                description: Copy.Home.ScoreGuide.goodDescription
                             )
                             Divider().padding(.leading, 52)
                             scoreLevelRow(
-                                range: "40–59",
-                                label: "Fair",
+                                range: Copy.Home.ScoreGuide.fairRange,
+                                label: Copy.Home.ScoreGuide.fairLabel,
                                 color: .orange,
-                                description: "A few metrics have shifted — worth paying attention."
+                                description: Copy.Home.ScoreGuide.fairDescription
                             )
                             Divider().padding(.leading, 52)
                             scoreLevelRow(
-                                range: "Below 40",
-                                label: "Needs Attention",
+                                range: Copy.Home.ScoreGuide.needsAttentionRange,
+                                label: Copy.Home.ScoreGuide.needsAttentionLabel,
                                 color: .red,
-                                description: "Several things are off from your norm — check your insights."
+                                description: Copy.Home.ScoreGuide.needsAttentionDescription
                             )
                         }
                         .background(.background, in: RoundedRectangle(cornerRadius: 16))
@@ -76,18 +76,18 @@ struct ScoreGuideSheet: View {
 
                     // MARK: - How it's calculated
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("How it's calculated")
+                        Text(Copy.Home.ScoreGuide.howItsCalculated)
                             .font(.headline)
                             .padding(.horizontal)
 
                         VStack(spacing: 0) {
-                            categoryRow(icon: "heart.fill", color: .red, name: "Heart & Cardio", detail: "Resting heart rate, HRV, and cardio fitness")
+                            categoryRow(icon: "heart.fill", color: .red, name: Copy.Home.ScoreGuide.heartCardioName, detail: Copy.Home.ScoreGuide.heartCardioDetail)
                             Divider().padding(.leading, 52)
-                            categoryRow(icon: "bed.double.fill", color: .indigo, name: "Sleep", detail: "Duration, consistency, and sleep stages")
+                            categoryRow(icon: "bed.double.fill", color: .indigo, name: Copy.Home.ScoreGuide.sleepName, detail: Copy.Home.ScoreGuide.sleepDetail)
                             Divider().padding(.leading, 52)
-                            categoryRow(icon: "figure.run", color: .green, name: "Activity", detail: "Steps, workouts, and energy burned")
+                            categoryRow(icon: "figure.run", color: .green, name: Copy.Home.ScoreGuide.activityName, detail: Copy.Home.ScoreGuide.activityDetail)
                             Divider().padding(.leading, 52)
-                            categoryRow(icon: "scalemass.fill", color: .orange, name: "Body & Vitals", detail: "Weight, body fat, blood oxygen, and more")
+                            categoryRow(icon: "scalemass.fill", color: .orange, name: Copy.Home.ScoreGuide.bodyVitalsName, detail: Copy.Home.ScoreGuide.bodyVitalsDetail)
                         }
                         .background(.background, in: RoundedRectangle(cornerRadius: 16))
                         .padding(.horizontal)
@@ -95,27 +95,27 @@ struct ScoreGuideSheet: View {
 
                     // MARK: - Recovery / Readiness
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Recovery & Readiness")
+                        Text(Copy.Home.ScoreGuide.recoveryAndReadiness)
                             .font(.headline)
                             .padding(.horizontal)
 
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Your Readiness score (0–100) tells you how recovered your body is. It's calculated from two signals your \(DeviceMessaging.deviceName) measures while you sleep:")
+                            Text(Copy.Home.ScoreGuide.readinessDescription(deviceName: DeviceMessaging.deviceName))
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
 
                             recoveryFactorRow(
                                 icon: "waveform.path.ecg",
                                 color: .purple,
-                                name: "Heart Rate Variability (HRV)",
-                                detail: "Higher HRV means better recovery and lower stress."
+                                name: Copy.Home.ScoreGuide.hrvName,
+                                detail: Copy.Home.ScoreGuide.hrvDetail
                             )
                             Divider().padding(.leading, 40)
                             recoveryFactorRow(
                                 icon: "heart.fill",
                                 color: .red,
-                                name: "Resting Heart Rate",
-                                detail: "Lower resting HR means your heart is recovering well."
+                                name: Copy.Home.ScoreGuide.restingHRName,
+                                detail: Copy.Home.ScoreGuide.restingHRDetail
                             )
                         }
                         .padding()
@@ -134,7 +134,7 @@ struct ScoreGuideSheet: View {
                             .font(.title3)
                             .foregroundStyle(.purple)
 
-                        Text("This score compares you to yourself — not world averages. As we learn your patterns, it becomes more accurate.")
+                        Text(Copy.Home.ScoreGuide.baselineCallout)
                             .font(.subheadline)
                             .foregroundStyle(.primary)
                     }
@@ -147,7 +147,7 @@ struct ScoreGuideSheet: View {
                     .padding(.horizontal)
 
                     // MARK: - Got It
-                    Button("Got It") {
+                    Button(Copy.Home.ScoreGuide.gotIt) {
                         AppAnalytics.shared.trackBlockTap(
                             title: "Got It",
                             type: .scoreGuideGotIt,
@@ -169,7 +169,7 @@ struct ScoreGuideSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") {
+                    Button(Copy.Buttons.close) {
                         AppAnalytics.shared.trackBlockTap(
                             title: "Close",
                             type: .scoreGuideClose,

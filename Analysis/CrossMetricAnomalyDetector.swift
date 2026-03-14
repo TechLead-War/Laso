@@ -555,7 +555,7 @@ struct CrossMetricAnomalyDetector {
         }
 
         // Combine into a flowing narrative
-        guard !parts.isEmpty else { return "Unusual combination of metric values detected." }
+        guard !parts.isEmpty else { return Copy.Analysis.CrossMetricAnomaly.unusualCombinationDetected }
 
         var narrative = parts[0].prefix(1).uppercased() + parts[0].dropFirst()
         if parts.count > 1 {
@@ -589,14 +589,14 @@ struct CrossMetricAnomalyDetector {
 
         if !anomaly.brokenCorrelations.isEmpty {
             let broken = anomaly.brokenCorrelations[0]
-            return "\(broken.metricA.displayName) & \(broken.metricB.displayName) Unusual Pattern"
+            return Copy.Analysis.CrossMetricAnomaly.unusualPattern(metricA: broken.metricA.displayName, metricB: broken.metricB.displayName)
         }
 
         if metricCount >= 3 {
-            return "Unusual Multi-Metric Pattern Detected"
+            return Copy.Analysis.CrossMetricAnomaly.unusualMultiMetricPattern
         }
 
-        return "Rare Metric Combination"
+        return Copy.Analysis.CrossMetricAnomaly.rareMetricCombination
     }
 
     private static func buildRecommendation(for anomaly: CrossMetricAnomaly) -> String {
@@ -625,5 +625,16 @@ struct CrossMetricAnomalyDetector {
             return "Unusual but mild pattern in \(topMetrics). No immediate action needed \u{2014} " +
                 "track whether this recurs over the next 3 days to determine if it's a one-off or emerging trend."
         }
+    }
+}
+
+// MARK: - InsightAnalyzer Conformance
+
+extension CrossMetricAnomalyDetector: InsightAnalyzer {
+    static var analyzerID: String { "crossMetricAnomaly" }
+    static var insightCategory: InsightCategory { .crossMetricAnomaly }
+
+    static func generateInsights(context: AnalysisContext) -> [Insight] {
+        generateInsights(from: context.crossMetricAnomalies)
     }
 }

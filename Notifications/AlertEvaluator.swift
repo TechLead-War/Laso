@@ -135,8 +135,8 @@ struct AlertEvaluator {
             } else if avg7d > 0 && latestRHR > avg7d * RemoteConfigManager.shared.heartRateSpikeMultiplier {
                 // Fallback for milder spikes that do not cross triage thresholds.
                 sendHeartRateAlert(
-                    title: "Resting Heart Rate Elevated",
-                    body: "Your resting heart rate (\(Int(latestRHR)) bpm) is significantly above your recent average (\(Int(avg7d)) bpm). Rest and recheck \u{2014} if it stays elevated, consider speaking with a healthcare provider.",
+                    title: Copy.Notifications.restingHRTitle,
+                    body: Copy.Notifications.restingHRElevated(current: Int(latestRHR), average: Int(avg7d)),
                     identifier: "healthpulse.spike.rhr.elevated",
                     maxPerDay: maxPerDay
                 )
@@ -164,15 +164,15 @@ struct AlertEvaluator {
                     )
                 } else if latestHR >= spikeThreshold {
                     sendHeartRateAlert(
-                        title: "High Heart Rate Detected",
-                        body: "Your heart rate reached \(Int(latestHR)) bpm (threshold: \(Int(spikeThreshold)) bpm). If you weren't exercising, you may want to check with a healthcare provider.",
+                        title: Copy.Notifications.highHRTitle,
+                        body: Copy.Notifications.highHRBody(current: Int(latestHR), threshold: Int(spikeThreshold)),
                         identifier: "healthpulse.spike.hr.high",
                         maxPerDay: maxPerDay
                     )
                 } else if latestHR <= dropThreshold {
                     sendHeartRateAlert(
-                        title: "Low Heart Rate Detected",
-                        body: "Your heart rate dropped to \(Int(latestHR)) bpm (threshold: \(Int(dropThreshold)) bpm). If you feel dizzy or faint, consider contacting a healthcare provider.",
+                        title: Copy.Notifications.lowHRTitle,
+                        body: Copy.Notifications.lowHRBody(current: Int(latestHR), threshold: Int(dropThreshold)),
                         identifier: "healthpulse.spike.hr.low",
                         maxPerDay: maxPerDay
                     )
@@ -187,8 +187,8 @@ struct AlertEvaluator {
             // Alert if HRV dropped 30%+ below 7-day average
             if avg7d > 0 && latestHRV < avg7d * RemoteConfigManager.shared.hrvDropMultiplier {
                 sendHeartRateAlert(
-                    title: "HRV Significantly Low",
-                    body: "Your heart rate variability (\(Int(latestHRV)) ms) dropped \(Int(((avg7d - latestHRV) / avg7d) * 100))% below your recent average. This may indicate stress or overtraining.",
+                    title: Copy.Notifications.hrvLowTitle,
+                    body: Copy.Notifications.hrvLowBody(current: Int(latestHRV), dropPercent: Int(((avg7d - latestHRV) / avg7d) * 100)),
                     identifier: "healthpulse.spike.hrv.low",
                     maxPerDay: maxPerDay
                 )
@@ -214,15 +214,15 @@ struct AlertEvaluator {
                 )
             } else if latestSpO2 < RemoteConfigManager.shared.spo2CriticalThreshold {
                 sendHeartRateAlert(
-                    title: "Blood Oxygen Critically Low",
-                    body: "Your blood oxygen is \(String(format: "%.1f", latestSpO2))%. Values below 92% are unusually low \u{2014} consider speaking with a healthcare provider.",
+                    title: Copy.Notifications.spo2CriticalTitle,
+                    body: Copy.Notifications.spo2CriticalBody(value: String(format: "%.1f", latestSpO2)),
                     identifier: "healthpulse.spike.spo2.critical",
                     maxPerDay: maxPerDay
                 )
             } else if latestSpO2 < RemoteConfigManager.shared.spo2WarningThreshold {
                 sendHeartRateAlert(
-                    title: "Blood Oxygen Below Normal",
-                    body: "Your blood oxygen is \(String(format: "%.1f", latestSpO2))%. Normal range is 95-100%. Monitor closely.",
+                    title: Copy.Notifications.spo2WarningTitle,
+                    body: Copy.Notifications.spo2WarningBody(value: String(format: "%.1f", latestSpO2)),
                     identifier: "healthpulse.spike.spo2.warning",
                     maxPerDay: maxPerDay
                 )
@@ -248,8 +248,8 @@ struct AlertEvaluator {
                 )
             } else if avg7d > 0 && latestRR > avg7d * RemoteConfigManager.shared.respiratoryRateSpikeMultiplier {
                 sendHeartRateAlert(
-                    title: "Respiratory Rate Elevated",
-                    body: "Your respiratory rate (\(String(format: "%.1f", latestRR)) br/min) is elevated compared to your average (\(String(format: "%.1f", avg7d)) br/min).",
+                    title: Copy.Notifications.respiratoryRateTitle,
+                    body: Copy.Notifications.respiratoryRateBody(current: String(format: "%.1f", latestRR), average: String(format: "%.1f", avg7d)),
                     identifier: "healthpulse.spike.rr.elevated",
                     maxPerDay: maxPerDay
                 )
@@ -271,15 +271,15 @@ struct AlertEvaluator {
             // Alert only on meaningful reversals
             if previousDirection == .declining && currentDirection == .improving {
                 NotificationManager.shared.scheduleNotification(
-                    title: "\(metric.displayName) Recovering",
-                    body: "Good news! Your \(metric.displayName.lowercased()) was declining but is now trending upward.",
+                    title: Copy.Notifications.trendRecoveringTitle(metric: metric.displayName),
+                    body: Copy.Notifications.trendRecoveringBody(metric: metric.displayName.lowercased()),
                     identifier: "healthpulse.reversal.\(metric.rawValue).recovering",
                     maxPerDay: maxPerDay
                 )
             } else if previousDirection == .improving && currentDirection == .declining {
                 NotificationManager.shared.scheduleNotification(
-                    title: "\(metric.displayName) Needs Attention",
-                    body: "Your \(metric.displayName.lowercased()) was improving but has started declining. Check your recent habits.",
+                    title: Copy.Notifications.trendDecliningTitle(metric: metric.displayName),
+                    body: Copy.Notifications.trendDecliningBody(metric: metric.displayName.lowercased()),
                     identifier: "healthpulse.reversal.\(metric.rawValue).declining",
                     maxPerDay: maxPerDay
                 )
@@ -300,8 +300,8 @@ struct AlertEvaluator {
         // Celebrate the most improved metric
         if let (metric, trend) = strongImprovements.max(by: { abs($0.value.weekOverWeekChange) < abs($1.value.weekOverWeekChange) }) {
             NotificationManager.shared.scheduleNotification(
-                title: "\(metric.displayName) Up \(String(format: "%.0f", abs(trend.weekOverWeekChange)))%!",
-                body: "Your \(metric.displayName.lowercased()) improved significantly this week. Keep up the great work!",
+                title: Copy.Notifications.improvementTitle(metric: metric.displayName, percent: String(format: "%.0f", abs(trend.weekOverWeekChange))),
+                body: Copy.Notifications.improvementBody(metric: metric.displayName.lowercased()),
                 identifier: "healthpulse.celebration.\(metric.rawValue)",
                 maxPerDay: maxPerDay
             )
@@ -322,9 +322,15 @@ struct AlertEvaluator {
         }
 
         let direction = anomaly.isAboveBaseline ? "above" : "below"
-        let body = "Your \(anomaly.metric.displayName.lowercased()) is \(String(format: "%.0f", abs(anomaly.deviationPercent)))% \(direction) your baseline. Current: \(String(format: "%.1f", anomaly.currentValue)) \(anomaly.metric.unit)"
+        let body = Copy.Notifications.anomalyBody(
+            metric: anomaly.metric.displayName.lowercased(),
+            deviation: String(format: "%.0f", abs(anomaly.deviationPercent)),
+            direction: direction,
+            current: String(format: "%.1f", anomaly.currentValue),
+            unit: anomaly.metric.unit
+        )
         sendAlert(
-            title: "Critical: \(anomaly.metric.displayName)",
+            title: Copy.Notifications.criticalMetric(anomaly.metric.displayName),
             body: body,
             identifier: "healthpulse.alert.\(anomaly.metric.rawValue).critical",
             maxPerDay: maxPerDay
@@ -343,9 +349,13 @@ struct AlertEvaluator {
         }
 
         let direction = anomaly.isAboveBaseline ? "above" : "below"
-        let body = "Your \(anomaly.metric.displayName.lowercased()) is \(String(format: "%.0f", abs(anomaly.deviationPercent)))% \(direction) your baseline."
+        let body = Copy.Notifications.anomalyWarningBody(
+            metric: anomaly.metric.displayName.lowercased(),
+            deviation: String(format: "%.0f", abs(anomaly.deviationPercent)),
+            direction: direction
+        )
         sendAlert(
-            title: "Warning: \(anomaly.metric.displayName)",
+            title: Copy.Notifications.warningMetric(anomaly.metric.displayName),
             body: body,
             identifier: "healthpulse.alert.\(anomaly.metric.rawValue).warning",
             maxPerDay: maxPerDay

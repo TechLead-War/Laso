@@ -1,7 +1,11 @@
 import Foundation
 
 /// Longitudinal ECG analysis: AFib recurrence tracking, waveform evolution,
-/// QTc prolongation warnings, and autonomic balance trends.
+/// QTc prolongation observations, and autonomic balance trends.
+///
+/// **Important:** This analysis is for informational and educational purposes only.
+/// It does not provide medical diagnosis. ECG data from consumer devices has limitations
+/// and should not replace clinical-grade ECG interpretation by a qualified healthcare provider.
 struct ECGIntelligence {
 
     // MARK: - Types
@@ -217,7 +221,7 @@ struct ECGIntelligence {
 
     // MARK: - Insight Generation
 
-    private static let medicalDisclaimer = " This is informational only — consult your cardiologist for clinical interpretation."
+    private static let medicalDisclaimer = " This is informational only and not a medical diagnosis. Consult your healthcare provider for clinical interpretation of ECG data."
 
     private static func generateInsights(
         afibCount: Int,
@@ -244,9 +248,9 @@ struct ECGIntelligence {
 
             insights.append(Insight(
                 metric: .heartRate,
-                title: "AFib Recurrence: \(afibFrequency.rawValue)",
+                title: "AFib Pattern: \(afibFrequency.rawValue)",
                 summary: summary,
-                recommendation: "Track your AFib episodes and share this trend with your cardiologist." + medicalDisclaimer,
+                recommendation: "Track your AFib episodes and share this data with your healthcare provider." + medicalDisclaimer,
                 severity: severity,
                 trend: afibTrend?.slope ?? 0 > 0 ? .declining : .stable,
                 currentValue: Double(afibCount),
@@ -265,8 +269,8 @@ struct ECGIntelligence {
             insights.append(Insight(
                 metric: .heartRate,
                 title: "QTc Prolongation Trend",
-                summary: qtc.description + ". QTc above 450ms in men or 460ms in women may be clinically significant.",
-                recommendation: "QTc prolongation can be caused by medications, electrolyte imbalances, or genetic conditions. Review with your physician." + medicalDisclaimer,
+                summary: qtc.description + ". QTc values above 450ms may warrant further review by a healthcare provider.",
+                recommendation: "Changes in QTc can have many causes. Share this trend data with your healthcare provider for proper evaluation." + medicalDisclaimer,
                 severity: qtc.currentValue > 500 ? .critical : .warning,
                 trend: qtc.slope > 0 ? .declining : .stable,
                 currentValue: qtc.currentValue,
@@ -285,8 +289,8 @@ struct ECGIntelligence {
             insights.append(Insight(
                 metric: .heartRate,
                 title: "QRS Width Trend",
-                summary: qrs.description + ". Wide QRS (>120ms) may indicate conduction abnormalities.",
-                recommendation: "Discuss QRS widening with your cardiologist, especially if combined with other symptoms." + medicalDisclaimer,
+                summary: qrs.description + ". QRS values above 120ms may warrant further review.",
+                recommendation: "Share this QRS trend data with your healthcare provider for evaluation." + medicalDisclaimer,
                 severity: .warning,
                 trend: qrs.slope > 0 ? .declining : .stable,
                 currentValue: qrs.currentValue,
@@ -305,7 +309,7 @@ struct ECGIntelligence {
             insights.append(Insight(
                 metric: .heartRateVariability,
                 title: "ECG-Derived HRV Declining",
-                summary: hrv.description + ". Low SDNN (<50ms) from ECG recordings suggests reduced autonomic function.",
+                summary: hrv.description + ". Low SDNN (<50ms) from ECG recordings may reflect reduced autonomic variability.",
                 recommendation: "Prioritize rest, stress management, and regular exercise to support autonomic health." + medicalDisclaimer,
                 severity: hrv.currentValue < 30 ? .warning : .info,
                 trend: .declining,
