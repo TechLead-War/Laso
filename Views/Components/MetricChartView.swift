@@ -241,7 +241,7 @@ struct MetricChartView: View {
             // Selection indicator
             if let sample = selectedSample {
                 RuleMark(x: .value("Selected", sample.date))
-                    .foregroundStyle(.secondary.opacity(0.3))
+                    .foregroundStyle(.secondary.opacity(0.5))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
 
                 PointMark(

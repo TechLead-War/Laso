@@ -35,6 +35,11 @@ struct OnboardingCalibrationStep: View {
         VStack(spacing: 0) {
             Spacer()
 
+            Text("Final step")
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
+                .padding(.bottom, 6)
+
             Text(Copy.Labels.appName)
                 .font(.system(size: 15, weight: .semibold, design: .rounded))
                 .foregroundStyle(.secondary)
@@ -63,13 +68,22 @@ struct OnboardingCalibrationStep: View {
             }
 
             if case .running = state {
-                ProgressView()
-                    .progressViewStyle(.circular)
-                    .padding(.top, 4)
+                if let progress = healthKitManager.syncProgress {
+                    // Determinate progress bar
+                    VStack(spacing: 6) {
+                        ProgressView(value: Double(progress.metricsCompleted), total: Double(max(progress.totalMetrics, 1)))
+                            .tint(.blue)
+                            .padding(.horizontal, 48)
 
-                if shouldShowExtendedStats {
-                    extendedStatsView
-                        .padding(.top, 8)
+                        Text("\(progress.metricsCompleted) of \(max(progress.totalMetrics, 1)) metrics synced")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.top, 12)
+                } else {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .padding(.top, 4)
                 }
             }
 
@@ -110,7 +124,7 @@ struct OnboardingCalibrationStep: View {
         case .success:
             Button {
                 AppAnalytics.shared.trackBlockTap(
-                    title: "Enter Laso",
+                    title: "Start Your Journey",
                     type: .onboardingGetStarted,
                     screen: .onboarding,
                     metadata: [
@@ -193,106 +207,6 @@ struct OnboardingCalibrationStep: View {
         String(repeating: ".", count: dots)
     }
 
-    private var calibrationElapsed: TimeInterval {
-        guard let calibrationStartTime else { return 0 }
-        return Date().timeIntervalSince(calibrationStartTime)
-    }
-
-    private var shouldShowExtendedStats: Bool {
-        calibrationElapsed >= 60
-    }
-
-    @ViewBuilder
-    private var extendedStatsView: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(Copy.Onboarding.liveCalibrationStats)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-
-            if let progress = healthKitManager.syncProgress {
-                statRow(
-                    icon: "dial.medium",
-                    label: Copy.Onboarding.stageLabel,
-                    value: progress.phase.title
-                )
-                statRow(
-                    icon: "chart.bar.fill",
-                    label: Copy.Onboarding.metricsScanned,
-                    value: "\(progress.metricsCompleted)/\(max(progress.totalMetrics, 1))"
-                )
-                statRow(
-                    icon: "waveform.path.ecg",
-                    label: Copy.Onboarding.dataPointsFound,
-                    value: Self.formatCount(progress.samplesDiscovered)
-                )
-                if let oldest = progress.oldestSampleDate {
-                    statRow(
-                        icon: "clock.arrow.circlepath",
-                        label: Copy.Onboarding.oldestData,
-                        value: Self.relativeDuration(from: oldest, to: Date())
-                    )
-                }
-                if let latestMetric = progress.latestMetric {
-                    statRow(
-                        icon: latestMetric.systemImageName,
-                        label: Copy.Onboarding.currentlyProcessing,
-                        value: latestMetric.displayName
-                    )
-                }
-            } else {
-                statRow(
-                    icon: "chart.bar.fill",
-                    label: Copy.Onboarding.stageLabel,
-                    value: Copy.Onboarding.analyzingPatterns
-                )
-            }
-
-            statRow(
-                icon: "timer",
-                label: Copy.Onboarding.elapsed,
-                value: Self.elapsedLabel(calibrationElapsed)
-            )
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
-        .padding(.horizontal, 24)
-    }
-
-    private func statRow(icon: String, label: String, value: String) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .frame(width: 14)
-
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            Spacer()
-
-            Text(value)
-                .font(.caption.weight(.medium).monospacedDigit())
-                .foregroundStyle(.primary)
-        }
-    }
-
-    private static func elapsedLabel(_ seconds: TimeInterval) -> String {
-        let value = max(0, Int(seconds))
-        let mins = value / 60
-        let secs = value % 60
-        return String(format: "%d:%02d", mins, secs)
-    }
-
-    private static func relativeDuration(from older: Date, to newer: Date) -> String {
-        let years = Calendar.current.dateComponents([.year], from: older, to: newer).year ?? 0
-        if years > 0 { return "\(years) yr ago" }
-        let months = Calendar.current.dateComponents([.month], from: older, to: newer).month ?? 0
-        if months > 0 { return "\(months) mo ago" }
-        let days = Calendar.current.dateComponents([.day], from: older, to: newer).day ?? 0
-        return "\(max(days, 0)) d ago"
-    }
 
     private static func formatCount(_ value: Int) -> String {
         if value >= 1_000_000 { return String(format: "%.1fM", Double(value) / 1_000_000) }

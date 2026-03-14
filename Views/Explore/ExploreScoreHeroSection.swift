@@ -33,7 +33,7 @@ struct ExploreScoreHeroSection: View {
                     }
 
                     Text(grade)
-                        .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .font(.system(size: 44, weight: .bold, design: .rounded).monospacedDigit())
                         .foregroundStyle(gradeColor)
 
                     if let delta = scoreChangeFromLastWeek {
@@ -65,7 +65,7 @@ struct ExploreScoreHeroSection: View {
                     Spacer()
                 }
                 .padding(10)
-                .background(weakest.category.color.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+                .background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
             }
         }
         .padding(16)
@@ -73,13 +73,7 @@ struct ExploreScoreHeroSection: View {
     }
 
     private var grade: String {
-        switch overallScore {
-        case 90...100: return "A"
-        case 80..<90: return "B"
-        case 70..<80: return "C"
-        case 60..<70: return "D"
-        default: return "F"
-        }
+        "\(overallScore)"
     }
 
     private var gradeColor: Color {

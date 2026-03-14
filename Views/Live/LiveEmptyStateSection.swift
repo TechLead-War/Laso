@@ -5,28 +5,26 @@ struct LiveStaleVitalsPrompt: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            // Wear your watch CTA
-            VStack(spacing: 12) {
+            // Wear your watch — subtle nudge
+            HStack(spacing: 14) {
                 Image(systemName: DeviceMessaging.deviceIcon)
-                    .font(.system(size: 36))
-                    .foregroundStyle(.orange)
-
-                Text(DeviceMessaging.wearPromptTitle)
-                    .font(.title3.weight(.semibold))
-
-                Text(DeviceMessaging.staleVitalsMessage)
-                    .font(.subheadline)
+                    .font(.title2)
                     .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
+                    .frame(width: 40)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(DeviceMessaging.wearPromptTitle)
+                        .font(.subheadline.weight(.semibold))
+
+                    Text(DeviceMessaging.staleVitalsMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
             }
-            .padding(.vertical, 20)
-            .frame(maxWidth: .infinity)
-            .background(.orange.opacity(0.06), in: RoundedRectangle(cornerRadius: 16))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .strokeBorder(.orange.opacity(0.15), lineWidth: 0.5)
-            )
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
             .padding(.horizontal)
 
             // Last known readings — compact muted row
@@ -95,7 +93,7 @@ struct LiveStaleVitalsPrompt: View {
             }
             if let ts = timestamp {
                 Text(ts, style: .relative)
-                    .font(.system(size: 9))
+                    .font(.caption2)
                     .foregroundStyle(.quaternary)
             }
         }
@@ -124,6 +122,11 @@ struct LiveWaitingForDataView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
+
+                Text("Data usually appears within a minute")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .padding(.top, 2)
             }
 
             // Tips

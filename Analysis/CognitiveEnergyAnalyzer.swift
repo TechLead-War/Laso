@@ -146,10 +146,10 @@ struct CognitiveEnergyAnalyzer {
         let summary: String
         let recommendation: String
         if isLow {
-            summary = "Your cognitive readiness is at \(finalScore)/100\(componentText). Together these predict reduced mental clarity and slower processing."
+            summary = "Your cognitive readiness is at \(finalScore)/100\(componentText). Addressing these factors can sharpen mental clarity and processing speed."
             // Find the biggest lever
             let topComponent = components.first?.name ?? "sleep"
-            recommendation = "Priority: extend tonight's sleep by 45 min. Your \(topComponent) is the biggest factor pulling your cognitive readiness down. A single night of 8+ hr sleep typically improves next-day HRV and deep sleep."
+            recommendation = "Consider extending tonight's sleep by 45 min. Your \(topComponent) is the biggest factor right now — a single night of 8+ hr sleep typically improves next-day HRV and deep sleep."
         } else {
             summary = "Your cognitive readiness is strong at \(finalScore)/100. HRV, sleep quality, and recovery markers are all above baseline."
             recommendation = Copy.Analysis.CognitiveEnergy.brainPrimedForWork
@@ -198,7 +198,7 @@ struct CognitiveEnergyAnalyzer {
             metric: .sleepDuration,
             title: Copy.Analysis.CognitiveEnergy.sleepDebtAccumulating,
             summary: "You've accumulated \(debtStr) hours of sleep debt this week (averaging \(avgStr) hrs vs your \(baselineStr) hr baseline). Cognitive impairment compounds with each deficit day \u{2014} reaction time and decision-making are most affected.",
-            recommendation: "You need ~1 extra hour per night for \(catchUpNights) nights to clear this debt. Set a bedtime alarm for 45 min before your target sleep time tonight.",
+            recommendation: "An extra hour per night for \(catchUpNights) nights can help clear this deficit. Setting a bedtime alarm 45 min before your target sleep time is a good starting point.",
             severity: cumulativeDebt >= 5.0 ? .warning : .info,
             trend: .declining,
             currentValue: weeklyAvg,

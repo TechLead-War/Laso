@@ -143,15 +143,20 @@ final class HealthDataStore {
         let hrZoneMinutes: [Double]
     }
 
+    struct SaveSamplesResult {
+        static let zero = SaveSamplesResult(insertedCount: 0, updatedCount: 0)
+
+        let insertedCount: Int
+        let updatedCount: Int
+
+        var hasChanges: Bool { insertedCount > 0 || updatedCount > 0 }
+        var changedSampleCount: Int { insertedCount + updatedCount }
+    }
+
     let modelContainer: ModelContainer?
     private let modelContext: ModelContext?
-
-    private static let dayFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        f.timeZone = TimeZone(identifier: "UTC")
-        return f
-    }()
+    private var allSeriesCache: [HealthMetric: MetricTimeSeries]?
+    private var metricSeriesCache: [HealthMetric: MetricTimeSeries] = [:]
 
     private static let encoderKey = "Laso.HealthDataStore.encoder"
     private static let decoderKey = "Laso.HealthDataStore.decoder"
@@ -186,6 +191,34 @@ final class HealthDataStore {
         try? threadDecoder().decode(type, from: data)
     }
 
+    private func updateSeriesCaches(metric: HealthMetric, incomingSamples: [MetricSample]) {
+        guard !incomingSamples.isEmpty else { return }
+
+        if let existingMetricSeries = metricSeriesCache[metric] {
+            metricSeriesCache[metric] = MetricTimeSeries(
+                metric: metric,
+                samples: MetricSample.mergedByUTCDay(existing: existingMetricSeries.samples, incoming: incomingSamples)
+            )
+        }
+
+        if var allCache = allSeriesCache {
+            let existing = allCache[metric]?.samples ?? []
+            let merged = MetricTimeSeries(
+                metric: metric,
+                samples: MetricSample.mergedByUTCDay(existing: existing, incoming: incomingSamples)
+            )
+            allCache[metric] = merged
+            allSeriesCache = allCache
+            metricSeriesCache[metric] = merged
+        }
+    }
+
+    /// Clear cached metric series so future reads reload from SwiftData.
+    func invalidateTimeSeriesCache() {
+        allSeriesCache = nil
+        metricSeriesCache.removeAll(keepingCapacity: true)
+    }
+
     init(modelContainer: ModelContainer) {
         self.modelContainer = modelContainer
         self.modelContext = ModelContext(modelContainer)
@@ -200,12 +233,13 @@ final class HealthDataStore {
     // MARK: - Save Samples
 
     /// Upsert daily samples for a metric. Efficiently batches by loading only the relevant date range.
-    func saveSamples(_ samples: [MetricSample], for metric: HealthMetric) {
-        guard !samples.isEmpty else { return }
+    @discardableResult
+    func saveSamples(_ samples: [MetricSample], for metric: HealthMetric) -> SaveSamplesResult {
+        guard modelContext != nil, !samples.isEmpty else { return .zero }
 
         let rawValue = metric.rawValue
         let dates = samples.map(\.date)
-        guard let minDate = dates.min(), let maxDate = dates.max() else { return }
+        guard let minDate = dates.min(), let maxDate = dates.max() else { return .zero }
 
         // Load only existing samples in the new data's date range
         let predicate = #Predicate<StoredDailySample> {
@@ -214,19 +248,21 @@ final class HealthDataStore {
         let descriptor = FetchDescriptor(predicate: predicate)
         let existing = (try? modelContext?.fetch(descriptor)) ?? []
 
-        // Build lookup by date string for O(1) dedup
-        let formatter = Self.dayFormatter
-        var existingByDate: [String: StoredDailySample] = [:]
+        // Build lookup by normalized UTC day for O(1) dedup.
+        var existingByDate: [Date: StoredDailySample] = [:]
         for sample in existing {
-            existingByDate[formatter.string(from: sample.date)] = sample
+            existingByDate[MetricSample.utcDayBucket(for: sample.date)] = sample
         }
 
         // Upsert: update existing or insert new
+        var insertedCount = 0
+        var updatedCount = 0
         for sample in samples {
-            let dateKey = formatter.string(from: sample.date)
+            let dateKey = MetricSample.utcDayBucket(for: sample.date)
             if let existingSample = existingByDate[dateKey] {
                 if existingSample.value != sample.value {
                     existingSample.value = sample.value
+                    updatedCount += 1
                 }
             } else {
                 modelContext?.insert(StoredDailySample(
@@ -234,17 +270,27 @@ final class HealthDataStore {
                     date: sample.date,
                     value: sample.value
                 ))
+                insertedCount += 1
             }
         }
 
-        try? modelContext?.save()
-        updateSyncMetadata(for: metric)
+        guard (try? modelContext?.save()) != nil else { return .zero }
+        updateSyncMetadata(for: metric, sampleDelta: insertedCount)
+        updateSeriesCaches(metric: metric, incomingSamples: samples)
+        return SaveSamplesResult(insertedCount: insertedCount, updatedCount: updatedCount)
     }
 
     // MARK: - Load Samples
 
     /// Load time series for a single metric from the store
     func loadTimeSeries(for metric: HealthMetric) -> MetricTimeSeries? {
+        if let cached = metricSeriesCache[metric] {
+            return cached
+        }
+        if let allCache = allSeriesCache {
+            return allCache[metric]
+        }
+
         let rawValue = metric.rawValue
         let predicate = #Predicate<StoredDailySample> { $0.metricRawValue == rawValue }
         var descriptor = FetchDescriptor(predicate: predicate)
@@ -252,11 +298,17 @@ final class HealthDataStore {
 
         guard let stored = try? modelContext?.fetch(descriptor), !stored.isEmpty else { return nil }
         let samples = stored.map { MetricSample(date: $0.date, value: $0.value) }
-        return MetricTimeSeries(metric: metric, samples: samples)
+        let series = MetricTimeSeries(metric: metric, samples: samples)
+        metricSeriesCache[metric] = series
+        return series
     }
 
     /// Load all stored time series in a single efficient query
     func loadAllTimeSeries() -> [HealthMetric: MetricTimeSeries] {
+        if let cached = allSeriesCache {
+            return cached
+        }
+
         guard modelContext != nil else {
             print("[HealthDataStore] loadAllTimeSeries: modelContext is nil — SwiftData unavailable")
             return [:]
@@ -282,6 +334,8 @@ final class HealthDataStore {
             guard let metric = HealthMetric(rawValue: rawValue) else { continue }
             result[metric] = MetricTimeSeries(metric: metric, samples: samples)
         }
+        allSeriesCache = result
+        metricSeriesCache = result
         return result
     }
 
@@ -317,30 +371,36 @@ final class HealthDataStore {
     private func updateSyncMetadata(
         for metric: HealthMetric,
         lastSyncDate: Date = Date(),
-        recalculateSampleCount: Bool = true
+        recalculateSampleCount: Bool = true,
+        sampleDelta: Int? = nil
     ) {
         let rawValue = metric.rawValue
         let predicate = #Predicate<StoredSyncMetadata> { $0.metricRawValue == rawValue }
         let descriptor = FetchDescriptor(predicate: predicate)
+        let existingMetadata = (try? modelContext?.fetch(descriptor))?.first
 
-        let totalSamples: Int
+        let totalSamples: Int?
         if recalculateSampleCount {
-            let samplePredicate = #Predicate<StoredDailySample> { $0.metricRawValue == rawValue }
-            totalSamples = (try? modelContext?.fetchCount(FetchDescriptor(predicate: samplePredicate))) ?? 0
+            if let sampleDelta, let existingMetadata {
+                totalSamples = max(0, existingMetadata.totalSamples + sampleDelta)
+            } else {
+                let samplePredicate = #Predicate<StoredDailySample> { $0.metricRawValue == rawValue }
+                totalSamples = (try? modelContext?.fetchCount(FetchDescriptor(predicate: samplePredicate))) ?? 0
+            }
         } else {
-            totalSamples = 0
+            totalSamples = nil
         }
 
-        if let existing = try? modelContext?.fetch(descriptor).first {
+        if let existing = existingMetadata {
             existing.lastSyncDate = lastSyncDate
-            if recalculateSampleCount {
+            if let totalSamples {
                 existing.totalSamples = totalSamples
             }
         } else {
             modelContext?.insert(StoredSyncMetadata(
                 metricRawValue: rawValue,
                 lastSyncDate: lastSyncDate,
-                totalSamples: totalSamples
+                totalSamples: totalSamples ?? 0
             ))
         }
         try? modelContext?.save()
@@ -511,13 +571,12 @@ final class HealthDataStore {
         let records = (try? modelContext?.fetch(descriptor)) ?? []
         if records.isEmpty { return [] }
 
-        // Dedup by normalized day key so historical charts remain stable even if old duplicates exist.
-        var dedupedByDay: [String: DailyStrainRecord] = [:]
+        // Dedup by normalized UTC day so historical charts remain stable even if old duplicates exist.
+        var dedupedByDay: [Date: DailyStrainRecord] = [:]
         for record in records {
-            let day = calendar.startOfDay(for: record.date)
-            let key = Self.dayFormatter.string(from: day)
-            dedupedByDay[key] = DailyStrainRecord(
-                date: day,
+            let dayBucket = MetricSample.utcDayBucket(for: record.date)
+            dedupedByDay[dayBucket] = DailyStrainRecord(
+                date: dayBucket,
                 strain: record.strain,
                 level: record.level,
                 hrZoneMinutes: Self.decodeJSON([Double].self, from: record.hrZoneMinutesJSON) ?? []
@@ -587,6 +646,23 @@ final class HealthDataStore {
     /// Total number of daily samples stored on device
     var totalStoredSamples: Int {
         (try? modelContext?.fetchCount(FetchDescriptor<StoredDailySample>())) ?? 0
+    }
+
+    /// True when any restorable on-device state already exists.
+    var hasRestorableState: Bool {
+        guard let modelContext else { return false }
+
+        if ((try? modelContext.fetchCount(FetchDescriptor<StoredDailySample>())) ?? 0) > 0 {
+            return true
+        }
+        if ((try? modelContext.fetchCount(FetchDescriptor<StoredAnalysisSnapshot>())) ?? 0) > 0 {
+            return true
+        }
+        if ((try? modelContext.fetchCount(FetchDescriptor<StoredMLModelState>())) ?? 0) > 0 {
+            return true
+        }
+
+        return false
     }
 
     /// Earliest data point stored

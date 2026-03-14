@@ -74,9 +74,10 @@ final class SleepNeedCalculator {
         currentStrain: Double,
         sleepDebt: Double,
         targetWakeTime: Date?,
-        performanceLevel: PerformanceLevel = .peak
+        performanceLevel: PerformanceLevel = .peak,
+        sleepSeries: MetricTimeSeries? = nil
     ) -> SleepNeed {
-        guard let sleepSeries = store.loadTimeSeries(for: .sleepDuration) else {
+        guard let sleepSeries = sleepSeries ?? store.loadTimeSeries(for: .sleepDuration) else {
             return fallbackNeed(performanceLevel: performanceLevel)
         }
 
@@ -105,7 +106,7 @@ final class SleepNeedCalculator {
         let totalHoursNeeded = rawTotal * performanceLevel.multiplier
 
         // Wake time: use provided or estimate from 14-day average
-        let wakeTime = targetWakeTime ?? estimateWakeTime(from: store)
+        let wakeTime = targetWakeTime ?? estimateWakeTime(from: sleepSeries)
 
         // Bedtime: wake time minus total need
         let recommendedBedtime: Date?
@@ -117,7 +118,7 @@ final class SleepNeedCalculator {
         }
 
         // Consistency score
-        sleepConsistencyScore = computeConsistencyScore(from: store)
+        sleepConsistencyScore = computeConsistencyScore(from: sleepSeries)
 
         let need = SleepNeed(
             totalHoursNeeded: totalHoursNeeded,
@@ -155,9 +156,7 @@ final class SleepNeedCalculator {
 
     // MARK: - Private Helpers
 
-    private func estimateWakeTime(from store: HealthDataStore) -> Date? {
-        guard let sleepSeries = store.loadTimeSeries(for: .sleepDuration) else { return nil }
-
+    private func estimateWakeTime(from sleepSeries: MetricTimeSeries) -> Date? {
         let recentSamples = sleepSeries.samples(lastDays: Self.wakeTimeWindowDays)
         guard recentSamples.count >= 3 else { return nil }
 
@@ -185,9 +184,7 @@ final class SleepNeedCalculator {
         return calendar.date(bySettingHour: avgHour, minute: avgMinute, second: 0, of: tomorrow)
     }
 
-    private func computeConsistencyScore(from store: HealthDataStore) -> Double {
-        guard let sleepSeries = store.loadTimeSeries(for: .sleepDuration) else { return 0 }
-
+    private func computeConsistencyScore(from sleepSeries: MetricTimeSeries) -> Double {
         let samples = sleepSeries.samples(lastDays: Self.baselineWindowDays)
         guard samples.count >= Self.minimumDaysRequired else { return 0 }
 
@@ -254,4 +251,3 @@ final class SleepNeedCalculator {
         )
     }
 }
-

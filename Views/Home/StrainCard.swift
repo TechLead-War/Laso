@@ -123,7 +123,7 @@ struct StrainCard: View {
                             .frame(height: max(CGFloat(fraction) * 24, 2))
 
                         Text("\(Int(minutes))")
-                            .font(.system(size: 8, weight: .medium).monospacedDigit())
+                            .font(.caption2.weight(.medium).monospacedDigit())
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -134,7 +134,7 @@ struct StrainCard: View {
             HStack(spacing: 4) {
                 ForEach(1...5, id: \.self) { zone in
                     Text("Z\(zone)")
-                        .font(.system(size: 7, weight: .medium))
+                        .font(.caption2.weight(.medium))
                         .foregroundStyle(.tertiary)
                         .frame(maxWidth: .infinity)
                 }

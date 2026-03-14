@@ -19,6 +19,10 @@ struct LevelBadgeCard: View {
         return max(nextDays - totalDaysTracked, 0)
     }
 
+    private var completedDaysInLevel: Int {
+        return totalDaysTracked - level.minDays
+    }
+
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 14) {
@@ -96,12 +100,13 @@ struct LevelBadgeCard: View {
             }
             .frame(height: 5)
 
-            // Days to next level
+            // Days done + days to next level (endowed progress)
             if let daysRemaining = daysToNextLevel, let nextDays = level.nextLevelDays {
                 let nextLevel = UserLevel.allCases.first { $0.minDays == nextDays }
-                Text("\(daysRemaining)d to \(nextLevel?.displayName ?? "Next")")
+                let almostThere = daysRemaining <= 3
+                Text("\(completedDaysInLevel)d done \u{00B7} \(daysRemaining)d to \(nextLevel?.displayName ?? "Next")")
                     .font(.caption2.weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(almostThere ? level.color : .secondary)
             } else {
                 Text("Max level reached")
                     .font(.caption2.weight(.medium))
@@ -122,19 +127,19 @@ struct LevelBadgeCard: View {
     }
 
     private func streakRow(icon: String, count: Int, isHot: Bool) -> some View {
-        HStack(spacing: 3) {
+        HStack(spacing: 4) {
             if isHot {
                 Image(systemName: "flame.fill")
-                    .font(.system(size: 7))
+                    .font(.caption2)
                     .foregroundStyle(.orange)
             }
 
             Image(systemName: icon)
-                .font(.system(size: 9, weight: .semibold))
+                .font(.caption2.weight(.semibold))
                 .foregroundStyle(.secondary)
 
             Text("\(count)")
-                .font(.system(size: 11, weight: .bold, design: .rounded).monospacedDigit())
+                .font(.caption.weight(.bold).monospacedDigit())
                 .foregroundStyle(.primary)
         }
     }

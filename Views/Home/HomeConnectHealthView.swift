@@ -24,6 +24,26 @@ struct HomeConnectHealthView: View {
                     .padding(.horizontal, 24)
             }
 
+            // Primary CTA above fold
+            Button {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Refresh",
+                    type: .emptyStateRefresh,
+                    screen: .home,
+                    metadata: [
+                        "source": "empty_state"
+                    ]
+                )
+                Task { await onRefresh() }
+            } label: {
+                Label(Copy.Home.refresh, systemImage: "arrow.clockwise")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .padding(.horizontal, 24)
+
             // Supported devices — dynamic from SupportedDevice
             VStack(alignment: .leading, spacing: 14) {
                 Text(Copy.Home.worksWith)
@@ -84,23 +104,6 @@ struct HomeConnectHealthView: View {
                     ]
                 )
             })
-
-            Button {
-                AppAnalytics.shared.trackBlockTap(
-                    title: "Refresh",
-                    type: .emptyStateRefresh,
-                    screen: .home,
-                    metadata: [
-                        "source": "empty_state"
-                    ]
-                )
-                Task { await onRefresh() }
-            } label: {
-                Label(Copy.Home.refresh, systemImage: "arrow.clockwise")
-                    .font(.subheadline.weight(.medium))
-            }
-            .buttonStyle(.borderedProminent)
-            .padding(.top, 4)
 
             Spacer()
         }

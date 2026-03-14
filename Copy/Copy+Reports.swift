@@ -33,7 +33,7 @@ extension Copy {
         static let scoreJourney = "Score Journey"
         static let monthlyAverages = "Monthly Averages"
         static let bestMonth = "Best Month"
-        static let worstMonth = "Worst Month"
+        static let worstMonth = "Lowest Month"
         static let yearOverYear = "Year over Year"
         static func yearOverYearDetail(prevYear: Int, prevScore: Int, curYear: Int, curScore: Int) -> String {
             "\(prevYear) avg: \(prevScore) \u{2192} \(curYear) avg: \(curScore)"

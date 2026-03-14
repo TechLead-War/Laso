@@ -198,11 +198,23 @@ struct HomeView: View {
                     .onAppear { recoveryTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 10) }
                     .onDisappear { recoveryTracker.disappeared() }
 
-                    // 2. Today's Action — single source of truth for what to do
+                    // 2. Illness Warning (promoted to top when active)
+                    illnessWarningCard
+                        .onAppear { illnessTracker.appeared() }
+                        .onDisappear { illnessTracker.disappeared() }
+                        .padding(.top, 8)
+
+                    // 3. Today's Action — single source of truth for what to do
                     primaryActionCard
                         .padding(.top, 8)
 
-                    // 3. Vitality Age card
+                    // 3a. Health Risks — critical alerts near top (NNG eyetracking)
+                    todayRisksSection
+                        .padding(.top, 8)
+                        .onAppear { risksTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 20) }
+                        .onDisappear { risksTracker.disappeared() }
+
+                    // 3b. Vitality Age card
                     VitalityCard(
                         scorer: viewModel.vitalityScorer,
                         onTap: {
@@ -218,7 +230,43 @@ struct HomeView: View {
                     .padding(.horizontal)
                     .padding(.top, 12)
 
-                    // 3b. Brain Health Card
+                    // 3c. Sleep Card
+                    SleepCard(
+                        liveVM: liveViewModel,
+                        sleepBaseline: viewModel.analysisEngine.baselines[.sleepDuration].map { $0.mean / 3600 },
+                        sleepInsight: nil,
+                        onTap: {
+                            AppAnalytics.shared.trackBlockTap(
+                                title: "Sleep",
+                                type: .recoveryCard,
+                                screen: .home,
+                                metadata: ["destination": "sleep_coach"]
+                            )
+                            navigationPath.append(Route.sleepCoach)
+                        }
+                    )
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+
+                    // 4. Level & Streaks — gamification progress above fold (Endowed Progress)
+                    LevelBadgeCard(
+                        level: viewModel.gamificationEngine.currentLevel,
+                        totalDaysTracked: viewModel.gamificationEngine.totalDaysTracked,
+                        progressToNext: viewModel.gamificationEngine.progressToNextLevel,
+                        streaks: viewModel.gamificationEngine.streaks,
+                        onTap: {
+                            AppAnalytics.shared.trackBlockTap(
+                                title: "Level Badge",
+                                type: .recoveryCard,
+                                screen: .home,
+                                metadata: ["destination": "achievements"]
+                            )
+                            navigationPath.append(Route.achievements)
+                        }
+                    )
+                    .padding(.top, 8)
+
+                    // 5. Brain Health Card
                     if let brain = viewModel.brainHealthScorer.currentScore {
                         BrainHealthCard(
                             score: brain.score,
@@ -242,7 +290,7 @@ struct HomeView: View {
                         .padding(.top, 8)
                     }
 
-                    // 4. Strain Card
+                    // 6. Strain Card
                     StrainCard(
                         strainValue: viewModel.strainScorer.currentStrain,
                         strainLevel: viewModel.strainScorer.strainLevel,
@@ -260,7 +308,7 @@ struct HomeView: View {
                     .padding(.horizontal)
                     .padding(.top, 8)
 
-                    // 6. Stress Card
+                    // 7. Stress Card
                     if let stress = viewModel.stressScorer.currentStress {
                         StressCard(
                             stressScore: stress.score,
@@ -281,7 +329,7 @@ struct HomeView: View {
                         .padding(.top, 8)
                     }
 
-                    // 7. Cycle Phase Card (female users with cycle data)
+                    // 8. Cycle Phase Card (female users with cycle data)
                     if let cycle = viewModel.menstrualCycleTracker.currentCycle {
                         CyclePhaseCard(
                             phaseName: cycle.currentPhase.displayName,
@@ -305,12 +353,6 @@ struct HomeView: View {
                     }
 
                     // ── Below the fold ──
-
-                    // 8. Illness Warning (only when active)
-                    illnessWarningCard
-                        .onAppear { illnessTracker.appeared() }
-                        .onDisappear { illnessTracker.disappeared() }
-                        .padding(.top, 8)
 
                     // 9. Body Insights
                     BodyInsightsSection(
@@ -336,13 +378,7 @@ struct HomeView: View {
                     .onAppear { bodyInsightsTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 60) }
                     .onDisappear { bodyInsightsTracker.disappeared() }
 
-                    // 10. Health Risks — "Needs Attention"
-                    todayRisksSection
-                        .padding(.top, 8)
-                        .onAppear { risksTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 75) }
-                        .onDisappear { risksTracker.disappeared() }
-
-                    // 11. Weekly Review
+                    // 10. Weekly Review
                     WeeklyReviewEntryCard(
                         viewModel: getOrCreateWeeklyReviewVM()
                     ) {
@@ -360,24 +396,6 @@ struct HomeView: View {
                     .padding(.top, 8)
                     .onAppear { weeklyReviewTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 90) }
                     .onDisappear { weeklyReviewTracker.disappeared() }
-
-                    // 12. Level & Streaks
-                    LevelBadgeCard(
-                        level: viewModel.gamificationEngine.currentLevel,
-                        totalDaysTracked: viewModel.gamificationEngine.totalDaysTracked,
-                        progressToNext: viewModel.gamificationEngine.progressToNextLevel,
-                        streaks: viewModel.gamificationEngine.streaks,
-                        onTap: {
-                            AppAnalytics.shared.trackBlockTap(
-                                title: "Level Badge",
-                                type: .recoveryCard,
-                                screen: .home,
-                                metadata: ["destination": "achievements"]
-                            )
-                            navigationPath.append(Route.achievements)
-                        }
-                    )
-                    .padding(.top, 8)
 
                     // Last updated footer
                     if let lastRefresh = viewModel.lastRefresh {
@@ -416,6 +434,26 @@ struct HomeView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
             }
+
+            // Primary CTA above fold
+            Button {
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Refresh",
+                    type: .emptyStateRefresh,
+                    screen: .home,
+                    metadata: [
+                        "source": "empty_state"
+                    ]
+                )
+                Task { await viewModel.refresh() }
+            } label: {
+                Label(Copy.Home.refresh, systemImage: "arrow.clockwise")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .padding(.horizontal, 24)
 
             // Supported devices — dynamic from SupportedDevice
             VStack(alignment: .leading, spacing: 14) {
@@ -477,23 +515,6 @@ struct HomeView: View {
                     ]
                 )
             })
-
-            Button {
-                AppAnalytics.shared.trackBlockTap(
-                    title: "Refresh",
-                    type: .emptyStateRefresh,
-                    screen: .home,
-                    metadata: [
-                        "source": "empty_state"
-                    ]
-                )
-                Task { await viewModel.refresh() }
-            } label: {
-                Label(Copy.Home.refresh, systemImage: "arrow.clockwise")
-                    .font(.subheadline.weight(.medium))
-            }
-            .buttonStyle(.borderedProminent)
-            .padding(.top, 4)
 
             Spacer()
         }
@@ -689,7 +710,7 @@ struct HomeView: View {
                     .rotationEffect(.degrees(-90))
                     .frame(width: 32, height: 32)
                 Text("\(risk.level)")
-                    .font(.system(size: 10, weight: .bold, design: .rounded).monospacedDigit())
+                    .font(.caption2.weight(.bold).monospacedDigit())
             }
 
             Image(systemName: "chevron.right")
@@ -705,6 +726,7 @@ struct HomeView: View {
     @ViewBuilder
     private var primaryActionCard: some View {
         let action = viewModel.smartDailyAction(liveVM: liveViewModel)
+        let actionRoute = routeForAction(action)
         Button {
             AppAnalytics.shared.trackBlockTap(
                 title: action.title,
@@ -712,9 +734,11 @@ struct HomeView: View {
                 screen: .home,
                 metadata: [
                     "source": action.source,
-                    "recovery_state": viewModel.recoveryState.rawValue
+                    "recovery_state": viewModel.recoveryState.rawValue,
+                    "routed_to": "\(actionRoute)"
                 ]
             )
+            navigationPath.append(actionRoute)
         } label: {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 4) {
@@ -747,6 +771,10 @@ struct HomeView: View {
                     }
 
                     Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.tertiary)
                 }
             }
             .padding(DS.cardPadding)
@@ -793,6 +821,21 @@ struct HomeView: View {
             .buttonStyle(.plain)
             .padding(.horizontal)
         }
+    }
+
+    /// Routes Today's Action card contextually based on action text content.
+    /// Sleep-related actions go to sleep coach, strain/workout to strain detail,
+    /// recovery/rest to insights. Defaults to insightsDetail.
+    private func routeForAction(_ action: DashboardViewModel.SmartAction) -> Route {
+        let text = (action.title + " " + action.subtitle).lowercased()
+        if text.contains("sleep") || text.contains("bedtime") || text.contains("rest tonight") {
+            return .sleepCoach
+        } else if text.contains("strain") || text.contains("workout") || text.contains("exercise") || text.contains("training") {
+            return .strainDetail
+        } else if text.contains("recovery") || text.contains("rest") || text.contains("ease off") {
+            return .insightsDetail
+        }
+        return .insightsDetail
     }
 
     static func recoveryLabel(_ score: Int) -> String {

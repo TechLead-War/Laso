@@ -605,7 +605,7 @@ struct CrossMetricAnomalyDetector {
 
         switch anomaly.severity {
         case .critical:
-            return "This combination of metric values (\(topMetrics)) is extremely rare for you. Review what was different yesterday \u{2014} travel, diet, late exercise, alcohol, or stress changes are common triggers. If this pattern repeats for 2+ days, consult a healthcare provider."
+            return "This combination of metric values (\(topMetrics)) is extremely rare for you. Worth exploring what was different yesterday \u{2014} travel, diet timing, late workouts, or stress shifts often trigger this. If this pattern shows up for 2+ days, it may be worth discussing with a healthcare provider."
         case .warning:
             if !anomaly.brokenCorrelations.isEmpty {
                 let broken = anomaly.brokenCorrelations[0]

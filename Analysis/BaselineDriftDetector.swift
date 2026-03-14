@@ -132,7 +132,7 @@ struct BaselineDriftDetector {
         return Insight(
             metric: metric,
             title: Copy.Analysis.BaselineDrift.title(metricName: metric.displayName, period: drift.label.capitalized),
-            summary: "Your \(metric.displayName.lowercased()) baseline has \(direction) \(absDrift)% over the last \(drift.label) (\(oldFormatted) \u{2192} \(newFormatted) \(metric.unit)).\(coDriftNote)",
+            summary: "Your \(metric.displayName.lowercased()) baseline has \(direction) \(absDrift)% over the last \(drift.label) (\(oldFormatted) \u{2192} \(newFormatted) \(metric.unit)) \u{2014} this shift is gradual and responsive to changes in your routine.\(coDriftNote)",
             recommendation: improving
                 ? "\(metric.displayName) baseline shifted \(direction) \(absDrift)% over \(drift.label): \(oldFormatted) \u{2192} \(newFormatted) \(metric.unit)."
                 : "\(metric.displayName) baseline shifted \(direction) \(absDrift)% over \(drift.label): \(oldFormatted) \u{2192} \(newFormatted) \(metric.unit).",

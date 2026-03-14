@@ -16,6 +16,7 @@ final class NotificationManager {
     /// Derive a notification type string from its identifier
     static func notificationType(_ identifier: String) -> String {
         if identifier == "healthpulse.dailySummary" { return "daily_summary" }
+        if identifier == "healthpulse.eveningSummary" { return "evening_summary" }
         if identifier.hasPrefix("healthpulse.alert.") { return "alert" }
         if identifier.hasPrefix("healthpulse.trend.") { return "trend_reversal" }
         if identifier.hasPrefix("healthpulse.improvement.") { return "improvement" }
@@ -66,6 +67,7 @@ final class NotificationManager {
         metricInFocus: Bool = false
     ) {
         let isDailySummary = identifier == "healthpulse.dailySummary"
+            || identifier == "healthpulse.eveningSummary"
 
         // Kill switch — remotely disable all non-critical notifications
         if RemoteConfigManager.shared.killNotifications && severity != .critical {

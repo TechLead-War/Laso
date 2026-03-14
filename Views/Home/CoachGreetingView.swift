@@ -33,15 +33,15 @@ struct CoachGreetingView: View {
                         .foregroundStyle(.tertiary)
 
                     if streakDays > 1 {
-                        HStack(spacing: 2) {
+                        HStack(spacing: 3) {
                             Image(systemName: "flame.fill")
-                                .font(.caption2)
-                            Text("\(streakDays)")
-                                .font(.caption2.weight(.bold).monospacedDigit())
+                                .font(.caption)
+                            Text("\(streakDays)d streak")
+                                .font(.caption.weight(.bold).monospacedDigit())
                         }
                         .foregroundStyle(.orange)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
                         .background(Color.orange.opacity(0.12), in: Capsule())
                     }
                 }
@@ -121,37 +121,37 @@ struct CoachGreetingView: View {
         guard let state = recoveryState else { return nil }
 
         switch (timeOfDay, state) {
-        // Morning observations
+        // Morning
         case (.morning, .green):
-            return "Recovery metrics are above your baseline today."
+            return "Your body bounced back well. Great day for a challenge."
         case (.morning, .yellow):
-            return "Recovery metrics are near your baseline."
+            return "Decent recovery overnight. Listen to your body today."
         case (.morning, .red):
-            return "Recovery metrics are below your baseline today."
+            return "Recovery is catching up. A lighter day might work well."
 
-        // Afternoon observations
+        // Afternoon
         case (.afternoon, .green):
-            return "Recovery metrics are strong — above baseline this afternoon."
+            return "Still riding high on solid recovery. Keep it going."
         case (.afternoon, .yellow):
-            return "Recovery metrics are sitting near your baseline."
+            return "Holding steady this afternoon. Pacing yourself pays off."
         case (.afternoon, .red):
-            return "Recovery metrics are below baseline this afternoon."
+            return "Recovery is still building. Your body might appreciate a gentler afternoon."
 
-        // Evening observations
+        // Evening
         case (.evening, .green):
-            return "Recovery metrics stayed above baseline today."
+            return "Strong day all around. Wind down and keep the streak."
         case (.evening, .yellow):
-            return "Recovery metrics are moderate this evening."
+            return "Not bad today. A good night\u{2019}s sleep will help."
         case (.evening, .red):
-            return "Recovery metrics are low this evening."
+            return "Your body might benefit from a reset. Sleep could be your best recovery tool tonight."
 
         // Late night
         case (.night, .green):
-            return "Recovery metrics look solid tonight."
+            return "You\u{2019}re in good shape. Get some rest to stay there."
         case (.night, .yellow):
-            return "Recovery metrics are moderate tonight."
+            return "Decent day. Sleep well and tomorrow\u{2019}s looking better."
         case (.night, .red):
-            return "Recovery metrics are low tonight."
+            return "Recovery is still building. Sleep is your strongest ally right now."
         }
     }
 

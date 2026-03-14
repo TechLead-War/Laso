@@ -13,6 +13,14 @@ struct NotificationPreferences: Codable, Equatable {
         return c
     }()
 
+    var eveningSummaryEnabled: Bool = false
+    var eveningSummaryTime: DateComponents = {
+        var c = DateComponents()
+        c.hour = 20
+        c.minute = 0
+        return c
+    }()
+
     var weeklySummaryEnabled: Bool = false
     var weeklySummaryDay: Int = 2 // Monday = 2
 
@@ -61,7 +69,8 @@ struct NotificationPreferences: Codable, Equatable {
 extension NotificationPreferences {
     /// Coding keys must handle the Set<HealthMetric> properly
     enum CodingKeys: String, CodingKey {
-        case dailySummaryEnabled, dailySummaryTime, weeklySummaryEnabled, weeklySummaryDay
+        case dailySummaryEnabled, dailySummaryTime, eveningSummaryEnabled, eveningSummaryTime
+        case weeklySummaryEnabled, weeklySummaryDay
         case criticalAlertsEnabled, warningAlertsEnabled, maxNotificationsPerDay
         case warningAlertMetrics
         case heartRateSpikeAlertsEnabled, heartRateSpikeThreshold, heartRateDropThreshold

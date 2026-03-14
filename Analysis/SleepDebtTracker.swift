@@ -120,8 +120,8 @@ final class SleepDebtTracker {
 
     /// Compute sleep debt from the data store's sleep duration time series.
     /// Requires at least 14 days of sleep data; uses 30-day average as the personal baseline.
-    func compute(from store: HealthDataStore) {
-        guard let sleepSeries = store.loadTimeSeries(for: .sleepDuration) else {
+    func compute(from store: HealthDataStore, sleepSeries: MetricTimeSeries? = nil) {
+        guard let sleepSeries = sleepSeries ?? store.loadTimeSeries(for: .sleepDuration) else {
             isReady = false
             currentDebt = nil
             return

@@ -101,7 +101,7 @@ struct FocusRiskCard: View {
                             ForEach(Array(concerning)) { factor in
                                 HStack(spacing: 2) {
                                     Image(systemName: factor.status.icon)
-                                        .font(.system(size: 8))
+                                        .font(.caption2)
                                         .foregroundStyle(factor.status.color)
                                     Text(factor.metric.displayName)
                                         .font(.caption2)
@@ -139,7 +139,7 @@ struct RiskGradeBadge: View {
     var body: some View {
         HStack(spacing: 3) {
             Image(systemName: grade.icon)
-                .font(.system(size: 9))
+                .font(.caption2)
             Text(grade.displayName)
                 .font(.caption2.weight(.bold))
         }

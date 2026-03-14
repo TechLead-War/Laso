@@ -124,7 +124,7 @@ struct ShareableAnnualReportCard: View {
                 .font(.system(size: 16, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
             Text(label)
-                .font(.system(size: 10, weight: .medium))
+                .font(.caption2.weight(.medium))
                 .foregroundStyle(.white.opacity(0.5))
         }
     }

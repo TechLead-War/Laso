@@ -52,6 +52,12 @@ final class HealthKitManager {
         var hasNewData: Bool { !metricsWithNewData.isEmpty }
     }
 
+    private struct PersistedSyncSummary {
+        let metricsWithChanges: Set<HealthMetric>
+        let totalInsertedSamples: Int
+        let totalChangedSamples: Int
+    }
+
     /// Raw menstrual flow sample used for cycle-phase analytics.
     struct MenstrualFlowSample: Sendable {
         let startDate: Date
@@ -181,13 +187,13 @@ final class HealthKitManager {
             }
 
             for await (metric, series) in group {
+                syncProgress?.metricsCompleted += 1
+                syncProgress?.latestMetric = metric
                 guard let series else { continue }
                 fetchedMetrics.insert(metric)
                 if !series.samples.isEmpty {
                     newData.append((metric, series))
                 }
-                syncProgress?.metricsCompleted += 1
-                syncProgress?.latestMetric = metric
                 if !series.samples.isEmpty {
                     syncProgress?.metricsWithSamples += 1
                     syncProgress?.samplesDiscovered += series.samples.count
@@ -204,60 +210,136 @@ final class HealthKitManager {
 
         // Phase 4: Save new data to SwiftData (sequential, main actor)
         syncProgress?.phase = .saving
-        for (metric, series) in newData {
-            store.saveSamples(series.samples, for: metric)
-        }
+        let persisted = persistFetchedData(
+            newData: newData,
+            fetchedMetrics: fetchedMetrics,
+            store: store,
+            endDate: endDate
+        )
 
-        // Metrics that fetched successfully but had no new samples should still advance sync metadata.
-        let metricsWithNewSamples = Set(newData.map { $0.0 })
-        for metric in fetchedMetrics.subtracting(metricsWithNewSamples) {
-            store.markSyncCompleted(for: metric, at: endDate)
-        }
-
-        // Phase 5: Reload complete stored data (includes both old + new)
+        // Phase 5: Finalize in-memory state incrementally
         syncProgress?.phase = .finalizing
-        let reloaded = store.loadAllTimeSeries()
-        if reloaded.isEmpty && !newData.isEmpty {
-            // SwiftData failed silently — use the fetched HealthKit data directly
-            var directTimeSeries: [HealthMetric: MetricTimeSeries] = [:]
-            for (metric, series) in newData {
-                directTimeSeries[metric] = series
-            }
-            timeSeries = directTimeSeries
-        } else {
-            timeSeries = reloaded
-        }
+        finalizeInMemoryTimeSeries(
+            isFirstSync: isFirstSync,
+            newData: newData,
+            store: store
+        )
 
         lastRefresh = Date()
         isLoading = false
         syncProgress?.phase = .completed
 
         // Track sync completion
-        let totalNewSamples = newData.reduce(0) { $0 + $1.1.samples.count }
+        let totalNewSamples = persisted.totalInsertedSamples
+        let changedMetricsCount = persisted.metricsWithChanges.count
         let syncDuration = Int(Date().timeIntervalSince(syncStartTime))
         AppAnalytics.shared.trackDataSync(
-            metricsCount: newData.count,
+            metricsCount: changedMetricsCount,
             newSamplesCount: totalNewSamples,
             durationSec: syncDuration,
             isFirstSync: isFirstSync
         )
         AppAnalytics.shared.trackSyncPerformance(
             durationMs: Int(Date().timeIntervalSince(syncStartTime) * 1000),
-            metricsCount: newData.count,
-            samplesLoaded: totalNewSamples,
+            metricsCount: changedMetricsCount,
+            samplesLoaded: persisted.totalChangedSamples,
             isIncremental: !isFirstSync
         )
 
         // Activation: first data load + time-to-first-value
-        if !newData.isEmpty {
+        if !persisted.metricsWithChanges.isEmpty {
             AppAnalytics.shared.trackActivationMilestone(.firstDataLoad)
             AppAnalytics.shared.trackTimeToFirstValue()
         }
 
         return SyncResult(
-            metricsWithNewData: metricsWithNewSamples,
+            metricsWithNewData: persisted.metricsWithChanges,
             totalNewSamples: totalNewSamples,
             isFirstSync: isFirstSync
+        )
+    }
+
+    /// Persist fetched series and return a summary of actual changes written to storage.
+    private func persistFetchedData(
+        newData: [(HealthMetric, MetricTimeSeries)],
+        fetchedMetrics: Set<HealthMetric>,
+        store: HealthDataStore,
+        endDate: Date
+    ) -> PersistedSyncSummary {
+        var metricsWithChanges = Set<HealthMetric>()
+        var totalInsertedSamples = 0
+        var totalChangedSamples = 0
+
+        for (metric, series) in newData {
+            let saveResult = store.saveSamples(series.samples, for: metric)
+            if saveResult.hasChanges {
+                metricsWithChanges.insert(metric)
+            }
+            totalInsertedSamples += saveResult.insertedCount
+            totalChangedSamples += saveResult.changedSampleCount
+        }
+
+        // Metrics that fetched successfully but had no samples still need sync advancement.
+        let metricsWithFetchedSamples = Set(newData.map { $0.0 })
+        for metric in fetchedMetrics.subtracting(metricsWithFetchedSamples) {
+            store.markSyncCompleted(for: metric, at: endDate)
+        }
+
+        return PersistedSyncSummary(
+            metricsWithChanges: metricsWithChanges,
+            totalInsertedSamples: totalInsertedSamples,
+            totalChangedSamples: totalChangedSamples
+        )
+    }
+
+    /// Apply persisted sync results to in-memory time series without full-store reloads.
+    private func finalizeInMemoryTimeSeries(
+        isFirstSync: Bool,
+        newData: [(HealthMetric, MetricTimeSeries)],
+        store: HealthDataStore
+    ) {
+        if isFirstSync {
+            // First sync fetched full history for each populated metric — avoid full reload.
+            if !newData.isEmpty {
+                var initialSeries = timeSeries
+                for (metric, series) in newData {
+                    initialSeries[metric] = series
+                }
+                timeSeries = initialSeries
+            } else if timeSeries.isEmpty {
+                timeSeries = store.loadAllTimeSeries()
+            }
+            return
+        }
+
+        // Incremental sync: refresh only touched metrics from persistence.
+        for (metric, series) in newData {
+            if let persisted = store.loadTimeSeries(for: metric) {
+                timeSeries[metric] = persisted
+            } else {
+                // Fallback if persistence read fails: merge overlap data directly in memory.
+                timeSeries[metric] = mergeSeries(metric: metric, existing: timeSeries[metric], incoming: series.samples)
+            }
+        }
+        if timeSeries.isEmpty {
+            timeSeries = store.loadAllTimeSeries()
+        }
+    }
+
+    /// Merge incremental daily samples into an in-memory series with day-level deduplication.
+    private func mergeSeries(
+        metric: HealthMetric,
+        existing: MetricTimeSeries?,
+        incoming: [MetricSample]
+    ) -> MetricTimeSeries {
+        guard let existing else {
+            return MetricTimeSeries(metric: metric, samples: incoming)
+        }
+        guard !incoming.isEmpty else { return existing }
+
+        return MetricTimeSeries(
+            metric: metric,
+            samples: MetricSample.mergedByUTCDay(existing: existing.samples, incoming: incoming)
         )
     }
 

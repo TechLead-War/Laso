@@ -11,13 +11,13 @@ extension Copy {
 
         static let healthScore = "Health Score"
         static func ptsThisWeek(_ delta: Int) -> String { "\(delta > 0 ? "+" : "")\(delta) pts this week" }
-        static func focusToImprove(_ category: String) -> String { "Focus on \(category) to improve your score" }
+        static func focusToImprove(_ category: String) -> String { "\(category) has the most room to grow" }
 
         // Score labels
-        static let excellentShape = "Excellent shape"
-        static let lookingGood = "Looking good"
-        static let roomToImprove = "Room to improve"
-        static let needsAttention = "Needs attention"
+        static let excellentShape = "Strong momentum"
+        static let lookingGood = "Solid progress"
+        static let roomToImprove = "Building up"
+        static let needsAttention = "Getting started"
 
         // MARK: - Data Summary
 
@@ -35,9 +35,9 @@ extension Copy {
         static let almostThereBody = "A few more days of tracking and your score will be ready"
         static let noDataYetBody = "Open the Health app and allow access to see your analysis"
 
-        // MARK: - Needs Attention
+        // MARK: - Areas to Focus
 
-        static let needsAttentionHeader = "Needs Attention"
+        static let needsAttentionHeader = "Areas to Focus"
 
         // MARK: - Correlations
 
@@ -49,7 +49,7 @@ extension Copy {
         static let categories = "Categories"
         static let onTrack = "On track"
         static let doingWell = "Doing well"
-        static let needsWork = "Needs work"
+        static let needsWork = "Opportunity"
         static func insightCount(_ count: Int) -> String { "\(count) insight\(count == 1 ? "" : "s")" }
 
         // MARK: - Declining Trends

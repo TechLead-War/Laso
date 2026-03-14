@@ -96,6 +96,15 @@ extension Copy {
         static func actionPrefix(_ action: String) -> String { "Action: \(action)" }
         static func streakDays(_ days: Int) -> String { "\(days)-day streak!" }
 
+        // MARK: - Evening Summary
+
+        static func eveningSummaryTitle(strainLevel: String) -> String {
+            "Today's Recap: \(strainLevel) Day"
+        }
+        static func eveningSummaryBody(strainLevel: String, score: Int) -> String {
+            "You had a \(strainLevel.lowercased()) strain day (score: \(score)/100). Sleep well tonight."
+        }
+
         // MARK: - Weekly Summary
 
         static func weeklyReportTitle(score: Int, change: String) -> String {

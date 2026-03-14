@@ -165,11 +165,17 @@ final class GamificationEngine {
     ///   - store: The on-device health data store.
     ///   - sessionDays: Total days the user has been using the app.
     ///   - scores: Daily overall health scores sorted chronologically.
-    func compute(from store: HealthDataStore, sessionDays: Int, scores: [(date: Date, score: Int)]) {
+    ///   - timeSeries: Optional in-memory time series to avoid redundant full-store reads.
+    func compute(
+        from store: HealthDataStore,
+        sessionDays: Int,
+        scores: [(date: Date, score: Int)],
+        timeSeries: [HealthMetric: MetricTimeSeries]? = nil
+    ) {
         totalDaysTracked = sessionDays
         currentLevel = UserLevel.from(days: sessionDays)
 
-        let allTimeSeries = store.loadAllTimeSeries()
+        let allTimeSeries = timeSeries ?? store.loadAllTimeSeries()
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
 

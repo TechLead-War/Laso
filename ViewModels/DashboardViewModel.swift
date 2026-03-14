@@ -35,6 +35,7 @@ final class DashboardViewModel {
     private static let syncRetryMinInterval: TimeInterval = 600  // 10 minutes
     private static let connectivityRecoveryMinInterval: TimeInterval = 900  // 15 minutes
     private var lastConnectivityRecoverySync: Date?
+    @MainActor private var refreshRunToken = UUID()
 
     /// Previous trend directions — used for trend reversal detection
     private var previousTrends: [HealthMetric: TrendDirection] = [:]
@@ -577,6 +578,12 @@ final class DashboardViewModel {
         forceHeavyDeferred: Bool = false,
         runHousekeeping: Bool = true
     ) async {
+        let refreshToken = await MainActor.run { () -> UUID in
+            let next = UUID()
+            refreshRunToken = next
+            return next
+        }
+
         // Capture previous trends before re-analysis
         let prevTrends = previousTrends
 
@@ -650,12 +657,14 @@ final class DashboardViewModel {
                 )
             }.value
 
+            guard await MainActor.run(resultType: Bool.self, body: { self.refreshRunToken == refreshToken }) else { return }
             updateCachedProperties()
 
             await Task.detached(priority: .background) { [analysisEngine] in
                 analysisEngine.runDeferredHeavy(timeSeries: ts, force: forceHeavyDeferred)
             }.value
 
+            guard await MainActor.run(resultType: Bool.self, body: { self.refreshRunToken == refreshToken }) else { return }
             updateCachedProperties()
 
             await runPostHeavyPhase(
@@ -670,6 +679,7 @@ final class DashboardViewModel {
                 runHousekeeping: runHousekeeping
             )
 
+            guard await MainActor.run(resultType: Bool.self, body: { self.refreshRunToken == refreshToken }) else { return }
             // ML pipeline — runs after rule-based analysis completes
             await runMLPhase(timeSeries: ts)
 
@@ -691,6 +701,7 @@ final class DashboardViewModel {
                 timeSeries: ts,
                 cycleFlowSamples: cycleFlowSamples
             )
+            guard await MainActor.run(resultType: Bool.self, body: { self.refreshRunToken == refreshToken }) else { return }
             await MainActor.run { self.updateCachedProperties() }
         }
 
@@ -703,6 +714,7 @@ final class DashboardViewModel {
             // Thermal break — let CPU cool after core + essentials
             try? await Task.sleep(for: .seconds(10))
             guard !Task.isCancelled else { return }
+            guard await MainActor.run(resultType: Bool.self, body: { self.refreshRunToken == refreshToken }) else { return }
 
             // Gate on thermal state — skip heavy work entirely if device is overheating
             if ThermalManager.shared.shouldThrottle {
@@ -715,6 +727,7 @@ final class DashboardViewModel {
             var waitIterations = 0
             while analysisEngine.mlOrchestrator.isRunning {
                 guard !Task.isCancelled else { return }
+                guard await MainActor.run(resultType: Bool.self, body: { self.refreshRunToken == refreshToken }) else { return }
                 waitIterations += 1
                 if waitIterations > 120 { break } // Safety: max 60s wait
                 try? await Task.sleep(for: .milliseconds(500))
@@ -723,6 +736,7 @@ final class DashboardViewModel {
             // Heavy cross-metric analysis (correlations, historical, causal chains)
             // Skipped automatically if results are still fresh (1-hour TTL)
             analysisEngine.runDeferredHeavy(timeSeries: ts, force: forceHeavyDeferred)
+            guard await MainActor.run(resultType: Bool.self, body: { self.refreshRunToken == refreshToken }) else { return }
 
             // Update cached properties now that correlations + historicalContext are available
             await MainActor.run { self.updateCachedProperties() }
@@ -738,6 +752,7 @@ final class DashboardViewModel {
                 metricsCount: metricsCount,
                 runHousekeeping: runHousekeeping
             )
+            guard await MainActor.run(resultType: Bool.self, body: { self.refreshRunToken == refreshToken }) else { return }
 
             // ML pipeline — runs after rule-based analysis completes
             await self.runMLPhase(timeSeries: ts)
@@ -825,6 +840,7 @@ final class DashboardViewModel {
         let prefs = persistence.loadPreferences()
         let notificationsEnabled =
             prefs.dailySummaryEnabled ||
+            prefs.eveningSummaryEnabled ||
             prefs.weeklySummaryEnabled ||
             prefs.criticalAlertsEnabled ||
             prefs.warningAlertsEnabled ||
@@ -874,6 +890,12 @@ final class DashboardViewModel {
             topAnomaly: topAnomaly,
             scoreChangeFromYesterday: scores.cachedScoreChangeFromYesterday,
             streakDays: SessionTracker.shared.streakDays
+        )
+
+        DailySummaryScheduler.scheduleEvening(
+            score: currentScore,
+            strainLevel: strainScorer.strainLabel,
+            preferences: prefs
         )
 
         let periodSummary7d = await MainActor.run { self.periodSummary(for: .sevenDays) }
@@ -1012,6 +1034,8 @@ final class DashboardViewModel {
     private func computeNewEngines(todayRawHR: [MetricSample] = []) {
         let profile = UserProfileStore.shared.loadLocal()
         let age = profile?.ageFromDateOfBirth ?? 30
+        let timeSeries = healthKitManager.timeSeries
+        let sleepSeries = timeSeries[.sleepDuration]
 
         // Strain — pass raw per-sample HR for accurate zone classification,
         // and in-memory time series for freshest data (avoids SwiftData read lag).
@@ -1020,7 +1044,7 @@ final class DashboardViewModel {
             age: age,
             restingHR: analysisEngine.baselines[.restingHeartRate]?.mean,
             todayHRSamples: todayRawHR,
-            timeSeries: healthKitManager.timeSeries
+            timeSeries: timeSeries
         )
 
         // Strain Coach
@@ -1032,13 +1056,13 @@ final class DashboardViewModel {
         )
 
         // Stress
-        stressScorer.compute(from: store)
+        stressScorer.compute(from: store, timeSeries: timeSeries)
 
         // Brain Health — pass in-memory timeSeries for guaranteed freshness
-        brainHealthScorer.compute(from: store, timeSeries: healthKitManager.timeSeries)
+        brainHealthScorer.compute(from: store, timeSeries: timeSeries)
 
         // Sleep debt
-        sleepDebtTracker.compute(from: store)
+        sleepDebtTracker.compute(from: store, sleepSeries: sleepSeries)
 
         // Sleep need
         let debtHours = sleepDebtTracker.currentDebt?.totalDebtHours ?? 0
@@ -1046,17 +1070,23 @@ final class DashboardViewModel {
             from: store,
             currentStrain: strainScorer.currentStrain,
             sleepDebt: debtHours,
-            targetWakeTime: nil
+            targetWakeTime: nil,
+            sleepSeries: sleepSeries
         )
         _ = need  // stored internally in sleepNeedCalculator
 
         // Gamification
         let sessionDays = SessionTracker.shared.daysSinceInstall
         let scoreHistory = store.loadScoreHistory(days: 365).map { (date: $0.date, score: $0.score) }
-        gamificationEngine.compute(from: store, sessionDays: sessionDays, scores: scoreHistory)
+        gamificationEngine.compute(
+            from: store,
+            sessionDays: sessionDays,
+            scores: scoreHistory,
+            timeSeries: timeSeries
+        )
 
         // Vitality Age — pass in-memory timeSeries for guaranteed freshness
-        vitalityScorer.compute(from: store, chronologicalAge: age, timeSeries: healthKitManager.timeSeries)
+        vitalityScorer.compute(from: store, chronologicalAge: age, timeSeries: timeSeries)
 
         // Menstrual cycle — female users + explicit onboarding opt-in.
         // Backward compatibility: if preference is absent (older installs), keep prior behavior.

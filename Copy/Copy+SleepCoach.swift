@@ -26,9 +26,9 @@ extension Copy {
 
         // MARK: - Sleep Debt
 
-        static let sleepDebt = "Sleep Debt"
-        static let currentDebt = "Current Debt"
-        static func daysToPayOff(_ days: Int) -> String { "\(days) days to pay off" }
+        static let sleepDebt = "Sleep Balance"
+        static let currentDebt = "Current Balance"
+        static func daysToPayOff(_ days: Int) -> String { "\(days) days to recover" }
 
         // Debt levels
         static let debtClear = "Clear"
@@ -52,13 +52,13 @@ extension Copy {
         static let consistency = "Consistency"
         static let excellent = "Excellent"
         static let good = "Good"
-        static let needsWork = "Needs Work"
+        static let needsWork = "Building"
         static let irregular = "Irregular"
 
         static let consistencyExcellent = "Your sleep schedule is very consistent. This helps maintain a strong circadian rhythm."
         static let consistencyGood = "Fairly consistent schedule. Try to reduce variability on weekends for better results."
-        static let consistencyNeedsWork = "Your sleep timing varies quite a bit. More consistency could improve sleep quality."
-        static let consistencyIrregular = "Highly variable sleep schedule. Your body struggles to establish a rhythm. Try fixing your wake time first."
+        static let consistencyNeedsWork = "Your sleep timing varies quite a bit. Even small improvements in consistency can boost sleep quality."
+        static let consistencyIrregular = "Highly variable sleep schedule. Anchoring a consistent wake time is often the most effective first step."
 
         // MARK: - Tips
 
@@ -67,24 +67,24 @@ extension Copy {
 
         // Debt tips
         static let tipAddSleepTitle = "Add 30-60 min per night"
-        static let tipAddSleepDetail = "Go to bed slightly earlier rather than sleeping in late to preserve your rhythm."
+        static let tipAddSleepDetail = "Going to bed slightly earlier preserves your rhythm better than sleeping in late."
         static func tipBePatientDetail(days: Int) -> String {
             "Pay off debt gradually over \(days) days. Avoid marathon sleep sessions."
         }
         static let tipBePatientTitle = "Be patient"
-        static let tipCutCaffeineTitle = "Cut caffeine after 2 PM"
-        static let tipCutCaffeineDetail = "Caffeine has a 6-hour half-life and can reduce deep sleep even if you fall asleep fine."
-        static let tipScreenCurfewTitle = "Screen curfew"
-        static let tipScreenCurfewDetail = "Stop screens 45 minutes before bed. Blue light suppresses melatonin production."
+        static let tipCutCaffeineTitle = "Caffeine timing"
+        static let tipCutCaffeineDetail = "Caffeine has a 6-hour half-life. Limiting it after 2 PM can protect your deep sleep."
+        static let tipScreenCurfewTitle = "Screen wind-down"
+        static let tipScreenCurfewDetail = "Winding down screens 45 min before bed helps — blue light suppresses melatonin production."
 
         // General tips
-        static let tipConsistentScheduleTitle = "Keep a consistent schedule"
-        static let tipConsistentScheduleDetail = "Go to bed and wake up at the same time daily, even on weekends."
-        static let tipCoolBedroomTitle = "Cool your bedroom"
-        static let tipCoolBedroomDetail = "Optimal sleep temperature is 65-68\u{00B0}F (18-20\u{00B0}C). Your body needs to cool down to sleep."
+        static let tipConsistentScheduleTitle = "Consistent schedule"
+        static let tipConsistentScheduleDetail = "A steady bed and wake time — even on weekends — is one of the strongest sleep levers."
+        static let tipCoolBedroomTitle = "Cool bedroom"
+        static let tipCoolBedroomDetail = "65-68\u{00B0}F (18-20\u{00B0}C) is the sweet spot. A cooler room helps your body drop into deeper sleep."
         static let tipMorningSunlightTitle = "Morning sunlight"
-        static let tipMorningSunlightDetail = "Get 10-15 minutes of bright light within an hour of waking to anchor your circadian rhythm."
+        static let tipMorningSunlightDetail = "10-15 minutes of bright light within an hour of waking anchors your circadian rhythm."
         static let tipExerciseTimingTitle = "Exercise timing"
-        static let tipExerciseTimingDetail = "Regular exercise improves sleep quality, but finish vigorous workouts 3+ hours before bed."
+        static let tipExerciseTimingDetail = "Regular exercise improves sleep quality. Finishing vigorous workouts 3+ hours before bed tends to work best."
     }
 }

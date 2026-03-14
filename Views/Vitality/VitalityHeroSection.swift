@@ -20,7 +20,7 @@ struct VitalityHeroSection: View {
                         .frame(width: orbW, height: orbH)
 
                     VStack(spacing: 6) {
-                        Text(String(format: "%.1f", Double(scorer.vitalityAge)))
+                        Text("\(scorer.vitalityAge)")
                             .font(.system(size: 56, weight: .bold, design: .rounded))
                             .monospacedDigit()
                             .foregroundStyle(.white)

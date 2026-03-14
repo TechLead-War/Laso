@@ -10,6 +10,8 @@ struct SleepCoachView: View {
     let dailyHistory: [DayEntry]
     let consistencyScore: Int
 
+    @State private var showAllTips = false
+
     /// A single day's sleep record for the 14-day history chart.
     struct DayEntry: Identifiable {
         let id = UUID()
@@ -327,12 +329,28 @@ struct SleepCoachView: View {
         VStack(alignment: .leading, spacing: 10) {
             sectionHeader(icon: "lightbulb.fill", title: debtHours > 2 ? Copy.SleepCoach.payingOffDebtTitle : Copy.SleepCoach.sleepTips)
 
+            let visibleTips = showAllTips ? currentTips : Array(currentTips.prefix(2))
+
             VStack(spacing: 0) {
-                ForEach(Array(currentTips.enumerated()), id: \.offset) { index, tip in
+                ForEach(Array(visibleTips.enumerated()), id: \.offset) { index, tip in
                     tipRow(tip)
-                    if index < currentTips.count - 1 {
+                    if index < visibleTips.count - 1 {
                         Divider().padding(.leading, 44)
                     }
+                }
+
+                if !showAllTips && currentTips.count > 2 {
+                    Divider().padding(.leading, 44)
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.25)) { showAllTips = true }
+                    } label: {
+                        Text("Show \(currentTips.count - 2) more tips")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(.blue)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             .padding(.vertical, 8)

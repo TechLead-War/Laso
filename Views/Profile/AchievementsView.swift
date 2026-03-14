@@ -333,17 +333,17 @@ struct AchievementsView: View {
                     .contentTransition(.numericText())
 
                 Text("days")
-                    .font(.system(size: 9, weight: .medium))
+                    .font(.caption2.weight(.medium))
                     .foregroundStyle(.tertiary)
             }
 
             // All-time best
             HStack(spacing: 2) {
                 Image(systemName: "trophy.fill")
-                    .font(.system(size: 8))
+                    .font(.caption2)
                     .foregroundStyle(.yellow)
                 Text("\(streak.best)")
-                    .font(.system(size: 10, weight: .semibold, design: .rounded).monospacedDigit())
+                    .font(.caption2.weight(.semibold).monospacedDigit())
                     .foregroundStyle(.secondary)
             }
         }
@@ -503,11 +503,11 @@ struct AchievementsView: View {
 
                 if achievement.isUnlocked, let date = achievement.unlockDate {
                     Text(date, format: .dateTime.month(.abbreviated).day())
-                        .font(.system(size: 9, weight: .medium))
+                        .font(.caption2.weight(.medium))
                         .foregroundStyle(.tertiary)
                 } else {
                     Text(achievement.requirement)
-                        .font(.system(size: 9, weight: .medium))
+                        .font(.caption2.weight(.medium))
                         .foregroundStyle(.tertiary)
                         .multilineTextAlignment(.center)
                         .lineLimit(2)

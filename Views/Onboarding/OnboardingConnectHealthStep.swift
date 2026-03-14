@@ -43,9 +43,9 @@ struct OnboardingConnectHealthStep: View {
             VStack(spacing: 0) {
                 ForEach(permissions, id: \.self) { permission in
                     HStack(spacing: 12) {
-                        Image(systemName: "checkmark.circle.fill")
+                        Image(systemName: "circle")
                             .font(.system(size: 20))
-                            .foregroundStyle(.green)
+                            .foregroundStyle(.secondary)
 
                         Text(permission)
                             .font(.body.weight(.medium))

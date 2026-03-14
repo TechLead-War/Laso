@@ -47,7 +47,7 @@ struct OnboardingView: View {
     }
 
     private var progressSteps: [OnboardingStep] {
-        flowSteps.filter { $0 != .welcome }
+        flowSteps
     }
 
     var body: some View {

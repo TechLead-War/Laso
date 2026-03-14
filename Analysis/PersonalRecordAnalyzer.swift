@@ -141,12 +141,27 @@ struct PersonalRecordAnalyzer {
             let recordAgeDays = movingAverages.count - 1 - previousBestIndex
             let recordAgeNote = recordAgeDays > 7 ? " You beat a record that stood for \(recordAgeDays) days." : ""
 
-            // It's a new PR with real improvement
+            // It's a new PR with real improvement — use variable templates for copy variety
+            let templateVariant = metric.rawValue.count % 3
+            let prSummary: String
+            let prRecommendation: String
+            switch templateVariant {
+            case 1:
+                prSummary = "New personal best! Your \(windowLabel) \(metric.displayName.lowercased()) just reached \(String(format: "%.1f", currentAvg)) \(metric.unit) \u{2014} that's \(String(format: "%.1f", improvement))% above your previous record.\(recordAgeNote)"
+                prRecommendation = "New \(windowLabel) record for \(metric.displayName.lowercased()): \(String(format: "%.1f", currentAvg)) \(metric.unit), surpassing previous best of \(String(format: "%.1f", bestPrevious)) \(metric.unit)."
+            case 2:
+                prSummary = "Record broken: \(metric.displayName.lowercased()) at \(String(format: "%.1f", currentAvg)) \(metric.unit). Keep this trajectory going.\(recordAgeNote)"
+                prRecommendation = "New \(windowLabel) record for \(metric.displayName.lowercased()): \(String(format: "%.1f", currentAvg)) \(metric.unit), surpassing previous best of \(String(format: "%.1f", bestPrevious)) \(metric.unit)."
+            default:
+                prSummary = "Your \(windowLabel) average \(metric.displayName.lowercased()) hit a personal record: \(String(format: "%.1f", currentAvg)) \(metric.unit). Previous best: \(String(format: "%.1f", bestPrevious)) \(metric.unit) (\(String(format: "%.1f", improvement))% improvement). You're building real momentum.\(recordAgeNote)"
+                prRecommendation = "New \(windowLabel) record for \(metric.displayName.lowercased()): \(String(format: "%.1f", currentAvg)) \(metric.unit), surpassing previous best of \(String(format: "%.1f", bestPrevious)) \(metric.unit)."
+            }
+
             return Insight(
                 metric: metric,
                 title: Copy.Analysis.PersonalRecord.newPR(windowLabel: windowLabel, metricName: metric.displayName),
-                summary: "Your \(windowLabel) average \(metric.displayName.lowercased()) hit a personal record: \(String(format: "%.1f", currentAvg)) \(metric.unit). Previous best: \(String(format: "%.1f", bestPrevious)) \(metric.unit) (\(String(format: "%.1f", improvement))% improvement).\(recordAgeNote)",
-                recommendation: "New \(windowLabel) record for \(metric.displayName.lowercased()): \(String(format: "%.1f", currentAvg)) \(metric.unit), surpassing previous best of \(String(format: "%.1f", bestPrevious)) \(metric.unit).",
+                summary: prSummary,
+                recommendation: prRecommendation,
                 severity: .info,
                 trend: .improving,
                 currentValue: currentAvg,

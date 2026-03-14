@@ -445,7 +445,7 @@ struct IllnessEarlyWarning {
 
             switch signal.direction {
             case "elevated":
-                parts.append("\(metricName) has been \(deviationDescription) above baseline for \(daysElevated) \(daysLabel) (\(formatted) vs \(baselineFormatted) \(unit))")
+                parts.append("\(metricName) has trended \(deviationDescription) above baseline for \(daysElevated) \(daysLabel) (\(formatted) vs \(baselineFormatted) \(unit))")
             case "depressed":
                 parts.append("\(metricName) dropped \(deviationDescription) below baseline over \(daysElevated) \(daysLabel) (\(formatted) vs \(baselineFormatted) \(unit))")
             default:

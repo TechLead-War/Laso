@@ -103,7 +103,7 @@ struct LiveVitalsSection: View {
                 if let ts = timestamp {
                     HStack(spacing: 4) {
                         Image(systemName: "clock")
-                            .font(.system(size: 9))
+                            .font(.caption2)
                         Text(ts, style: .relative)
                             .font(.caption2.weight(.medium))
                         Text("ago")

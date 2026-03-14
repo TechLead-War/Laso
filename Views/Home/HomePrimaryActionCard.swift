@@ -4,6 +4,7 @@ struct HomePrimaryActionCard: View {
     let action: DashboardViewModel.SmartAction
     let overallScore: Int
     let recoveryStateRawValue: String
+    let onTap: () -> Void
 
     var body: some View {
         Button {
@@ -16,6 +17,7 @@ struct HomePrimaryActionCard: View {
                     "recovery_state": recoveryStateRawValue
                 ]
             )
+            onTap()
         } label: {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 4) {
@@ -48,6 +50,10 @@ struct HomePrimaryActionCard: View {
                     }
 
                     Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.tertiary)
                 }
             }
             .padding(DS.cardPadding)

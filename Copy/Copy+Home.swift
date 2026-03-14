@@ -49,7 +49,7 @@ extension Copy {
 
         // MARK: - Health Risks
 
-        static let healthRisks = "Health Risks"
+        static let healthRisks = "Areas to Watch"
 
         // MARK: - Trends
 
@@ -118,7 +118,7 @@ extension Copy {
             static let fairLabel = "Fair"
             static let fairDescription = "A few metrics have shifted \u{2014} worth paying attention."
             static let needsAttentionRange = "Below 40"
-            static let needsAttentionLabel = "Needs Attention"
+            static let needsAttentionLabel = "Room to Grow"
             static let needsAttentionDescription = "Several things are off from your norm \u{2014} check your insights."
 
             // Categories

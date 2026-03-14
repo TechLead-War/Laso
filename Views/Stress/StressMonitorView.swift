@@ -191,7 +191,7 @@ struct StressMonitorView: View {
                                 .frame(height: max(barHeight(for: point.score), 4))
 
                             Text(point.dayLabel)
-                                .font(.system(size: 9, weight: .medium))
+                                .font(.caption2.weight(.medium))
                                 .foregroundStyle(.secondary)
                         }
                         .frame(maxWidth: .infinity)
@@ -202,11 +202,11 @@ struct StressMonitorView: View {
                 // Scale labels
                 HStack {
                     Text("0")
-                        .font(.system(size: 8, weight: .medium))
+                        .font(.caption2.weight(.medium))
                         .foregroundStyle(.tertiary)
                     Spacer()
                     Text("3.0")
-                        .font(.system(size: 8, weight: .medium))
+                        .font(.caption2.weight(.medium))
                         .foregroundStyle(.tertiary)
                 }
             }
@@ -331,16 +331,16 @@ struct StressMonitorView: View {
         case "moderate":
             return [
                 "Consider a walk or gentle stretching.",
-                "Avoid caffeine and stimulants for the next few hours.",
+                "Limiting caffeine and stimulants for the next few hours may help.",
                 "Try progressive muscle relaxation.",
                 "Shorten your to-do list and focus on essentials."
             ]
         case "high":
             return [
-                "Your body needs rest. Postpone intense activity.",
-                "Practice box breathing: inhale 4s, hold 4s, exhale 4s, hold 4s.",
-                "Avoid screens and find a quiet environment.",
-                "Prioritize sleep tonight — aim for 8+ hours."
+                "Your body is signaling for rest. Lighter activity may serve you better right now.",
+                "Box breathing can help: inhale 4s, hold 4s, exhale 4s, hold 4s.",
+                "A quieter, screen-free environment may help your nervous system settle.",
+                "Many people find that 8+ hours of sleep tonight helps them feel more resilient tomorrow."
             ]
         default:
             return [

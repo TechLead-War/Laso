@@ -187,9 +187,11 @@ final class StressScorer {
     /// Builds a 14-day personal baseline for HRV and resting heart rate,
     /// then scores the most recent values against those baselines.
     ///
-    /// - Parameter store: The on-device health data store containing metric time series.
-    func compute(from store: HealthDataStore) {
-        let allSeries = store.loadAllTimeSeries()
+    /// - Parameters:
+    ///   - store: The on-device health data store containing metric time series.
+    ///   - timeSeries: Optional in-memory time series to avoid redundant full-store reads.
+    func compute(from store: HealthDataStore, timeSeries: [HealthMetric: MetricTimeSeries]? = nil) {
+        let allSeries = timeSeries ?? store.loadAllTimeSeries()
 
         guard let hrvSeries = allSeries[.heartRateVariability],
               hrvSeries.daysOfData >= Self.minimumDaysRequired else {

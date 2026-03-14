@@ -126,7 +126,7 @@ struct HealthStateTimelineView: View {
                     ForEach(Array(notable.prefix(4).enumerated()), id: \.offset) { _, char in
                         HStack(spacing: 3) {
                             Image(systemName: char.level == .high ? "arrow.up" : "arrow.down")
-                                .font(.system(size: 8, weight: .bold))
+                                .font(.caption2.weight(.bold))
                                 .foregroundStyle(char.level == .high ? .green : .red)
                             Text(char.metric.displayName)
                                 .font(.caption2)
@@ -223,7 +223,7 @@ struct HealthStateTimelineView: View {
                             .fill(Color(red: rgb.r, green: rgb.g, blue: rgb.b))
                             .frame(width: 8, height: 8)
                         Text(label)
-                            .font(.system(size: 9))
+                            .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -313,7 +313,7 @@ struct HealthStateTimelineView: View {
                         .font(.caption.weight(.medium))
 
                     Image(systemName: "arrow.right")
-                        .font(.system(size: 8))
+                        .font(.caption2)
                         .foregroundStyle(.tertiary)
 
                     Circle()

@@ -5,12 +5,13 @@ struct SleepCard: View {
     let liveVM: LiveViewModel
     let sleepBaseline: Double? // baseline hours from AnalysisEngine
     let sleepInsight: Insight? // top sleep performance insight, if any
+    let onTap: () -> Void
 
     private var hours: Double { liveVM.sleep.lastNightSleepDuration / 3600 }
 
     var body: some View {
         if liveVM.sleep.hasSleepData {
-            VStack(spacing: 0) {
+            Button(action: onTap) {
                 HStack(spacing: 0) {
                     // Left accent bar — indigo
                     RoundedRectangle(cornerRadius: DS.accentRadius)
@@ -51,6 +52,11 @@ struct SleepCard: View {
                                 .padding(.horizontal, DS.badgeH)
                                 .padding(.vertical, DS.badgeV)
                                 .background(qualityColor.opacity(DS.badgeBg), in: Capsule())
+
+                            Image(systemName: "chevron.right")
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(.tertiary)
+                                .padding(.leading, 6)
                         }
 
                         // Stage breakdown bar
@@ -65,6 +71,13 @@ struct SleepCard: View {
                                 .foregroundStyle(.secondary)
                                 .lineLimit(2)
                         }
+
+                        // B=MAP prompt — visible when sleep quality is poor (high motivation moment)
+                        if liveVM.sleep.sleepQualityLabel == "Fair" || liveVM.sleep.sleepQualityLabel == "Poor" {
+                            Text("See sleep tips \u{2192}")
+                                .font(.caption2.weight(.medium))
+                                .foregroundStyle(.blue)
+                        }
                     }
                     .padding(.leading, DS.accentLeading)
                     .padding(.trailing, DS.accentTrailing)
@@ -72,6 +85,12 @@ struct SleepCard: View {
                 }
                 .cardStyle(tint: .indigo)
             }
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Last night's sleep \(formatDuration(hours)), \(liveVM.sleep.sleepQualityLabel)")
+            .accessibilityHint("View sleep details")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityIdentifier("home.sleepCard")
         }
     }
 
@@ -116,7 +135,7 @@ struct SleepCard: View {
                 .fill(color)
                 .frame(width: 6, height: 6)
             Text("\(label) \(formatDuration(duration / 3600))")
-                .font(.system(size: 9, weight: .medium))
+                .font(.caption2.weight(.medium))
                 .foregroundStyle(.secondary)
         }
     }

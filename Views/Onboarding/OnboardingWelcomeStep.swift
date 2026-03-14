@@ -7,6 +7,11 @@ struct OnboardingWelcomeStep: View {
         VStack(spacing: 0) {
             Spacer()
 
+            Text("Step 1")
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
+                .padding(.bottom, 12)
+
             Image("LaunchIcon")
                 .resizable()
                 .frame(width: 100, height: 100)

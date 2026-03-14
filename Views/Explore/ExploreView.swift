@@ -57,7 +57,7 @@ struct ExploreView: View {
                     .onAppear { dataSummaryTracker.appeared() }
                     .onDisappear { dataSummaryTracker.disappeared() }
 
-                    // 2b. Your Trends — prominent trend-first section
+                    // 3. Your Trends — prominent trend-first section
                     if !trendMetrics.isEmpty {
                         ExploreYourTrendsSection(
                             trendMetrics: trendMetrics,
@@ -82,7 +82,71 @@ struct ExploreView: View {
                         .onDisappear { yourTrendsTracker.disappeared() }
                     }
 
-                    // 3. Needs Attention — negative factors only
+                    // 4. Categories — primary navigation
+                    ExploreCategoriesSection(
+                        categories: sortedCategories,
+                        insightCountProvider: { category in
+                            viewModel.analysisEngine.insights(for: category).count
+                        },
+                        onCategoryTapped: { category, score in
+                            AppAnalytics.shared.trackBlockTap(
+                                title: category.displayName,
+                                type: .categoryRow,
+                                screen: .explore,
+                                metadata: [
+                                    "category_id": category.rawValue,
+                                    "category_score": score ?? -1
+                                ]
+                            )
+                            categoriesTracker.tapped(target: category.rawValue)
+                            navigationPath.append(category)
+                        }
+                    )
+                    .padding(.horizontal)
+                    .onAppear { categoriesTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 45) }
+                    .onDisappear { categoriesTracker.disappeared() }
+
+                    // 5. Health State Timeline link (requires 30+ days)
+                    if viewModel.analysis.dataDepth.daysOfData >= 30,
+                       viewModel.analysisEngine.mlOrchestrator.stateClassifier.isReady {
+                        ExploreHealthStateLinkSection(
+                            currentHealthState: viewModel.analysisEngine.currentHealthState,
+                            onTapped: {
+                                AppAnalytics.shared.trackBlockTap(
+                                    title: "Health States",
+                                    type: .exploreHealthStateTeaser,
+                                    screen: .explore,
+                                    metadata: [
+                                        "destination": "health_state_timeline",
+                                        "state": viewModel.analysisEngine.currentHealthState?.label ?? "unknown"
+                                    ]
+                                )
+                                navigationPath.append(Route.healthStateTimeline)
+                            }
+                        )
+                        .padding(.horizontal)
+                    }
+
+                    // 6. Strongest area — positive anchor before negative content
+                    if let strongest = viewModel.analysisEngine.categoryScores
+                        .compactMap({ score -> (category: HealthCategory, score: Int)? in
+                            guard let cat = score.category else { return nil }
+                            return (category: cat, score: score.score)
+                        })
+                        .max(by: { $0.score < $1.score }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: strongest.category.systemImageName)
+                                .font(.caption)
+                                .foregroundStyle(.green)
+                            Text("Strongest: \(strongest.category.displayName)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                        }
+                        .padding(.horizontal)
+                    }
+
+                    // 7. Needs Attention — negative factors
                     ExploreNeedsAttentionSection(
                         scoreExplanation: viewModel.scores.scoreExplanation,
                         onFactorTapped: { factor in
@@ -118,11 +182,11 @@ struct ExploreView: View {
                         }
                     )
                     .padding(.horizontal)
-                    .onAppear { needsAttentionTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 45) }
+                    .onAppear { needsAttentionTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 65) }
                     .onDisappear { needsAttentionTracker.disappeared() }
 
-                    // 4. Declining metrics from history
-                    if !decliningHighlights.isEmpty {
+                    // 8. Declining metrics from history (requires 30+ days)
+                    if viewModel.analysis.dataDepth.daysOfData >= 30, !decliningHighlights.isEmpty {
                         ExploreDecliningTrendsSection(
                             decliningHighlights: decliningHighlights,
                             onHighlightTapped: { highlight in
@@ -149,27 +213,7 @@ struct ExploreView: View {
                         .onDisappear { decliningTrendsTracker.disappeared() }
                     }
 
-                    // 4b. Health State Timeline link
-                    if viewModel.analysisEngine.mlOrchestrator.stateClassifier.isReady {
-                        ExploreHealthStateLinkSection(
-                            currentHealthState: viewModel.analysisEngine.currentHealthState,
-                            onTapped: {
-                                AppAnalytics.shared.trackBlockTap(
-                                    title: "Health States",
-                                    type: .exploreHealthStateTeaser,
-                                    screen: .explore,
-                                    metadata: [
-                                        "destination": "health_state_timeline",
-                                        "state": viewModel.analysisEngine.currentHealthState?.label ?? "unknown"
-                                    ]
-                                )
-                                navigationPath.append(Route.healthStateTimeline)
-                            }
-                        )
-                        .padding(.horizontal)
-                    }
-
-                    // 5. Correlations preview
+                    // 9. Correlations preview
                     if FeatureGate.canAccess(.advancedAnalytics), !viewModel.analysis.topCorrelations.isEmpty {
                         ExploreCorrelationsSection(
                             correlations: viewModel.analysis.topCorrelations,
@@ -187,33 +231,31 @@ struct ExploreView: View {
                                 navigationPath.append(Route.correlationsDetail)
                             }
                         )
-                        .onAppear { correlationsTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 75) }
+                        .onAppear { correlationsTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 90) }
+                        .onDisappear { correlationsTracker.disappeared() }
+                    } else if !FeatureGate.canAccess(.advancedAnalytics) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text(Copy.Explore.connections)
+                                    .font(.headline)
+                                Spacer()
+                                Text("PRO")
+                                    .font(.caption2.weight(.bold))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(.blue, in: Capsule())
+                            }
+                            Text("Discover hidden connections between your metrics")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(DS.cardPadding)
+                        .cardStyle()
+                        .padding(.horizontal)
+                        .onAppear { correlationsTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 90) }
                         .onDisappear { correlationsTracker.disappeared() }
                     }
-
-                    // 6. Categories — worst first
-                    ExploreCategoriesSection(
-                        categories: sortedCategories,
-                        insightCountProvider: { category in
-                            viewModel.analysisEngine.insights(for: category).count
-                        },
-                        onCategoryTapped: { category, score in
-                            AppAnalytics.shared.trackBlockTap(
-                                title: category.displayName,
-                                type: .categoryRow,
-                                screen: .explore,
-                                metadata: [
-                                    "category_id": category.rawValue,
-                                    "category_score": score ?? -1
-                                ]
-                            )
-                            categoriesTracker.tapped(target: category.rawValue)
-                            navigationPath.append(category)
-                        }
-                    )
-                    .padding(.horizontal)
-                    .onAppear { categoriesTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 90) }
-                    .onDisappear { categoriesTracker.disappeared() }
                 } else {
                     ExploreEmptyStateSection(
                         hasAnyHealthData: hasAnyHealthData

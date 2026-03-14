@@ -17,7 +17,7 @@ struct ExploreNeedsAttentionSection: View {
                     Text(Copy.Explore.needsAttentionHeader)
                         .font(.headline)
 
-                    ForEach(Array(negativeFactors.prefix(5).enumerated()), id: \.offset) { _, factor in
+                    ForEach(Array(negativeFactors.prefix(3).enumerated()), id: \.offset) { _, factor in
                         Button {
                             onFactorTapped(factor)
                         } label: {
@@ -67,7 +67,7 @@ struct ExploreNeedsAttentionSection: View {
                                             .font(.caption.weight(.bold).monospacedDigit())
                                             .foregroundStyle(contrib.score < 60 ? .red : .orange)
                                         Text(contrib.category.shortName)
-                                            .font(.system(size: 8))
+                                            .font(.caption2)
                                             .foregroundStyle(.secondary)
                                     }
                                     .frame(maxWidth: .infinity)

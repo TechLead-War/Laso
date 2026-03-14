@@ -40,7 +40,7 @@ struct DataConfidenceBadge: View {
     private var compactPill: some View {
         HStack(spacing: 6) {
             Image(systemName: tier.icon)
-                .font(.system(size: 10, weight: .semibold))
+                .font(.caption2.weight(.semibold))
                 .foregroundStyle(tier.color)
 
             Text(tier.name)
@@ -57,13 +57,13 @@ struct DataConfidenceBadge: View {
 
             if let next = tier.nextUnlock {
                 Text(next)
-                    .font(.system(size: 9, weight: .medium))
-                    .foregroundStyle(.tertiary)
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(.secondary)
             }
 
             Image(systemName: showDetail ? "chevron.up" : "chevron.down")
-                .font(.system(size: 8, weight: .semibold))
-                .foregroundStyle(.quaternary)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.tertiary)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
@@ -82,18 +82,18 @@ struct DataConfidenceBadge: View {
                             .frame(width: 20, height: 20)
                         if daysOfData >= t.minDays {
                             Image(systemName: "checkmark")
-                                .font(.system(size: 9, weight: .bold))
+                                .font(.caption2.weight(.bold))
                                 .foregroundStyle(.white)
                         }
                     }
 
                     Text(t.name)
-                        .font(.system(size: 9, weight: daysOfData >= t.minDays ? .semibold : .regular))
-                        .foregroundStyle(daysOfData >= t.minDays ? .primary : .tertiary)
+                        .font(.caption2.weight(daysOfData >= t.minDays ? .semibold : .regular))
+                        .foregroundStyle(daysOfData >= t.minDays ? .primary : .secondary)
 
                     Text(t.shortLabel)
-                        .font(.system(size: 8))
-                        .foregroundStyle(.quaternary)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
                 }
                 .frame(maxWidth: .infinity)
 

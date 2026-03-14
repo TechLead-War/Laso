@@ -8,6 +8,7 @@ enum AppConstants {
 
     enum NotificationID {
         static let dailySummary = "healthpulse.dailySummary"
+        static let eveningSummary = "healthpulse.eveningSummary"
         static let weeklySummary = "healthpulse.weeklySummary"
         static let reengagement = "healthpulse.reengagement.3day"
         static let watchNotWornScheduled = "healthpulse.watch.notWorn.scheduled"

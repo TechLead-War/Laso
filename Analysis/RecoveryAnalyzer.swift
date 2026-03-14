@@ -118,7 +118,7 @@ struct RecoveryAnalyzer {
                 title: isAllThree ? Copy.Analysis.Recovery.overtrainingWarning : Copy.Analysis.Recovery.earlyOvertrainingSignal,
                 summary: "\(signals.count) of 3 overtraining indicators present: \(signalText).\(isAllThree ? "" : " A third declining signal would confirm overtraining.")",
                 recommendation: isAllThree
-                    ? "All 3 overtraining indicators are present simultaneously: \(signalText). Your recovery metrics indicate sustained strain across multiple systems."
+                    ? "All 3 overtraining indicators are present simultaneously: \(signalText). Your recovery metrics suggest your body is working hard to catch up across multiple systems."
                     : "2 of 3 overtraining indicators are trending in the same direction: \(signalText). This pattern has preceded extended recovery periods in your data.",
                 severity: isAllThree ? .critical : .warning,
                 trend: .declining,

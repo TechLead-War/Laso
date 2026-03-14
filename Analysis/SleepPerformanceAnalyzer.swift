@@ -59,7 +59,7 @@ struct SleepPerformanceAnalyzer {
             return Insight(
                 metric: .sleepDuration,
                 title: Copy.Analysis.Sleep.sleepDrives(performanceMetric.displayName),
-                summary: "On 7+ hour sleep nights, your next-day \(performanceMetric.displayName.lowercased()) is \(String(format: "%.0f", abs(percentDiff)))% \(percentDiff > 0 ? "higher" : "lower") (\(String(format: "%.0f", avgGood)) vs \(String(format: "%.0f", avgPoor)) \(performanceMetric.unit)).",
+                summary: "Good sleep (7+ hrs) boosts your next-day \(performanceMetric.displayName.lowercased()) by \(String(format: "%.0f", abs(percentDiff)))% — averaging \(String(format: "%.0f", avgGood)) \(performanceMetric.unit) vs \(String(format: "%.0f", avgPoor)) on shorter nights.",
                 recommendation: "Your data shows a \(String(format: "%.0f", abs(percentDiff)))% difference in next-day \(performanceMetric.displayName.lowercased()) between 7+ hr sleep nights (\(String(format: "%.0f", avgGood)) \(performanceMetric.unit)) and <6 hr nights (\(String(format: "%.0f", avgPoor)) \(performanceMetric.unit)) across \(goodSleep.count + poorSleep.count) measured nights.",
                 severity: abs(percentDiff) >= 25 ? .warning : .info,
                 trend: .stable,

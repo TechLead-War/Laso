@@ -537,7 +537,7 @@ struct CycleDetailView: View {
                         Text("\(daysUntilPeriod)")
                             .font(.title3.weight(.bold).monospacedDigit())
                         Text(Copy.CycleTracking.days)
-                            .font(.system(size: 9, weight: .medium))
+                            .font(.caption2.weight(.medium))
                             .foregroundStyle(.secondary)
                     }
                 }

@@ -206,7 +206,7 @@ struct LasoApp: App {
                 // Run CloudKit restore and subscription configure in parallel
                 async let subscriptionTask: Void = subscriptionManager.configure()
 
-                if healthDataStore.totalStoredSamples == 0 {
+                if !healthDataStore.hasRestorableState {
                     let persistence = PersistenceManager()
                     _ = await CloudBackupManager.shared.restore(
                         store: healthDataStore, persistence: persistence
@@ -232,6 +232,7 @@ struct LasoApp: App {
                 if let container = healthDataStore.modelContainer {
                     let retentionContext = ModelContext(container)
                     DataRetentionManager().pruneIfNeeded(context: retentionContext)
+                    healthDataStore.invalidateTimeSeriesCache()
                 }
 
                 // Dismiss splash once background init is done

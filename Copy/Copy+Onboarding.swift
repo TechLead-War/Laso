@@ -39,16 +39,16 @@ extension Copy {
         // MARK: - Focus Selection
 
         static let whatMatters = "What matters most to you?"
-        static let focusSubtitle = "Pick your areas — we'll prioritize those insights."
+        static let focusSubtitle = "Pick your areas — those insights get prioritized first."
 
         // MARK: - Calibration
 
         static let calibratingTitle = "Calibrating Your Baseline"
         static let calibrationComplete = "Calibration Complete"
         static let calibrationIncomplete = "Calibration Incomplete"
-        static let calibratingMessage = "We are calculating your baseline from historical Apple Health data. This happens only once."
+        static let calibratingMessage = "Your baseline is being built from historical Apple Health data. This happens only once."
         static let calibrationSuccessMessage = "Your historical baseline is ready. You will now start with personalized insights instead of generic ones."
-        static let enterLaso = "Enter Laso"
+        static let enterLaso = "Start Your Journey"
         static let retryCalibration = "Retry Calibration"
 
         // Calibration stats

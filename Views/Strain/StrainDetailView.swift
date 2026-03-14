@@ -147,7 +147,7 @@ struct StrainDetailView: View {
                             .frame(height: 4)
 
                         Text(level.rawValue)
-                            .font(.system(size: 8, weight: .medium))
+                            .font(.caption2.weight(.medium))
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity)

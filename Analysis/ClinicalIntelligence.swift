@@ -163,7 +163,7 @@ struct ClinicalIntelligence {
             insights.append(Insight(
                 metric: .bloodPressureSystolic,
                 title: Copy.Analysis.Clinical.bloodPressureTrendingUp,
-                summary: "Your systolic BP has been rising \(String(format: "%.1f", slopePerMonth)) mmHg/month over the past \(recent90.count) days. Current stage: \(currentStage.rawValue). \(nextStageInfo)",
+                summary: "Your systolic trend shows a rise of \(String(format: "%.1f", slopePerMonth)) mmHg/month over the past \(recent90.count) days. Currently in the \(currentStage.rawValue) range — this is still modifiable with lifestyle changes. \(nextStageInfo)",
                 recommendation: "\(Copy.Analysis.Clinical.bpRecommendation) \(Copy.Analysis.Clinical.medicalDisclaimer)",
                 severity: severity,
                 trend: .declining,

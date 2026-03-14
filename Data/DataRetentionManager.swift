@@ -31,15 +31,15 @@ final class DataRetentionManager {
 
         var totalPruned = 0
 
-        totalPruned += pruneModel(StoredDailySample.self, dateKeyPath: \.date, olderThanDays: dailySampleDays, context: context)
-        totalPruned += pruneModel(StoredAnalysisSnapshot.self, dateKeyPath: \.date, olderThanDays: snapshotDays, context: context)
-        totalPruned += pruneModel(StoredDailyStrain.self, dateKeyPath: \.date, olderThanDays: strainDays, context: context)
-        totalPruned += pruneModel(StoredRecommendation.self, dateKeyPath: \.shownDate, olderThanDays: recommendationDays, context: context)
-        totalPruned += pruneModel(StoredNotificationEvent.self, dateKeyPath: \.sentDate, olderThanDays: notificationDays, context: context)
-        totalPruned += pruneModel(StoredAdherenceRecord.self, dateKeyPath: \.givenDate, olderThanDays: adherenceDays, context: context)
-        totalPruned += pruneModel(StoredECGFeatures.self, dateKeyPath: \.ecgDate, olderThanDays: ecgDays, context: context)
-        totalPruned += pruneModel(StoredJournalEntry.self, dateKeyPath: \.date, olderThanDays: journalDays, context: context)
-        totalPruned += pruneModel(StoredModelEvaluation.self, dateKeyPath: \.evaluationDate, olderThanDays: evaluationDays, context: context)
+        totalPruned += pruneStoredDailySample(olderThanDays: dailySampleDays, context: context)
+        totalPruned += pruneStoredAnalysisSnapshot(olderThanDays: snapshotDays, context: context)
+        totalPruned += pruneStoredDailyStrain(olderThanDays: strainDays, context: context)
+        totalPruned += pruneStoredRecommendation(olderThanDays: recommendationDays, context: context)
+        totalPruned += pruneStoredNotificationEvent(olderThanDays: notificationDays, context: context)
+        totalPruned += pruneStoredAdherenceRecord(olderThanDays: adherenceDays, context: context)
+        totalPruned += pruneStoredECGFeatures(olderThanDays: ecgDays, context: context)
+        totalPruned += pruneStoredJournalEntry(olderThanDays: journalDays, context: context)
+        totalPruned += pruneStoredModelEvaluation(olderThanDays: evaluationDays, context: context)
 
         if totalPruned > 0 {
             try? context.save()
@@ -51,29 +51,70 @@ final class DataRetentionManager {
 
     // MARK: - Helpers
 
-    /// Fetch-and-delete rows older than `olderThanDays`. Returns count deleted.
-    private func pruneModel<T: PersistentModel>(
-        _ type: T.Type,
-        dateKeyPath: KeyPath<T, Date>,
-        olderThanDays days: Int,
-        context: ModelContext
-    ) -> Int {
-        guard days > 0 else { return 0 }
-        let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+    private func cutoffDate(olderThanDays days: Int) -> Date? {
+        guard days > 0 else { return nil }
+        return Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+    }
 
-        // SwiftData doesn't support KeyPath-based predicates generically,
-        // so we fetch all and filter in memory. The retention window is long
-        // enough that the expired set is small relative to total rows.
-        let descriptor = FetchDescriptor<T>()
-        guard let all = try? context.fetch(descriptor) else { return 0 }
-
-        var count = 0
-        for item in all {
-            if item[keyPath: dateKeyPath] < cutoff {
-                context.delete(item)
-                count += 1
-            }
+    private func deleteAll<T: PersistentModel>(_ descriptor: FetchDescriptor<T>, context: ModelContext) -> Int {
+        guard let items = try? context.fetch(descriptor), !items.isEmpty else { return 0 }
+        for item in items {
+            context.delete(item)
         }
-        return count
+        return items.count
+    }
+
+    private func pruneStoredDailySample(olderThanDays days: Int, context: ModelContext) -> Int {
+        guard let cutoff = cutoffDate(olderThanDays: days) else { return 0 }
+        let predicate = #Predicate<StoredDailySample> { $0.date < cutoff }
+        return deleteAll(FetchDescriptor(predicate: predicate), context: context)
+    }
+
+    private func pruneStoredAnalysisSnapshot(olderThanDays days: Int, context: ModelContext) -> Int {
+        guard let cutoff = cutoffDate(olderThanDays: days) else { return 0 }
+        let predicate = #Predicate<StoredAnalysisSnapshot> { $0.date < cutoff }
+        return deleteAll(FetchDescriptor(predicate: predicate), context: context)
+    }
+
+    private func pruneStoredDailyStrain(olderThanDays days: Int, context: ModelContext) -> Int {
+        guard let cutoff = cutoffDate(olderThanDays: days) else { return 0 }
+        let predicate = #Predicate<StoredDailyStrain> { $0.date < cutoff }
+        return deleteAll(FetchDescriptor(predicate: predicate), context: context)
+    }
+
+    private func pruneStoredRecommendation(olderThanDays days: Int, context: ModelContext) -> Int {
+        guard let cutoff = cutoffDate(olderThanDays: days) else { return 0 }
+        let predicate = #Predicate<StoredRecommendation> { $0.shownDate < cutoff }
+        return deleteAll(FetchDescriptor(predicate: predicate), context: context)
+    }
+
+    private func pruneStoredNotificationEvent(olderThanDays days: Int, context: ModelContext) -> Int {
+        guard let cutoff = cutoffDate(olderThanDays: days) else { return 0 }
+        let predicate = #Predicate<StoredNotificationEvent> { $0.sentDate < cutoff }
+        return deleteAll(FetchDescriptor(predicate: predicate), context: context)
+    }
+
+    private func pruneStoredAdherenceRecord(olderThanDays days: Int, context: ModelContext) -> Int {
+        guard let cutoff = cutoffDate(olderThanDays: days) else { return 0 }
+        let predicate = #Predicate<StoredAdherenceRecord> { $0.givenDate < cutoff }
+        return deleteAll(FetchDescriptor(predicate: predicate), context: context)
+    }
+
+    private func pruneStoredECGFeatures(olderThanDays days: Int, context: ModelContext) -> Int {
+        guard let cutoff = cutoffDate(olderThanDays: days) else { return 0 }
+        let predicate = #Predicate<StoredECGFeatures> { $0.ecgDate < cutoff }
+        return deleteAll(FetchDescriptor(predicate: predicate), context: context)
+    }
+
+    private func pruneStoredJournalEntry(olderThanDays days: Int, context: ModelContext) -> Int {
+        guard let cutoff = cutoffDate(olderThanDays: days) else { return 0 }
+        let predicate = #Predicate<StoredJournalEntry> { $0.date < cutoff }
+        return deleteAll(FetchDescriptor(predicate: predicate), context: context)
+    }
+
+    private func pruneStoredModelEvaluation(olderThanDays days: Int, context: ModelContext) -> Int {
+        guard let cutoff = cutoffDate(olderThanDays: days) else { return 0 }
+        let predicate = #Predicate<StoredModelEvaluation> { $0.evaluationDate < cutoff }
+        return deleteAll(FetchDescriptor(predicate: predicate), context: context)
     }
 }

@@ -31,15 +31,15 @@ extension Copy {
             "Your body is performing about \(delta) years younger than your chronological age."
         }
         static func personalOlderNarrative(delta: Int) -> String {
-            "Your body is performing about \(delta) years older than your chronological age. Focus on the top improvement levers below."
+            "Your trend suggests ~\(delta) years above your chronological age. The top improvement levers below can help close this gap."
         }
         static let personalAlignedNarrative = "Your vitality age is aligned with your chronological age. Maintaining your current routine can preserve this trend."
 
         // MARK: - Pace
 
         static let normalOrSlower = "Normal or slower"
-        static let agingTooQuickly = "Aging too quickly"
-        static let agingVeryFast = "Aging very fast"
+        static let agingTooQuickly = "Accelerating"
+        static let agingVeryFast = "Needs attention"
 
         // MARK: - Delta Labels
 

@@ -324,7 +324,7 @@ struct BrainHealthDetailView: View {
                                 .frame(height: max(chartBarHeight(for: entry.score), 4))
 
                             Text(abbreviatedDay(entry.date))
-                                .font(.system(size: 9, weight: .medium))
+                                .font(.caption2.weight(.medium))
                                 .foregroundStyle(.secondary)
                         }
                         .frame(maxWidth: .infinity)
@@ -334,11 +334,11 @@ struct BrainHealthDetailView: View {
 
                 HStack {
                     Text("0")
-                        .font(.system(size: 8, weight: .medium))
+                        .font(.caption2.weight(.medium))
                         .foregroundStyle(.tertiary)
                     Spacer()
                     Text("100")
-                        .font(.system(size: 8, weight: .medium))
+                        .font(.caption2.weight(.medium))
                         .foregroundStyle(.tertiary)
                 }
 

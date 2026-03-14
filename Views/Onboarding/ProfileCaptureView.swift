@@ -6,8 +6,6 @@ import UIKit
 struct ProfileCaptureView: View {
     let onComplete: (_ name: String?, _ email: String?, _ gender: Gender, _ age: Int?) -> Void
 
-    @State private var name = ""
-    @State private var email = ""
     @State private var gender: Gender?
     @State private var ageText = ""
     @State private var buttonTapCount = 0
@@ -50,57 +48,17 @@ struct ProfileCaptureView: View {
                 Text("About You")
                     .font(.title2.weight(.bold))
 
-                Text("This helps us personalize insights for your body. Everything stays on your device.")
+                Text("Heart rate, sleep, and recovery norms vary by age and gender. This helps compare your data to what\u{2019}s normal for you.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
                     .fixedSize(horizontal: false, vertical: true)
-
-                Text("Age and gender are required.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
             .padding(.bottom, 24)
 
             // Form fields
             VStack(spacing: 0) {
-                // Name
-                fieldRow {
-                    HStack {
-                        Text("Name")
-                            .font(.subheadline)
-                            .foregroundStyle(.primary)
-                        Spacer()
-                        TextField("Your name", text: $name)
-                            .font(.subheadline)
-                            .multilineTextAlignment(.trailing)
-                            .textContentType(.givenName)
-                            .autocorrectionDisabled()
-                    }
-                }
-
-                Divider().padding(.leading, 16)
-
-                // Email
-                fieldRow {
-                    HStack {
-                        Text("Email")
-                            .font(.subheadline)
-                            .foregroundStyle(.primary)
-                        Spacer()
-                        TextField("your@email.com", text: $email)
-                            .font(.subheadline)
-                            .multilineTextAlignment(.trailing)
-                            .textContentType(.emailAddress)
-                            .keyboardType(.emailAddress)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                    }
-                }
-
-                Divider().padding(.leading, 16)
-
                 // Age
                 fieldRow {
                     HStack {
@@ -156,8 +114,6 @@ struct ProfileCaptureView: View {
             Button {
                 buttonTapCount += 1
                 showValidationErrors = true
-                let trimmedName = name.trimmingCharacters(in: .whitespaces)
-                let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
                 let requiredGender = gender
                 let requiredAge = parsedAge
 
@@ -167,8 +123,6 @@ struct ProfileCaptureView: View {
                     screen: .onboarding,
                     metadata: [
                         "step_name": "profile_capture",
-                        "has_name": trimmedName.isEmpty ? 0 : 1,
-                        "has_email": trimmedEmail.isEmpty ? 0 : 1,
                         "gender": requiredGender?.rawValue ?? "missing",
                         "has_age": requiredAge != nil ? 1 : 0
                     ]
@@ -179,8 +133,8 @@ struct ProfileCaptureView: View {
                 isAgeFieldFocused = false
                 saveDeviceIdSilently()
                 onComplete(
-                    trimmedName.isEmpty ? nil : trimmedName,
-                    trimmedEmail.isEmpty ? nil : trimmedEmail,
+                    nil,
+                    nil,
                     requiredGender,
                     requiredAge
                 )

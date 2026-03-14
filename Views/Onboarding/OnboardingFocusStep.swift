@@ -85,13 +85,13 @@ struct OnboardingFocusSelectionStep: View {
                             .padding(.horizontal, 16)
                             .padding(.vertical, 10)
                             .background(
-                                isSelected ? focus.color.opacity(0.15) : Color.secondary.opacity(0.08),
+                                isSelected ? focus.color.opacity(0.2) : Color.secondary.opacity(0.06),
                                 in: Capsule()
                             )
                             .foregroundStyle(isSelected ? focus.color : .secondary)
                             .overlay(
                                 Capsule()
-                                    .strokeBorder(isSelected ? focus.color.opacity(0.4) : .clear, lineWidth: 1.5)
+                                    .strokeBorder(isSelected ? focus.color : .clear, lineWidth: 2)
                             )
                     }
                     .sensoryFeedback(.selection, trigger: isSelected)
