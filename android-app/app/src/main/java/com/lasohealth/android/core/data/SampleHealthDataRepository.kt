@@ -6,18 +6,25 @@ import com.lasohealth.android.core.model.ActionCardUi
 import com.lasohealth.android.core.model.ActivityUi
 import com.lasohealth.android.core.model.AlertSeverity
 import com.lasohealth.android.core.model.AlertUi
+import com.lasohealth.android.core.model.AnnualReportUiState
 import com.lasohealth.android.core.model.AttentionUi
 import com.lasohealth.android.core.model.BodyInsightUi
+import com.lasohealth.android.core.model.BrainFactorUi
 import com.lasohealth.android.core.model.BrainHealthUiState
 import com.lasohealth.android.core.model.CategoryDetailUiState
 import com.lasohealth.android.core.model.CategoryMetricRow
+import com.lasohealth.android.core.model.CategoryMonthUi
+import com.lasohealth.android.core.model.CategoryPerformanceUi
 import com.lasohealth.android.core.model.CategoryScoreUi
 import com.lasohealth.android.core.model.CoachTargetUi
 import com.lasohealth.android.core.model.ConnectedDevicesUiState
 import com.lasohealth.android.core.model.CorrelationUi
 import com.lasohealth.android.core.model.CycleDetailUiState
+import com.lasohealth.android.core.model.DayHighlightUi
+import com.lasohealth.android.core.model.DecliningTrendUi
 import com.lasohealth.android.core.model.DeviceDetailUiState
 import com.lasohealth.android.core.model.DeviceUi
+import com.lasohealth.android.core.model.DiscoveryUi
 import com.lasohealth.android.core.model.ExploreUiState
 import com.lasohealth.android.core.model.HealthCategory
 import com.lasohealth.android.core.model.HealthMetric
@@ -26,12 +33,18 @@ import com.lasohealth.android.core.model.HealthStateTimelineUiState
 import com.lasohealth.android.core.model.HomeUiState
 import com.lasohealth.android.core.model.InsightUi
 import com.lasohealth.android.core.model.LiveUiState
+import com.lasohealth.android.core.model.MetricChangeMonthUi
 import com.lasohealth.android.core.model.MetricChangeUi
 import com.lasohealth.android.core.model.MetricContributionUi
 import com.lasohealth.android.core.model.MetricDetailUiState
 import com.lasohealth.android.core.model.MetricTileUi
+import com.lasohealth.android.core.model.MilestoneUi
+import com.lasohealth.android.core.model.MonthlyReviewUiState
+import com.lasohealth.android.core.model.PerformanceProfileUiState
+import com.lasohealth.android.core.model.PersonalRecordUi
 import com.lasohealth.android.core.model.PhaseDurationUi
 import com.lasohealth.android.core.model.PlatformStatus
+import com.lasohealth.android.core.model.RecommendationUi
 import com.lasohealth.android.core.model.SettingsUiState
 import com.lasohealth.android.core.model.SleepCoachUiState
 import com.lasohealth.android.core.model.SleepDayUi
@@ -41,8 +54,10 @@ import com.lasohealth.android.core.model.StreaksUi
 import com.lasohealth.android.core.model.StressMonitorUiState
 import com.lasohealth.android.core.model.TrendMetricUi
 import com.lasohealth.android.core.model.VitalityDetailUiState
+import com.lasohealth.android.core.model.VitalityImprovementUi
 import com.lasohealth.android.core.model.WeeklyReviewDetailUiState
 import com.lasohealth.android.core.model.WeeklyReviewUi
+import com.lasohealth.android.core.model.HeartRateEntry
 import com.lasohealth.android.core.model.WorkoutUi
 import java.util.Calendar
 
@@ -142,6 +157,23 @@ class SampleHealthDataRepository : HealthDataRepository {
                 narrative = "Your sleep improvements over the past week are directly driving your recovery gains.",
                 isChain = true,
             ),
+            correlations = listOf(
+                CorrelationUi(
+                    title = "Late caffeine vs deep sleep",
+                    summary = "Higher caffeine after 3 PM strongly lines up with lower deep sleep.",
+                    metricA = HealthMetric.CAFFEINE_INTAKE,
+                    metricB = HealthMetric.SLEEP_DEEP,
+                ),
+                CorrelationUi(
+                    title = "Training load vs readiness",
+                    summary = "Back-to-back hard sessions reduce next-day readiness more than longer workouts do.",
+                    metricA = HealthMetric.ACTIVE_CALORIES,
+                    metricB = HealthMetric.HEART_RATE_VARIABILITY,
+                ),
+            ),
+            activityStreak = 12,
+            sleepStreak = 5,
+            recoveryStreak = 8,
         )
     }
 
@@ -162,6 +194,14 @@ class SampleHealthDataRepository : HealthDataRepository {
                 activeCalories = 586,
                 exerciseMinutes = 41,
                 standHours = 10,
+                moveGoal = 600,
+                exerciseGoal = 30,
+                standGoal = 12,
+                moveProgress = 0.98f,
+                exerciseProgress = 1.37f,
+                standProgress = 0.83f,
+                distance = 6.2,
+                flightsClimbed = 8,
             ),
             workout = WorkoutUi(
                 title = "Tempo Run",
@@ -177,6 +217,16 @@ class SampleHealthDataRepository : HealthDataRepository {
             todayHeartRateMax = 156,
             hasFreshData = true,
             isAging = false,
+            recentHeartRates = listOf(
+                HeartRateEntry(30, 72), HeartRateEntry(27, 75), HeartRateEntry(24, 78),
+                HeartRateEntry(21, 82), HeartRateEntry(18, 95), HeartRateEntry(15, 110),
+                HeartRateEntry(12, 125), HeartRateEntry(9, 132), HeartRateEntry(6, 128),
+                HeartRateEntry(3, 122), HeartRateEntry(1, 118),
+            ),
+            systolic = 122,
+            diastolic = 78,
+            bodyTemperature = 36.6,
+            bloodPressureStatus = "Normal",
         )
     }
 
@@ -188,6 +238,7 @@ class SampleHealthDataRepository : HealthDataRepository {
             metricsTracked = 26,
             totalDataPoints = 18294,
             daysOfData = 47,
+            insightCount = 14,
             trendMetrics = listOf(
                 TrendMetricUi(HealthMetric.SLEEP_DURATION, "Sleep duration is up 6% versus last week."),
                 TrendMetricUi(HealthMetric.HEART_RATE_VARIABILITY, "HRV improved 8% and is trending upward."),
@@ -221,6 +272,17 @@ class SampleHealthDataRepository : HealthDataRepository {
                     metricB = HealthMetric.HEART_RATE_VARIABILITY,
                 ),
             ),
+            decliningTrends = listOf(
+                DecliningTrendUi(
+                    metric = HealthMetric.SLEEP_DEEP,
+                    title = "Deep sleep dropped 18% over the last 14 days",
+                    recommendation = "Try winding down earlier and limiting screens before bed.",
+                    typeLabel = "14-day decline",
+                ),
+            ),
+            currentHealthState = "Recovering",
+            healthStateDays = 3,
+            strongestCategory = HealthCategory.HEART,
         )
     }
 
@@ -260,6 +322,14 @@ class SampleHealthDataRepository : HealthDataRepository {
                     metric,
                 ),
             ),
+            chartValues = listOf(
+                68f, 70f, 65f, 72f, 71f, 69f, 74f, 73f, 70f, 68f,
+                66f, 71f, 75f, 72f, 70f, 69f, 67f, 73f, 76f, 74f,
+                71f, 69f, 72f, 75f, 73f, 70f, 68f, 71f, 74f, 72f,
+            ),
+            weekOverWeekBadge = "+3% vs last week",
+            dataSource = "Apple Watch Series 9",
+            actionRecommendation = "Your resting HR is slightly elevated. Consider extra recovery today.",
         )
     }
 
@@ -640,73 +710,133 @@ class SampleHealthDataRepository : HealthDataRepository {
             delta = -4,
             score = 84,
             trendDirection = "Improving",
+            paceLabel = "Healthy",
+            heroNarrative = "You\u2019re aging slower than your calendar age. Your cardiovascular fitness and sleep quality are the strongest contributors.",
             contributions = listOf(
                 MetricContributionUi(
                     name = "Resting Heart Rate",
                     value = "62 bpm",
                     impact = "Strong positive",
+                    metricAge = 24,
+                    delta = -8,
+                    gaugePosition = 0.82f,
+                    subtitle = "Well below age norm",
+                    metric = HealthMetric.RESTING_HEART_RATE,
                 ),
                 MetricContributionUi(
                     name = "VO2 Max",
                     value = "42.5 mL/kg/min",
                     impact = "Above average",
+                    metricAge = 26,
+                    delta = -6,
+                    gaugePosition = 0.74f,
+                    subtitle = "Top 30th percentile",
+                    metric = HealthMetric.VO2_MAX,
                 ),
                 MetricContributionUi(
                     name = "Sleep Quality",
                     value = "7h 24m avg",
                     impact = "Positive",
+                    metricAge = 29,
+                    delta = -3,
+                    gaugePosition = 0.68f,
+                    subtitle = "Consistent duration",
+                    metric = HealthMetric.SLEEP_DURATION,
                 ),
                 MetricContributionUi(
                     name = "Body Composition",
                     value = "18.4% body fat",
                     impact = "Healthy range",
+                    metricAge = 30,
+                    delta = -2,
+                    gaugePosition = 0.62f,
+                    subtitle = "Within healthy range",
+                    metric = HealthMetric.BODY_FAT_PERCENTAGE,
                 ),
                 MetricContributionUi(
                     name = "HRV",
                     value = "48 ms",
                     impact = "Moderate",
+                    metricAge = 33,
+                    delta = 1,
+                    gaugePosition = 0.45f,
+                    subtitle = "Slightly below norm",
+                    metric = HealthMetric.HEART_RATE_VARIABILITY,
                 ),
                 MetricContributionUi(
                     name = "Activity Level",
                     value = "9,240 steps/day",
                     impact = "Above target",
+                    metricAge = 27,
+                    delta = -5,
+                    gaugePosition = 0.76f,
+                    subtitle = "Exceeds daily target",
+                    metric = HealthMetric.STEPS,
                 ),
             ),
+            improvements = listOf(
+                VitalityImprovementUi(
+                    metricName = "HRV",
+                    impactYears = 3,
+                    description = "Improving HRV through stress management and sleep consistency could reduce your vitality age by up to 3 years.",
+                ),
+                VitalityImprovementUi(
+                    metricName = "VO2 Max",
+                    impactYears = 2,
+                    description = "Adding 2 more cardio sessions per week could improve your cardiovascular age further.",
+                ),
+            ),
+            trendHistory = listOf(33f, 32f, 31f, 31f, 30f, 30f, 29f, 29f, 28f, 28f, 28f, 28f),
             historicalComparison = "Your vitality age has improved by 2 years over the past 6 months, driven primarily by improvements in cardiovascular fitness and sleep consistency.",
         )
     }
 
     override fun strainDetailState(): StrainDetailUiState {
         return StrainDetailUiState(
-            strainScore = 6.2,
-            strainLevel = "Moderate",
-            targetMin = 5.0,
-            targetMax = 8.0,
-            zoneMinutes = 41,
-            weeklyHistory = listOf(4.8f, 7.2f, 5.5f, 6.9f, 3.2f, 8.1f, 6.2f),
-            balanceLabel = "Well balanced",
-            guidance = "You're within your optimal strain zone for today. Your recovery supports another moderate session tomorrow, but consider a lighter day if your resting HR stays elevated.",
+            strainScore = 14.2,
+            strainLevel = "High",
+            targetMin = 10.0,
+            targetMax = 16.0,
+            zoneMinutes = mapOf(1 to 45.0, 2 to 30.0, 3 to 22.0, 4 to 15.0, 5 to 8.0),
+            weeklyHistory = listOf(8.5f, 12.3f, 15.8f, 5.2f, 11.0f, 18.9f, 14.2f),
+            balanceLabel = "Optimal",
+            guidance = "Your recovery supports moderate-to-high strain today. Focus on sustained aerobic work in Zone 2-3 for optimal cardiovascular benefit without overreaching.",
+            trainingZone = "Zone 2-3 (Aerobic Base)",
+            strainBalance = "Optimal",
         )
     }
 
     override fun stressMonitorState(): StressMonitorUiState {
         return StressMonitorUiState(
-            stressScore = 28,
-            stressLevel = "Low",
-            hrvDeviation = "-3% from baseline",
-            hrElevation = "+2 bpm above resting",
-            weeklyScores = listOf(32, 41, 28, 35, 22, 38, 28),
-            weeklyAverage = 32,
-            previousWeekAverage = 36,
+            stressScore = 1.2,
+            stressLevel = "Mild",
+            hrvDeviation = 0.35,
+            hrElevation = 0.22,
+            weeklyScores = listOf(0.8, 1.1, 1.5, 1.2, 0.9, 0.6, 1.2),
+            weeklyAverage = 1.04,
+            previousWeekAverage = 1.32,
         )
     }
 
     override fun brainHealthState(): BrainHealthUiState {
         return BrainHealthUiState(
-            score = 76,
+            score = 78,
             grade = "B+",
-            stateLabel = "Cognitive readiness is good",
-            weeklyHistory = listOf(72, 68, 74, 78, 71, 80, 76),
+            stateLabel = "Focused",
+            headline = "Good recovery signals from last night",
+            weeklyHistory = listOf(72, 68, 75, 80, 77, 82, 78),
+            cognitiveReadiness = 82,
+            memoryRecovery = 71,
+            stressCognitionLoad = 75,
+            neurovascularFitness = 80,
+            circadianAlignment = 68,
+            confidence = 0.85f,
+            trend = "improving",
+            topFactors = listOf(
+                BrainFactorUi("REM Sleep", "12% above baseline", isPositive = true),
+                BrainFactorUi("HRV", "Trending up this week", isPositive = true),
+                BrainFactorUi("Sleep Regularity", "Inconsistent bedtimes", isPositive = false),
+            ),
             contributingFactors = listOf(
                 MetricContributionUi(
                     name = "Sleep Quality",
@@ -843,6 +973,111 @@ class SampleHealthDataRepository : HealthDataRepository {
             dataHistorySpan = "47 days",
             metricsTrackedCount = 26,
             isPro = false,
+        )
+    }
+
+    override fun annualReportState(): AnnualReportUiState {
+        return AnnualReportUiState(
+            year = 2025,
+            monthlyScores = listOf(72, 74, 76, 78, 75, 80, 82, 79, 81, 83, 80, 82),
+            averageScore = 79,
+            totalDaysTracked = 312,
+            insightsGenerated = 1847,
+            achievementsUnlocked = 24,
+            longestStreak = 47,
+            categoryPerformance = listOf(
+                CategoryPerformanceUi("Heart", "\u2764\uFE0F", 85, "Improving"),
+                CategoryPerformanceUi("Activity", "\uD83C\uDFC3", 82, "Stable"),
+                CategoryPerformanceUi("Respiratory", "\uD83C\uDF2C\uFE0F", 80, "Improving"),
+                CategoryPerformanceUi("Body", "\uD83E\uDDB4", 78, "Stable"),
+                CategoryPerformanceUi("Mobility", "\uD83E\uDDBF", 76, "Improving"),
+                CategoryPerformanceUi("Sleep", "\uD83C\uDF19", 74, "Declining"),
+                CategoryPerformanceUi("Mindfulness", "\uD83E\uDDD8", 68, "Stable"),
+            ),
+            milestones = listOf(
+                MilestoneUi("First Steps", "\uD83D\uDC63", "Jan 28"),
+                MilestoneUi("Week Warrior", "\uD83D\uDCAA", "Feb 3"),
+                MilestoneUi("Sleep Champion", "\uD83C\uDFC6", "Feb 12"),
+                MilestoneUi("Data Scientist", "\uD83D\uDD2C", "Feb 26"),
+                MilestoneUi("Iron Legs", "\uD83E\uDDBF", "Mar 8"),
+            ),
+            topDiscoveries = listOf(
+                DiscoveryUi("Late caffeine reduces deep sleep by 23% on average.", "Mar 15"),
+                DiscoveryUi("Zone 2 training improves next-day HRV more than HIIT.", "Apr 22"),
+                DiscoveryUi("Consistent bedtime boosts recovery score by 12 points.", "Jun 8"),
+                DiscoveryUi("Walking 8,000+ steps correlates with lower resting HR.", "Aug 14"),
+                DiscoveryUi("Mindfulness sessions reduce stress markers for 48 hours.", "Oct 3"),
+            ),
+            recommendations = listOf(
+                RecommendationUi(
+                    "Prioritize Sleep Consistency",
+                    "Your sleep score dipped in Q4. Focus on a consistent bedtime to reverse the trend.",
+                    "\uD83C\uDF19",
+                ),
+                RecommendationUi(
+                    "Add More Zone 2 Training",
+                    "Your cardiovascular gains plateau when training stays in Zone 4-5. Add 2 Zone 2 sessions per week.",
+                    "\uD83C\uDFC3",
+                ),
+                RecommendationUi(
+                    "Build a Mindfulness Habit",
+                    "Your mindfulness score has room to grow. Even 5 minutes daily shows measurable stress reduction.",
+                    "\uD83E\uDDD8",
+                ),
+            ),
+        )
+    }
+
+    override fun monthlyReviewState(): MonthlyReviewUiState {
+        return MonthlyReviewUiState(
+            monthName = "February",
+            year = 2026,
+            overallScore = 79,
+            scoreChangeFromPreviousMonth = 3,
+            dailyScores = listOf(
+                76, 78, 80, 82, 79, 74, 77, 81, 83, 85,
+                82, 80, 78, 75, 79, 82, 84, 86, 83, 80,
+                78, 76, 79, 81, 83, 80, 78, 77,
+            ),
+            bestDay = DayHighlightUi("Feb 18", 86, "Perfect sleep, morning workout, low stress all day."),
+            worstDay = DayHighlightUi("Feb 6", 74, "Short sleep, elevated resting HR, skipped exercise."),
+            categoryBreakdown = listOf(
+                CategoryMonthUi("Heart", 84, "Improving", listOf(82, 83, 84, 85, 84, 83, 85)),
+                CategoryMonthUi("Sleep", 76, "Stable", listOf(74, 76, 78, 75, 77, 76, 76)),
+                CategoryMonthUi("Activity", 81, "Improving", listOf(79, 80, 82, 83, 81, 80, 82)),
+                CategoryMonthUi("Body", 77, "Stable", listOf(77, 77, 78, 77, 76, 77, 78)),
+            ),
+            topChangedMetrics = listOf(
+                MetricChangeMonthUi("HRV", "+12%", "Up"),
+                MetricChangeMonthUi("Sleep Duration", "+8%", "Up"),
+                MetricChangeMonthUi("Resting HR", "-5%", "Down"),
+                MetricChangeMonthUi("Step Count", "-3%", "Down"),
+                MetricChangeMonthUi("VO2 Max", "+2%", "Up"),
+            ),
+            topInsights = listOf(
+                "Your sleep consistency improved significantly in the second half of the month.",
+                "HRV gains are the strongest driver of your score improvement.",
+                "Consider adding back a midweek walk to reverse the step count dip.",
+            ),
+        )
+    }
+
+    override fun performanceProfileState(): PerformanceProfileUiState {
+        return PerformanceProfileUiState(
+            overallScore = 82,
+            personalRecords = listOf(
+                PersonalRecordUi("Best HRV", "68 ms", "Mar 2, 2026", "\uD83D\uDC9A"),
+                PersonalRecordUi("Lowest RHR", "54 bpm", "Feb 18, 2026", "\u2764\uFE0F"),
+                PersonalRecordUi("Best Sleep Score", "94", "Feb 22, 2026", "\uD83C\uDF19"),
+                PersonalRecordUi("Highest VO2 Max", "44.2 mL/kg/min", "Mar 5, 2026", "\uD83C\uDF2C\uFE0F"),
+                PersonalRecordUi("Most Steps", "18,432", "Jan 31, 2026", "\uD83D\uDEB6"),
+                PersonalRecordUi("Longest Streak", "47 days", "Mar 14, 2026", "\uD83D\uDD25"),
+            ),
+            totalWorkouts = 68,
+            avgWeeklyStrain = "6.4",
+            recoveryDays = 24,
+            activeDaysPerWeek = 5.2f,
+            performanceTrend = "Improving",
         )
     }
 

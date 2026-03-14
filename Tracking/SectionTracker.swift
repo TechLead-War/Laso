@@ -114,9 +114,6 @@ final class SectionTracker {
         guard let start = appearDate else { return }
         let durationMs = Int(Date().timeIntervalSince(start) * 1000)
         AppAnalytics.shared.trackSectionViewed(section: section, tab: tab, durationMs: durationMs)
-        if durationMs >= Self.stuckThresholdMs {
-            AppAnalytics.shared.trackSectionStuck(section: section, tab: tab, durationMs: durationMs)
-        }
         appearDate = nil
     }
 

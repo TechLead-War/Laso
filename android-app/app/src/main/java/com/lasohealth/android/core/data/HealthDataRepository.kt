@@ -1,6 +1,7 @@
 package com.lasohealth.android.core.data
 
 import com.lasohealth.android.core.model.AchievementsUiState
+import com.lasohealth.android.core.model.AnnualReportUiState
 import com.lasohealth.android.core.model.BrainHealthUiState
 import com.lasohealth.android.core.model.CategoryDetailUiState
 import com.lasohealth.android.core.model.ConnectedDevicesUiState
@@ -13,6 +14,8 @@ import com.lasohealth.android.core.model.HealthStateTimelineUiState
 import com.lasohealth.android.core.model.HomeUiState
 import com.lasohealth.android.core.model.LiveUiState
 import com.lasohealth.android.core.model.MetricDetailUiState
+import com.lasohealth.android.core.model.MonthlyReviewUiState
+import com.lasohealth.android.core.model.PerformanceProfileUiState
 import com.lasohealth.android.core.model.PlatformStatus
 import com.lasohealth.android.core.model.SettingsUiState
 import com.lasohealth.android.core.model.SleepCoachUiState
@@ -42,4 +45,9 @@ interface HealthDataRepository {
     fun cycleDetailState(): CycleDetailUiState
     fun healthStateTimelineState(): HealthStateTimelineUiState
     fun settingsState(): SettingsUiState
+
+    // New screen states (matching iOS parity)
+    fun annualReportState(): AnnualReportUiState
+    fun monthlyReviewState(): MonthlyReviewUiState
+    fun performanceProfileState(): PerformanceProfileUiState
 }

@@ -185,7 +185,14 @@ struct HomeView: View {
                         scoreDelta: readinessDelta,
                         onTap: { showScoreGuide = true }
                     )
-                    .onAppear { recoveryTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 10) }
+                    .onAppear {
+                        recoveryTracker.appeared()
+                        maxScrollDepth = max(maxScrollDepth, 10)
+                        AppAnalytics.shared.trackScoreViewed(
+                            score: liveReadinessScore,
+                            previousScore: viewModel.scores.scoreChangeFromYesterday.map { liveReadinessScore - $0 }
+                        )
+                    }
                     .onDisappear { recoveryTracker.disappeared() }
 
                     // 2. Today's Action — single source of truth for what to do

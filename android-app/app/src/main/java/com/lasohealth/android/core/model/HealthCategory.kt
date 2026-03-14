@@ -1,8 +1,8 @@
 package com.lasohealth.android.core.model
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DirectionsRun
-import androidx.compose.material.icons.filled.DirectionsWalk
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Hearing
 import androidx.compose.material.icons.filled.Hotel
@@ -37,11 +37,11 @@ enum class HealthCategory(
 ) {
     HEART("Heart & Cardio", "Heart", CategoryHeart, Icons.Filled.Favorite),
     SLEEP("Sleep", "Sleep", CategorySleep, Icons.Filled.Hotel),
-    ACTIVITY("Activity", "Activity", CategoryActivity, Icons.Filled.DirectionsRun),
+    ACTIVITY("Activity", "Activity", CategoryActivity, Icons.AutoMirrored.Filled.DirectionsRun),
     BODY("Body & Vitals", "Body", CategoryBody, Icons.Filled.Person),
     RESPIRATORY("Respiratory", "Lungs", CategoryRespiratory, Icons.Filled.Air),
     MINDFULNESS("Mindfulness", "Mind", CategoryMindfulness, Icons.Filled.SelfImprovement),
-    MOBILITY("Mobility", "Mobility", CategoryMobility, Icons.Filled.DirectionsWalk),
+    MOBILITY("Mobility", "Mobility", CategoryMobility, Icons.AutoMirrored.Filled.DirectionsWalk),
     NUTRITION("Nutrition", "Nutrition", CategoryNutrition, Icons.Filled.Restaurant),
     HEARING("Hearing", "Hearing", CategoryHearing, Icons.Filled.Hearing),
 }

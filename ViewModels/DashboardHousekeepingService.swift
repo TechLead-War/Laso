@@ -81,6 +81,14 @@ final class DashboardHousekeepingService {
             delta: scoreChange
         )
 
+        // Track whether this refresh delivered new value to the user
+        analytics.trackValueDelivered(
+            newInsightsCount: payload.insights.count,
+            scoreChanged: scoreChange != 0,
+            newAnomalies: payload.currentAnomalies.filter { $0.severity >= .warning }.count,
+            newCorrelations: payload.correlationsCount
+        )
+
         let anomalyCount = payload.currentAnomalies.filter { $0.severity >= .warning }.count
         let categoryBreakdown = payload.currentCategoryScores.compactMap { score -> String? in
             guard let category = score.category else { return nil }

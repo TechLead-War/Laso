@@ -26,7 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bedtime
-import androidx.compose.material.icons.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Lightbulb
@@ -66,6 +66,7 @@ import com.lasohealth.android.core.design.LasoTokens
 import com.lasohealth.android.core.design.SectionHeading
 import com.lasohealth.android.core.model.AlertUi
 import com.lasohealth.android.core.model.BodyInsightUi
+import com.lasohealth.android.core.model.CorrelationUi
 import com.lasohealth.android.core.model.HealthMetric
 import com.lasohealth.android.core.model.HomeUiState
 import com.lasohealth.android.core.model.MetricTileUi
@@ -171,6 +172,9 @@ fun HomeScreen(
                 score = state.score,
                 totalDaysTracked = state.totalDaysTracked,
                 progressToNextLevel = state.progressToNextLevel,
+                activityStreak = state.activityStreak,
+                sleepStreak = state.sleepStreak,
+                recoveryStreak = state.recoveryStreak,
                 onClick = { navController.navigate(AppRoute.Achievements.route) },
             )
         }
@@ -182,6 +186,27 @@ fun HomeScreen(
                 BodyInsightsSection(
                     bodyInsight = state.bodyInsight,
                     onClick = { navController.navigate(AppRoute.InsightsDetail.route) },
+                )
+            }
+        }
+
+        // 7b. Correlations Section (iOS: "From Your Data") — .padding(.top, 8)
+        if (state.correlations.isNotEmpty()) {
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                HomeCorrelationsSection(
+                    correlations = state.correlations,
+                    onSeeAll = { navController.navigate(AppRoute.CorrelationsDetail.route) },
+                )
+            }
+        }
+
+        // 7c. Journal Prompt Card (iOS: shows after 6 PM) — .padding(.top, 8)
+        if (LocalTime.now().hour >= 18) {
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                JournalPromptCard(
+                    onClick = { navController.navigate(AppRoute.JournalEntry.route) },
                 )
             }
         }
@@ -489,7 +514,7 @@ private fun TodaysActionCard(
         // "TODAY'S ACTION" label with sparkle icon
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.padding(bottom = 10.dp),
         ) {
             Icon(
@@ -511,13 +536,13 @@ private fun TodaysActionCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // Emoji in 40dp circle with scoreColor bg at 0.15 alpha
+            // Emoji in 40dp rounded rect with scoreColor bg at 0.15 alpha
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .background(
                         color = scoreColor.copy(alpha = 0.15f),
-                        shape = CircleShape,
+                        shape = RoundedCornerShape(10.dp),
                     ),
                 contentAlignment = Alignment.Center,
             ) {
@@ -533,7 +558,7 @@ private fun TodaysActionCard(
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -603,13 +628,23 @@ private fun AlertBannerRow(
                     ),
             )
 
-            // Warning icon colored
-            Icon(
-                imageVector = Icons.Filled.Warning,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = accentColor,
-            )
+            // Warning icon in colored circle background
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(
+                        color = accentColor.copy(alpha = 0.12f),
+                        shape = CircleShape,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Warning,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = accentColor,
+                )
+            }
 
             // Title + detail
             Column(
@@ -769,7 +804,7 @@ private fun MetricTile(
 /** Maps tile label to the matching iOS SF Symbol → Material Icon.
  *  iOS icons: figure.run, moon.fill, flame.fill, brain, waveform.path.ecg, heart.fill */
 private fun metricTileIcon(label: String, metric: HealthMetric): ImageVector = when (label) {
-    "Vitality" -> Icons.Filled.DirectionsRun
+    "Vitality" -> Icons.AutoMirrored.Filled.DirectionsRun
     "Sleep" -> Icons.Filled.Bedtime
     "Strain" -> Icons.Filled.LocalFireDepartment
     "Brain" -> Icons.Filled.Psychology
@@ -788,12 +823,14 @@ private fun LevelBadgeCard(
     score: Int,
     totalDaysTracked: Int,
     progressToNextLevel: Float,
+    activityStreak: Int,
+    sleepStreak: Int,
+    recoveryStreak: Int,
     onClick: () -> Unit,
 ) {
     val scoreColor = LasoTokens.scoreColor(score)
     val levelEmoji = levelEmoji(level)
 
-    // Animate the progress bar
     val animatedProgress by animateFloatAsState(
         targetValue = progressToNextLevel,
         animationSpec = tween(durationMillis = 800),
@@ -809,9 +846,9 @@ private fun LevelBadgeCard(
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            // Level emoji in 44dp circle
+            // Left: level icon
             Box(
                 modifier = Modifier
                     .size(44.dp)
@@ -827,38 +864,98 @@ private fun LevelBadgeCard(
                 )
             }
 
+            // Center: level name + progress
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(5.dp),
             ) {
-                // Level name
                 Text(
                     text = level,
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
 
-                // Progress bar — 8dp height, rounded, animated
                 LinearProgressIndicator(
                     progress = { animatedProgress },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(4.dp)),
+                        .height(5.dp)
+                        .clip(RoundedCornerShape(3.dp)),
                     color = scoreColor,
-                    trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                    trackColor = scoreColor.copy(alpha = 0.15f),
                 )
 
-                // "X days · Y% to next"
                 val percentToNext = (progressToNextLevel * 100).toInt()
                 Text(
                     text = "$totalDaysTracked days \u00B7 $percentToNext% to next",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
                 )
             }
+
+            // Right: mini streak counters (iOS streakColumn)
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                StreakRow(
+                    icon = Icons.AutoMirrored.Filled.DirectionsRun,
+                    count = activityStreak,
+                    isHot = activityStreak >= 7,
+                )
+                StreakRow(
+                    icon = Icons.Filled.Bedtime,
+                    count = sleepStreak,
+                    isHot = sleepStreak >= 7,
+                )
+                StreakRow(
+                    icon = Icons.Filled.Favorite,
+                    count = recoveryStreak,
+                    isHot = recoveryStreak >= 7,
+                )
+            }
+
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                modifier = Modifier.size(14.dp),
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+            )
         }
+    }
+}
+
+@Composable
+private fun StreakRow(
+    icon: ImageVector,
+    count: Int,
+    isHot: Boolean,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        if (isHot) {
+            Icon(
+                imageVector = Icons.Filled.LocalFireDepartment,
+                contentDescription = null,
+                modifier = Modifier.size(12.dp),
+                tint = AccentOrange,
+            )
+        }
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(12.dp),
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+        )
+        Text(
+            text = "$count",
+            style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
+            fontWeight = FontWeight.Bold,
+        )
     }
 }
 
@@ -895,13 +992,17 @@ private fun BodyInsightsSection(
         Icons.Filled.Lightbulb
     }
 
-    Surface(
+    val gradientBrush = Brush.linearGradient(
+        colors = listOf(bgColor, bgColor.copy(alpha = 0.85f)),
+    )
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(LasoTokens.CardRadius))
+            .background(gradientBrush)
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(LasoTokens.CardRadius),
-        color = bgColor,
     ) {
         Row(
             modifier = Modifier.padding(LasoTokens.CardPadding),
@@ -1010,6 +1111,182 @@ private fun LastUpdatedFooter(lastUpdated: String) {
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
         )
+    }
+}
+
+// endregion
+
+// region 10. Correlations Section (iOS: "From Your Data")
+
+@Composable
+private fun HomeCorrelationsSection(
+    correlations: List<CorrelationUi>,
+    onSeeAll: () -> Unit,
+) {
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            SectionHeading(title = "From Your Data")
+            Text(
+                text = "See all",
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.clickable(onClick = onSeeAll),
+            )
+        }
+
+        correlations.take(2).forEach { correlation ->
+            LasoCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onSeeAll),
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .background(
+                                    color = correlation.metricA.category.accentColor.copy(alpha = 0.15f),
+                                    shape = CircleShape,
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = correlation.metricA.category.icon,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = correlation.metricA.category.accentColor,
+                            )
+                        }
+
+                        Text(
+                            text = "\u2192",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .background(
+                                    color = correlation.metricB.category.accentColor.copy(alpha = 0.15f),
+                                    shape = CircleShape,
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = correlation.metricB.category.icon,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = correlation.metricB.category.accentColor,
+                            )
+                        }
+
+                        Text(
+                            text = correlation.title,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                        )
+                    }
+
+                    Text(
+                        text = correlation.summary,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+    }
+}
+
+// endregion
+
+// region 11. Journal Prompt Card (iOS: shows after 6 PM)
+
+@Composable
+private fun JournalPromptCard(
+    onClick: () -> Unit,
+) {
+    val purple = Color(0xFF7C3AED)
+
+    LasoCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clickable(onClick = onClick),
+        tint = purple,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .background(
+                        color = purple.copy(alpha = LasoTokens.BadgeBgOpacity),
+                        shape = CircleShape,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "\u270F\uFE0F",
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            }
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = "How was today?",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = "Capture your thoughts before the day ends",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+            )
+        }
     }
 }
 

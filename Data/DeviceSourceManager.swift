@@ -83,8 +83,15 @@ final class DeviceSourceManager {
         }
         let activeCount = connectedDevices.filter(\.isActive).count
         let primary = connectedDevices.first?.device.rawValue ?? "none"
+        let hasWatch = connectedDevices.contains { $0.device == .appleWatch && $0.isActive }
         UserDefaults.standard.set(primary, forKey: AppKeys.Data.primaryDevice)
         AppAnalytics.shared.updateDeviceProperties(activeCount: activeCount, primaryDevice: primary)
+        AppAnalytics.shared.updateHealthSourceProperties(
+            hasAppleWatch: hasWatch,
+            sourceCount: activeCount,
+            primarySource: primary,
+            daysSinceFirstSync: SessionTracker.shared.daysSinceInstall
+        )
     }
 
     /// Query sources for a given sample type and return (source, metric, lastSampleDate) tuples

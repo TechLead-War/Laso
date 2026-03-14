@@ -124,12 +124,6 @@ struct ContentView: View {
             }
         }
         .onChange(of: connectivityMonitor.isOnline) { wasOnline, isOnline in
-            AppAnalytics.shared.trackConnectivityStateChanged(
-                isOnline: isOnline,
-                isExpensive: connectivityMonitor.isExpensive,
-                isConstrained: connectivityMonitor.isConstrained
-            )
-
             guard wasOnline == false, isOnline == true else { return }
             guard appStateStore.onboardingCompleted, scenePhase == .active else { return }
 

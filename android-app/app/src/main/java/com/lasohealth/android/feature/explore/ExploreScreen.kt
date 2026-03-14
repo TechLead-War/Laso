@@ -21,10 +21,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.NorthEast
 import androidx.compose.material.icons.filled.SouthEast
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -64,8 +65,11 @@ import com.lasohealth.android.core.model.HealthCategory
 import com.lasohealth.android.core.model.HealthMetric
 import com.lasohealth.android.core.model.TrendMetricUi
 import com.lasohealth.android.navigation.AppRoute
+import com.lasohealth.android.core.model.DecliningTrendUi
 import com.lasohealth.android.ui.theme.AccentGreen
+import com.lasohealth.android.ui.theme.AccentOrange
 import com.lasohealth.android.ui.theme.AccentRed
+import kotlin.math.abs
 
 @Composable
 fun ExploreScreen(
@@ -95,6 +99,7 @@ fun ExploreScreen(
                 metricsTracked = state.metricsTracked,
                 totalDataPoints = state.totalDataPoints,
                 daysOfData = state.daysOfData,
+                insightCount = state.insightCount,
             )
         }
 
@@ -120,11 +125,45 @@ fun ExploreScreen(
             )
         }
 
-        // 5. Needs Attention Section (conditional)
+        // 5. Health State Timeline Link (conditional — iOS: requires 30+ days)
+        if (state.currentHealthState != null) {
+            item {
+                HealthStateLinkSection(
+                    currentState = state.currentHealthState,
+                    daysInState = state.healthStateDays,
+                    onClick = { navController.navigate(AppRoute.HealthStateTimeline.route) },
+                )
+            }
+        }
+
+        // 6. Strongest Area (conditional — iOS: inline green positive anchor)
+        if (state.strongestCategory != null) {
+            item {
+                StrongestAreaRow(category = state.strongestCategory)
+            }
+        }
+
+        // 7. Needs Attention Section (conditional)
         if (state.needsAttention.isNotEmpty()) {
             item {
                 NeedsAttentionSection(
                     items = state.needsAttention,
+                    categoryScores = state.categoryScores,
+                    onItemClick = { metric ->
+                        navController.navigate(AppRoute.MetricDetail.createRoute(metric))
+                    },
+                    onCategoryClick = { category ->
+                        navController.navigate(AppRoute.CategoryDetail.createRoute(category))
+                    },
+                )
+            }
+        }
+
+        // 8. Declining Trends Section (conditional — iOS: requires 30+ days)
+        if (state.decliningTrends.isNotEmpty()) {
+            item {
+                DecliningTrendsSection(
+                    items = state.decliningTrends,
                     onItemClick = { metric ->
                         navController.navigate(AppRoute.MetricDetail.createRoute(metric))
                     },
@@ -132,7 +171,7 @@ fun ExploreScreen(
             }
         }
 
-        // 6. Correlations Section (conditional)
+        // 9. Correlations Section (conditional)
         if (state.correlations.isNotEmpty()) {
             item {
                 CorrelationsSection(
@@ -142,7 +181,7 @@ fun ExploreScreen(
             }
         }
 
-        // 7. Bottom spacer for nav bar clearance
+        // 10. Bottom spacer for nav bar clearance
         item {
             Spacer(modifier = Modifier.height(80.dp))
         }
@@ -293,8 +332,8 @@ private fun DataSummaryBar(
     metricsTracked: Int,
     totalDataPoints: Int,
     daysOfData: Int,
+    insightCount: Int = 0,
 ) {
-    // iOS: quaternary.opacity(0.3) in RoundedRectangle, not LasoCard
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -321,6 +360,12 @@ private fun DataSummaryBar(
             )
             SummaryStat(value = daysOfData.toString(), label = if (daysOfData == 1) "Day" else "Days", modifier = Modifier.weight(1f))
         }
+        VerticalDivider(
+            modifier = Modifier.fillMaxHeight().padding(vertical = 4.dp),
+            thickness = 1.dp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
+        )
+        SummaryStat(value = insightCount.toString(), label = "Insights", modifier = Modifier.weight(1f))
     }
 }
 
@@ -612,6 +657,15 @@ private fun CategoryRow(
             )
         }
 
+        // iOS: insight count caption on the right side
+        if (item.insightCount > 0) {
+            Text(
+                text = "${item.insightCount} insight${if (item.insightCount != 1) "s" else ""}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+            )
+        }
+
         // iOS: HealthScoreRing(size: 36, lineWidth: 4)
         HealthScoreRing(
             score = item.score,
@@ -635,9 +689,12 @@ private fun CategoryRow(
 @Composable
 private fun NeedsAttentionSection(
     items: List<AttentionUi>,
+    categoryScores: List<CategoryScoreUi> = emptyList(),
     onItemClick: (HealthMetric) -> Unit,
+    onCategoryClick: (HealthCategory) -> Unit = {},
 ) {
-    // iOS: VStack(alignment: .leading, spacing: 10) with background card
+    val weakCategories = categoryScores.filter { it.score < 75 }.sortedBy { it.score }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -648,7 +705,6 @@ private fun NeedsAttentionSection(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        // iOS: .headline
         Text(
             text = "Needs Attention",
             style = MaterialTheme.typography.titleMedium,
@@ -660,6 +716,46 @@ private fun NeedsAttentionSection(
                 item = item,
                 onClick = { onItemClick(item.metric) },
             )
+        }
+
+        // Weak category badges (iOS: below divider, score < 75)
+        if (weakCategories.isNotEmpty()) {
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 4.dp),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                weakCategories.take(4).forEach { contrib ->
+                    Column(
+                        modifier = Modifier
+                            .clickable { onCategoryClick(contrib.category) }
+                            .padding(horizontal = 4.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        Icon(
+                            imageVector = contrib.category.icon,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = contrib.category.accentColor,
+                        )
+                        Text(
+                            text = "${contrib.score}",
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
+                            fontWeight = FontWeight.Bold,
+                            color = if (contrib.score < 60) AccentRed else AccentOrange,
+                        )
+                        Text(
+                            text = contrib.category.shortName,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -717,6 +813,27 @@ private fun NeedsAttentionRow(
                 maxLines = 2,
             )
         }
+
+        // iOS: impact severity indicator — small red dot scaled by severity
+        val absSeverity = abs(item.impact)
+        val severityDotSize = when {
+            absSeverity >= 15 -> 8.dp
+            absSeverity >= 8 -> 6.dp
+            else -> 5.dp
+        }
+        val severityAlpha = when {
+            absSeverity >= 15 -> 1.0f
+            absSeverity >= 8 -> 0.75f
+            else -> 0.5f
+        }
+        Box(
+            modifier = Modifier
+                .size(severityDotSize)
+                .background(
+                    color = AccentRed.copy(alpha = severityAlpha),
+                    shape = CircleShape,
+                ),
+        )
 
         // iOS: impact number — .subheadline.weight(.bold).monospacedDigit(), .red
         Text(
@@ -812,7 +929,7 @@ private fun CorrelationCard(item: CorrelationUi) {
 
             // iOS: arrow.right .caption2 .tertiary
             Icon(
-                imageVector = Icons.Filled.ArrowForward,
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = null,
                 modifier = Modifier.size(12.dp),
                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
@@ -854,6 +971,195 @@ private fun CorrelationCard(item: CorrelationUi) {
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF9C27B0), // purple
                 )
+            }
+        }
+    }
+}
+
+// ── Health State Timeline Link ───────────────────────────────────────────────
+
+@Composable
+private fun HealthStateLinkSection(
+    currentState: String,
+    daysInState: Int,
+    onClick: () -> Unit,
+) {
+    val mintColor = Color(0xFF00C7BE) // iOS .mint
+
+    // iOS: card with mint/teal accent color
+    LasoCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        tint = mintColor,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            // iOS: gauge.open icon — rendered subtly in mint badge
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(
+                        color = mintColor.copy(alpha = 0.10f),
+                        shape = RoundedCornerShape(8.dp),
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Speed,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = mintColor.copy(alpha = 0.8f),
+                )
+            }
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = "Health States",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = "$currentState for $daysInState days",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                )
+            }
+
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                modifier = Modifier.size(14.dp),
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+            )
+        }
+    }
+}
+
+// ── Strongest Area Row ──────────────────────────────────────────────────────
+
+@Composable
+private fun StrongestAreaRow(category: HealthCategory) {
+    // iOS: simple inline text row, not a prominent card — minimal visual weight
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp, vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Icon(
+            imageVector = category.icon,
+            contentDescription = null,
+            modifier = Modifier.size(13.dp),
+            tint = AccentGreen.copy(alpha = 0.7f),
+        )
+        Text(
+            text = "Strongest: ${category.shortName}",
+            style = MaterialTheme.typography.bodySmall,
+            color = AccentGreen.copy(alpha = 0.7f),
+        )
+    }
+}
+
+// ── Declining Trends Section ────────────────────────────────────────────────
+
+@Composable
+private fun DecliningTrendsSection(
+    items: List<DecliningTrendUi>,
+    onItemClick: (HealthMetric) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = "Declining Trends",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+        )
+
+        items.forEach { item ->
+            LasoCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onItemClick(item.metric) },
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    // Orange warning icon
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(
+                                color = AccentOrange.copy(alpha = 0.12f),
+                                shape = RoundedCornerShape(10.dp),
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.SouthEast,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = AccentOrange,
+                        )
+                    }
+
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(3.dp),
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            Text(
+                                text = item.metric.displayName,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            // Type badge
+                            Text(
+                                text = item.typeLabel,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Medium,
+                                color = AccentOrange,
+                                modifier = Modifier
+                                    .background(
+                                        color = AccentOrange.copy(alpha = 0.12f),
+                                        shape = RoundedCornerShape(50),
+                                    )
+                                    .padding(horizontal = 8.dp, vertical = 2.dp),
+                            )
+                        }
+
+                        Text(
+                            text = item.title,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Medium,
+                        )
+
+                        Text(
+                            text = item.recommendation,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            maxLines = 2,
+                        )
+                    }
+
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                    )
+                }
             }
         }
     }

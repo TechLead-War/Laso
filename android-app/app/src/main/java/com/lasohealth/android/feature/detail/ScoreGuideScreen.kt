@@ -18,7 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Hotel
 import androidx.compose.material.icons.filled.MonitorHeart
@@ -252,7 +252,7 @@ fun ScoreGuideScreen(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
                     )
                     CategoryRow(
-                        icon = Icons.Filled.DirectionsRun,
+                        icon = Icons.AutoMirrored.Filled.DirectionsRun,
                         color = AccentGreen,
                         name = "Activity",
                         detail = "Steps, workouts, and energy burned",

@@ -37,5 +37,6 @@ final class AppLaunchCoordinator {
         }
 
         analyticsManager.configure()
+        AppAnalytics.shared.startScreenshotTracking()
     }
 }

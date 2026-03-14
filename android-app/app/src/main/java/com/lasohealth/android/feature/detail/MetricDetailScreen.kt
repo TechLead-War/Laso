@@ -1,5 +1,6 @@
 package com.lasohealth.android.feature.detail
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,8 +20,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Insights
+import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.NorthEast
+import androidx.compose.material.icons.filled.SouthEast
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Timeline
+import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.Watch
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -40,7 +48,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -102,7 +116,24 @@ fun MetricDetailScreen(
                 MetricCurrentValueHeader(state = state)
             }
 
-            // 2. Time Range Selector
+            // 2. Action Recommendation Banner (conditional — iOS: yellow lightbulb card)
+            if (state.actionRecommendation.isNotEmpty()) {
+                item(key = "actionBanner") {
+                    Column {
+                        ActionRecommendationBanner(
+                            text = state.actionRecommendation,
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
+                        )
+                    }
+                }
+            }
+
+            // 3. Time Range Selector
             item(key = "timeRange") {
                 TimeRangeSelector(
                     options = timeRangeOptions,
@@ -112,16 +143,31 @@ fun MetricDetailScreen(
                 )
             }
 
-            // 3. Stats Summary
-            item(key = "stats") {
-                MetricStatsSummaryCard(state = state)
+            // 4. Chart Visualization (the biggest gap — now filled)
+            if (state.chartValues.isNotEmpty()) {
+                item(key = "chart") {
+                    MetricChart(
+                        values = state.chartValues,
+                        color = categoryColor,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+                }
             }
 
-            // 4. Month-over-Month (conditional)
-            if (state.monthOverMonthChange != null) {
-                item(key = "monthOverMonth") {
-                    MetricMonthOverMonthCard(change = state.monthOverMonthChange)
+            // 5. Week-over-Week badge + Data Source (conditional)
+            if (state.weekOverWeekBadge.isNotEmpty() || state.dataSource.isNotEmpty()) {
+                item(key = "badges") {
+                    MetricBadgesRow(
+                        weekBadge = state.weekOverWeekBadge,
+                        dataSource = state.dataSource,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
                 }
+            }
+
+            // 6. Stats Summary (2-column: Average+Change | Range+Trend)
+            item(key = "stats") {
+                MetricStatsSummaryCard(state = state)
             }
 
             // 5. Historical Context (conditional)
@@ -256,7 +302,7 @@ private fun MetricCurrentValueHeader(state: MetricDetailUiState) {
     }
 }
 
-// ── Stats Summary (3-column) ─────────────────────────────────────────────────
+// ── Stats Summary (2-column: Average+Change | Range+Trend) ───────────────────
 
 @Composable
 private fun MetricStatsSummaryCard(state: MetricDetailUiState) {
@@ -271,32 +317,62 @@ private fun MetricStatsSummaryCard(state: MetricDetailUiState) {
                 .height(IntrinsicSize.Min),
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            MetricStatColumn(label = "Average", value = state.average, modifier = Modifier.weight(1f))
+            // Left column: Average + Change
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                MetricStatCell(label = "Average", value = state.average)
+                Spacer(modifier = Modifier.height(12.dp))
+                MetricStatCell(
+                    label = "Change",
+                    value = state.monthOverMonthChange ?: "—",
+                    valueColor = state.monthOverMonthChange?.let {
+                        if (!it.startsWith("-")) AccentGreen else AccentRed
+                    },
+                )
+            }
+
             VerticalDividerLine()
-            MetricStatColumn(label = "Min", value = state.min, modifier = Modifier.weight(1f))
-            VerticalDividerLine()
-            MetricStatColumn(label = "Max", value = state.max, modifier = Modifier.weight(1f))
+
+            // Right column: Range + Trend
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                MetricStatCell(label = "Range", value = "${state.min}–${state.max}")
+                Spacer(modifier = Modifier.height(12.dp))
+                MetricStatCell(
+                    label = "Trend",
+                    value = state.weekOverWeekBadge.ifEmpty { "—" },
+                    valueColor = if (state.weekOverWeekBadge.startsWith("+")) AccentGreen
+                    else if (state.weekOverWeekBadge.startsWith("-")) AccentRed
+                    else null,
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun MetricStatColumn(
+private fun MetricStatCell(
     label: String,
     value: String,
-    modifier: Modifier = Modifier,
+    valueColor: Color? = null,
 ) {
-    Column(
-        modifier = modifier.padding(vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = value,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Monospace,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = valueColor ?: MaterialTheme.colorScheme.onSurface,
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
@@ -318,54 +394,15 @@ private fun VerticalDividerLine() {
     )
 }
 
-// ── Month-over-Month ──────────────────────────────────────────────────────────
-
-@Composable
-private fun MetricMonthOverMonthCard(change: String) {
-    val isPositive = !change.startsWith("-")
-    val changeColor = if (isPositive) AccentGreen else AccentRed
-    val arrow = if (isPositive) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
-
-    LasoCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-    ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = "vs Last Month",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Icon(
-                    imageVector = arrow,
-                    contentDescription = if (isPositive) "Increased" else "Decreased",
-                    tint = changeColor,
-                    modifier = Modifier.size(24.dp),
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = change,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Monospace,
-                    color = changeColor,
-                )
-            }
-        }
-    }
-}
-
 // ── Historical Context ────────────────────────────────────────────────────────
+
+private val historicalFactIcons: List<ImageVector> = listOf(
+    Icons.Filled.Timeline,
+    Icons.Filled.TrendingUp,
+    Icons.Filled.Star,
+    Icons.Filled.History,
+    Icons.Filled.Insights,
+)
 
 @Composable
 private fun MetricHistoricalContextSection(facts: List<String>) {
@@ -375,15 +412,18 @@ private fun MetricHistoricalContextSection(facts: List<String>) {
     ) {
         SectionHeading(title = "From Your History")
 
-        facts.forEach { fact ->
+        facts.forEachIndexed { index, fact ->
+            val icon = historicalFactIcons[index % historicalFactIcons.size]
             LasoCard(modifier = Modifier.fillMaxWidth()) {
                 Row(
                     verticalAlignment = Alignment.Top,
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    Text(
-                        text = "\u23F0",
-                        style = MaterialTheme.typography.bodyMedium,
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     )
                     Text(
                         text = fact,
@@ -520,6 +560,229 @@ private fun MetricInsightsSection(
                         maxLines = 3,
                     )
                 }
+            }
+        }
+    }
+}
+
+// ── Action Recommendation Banner ─────────────────────────────────────────────
+
+@Composable
+private fun ActionRecommendationBanner(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                color = AccentYellow.copy(alpha = 0.12f),
+                shape = RoundedCornerShape(LasoTokens.CardRadius),
+            )
+            .padding(LasoTokens.CardPadding),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Lightbulb,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+            tint = AccentYellow,
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+// ── Metric Chart ─────────────────────────────────────────────────────────────
+
+@Composable
+private fun MetricChart(
+    values: List<Float>,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    if (values.size < 2) return
+
+    val minVal = values.min() - (values.max() - values.min()) * 0.1f
+    val maxVal = values.max() + (values.max() - values.min()) * 0.1f
+    val range = (maxVal - minVal).coerceAtLeast(1f)
+    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+
+    LasoCard(modifier = modifier.fillMaxWidth()) {
+        Column {
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp),
+            ) {
+                val w = size.width
+                val h = size.height
+                val n = values.size
+
+                val points = values.mapIndexed { index, value ->
+                    val x = (index.toFloat() / (n - 1)) * w
+                    val y = h - ((value - minVal) / range) * h
+                    Offset(x, y)
+                }
+
+                // Baseline dashed line at average
+                val avg = values.average().toFloat()
+                val avgY = h - ((avg - minVal) / range) * h
+                val dashPath = Path().apply {
+                    var x = 0f
+                    while (x < w) {
+                        moveTo(x, avgY)
+                        lineTo((x + 6.dp.toPx()).coerceAtMost(w), avgY)
+                        x += 12.dp.toPx()
+                    }
+                }
+                drawPath(
+                    path = dashPath,
+                    color = color.copy(alpha = 0.25f),
+                    style = Stroke(width = 1.dp.toPx()),
+                )
+
+                // Area fill
+                val areaPath = Path().apply {
+                    moveTo(points.first().x, h)
+                    points.forEach { lineTo(it.x, it.y) }
+                    lineTo(points.last().x, h)
+                    close()
+                }
+                drawPath(
+                    path = areaPath,
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            color.copy(alpha = 0.18f),
+                            color.copy(alpha = 0.02f),
+                        ),
+                    ),
+                )
+
+                // Line
+                val linePath = Path().apply {
+                    moveTo(points.first().x, points.first().y)
+                    for (i in 1 until points.size) {
+                        val prev = points[i - 1]
+                        val curr = points[i]
+                        val cpX = (prev.x + curr.x) / 2f
+                        cubicTo(cpX, prev.y, cpX, curr.y, curr.x, curr.y)
+                    }
+                }
+                drawPath(
+                    path = linePath,
+                    color = color,
+                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round),
+                )
+
+                // End dot
+                val last = points.last()
+                drawCircle(
+                    color = color,
+                    radius = 4.dp.toPx(),
+                    center = last,
+                )
+                drawCircle(
+                    color = Color.White,
+                    radius = 2.dp.toPx(),
+                    center = last,
+                )
+            }
+
+            // Time axis labels
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = "30d ago",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = labelColor,
+                )
+                Text(
+                    text = "15d ago",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = labelColor,
+                )
+                Text(
+                    text = "Today",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = labelColor,
+                )
+            }
+        }
+    }
+}
+
+// ── Badges Row (Week-over-Week + Data Source) ────────────────────────────────
+
+@Composable
+private fun MetricBadgesRow(
+    weekBadge: String,
+    dataSource: String,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        if (weekBadge.isNotEmpty()) {
+            val isPositive = weekBadge.startsWith("+")
+            val badgeColor = if (isPositive) AccentGreen else AccentRed
+            val icon = if (isPositive) Icons.Filled.NorthEast else Icons.Filled.SouthEast
+            Row(
+                modifier = Modifier
+                    .background(
+                        color = badgeColor.copy(alpha = 0.12f),
+                        shape = RoundedCornerShape(50),
+                    )
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(12.dp),
+                    tint = badgeColor,
+                )
+                Text(
+                    text = weekBadge,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = badgeColor,
+                )
+            }
+        }
+        if (dataSource.isNotEmpty()) {
+            Row(
+                modifier = Modifier
+                    .background(
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
+                        shape = RoundedCornerShape(50),
+                    )
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Watch,
+                    contentDescription = null,
+                    modifier = Modifier.size(12.dp),
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                )
+                Text(
+                    text = dataSource,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                )
             }
         }
     }

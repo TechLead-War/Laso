@@ -52,12 +52,20 @@ final class BackgroundRefreshCoordinator {
         schedule()
 
         let liveViewModel = liveViewModelFactory()
+        let startTime = Date()
         task.expirationHandler = {}
 
         liveViewModel.fetchHomeData()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + completionDelay) {
-            task.setTaskCompleted(success: liveViewModel.recovery.readinessScore != nil)
+            let success = liveViewModel.recovery.readinessScore != nil
+            let durationMs = Int(Date().timeIntervalSince(startTime) * 1000)
+            task.setTaskCompleted(success: success)
+            AppAnalytics.shared.trackBackgroundRefreshResult(
+                success: success,
+                durationMs: durationMs,
+                samplesLoaded: success ? 1 : 0
+            )
         }
     }
 }

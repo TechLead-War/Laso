@@ -27,16 +27,21 @@ import com.lasohealth.android.core.model.HealthCategory
 import com.lasohealth.android.core.model.HealthMetric
 import com.lasohealth.android.feature.detail.AchievementsScreen
 import com.lasohealth.android.feature.detail.BrainHealthScreen
+import com.lasohealth.android.feature.detail.BreathworkScreen
 import com.lasohealth.android.feature.detail.CategoryDetailScreen
 import com.lasohealth.android.feature.detail.ConnectedDevicesScreen
 import com.lasohealth.android.feature.detail.CorrelationsDetailScreen
 import com.lasohealth.android.feature.detail.CycleDetailScreen
 import com.lasohealth.android.feature.detail.DeviceDetailScreen
+import com.lasohealth.android.feature.detail.DeviceSetupGuideScreen
+import com.lasohealth.android.feature.detail.DiscoveryScreen
 import com.lasohealth.android.feature.detail.HealthStateTimelineScreen
 import com.lasohealth.android.feature.detail.InsightsDetailScreen
 import com.lasohealth.android.feature.detail.MetricDetailScreen
 import com.lasohealth.android.feature.detail.PaywallScreen
+import com.lasohealth.android.feature.detail.PerformanceProfileScreen
 import com.lasohealth.android.feature.detail.ScoreGuideScreen
+import com.lasohealth.android.feature.detail.SimulationScreen
 import com.lasohealth.android.feature.detail.SleepCoachScreen
 import com.lasohealth.android.feature.detail.StrainDetailScreen
 import com.lasohealth.android.feature.detail.StressMonitorScreen
@@ -44,7 +49,12 @@ import com.lasohealth.android.feature.detail.VitalityDetailScreen
 import com.lasohealth.android.feature.detail.WeeklyReviewScreen
 import com.lasohealth.android.feature.explore.ExploreScreen
 import com.lasohealth.android.feature.home.HomeScreen
+import com.lasohealth.android.feature.journal.ExpandedJournalScreen
+import com.lasohealth.android.feature.journal.JournalEntryScreen
+import com.lasohealth.android.feature.journal.JournalInsightsScreen
 import com.lasohealth.android.feature.live.LiveScreen
+import com.lasohealth.android.feature.reports.AnnualReportScreen
+import com.lasohealth.android.feature.reports.MonthlyReviewScreen
 import com.lasohealth.android.feature.settings.SettingsScreen
 
 @Composable
@@ -223,6 +233,52 @@ fun LasoNavScaffold(
                     correlations = exploreState.correlations,
                     navController = navController,
                 )
+            }
+
+            // New screens matching iOS parity
+            composable(AppRoute.Breathwork.route) {
+                BreathworkScreen(navController = navController)
+            }
+            composable(AppRoute.PerformanceProfile.route) {
+                PerformanceProfileScreen(
+                    state = repository.performanceProfileState(),
+                    navController = navController,
+                )
+            }
+            composable(AppRoute.Simulation.route) {
+                SimulationScreen(navController = navController)
+            }
+            composable(AppRoute.Discovery.route) {
+                DiscoveryScreen(
+                    score = homeState.score,
+                    categoryScores = exploreState.categoryScores.map { it.category.shortName to it.score },
+                    insights = homeState.insights.map { it.title },
+                    onDismiss = { navController.popBackStack() },
+                )
+            }
+            composable(AppRoute.DeviceSetupGuide.route) {
+                DeviceSetupGuideScreen(navController = navController)
+            }
+            composable(AppRoute.AnnualReport.route) {
+                AnnualReportScreen(
+                    state = repository.annualReportState(),
+                    navController = navController,
+                )
+            }
+            composable(AppRoute.MonthlyReview.route) {
+                MonthlyReviewScreen(
+                    state = repository.monthlyReviewState(),
+                    navController = navController,
+                )
+            }
+            composable(AppRoute.JournalEntry.route) {
+                JournalEntryScreen(navController = navController)
+            }
+            composable(AppRoute.JournalList.route) {
+                ExpandedJournalScreen(navController = navController)
+            }
+            composable(AppRoute.JournalInsights.route) {
+                JournalInsightsScreen(navController = navController)
             }
 
             // Parameterized routes

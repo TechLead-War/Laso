@@ -30,8 +30,11 @@ final class NotificationManager {
     @discardableResult
     func requestAuthorization() async -> Bool {
         do {
-            return try await center.requestAuthorization(options: [.alert, .sound, .badge])
+            let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
+            AppAnalytics.shared.updateNotificationProperties(enabled: granted)
+            return granted
         } catch {
+            AppAnalytics.shared.updateNotificationProperties(enabled: false)
             print("Notification authorization failed: \(error.localizedDescription)")
             return false
         }

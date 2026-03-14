@@ -26,6 +26,10 @@ data class HomeUiState(
     val weeklyReview: WeeklyReviewUi,
     val illnessWarning: IllnessWarningUi? = null,
     val bodyInsight: BodyInsightUi? = null,
+    val correlations: List<CorrelationUi> = emptyList(),
+    val activityStreak: Int = 0,
+    val sleepStreak: Int = 0,
+    val recoveryStreak: Int = 0,
 )
 
 data class IllnessWarningUi(
@@ -103,6 +107,13 @@ data class LiveUiState(
     val todayHeartRateMax: Int? = null,
     val hasFreshData: Boolean = false,
     val isAging: Boolean = false,
+    val isStale: Boolean = false,
+    val hasAnyData: Boolean = true,
+    val recentHeartRates: List<HeartRateEntry> = emptyList(),
+    val systolic: Int? = null,
+    val diastolic: Int? = null,
+    val bodyTemperature: Double? = null,
+    val bloodPressureStatus: String = "Normal",
 )
 
 data class ActivityUi(
@@ -110,6 +121,14 @@ data class ActivityUi(
     val activeCalories: Int,
     val exerciseMinutes: Int,
     val standHours: Int,
+    val moveGoal: Int = 500,
+    val exerciseGoal: Int = 30,
+    val standGoal: Int = 12,
+    val moveProgress: Float = 0f,
+    val exerciseProgress: Float = 0f,
+    val standProgress: Float = 0f,
+    val distance: Double = 0.0,
+    val flightsClimbed: Int = 0,
 )
 
 data class WorkoutUi(
@@ -119,6 +138,11 @@ data class WorkoutUi(
     val suggestion: String,
 )
 
+data class HeartRateEntry(
+    val minutesAgo: Int,
+    val value: Int,
+)
+
 data class ExploreUiState(
     val overallScore: Int,
     val scoreChangeFromLastWeek: Int,
@@ -126,10 +150,23 @@ data class ExploreUiState(
     val metricsTracked: Int,
     val totalDataPoints: Int,
     val daysOfData: Int,
+    val insightCount: Int = 0,
     val trendMetrics: List<TrendMetricUi>,
     val categoryScores: List<CategoryScoreUi>,
     val needsAttention: List<AttentionUi>,
     val correlations: List<CorrelationUi>,
+    val decliningTrends: List<DecliningTrendUi> = emptyList(),
+    val currentHealthState: String? = null,
+    val healthStateDays: Int = 0,
+    val strongestCategory: HealthCategory? = null,
+    val hasData: Boolean = true,
+)
+
+data class DecliningTrendUi(
+    val metric: HealthMetric,
+    val title: String,
+    val recommendation: String,
+    val typeLabel: String = "Declining",
 )
 
 data class TrendMetricUi(
@@ -140,6 +177,7 @@ data class TrendMetricUi(
 data class CategoryScoreUi(
     val category: HealthCategory,
     val score: Int,
+    val insightCount: Int = 0,
 )
 
 data class AttentionUi(
@@ -176,6 +214,10 @@ data class MetricDetailUiState(
     val categoryImpact: String,
     val historicalFacts: List<String>,
     val relatedInsights: List<InsightUi>,
+    val chartValues: List<Float> = emptyList(),
+    val weekOverWeekBadge: String = "",
+    val dataSource: String = "",
+    val actionRecommendation: String = "",
 )
 
 data class CategoryDetailUiState(
@@ -296,14 +338,30 @@ data class VitalityDetailUiState(
     val delta: Int,
     val score: Int,
     val trendDirection: String,
+    val paceLabel: String = "Healthy",
+    val heroNarrative: String = "",
     val contributions: List<MetricContributionUi>,
+    val improvements: List<VitalityImprovementUi> = emptyList(),
+    val trendHistory: List<Float> = emptyList(),
     val historicalComparison: String?,
+    val methodologyText: String = "Vitality Age compares your health metrics against age-matched population norms. Each metric contributes a component age — the weighted average becomes your Vitality Age. Lower is better.",
 )
 
 data class MetricContributionUi(
     val name: String,
     val value: String,
     val impact: String,
+    val metricAge: Int = 0,
+    val delta: Int = 0,
+    val gaugePosition: Float = 0.5f,
+    val subtitle: String = "",
+    val metric: HealthMetric? = null,
+)
+
+data class VitalityImprovementUi(
+    val metricName: String,
+    val impactYears: Int,
+    val description: String,
 )
 
 data class StrainDetailUiState(
@@ -311,28 +369,45 @@ data class StrainDetailUiState(
     val strainLevel: String,
     val targetMin: Double,
     val targetMax: Double,
-    val zoneMinutes: Int,
+    val zoneMinutes: Map<Int, Double> = emptyMap(),
     val weeklyHistory: List<Float>,
     val balanceLabel: String,
     val guidance: String,
+    val trainingZone: String = "",
+    val strainBalance: String = "Optimal",
 )
 
 data class StressMonitorUiState(
-    val stressScore: Int,
+    val stressScore: Double,
     val stressLevel: String,
-    val hrvDeviation: String,
-    val hrElevation: String,
-    val weeklyScores: List<Int>,
-    val weeklyAverage: Int,
-    val previousWeekAverage: Int,
+    val hrvDeviation: Double = 0.0,
+    val hrElevation: Double = 0.0,
+    val weeklyScores: List<Double> = emptyList(),
+    val weeklyAverage: Double = 0.0,
+    val previousWeekAverage: Double = 0.0,
 )
 
 data class BrainHealthUiState(
     val score: Int,
     val grade: String,
     val stateLabel: String,
+    val headline: String = "",
     val weeklyHistory: List<Int>,
     val contributingFactors: List<MetricContributionUi>,
+    val cognitiveReadiness: Int = 0,
+    val memoryRecovery: Int = 0,
+    val stressCognitionLoad: Int = 0,
+    val neurovascularFitness: Int = 0,
+    val circadianAlignment: Int = 0,
+    val confidence: Float = 1f,
+    val trend: String = "stable",
+    val topFactors: List<BrainFactorUi> = emptyList(),
+)
+
+data class BrainFactorUi(
+    val label: String,
+    val impact: String,
+    val isPositive: Boolean,
 )
 
 data class SleepCoachUiState(
@@ -397,4 +472,95 @@ data class SettingsUiState(
     val dataHistorySpan: String,
     val metricsTrackedCount: Int,
     val isPro: Boolean,
+)
+
+// ── Report Models ───────────────────────────────────────────────────────────
+
+data class AnnualReportUiState(
+    val year: Int,
+    val monthlyScores: List<Int>,
+    val averageScore: Int,
+    val totalDaysTracked: Int,
+    val insightsGenerated: Int,
+    val achievementsUnlocked: Int,
+    val longestStreak: Int,
+    val categoryPerformance: List<CategoryPerformanceUi>,
+    val milestones: List<MilestoneUi>,
+    val topDiscoveries: List<DiscoveryUi>,
+    val recommendations: List<RecommendationUi>,
+)
+
+data class CategoryPerformanceUi(
+    val name: String,
+    val emoji: String,
+    val score: Int,
+    val trend: String,
+)
+
+data class MilestoneUi(
+    val title: String,
+    val emoji: String,
+    val date: String,
+)
+
+data class DiscoveryUi(
+    val text: String,
+    val date: String,
+)
+
+data class RecommendationUi(
+    val title: String,
+    val description: String,
+    val emoji: String,
+)
+
+data class MonthlyReviewUiState(
+    val monthName: String,
+    val year: Int,
+    val overallScore: Int,
+    val scoreChangeFromPreviousMonth: Int,
+    val dailyScores: List<Int>,
+    val bestDay: DayHighlightUi?,
+    val worstDay: DayHighlightUi?,
+    val categoryBreakdown: List<CategoryMonthUi>,
+    val topChangedMetrics: List<MetricChangeMonthUi>,
+    val topInsights: List<String>,
+)
+
+data class DayHighlightUi(
+    val date: String,
+    val score: Int,
+    val reason: String,
+)
+
+data class CategoryMonthUi(
+    val name: String,
+    val averageScore: Int,
+    val trend: String,
+    val dailyScores: List<Int>,
+)
+
+data class MetricChangeMonthUi(
+    val name: String,
+    val changePercent: String,
+    val direction: String,
+)
+
+// ── Performance Profile Models ──────────────────────────────────────────────
+
+data class PerformanceProfileUiState(
+    val overallScore: Int,
+    val personalRecords: List<PersonalRecordUi>,
+    val totalWorkouts: Int,
+    val avgWeeklyStrain: String,
+    val recoveryDays: Int,
+    val activeDaysPerWeek: Float,
+    val performanceTrend: String,
+)
+
+data class PersonalRecordUi(
+    val label: String,
+    val value: String,
+    val date: String,
+    val emoji: String,
 )

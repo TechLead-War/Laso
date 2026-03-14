@@ -174,9 +174,7 @@ struct FeedbackSheet: View {
                 .buttonStyle(.borderedProminent)
                 .padding(.bottom, 32)
         }
-        .onAppear {
-            AppAnalytics.shared.trackFeedbackThankYouShown(category: selectedCategory.rawValue)
-        }
+        .onAppear {}
     }
 
     // MARK: - Submit

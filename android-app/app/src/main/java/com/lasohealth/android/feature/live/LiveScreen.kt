@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,14 +27,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Air
 import androidx.compose.material.icons.filled.CellTower
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.DirectionsRun
-import androidx.compose.material.icons.filled.DirectionsWalk
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.MonitorHeart
+import androidx.compose.material.icons.filled.FlightLand
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MonitorHeart
+import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.WaterDrop
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -44,8 +47,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -61,10 +69,14 @@ import com.lasohealth.android.ui.theme.AccentOrange
 import com.lasohealth.android.ui.theme.AccentRed
 import com.lasohealth.android.ui.theme.AccentYellow
 import com.lasohealth.android.ui.theme.CategoryRespiratory
+import kotlin.math.min
+
+// Colors matching iOS activity rings
+private val RingPink = Color(0xFFFF2D55)
+private val RingCyan = Color(0xFF00BCD4)
+private val AccentPurple = Color(0xFF9C27B0)
 
 // ── Live Screen ──────────────────────────────────────────────────────────────
-// Mirrors the iOS Live tab layout: header, heart-rate hero, vitals grid,
-// activity card, conditional workout card, status footer.
 
 @Composable
 fun LiveScreen(
@@ -80,22 +92,41 @@ fun LiveScreen(
         // 1. Header
         item { LiveHeader(state = state) }
 
-        // 2. Heart Rate Hero Card
-        item { HeartRateHeroCard(state = state) }
+        if (!state.hasAnyData) {
+            // Empty state — waiting for data
+            item { WaitingForDataView() }
+        } else if (state.isStale && !state.isStreaming) {
+            // Stale vitals prompt
+            item { StaleVitalsPrompt(state = state) }
+            item { ActivityRingsCard(state = state) }
+            if (state.workout != null) {
+                item { WorkoutCard(workout = state.workout, readinessScore = state.readinessScore) }
+            }
+            item { StatusFooter(label = state.lastUpdatedLabel) }
+        } else {
+            // Full live UI
+            // 2. Heart Rate Hero Card
+            item { HeartRateHeroCard(state = state) }
 
-        // 3. Vitals Grid (SpO2 + Respiratory Rate)
-        item { VitalsGrid(state = state) }
+            // 3. Vitals Grid (SpO2 + Respiratory Rate)
+            item { VitalsGrid(state = state) }
 
-        // 4. Activity Card
-        item { ActivityCard(state = state) }
+            // 4. Activity Rings Card
+            item { ActivityRingsCard(state = state) }
 
-        // 5. Workout Card (conditional)
-        if (state.workout != null) {
-            item { WorkoutCard(workout = state.workout, readinessScore = state.readinessScore) }
+            // 5. Blood Pressure + Temperature (conditional)
+            if (state.systolic != null || state.bodyTemperature != null) {
+                item { BloodPressureTempRow(state = state) }
+            }
+
+            // 6. Workout Card (conditional)
+            if (state.workout != null) {
+                item { WorkoutCard(workout = state.workout, readinessScore = state.readinessScore) }
+            }
+
+            // 7. Status Footer
+            item { StatusFooter(label = state.lastUpdatedLabel) }
         }
-
-        // 6. Status Footer
-        item { StatusFooter(label = state.lastUpdatedLabel) }
     }
 }
 
@@ -103,14 +134,17 @@ fun LiveScreen(
 
 @Composable
 private fun LiveHeader(state: LiveUiState) {
-    // iOS: HStack { VStack(title + status) | Spacer | device icon }
     val dotColor = when {
         state.hasFreshData -> AccentGreen
         state.isAging -> AccentYellow
+        state.isStale -> AccentOrange
+        !state.hasAnyData -> Color.Gray
         else -> AccentOrange
     }
 
     val statusLabel = when {
+        !state.hasAnyData -> "Waiting for data..."
+        state.isStale -> "Data is stale"
         state.isStreaming && state.hasFreshData -> "Streaming"
         state.isAging -> "Updating..."
         else -> "Waiting for data..."
@@ -121,16 +155,12 @@ private fun LiveHeader(state: LiveUiState) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Left: title + status row below (iOS VStack spacing: 4)
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            // iOS: .largeTitle.bold()
             Text(
                 text = "Live",
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
             )
-
-            // Status dot + label (iOS: HStack spacing: 6)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -146,7 +176,6 @@ private fun LiveHeader(state: LiveUiState) {
                         )
                         .background(color = dotColor, shape = CircleShape),
                 )
-                // iOS: .caption, .secondary
                 Text(
                     text = statusLabel,
                     style = MaterialTheme.typography.bodySmall,
@@ -154,14 +183,213 @@ private fun LiveHeader(state: LiveUiState) {
                 )
             }
         }
-
-        // Right: device icon (iOS: waveform.path.ecg, .title2, .secondary)
         Icon(
             imageVector = Icons.Filled.MonitorHeart,
             contentDescription = null,
             modifier = Modifier.size(28.dp),
             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
         )
+    }
+}
+
+// ─── Waiting For Data (Empty State) ─────────────────────────────────────────
+
+@Composable
+private fun WaitingForDataView() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 40.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Filled.MonitorHeart,
+            contentDescription = null,
+            modifier = Modifier.size(56.dp),
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Waiting for Live Data",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+        )
+
+        Text(
+            text = "Live heart rate, oxygen, and respiratory updates need a wearable source that syncs into Health.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            modifier = Modifier.padding(horizontal = 32.dp),
+        )
+
+        Text(
+            text = "Fresh samples usually appear within a minute",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Tips card
+        LasoCard(modifier = Modifier.fillMaxWidth()) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                WaitingTipRow(icon = Icons.Filled.MonitorHeart, text = "Wear your wearable and keep it nearby")
+                WaitingTipRow(icon = Icons.Filled.Favorite, text = "Open the companion app or start a quick workout to generate a fresh sample")
+                WaitingTipRow(icon = Icons.Filled.DateRange, text = "Return after the first wearable sync")
+            }
+        }
+    }
+}
+
+@Composable
+private fun WaitingTipRow(icon: ImageVector, text: String) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(24.dp),
+            tint = AccentBlue,
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+// ─── Stale Vitals Prompt ────────────────────────────────────────────────────
+
+@Composable
+private fun StaleVitalsPrompt(state: LiveUiState) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // Device prompt
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    MaterialTheme.colorScheme.surfaceVariant,
+                    RoundedCornerShape(14.dp),
+                )
+                .padding(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.MonitorHeart,
+                contentDescription = null,
+                modifier = Modifier.size(28.dp),
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = "Live vitals data is stale",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = "Reopen the companion app or wear the device again to refresh live vitals.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    maxLines = 2,
+                )
+            }
+        }
+
+        // Last known readings
+        LasoCard(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.DateRange,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                )
+                Text(
+                    text = "Last Known Readings",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                )
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                if (state.currentHeartRate != null) {
+                    StaleReadingPill(
+                        icon = Icons.Filled.Favorite,
+                        color = AccentRed,
+                        value = "${state.currentHeartRate}",
+                        unit = "bpm",
+                    )
+                }
+                StaleReadingPill(
+                    icon = Icons.Filled.WaterDrop,
+                    color = AccentBlue,
+                    value = "${state.bloodOxygen}",
+                    unit = "%",
+                )
+                StaleReadingPill(
+                    icon = Icons.Filled.Air,
+                    color = CategoryRespiratory,
+                    value = "${state.respiratoryRate.toInt()}",
+                    unit = "br/m",
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun StaleReadingPill(
+    icon: ImageVector,
+    color: Color,
+    value: String,
+    unit: String,
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(12.dp),
+                tint = color.copy(alpha = 0.6f),
+            )
+            Row(
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.spacedBy(1.dp),
+            ) {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                )
+                Text(
+                    text = unit,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
+                )
+            }
+        }
     }
 }
 
@@ -190,7 +418,6 @@ private fun HeartRateHeroCard(state: LiveUiState) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // Pulsing heart icon — 64dp circle, red bg 0.1f, heart 32dp
             Box(
                 modifier = Modifier
                     .size(64.dp)
@@ -209,7 +436,6 @@ private fun HeartRateHeroCard(state: LiveUiState) {
                 )
             }
 
-            // HR value (52sp, bold, Monospace) + "bpm" inline (iOS: firstTextBaseline alignment)
             Column(
                 modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.Start,
@@ -245,13 +471,12 @@ private fun HeartRateHeroCard(state: LiveUiState) {
                 }
             }
 
-            // Zone badge capsule (white text on zoneColor bg)
             HeartRateZoneBadge(zoneLabel = state.heartRateZoneLabel)
         }
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Zone progress bar — 8dp height
+        // Zone progress bar
         ZoneProgressBar(
             progress = state.heartRateZonePercent,
             zoneLabel = state.heartRateZoneLabel,
@@ -259,7 +484,7 @@ private fun HeartRateHeroCard(state: LiveUiState) {
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Session stats: 3-column Min/Avg/Max with vertical dividers
+        // Session stats: Min/Avg/Max
         if (state.heartRateMin != null || state.heartRateAvg != null || state.heartRateMax != null) {
             Row(
                 modifier = Modifier
@@ -305,7 +530,7 @@ private fun HeartRateHeroCard(state: LiveUiState) {
             Spacer(modifier = Modifier.height(10.dp))
         }
 
-        // Today range: calendar icon + "Today: XX-XX bpm" (iOS matched)
+        // Today range
         if (state.todayHeartRateMin != null && state.todayHeartRateMax != null) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -321,6 +546,116 @@ private fun HeartRateHeroCard(state: LiveUiState) {
                     text = "Today: ${state.todayHeartRateMin}\u2013${state.todayHeartRateMax} bpm",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+        }
+
+        // 30-minute mini chart (iOS: Swift Charts line + area)
+        if (state.recentHeartRates.size > 1) {
+            HeartRateMiniChart(
+                entries = state.recentHeartRates.map { it.minutesAgo to it.value },
+            )
+        }
+    }
+}
+
+@Composable
+private fun HeartRateMiniChart(
+    entries: List<Pair<Int, Int>>,
+) {
+    val sortedEntries = entries.sortedBy { it.first }.reversed() // oldest first (highest minutesAgo)
+    val minVal = (sortedEntries.minOfOrNull { it.second } ?: 60) - 5
+    val maxVal = (sortedEntries.maxOfOrNull { it.second } ?: 160) + 5
+    val range = (maxVal - minVal).coerceAtLeast(1).toFloat()
+    val gridColor = MaterialTheme.colorScheme.onSurface
+    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+
+    Column {
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(80.dp),
+        ) {
+            val w = size.width
+            val h = size.height
+            val n = sortedEntries.size
+            if (n < 2) return@Canvas
+
+            // Horizontal dashed grid lines at BPM levels
+            val gridBpmLevels = listOf(60, 80, 100, 120)
+            gridBpmLevels.forEach { bpm ->
+                if (bpm in minVal..maxVal) {
+                    val gridY = h - ((bpm - minVal) / range) * h
+                    val gridDashPath = Path().apply {
+                        var gx = 0f
+                        while (gx < w) {
+                            moveTo(gx, gridY)
+                            lineTo((gx + 4.dp.toPx()).coerceAtMost(w), gridY)
+                            gx += 8.dp.toPx()
+                        }
+                    }
+                    drawPath(
+                        path = gridDashPath,
+                        color = gridColor.copy(alpha = 0.08f),
+                        style = Stroke(width = 1.dp.toPx()),
+                    )
+                }
+            }
+
+            val points = sortedEntries.mapIndexed { index, (_, value) ->
+                val x = (index.toFloat() / (n - 1)) * w
+                val y = h - ((value - minVal) / range) * h
+                Offset(x, y)
+            }
+
+            // Area fill (red gradient, fading to transparent)
+            val areaPath = Path().apply {
+                moveTo(points.first().x, h)
+                points.forEach { lineTo(it.x, it.y) }
+                lineTo(points.last().x, h)
+                close()
+            }
+            drawPath(
+                path = areaPath,
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        AccentRed.copy(alpha = 0.15f),
+                        AccentRed.copy(alpha = 0.02f),
+                    ),
+                ),
+            )
+
+            // Line
+            val linePath = Path().apply {
+                moveTo(points.first().x, points.first().y)
+                for (i in 1 until points.size) {
+                    // Catmull-Rom-like smooth interpolation using cubic bezier
+                    val prev = if (i > 0) points[i - 1] else points[i]
+                    val curr = points[i]
+                    val cpX = (prev.x + curr.x) / 2f
+                    cubicTo(cpX, prev.y, cpX, curr.y, curr.x, curr.y)
+                }
+            }
+            drawPath(
+                path = linePath,
+                color = AccentRed.copy(alpha = 0.7f),
+                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round),
+            )
+        }
+
+        // Time axis labels
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            listOf("30m", "20m", "10m", "Now").forEach { label ->
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = labelColor,
                 )
             }
         }
@@ -359,7 +694,6 @@ private fun ZoneProgressBar(
             .height(8.dp)
             .clip(RoundedCornerShape(4.dp)),
     ) {
-        // Background gradient bar (blue->green->yellow->red at 0.2f alpha)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -377,7 +711,6 @@ private fun ZoneProgressBar(
                 ),
         )
 
-        // Active fill gradient (blue->zoneColor)
         if (clampedProgress > 0f) {
             Box(
                 modifier = Modifier
@@ -392,7 +725,6 @@ private fun ZoneProgressBar(
             )
         }
 
-        // White dot indicator at end
         if (clampedProgress > 0f) {
             Box(
                 modifier = Modifier
@@ -427,7 +759,6 @@ private fun SessionStatCell(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        // Value + "bpm" (iOS: firstTextBaseline alignment, colored)
         if (value != null) {
             Row(
                 verticalAlignment = Alignment.Bottom,
@@ -455,7 +786,6 @@ private fun SessionStatCell(
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
             )
         }
-        // Label below value
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
@@ -483,12 +813,11 @@ private fun VitalsGrid(state: LiveUiState) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(LasoTokens.ItemGap),
     ) {
-        // Blood Oxygen card — tint=AccentBlue
+        // Blood Oxygen card
         LasoCard(
             modifier = Modifier.weight(1f),
             tint = AccentBlue,
         ) {
-            // WaterDrop icon in 28dp blue circle + "Blood Oxygen" label
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -516,7 +845,6 @@ private fun VitalsGrid(state: LiveUiState) {
                 )
             }
             Spacer(modifier = Modifier.height(10.dp))
-            // Value "XX%" (titleLarge Monospace bold)
             Text(
                 text = "${state.bloodOxygen}%",
                 style = MaterialTheme.typography.titleLarge.copy(
@@ -525,7 +853,6 @@ private fun VitalsGrid(state: LiveUiState) {
                 fontWeight = FontWeight.Bold,
             )
             Spacer(modifier = Modifier.height(6.dp))
-            // Status dot + "Normal"/"Low" colored text
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -547,12 +874,11 @@ private fun VitalsGrid(state: LiveUiState) {
             }
         }
 
-        // Respiratory Rate card — tint=CategoryRespiratory
+        // Respiratory Rate card
         LasoCard(
             modifier = Modifier.weight(1f),
             tint = CategoryRespiratory,
         ) {
-            // Air icon in 28dp teal circle + "Respiratory Rate" label
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -580,7 +906,6 @@ private fun VitalsGrid(state: LiveUiState) {
                 )
             }
             Spacer(modifier = Modifier.height(10.dp))
-            // Value "XX br/min" (titleLarge Monospace bold)
             Text(
                 text = "${state.respiratoryRate.toInt()} br/min",
                 style = MaterialTheme.typography.titleLarge.copy(
@@ -589,7 +914,6 @@ private fun VitalsGrid(state: LiveUiState) {
                 fontWeight = FontWeight.Bold,
             )
             Spacer(modifier = Modifier.height(6.dp))
-            // Status dot + "Normal"/"Abnormal" colored text
             val isNormal = state.respiratoryRate in 12.0..20.0
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -613,95 +937,229 @@ private fun VitalsGrid(state: LiveUiState) {
     }
 }
 
-// ─── 4. Activity Card ────────────────────────────────────────────────────────
+// ─── 4. Activity Rings Card ─────────────────────────────────────────────────
 
 @Composable
-private fun ActivityCard(state: LiveUiState) {
-    LasoCard(
-        modifier = Modifier.fillMaxWidth(),
-        tint = AccentGreen,
-    ) {
-        // "Activity Rings" title (matching iOS .headline)
+private fun ActivityRingsCard(state: LiveUiState) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text = "Activity Rings",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
         )
 
-        Spacer(modifier = Modifier.height(LasoTokens.ItemGap))
+        // Main rings card
+        LasoCard(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Triple concentric rings — Canvas
+                Box(
+                    modifier = Modifier.size(100.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Canvas(modifier = Modifier.size(100.dp)) {
+                        val center = Offset(size.width / 2f, size.height / 2f)
+                        val strokeWidth = 8.dp.toPx()
+                        val startAngle = -90f
 
-        // 4 rows with HorizontalDivider between
-        ActivityStatRow(
-            icon = Icons.Filled.DirectionsWalk,
-            iconColor = AccentGreen,
-            label = "Steps",
-            value = formatNumber(state.activity.steps),
+                        // Stand ring (outer) — cyan, 90dp diameter
+                        val standRadius = 45.dp.toPx()
+                        drawArc(
+                            color = RingCyan.copy(alpha = 0.15f),
+                            startAngle = 0f,
+                            sweepAngle = 360f,
+                            useCenter = false,
+                            topLeft = Offset(center.x - standRadius, center.y - standRadius),
+                            size = Size(standRadius * 2, standRadius * 2),
+                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                        )
+                        drawArc(
+                            color = RingCyan,
+                            startAngle = startAngle,
+                            sweepAngle = 360f * min(state.activity.standProgress, 1f),
+                            useCenter = false,
+                            topLeft = Offset(center.x - standRadius, center.y - standRadius),
+                            size = Size(standRadius * 2, standRadius * 2),
+                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                        )
+
+                        // Exercise ring (middle) — green, 70dp diameter
+                        val exerciseRadius = 35.dp.toPx()
+                        drawArc(
+                            color = AccentGreen.copy(alpha = 0.15f),
+                            startAngle = 0f,
+                            sweepAngle = 360f,
+                            useCenter = false,
+                            topLeft = Offset(center.x - exerciseRadius, center.y - exerciseRadius),
+                            size = Size(exerciseRadius * 2, exerciseRadius * 2),
+                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                        )
+                        drawArc(
+                            color = AccentGreen,
+                            startAngle = startAngle,
+                            sweepAngle = 360f * min(state.activity.exerciseProgress, 1f),
+                            useCenter = false,
+                            topLeft = Offset(center.x - exerciseRadius, center.y - exerciseRadius),
+                            size = Size(exerciseRadius * 2, exerciseRadius * 2),
+                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                        )
+
+                        // Move ring (inner) — pink, 50dp diameter
+                        val moveRadius = 25.dp.toPx()
+                        drawArc(
+                            color = RingPink.copy(alpha = 0.15f),
+                            startAngle = 0f,
+                            sweepAngle = 360f,
+                            useCenter = false,
+                            topLeft = Offset(center.x - moveRadius, center.y - moveRadius),
+                            size = Size(moveRadius * 2, moveRadius * 2),
+                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                        )
+                        drawArc(
+                            color = RingPink,
+                            startAngle = startAngle,
+                            sweepAngle = 360f * min(state.activity.moveProgress, 1f),
+                            useCenter = false,
+                            topLeft = Offset(center.x - moveRadius, center.y - moveRadius),
+                            size = Size(moveRadius * 2, moveRadius * 2),
+                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                        )
+                    }
+                }
+
+                // Labels column
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    RingLabel(
+                        color = RingPink,
+                        label = "Move",
+                        value = "${state.activity.activeCalories}/${state.activity.moveGoal} kcal",
+                        progress = state.activity.moveProgress,
+                    )
+                    RingLabel(
+                        color = AccentGreen,
+                        label = "Exercise",
+                        value = "${state.activity.exerciseMinutes}/${state.activity.exerciseGoal} min",
+                        progress = state.activity.exerciseProgress,
+                    )
+                    RingLabel(
+                        color = RingCyan,
+                        label = "Stand",
+                        value = "${state.activity.standHours}/${state.activity.standGoal} hrs",
+                        progress = state.activity.standProgress,
+                    )
+                }
+            }
+        }
+
+        // Quick stats row (Steps / Distance / Flights) — iOS quickStatPill
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(LasoTokens.ItemGap),
+        ) {
+            QuickStatPill(
+                icon = Icons.AutoMirrored.Filled.DirectionsWalk,
+                value = formatNumber(state.activity.steps),
+                label = "Steps",
+                color = AccentGreen,
+                modifier = Modifier.weight(1f),
+            )
+            QuickStatPill(
+                icon = Icons.Filled.LocationOn,
+                value = String.format("%.1f km", state.activity.distance),
+                label = "Distance",
+                color = AccentBlue,
+                modifier = Modifier.weight(1f),
+            )
+            QuickStatPill(
+                icon = Icons.Filled.FlightLand,
+                value = "${state.activity.flightsClimbed}",
+                label = "Flights",
+                color = AccentPurple,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun RingLabel(
+    color: Color,
+    label: String,
+    value: String,
+    progress: Float,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(color, CircleShape),
         )
-        ActivityDivider()
-        ActivityStatRow(
-            icon = Icons.Filled.LocalFireDepartment,
-            iconColor = AccentOrange,
-            label = "Active Calories",
-            value = "${state.activity.activeCalories} kcal",
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            modifier = Modifier.width(52.dp),
         )
-        ActivityDivider()
-        ActivityStatRow(
-            icon = Icons.Filled.Timer,
-            iconColor = AccentBlue,
-            label = "Exercise Minutes",
-            value = "${state.activity.exerciseMinutes} min",
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.weight(1f),
         )
-        ActivityDivider()
-        ActivityStatRow(
-            icon = Icons.Filled.DirectionsRun,
-            iconColor = MaterialTheme.colorScheme.primary,
-            label = "Stand Hours",
-            value = "${state.activity.standHours} hrs",
+        Text(
+            text = "${(progress * 100).toInt()}%",
+            style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
+            fontWeight = FontWeight.Bold,
+            color = color,
         )
     }
 }
 
 @Composable
-private fun ActivityStatRow(
+private fun QuickStatPill(
     icon: ImageVector,
-    iconColor: Color,
-    label: String,
     value: String,
+    label: String,
+    color: Color,
+    modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    Column(
+        modifier = modifier
+            .background(
+                color = color.copy(alpha = LasoTokens.BadgeBgOpacity),
+                shape = RoundedCornerShape(LasoTokens.CardRadius),
+            )
+            .padding(vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            modifier = Modifier.size(18.dp),
-            tint = iconColor,
-        )
-        Spacer(modifier = Modifier.width(10.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.size(16.dp),
+            tint = color,
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontFamily = FontFamily.Monospace,
-            ),
+            style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
             fontWeight = FontWeight.Bold,
         )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+        )
     }
-}
-
-@Composable
-private fun ActivityDivider() {
-    HorizontalDivider(
-        modifier = Modifier.padding(vertical = 2.dp),
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-    )
 }
 
 private fun formatNumber(value: Int): String {
@@ -712,7 +1170,125 @@ private fun formatNumber(value: Int): String {
     }
 }
 
-// ─── 5. Workout Card (conditional) — matches iOS LiveWorkoutSection ─────────
+// ─── 5. Blood Pressure + Temperature ────────────────────────────────────────
+
+@Composable
+private fun BloodPressureTempRow(state: LiveUiState) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(LasoTokens.ItemGap),
+    ) {
+        if (state.systolic != null && state.diastolic != null) {
+            LasoCard(modifier = Modifier.weight(1f)) {
+                // Header
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.MonitorHeart,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = AccentPurple,
+                    )
+                    Text(
+                        text = "Blood Pressure",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                // Value
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    Text(
+                        text = "${state.systolic}/${state.diastolic}",
+                        style = MaterialTheme.typography.titleLarge.copy(fontFamily = FontFamily.Monospace),
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text = "mmHg",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        modifier = Modifier.padding(bottom = 2.dp),
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                // Status
+                val bpColor = when (state.bloodPressureStatus) {
+                    "Normal" -> AccentGreen
+                    "Elevated" -> AccentYellow
+                    "High" -> AccentOrange
+                    else -> AccentGreen
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .background(bpColor, CircleShape),
+                    )
+                    Text(
+                        text = state.bloodPressureStatus,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium,
+                        color = bpColor,
+                    )
+                }
+            }
+        }
+
+        if (state.bodyTemperature != null) {
+            LasoCard(modifier = Modifier.weight(1f)) {
+                // Header
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Thermostat,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = AccentOrange,
+                    )
+                    Text(
+                        text = "Temperature",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                // Value
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    Text(
+                        text = String.format("%.1f", state.bodyTemperature),
+                        style = MaterialTheme.typography.titleLarge.copy(fontFamily = FontFamily.Monospace),
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text = "\u00B0C",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        modifier = Modifier.padding(bottom = 2.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ─── 6. Workout Card ────────────────────────────────────────────────────────
 
 @Composable
 private fun WorkoutCard(
@@ -720,7 +1296,6 @@ private fun WorkoutCard(
     readinessScore: Int,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        // iOS: "Last Workout" heading (.headline)
         Text(
             text = "Last Workout",
             style = MaterialTheme.typography.titleMedium,
@@ -733,7 +1308,6 @@ private fun WorkoutCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                // iOS: Figure icon in green badge (DS.iconSize circle)
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -744,7 +1318,7 @@ private fun WorkoutCard(
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.DirectionsRun,
+                        imageVector = Icons.AutoMirrored.Filled.DirectionsRun,
                         contentDescription = null,
                         modifier = Modifier.size(22.dp),
                         tint = AccentGreen,
@@ -755,13 +1329,11 @@ private fun WorkoutCard(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
-                    // Workout type (.subheadline.weight(.semibold))
                     Text(
                         text = workout.title,
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.SemiBold,
                     )
-                    // Duration + calories row (.caption.monospacedDigit())
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
@@ -808,7 +1380,7 @@ private fun WorkoutCard(
     }
 }
 
-// ─── 6. Status Footer ───────────────────────────────────────────────────────
+// ─── 7. Status Footer ───────────────────────────────────────────────────────
 
 @Composable
 private fun StatusFooter(label: String) {
@@ -818,7 +1390,6 @@ private fun StatusFooter(label: String) {
             .padding(bottom = 8.dp),
         contentAlignment = Alignment.Center,
     ) {
-        // iOS: HStack(spacing: 6) { antenna icon + "Last signal X ago" } .caption2, .tertiary
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),

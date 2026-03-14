@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 /// All trackable screens in the app.
 enum AppFeature: String, Hashable {
@@ -180,110 +181,126 @@ enum BlockType: String {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// MARK: - Event Reference (PMF-Focused, Decision-Making Events Only)
+// MARK: - Event Reference — 5 Product Questions
 // ──────────────────────────────────────────────────────────────────────────────
 //
-// PMF CORE METRICS (4 numbers that matter):
-//   1. Activation %    → onboarding_completed → activation_completed funnel
-//   2. Day 7 retention → retention_milestone day=7
-//   3. % disappointed  → nps_submitted score < 7
-//   4. % paying        → subscription_purchased conversion
+// NORTH-STAR METRICS:
+//   1. Activation rate           → onboarding_completed → activation_completed
+//   2. Time to first value       → time_to_first_value / first_score_generated
+//   3. D1 / D7 / D30 retention  → retention_milestone
+//   4. Trial-to-paid conversion  → subscription_purchased (trial_converted=1)
+//   5. Churn                     → subscription_cancelled / inactive_period_detected
 //
-// BUSINESS EVENTS:
+// ─── Q1: WHO GETS VALUE? ────────────────────────────────────────────────────
+//  onboarding_completed          focuses, duration_sec               Setup completion
+//  onboarding_step_completed     step, step_name, duration_sec       Drop-off funnel
+//  onboarding_drop_off           last_step, duration_sec             Where they quit
+//  activation_milestone          milestone, time_since_install       Which features click
+//  activation_completed          milestones_count, days_to_activate  Aha moment reached
+//  time_to_first_value           seconds                             Speed to value
+//  first_score_generated         score, time_since_install_sec       First real output
+//  health_permission_requested   metrics_requested                   Permission funnel start
+//  health_permission_result      granted, denied, grant_rate         Permission success
+//  source_connected              source_type, metrics_available      Wearable onboarded
+//  data_pipeline_quality         coverage, enough_for_score          Data readiness
+//  empty_state_shown             screen, reason                      Blocked from value
 //
-//  Event                         Key Params                          Question Answered
-//  ─────────────────────────────────────────────────────────────────────────────────────
-//  SESSION & RETENTION:
-//  session_start                 session_id, hour, weekday, streak,  When do users open?
-//                                session_source, weekly_active_days  + How? (organic/notif)
-//  session_end                   duration_sec, screens, depth        How deep are sessions?
-//  return_session                session_number, days_since_last     Are users coming back?
-//  daily_active                  session_source, weekly_active_days  DAU/WAU/MAU counting
-//  retention_milestone           day (1,2,3,7,14,30)                 When do we lose users?
-//  inactive_period_detected      days_inactive (3, 7)                Who is churning?
-//  streak_broken                 previous_streak, longest_streak     When do habits break?
-//  streak_milestone              days (7, 14, 30, 60, 100)           Who forms habits?
-//
-//  ACTIVATION:
-//  onboarding_completed          focuses, duration_sec, step         Did they finish setup?
-//  onboarding_step_completed     step, step_name, duration_sec       Where do they drop?
-//  activation_completed          milestones_count, days_to_activate  Did they find value?
-//  time_to_first_value           seconds                             How fast is aha moment?
-//  activation_milestone          milestone, time_since_install       What features click?
-//
-//  FEATURE ENGAGEMENT:
-//  screen_viewed                 screen, tab, depth, content         What do users see?
-//  screen_exited                 screen, duration_sec                How long per feature?
-//  feature_abandoned             screen, duration_sec                What confuses users?
-//  block_tapped                  block_type, screen                  What UI gets tapped?
-//  core_action_completed         action, screen                      What predicts retention?
-//  chart_interaction             metric, type, period                Which charts explored?
-//  time_range_changed            from_days, to_days                  What periods matter?
-//
-//  CONTENT VALUE:
-//  insight_tapped                category, severity, metric          Which insights resonate?
-//  correlation_tapped            metric_a, metric_b, strength        Which correlations?
-//  risk_tapped                   risk_type, grade                    Do risks drive action?
-//  analysis_completed            insights/anomalies counts           Is engine useful?
-//  weekly_score_change           delta, direction, new_score         Is user improving?
-//
-//  MONETIZATION:
-//  paywall_viewed                source, days_since_install          When do they see paywall?
-//  paywall_dismissed             time_on_paywall, source             Why don't they convert?
-//  paywall_cta_tapped            product_id, price                   What triggers purchase?
-//  subscription_purchased        product_id, trial_converted         Who pays?
-//  subscription_renewed          months_subscribed                   Who stays?
-//  subscription_cancelled        months_subscribed                   Who churns?
-//  trial_started                 days_remaining                      Trial began
-//  trial_day_check               days_remaining, milestones          Engagement during trial
-//  trial_expired                 milestones_completed                Why didn't they convert?
-//  restore_attempted             success                             Are they confused?
-//  purchase_failed               error_type                          What blocks payment?
-//
-//  EMOTIONAL / NPS:
-//  nps_submitted                 score, category                     Would they recommend?
-//  feedback_submitted            category, text_length, sentiment    What do they want?
-//
-//  FRICTION:
-//  error_occurred                error_type, screen                  What breaks?
-//  onboarding_drop_off           last_step, duration_sec             Where do they give up?
-//
-//  DEVICE & DATA:
-//  device_detected               device_type, is_active              What devices do they own?
-//  data_sync_completed           metrics, new_samples                Is sync healthy?
-//  sync_performance              duration_ms, metrics, samples       How fast is sync?
-//
-//  DASHBOARD METRICS:
+// ─── Q2: WHO COMES BACK? ────────────────────────────────────────────────────
+//  session_start                 hour, weekday, streak, source       When & how they open
+//  session_end                   duration_sec, screens, depth        Session quality
+//  return_session                session_number, days_since_last     Return cadence
 //  daily_active                  source, weekly_active_days          DAU/WAU/MAU
-//  notification_scheduled        type, notification_id               Notif delivery tracking
-//  ml_analysis_performance       duration_ms, components, data_pts   ML speed
-//  pro_feature_funnel            feature, step                       Pro conversion by feature
-//  insight_engagement            category, metric, action            Insight usefulness
+//  retention_milestone           day (1,2,3,7,14,30)                 Retention curve
+//  streak_milestone              days (7,14,30,60,100)               Habit formation
+//  streak_broken                 previous_streak                     Habit loss
+//  inactive_period_detected      days_inactive                       Churn signal
+//  notification_opened           notification_id, type               Re-engagement
+//  recommendation_completed      type, metric                        Action loop
 //
-// USER PROPERTIES (for cohort analysis):
+// ─── Q3: WHAT CREATES TRUST? ────────────────────────────────────────────────
+//  explanation_viewed            type, screen                        Do they check methodology?
+//  insight_marked_helpful        category, metric                    Insight quality signal
+//  insight_marked_unhelpful      category, metric, reason            False positives
+//  privacy_page_viewed           source                              Privacy concern
+//  recommendation_viewed         type, metric, difficulty            Shown vs acted on
+//  recommendation_skipped        type, metric, reason                Why they ignore advice
+//  nps_submitted                 score, category                     Would they recommend?
+//  feedback_submitted            category, text_length, sentiment    What they want
 //
-//  Property                  Values                           Use
-//  ─────────────────────────────────────────────────────────────────────────────
-//  subscription_status       trial | pro | billing_grace |    Segment by tier
-//                            expired | unknown
-//  months_subscribed         0, 1, 2, ...                     LTV / churn month
-//  trial_converted           yes | no | pending               Conversion rate
-//  price_tier                standard | reduced | premium      Pricing analysis
-//  days_since_install        0, 1, 2, ...                     Retention cohorts
-//  activation_status         not_activated | activated         Did they find value?
-//  activation_milestones     0-10                              Activation depth
-//  total_sessions            1, 2, 3, ...                      Usage frequency
-//  data_richness             low | medium | high               Data completeness
-//  connected_device_count    0, 1, 2, ...                      Device ecosystem
-//  primary_device            apple_watch | garmin | ...        Primary data source
-//  health_focus              sleep,fitness,heartHealth,...      User goals
-//  longest_streak            0, 1, 2, ...                      Habit strength
-//  lifetime_core_actions     0, 1, 2, ...                      Value extracted
-//  health_score_bracket      low | medium | high               Outcome segment
-//  retention_day             0, 1, 2, 3, 7, 14, 30            Furthest milestone
-//  onboarding_completed      yes | no                          Setup completion
-//  weekly_active_days        1-7                                Stickiness (days/week)
-//  organic_session_pct       0-100                              % organic (vs notif)
+// ─── Q4: WHAT CONVERTS TO PAID? ─────────────────────────────────────────────
+//  paywall_viewed                source, days_since_install          When they see paywall
+//  paywall_dismissed             time_on_paywall, source             Why they don't convert
+//  paywall_cta_tapped            product_id, price                   Purchase intent
+//  trial_started                 days_remaining                      Trial began
+//  trial_day_check               days_remaining, milestones          Trial engagement
+//  trial_expired                 milestones_completed                Why no conversion
+//  subscription_purchased        product_id, trial_converted         Who pays
+//  pro_feature_funnel            feature, step                       Which feature converts
+//  premium_feature_attempted     feature, screen                     Free user desire
+//
+// ─── Q5: WHAT PREDICTS CHURN? ───────────────────────────────────────────────
+//  subscription_cancelled        months_subscribed                   Who churns
+//  subscription_renewed          months_subscribed                   Who stays
+//  inactive_period_detected      days_inactive, was_activated        Churn signal
+//  stale_data_detected           stale_since_hours, metric           Data pipeline death
+//  sync_failed                   reason, retry_count                 Broken pipeline
+//  score_generation_failed       reason                              No value delivered
+//  error_occurred                error_type, screen                  Product broken
+//
+// ─── ENGAGEMENT (supporting all 5 questions) ────────────────────────────────
+//  screen_viewed                 screen, tab, depth                  What they use
+//  screen_exited                 screen, duration_sec                Time per feature
+//  block_tapped                  block_type, screen                  UI interaction
+//  core_action_completed         action, screen                      Retention predictor
+//  insight_tapped                category, severity, metric          Insight engagement
+//  correlation_tapped            metric_a, metric_b, strength        Discovery
+//  risk_tapped                   risk_type, grade                    Risk awareness
+//  analysis_completed            score, insights_count               Engine output
+//  weekly_score_change           delta, direction, new_score         Outcome improvement
+//
+// ─── USER PROPERTIES (cohort segmentation) ──────────────────────────────────
+//
+//  DEMOGRAPHICS:                                  PIPELINE:
+//  age_bracket         18-24 | 25-34 | ...        data_sufficiency     sufficient | insufficient
+//  gender              male | female | other       health_source_count  0, 1, 2, ...
+//  country             US | GB | IN | ...          has_apple_watch      yes | no
+//  language            en | es | de | ...          primary_health_source apple_watch | ...
+//  timezone            America/New_York | ...      days_since_first_sync 0, 1, 2, ...
+//  device_model        iPhone16,1 | ...            data_richness        low | medium | high
+//  os_version          18.3 | ...                  notifications_enabled yes | no
+//  app_version         1.71 | ...
+//
+//  LIFECYCLE:                                     MONETIZATION:
+//  days_since_install  0, 1, 2, ...               subscription_status  trial | pro | expired
+//  onboarding_completed yes | no                  months_subscribed    0, 1, 2, ...
+//  activation_status   not_activated | activated   trial_converted      yes | no | pending
+//  activation_milestones 0-10                     price_tier           standard | reduced
+//  retention_day       0, 1, 3, 7, 14, 30        user_tier            free | pro
+//  total_sessions      1, 2, 3, ...               renewal_count        0, 1, 2, ...
+//  weekly_active_days  1-7
+//  longest_streak      0, 1, 2, ...               ENGAGEMENT:
+//  lifetime_core_actions 0, 1, 2, ...             health_score_bracket low | medium | high
+//  organic_session_pct 0-100                      health_focus         sleep,fitness,...
+//  nps_category        promoter | passive | detractor
+//
+// ─── BEHAVIORAL INTELLIGENCE (auto-computed, non-obvious) ───────────────────
+//  ghost_session                 duration_sec, screens_visited      Opened but did nothing
+//  session_quality               quality (deep/engaged/shallow/bounce) Session classification
+//  score_viewed                  score, delta, direction            When score is seen
+//  score_reaction                reaction_type, next_action         What they do after seeing score
+//  screenshot_taken              screen, tab                        Trust/share signal
+//  habit_ritual_formed           ritual_strength, peak_hour         Morning ritual detection
+//  feature_discovered            feature, discovery_pct             Feature adoption map
+//  rage_tap                      element, screen, tap_count         Frustration detection
+//  pre_churn_signal              avg_engagement_score, trend        1-2 week churn warning
+//  value_delivered               has_new_value, new_insights        Did this session matter?
+//  background_refresh_result     success, samples_loaded            Data freshness pipeline
+//
+//  USER PROPERTIES (behavioral):
+//  engagement_level              power_user | casual | at_risk | disengaging
+//  usage_pattern                 strong | forming | irregular       Ritual consistency
+//  has_morning_ritual            yes | no                           Habit formation
+//  feature_discovery_pct         0-100                              Feature adoption
 //
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -308,19 +325,80 @@ final class AppAnalytics {
     private init() {}
 
     // ══════════════════════════════════════════════════════════════════════
+    // MARK: - Demographics & Device Properties
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Set standard demographic and device user properties.
+    /// Call on session start and after onboarding completes.
+    func setDemographicProperties() {
+        let defaults = UserDefaults.standard
+        var props: [String: Any] = [:]
+
+        // Age bracket — derived from stored age
+        if let storedAge = defaults.object(forKey: AppKeys.Profile.dateOfBirth) as? Int, storedAge > 0 {
+            let bracket: String
+            switch storedAge {
+            case ..<18:   bracket = "under_18"
+            case 18...24: bracket = "18-24"
+            case 25...34: bracket = "25-34"
+            case 35...44: bracket = "35-44"
+            case 45...54: bracket = "45-54"
+            case 55...64: bracket = "55-64"
+            default:      bracket = "65+"
+            }
+            props["age_bracket"] = bracket
+        }
+
+        // Gender
+        if let genderRaw = defaults.string(forKey: AppKeys.Profile.gender) {
+            props["gender"] = genderRaw
+        }
+
+        // Country (ISO 3166-1 alpha-2)
+        if let region = Locale.current.region?.identifier {
+            props["country"] = region
+        }
+
+        // Language (e.g. "en", "es", "de")
+        if let lang = Locale.current.language.languageCode?.identifier {
+            props["language"] = lang
+        }
+
+        // Timezone (e.g. "America/New_York")
+        props["timezone"] = TimeZone.current.identifier
+
+        // Device model (marketing name)
+        props["device_model"] = deviceModelName()
+
+        // OS version
+        props["os_version"] = UIDevice.current.systemVersion
+
+        // App version
+        props["app_version"] = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
+
+        if !props.isEmpty {
+            PostHogManager.shared.setUserProperties(props)
+        }
+    }
+
+    /// Returns the marketing device name (e.g. "iPhone 15 Pro") from the hw.machine identifier.
+    private func deviceModelName() -> String {
+        var systemInfo = utsname()
+        uname(&systemInfo)
+        let machine = withUnsafePointer(to: &systemInfo.machine) {
+            $0.withMemoryRebound(to: CChar.self, capacity: 1) { String(cString: $0) }
+        }
+        // Return the raw identifier — PostHog can map these, and it avoids maintaining a lookup table.
+        return machine
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
     // MARK: - Error Tracking (PostHog)
     // ══════════════════════════════════════════════════════════════════════
 
     /// Record a non-fatal error to PostHog for monitoring.
     func recordNonFatal(_ error: Error, context: String, metadata: [String: Any] = [:]) {
         PostHogManager.shared.captureError(error, context: context, metadata: metadata)
-    }
-
-    /// Log a breadcrumb as a lightweight PostHog event.
-    func logBreadcrumb(_ message: String) {
-        PostHogManager.shared.capture(event: "app_breadcrumb", properties: [
-            "message": String(message.prefix(200))
-        ])
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -347,6 +425,9 @@ final class AppAnalytics {
         ])
         setUserProperty("onboarding_completed", value: "yes")
         setUserProperty("health_focus", value: focuses.joined(separator: ","))
+
+        // Set demographics now that profile is captured
+        setDemographicProperties()
     }
 
     /// Call when user drops off onboarding without completing.
@@ -500,19 +581,30 @@ final class AppAnalytics {
         setUserProperty("lifetime_core_actions", value: "\(session.lifetimeCoreActions)")
         setUserProperty("weekly_active_days", value: "\(session.weeklyActiveDays)")
         setUserProperty("organic_session_pct", value: "\(session.organicSessionPercent)")
+
+        // Refresh demographic & device properties every session
+        setDemographicProperties()
+
+        // Behavioral intelligence: detect habit patterns
+        detectHabitPattern()
     }
 
     /// Call when app enters background.
     func trackSessionEnd() {
         let stats = session.endSession()
+        let coreActionsCount = session.coreActionsThisSession.count
 
         logEvent("session_end", parameters: [
             "session_id": session.sessionId,
             "duration_sec": stats.durationSec,
             "screens_visited": stats.screensVisited,
             "max_depth": stats.maxDepth,
-            "core_actions_count": session.coreActionsThisSession.count
+            "core_actions_count": coreActionsCount
         ])
+
+        // Behavioral intelligence: ghost sessions, churn risk, session quality
+        evaluateSessionQuality(durationSec: stats.durationSec, screensVisited: stats.screensVisited, coreActionsCount: coreActionsCount)
+        evaluateChurnRisk(durationSec: stats.durationSec, coreActionsCount: coreActionsCount, screensVisited: stats.screensVisited)
     }
 
     func trackReturnSession() {
@@ -538,7 +630,7 @@ final class AppAnalytics {
             self.openTimestamps[feature] = now
         }
 
-        let previousScreen = session.recordScreenView(feature.rawValue)
+        _ = session.recordScreenView(feature.rawValue)
 
         var params: [String: Any] = [
             "screen": feature.rawValue,
@@ -554,15 +646,8 @@ final class AppAnalytics {
             "depth": session.currentDepth
         ])
 
-        if let previousScreen, previousScreen != feature.rawValue {
-            logEvent("nav_transition", parameters: [
-                "from_screen": previousScreen,
-                "to_screen": feature.rawValue,
-                "to_screen_id": feature.rawValue,
-                "tab": session.currentTab,
-                "depth": session.currentDepth
-            ])
-        }
+        // Behavioral intelligence: track feature discovery
+        updateFeatureDiscovery(screen: feature)
     }
 
     func trackFeatureClose(_ feature: AppFeature, metadata: [String: Any] = [:]) {
@@ -577,15 +662,6 @@ final class AppAnalytics {
         }
 
         let duration = Int(durationSeconds.rounded())
-
-        // Feature abandoned = opened but closed in < 3 seconds
-        if duration < 3 && duration > 0 {
-            logEvent("feature_abandoned", parameters: [
-                "screen": feature.rawValue,
-                "duration_sec": duration,
-                "tab": session.currentTab
-            ])
-        }
 
         logEvent("screen_exited", parameters: [
             "screen": feature.rawValue,
@@ -614,6 +690,9 @@ final class AppAnalytics {
 
     func trackCoreAction(_ action: CoreAction, screen: AppFeature) {
         session.recordCoreAction(action.rawValue)
+
+        // Score reaction: capture what the user does after seeing their score
+        trackScoreReaction(nextAction: action.rawValue, nextScreen: screen)
 
         logEvent("core_action_completed", parameters: [
             "action": action.rawValue,
@@ -646,7 +725,9 @@ final class AppAnalytics {
         ]
         for (k, v) in metadata { params[k] = v }
         logEvent("block_tapped", parameters: params)
-        logEvent("tap_\(type.rawValue)", parameters: params)
+
+        // Behavioral intelligence: detect rage taps on any block
+        detectRageTap(element: type.rawValue, screen: screen)
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -1116,13 +1197,6 @@ final class AppAnalytics {
         ])
     }
 
-    func trackFeedbackThankYouShown(category: String) {
-        logEvent("feedback_thank_you_shown", parameters: [
-            "category": category,
-            "screen": AppFeature.feedback.rawValue
-        ])
-    }
-
     // Scroll depth
     func trackScrollDepth(screen: AppFeature, maxDepthPercent: Int) {
         logEvent("scroll_depth", parameters: [
@@ -1154,16 +1228,6 @@ final class AppAnalytics {
         ])
     }
 
-    func trackSectionStuck(section: AppSection, tab: AppFeature, durationMs: Int) {
-        logEvent("section_stuck", parameters: [
-            "section_id": section.rawValue,
-            "tab": tab.rawValue,
-            "screen": tab.rawValue,
-            "duration_ms": durationMs,
-            "session_id": session.sessionId
-        ])
-    }
-
     // Subscription billing grace
     func trackBillingGraceStarted(daysSinceInstall: Int) {
         logEvent("billing_grace_started", parameters: [
@@ -1184,14 +1248,6 @@ final class AppAnalytics {
             "offline_duration_sec": offlineDurationSec,
             "sync_triggered": syncTriggered ? 1 : 0,
             "backup_triggered": backupTriggered ? 1 : 0
-        ])
-    }
-
-    func trackConnectivityStateChanged(isOnline: Bool, isExpensive: Bool, isConstrained: Bool) {
-        logEvent("connectivity_state_changed", parameters: [
-            "is_online": isOnline ? 1 : 0,
-            "is_expensive": isExpensive ? 1 : 0,
-            "is_constrained": isConstrained ? 1 : 0
         ])
     }
 
@@ -1381,6 +1437,513 @@ final class AppAnalytics {
             "insight_category": category,
             "metric": metric,
             "action": action
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 16. Health Data Pipeline Quality
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Call when HealthKit authorization is requested.
+    func trackHealthPermissionRequested(metrics: [String]) {
+        logEvent("health_permission_requested", parameters: [
+            "metrics_requested": metrics.count,
+            "days_since_install": session.daysSinceInstall
+        ])
+    }
+
+    /// Call after HealthKit authorization response.
+    func trackHealthPermissionResult(granted: Int, denied: Int, total: Int) {
+        logEvent("health_permission_result", parameters: [
+            "granted": granted,
+            "denied": denied,
+            "total": total,
+            "grant_rate": total > 0 ? Double(granted) / Double(total) : 0
+        ])
+    }
+
+    /// Call when a health source (Apple Watch, Oura, etc.) is detected as connected.
+    func trackSourceConnected(sourceType: String, metricsAvailable: Int) {
+        logEvent("source_connected", parameters: [
+            "source_type": sourceType,
+            "metrics_available": metricsAvailable,
+            "days_since_install": session.daysSinceInstall
+        ])
+    }
+
+    /// Call after each sync to track data pipeline health.
+    func trackDataPipelineQuality(
+        metricsAvailable: Int,
+        metricsMissing: Int,
+        dataCoveragePercent: Int,
+        lastSyncAgeSec: Int,
+        hasEnoughForScore: Bool
+    ) {
+        logEvent("data_pipeline_quality", parameters: [
+            "metrics_available": metricsAvailable,
+            "metrics_missing": metricsMissing,
+            "data_coverage_pct": dataCoveragePercent,
+            "last_sync_age_sec": lastSyncAgeSec,
+            "enough_for_score": hasEnoughForScore ? 1 : 0
+        ])
+
+        // Set user properties for cohort segmentation
+        let sufficiency = hasEnoughForScore ? "sufficient" : "insufficient"
+        setUserProperty("data_sufficiency", value: sufficiency)
+        setUserProperty("health_source_count", value: "\(metricsAvailable > 0 ? 1 : 0)")
+    }
+
+    /// Call when first score is generated — critical activation event.
+    func trackFirstScoreGenerated(score: Int, timeSinceInstallSec: Int, metricsUsed: Int) {
+        logEvent("first_score_generated", parameters: [
+            "score": score,
+            "time_since_install_sec": timeSinceInstallSec,
+            "metrics_used": metricsUsed
+        ])
+    }
+
+    /// Call when stale data is detected (no new samples for >24h).
+    func trackStaleDataDetected(staleSinceHours: Int, metric: String) {
+        logEvent("stale_data_detected", parameters: [
+            "stale_since_hours": staleSinceHours,
+            "metric": metric
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 17. Trust Signals
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Call when user views a score explanation or methodology page.
+    func trackExplanationViewed(type: String, screen: AppFeature) {
+        logEvent("explanation_viewed", parameters: [
+            "explanation_type": type,
+            "screen": screen.rawValue,
+            "days_since_install": session.daysSinceInstall
+        ])
+    }
+
+    /// Call when user marks an insight as helpful.
+    func trackInsightMarkedHelpful(category: String, metric: String) {
+        logEvent("insight_marked_helpful", parameters: [
+            "insight_category": category,
+            "metric": metric
+        ])
+    }
+
+    /// Call when user marks an insight as unhelpful / false positive.
+    func trackInsightMarkedUnhelpful(category: String, metric: String, reason: String = "") {
+        logEvent("insight_marked_unhelpful", parameters: [
+            "insight_category": category,
+            "metric": metric,
+            "reason": reason
+        ])
+    }
+
+    /// Call when user views the privacy/data policy page.
+    func trackPrivacyPageViewed(source: String) {
+        logEvent("privacy_page_viewed", parameters: [
+            "source": source,
+            "days_since_install": session.daysSinceInstall
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 18. Recommendation Lifecycle
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Call when a recommendation (Today's Action, insight action) is shown.
+    func trackRecommendationViewed(type: String, metric: String, difficulty: String = "") {
+        logEvent("recommendation_viewed", parameters: [
+            "recommendation_type": type,
+            "metric": metric,
+            "difficulty": difficulty
+        ])
+    }
+
+    /// Call when user starts acting on a recommendation.
+    func trackRecommendationStarted(type: String, metric: String) {
+        logEvent("recommendation_started", parameters: [
+            "recommendation_type": type,
+            "metric": metric
+        ])
+    }
+
+    /// Call when user completes a recommendation action.
+    func trackRecommendationCompleted(type: String, metric: String, delaySec: Int = 0) {
+        logEvent("recommendation_completed", parameters: [
+            "recommendation_type": type,
+            "metric": metric,
+            "delay_sec": delaySec
+        ])
+    }
+
+    /// Call when user skips/dismisses a recommendation.
+    func trackRecommendationSkipped(type: String, metric: String, reason: String = "") {
+        logEvent("recommendation_skipped", parameters: [
+            "recommendation_type": type,
+            "metric": metric,
+            "reason": reason
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 19. Wearable & Source Properties
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Update wearable/source user properties. Call after device detection.
+    func updateHealthSourceProperties(
+        hasAppleWatch: Bool,
+        sourceCount: Int,
+        primarySource: String,
+        daysSinceFirstSync: Int
+    ) {
+        PostHogManager.shared.setUserProperties([
+            "has_apple_watch": hasAppleWatch ? "yes" : "no",
+            "health_source_count": "\(sourceCount)",
+            "primary_health_source": primarySource,
+            "days_since_first_sync": "\(daysSinceFirstSync)"
+        ])
+    }
+
+    /// Update notification permission state as user property.
+    func updateNotificationProperties(enabled: Bool) {
+        setUserProperty("notifications_enabled", value: enabled ? "yes" : "no")
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 20. Empty State & Friction Signals
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Call when an empty state is shown (no data, no insights, etc.).
+    func trackEmptyStateShown(screen: AppFeature, reason: String) {
+        logEvent("empty_state_shown", parameters: [
+            "screen": screen.rawValue,
+            "reason": reason,
+            "days_since_install": session.daysSinceInstall
+        ])
+    }
+
+    /// Call when score generation fails.
+    func trackScoreGenerationFailed(reason: String) {
+        logEvent("score_generation_failed", parameters: [
+            "reason": reason,
+            "days_since_install": session.daysSinceInstall
+        ])
+    }
+
+    /// Call when sync times out or fails.
+    func trackSyncFailed(reason: String, retryCount: Int = 0) {
+        logEvent("sync_failed", parameters: [
+            "reason": reason,
+            "retry_count": retryCount
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 21. Behavioral Intelligence (Non-Obvious Signals)
+    // ══════════════════════════════════════════════════════════════════════
+
+    // --- A. Ghost Sessions ---
+    // A session where the user opened the app but did nothing meaningful.
+    // Strongest leading indicator of disengagement — they came, saw nothing worth doing, and left.
+
+    /// Call from `trackSessionEnd`. Automatically detects ghost sessions.
+    func evaluateSessionQuality(durationSec: Int, screensVisited: Int, coreActionsCount: Int) {
+        // Ghost: >5 sec but zero core actions and ≤1 screen
+        let isGhost = durationSec >= 5 && coreActionsCount == 0 && screensVisited <= 1
+        if isGhost {
+            logEvent("ghost_session", parameters: [
+                "duration_sec": durationSec,
+                "screens_visited": screensVisited,
+                "days_since_install": session.daysSinceInstall,
+                "streak_days": session.streakDays,
+                "session_source": session.currentSessionSource.rawValue
+            ])
+        }
+
+        // Classify session quality for cohort analysis
+        let quality: String
+        if coreActionsCount >= 3 && screensVisited >= 3 { quality = "deep" }
+        else if coreActionsCount >= 1 { quality = "engaged" }
+        else if durationSec >= 5 { quality = "shallow" }
+        else { quality = "bounce" }
+
+        logEvent("session_quality", parameters: [
+            "quality": quality,
+            "duration_sec": durationSec,
+            "screens_visited": screensVisited,
+            "core_actions": coreActionsCount,
+            "session_source": session.currentSessionSource.rawValue
+        ])
+    }
+
+    // --- B. Score Reaction ---
+    // When score changes, what does the user do? Investigate = engaged. Close = disengaging.
+    // This reveals whether the scoring system drives action or apathy.
+
+    private var lastScoreDelta: Int = 0
+    private var scoreSeenDate: Date?
+
+    /// Call when the score is first shown to the user.
+    func trackScoreViewed(score: Int, previousScore: Int?) {
+        let delta = previousScore.map { score - $0 } ?? 0
+        lastScoreDelta = delta
+        scoreSeenDate = Date()
+
+        let direction: String
+        if delta > 5 { direction = "big_improvement" }
+        else if delta > 0 { direction = "slight_improvement" }
+        else if delta == 0 { direction = "unchanged" }
+        else if delta > -5 { direction = "slight_decline" }
+        else { direction = "big_decline" }
+
+        logEvent("score_viewed", parameters: [
+            "score": score,
+            "delta": delta,
+            "direction": direction,
+            "days_since_install": session.daysSinceInstall
+        ])
+    }
+
+    /// Call when the user takes ANY action after seeing the score.
+    /// Fires only once per session to capture the immediate reaction.
+    func trackScoreReaction(nextAction: String, nextScreen: AppFeature) {
+        guard let seen = scoreSeenDate else { return }
+        let reactionTimeSec = Int(Date().timeIntervalSince(seen))
+        scoreSeenDate = nil // fire once per session
+
+        let reactionType: String
+        if nextAction.contains("insight") || nextAction.contains("metric") || nextAction.contains("correlation") {
+            reactionType = "investigated"
+        } else if nextAction.contains("setting") || nextAction == "session_end" {
+            reactionType = "disengaged"
+        } else {
+            reactionType = "continued"
+        }
+
+        logEvent("score_reaction", parameters: [
+            "reaction_type": reactionType,
+            "next_action": nextAction,
+            "next_screen": nextScreen.rawValue,
+            "reaction_time_sec": reactionTimeSec,
+            "score_delta": lastScoreDelta
+        ])
+    }
+
+    // --- C. Screenshot Detection ---
+    // Users screenshot things they trust and want to share.
+    // Screenshot rate is a proxy for "would you show this to a friend?"
+
+    private var screenshotObserver: Any?
+
+    /// Call once at app launch to start observing screenshots.
+    func startScreenshotTracking() {
+        screenshotObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.userDidTakeScreenshotNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self else { return }
+            self.logEvent("screenshot_taken", parameters: [
+                "screen": self.session.currentScreen ?? "unknown",
+                "tab": self.session.currentTab,
+                "days_since_install": self.session.daysSinceInstall,
+                "subscription_status": UserDefaults.standard.string(forKey: "laso.analytics.last_known_status") ?? "unknown"
+            ])
+        }
+    }
+
+    // --- D. Habit Pattern Detection ---
+    // Detect if the user is forming a "morning ritual" — checking the app at roughly the same
+    // time on consecutive days. This is the #1 predictor of 6-month retention.
+
+    private enum HabitKey {
+        static let sessionHours = "laso.analytics.session_hours"
+        static let ritualDetected = "laso.analytics.ritual_detected"
+    }
+
+    /// Call from session start. Builds up a pattern of open-times to detect ritual formation.
+    func detectHabitPattern() {
+        let hour = Calendar.current.component(.hour, from: Date())
+
+        // Store last 14 session hours
+        var hours = defaults.array(forKey: HabitKey.sessionHours) as? [Int] ?? []
+        hours.append(hour)
+        if hours.count > 14 { hours = Array(hours.suffix(14)) }
+        defaults.set(hours, forKey: HabitKey.sessionHours)
+
+        guard hours.count >= 5 else { return }
+
+        // Check if >60% of sessions are within a 2-hour window
+        var bestCount = 0
+        for testHour in 0..<24 {
+            let count = hours.filter { abs($0 - testHour) <= 1 || abs($0 - testHour) >= 23 }.count
+            bestCount = max(bestCount, count)
+        }
+
+        let ritualStrength = Double(bestCount) / Double(hours.count)
+        let isRitual = ritualStrength >= 0.6 && hours.count >= 7
+
+        if isRitual && !defaults.bool(forKey: HabitKey.ritualDetected) {
+            defaults.set(true, forKey: HabitKey.ritualDetected)
+            logEvent("habit_ritual_formed", parameters: [
+                "ritual_strength": String(format: "%.2f", ritualStrength),
+                "peak_hour": hours.max(by: { a, b in hours.filter { $0 == a }.count < hours.filter { $0 == b }.count }) ?? -1,
+                "days_since_install": session.daysSinceInstall,
+                "streak_days": session.streakDays
+            ])
+            setUserProperty("has_morning_ritual", value: "yes")
+        }
+
+        // Always update ritual strength as user property for cohort segmentation
+        if hours.count >= 7 {
+            let bucket: String
+            if ritualStrength >= 0.8 { bucket = "strong" }
+            else if ritualStrength >= 0.5 { bucket = "forming" }
+            else { bucket = "irregular" }
+            setUserProperty("usage_pattern", value: bucket)
+        }
+    }
+
+    // --- E. Feature Discovery Map ---
+    // What % of features has this user seen? Correlate with retention.
+    // Users who discover <30% of features churn. Users who discover >60% retain.
+
+    private static let keyFeatures: Set<String> = [
+        "home", "explore", "metric_detail", "insights_detail", "correlations",
+        "score_guide", "simulation", "settings", "connected_devices",
+        "sleep_coach", "stress_monitor", "performance_profile", "brain_health"
+    ]
+
+    /// Call from `trackFeatureOpen`. Automatically tracks discovery depth.
+    func updateFeatureDiscovery(screen: AppFeature) {
+        let key = "laso.analytics.discovered_features"
+        var discovered = Set(defaults.stringArray(forKey: key) ?? [])
+        let raw = screen.rawValue
+
+        guard Self.keyFeatures.contains(raw), !discovered.contains(raw) else { return }
+
+        discovered.insert(raw)
+        defaults.set(Array(discovered), forKey: key)
+
+        let discoveryPct = (discovered.count * 100) / Self.keyFeatures.count
+
+        logEvent("feature_discovered", parameters: [
+            "feature": raw,
+            "total_discovered": discovered.count,
+            "discovery_pct": discoveryPct,
+            "days_since_install": session.daysSinceInstall,
+            "session_number": session.totalSessions
+        ])
+
+        setUserProperty("feature_discovery_pct", value: "\(discoveryPct)")
+    }
+
+    // --- F. Rage Tap Detection ---
+    // 3+ taps on the same element within 2 seconds = frustration.
+    // This is the mobile equivalent of rage-clicking.
+
+    private var lastTapElement: String = ""
+    private var tapTimestamps: [Date] = []
+
+    /// Call from any tap handler. Detects rapid repeated taps (frustration).
+    func detectRageTap(element: String, screen: AppFeature) {
+        let now = Date()
+        if element == lastTapElement {
+            tapTimestamps.append(now)
+            // Keep only taps within last 2 seconds
+            tapTimestamps = tapTimestamps.filter { now.timeIntervalSince($0) < 2.0 }
+        } else {
+            lastTapElement = element
+            tapTimestamps = [now]
+        }
+
+        if tapTimestamps.count >= 3 {
+            logEvent("rage_tap", parameters: [
+                "element": element,
+                "screen": screen.rawValue,
+                "tap_count": tapTimestamps.count,
+                "days_since_install": session.daysSinceInstall
+            ])
+            tapTimestamps = [] // reset after detection
+        }
+    }
+
+    // --- G. Pre-Churn Behavioral Signature ---
+    // Track a "health score" of the user's engagement. Declining engagement
+    // over 3 sessions = pre-churn. This gives you 1-2 weeks warning before they leave.
+
+    private enum ChurnKey {
+        static let sessionScores = "laso.analytics.session_engagement_scores"
+    }
+
+    /// Call at session end. Computes an engagement score and detects decline patterns.
+    func evaluateChurnRisk(durationSec: Int, coreActionsCount: Int, screensVisited: Int) {
+        // Simple engagement score: 0-100
+        let durationScore = min(30, durationSec / 6)           // max 30 pts for 3 min
+        let actionScore = min(40, coreActionsCount * 10)        // max 40 pts for 4 actions
+        let depthScore = min(30, screensVisited * 6)            // max 30 pts for 5 screens
+        let engagementScore = durationScore + actionScore + depthScore
+
+        var scores = defaults.array(forKey: ChurnKey.sessionScores) as? [Int] ?? []
+        scores.append(engagementScore)
+        if scores.count > 5 { scores = Array(scores.suffix(5)) }
+        defaults.set(scores, forKey: ChurnKey.sessionScores)
+
+        guard scores.count >= 3 else { return }
+
+        // Check for declining trend: each session worse than the previous
+        let recentThree = Array(scores.suffix(3))
+        let isDecline = recentThree[0] > recentThree[1] && recentThree[1] > recentThree[2]
+        let avgScore = recentThree.reduce(0, +) / recentThree.count
+
+        if isDecline && avgScore < 40 {
+            logEvent("pre_churn_signal", parameters: [
+                "avg_engagement_score": avgScore,
+                "trend": "declining_3_sessions",
+                "latest_score": engagementScore,
+                "days_since_install": session.daysSinceInstall,
+                "subscription_status": defaults.string(forKey: "laso.analytics.last_known_status") ?? "unknown"
+            ])
+        }
+
+        // User property: engagement bucket
+        let bucket: String
+        if avgScore >= 70 { bucket = "power_user" }
+        else if avgScore >= 40 { bucket = "casual" }
+        else if avgScore >= 15 { bucket = "at_risk" }
+        else { bucket = "disengaging" }
+        setUserProperty("engagement_level", value: bucket)
+    }
+
+    // --- H. Background Refresh Success ---
+    // If background refresh fails, the app feels stale when opened. Users leave.
+
+    /// Call after background refresh completes.
+    func trackBackgroundRefreshResult(success: Bool, durationMs: Int, samplesLoaded: Int) {
+        logEvent("background_refresh_result", parameters: [
+            "success": success ? 1 : 0,
+            "duration_ms": durationMs,
+            "samples_loaded": samplesLoaded
+        ])
+    }
+
+    // --- I. Value Delivery Rate ---
+    // Track the ratio of sessions where the user received genuinely new information
+    // vs sessions where everything was the same. If nothing changes, why come back?
+
+    /// Call after analysis completes. Track whether this session delivered new value.
+    func trackValueDelivered(newInsightsCount: Int, scoreChanged: Bool, newAnomalies: Int, newCorrelations: Int) {
+        let hasNewValue = newInsightsCount > 0 || scoreChanged || newAnomalies > 0 || newCorrelations > 0
+
+        logEvent("value_delivered", parameters: [
+            "has_new_value": hasNewValue ? 1 : 0,
+            "new_insights": newInsightsCount,
+            "score_changed": scoreChanged ? 1 : 0,
+            "new_anomalies": newAnomalies,
+            "new_correlations": newCorrelations,
+            "days_since_install": session.daysSinceInstall
         ])
     }
 

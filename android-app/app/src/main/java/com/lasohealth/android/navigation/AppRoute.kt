@@ -23,6 +23,20 @@ sealed class AppRoute(val route: String) {
     data object HealthStateTimeline : AppRoute("healthStateTimeline")
     data object CorrelationsDetail : AppRoute("correlationsDetail")
 
+    // Missing iOS screens
+    data object Breathwork : AppRoute("breathwork")
+    data object PerformanceProfile : AppRoute("performanceProfile")
+    data object Simulation : AppRoute("simulation")
+    data object Discovery : AppRoute("discovery")
+    data object DeviceSetupGuide : AppRoute("deviceSetupGuide")
+    data object AnnualReport : AppRoute("annualReport")
+    data object MonthlyReview : AppRoute("monthlyReview")
+    data object JournalEntry : AppRoute("journalEntry")
+    data object JournalList : AppRoute("journalList")
+    data object JournalInsights : AppRoute("journalInsights")
+    data object Feedback : AppRoute("feedback")
+    data object RecoveryInfo : AppRoute("recoveryInfo")
+
     // Parameterized routes
     data object MetricDetail : AppRoute("metricDetail/{metricId}") {
         fun createRoute(metric: HealthMetric): String = "metricDetail/${metric.name}"
