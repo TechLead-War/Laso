@@ -310,22 +310,24 @@ struct PredictiveHealthSignals {
         days: Int,
         dailyMaps: [HealthMetric: [Date: Double]]
     ) -> [(date: Date, value: Double)] {
-        guard let map = dailyMaps[metric] else { return [] }
-        let calendar = Calendar.current
+        guard let map = dailyMaps[metric], !map.isEmpty else { return [] }
+        
         let now = Date()
+        let calendar = Calendar.current
+        let cutoffDate = calendar.date(byAdding: .day, value: -days, to: now) ?? now
+        let cutoffDay = calendar.startOfDay(for: cutoffDate)
+        
+        // Extract recent valid dates without nested calendar operations
         var result: [(Date, Double)] = []
         result.reserveCapacity(days)
-
-        for dayOffset in 0..<days {
-            let day = calendar.startOfDay(
-                for: calendar.date(byAdding: .day, value: -dayOffset, to: now) ?? now
-            )
-            if let value = map[day] {
-                result.append((day, value))
+        
+        for date in map.keys.sorted() {
+            if date > cutoffDay && date <= now {
+                result.append((date, map[date]!))
             }
         }
-
-        return result.reversed() // chronological order
+        
+        return result
     }
 
     /// Compute sigma deviation of a value from a baseline.
@@ -439,7 +441,7 @@ struct PredictiveHealthSignals {
             componentScores.append((0.20, sleepScore))
 
             if sleepScore > 0.1 {
-                let recentAvg = sleepValues.suffix(3).map(\.value).mean
+                let recentAvg = sleepValues.suffix(3).meanValue
                 factors.append(ContributingFactor(
                     metric: .sleepDuration,
                     description: "Sleep averaging \(formatted(recentAvg, metric: .sleepDuration)) over the last 3 nights vs your baseline of \(formatted(sleepBaseline.mean, metric: .sleepDuration))",
@@ -452,8 +454,8 @@ struct PredictiveHealthSignals {
         let exerciseValues = recentDailyValues(metric: .activeCalories, days: 28, dailyMaps: dailyMaps)
         if exerciseValues.count >= Constants.fatigueMinDays {
             availableMetrics += 1
-            let acute7 = exerciseValues.suffix(7).map(\.value).mean
-            let chronic28 = exerciseValues.map(\.value).mean
+            let acute7 = exerciseValues.suffix(7).meanValue
+            let chronic28 = exerciseValues.meanValue
             let acwr = chronic28 > 0 ? acute7 / chronic28 : 1.0
 
             // ACWR: 0.8-1.3 is optimal, >1.5 is danger zone
@@ -818,8 +820,8 @@ struct PredictiveHealthSignals {
         let calValues = recentDailyValues(metric: .activeCalories, days: 28, dailyMaps: dailyMaps)
         var acwr: Double = 1.0
         if calValues.count >= Constants.overtrainingMinDays {
-            let acute7 = calValues.suffix(7).map(\.value).mean
-            let chronic28 = calValues.map(\.value).mean
+            let acute7 = calValues.suffix(7).meanValue
+            let chronic28 = calValues.meanValue
             acwr = chronic28 > 0 ? acute7 / chronic28 : 1.0
 
             let otsScore: Double
@@ -902,10 +904,10 @@ struct PredictiveHealthSignals {
             let exerciseMins = recentDailyValues(metric: .exerciseMinutes, days: 28, dailyMaps: dailyMaps)
             if exerciseMins.count >= 14 {
                 // Compare calorie efficiency: calories per exercise minute
-                let recentCals = calValues.suffix(7).map(\.value).mean
-                let recentMins = exerciseMins.suffix(7).map(\.value).mean
-                let olderCals = calValues.prefix(14).map(\.value).mean
-                let olderMins = exerciseMins.prefix(14).map(\.value).mean
+                let recentCals = calValues.suffix(7).meanValue
+                let recentMins = exerciseMins.suffix(7).meanValue
+                let olderCals = calValues.prefix(14).meanValue
+                let olderMins = exerciseMins.prefix(14).meanValue
 
                 let recentEfficiency = recentMins > 0 ? recentCals / recentMins : 0
                 let olderEfficiency = olderMins > 0 ? olderCals / olderMins : 0
@@ -1129,7 +1131,7 @@ struct PredictiveHealthSignals {
         // Signal 5: Caffeine timing effects (weight 0.10)
         let caffeineValues = recentDailyValues(metric: .caffeineIntake, days: 7, dailyMaps: dailyMaps)
         if let caffeineBaseline = baselines[.caffeineIntake], caffeineValues.count >= 3 {
-            let recentCaffeine = caffeineValues.suffix(3).map(\.value).mean
+            let recentCaffeine = caffeineValues.suffix(3).meanValue
             let deviation = sigmaDeviation(value: recentCaffeine, baseline: caffeineBaseline)
 
             let caffeineScore = clamp01(max(0, deviation) / 2.0)
@@ -1361,7 +1363,7 @@ struct PredictiveHealthSignals {
         let rawScore = clamp01(avgRecentRisk + consecutiveBoost)
 
         // Build factors
-        let recentRHR = rhrValues.suffix(3).map(\.value).mean
+        let recentRHR = rhrValues.suffix(3).meanValue
         let rhrDevPct = abs(percentDeviation(value: recentRHR, baseline: rhrBaseline))
         if rhrDevPct > 3 {
             let daysElevated = rhrValues.filter { $0.value > rhrBaseline.mean + 0.7 * rhrBaseline.standardDeviation }.count
@@ -1372,7 +1374,7 @@ struct PredictiveHealthSignals {
             ))
         }
 
-        let recentHRV = hrvValues.suffix(3).map(\.value).mean
+        let recentHRV = hrvValues.suffix(3).meanValue
         let hrvDevPct = abs(percentDeviation(value: recentHRV, baseline: hrvBaseline))
         if hrvDevPct > 3 {
             let daysSuppressed = hrvValues.filter { $0.value < hrvBaseline.mean - 0.5 * hrvBaseline.standardDeviation }.count
@@ -1384,7 +1386,7 @@ struct PredictiveHealthSignals {
         }
 
         if let sb = sleepBaseline {
-            let recentSleep = sleepValues.suffix(3).map(\.value).mean
+            let recentSleep = sleepValues.suffix(3).meanValue
             let sleepDevPct = percentDeviation(value: recentSleep, baseline: sb)
             if sleepDevPct < -5 {
                 factors.append(ContributingFactor(
@@ -1514,7 +1516,7 @@ struct PredictiveHealthSignals {
             availableSignals += 1
 
             if streak >= 3 {
-                let avgSteps = stepValues.suffix(streak).map(\.value).mean
+                let avgSteps = stepValues.suffix(streak).meanValue
                 factors.append(ContributingFactor(
                     metric: .steps,
                     description: "Step count below 3,000 for \(streak) consecutive days, averaging \(String(format: "%.0f", avgSteps)) steps",
@@ -1526,7 +1528,7 @@ struct PredictiveHealthSignals {
         // Signal 2: Reduced stand hours below baseline (weight 0.20)
         let standValues = recentDailyValues(metric: .standHours, days: window, dailyMaps: dailyMaps)
         if standValues.count >= Constants.inactivityMinDays, let standBaseline = baselines[.standHours] {
-            let recentAvg = standValues.suffix(3).map(\.value).mean
+            let recentAvg = standValues.suffix(3).meanValue
             let deviation = sigmaDeviation(value: recentAvg, baseline: standBaseline)
 
             let standScore = clamp01(max(0, -deviation) / 2.0)
@@ -1574,7 +1576,7 @@ struct PredictiveHealthSignals {
 
             // Only concerning if weight is trending up AND activity is declining
             let activityDeclining = stepValues.count >= Constants.inactivityMinDays &&
-                stepValues.suffix(3).map(\.value).mean < (baselines[.steps]?.mean ?? 10000) * 0.7
+                stepValues.suffix(3).meanValue < (baselines[.steps]?.mean ?? 10000) * 0.7
 
             if weightDeviation > 0.3 && activityDeclining {
                 let weightScore = clamp01(weightDeviation / 2.0)
@@ -1682,5 +1684,15 @@ struct PredictiveHealthSignals {
         }
 
         return parts.joined(separator: " ")
+    }
+}
+
+// MARK: - Collection Extensions for Optimization
+private extension Collection where Element == (date: Date, value: Double) {
+    /// Computes the mean value directly, avoiding `.map(\.value)` which triggers an unnecessary array memory allocation.
+    var meanValue: Double {
+        guard !isEmpty else { return 0 }
+        let sum = reduce(0.0) { $0 + $1.value }
+        return sum / Double(count)
     }
 }

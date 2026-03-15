@@ -186,9 +186,10 @@ final class TemporalSequenceMiner {
         var lookup: [Date: [HealthMetric: Double]] = [:]
 
         for (metric, series) in timeSeries {
-            for sample in series.sortedSamples {
-                let day = calendar.startOfDay(for: sample.date)
-                lookup[day, default: [:]][metric] = sample.value
+            // Use TimeSeriesAligner for optimized, O(N) grouping without repetitive Calendar calls
+            let dailyMap = TimeSeriesAligner.dailyValueMap(series)
+            for (day, value) in dailyMap {
+                lookup[day, default: [:]][metric] = value
             }
         }
 

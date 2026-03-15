@@ -170,23 +170,19 @@ enum AccelerateML {
         let n = values.count
         guard n > 0 else { return [] }
 
-        // Negate
-        var negated = [Double](repeating: 0, count: n)
-        var minusOne = -1.0
-        vDSP_vsmulD(values, 1, &minusOne, &negated, 1, vDSP_Length(n))
-
-        // Exp
-        var expResult = [Double](repeating: 0, count: n)
-        vForce.exp(negated, result: &expResult)
-
-        // Add 1
-        var onePlusExp = [Double](repeating: 0, count: n)
-        var one = 1.0
-        vDSP_vsaddD(expResult, 1, &one, &onePlusExp, 1, vDSP_Length(n))
-
-        // Reciprocal: 1 / (1 + exp(-x))
+        // In-place processing to avoid multiple memory allocations
         var result = [Double](repeating: 0, count: n)
-        vForce.reciprocal(onePlusExp, result: &result)
+        var minusOne = -1.0
+        
+        // 1. Negate: result = -x
+        vDSP_vsmulD(values, 1, &minusOne, &result, 1, vDSP_Length(n))
+        // 2. Exp: result = exp(-x)
+        vForce.exp(result, result: &result)
+        // 3. Add 1: result = 1 + exp(-x)
+        var one = 1.0
+        vDSP_vsaddD(result, 1, &one, &result, 1, vDSP_Length(n))
+        // 4. Reciprocal: result = 1 / (1 + exp(-x))
+        vForce.reciprocal(result, result: &result)
 
         return result
     }
@@ -289,24 +285,23 @@ enum AccelerateML {
         var maxVal: Double = 0
         vDSP_maxvD(values, 1, &maxVal, vDSP_Length(n))
 
-        // Subtract max
-        var negMax = -maxVal
-        var shifted = [Double](repeating: 0, count: n)
-        vDSP_vsaddD(values, 1, &negMax, &shifted, 1, vDSP_Length(n))
-
-        // Exp
-        var expValues = [Double](repeating: 0, count: n)
-        vForce.exp(shifted, result: &expValues)
-
-        // Sum
-        var total: Double = 0
-        vDSP_sveD(expValues, 1, &total, vDSP_Length(n))
-
-        // Normalize
-        guard total > 0 else { return [Double](repeating: 1.0 / Double(n), count: n) }
+        // In-place processing
         var result = [Double](repeating: 0, count: n)
+        var negMax = -maxVal
+        
+        // 1. Subtract max: result = x - max
+        vDSP_vsaddD(values, 1, &negMax, &result, 1, vDSP_Length(n))
+        // 2. Exp: result = exp(x - max)
+        vForce.exp(result, result: &result)
+
+        // 3. Sum
+        var total: Double = 0
+        vDSP_sveD(result, 1, &total, vDSP_Length(n))
+
+        // 4. Normalize in-place
+        guard total > 0 else { return [Double](repeating: 1.0 / Double(n), count: n) }
         var invTotal = 1.0 / total
-        vDSP_vsmulD(expValues, 1, &invTotal, &result, 1, vDSP_Length(n))
+        vDSP_vsmulD(result, 1, &invTotal, &result, 1, vDSP_Length(n))
 
         return result
     }
@@ -322,14 +317,15 @@ enum AccelerateML {
         vDSP_maxvD(values, 1, &maxVal, vDSP_Length(n))
 
         var negMax = -maxVal
-        var shifted = [Double](repeating: 0, count: n)
-        vDSP_vsaddD(values, 1, &negMax, &shifted, 1, vDSP_Length(n))
-
-        var expValues = [Double](repeating: 0, count: n)
-        vForce.exp(shifted, result: &expValues)
+        var workBuffer = [Double](repeating: 0, count: n)
+        
+        // 1. Subtract max
+        vDSP_vsaddD(values, 1, &negMax, &workBuffer, 1, vDSP_Length(n))
+        // 2. Exp in-place
+        vForce.exp(workBuffer, result: &workBuffer)
 
         var total: Double = 0
-        vDSP_sveD(expValues, 1, &total, vDSP_Length(n))
+        vDSP_sveD(workBuffer, 1, &total, vDSP_Length(n))
 
         return maxVal + log(total)
     }
