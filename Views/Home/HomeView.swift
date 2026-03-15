@@ -118,15 +118,6 @@ struct HomeView: View {
         liveViewModel.recovery.readinessScore ?? viewModel.overallScore.score
     }
 
-    /// Delta from the daily baseline score (positive = above baseline, negative = below)
-    private var readinessDelta: Int? {
-        guard let readiness = liveViewModel.recovery.readinessScore else {
-            return viewModel.scores.scoreChangeFromYesterday
-        }
-        let delta = readiness - viewModel.overallScore.score
-        return delta == 0 ? nil : delta
-    }
-
     private static let readinessRefreshInterval: TimeInterval = 30 * 60
 
     private func startReadinessRefresh() {
@@ -182,7 +173,7 @@ struct HomeView: View {
                         dailyScore: viewModel.overallScore.score,
                         recoveryLabel: HomeView.recoveryLabel(liveReadinessScore),
                         dayType: DashboardViewModel.RecoveryState(score: liveReadinessScore).dayType,
-                        scoreDelta: readinessDelta,
+                        scoreChangeFromLastWeek: viewModel.scores.scoreChangeFromLastWeek,
                         onTap: { showScoreGuide = true }
                     )
                     .onAppear {
@@ -621,15 +612,7 @@ struct HomeView: View {
     /// Sleep-related actions go to sleep coach, strain/workout to strain detail,
     /// recovery/rest to insights. Defaults to insightsDetail.
     private func routeForAction(_ action: DashboardViewModel.SmartAction) -> Route {
-        let text = (action.title + " " + action.subtitle).lowercased()
-        if text.contains("sleep") || text.contains("bedtime") || text.contains("rest tonight") {
-            return .sleepCoach
-        } else if text.contains("strain") || text.contains("workout") || text.contains("exercise") || text.contains("training") {
-            return .strainDetail
-        } else if text.contains("recovery") || text.contains("rest") || text.contains("ease off") {
-            return .insightsDetail
-        }
-        return .insightsDetail
+        .todaysAction
     }
 
     static func recoveryLabel(_ score: Int) -> String {

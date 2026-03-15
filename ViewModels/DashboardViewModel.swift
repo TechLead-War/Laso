@@ -45,6 +45,10 @@ final class DashboardViewModel {
     /// Previous trend directions — used for trend reversal detection
     private var previousTrends: [HealthMetric: TrendDirection] = [:]
 
+    /// Cached daily action — computed once per calendar day (or after analysis refresh)
+    @MainActor private var _cachedDailyAction: SmartAction?
+    @MainActor private var _cachedDailyActionDate: Date?
+
     /// Cached 365-day score history for the current refresh cycle.
     /// Fetched once on first access via `scoreHistoryCached()`, cleared at
     /// the start of each refresh and after saving a new analysis snapshot.
@@ -512,6 +516,7 @@ final class DashboardViewModel {
         updateCachedProperties()
         computeNewEngines()
         lastAnalysisDate = Date()
+        invalidateDailyActionCache()
     }
 
     /// Initial load: authorize, fetch, analyze.
@@ -693,6 +698,7 @@ final class DashboardViewModel {
 
         // Mark analysis timestamp so subsequent no-change refreshes can skip
         lastAnalysisDate = Date()
+        await MainActor.run { invalidateDailyActionCache() }
 
         // Store current trends for next refresh comparison
         previousTrends = analysisEngine.trends.mapValues { $0.direction }
@@ -1267,8 +1273,22 @@ final class DashboardViewModel {
     }
 
     /// Single source of truth for what to do today.
-    /// Weighs ML policy decision, recovery, strain, goals, trends, and risks — outputs one clear recommendation.
+    /// Cached per calendar day — stable within a day, refreshed on new day or after analysis re-run.
+    @MainActor
     func smartDailyAction(liveVM: LiveViewModel) -> SmartAction {
+        let today = Calendar.current.startOfDay(for: Date())
+        if let cached = _cachedDailyAction,
+           let cachedDate = _cachedDailyActionDate,
+           Calendar.current.isDate(cachedDate, inSameDayAs: today) {
+            return cached
+        }
+
+        let sortedInsights = insights.focusedInsights
+        let recentActionKeys = loadRecentActionKeys()
+
+        // Filter insights: deprioritize ones shown 2+ consecutive days
+        let rotatedInsights = rotateInsights(sortedInsights, recentKeys: recentActionKeys)
+
         let recommendation = smartActionAdvisor.recommend(
             live: DashboardSmartActionAdvisor.LiveSnapshot(
                 hour: Calendar.current.component(.hour, from: Date()),
@@ -1284,15 +1304,73 @@ final class DashboardViewModel {
             analysis: DashboardSmartActionAdvisor.AnalysisSnapshot(
                 policyDecision: analysisEngine.mlOrchestrator.policyDecision,
                 restingHeartRateBaselineMean: analysisEngine.baselines[.restingHeartRate]?.mean,
-                userFocuses: insights.cachedHealthFocuses
+                userFocuses: insights.cachedHealthFocuses,
+                topInsights: rotatedInsights
             )
         )
-        return SmartAction(
+
+        let action = SmartAction(
             icon: recommendation.icon,
             title: recommendation.title,
             subtitle: recommendation.subtitle,
-            source: recommendation.source
+            source: recommendation.source,
+            rationale: recommendation.rationale,
+            supportingInsights: Array(sortedInsights.prefix(5))
         )
+
+        _cachedDailyAction = action
+        _cachedDailyActionDate = today
+        saveActionKey(recommendation.title)
+
+        return action
+    }
+
+    /// Invalidate the cached daily action — called after analysis refresh so new data takes effect.
+    @MainActor
+    func invalidateDailyActionCache() {
+        _cachedDailyAction = nil
+        _cachedDailyActionDate = nil
+    }
+
+    // MARK: - Action Rotation (avoid repeating same action 3+ days)
+
+    private static let recentActionKeysKey = "dailyAction_recentKeys"
+    private static let maxConsecutiveRepeat = 2
+
+    private func loadRecentActionKeys() -> [String] {
+        UserDefaults.standard.stringArray(forKey: Self.recentActionKeysKey) ?? []
+    }
+
+    private func saveActionKey(_ key: String) {
+        var recent = loadRecentActionKeys()
+        recent.append(key)
+        // Keep last 7 days worth
+        if recent.count > 7 { recent = Array(recent.suffix(7)) }
+        UserDefaults.standard.set(recent, forKey: Self.recentActionKeysKey)
+    }
+
+    /// Reorder insights so that if the same metric/directive drove the action 2+ consecutive days,
+    /// it drops down in priority to let a fresh insight surface.
+    private func rotateInsights(_ insights: [Insight], recentKeys: [String]) -> [Insight] {
+        guard recentKeys.count >= Self.maxConsecutiveRepeat else { return insights }
+
+        // Check if the last N action keys are the same
+        let tail = recentKeys.suffix(Self.maxConsecutiveRepeat)
+        guard let repeatedKey = tail.first, tail.allSatisfy({ $0 == repeatedKey }) else {
+            return insights
+        }
+
+        // Move insights whose title matches the repeated key to the back
+        var prioritized: [Insight] = []
+        var deprioritized: [Insight] = []
+        for insight in insights {
+            if insight.title == repeatedKey {
+                deprioritized.append(insight)
+            } else {
+                prioritized.append(insight)
+            }
+        }
+        return prioritized + deprioritized
     }
 
     struct SmartAction {
@@ -1300,6 +1378,8 @@ final class DashboardViewModel {
         let title: String
         let subtitle: String
         var source: String = "context_rules"
+        var rationale: String = ""
+        var supportingInsights: [Insight] = []
     }
 
     private var recentActivityTrendDirection: TrendDirection? {

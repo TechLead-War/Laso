@@ -41,6 +41,7 @@ enum AppFeature: String, Hashable {
     case brainHealth = "brain_health"
     case cycleDetail = "cycle_detail"
     case deviceSetupGuide = "device_setup_guide"
+    case todaysActionDetail = "todays_action_detail"
 }
 
 /// Actionable block/card types — only user-initiated taps and meaningful interactions.

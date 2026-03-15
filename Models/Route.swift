@@ -14,4 +14,5 @@ enum Route: Hashable {
     case cycleDetail
     case achievements
     case journalEntry
+    case todaysAction
 }

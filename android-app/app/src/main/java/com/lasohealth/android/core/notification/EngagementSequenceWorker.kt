@@ -69,10 +69,8 @@ class EngagementSequenceWorker(
             val initialDelay = computeInitialDelay(prefs.wakeUpHour, prefs.wakeUpMinute)
 
             val request = PeriodicWorkRequestBuilder<EngagementSequenceWorker>(
-                repeatInterval = 24,
-                repeatIntervalTimeUnit = TimeUnit.HOURS,
-                flexInterval = 2,
-                flexTimeUnit = TimeUnit.HOURS,
+                24L, TimeUnit.HOURS,
+                2L, TimeUnit.HOURS,
             )
                 .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
                 .addTag(WORK_NAME)

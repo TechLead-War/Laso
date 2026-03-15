@@ -19,18 +19,18 @@ object LasoTokens {
     const val BorderOpacity = 0.10f
     val DividerHeight = 32.dp
 
-    // iOS thresholds: 80+ green, 60-79 yellow, 40-59 orange, 0-39 red
+    // iOS thresholds: 75+ green, 50-74 yellow, 30-49 orange, 0-29 red
     fun scoreColor(score: Int): Color = when {
-        score >= 80 -> AccentGreen
-        score >= 60 -> AccentYellow
-        score >= 40 -> AccentOrange
+        score > 75 -> AccentGreen
+        score >= 50 -> AccentYellow
+        score >= 30 -> AccentOrange
         else -> AccentRed
     }
 
     fun scoreLabel(score: Int): String = when {
-        score >= 80 -> "Optimal"
-        score >= 60 -> "Good"
-        score >= 40 -> "Fair"
+        score > 75 -> "Optimal"
+        score >= 50 -> "Good"
+        score >= 30 -> "Fair"
         else -> "Poor"
     }
 

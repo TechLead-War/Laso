@@ -190,26 +190,6 @@ fun HomeScreen(
             }
         }
 
-        // 7b. Correlations Section (iOS: "From Your Data") — .padding(.top, 8)
-        if (state.correlations.isNotEmpty()) {
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-                HomeCorrelationsSection(
-                    correlations = state.correlations,
-                    onSeeAll = { navController.navigate(AppRoute.CorrelationsDetail.route) },
-                )
-            }
-        }
-
-        // 7c. Journal Prompt Card (iOS: shows after 6 PM) — .padding(.top, 8)
-        if (LocalTime.now().hour >= 18) {
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-                JournalPromptCard(
-                    onClick = { navController.navigate(AppRoute.JournalEntry.route) },
-                )
-            }
-        }
 
         // 8. Weekly Review Card — .padding(.top, 8)
         item {
@@ -241,7 +221,7 @@ private fun CoachGreetingHeader(
         now.hour < 5 -> "Good Night"
         now.hour < 12 -> "Good Morning"
         now.hour < 17 -> "Good Afternoon"
-        now.hour < 21 -> "Good Evening"
+        now.hour < 22 -> "Good Evening"
         else -> "Good Night"
     }
 
@@ -405,7 +385,7 @@ private fun RecoveryHeroCard(
                         if (scoreDelta != null && scoreDelta != 0) {
                             val deltaText = if (scoreDelta > 0) "+$scoreDelta" else "$scoreDelta"
                             val deltaBadgeColor = if (scoreDelta > 0) {
-                                LasoTokens.scoreColor(80) // green
+                                LasoTokens.scoreColor(76) // green
                             } else {
                                 LasoTokens.scoreColor(20) // red
                             }
@@ -442,7 +422,7 @@ private fun RecoveryHeroCard(
                                         color = deltaBadgeColor,
                                     )
                                     Text(
-                                        text = "from yesterday",
+                                        text = "vs last week",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = deltaBadgeColor,
                                     )
@@ -1116,178 +1096,3 @@ private fun LastUpdatedFooter(lastUpdated: String) {
 
 // endregion
 
-// region 10. Correlations Section (iOS: "From Your Data")
-
-@Composable
-private fun HomeCorrelationsSection(
-    correlations: List<CorrelationUi>,
-    onSeeAll: () -> Unit,
-) {
-    Column(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            SectionHeading(title = "From Your Data")
-            Text(
-                text = "See all",
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.clickable(onClick = onSeeAll),
-            )
-        }
-
-        correlations.take(2).forEach { correlation ->
-            LasoCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = onSeeAll),
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .background(
-                                    color = correlation.metricA.category.accentColor.copy(alpha = 0.15f),
-                                    shape = CircleShape,
-                                ),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                imageVector = correlation.metricA.category.icon,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                                tint = correlation.metricA.category.accentColor,
-                            )
-                        }
-
-                        Text(
-                            text = "\u2192",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .background(
-                                    color = correlation.metricB.category.accentColor.copy(alpha = 0.15f),
-                                    shape = CircleShape,
-                                ),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                imageVector = correlation.metricB.category.icon,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                                tint = correlation.metricB.category.accentColor,
-                            )
-                        }
-
-                        Text(
-                            text = correlation.title,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.weight(1f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                        )
-                    }
-
-                    Text(
-                        text = correlation.summary,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-        }
-    }
-}
-
-// endregion
-
-// region 11. Journal Prompt Card (iOS: shows after 6 PM)
-
-@Composable
-private fun JournalPromptCard(
-    onClick: () -> Unit,
-) {
-    val purple = Color(0xFF7C3AED)
-
-    LasoCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .clickable(onClick = onClick),
-        tint = purple,
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .background(
-                        color = purple.copy(alpha = LasoTokens.BadgeBgOpacity),
-                        shape = CircleShape,
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "\u270F\uFE0F",
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-            }
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                Text(
-                    text = "How was today?",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = "Capture your thoughts before the day ends",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-            )
-        }
-    }
-}
-
-// endregion

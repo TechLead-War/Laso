@@ -8,7 +8,7 @@ struct RecoveryHeroCard: View {
     let dailyScore: Int?
     let recoveryLabel: String
     let dayType: String
-    let scoreDelta: Int?
+    let scoreChangeFromLastWeek: Int?
     var onTap: (() -> Void)? = nil
 
     @State private var appeared = false
@@ -49,21 +49,21 @@ struct RecoveryHeroCard: View {
                         .foregroundStyle(.primary)
                         .contentTransition(.numericText())
 
-                    // Score delta badge
-                    if let delta = scoreDelta, delta != 0 {
+                    // Score change from last week (stable comparison, not intra-day noise)
+                    if let weekDelta = scoreChangeFromLastWeek, weekDelta != 0 {
                         HStack(spacing: 4) {
-                            Image(systemName: delta > 0 ? "arrow.up.right" : "arrow.down.right")
+                            Image(systemName: weekDelta > 0 ? "arrow.up.right" : "arrow.down.right")
                                 .font(.caption.weight(.bold))
-                            Text(delta > 0 ? "+\(delta)" : "\(delta)")
+                            Text(weekDelta > 0 ? "+\(weekDelta)" : "\(weekDelta)")
                                 .font(.subheadline.weight(.semibold).monospacedDigit())
-                            Text("from yesterday")
+                            Text("vs last week")
                                 .font(.caption)
                         }
-                        .foregroundStyle(delta > 0 ? .green : .red)
+                        .foregroundStyle(weekDelta > 0 ? .green : .red)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
                         .background(
-                            (delta > 0 ? Color.green : Color.red).opacity(DS.badgeBg),
+                            (weekDelta > 0 ? Color.green : Color.red).opacity(DS.badgeBg),
                             in: Capsule()
                         )
                     }
@@ -118,7 +118,7 @@ struct RecoveryHeroCard: View {
             dailyScore: 78,
             recoveryLabel: "Fully Recovered",
             dayType: "Green Day — Push Hard",
-            scoreDelta: 5
+            scoreChangeFromLastWeek: 5
         )
 
         RecoveryHeroCard(
@@ -126,7 +126,7 @@ struct RecoveryHeroCard: View {
             dailyScore: 78,
             recoveryLabel: "Moderate Recovery",
             dayType: "Yellow Day — Maintain",
-            scoreDelta: -3
+            scoreChangeFromLastWeek: -3
         )
 
         RecoveryHeroCard(
@@ -134,7 +134,7 @@ struct RecoveryHeroCard: View {
             dailyScore: 78,
             recoveryLabel: "Low Recovery",
             dayType: "Red Day — Recover",
-            scoreDelta: -12
+            scoreChangeFromLastWeek: -12
         )
     }
     .padding(.vertical)

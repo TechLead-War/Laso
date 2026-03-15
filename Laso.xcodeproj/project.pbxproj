@@ -217,6 +217,7 @@
 		A163B5FCE99326D09247AC75 /* ShareableCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CECC156345E05CF1B22BA2C /* ShareableCard.swift */; };
 		A165F775F6B6935CB9C754AE /* AppContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C7BCB77296C0CC52749362 /* AppContainer.swift */; };
 		A329FE7C8C1DFDB4DEBEB501 /* HomePrimaryActionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97B33FA07679543DDE4568BA /* HomePrimaryActionCard.swift */; };
+		B1A2C3D4E5F60718293A4B5C /* TodaysActionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B3D4E5F6071829304B5C6D /* TodaysActionDetailView.swift */; };
 		A34AAFFC8F0B1B05D3A5EDEF /* WorkoutTypeAppEnum.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA472033C4C2010869C08B3C /* WorkoutTypeAppEnum.swift */; };
 		A474F6C7E6B021D9C306CE44 /* LiveBloodPressureTempSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B776F380F64FD36358B287AE /* LiveBloodPressureTempSection.swift */; };
 		A4CFD4ED752519F1BAEC503D /* ContextualSignalEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB181EB1D26029A00CDF9513 /* ContextualSignalEngine.swift */; };
@@ -563,6 +564,7 @@
 		96B8010F2D0788FA47869B48 /* Copy+Explore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+Explore.swift"; sourceTree = "<group>"; };
 		97556537D764BAF01B89B46C /* LiveRefreshPlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRefreshPlanner.swift; sourceTree = "<group>"; };
 		97B33FA07679543DDE4568BA /* HomePrimaryActionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePrimaryActionCard.swift; sourceTree = "<group>"; };
+		C2B3D4E5F6071829304B5C6D /* TodaysActionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodaysActionDetailView.swift; sourceTree = "<group>"; };
 		97F743B1B8A340CB76E7D725 /* StressCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StressCard.swift; sourceTree = "<group>"; };
 		9A0537AF9DDF66CD4D1F8F9C /* OnboardingWelcomeStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWelcomeStep.swift; sourceTree = "<group>"; };
 		9A4F8FE01B7C6F5215CE3F48 /* FrequencyCapManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrequencyCapManager.swift; sourceTree = "<group>"; };
@@ -1312,6 +1314,7 @@
 				46D64D56CD07103857A1F0CD /* HomeFirstLaunchLoadingView.swift */,
 				29C4F7E23A76618C9508A8A5 /* HomeJournalPromptCard.swift */,
 				97B33FA07679543DDE4568BA /* HomePrimaryActionCard.swift */,
+				C2B3D4E5F6071829304B5C6D /* TodaysActionDetailView.swift */,
 				4E39C48FAFF0EE6BB872CB33 /* HomeView.swift */,
 				24BFF272759A76CC1A5AA370 /* LevelBadgeCard.swift */,
 				57C7C392834EE694D06A3C80 /* MetricStripView.swift */,
@@ -1699,6 +1702,7 @@
 				19527C7B2A20FFB7DD89E892 /* HomeFirstLaunchLoadingView.swift in Sources */,
 				6EFF44BDF76459FCBE54646B /* HomeJournalPromptCard.swift in Sources */,
 				A329FE7C8C1DFDB4DEBEB501 /* HomePrimaryActionCard.swift in Sources */,
+				B1A2C3D4E5F60718293A4B5C /* TodaysActionDetailView.swift in Sources */,
 				6B6DD6BD752BAF8FC456DF0D /* HomeView.swift in Sources */,
 				D8445E0D2CFFD6D45B17BCC3 /* IllnessEarlyWarning.swift in Sources */,
 				CFC81918E323B74F7051D0AE /* Insight.swift in Sources */,

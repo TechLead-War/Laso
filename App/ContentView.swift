@@ -255,6 +255,13 @@ struct ContentView: View {
             achievementsDestination
         case .journalEntry:
             JournalEntryView()
+        case .todaysAction:
+            TodaysActionDetailView(
+                action: dashboardViewModel.smartDailyAction(liveVM: liveViewModel),
+                policyDecision: dashboardViewModel.analysisEngine.mlOrchestrator.policyDecision,
+                readinessScore: liveViewModel.recovery.readinessScore ?? dashboardViewModel.overallScore.score,
+                onTapMetric: { metric in navigationPath.append(metric) }
+            )
         }
     }
 

@@ -223,6 +223,27 @@ Project settings are in `.qualitygate`. See `QualityGate/README.md` for full doc
 
 ---
 
+## Website Deployment
+
+Website is an Astro site hosted on Cloudflare Pages. Domain: **lasohealth.fit**
+
+```bash
+# Dev server (hot reload)
+cd website && npm run dev
+
+# Deploy to production
+cd website && npm run build && npx wrangler pages deploy dist --project-name=laso --branch=main --commit-dirty=true
+
+# List deployments
+npx wrangler pages deployment list --project-name=laso
+
+# Rollback to a previous deployment
+curl -X POST "https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/pages/projects/laso/deployments/<DEPLOYMENT_ID>/rollback" \
+  -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json"
+```
+
+---
+
 ## Troubleshooting
 
 | Problem | Fix |
