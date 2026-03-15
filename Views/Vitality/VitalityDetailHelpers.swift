@@ -24,6 +24,11 @@ func vitalityPaceState(for scorer: VitalityScorer) -> VitalityPaceState {
 }
 
 func vitalityPaceTint(for scorer: VitalityScorer) -> Color {
+    // Delta overrides pace: a large positive delta (aging much older) should never show green
+    let delta = scorer.delta
+    if delta > 5 { return vitalityPaceRed }
+    if delta > 2 { return vitalityPaceYellow }
+
     switch vitalityPaceState(for: scorer) {
     case .healthy: return vitalityWhoopGreen
     case .caution: return vitalityPaceYellow

@@ -32,7 +32,7 @@ struct VitalityHeroSection: View {
 
                         Text(deltaBadgeText)
                             .font(.title3.weight(.bold))
-                            .foregroundStyle(paceTint)
+                            .foregroundStyle(vitalityDeltaColor(for: scorer.delta))
                             .monospacedDigit()
                     }
 
