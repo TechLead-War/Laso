@@ -286,7 +286,12 @@ final class VitalityScorer {
     ///   - timeSeries: Fresh in-memory time series from HealthKitManager.
     func compute(from store: HealthDataStore, chronologicalAge: Int, timeSeries: [HealthMetric: MetricTimeSeries]? = nil) {
         self.chronologicalAge = chronologicalAge
-        let allSeries = timeSeries ?? store.loadAllTimeSeries()
+        let allSeries: [HealthMetric: MetricTimeSeries]
+        if let timeSeries {
+            allSeries = timeSeries
+        } else {
+            allSeries = MainActor.assumeIsolated { store.loadAllTimeSeries() }
+        }
 
         availableDays = usableDaysForPersonalization(from: allSeries)
         personalizationProgress = personalizationProgress(for: availableDays)
@@ -602,7 +607,7 @@ final class VitalityScorer {
     /// Uses a simplified re-computation approach: samples the overall score trend
     /// and maps it to a vitality age approximation over time.
     private func computeHistory(from store: HealthDataStore) {
-        let scoreHistory = store.loadScoreHistory(days: 90)
+        let scoreHistory = MainActor.assumeIsolated { store.loadScoreHistory(days: 90) }
         guard scoreHistory.count >= 7 else {
             history = []
             return

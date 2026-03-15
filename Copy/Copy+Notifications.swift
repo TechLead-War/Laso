@@ -36,12 +36,14 @@ extension Copy {
 
         static let spo2CriticalTitle = "Blood Oxygen Below Typical Range"
         static func spo2CriticalBody(value: String) -> String {
-            "Your blood oxygen is \(value)%. Values below 92% are unusually low \u{2014} consider speaking with a healthcare provider."
+            let threshold = Int(RemoteConfigManager.shared.spo2CriticalThreshold)
+            return "Your blood oxygen is \(value)%. Values below \(threshold)% are unusually low \u{2014} consider speaking with a healthcare provider."
         }
 
         static let spo2WarningTitle = "Blood Oxygen Worth Monitoring"
         static func spo2WarningBody(value: String) -> String {
-            "Your blood oxygen is \(value)%. Normal range is 95-100%. Monitor closely."
+            let threshold = Int(RemoteConfigManager.shared.spo2WarningThreshold)
+            return "Your blood oxygen is \(value)%. Normal range is \(threshold)-100%. Monitor closely."
         }
 
         // MARK: - Respiratory Rate

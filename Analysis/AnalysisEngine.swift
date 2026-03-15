@@ -263,7 +263,7 @@ final class AnalysisEngine {
 
         var allInsights = AnalyzerRegistry.runAll(AnalyzerRegistry.essential, context: context)
 
-        allInsights.append(contentsOf: mlOrchestrator.generateInsights())
+        // ML insights are appended exclusively in runMLAnalysis to avoid duplicates.
         allInsights = InsightCoordinator.coordinate(allInsights)
 
         insights = allInsights

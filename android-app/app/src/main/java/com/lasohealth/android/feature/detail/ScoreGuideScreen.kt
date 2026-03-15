@@ -278,7 +278,7 @@ fun ScoreGuideScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Text(
-                    text = "Recovery & Readiness",
+                    text = "Recovery",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                 )
@@ -292,7 +292,7 @@ fun ScoreGuideScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
-                        text = "Your Readiness score (0\u2013100) tells you how recovered your body is. It\u2019s calculated from two signals:",
+                        text = "Your Recovery score (0\u2013100) tells you how recovered your body is. It\u2019s calculated from two signals:",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     )

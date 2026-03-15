@@ -9,6 +9,8 @@ struct SettingsView: View {
     @State private var showExportSheet = false
     @State private var showMetricAlertPicker = false
 
+    @State private var saveDebounceTask: DispatchWorkItem?
+
     @State private var devicesTracker = SectionTracker(section: .settingsDevices, tab: .settings)
     @State private var notificationsTracker = SectionTracker(section: .settingsNotifications, tab: .settings)
     @State private var alertsTracker = SectionTracker(section: .settingsAlerts, tab: .settings)
@@ -376,23 +378,27 @@ struct SettingsView: View {
                             .foregroundStyle(.secondary)
                     }
 
-                    Link(destination: URL(string: AppSecrets.URLs.privacyPolicy)!) {
-                        HStack {
-                            Label(Copy.Privacy.privacyPolicy, systemImage: "hand.raised.fill")
-                            Spacer()
-                            Image(systemName: "arrow.up.right")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                    if let privacyURL = URL(string: AppSecrets.URLs.privacyPolicy) {
+                        Link(destination: privacyURL) {
+                            HStack {
+                                Label(Copy.Privacy.privacyPolicy, systemImage: "hand.raised.fill")
+                                Spacer()
+                                Image(systemName: "arrow.up.right")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
 
-                    Link(destination: URL(string: AppSecrets.URLs.termsOfUse)!) {
-                        HStack {
-                            Label(Copy.Privacy.termsOfUse, systemImage: "doc.text.fill")
-                            Spacer()
-                            Image(systemName: "arrow.up.right")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                    if let termsURL = URL(string: AppSecrets.URLs.termsOfUse) {
+                        Link(destination: termsURL) {
+                            HStack {
+                                Label(Copy.Privacy.termsOfUse, systemImage: "doc.text.fill")
+                                Spacer()
+                                Image(systemName: "arrow.up.right")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }
@@ -436,7 +442,7 @@ struct SettingsView: View {
                 }
             }
             .onChange(of: preferences) { _, _ in
-                savePreferences()
+                debouncedSave()
             }
             .sheet(isPresented: $showExportSheet, onDismiss: {
                 webExportViewModel.cleanupExport()
@@ -449,6 +455,15 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    private func debouncedSave() {
+        saveDebounceTask?.cancel()
+        let task = DispatchWorkItem { [preferences] in
+            persistence.savePreferences(preferences)
+        }
+        saveDebounceTask = task
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: task)
     }
 
     private func savePreferences() {

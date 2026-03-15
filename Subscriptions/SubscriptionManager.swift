@@ -242,10 +242,8 @@ final class SubscriptionManager {
 
         if daysSinceInstall < SubscriptionConfig.trialDays {
             let remaining = SubscriptionConfig.trialDays - daysSinceInstall
-            let wasNotTrial = { if case .trial = self.status { return false }; return true }()
             status = .trial(daysRemaining: remaining)
         } else {
-            let wasNotExpired = { if case .expired = self.status { return false }; return true }()
             status = .expired
         }
     }
@@ -266,8 +264,8 @@ final class SubscriptionManager {
         let previousStatus = status
         await refreshStatus()
         AppAnalytics.shared.updateSubscriptionProperties(status: status)
-        if case .subscribed = previousStatus, case .subscribed = status {
-            AppAnalytics.shared.trackSubscriptionRenewed()
+        if case .subscribed = previousStatus, case .subscribed(let expirationDate) = status {
+            AppAnalytics.shared.trackSubscriptionRenewed(newExpirationDate: expirationDate)
         }
     }
 

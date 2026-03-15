@@ -20,10 +20,10 @@ extension Copy {
 
             // Projection templates
             static func projectedToReach(label: String, days: Int) -> String {
-                "At this rate, you could reach \(label) territory in ~\(days) days."
+                "Based on current trends, this metric may approach \(label) territory within ~\(days) days."
             }
             static func projectedToReachRange(label: String, days: Int) -> String {
-                "Projected to reach \(label) range in ~\(days) days."
+                "Based on current trends, this may approach the \(label) range within ~\(days) days."
             }
 
             // BP summary templates
@@ -31,13 +31,13 @@ extension Copy {
                 "Your systolic BP has been rising \(slopePerMonth) mmHg/month over the past \(dayCount) days. Current stage: \(stage). \(nextStageInfo)"
             }
             static func pulsePressureSummary(pulsePressure: Int) -> String {
-                "Your pulse pressure (\(pulsePressure) mmHg) is above the normal range of 40-60 mmHg, which may indicate arterial stiffness."
+                "Your pulse pressure (\(pulsePressure) mmHg) is above the typical range of 40-60 mmHg, which is sometimes associated with arterial stiffness."
             }
             static func glucoseTrendingSummary(slopePerMonth: String, latest: String, stage: String, nextInfo: String) -> String {
                 "Your fasting glucose has been rising \(slopePerMonth) mg/dL per month. Current: \(latest) mg/dL (\(stage)). \(nextInfo)"
             }
             static func respiratorySummary(rate: String, stage: String) -> String {
-                "Your respiratory rate (\(rate) br/min) is classified as \(stage). Normal range is 12-20 breaths per minute."
+                "Your respiratory rate (\(rate) br/min) falls in the \(stage) range. The typical range is 12-20 breaths per minute."
             }
         }
 
@@ -152,22 +152,22 @@ extension Copy {
         // MARK: - Cognitive Energy
 
         enum CognitiveEnergy {
-            static let lowCognitiveReadiness = "Low Cognitive Readiness"
-            static let strongCognitiveReadiness = "Strong Cognitive Readiness"
-            static let sleepDebtAccumulating = "Sleep Debt Accumulating"
+            static let lowCognitiveReadiness = "Low Cognitive Energy"
+            static let strongCognitiveReadiness = "Strong Cognitive Energy"
+            static let sleepDebtAccumulating = "Sleep Balance Declining"
             static let mentalFatiguePatternDetected = "Mental Fatigue Pattern Detected"
             static let lowPhysicalEnergy = "Low Physical Energy"
             static let recoveryDayNeeded = "Recovery Day Needed"
             static let daylightSleepCognitionChain = "Daylight-Sleep-Cognition Chain"
 
-            // Cognitive readiness narratives
+            // Cognitive energy narratives
             static func cognitiveReadinessLow(score: Int, componentText: String) -> String {
-                "Your cognitive readiness is at \(score)/100\(componentText). Together these predict reduced mental clarity and slower processing."
+                "Your cognitive energy is at \(score)/100\(componentText). Together these predict reduced mental clarity and slower processing."
             }
             static func cognitiveReadinessStrong(score: Int) -> String {
-                "Your cognitive readiness is strong at \(score)/100. HRV, sleep quality, and recovery markers are all above baseline."
+                "Your cognitive energy is strong at \(score)/100. HRV, sleep quality, and recovery markers are all above baseline."
             }
-            static let brainPrimedForWork = "Your brain is primed for demanding work today. Take advantage of this high-readiness state for complex tasks."
+            static let brainPrimedForWork = "Your brain is primed for demanding work today. Take advantage of this high-energy state for complex tasks."
 
             // Recovery day
             static let recoveryDayRecommendation = "Take a genuine rest day tomorrow. Light walking only, no intense exercise. Your patterns show HRV typically rebounds within 48 hrs of reduced intensity."

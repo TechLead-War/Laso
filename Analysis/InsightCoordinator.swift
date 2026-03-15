@@ -118,9 +118,6 @@ struct InsightCoordinator {
                 let directiveB = directiveMap[insightB.id] ?? .informational
                 guard directiveA.conflicts.contains(directiveB) else { continue }
 
-                // Only resolve if at least one is warning+
-                guard insightA.severity >= .warning || insightB.severity >= .warning else { continue }
-
                 // Determine winner
                 let aWins: Bool
                 if directiveA.resolutionPriority != directiveB.resolutionPriority {

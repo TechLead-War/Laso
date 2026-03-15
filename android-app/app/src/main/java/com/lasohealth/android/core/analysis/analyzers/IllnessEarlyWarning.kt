@@ -359,10 +359,8 @@ class IllnessEarlyWarning : InsightAnalyzer {
     ): String {
         val observations = mutableListOf<String>()
 
-        observations += "Your body is showing strain across ${signals.size} metrics over $daysElevated consecutive days."
-
         if (priority <= InsightPriority.HIGH) {
-            observations += "Your body is showing strain across ${signals.size} metrics simultaneously."
+            observations += "Your body is showing strain across ${signals.size} metrics over $daysElevated consecutive days."
         } else {
             observations += "Multiple metrics have shifted from your baseline at the same time."
         }

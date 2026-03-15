@@ -272,6 +272,7 @@ struct ExploreView: View {
         .navigationBarTitleDisplayMode(.large)
         .toolbar(.visible, for: .navigationBar)
         .onAppear {
+            maxScrollDepth = 0
             AppAnalytics.shared.trackFeatureOpen(.explore, metadata: [
                 "weakest_category": weakestCategory?.category.displayName ?? "none",
                 "insights_count": viewModel.insights.focusedInsights.count,
@@ -328,24 +329,7 @@ struct ExploreView: View {
     }
 
     private var trendMetrics: [TrendMetricItem] {
-        var items: [TrendMetricItem] = []
-        for (metric, series) in viewModel.healthKitManager.timeSeries {
-            guard let trend = TrendAnalyzer.canonicalTrend(
-                metric: metric,
-                series: series,
-                analysisEngine: viewModel.analysisEngine,
-                days: trendTimeframe
-            ) else { continue }
-            let samples = series.samples(lastDays: trendTimeframe)
-            guard samples.count >= 3 else { continue }
-            items.append(TrendMetricItem(
-                metric: metric,
-                trend: trend,
-                sparklineSamples: samples
-            ))
-        }
-        items.sort { abs($0.trend.weekOverWeekChange) > abs($1.trend.weekOverWeekChange) }
-        return items
+        viewModel.trends.trendMetrics(for: trendTimeframe)
     }
 
     private var sortedCategories: [(category: HealthCategory, score: Int?)] {

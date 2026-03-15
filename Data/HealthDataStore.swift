@@ -134,6 +134,10 @@ final class StoredMLModelState {
 
 /// On-device persistent store for all health metric data using SwiftData.
 /// Enables years of historical data storage, incremental HealthKit sync, and score history.
+///
+/// All ModelContext operations are confined to the main actor for thread safety.
+/// Background tasks that need store data should `await` calls on this actor boundary.
+@MainActor
 @Observable
 final class HealthDataStore {
     struct DailyStrainRecord {

@@ -309,7 +309,6 @@ final class PersonalOptimizer {
         var i = 0
         while i < sorted.count {
             if Double(sorted[i].score) < threshold {
-                let start = i
                 while i < sorted.count && Double(sorted[i].score) < threshold { i += 1 }
                 let end = i - 1
                 var rd: Int?; var rm: [HealthMetric: [Double]] = [:]

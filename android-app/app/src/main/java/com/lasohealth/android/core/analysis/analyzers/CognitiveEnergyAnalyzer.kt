@@ -127,12 +127,12 @@ class CognitiveEnergyAnalyzer : InsightAnalyzer {
 
         return AnalysisInsight(
             id = UUID.randomUUID().toString(),
-            title = if (isLow) "Low Cognitive Readiness" else "Strong Cognitive Readiness",
+            title = if (isLow) "Low Cognitive Energy" else "Strong Cognitive Energy",
             detail = if (isLow) {
-                "Your cognitive readiness is at $finalScore/100$componentText. " +
+                "Your cognitive energy is at $finalScore/100$componentText. " +
                     "Addressing these factors can sharpen mental clarity and processing speed."
             } else {
-                "Your cognitive readiness is strong at $finalScore/100. " +
+                "Your cognitive energy is strong at $finalScore/100. " +
                     "HRV, sleep quality, and recovery markers are all above baseline."
             },
             metric = HealthMetric.HEART_RATE_VARIABILITY,
@@ -164,7 +164,7 @@ class CognitiveEnergyAnalyzer : InsightAnalyzer {
 
         return AnalysisInsight(
             id = UUID.randomUUID().toString(),
-            title = "Sleep Debt Accumulating",
+            title = "Sleep Balance Declining",
             detail = "You've accumulated $debtStr hours of sleep debt this week (averaging $avgStr hrs " +
                 "vs your $baselineStr hr baseline). Cognitive impairment compounds with each deficit day " +
                 "\u2014 reaction time and decision-making are most affected. " +

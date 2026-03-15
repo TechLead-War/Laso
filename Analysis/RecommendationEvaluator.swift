@@ -10,6 +10,7 @@ enum RecommendationEvaluator {
     }
 
     /// Evaluate all pending recommendations against actual metric data
+    @MainActor
     static func evaluatePending(store: HealthDataStore, timeSeries: [HealthMetric: MetricTimeSeries]) {
         let pending = store.loadPendingRecommendations()
         let now = Date()
@@ -70,6 +71,7 @@ enum RecommendationEvaluator {
     }
 
     /// Win rate: % of fully evaluated recommendations that improved (needs >= 5)
+    @MainActor
     static func computeWinRate(store: HealthDataStore) -> Double? {
         let evaluated = store.loadEvaluatedRecommendations(days: 90)
         guard evaluated.count >= 5 else { return nil }

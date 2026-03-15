@@ -27,6 +27,8 @@ enum AnalyzerRegistry {
         CrossMetricAnomalyDetector.self,
         NutritionCorrelationAnalyzer.self,
         CausalChainEngine.self,
+        ScoreTrajectoryAnalyzer.self,
+        BaselineDriftDetector.self,
     ]
 
     static func runAll(_ analyzers: [any InsightAnalyzer.Type], context: AnalysisContext) -> [Insight] {

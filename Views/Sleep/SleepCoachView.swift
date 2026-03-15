@@ -531,15 +531,20 @@ struct SleepCoachView: View {
     // MARK: - Formatting Helpers
 
     private func formatDuration(_ hours: Double) -> String {
-        let h = Int(hours)
-        let m = Int((hours - Double(h)) * 60)
+        let clamped = max(0, hours)
+        let h = Int(clamped)
+        let m = max(0, Int((clamped - Double(h)) * 60))
         if h == 0 { return "\(m)m" }
         return "\(h)h \(String(format: "%02d", m))m"
     }
 
-    private func dayLabel(_ date: Date) -> String {
+    private static let dayFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "E"
-        return String(formatter.string(from: date).prefix(3))
+        return formatter
+    }()
+
+    private func dayLabel(_ date: Date) -> String {
+        String(Self.dayFormatter.string(from: date).prefix(3))
     }
 }

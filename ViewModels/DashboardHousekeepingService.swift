@@ -41,9 +41,12 @@ final class DashboardHousekeepingService {
     func perform(store: HealthDataStore, payload: Payload) async {
         await cloudBackupManager.backupIfNeeded(store: store, persistence: persistenceManager)
 
-        RecommendationEvaluator.evaluatePending(store: store, timeSeries: payload.timeSeries)
-        store.pruneOldRecommendations()
-        store.pruneOldNotificationEvents()
+        // HealthDataStore is @MainActor — batch SwiftData operations on main actor
+        await MainActor.run {
+            RecommendationEvaluator.evaluatePending(store: store, timeSeries: payload.timeSeries)
+            store.pruneOldRecommendations()
+            store.pruneOldNotificationEvents()
+        }
 
         analytics.trackAnalysisCompleted(
             score: payload.currentScore,
@@ -100,51 +103,56 @@ final class DashboardHousekeepingService {
             .max(by: { $0.severity < $1.severity })
             .map { (metricName: $0.metric.displayName, changePercent: $0.deviationPercent) }
 
-        var optimizedPreferences = preferences
-        let notificationEvents = store.loadNotificationEvents(days: 30)
-        if notificationEvents.count >= 14 {
-            optimizedPreferences.dailySummaryTime.hour = NotificationOptimizer.optimalHour(events: notificationEvents)
-        }
+        // Notification scheduling accesses @MainActor HealthDataStore internally
+        // (via NotificationManager.store), so run all scheduling on main actor.
+        let streakDays = sessionTracker.streakDays
+        await MainActor.run {
+            var optimizedPreferences = preferences
+            let notificationEvents = store.loadNotificationEvents(days: 30)
+            if notificationEvents.count >= 14 {
+                optimizedPreferences.dailySummaryTime.hour = NotificationOptimizer.optimalHour(events: notificationEvents)
+            }
 
-        DailySummaryScheduler.schedule(
-            score: payload.currentScore,
-            anomalyCount: anomalyCount,
-            topInsights: Array(payload.insights.prefix(3)),
-            categoryBreakdown: categoryBreakdown,
-            preferences: optimizedPreferences,
-            topAnomaly: topAnomaly,
-            scoreChangeFromYesterday: payload.scoreChangeFromYesterday,
-            streakDays: sessionTracker.streakDays
-        )
+            DailySummaryScheduler.schedule(
+                score: payload.currentScore,
+                anomalyCount: anomalyCount,
+                topInsights: Array(payload.insights.prefix(3)),
+                categoryBreakdown: categoryBreakdown,
+                preferences: optimizedPreferences,
+                topAnomaly: topAnomaly,
+                scoreChangeFromYesterday: payload.scoreChangeFromYesterday,
+                streakDays: streakDays
+            )
 
-        DailySummaryScheduler.scheduleEvening(
-            score: payload.currentScore,
-            strainLevel: payload.strainLabel,
-            preferences: preferences
-        )
-
-        let topTrends: [(metric: String, direction: String, change: Double)] = payload.currentTrends
-            .sorted { abs($0.value.weekOverWeekChange) > abs($1.value.weekOverWeekChange) }
-            .prefix(5)
-            .map { (metric: $0.key.displayName, direction: $0.value.direction.symbol, change: $0.value.weekOverWeekChange) }
-
-        WeeklySummaryScheduler.schedule(
-            score: payload.currentScore,
-            scoreChange: scoreChange,
-            improvedCount: payload.periodSummary.improvedCount,
-            declinedCount: payload.periodSummary.declinedCount,
-            topTrends: topTrends,
-            preferences: preferences
-        )
-
-        if notificationsAuthorized {
-            AlertEvaluator.evaluate(
-                anomalies: payload.currentAnomalies,
-                trends: payload.currentTrends,
-                timeSeries: payload.timeSeries,
-                previousTrends: payload.previousTrends,
+            DailySummaryScheduler.scheduleEvening(
+                score: payload.currentScore,
+                strainLevel: payload.strainLabel,
                 preferences: preferences
             )
+
+            let topTrends: [(metric: String, direction: String, change: Double)] = payload.currentTrends
+                .sorted { abs($0.value.weekOverWeekChange) > abs($1.value.weekOverWeekChange) }
+                .prefix(5)
+                .map { (metric: $0.key.displayName, direction: $0.value.direction.symbol, change: $0.value.weekOverWeekChange) }
+
+            WeeklySummaryScheduler.schedule(
+                score: payload.currentScore,
+                scoreChange: scoreChange,
+                improvedCount: payload.periodSummary.improvedCount,
+                declinedCount: payload.periodSummary.declinedCount,
+                topTrends: topTrends,
+                preferences: preferences
+            )
+
+            if notificationsAuthorized {
+                AlertEvaluator.evaluate(
+                    anomalies: payload.currentAnomalies,
+                    trends: payload.currentTrends,
+                    timeSeries: payload.timeSeries,
+                    previousTrends: payload.previousTrends,
+                    preferences: preferences
+                )
+            }
         }
     }
 }

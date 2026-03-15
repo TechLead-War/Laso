@@ -45,6 +45,11 @@ final class DashboardViewModel {
     /// Previous trend directions — used for trend reversal detection
     private var previousTrends: [HealthMetric: TrendDirection] = [:]
 
+    /// Cached 365-day score history for the current refresh cycle.
+    /// Fetched once on first access via `scoreHistoryCached()`, cleared at
+    /// the start of each refresh and after saving a new analysis snapshot.
+    @MainActor private var _cachedScoreHistory: [(date: Date, score: Int)]?
+
     // MARK: - Nested @Observable Classes
 
     @Observable
@@ -80,10 +85,7 @@ final class DashboardViewModel {
         var scoreChangeFromYesterday: Int? { cachedScoreChangeFromYesterday }
 
         var recoveryState: RecoveryState {
-            let score = overallScore.score
-            if score > 75 { return .green }
-            if score >= 50 { return .yellow }
-            return .red
+            RecoveryState(score: overallScore.score)
         }
 
         var dayClassification: String {
@@ -97,6 +99,8 @@ final class DashboardViewModel {
     @Observable
     final class TrendState {
         fileprivate(set) var cachedTrendsSummary: TrendsSummary?
+        /// Pre-computed trend metrics keyed by timeframe (7, 30, 90 days)
+        fileprivate(set) var cachedTrendMetricsByTimeframe: [Int: [TrendMetricItem]] = [:]
 
         var trendsSummary: TrendsSummary {
             cachedTrendsSummary ?? TrendsSummary(improving: 0, stable: 0, declining: 0, topMovers: [])
@@ -106,10 +110,17 @@ final class DashboardViewModel {
         var todayTrendsSummary: TrendsSummary {
             trendsSummary
         }
+
+        /// Returns pre-computed trend metrics for the given timeframe
+        func trendMetrics(for days: Int) -> [TrendMetricItem] {
+            cachedTrendMetricsByTimeframe[days] ?? []
+        }
     }
 
     @Observable
     final class InsightState {
+        /// Raw health focuses from encrypted store — cached to avoid repeated Keychain + AES-GCM decryption.
+        fileprivate(set) var cachedHealthFocuses: Set<HealthFocus> = []
         fileprivate(set) var cachedFocusCategories: Set<HealthCategory> = []
         fileprivate(set) var cachedFocusedInsights: [Insight] = []
 
@@ -165,6 +176,12 @@ final class DashboardViewModel {
 
     enum RecoveryState: String, CaseIterable {
         case green, yellow, red
+
+        init(score: Int) {
+            if score > 75 { self = .green }
+            else if score >= 50 { self = .yellow }
+            else { self = .red }
+        }
 
         var label: String {
             switch self {
@@ -351,7 +368,7 @@ final class DashboardViewModel {
             case .threeMonths: return 90
             case .sixMonths: return 180
             case .oneYear: return 365
-            case .allTime: return 365
+            case .allTime: return 3650
             }
         }
 
@@ -487,6 +504,7 @@ final class DashboardViewModel {
 
     /// Use results produced by onboarding calibration without re-running heavy first-load work.
     /// Assumes shared `healthKitManager` + `analysisEngine` were already populated.
+    @MainActor
     func hydrateFromCalibration() {
         ui.isLoading = false
         ui.errorMessage = nil
@@ -498,6 +516,7 @@ final class DashboardViewModel {
 
     /// Initial load: authorize, fetch, analyze.
     /// `skipDiscovery` is used by onboarding calibration to avoid extra first-day computation.
+    @MainActor
     func load(
         skipDiscovery: Bool = false,
         awaitDeferredAnalysis: Bool = false,
@@ -609,6 +628,8 @@ final class DashboardViewModel {
         let refreshToken = await MainActor.run { () -> UUID in
             let next = UUID()
             refreshRunToken = next
+            // Invalidate cached score history so this refresh cycle re-fetches fresh data
+            _cachedScoreHistory = nil
             return next
         }
 
@@ -625,7 +646,7 @@ final class DashboardViewModel {
         let sameDay = lastAnalysisDate.map { Calendar.current.isDate($0, inSameDayAs: now) } ?? false
         if !syncResult.hasNewData && recentlyAnalyzed && sameDay && !syncResult.isFirstSync {
             // Still refresh lightweight cached properties (data depth, scores display)
-            updateCachedProperties()
+            await MainActor.run { updateCachedProperties() }
             return
         }
 
@@ -639,26 +660,36 @@ final class DashboardViewModel {
 
         // Phase 1: Core analysis — scores, trends, baselines (blocks until done, UI needs these)
         // Pass user's onboarding focus categories so focused areas weigh more in scoring.
-        let focuses = insights.cachedFocusCategories.isEmpty ? persistence.loadHealthFocuses() : []
-        let focusCats = focuses.isEmpty ? insights.cachedFocusCategories : HealthFocus.categories(for: focuses)
+        // Use cached focuses if available; otherwise load once (first refresh before updateCachedProperties runs).
+        let focusCats: Set<HealthCategory>
+        if !insights.cachedFocusCategories.isEmpty {
+            focusCats = insights.cachedFocusCategories
+        } else {
+            let freshFocuses = persistence.loadHealthFocuses()
+            insights.cachedHealthFocuses = freshFocuses
+            focusCats = HealthFocus.categories(for: freshFocuses)
+            insights.cachedFocusCategories = focusCats
+        }
         await Task.detached(priority: .userInitiated) { [analysisEngine, focusCats] in
             analysisEngine.runCoreAnalysis(timeSeries: ts, focusCategories: focusCats)
         }.value
 
         let todayRawHR = await todayRawHRTask
 
-        // Persist today's analysis snapshot for historical score tracking
-        store.saveAnalysisSnapshot(
-            overallScore: overallScore.score,
-            categoryScores: analysisEngine.categoryScores,
-            baselines: analysisEngine.baselines
-        )
-
-        // Update cached computed properties so views don't recompute on every render
-        updateCachedProperties()
-
-        // Compute new engines (strain, stress, sleep coach, gamification, cycle)
-        computeNewEngines(todayRawHR: todayRawHR)
+        // Persist snapshot, update caches, and compute engines on main actor.
+        // HealthDataStore is @MainActor for ModelContext thread safety; updateCachedProperties
+        // also reads score history from the store for score change computation.
+        await MainActor.run {
+            store.saveAnalysisSnapshot(
+                overallScore: overallScore.score,
+                categoryScores: analysisEngine.categoryScores,
+                baselines: analysisEngine.baselines
+            )
+            // Invalidate score history cache after saving — the new snapshot is now part of the data
+            invalidateScoreHistoryCache()
+            updateCachedProperties()
+            computeNewEngines(todayRawHR: todayRawHR)
+        }
 
         // Mark analysis timestamp so subsequent no-change refreshes can skip
         lastAnalysisDate = Date()
@@ -686,14 +717,14 @@ final class DashboardViewModel {
             }.value
 
             guard await MainActor.run(resultType: Bool.self, body: { self.refreshRunToken == refreshToken }) else { return }
-            updateCachedProperties()
+            await MainActor.run { updateCachedProperties() }
 
             await Task.detached(priority: .background) { [analysisEngine] in
                 analysisEngine.runDeferredHeavy(timeSeries: ts, force: forceHeavyDeferred)
             }.value
 
             guard await MainActor.run(resultType: Bool.self, body: { self.refreshRunToken == refreshToken }) else { return }
-            updateCachedProperties()
+            await MainActor.run { updateCachedProperties() }
 
             await runPostHeavyPhase(
                 timeSeries: ts,
@@ -802,12 +833,13 @@ final class DashboardViewModel {
         let currentCorrelations = analysisEngine.correlations
 
         // Score trajectory + baseline drift insights (need stored history)
-        let scoreHistory = store.loadScoreHistory(days: 60)
+        // Store is @MainActor — hop to main actor for SwiftData reads
+        let scoreHistory = await MainActor.run { scoreHistoryCached(days: 60) }
         let trajectoryInsights = ScoreTrajectoryAnalyzer.generateInsights(
             scoreHistory: scoreHistory,
             categoryScores: currentCategoryScores
         )
-        let baselineHistory = store.loadAllBaselineHistory(forMetrics: Set(currentBaselines.keys))
+        let baselineHistory = await MainActor.run { store.loadAllBaselineHistory(forMetrics: Set(currentBaselines.keys)) }
         var extraInsights = trajectoryInsights
         if !baselineHistory.isEmpty {
             extraInsights.append(contentsOf: BaselineDriftDetector.generateInsights(
@@ -870,7 +902,8 @@ final class DashboardViewModel {
     /// Runs the on-device ML analysis pipeline after rule-based analysis completes.
     /// Uses score history from SwiftData and anomaly counts derived from stored snapshots.
     private func runMLPhase(timeSeries: [HealthMetric: MetricTimeSeries]) async {
-        let scoreHistory = store.loadScoreHistory(days: 365)
+        // Use cached score history — already fetched earlier in the refresh cycle
+        let scoreHistory = await MainActor.run { scoreHistoryCached() }
 
         // Build anomaly counts per day from stored analysis snapshots.
         // Each snapshot records the anomaly count for that day's analysis run.
@@ -885,9 +918,8 @@ final class DashboardViewModel {
 
         guard !RemoteConfigManager.shared.killMLPipeline else { return }
 
-        let focusCats = insights.cachedFocusCategories.isEmpty
-            ? HealthFocus.categories(for: persistence.loadHealthFocuses())
-            : insights.cachedFocusCategories
+        // Use cached focus categories — already loaded by refresh() or updateCachedProperties()
+        let focusCats = insights.cachedFocusCategories
         await analysisEngine.runMLAnalysis(
             timeSeries: timeSeries,
             scoreHistory: scoreHistory,
@@ -899,9 +931,11 @@ final class DashboardViewModel {
 
     // MARK: - Cache Update (called once per refresh, not per render)
 
+    @MainActor
     private func updateCachedProperties() {
-        // Cache focus categories first (Keychain + AES-GCM decrypt — do once, not per view access)
+        // Cache raw focuses + derived categories (Keychain + AES-GCM decrypt — do once, not per view access)
         let focuses = persistence.loadHealthFocuses()
+        insights.cachedHealthFocuses = focuses
         insights.cachedFocusCategories = HealthFocus.categories(for: focuses)
 
         // Cache focused insights (depends on focus categories)
@@ -919,6 +953,11 @@ final class DashboardViewModel {
 
         // Update trend state
         trends.cachedTrendsSummary = computeTrendsSummary()
+        trends.cachedTrendMetricsByTimeframe = [
+            7: computeTrendMetrics(days: 7),
+            30: computeTrendMetrics(days: 30),
+            90: computeTrendMetrics(days: 90),
+        ]
 
         // Update analysis state
         analysis.cachedHistoricalHighlights = computeHistoricalHighlights()
@@ -973,6 +1012,7 @@ final class DashboardViewModel {
 
     // MARK: - New Engine Computation
 
+    @MainActor
     private func computeNewEngines(todayRawHR: [MetricSample] = []) {
         let profile = UserProfileStore.shared.loadLocal()
         let age = profile?.ageFromDateOfBirth ?? 30
@@ -1019,7 +1059,7 @@ final class DashboardViewModel {
 
         // Gamification
         let sessionDays = SessionTracker.shared.daysSinceInstall
-        let scoreHistory = store.loadScoreHistory(days: 365).map { (date: $0.date, score: $0.score) }
+        let scoreHistory = scoreHistoryCached().map { (date: $0.date, score: $0.score) }
         gamificationEngine.compute(
             from: store,
             sessionDays: sessionDays,
@@ -1038,17 +1078,47 @@ final class DashboardViewModel {
         menstrualCycleTracker.isApplicable = isFemale && cycleTrackingEnabled
     }
 
+    // MARK: - Score History Cache
+
+    /// Returns the cached 365-day score history, fetching once per refresh cycle.
+    /// All callers that need score history should use this instead of `store.loadScoreHistory()`
+    /// to avoid redundant SwiftData fetches + JSON decoding during a single refresh.
+    @MainActor
+    private func scoreHistoryCached() -> [(date: Date, score: Int)] {
+        if let cached = _cachedScoreHistory { return cached }
+        let history = store.loadScoreHistory(days: 365)
+        _cachedScoreHistory = history
+        return history
+    }
+
+    /// Returns the cached score history filtered to the most recent N days.
+    @MainActor
+    private func scoreHistoryCached(days: Int) -> [(date: Date, score: Int)] {
+        let all = scoreHistoryCached()
+        guard days < 365 else { return all }
+        let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        return all.filter { $0.date >= cutoff }
+    }
+
+    /// Clears the cached score history so the next access re-fetches from the store.
+    @MainActor
+    private func invalidateScoreHistoryCache() {
+        _cachedScoreHistory = nil
+    }
+
+    @MainActor
     private func computeScoreChangeFromLastWeek() -> Int? {
         derivedStateBuilder.scoreChangeFromLastWeek(
             currentScore: overallScore.score,
-            history: store.loadScoreHistory(days: 14)
+            history: scoreHistoryCached(days: 14)
         )
     }
 
+    @MainActor
     private func computeScoreChangeFromYesterday() -> Int? {
         derivedStateBuilder.scoreChangeFromYesterday(
             currentScore: overallScore.score,
-            history: store.loadScoreHistory(days: 3)
+            history: scoreHistoryCached(days: 3)
         )
     }
 
@@ -1063,6 +1133,27 @@ final class DashboardViewModel {
             },
             focusCategories: insights.focusCategories
         )
+    }
+
+    private func computeTrendMetrics(days: Int) -> [TrendMetricItem] {
+        var items: [TrendMetricItem] = []
+        for (metric, series) in healthKitManager.timeSeries {
+            guard let trend = TrendAnalyzer.canonicalTrend(
+                metric: metric,
+                series: series,
+                analysisEngine: analysisEngine,
+                days: days
+            ) else { continue }
+            let samples = series.samples(lastDays: days)
+            guard samples.count >= 3 else { continue }
+            items.append(TrendMetricItem(
+                metric: metric,
+                trend: trend,
+                sparklineSamples: samples
+            ))
+        }
+        items.sort { abs($0.trend.weekOverWeekChange) > abs($1.trend.weekOverWeekChange) }
+        return items
     }
 
     private func computeTopCorrelations() -> [HealthCorrelation] {
@@ -1193,7 +1284,7 @@ final class DashboardViewModel {
             analysis: DashboardSmartActionAdvisor.AnalysisSnapshot(
                 policyDecision: analysisEngine.mlOrchestrator.policyDecision,
                 restingHeartRateBaselineMean: analysisEngine.baselines[.restingHeartRate]?.mean,
-                userFocuses: persistence.loadHealthFocuses()
+                userFocuses: insights.cachedHealthFocuses
             )
         )
         return SmartAction(

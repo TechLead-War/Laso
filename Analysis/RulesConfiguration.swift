@@ -13,6 +13,39 @@ struct RulesConfiguration {
         }
     }
 
+    /// Critical absolute thresholds — values beyond these are medical emergencies
+    /// regardless of personal baselines or z-scores.
+    struct CriticalThreshold {
+        /// Value below which the reading is critical (nil = no low critical threshold)
+        let criticalLow: Double?
+        /// Value above which the reading is critical (nil = no high critical threshold)
+        let criticalHigh: Double?
+
+        func isCritical(_ value: Double) -> Bool {
+            if let low = criticalLow, value < low { return true }
+            if let high = criticalHigh, value > high { return true }
+            return false
+        }
+    }
+
+    /// Returns the critical absolute threshold for a metric, if one exists.
+    /// These represent medically dangerous values that override z-score-based severity.
+    static func criticalThreshold(for metric: HealthMetric) -> CriticalThreshold? {
+        switch metric {
+        case .bloodOxygen:
+            // SpO2 <90% is a medical emergency (severe hypoxemia)
+            return CriticalThreshold(criticalLow: 90, criticalHigh: nil)
+        case .heartRate:
+            // HR <40 or >150 at rest is dangerous
+            return CriticalThreshold(criticalLow: 40, criticalHigh: 150)
+        case .bodyTemperature:
+            // <35°C (hypothermia) or >40°C (hyperpyrexia)
+            return CriticalThreshold(criticalLow: 35.0, criticalHigh: 40.0)
+        default:
+            return nil
+        }
+    }
+
     static func normalRange(for metric: HealthMetric) -> NormalRange {
         switch metric {
         case .heartRate: return NormalRange(low: 60, high: 100)
@@ -24,11 +57,11 @@ struct RulesConfiguration {
         case .bloodOxygen: return NormalRange(low: 95, high: 100)
         case .atrialFibrillationBurden: return NormalRange(low: 0, high: 1)
         case .peripheralPerfusionIndex: return NormalRange(low: 0.5, high: 5)
-        case .sleepDuration: return NormalRange(low: 6, high: 9)
+        case .sleepDuration: return NormalRange(low: 7, high: 9)
         case .sleepREM: return NormalRange(low: 0.8, high: 2.5)
         case .sleepDeep: return NormalRange(low: 0.8, high: 2.0)
         case .sleepCore: return NormalRange(low: 2.0, high: 5.0)
-        case .sleepAwake: return NormalRange(low: 0, high: 1.0)
+        case .sleepAwake: return NormalRange(low: 0, high: 0.5)
         case .steps: return NormalRange(low: 5000, high: 15000)
         case .activeCalories: return NormalRange(low: 200, high: 800)
         case .basalCalories: return NormalRange(low: 1200, high: 2200)
@@ -42,7 +75,7 @@ struct RulesConfiguration {
         case .appleMoveTime: return NormalRange(low: 10, high: 120)
         case .walkingSpeed: return NormalRange(low: 3.5, high: 6.5)
         case .walkingStepLength: return NormalRange(low: 55, high: 85)
-        case .walkingAsymmetry: return NormalRange(low: 0, high: 15)
+        case .walkingAsymmetry: return NormalRange(low: 0, high: 10)
         case .walkingDoubleSupportPercentage: return NormalRange(low: 20, high: 40)
         case .stairAscentSpeed: return NormalRange(low: 0.5, high: 2.0)
         case .stairDescentSpeed: return NormalRange(low: 0.5, high: 2.0)
@@ -51,7 +84,7 @@ struct RulesConfiguration {
         case .bmi: return NormalRange(low: 18.5, high: 25)
         case .bodyFatPercentage: return NormalRange(low: 8, high: 30)
         case .bloodPressureSystolic: return NormalRange(low: 90, high: 130)
-        case .bloodPressureDiastolic: return NormalRange(low: 60, high: 85)
+        case .bloodPressureDiastolic: return NormalRange(low: 60, high: 80)
         case .respiratoryRate: return NormalRange(low: 12, high: 20)
         case .bodyTemperature: return NormalRange(low: 36.1, high: 37.2)
         case .appleSleepingWristTemperature: return NormalRange(low: -1.0, high: 1.0)
@@ -126,10 +159,10 @@ struct RulesConfiguration {
 
     // MARK: - Context-Aware Helpers
 
-    /// "At this rate, you'll reach warning level in ~8 days."
+    /// "Based on current trends, this may approach warning level within ~8 days."
     static func projectionSentence(context: InsightContext?, trend: TrendDirection) -> String {
         guard trend == .declining, let days = context?.projectedDaysToThreshold, days > 0, days <= 21 else { return "" }
-        return " At this rate, you'll reach warning level in ~\(days) days."
+        return " Based on current trends, this may approach warning level within ~\(days) days."
     }
 
     /// "This appears connected to your sleep duration dropping 18%."
@@ -211,6 +244,10 @@ struct RulesConfiguration {
             return "\(valStr)VO2 Max has been flat or declining \(devStr)compared to your baseline." + projection + historical
 
         case .bloodOxygen:
+            // SpO2 <90% is a medical emergency — escalate with urgent language
+            if severity == .critical, let value = currentValue, value < 90 {
+                return "\(valStr)Blood oxygen is critically low, below the 90% emergency threshold. This level of hypoxemia requires immediate attention. If you experience shortness of breath, confusion, bluish lips or fingertips, or chest pain, seek emergency medical care. Retake the reading to confirm, and if it remains below 90%, contact a healthcare provider urgently."
+            }
             if severity >= .warning {
                 return "\(valStr)Blood oxygen has dropped \(devStr)below your typical level." + rootCause + projection
             }

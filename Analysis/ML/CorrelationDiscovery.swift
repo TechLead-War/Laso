@@ -415,7 +415,7 @@ final class CorrelationDiscovery {
         var maxSurvivingRank = -1
         for (rank, ipv) in indexedPValues.enumerated() {
             let i = rank + 1 // 1-based rank
-            let bhThreshold = (Double(i) / Double(totalTests)) * alpha
+            let bhThreshold = (Double(i) / Double(m)) * alpha
             if ipv.pValue <= bhThreshold {
                 maxSurvivingRank = rank
             }

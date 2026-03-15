@@ -70,7 +70,7 @@ class ClinicalIntelligence : InsightAnalyzer {
             val priority = if (slopePerMonth > 2.0) InsightPriority.HIGH else InsightPriority.MEDIUM
             val daysToNext = projectDaysToNextThreshold(latestSys, sysSlope, SYSTOLIC_THRESHOLDS)
             val nextStageInfo = daysToNext?.let {
-                "At this rate, you could reach ${it.second} territory in ~${it.first} days."
+                "Based on current trends, this metric may approach ${it.second} territory within ~${it.first} days."
             } ?: ""
 
             val baselineValue = context.baselines[HealthMetric.BLOOD_PRESSURE_SYSTOLIC]?.mean ?: latestSys
@@ -95,8 +95,8 @@ class ClinicalIntelligence : InsightAnalyzer {
                 insights += AnalysisInsight(
                     id = UUID.randomUUID().toString(),
                     title = "Elevated Pulse Pressure",
-                    detail = "Your pulse pressure (${pulsePressure.toInt()} mmHg) is above the normal range of 40-60 mmHg, " +
-                        "which may indicate arterial stiffness. $MEDICAL_DISCLAIMER",
+                    detail = "Your pulse pressure (${pulsePressure.toInt()} mmHg) is above the typical range of 40-60 mmHg, " +
+                        "which is sometimes associated with arterial stiffness. $MEDICAL_DISCLAIMER",
                     metric = HealthMetric.BLOOD_PRESSURE_SYSTOLIC,
                     priority = InsightPriority.HIGH,
                     directive = InsightDirective.SEEK_MEDICAL,
@@ -134,7 +134,7 @@ class ClinicalIntelligence : InsightAnalyzer {
                 id = UUID.randomUUID().toString(),
                 title = "Elevated Resting Heart Rate",
                 detail = "Your resting heart rate is averaging ${String.format("%.0f", avgRHR)} bpm over the past week, " +
-                    "which is above the normal range of 60-100 bpm. Sustained tachycardia may indicate underlying conditions. " +
+                    "which is above the typical range of 60-100 bpm. A persistently elevated heart rate is worth discussing with your doctor. " +
                     MEDICAL_DISCLAIMER,
                 metric = HealthMetric.RESTING_HEART_RATE,
                 priority = InsightPriority.CRITICAL,
@@ -212,8 +212,8 @@ class ClinicalIntelligence : InsightAnalyzer {
         return AnalysisInsight(
             id = UUID.randomUUID().toString(),
             title = "Abnormal Respiratory Rate",
-            detail = "Your respiratory rate (${String.format("%.1f", latest)} br/min) is classified as ${stage.label}. " +
-                "Normal range is 12-20 breaths per minute. $MEDICAL_DISCLAIMER",
+            detail = "Your respiratory rate (${String.format("%.1f", latest)} br/min) falls in the ${stage.label} range. " +
+                "The typical range is 12-20 breaths per minute. $MEDICAL_DISCLAIMER",
             metric = HealthMetric.RESPIRATORY_RATE,
             priority = if (stage == RespiratoryStage.SEVERE) InsightPriority.CRITICAL else InsightPriority.HIGH,
             directive = InsightDirective.SEEK_MEDICAL,
@@ -239,7 +239,7 @@ class ClinicalIntelligence : InsightAnalyzer {
         if (slopePerMonth <= 0.3) return null
 
         val daysToNext = projectDaysToNextThreshold(latest, slope, GLUCOSE_THRESHOLDS)
-        val nextInfo = daysToNext?.let { "Projected to reach ${it.second} range in ~${it.first} days." } ?: ""
+        val nextInfo = daysToNext?.let { "Based on current trends, this may approach the ${it.second} range within ~${it.first} days." } ?: ""
 
         val priority = if (currentStage >= GlucoseStage.PREDIABETIC || slopePerMonth > 1.5) {
             InsightPriority.HIGH

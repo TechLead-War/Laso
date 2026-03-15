@@ -28,7 +28,7 @@ struct VitalityHeroSection: View {
                         Text(Copy.Vitality.vitalityAgeLabel)
                             .font(.system(size: 13, weight: .semibold))
                             .tracking(2)
-                            .foregroundStyle(.white.opacity(0.68))
+                            .foregroundStyle(.white.opacity(0.8))
 
                         Text(deltaBadgeText)
                             .font(.title3.weight(.bold))
@@ -266,9 +266,9 @@ struct OrbMetricChip: View {
     }
 
     private var deltaText: String {
-        if metricDelta < 0 { return "\(abs(metricDelta)).0y" }
-        if metricDelta > 0 { return "+\(metricDelta).0y" }
-        return "0.0y"
+        if metricDelta < 0 { return "\(abs(metricDelta))y" }
+        if metricDelta > 0 { return "+\(metricDelta)y" }
+        return "0y"
     }
 
     private var deltaTint: Color {

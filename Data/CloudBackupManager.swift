@@ -84,7 +84,8 @@ final class CloudBackupManager {
         backupStatus = .backingUp
 
         // Build payload from current on-device data
-        let payload = buildPayload(store: store, persistence: persistence)
+        // Store is @MainActor — gather all SwiftData reads on main actor
+        let payload = await MainActor.run { buildPayload(store: store, persistence: persistence) }
 
         guard let compressedData = payload.compressedAndEncrypted() else {
             backupStatus = .failed("Encryption failed")
@@ -170,32 +171,32 @@ final class CloudBackupManager {
             return false
         }
 
-        // Restore analysis snapshots
-        for snapshot in payload.snapshots {
-            store.insertRestoredSnapshot(
-                date: snapshot.date,
-                overallScore: snapshot.overallScore,
-                categoryScoresJSON: snapshot.categoryScoresJSON,
-                baselinesJSON: snapshot.baselinesJSON
-            )
-        }
+        // Store is @MainActor — batch all SwiftData writes on main actor
+        await MainActor.run {
+            for snapshot in payload.snapshots {
+                store.insertRestoredSnapshot(
+                    date: snapshot.date,
+                    overallScore: snapshot.overallScore,
+                    categoryScoresJSON: snapshot.categoryScoresJSON,
+                    baselinesJSON: snapshot.baselinesJSON
+                )
+            }
 
-        // Restore ML model states
-        for ml in payload.mlStates {
-            let state = MLModelState(
-                componentName: ml.componentName,
-                version: ml.version,
-                parametersJSON: ml.parametersJSON,
-                dataPointsUsed: ml.dataPointsUsed,
-                lastTrainedDate: ml.lastTrainedDate
-            )
-            store.saveMLModelState(state)
-        }
+            for ml in payload.mlStates {
+                let state = MLModelState(
+                    componentName: ml.componentName,
+                    version: ml.version,
+                    parametersJSON: ml.parametersJSON,
+                    dataPointsUsed: ml.dataPointsUsed,
+                    lastTrainedDate: ml.lastTrainedDate
+                )
+                store.saveMLModelState(state)
+            }
 
-        // Restore sync metadata (so HealthKit sync is incremental, not full re-fetch)
-        for (metricRaw, syncDate) in payload.syncDates {
-            if let metric = HealthMetric(rawValue: metricRaw) {
-                store.markSyncCompleted(for: metric, at: syncDate)
+            for (metricRaw, syncDate) in payload.syncDates {
+                if let metric = HealthMetric(rawValue: metricRaw) {
+                    store.markSyncCompleted(for: metric, at: syncDate)
+                }
             }
         }
 
@@ -241,6 +242,7 @@ final class CloudBackupManager {
 
     // MARK: - Build Payload
 
+    @MainActor
     private func buildPayload(store: HealthDataStore, persistence: PersistenceManager) -> BackupPayload {
         // Snapshots
         let snapshotData = store.loadAllAnalysisSnapshots()

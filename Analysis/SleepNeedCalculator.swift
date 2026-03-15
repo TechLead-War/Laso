@@ -69,6 +69,7 @@ final class SleepNeedCalculator {
 
     // MARK: - Compute
 
+    @MainActor
     func compute(
         from store: HealthDataStore,
         currentStrain: Double,

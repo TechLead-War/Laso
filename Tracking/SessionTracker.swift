@@ -2,6 +2,7 @@ import Foundation
 
 /// Manages session lifecycle, navigation depth, screen transitions, daily streak,
 /// activation milestones, retention signals, and habit/churn detection.
+@MainActor
 final class SessionTracker {
     static let shared = SessionTracker()
 

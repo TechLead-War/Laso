@@ -4,14 +4,61 @@ struct OrganicParticleOrbView: View {
     let phase: CGFloat
     let tint: Color
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var glowPulse = false
+    @State private var thermalState: ProcessInfo.ThermalState = ProcessInfo.processInfo.thermalState
 
-    private static let particles: [ParticleSeed] = makeParticles()
+    private static let fullParticles: [ParticleSeed] = makeParticles(count: 120)
+    private static let reducedParticles: [ParticleSeed] = makeParticles(count: 40)
+
+    private var effectiveParticles: [ParticleSeed] {
+        if reduceMotion { return [] }
+        if thermalState == .serious || thermalState == .critical {
+            return Self.reducedParticles
+        }
+        return Self.fullParticles
+    }
+
+    private var animationPaused: Bool {
+        reduceMotion || thermalState == .critical
+    }
 
     var body: some View {
         let blobShape = OrganicBlobShape(phase: phase)
 
-        return OrbParticleCanvas(tint: tint, particles: Self.particles)
+        return Group {
+            if reduceMotion {
+                staticOrb(blobShape: blobShape)
+            } else {
+                animatedOrb(blobShape: blobShape)
+            }
+        }
+        .onReceive(
+            NotificationCenter.default.publisher(for: ProcessInfo.thermalStateDidChangeNotification)
+        ) { _ in
+            thermalState = ProcessInfo.processInfo.thermalState
+        }
+    }
+
+    @ViewBuilder
+    private func staticOrb(blobShape: OrganicBlobShape) -> some View {
+        blobShape
+            .fill(tint.opacity(0.22))
+            .overlay(
+                blobShape
+                    .stroke(tint.opacity(0.78), lineWidth: 1.4)
+            )
+            .shadow(color: tint.opacity(0.14), radius: 8, y: 4)
+    }
+
+    @ViewBuilder
+    private func animatedOrb(blobShape: OrganicBlobShape) -> some View {
+        OrbParticleCanvas(
+            tint: tint,
+            particles: effectiveParticles,
+            paused: animationPaused,
+            frameRate: thermalState == .serious ? 12.0 : 24.0
+        )
         .clipShape(OrganicBlobShape(phase: phase))
         .overlay(
             blobShape
@@ -31,8 +78,8 @@ struct OrganicParticleOrbView: View {
         }
     }
 
-    private static func makeParticles() -> [ParticleSeed] {
-        (0..<260).map { i in
+    private static func makeParticles(count: Int) -> [ParticleSeed] {
+        (0..<count).map { i in
             let index = Double(i)
             let h1 = vfract(sin(index * 127.1 + 14.7) * 43758.5453)
             let h2 = vfract(sin(index * 269.5 + 41.3) * 43758.5453)
@@ -68,9 +115,11 @@ struct OrganicParticleOrbView: View {
 private struct OrbParticleCanvas: View {
     let tint: Color
     let particles: [ParticleSeed]
+    let paused: Bool
+    let frameRate: Double
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: false)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / frameRate, paused: paused)) { timeline in
             Canvas { context, size in
                 drawBackground(context: context, size: size)
                 drawParticles(context: context, size: size, time: timeline.date.timeIntervalSinceReferenceDate)

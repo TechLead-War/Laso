@@ -80,6 +80,9 @@ fun MetricDetailScreen(
 ) {
     var selectedTimeRange by remember { mutableIntStateOf(30) }
     val categoryColor = state.metric.category.accentColor
+    val filteredChartValues = remember(state.chartValues, selectedTimeRange) {
+        state.chartValues.takeLast(selectedTimeRange)
+    }
 
     Scaffold(
         modifier = modifier,
@@ -144,11 +147,12 @@ fun MetricDetailScreen(
             }
 
             // 4. Chart Visualization (the biggest gap — now filled)
-            if (state.chartValues.isNotEmpty()) {
+            if (filteredChartValues.isNotEmpty()) {
                 item(key = "chart") {
                     MetricChart(
-                        values = state.chartValues,
+                        values = filteredChartValues,
                         color = categoryColor,
+                        timeRangeDays = selectedTimeRange,
                         modifier = Modifier.padding(horizontal = 16.dp),
                     )
                 }
@@ -605,6 +609,7 @@ private fun ActionRecommendationBanner(
 private fun MetricChart(
     values: List<Float>,
     color: Color,
+    timeRangeDays: Int = 30,
     modifier: Modifier = Modifier,
 ) {
     if (values.size < 2) return
@@ -696,18 +701,22 @@ private fun MetricChart(
             }
 
             // Time axis labels
+            val startLabel = if (timeRangeDays >= 365) "1y ago"
+                else "${timeRangeDays}d ago"
+            val midLabel = if (timeRangeDays >= 365) "6mo ago"
+                else "${timeRangeDays / 2}d ago"
             Spacer(modifier = Modifier.height(6.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    text = "30d ago",
+                    text = startLabel,
                     style = MaterialTheme.typography.labelSmall,
                     color = labelColor,
                 )
                 Text(
-                    text = "15d ago",
+                    text = midLabel,
                     style = MaterialTheme.typography.labelSmall,
                     color = labelColor,
                 )

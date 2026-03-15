@@ -7,8 +7,6 @@ struct LoadingView: View {
     @State private var activeDots = 0
     @State private var iconScale: CGFloat = 0.8
     @State private var iconOpacity: Double = 0.6
-    @State private var appeared = false
-    @State private var tickTimer: Timer?
     /// Counts ticks so we can advance the phase every 2nd tick (~1.8s at 0.9s interval).
     @State private var tickCount = 0
 
@@ -91,8 +89,7 @@ struct LoadingView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onAppear {
-            appeared = true
+        .task {
             currentPhase = min(1, phases.count - 1)
 
             if thermallyConstrained {
@@ -105,12 +102,12 @@ struct LoadingView: View {
                 }
             }
 
-            startTickTimer()
-        }
-        .onDisappear {
-            appeared = false
-            tickTimer?.invalidate()
-            tickTimer = nil
+            // Auto-cancelled when the view is removed from the hierarchy.
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(900))
+                guard !Task.isCancelled else { break }
+                tick()
+            }
         }
     }
 
@@ -122,34 +119,30 @@ struct LoadingView: View {
         String(repeating: ".", count: dotCount)
     }
 
-    // MARK: - Single consolidated timer
+    // MARK: - Tick
 
-    private func startTickTimer() {
-        tickTimer?.invalidate()
-        tickTimer = Timer.scheduledTimer(withTimeInterval: 0.9, repeats: true) { timer in
-            guard appeared else { timer.invalidate(); return }
-            tickCount += 1
+    private func tick() {
+        tickCount += 1
 
-            // Cycle dots every tick: 1 → 2 → 3 → 1 ...
-            dotCount = (dotCount % 3) + 1
+        // Cycle dots every tick: 1 → 2 → 3 → 1 ...
+        dotCount = (dotCount % 3) + 1
 
-            // Advance progress dots every tick
-            withAnimation {
-                if activeDots >= phases.count {
-                    activeDots = 0
-                } else {
-                    activeDots += 1
-                }
+        // Advance progress dots every tick
+        withAnimation {
+            if activeDots >= phases.count {
+                activeDots = 0
+            } else {
+                activeDots += 1
             }
+        }
 
-            // Advance phase every 2nd tick (~1.8s, matching original interval)
-            if tickCount % 2 == 0 {
-                withAnimation(.easeInOut(duration: 0.4)) {
-                    if currentPhase < phases.count - 1 {
-                        currentPhase += 1
-                    } else {
-                        currentPhase = min(1, phases.count - 1)
-                    }
+        // Advance phase every 2nd tick (~1.8s, matching original interval)
+        if tickCount % 2 == 0 {
+            withAnimation(.easeInOut(duration: 0.4)) {
+                if currentPhase < phases.count - 1 {
+                    currentPhase += 1
+                } else {
+                    currentPhase = min(1, phases.count - 1)
                 }
             }
         }

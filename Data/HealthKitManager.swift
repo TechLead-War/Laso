@@ -99,11 +99,13 @@ final class HealthKitManager {
         do {
             try await healthStore.requestAuthorization(toShare: writeTypes, read: readTypes)
             isAuthorized = true
-            AppAnalytics.shared.trackHealthPermissionResult(granted: totalRequested, denied: 0, total: totalRequested)
+            await MainActor.run { AppAnalytics.shared.trackHealthPermissionResult(granted: totalRequested, denied: 0, total: totalRequested) }
         } catch {
             self.error = "Authorization failed: \(error.localizedDescription)"
-            AppAnalytics.shared.trackHealthPermissionResult(granted: 0, denied: totalRequested, total: totalRequested)
-            AppAnalytics.shared.trackError(type: "healthkit_authorization", screen: .home, message: error.localizedDescription)
+            await MainActor.run {
+                AppAnalytics.shared.trackHealthPermissionResult(granted: 0, denied: totalRequested, total: totalRequested)
+                AppAnalytics.shared.trackError(type: "healthkit_authorization", screen: .home, message: error.localizedDescription)
+            }
         }
     }
 
@@ -243,6 +245,7 @@ final class HealthKitManager {
         )
     }
 
+    @MainActor
     private func persistFetchedData(
         newData: [(HealthMetric, MetricTimeSeries)],
         fetchedMetrics: Set<HealthMetric>,
@@ -275,6 +278,7 @@ final class HealthKitManager {
         )
     }
 
+    @MainActor
     private func finalizeInMemoryTimeSeries(
         isFirstSync: Bool,
         newData: [(HealthMetric, MetricTimeSeries)],

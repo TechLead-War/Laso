@@ -106,9 +106,10 @@ struct ExploreCategoryRow: View {
     private var scoreStatusColor: Color {
         guard let score else { return .secondary }
         switch score {
-        case 80...100: return .green
-        case 60..<80: return .secondary
-        case 40..<60: return .orange
+        case 85...100: return .green
+        case 70..<85: return .secondary
+        case 55..<70: return .orange
+        case 40..<55: return .red
         default: return .red
         }
     }

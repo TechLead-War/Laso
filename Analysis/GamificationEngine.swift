@@ -175,7 +175,12 @@ final class GamificationEngine {
         totalDaysTracked = sessionDays
         currentLevel = UserLevel.from(days: sessionDays)
 
-        let allTimeSeries = timeSeries ?? store.loadAllTimeSeries()
+        let allTimeSeries: [HealthMetric: MetricTimeSeries]
+        if let timeSeries {
+            allTimeSeries = timeSeries
+        } else {
+            allTimeSeries = MainActor.assumeIsolated { store.loadAllTimeSeries() }
+        }
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
 

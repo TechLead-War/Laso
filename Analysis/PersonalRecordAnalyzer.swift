@@ -237,8 +237,8 @@ struct PersonalRecordAnalyzer {
                 tracked.lowerIsBetter ? sample.value <= threshold : sample.value >= threshold
             }
 
-            // Check if this is the first time (not in older data)
-            let older = series.samples(lastDays: 90).filter { sample in
+            // Check if this is the first time (not in any older data)
+            let older = series.sortedSamples.filter { sample in
                 sample.date < Date().daysAgo(7)
             }
             let previouslyAchieved = older.contains { sample in

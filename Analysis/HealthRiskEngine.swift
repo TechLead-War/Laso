@@ -362,8 +362,8 @@ struct HealthRiskEngine {
         case (.respiratory, .bloodOxygen):
             return (
                 "Monitor Blood Oxygen",
-                "SpO2 below 95% warrants attention. Practice deep breathing exercises. Sleep with head slightly elevated if levels drop at night.",
-                "Target: 95–100%"
+                "SpO2 below 95% warrants attention. Below 90% is a medical emergency requiring urgent care. Practice deep breathing exercises and sleep with head slightly elevated if levels drop at night. If readings fall below 90%, retake the measurement and seek immediate medical attention if confirmed.",
+                "Target: 95–100% (below 90% = emergency)"
             )
         case (.respiratory, .vo2Max):
             return (
@@ -375,7 +375,7 @@ struct HealthRiskEngine {
             return (
                 "Normalize Breathing Rate",
                 "Elevated respiratory rate may indicate stress or illness. Practice diaphragmatic breathing: 4 seconds in, 6 seconds out, 5 minutes daily.",
-                "Target: 12–18 breaths/min at rest"
+                "Target: 12–20 breaths/min at rest"
             )
 
         // Metabolic

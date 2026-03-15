@@ -2,6 +2,7 @@ import Foundation
 import Observation
 
 /// ViewModel that orchestrates HTML report generation
+@MainActor
 @Observable
 final class WebExportViewModel {
     let healthKitManager: HealthKitManager

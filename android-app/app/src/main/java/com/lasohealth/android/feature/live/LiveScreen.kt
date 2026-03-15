@@ -338,14 +338,14 @@ private fun StaleVitalsPrompt(state: LiveUiState) {
                 StaleReadingPill(
                     icon = Icons.Filled.WaterDrop,
                     color = AccentBlue,
-                    value = "${state.bloodOxygen}",
-                    unit = "%",
+                    value = if (state.bloodOxygen > 0) "${state.bloodOxygen}" else "—",
+                    unit = if (state.bloodOxygen > 0) "%" else "",
                 )
                 StaleReadingPill(
                     icon = Icons.Filled.Air,
                     color = CategoryRespiratory,
-                    value = "${state.respiratoryRate.toInt()}",
-                    unit = "br/m",
+                    value = if (state.respiratoryRate > 0.0) "${state.respiratoryRate.toInt()}" else "—",
+                    unit = if (state.respiratoryRate > 0.0) "br/m" else "",
                 )
             }
         }
@@ -846,30 +846,38 @@ private fun VitalsGrid(state: LiveUiState) {
             }
             Spacer(modifier = Modifier.height(10.dp))
             Text(
-                text = "${state.bloodOxygen}%",
+                text = if (state.bloodOxygen > 0) "${state.bloodOxygen}%" else "—",
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontFamily = FontFamily.Monospace,
                 ),
                 fontWeight = FontWeight.Bold,
             )
             Spacer(modifier = Modifier.height(6.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                val isNormal = state.bloodOxygen >= 95
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .background(
-                            color = if (isNormal) AccentGreen else AccentOrange,
-                            shape = CircleShape,
-                        ),
-                )
+            if (state.bloodOxygen > 0) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    val isNormal = state.bloodOxygen >= 95
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .background(
+                                color = if (isNormal) AccentGreen else AccentOrange,
+                                shape = CircleShape,
+                            ),
+                    )
+                    Text(
+                        text = if (isNormal) "Normal" else "Low",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (isNormal) AccentGreen else AccentOrange,
+                    )
+                }
+            } else {
                 Text(
-                    text = if (isNormal) "Normal" else "Low",
+                    text = "No data",
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (isNormal) AccentGreen else AccentOrange,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                 )
             }
         }
@@ -907,30 +915,38 @@ private fun VitalsGrid(state: LiveUiState) {
             }
             Spacer(modifier = Modifier.height(10.dp))
             Text(
-                text = "${state.respiratoryRate.toInt()} br/min",
+                text = if (state.respiratoryRate > 0.0) "${state.respiratoryRate.toInt()} br/min" else "—",
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontFamily = FontFamily.Monospace,
                 ),
                 fontWeight = FontWeight.Bold,
             )
             Spacer(modifier = Modifier.height(6.dp))
-            val isNormal = state.respiratoryRate in 12.0..20.0
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .background(
-                            color = if (isNormal) AccentGreen else AccentOrange,
-                            shape = CircleShape,
-                        ),
-                )
+            if (state.respiratoryRate > 0.0) {
+                val isNormal = state.respiratoryRate in 12.0..20.0
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .background(
+                                color = if (isNormal) AccentGreen else AccentOrange,
+                                shape = CircleShape,
+                            ),
+                    )
+                    Text(
+                        text = if (isNormal) "Normal" else "Abnormal",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (isNormal) AccentGreen else AccentOrange,
+                    )
+                }
+            } else {
                 Text(
-                    text = if (isNormal) "Normal" else "Abnormal",
+                    text = "No data",
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (isNormal) AccentGreen else AccentOrange,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                 )
             }
         }

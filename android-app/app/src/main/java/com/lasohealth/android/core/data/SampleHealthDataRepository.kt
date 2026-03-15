@@ -52,6 +52,7 @@ import com.lasohealth.android.core.model.StrainDetailUiState
 import com.lasohealth.android.core.model.StreakUi
 import com.lasohealth.android.core.model.StreaksUi
 import com.lasohealth.android.core.model.StressMonitorUiState
+import com.lasohealth.android.core.analysis.TrendDirection
 import com.lasohealth.android.core.model.TrendMetricUi
 import com.lasohealth.android.core.model.VitalityDetailUiState
 import com.lasohealth.android.core.model.VitalityImprovementUi
@@ -240,9 +241,24 @@ class SampleHealthDataRepository : HealthDataRepository {
             daysOfData = 47,
             insightCount = 14,
             trendMetrics = listOf(
-                TrendMetricUi(HealthMetric.SLEEP_DURATION, "Sleep duration is up 6% versus last week."),
-                TrendMetricUi(HealthMetric.HEART_RATE_VARIABILITY, "HRV improved 8% and is trending upward."),
-                TrendMetricUi(HealthMetric.RESTING_HEART_RATE, "Resting HR is down 4 bpm over the last 30 days."),
+                TrendMetricUi(
+                    HealthMetric.SLEEP_DURATION,
+                    "Sleep duration is up 6% versus last week.",
+                    sparklineValues = listOf(0.4f, 0.45f, 0.5f, 0.48f, 0.55f, 0.6f, 0.58f, 0.65f, 0.7f, 0.68f, 0.75f, 0.72f),
+                    direction = TrendDirection.RISING,
+                ),
+                TrendMetricUi(
+                    HealthMetric.HEART_RATE_VARIABILITY,
+                    "HRV improved 8% and is trending upward.",
+                    sparklineValues = listOf(0.3f, 0.35f, 0.32f, 0.4f, 0.45f, 0.5f, 0.55f, 0.6f, 0.58f, 0.65f, 0.7f, 0.75f),
+                    direction = TrendDirection.RISING,
+                ),
+                TrendMetricUi(
+                    HealthMetric.RESTING_HEART_RATE,
+                    "Resting HR is down 4 bpm over the last 30 days.",
+                    sparklineValues = listOf(0.8f, 0.78f, 0.75f, 0.77f, 0.7f, 0.72f, 0.68f, 0.65f, 0.63f, 0.6f, 0.58f, 0.55f),
+                    direction = TrendDirection.FALLING,
+                ),
             ),
             categoryScores = listOf(
                 CategoryScoreUi(HealthCategory.HEART, 85),
@@ -328,7 +344,7 @@ class SampleHealthDataRepository : HealthDataRepository {
                 71f, 69f, 72f, 75f, 73f, 70f, 68f, 71f, 74f, 72f,
             ),
             weekOverWeekBadge = "+3% vs last week",
-            dataSource = "Apple Watch Series 9",
+            dataSource = "Health Connect",
             actionRecommendation = "Your resting HR is slightly elevated. Consider extra recovery today.",
         )
     }
@@ -677,7 +693,7 @@ class SampleHealthDataRepository : HealthDataRepository {
                 metricsProvided = listOf(
                     "Heart Rate", "HRV", "Blood Oxygen",
                     "Sleep Duration", "Sleep Stages", "Body Temperature",
-                    "Activity", "Readiness",
+                    "Activity", "Recovery",
                 ),
                 lastSync = "3 days ago",
                 troubleshooting = "Try opening the Oura app and syncing manually. Make sure Health Connect permissions are enabled in the Oura app settings.",

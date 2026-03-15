@@ -63,7 +63,9 @@ final class FeedbackPromptManager {
             guard let installDate = defaults.object(forKey: Key.installDate) as? Date else { return 0 }
             return Calendar.current.dateComponents([.day], from: installDate, to: Date()).day ?? 0
         }()
-        AppAnalytics.shared.trackFeedbackPromptShown(daysSinceInstall: daysSinceInstall)
+        Task { @MainActor in
+            AppAnalytics.shared.trackFeedbackPromptShown(daysSinceInstall: daysSinceInstall)
+        }
     }
 
     /// Mark that user submitted feedback (for analytics).

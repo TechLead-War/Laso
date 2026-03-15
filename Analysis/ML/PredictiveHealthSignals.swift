@@ -993,12 +993,12 @@ struct PredictiveHealthSignals {
         factors: [ContributingFactor],
         baselines: [HealthMetric: UserBaseline]
     ) -> String {
-        let recoveryText = recovery.map { " Full recovery is projected to take approximately \($0) days." } ?? ""
+        let recoveryText = recovery.map { " Based on similar patterns, recovery may take around \($0) days." } ?? ""
         var parts: [String] = []
 
         switch riskLevel {
         case .critical:
-            parts.append("Overtraining syndrome is likely.")
+            parts.append("Your data is consistent with overtraining syndrome.")
             for factor in factors.prefix(2) {
                 if let baseline = baselines[factor.metric] {
                     parts.append("\(factor.metric.displayName) at concerning levels — target: \(formatted(baseline.mean, metric: factor.metric)).")

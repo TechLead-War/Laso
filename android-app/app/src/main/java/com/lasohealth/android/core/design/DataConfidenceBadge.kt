@@ -132,7 +132,7 @@ fun DataConfidenceBadge(daysOfData: Int) {
                             .size(6.dp)
                             .clip(CircleShape)
                             .background(
-                                if (i <= tier.filledDots)
+                                if (i < tier.filledDots)
                                     tier.color
                                 else
                                     tier.color.copy(alpha = 0.2f)

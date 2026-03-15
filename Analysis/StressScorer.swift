@@ -191,7 +191,12 @@ final class StressScorer {
     ///   - store: The on-device health data store containing metric time series.
     ///   - timeSeries: Optional in-memory time series to avoid redundant full-store reads.
     func compute(from store: HealthDataStore, timeSeries: [HealthMetric: MetricTimeSeries]? = nil) {
-        let allSeries = timeSeries ?? store.loadAllTimeSeries()
+        let allSeries: [HealthMetric: MetricTimeSeries]
+        if let timeSeries {
+            allSeries = timeSeries
+        } else {
+            allSeries = MainActor.assumeIsolated { store.loadAllTimeSeries() }
+        }
 
         guard let hrvSeries = allSeries[.heartRateVariability],
               hrvSeries.daysOfData >= Self.minimumDaysRequired else {

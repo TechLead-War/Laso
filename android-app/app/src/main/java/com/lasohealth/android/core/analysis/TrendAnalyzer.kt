@@ -113,7 +113,7 @@ class TrendAnalyzer {
         /** Minimum samples required to run regression. */
         const val MIN_SAMPLES = 7
         /** Default look-back period in days. */
-        const val DEFAULT_PERIOD_DAYS = 14
+        const val DEFAULT_PERIOD_DAYS = 30
         /** Milliseconds in one day. */
         const val MILLIS_PER_DAY = 86_400_000L
         /** |t| threshold for treating the slope as statistically significant. */

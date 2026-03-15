@@ -10,7 +10,7 @@ extension Copy {
 
         // MARK: - Features
 
-        static let featureLiveVitals = "Live vitals & 58+ health metrics"
+        static var featureLiveVitals: String { "Live vitals & \(HealthMetric.allCases.count)+ health metrics" }
         static let featureInsights = "Personalized insights & root cause analysis"
         static let featureTrends = "Trends, correlations & weekly reports"
         static let featureAlerts = "Smart alerts with custom thresholds"

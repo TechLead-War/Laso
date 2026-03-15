@@ -50,6 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import kotlin.math.roundToInt
 import com.lasohealth.android.core.data.HealthDataRepository
 import com.lasohealth.android.core.design.LasoCard
 import com.lasohealth.android.core.design.LasoTokens
@@ -207,7 +208,7 @@ fun SettingsScreen(
                                         style = MaterialTheme.typography.bodyMedium,
                                     )
                                     Text(
-                                        text = "${highHRThreshold.toInt()} bpm",
+                                        text = "${highHRThreshold.roundToInt()} bpm",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                                     )
@@ -216,7 +217,7 @@ fun SettingsScreen(
                                     value = highHRThreshold,
                                     onValueChange = { highHRThreshold = it },
                                     valueRange = 100f..180f,
-                                    steps = 15,
+                                    steps = 15, // 15 intermediate values → 16 intervals → 5 bpm each
                                     colors = SliderDefaults.colors(
                                         thumbColor = AccentRed,
                                         activeTrackColor = AccentRed,
@@ -234,7 +235,7 @@ fun SettingsScreen(
                                         style = MaterialTheme.typography.bodyMedium,
                                     )
                                     Text(
-                                        text = "${lowHRThreshold.toInt()} bpm",
+                                        text = "${lowHRThreshold.roundToInt()} bpm",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                                     )
@@ -243,7 +244,7 @@ fun SettingsScreen(
                                     value = lowHRThreshold,
                                     onValueChange = { lowHRThreshold = it },
                                     valueRange = 30f..60f,
-                                    steps = 5,
+                                    steps = 5, // 5 intermediate values → 6 intervals → 5 bpm each
                                     colors = SliderDefaults.colors(
                                         thumbColor = AccentRed,
                                         activeTrackColor = AccentRed,

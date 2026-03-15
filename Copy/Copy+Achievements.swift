@@ -63,7 +63,7 @@ extension Copy {
         static let marathonMonthDescription = "Total monthly steps exceed 300,000"
         static let peakPerformerTitle = "Peak Performer"
         static let peakPerformerDescription = "Achieve a health score of 95 or higher"
-        static let stepKingTitle = "Step King"
+        static let stepKingTitle = "Step Legend"
         static let stepKingDescription = "Hit 20,000 steps in a single day"
 
         // MARK: - Consistency Achievements

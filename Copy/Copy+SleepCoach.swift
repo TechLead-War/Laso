@@ -62,7 +62,7 @@ extension Copy {
 
         // MARK: - Tips
 
-        static let payingOffDebtTitle = "Paying Off Debt"
+        static let payingOffDebtTitle = "Restoring Balance"
         static let sleepTips = "Sleep Tips"
 
         // Debt tips

@@ -412,7 +412,7 @@ struct StrainDetailView: View {
 
                 // Chart legend
                 HStack(spacing: 16) {
-                    ForEach([StrainLevel.low, .moderate, .high, .overreaching], id: \.rawValue) { level in
+                    ForEach(StrainLevel.allCases, id: \.rawValue) { level in
                         HStack(spacing: 4) {
                             Circle().fill(level.color).frame(width: 6, height: 6)
                             Text(level.rawValue)

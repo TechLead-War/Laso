@@ -309,7 +309,7 @@ private fun CognitiveReadinessSection(
     LasoCard(modifier = Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(LasoTokens.ItemGap)) {
             Text(
-                text = "Cognitive Readiness",
+                text = "Cognitive Recovery",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
             )

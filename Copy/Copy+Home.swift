@@ -29,7 +29,7 @@ extension Copy {
 
         // MARK: - First Launch Sync
 
-        static let syncingHealthData = "Syncing your last 1 years of health data"
+        static let syncingHealthData = "Syncing your last 1 year of health data"
         static func analyzingDataPoints(_ count: Int) -> String { "Analyzing \(count) data points" }
         static let analyzingYourData = "Analyzing your data"
         static let discoveringPatterns = "Discovering patterns"
@@ -132,13 +132,13 @@ extension Copy {
             static let bodyVitalsName = "Body & Vitals"
             static let bodyVitalsDetail = "Weight, body fat, blood oxygen, and more"
 
-            // Recovery & Readiness
-            static let recoveryAndReadiness = "Recovery & Readiness"
+            // Recovery
+            static let recoveryAndReadiness = "Recovery"
             static func readinessDescription(deviceName: String?) -> String {
                 if let deviceName {
-                    return "Your Readiness score (0\u{2013}100) tells you how recovered your body is. It\u{2019}s calculated from two signals your \(deviceName) measures while you sleep:"
+                    return "Your Recovery score (0\u{2013}100) tells you how recovered your body is. It\u{2019}s calculated from two signals your \(deviceName) measures while you sleep:"
                 }
-                return "Your Readiness score (0\u{2013}100) tells you how recovered your body is. It\u{2019}s calculated from HRV and resting heart rate samples that Apple Health collects overnight:"
+                return "Your Recovery score (0\u{2013}100) tells you how recovered your body is. It\u{2019}s calculated from HRV and resting heart rate samples that Apple Health collects overnight:"
             }
             static let hrvName = "Heart Rate Variability (HRV)"
             static let hrvDetail = "Higher HRV means better recovery and lower stress."
@@ -155,7 +155,7 @@ extension Copy {
 
         enum RecoveryInfo {
             static let title = "How Recovery Works"
-            static let description = "Your Readiness score (0\u{2013}100) tells you how recovered your body is, based on two signals measured while you sleep."
+            static let description = "Your Recovery score (0\u{2013}100) tells you how recovered your body is, based on two signals measured while you sleep."
             static let hrvName = "Heart Rate Variability"
             static let hrvDetail = "Higher HRV means better recovery and lower stress."
             static let restingHRName = "Resting Heart Rate"

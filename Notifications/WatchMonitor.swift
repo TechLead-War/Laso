@@ -241,7 +241,7 @@ final class WatchMonitor {
             identifier: AppConstants.NotificationID.watchNotWorn,
             maxPerDay: 1
         )
-        AppAnalytics.shared.trackNotificationSent(type: "watch_not_worn")
+        Task { @MainActor in AppAnalytics.shared.trackNotificationSent(type: "watch_not_worn") }
 
         defaults.set(Date().timeIntervalSince1970, forKey: lastNotWornNotificationKey)
     }
@@ -266,7 +266,7 @@ final class WatchMonitor {
                 identifier: AppConstants.NotificationID.watchLowBattery,
                 maxPerDay: 1
             )
-            AppAnalytics.shared.trackNotificationSent(type: "battery_low")
+            Task { @MainActor in AppAnalytics.shared.trackNotificationSent(type: "battery_low") }
 
             defaults.set(true, forKey: lowBatteryAlertShownKey)
         } else {

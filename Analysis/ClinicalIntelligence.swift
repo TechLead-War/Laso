@@ -158,7 +158,7 @@ struct ClinicalIntelligence {
         // Generate insight if trending upward significantly
         if slopePerMonth > 0.5 {
             let severity: Severity = slopePerMonth > 2.0 ? .warning : .info
-            let nextStageInfo = daysToNextStage.map { "At this rate, you could reach \($0.label) territory in ~\($0.days) days." } ?? ""
+            let nextStageInfo = daysToNextStage.map { Copy.Analysis.Clinical.projectedToReach(label: $0.label, days: $0.days) } ?? ""
 
             insights.append(Insight(
                 metric: .bloodPressureSystolic,
@@ -187,7 +187,7 @@ struct ClinicalIntelligence {
                 insights.append(Insight(
                     metric: .bloodPressureSystolic,
                     title: Copy.Analysis.Clinical.elevatedPulsePressure,
-                    summary: "Your pulse pressure (\(Int(pulsePressure)) mmHg) is above the normal range of 40-60 mmHg, which may indicate arterial stiffness.",
+                    summary: Copy.Analysis.Clinical.pulsePressureSummary(pulsePressure: Int(pulsePressure)),
                     recommendation: "\(Copy.Analysis.Clinical.pulsePressureRecommendation) \(Copy.Analysis.Clinical.medicalDisclaimer)",
                     severity: .warning,
                     trend: .declining,
@@ -232,7 +232,7 @@ struct ClinicalIntelligence {
         )
 
         let severity: Severity = currentStage >= .prediabetic || slopePerMonth > 1.5 ? .warning : .info
-        let nextInfo = daysToNext.map { "Projected to reach \($0.label) range in ~\($0.days) days." } ?? ""
+        let nextInfo = daysToNext.map { Copy.Analysis.Clinical.projectedToReachRange(label: $0.label, days: $0.days) } ?? ""
 
         return Insight(
             metric: .bloodGlucose,
@@ -276,7 +276,7 @@ struct ClinicalIntelligence {
         return Insight(
             metric: .respiratoryRate,
             title: Copy.Analysis.Clinical.abnormalRespiratoryRate,
-            summary: "Your respiratory rate (\(String(format: "%.1f", latest)) br/min) is classified as \(stage.rawValue). Normal range is 12-20 breaths per minute.",
+            summary: Copy.Analysis.Clinical.respiratorySummary(rate: String(format: "%.1f", latest), stage: stage.rawValue),
             recommendation: "\(Copy.Analysis.Clinical.respiratoryRecommendation) \(Copy.Analysis.Clinical.medicalDisclaimer)",
             severity: stage == .severe ? .critical : .warning,
             trend: slopePerMonth > 0 ? .declining : .stable,

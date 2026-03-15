@@ -40,8 +40,13 @@ struct AnomalyDetector {
 
         let absZ = abs(zScore)
 
+        // Determine severity: critical absolute thresholds override z-score logic.
+        // For example, SpO2 <90% is always critical regardless of personal baseline variability.
         let severity: Severity
-        if absZ >= criticalZScore {
+        if let criticalThreshold = RulesConfiguration.criticalThreshold(for: metric),
+           criticalThreshold.isCritical(currentValue) {
+            severity = .critical
+        } else if absZ >= criticalZScore {
             severity = .critical
         } else if absZ >= warningZScore {
             severity = .warning

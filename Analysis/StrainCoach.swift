@@ -223,7 +223,7 @@ final class StrainCoach {
             return (.maintaining, 11.5, 10.0, 13.0)
 
         case .red:
-            return (.restoring, 5.0, 0.0, 9.0)
+            return (.restoring, 5.0, 0.0, 5.0)
         }
     }
 

@@ -146,12 +146,12 @@ struct CognitiveEnergyAnalyzer {
         let summary: String
         let recommendation: String
         if isLow {
-            summary = "Your cognitive readiness is at \(finalScore)/100\(componentText). Addressing these factors can sharpen mental clarity and processing speed."
+            summary = "Your cognitive energy is at \(finalScore)/100\(componentText). Addressing these factors can sharpen mental clarity and processing speed."
             // Find the biggest lever
             let topComponent = components.first?.name ?? "sleep"
             recommendation = "Consider extending tonight's sleep by 45 min. Your \(topComponent) is the biggest factor right now — a single night of 8+ hr sleep typically improves next-day HRV and deep sleep."
         } else {
-            summary = "Your cognitive readiness is strong at \(finalScore)/100. HRV, sleep quality, and recovery markers are all above baseline."
+            summary = "Your cognitive energy is strong at \(finalScore)/100. HRV, sleep quality, and recovery markers are all above baseline."
             recommendation = Copy.Analysis.CognitiveEnergy.brainPrimedForWork
         }
 

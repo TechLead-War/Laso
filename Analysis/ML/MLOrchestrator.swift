@@ -176,11 +176,13 @@ final class MLOrchestrator {
             if componentsRunCount > 0 {
                 let pipelineDurationMs = Int(Date().timeIntervalSince(pipelineStart) * 1000)
                 let totalDataPoints = timeSeries.values.reduce(0) { $0 + $1.samples.count }
-                AppAnalytics.shared.trackMLAnalysisPerformance(
-                    durationMs: pipelineDurationMs,
-                    componentsRun: componentsRunCount,
-                    dataPointsUsed: totalDataPoints
-                )
+                Task { @MainActor in
+                    AppAnalytics.shared.trackMLAnalysisPerformance(
+                        durationMs: pipelineDurationMs,
+                        componentsRun: componentsRunCount,
+                        dataPointsUsed: totalDataPoints
+                    )
+                }
             }
         }
 

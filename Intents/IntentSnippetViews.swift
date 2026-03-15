@@ -167,8 +167,9 @@ enum IntentSnippetViews {
         }
 
         private func formatHours(_ hours: Double) -> String {
-            let h = Int(hours)
-            let m = Int((hours - Double(h)) * 60)
+            let clamped = max(0, hours)
+            let h = Int(clamped)
+            let m = max(0, Int((clamped - Double(h)) * 60))
             if h == 0 { return "\(m)m" }
             if m == 0 { return "\(h)h" }
             return "\(h)h \(m)m"

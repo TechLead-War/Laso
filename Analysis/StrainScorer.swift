@@ -112,6 +112,7 @@ final class StrainScorer {
     ///   - todayHRSamples: Raw per-sample heart rate data for today. The sync pipeline
     ///     stores daily averages, which loses per-minute granularity needed for HR zone
     ///     classification. Pass raw samples from HealthKit for accurate zone computation.
+    @MainActor
     func compute(from store: HealthDataStore, age: Int, restingHR: Double?, todayHRSamples: [MetricSample] = [], timeSeries: [HealthMetric: MetricTimeSeries]? = nil) {
         // Prefer in-memory time series from HealthKitManager (freshest data)
         // over re-reading from SwiftData (may lag behind)
@@ -330,6 +331,7 @@ final class StrainScorer {
     }
 
     /// Build rolling strain history from persisted snapshots, with day-level recompute fallback for missing dates.
+    @MainActor
     private func computeWeeklyHistory(
         from allSeries: [HealthMetric: MetricTimeSeries],
         store: HealthDataStore,
@@ -341,8 +343,6 @@ final class StrainScorer {
         let today = calendar.startOfDay(for: Date())
         let lookbackDays = 7
         var history: [(date: Date, strain: Double)] = []
-
-        let validHR = maxHR > restingHR
 
         let persistedHistory = store.loadDailyStrainHistory(lookbackDays: lookbackDays)
         var persistedByDate: [Date: Double] = [:]

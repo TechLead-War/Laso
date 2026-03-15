@@ -36,7 +36,7 @@ struct RecoveryHeroCard: View {
                 // Score ring — hero size
                 HealthScoreRing(
                     score: score,
-                    label: "Readiness",
+                    label: "Recovery",
                     size: 120,
                     lineWidth: 12
                 )
@@ -105,7 +105,7 @@ struct RecoveryHeroCard: View {
         )
         .shadow(color: scoreColor.opacity(0.15), radius: 12, y: 4)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Readiness score \(score). \(recoveryLabel). \(dayType).")
+        .accessibilityLabel("Recovery score \(score). \(recoveryLabel). \(dayType).")
         .accessibilityHint("Opens score breakdown")
         .accessibilityIdentifier("home.recoveryCard")
     }

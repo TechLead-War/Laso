@@ -1,6 +1,7 @@
 package com.lasohealth.android.core.model
 
 import androidx.compose.ui.graphics.Color
+import com.lasohealth.android.core.analysis.TrendDirection
 import com.lasohealth.android.ui.theme.AccentOrange
 import com.lasohealth.android.ui.theme.AccentRed
 import com.lasohealth.android.ui.theme.AccentYellow
@@ -172,6 +173,8 @@ data class DecliningTrendUi(
 data class TrendMetricUi(
     val metric: HealthMetric,
     val summary: String,
+    val sparklineValues: List<Float> = emptyList(),
+    val direction: TrendDirection = TrendDirection.STABLE,
 )
 
 data class CategoryScoreUi(

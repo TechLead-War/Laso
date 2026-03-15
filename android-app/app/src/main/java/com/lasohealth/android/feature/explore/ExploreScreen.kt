@@ -64,6 +64,7 @@ import com.lasohealth.android.core.model.ExploreUiState
 import com.lasohealth.android.core.model.HealthCategory
 import com.lasohealth.android.core.model.HealthMetric
 import com.lasohealth.android.core.model.TrendMetricUi
+import com.lasohealth.android.core.analysis.TrendDirection
 import com.lasohealth.android.navigation.AppRoute
 import com.lasohealth.android.core.model.DecliningTrendUi
 import com.lasohealth.android.ui.theme.AccentGreen
@@ -443,7 +444,15 @@ private fun TrendMetricRow(
     onClick: () -> Unit,
 ) {
     val categoryColor = trend.metric.category.accentColor
-    val trendColor = if (trend.metric.higherIsBetter) AccentGreen else AccentRed
+    // Color reflects whether the trend is favorable: green = good, red = bad.
+    // Rising is good when higherIsBetter; falling is good when !higherIsBetter.
+    val isRising = trend.direction == TrendDirection.RISING
+    val isFavorable = when (trend.direction) {
+        TrendDirection.RISING -> trend.metric.higherIsBetter
+        TrendDirection.FALLING -> !trend.metric.higherIsBetter
+        else -> true // stable / insufficient data — neutral, show green
+    }
+    val trendColor = if (isFavorable) AccentGreen else AccentRed
 
     // iOS: HStack(spacing: 12) inside .cardStyle()
     LasoCard(
@@ -495,13 +504,15 @@ private fun TrendMetricRow(
 
             // Sparkline mini chart — iOS: SparklineView(52×24)
             SparklineChart(
+                values = trend.sparklineValues,
                 color = trendColor,
                 modifier = Modifier.size(width = 52.dp, height = 24.dp),
             )
 
             // iOS: trend direction icon + percent change
+            // Arrow reflects actual data direction; color (trendColor) reflects good/bad
             Icon(
-                imageVector = if (trend.metric.higherIsBetter) Icons.Filled.NorthEast else Icons.Filled.SouthEast,
+                imageVector = if (isRising) Icons.Filled.NorthEast else Icons.Filled.SouthEast,
                 contentDescription = null,
                 modifier = Modifier.size(12.dp),
                 tint = trendColor,
@@ -521,20 +532,22 @@ private fun TrendMetricRow(
 // Simple sparkline chart matching iOS SparklineView
 @Composable
 private fun SparklineChart(
+    values: List<Float>,
     color: Color,
     modifier: Modifier = Modifier,
 ) {
-    // Generate a simple representative sparkline shape
-    val values = remember {
-        listOf(0.3f, 0.5f, 0.4f, 0.6f, 0.55f, 0.7f, 0.65f, 0.8f, 0.75f, 0.85f, 0.9f, 0.82f)
-    }
+    if (values.size < 2) return
+    val minVal = values.min()
+    val maxVal = values.max()
+    val range = (maxVal - minVal).coerceAtLeast(0.01f)
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
         val path = Path()
         values.forEachIndexed { index, value ->
-            val x = w * index / (values.size - 1).coerceAtLeast(1)
-            val y = h - (h * value)
+            val x = w * index / (values.size - 1)
+            val normalized = (value - minVal) / range
+            val y = h - (h * normalized)
             if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
         }
         drawPath(

@@ -39,8 +39,12 @@ struct ECGIntelligence {
 
     // MARK: - Analysis
 
-    /// Analyze stored ECG features for longitudinal trends and patterns
-    static func analyze(features: [StoredECGFeatures]) -> ECGAnalysisResult? {
+    /// Analyze stored ECG features for longitudinal trends and patterns.
+    /// - Parameters:
+    ///   - features: Chronological ECG feature snapshots.
+    ///   - biologicalSex: User's biological sex for sex-adjusted thresholds (QTc).
+    ///     Pass `nil` to fall back to the more conservative male threshold (450 ms).
+    static func analyze(features: [StoredECGFeatures], biologicalSex: Gender? = nil) -> ECGAnalysisResult? {
         guard features.count >= 2 else { return nil }
 
         // Sort by date (newest first is how they come from store, reverse for chronological)
@@ -52,6 +56,9 @@ struct ECGIntelligence {
         let afibCount = afibEpisodes.count
         let afibFrequency = classifyAFibFrequency(episodeCount: afibCount, totalDays: max(1, totalDays))
         let afibTrend = analyzeAFibBurdenTrend(sorted: sorted)
+
+        // Sex-adjusted QTc threshold: ≤450 ms for males, ≤470 ms for females (AHA/ACC guidelines)
+        let qtcThreshold: Double = biologicalSex == .female ? 470.0 : 450.0
 
         // Waveform trends
         let qrsWidthTrend = analyzeTrend(
@@ -72,7 +79,7 @@ struct ECGIntelligence {
             },
             metricName: "QTc Interval",
             unit: "ms",
-            worrisomeThreshold: 450.0, // Prolonged QTc
+            worrisomeThreshold: qtcThreshold,
             worrisomeDirection: .above
         )
 
@@ -103,6 +110,7 @@ struct ECGIntelligence {
             afibTrend: afibTrend,
             qrsWidthTrend: qrsWidthTrend,
             qtcTrend: qtcTrend,
+            qtcThreshold: qtcThreshold,
             hrvTrend: hrvTrend,
             autonomicTrend: autonomicTrend,
             totalECGs: sorted.count
@@ -229,6 +237,7 @@ struct ECGIntelligence {
         afibTrend: ECGTrend?,
         qrsWidthTrend: ECGTrend?,
         qtcTrend: ECGTrend?,
+        qtcThreshold: Double,
         hrvTrend: ECGTrend?,
         autonomicTrend: ECGTrend?,
         totalECGs: Int
@@ -269,7 +278,7 @@ struct ECGIntelligence {
             insights.append(Insight(
                 metric: .heartRate,
                 title: "QTc Prolongation Trend",
-                summary: qtc.description + ". QTc values above 450ms may warrant further review by a healthcare provider.",
+                summary: qtc.description + ". QTc values above \(Int(qtcThreshold))ms may warrant further review by a healthcare provider.",
                 recommendation: "Changes in QTc can have many causes. Share this trend data with your healthcare provider for proper evaluation." + medicalDisclaimer,
                 severity: qtc.currentValue > 500 ? .critical : .warning,
                 trend: qtc.slope > 0 ? .declining : .stable,

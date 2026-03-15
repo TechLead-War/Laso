@@ -275,6 +275,9 @@ class TimeSeriesForecaster {
         val residuals = mutableListOf<Double>()
 
         for (i in startIdx until values.size) {
+            val v = values[i]
+            if (!v.isFinite()) continue
+
             val weeklyIdx = i % WEEKLY_PERIOD
             val oldWeekly = state.seasonal[weeklyIdx]
             if (oldWeekly == 0.0) continue
@@ -284,17 +287,22 @@ class TimeSeriesForecaster {
             } else 1.0
 
             val combined = oldWeekly * oldMonthly
-            if (combined == 0.0) continue
+            if (abs(combined) < 0.001) continue
 
             val predicted = (state.level + phi * state.trend) * combined
-            residuals.add(values[i] - predicted)
+            val residual = v - predicted
+            if (residual.isFinite()) residuals.add(residual)
 
-            val newLevel = alpha * (values[i] / combined) + (1 - alpha) * (state.level + phi * state.trend)
+            val newLevel = alpha * (v / combined) + (1 - alpha) * (state.level + phi * state.trend)
+            if (!newLevel.isFinite() || newLevel == 0.0) continue
+
             val newTrend = beta * (newLevel - state.level) + (1 - beta) * phi * state.trend
+            if (!newTrend.isFinite()) continue
 
             val weeklyDenom = newLevel * oldMonthly
             val newWeekly = if (abs(weeklyDenom) > 0.001) {
-                gamma1 * (values[i] / weeklyDenom) + (1 - gamma1) * oldWeekly
+                val candidate = gamma1 * (v / weeklyDenom) + (1 - gamma1) * oldWeekly
+                if (candidate.isFinite()) candidate else oldWeekly
             } else oldWeekly
 
             if (doubleSeasonal) {
@@ -303,7 +311,7 @@ class TimeSeriesForecaster {
                         val mIdx = i % MONTHLY_PERIOD
                         val denom = newLevel * newWeekly
                         if (abs(denom) > 0.001) {
-                            val nm = g2 * (values[i] / denom) + (1 - g2) * monthly[mIdx]
+                            val nm = g2 * (v / denom) + (1 - g2) * monthly[mIdx]
                             if (nm.isFinite()) monthly[mIdx] = nm
                         }
                     }
@@ -344,10 +352,15 @@ class TimeSeriesForecaster {
             if (abs(combined) < 0.001) continue
 
             val newLevel = s.alpha * (values[i] / combined) + (1 - s.alpha) * (s.level + s.dampingFactor * s.trend)
+            if (!newLevel.isFinite() || newLevel == 0.0) continue
+
             val newTrend = s.beta * (newLevel - s.level) + (1 - s.beta) * s.dampingFactor * s.trend
+            if (!newTrend.isFinite()) continue
+
             val weeklyDenom = newLevel * mS
             if (abs(weeklyDenom) > 0.001) {
-                s.seasonal[weeklyIdx] = s.gamma * (values[i] / weeklyDenom) + (1 - s.gamma) * wS
+                val candidate = s.gamma * (values[i] / weeklyDenom) + (1 - s.gamma) * wS
+                if (candidate.isFinite()) s.seasonal[weeklyIdx] = candidate
             }
 
             if (doubleSeasonal) {

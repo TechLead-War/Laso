@@ -63,6 +63,12 @@ struct BrainHealthScore {
     let neurovascularFitness: Double
     /// Circadian alignment subscale (0-100) from sleep timing regularity
     let circadianAlignment: Double
+    /// Deep sleep component score (0-100), normalized against personal baseline. Nil when no deep sleep data available.
+    let deepSleepScore: Double?
+    /// REM sleep component score (0-100), normalized against personal baseline. Nil when no REM data available.
+    let remSleepScore: Double?
+    /// Sleep duration component score (0-100), normalized against personal baseline. Nil when no duration data available.
+    let sleepDurationScore: Double?
     /// Top contributing factors with their direction and sentiment
     let topFactors: [(label: String, impact: String, isPositive: Bool)]
     /// Concise, data-backed headline summarizing the score
@@ -144,6 +150,7 @@ final class BrainHealthScorer {
     /// - Parameters:
     ///   - store: The on-device health data store containing metric time series.
     ///   - timeSeries: Optional in-memory time series for guaranteed freshness (falls back to store).
+    @MainActor
     func compute(from store: HealthDataStore, timeSeries: [HealthMetric: MetricTimeSeries]? = nil) {
         let allSeries = timeSeries ?? store.loadAllTimeSeries()
 
@@ -256,6 +263,25 @@ final class BrainHealthScorer {
             hrvBaseline: hrvBase
         )
 
+        // Individual sleep stage component scores (0-100) for direct display
+        let deepSleepScore: Double? = {
+            guard let deep = recentDeep, let deepBase = deepBaseline else { return nil }
+            let z = zScore(current: deep, baseline: deepBase)
+            return normalizeZScore(z) * 100.0
+        }()
+
+        let remSleepScore: Double? = {
+            guard let rem = recentREM, let remBase = remBaseline else { return nil }
+            let z = zScore(current: rem, baseline: remBase)
+            return normalizeZScore(z) * 100.0
+        }()
+
+        let sleepDurationScore: Double? = {
+            guard let dur = recentDuration, let durBase = durationBaseline else { return nil }
+            let z = zScore(current: dur, baseline: durBase)
+            return normalizeZScore(z) * 100.0
+        }()
+
         currentScore = BrainHealthScore(
             score: finalScore,
             state: state,
@@ -264,6 +290,9 @@ final class BrainHealthScorer {
             stressCognitionLoad: stressCognitionLoad,
             neurovascularFitness: neurovascularFitness,
             circadianAlignment: circadianAlignment,
+            deepSleepScore: deepSleepScore,
+            remSleepScore: remSleepScore,
+            sleepDurationScore: sleepDurationScore,
             topFactors: topFactors,
             headline: headline,
             confidence: confidence

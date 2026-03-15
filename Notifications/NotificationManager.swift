@@ -31,10 +31,10 @@ final class NotificationManager {
     func requestAuthorization() async -> Bool {
         do {
             let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
-            AppAnalytics.shared.updateNotificationProperties(enabled: granted)
+            await MainActor.run { AppAnalytics.shared.updateNotificationProperties(enabled: granted) }
             return granted
         } catch {
-            AppAnalytics.shared.updateNotificationProperties(enabled: false)
+            await MainActor.run { AppAnalytics.shared.updateNotificationProperties(enabled: false) }
             print("Notification authorization failed: \(error.localizedDescription)")
             return false
         }
@@ -90,10 +90,12 @@ final class NotificationManager {
                 return
             }
 
-            // Dynamic budget based on fatigue detection
+            // Dynamic budget based on fatigue detection.
+            // HealthDataStore is @MainActor — use assumeIsolated when on main thread,
+            // otherwise fall back to the static maxPerDay budget.
             let dynamicBudget: Int
-            if let store {
-                let events = store.loadNotificationEvents(days: 7)
+            if let store, Thread.isMainThread {
+                let events = MainActor.assumeIsolated { store.loadNotificationEvents(days: 7) }
                 dynamicBudget = NotificationOptimizer.dailyBudget(events: events)
             } else {
                 dynamicBudget = maxPerDay
@@ -116,18 +118,28 @@ final class NotificationManager {
             trigger: trigger
         )
 
+        let notifType = Self.notificationType(identifier)
+
         center.add(request) { [weak self] error in
             if let error {
                 print("Failed to schedule notification: \(error.localizedDescription)")
-            } else if !isDailySummary {
-                self?.frequencyCap.recordNotification()
+            } else {
+                if !isDailySummary {
+                    self?.frequencyCap.recordNotification()
+                }
+
+                // Record the send event for optimizer tracking.
+                // HealthDataStore is @MainActor — dispatch to main actor for the write.
+                if let store = self?.store {
+                    Task { @MainActor in
+                        store.recordNotificationSent(id: identifier, type: notifType)
+                    }
+                }
+                Task { @MainActor in
+                    AppAnalytics.shared.trackNotificationScheduled(type: notifType, identifier: identifier)
+                }
             }
         }
-
-        // Record the send event for optimizer tracking
-        let notifType = Self.notificationType(identifier)
-        store?.recordNotificationSent(id: identifier, type: notifType)
-        AppAnalytics.shared.trackNotificationScheduled(type: notifType, identifier: identifier)
     }
 
     /// Cancel a specific notification

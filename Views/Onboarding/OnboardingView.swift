@@ -119,6 +119,7 @@ struct OnboardingView: View {
                 .tag(OnboardingStep.focusCalibration)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
+            .scrollDisabled(true)
 
             // Progress dots (visible on non-welcome steps)
             if let currentProgressIndex = progressSteps.firstIndex(of: currentStep) {

@@ -386,7 +386,7 @@ private fun RecoveryHeroCard(
                         score = score,
                         size = 120.dp,
                         strokeWidth = 12.dp,
-                        label = "Readiness",
+                        label = "Recovery",
                     )
 
                     Column(

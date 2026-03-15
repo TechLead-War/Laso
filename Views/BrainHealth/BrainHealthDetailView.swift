@@ -75,43 +75,51 @@ struct BrainHealthDetailView: View {
     // MARK: - Cognitive Readiness
 
     private var readinessSection: some View {
-        VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text("Cognitive Readiness")
+        let deepValue = brainScore.deepSleepScore.map { $0 / 100 }
+        let remValue = brainScore.remSleepScore.map { $0 / 100 }
+        let durationValue = brainScore.sleepDurationScore.map { $0 / 100 }
+
+        return VStack(alignment: .leading, spacing: DS.itemSpacing) {
+            Text("Cognitive Recovery")
                 .font(.headline)
 
             driverRow(
                 label: "HRV Signal",
                 icon: "waveform.path.ecg",
                 value: brainScore.cognitiveReadiness / 100,
-                color: readinessColor(brainScore.cognitiveReadiness / 100)
+                color: readinessColor(brainScore.cognitiveReadiness / 100),
+                isEstimate: false
             )
 
             driverRow(
                 label: "Deep Sleep",
                 icon: "moon.zzz.fill",
-                value: brainScore.cognitiveReadiness / 100 * 0.9,
-                color: readinessColor(brainScore.cognitiveReadiness / 100 * 0.9)
+                value: deepValue ?? brainScore.cognitiveReadiness / 100 * 0.9,
+                color: readinessColor(deepValue ?? brainScore.cognitiveReadiness / 100 * 0.9),
+                isEstimate: deepValue == nil
             )
 
             driverRow(
                 label: "REM Sleep",
                 icon: "brain.fill",
-                value: brainScore.memoryRecovery / 100,
-                color: readinessColor(brainScore.memoryRecovery / 100)
+                value: remValue ?? brainScore.memoryRecovery / 100,
+                color: readinessColor(remValue ?? brainScore.memoryRecovery / 100),
+                isEstimate: remValue == nil
             )
 
             driverRow(
                 label: "Sleep Duration",
                 icon: "bed.double.fill",
-                value: brainScore.circadianAlignment / 100,
-                color: readinessColor(brainScore.circadianAlignment / 100)
+                value: durationValue ?? brainScore.circadianAlignment / 100,
+                color: readinessColor(durationValue ?? brainScore.circadianAlignment / 100),
+                isEstimate: durationValue == nil
             )
         }
         .padding(DS.cardPadding)
         .cardStyle()
     }
 
-    private func driverRow(label: String, icon: String, value: Double, color: Color) -> some View {
+    private func driverRow(label: String, icon: String, value: Double, color: Color, isEstimate: Bool = false) -> some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.body.weight(.semibold))
@@ -122,6 +130,15 @@ struct BrainHealthDetailView: View {
                 HStack {
                     Text(label)
                         .font(.subheadline.weight(.medium))
+
+                    if isEstimate {
+                        Text("Est.")
+                            .font(.caption2.weight(.medium))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1)
+                            .background(Color(.systemGray5), in: Capsule())
+                    }
 
                     Spacer()
 
@@ -137,7 +154,7 @@ struct BrainHealthDetailView: View {
                             .frame(height: 6)
 
                         RoundedRectangle(cornerRadius: 3)
-                            .fill(color)
+                            .fill(isEstimate ? color.opacity(0.5) : color)
                             .frame(width: geo.size.width * min(max(value, 0), 1.0), height: 6)
                     }
                 }
@@ -156,15 +173,19 @@ struct BrainHealthDetailView: View {
     // MARK: - Memory & Recovery
 
     private var memorySection: some View {
-        VStack(alignment: .leading, spacing: DS.itemSpacing) {
+        let remDisplay = brainScore.remSleepScore ?? brainScore.memoryRecovery
+        let deepDisplay = brainScore.deepSleepScore ?? brainScore.cognitiveReadiness * 0.9
+        let hasSleepStages = brainScore.remSleepScore != nil || brainScore.deepSleepScore != nil
+
+        return VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text("Memory & Recovery")
                 .font(.headline)
 
             HStack(spacing: 16) {
                 statBox(
-                    label: "REM Quality",
-                    value: "\(Int(brainScore.memoryRecovery))%",
-                    color: readinessColor(brainScore.memoryRecovery / 100)
+                    label: brainScore.remSleepScore != nil ? "REM Quality" : "REM Quality (Est.)",
+                    value: "\(Int(remDisplay))%",
+                    color: readinessColor(remDisplay / 100)
                 )
 
                 RoundedRectangle(cornerRadius: 1)
@@ -172,9 +193,9 @@ struct BrainHealthDetailView: View {
                     .frame(width: 1, height: DS.dividerHeight)
 
                 statBox(
-                    label: "Deep Sleep",
-                    value: "\(Int(brainScore.cognitiveReadiness * 0.9))%",
-                    color: readinessColor(brainScore.cognitiveReadiness * 0.9 / 100)
+                    label: brainScore.deepSleepScore != nil ? "Deep Sleep" : "Deep Sleep (Est.)",
+                    value: "\(Int(deepDisplay))%",
+                    color: readinessColor(deepDisplay / 100)
                 )
 
                 RoundedRectangle(cornerRadius: 1)
@@ -184,9 +205,15 @@ struct BrainHealthDetailView: View {
                 trendIndicator
             }
 
-            Text("Deep sleep clears brain waste. REM consolidates memory.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            if !hasSleepStages {
+                Text("Sleep stage data not available. Values are estimated from other signals.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("Deep sleep clears brain waste. REM consolidates memory.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding(DS.cardPadding)
         .cardStyle()
@@ -384,10 +411,14 @@ struct BrainHealthDetailView: View {
         return .orange
     }
 
-    private func abbreviatedDay(_ date: Date) -> String {
+    private static let dayFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEE"
-        return String(formatter.string(from: date).prefix(3))
+        return formatter
+    }()
+
+    private func abbreviatedDay(_ date: Date) -> String {
+        String(Self.dayFormatter.string(from: date).prefix(3))
     }
 
     private var trendIcon: String {
@@ -448,6 +479,9 @@ struct BrainHealthDetailView: View {
                 stressCognitionLoad: 75,
                 neurovascularFitness: 80,
                 circadianAlignment: 68,
+                deepSleepScore: 74,
+                remSleepScore: 68,
+                sleepDurationScore: 72,
                 topFactors: [
                     (label: "REM Sleep", impact: "12% above baseline", isPositive: true),
                     (label: "HRV", impact: "Trending up this week", isPositive: true),

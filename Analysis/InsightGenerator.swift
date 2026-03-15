@@ -152,54 +152,6 @@ struct InsightGenerator {
         return insights.sorted { $0.priorityScore > $1.priorityScore }
     }
 
-    // MARK: - Deduplication
-
-    /// Remove duplicate insights about the same metric, keeping only the highest-priority
-    /// insight per metric. Exception: keep both if one is a causal chain and the other is
-    /// an anomaly — they provide fundamentally different information.
-    private static func deduplicate(_ insights: [Insight]) -> [Insight] {
-        var grouped: [HealthMetric: [Insight]] = [:]
-        for insight in insights {
-            grouped[insight.metric, default: []].append(insight)
-        }
-
-        var result: [Insight] = []
-        for (_, metricInsights) in grouped {
-            if metricInsights.count <= 1 {
-                result.append(contentsOf: metricInsights)
-                continue
-            }
-
-            // Separate causal chain and anomaly insights — they provide different info
-            let causalChains = metricInsights.filter { $0.category == .causalChain }
-            let anomalies = metricInsights.filter { $0.category == .anomaly }
-            let others = metricInsights.filter { $0.category != .causalChain && $0.category != .anomaly }
-
-            // Keep the best causal chain if any exist
-            if let bestCausal = causalChains.max(by: { $0.priorityScore < $1.priorityScore }) {
-                result.append(bestCausal)
-            }
-
-            // Keep the best anomaly if any exist
-            if let bestAnomaly = anomalies.max(by: { $0.priorityScore < $1.priorityScore }) {
-                result.append(bestAnomaly)
-            }
-
-            // For everything else, keep only the single highest-priority
-            if let bestOther = others.max(by: { $0.priorityScore < $1.priorityScore }) {
-                // Only add if we didn't already keep a causal or anomaly (avoid triple-stacking)
-                if causalChains.isEmpty && anomalies.isEmpty {
-                    result.append(bestOther)
-                } else if bestOther.priorityScore > (causalChains.first?.priorityScore ?? 0)
-                            && bestOther.priorityScore > (anomalies.first?.priorityScore ?? 0) {
-                    result.append(bestOther)
-                }
-            }
-        }
-
-        return result
-    }
-
     // MARK: - Actionability Scoring
 
     /// Rate how actionable an insight is on a 0-100 scale.

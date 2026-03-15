@@ -50,7 +50,7 @@ struct IllnessEarlyWarning {
     private static let signalMetrics: [SignalConfig] = [
         SignalConfig(metric: .restingHeartRate, unfavorableDirection: .above, isSleepDuration: false),
         SignalConfig(metric: .heartRateVariability, unfavorableDirection: .below, isSleepDuration: false),
-        SignalConfig(metric: .sleepDuration, unfavorableDirection: .above, isSleepDuration: true),
+        SignalConfig(metric: .sleepDuration, unfavorableDirection: .below, isSleepDuration: true),
         SignalConfig(metric: .steps, unfavorableDirection: .below, isSleepDuration: false),
         SignalConfig(metric: .respiratoryRate, unfavorableDirection: .above, isSleepDuration: false),
     ]

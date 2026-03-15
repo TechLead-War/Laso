@@ -3,6 +3,7 @@ import SwiftUI
 struct VitalityDetailView: View {
     let scorer: VitalityScorer
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var orbPhase: CGFloat = 0
 
     var body: some View {
@@ -36,6 +37,7 @@ struct VitalityDetailView: View {
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.vitalityDetail)
+            guard !reduceMotion else { return }
             withAnimation(.linear(duration: 18).repeatForever(autoreverses: false)) {
                 orbPhase = .pi * 2
             }

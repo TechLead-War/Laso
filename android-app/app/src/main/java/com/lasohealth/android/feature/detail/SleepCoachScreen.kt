@@ -397,7 +397,7 @@ private fun DebtSection(
     ) {
         SleepSectionHeader(
             icon = Icons.Filled.Warning,
-            title = "Sleep Debt",
+            title = "Sleep Balance",
         )
 
         LasoCard(modifier = Modifier.fillMaxWidth()) {
@@ -722,7 +722,7 @@ private fun TipsSection(
     ) {
         SleepSectionHeader(
             icon = Icons.Filled.Lightbulb,
-            title = if (sleepDebt > 2) "Paying Off Debt" else "Sleep Tips",
+            title = if (sleepDebt > 2) "Restoring Balance" else "Sleep Tips",
         )
 
         LasoCard(modifier = Modifier.fillMaxWidth()) {
@@ -906,8 +906,9 @@ private fun SleepSectionHeader(
 // region Computed Helpers
 
 private fun formatDuration(hours: Double): String {
-    val h = hours.toInt()
-    val m = ((hours - h) * 60).toInt()
+    val clamped = hours.coerceAtLeast(0.0)
+    val h = clamped.toInt()
+    val m = ((clamped - h) * 60).toInt().coerceAtLeast(0)
     return if (h == 0) "${m}m" else "${h}h ${String.format("%02d", m)}m"
 }
 
@@ -964,17 +965,17 @@ private fun computeConsistencyLabel(score: Int): String {
     return when {
         score >= 80 -> "Excellent"
         score >= 60 -> "Good"
-        score >= 40 -> "Needs Work"
+        score >= 40 -> "Building"
         else -> "Irregular"
     }
 }
 
 private fun computeConsistencyDescription(score: Int): String {
     return when {
-        score >= 80 -> "Your sleep schedule is very consistent. This is one of the strongest predictors of good sleep quality."
-        score >= 60 -> "Minor variations in your schedule. Tightening your bedtime window could improve sleep quality."
-        score >= 40 -> "Your sleep times vary quite a bit. Try to keep bedtime within a 30-minute window each night."
-        else -> "Irregular sleep schedule detected. Your body\u2019s circadian rhythm works best with consistency."
+        score >= 80 -> "Your sleep schedule is very consistent. This helps maintain a strong circadian rhythm."
+        score >= 60 -> "Fairly consistent schedule. Try to reduce variability on weekends for better results."
+        score >= 40 -> "Your sleep timing varies quite a bit. Even small improvements in consistency can boost sleep quality."
+        else -> "Highly variable sleep schedule. Anchoring a consistent wake time is often the most effective first step."
     }
 }
 

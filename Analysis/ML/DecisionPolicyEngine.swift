@@ -540,9 +540,9 @@ final class DecisionPolicyEngine {
             if let bl = baseline, bl.mean > 0 {
                 let targetHrs = bl.mean + 0.5
                 if let current = currentValue, current < bl.mean {
-                    title = "Your sleep is averaging \(metric.formatValue(current))h — your baseline is \(String(format: "%.1f", bl.mean))h"
+                    title = "Your sleep is averaging \(metric.formatValue(current))h — aim for \(String(format: "%.1f", targetHrs))h to exceed your \(String(format: "%.1f", bl.mean))h baseline"
                 } else {
-                    title = "Your sleep baseline is \(String(format: "%.1f", bl.mean))h — you're currently on track"
+                    title = "Your sleep baseline is \(String(format: "%.1f", bl.mean))h — target \(String(format: "%.1f", targetHrs))h for optimal recovery"
                 }
             } else {
                 title = "Your sleep metrics are below baseline"

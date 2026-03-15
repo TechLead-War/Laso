@@ -63,6 +63,7 @@ struct HomeView: View {
         }
         .sensoryFeedback(.success, trigger: viewModel.lastRefresh)
         .onAppear {
+            ensureWeeklyReviewVM()
             startHomeRefresh()
             startReadinessRefresh()
             AppAnalytics.shared.trackFeatureOpen(.home)
@@ -138,12 +139,11 @@ struct HomeView: View {
         readinessRefreshTimer.stop()
     }
 
-    /// Lazily created and reused WeeklyReviewViewModel
-    private func getOrCreateWeeklyReviewVM() -> WeeklyReviewViewModel {
-        if let existing = weeklyReviewViewModel { return existing }
-        let vm = WeeklyReviewViewModel(dashboardViewModel: viewModel)
-        weeklyReviewViewModel = vm
-        return vm
+    /// Ensure the WeeklyReviewViewModel is created before the body needs it.
+    private func ensureWeeklyReviewVM() {
+        if weeklyReviewViewModel == nil {
+            weeklyReviewViewModel = WeeklyReviewViewModel(dashboardViewModel: viewModel)
+        }
     }
 
     private var hasData: Bool {
@@ -166,7 +166,7 @@ struct HomeView: View {
                     streakDays: SessionTracker.shared.streakDays,
                     scoreChangeFromYesterday: viewModel.scores.scoreChangeFromYesterday,
                     currentScore: hasData ? liveReadinessScore : nil,
-                    recoveryState: hasData ? viewModel.recoveryState : nil,
+                    recoveryState: hasData ? DashboardViewModel.RecoveryState(score: liveReadinessScore) : nil,
                     onTapScoreInfo: { showScoreGuide = true }
                 )
                 .padding(.top, 12)
@@ -181,7 +181,7 @@ struct HomeView: View {
                         score: liveReadinessScore,
                         dailyScore: viewModel.overallScore.score,
                         recoveryLabel: HomeView.recoveryLabel(liveReadinessScore),
-                        dayType: viewModel.scores.dayClassification,
+                        dayType: DashboardViewModel.RecoveryState(score: liveReadinessScore).dayType,
                         scoreDelta: readinessDelta,
                         onTap: { showScoreGuide = true }
                     )
@@ -263,7 +263,7 @@ struct HomeView: View {
 
                     // 7. Weekly Review
                     WeeklyReviewEntryCard(
-                        viewModel: getOrCreateWeeklyReviewVM()
+                        viewModel: weeklyReviewViewModel ?? WeeklyReviewViewModel(dashboardViewModel: viewModel)
                     ) {
                         AppAnalytics.shared.trackBlockTap(
                             title: "Weekly Review",
@@ -271,7 +271,7 @@ struct HomeView: View {
                             screen: .home,
                             metadata: [
                                 "destination": "weekly_review",
-                                "score": viewModel.overallScore.score
+                                "score": liveReadinessScore
                             ]
                         )
                         navigationPath.append(Route.weeklyReview)
@@ -550,7 +550,7 @@ struct HomeView: View {
                         .font(.title3.weight(.semibold))
                         .foregroundStyle(.white)
                         .frame(width: 40, height: 40)
-                        .background(DS.scoreColor(viewModel.overallScore.score), in: RoundedRectangle(cornerRadius: 10))
+                        .background(DS.scoreColor(liveReadinessScore), in: RoundedRectangle(cornerRadius: 10))
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text(action.title)

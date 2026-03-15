@@ -306,6 +306,7 @@ enum BlockType: String {
 
 /// Central analytics facade. PostHog backend (sole analytics platform).
 /// Focused on PMF metrics: activation, retention, monetization, and value delivery.
+@MainActor
 final class AppAnalytics {
     static let shared = AppAnalytics()
 
@@ -320,6 +321,7 @@ final class AppAnalytics {
         static let renewalCount = "laso.analytics.renewal_count"
         static let trialConverted = "laso.analytics.trial_converted"
         static let lastKnownStatus = "laso.analytics.last_known_status"
+        static let lastRenewalExpirationDate = "laso.analytics.last_renewal_expiration_date"
     }
 
     private init() {}
@@ -950,8 +952,21 @@ final class AppAnalytics {
         updateMonthsSubscribed()
     }
 
-    /// Call when we detect a renewal.
-    func trackSubscriptionRenewed() {
+    /// Call when we detect a renewal. Pass the new expiration date to deduplicate —
+    /// the counter only increments when the expiration date differs from the last recorded one.
+    func trackSubscriptionRenewed(newExpirationDate: Date? = nil) {
+        // Deduplicate: only count if the expiration date is genuinely new
+        if let newDate = newExpirationDate,
+           let lastDate = defaults.object(forKey: Key.lastRenewalExpirationDate) as? Date,
+           abs(newDate.timeIntervalSince(lastDate)) < 60 {
+            // Same renewal period — skip
+            return
+        }
+
+        if let newDate = newExpirationDate {
+            defaults.set(newDate, forKey: Key.lastRenewalExpirationDate)
+        }
+
         let renewals = defaults.integer(forKey: Key.renewalCount) + 1
         defaults.set(renewals, forKey: Key.renewalCount)
 
@@ -1004,7 +1019,7 @@ final class AppAnalytics {
         switch status {
         case .trial(let daysRemaining):
             statusLabel = "trial"
-            userTier = "free"
+            userTier = "trial"
             trackTrialDayCheck(daysRemaining: daysRemaining)
             if previousStatus == "unknown" {
                 trackTrialStarted(daysRemaining: daysRemaining)
@@ -1013,9 +1028,6 @@ final class AppAnalytics {
             statusLabel = "pro"
             userTier = "pro"
             updateMonthsSubscribed()
-            if previousStatus == "pro" {
-                trackSubscriptionRenewed()
-            }
         case .billingGrace:
             statusLabel = "billing_grace"
             userTier = "pro"

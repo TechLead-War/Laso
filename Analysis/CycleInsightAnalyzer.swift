@@ -48,6 +48,7 @@ struct CycleInsightAnalyzer {
     ///   - store: The health data store providing per-metric time series.
     ///   - cycleHistory: Completed cycle records with start dates and lengths (days).
     /// - Returns: Array of `CycleInsight` values, sorted by absolute percent difference descending.
+    @MainActor
     static func analyze(
         cycleInfo: MenstrualCycleTracker.CycleInfo,
         store: HealthDataStore,

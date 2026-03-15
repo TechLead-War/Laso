@@ -56,14 +56,14 @@ extension Copy {
 
         // MARK: - Source Descriptions
 
-        static let sourcePredictive = "predictive model (GBT risk scorer)"
-        static let sourceCausal = "Granger causal analysis"
+        static let sourcePredictive = "health risk assessment"
+        static let sourceCausal = "pattern analysis"
         static let sourceCircadian = "circadian rhythm analysis"
-        static let sourceState = "health state classification"
-        static let sourceAnomaly = "anomaly detection"
+        static let sourceState = "health state analysis"
+        static let sourceAnomaly = "unusual activity detection"
         static let sourceTrend = "trend analysis"
-        static let sourceBaseline = "baseline deviation detection"
-        static let sourceCounterfactual = "counterfactual simulation"
+        static let sourceBaseline = "baseline comparison"
+        static let sourceCounterfactual = "what-if analysis"
 
         // MARK: - Time to Benefit
 
