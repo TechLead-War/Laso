@@ -9,7 +9,7 @@ extension Copy {
 
         // MARK: - Score Hero
 
-        static let healthScore = "Health Score"
+        static let healthScore = "Weekly Health Score"
         static func ptsThisWeek(_ delta: Int) -> String { "\(delta > 0 ? "+" : "")\(delta) pts this week" }
         static func focusToImprove(_ category: String) -> String { "\(category) has the most room to grow" }
 

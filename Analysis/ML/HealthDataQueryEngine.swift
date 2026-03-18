@@ -63,16 +63,16 @@ final class HealthDataQueryEngine {
         "resting heart rate": .restingHeartRate, "rhr": .restingHeartRate, "resting hr": .restingHeartRate,
         "hrv": .heartRateVariability, "heart rate variability": .heartRateVariability, "variability": .heartRateVariability,
         "sleep": .sleepDuration, "sleep duration": .sleepDuration, "hours slept": .sleepDuration,
-        "deep sleep": .deepSleep, "rem": .remSleep, "rem sleep": .remSleep,
+        "deep sleep": .sleepDeep, "rem": .sleepREM, "rem sleep": .sleepREM,
         "steps": .steps, "step count": .steps, "walking": .steps,
         "calories": .activeCalories, "active calories": .activeCalories, "energy": .activeCalories,
         "exercise": .exerciseMinutes, "exercise minutes": .exerciseMinutes, "workout": .exerciseMinutes,
         "weight": .weight, "body weight": .weight,
-        "blood pressure": .systolicBP, "systolic": .systolicBP, "diastolic": .diastolicBP,
+        "blood pressure": .bloodPressureSystolic, "systolic": .bloodPressureSystolic, "diastolic": .bloodPressureDiastolic,
         "blood oxygen": .bloodOxygen, "spo2": .bloodOxygen, "oxygen": .bloodOxygen,
         "vo2 max": .vo2Max, "vo2": .vo2Max, "fitness": .vo2Max,
         "respiratory rate": .respiratoryRate, "breathing": .respiratoryRate,
-        "body fat": .bodyFatPercent, "fat": .bodyFatPercent,
+        "body fat": .bodyFatPercentage, "fat": .bodyFatPercentage,
         "mindfulness": .mindfulMinutes, "meditation": .mindfulMinutes,
         "temperature": .bodyTemperature, "temp": .bodyTemperature,
     ]
@@ -571,7 +571,7 @@ final class HealthDataQueryEngine {
         switch metric {
         case .steps:
             return "\(Int(value))"
-        case .sleepDuration, .deepSleep, .remSleep, .coreSleep:
+        case .sleepDuration, .sleepDeep, .sleepREM, .sleepCore:
             let hours = value / 3600
             return String(format: "%.1fh", hours)
         case .heartRateVariability:

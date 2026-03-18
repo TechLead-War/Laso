@@ -9,7 +9,7 @@ import Foundation
 struct CircadianHealthAnalyzer: InsightAnalyzer {
 
     static var analyzerID: String { "circadian_health" }
-    static var insightCategory: InsightCategory { .sleep }
+    static var insightCategory: InsightCategory { .circadian }
 
     // MARK: - Biomarker Results
 

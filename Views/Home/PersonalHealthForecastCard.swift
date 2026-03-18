@@ -150,7 +150,7 @@ struct MetricForecast: Identifiable {
         switch metric {
         case .steps:
             return "\(Int(value))"
-        case .sleepDuration, .deepSleep, .remSleep, .coreSleep:
+        case .sleepDuration, .sleepDeep, .sleepREM, .sleepCore:
             let h = value / 3600
             return String(format: "%.1fh", h)
         case .heartRateVariability:
@@ -184,7 +184,7 @@ enum ForecastBuilder {
         // Priority metrics to show forecasts for
         let priorityMetrics: [HealthMetric] = [
             .heartRateVariability, .restingHeartRate, .sleepDuration,
-            .steps, .vo2Max, .activeCalories, .deepSleep
+            .steps, .vo2Max, .activeCalories, .sleepDeep
         ]
 
         for metric in priorityMetrics {

@@ -98,6 +98,10 @@ final class DashboardViewModel {
 
         /// Score explanation for transparency
         fileprivate(set) var scoreExplanation: HealthScorer.ScoreExplanation?
+
+        /// 7-day rolling average score for Explore tab (differs from today's overallScore).
+        /// Falls back to overallScore when insufficient history.
+        fileprivate(set) var rollingAverageScore: Int = 0
     }
 
     @Observable
@@ -980,6 +984,7 @@ final class DashboardViewModel {
         scores.categoryScores = analysisEngine.categoryScores
         scores.cachedScoreChangeFromLastWeek = computeScoreChangeFromLastWeek()
         scores.cachedScoreChangeFromYesterday = computeScoreChangeFromYesterday()
+        scores.rollingAverageScore = computeRollingAverageScore()
         scores.scoreExplanation = analysisEngine.scoreExplanation
 
         // Update trend state
@@ -1151,6 +1156,17 @@ final class DashboardViewModel {
             currentScore: overallScore.score,
             history: scoreHistoryCached(days: 3)
         )
+    }
+
+    /// 7-day rolling average score for the Explore tab.
+    /// Returns today's score when fewer than 2 history entries exist.
+    @MainActor
+    private func computeRollingAverageScore() -> Int {
+        let history = scoreHistoryCached(days: 7)
+        guard history.count >= 2 else { return overallScore.score }
+        // Include today's score in the average
+        let total = history.map(\.score).reduce(0, +) + overallScore.score
+        return Int((Double(total) / Double(history.count + 1)).rounded())
     }
 
     private func computeTrendsSummary() -> TrendsSummary {

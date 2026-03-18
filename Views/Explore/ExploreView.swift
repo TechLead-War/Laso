@@ -25,7 +25,7 @@ struct ExploreView: View {
                 if hasScoreData {
                     // 1. Score Hero with trend
                     ExploreScoreHeroSection(
-                        overallScore: viewModel.scores.overallScore.score,
+                        overallScore: viewModel.scores.rollingAverageScore,
                         scoreChangeFromLastWeek: viewModel.scores.scoreChangeFromLastWeek,
                         weakestCategory: weakestCategory,
                         onScoreInfoTapped: {
@@ -315,7 +315,7 @@ struct ExploreView: View {
     }
 
     private var grade: String {
-        switch viewModel.scores.overallScore.score {
+        switch viewModel.scores.rollingAverageScore {
         case 90...100: return "A"
         case 80..<90: return "B"
         case 70..<80: return "C"
