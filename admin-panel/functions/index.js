@@ -43,6 +43,8 @@ const ALLOWED_ORIGINS = [
   "https://laso-health-v1.firebaseapp.com",
   "https://lasohealth.com",
   "https://www.lasohealth.com",
+  "https://lasohealth.fit",
+  "https://www.lasohealth.fit",
 ];
 
 // In development, also allow localhost
@@ -57,7 +59,7 @@ function getCorsOrigin(req) {
 }
 
 function setCorsHeaders(req, res) {
-  res.set("Access-Control-Allow-Origin", getCorsOrigin(req));
+  res.set("Access-Control-Allow-Origin", "*");
   res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.set("Access-Control-Allow-Headers", "Content-Type");
   res.set("Access-Control-Max-Age", "3600");
