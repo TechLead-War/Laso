@@ -125,6 +125,58 @@ extension Copy {
         static let insightsReady = "Your Health Insights Are Ready"
         static let insightsReadyBody = "It's been a few days — open Laso to see your latest health trends."
 
+        // MARK: - Engagement Sequence
+
+        static func engagementDay1Title(name: String?) -> String {
+            if let name, !name.isEmpty {
+                return "Morning check-in, \(name)"
+            }
+            return "Your first morning check-in"
+        }
+
+        static let engagementDay1Body = "Open Laso when you wake up to start building your recovery baseline."
+
+        static func engagementDay2Title(score: Int) -> String {
+            "Your recovery score is \(score)"
+        }
+
+        static func engagementDay2Body(insight: String) -> String {
+            "\(insight) Open Laso for the full breakdown."
+        }
+
+        static let engagementDay2Fallback = "Open Laso to reveal today's recovery score and morning guidance."
+
+        static let engagementDay3Title = "A sleep pattern is forming"
+
+        static func engagementDay3Body(finding: String) -> String {
+            "\(finding) Open Laso to see what changed."
+        }
+
+        static let engagementDay3Fallback = "We're starting to detect changes in your sleep. Open Laso to see the early pattern."
+
+        static func engagementDay5Title(percent: Int) -> String {
+            "Personalization is \(percent)% complete"
+        }
+
+        static func engagementDay5Body(daysRemaining: Int) -> String {
+            if daysRemaining <= 0 {
+                return "Your baseline is ready. Open Laso to see the patterns built from your first month of data."
+            }
+            return "Keep checking in for \(daysRemaining) more day\(daysRemaining == 1 ? "" : "s") to unlock a stronger baseline."
+        }
+
+        static func engagementDay7Title(patternCount: Int) -> String {
+            "We've found \(patternCount) early signals"
+        }
+
+        static func engagementDay7BodyTrend(metric: String, direction: String) -> String {
+            "One of them: your \(metric) is \(direction). Open Laso before the trend slips past you."
+        }
+
+        static func engagementDay7BodyGeneric(count: Int) -> String {
+            "Laso has already found \(count) early patterns in your data. Open the app to review them."
+        }
+
         // MARK: - Watch Monitor
 
         static let watchBatteryLow = "Watch Battery Low"

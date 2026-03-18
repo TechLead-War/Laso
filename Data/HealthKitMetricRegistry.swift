@@ -26,7 +26,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.heartRate),
                 quantityType: HKQuantityType(.heartRate),
                 unit: HKUnit.count().unitDivided(by: .minute()),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .restingHeartRate:
@@ -34,7 +34,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.restingHeartRate),
                 quantityType: HKQuantityType(.restingHeartRate),
                 unit: HKUnit.count().unitDivided(by: .minute()),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .heartRateVariability:
@@ -42,7 +42,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.heartRateVariabilitySDNN),
                 quantityType: HKQuantityType(.heartRateVariabilitySDNN),
                 unit: HKUnit.secondUnit(with: .milli),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .walkingHeartRateAverage:
@@ -50,7 +50,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.walkingHeartRateAverage),
                 quantityType: HKQuantityType(.walkingHeartRateAverage),
                 unit: HKUnit.count().unitDivided(by: .minute()),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .heartRateRecovery:
@@ -58,7 +58,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.heartRateRecoveryOneMinute),
                 quantityType: HKQuantityType(.heartRateRecoveryOneMinute),
                 unit: HKUnit.count().unitDivided(by: .minute()),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .atrialFibrillationBurden:
@@ -66,7 +66,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.atrialFibrillationBurden),
                 quantityType: HKQuantityType(.atrialFibrillationBurden),
                 unit: .percent(),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .peripheralPerfusionIndex:
@@ -74,7 +74,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.peripheralPerfusionIndex),
                 quantityType: HKQuantityType(.peripheralPerfusionIndex),
                 unit: .percent(),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .bloodOxygen:
@@ -82,7 +82,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.oxygenSaturation),
                 quantityType: HKQuantityType(.oxygenSaturation),
                 unit: .percent(),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .sleepAwake:
@@ -186,7 +186,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.walkingSpeed),
                 quantityType: HKQuantityType(.walkingSpeed),
                 unit: HKUnit.meterUnit(with: .kilo).unitDivided(by: .hour()),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .walkingStepLength:
@@ -194,7 +194,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.walkingStepLength),
                 quantityType: HKQuantityType(.walkingStepLength),
                 unit: .meterUnit(with: .centi),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .walkingAsymmetry:
@@ -202,7 +202,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.walkingAsymmetryPercentage),
                 quantityType: HKQuantityType(.walkingAsymmetryPercentage),
                 unit: .percent(),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .walkingDoubleSupportPercentage:
@@ -210,7 +210,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.walkingDoubleSupportPercentage),
                 quantityType: HKQuantityType(.walkingDoubleSupportPercentage),
                 unit: .percent(),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .stairAscentSpeed:
@@ -218,7 +218,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.stairAscentSpeed),
                 quantityType: HKQuantityType(.stairAscentSpeed),
                 unit: HKUnit.meter().unitDivided(by: .second()),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .stairDescentSpeed:
@@ -226,7 +226,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.stairDescentSpeed),
                 quantityType: HKQuantityType(.stairDescentSpeed),
                 unit: HKUnit.meter().unitDivided(by: .second()),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .sixMinuteWalkTestDistance:
@@ -234,7 +234,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.sixMinuteWalkTestDistance),
                 quantityType: HKQuantityType(.sixMinuteWalkTestDistance),
                 unit: .meter(),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .weight:
@@ -242,7 +242,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.bodyMass),
                 quantityType: HKQuantityType(.bodyMass),
                 unit: .gramUnit(with: .kilo),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .bmi:
@@ -250,7 +250,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.bodyMassIndex),
                 quantityType: HKQuantityType(.bodyMassIndex),
                 unit: .count(),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .bodyFatPercentage:
@@ -258,7 +258,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.bodyFatPercentage),
                 quantityType: HKQuantityType(.bodyFatPercentage),
                 unit: .percent(),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .bloodPressureSystolic:
@@ -282,7 +282,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.respiratoryRate),
                 quantityType: HKQuantityType(.respiratoryRate),
                 unit: HKUnit.count().unitDivided(by: .minute()),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .bodyTemperature:
@@ -290,7 +290,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.bodyTemperature),
                 quantityType: HKQuantityType(.bodyTemperature),
                 unit: .degreeCelsius(),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .appleSleepingWristTemperature:
@@ -298,7 +298,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.appleSleepingWristTemperature),
                 quantityType: HKQuantityType(.appleSleepingWristTemperature),
                 unit: .degreeCelsius(),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .leanBodyMass:
@@ -306,7 +306,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.leanBodyMass),
                 quantityType: HKQuantityType(.leanBodyMass),
                 unit: .gramUnit(with: .kilo),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .waistCircumference:
@@ -314,7 +314,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.waistCircumference),
                 quantityType: HKQuantityType(.waistCircumference),
                 unit: .meterUnit(with: .centi),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .vo2Max:
@@ -322,7 +322,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.vo2Max),
                 quantityType: HKQuantityType(.vo2Max),
                 unit: HKUnit(from: "mL/kg*min"),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .peakExpiratoryFlowRate:
@@ -330,7 +330,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.peakExpiratoryFlowRate),
                 quantityType: HKQuantityType(.peakExpiratoryFlowRate),
                 unit: HKUnit.liter().unitDivided(by: .minute()),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .forcedVitalCapacity:
@@ -338,7 +338,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.forcedVitalCapacity),
                 quantityType: HKQuantityType(.forcedVitalCapacity),
                 unit: .liter(),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .mindfulMinutes:
@@ -362,7 +362,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.electrodermalActivity),
                 quantityType: HKQuantityType(.electrodermalActivity),
                 unit: HKUnit(from: "mcS"),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .waterIntake:
@@ -442,7 +442,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.bloodGlucose),
                 quantityType: HKQuantityType(.bloodGlucose),
                 unit: HKUnit(from: "mg/dL"),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .workoutCount, .workoutDuration:
@@ -460,7 +460,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.headphoneAudioExposure),
                 quantityType: HKQuantityType(.headphoneAudioExposure),
                 unit: .decibelAWeightedSoundPressureLevel(),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .environmentalAudioExposure:
@@ -468,7 +468,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.environmentalAudioExposure),
                 quantityType: HKQuantityType(.environmentalAudioExposure),
                 unit: .decibelAWeightedSoundPressureLevel(),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
 
@@ -478,7 +478,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.runningPower),
                 quantityType: HKQuantityType(.runningPower),
                 unit: .watt(),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .runningGroundContactTime:
@@ -486,7 +486,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.runningGroundContactTime),
                 quantityType: HKQuantityType(.runningGroundContactTime),
                 unit: .secondUnit(with: .milli),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .runningVerticalOscillation:
@@ -494,7 +494,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.runningVerticalOscillation),
                 quantityType: HKQuantityType(.runningVerticalOscillation),
                 unit: .meterUnit(with: .centi),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
         case .runningStrideLength:
@@ -502,7 +502,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.runningStrideLength),
                 quantityType: HKQuantityType(.runningStrideLength),
                 unit: .meter(),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
 
@@ -512,7 +512,7 @@ struct HealthKitMetricRegistry {
                 sampleType: HKQuantityType(.forcedExpiratoryVolume1),
                 quantityType: HKQuantityType(.forcedExpiratoryVolume1),
                 unit: .liter(),
-                strategy: .quantitySample,
+                strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
 

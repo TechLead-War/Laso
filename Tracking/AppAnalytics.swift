@@ -323,6 +323,7 @@ final class AppAnalytics {
         static let trialConverted = "laso.analytics.trial_converted"
         static let lastKnownStatus = "laso.analytics.last_known_status"
         static let lastRenewalExpirationDate = "laso.analytics.last_renewal_expiration_date"
+        static let firstScoreGeneratedTracked = "laso.analytics.first_score_generated_tracked"
     }
 
     private init() {}
@@ -404,6 +405,11 @@ final class AppAnalytics {
         PostHogManager.shared.captureError(error, context: context, metadata: metadata)
     }
 
+    /// Record a string-described error (no Error object) to PostHog.
+    func recordNonFatal(_ message: String, context: String, metadata: [String: Any] = [:]) {
+        PostHogManager.shared.captureError(message, context: context, metadata: metadata)
+    }
+
     // ══════════════════════════════════════════════════════════════════════
     // MARK: - 1. Activation Events
     // ══════════════════════════════════════════════════════════════════════
@@ -453,6 +459,8 @@ final class AppAnalytics {
         case firstLiveSession = "first_live_session"
         case firstSettingsVisit = "first_settings_visit"
         case firstPullToRefresh = "first_pull_to_refresh"
+        case firstPrediction = "first_prediction"
+        case fullCalibration = "full_calibration"
     }
 
     func trackActivationMilestone(_ milestone: ActivationMilestone) {
@@ -584,9 +592,11 @@ final class AppAnalytics {
         setUserProperty("lifetime_core_actions", value: "\(session.lifetimeCoreActions)")
         setUserProperty("weekly_active_days", value: "\(session.weeklyActiveDays)")
         setUserProperty("organic_session_pct", value: "\(session.organicSessionPercent)")
+        setUserProperty("activation_status", value: session.isActivated ? "activated" : "not_activated")
 
         // Refresh demographic & device properties every session
         setDemographicProperties()
+        updateJourneyProperties()
 
         // Behavioral intelligence: detect habit patterns
         detectHabitPattern()
@@ -628,12 +638,11 @@ final class AppAnalytics {
 
     func trackFeatureOpen(_ feature: AppFeature, metadata: [String: Any] = [:]) {
         let now = Date()
+        let previousScreen = session.recordScreenView(feature.rawValue)
 
         queue.sync {
             self.openTimestamps[feature] = now
         }
-
-        _ = session.recordScreenView(feature.rawValue)
 
         var params: [String: Any] = [
             "screen": feature.rawValue,
@@ -641,6 +650,10 @@ final class AppAnalytics {
             "tab": session.currentTab,
             "depth": session.currentDepth
         ]
+        if let previousScreen {
+            params["previous_screen"] = previousScreen
+            params["transition"] = "\(previousScreen)->\(feature.rawValue)"
+        }
         for (k, v) in metadata { params[k] = v }
         logEvent("screen_viewed", parameters: params)
 
@@ -666,12 +679,14 @@ final class AppAnalytics {
 
         let duration = Int(durationSeconds.rounded())
 
-        logEvent("screen_exited", parameters: [
+        var params: [String: Any] = [
             "screen": feature.rawValue,
             "screen_id": feature.rawValue,
             "tab": session.currentTab,
             "duration_sec": duration
-        ])
+        ]
+        for (k, v) in metadata { params[k] = v }
+        logEvent("screen_exited", parameters: params)
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -689,6 +704,9 @@ final class AppAnalytics {
         case changedTimeRange = "changed_time_range"
         case pulledToRefresh = "pulled_to_refresh"
         case viewedRiskDetail = "viewed_risk_detail"
+        case completedMorningCheckIn = "completed_morning_checkin"
+        case viewedDailyAction = "viewed_daily_action"
+        case askedHealthQuery = "asked_health_query"
     }
 
     func trackCoreAction(_ action: CoreAction, screen: AppFeature) {
@@ -827,6 +845,22 @@ final class AppAnalytics {
     func trackAnalysisCompleted(score: Int, insightsCount: Int, anomaliesCount: Int,
                                  risksCount: Int, correlationsCount: Int,
                                  illnessWarningsCount: Int, metricsAnalyzed: Int) {
+        let insightsPerMetric = metricsAnalyzed > 0
+            ? Double(insightsCount) / Double(metricsAnalyzed)
+            : 0
+        let analysisDepth: String
+        switch metricsAnalyzed {
+        case 0..<8:
+            analysisDepth = "thin"
+        case 8..<18:
+            analysisDepth = "developing"
+        case 18..<32:
+            analysisDepth = "strong"
+        default:
+            analysisDepth = "dense"
+        }
+        let signalDensity = anomaliesCount + risksCount + correlationsCount + illnessWarningsCount
+
         logEvent("analysis_completed", parameters: [
             "insights_count": insightsCount,
             "anomalies_count": anomaliesCount,
@@ -834,16 +868,31 @@ final class AppAnalytics {
             "correlations_count": correlationsCount,
             "illness_warnings_count": illnessWarningsCount,
             "metrics_analyzed": metricsAnalyzed,
-            "score": score
+            "score": score,
+            "insights_per_metric": insightsPerMetric,
+            "signal_density": signalDensity,
+            "analysis_depth": analysisDepth
         ])
 
         setUserProperty("data_richness", value: metricsAnalyzed < 10 ? "low" : metricsAnalyzed < 30 ? "medium" : "high")
+        setUserProperty("analysis_depth", value: analysisDepth)
+        setUserProperty("last_score", value: "\(score)")
+        setUserProperty("insight_density", value: insightsPerMetric >= 0.75 ? "high" : insightsPerMetric >= 0.35 ? "medium" : "low")
 
         let bracket: String
         if score >= 75 { bracket = "high" }
         else if score >= 50 { bracket = "medium" }
         else { bracket = "low" }
         setUserProperty("health_score_bracket", value: bracket)
+
+        if !defaults.bool(forKey: Key.firstScoreGeneratedTracked) {
+            defaults.set(true, forKey: Key.firstScoreGeneratedTracked)
+            trackFirstScoreGenerated(
+                score: score,
+                timeSinceInstallSec: Int(Date().timeIntervalSince(session.installDate)),
+                metricsUsed: metricsAnalyzed
+            )
+        }
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -1461,6 +1510,9 @@ final class AppAnalytics {
     func trackHealthPermissionRequested(metrics: [String]) {
         logEvent("health_permission_requested", parameters: [
             "metrics_requested": metrics.count,
+            "includes_cycle_data": metrics.contains("menstrual_flow") ? 1 : 0,
+            "includes_ecg": metrics.contains("electrocardiogram") ? 1 : 0,
+            "metric_preview": metrics.prefix(5).joined(separator: ","),
             "days_since_install": session.daysSinceInstall
         ])
     }
@@ -1492,18 +1544,47 @@ final class AppAnalytics {
         lastSyncAgeSec: Int,
         hasEnoughForScore: Bool
     ) {
+        let freshnessBucket: String
+        switch lastSyncAgeSec {
+        case ..<0:
+            freshnessBucket = "unknown"
+        case 0..<3_600:
+            freshnessBucket = "fresh"
+        case 3_600..<21_600:
+            freshnessBucket = "warm"
+        case 21_600..<86_400:
+            freshnessBucket = "aging"
+        default:
+            freshnessBucket = "stale"
+        }
+        let coverageBucket: String
+        switch dataCoveragePercent {
+        case 85...100:
+            coverageBucket = "excellent"
+        case 65..<85:
+            coverageBucket = "good"
+        case 40..<65:
+            coverageBucket = "partial"
+        default:
+            coverageBucket = "thin"
+        }
+
         logEvent("data_pipeline_quality", parameters: [
             "metrics_available": metricsAvailable,
             "metrics_missing": metricsMissing,
             "data_coverage_pct": dataCoveragePercent,
             "last_sync_age_sec": lastSyncAgeSec,
-            "enough_for_score": hasEnoughForScore ? 1 : 0
+            "enough_for_score": hasEnoughForScore ? 1 : 0,
+            "coverage_bucket": coverageBucket,
+            "freshness_bucket": freshnessBucket
         ])
 
         // Set user properties for cohort segmentation
         let sufficiency = hasEnoughForScore ? "sufficient" : "insufficient"
         setUserProperty("data_sufficiency", value: sufficiency)
-        setUserProperty("health_source_count", value: "\(metricsAvailable > 0 ? 1 : 0)")
+        setUserProperty("data_coverage_bucket", value: coverageBucket)
+        setUserProperty("data_freshness", value: freshnessBucket)
+        setUserProperty("metrics_available_count", value: "\(metricsAvailable)")
     }
 
     /// Call when first score is generated — critical activation event.
@@ -1601,7 +1682,171 @@ final class AppAnalytics {
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // MARK: - 19. Wearable & Source Properties
+    // MARK: - 19. Feature Lifecycle Metrics
+    // ══════════════════════════════════════════════════════════════════════
+
+    func trackWorkoutPlanGenerated(
+        plan: WorkoutPlan,
+        recoveryBand: WorkoutRecoveryBand,
+        cyclePhase: CyclePhaseModifier?,
+        screen: AppFeature
+    ) {
+        logEvent("workout_plan_generated", parameters: [
+            "screen": screen.rawValue,
+            "training_zone": plan.zone.rawValue,
+            "recovery_band": recoveryBand.rawValue,
+            "target_duration_min": plan.targetDuration,
+            "estimated_calories": plan.estimatedCalories,
+            "main_block_count": plan.mainBlocks.count,
+            "has_cycle_adjustment": cyclePhase == nil ? 0 : 1,
+            "cycle_phase": cyclePhase?.displayName ?? "none"
+        ])
+    }
+
+    func trackWorkoutPlanOpened(
+        plan: WorkoutPlan,
+        recoveryBand: WorkoutRecoveryBand,
+        cyclePhase: CyclePhaseModifier?,
+        screen: AppFeature
+    ) {
+        logEvent("workout_plan_opened", parameters: [
+            "screen": screen.rawValue,
+            "training_zone": plan.zone.rawValue,
+            "recovery_band": recoveryBand.rawValue,
+            "target_duration_min": plan.targetDuration,
+            "estimated_calories": plan.estimatedCalories,
+            "cycle_phase": cyclePhase?.displayName ?? "none"
+        ])
+    }
+
+    func trackBreathworkProtocolSelected(_ breathingProtocol: BreathingProtocol) {
+        logEvent("breathwork_protocol_selected", parameters: [
+            "protocol_type": breathingProtocol.subtitle,
+            "protocol_id": breathingProtocol.rawValue,
+            "planned_duration_sec": Int(breathingProtocol.sessionDuration),
+            "phase_count": breathingProtocol.phases.count
+        ])
+    }
+
+    func trackBreathworkSessionStarted(_ breathingProtocol: BreathingProtocol, cycleCount: Int) {
+        logEvent("breathwork_session_started", parameters: [
+            "protocol_type": breathingProtocol.subtitle,
+            "protocol_id": breathingProtocol.rawValue,
+            "planned_duration_sec": Int(breathingProtocol.sessionDuration),
+            "cycle_count": cycleCount
+        ])
+    }
+
+    func trackBreathworkSessionPaused(
+        _ breathingProtocol: BreathingProtocol,
+        phase: BreathPhase,
+        remainingSec: Int,
+        pauseCount: Int
+    ) {
+        logEvent("breathwork_session_paused", parameters: [
+            "protocol_type": breathingProtocol.subtitle,
+            "phase": phase.rawValue,
+            "remaining_sec": remainingSec,
+            "pause_count": pauseCount
+        ])
+    }
+
+    func trackBreathworkSessionResumed(
+        _ breathingProtocol: BreathingProtocol,
+        phase: BreathPhase,
+        remainingSec: Int,
+        pauseCount: Int
+    ) {
+        logEvent("breathwork_session_resumed", parameters: [
+            "protocol_type": breathingProtocol.subtitle,
+            "phase": phase.rawValue,
+            "remaining_sec": remainingSec,
+            "pause_count": pauseCount
+        ])
+    }
+
+    func trackBreathworkSessionCompleted(
+        _ breathingProtocol: BreathingProtocol,
+        actualDurationSec: Int,
+        pauseCount: Int,
+        mood: PostSessionMood?
+    ) {
+        let plannedDurationSec = Int(breathingProtocol.sessionDuration)
+        let completionRate = plannedDurationSec > 0
+            ? min(max(Double(actualDurationSec) / Double(plannedDurationSec), 0), 1)
+            : 0
+
+        logEvent("breathwork_session_completed", parameters: [
+            "protocol_type": breathingProtocol.subtitle,
+            "protocol_id": breathingProtocol.rawValue,
+            "planned_duration_sec": plannedDurationSec,
+            "actual_duration_sec": actualDurationSec,
+            "completion_rate": completionRate,
+            "pause_count": pauseCount,
+            "mood": mood?.rawValue.lowercased() ?? "unanswered"
+        ])
+    }
+
+    func trackBreathworkSessionAbandoned(
+        _ breathingProtocol: BreathingProtocol,
+        phase: BreathPhase,
+        actualDurationSec: Int,
+        pauseCount: Int
+    ) {
+        let plannedDurationSec = Int(breathingProtocol.sessionDuration)
+        let completionRate = plannedDurationSec > 0
+            ? min(max(Double(actualDurationSec) / Double(plannedDurationSec), 0), 1)
+            : 0
+
+        logEvent("breathwork_session_abandoned", parameters: [
+            "protocol_type": breathingProtocol.subtitle,
+            "protocol_id": breathingProtocol.rawValue,
+            "phase": phase.rawValue,
+            "planned_duration_sec": plannedDurationSec,
+            "actual_duration_sec": actualDurationSec,
+            "completion_rate": completionRate,
+            "pause_count": pauseCount
+        ])
+    }
+
+    func trackLiveActivityStateChanged(kind: String, state: String, metadata: [String: Any] = [:]) {
+        var params: [String: Any] = [
+            "activity_kind": kind,
+            "activity_state": state
+        ]
+        for (key, value) in metadata {
+            params[key] = value
+        }
+        logEvent("live_activity_state_changed", parameters: params)
+    }
+
+    func trackWidgetSnapshotUpdated(
+        trigger: String,
+        snapshotsWritten: Int,
+        hasReadiness: Bool,
+        hasSleep: Bool,
+        hasAction: Bool,
+        hasIntelligence: Bool,
+        hasRecoveryDebt: Bool
+    ) {
+        let completeness = [hasReadiness, hasSleep, hasAction, hasIntelligence, hasRecoveryDebt]
+            .filter { $0 }
+            .count
+
+        logEvent("widget_snapshot_updated", parameters: [
+            "trigger": trigger,
+            "snapshots_written": snapshotsWritten,
+            "completeness_count": completeness,
+            "has_readiness": hasReadiness ? 1 : 0,
+            "has_sleep": hasSleep ? 1 : 0,
+            "has_action": hasAction ? 1 : 0,
+            "has_intelligence": hasIntelligence ? 1 : 0,
+            "has_recovery_debt": hasRecoveryDebt ? 1 : 0
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 20. Wearable & Source Properties
     // ══════════════════════════════════════════════════════════════════════
 
     /// Update wearable/source user properties. Call after device detection.
@@ -1625,7 +1870,7 @@ final class AppAnalytics {
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // MARK: - 20. Empty State & Friction Signals
+    // MARK: - 21. Empty State & Friction Signals
     // ══════════════════════════════════════════════════════════════════════
 
     /// Call when an empty state is shown (no data, no insights, etc.).
@@ -1654,7 +1899,7 @@ final class AppAnalytics {
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // MARK: - 21. Behavioral Intelligence (Non-Obvious Signals)
+    // MARK: - 22. Behavioral Intelligence (Non-Obvious Signals)
     // ══════════════════════════════════════════════════════════════════════
 
     // --- A. Ghost Sessions ---
@@ -1757,13 +2002,15 @@ final class AppAnalytics {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            guard let self else { return }
-            self.logEvent("screenshot_taken", parameters: [
-                "screen": self.session.currentScreen ?? "unknown",
-                "tab": self.session.currentTab,
-                "days_since_install": self.session.daysSinceInstall,
-                "subscription_status": UserDefaults.standard.string(forKey: "laso.analytics.last_known_status") ?? "unknown"
-            ])
+            Task { @MainActor in
+                guard let self else { return }
+                self.logEvent("screenshot_taken", parameters: [
+                    "screen": self.session.currentScreen ?? "unknown",
+                    "tab": self.session.currentTab,
+                    "days_since_install": self.session.daysSinceInstall,
+                    "subscription_status": UserDefaults.standard.string(forKey: "laso.analytics.last_known_status") ?? "unknown"
+                ])
+            }
         }
     }
 
@@ -1962,6 +2209,28 @@ final class AppAnalytics {
 
     // MARK: - Private Helpers
 
+    private func updateJourneyProperties() {
+        let onboardingCompleted = defaults.bool(forKey: AppKeys.App.onboardingCompleted)
+        let status = defaults.string(forKey: Key.lastKnownStatus) ?? "unknown"
+        let journeyStage: String
+
+        if !onboardingCompleted {
+            journeyStage = "onboarding"
+        } else if status == "trial" {
+            journeyStage = "trial"
+        } else if status == "pro" || status == "billing_grace" {
+            journeyStage = "subscriber"
+        } else if session.isActivated {
+            journeyStage = "activated_free"
+        } else {
+            journeyStage = "exploring"
+        }
+
+        setUserProperty("journey_stage", value: journeyStage)
+        setUserProperty("activation_status", value: session.isActivated ? "activated" : "not_activated")
+        setUserProperty("onboarding_completed", value: onboardingCompleted ? "yes" : "no")
+    }
+
     private func sanitizeEventName(_ name: String) -> String {
         let allowed = name.lowercased().map { char -> Character in
             if char.isLetter || char.isNumber || char == "_" {
@@ -1971,8 +2240,149 @@ final class AppAnalytics {
         }
         let normalized = String(allowed).trimmingCharacters(in: CharacterSet(charactersIn: "_"))
         if normalized.isEmpty { return "custom_event" }
-        if normalized.count > 40 { return String(normalized.prefix(40)) }
+        if normalized.count > 80 { return String(normalized.prefix(80)) }
         return normalized
+    }
+
+    private func canonicalEventName(_ name: String, parameters: [String: Any]) -> String {
+        let screen = scopedValue("screen", in: parameters)
+        let action = scopedValue("action", in: parameters)
+        let metric = scopedValue("metric", in: parameters)
+        let filterType = scopedValue("filter_type", in: parameters)
+        let context = scopedValue("context", in: parameters)
+        let section = scopedValue("section_id", in: parameters)
+        let setting = scopedValue("setting_name", in: parameters)
+        let notificationType = scopedValue("type", in: parameters)
+        let recommendationType = scopedValue("recommendation_type", in: parameters)
+        let explanationType = scopedValue("explanation_type", in: parameters)
+        let source = scopedValue("source", in: parameters)
+        let errorType = scopedValue("error_type", in: parameters)
+        let activityKind = scopedValue("activity_kind", in: parameters)
+        let trigger = scopedValue("trigger", in: parameters)
+        let contentType = scopedValue("content_type", in: parameters)
+        let feedbackCategory = scopedValue("category", in: parameters)
+        let sourceType = scopedValue("source_type", in: parameters)
+
+        switch name {
+        case "session_start":
+            return "app_session_started"
+        case "session_end":
+            return "app_session_ended"
+        case "return_session":
+            return "app_return_session_recorded"
+        case "daily_active":
+            return "app_daily_active_recorded"
+        case "screen_viewed":
+            return composedEventName([screen, "screen", "viewed"], fallback: "app_screen_viewed")
+        case "screen_exited":
+            return composedEventName([screen, "screen", "exited"], fallback: "app_screen_exited")
+        case "block_tapped":
+            return composedEventName([screen, "block", "tapped"], fallback: "app_block_tapped")
+        case "core_action_completed":
+            return composedEventName([screen, action, "completed"], fallback: "app_core_action_completed")
+        case "insight_tapped":
+            return composedEventName([screen, "insight", "tapped"], fallback: "insight_tapped")
+        case "correlation_tapped":
+            return composedEventName([screen, "correlation", "tapped"], fallback: "correlation_tapped")
+        case "risk_tapped":
+            return composedEventName([screen, "risk", "tapped"], fallback: "risk_tapped")
+        case "chart_interaction":
+            return composedEventName([screen, metric, "chart", "interacted"], fallback: "chart_interaction")
+        case "pull_to_refresh":
+            return composedEventName([screen, "pull", "to", "refresh", "triggered"], fallback: "pull_to_refresh_triggered")
+        case "time_range_changed":
+            return composedEventName([screen, context, "time", "range", "changed"], fallback: "time_range_changed")
+        case "filter_changed":
+            return composedEventName([screen, filterType, "filter", "changed"], fallback: "filter_changed")
+        case "weekly_score_change":
+            return "health_score_weekly_changed"
+        case "analysis_completed":
+            return "health_analysis_completed"
+        case "data_sync_completed":
+            return "health_data_sync_completed"
+        case "sync_performance":
+            return "health_data_sync_performance_measured"
+        case "setting_changed":
+            return composedEventName(["settings", setting, "changed"], fallback: "settings_changed")
+        case "notification_sent":
+            return composedEventName([notificationType, "notification", "sent"], fallback: "notification_sent")
+        case "notification_opened":
+            return composedEventName([notificationType, "notification", "opened"], fallback: "notification_opened")
+        case "notification_scheduled":
+            return composedEventName([notificationType, "notification", "scheduled"], fallback: "notification_scheduled")
+        case "share_sheet_presented":
+            return composedEventName([contentType, "share", "sheet", "presented"], fallback: "share_sheet_presented")
+        case "feedback_submitted":
+            return composedEventName([feedbackCategory, "feedback", "submitted"], fallback: "feedback_submitted")
+        case "scroll_depth":
+            return composedEventName([screen, "scroll", "depth", "recorded"], fallback: "scroll_depth_recorded")
+        case "section_viewed":
+            return composedEventName([section, "section", "viewed"], fallback: "section_viewed")
+        case "section_tapped":
+            return composedEventName([section, "section", "tapped"], fallback: "section_tapped")
+        case "error_occurred":
+            return composedEventName([screen, errorType, "error", "occurred"], fallback: "app_error_occurred")
+        case "health_permission_requested":
+            return "healthkit_permission_requested"
+        case "health_permission_result":
+            return "healthkit_permission_result_recorded"
+        case "source_connected":
+            return composedEventName([sourceType, "source", "connected"], fallback: "source_connected")
+        case "recommendation_viewed":
+            return composedEventName([recommendationType, "recommendation", "viewed"], fallback: "recommendation_viewed")
+        case "recommendation_started":
+            return composedEventName([recommendationType, "recommendation", "started"], fallback: "recommendation_started")
+        case "recommendation_completed":
+            return composedEventName([recommendationType, "recommendation", "completed"], fallback: "recommendation_completed")
+        case "recommendation_skipped":
+            return composedEventName([recommendationType, "recommendation", "skipped"], fallback: "recommendation_skipped")
+        case "workout_plan_generated":
+            return composedEventName([screen, "workout", "plan", "generated"], fallback: "workout_plan_generated")
+        case "workout_plan_opened":
+            return composedEventName([screen, "workout", "plan", "opened"], fallback: "workout_plan_opened")
+        case "live_activity_state_changed":
+            return composedEventName([activityKind, "live", "activity", "state", "changed"], fallback: "live_activity_state_changed")
+        case "widget_snapshot_updated":
+            return composedEventName([trigger, "widget", "snapshot", "updated"], fallback: "widget_snapshot_updated")
+        case "empty_state_shown":
+            return composedEventName([screen, "empty", "state", "shown"], fallback: "empty_state_shown")
+        case "score_generation_failed":
+            return "health_score_generation_failed"
+        case "sync_failed":
+            return "health_data_sync_failed"
+        case "streaming_started":
+            return "live_vitals_streaming_started"
+        case "streaming_stopped":
+            return "live_vitals_streaming_stopped"
+        case "live_first_data_received":
+            return "live_vitals_first_data_received"
+        case "explanation_viewed":
+            return composedEventName([screen, explanationType, "explanation", "viewed"], fallback: "explanation_viewed")
+        case "privacy_page_viewed":
+            return composedEventName([source, "privacy", "page", "viewed"], fallback: "privacy_page_viewed")
+        case "background_refresh_result":
+            return "background_refresh_completed"
+        case "value_delivered":
+            return "analysis_value_delivered"
+        default:
+            return name
+        }
+    }
+
+    private func scopedValue(_ key: String, in parameters: [String: Any]) -> String? {
+        guard let rawValue = parameters[key] else { return nil }
+        let value = String(describing: rawValue)
+        let slug = slugify(value)
+        return slug == "unknown" ? nil : slug
+    }
+
+    private func composedEventName(_ parts: [String?], fallback: String) -> String {
+        let components = parts.compactMap { part -> String? in
+            guard let part, !part.isEmpty else { return nil }
+            return part
+        }
+        guard !components.isEmpty else { return fallback }
+        return components.joined(separator: "_")
     }
 
     private func sanitizeParameters(_ parameters: [String: Any]) -> [String: Any] {
@@ -2027,8 +2437,45 @@ final class AppAnalytics {
         if enriched["screen"] == nil, let currentScreen = session.currentScreen {
             enriched["screen"] = currentScreen
         }
+        if enriched["session_source"] == nil {
+            enriched["session_source"] = session.currentSessionSource.rawValue
+        }
+        if enriched["session_number"] == nil {
+            enriched["session_number"] = session.totalSessions
+        }
+        if enriched["days_since_install"] == nil {
+            enriched["days_since_install"] = session.daysSinceInstall
+        }
+        if enriched["streak_days"] == nil {
+            enriched["streak_days"] = session.streakDays
+        }
+        if enriched["weekly_active_days"] == nil {
+            enriched["weekly_active_days"] = session.weeklyActiveDays
+        }
+        if enriched["nav_depth"] == nil {
+            enriched["nav_depth"] = session.currentDepth
+        }
+        if enriched["organic_session_pct"] == nil {
+            enriched["organic_session_pct"] = session.organicSessionPercent
+        }
+        if enriched["app_version"] == nil {
+            enriched["app_version"] = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
+        }
+        if enriched["subscription_status"] == nil {
+            enriched["subscription_status"] = defaults.string(forKey: Key.lastKnownStatus) ?? "unknown"
+        }
+        if enriched["user_tier"] == nil {
+            let status = defaults.string(forKey: Key.lastKnownStatus) ?? "unknown"
+            enriched["user_tier"] = (status == "pro" || status == "billing_grace") ? "pro" : (status == "trial" ? "trial" : "free")
+        }
+        if enriched["onboarding_completed"] == nil {
+            enriched["onboarding_completed"] = defaults.bool(forKey: AppKeys.App.onboardingCompleted) ? 1 : 0
+        }
+        if enriched["activation_status"] == nil {
+            enriched["activation_status"] = session.isActivated ? "activated" : "not_activated"
+        }
 
-        let eventName = sanitizeEventName(name)
+        let eventName = sanitizeEventName(canonicalEventName(name, parameters: enriched))
         let params = sanitizeParameters(enriched)
         PostHogManager.shared.capture(event: eventName, properties: params)
     }

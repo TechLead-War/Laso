@@ -158,7 +158,7 @@ final class HealthDataStore {
     }
 
     let modelContainer: ModelContainer?
-    private let modelContext: ModelContext?
+    private(set) var modelContext: ModelContext?
     private var allSeriesCache: [HealthMetric: MetricTimeSeries]?
     private var metricSeriesCache: [HealthMetric: MetricTimeSeries] = [:]
 
@@ -234,6 +234,20 @@ final class HealthDataStore {
         self.modelContext = nil
     }
 
+    // MARK: - Helpers
+
+    /// Save the model context and track failures to PostHog.
+    @discardableResult
+    private func saveContext(_ context: String) -> Bool {
+        do {
+            try modelContext?.save()
+            return true
+        } catch {
+            AppAnalytics.shared.recordNonFatal(error, context: context)
+            return false
+        }
+    }
+
     // MARK: - Save Samples
 
     /// Upsert daily samples for a metric. Efficiently batches by loading only the relevant date range.
@@ -278,7 +292,7 @@ final class HealthDataStore {
             }
         }
 
-        guard (try? modelContext?.save()) != nil else { return .zero }
+        guard saveContext("swiftdata_save_samples") else { return .zero }
         updateSyncMetadata(for: metric, sampleDelta: insertedCount)
         updateSeriesCaches(metric: metric, incomingSamples: samples)
         return SaveSamplesResult(insertedCount: insertedCount, updatedCount: updatedCount)
@@ -407,7 +421,7 @@ final class HealthDataStore {
                 totalSamples: totalSamples ?? 0
             ))
         }
-        try? modelContext?.save()
+        saveContext("swiftdata_save_sync_metadata")
     }
 
     // MARK: - Analysis Snapshots
@@ -448,7 +462,7 @@ final class HealthDataStore {
                 baselinesJSON: baseJSON
             ))
         }
-        try? modelContext?.save()
+        saveContext("swiftdata_save_snapshot")
     }
 
     /// Load all analysis snapshots (used for CloudKit backup)
@@ -465,7 +479,7 @@ final class HealthDataStore {
             categoryScoresJSON: categoryScoresJSON,
             baselinesJSON: baselinesJSON
         ))
-        try? modelContext?.save()
+        saveContext("swiftdata_restore_snapshot")
     }
 
     /// Load score history for charting (optional day limit, nil = all time)
@@ -556,7 +570,7 @@ final class HealthDataStore {
             ))
         }
 
-        try? modelContext?.save()
+        saveContext("swiftdata_save_strain")
     }
 
     /// Load persisted strain history from [today-lookbackDays, today], sorted ascending.
@@ -612,7 +626,7 @@ final class HealthDataStore {
                 lastTrainedDate: state.lastTrainedDate
             ))
         }
-        try? modelContext?.save()
+        saveContext("swiftdata_save_ml_state")
     }
 
     /// Load an ML component's learned parameters
@@ -713,7 +727,29 @@ final class HealthDataStore {
             baselineValue: insight.baselineValue,
             shownDate: Date()
         ))
-        try? modelContext?.save()
+        saveContext("swiftdata_save_recommendation")
+    }
+
+    /// Batch save recommendations — inserts all then saves once (avoids N separate save() calls)
+    func batchSaveRecommendations(_ insights: [Insight]) {
+        guard let modelContext else { return }
+        for insight in insights {
+            let idString = insight.id.uuidString
+            let predicate = #Predicate<StoredRecommendation> { $0.insightId == idString }
+            let descriptor = FetchDescriptor(predicate: predicate)
+            guard (try? modelContext.fetch(descriptor))?.isEmpty ?? true else { continue }
+
+            modelContext.insert(StoredRecommendation(
+                insightId: idString,
+                metricRawValue: insight.metric.rawValue,
+                recommendation: String(insight.actionSummary.prefix(500)),
+                severityRawValue: insight.severity.rawValue,
+                categoryRawValue: insight.category.rawValue,
+                baselineValue: insight.baselineValue,
+                shownDate: Date()
+            ))
+        }
+        saveContext("swiftdata_batch_save_recommendations")
     }
 
     /// Record that the user tapped on an insight recommendation
@@ -723,7 +759,7 @@ final class HealthDataStore {
         let descriptor = FetchDescriptor(predicate: predicate)
         guard let rec = try? modelContext?.fetch(descriptor).first else { return }
         rec.tappedDate = Date()
-        try? modelContext?.save()
+        saveContext("swiftdata_save_recommendation_tap")
     }
 
     /// Load recommendations that still need 24h or 7d evaluation
@@ -748,7 +784,7 @@ final class HealthDataStore {
         let descriptor = FetchDescriptor(predicate: predicate)
         guard let old = try? modelContext?.fetch(descriptor) else { return }
         for rec in old { modelContext?.delete(rec) }
-        try? modelContext?.save()
+        saveContext("swiftdata_prune_recommendations")
     }
 
     // MARK: - Notification Events
@@ -764,7 +800,7 @@ final class HealthDataStore {
             hourSent: cal.component(.hour, from: now),
             dayOfWeek: cal.component(.weekday, from: now)
         ))
-        try? modelContext?.save()
+        saveContext("swiftdata_save_notification_sent")
     }
 
     /// Record that a notification was opened by the user
@@ -774,7 +810,7 @@ final class HealthDataStore {
         guard let event = try? modelContext?.fetch(descriptor).first else { return }
         event.openedDate = Date()
         event.actionTaken = true
-        try? modelContext?.save()
+        saveContext("swiftdata_save_notification_opened")
     }
 
     /// Load notification events from the last N days
@@ -792,7 +828,7 @@ final class HealthDataStore {
         let descriptor = FetchDescriptor(predicate: predicate)
         guard let old = try? modelContext?.fetch(descriptor) else { return }
         for event in old { modelContext?.delete(event) }
-        try? modelContext?.save()
+        saveContext("swiftdata_prune_notifications")
     }
 
     // MARK: - Adherence Records
@@ -801,7 +837,7 @@ final class HealthDataStore {
     func saveAdherenceRecords(_ records: [StoredAdherenceRecord]) {
         guard let ctx = modelContext else { return }
         for record in records { ctx.insert(record) }
-        try? ctx.save()
+        saveContext("swiftdata_save_adherence")
     }
 
     /// Load pending (unevaluated) adherence records
@@ -824,7 +860,7 @@ final class HealthDataStore {
 
     /// Save updated adherence records (after outcome measurement)
     func updateAdherenceOutcomes() {
-        try? modelContext?.save()
+        saveContext("swiftdata_update_adherence")
     }
 
     // MARK: - ECG Features
@@ -832,7 +868,7 @@ final class HealthDataStore {
     /// Save ECG feature extraction results
     func saveECGFeatures(_ features: StoredECGFeatures) {
         modelContext?.insert(features)
-        try? modelContext?.save()
+        saveContext("swiftdata_save_ecg_features")
     }
 
     /// Load all stored ECG features sorted by date

@@ -234,14 +234,14 @@ struct OnboardingCalibrationStep: View {
                 if let errorMessage {
                     state = .failed(errorMessage)
                     // PostHog: Track calibration failure
-                    PostHogManager.shared.capture(event: "calibration_failed", properties: [
+                    PostHogManager.shared.capture(event: "onboarding_calibration_failed", properties: [
                         "error_message": errorMessage,
                         "elapsed_sec": elapsed,
                     ])
                 } else {
                     state = .success
                     // PostHog: Track successful calibration (user is now fully set up)
-                    PostHogManager.shared.capture(event: "calibration_completed", properties: [
+                    PostHogManager.shared.capture(event: "onboarding_calibration_completed", properties: [
                         "elapsed_sec": elapsed,
                     ])
                 }

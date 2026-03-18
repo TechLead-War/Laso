@@ -51,14 +51,23 @@ final class EncryptedStore {
     // MARK: - Encryption
 
     private func encrypt(_ data: Data, using key: SymmetricKey) -> Data? {
-        guard let sealedBox = try? AES.GCM.seal(data, using: key) else { return nil }
-        return sealedBox.combined
+        do {
+            let sealedBox = try AES.GCM.seal(data, using: key)
+            return sealedBox.combined
+        } catch {
+            PostHogManager.shared.captureError(error, context: "encryption_seal_failed")
+            return nil
+        }
     }
 
     private func decrypt(_ data: Data, using key: SymmetricKey) -> Data? {
-        guard let sealedBox = try? AES.GCM.SealedBox(combined: data),
-              let decrypted = try? AES.GCM.open(sealedBox, using: key) else { return nil }
-        return decrypted
+        do {
+            let sealedBox = try AES.GCM.SealedBox(combined: data)
+            return try AES.GCM.open(sealedBox, using: key)
+        } catch {
+            PostHogManager.shared.captureError(error, context: "decryption_open_failed")
+            return nil
+        }
     }
 
     // MARK: - iCloud Sync Key (for E2E encrypted CloudKit backup)

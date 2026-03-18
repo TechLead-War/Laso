@@ -1,5 +1,6 @@
 import BackgroundTasks
 import Foundation
+import WidgetKit
 
 /// Encapsulates BGTask registration, scheduling, and execution.
 final class BackgroundRefreshCoordinator {
@@ -48,6 +49,16 @@ final class BackgroundRefreshCoordinator {
         try? BGTaskScheduler.shared.submit(request)
     }
 
+    private static func gradeForScore(_ score: Int) -> String {
+        switch score {
+        case 90...100: return "A+"
+        case 80..<90: return "A"
+        case 70..<80: return "B"
+        case 60..<70: return "C"
+        default: return "D"
+        }
+    }
+
     func handle(_ task: BGAppRefreshTask) {
         schedule()
 
@@ -60,6 +71,29 @@ final class BackgroundRefreshCoordinator {
         DispatchQueue.main.asyncAfter(deadline: .now() + completionDelay) {
             let success = liveViewModel.recovery.readinessScore != nil
             let durationMs = Int(Date().timeIntervalSince(startTime) * 1000)
+
+            // Write readiness to widget data store so widgets stay fresh
+            if let score = liveViewModel.recovery.readinessScore {
+                let snapshot = WidgetReadinessSnapshot(
+                    score: score,
+                    grade: Self.gradeForScore(score),
+                    dayType: "",
+                    updatedAt: Date()
+                )
+                WidgetDataStore.shared.saveReadiness(snapshot)
+                WidgetDataStore.shared.markLastUpdate()
+                WidgetCenter.shared.reloadAllTimelines()
+                AppAnalytics.shared.trackWidgetSnapshotUpdated(
+                    trigger: "background_refresh",
+                    snapshotsWritten: 1,
+                    hasReadiness: true,
+                    hasSleep: false,
+                    hasAction: false,
+                    hasIntelligence: false,
+                    hasRecoveryDebt: false
+                )
+            }
+
             task.setTaskCompleted(success: success)
             AppAnalytics.shared.trackBackgroundRefreshResult(
                 success: success,

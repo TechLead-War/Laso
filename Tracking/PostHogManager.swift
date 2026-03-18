@@ -79,6 +79,20 @@ final class PostHogManager {
         PostHogSDK.shared.capture("app_error_recorded", properties: props)
     }
 
+    /// Capture a string-described error (no Error object) as a PostHog event.
+    func captureError(_ message: String, context: String, metadata: [String: Any] = [:]) {
+        guard isConfigured else { return }
+        var props: [String: Any] = [
+            "error_message": message,
+            "error_context": context
+        ]
+        for (k, v) in metadata { props[k] = v }
+        #if DEBUG
+        print("[PostHog] app_error_recorded: \(context) — \(message)")
+        #endif
+        PostHogSDK.shared.capture("app_error_recorded", properties: props)
+    }
+
     // MARK: - Flush
 
     /// Force-flush the event queue (e.g. before app termination).

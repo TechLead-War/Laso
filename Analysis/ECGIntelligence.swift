@@ -16,6 +16,16 @@ struct ECGIntelligence {
         case occasional = "Occasional" // 1-4/month
         case frequent = "Frequent"     // 1+/week
         case persistent = "Persistent" // daily
+
+        var rateDescription: String {
+            switch self {
+            case .none: return "no episodes"
+            case .rare: return "<1 episode/mo"
+            case .occasional: return "1\u{2013}4 episodes/mo"
+            case .frequent: return "1+ episodes/week"
+            case .persistent: return "daily episodes"
+            }
+        }
     }
 
     struct ECGTrend {
@@ -250,7 +260,7 @@ struct ECGIntelligence {
                                      afibFrequency == .occasional ? .warning : .info
 
             var summary = "Detected \(afibCount) AFib episode\(afibCount == 1 ? "" : "s") across \(totalECGs) ECG recordings."
-            summary += " Frequency classification: \(afibFrequency.rawValue)."
+            summary += " Frequency classification: \(afibFrequency.rawValue) (\(afibFrequency.rateDescription))."
             if let trend = afibTrend {
                 summary += " " + trend.description
             }

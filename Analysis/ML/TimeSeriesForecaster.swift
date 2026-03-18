@@ -135,6 +135,9 @@ final class TimeSeriesForecaster {
     /// Last full retrain date -- guards against expensive grid search too frequently
     private var lastRetrainDate: Date?
 
+    /// Ensemble member
+    private let arimaForecaster = ARIMAForecaster()
+
     /// Whether a full retrain is needed (never trained, or >30 days since last)
     var needsRetrain: Bool {
         guard let lastRetrain = lastRetrainDate else { return true }
@@ -143,8 +146,9 @@ final class TimeSeriesForecaster {
 
     // MARK: - Training
 
-    /// Fit Holt-Winters model for each metric with sufficient data
+    /// Fit Ensemble models (Holt-Winters + ARIMA)
     func fit(timeSeries: [HealthMetric: MetricTimeSeries]) {
+        // 1. Fit existing ETS/Holt-Winters pipeline
         for (metric, series) in timeSeries {
             let values = series.sortedSamples.map(\.value)
             guard values.count >= Self.minimumDays else { continue }
@@ -153,6 +157,9 @@ final class TimeSeriesForecaster {
             let bestState = gridSearchFit(values: values, doubleSeasonal: useDoubleSeasonal)
             states[metric] = bestState
         }
+
+        // 2. Fit rigorous ARIMA pipeline mathematically alongside it
+        arimaForecaster.fit(timeSeries: timeSeries)
 
         lastRetrainDate = Date()
     }
@@ -235,30 +242,49 @@ final class TimeSeriesForecaster {
 
     // MARK: - Forecasting
 
-    /// Get forecast for a metric N steps ahead
+    /// Get forecast for a metric N steps ahead via Model Ensembling Selection
     func forecast(metric: HealthMetric, stepsAhead: Int = 1) -> (value: Double, ci: Double)? {
-        guard let state = states[metric] else { return nil }
-        let value = state.forecast(stepsAhead: stepsAhead)
-        let ci = state.confidenceInterval(stepsAhead: stepsAhead)
-        return (value, ci)
+        let hwState = states[metric]
+        
+        let hwValue = hwState?.forecast(stepsAhead: stepsAhead)
+        let hwCI = hwState?.confidenceInterval(stepsAhead: stepsAhead)
+        
+        let arimaForecast = arimaForecaster.forecast(metric: metric, stepsAhead: stepsAhead)
+        
+        // Model Selection Logic (Ensemble Picker):
+        // Pick the model with the lowest uncertainty/variance on the targeted horizon.
+        if let hwV = hwValue, let hwC = hwCI, let arima = arimaForecast {
+            if arima.ci < hwC {
+                print("[TimeSeriesForecaster] ARIMA Selected for \(metric.rawValue) (CI: \(arima.ci) vs HW: \(hwC))")
+                return arima
+            } else {
+                return (hwV, hwC)
+            }
+        } else if let hwV = hwValue, let hwC = hwCI {
+             return (hwV, hwC)
+        } else if let arima = arimaForecast {
+             return arima
+        }
+        
+        return nil
     }
 
-    /// Multi-horizon forecast with per-horizon confidence intervals
+    /// Multi-horizon forecast with per-horizon confidence intervals (Ensemble execution)
     func forecast(metric: HealthMetric, horizons: [Int] = [1, 3, 7]) -> MultiHorizonForecast? {
-        guard let state = states[metric] else { return nil }
-
-        let results = horizons.map { h -> MultiHorizonForecast.HorizonResult in
-            let value = state.forecast(stepsAhead: h)
-            let ciWidth = state.confidenceInterval(stepsAhead: h)
-            return MultiHorizonForecast.HorizonResult(
+        // Ensembling multi-horizon by performing stepwise selection.
+        var results: [MultiHorizonForecast.HorizonResult] = []
+        for h in horizons {
+            guard let (value, ciWidth) = forecast(metric: metric, stepsAhead: h) else { continue }
+            results.append(MultiHorizonForecast.HorizonResult(
                 horizon: h,
                 value: value,
                 ciLower: value - ciWidth,
                 ciUpper: value + ciWidth,
                 ciWidth: ciWidth * 2
-            )
+            ))
         }
-
+        
+        guard !results.isEmpty else { return nil }
         return MultiHorizonForecast(metric: metric, horizons: results)
     }
 
@@ -446,12 +472,20 @@ final class TimeSeriesForecaster {
         Dictionary(uniqueKeysWithValues: states.map { ($0.key.rawValue, $0.value) })
     }
 
+    /// Get ARIMA serializable state for persistence
+    func getArimaState() -> [String: ARIMAForecaster.ARIMAParameters] {
+        arimaForecaster.getState()
+    }
+
     /// Restore from persisted state
-    func restoreState(_ saved: [String: HoltWintersState]) {
+    func restoreState(_ saved: [String: HoltWintersState], arimaSaved: [String: ARIMAForecaster.ARIMAParameters]? = nil) {
         for (rawValue, state) in saved {
             if let metric = HealthMetric(rawValue: rawValue) {
                 states[metric] = state
             }
+        }
+        if let arima = arimaSaved {
+            arimaForecaster.restoreState(arima)
         }
     }
 

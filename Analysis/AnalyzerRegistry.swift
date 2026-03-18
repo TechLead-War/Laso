@@ -29,6 +29,20 @@ enum AnalyzerRegistry {
         CausalChainEngine.self,
         ScoreTrajectoryAnalyzer.self,
         BaselineDriftDetector.self,
+
+        // Research-backed analyzers (2025-2026 papers)
+        SleepCoherenceAnalyzer.self,
+        RHRTrajectoryAnalyzer.self,
+        SleepRegularityAnalyzer.self,
+        BiologicalAgeAnalyzer.self,
+        InflammationRiskAnalyzer.self,
+        HRRFitnessAnalyzer.self,
+        MobilityDeclineAnalyzer.self,
+        TemperatureCompoundAnalyzer.self,
+        CardioRespiratoryAgeAnalyzer.self,
+        WellbeingTrendAnalyzer.self,
+        CircadianDisruptionAnalyzer.self,
+        CircadianHealthAnalyzer.self,
     ]
 
     static func runAll(_ analyzers: [any InsightAnalyzer.Type], context: AnalysisContext) -> [Insight] {

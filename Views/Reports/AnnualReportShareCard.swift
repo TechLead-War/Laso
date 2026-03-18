@@ -84,8 +84,8 @@ struct ShareableAnnualReportCard: View {
 
                 HStack(spacing: 16) {
                     shareStatBadge(icon: "checkmark.circle.fill", value: "\(totalActiveDays)", label: Copy.Reports.activeDays)
-                    shareStatBadge(icon: "flame.fill", value: String(format: "%.0f", totalExerciseHours), label: Copy.Reports.exerciseHrs)
-                    shareStatBadge(icon: "bed.double.fill", value: String(format: "%.1f", averageSleepHours), label: Copy.Reports.avgSleep)
+                    shareStatBadge(icon: "flame.fill", value: String(format: "%.0fh", totalExerciseHours), label: Copy.Reports.exerciseHrs)
+                    shareStatBadge(icon: "bed.double.fill", value: String(format: "%.1fh", averageSleepHours), label: Copy.Reports.avgSleep)
                 }
 
                 if streakRecord > 0 {

@@ -84,6 +84,9 @@ final class CompoundInsightEngine {
     var topInsights: [CompoundInsight] { Array(insights.prefix(5)) }
 
     private let calendar = Calendar.current
+    
+    // Natural Language Generator
+    private let llmGenerator = LLMInsightGenerator()
 
     // MARK: - Main Entry Point
 
@@ -174,24 +177,19 @@ final class CompoundInsightEngine {
             let avgChange = improving.map { abs($0.percentChange) }.reduce(0, +) / Double(improving.count)
 
             let topMetric = improving.max(by: { abs($0.percentChange) < abs($1.percentChange) })!
-            let topChangeStr = formatPercent(topMetric.percentChange)
-            let topName = topMetric.metric.displayName
-
-            var narrative = "\(improving.count) of your key metrics are improving in lockstep across \(categories.count) categories. "
-            narrative += "\(topName) leads with \(topChangeStr) over 7 days, averaging \(formatPercent(avgChange)) improvement across all."
-
-            // Check state for context
-            if let state = currentState {
-                narrative += " Your current state is \"\(state.label)\" (day \(state.daysInState))."
-            }
-
-            // Historical comparison: find if this trajectory happened before
-            let historicalMatch = findHistoricalTrajectoryMatch(
-                metrics: metrics, direction: .improving, timeSeries: timeSeries
+            
+            // Generate Semantic LLM Context
+            let context = LLMInsightGenerator.InsightContext(
+                baseTopic: "health",
+                primaryMetric: topMetric.metric,
+                trendChange: topMetric.percentChange,
+                riskScore: 0.1, // Proxy for momentum
+                relatedMetrics: Array(metrics.prefix(3)),
+                causalLag: nil,
+                severity: .notable
             )
-            if let match = historicalMatch {
-                narrative += " The last time this pattern played out, you peaked in \(match) days."
-            }
+            
+            let narrative = llmGenerator.synthesizeParagraph(context: context)
 
             results.append(CompoundInsight(
                 id: "trajectory_coordinated_improvement",
@@ -203,7 +201,7 @@ final class CompoundInsightEngine {
                 category: .trajectory,
                 surpriseScore: categories.count > 2 ? 0.7 : 0.5,
                 confidence: min(0.9, Double(improving.count) * 0.15 + 0.3),
-                evidenceSources: ["TrendAnalysis", "StateClassifier"],
+                evidenceSources: ["TrendAnalysis", "StateClassifier", "LLMGenerator"],
                 timeHorizon: .shortTerm,
                 isActionable: true
             ))
@@ -216,12 +214,18 @@ final class CompoundInsightEngine {
             let avgChange = declining.map { abs($0.percentChange) }.reduce(0, +) / Double(declining.count)
             let topMetric = declining.max(by: { abs($0.percentChange) < abs($1.percentChange) })!
 
-            var narrative = "\(declining.count) metrics are declining simultaneously across \(categories.count) categories. "
-            narrative += "\(topMetric.metric.displayName) is down \(formatPercent(abs(topMetric.percentChange))) over 7 days."
-
-            if let state = currentState, state.daysInState <= 3 {
-                narrative += " You entered the \"\(state.label)\" state \(state.daysInState) day\(state.daysInState == 1 ? "" : "s") ago, suggesting a regime change."
-            }
+            // Generate Semantic LLM Context
+            let context = LLMInsightGenerator.InsightContext(
+                baseTopic: "system",
+                primaryMetric: topMetric.metric,
+                trendChange: topMetric.percentChange * -1.0, // Negate for semantic interpretation
+                riskScore: 0.8, // High proxy for decline
+                relatedMetrics: Array(metrics.prefix(3)),
+                causalLag: nil,
+                severity: .important
+            )
+            
+            let narrative = llmGenerator.synthesizeParagraph(context: context)
 
             results.append(CompoundInsight(
                 id: "trajectory_coordinated_decline",
@@ -233,7 +237,7 @@ final class CompoundInsightEngine {
                 category: .trajectory,
                 surpriseScore: categories.count > 2 ? 0.7 : 0.5,
                 confidence: min(0.85, Double(declining.count) * 0.15 + 0.3),
-                evidenceSources: ["TrendAnalysis", "StateClassifier"],
+                evidenceSources: ["TrendAnalysis", "StateClassifier", "LLMGenerator"],
                 timeHorizon: .shortTerm,
                 isActionable: true
             ))
@@ -365,11 +369,12 @@ final class CompoundInsightEngine {
         if let strongest = crossCategoryCorrelations.max(by: { abs($0.pearsonR) < abs($1.pearsonR) }) {
             let catA = strongest.metricA.category
             let catB = strongest.metricB.category
-            let rStr = formatPercent(abs(strongest.pearsonR) * 100)
+            let rPct = formatPercent(abs(strongest.pearsonR) * 100)
+            let rCoeff = "r=\(formatValue(strongest.pearsonR, decimals: 2))"
             let direction = strongest.pearsonR > 0 ? "move together" : "move opposite"
 
-            var narrative = "Your \(catA.rawValue) and \(catB.rawValue) metrics are \(rStr) correlated — they \(direction). "
-            narrative += "Specifically, \(strongest.metricA.displayName) and \(strongest.metricB.displayName) (r=\(formatValue(strongest.pearsonR, decimals: 2))). "
+            var narrative = "Your \(catA.rawValue) and \(catB.rawValue) metrics are \(rPct) correlated — they \(direction). "
+            narrative += "Specifically, \(strongest.metricA.displayName) and \(strongest.metricB.displayName) (\(rCoeff)). "
 
             if strongest.grangerCausal {
                 let causalDirection = strongest.metricA.displayName
@@ -384,7 +389,7 @@ final class CompoundInsightEngine {
                 id: "hidden_cross_category_\(catA.rawValue)_\(catB.rawValue)",
                 title: "Your \(catA.rawValue.capitalized) and \(catB.rawValue.capitalized) Are Linked",
                 narrative: narrative,
-                recommendation: "\(strongest.metricA.displayName) and \(strongest.metricB.displayName) \(direction) (r=\(rStr))\(strongest.grangerCausal ? ", with \(strongest.metricA.displayName) leading by \(strongest.grangerOptimalLag) day\(strongest.grangerOptimalLag == 1 ? "" : "s")" : "").",
+                recommendation: "\(strongest.metricA.displayName) and \(strongest.metricB.displayName) \(direction) (\(rCoeff))\(strongest.grangerCausal ? ", with \(strongest.metricA.displayName) leading by \(strongest.grangerOptimalLag) day\(strongest.grangerOptimalLag == 1 ? "" : "s")" : "").",
                 involvedMetrics: [strongest.metricA, strongest.metricB],
                 severity: .notable,
                 category: .hiddenPattern,
@@ -472,15 +477,24 @@ final class CompoundInsightEngine {
         if let best = chains.max(by: { ($0.strength1 * $0.strength2) < ($1.strength1 * $1.strength2) }) {
             let totalLag = best.lag1 + best.lag2
             let combinedR = best.strength1 * best.strength2
-            let rStr = formatValue(combinedR, decimals: 2)
-
-            let narrative = "Your \(best.source.displayName) influences your \(best.mid.displayName) (lag \(best.lag1) day\(best.lag1 == 1 ? "" : "s")), which in turn influences your \(best.dest.displayName) (lag \(best.lag2) day\(best.lag2 == 1 ? "" : "s")). Total chain effect: r=\(rStr) over \(totalLag) days. Changes to \(best.source.displayName) take \(totalLag) day\(totalLag == 1 ? "" : "s") to fully ripple through."
-
+            // Generate Semantic LLM Context
+            let context = LLMInsightGenerator.InsightContext(
+                baseTopic: "system performance",
+                primaryMetric: best.source,
+                trendChange: combinedR * 10.0, // Arbitrary trend scalar for NLP
+                riskScore: 0.2, 
+                relatedMetrics: [best.mid, best.dest],
+                causalLag: totalLag,
+                severity: .notable
+            )
+            
+            let narrative = llmGenerator.synthesizeParagraph(context: context)
+            
             results.append(CompoundInsight(
                 id: "causal_chain_\(best.source.rawValue)_\(best.dest.rawValue)",
                 title: "\(best.source.displayName) Drives a Chain Reaction",
                 narrative: narrative,
-                recommendation: "\(best.source.displayName) influences \(best.mid.displayName) (lag \(best.lag1)d), which influences \(best.dest.displayName) (lag \(best.lag2)d). Total chain effect: r=\(rStr) over \(totalLag) days.",
+                recommendation: "\(best.source.displayName) influences \(best.mid.displayName) (\(best.lag1)-day lag), which influences \(best.dest.displayName) (\(best.lag2)-day lag). Total chain effect: r=\(formatValue(combinedR, decimals: 2)) over \(totalLag) days.",
                 involvedMetrics: [best.source, best.mid, best.dest],
                 severity: .notable,
                 category: .causeAndEffect,
@@ -496,24 +510,27 @@ final class CompoundInsightEngine {
         if let strongestDirect = causalLinks.max(by: { $0.effectSize < $1.effectSize }),
            strongestDirect.effectSize > 0.1 {
 
-            let effectSizeLabel: String
-            if strongestDirect.effectSize > 0.35 {
-                effectSizeLabel = "large"
-            } else if strongestDirect.effectSize > 0.15 {
-                effectSizeLabel = "medium"
-            } else {
-                effectSizeLabel = "small"
-            }
-
-            let lagStr = strongestDirect.lag == 0 ? "same day" : "\(strongestDirect.lag) day\(strongestDirect.lag == 1 ? "" : "s") later"
-
-            let narrative = "Your \(strongestDirect.cause.displayName) has a \(effectSizeLabel) causal effect on \(strongestDirect.effect.displayName), showing up \(lagStr) (Cohen's f\u{00B2}=\(formatValue(strongestDirect.effectSize, decimals: 2))). This is not just correlation — past changes in \(strongestDirect.cause.displayName) statistically predict future changes in \(strongestDirect.effect.displayName)."
+            // Generate Semantic LLM Context
+            let context = LLMInsightGenerator.InsightContext(
+                baseTopic: "biological metrics",
+                primaryMetric: strongestDirect.cause,
+                trendChange: strongestDirect.effectSize * 15.0, // Scalar
+                riskScore: 0.3,
+                relatedMetrics: [strongestDirect.effect],
+                causalLag: strongestDirect.lag,
+                severity: strongestDirect.effectSize > 0.25 ? .important : .notable
+            )
+            
+            let narrative = llmGenerator.synthesizeParagraph(context: context)
 
             // Avoid duplicating the chain insight
             let chainAlreadyCovers = chains.contains {
                 ($0.source == strongestDirect.cause && $0.mid == strongestDirect.effect) ||
                 ($0.mid == strongestDirect.cause && $0.dest == strongestDirect.effect)
             }
+
+            let effectSizeLabel = strongestDirect.effectSize > 0.35 ? "large" : strongestDirect.effectSize > 0.15 ? "medium" : "small"
+            let lagStr = strongestDirect.lag > 0 ? "after \(strongestDirect.lag) day\(strongestDirect.lag == 1 ? "" : "s")" : "same day"
 
             if !chainAlreadyCovers {
                 results.append(CompoundInsight(
@@ -555,32 +572,31 @@ final class CompoundInsightEngine {
 
         let riskSignals = decliningTrends.count + recentAnomalies.count
         let predictionRisk = prediction?.probability ?? 0
+        let pastCrashes: Int = {
+            guard scoreHistory.count >= 2 else { return 0 }
+            var count = 0
+            for i in 1..<scoreHistory.count {
+                if scoreHistory[i].score < scoreHistory[i - 1].score - 10 { count += 1 }
+            }
+            return count
+        }()
 
         if riskSignals >= 3 || (riskSignals >= 2 && predictionRisk > 0.5) {
-            let decliningNames = decliningTrends.prefix(3).map { $0.metric.displayName }
-            let anomalyNames = Array(Set(recentAnomalies.map { $0.metric.displayName })).prefix(2)
-
-            var narrative = "Multiple warning signs converging: "
-            if !decliningNames.isEmpty {
-                narrative += "declining \(decliningNames.joined(separator: ", ")) (\(decliningTrends.first.map { "\(Int(abs($0.percentChange)))%" } ?? ""))"
-            }
-            if !anomalyNames.isEmpty {
-                narrative += (decliningNames.isEmpty ? "" : ", plus ") + "anomalies in \(anomalyNames.joined(separator: " and "))"
-            }
-            narrative += "."
-
-            if predictionRisk > 0.3 {
-                narrative += " Tomorrow's risk estimate: \(Int(predictionRisk * 100))%."
-            }
-
-            // Check if this pattern preceded past dips
-            let pastCrashes = findPastScoreDips(scoreHistory: scoreHistory, threshold: -8)
-            if pastCrashes >= 2 {
-                narrative += " Similar signal patterns preceded your last \(pastCrashes) score dips."
-            }
-
             let allMetrics = (decliningTrends.map(\.metric) + recentAnomalies.map(\.metric))
             let uniqueMetrics = Array(Set(allMetrics))
+            
+            // Generate Semantic LLM Context
+            let context = LLMInsightGenerator.InsightContext(
+                baseTopic: "overall readiness",
+                primaryMetric: uniqueMetrics.first ?? .restingHeartRate,
+                trendChange: -15.0, // Heavily negative for NLP 
+                riskScore: predictionRisk > 0 ? predictionRisk : 0.8,
+                relatedMetrics: Array(uniqueMetrics.prefix(2)),
+                causalLag: nil,
+                severity: predictionRisk > 0.6 ? .urgent : .important
+            )
+            
+            let narrative = llmGenerator.synthesizeParagraph(context: context)
 
             results.append(CompoundInsight(
                 id: "risk_converging_signals",
@@ -726,7 +742,7 @@ final class CompoundInsightEngine {
                 let top = metricDiffs[0]
                 let second = metricDiffs[1]
 
-                let narrative = "On your best-scoring days, \(top.0.displayName) averages \(top.0.formatValue(top.1)) \(top.0.unit) (vs \(top.0.formatValue(top.2)) overall, a \(formatPercent(abs(top.3))) difference) and \(second.0.displayName) averages \(second.0.formatValue(second.1)) \(second.0.unit) (vs \(second.0.formatValue(second.2))). These two metrics best distinguish your great days from average ones."
+                let narrative = "On your best-scoring days, \(top.0.displayName) averages \(top.0.formatValue(top.1)) \(top.0.unit) (vs \(top.0.formatValue(top.2)) \(top.0.unit) overall, a \(formatPercent(abs(top.3))) difference) and \(second.0.displayName) averages \(second.0.formatValue(second.1)) \(second.0.unit) (vs \(second.0.formatValue(second.2)) \(second.0.unit)). These two metrics best distinguish your great days from average ones."
 
                 results.append(CompoundInsight(
                     id: "optimization_best_day_profile",

@@ -335,6 +335,13 @@ enum HealthMetric: String, CaseIterable, Identifiable, Codable {
         }
     }
 
+    /// Formats a value with its unit appended (e.g. "72 bpm", "7.5 hrs")
+    func formatWithUnit(_ value: Double) -> String {
+        let formatted = formatValue(value)
+        let u = unit
+        return u.isEmpty ? formatted : "\(formatted) \(u)"
+    }
+
     var systemImageName: String {
         switch self {
         case .heartRate, .restingHeartRate, .heartRateVariability, .heartRateRecovery,

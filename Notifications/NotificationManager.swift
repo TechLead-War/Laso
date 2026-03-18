@@ -46,12 +46,15 @@ final class NotificationManager {
         let settings = await center.notificationSettings()
         switch settings.authorizationStatus {
         case .authorized, .provisional, .ephemeral:
+            await MainActor.run { AppAnalytics.shared.updateNotificationProperties(enabled: true) }
             return true
         case .notDetermined:
             return await requestAuthorization()
         case .denied:
+            await MainActor.run { AppAnalytics.shared.updateNotificationProperties(enabled: false) }
             return false
         @unknown default:
+            await MainActor.run { AppAnalytics.shared.updateNotificationProperties(enabled: false) }
             return false
         }
     }

@@ -128,6 +128,29 @@ struct ScoreGuideSheet: View {
                             .padding(.horizontal)
                     }
 
+                    // MARK: - When does it update?
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(Copy.Home.ScoreGuide.whenItUpdatesTitle)
+                            .font(.headline)
+                            .padding(.horizontal)
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(alignment: .top, spacing: 12) {
+                                Image(systemName: "clock.arrow.circlepath")
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(.blue)
+                                    .frame(width: 24)
+
+                                Text(Copy.Home.ScoreGuide.whenItUpdatesBody)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding()
+                        .background(.background, in: RoundedRectangle(cornerRadius: 16))
+                        .padding(.horizontal)
+                    }
+
                     // MARK: - Baseline callout
                     HStack(spacing: 12) {
                         Image(systemName: "person.fill.checkmark")

@@ -65,6 +65,8 @@ final class LiveViewModel {
     private var readinessBaselineRefreshTask: Task<Void, Never>?
     private var smoothedReadinessScore: Double?
     private var refreshState = LiveRefreshPlanner.State()
+    private var lastHomeFetchDate: Date?
+    private static let homeFetchDebounce: TimeInterval = 1.0
 
     private typealias PendingHRUpdate = LiveHeartRateTimelineReducer.PendingUpdate
 
@@ -172,6 +174,11 @@ final class LiveViewModel {
     func fetchHomeData() {
         guard HKHealthStore.isHealthDataAvailable() else { return }
         let now = Date()
+        // Debounce: skip if called within 1 second of last fetch
+        if let last = lastHomeFetchDate, now.timeIntervalSince(last) < Self.homeFetchDebounce {
+            return
+        }
+        lastHomeFetchDate = now
         fetchLatestDailyValues()
         fetchTodayCumulativeStats()
         fetchActivityGoals()

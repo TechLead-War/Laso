@@ -25,6 +25,8 @@ final class MLOrchestrator {
     let decisionPolicyEngine = DecisionPolicyEngine()
     let mlEvaluator = MLEvaluator()
     let conformalCalibrator = ConformalCalibrator()
+    let receptivityEstimator = ReceptivityEstimator()
+    let healthDataQueryEngine = HealthDataQueryEngine()
 
     // MARK: - ML Components (Intelligence Layer)
 
@@ -48,6 +50,10 @@ final class MLOrchestrator {
     var isRunning = false
     /// Last full retrain date
     var lastFullRetrain: Date?
+
+    /// Last ML pipeline completion time — used for 1-hour TTL
+    private var lastPipelineCompletion: Date?
+    private static let pipelineTTL: TimeInterval = 3600  // 1 hour
 
     // MARK: - Results (for AnalysisEngine to consume)
 
@@ -167,12 +173,21 @@ final class MLOrchestrator {
             return
         }
 
+        // Skip if pipeline ran recently and no new data indicator
+        if let lastCompletion = lastPipelineCompletion,
+           Date().timeIntervalSince(lastCompletion) < Self.pipelineTTL,
+           hasRunOnce {
+            logger.info("Skipping ML analysis — pipeline ran \(Int(Date().timeIntervalSince(lastCompletion)))s ago (TTL: \(Int(Self.pipelineTTL))s)")
+            return
+        }
+
         isRunning = true
         let pipelineStart = Date()
         var componentsRunCount = 0
         defer {
             isRunning = false
             hasRunOnce = true
+            lastPipelineCompletion = Date()
             if componentsRunCount > 0 {
                 let pipelineDurationMs = Int(Date().timeIntervalSince(pipelineStart) * 1000)
                 let totalDataPoints = timeSeries.values.reduce(0) { $0 + $1.samples.count }
@@ -213,6 +228,9 @@ final class MLOrchestrator {
 
         // Apply pipeline output to observable state
         applyPipelineOutput(pipelineOutput)
+
+        // Clear bulky intermediates to reduce memory pressure
+        enrichedVectors = []
 
         if !pipelineOutput.stoppedEarly {
             // Step 13: CompoundInsightEngine (uses current self.* state from previous run)
@@ -277,6 +295,11 @@ final class MLOrchestrator {
 
     func markFullRetrainComplete() {
         lastFullRetrain = Date()
+    }
+
+    /// Invalidate pipeline TTL so the next run proceeds regardless
+    func invalidatePipelineTTL() {
+        lastPipelineCompletion = nil
     }
 
     // MARK: - Circadian Analysis (separate pipeline, runs weekly)

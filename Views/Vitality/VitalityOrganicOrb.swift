@@ -8,12 +8,12 @@ struct OrganicParticleOrbView: View {
     @State private var glowPulse = false
     @State private var thermalState: ProcessInfo.ThermalState = ProcessInfo.processInfo.thermalState
 
-    private static let fullParticles: [ParticleSeed] = makeParticles(count: 120)
+    private static let fullParticles: [ParticleSeed] = makeParticles(count: 80)
     private static let reducedParticles: [ParticleSeed] = makeParticles(count: 40)
 
     private var effectiveParticles: [ParticleSeed] {
         if reduceMotion { return [] }
-        if thermalState == .serious || thermalState == .critical {
+        if thermalState == .fair || thermalState == .serious || thermalState == .critical {
             return Self.reducedParticles
         }
         return Self.fullParticles
@@ -57,7 +57,7 @@ struct OrganicParticleOrbView: View {
             tint: tint,
             particles: effectiveParticles,
             paused: animationPaused,
-            frameRate: thermalState == .serious ? 12.0 : 24.0
+            frameRate: thermalState == .nominal ? 24.0 : (thermalState == .serious || thermalState == .critical ? 8.0 : 15.0)
         )
         .clipShape(OrganicBlobShape(phase: phase))
         .overlay(

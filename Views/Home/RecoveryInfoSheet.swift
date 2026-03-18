@@ -48,6 +48,24 @@ struct RecoveryInfoSheet: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
 
+                // When does it update?
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.system(size: 16))
+                            .foregroundStyle(.blue)
+                        Text(Copy.Home.RecoveryInfo.whenItUpdatesTitle)
+                            .font(.subheadline.weight(.medium))
+                    }
+
+                    Text(Copy.Home.RecoveryInfo.whenItUpdatesBody)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding()
+                .background(.background, in: RoundedRectangle(cornerRadius: 16))
+                .padding(.horizontal)
+
                 Spacer()
             }
             .background(Color(.systemGroupedBackground))

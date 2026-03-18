@@ -2,6 +2,35 @@ import Foundation
 import HealthKit
 import Observation
 
+/// Codable wrapper for caching ConnectedDeviceInfo to UserDefaults
+private struct CachedDeviceEntry: Codable {
+    let deviceRawValue: String
+    let sourceName: String
+    let sourceBundleId: String
+    let metricRawValues: [String]
+    let lastDataDate: Date?
+
+    init(from info: ConnectedDeviceInfo) {
+        self.deviceRawValue = info.device.rawValue
+        self.sourceName = info.sourceName
+        self.sourceBundleId = info.sourceBundleId
+        self.metricRawValues = info.metricsProvided.map(\.rawValue)
+        self.lastDataDate = info.lastDataDate
+    }
+
+    func toConnectedDeviceInfo() -> ConnectedDeviceInfo? {
+        guard let device = SupportedDevice(rawValue: deviceRawValue) else { return nil }
+        let metrics = Set(metricRawValues.compactMap { HealthMetric(rawValue: $0) })
+        return ConnectedDeviceInfo(
+            device: device,
+            sourceName: sourceName,
+            sourceBundleId: sourceBundleId,
+            metricsProvided: metrics,
+            lastDataDate: lastDataDate
+        )
+    }
+}
+
 /// Detects which devices/apps are writing health data to HealthKit via HKSourceQuery
 @Observable
 final class DeviceSourceManager {
@@ -10,12 +39,29 @@ final class DeviceSourceManager {
     var connectedDevices: [ConnectedDeviceInfo] = []
     var isScanning = false
 
+    private var hasScanned = false
+    private var lastScanDate: Date?
+    private static let scanTTL: TimeInterval = 24 * 3600
+
+    /// Only scan these representative metrics instead of all 83
+    private static let representativeMetrics: [HealthMetric] = [
+        .heartRate, .steps, .sleepDuration, .bloodOxygen, .activeCalories
+    ]
+
     init(healthStore: HKHealthStore) {
         self.healthStore = healthStore
+        loadCachedDevices()
     }
 
-    /// Scan all HealthKit sample types for contributing sources
+    /// Scan representative HealthKit sample types for contributing sources.
+    /// Results are cached to UserDefaults with a 24-hour TTL.
     func scanSources() async {
+        // Early return if scanned recently (within TTL)
+        if hasScanned, let lastScan = lastScanDate,
+           Date().timeIntervalSince(lastScan) < Self.scanTTL {
+            return
+        }
+
         guard !isScanning else { return }
         isScanning = true
         defer { isScanning = false }
@@ -23,7 +69,7 @@ final class DeviceSourceManager {
         var sourceMap: [String: (source: HKSource, metrics: Set<HealthMetric>, lastDate: Date?)] = [:]
 
         await withTaskGroup(of: [(HKSource, HealthMetric, Date?)].self) { group in
-            for metric in HealthMetric.allCases {
+            for metric in Self.representativeMetrics {
                 let config = HealthKitMetricRegistry.config(for: metric)
                 guard let sampleType = config.sampleType else { continue }
 
@@ -73,6 +119,11 @@ final class DeviceSourceManager {
             return a.metricCount > b.metricCount
         }
 
+        // Mark scan as complete and cache results
+        hasScanned = true
+        lastScanDate = Date()
+        cacheDevicesToDefaults()
+
         // Track detected devices
         let activeCount = connectedDevices.filter(\.isActive).count
         let primary = connectedDevices.first?.device.rawValue ?? "none"
@@ -86,6 +137,12 @@ final class DeviceSourceManager {
                     metricsCount: device.metricCount,
                     isActive: device.isActive
                 )
+                if device.isActive {
+                    AppAnalytics.shared.trackSourceConnected(
+                        sourceType: device.device.rawValue,
+                        metricsAvailable: device.metricCount
+                    )
+                }
             }
             AppAnalytics.shared.updateDeviceProperties(activeCount: activeCount, primaryDevice: primary)
             AppAnalytics.shared.updateHealthSourceProperties(
@@ -160,6 +217,38 @@ final class DeviceSourceManager {
             }
         }
         return .generic
+    }
+
+    // MARK: - UserDefaults Cache
+
+    /// Save current connectedDevices to UserDefaults as JSON
+    private func cacheDevicesToDefaults() {
+        let entries = connectedDevices.map { CachedDeviceEntry(from: $0) }
+        if let data = try? JSONEncoder().encode(entries) {
+            UserDefaults.standard.set(data, forKey: AppKeys.Data.cachedDeviceSources)
+        }
+        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: AppKeys.Data.deviceSourceScanDate)
+    }
+
+    /// Load cached devices from UserDefaults (called on init for instant availability)
+    private func loadCachedDevices() {
+        // Restore last scan date
+        let storedTimestamp = UserDefaults.standard.double(forKey: AppKeys.Data.deviceSourceScanDate)
+        if storedTimestamp > 0 {
+            lastScanDate = Date(timeIntervalSince1970: storedTimestamp)
+        }
+
+        // Restore cached devices
+        guard let data = UserDefaults.standard.data(forKey: AppKeys.Data.cachedDeviceSources),
+              let entries = try? JSONDecoder().decode([CachedDeviceEntry].self, from: data) else {
+            return
+        }
+
+        let restored = entries.compactMap { $0.toConnectedDeviceInfo() }
+        if !restored.isEmpty {
+            connectedDevices = restored
+            hasScanned = true
+        }
     }
 
     /// Devices that are not yet detected as connected

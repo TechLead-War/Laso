@@ -15,6 +15,8 @@ struct HomeView: View {
     @State private var weeklyReviewViewModel: WeeklyReviewViewModel?
     @State private var showScoreGuide = false
     @State private var maxScrollDepth: Int = 0
+    @State private var showMorningCheckIn = false
+    @State private var showAskData = false
     // Section trackers
     @State private var recoveryTracker = SectionTracker(section: .homeRecovery, tab: .home)
     @State private var illnessTracker = SectionTracker(section: .homeIllness, tab: .home)
@@ -66,6 +68,13 @@ struct HomeView: View {
             ensureWeeklyReviewVM()
             startHomeRefresh()
             startReadinessRefresh()
+            showMorningCheckIn = MorningCheckInManager.shouldShowCheckIn()
+            viewModel.checkActivationMilestones()
+            viewModel.refreshHealthForecasts()
+            viewModel.refreshCircadianBiomarkers()
+            if let checkIn = MorningCheckInManager.todaysCheckIn() {
+                viewModel.subjectiveReadinessAdjustment = checkIn.readinessAdjustment
+            }
             AppAnalytics.shared.trackFeatureOpen(.home)
         }
         .onDisappear {
@@ -82,7 +91,7 @@ struct HomeView: View {
                 startHomeRefresh()
                 startReadinessRefresh()
                 // Immediately refresh readiness on foreground return
-                liveViewModel.fetchHomeData()
+                liveViewModel.fetchHomeDataTiered()
             } else {
                 stopHomeRefresh()
                 stopReadinessRefresh()
@@ -118,11 +127,16 @@ struct HomeView: View {
         liveViewModel.recovery.readinessScore ?? viewModel.overallScore.score
     }
 
+    /// Whether we have a real live readiness score (not a fallback)
+    private var hasLiveReadiness: Bool {
+        liveViewModel.recovery.readinessScore != nil
+    }
+
     private static let readinessRefreshInterval: TimeInterval = 30 * 60
 
     private func startReadinessRefresh() {
         readinessRefreshTimer.start(interval: Self.readinessRefreshInterval, tolerance: 60) {
-            liveViewModel.fetchHomeData()
+            liveViewModel.fetchHomeDataTiered()
         }
     }
 
@@ -157,7 +171,7 @@ struct HomeView: View {
                     streakDays: SessionTracker.shared.streakDays,
                     scoreChangeFromYesterday: viewModel.scores.scoreChangeFromYesterday,
                     currentScore: hasData ? liveReadinessScore : nil,
-                    recoveryState: hasData ? DashboardViewModel.RecoveryState(score: liveReadinessScore) : nil,
+                    recoveryState: hasData && hasLiveReadiness ? DashboardViewModel.RecoveryState(score: liveReadinessScore) : nil,
                     onTapScoreInfo: { showScoreGuide = true }
                 )
                 .padding(.top, 12)
@@ -171,9 +185,12 @@ struct HomeView: View {
                     RecoveryHeroCard(
                         score: liveReadinessScore,
                         dailyScore: viewModel.overallScore.score,
-                        recoveryLabel: HomeView.recoveryLabel(liveReadinessScore),
+                        recoveryLabel: hasLiveReadiness
+                            ? HomeView.recoveryLabel(liveReadinessScore)
+                            : "Daily Health Score",
                         dayType: DashboardViewModel.RecoveryState(score: liveReadinessScore).dayType,
                         scoreChangeFromLastWeek: viewModel.scores.scoreChangeFromLastWeek,
+                        hasLiveReadiness: hasLiveReadiness,
                         onTap: { showScoreGuide = true }
                     )
                     .onAppear {
@@ -186,9 +203,66 @@ struct HomeView: View {
                     }
                     .onDisappear { recoveryTracker.disappeared() }
 
+                    // 1b. Activation Progress (first 8 days — Paper 8)
+                    ActivationProgressBanner(
+                        state: viewModel.activationState,
+                        latestMilestone: viewModel.latestMilestoneEvent,
+                        onDismissCelebration: { viewModel.latestMilestoneEvent = nil }
+                    )
+                    .padding(.top, 4)
+
+                    // 1c. Morning Check-In (Paper 10: Subjective + Objective)
+                    if showMorningCheckIn {
+                        MorningCheckInView(
+                            onComplete: { checkIn in
+                                viewModel.applyMorningCheckIn(checkIn)
+                                withAnimation { showMorningCheckIn = false }
+                            },
+                            onDismiss: {
+                                withAnimation { showMorningCheckIn = false }
+                            }
+                        )
+                        .padding(.top, 8)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+
                     // 2. Today's Action — single source of truth for what to do
                     primaryActionCard
                         .padding(.top, 8)
+
+                    // 2b. Body Intelligence — non-obvious ML findings
+                    TodayBriefingView(cards: viewModel.intelligenceBriefing)
+                        .padding(.top, 8)
+                        .onAppear {
+                            viewModel.refreshIntelligenceBriefing(liveVM: liveViewModel)
+                        }
+
+                    // 2c. Personal Health Forecast (Paper 3: Conformal Prediction)
+                    PersonalHealthForecastCard(
+                        forecasts: viewModel.healthForecasts,
+                        onTapMetric: { metric in
+                            AppAnalytics.shared.trackBlockTap(
+                                title: metric.displayName,
+                                type: .metricRow,
+                                screen: .home,
+                                metadata: ["source": "forecast_card"]
+                            )
+                            navigationPath.append(metric)
+                        }
+                    )
+                    .padding(.top, 8)
+
+                    // 2d. Ask Your Data (Papers 1 & 2: PHIA)
+                    AskYourDataCard {
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Ask Your Data",
+                            type: .smartAction,
+                            screen: .home,
+                            metadata: ["source": "home_card"]
+                        )
+                        navigationPath.append(Route.askYourData)
+                    }
+                    .padding(.top, 8)
 
                     // 3. Compact alert banner (illness + health risks)
                     compactAlertBanner

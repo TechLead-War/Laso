@@ -100,9 +100,7 @@ struct ContentView: View {
                 await dashboardViewModel.load()
             }
             await refreshDeviceSourcesIfNeeded()
-            if selectedTab == .home {
-                liveViewModel.fetchHomeData()
-            }
+            // HomeView.onAppear handles its own initial fetch — no duplicate needed here
         }
         .onAppear {
             startSessionAnalytics()
@@ -113,8 +111,7 @@ struct ContentView: View {
                 WatchMonitor.shared.evaluateWatchStatus()
                 Task { await refreshDeviceSourcesIfNeeded() }
                 if selectedTab == .home {
-                    // Refresh home data only when Home is visible.
-                    liveViewModel.fetchHomeData()
+                    // HomeView's own onChange(scenePhase) handles fetchHomeData — no duplicate needed here
                     // Retry sync only when Home is visible and potentially stuck.
                     Task { await dashboardViewModel.retrySyncIfNeeded() }
                 }
@@ -262,6 +259,8 @@ struct ContentView: View {
                 readinessScore: liveViewModel.recovery.readinessScore ?? dashboardViewModel.overallScore.score,
                 onTapMetric: { metric in navigationPath.append(metric) }
             )
+        case .askYourData:
+            AskYourDataView(viewModel: dashboardViewModel)
         }
     }
 
@@ -270,6 +269,9 @@ struct ContentView: View {
         let scorer = dashboardViewModel.strainScorer
         let coach = dashboardViewModel.strainCoach
         let target = coach.currentTarget
+        let readinessScore = liveViewModel.recovery.readinessScore ?? dashboardViewModel.overallScore.score
+        let workoutRecoveryBand = WorkoutRecoveryBand(score: readinessScore)
+        let cyclePhase = dashboardViewModel.menstrualCycleTracker.currentCycle?.currentPhase.workoutModifier
         let balance: StrainBalance = {
             switch coach.strainBalance {
             case .undertraining: return .under
@@ -287,7 +289,9 @@ struct ContentView: View {
             weekHistory: scorer.weeklyStrainHistory.map {
                 DailyStrainPoint(date: $0.date, strain: $0.strain, level: StrainLevel(strain: $0.strain))
             },
-            strainBalance: balance
+            strainBalance: balance,
+            workoutRecoveryBand: workoutRecoveryBand,
+            cyclePhase: cyclePhase
         )
     }
 

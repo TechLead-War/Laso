@@ -360,7 +360,9 @@ enum EngagementSequenceScheduler {
             severity: .info
         )
 
-        AppAnalytics.shared.trackNotificationScheduled(type: "engagement", identifier: identifier)
+        Task { @MainActor in
+            AppAnalytics.shared.trackNotificationScheduled(type: "engagement", identifier: identifier)
+        }
     }
 
     private static func scheduleFutureNotification(

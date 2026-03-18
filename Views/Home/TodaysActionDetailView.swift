@@ -44,6 +44,11 @@ struct TodaysActionDetailView: View {
                 "has_policy": policyDecision != nil,
                 "insight_count": action.supportingInsights.count
             ])
+            AppAnalytics.shared.trackRecommendationViewed(
+                type: "todays_action_\(action.source)",
+                metric: action.supportingInsights.first?.metric.rawValue ?? "general",
+                difficulty: recommendationDifficulty
+            )
         }
         .onDisappear {
             AppAnalytics.shared.trackFeatureClose(.todaysActionDetail)
@@ -131,6 +136,13 @@ struct TodaysActionDetailView: View {
             if !why.isEmpty { return why }
         }
         return action.rationale
+    }
+
+    private var recommendationDifficulty: String {
+        guard let confidence = policyDecision?.decisionConfidence else {
+            return "contextual"
+        }
+        return confidence >= 0.7 ? "high_confidence" : "medium_confidence"
     }
 
     // MARK: - Guidance Tiles

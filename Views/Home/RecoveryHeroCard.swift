@@ -9,6 +9,7 @@ struct RecoveryHeroCard: View {
     let recoveryLabel: String
     let dayType: String
     let scoreChangeFromLastWeek: Int?
+    var hasLiveReadiness: Bool = true
     var onTap: (() -> Void)? = nil
 
     @State private var appeared = false
@@ -36,7 +37,7 @@ struct RecoveryHeroCard: View {
                 // Score ring — hero size
                 HealthScoreRing(
                     score: score,
-                    label: "Recovery",
+                    label: hasLiveReadiness ? "Recovery" : "Health",
                     size: 120,
                     lineWidth: 12
                 )
@@ -76,8 +77,12 @@ struct RecoveryHeroCard: View {
                         .padding(.vertical, 5)
                         .background(scoreColor.opacity(DS.badgeBg), in: Capsule())
 
-                    // Daily baseline reference
-                    if let daily = dailyScore, daily != score {
+                    // Daily baseline reference / fallback hint
+                    if !hasLiveReadiness {
+                        Text("Wear Apple Watch for recovery data")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    } else if let daily = dailyScore, daily != score {
                         Text("Daily baseline: \(daily)")
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
@@ -105,7 +110,7 @@ struct RecoveryHeroCard: View {
         )
         .shadow(color: scoreColor.opacity(0.15), radius: 12, y: 4)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Recovery score \(score). \(recoveryLabel). \(dayType).")
+        .accessibilityLabel("\(hasLiveReadiness ? "Recovery" : "Health") score \(score). \(recoveryLabel). \(dayType).")
         .accessibilityHint("Opens score breakdown")
         .accessibilityIdentifier("home.recoveryCard")
     }

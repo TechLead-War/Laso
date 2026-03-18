@@ -514,7 +514,7 @@ final class DecisionPolicyEngine {
             let pct = Int(abs(bl.deviationPercent(for: current)))
             guard pct >= 10 else { return "" }
             let dir = current < bl.mean ? "below" : "above"
-            return " (\(metric.formatValue(current)) \(metric.unit) is \(pct)% \(dir) your \(metric.formatValue(bl.mean)) baseline)"
+            return " (\(metric.formatValue(current)) \(metric.unit) is \(pct)% \(dir) your \(metric.formatValue(bl.mean)) \(metric.unit) baseline)"
         }
 
         let title: String
@@ -523,7 +523,7 @@ final class DecisionPolicyEngine {
             if let current = currentValue, let bl = baseline, bl.mean > 0 {
                 let deficit = bl.mean - current
                 if deficit > 0 {
-                    title = "Your sleep is averaging \(metric.formatValue(current))h — \(String(format: "%.1f", deficit))h below your \(metric.formatValue(bl.mean))h baseline"
+                    title = "Your sleep is averaging \(metric.formatValue(current)) \(metric.unit) — \(String(format: "%.1f", deficit)) \(metric.unit) below your \(metric.formatValue(bl.mean)) \(metric.unit) baseline"
                 } else {
                     title = "Your sleep metrics shifted from baseline" + deviationContext()
                 }
@@ -532,7 +532,7 @@ final class DecisionPolicyEngine {
             }
         case .sleepLater:
             if let current = currentValue, let bl = baseline, bl.mean > 0 {
-                title = "Your sleep has been averaging \(metric.formatValue(current))h vs your \(metric.formatValue(bl.mean))h baseline"
+                title = "Your sleep has been averaging \(metric.formatValue(current)) \(metric.unit) vs your \(metric.formatValue(bl.mean)) \(metric.unit) baseline"
             } else {
                 title = "Your sleep metrics suggest a deficit"
             }
@@ -540,9 +540,9 @@ final class DecisionPolicyEngine {
             if let bl = baseline, bl.mean > 0 {
                 let targetHrs = bl.mean + 0.5
                 if let current = currentValue, current < bl.mean {
-                    title = "Your sleep is averaging \(metric.formatValue(current))h — aim for \(String(format: "%.1f", targetHrs))h to exceed your \(String(format: "%.1f", bl.mean))h baseline"
+                    title = "Your sleep is averaging \(metric.formatValue(current)) \(metric.unit) — aim for \(String(format: "%.1f", targetHrs)) \(metric.unit) to exceed your \(String(format: "%.1f", bl.mean)) \(metric.unit) baseline"
                 } else {
-                    title = "Your sleep baseline is \(String(format: "%.1f", bl.mean))h — target \(String(format: "%.1f", targetHrs))h for optimal recovery"
+                    title = "Your sleep baseline is \(String(format: "%.1f", bl.mean)) \(metric.unit) — target \(String(format: "%.1f", targetHrs)) \(metric.unit) for optimal recovery"
                 }
             } else {
                 title = "Your sleep metrics are below baseline"
@@ -556,7 +556,7 @@ final class DecisionPolicyEngine {
             }
         case .reduceEvening:
             if let current = currentValue, let bl = baseline, bl.mean > 0 {
-                title = "Your evening \(metric.displayName.lowercased()) is at \(metric.formatValue(current)) \(metric.unit) vs \(metric.formatValue(bl.mean)) baseline"
+                title = "Your evening \(metric.displayName.lowercased()) is at \(metric.formatValue(current)) \(metric.unit) vs \(metric.formatValue(bl.mean)) \(metric.unit) baseline"
             } else {
                 title = "Your evening metrics are off baseline"
             }
@@ -579,19 +579,19 @@ final class DecisionPolicyEngine {
             }
         case .reduceExercise:
             if let current = currentValue, let bl = baseline, bl.mean > 0 {
-                title = "Your \(metric.displayName.lowercased()) is \(Int(abs(bl.deviationPercent(for: current))))% off baseline (\(metric.formatValue(current)) vs \(metric.formatValue(bl.mean)) \(metric.unit))"
+                title = "Your \(metric.displayName.lowercased()) is \(Int(abs(bl.deviationPercent(for: current))))% off baseline (\(metric.formatValue(current)) \(metric.unit) vs \(metric.formatValue(bl.mean)) \(metric.unit))"
             } else {
                 title = "Your recovery metrics are below baseline"
             }
         case .shiftCaffeineTiming:
             if let current = currentValue, let bl = baseline, bl.mean > 0 {
-                title = "Your \(metric.displayName.lowercased()) is \(metric.formatValue(current)) \(metric.unit) — baseline is \(metric.formatValue(bl.mean))"
+                title = "Your \(metric.displayName.lowercased()) is \(metric.formatValue(current)) \(metric.unit) — baseline is \(metric.formatValue(bl.mean)) \(metric.unit)"
             } else {
                 title = "Your sleep-related metrics shifted from baseline"
             }
         case .reduceCaffeine:
             if let current = currentValue, let bl = baseline {
-                title = "Your \(metric.displayName.lowercased()) is at \(metric.formatValue(current)) \(metric.unit) — baseline is \(metric.formatValue(bl.mean))"
+                title = "Your \(metric.displayName.lowercased()) is at \(metric.formatValue(current)) \(metric.unit) — baseline is \(metric.formatValue(bl.mean)) \(metric.unit)"
             } else {
                 title = "Your caffeine-related metrics are off baseline"
             }
@@ -599,7 +599,7 @@ final class DecisionPolicyEngine {
             if let current = currentValue, let bl = baseline, metric == .heartRateVariability {
                 let diff = Int(bl.mean - current)
                 if diff > 5 {
-                    title = "Your HRV is \(diff) \(metric.unit) below baseline (\(metric.formatValue(current)) vs \(metric.formatValue(bl.mean)))"
+                    title = "Your HRV is \(diff) \(metric.unit) below baseline (\(metric.formatValue(current)) \(metric.unit) vs \(metric.formatValue(bl.mean)) \(metric.unit))"
                 } else {
                     title = "Your HRV is near baseline at \(metric.formatValue(current)) \(metric.unit)"
                 }
@@ -614,13 +614,13 @@ final class DecisionPolicyEngine {
             }
         case .adjustMealTiming:
             if let current = currentValue, let bl = baseline, bl.mean > 0 {
-                title = "Your \(metric.displayName.lowercased()) is at \(metric.formatValue(current)) \(metric.unit) — baseline is \(metric.formatValue(bl.mean))"
+                title = "Your \(metric.displayName.lowercased()) is at \(metric.formatValue(current)) \(metric.unit) — baseline is \(metric.formatValue(bl.mean)) \(metric.unit)"
             } else {
                 title = "Your sleep metrics suggest a digestion-related pattern"
             }
         case .hydration:
             if let bl = baseline, let current = currentValue {
-                title = "Your hydration-related \(metric.displayName.lowercased()) is at \(metric.formatValue(current)) — baseline is \(metric.formatValue(bl.mean)) \(metric.unit)"
+                title = "Your hydration-related \(metric.displayName.lowercased()) is at \(metric.formatValue(current)) \(metric.unit) — baseline is \(metric.formatValue(bl.mean)) \(metric.unit)"
             } else if let bl = baseline {
                 title = "Your hydration baseline is \(metric.formatValue(bl.mean)) \(metric.unit)"
             } else {
@@ -644,13 +644,13 @@ final class DecisionPolicyEngine {
             }
         case .reduceSteps:
             if let current = currentValue, let bl = baseline, current > bl.mean * 1.3 {
-                title = "Your activity is at \(metric.formatValue(current)) — \(Int(bl.deviationPercent(for: current)))% above your \(metric.formatValue(bl.mean)) baseline"
+                title = "Your activity is at \(metric.formatValue(current)) \(metric.unit) — \(Int(bl.deviationPercent(for: current)))% above your \(metric.formatValue(bl.mean)) \(metric.unit) baseline"
             } else {
                 title = "Your activity metrics are elevated above baseline"
             }
         case .napRecommendation:
             if let current = currentValue, let bl = baseline, bl.mean > 0 {
-                title = "Your sleep deficit is \(metric.formatValue(abs(bl.mean - current)))h below your \(metric.formatValue(bl.mean))h baseline"
+                title = "Your sleep deficit is \(metric.formatValue(abs(bl.mean - current))) \(metric.unit) below your \(metric.formatValue(bl.mean)) \(metric.unit) baseline"
             } else {
                 title = "Your sleep metrics indicate a deficit"
             }
@@ -694,7 +694,7 @@ final class DecisionPolicyEngine {
                 } else {
                     parts.append(
                         "Your \(metric.displayName.lowercased()) is \(metric.formatValue(current)) \(metric.unit)"
-                        + " (near your \(metric.formatValue(bl.mean)) baseline)."
+                        + " (near your \(metric.formatValue(bl.mean)) \(metric.unit) baseline)."
                     )
                 }
             } else {

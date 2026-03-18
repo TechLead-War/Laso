@@ -56,14 +56,17 @@ final class HealthStateClassifier {
     /// Forward-backward posterior probabilities per time step: T x K
     private var smoothedPosteriors: [[Double]] = []
 
-    /// State schema version — increments on retrain
-    private(set) var stateSchemaVersion: Int = 0
-    /// Mapping from old state labels to new state labels after retrain
-    private var oldToNewStateMap: [String: String] = [:]
-    /// Previous centroids for computing old-to-new state mapping
+    /// Previous centroids for state versioning across retrains
     private var previousCentroids: [[Double]] = []
     /// Previous labels corresponding to previousCentroids
     private var previousLabels: [String] = []
+    /// Mapping from old state labels to new state labels after retrain
+    private var oldToNewStateMap: [String: String] = [:]
+    /// Schema version counter, incremented each retrain
+    private var stateSchemaVersion: Int = 0
+
+    /// Apple Neural Engine (CoreML) Pipeline
+    private let coreMLEngine = CoreMLEngine()
 
     /// Laplace smoothing parameter for HMM transition matrix (adaptive: 1/k at train time)
 
@@ -344,8 +347,35 @@ final class HealthStateClassifier {
 
     // MARK: - Classification
 
-    /// Classify a single day into a health state using soft GMM assignment
+    /// Classify a single day into a health state using CoreML (Primary) or soft GMM assignment (Fallback)
     func classify(vector: DailyFeatureVector) -> HealthState? {
+        // 1. CoreML Neural Inference (Primary Engine)
+        if coreMLEngine.isAvailable {
+            do {
+                let riskScore = try coreMLEngine.predictRisk(vector: vector, orderedKeys: trainedKeys)
+                
+                // Construct a Neural-assigned state representation
+                // In a full implementation, we would extract the ML feature matrix and clustering
+                // explicitly from `coreml_classifier`. We use the Risk Score for direct narrative here.
+                let stateLabel: String
+                if riskScore > 0.75 { stateLabel = "Stressed" }
+                else if riskScore > 0.5 { stateLabel = "Fatigued" }
+                else if riskScore < 0.2 { stateLabel = "Peak Performance" }
+                else { stateLabel = "Recovery" }
+                
+                return HealthState(
+                    label: stateLabel,
+                    centroid: [],
+                    characteristics: [HealthState.StateCharacteristic(metric: .heartRateVariability, level: riskScore > 0.5 ? .low : .high, zScore: riskScore)],
+                    daysInState: 1,
+                    transitionProbabilities: [:]
+                )
+            } catch {
+                print("[HealthStateClassifier] CoreML inference failed. Falling back to GMM. Error: \(error)")
+            }
+        }
+        
+        // 2. GMM Fallback
         guard !means.isEmpty, numComponents > 0 else { return nil }
 
         // Use training-derived medians for missing values (consistent with train-time imputation)

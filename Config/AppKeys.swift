@@ -62,6 +62,9 @@ enum AppKeys {
         static let healthFocuses     = "healthpulse.healthFocuses"
         static let progressiveCoachState = "healthpulse.progressiveCoachState"
         static let primaryDevice         = "healthpulse.primaryDevice"
+        static let cachedDailyAction     = "healthpulse.cachedDailyAction"
+        static let cachedDeviceSources   = "Laso.DeviceSource.cachedDevices"
+        static let deviceSourceScanDate  = "Laso.DeviceSource.lastScanDate"
     }
 
     // MARK: - Intent Cache (lightweight, non-sensitive — used by Siri shortcuts)
@@ -111,6 +114,14 @@ enum AppKeys {
         static let cachedTimestamp = "laso.readiness.cached_timestamp"
     }
 
+    // MARK: - Referral
+
+    enum Referral {
+        static let code         = "laso.referral.code"
+        static let redeemedCode = "laso.referral.redeemed_code"
+        static let freeUntil    = "laso.referral.free_until"
+    }
+
     // MARK: - Backup
 
     enum Backup {
@@ -125,6 +136,16 @@ enum AppKeys {
         /// e.g. `AppKeys.Notifications.alertCooldownPrefix + identifier`.
         static let alertCooldownPrefix = "healthpulse.alertCooldown."
         static let notificationLog     = "healthpulse.notificationLog"
+    }
+
+    // MARK: - Engagement Sequence
+
+    enum Engagement {
+        static let lastScheduledDay  = "laso.engagement.last_scheduled_day"
+        static let sequenceCompleted = "laso.engagement.sequence_completed"
+        static let detectedWakeHour  = "laso.engagement.detected_wake_hour"
+        static let detectedWakeMinute = "laso.engagement.detected_wake_minute"
+        static let wakeTimeSource    = "laso.engagement.wake_time_source"
     }
 
     // MARK: - User Profile
@@ -184,9 +205,40 @@ enum AppKeys {
         static let lastCycleComputed = "laso.cycle.last_computed"
     }
 
+    // MARK: - Widget (App Group UserDefaults)
+
+    enum Widget {
+        static let readiness    = "laso.widget.readiness"
+        static let sleep        = "laso.widget.sleep"
+        static let action       = "laso.widget.action"
+        static let intelligence = "laso.widget.intelligence"
+        static let recoveryDebt = "laso.widget.recoveryDebt"
+        static let lastUpdate   = "laso.widget.lastUpdate"
+    }
+
     // MARK: - Data Retention
 
     enum Retention {
         static let lastPruneDate = "laso.retention.last_prune_date"
+    }
+
+    // MARK: - Morning Check-In
+
+    enum CheckIn {
+        static let history    = "laso.morning_checkin.history"
+        static let lastDate   = "laso.morning_checkin.last_date"
+    }
+
+    // MARK: - Activation Sequence
+
+    enum Activation {
+        static let state = "laso.activation.state"
+    }
+
+    // MARK: - Circadian Health
+
+    enum Circadian {
+        static let lastScore      = "laso.circadian.last_score"
+        static let lastComputeDate = "laso.circadian.last_compute_date"
     }
 }

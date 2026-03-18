@@ -21,6 +21,7 @@ enum AppConstants {
         static let triagePrefix = "healthpulse.triage."
         static let reversalPrefix = "healthpulse.reversal."
         static let celebrationPrefix = "healthpulse.celebration."
+        static let engagementPrefix = "healthpulse.engagement."
     }
 
     // MARK: - Notification Names (NotificationCenter)

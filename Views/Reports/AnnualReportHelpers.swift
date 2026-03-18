@@ -26,9 +26,9 @@ enum AnnualReportHelpers {
     }
 
     static func formatHours(_ hours: Double) -> String {
-        if hours >= 1000 { return "\(Int(hours / 100) * 100)" }
-        if hours >= 100 { return "\(Int(hours))" }
-        return String(format: "%.0f", hours)
+        if hours >= 1000 { return "\(Int(hours / 100) * 100)h" }
+        if hours >= 100 { return "\(Int(hours))h" }
+        return String(format: "%.0fh", hours)
     }
 
     static func formatDistance(_ km: Double) -> String {

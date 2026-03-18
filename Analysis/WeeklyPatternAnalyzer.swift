@@ -68,8 +68,8 @@ struct WeeklyPatternAnalyzer {
             return Insight(
                 metric: entry.metric,
                 title: "Weakest Day: \(weakestName)",
-                summary: "\(weakestName) is your least active day with \(String(format: "%.0f", weakest.avg)) avg \(entry.label) — \(String(format: "%.0f", deficit))% below your daily average. \(strongestName) is your strongest (\(String(format: "%.0f", strongest.avg))).",
-                recommendation: "\(weakestName) averages \(String(format: "%.0f", weakest.avg)) \(entry.label) — \(String(format: "%.0f", deficit))% below your daily mean of \(String(format: "%.0f", overallAvg)). Your strongest day is \(strongestName) at \(String(format: "%.0f", strongest.avg)).",
+                summary: "\(weakestName) is your least active day with \(entry.metric.formatWithUnit(weakest.avg)) avg — \(String(format: "%.0f", deficit))% below your daily average. \(strongestName) is your strongest (\(entry.metric.formatWithUnit(strongest.avg))).",
+                recommendation: "\(weakestName) averages \(entry.metric.formatWithUnit(weakest.avg)) — \(String(format: "%.0f", deficit))% below your daily mean of \(entry.metric.formatWithUnit(overallAvg)). Your strongest day is \(strongestName) at \(entry.metric.formatWithUnit(strongest.avg)).",
                 severity: deficit >= 25 ? .warning : .info,
                 trend: .stable,
                 currentValue: weakest.avg,
@@ -86,11 +86,11 @@ struct WeeklyPatternAnalyzer {
 
     private static func analyzeWeekendGap(timeSeries: [HealthMetric: MetricTimeSeries]) -> Insight? {
         // Check multiple metrics for weekend gaps
-        let metricsToCheck: [(metric: HealthMetric, label: String, unit: String)] = [
-            (.steps, "steps", "steps"),
-            (.exerciseMinutes, "exercise", "min"),
-            (.activeCalories, "active calories", "cal"),
-            (.sleepDuration, "sleep", "hrs")
+        let metricsToCheck: [(metric: HealthMetric, label: String)] = [
+            (.steps, "steps"),
+            (.exerciseMinutes, "exercise"),
+            (.activeCalories, "active calories"),
+            (.sleepDuration, "sleep")
         ]
 
         for entry in metricsToCheck {
@@ -135,10 +135,10 @@ struct WeeklyPatternAnalyzer {
             return Insight(
                 metric: entry.metric,
                 title: "\(entry.metric.displayName): Weekday vs Weekend",
-                summary: "Your \(entry.label) is \(String(format: "%.0f", abs(gap)))% higher on \(moreActive). Weekday avg: \(String(format: "%.0f", weekdayAvg)) \(entry.unit), weekend avg: \(String(format: "%.0f", weekendAvg)) \(entry.unit).",
+                summary: "Your \(entry.label) is \(String(format: "%.0f", abs(gap)))% higher on \(moreActive). Weekday avg: \(entry.metric.formatWithUnit(weekdayAvg)), weekend avg: \(entry.metric.formatWithUnit(weekendAvg)).",
                 recommendation: gap > 20 ?
-                    "Weekend \(entry.label) averages \(String(format: "%.0f", weekendAvg)) \(entry.unit) vs \(String(format: "%.0f", weekdayAvg)) \(entry.unit) on weekdays — a \(String(format: "%.0f", abs(gap)))% gap." :
-                    "Weekday avg: \(String(format: "%.0f", weekdayAvg)) \(entry.unit), weekend avg: \(String(format: "%.0f", weekendAvg)) \(entry.unit) — \(String(format: "%.0f", abs(gap)))% difference.",
+                    "Weekend \(entry.label) averages \(entry.metric.formatWithUnit(weekendAvg)) vs \(entry.metric.formatWithUnit(weekdayAvg)) on weekdays — a \(String(format: "%.0f", abs(gap)))% gap." :
+                    "Weekday avg: \(entry.metric.formatWithUnit(weekdayAvg)), weekend avg: \(entry.metric.formatWithUnit(weekendAvg)) — \(String(format: "%.0f", abs(gap)))% difference.",
                 severity: abs(gap) >= 30 ? .warning : .info,
                 trend: .stable,
                 currentValue: weekendAvg,

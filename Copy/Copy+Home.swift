@@ -39,6 +39,7 @@ extension Copy {
         // MARK: - Primary Action
 
         static let todaysAction = "Today's Action"
+        static let bodyIntelligence = "Body Intelligence"
 
         // MARK: - Early Warning
 
@@ -145,6 +146,10 @@ extension Copy {
             static let restingHRName = "Resting Heart Rate"
             static let restingHRDetail = "Lower resting HR means your heart is recovering well."
 
+            // Refresh timing
+            static let whenItUpdatesTitle = "When does it update?"
+            static let whenItUpdatesBody = "Your Recovery score recalculates each morning using overnight data. Wear your Apple Watch to sleep and open the app after waking up to see your latest score. It typically takes 1\u{2013}3 days of consistent overnight wear before changes in your routine show up in the score."
+
             // Baseline callout
             static let baselineCallout = "This score compares you to yourself \u{2014} not world averages. As we learn your patterns, it becomes more accurate."
 
@@ -160,6 +165,8 @@ extension Copy {
             static let hrvDetail = "Higher HRV means better recovery and lower stress."
             static let restingHRName = "Resting Heart Rate"
             static let restingHRDetail = "Lower resting HR means your heart is recovering well."
+            static let whenItUpdatesTitle = "When does it update?"
+            static let whenItUpdatesBody = "Your Recovery score recalculates each morning using overnight data. It typically takes 1\u{2013}3 days of consistent overnight wear before changes in your routine show up in the score."
         }
     }
 }

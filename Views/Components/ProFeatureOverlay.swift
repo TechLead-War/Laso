@@ -47,7 +47,7 @@ struct ProFeatureOverlay: View {
                 AppAnalytics.shared.trackPremiumFeatureAttempted(feature: feature, screen: .proOverlay)
                 AppAnalytics.shared.trackProFeatureFunnel(feature: feature, step: "upgrade_tapped")
                 // PostHog: Track upgrade intent (high-value conversion signal)
-                PostHogManager.shared.capture(event: "pro_feature_upgrade_tapped", properties: [
+                PostHogManager.shared.capture(event: "pro_overlay_upgrade_tapped", properties: [
                     "feature_name": feature,
                 ])
                 showPaywall = true

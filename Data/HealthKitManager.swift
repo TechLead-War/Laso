@@ -97,6 +97,11 @@ final class HealthKitManager {
         let totalRequested = readTypes.count
 
         do {
+            await MainActor.run {
+                AppAnalytics.shared.trackHealthPermissionRequested(
+                    metrics: HealthMetric.allCases.map(\.rawValue) + ["menstrual_flow", "electrocardiogram"]
+                )
+            }
             try await healthStore.requestAuthorization(toShare: writeTypes, read: readTypes)
             isAuthorized = true
             await MainActor.run { AppAnalytics.shared.trackHealthPermissionResult(granted: totalRequested, denied: 0, total: totalRequested) }
@@ -113,8 +118,8 @@ final class HealthKitManager {
         isLoading = true
         defer { isLoading = false }
 
-        let endDate = Date()
-        let startDate = endDate.daysAgo(days)
+        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Date())) ?? Date()
+        let startDate = Date().daysAgo(days)
 
         await withTaskGroup(of: (HealthMetric, MetricTimeSeries?).self) { group in
             for metric in HealthMetric.allCases {
@@ -138,6 +143,7 @@ final class HealthKitManager {
     @discardableResult
     func loadAndSync(store: HealthDataStore) async -> SyncResult {
         let syncStartTime = Date()
+        let previousRefresh = lastRefresh
         isLoading = true
         syncProgress = SyncProgress(
             phase: .preparing,
@@ -156,7 +162,8 @@ final class HealthKitManager {
 
         let syncDates = store.allSyncDates()
         let isFirstSync = syncDates.isEmpty
-        let endDate = Date()
+        // Use start-of-tomorrow so daily statistics buckets always include today's partial data
+        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Date())) ?? Date()
         syncProgress?.phase = .fetching
 
         var newData: [(HealthMetric, MetricTimeSeries)] = []
@@ -231,6 +238,13 @@ final class HealthKitManager {
             samplesLoaded: persisted.totalChangedSamples,
             isIncremental: !isFirstSync
         )
+        AppAnalytics.shared.trackDataPipelineQuality(
+            metricsAvailable: fetchedMetrics.count,
+            metricsMissing: max(HealthMetric.allCases.count - fetchedMetrics.count, 0),
+            dataCoveragePercent: (fetchedMetrics.count * 100) / max(HealthMetric.allCases.count, 1),
+            lastSyncAgeSec: previousRefresh.map { Int(syncStartTime.timeIntervalSince($0)) } ?? -1,
+            hasEnoughForScore: fetchedMetrics.count >= 8
+        )
 
         // Activation: first data load + time-to-first-value
         if !persisted.metricsWithChanges.isEmpty {
@@ -252,29 +266,24 @@ final class HealthKitManager {
         store: HealthDataStore,
         endDate: Date
     ) -> PersistedSyncSummary {
-        var metricsWithChanges = Set<HealthMetric>()
-        var totalInsertedSamples = 0
-        var totalChangedSamples = 0
-
-        for (metric, series) in newData {
-            let saveResult = store.saveSamples(series.samples, for: metric)
-            if saveResult.hasChanges {
-                metricsWithChanges.insert(metric)
-            }
-            totalInsertedSamples += saveResult.insertedCount
-            totalChangedSamples += saveResult.changedSampleCount
+        guard let context = store.modelContext else {
+            return PersistedSyncSummary(metricsWithChanges: [], totalInsertedSamples: 0, totalChangedSamples: 0)
         }
 
-        // Metrics that fetched successfully but had no samples still need sync advancement.
-        let metricsWithFetchedSamples = Set(newData.map { $0.0 })
-        for metric in fetchedMetrics.subtracting(metricsWithFetchedSamples) {
-            store.markSyncCompleted(for: metric, at: endDate)
-        }
+        let batchResult = HealthDataBatchWriter.persistAll(
+            newData: newData,
+            fetchedMetrics: fetchedMetrics,
+            context: context,
+            endDate: endDate
+        )
+
+        // Invalidate in-memory caches so future reads pick up the new data
+        store.invalidateTimeSeriesCache()
 
         return PersistedSyncSummary(
-            metricsWithChanges: metricsWithChanges,
-            totalInsertedSamples: totalInsertedSamples,
-            totalChangedSamples: totalChangedSamples
+            metricsWithChanges: batchResult.metricsWithChanges,
+            totalInsertedSamples: batchResult.totalInsertedSamples,
+            totalChangedSamples: batchResult.totalChangedSamples
         )
     }
 
@@ -365,6 +374,9 @@ final class HealthKitManager {
                 limit: HKObjectQueryNoLimit,
                 sortDescriptors: [sort]
             ) { _, results, error in
+                if let error {
+                    PostHogManager.shared.captureError(error, context: "healthkit_fetch_menstrual")
+                }
                 guard let results = results as? [HKCategorySample], error == nil else {
                     continuation.resume(returning: [])
                     return
@@ -390,8 +402,8 @@ final class HealthKitManager {
         let config = HealthKitMetricRegistry.config(for: metric)
         guard let quantityType = config.quantityType else { return nil }
 
-        let endDate = Date()
-        let startDate = endDate.daysAgo(days)
+        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Date())) ?? Date()
+        let startDate = Date().daysAgo(days)
 
         return await withCheckedContinuation { continuation in
             var interval = DateComponents()
@@ -526,6 +538,9 @@ final class HealthKitManager {
                 limit: HKObjectQueryNoLimit,
                 sortDescriptors: [sort]
             ) { _, results, error in
+                if let error {
+                    PostHogManager.shared.captureError(error, context: "healthkit_fetch_raw_hr")
+                }
                 guard let results = results as? [HKQuantitySample], error == nil else {
                     continuation.resume(returning: [])
                     return
@@ -560,14 +575,18 @@ final class HealthKitManager {
                 intervalComponents: interval
             )
 
-            query.initialResultsHandler = { _, results, error in
+            query.initialResultsHandler = { [metric] _, results, error in
+                if let error {
+                    PostHogManager.shared.captureError(error, context: "healthkit_fetch_daily_stats", metadata: ["metric": metric.rawValue])
+                }
                 guard let results, error == nil else {
                     continuation.resume(returning: nil)
                     return
                 }
 
                 var samples: [MetricSample] = []
-                results.enumerateStatistics(from: startDate, to: endDate) { statistics, _ in
+                // Use midnight boundaries so daily buckets include today's partial data
+                results.enumerateStatistics(from: startDate.startOfDay, to: endDate) { statistics, _ in
                     let value: Double?
                     if config.statisticsOption == .cumulativeSum {
                         value = statistics.sumQuantity()?.doubleValue(for: config.unit)
@@ -600,7 +619,10 @@ final class HealthKitManager {
                 predicate: predicate,
                 limit: HKObjectQueryNoLimit,
                 sortDescriptors: [sort]
-            ) { _, results, error in
+            ) { [metric] _, results, error in
+                if let error {
+                    PostHogManager.shared.captureError(error, context: "healthkit_fetch_quantity", metadata: ["metric": metric.rawValue])
+                }
                 guard let results = results as? [HKQuantitySample], error == nil else {
                     continuation.resume(returning: nil)
                     return
@@ -635,7 +657,10 @@ final class HealthKitManager {
                 predicate: predicate,
                 limit: HKObjectQueryNoLimit,
                 sortDescriptors: [sort]
-            ) { _, results, error in
+            ) { [metric] _, results, error in
+                if let error {
+                    PostHogManager.shared.captureError(error, context: "healthkit_fetch_sleep", metadata: ["metric": metric.rawValue])
+                }
                 guard let results = results as? [HKCategorySample], error == nil else {
                     continuation.resume(returning: nil)
                     return
@@ -695,7 +720,10 @@ final class HealthKitManager {
                 predicate: predicate,
                 limit: HKObjectQueryNoLimit,
                 sortDescriptors: [sort]
-            ) { _, results, error in
+            ) { [metric] _, results, error in
+                if let error {
+                    PostHogManager.shared.captureError(error, context: "healthkit_fetch_workouts", metadata: ["metric": metric.rawValue])
+                }
                 guard let workouts = results as? [HKWorkout], error == nil else {
                     continuation.resume(returning: nil)
                     return
@@ -764,8 +792,8 @@ final class HealthKitManager {
 
     @MainActor
     func refreshMetric(_ metric: HealthMetric, store: HealthDataStore) async {
-        let endDate = Date()
-        let startDate = endDate.daysAgo(365)
+        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Date())) ?? Date()
+        let startDate = Date().daysAgo(365)
         guard let series = await fetchMetric(metric, from: startDate, to: endDate) else { return }
         store.saveSamples(series.samples, for: metric)
         let reloaded = store.loadTimeSeries(for: metric)
@@ -785,6 +813,9 @@ final class HealthKitManager {
                 limit: HKObjectQueryNoLimit,
                 sortDescriptors: [sort]
             ) { _, results, error in
+                if let error {
+                    PostHogManager.shared.captureError(error, context: "healthkit_fetch_mindful")
+                }
                 guard let results = results as? [HKCategorySample], error == nil else {
                     continuation.resume(returning: nil)
                     return

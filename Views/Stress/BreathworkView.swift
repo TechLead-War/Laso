@@ -148,10 +148,13 @@ struct BreathworkView: View {
     @State private var showStopConfirmation = false
     @State private var selectedMood: PostSessionMood?
     @State private var phaseTransitionTrigger = false
+    @State private var sessionStartedAt: Date?
+    @State private var pauseCount = 0
+    @State private var didTrackCompletedSession = false
 
     @Environment(\.dismiss) private var dismiss
 
-    private var timer = Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()
+    private var timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
 
     private var accent: Color { selectedProtocol.accentColor }
 
@@ -188,6 +191,11 @@ struct BreathworkView: View {
             AppAnalytics.shared.trackFeatureOpen(.breathwork)
         }
         .onDisappear {
+            if sessionState == .complete {
+                trackCompletedSessionIfNeeded()
+            } else if sessionStartedAt != nil, sessionState == .active || sessionState == .paused {
+                endSession()
+            }
             AppAnalytics.shared.trackFeatureClose(.breathwork)
         }
         .alert("End Session?", isPresented: $showStopConfirmation) {
@@ -272,6 +280,8 @@ struct BreathworkView: View {
         let isSelected = selectedProtocol == proto
 
         return Button {
+            guard selectedProtocol != proto else { return }
+            AppAnalytics.shared.trackBreathworkProtocolSelected(proto)
             withAnimation(.easeInOut(duration: 0.25)) {
                 selectedProtocol = proto
             }
@@ -515,6 +525,7 @@ struct BreathworkView: View {
 
             // Done button
             Button {
+                trackCompletedSessionIfNeeded()
                 dismiss()
             } label: {
                 Text("Done")
@@ -567,10 +578,15 @@ struct BreathworkView: View {
     private func startSession() {
         let proto = selectedProtocol
         let firstPhase = proto.phases[0]
+        let cycleDuration = max(proto.phases.reduce(0.0) { $0 + proto.duration(for: $1) }, 1)
 
         sessionTimeRemaining = proto.sessionDuration
         currentPhase = firstPhase
         phaseTimeRemaining = proto.duration(for: firstPhase)
+        selectedMood = nil
+        pauseCount = 0
+        didTrackCompletedSession = false
+        sessionStartedAt = Date()
 
         // Animate circle to target scale
         withAnimation(.easeInOut(duration: proto.duration(for: firstPhase))) {
@@ -578,10 +594,17 @@ struct BreathworkView: View {
         }
 
         sessionState = .active
+        AppAnalytics.shared.trackBreathworkSessionStarted(proto, cycleCount: Int(proto.sessionDuration / cycleDuration))
+        AppAnalytics.shared.trackRecommendationStarted(type: "breathwork_session", metric: proto.subtitle)
+        BreathworkLiveActivityManager.shared.start(
+            protocol: proto,
+            phase: firstPhase,
+            sessionTimeRemaining: sessionTimeRemaining
+        )
     }
 
     private func tick() {
-        let dt = 0.05
+        let dt = 0.1
 
         phaseTimeRemaining -= dt
         sessionTimeRemaining -= dt
@@ -589,10 +612,7 @@ struct BreathworkView: View {
         // Session complete
         if sessionTimeRemaining <= 0 {
             sessionTimeRemaining = 0
-            withAnimation(.easeInOut(duration: 0.5)) {
-                sessionState = .complete
-                circleScale = 0.4
-            }
+            completeSession()
             return
         }
 
@@ -620,19 +640,100 @@ struct BreathworkView: View {
         withAnimation(.easeInOut(duration: duration)) {
             circleScale = nextPhase.targetScale
         }
+
+        BreathworkLiveActivityManager.shared.update(
+            protocol: selectedProtocol,
+            phase: nextPhase,
+            sessionTimeRemaining: sessionTimeRemaining,
+            isPaused: false
+        )
     }
 
     private func togglePause() {
         withAnimation(.easeInOut(duration: 0.3)) {
             sessionState = sessionState == .active ? .paused : .active
         }
+
+        if sessionState == .paused {
+            pauseCount += 1
+            AppAnalytics.shared.trackBreathworkSessionPaused(
+                selectedProtocol,
+                phase: currentPhase,
+                remainingSec: max(Int(ceil(sessionTimeRemaining)), 0),
+                pauseCount: pauseCount
+            )
+        } else {
+            AppAnalytics.shared.trackBreathworkSessionResumed(
+                selectedProtocol,
+                phase: currentPhase,
+                remainingSec: max(Int(ceil(sessionTimeRemaining)), 0),
+                pauseCount: pauseCount
+            )
+        }
+
+        BreathworkLiveActivityManager.shared.update(
+            protocol: selectedProtocol,
+            phase: currentPhase,
+            sessionTimeRemaining: sessionTimeRemaining,
+            isPaused: sessionState == .paused
+        )
     }
 
     private func endSession() {
+        let actualDurationSec = max(Int(selectedProtocol.sessionDuration - sessionTimeRemaining), 0)
+        if sessionStartedAt != nil {
+            AppAnalytics.shared.trackBreathworkSessionAbandoned(
+                selectedProtocol,
+                phase: currentPhase,
+                actualDurationSec: actualDurationSec,
+                pauseCount: pauseCount
+            )
+            AppAnalytics.shared.trackRecommendationSkipped(
+                type: "breathwork_session",
+                metric: selectedProtocol.subtitle,
+                reason: "abandoned"
+            )
+        }
         withAnimation(.easeInOut(duration: 0.4)) {
             sessionState = .idle
             circleScale = 0.4
         }
+        sessionStartedAt = nil
+        pauseCount = 0
+        BreathworkLiveActivityManager.shared.end(after: 0)
+    }
+
+    private func completeSession() {
+        withAnimation(.easeInOut(duration: 0.5)) {
+            sessionState = .complete
+            circleScale = 0.4
+        }
+        BreathworkLiveActivityManager.shared.end(after: 30)
+    }
+
+    private func trackCompletedSessionIfNeeded() {
+        guard !didTrackCompletedSession else { return }
+        didTrackCompletedSession = true
+
+        let actualDurationSec: Int
+        if let sessionStartedAt {
+            actualDurationSec = max(Int(Date().timeIntervalSince(sessionStartedAt)), 0)
+        } else {
+            actualDurationSec = Int(selectedProtocol.sessionDuration)
+        }
+
+        AppAnalytics.shared.trackBreathworkSessionCompleted(
+            selectedProtocol,
+            actualDurationSec: actualDurationSec,
+            pauseCount: pauseCount,
+            mood: selectedMood
+        )
+        AppAnalytics.shared.trackRecommendationCompleted(
+            type: "breathwork_session",
+            metric: selectedProtocol.subtitle,
+            delaySec: actualDurationSec
+        )
+        sessionStartedAt = nil
     }
 
     // MARK: - Helpers

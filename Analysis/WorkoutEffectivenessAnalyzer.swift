@@ -57,7 +57,7 @@ struct WorkoutEffectivenessAnalyzer {
         let trend: TrendDirection = weekWorkoutCounts.last ?? 0 >= weekWorkoutCounts.first ?? 0 ? .improving : .declining
 
         let weekBreakdown = weekWorkoutCounts.enumerated()
-            .map { "Week \($0.offset + 1): \($0.element)" }
+            .map { "Week \($0.offset + 1): \($0.element) day\($0.element == 1 ? "" : "s")" }
             .joined(separator: ", ")
 
         return Insight(
@@ -105,7 +105,7 @@ struct WorkoutEffectivenessAnalyzer {
                 weeklyAvgs.append(String(format: "%.1f", weekSamples.map(\.value).mean))
             }
         }
-        let weeklyProgression = weeklyAvgs.isEmpty ? "" : " Weekly VO2: \(weeklyAvgs.joined(separator: " \u{2192} "))."
+        let weeklyProgression = weeklyAvgs.isEmpty ? "" : " Weekly VO2: \(weeklyAvgs.joined(separator: " \u{2192} ")) \(HealthMetric.vo2Max.unit)."
 
         return Insight(
             metric: .vo2Max,

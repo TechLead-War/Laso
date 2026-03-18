@@ -306,6 +306,13 @@ final class RemoteConfigManager {
         boolValue(forKey: "free_year_active")
     }
 
+    // MARK: - Intelligence Notifications
+
+    /// Whether ML intelligence card notifications are enabled
+    var intelligenceNotificationsEnabled: Bool {
+        boolValue(forKey: "intelligence_notifications_enabled")
+    }
+
     // MARK: - Kill Switches
 
     /// Master kill switch — disables the entire app with a maintenance message
@@ -488,6 +495,9 @@ extension RemoteConfigManager {
         "retention_ecg_features_days":        730 as NSNumber,   // 2 years (clinical value)
         "retention_journal_entry_days":       365 as NSNumber,   // 1 year
         "retention_model_evaluation_days":    180 as NSNumber,   // 6 months
+
+        // Intelligence notifications
+        "intelligence_notifications_enabled": true as NSNumber,
 
         // Monetization
         "free_year_active":          true as NSNumber,

@@ -177,15 +177,15 @@ struct HTMLReportGenerator {
             </div>
             <div class="stats-grid">
                 <div class="stat-item">
-                    <div class="stat-value">\(String(format: "%.1f", stats.last ?? 0))</div>
+                    <div class="stat-value">\(String(format: "%.1f", stats.last ?? 0)) \(metric.unit)</div>
                     <div class="stat-label">Current</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value">\(String(format: "%.1f", mean))</div>
+                    <div class="stat-value">\(String(format: "%.1f", mean)) \(metric.unit)</div>
                     <div class="stat-label">Average</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value">\(String(format: "%.1f", stdDev))</div>
+                    <div class="stat-value">\(String(format: "%.1f", stdDev)) \(metric.unit)</div>
                     <div class="stat-label">Std Dev</div>
                 </div>
             </div>

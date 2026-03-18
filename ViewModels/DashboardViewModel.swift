@@ -482,6 +482,25 @@ final class DashboardViewModel {
     let vitalityScorer = VitalityScorer()
     let brainHealthScorer = BrainHealthScorer()
     let strainCoach = StrainCoach()
+    let todayIntelligenceEngine = TodayIntelligenceEngine()
+
+    /// Intelligence briefing cards — non-obvious findings from ML algorithms
+    @MainActor var intelligenceBriefing: [IntelligenceCard] = []
+
+    // MARK: - Research-Backed Feature State (Papers 1-10)
+
+    /// Personal health forecast cards (Paper 3: Conformal Prediction + Digital Twin)
+    @MainActor var healthForecasts: [MetricForecast] = []
+
+    /// Activation sequence state (Paper 8: 8-Day Hook Window)
+    @MainActor var activationState: ActivationSequenceManager.ActivationState = ActivationSequenceManager.loadState()
+    @MainActor var latestMilestoneEvent: ActivationSequenceManager.MilestoneEvent?
+
+    /// Circadian biomarkers (Paper 7: Chronomedicine)
+    @MainActor var circadianBiomarkers: CircadianHealthAnalyzer.CircadianBiomarkers?
+
+    /// Morning check-in adjustment applied to readiness (Paper 10: HRV + Subjective)
+    @MainActor var subjectiveReadinessAdjustment: Int = 0
 
     init(
         healthKitManager: HealthKitManager,
@@ -698,7 +717,11 @@ final class DashboardViewModel {
 
         // Mark analysis timestamp so subsequent no-change refreshes can skip
         lastAnalysisDate = Date()
-        await MainActor.run { invalidateDailyActionCache() }
+        await MainActor.run {
+            invalidateDailyActionCache()
+            refreshIntelligenceBriefing()
+            writeWidgetSnapshots()
+        }
 
         // Store current trends for next refresh comparison
         previousTrends = analysisEngine.trends.mapValues { $0.direction }
@@ -882,6 +905,7 @@ final class DashboardViewModel {
         guard runHousekeeping else { return }
 
         let periodSummary7d = await MainActor.run { self.periodSummary(for: .sevenDays) }
+        let currentIntelligence = await MainActor.run { self.intelligenceBriefing }
         await housekeepingService.perform(
             store: store,
             payload: DashboardHousekeepingService.Payload(
@@ -898,7 +922,8 @@ final class DashboardViewModel {
                 illnessWarningsCount: analysisEngine.illnessWarnings.count,
                 strainLabel: strainScorer.strainLabel,
                 scoreChangeFromYesterday: scores.cachedScoreChangeFromYesterday,
-                periodSummary: periodSummary7d
+                periodSummary: periodSummary7d,
+                intelligenceBriefing: currentIntelligence
             )
         )
     }
@@ -1332,6 +1357,120 @@ final class DashboardViewModel {
         _cachedDailyActionDate = nil
     }
 
+    // MARK: - Intelligence Briefing
+
+    /// Regenerate the intelligence briefing from current ML outputs.
+    @MainActor
+    func refreshIntelligenceBriefing() {
+        guard analysisEngine.mlOrchestrator.hasRunOnce else { return }
+        intelligenceBriefing = todayIntelligenceEngine.generateBriefing(
+            orchestrator: analysisEngine.mlOrchestrator,
+            baselines: analysisEngine.baselines,
+            trends: analysisEngine.trends,
+            timeSeries: healthKitManager.timeSeries,
+            liveHRV: nil,
+            liveRestingHR: nil,
+            sleepHours: 0,
+            deepSleepMinutes: 0,
+            exerciseMinutes: 0,
+            exerciseGoal: 30,
+            readinessScore: nil
+        )
+    }
+
+    /// Regenerate the intelligence briefing with live data from LiveViewModel.
+    @MainActor
+    func refreshIntelligenceBriefing(liveVM: LiveViewModel) {
+        guard analysisEngine.mlOrchestrator.hasRunOnce else { return }
+        intelligenceBriefing = todayIntelligenceEngine.generateBriefing(
+            orchestrator: analysisEngine.mlOrchestrator,
+            baselines: analysisEngine.baselines,
+            trends: analysisEngine.trends,
+            timeSeries: healthKitManager.timeSeries,
+            liveHRV: liveVM.recovery.latestHRV,
+            liveRestingHR: liveVM.recovery.latestRestingHeartRate,
+            sleepHours: liveVM.sleep.lastNightSleepDuration / 3600,
+            deepSleepMinutes: liveVM.sleep.lastNightDeepSleep / 60,
+            exerciseMinutes: liveVM.activity.todayExerciseMinutes,
+            exerciseGoal: liveVM.activity.exerciseGoal,
+            readinessScore: liveVM.recovery.readinessScore
+        )
+    }
+
+    // MARK: - Widget Snapshots
+
+    /// Write current analysis state to App Group UserDefaults for widgets.
+    @MainActor
+    func writeWidgetSnapshots() {
+        let score = overallScore.score
+        let grade = overallScore.grade
+
+        let readiness = WidgetReadinessSnapshot(
+            score: score,
+            grade: grade,
+            dayType: strainCoach.currentTarget?.zone.displayName ?? "Maintain",
+            updatedAt: Date()
+        )
+
+        // Sleep — pull from latest time series if available
+        let sleepSeries = healthKitManager.timeSeries[.sleepDuration]
+        let sleepHours = sleepSeries?.latestValue ?? 0
+        let sleep = WidgetSleepSnapshot(
+            hoursSlept: sleepHours,
+            deepMinutes: healthKitManager.timeSeries[.sleepDeep]?.latestValue ?? 0,
+            remMinutes: healthKitManager.timeSeries[.sleepREM]?.latestValue ?? 0,
+            quality: sleepHours >= 7 ? "Good" : sleepHours >= 6 ? "Fair" : "Low",
+            updatedAt: Date()
+        )
+
+        // Action — from daily action cache
+        let actionText = _cachedDailyAction
+        let action = actionText.map {
+            WidgetActionSnapshot(
+                headline: $0.title,
+                detail: $0.subtitle,
+                icon: $0.icon,
+                updatedAt: Date()
+            )
+        }
+
+        // Intelligence — top card
+        let intelligence = intelligenceBriefing.first.map {
+            WidgetIntelligenceSnapshot(
+                headline: $0.headline,
+                severityRaw: $0.severity.rawValue,
+                cardType: $0.type.rawValue,
+                updatedAt: Date()
+            )
+        }
+
+        // Recovery debt
+        let debtHours = sleepDebtTracker.currentDebt?.totalDebtHours ?? 0
+        let recoveryDebt = WidgetRecoveryDebtSnapshot(
+            debtHours: debtHours,
+            trend: debtHours < 1 ? "stable" : debtHours > 3 ? "worsening" : "improving",
+            detail: debtHours < 0.5 ? "Fully recovered" : String(format: "%.1fh deficit", debtHours),
+            updatedAt: Date()
+        )
+
+        WidgetDataStore.shared.writeAllSnapshots(
+            readiness: readiness,
+            sleep: sleep,
+            action: action,
+            intelligence: intelligence,
+            recoveryDebt: recoveryDebt
+        )
+        AppAnalytics.shared.trackWidgetSnapshotUpdated(
+            trigger: "analysis_refresh",
+            snapshotsWritten: [true, true, action != nil, intelligence != nil, true].filter { $0 }.count,
+            hasReadiness: true,
+            hasSleep: true,
+            hasAction: action != nil,
+            hasIntelligence: intelligence != nil,
+            hasRecoveryDebt: true
+        )
+    }
+
     // MARK: - Action Rotation (avoid repeating same action 3+ days)
 
     private static let recentActionKeysKey = "dailyAction_recentKeys"
@@ -1398,5 +1537,95 @@ final class DashboardViewModel {
         if averageChange > 2 { return .improving }
         if averageChange < -2 { return .declining }
         return .stable
+    }
+
+    // MARK: - Research-Backed Features
+
+    /// Refresh personal health forecasts from MLOrchestrator multi-horizon output (Paper 3)
+    @MainActor
+    func refreshHealthForecasts() {
+        healthForecasts = ForecastBuilder.buildForecasts(
+            multiHorizonForecasts: analysisEngine.mlOrchestrator.multiHorizonForecasts,
+            timeSeries: healthKitManager.timeSeries
+        )
+    }
+
+    /// Check and advance activation milestones (Paper 8)
+    @MainActor
+    func checkActivationMilestones() {
+        let orch = analysisEngine.mlOrchestrator
+        let newEvents = ActivationSequenceManager.checkMilestones(
+            state: &activationState,
+            metricsAvailable: healthKitManager.timeSeries.count,
+            hasBaselines: !analysisEngine.baselines.isEmpty,
+            hasTrends: !analysisEngine.trends.isEmpty,
+            hasCorrelations: !orch.mlCorrelations.isEmpty,
+            hasAnomalyDetection: orch.anomalyDetector.isReady,
+            hasPredictions: orch.tomorrowRiskPrediction != nil
+        )
+
+        if let latest = newEvents.last {
+            latestMilestoneEvent = latest
+            // Map activation sequence milestones to analytics milestones
+            switch latest.milestone {
+            case .firstCorrelation:
+                AppAnalytics.shared.trackActivationMilestone(.firstCorrelation)
+            case .firstPrediction:
+                AppAnalytics.shared.trackActivationMilestone(.firstPrediction)
+            case .fullUnlock:
+                AppAnalytics.shared.trackActivationMilestone(.fullCalibration)
+            default:
+                break // Other milestones tracked via activation state persistence
+            }
+        }
+    }
+
+    /// Compute circadian biomarkers from current time series (Paper 7)
+    @MainActor
+    func refreshCircadianBiomarkers() {
+        let context = AnalysisContext(
+            timeSeries: healthKitManager.timeSeries,
+            baselines: analysisEngine.baselines,
+            trends: analysisEngine.trends,
+            anomalies: []
+        )
+        circadianBiomarkers = CircadianHealthAnalyzer.computeBiomarkers(from: context)
+    }
+
+    /// Apply morning check-in to readiness scoring (Paper 10)
+    @MainActor
+    func applyMorningCheckIn(_ checkIn: MorningCheckIn) {
+        MorningCheckInManager.save(checkIn)
+        subjectiveReadinessAdjustment = checkIn.readinessAdjustment
+        AppAnalytics.shared.trackCoreAction(.completedMorningCheckIn, screen: .home)
+    }
+
+    /// Adjusted readiness score incorporating subjective data (Paper 10)
+    /// Falls back to overall score if no readiness is available.
+    @MainActor
+    var adjustedReadinessScore: Int {
+        let base = scores.overallScore.score
+        return max(0, min(100, base + subjectiveReadinessAdjustment))
+    }
+
+    /// Run NL health query (Papers 1 & 2: PHIA)
+    func queryHealthData(_ question: String) -> HealthDataQueryEngine.QueryResult {
+        analysisEngine.mlOrchestrator.healthDataQueryEngine.query(
+            question: question,
+            timeSeries: healthKitManager.timeSeries,
+            baselines: analysisEngine.baselines,
+            trends: analysisEngine.trends,
+            correlations: analysisEngine.mlOrchestrator.mlCorrelations,
+            forecasts: analysisEngine.mlOrchestrator.multiHorizonForecasts
+        )
+    }
+
+    /// Assess current receptivity for nudge delivery (Paper 5 & 6: JITAI)
+    func assessReceptivity(liveVM: LiveViewModel) -> ReceptivityEstimator.ReceptivityAssessment {
+        analysisEngine.mlOrchestrator.receptivityEstimator.assess(
+            currentHRV: liveVM.recovery.latestHRV,
+            recentStressLevel: liveVM.recovery.stressLevel.map { Double($0) / 100.0 },
+            lastAppOpenDate: Date()
+        )
     }
 }

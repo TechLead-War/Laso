@@ -16,6 +16,7 @@ final class DashboardHousekeepingService {
         let strainLabel: String
         let scoreChangeFromYesterday: Int?
         let periodSummary: DashboardViewModel.PeriodSummary
+        let intelligenceBriefing: [IntelligenceCard]
     }
 
     private let persistenceManager: PersistenceManager
@@ -150,6 +151,11 @@ final class DashboardHousekeepingService {
                     trends: payload.currentTrends,
                     timeSeries: payload.timeSeries,
                     previousTrends: payload.previousTrends,
+                    preferences: preferences
+                )
+
+                IntelligenceAlertEvaluator.evaluate(
+                    cards: payload.intelligenceBriefing,
                     preferences: preferences
                 )
             }
