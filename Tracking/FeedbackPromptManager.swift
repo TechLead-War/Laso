@@ -1,23 +1,30 @@
 import Foundation
 
-/// Manages the "ask for feedback after 5 days" logic.
-/// Uses UserDefaults only — no backend needed for scheduling.
+/// Feedback prompt cadence:
+/// - First prompt: 5 days after install.
+/// - If user skips: nag every 5 days until they submit.
+/// - If user submits: wait 30 days, then ask again (recurring).
+/// All intervals are tunable via Remote Config.
 final class FeedbackPromptManager {
     static let shared = FeedbackPromptManager()
 
     private let defaults = UserDefaults.standard
 
     private enum Key {
-        static let installDate = AppKeys.Lifecycle.installDate
-        static let lastPromptDate = AppKeys.Feedback.lastPromptDate
-        static let feedbackSubmitted = AppKeys.Feedback.submitted
+        static let installDate        = AppKeys.Lifecycle.installDate
+        static let lastPromptDate     = AppKeys.Feedback.lastPromptDate
+        static let feedbackSubmitted  = AppKeys.Feedback.submitted
+        static let lastSubmittedDate  = AppKeys.Feedback.lastSubmittedDate
     }
 
-    /// Default: re-ask every 30 days after the first prompt (if user skipped).
-    private var cooldownDays: Int { RemoteConfigManager.shared.feedbackCooldownDays }
-
-    /// Minimum days after install before showing the first prompt.
+    /// Days after install before showing the very first prompt.
     private var daysBeforeFirstPrompt: Int { RemoteConfigManager.shared.feedbackDaysBeforeFirstPrompt }
+
+    /// Cooldown after user submits feedback (default 30 days).
+    private var postSubmitCooldownDays: Int { RemoteConfigManager.shared.feedbackCooldownDays }
+
+    /// Nag interval when user keeps skipping (default 5 days).
+    private var nagIntervalDays: Int { RemoteConfigManager.shared.feedbackDaysBeforeFirstPrompt }
 
     private init() {}
 
@@ -38,27 +45,37 @@ final class FeedbackPromptManager {
 
         let daysSinceInstall = Calendar.current.dateComponents([.day], from: installDate, to: Date()).day ?? 0
 
-        // Too early
+        // Too early — wait at least daysBeforeFirstPrompt
         if daysSinceInstall < daysBeforeFirstPrompt {
             return false
         }
 
-        // Check cooldown from last prompt
-        if let lastPrompt = defaults.object(forKey: Key.lastPromptDate) as? Date {
-            let daysSinceLastPrompt = Calendar.current.dateComponents([.day], from: lastPrompt, to: Date()).day ?? 0
-            if daysSinceLastPrompt < cooldownDays {
-                return false
-            }
-        }
+        let hasSubmittedBefore = defaults.bool(forKey: Key.feedbackSubmitted)
 
-        return true
+        if hasSubmittedBefore {
+            // User has submitted before → wait postSubmitCooldownDays (30) from last submission
+            guard let lastSubmitted = defaults.object(forKey: Key.lastSubmittedDate) as? Date else {
+                // Submitted flag set but no date (legacy) — reset and re-ask
+                defaults.set(false, forKey: Key.feedbackSubmitted)
+                return true
+            }
+            let daysSinceSubmission = Calendar.current.dateComponents([.day], from: lastSubmitted, to: Date()).day ?? 0
+            return daysSinceSubmission >= postSubmitCooldownDays
+        } else {
+            // User has never submitted → nag every nagIntervalDays (5) from last prompt shown
+            guard let lastPrompt = defaults.object(forKey: Key.lastPromptDate) as? Date else {
+                // Never shown before — show now
+                return true
+            }
+            let daysSinceLastPrompt = Calendar.current.dateComponents([.day], from: lastPrompt, to: Date()).day ?? 0
+            return daysSinceLastPrompt >= nagIntervalDays
+        }
     }
 
     /// Mark that we showed the prompt (to enforce cooldown).
     func markPromptShown() {
         defaults.set(Date(), forKey: Key.lastPromptDate)
 
-        // Fire analytics event
         let daysSinceInstall: Int = {
             guard let installDate = defaults.object(forKey: Key.installDate) as? Date else { return 0 }
             return Calendar.current.dateComponents([.day], from: installDate, to: Date()).day ?? 0
@@ -68,9 +85,10 @@ final class FeedbackPromptManager {
         }
     }
 
-    /// Mark that user submitted feedback (for analytics).
+    /// Mark that user submitted feedback. Resets nag cycle, starts 30-day cooldown.
     func markFeedbackSubmitted() {
         defaults.set(true, forKey: Key.feedbackSubmitted)
+        defaults.set(Date(), forKey: Key.lastSubmittedDate)
     }
 
     /// Days since install (for metadata).
