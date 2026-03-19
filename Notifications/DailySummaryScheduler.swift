@@ -6,8 +6,7 @@ struct DailySummaryScheduler {
     private static let identifier = AppConstants.NotificationID.dailySummary
     private static let eveningIdentifier = AppConstants.NotificationID.eveningSummary
 
-    /// Schedule rich daily summary with score, anomalies, top insights, category breakdown,
-    /// specific anomaly callout, yesterday score delta, and streak.
+    /// Schedule rich daily summary with dynamic, varied copy and wake-time-aware scheduling.
     static func schedule(
         score: Int,
         anomalyCount: Int,
@@ -16,54 +15,48 @@ struct DailySummaryScheduler {
         preferences: NotificationPreferences,
         topAnomaly: (metricName: String, changePercent: Double)? = nil,
         scoreChangeFromYesterday: Int? = nil,
-        streakDays: Int = 0
+        streakDays: Int = 0,
+        improvingDays: Int = 0
     ) {
         guard preferences.dailySummaryEnabled else {
             NotificationManager.shared.cancelNotification(identifier: identifier)
             return
         }
 
-        let grade = gradeFor(score: score)
+        // Dynamic title — leads with the most interesting psychological hook
+        let title = Copy.Notifications.dynamicDailySummaryTitle(
+            score: score,
+            scoreDelta: scoreChangeFromYesterday,
+            streakDays: streakDays,
+            topAnomalyMetric: topAnomaly?.metricName,
+            topAnomalyPercent: topAnomaly?.changePercent,
+            improvingDays: improvingDays
+        )
 
-        // Title includes yesterday delta arrow when available
-        var titleSuffix = ""
-        if let delta = scoreChangeFromYesterday {
-            let arrow = delta > 0 ? "\u{2191}" : "\u{2193}"  // ↑ or ↓
-            titleSuffix = " \(arrow)\(abs(delta))"
-        }
-        let title = Copy.Notifications.dailySummaryTitle(score: score, grade: grade, suffix: titleSuffix)
+        // Read which hook category was chosen (set inside dynamicDailySummaryTitle)
+        let hookCategory = UserDefaults.standard.string(
+            forKey: AppKeys.Notifications.lastDailyHookCategory
+        )
 
-        var bodyParts: [String] = []
+        // Dynamic body — adds context without repeating the title
+        let topAction: String? = topInsights.first.map { firstSentence($0.recommendation) }
+        let dayOfWeek = Calendar.current.component(.weekday, from: Date())
 
-        // Specific anomaly callout
-        if let anomaly = topAnomaly {
-            let direction = anomaly.changePercent > 0 ? "up" : "down"
-            bodyParts.append(Copy.Notifications.anomalyCallout(metric: anomaly.metricName, direction: direction, percent: String(format: "%.0f", abs(anomaly.changePercent))))
-        } else if anomalyCount > 0 {
-            bodyParts.append(Copy.Notifications.metricsNeedAttention(anomalyCount))
-        } else {
-            bodyParts.append(Copy.Notifications.allMetricsHealthy)
-        }
+        let body = Copy.Notifications.dynamicDailySummaryBody(
+            score: score,
+            categoryBreakdown: categoryBreakdown,
+            topInsightAction: topAction,
+            streakDays: streakDays,
+            anomalyCount: anomalyCount,
+            topAnomalyMetric: topAnomaly?.metricName,
+            dayOfWeek: dayOfWeek
+        )
 
-        // Top insight action
-        if let top = topInsights.first {
-            let shortRec = firstSentence(top.recommendation)
-            bodyParts.append(Copy.Notifications.actionPrefix(shortRec))
-        }
-
-        // Streak mention
-        if streakDays > 1 {
-            bodyParts.append(Copy.Notifications.streakDays(streakDays))
-        }
-
-        // Category breakdown (compact)
-        if !categoryBreakdown.isEmpty {
-            bodyParts.append(categoryBreakdown)
-        }
-
-        let body = bodyParts.joined(separator: " ")
-
-        var dateComponents = preferences.dailySummaryTime
+        // Use detected wake-up time, fall back to user preference
+        let wakeTime = WakeUpTimeDetector.persistedWakeTime
+        var dateComponents = DateComponents()
+        dateComponents.hour = wakeTime.hour
+        dateComponents.minute = wakeTime.minute
         dateComponents.calendar = Calendar.current
 
         let trigger = UNCalendarNotificationTrigger(
@@ -76,7 +69,8 @@ struct DailySummaryScheduler {
             body: body,
             identifier: identifier,
             trigger: trigger,
-            maxPerDay: preferences.maxNotificationsPerDay
+            maxPerDay: preferences.maxNotificationsPerDay,
+            hookCategory: hookCategory
         )
     }
 

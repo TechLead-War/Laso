@@ -19,6 +19,15 @@ struct ExploreNeedsAttentionSection: View {
 
                     ForEach(Array(negativeFactors.prefix(3).enumerated()), id: \.offset) { _, factor in
                         Button {
+                            AppAnalytics.shared.trackBlockTap(
+                                title: factor.metric.displayName,
+                                type: .exploreNeedsAttentionMetric,
+                                screen: .explore,
+                                metadata: [
+                                    "metric_id": factor.metric.rawValue,
+                                    "impact": factor.impact
+                                ]
+                            )
                             onFactorTapped(factor)
                         } label: {
                             HStack(spacing: 10) {
@@ -57,6 +66,15 @@ struct ExploreNeedsAttentionSection: View {
                         HStack(spacing: 0) {
                             ForEach(weakCategories.prefix(4), id: \.category) { contrib in
                                 Button {
+                                    AppAnalytics.shared.trackBlockTap(
+                                        title: contrib.category.displayName,
+                                        type: .exploreWeakCategory,
+                                        screen: .explore,
+                                        metadata: [
+                                            "category": contrib.category.rawValue,
+                                            "score": contrib.score
+                                        ]
+                                    )
                                     onWeakCategoryTapped(contrib)
                                 } label: {
                                     VStack(spacing: 2) {

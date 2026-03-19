@@ -41,6 +41,49 @@ extension Copy {
         static let whatMatters = "What matters most to you?"
         static let focusSubtitle = "Pick your areas — those insights get prioritized first."
 
+        // MARK: - Connect Health (personalized)
+
+        static func personalizedConnectSubtitle(age: Int?) -> String {
+            guard let age else { return connectHealthDescription }
+            switch age {
+            case ..<25:
+                return "At your age, establishing health baselines early gives you a lifetime of personal insights."
+            case 25..<35:
+                return "In your late 20s and 30s, HRV and recovery patterns are especially revealing."
+            case 35..<45:
+                return "In your 40s, tracking heart health and recovery trends becomes increasingly valuable."
+            case 45..<55:
+                return "At your stage, monitoring heart, sleep, and mobility metrics reveals important trends."
+            default:
+                return "Your health data will be calibrated against norms for your age and profile."
+            }
+        }
+
+        // MARK: - Focus Confirmation
+
+        static let focusConfirmationTitle = "Here's what we'll focus on"
+
+        static func focusConfirmationItems(for focuses: Set<HealthFocus>) -> [(icon: String, text: String)] {
+            let effective = focuses.isEmpty ? Set(HealthFocus.allCases) : focuses
+            var items: [(String, String)] = []
+            if effective.contains(.sleep) {
+                items.append(("moon.fill", "Sleep stages, timing, and overnight recovery tracked nightly"))
+            }
+            if effective.contains(.fitness) {
+                items.append(("figure.run", "Steps, exercise, calories, and workout effectiveness analyzed daily"))
+            }
+            if effective.contains(.heartHealth) {
+                items.append(("heart.fill", "Resting heart rate, HRV, and cardio fitness monitored continuously"))
+            }
+            if effective.contains(.weightBody) {
+                items.append(("scalemass.fill", "Weight trends, body composition, and vitals tracked over time"))
+            }
+            if effective.contains(.recovery) {
+                items.append(("bolt.heart.fill", "Recovery scoring built from your heart rate and sleep patterns"))
+            }
+            return items
+        }
+
         // MARK: - Calibration
 
         static let calibratingTitle = "Calibrating Your Baseline"
@@ -60,6 +103,14 @@ extension Copy {
         static let currentlyProcessing = "Currently Processing"
         static let elapsed = "Elapsed"
         static let analyzingPatterns = "Analyzing Patterns"
+
+        // MARK: - Personalized Completion
+
+        static let yourHealthDecoded = "Your Health, Decoded"
+        static func dataSpanSubtitle(_ span: String) -> String {
+            "\(span) of health history analyzed"
+        }
+        static let noDataYetMessage = "No health data available yet — Laso will start building your baseline as data arrives."
 
         // MARK: - Siri
 

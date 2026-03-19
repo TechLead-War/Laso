@@ -6,6 +6,14 @@ struct ExploreHealthStateLinkSection: View {
 
     var body: some View {
         Button {
+            AppAnalytics.shared.trackBlockTap(
+                title: "Health States",
+                type: .exploreHealthStateLink,
+                screen: .explore,
+                metadata: [
+                    "has_current_state": currentHealthState != nil
+                ]
+            )
             onTapped()
         } label: {
             HStack(spacing: 12) {

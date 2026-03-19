@@ -41,6 +41,19 @@ struct LogWaterIntent: AppIntent {
 
         let success = await IntentDataProvider.logWater(liters: amount)
 
+        await MainActor.run {
+            AppAnalytics.shared.trackBlockTap(
+                title: "Log Water",
+                type: .siriShortcutPerformed,
+                screen: .home,
+                metadata: [
+                    "shortcut": "log_water",
+                    "amount_liters": amount,
+                    "success": success
+                ]
+            )
+        }
+
         if success {
             let mlAmount = Int(amount * 1000)
             let dialog = IntentDialog("Logged \(formatAmount(amount)) of water (\(mlAmount) mL) to Apple Health.")

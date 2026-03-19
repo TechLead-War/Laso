@@ -36,6 +36,7 @@ struct MorningCheckInView: View {
                 }
                 Spacer()
                 Button {
+                    AppAnalytics.shared.trackBlockTap(title: "Morning Check-In Dismissed", type: .smartAction, screen: .home, metadata: ["source": "morning_checkin", "completed": false])
                     onDismiss()
                 } label: {
                     Image(systemName: "xmark")
@@ -100,6 +101,9 @@ struct MorningCheckInView: View {
         )
         .padding(.horizontal)
         .animation(.snappy(duration: 0.25), value: isComplete)
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.home, metadata: ["subscreen": "morning_checkin"])
+        }
     }
 
     // MARK: - Row Builder
@@ -164,6 +168,8 @@ struct MorningCheckInView: View {
             energyLevel: energyLevel,
             soreness: soreness
         )
+        AppAnalytics.shared.trackCoreAction(.completedMorningCheckIn, screen: .home)
+        AppAnalytics.shared.trackBlockTap(title: "Morning Check-In Submitted", type: .smartAction, screen: .home, metadata: ["source": "morning_checkin", "sleep_quality": sleepQuality, "energy_level": energyLevel, "soreness": soreness])
         onComplete(checkIn)
     }
 }

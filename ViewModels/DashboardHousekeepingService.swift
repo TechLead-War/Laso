@@ -15,6 +15,7 @@ final class DashboardHousekeepingService {
         let illnessWarningsCount: Int
         let strainLabel: String
         let scoreChangeFromYesterday: Int?
+        let improvingDays: Int
         let periodSummary: DashboardViewModel.PeriodSummary
         let intelligenceBriefing: [IntelligenceCard]
     }
@@ -108,21 +109,16 @@ final class DashboardHousekeepingService {
         // (via NotificationManager.store), so run all scheduling on main actor.
         let streakDays = sessionTracker.streakDays
         await MainActor.run {
-            var optimizedPreferences = preferences
-            let notificationEvents = store.loadNotificationEvents(days: 30)
-            if notificationEvents.count >= 14 {
-                optimizedPreferences.dailySummaryTime.hour = NotificationOptimizer.optimalHour(events: notificationEvents)
-            }
-
             DailySummaryScheduler.schedule(
                 score: payload.currentScore,
                 anomalyCount: anomalyCount,
                 topInsights: Array(payload.insights.prefix(3)),
                 categoryBreakdown: categoryBreakdown,
-                preferences: optimizedPreferences,
+                preferences: preferences,
                 topAnomaly: topAnomaly,
                 scoreChangeFromYesterday: payload.scoreChangeFromYesterday,
-                streakDays: streakDays
+                streakDays: streakDays,
+                improvingDays: payload.improvingDays
             )
 
             DailySummaryScheduler.scheduleEvening(

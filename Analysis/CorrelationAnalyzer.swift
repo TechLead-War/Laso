@@ -161,15 +161,40 @@ struct CorrelationAnalyzer {
 
             let strengthLabel = Self.strengthLabel(for: abs(best.r))
 
+            // Build personalized labels using the user's actual data
+            let baseline = best.aligned.mean(of: \.valueA)
+            let personalCauseLabel = Self.personalizedCauseLabel(
+                metric: pair.metricA,
+                baseline: baseline
+            )
+            let personalEffectLabel = Self.personalizedEffectLabel(
+                metric: pair.metricB,
+                avgAbove: effectResult.avgBAbove,
+                avgBelow: effectResult.avgBBelow,
+                percentDiff: effectResult.percentDiff,
+                dayOffset: best.lag
+            )
+            let personalSummary = Self.personalizedSummary(
+                metricA: pair.metricA,
+                metricB: pair.metricB,
+                baseline: baseline,
+                avgBAbove: effectResult.avgBAbove,
+                avgBBelow: effectResult.avgBBelow,
+                percentDiff: effectResult.percentDiff,
+                dayOffset: best.lag,
+                sampleCount: best.aligned.count,
+                r: best.r
+            )
+
             results.append(HealthCorrelation(
                 metricA: pair.metricA,
                 metricB: pair.metricB,
                 correlation: best.r,
                 sampleCount: best.aligned.count,
                 strengthLabel: strengthLabel,
-                causeLabel: pair.causeLabel,
-                effectLabel: effectLabel,
-                effectSummary: effectResult.summary,
+                causeLabel: personalCauseLabel,
+                effectLabel: personalEffectLabel,
+                effectSummary: personalSummary,
                 effectPercentDiff: effectResult.percentDiff,
                 isPositive: best.r > 0,
                 dayOffset: best.lag,
@@ -181,25 +206,23 @@ struct CorrelationAnalyzer {
         return results.sorted { abs($0.correlation) > abs($1.correlation) }
     }
 
-    /// Generate top correlation insights with actionable, data-specific text
+    /// Generate top correlation insights with natural language text
     static func generateInsights(from correlations: [HealthCorrelation]) -> [Insight] {
-        let topResults = Array(correlations.prefix(3))
+        // Prioritize non-obvious correlations: cross-day > cross-category > same-category
+        let ranked = correlations.sorted { a, b in
+            let aScore = insightPriority(a)
+            let bScore = insightPriority(b)
+            return aScore > bScore
+        }
 
-        return topResults.map { result in
+        return Array(ranked.prefix(3)).map { result in
             let severity: Severity = abs(result.correlation) >= 0.5 ? .warning : .info
-            let formattedAbove = result.metricB.formatValue(result.avgBAbove)
-            let formattedBelow = result.metricB.formatValue(result.avgBBelow)
-            let diffPct = String(format: "%.0f", result.effectPercentDiff)
-
-            let summary = "When your \(result.metricA.displayName.lowercased()) is above average, your \(result.metricB.displayName.lowercased()) averages \(formattedAbove) vs \(formattedBelow) \(result.metricB.unit) (\(diffPct)% \(result.isPositive ? "higher" : "lower")). Based on \(result.sampleCount) days of data (\(result.strengthLabel.lowercased()) correlation, r=\(String(format: "%.2f", result.correlation)))."
-
-            let recommendation = buildCorrelationRecommendation(result)
 
             return Insight(
                 metric: result.metricA,
-                title: "\(result.causeLabel) \u{2192} \(result.effectLabel)",
-                summary: summary,
-                recommendation: recommendation,
+                title: insightTitle(result),
+                summary: result.effectSummary,
+                recommendation: insightRecommendation(result),
                 severity: severity,
                 trend: .stable,
                 currentValue: result.correlation,
@@ -211,16 +234,47 @@ struct CorrelationAnalyzer {
         }
     }
 
-    /// Build a data-driven observation based on the correlation data
-    private static func buildCorrelationRecommendation(_ result: HealthCorrelation) -> String {
-        let aName = result.metricA.displayName.lowercased()
-        let bName = result.metricB.displayName.lowercased()
-        let diffPct = String(format: "%.0f", result.effectPercentDiff)
-        let formattedAbove = result.metricB.formatValue(result.avgBAbove)
-        let formattedBelow = result.metricB.formatValue(result.avgBBelow)
-        let lagNote = result.dayOffset > 0 ? " (next-day effect)" : ""
+    /// Score how "non-obvious" and valuable a correlation is.
+    /// Cross-day effects > cross-category > high effect size > same-category obvious ones.
+    private static func insightPriority(_ c: HealthCorrelation) -> Double {
+        var score = abs(c.correlation) * 10   // base: correlation strength
+        score += c.effectPercentDiff * 0.3    // bigger effect = more interesting
+        if c.dayOffset > 0 { score += 15 }    // lagged = non-obvious
+        if c.metricA.category != c.metricB.category { score += 10 } // cross-category = surprising
+        // Penalize obvious pairs
+        let obviousPairs: Set<String> = ["steps-activeCalories", "activeCalories-steps", "standHours-activeCalories"]
+        let pairKey = "\(c.metricA.rawValue)-\(c.metricB.rawValue)"
+        if obviousPairs.contains(pairKey) { score -= 20 }
+        return score
+    }
 
-        return "Your data shows \(diffPct)% difference in \(bName) on above-average vs below-average \(aName) days: \(formattedAbove) vs \(formattedBelow) \(result.metricB.unit)\(lagNote). Based on \(result.sampleCount) days."
+    /// Natural language insight title — reads like a discovery, not a formula.
+    private static func insightTitle(_ c: HealthCorrelation) -> String {
+        let diffPct = Int(c.effectPercentDiff)
+        let bFormatted = c.metricB.formatValue(c.avgBAbove)
+
+        if c.dayOffset > 0 {
+            // Lagged correlations — the most valuable ones
+            return "Your \(c.metricB.displayName.lowercased()) is \(diffPct)% \(c.isPositive ? "higher" : "lower") the day after more \(c.metricA.displayName.lowercased())"
+        }
+
+        // Same-day correlations
+        return "Days with more \(c.metricA.displayName.lowercased()) show \(diffPct)% \(c.isPositive ? "higher" : "lower") \(c.metricB.displayName.lowercased()) (\(bFormatted)\(c.metricB.unit))"
+    }
+
+    /// Conversational recommendation — what this means for the user.
+    private static func insightRecommendation(_ c: HealthCorrelation) -> String {
+        let aName = c.metricA.displayName.lowercased()
+        let bName = c.metricB.displayName.lowercased()
+        let formattedAbove = c.metricB.formatValue(c.avgBAbove)
+        let formattedBelow = c.metricB.formatValue(c.avgBBelow)
+        let diffPct = Int(c.effectPercentDiff)
+
+        if c.dayOffset > 0 {
+            return "In your data, higher \(aName) days are followed by \(bName) of \(formattedAbove)\(c.metricB.unit) vs \(formattedBelow)\(c.metricB.unit) — a \(diffPct)% difference that shows up the next day. This pattern held across \(c.sampleCount) days."
+        }
+
+        return "On your above-average \(aName) days, \(bName) reaches \(formattedAbove)\(c.metricB.unit) instead of \(formattedBelow)\(c.metricB.unit). That \(diffPct)% gap is consistent across \(c.sampleCount) days of your data."
     }
 
     /// Legacy entry point — kept for backward compatibility
@@ -265,6 +319,69 @@ struct CorrelationAnalyzer {
 
         guard denomA > 0, denomB > 0 else { return nil }
         return numerator / (denomA.squareRoot() * denomB.squareRoot())
+    }
+
+    // MARK: - Personalized Natural Language
+
+    /// Cause label with the user's actual threshold number.
+    /// "More exercise" → "40+ min of exercise"
+    private static func personalizedCauseLabel(metric: HealthMetric, baseline: Double) -> String {
+        let formatted = metric.formatValue(baseline)
+        return "\(formatted)+ \(metric.displayName.lowercased())"
+    }
+
+    /// Effect label with the user's actual outcome numbers.
+    /// "Higher HRV next day" → "HRV jumps to 45ms"
+    private static func personalizedEffectLabel(
+        metric: HealthMetric,
+        avgAbove: Double,
+        avgBelow: Double,
+        percentDiff: Double,
+        dayOffset: Int
+    ) -> String {
+        let formatted = metric.formatValue(avgAbove)
+        let diffPct = Int(abs(percentDiff))
+        let timing = dayOffset > 0 ? " next day" : ""
+        return "\(metric.displayName) \(diffPct)% \(percentDiff > 0 ? "higher" : "lower")\(timing) (\(formatted)\(metric.unit))"
+    }
+
+    /// Natural language summary that reads like a coach, not a stats report.
+    private static func personalizedSummary(
+        metricA: HealthMetric,
+        metricB: HealthMetric,
+        baseline: Double,
+        avgBAbove: Double,
+        avgBBelow: Double,
+        percentDiff: Double,
+        dayOffset: Int,
+        sampleCount: Int,
+        r: Double
+    ) -> String {
+        let aName = metricA.displayName.lowercased()
+        let bName = metricB.displayName.lowercased()
+        let threshold = metricA.formatValue(baseline)
+        let formattedAbove = metricB.formatValue(avgBAbove)
+        let formattedBelow = metricB.formatValue(avgBBelow)
+        let diffPct = Int(abs(percentDiff))
+        let timing = dayOffset > 0 ? "the next morning" : "that same day"
+
+        // Build a conversational explanation
+        var parts: [String] = []
+
+        // Opening — the finding in plain language
+        parts.append("On days you hit \(threshold)+ \(aName), your \(bName) averages \(formattedAbove)\(metricB.unit) \(timing) — compared to \(formattedBelow)\(metricB.unit) on lighter days.")
+
+        // The "so what" — why this matters
+        parts.append("That's a \(diffPct)% difference.")
+
+        // Confidence note — builds trust
+        if sampleCount >= 30 {
+            parts.append("This is based on \(sampleCount) days of your data — a reliable pattern.")
+        } else {
+            parts.append("Seen across \(sampleCount) days so far — still building confidence.")
+        }
+
+        return parts.joined(separator: " ")
     }
 
     struct EffectResult {

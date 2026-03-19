@@ -447,6 +447,12 @@ struct AchievementsView: View {
             withAnimation(.easeInOut(duration: 0.2)) {
                 selectedCategory = category
             }
+            AppAnalytics.shared.trackBlockTap(
+                title: label,
+                type: .achievementCategoryFilter,
+                screen: .achievements,
+                metadata: ["category": category?.rawValue ?? "all"]
+            )
         } label: {
             Text(label)
                 .font(.caption.weight(.semibold))

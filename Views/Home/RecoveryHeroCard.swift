@@ -10,6 +10,7 @@ struct RecoveryHeroCard: View {
     let dayType: String
     let scoreChangeFromLastWeek: Int?
     var hasLiveReadiness: Bool = true
+    var lastRefresh: Date? = nil
     var onTap: (() -> Void)? = nil
 
     @State private var appeared = false
@@ -77,11 +78,22 @@ struct RecoveryHeroCard: View {
                         .padding(.vertical, 5)
                         .background(scoreColor.opacity(DS.badgeBg), in: Capsule())
 
-                    // Daily baseline reference / fallback hint
+                    // Staleness indicator or fallback hint
                     if !hasLiveReadiness {
                         Text("Wear Apple Watch for recovery data")
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
+                    } else if let refresh = lastRefresh, isStale(refresh) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .font(.caption2)
+                            Text("Updated \(refresh, style: .relative) ago")
+                                .font(.caption2)
+                        }
+                        .foregroundStyle(.orange)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.orange.opacity(0.1), in: Capsule())
                     } else if let daily = dailyScore, daily != score {
                         Text("Daily baseline: \(daily)")
                             .font(.caption2)
@@ -113,6 +125,11 @@ struct RecoveryHeroCard: View {
         .accessibilityLabel("\(hasLiveReadiness ? "Recovery" : "Health") score \(score). \(recoveryLabel). \(dayType).")
         .accessibilityHint("Opens score breakdown")
         .accessibilityIdentifier("home.recoveryCard")
+    }
+
+    /// Score is stale if last refresh was more than 30 minutes ago
+    private func isStale(_ date: Date) -> Bool {
+        Date().timeIntervalSince(date) > 30 * 60
     }
 }
 

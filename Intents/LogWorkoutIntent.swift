@@ -51,6 +51,20 @@ struct LogWorkoutIntent: AppIntent {
             durationMinutes: durationMinutes
         )
 
+        await MainActor.run {
+            AppAnalytics.shared.trackBlockTap(
+                title: "Log Workout",
+                type: .siriShortcutPerformed,
+                screen: .home,
+                metadata: [
+                    "shortcut": "log_workout",
+                    "workout_type": workoutType.rawValue,
+                    "duration_minutes": durationMinutes,
+                    "success": success
+                ]
+            )
+        }
+
         if success {
             let workoutName = workoutType.rawValue
             let formattedDuration = formatDuration(durationMinutes)

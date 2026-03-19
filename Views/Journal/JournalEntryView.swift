@@ -44,7 +44,15 @@ struct JournalEntryView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") {
+                        AppAnalytics.shared.trackBlockTap(
+                            title: "Cancel",
+                            type: .journalEntryCancelled,
+                            screen: .journalEntry,
+                            metadata: ["had_category": selectedCategory != nil]
+                        )
+                        dismiss()
+                    }
                 }
             }
             .sensoryFeedback(.selection, trigger: selectedCategory)
@@ -85,6 +93,12 @@ struct JournalEntryView: View {
             } else {
                 selectedCategory = category
                 value = category.valueRange.lowerBound
+                AppAnalytics.shared.trackBlockTap(
+                    title: category.displayName,
+                    type: .journalCategorySelected,
+                    screen: .journalEntry,
+                    metadata: ["category": category.rawValue]
+                )
             }
         } label: {
             VStack(spacing: 8) {
@@ -229,6 +243,16 @@ struct JournalEntryView: View {
                 category: category,
                 value: value,
                 notes: notes.isEmpty ? nil : notes
+            )
+            AppAnalytics.shared.trackBlockTap(
+                title: "Log \(category.displayName)",
+                type: .journalEntrySaved,
+                screen: .journalEntry,
+                metadata: [
+                    "category": category.rawValue,
+                    "value": value,
+                    "has_notes": !notes.isEmpty
+                ]
             )
             withAnimation(.spring(duration: 0.4)) {
                 showConfirmation = true

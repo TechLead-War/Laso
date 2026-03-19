@@ -24,8 +24,12 @@ struct ActivationProgressBanner: View {
                 progressBar
             }
             .padding(.horizontal)
+            .onAppear {
+                AppAnalytics.shared.trackFeatureOpen(.home, metadata: ["subscreen": "activation_progress_banner", "current_day": state.currentDay, "progress_pct": Int(state.progressFraction * 100)])
+            }
             .onChange(of: latestMilestone?.milestone.rawValue) { _, newValue in
-                if newValue != nil {
+                if let newValue {
+                    AppAnalytics.shared.trackBlockTap(title: "Milestone Celebration Shown", type: .smartAction, screen: .home, metadata: ["source": "activation_progress", "milestone": newValue])
                     withAnimation(.spring(duration: 0.4)) {
                         showCelebration = true
                     }
@@ -78,17 +82,37 @@ struct ActivationProgressBanner: View {
             }
             .frame(height: 6)
 
-            // Milestone dots
-            HStack(spacing: 0) {
-                ForEach(1...8, id: \.self) { day in
-                    Circle()
-                        .fill(day <= state.currentDay ? Color.accentColor : Color(.systemFill))
-                        .frame(width: 6, height: 6)
-                    if day < 8 {
-                        Spacer()
+            // Milestone dots with connecting lines
+            GeometryReader { geo in
+                let dotSize: CGFloat = 6
+                let totalDots: CGFloat = 8
+                let totalGaps = totalDots - 1
+                let availableWidth = geo.size.width - (dotSize * totalDots)
+                let gapWidth = availableWidth / totalGaps
+
+                ZStack(alignment: .leading) {
+                    // Draw connecting lines first (behind dots)
+                    ForEach(0..<7, id: \.self) { i in
+                        let lineX = dotSize * CGFloat(i + 1) + gapWidth * CGFloat(i)
+                        let filled = (i + 1) < state.currentDay
+                        RoundedRectangle(cornerRadius: 1)
+                            .fill(filled ? Color.accentColor : Color(.systemFill))
+                            .frame(width: gapWidth, height: 2)
+                            .offset(x: lineX)
+                    }
+
+                    // Draw dots on top
+                    ForEach(1...8, id: \.self) { day in
+                        let dotX = dotSize * CGFloat(day - 1) + gapWidth * CGFloat(day - 1)
+                        Circle()
+                            .fill(day <= state.currentDay ? Color.accentColor : Color(.systemFill))
+                            .frame(width: dotSize, height: dotSize)
+                            .offset(x: dotX)
                     }
                 }
+                .frame(maxHeight: .infinity)
             }
+            .frame(height: 6)
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
@@ -119,6 +143,7 @@ struct ActivationProgressBanner: View {
             Spacer()
 
             Button {
+                AppAnalytics.shared.trackBlockTap(title: "Milestone Celebration Dismissed", type: .smartAction, screen: .home, metadata: ["source": "activation_progress", "milestone": event.milestone.rawValue])
                 withAnimation(.easeOut(duration: 0.2)) {
                     showCelebration = false
                     onDismissCelebration()
@@ -150,7 +175,10 @@ struct AskYourDataCard: View {
     let onTap: () -> Void
 
     var body: some View {
-        Button(action: onTap) {
+        Button(action: {
+            AppAnalytics.shared.trackBlockTap(title: "Ask Your Data Card", type: .smartAction, screen: .home, metadata: ["source": "ask_your_data_card"])
+            onTap()
+        }) {
             HStack(spacing: 12) {
                 Image(systemName: "text.bubble")
                     .font(.title3)

@@ -121,10 +121,10 @@ final class HealthDataQueryEngine {
             return answerBestWorst(metric: metric, seeking: seeking, timeSeries: timeSeries)
 
         case .status(let metric):
-            return answerStatus(metric: metric, timeSeries: timeSeries, baselines: baselines, trends: trends)
+            return answerStatus(metric: metric, timeSeries: timeSeries, baselines: baselines, trends: trends, correlations: correlations)
 
         case .general:
-            return answerGeneral(question: normalizedQuestion, timeSeries: timeSeries, baselines: baselines)
+            return answerGeneral(question: normalizedQuestion, timeSeries: timeSeries, baselines: baselines, trends: trends, correlations: correlations)
         }
     }
 
@@ -494,10 +494,11 @@ final class HealthDataQueryEngine {
         metric: HealthMetric?,
         timeSeries: [HealthMetric: MetricTimeSeries],
         baselines: [HealthMetric: UserBaseline],
-        trends: [HealthMetric: TrendAnalyzer.TrendResult]
+        trends: [HealthMetric: TrendAnalyzer.TrendResult],
+        correlations: [MLCorrelation]
     ) -> QueryResult {
         guard let m = metric, let series = timeSeries[m] else {
-            return answerGeneral(question: "status", timeSeries: timeSeries, baselines: baselines)
+            return answerGeneral(question: "status", timeSeries: timeSeries, baselines: baselines, trends: trends, correlations: correlations)
         }
 
         let recent = recentSamples(from: series, days: 7)
@@ -540,19 +541,86 @@ final class HealthDataQueryEngine {
     private func answerGeneral(
         question: String,
         timeSeries: [HealthMetric: MetricTimeSeries],
-        baselines: [HealthMetric: UserBaseline]
+        baselines: [HealthMetric: UserBaseline],
+        trends: [HealthMetric: TrendAnalyzer.TrendResult],
+        correlations: [MLCorrelation]
     ) -> QueryResult {
-        // Provide an overview
-        let metricsWithData = timeSeries.filter { !$0.value.samples.isEmpty }
-        let answer = "I'm tracking \(metricsWithData.count) health metrics for you. Try asking about a specific metric like 'How is my HRV trending?' or 'Does sleep affect my resting heart rate?'"
+        // Instead of a dead-end help message, surface the most interesting
+        // finding from the user's actual data.
 
-        let suggestions = Array(metricsWithData.keys.prefix(3))
+        var highlights: [(priority: Int, answer: String, dataPoints: [QueryResult.DataPoint], followUps: [String])] = []
+
+        // 1. Find biggest anomaly (most surprising data point)
+        for (metric, series) in timeSeries {
+            guard let latest = series.samples.last,
+                  let baseline = baselines[metric] else { continue }
+            let deviation = abs(latest.value - baseline.mean) / max(1, baseline.standardDeviation)
+            if deviation > 2.0 {
+                let dir = latest.value > baseline.mean ? "above" : "below"
+                highlights.append((
+                    priority: Int(deviation * 10),
+                    answer: "Your \(metric.displayName) is unusual right now — \(formatValue(latest.value, metric: metric)) is \(String(format: "%.1f", deviation)) standard deviations \(dir) your baseline.",
+                    dataPoints: [.init(label: metric.displayName, value: latest.value, unit: metric.unit, date: latest.date)],
+                    followUps: ["What's happening with my \(metric.displayName)?", "Is my \(metric.displayName) trending?"]
+                ))
+            }
+        }
+
+        // 2. Find strongest trend (biggest mover)
+        let sortedTrends = trends.sorted { abs($0.value.weekOverWeekChange) > abs($1.value.weekOverWeekChange) }
+        if let top = sortedTrends.first, abs(top.value.weekOverWeekChange) > 5 {
+            let dir = top.value.weekOverWeekChange > 0 ? "up" : "down"
+            highlights.append((
+                priority: Int(abs(top.value.weekOverWeekChange)),
+                answer: "Your \(top.key.displayName) is moving — \(dir) \(String(format: "%.0f%%", abs(top.value.weekOverWeekChange))) week over week.",
+                dataPoints: [.init(label: "Change", value: top.value.weekOverWeekChange, unit: "%", date: nil)],
+                followUps: ["How is my \(top.key.displayName) trending?", "What affects my \(top.key.displayName)?"]
+            ))
+        }
+
+        // 3. Find strongest correlation
+        if let topCorr = correlations.sorted(by: { abs($0.pearsonR) > abs($1.pearsonR) }).first,
+           abs(topCorr.pearsonR) > 0.4 {
+            let dir = topCorr.pearsonR > 0 ? "positively" : "negatively"
+            highlights.append((
+                priority: Int(abs(topCorr.pearsonR) * 20),
+                answer: "Interesting finding: your \(topCorr.metricA.displayName) and \(topCorr.metricB.displayName) are \(dir) linked (r=\(String(format: "%.2f", topCorr.pearsonR))).",
+                dataPoints: [.init(label: "Correlation", value: topCorr.pearsonR, unit: "r", date: nil)],
+                followUps: ["Does \(topCorr.metricA.displayName) affect \(topCorr.metricB.displayName)?", "How is my \(topCorr.metricA.displayName)?"]
+            ))
+        }
+
+        // Pick the most interesting finding
+        if let best = highlights.sorted(by: { $0.priority > $1.priority }).first {
+            return QueryResult(
+                question: question,
+                answer: best.answer,
+                dataPoints: best.dataPoints,
+                confidence: 0.7,
+                relatedQuestions: best.followUps
+            )
+        }
+
+        // True fallback — no interesting findings at all (very early user)
+        let metricsWithData = timeSeries.filter { !$0.value.samples.isEmpty }
+        let metricCount = metricsWithData.count
+
+        if metricCount == 0 {
+            return QueryResult(
+                question: question,
+                answer: "No health data yet. Connect your Apple Watch or allow Health access to get started.",
+                dataPoints: [],
+                confidence: 0.3,
+                relatedQuestions: []
+            )
+        }
+
         return QueryResult(
             question: question,
-            answer: answer,
+            answer: "Tracking \(metricCount) metrics. Everything looks within normal ranges right now. Ask about a specific metric to dig deeper.",
             dataPoints: [],
-            confidence: 0.5,
-            relatedQuestions: suggestions.map { "How is my \($0.displayName)?" }
+            confidence: 0.6,
+            relatedQuestions: Array(metricsWithData.keys.prefix(3)).map { "How is my \($0.displayName)?" }
         )
     }
 

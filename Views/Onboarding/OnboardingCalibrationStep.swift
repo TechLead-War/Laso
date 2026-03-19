@@ -18,6 +18,7 @@ struct OnboardingCalibrationStep: View {
     @State private var dotTimer: Timer?
     @State private var calibrationTask: Task<Void, Never>?
     @State private var calibrationStartTime: Date?
+    @State private var discovery: CalibrationDiscovery?
 
     init(
         isActive: Bool,
@@ -32,72 +33,13 @@ struct OnboardingCalibrationStep: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
-
-            Text("Final step")
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.secondary)
-                .padding(.bottom, 6)
-
-            Text(Copy.Labels.appName)
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
-                .foregroundStyle(.secondary)
-                .padding(.bottom, 32)
-
-            let iconName = state == .success ? "checkmark.seal.fill" : "gearshape.2.fill"
-            let iconColor: Color = state == .success ? .green : .blue
-            Image(systemName: iconName)
-                .font(.system(size: 44, weight: .medium))
-                .foregroundStyle(iconColor)
-                .frame(width: 88, height: 88)
-                .background(iconColor.opacity(0.12), in: Circle())
-                .contentTransition(.symbolEffect(.replace))
-                .padding(.bottom, 28)
-
-            VStack(spacing: 10) {
-                Text(title)
-                    .font(.title2.weight(.bold))
-                    .multilineTextAlignment(.center)
-
-                Text(message)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+        Group {
+            if case .success = state, let discovery {
+                OnboardingCompletionView(discovery: discovery, onStart: onComplete)
+            } else {
+                calibrationView
             }
-
-            if case .running = state {
-                if let progress = healthKitManager.syncProgress {
-                    // Determinate progress bar
-                    VStack(spacing: 6) {
-                        ProgressView(value: Double(progress.metricsCompleted), total: Double(max(progress.totalMetrics, 1)))
-                            .tint(.blue)
-                            .padding(.horizontal, 48)
-
-                        Text("\(progress.metricsCompleted) of \(max(progress.totalMetrics, 1)) metrics synced")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.top, 12)
-                } else {
-                    ProgressView()
-                        .progressViewStyle(.circular)
-                        .padding(.top, 4)
-                }
-            }
-
-            if case .success = state {
-                siriTipCard
-                    .padding(.top, 20)
-            }
-
-            Spacer()
-
-            footerActions
-                .padding(.bottom, 48)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             if isActive {
                 startCalibrationIfNeeded()
@@ -116,31 +58,87 @@ struct OnboardingCalibrationStep: View {
         }
     }
 
+    private var calibrationView: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            Text("Final step")
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
+                .padding(.bottom, 6)
+
+            Text(Copy.Labels.appName)
+                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .foregroundStyle(.secondary)
+                .padding(.bottom, 32)
+
+            Image(systemName: "gearshape.2.fill")
+                .font(.system(size: 44, weight: .medium))
+                .foregroundStyle(.blue)
+                .frame(width: 88, height: 88)
+                .background(Color.blue.opacity(0.12), in: Circle())
+                .padding(.bottom, 28)
+
+            VStack(spacing: 10) {
+                Text(title)
+                    .font(.title2.weight(.bold))
+                    .multilineTextAlignment(.center)
+
+                Text(message)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+            }
+
+            if case .running = state {
+                if let progress = healthKitManager.syncProgress {
+                    VStack(spacing: 8) {
+                        ProgressView(value: Double(progress.metricsCompleted), total: Double(max(progress.totalMetrics, 1)))
+                            .tint(.blue)
+                            .padding(.horizontal, 48)
+
+                        Text("\(progress.metricsCompleted) of \(max(progress.totalMetrics, 1)) metrics synced")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        // Live discovery stats
+                        VStack(spacing: 4) {
+                            if progress.samplesDiscovered > 0 {
+                                Text("\(Self.formatCount(progress.samplesDiscovered)) data points found")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .contentTransition(.numericText())
+                            }
+                            if let oldest = progress.oldestSampleDate {
+                                Text("Data going back to \(oldest.formatted(.dateTime.month(.wide).year()))")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .animation(.smooth, value: progress.samplesDiscovered)
+                    }
+                    .padding(.top, 12)
+                } else {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .padding(.top, 4)
+                }
+            }
+
+            Spacer()
+
+            footerActions
+                .padding(.bottom, 48)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
     @ViewBuilder
     private var footerActions: some View {
         switch state {
-        case .idle, .running:
+        case .idle, .running, .success:
             EmptyView()
-        case .success:
-            Button {
-                AppAnalytics.shared.trackBlockTap(
-                    title: "Start Your Journey",
-                    type: .onboardingGetStarted,
-                    screen: .onboarding,
-                    metadata: [
-                        "step_name": "focus_calibration",
-                        "calibration_state": "success"
-                    ]
-                )
-                onComplete()
-            } label: {
-                Text(Copy.Onboarding.enterLaso)
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .font(.headline)
-            .padding(.horizontal, 24)
         case .failed:
             VStack(spacing: 10) {
                 Button {
@@ -207,7 +205,6 @@ struct OnboardingCalibrationStep: View {
         String(repeating: ".", count: dots)
     }
 
-
     private static func formatCount(_ value: Int) -> String {
         if value >= 1_000_000 { return String(format: "%.1fM", Double(value) / 1_000_000) }
         if value >= 1_000 { return String(format: "%.1fK", Double(value) / 1_000) }
@@ -222,6 +219,7 @@ struct OnboardingCalibrationStep: View {
     private func startCalibration() {
         calibrationTask?.cancel()
         state = .running
+        discovery = nil
         calibrationStartTime = Date()
         startDotTimer()
 
@@ -233,46 +231,24 @@ struct OnboardingCalibrationStep: View {
                 let elapsed = calibrationStartTime.map { Int(Date().timeIntervalSince($0)) } ?? 0
                 if let errorMessage {
                     state = .failed(errorMessage)
-                    // PostHog: Track calibration failure
                     PostHogManager.shared.capture(event: "onboarding_calibration_failed", properties: [
                         "error_message": errorMessage,
                         "elapsed_sec": elapsed,
                     ])
                 } else {
-                    state = .success
-                    // PostHog: Track successful calibration (user is now fully set up)
+                    discovery = CalibrationDiscovery.build(from: healthKitManager.timeSeries)
+                    withAnimation(.smooth(duration: 0.5)) {
+                        state = .success
+                    }
                     PostHogManager.shared.capture(event: "onboarding_calibration_completed", properties: [
                         "elapsed_sec": elapsed,
+                        "metrics_with_data": discovery?.metricsWithData ?? 0,
+                        "highlights_count": discovery?.highlights.count ?? 0,
                     ])
                 }
             }
         }
         calibrationTask = task
-    }
-
-    private var siriTipCard: some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 10) {
-                Image(systemName: "mic.fill")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.blue)
-                    .frame(width: 32, height: 32)
-                    .background(Color.blue.opacity(0.12), in: Circle())
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(Copy.Onboarding.worksWithSiri)
-                        .font(.subheadline.weight(.semibold))
-                    Text(Copy.Onboarding.siriTip)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer(minLength: 0)
-            }
-        }
-        .padding(12)
-        .background(Color.blue.opacity(0.06), in: RoundedRectangle(cornerRadius: 12))
-        .padding(.horizontal, 24)
     }
 
     private func startDotTimer() {

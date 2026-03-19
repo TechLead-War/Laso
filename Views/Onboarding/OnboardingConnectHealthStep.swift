@@ -3,6 +3,7 @@ import HealthKit
 
 struct OnboardingConnectHealthStep: View {
     let healthKitManager: HealthKitManager
+    let age: Int?
     let onContinue: () -> Void
 
     private let permissions = [
@@ -36,6 +37,15 @@ struct OnboardingConnectHealthStep: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
+
+                if age != nil {
+                    Text(Copy.Onboarding.personalizedConnectSubtitle(age: age))
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                        .padding(.top, 4)
+                }
             }
             .padding(.bottom, 20)
 

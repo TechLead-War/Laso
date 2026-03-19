@@ -10,6 +10,7 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var selectedTab: AppTab = .home
     @State private var showSettings = false
+    @State private var showNotificationReprompt = false
     @State private var navigationPath = NavigationPath()
     @State private var connectivityMonitor = ConnectivityMonitor.shared
 
@@ -82,6 +83,13 @@ struct ContentView: View {
                     routeDestination(for: route)
                 }
         }
+        .overlay(alignment: .top) {
+            if showNotificationReprompt {
+                NotificationRepromptBanner(isPresented: $showNotificationReprompt)
+                    .padding(.top, 8)
+                    .animation(.spring(duration: 0.4), value: showNotificationReprompt)
+            }
+        }
         .sheet(isPresented: $showSettings) {
             SettingsView(
                 webExportViewModel: webExportViewModel,
@@ -110,6 +118,11 @@ struct ContentView: View {
                 startSessionAnalytics()
                 WatchMonitor.shared.evaluateWatchStatus()
                 Task { await refreshDeviceSourcesIfNeeded() }
+                Task {
+                    if await NotificationRepromptManager.checkAndRecordDenial() {
+                        showNotificationReprompt = true
+                    }
+                }
                 if selectedTab == .home {
                     // HomeView's own onChange(scenePhase) handles fetchHomeData — no duplicate needed here
                     // Retry sync only when Home is visible and potentially stuck.
@@ -156,8 +169,19 @@ struct ContentView: View {
                 )
             }
         }
-        .onChange(of: selectedTab) { _, newTab in
+        .onChange(of: selectedTab) { oldTab, newTab in
             SessionTracker.shared.currentTab = newTab.rawValue
+            let blockType: BlockType = switch newTab {
+            case .home: .tabHome
+            case .live: .tabLive
+            case .explore: .tabExplore
+            }
+            AppAnalytics.shared.trackBlockTap(
+                title: newTab.rawValue.capitalized,
+                type: blockType,
+                screen: .home,
+                metadata: ["from_tab": oldTab.rawValue, "to_tab": newTab.rawValue]
+            )
             guard scenePhase == .active else { return }
             if newTab == .home {
                 liveViewModel.fetchHomeDataTiered()

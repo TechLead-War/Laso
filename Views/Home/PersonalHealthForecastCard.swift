@@ -31,7 +31,10 @@ struct PersonalHealthForecastCard: View {
                 VStack(spacing: 8) {
                     ForEach(Array(forecasts.prefix(3))) { forecast in
                         forecastRow(forecast)
-                            .onTapGesture { onTapMetric(forecast.metric) }
+                            .onTapGesture {
+                                AppAnalytics.shared.trackBlockTap(title: "Forecast Metric", type: .metricRow, screen: .home, metadata: ["source": "health_forecast", "metric": forecast.metric.rawValue])
+                                onTapMetric(forecast.metric)
+                            }
                     }
                 }
             }

@@ -908,6 +908,9 @@ final class DashboardViewModel {
 
         guard runHousekeeping else { return }
 
+        // Re-detect wake-up time weekly so daily notification timing stays current
+        _ = await WakeUpTimeDetector.detectAndPersist(healthStore: healthKitManager.healthStore)
+
         let periodSummary7d = await MainActor.run { self.periodSummary(for: .sevenDays) }
         let currentIntelligence = await MainActor.run { self.intelligenceBriefing }
         await housekeepingService.perform(
@@ -926,6 +929,7 @@ final class DashboardViewModel {
                 illnessWarningsCount: analysisEngine.illnessWarnings.count,
                 strainLabel: strainScorer.strainLabel,
                 scoreChangeFromYesterday: scores.cachedScoreChangeFromYesterday,
+                improvingDays: computeImprovingDays(),
                 periodSummary: periodSummary7d,
                 intelligenceBriefing: currentIntelligence
             )
@@ -1167,6 +1171,23 @@ final class DashboardViewModel {
         // Include today's score in the average
         let total = history.map(\.score).reduce(0, +) + overallScore.score
         return Int((Double(total) / Double(history.count + 1)).rounded())
+    }
+
+    /// Count consecutive recent days where the score improved day-over-day.
+    @MainActor
+    private func computeImprovingDays() -> Int {
+        let history = scoreHistoryCached(days: 7)
+        guard history.count >= 2 else { return 0 }
+        var count = 0
+        let sorted = history.sorted { $0.date > $1.date }
+        for i in 0..<(sorted.count - 1) {
+            if sorted[i].score > sorted[i + 1].score {
+                count += 1
+            } else {
+                break
+            }
+        }
+        return count
     }
 
     private func computeTrendsSummary() -> TrendsSummary {

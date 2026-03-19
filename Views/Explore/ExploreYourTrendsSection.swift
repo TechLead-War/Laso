@@ -21,9 +21,27 @@ struct ExploreYourTrendsSection: View {
             }
             .pickerStyle(.segmented)
             .padding(.horizontal)
+            .onChange(of: trendTimeframe) { oldValue, newValue in
+                AppAnalytics.shared.trackBlockTap(
+                    title: "\(newValue)D",
+                    type: .exploreTrendTimeframeChanged,
+                    screen: .explore,
+                    metadata: ["from_days": oldValue, "to_days": newValue]
+                )
+            }
 
             ForEach(trendMetrics.prefix(8)) { item in
                 Button {
+                    AppAnalytics.shared.trackBlockTap(
+                        title: item.metric.displayName,
+                        type: .exploreTrendMetric,
+                        screen: .explore,
+                        metadata: [
+                            "metric_id": item.metric.rawValue,
+                            "trend_direction": item.trend.direction.rawValue,
+                            "timeframe_days": trendTimeframe
+                        ]
+                    )
                     onMetricTapped(item)
                 } label: {
                     trendMetricRow(item)

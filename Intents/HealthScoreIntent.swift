@@ -12,6 +12,15 @@ struct HealthScoreIntent: AppIntent {
     static var openAppWhenRun: Bool = false
 
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
+        await MainActor.run {
+            AppAnalytics.shared.trackBlockTap(
+                title: "Health Score",
+                type: .siriShortcutPerformed,
+                screen: .home,
+                metadata: ["shortcut": "health_score"]
+            )
+        }
+
         guard let result = await IntentDataProvider.fetchCurrentHealthScore() else {
             return .result(
                 dialog: "I don't have enough health data yet. Open Laso and let it sync with Apple Health first."

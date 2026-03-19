@@ -17,19 +17,25 @@ struct ExploreScoreHeroSection: View {
                 )
 
                 VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 6) {
-                        Text(Copy.Explore.healthScore)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-
-                        Button {
-                            onScoreInfoTapped()
-                        } label: {
-                            Image(systemName: "info.circle")
-                                .font(.caption)
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: 6) {
+                            Text(Copy.Explore.healthScore)
+                                .font(.subheadline)
                                 .foregroundStyle(.secondary)
+
+                            Button {
+                                onScoreInfoTapped()
+                            } label: {
+                                Image(systemName: "info.circle")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
+
+                        Text(Copy.Explore.healthScoreSubtitle)
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
                     }
 
                     Text(grade)

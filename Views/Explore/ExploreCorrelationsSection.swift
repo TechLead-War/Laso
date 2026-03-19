@@ -13,6 +13,12 @@ struct ExploreCorrelationsSection: View {
                 Spacer()
 
                 Button {
+                    AppAnalytics.shared.trackBlockTap(
+                        title: "See All Correlations",
+                        type: .exploreSeeAllCorrelations,
+                        screen: .explore,
+                        metadata: ["correlations_count": correlations.count]
+                    )
                     onSeeAllTapped()
                 } label: {
                     HStack(spacing: 4) {

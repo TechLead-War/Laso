@@ -14,6 +14,12 @@ struct ShowTrendsIntent: AppIntent {
     func perform() async throws -> some IntentResult & ProvidesDialog {
         // Post a notification that ContentView can observe to switch to the Explore tab
         await MainActor.run {
+            AppAnalytics.shared.trackBlockTap(
+                title: "Show Trends",
+                type: .siriShortcutPerformed,
+                screen: .explore,
+                metadata: ["shortcut": "show_trends"]
+            )
             NotificationCenter.default.post(
                 name: .healthPulseNavigateToExplore,
                 object: nil

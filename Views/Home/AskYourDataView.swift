@@ -22,29 +22,24 @@ struct AskYourDataView: View {
     ]
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Search bar
-                    searchBar
+        ScrollView {
+            VStack(spacing: 20) {
+                // Search bar
+                searchBar
 
-                    // Results
-                    if let result {
-                        resultCard(result)
-                    } else {
-                        suggestionsGrid
-                    }
-                }
-                .padding()
-            }
-            .navigationTitle("Ask Your Data")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") { dismiss() }
-                        .font(.subheadline.weight(.medium))
+                // Results
+                if let result {
+                    resultCard(result)
+                } else {
+                    suggestionsGrid
                 }
             }
+            .padding()
+        }
+        .navigationTitle("Ask Your Data")
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            AppAnalytics.shared.trackFeatureOpen(.home, metadata: ["subscreen": "ask_your_data"])
         }
     }
 
@@ -94,6 +89,7 @@ struct AskYourDataView: View {
                 ForEach(suggestedQuestions, id: \.self) { question in
                     Button {
                         query = question
+                        AppAnalytics.shared.trackBlockTap(title: "Suggested Question", type: .smartAction, screen: .home, metadata: ["source": "ask_your_data_suggestion", "query_length": question.count])
                         runQuery()
                     } label: {
                         Text(question)
@@ -159,6 +155,7 @@ struct AskYourDataView: View {
                     ForEach(result.relatedQuestions, id: \.self) { q in
                         Button {
                             query = q
+                            AppAnalytics.shared.trackBlockTap(title: "Related Question", type: .smartAction, screen: .home, metadata: ["source": "ask_your_data_related", "query_length": q.count])
                             runQuery()
                         } label: {
                             HStack(spacing: 6) {
@@ -187,6 +184,9 @@ struct AskYourDataView: View {
         guard !query.trimmingCharacters(in: .whitespaces).isEmpty else { return }
         isSearching = true
 
+        AppAnalytics.shared.trackCoreAction(.askedHealthQuery, screen: .home)
+        AppAnalytics.shared.trackBlockTap(title: "Query Submitted", type: .smartAction, screen: .home, metadata: ["source": "ask_your_data", "query_length": query.count])
+
         // Run on background to avoid blocking UI
         let q = query
         DispatchQueue.global(qos: .userInitiated).async {
@@ -196,6 +196,7 @@ struct AskYourDataView: View {
                     result = queryResult
                     isSearching = false
                 }
+                AppAnalytics.shared.trackBlockTap(title: "Query Result Viewed", type: .smartAction, screen: .home, metadata: ["source": "ask_your_data", "confidence": Int(queryResult.confidence * 100), "data_points_count": queryResult.dataPoints.count, "related_questions_count": queryResult.relatedQuestions.count])
             }
         }
     }

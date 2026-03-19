@@ -13,6 +13,15 @@ struct ExploreCategoriesSection: View {
             VStack(spacing: 0) {
                 ForEach(Array(categories.enumerated()), id: \.element.category) { index, item in
                     Button {
+                        AppAnalytics.shared.trackBlockTap(
+                            title: item.category.displayName,
+                            type: .exploreCategoryRow,
+                            screen: .explore,
+                            metadata: [
+                                "category": item.category.rawValue,
+                                "score": item.score ?? 0
+                            ]
+                        )
                         onCategoryTapped(item.category, item.score)
                     } label: {
                         ExploreCategoryRow(

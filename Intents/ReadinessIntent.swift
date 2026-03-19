@@ -12,6 +12,15 @@ struct ReadinessIntent: AppIntent {
     static var openAppWhenRun: Bool = false
 
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
+        await MainActor.run {
+            AppAnalytics.shared.trackBlockTap(
+                title: "Check Readiness",
+                type: .siriShortcutPerformed,
+                screen: .home,
+                metadata: ["shortcut": "check_readiness"]
+            )
+        }
+
         guard let readiness = await IntentDataProvider.fetchReadiness() else {
             return .result(
                 dialog: "I couldn't calculate your readiness. Make sure Apple Health has recent HRV and resting heart rate data."

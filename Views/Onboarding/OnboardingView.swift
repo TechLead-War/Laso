@@ -86,7 +86,7 @@ struct OnboardingView: View {
                 .tag(OnboardingStep.profileCapture)
 
                 // Page 3: Connect Apple Health
-                OnboardingConnectHealthStep(healthKitManager: healthKitManager) {
+                OnboardingConnectHealthStep(healthKitManager: healthKitManager, age: profileAge) {
                     withAnimation(.smooth(duration: 0.4)) {
                         currentStep = includesCycleStep ? .cycleOptIn : .focusCalibration
                     }

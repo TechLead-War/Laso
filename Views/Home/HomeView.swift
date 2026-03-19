@@ -191,6 +191,7 @@ struct HomeView: View {
                         dayType: DashboardViewModel.RecoveryState(score: liveReadinessScore).dayType,
                         scoreChangeFromLastWeek: viewModel.scores.scoreChangeFromLastWeek,
                         hasLiveReadiness: hasLiveReadiness,
+                        lastRefresh: viewModel.lastRefresh,
                         onTap: { showScoreGuide = true }
                     )
                     .onAppear {

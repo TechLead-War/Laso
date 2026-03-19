@@ -70,18 +70,23 @@ final class NotificationManager {
         maxPerDay: Int = 1,
         severity: Severity = .info,
         deviationPercent: Double = 0,
-        metricInFocus: Bool = false
+        metricInFocus: Bool = false,
+        bypassCap: Bool = false,
+        hookCategory: String? = nil
     ) {
         let isDailySummary = identifier == "healthpulse.dailySummary"
             || identifier == "healthpulse.eveningSummary"
 
+        let notifType = Self.notificationType(identifier)
+
         // Kill switch — remotely disable all non-critical notifications
-        if RemoteConfigManager.shared.killNotifications && severity != .critical {
+        if RemoteConfigManager.shared.killNotifications && severity != .critical && !bypassCap {
+            Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "kill_switch") }
             return
         }
 
-        // Everything except the daily summary is capped and optimized
-        if !isDailySummary {
+        // Everything except daily summaries and bypassed notifications is capped and optimized
+        if !isDailySummary && !bypassCap {
             // Priority filtering — skip low-priority unless critical
             let priority = NotificationOptimizer.priorityScore(
                 severity: severity,
@@ -90,6 +95,7 @@ final class NotificationManager {
             )
             let minPriority = RemoteConfigManager.shared.notificationMinPriorityScore
             if priority < minPriority && severity != .critical {
+                Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "low_priority") }
                 return
             }
 
@@ -105,7 +111,7 @@ final class NotificationManager {
             }
 
             guard frequencyCap.canSendNotification(maxPerDay: dynamicBudget) else {
-                print("Notification frequency cap reached for today — suppressing: \(identifier)")
+                Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "frequency_cap") }
                 return
             }
         }
@@ -120,8 +126,6 @@ final class NotificationManager {
             content: content,
             trigger: trigger
         )
-
-        let notifType = Self.notificationType(identifier)
 
         center.add(request) { [weak self] error in
             if let error {
@@ -139,7 +143,7 @@ final class NotificationManager {
                     }
                 }
                 Task { @MainActor in
-                    AppAnalytics.shared.trackNotificationScheduled(type: notifType, identifier: identifier)
+                    AppAnalytics.shared.trackNotificationScheduled(type: notifType, identifier: identifier, hookCategory: hookCategory)
                 }
             }
         }

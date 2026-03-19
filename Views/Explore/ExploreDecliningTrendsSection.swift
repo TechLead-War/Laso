@@ -12,6 +12,15 @@ struct ExploreDecliningTrendsSection: View {
 
             ForEach(decliningHighlights) { highlight in
                 Button {
+                    AppAnalytics.shared.trackBlockTap(
+                        title: highlight.metric.displayName,
+                        type: .exploreDecliningMetric,
+                        screen: .explore,
+                        metadata: [
+                            "metric_id": highlight.metric.rawValue,
+                            "highlight_type": highlight.typeLabel
+                        ]
+                    )
                     onHighlightTapped(highlight)
                 } label: {
                     historicalCard(highlight)

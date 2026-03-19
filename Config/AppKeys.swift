@@ -137,6 +137,12 @@ enum AppKeys {
         /// e.g. `AppKeys.Notifications.alertCooldownPrefix + identifier`.
         static let alertCooldownPrefix = "healthpulse.alertCooldown."
         static let notificationLog     = "healthpulse.notificationLog"
+        /// Timestamp when the user first denied notification permission
+        static let permissionDeniedDate    = "healthpulse.notifications.deniedDate"
+        /// Timestamp when the re-prompt banner was last shown
+        static let repromptLastShownDate   = "healthpulse.notifications.repromptLastShown"
+        /// Last psychological category used for daily summary (avoids repeats)
+        static let lastDailyHookCategory   = "healthpulse.notifications.lastHookCategory"
     }
 
     // MARK: - Engagement Sequence

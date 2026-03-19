@@ -2,8 +2,22 @@ import Foundation
 import HealthKit
 import UserNotifications
 
-/// Monitors Apple Watch wearing status via HealthKit heart rate data freshness
-/// and provides low-battery notification support.
+/// Monitors Apple Watch wearing status and battery via HealthKit background delivery.
+///
+/// **How it works (all background-capable, no foreground required):**
+///
+/// 1. An `HKObserverQuery` with `enableBackgroundDelivery(.immediate)` fires whenever
+///    new heart rate data arrives — even when the app is suspended or killed.
+///
+/// 2. Each time fresh Apple Watch data arrives, a local notification is **scheduled**
+///    to fire after `watchNotWornThresholdHours` (default 1h). This pushes the
+///    notification forward — as long as data keeps flowing, it never fires.
+///
+/// 3. When data stops (watch removed, battery dead, out of range), no more pushes
+///    happen and the scheduled notification fires automatically — no app needed.
+///
+/// 4. Battery: checked from HealthKit sample metadata on each background delivery.
+///    If available and below threshold, a notification is sent immediately.
 final class WatchMonitor {
     static let shared = WatchMonitor()
 
@@ -23,6 +37,8 @@ final class WatchMonitor {
     private var cachedPreferences: NotificationPreferences?
     private var preferencesLoadedAt: Date?
 
+    private let scheduledNotWornIdentifier = AppConstants.NotificationID.watchNotWornScheduled
+
     private init() {}
 
     // MARK: - Start / Stop
@@ -37,6 +53,13 @@ final class WatchMonitor {
         // Use shared store, or create one as fallback
         if healthStore == nil { healthStore = HKHealthStore() }
         startHeartRateObserver()
+
+        // If we previously saw watch data, ensure a "not worn" notification
+        // is scheduled so it fires if the watch is currently off.
+        let lastDataTime = UserDefaults.standard.double(forKey: lastWatchDataKey)
+        if lastDataTime > 0 {
+            ensureNotWornScheduled()
+        }
     }
 
     func stopMonitoring() {
@@ -47,8 +70,10 @@ final class WatchMonitor {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [scheduledNotWornIdentifier])
     }
 
-    // MARK: - Heart Rate Observer (Watch Wearing Detection)
+    // MARK: - Heart Rate Observer (Background-Capable)
 
+    /// Sets up HKObserverQuery + background delivery. This is the engine that drives
+    /// everything — it runs even when the app is suspended.
     private func startHeartRateObserver() {
         guard let healthStore,
               let heartRateType = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return }
@@ -63,28 +88,32 @@ final class WatchMonitor {
                 completionHandler()
                 return
             }
-            self?.checkLatestHeartRateSource()
+            // This fires in BACKGROUND — check watch data and reschedule notification
+            self?.onHeartRateDelivery()
             completionHandler()
         }
 
         healthStore.execute(query)
         observerQuery = query
 
-        // Enable background delivery so the observer fires even when the app is suspended
-        healthStore.enableBackgroundDelivery(for: heartRateType, frequency: .hourly) { _, _ in }
+        // .immediate = wake app as soon as new data arrives (not hourly batched)
+        healthStore.enableBackgroundDelivery(for: heartRateType, frequency: .immediate) { _, _ in }
 
-        // Also check immediately
-        checkLatestHeartRateSource()
+        // Also check right now
+        onHeartRateDelivery()
     }
 
-    /// Query the most recent heart rate sample and check if it came from an Apple Watch
-    private func checkLatestHeartRateSource() {
+    // MARK: - Background Delivery Handler
+
+    /// Called every time HealthKit delivers new heart rate data — foreground OR background.
+    /// This is the single entry point for all watch monitoring logic.
+    private func onHeartRateDelivery() {
         guard let healthStore,
               let heartRateType = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return }
 
-        // Only look at samples from the last 2 hours
-        let twHoursAgo = Date().addingTimeInterval(-RemoteConfigManager.shared.watchDataFreshnessHours * 3600)
-        let predicate = HKQuery.predicateForSamples(withStart: twHoursAgo, end: Date(), options: .strictStartDate)
+        let freshnessWindow = RemoteConfigManager.shared.watchDataFreshnessHours * 3600
+        let windowStart = Date().addingTimeInterval(-freshnessWindow)
+        let predicate = HKQuery.predicateForSamples(withStart: windowStart, end: Date(), options: .strictStartDate)
         let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
 
         let query = HKSampleQuery(
@@ -97,23 +126,37 @@ final class WatchMonitor {
 
             for sample in samples {
                 if self.isFromAppleWatch(sample: sample) {
+                    // Watch is alive — record timestamp
                     UserDefaults.standard.set(
                         sample.startDate.timeIntervalSince1970,
                         forKey: self.lastWatchDataKey
                     )
-                    // Watch is actively sending data — push the "not worn" notification forward
-                    self.rescheduleNotWornReminder()
+
+                    // Push the "not worn" notification forward — it won't fire
+                    // as long as data keeps coming.
+                    self.scheduleNotWornNotification()
+
+                    // Check battery from sample metadata (if available)
+                    self.checkBatteryFromSample(sample)
+
                     return
                 }
+            }
+
+            // No fresh watch data — ensure a notification is pending
+            let lastDataTime = UserDefaults.standard.double(forKey: self.lastWatchDataKey)
+            if lastDataTime > 0 {
+                self.ensureNotWornScheduled()
             }
         }
 
         healthStore.execute(query)
     }
 
+    // MARK: - Watch Detection
+
     /// Determine if a sample originated from an Apple Watch
     private func isFromAppleWatch(sample: HKSample) -> Bool {
-        // Check HKDevice metadata
         if let device = sample.device {
             if device.manufacturer == "Apple Inc.",
                let model = device.model, model.contains("Watch") {
@@ -124,16 +167,13 @@ final class WatchMonitor {
             }
         }
 
-        // Check source bundle identifier
         let bundleId = sample.sourceRevision.source.bundleIdentifier
         let watchPrefixes = ["com.apple.health", "com.apple.watch"]
         for prefix in watchPrefixes {
             if bundleId.hasPrefix(prefix) {
-                // Distinguish Apple Watch from iPhone health data
                 if let device = sample.device, device.model?.contains("Watch") == true {
                     return true
                 }
-                // If no device metadata, check if source name hints at watch
                 if sample.sourceRevision.source.name.contains("Watch") {
                     return true
                 }
@@ -143,20 +183,106 @@ final class WatchMonitor {
         return false
     }
 
-    // MARK: - Foreground Check
+    // MARK: - Not Worn Notification (Background-Capable)
 
-    /// Called on foreground return — evaluates all watch-related alerts.
-    /// No periodic timer needed: the HKObserverQuery + scheduled UNNotification handle detection.
-    func evaluateWatchStatus() {
+    /// Cancels any pending "not worn" notification and schedules a new one to fire
+    /// after `thresholdHours`. As long as watch data keeps arriving, this keeps
+    /// getting pushed forward. The moment data stops, it fires — no app needed.
+    private func scheduleNotWornNotification() {
+        NotificationManager.shared.cancelNotification(identifier: scheduledNotWornIdentifier)
+
         let preferences = loadCachedPreferences()
+        guard preferences.watchNotWornReminderEnabled else { return }
 
-        if preferences.watchNotWornReminderEnabled {
-            checkWatchNotWorn(maxPerDay: preferences.maxNotificationsPerDay)
-            // Re-check watch data freshness and reschedule the background notification
-            // so it fires even when the app is killed after being opened without watch.
-            checkLatestHeartRateSource()
+        let thresholdSeconds = RemoteConfigManager.shared.watchNotWornThresholdHours * 3600
+
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: thresholdSeconds, repeats: false)
+        NotificationManager.shared.scheduleNotification(
+            title: DeviceMessaging.wearPromptTitle,
+            body: Copy.Notifications.watchNotWornScheduled(device: DeviceMessaging.deviceName, wearToTrack: DeviceMessaging.wearToTrackMessage),
+            identifier: scheduledNotWornIdentifier,
+            trigger: trigger,
+            maxPerDay: 1,
+            bypassCap: true
+        )
+    }
+
+    /// Ensures a "not worn" notification is pending without cancelling an existing one.
+    /// Used at startup and when no fresh data is found — we don't want to reset the
+    /// timer, just make sure one is scheduled.
+    private func ensureNotWornScheduled() {
+        UNUserNotificationCenter.current().getPendingNotificationRequests { [weak self] requests in
+            guard let self else { return }
+            let hasPending = requests.contains { $0.identifier == self.scheduledNotWornIdentifier }
+            if !hasPending {
+                self.scheduleNotWornNotification()
+            }
         }
     }
+
+    // MARK: - Battery Check (Background-Capable)
+
+    /// Extract battery level from HealthKit sample metadata.
+    /// This runs on every background delivery, so it works even when app is not open.
+    ///
+    /// Note: HealthKit does not have a standard battery metadata key.
+    /// Some watchOS versions may include it under custom keys. If battery data
+    /// is never present in your samples, a watchOS companion app with
+    /// WatchConnectivity would be needed for reliable battery monitoring.
+    private func checkBatteryFromSample(_ sample: HKSample) {
+        guard let metadata = sample.metadata else { return }
+
+        // Check known metadata keys that may contain battery level (0.0–1.0)
+        let batteryKeys = ["WatchBatteryLevel", "DeviceBatteryLevel", "HKDeviceBatteryLevel"]
+        for key in batteryKeys {
+            if let batteryLevel = metadata[key] as? Double {
+                handleBatteryLevel(batteryLevel)
+                return
+            }
+        }
+    }
+
+    /// Process a battery level reading (0.0–1.0). Sends a notification if below threshold.
+    private func handleBatteryLevel(_ level: Double) {
+        let preferences = loadCachedPreferences()
+        guard preferences.lowBatteryReminderEnabled else { return }
+
+        let defaults = UserDefaults.standard
+
+        if level < RemoteConfigManager.shared.watchBatteryLowThreshold {
+            // Only show once per low-battery cycle
+            guard !defaults.bool(forKey: lowBatteryAlertShownKey) else { return }
+
+            NotificationManager.shared.scheduleNotification(
+                title: Copy.Notifications.watchBatteryLow,
+                body: Copy.Notifications.watchBatteryBody(device: DeviceMessaging.deviceName, percent: Int(level * 100)),
+                identifier: AppConstants.NotificationID.watchLowBattery,
+                maxPerDay: 1,
+                bypassCap: true
+            )
+            Task { @MainActor in AppAnalytics.shared.trackNotificationSent(type: "battery_low") }
+
+            defaults.set(true, forKey: lowBatteryAlertShownKey)
+        } else {
+            // Battery recovered — reset so we can alert again next cycle
+            defaults.set(false, forKey: lowBatteryAlertShownKey)
+        }
+    }
+
+    /// Reset low battery alert flag (e.g. when user manually charges watch)
+    func resetLowBatteryAlert() {
+        UserDefaults.standard.set(false, forKey: lowBatteryAlertShownKey)
+    }
+
+    // MARK: - Foreground Re-evaluation
+
+    /// Called on foreground return — supplementary check, not the primary mechanism.
+    /// The real work happens via background delivery above.
+    func evaluateWatchStatus() {
+        onHeartRateDelivery()
+    }
+
+    // MARK: - Preferences
 
     /// Load preferences with a 5-minute cache to avoid repeated Keychain + AES-GCM decryption
     private func loadCachedPreferences() -> NotificationPreferences {
@@ -175,108 +301,5 @@ final class WatchMonitor {
     func invalidatePreferencesCache() {
         cachedPreferences = nil
         preferencesLoadedAt = nil
-    }
-
-    // MARK: - Scheduled "Not Worn" Notification (Background-capable)
-
-    private let scheduledNotWornIdentifier = AppConstants.NotificationID.watchNotWornScheduled
-
-    /// Cancels any pending scheduled "not worn" notification, then schedules a new one
-    /// to fire after `thresholdHours`. Each time fresh Apple Watch data arrives, this
-    /// gets called — pushing the notification forward. If data stops (watch removed or
-    /// battery dead), the notification fires automatically even if the app is killed.
-    private func rescheduleNotWornReminder() {
-        NotificationManager.shared.cancelNotification(identifier: scheduledNotWornIdentifier)
-
-        let preferences = loadCachedPreferences()
-        guard preferences.watchNotWornReminderEnabled else { return }
-
-        let thresholdSeconds = RemoteConfigManager.shared.watchNotWornThresholdHours * 3600
-
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: thresholdSeconds, repeats: false)
-        NotificationManager.shared.scheduleNotification(
-            title: DeviceMessaging.wearPromptTitle,
-            body: Copy.Notifications.watchNotWornScheduled(device: DeviceMessaging.deviceName, wearToTrack: DeviceMessaging.wearToTrackMessage),
-            identifier: scheduledNotWornIdentifier,
-            trigger: trigger,
-            maxPerDay: 1
-        )
-    }
-
-    // MARK: - Watch Not Worn Check (Foreground Fallback)
-
-    private func checkWatchNotWorn(maxPerDay: Int) {
-        let defaults = UserDefaults.standard
-        let lastDataTime = defaults.double(forKey: lastWatchDataKey)
-
-        // If we've never received watch data, don't alert (user might not have a watch)
-        guard lastDataTime > 0 else { return }
-
-        let elapsed = Date().timeIntervalSince1970 - lastDataTime
-        let threshold: TimeInterval = RemoteConfigManager.shared.watchNotWornThresholdHours * 3600
-
-        // Only alert if more than threshold without data
-        guard elapsed > threshold else { return }
-
-        // Enforce cooldown between repeated notifications
-        let lastNotification = defaults.double(forKey: lastNotWornNotificationKey)
-        if lastNotification > 0 {
-            let sinceLastNotification = Date().timeIntervalSince1970 - lastNotification
-            guard sinceLastNotification > notWornCooldownHours * 3600 else { return }
-        }
-
-        let hours = Int(elapsed / 3600)
-        let minutes = Int(elapsed.truncatingRemainder(dividingBy: 3600) / 60)
-
-        let body: String
-        if hours >= 1 {
-            body = Copy.Notifications.watchNotWornHours(device: DeviceMessaging.deviceName, hours: hours, minutes: minutes, wearToTrack: DeviceMessaging.wearToTrackMessage)
-        } else {
-            body = Copy.Notifications.watchNotWornRecent(device: DeviceMessaging.deviceName, wearToTrack: DeviceMessaging.wearToTrackMessage)
-        }
-
-        NotificationManager.shared.scheduleNotification(
-            title: DeviceMessaging.wearPromptTitle,
-            body: body,
-            identifier: AppConstants.NotificationID.watchNotWorn,
-            maxPerDay: 1
-        )
-        Task { @MainActor in AppAnalytics.shared.trackNotificationSent(type: "watch_not_worn") }
-
-        defaults.set(Date().timeIntervalSince1970, forKey: lastNotWornNotificationKey)
-    }
-
-    // MARK: - Battery Level
-
-    /// Call this when battery level data becomes available (e.g. via WatchConnectivity companion).
-    /// `level` is 0.0–1.0 (e.g. 0.08 = 8%).
-    func handleBatteryLevel(_ level: Double) {
-        let preferences = loadCachedPreferences()
-        guard preferences.lowBatteryReminderEnabled else { return }
-
-        let defaults = UserDefaults.standard
-
-        if level < RemoteConfigManager.shared.watchBatteryLowThreshold {
-            // Only show once per low-battery cycle
-            guard !defaults.bool(forKey: lowBatteryAlertShownKey) else { return }
-
-            NotificationManager.shared.scheduleNotification(
-                title: Copy.Notifications.watchBatteryLow,
-                body: Copy.Notifications.watchBatteryBody(device: DeviceMessaging.deviceName, percent: Int(level * 100)),
-                identifier: AppConstants.NotificationID.watchLowBattery,
-                maxPerDay: 1
-            )
-            Task { @MainActor in AppAnalytics.shared.trackNotificationSent(type: "battery_low") }
-
-            defaults.set(true, forKey: lowBatteryAlertShownKey)
-        } else {
-            // Battery recovered above 10% — reset so we can alert again next cycle
-            defaults.set(false, forKey: lowBatteryAlertShownKey)
-        }
-    }
-
-    /// Reset low battery alert flag (e.g. when user manually charges watch)
-    func resetLowBatteryAlert() {
-        UserDefaults.standard.set(false, forKey: lowBatteryAlertShownKey)
     }
 }

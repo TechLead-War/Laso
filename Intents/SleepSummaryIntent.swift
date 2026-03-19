@@ -12,6 +12,15 @@ struct SleepSummaryIntent: AppIntent {
     static var openAppWhenRun: Bool = false
 
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
+        await MainActor.run {
+            AppAnalytics.shared.trackBlockTap(
+                title: "Sleep Summary",
+                type: .siriShortcutPerformed,
+                screen: .home,
+                metadata: ["shortcut": "sleep_summary"]
+            )
+        }
+
         guard let sleep = await IntentDataProvider.fetchLastNightSleep() else {
             return .result(
                 dialog: "I couldn't find sleep data for last night. Make sure your sleep data synced to Apple Health."

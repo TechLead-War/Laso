@@ -98,6 +98,144 @@ extension Copy {
         static func actionPrefix(_ action: String) -> String { "Action: \(action)" }
         static func streakDays(_ days: Int) -> String { "\(days)-day streak!" }
 
+        // MARK: - Dynamic Daily Summary (Psychology-Driven)
+
+        /// Psychological hook categories — never repeat the same category two days in a row.
+        enum HookCategory: String, CaseIterable {
+            case curiosity      // Zeigarnik effect — open loop, must tap to resolve
+            case lossFrame      // Loss aversion — what you're about to lose
+            case progress       // Endowed progress + goal gradient
+            case personalRecord // Self-reference effect — your personal data
+            case question       // Direct question — triggers inner dialogue
+        }
+
+        /// Picks a title using the best available psychological hook.
+        /// Rotates categories so the user never sees the same style twice in a row.
+        static func dynamicDailySummaryTitle(
+            score: Int,
+            scoreDelta: Int?,
+            streakDays: Int,
+            topAnomalyMetric: String?,
+            topAnomalyPercent: Double?,
+            improvingDays: Int
+        ) -> String {
+            let lastCategory = UserDefaults.standard.string(forKey: AppKeys.Notifications.lastDailyHookCategory)
+
+            // Build candidate hooks ranked by data strength, skip last-used category
+            var candidates: [(category: HookCategory, title: String)] = []
+
+            // ── Curiosity hooks (Zeigarnik) ──
+            if let metric = topAnomalyMetric, let pct = topAnomalyPercent, abs(pct) >= 10 {
+                candidates.append((.curiosity, "Something shifted in your \(metric.lowercased()) data."))
+            }
+            if let delta = scoreDelta, abs(delta) >= 3 {
+                candidates.append((.curiosity, "Your score changed overnight."))
+            }
+            if improvingDays >= 2 {
+                candidates.append((.curiosity, "A pattern is forming in your data."))
+            }
+
+            // ── Loss-frame hooks ──
+            if streakDays >= 3 {
+                candidates.append((.lossFrame, "Your \(streakDays)-day streak expires tonight."))
+            }
+            if let delta = scoreDelta, delta <= -3 {
+                candidates.append((.lossFrame, "You're losing ground from last week."))
+            }
+            if improvingDays == 0, let delta = scoreDelta, delta < 0 {
+                candidates.append((.lossFrame, "Yesterday's gains are slipping."))
+            }
+
+            // ── Progress hooks (endowed progress) ──
+            if improvingDays >= 3 {
+                candidates.append((.progress, "\(improvingDays) days up. Keep the run going?"))
+            }
+            if streakDays > 0 && streakDays.isMultiple(of: 7) {
+                candidates.append((.progress, "\(streakDays) days in. New milestone."))
+            }
+            if score >= 80 {
+                candidates.append((.progress, "Score: \(score). You're in the top tier."))
+            }
+
+            // ── Personal record hooks ──
+            if let metric = topAnomalyMetric, let pct = topAnomalyPercent, pct > 15 {
+                candidates.append((.personalRecord, "Your \(metric.lowercased()) hit a new high."))
+            }
+            if score >= 90 {
+                candidates.append((.personalRecord, "\(score) — your best score this month."))
+            }
+            if let delta = scoreDelta, delta >= 5 {
+                candidates.append((.personalRecord, "Biggest jump in weeks: +\(delta) points."))
+            }
+
+            // ── Question hooks ──
+            candidates.append((.question, "How did last night affect your body?"))
+            if let metric = topAnomalyMetric {
+                candidates.append((.question, "Why did your \(metric.lowercased()) change?"))
+            }
+            if score < 65 {
+                candidates.append((.question, "What's pulling your score down?"))
+            }
+
+            // Filter out the last-used category
+            let filtered = candidates.filter { $0.category.rawValue != lastCategory }
+            let pool = filtered.isEmpty ? candidates : filtered
+
+            // Pick the first match (data-driven priority order)
+            if let chosen = pool.first {
+                UserDefaults.standard.set(chosen.category.rawValue, forKey: AppKeys.Notifications.lastDailyHookCategory)
+                return chosen.title
+            }
+
+            // Ultimate fallback
+            UserDefaults.standard.set(HookCategory.curiosity.rawValue, forKey: AppKeys.Notifications.lastDailyHookCategory)
+            return "Your morning health check is ready."
+        }
+
+        /// Body text — short, data-rich, complements the title.
+        static func dynamicDailySummaryBody(
+            score: Int,
+            categoryBreakdown: String,
+            topInsightAction: String?,
+            streakDays: Int,
+            anomalyCount: Int,
+            topAnomalyMetric: String?,
+            dayOfWeek: Int
+        ) -> String {
+            var parts: [String] = []
+
+            // Score context (always include — it's the payoff for tapping)
+            parts.append("Score: \(score)/100.")
+
+            // Most notable data point
+            if anomalyCount > 0, let metric = topAnomalyMetric {
+                parts.append("\(metric) needs a look.")
+            } else {
+                let variants = [
+                    "All metrics steady.",
+                    "No red flags today.",
+                    "Numbers looking solid.",
+                    "Everything in range.",
+                    "Clean across the board.",
+                    "Body data looks good.",
+                    "Healthy readings overall.",
+                ]
+                parts.append(variants[dayOfWeek % variants.count])
+            }
+
+            // Action — first sentence only
+            if let action = topInsightAction {
+                parts.append(action)
+            }
+
+            // Streak (compact)
+            if streakDays > 1 {
+                parts.append("\(streakDays)-day streak.")
+            }
+
+            return parts.joined(separator: " ")
+        }
+
         // MARK: - Evening Summary
 
         static func eveningSummaryTitle(strainLevel: String) -> String {
@@ -192,5 +330,12 @@ extension Copy {
         static func watchNotWornRecent(device: String, wearToTrack: String) -> String {
             "\(device) hasn't recorded data recently. \(wearToTrack)"
         }
+
+        // MARK: - Permission Re-prompt
+
+        static let repromptTitle = "Stay on top of your health"
+        static let repromptBody = "Notifications are turned off. You're missing alerts about unusual heart rate, sleep changes, and weekly progress updates."
+        static let repromptAction = "Turn On in Settings"
+        static let repromptDismiss = "Not Now"
     }
 }

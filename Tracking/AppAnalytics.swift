@@ -179,6 +179,22 @@ enum BlockType: String {
     case paywallTermsLink = "paywall_terms_link"
     case paywallPrivacyLink = "paywall_privacy_link"
     case proUpgradeButton = "pro_upgrade_button"
+
+    // Explore sections
+    case exploreCategoryRow = "explore_category_row"
+    case exploreHealthStateLink = "explore_health_state_link"
+    case exploreTrendTimeframeChanged = "explore_trend_timeframe_changed"
+
+    // Journal
+    case journalCategorySelected = "journal_category_selected"
+    case journalEntrySaved = "journal_entry_saved"
+    case journalEntryCancelled = "journal_entry_cancelled"
+
+    // Achievements
+    case achievementCategoryFilter = "achievement_category_filter"
+
+    // Siri Shortcuts
+    case siriShortcutPerformed = "siri_shortcut_performed"
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -1329,10 +1345,35 @@ final class AppAnalytics {
 
     // Notification opened
     func trackNotificationOpened(identifier: String) {
+        let defaults = UserDefaults.standard
+        let type = NotificationManager.notificationType(identifier)
+
+        // Retrieve stored context from when notification was scheduled
+        let hookCategory = defaults.string(forKey: "healthpulse.notif.hook.\(identifier)") ?? "unknown"
+        let sentTimestamp = defaults.double(forKey: "healthpulse.notif.sent.\(identifier)")
+
+        // Compute time-to-open in minutes
+        let now = Date()
+        let latencyMinutes: Int
+        if sentTimestamp > 0 {
+            latencyMinutes = Int(now.timeIntervalSince1970 - sentTimestamp) / 60
+        } else {
+            latencyMinutes = -1 // unknown
+        }
+
+        let cal = Calendar.current
         logEvent("notification_opened", parameters: [
             "notification_id": identifier,
-            "type": NotificationManager.notificationType(identifier)
+            "type": type,
+            "hook_category": hookCategory,
+            "latency_minutes": latencyMinutes,
+            "hour_opened": cal.component(.hour, from: now),
+            "day_of_week": cal.component(.weekday, from: now)
         ])
+
+        // Clean up stored context
+        defaults.removeObject(forKey: "healthpulse.notif.hook.\(identifier)")
+        defaults.removeObject(forKey: "healthpulse.notif.sent.\(identifier)")
     }
 
     // Monetization signals
@@ -1458,10 +1499,31 @@ final class AppAnalytics {
     }
 
     /// Track notification delivery (when we schedule a local notification).
-    func trackNotificationScheduled(type: String, identifier: String) {
-        logEvent("notification_scheduled", parameters: [
+    func trackNotificationScheduled(type: String, identifier: String, hookCategory: String? = nil) {
+        let now = Date()
+        let cal = Calendar.current
+        var params: [String: Any] = [
             "type": type,
-            "notification_id": identifier
+            "notification_id": identifier,
+            "hour_scheduled": cal.component(.hour, from: now),
+            "day_of_week": cal.component(.weekday, from: now)
+        ]
+        if let hook = hookCategory {
+            params["hook_category"] = hook
+            UserDefaults.standard.set(hook, forKey: "healthpulse.notif.hook.\(identifier)")
+        }
+        // Store send timestamp for time-to-open calculation
+        UserDefaults.standard.set(now.timeIntervalSince1970, forKey: "healthpulse.notif.sent.\(identifier)")
+        logEvent("notification_scheduled", parameters: params)
+    }
+
+    /// Track when a notification is suppressed before delivery.
+    /// Gives visibility into cap/filter behavior that would otherwise be invisible.
+    func trackNotificationSuppressed(type: String, identifier: String, reason: String) {
+        logEvent("notification_suppressed", parameters: [
+            "type": type,
+            "notification_id": identifier,
+            "reason": reason
         ])
     }
 
