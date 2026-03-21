@@ -161,6 +161,6 @@ struct ProfileCaptureView: View {
     /// Silently persist device ID without any user-facing prompt
     private func saveDeviceIdSilently() {
         let deviceId = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
-        UserDefaults.standard.set(deviceId, forKey: AppKeys.Profile.deviceId)
+        UserProfileStore.shared.persistDeviceId(deviceId)
     }
 }

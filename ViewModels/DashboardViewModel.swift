@@ -4,7 +4,7 @@ import os
 
 /// ViewModel for the main dashboard showing overall score, top insights, and category cards.
 /// Properties are grouped into nested @Observable sub-objects to reduce unnecessary SwiftUI re-renders.
-@Observable
+@MainActor @Observable
 final class DashboardViewModel {
     let healthKitManager: HealthKitManager
     let analysisEngine: AnalysisEngine

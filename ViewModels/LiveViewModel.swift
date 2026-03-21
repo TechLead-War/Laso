@@ -6,7 +6,7 @@ import SwiftUI
 /// ViewModel for the Live tab. streams real-time health data from Apple Watch via HealthKit.
 /// Properties are grouped into independently observable sub-objects so that changes in one group
 /// (e.g. heart rate) don't trigger re-renders in views that only read another group (e.g. sleep).
-@Observable
+@MainActor @Observable
 final class LiveViewModel {
     let healthKitManager: HealthKitManager
     private let readinessStore: ReadinessStore
@@ -389,11 +389,11 @@ final class LiveViewModel {
             anchor: nil,
             limit: HKObjectQueryNoLimit
         ) { [weak self] _, samples, _, _, _ in
-            self?.processHeartRateSamples(samples, unit: unit)
+            Task { @MainActor in self?.processHeartRateSamples(samples, unit: unit) }
         }
 
         query.updateHandler = { [weak self] _, samples, _, _, _ in
-            self?.processHeartRateSamples(samples, unit: unit)
+            Task { @MainActor in self?.processHeartRateSamples(samples, unit: unit) }
         }
 
         healthStore.execute(query)
@@ -510,11 +510,11 @@ final class LiveViewModel {
             anchor: nil,
             limit: HKObjectQueryNoLimit
         ) { [weak self] _, samples, _, _, _ in
-            self?.processLatestSample(samples, unit: unit, update: update)
+            Task { @MainActor in self?.processLatestSample(samples, unit: unit, update: update) }
         }
 
         query.updateHandler = { [weak self] _, samples, _, _, _ in
-            self?.processLatestSample(samples, unit: unit, update: update)
+            Task { @MainActor in self?.processLatestSample(samples, unit: unit, update: update) }
         }
 
         healthStore.execute(query)

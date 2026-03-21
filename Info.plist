@@ -32,6 +32,10 @@
 	<string>Laso uses Siri to let you check your health score, log water, view sleep data, and track workouts hands-free.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>POSTHOG_API_KEY</key>
+	<string>$(POSTHOG_API_KEY)</string>
+	<key>POSTHOG_HOST</key>
+	<string>$(POSTHOG_HOST)</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>processing</string>

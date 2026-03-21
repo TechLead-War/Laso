@@ -4,6 +4,7 @@ import SwiftUI
 struct ScoreGuideSheet: View {
     let score: Int
     let weakestCategoryName: String?
+    let appStateStore: AppStateStore
 
     @Environment(\.dismiss) private var dismiss
     @State private var contentTracker = SectionTracker(section: .scoreGuideContent, tab: .scoreGuide)
@@ -153,7 +154,7 @@ struct ScoreGuideSheet: View {
                             ]
                         )
                         contentTracker.tapped(target: "got_it")
-                        UserDefaults.standard.set(true, forKey: AppKeys.App.hasSeenScoreGuide)
+                        appStateStore.markScoreGuideSeen()
                         dismiss()
                     }
                     .buttonStyle(.borderedProminent)
@@ -175,7 +176,7 @@ struct ScoreGuideSheet: View {
                             ]
                         )
                         contentTracker.tapped(target: "close")
-                        UserDefaults.standard.set(true, forKey: AppKeys.App.hasSeenScoreGuide)
+                        appStateStore.markScoreGuideSeen()
                         dismiss()
                     }
                     .font(.subheadline)

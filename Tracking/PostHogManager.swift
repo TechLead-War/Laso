@@ -105,6 +105,16 @@ final class PostHogManager {
 // MARK: - PostHog Configuration
 
 private enum PHConfig {
-    static let apiKey = "phc_bBp1OaF9TabDqJ9iA9uxbObl8YAIIIYn049Tt8AS7km"
-    static let host = "https://eu.i.posthog.com"
+    static let apiKey: String = {
+        guard let key = Bundle.main.infoDictionary?["POSTHOG_API_KEY"] as? String, !key.isEmpty else {
+            return AppSecrets.PostHog.apiKey
+        }
+        return key
+    }()
+    static let host: String = {
+        guard let host = Bundle.main.infoDictionary?["POSTHOG_HOST"] as? String, !host.isEmpty else {
+            return AppSecrets.PostHog.host
+        }
+        return host
+    }()
 }

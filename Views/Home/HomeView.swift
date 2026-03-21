@@ -6,6 +6,7 @@ struct HomeView: View {
     let viewModel: DashboardViewModel
     let liveViewModel: LiveViewModel
     let deviceSourceManager: DeviceSourceManager
+    let appStateStore: AppStateStore
     @Binding var navigationPath: NavigationPath
     @Binding var showSettings: Bool
     @Environment(\.scenePhase) private var scenePhase
@@ -57,7 +58,8 @@ struct HomeView: View {
         .sheet(isPresented: $showScoreGuide) {
             ScoreGuideSheet(
                 score: viewModel.overallScore.score,
-                weakestCategoryName: weakestCategoryName
+                weakestCategoryName: weakestCategoryName,
+                appStateStore: appStateStore
             )
         }
         .sheet(isPresented: $showRecoveryInfo) {
@@ -874,6 +876,7 @@ struct HomeView: View {
             ),
             liveViewModel: LiveViewModel(healthKitManager: hkManager),
             deviceSourceManager: DeviceSourceManager(healthStore: hkManager.healthStore),
+            appStateStore: AppStateStore(),
             navigationPath: .constant(NavigationPath()),
             showSettings: .constant(false)
         )

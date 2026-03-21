@@ -210,6 +210,7 @@ struct ContentView: View {
                 viewModel: dashboardViewModel,
                 liveViewModel: liveViewModel,
                 deviceSourceManager: deviceSourceManager,
+                appStateStore: appStateStore,
                 navigationPath: $navigationPath,
                 showSettings: $showSettings
             )
@@ -232,6 +233,7 @@ struct ContentView: View {
         case .explore:
             ExploreView(
                 viewModel: dashboardViewModel,
+                appStateStore: appStateStore,
                 navigationPath: $navigationPath
             )
         }

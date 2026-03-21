@@ -2,7 +2,7 @@ import Foundation
 import Observation
 
 /// ViewModel for category detail view showing all metrics, analytics, and trends in a category
-@Observable
+@MainActor @Observable
 final class CategoryDetailViewModel {
     let category: HealthCategory
     let healthKitManager: HealthKitManager

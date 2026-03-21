@@ -2,7 +2,7 @@ import Foundation
 import Observation
 
 /// ViewModel for the Connected Devices management screen
-@Observable
+@MainActor @Observable
 final class ConnectedDevicesViewModel {
     let deviceSourceManager: DeviceSourceManager
     let healthKitManager: HealthKitManager

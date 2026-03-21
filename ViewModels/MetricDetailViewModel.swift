@@ -2,7 +2,7 @@ import Foundation
 import Observation
 
 /// ViewModel for the metric detail deep-dive view with charts, stats, moving averages, and baseline data
-@Observable
+@MainActor @Observable
 final class MetricDetailViewModel {
     let metric: HealthMetric
     let healthKitManager: HealthKitManager

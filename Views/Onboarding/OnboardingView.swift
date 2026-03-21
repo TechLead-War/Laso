@@ -210,19 +210,6 @@ struct OnboardingView: View {
             healthFocuses: focuses.map(\.rawValue)
         )
         UserProfileStore.shared.save(profile)
-
-        // Persist individual fields for quick access
-        if let name = profileName {
-            UserDefaults.standard.set(name, forKey: AppKeys.Profile.name)
-        }
-        if let email = profileEmail {
-            UserDefaults.standard.set(email, forKey: AppKeys.Profile.email)
-        }
-        UserDefaults.standard.set(finalGender.rawValue, forKey: AppKeys.Profile.gender)
-        if let age = profileAge {
-            UserDefaults.standard.set(age, forKey: AppKeys.Profile.dateOfBirth)
-        }
-        UserDefaults.standard.set(true, forKey: AppKeys.Profile.profileCompleted)
     }
 
     private func stepIndex(for step: OnboardingStep) -> Int {
@@ -230,7 +217,7 @@ struct OnboardingView: View {
     }
 
     private func persistCyclePreference(_ enabled: Bool, trackAnalytics: Bool) {
-        UserDefaults.standard.set(enabled, forKey: AppKeys.Cycle.trackingEnabled)
+        appStateStore.setCycleTrackingEnabled(enabled)
         if trackAnalytics {
             AppAnalytics.shared.trackSettingChanged(name: "cycle_tracking_enabled", value: enabled)
         }

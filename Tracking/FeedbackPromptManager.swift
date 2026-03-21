@@ -1,5 +1,9 @@
 import Foundation
 
+#if canImport(FirebaseFirestore)
+import FirebaseFirestore
+#endif
+
 /// Feedback prompt cadence:
 /// - First prompt: 5 days after install.
 /// - If user skips: nag every 5 days until they submit.
@@ -95,5 +99,29 @@ final class FeedbackPromptManager {
     var daysSinceInstall: Int {
         guard let installDate = defaults.object(forKey: Key.installDate) as? Date else { return 0 }
         return Calendar.current.dateComponents([.day], from: installDate, to: Date()).day ?? 0
+    }
+
+    /// Save feedback locally and send to Firestore
+    func submitFeedback(category: String, text: String, completion: @escaping () -> Void) {
+        var allFeedback = defaults.stringArray(forKey: AppKeys.Feedback.entries) ?? []
+        let entry = "[\(category)] \(text). \(Date().formatted(.dateTime.month().day().year()))"
+        allFeedback.append(entry)
+        defaults.set(allFeedback, forKey: AppKeys.Feedback.entries)
+
+        let feedbackData: [String: Any] = [
+            "category": category,
+            "text": text,
+            "timestamp": Date().timeIntervalSince1970,
+            "days_since_install": daysSinceInstall,
+            "app_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
+        ]
+
+#if canImport(FirebaseFirestore)
+        Firestore.firestore().collection(AppSecrets.Firestore.feedbackCollection).addDocument(data: feedbackData) { _ in
+            completion()
+        }
+#else
+        completion()
+#endif
     }
 }

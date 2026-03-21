@@ -5,6 +5,7 @@ import SwiftData
 /// historical context, correlations, and category scores from the analysis engine.
 struct ExploreView: View {
     let viewModel: DashboardViewModel
+    let appStateStore: AppStateStore
     @Binding var navigationPath: NavigationPath
     @State private var showScoreGuide = false
     @State private var trendTimeframe: Int = 30
@@ -292,7 +293,8 @@ struct ExploreView: View {
         .sheet(isPresented: $showScoreGuide) {
             ScoreGuideSheet(
                 score: viewModel.scores.rollingAverageScore,
-                weakestCategoryName: weakestCategory?.category.displayName
+                weakestCategoryName: weakestCategory?.category.displayName,
+                appStateStore: appStateStore
             )
         }
         .refreshable {
@@ -372,6 +374,7 @@ struct ExploreView: View {
                     sessionTracker: SessionTracker.shared
                 )
             ),
+            appStateStore: AppStateStore(),
             navigationPath: .constant(NavigationPath())
         )
     }

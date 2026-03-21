@@ -71,7 +71,7 @@ struct OnboardingConnectHealthStep: View {
             Spacer()
             Spacer()
 
-            if HKHealthStore.isHealthDataAvailable() {
+            if healthKitManager.isHealthKitAvailable {
                 Button {
                     AppAnalytics.shared.trackBlockTap(
                         title: "Connect Apple Health",

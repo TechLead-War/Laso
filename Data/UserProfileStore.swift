@@ -91,6 +91,26 @@ final class UserProfileStore {
     func saveLocal(_ profile: UserProfile) {
         guard let data = try? JSONEncoder().encode(profile) else { return }
         defaults.set(data, forKey: localKey)
+        persistProfileFields(profile)
+    }
+
+    /// Persist individual profile fields for quick access across the app
+    func persistProfileFields(_ profile: UserProfile) {
+        if !profile.name.isEmpty {
+            defaults.set(profile.name, forKey: AppKeys.Profile.name)
+        }
+        if !profile.email.isEmpty {
+            defaults.set(profile.email, forKey: AppKeys.Profile.email)
+        }
+        defaults.set(profile.gender.rawValue, forKey: AppKeys.Profile.gender)
+        defaults.set(profile.dateOfBirth.timeIntervalSince1970, forKey: AppKeys.Profile.dateOfBirth)
+        defaults.set(true, forKey: AppKeys.Profile.profileCompleted)
+        defaults.set(profile.deviceId, forKey: AppKeys.Profile.deviceId)
+    }
+
+    /// Persist a device ID for quick access
+    func persistDeviceId(_ deviceId: String) {
+        defaults.set(deviceId, forKey: AppKeys.Profile.deviceId)
     }
 
     /// Load cached profile from UserDefaults

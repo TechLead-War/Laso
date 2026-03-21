@@ -3,7 +3,7 @@ import Observation
 
 /// ViewModel for the Health State Timeline visualization.
 /// Surfaces HealthStateClassifier data: state history, transitions, distribution.
-@Observable
+@MainActor @Observable
 final class HealthStateTimelineViewModel {
 
     // MARK: - State

@@ -3,7 +3,7 @@ import Observation
 
 /// ViewModel for the What-If Simulation feature.
 /// Manages slider adjustments, runs simulations, and computes ROI rankings.
-@Observable
+@MainActor @Observable
 final class SimulationViewModel {
 
     // MARK: - State

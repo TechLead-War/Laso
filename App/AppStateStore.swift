@@ -12,11 +12,15 @@ final class AppStateStore {
         static let onboardingCompleted = AppKeys.App.onboardingCompleted
         static let hasSeenDiscovery = AppKeys.App.hasSeenDiscovery
         static let pendingCalibrationHydration = AppKeys.App.pendingCalibrationHydration
+        static let hasSeenScoreGuide = AppKeys.App.hasSeenScoreGuide
+        static let cycleTrackingEnabled = AppKeys.Cycle.trackingEnabled
     }
 
     private(set) var onboardingCompleted: Bool
     private(set) var hasSeenDiscovery: Bool
     private(set) var pendingCalibrationHydration: Bool
+    private(set) var hasSeenScoreGuide: Bool
+    private(set) var cycleTrackingEnabled: Bool
 
     init(
         userDefaults: UserDefaults = .standard,
@@ -36,6 +40,8 @@ final class AppStateStore {
 
         hasSeenDiscovery = userDefaults.bool(forKey: Key.hasSeenDiscovery)
         pendingCalibrationHydration = userDefaults.bool(forKey: Key.pendingCalibrationHydration)
+        hasSeenScoreGuide = userDefaults.bool(forKey: Key.hasSeenScoreGuide)
+        cycleTrackingEnabled = userDefaults.bool(forKey: Key.cycleTrackingEnabled)
     }
 
     func markOnboardingCompleted() {
@@ -59,6 +65,16 @@ final class AppStateStore {
     func setPendingCalibrationHydration(_ isPending: Bool) {
         pendingCalibrationHydration = isPending
         persist(isPending, forKey: Key.pendingCalibrationHydration)
+    }
+
+    func markScoreGuideSeen() {
+        hasSeenScoreGuide = true
+        persist(true, forKey: Key.hasSeenScoreGuide)
+    }
+
+    func setCycleTrackingEnabled(_ enabled: Bool) {
+        cycleTrackingEnabled = enabled
+        persist(enabled, forKey: Key.cycleTrackingEnabled)
     }
 
     private func persist(_ value: Bool, forKey key: String, syncToCloud: Bool = false) {

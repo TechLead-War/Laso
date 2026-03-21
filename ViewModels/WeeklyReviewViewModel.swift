@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-@Observable
+@MainActor @Observable
 final class WeeklyReviewViewModel {
     private let dashboardViewModel: DashboardViewModel
     private let persistence = PersistenceManager()

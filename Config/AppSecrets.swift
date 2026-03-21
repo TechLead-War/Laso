@@ -54,6 +54,13 @@ enum AppSecrets {
         static let manageSubscriptions = "https://apps.apple.com/account/subscriptions"
     }
 
+    // MARK: - PostHog
+
+    enum PostHog {
+        static let apiKey = ""
+        static let host = "https://eu.i.posthog.com"
+    }
+
     // MARK: - External Dependencies
 
     enum CDN {

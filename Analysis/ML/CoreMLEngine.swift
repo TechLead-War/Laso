@@ -174,8 +174,12 @@ class HealthStateModelOutput : MLFeatureProvider {
     }
     
     init(riskScore: Double) {
-        let dictionary : [String: Any] = ["riskScore": riskScore]
-        self.provider = try! MLDictionaryFeatureProvider(dictionary: dictionary)
+        let dictionary: [String: Any] = ["riskScore": riskScore]
+        do {
+            self.provider = try MLDictionaryFeatureProvider(dictionary: dictionary)
+        } catch {
+            self.provider = MLDictionaryFeatureProvider()
+        }
     }
     
     init(features: MLFeatureProvider) {
