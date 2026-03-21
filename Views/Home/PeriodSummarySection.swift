@@ -39,7 +39,7 @@ struct PeriodSummarySection: View {
 
             let summary = viewModel.focusFilteredPeriodSummary(for: viewModel.ui.selectedPeriod)
 
-            // Metric rows — declined first, then improved, capped at 4
+            // Metric rows. declined first, then improved, capped at 4
             let allChanges = (summary.topDeclined + summary.topImproved)
                 .sorted { abs($0.changePercent) > abs($1.changePercent) }
             let visibleChanges = Array(allChanges.prefix(4))
@@ -71,7 +71,7 @@ struct PeriodSummarySection: View {
     }
 }
 
-/// Counter pill showing improved/stable/declined count — tappable to filter
+/// Counter pill showing improved/stable/declined count. tappable to filter
 struct PeriodCounter: View {
     let count: Int
     let label: String
@@ -221,7 +221,12 @@ struct MetricChangeRow: View {
         viewModel: DashboardViewModel(
             healthKitManager: HealthKitManager(),
             analysisEngine: AnalysisEngine(),
-            store: HealthDataStore(modelContainer: container)
+            store: HealthDataStore(modelContainer: container),
+            housekeepingService: DashboardHousekeepingService(
+                persistenceManager: PersistenceManager(),
+                analytics: AppAnalytics.shared,
+                sessionTracker: SessionTracker.shared
+            )
         ),
         onTapMetric: { _ in }
     )

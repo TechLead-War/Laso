@@ -617,7 +617,7 @@ struct GrangerCausalityEngine {
         for i in 0..<nCols {
             for j in i..<nCols {
                 var dot: Double = 0
-                // X[:,i] dot X[:,j] — columns are strided in row-major layout
+                // X[:,i] dot X[:,j]. columns are strided in row-major layout
                 for row in 0..<nRows {
                     dot += designMatrix[row * nCols + i] * designMatrix[row * nCols + j]
                 }

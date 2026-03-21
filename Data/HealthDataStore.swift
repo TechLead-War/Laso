@@ -228,7 +228,7 @@ final class HealthDataStore {
         self.modelContext = ModelContext(modelContainer)
     }
 
-    /// Emergency init when SwiftData is unavailable — all reads return empty, writes are no-ops
+    /// Emergency init when SwiftData is unavailable. all reads return empty, writes are no-ops
     init() {
         self.modelContainer = nil
         self.modelContext = nil
@@ -328,7 +328,7 @@ final class HealthDataStore {
         }
 
         guard modelContext != nil else {
-            print("[HealthDataStore] loadAllTimeSeries: modelContext is nil — SwiftData unavailable")
+            print("[HealthDataStore] loadAllTimeSeries: modelContext is nil. SwiftData unavailable")
             return [:]
         }
         var descriptor = FetchDescriptor<StoredDailySample>()
@@ -471,7 +471,7 @@ final class HealthDataStore {
         return (try? modelContext?.fetch(descriptor)) ?? []
     }
 
-    /// Insert a restored snapshot from CloudKit backup (skips dedup — only called on fresh install)
+    /// Insert a restored snapshot from CloudKit backup (skips dedup. only called on fresh install)
     func insertRestoredSnapshot(date: Date, overallScore: Int, categoryScoresJSON: Data, baselinesJSON: Data) {
         modelContext?.insert(StoredAnalysisSnapshot(
             date: date,
@@ -730,7 +730,7 @@ final class HealthDataStore {
         saveContext("swiftdata_save_recommendation")
     }
 
-    /// Batch save recommendations — inserts all then saves once (avoids N separate save() calls)
+    /// Batch save recommendations. inserts all then saves once (avoids N separate save() calls)
     func batchSaveRecommendations(_ insights: [Insight]) {
         guard let modelContext else { return }
         for insight in insights {

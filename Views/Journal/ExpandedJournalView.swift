@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-/// Fast multi-behavior journal sheet — log 5-10 behaviors in under 30 seconds.
+/// Fast multi-behavior journal sheet. log 5-10 behaviors in under 30 seconds.
 /// Presents 55 behaviors organized by group with filter pills and compact input rows.
 struct ExpandedJournalView: View {
     @Environment(\.dismiss) private var dismiss
@@ -389,7 +389,7 @@ struct ExpandedJournalView: View {
                 // JournalStore.save uses JournalCategory.rawValue as the key.
                 store.save(category: legacyCategory, value: value, date: today)
             } else {
-                // New expanded behavior — save with behavior rawValue as category key
+                // New expanded behavior. save with behavior rawValue as category key
                 let entry = StoredJournalEntry(
                     date: today,
                     categoryRawValue: behavior.rawValue,

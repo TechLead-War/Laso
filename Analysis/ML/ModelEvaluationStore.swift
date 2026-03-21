@@ -28,7 +28,7 @@ final class StoredModelEvaluation {
 // MARK: - Evaluation Engine
 
 /// Computes evaluation metrics for each ML component type.
-/// All methods are pure functions — no state, no side effects.
+/// All methods are pure functions. no state, no side effects.
 enum ModelEvaluationEngine {
 
     // MARK: - Classification Metrics (PredictiveScorer)
@@ -172,7 +172,7 @@ enum ModelEvaluationEngine {
 
             // Coverage: use simple +-1 RMSE as a proxy prediction interval
             // (actual coverage evaluation requires the CI from the forecaster)
-            let coverageRate = 0.0 // Placeholder — populated when intervals are provided
+            let coverageRate = 0.0 // Placeholder. populated when intervals are provided
 
             results.append(ForecastMetrics(
                 metric: metric,
@@ -287,7 +287,7 @@ enum ModelEvaluationEngine {
                 current: assignments, previous: previous, k: k
             )
         } else {
-            stability = 0 // No previous — perfectly stable by default
+            stability = 0 // No previous. perfectly stable by default
         }
 
         return ClusterMetrics(
@@ -461,7 +461,7 @@ enum ModelEvaluationEngine {
 
             let deviation = abs(nextValue - baseline.mean) / Swift.max(baseline.standardDeviation, 1e-9)
             if deviation < 1.5 {
-                // Returned to within 1.5 SD of baseline — likely false positive
+                // Returned to within 1.5 SD of baseline. likely false positive
                 selfResolved += 1
             } else {
                 persistent += 1

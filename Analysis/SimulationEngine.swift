@@ -1,7 +1,7 @@
 import Foundation
 
 /// Counterfactual engine: "What if I change metric X by Y?"
-/// Two prediction paths — rule-based (always available) and ML-based (30+ days),
+/// Two prediction paths. rule-based (always available) and ML-based (30+ days),
 /// blended by ML confidence to ensure ML never dominates.
 struct SimulationEngine {
 
@@ -41,7 +41,7 @@ struct SimulationEngine {
         let categoryScores: [HealthScore]
         let categoryWeights: [HealthCategory: Double]
         let latestValues: [HealthMetric: Double]
-        // ML fields (optional — only available with 30+ days)
+        // ML fields (optional. only available with 30+ days)
         let todayVector: DailyFeatureVector?
         let predictiveScorer: PredictiveScorer?
         let predictiveScorerKeys: [FeatureKey]?
@@ -212,7 +212,12 @@ struct SimulationEngine {
             newCategoryScores.append(HealthScorer.scoreCategory(category: category, metricScores: metricScores))
         }
 
-        let newOverall = HealthScorer.overallScore(categoryScores: newCategoryScores, weights: state.categoryWeights)
+        let rawNewOverall = HealthScorer.overallScore(categoryScores: newCategoryScores, weights: state.categoryWeights)
+        let newOverall = HealthScore(
+            score: HealthScorer.applyCoverageAdjustment(rawScore: rawNewOverall.score, baselines: state.baselines),
+            breakdown: rawNewOverall.breakdown,
+            generatedAt: rawNewOverall.generatedAt
+        )
         let scoreDelta = newOverall.score - state.overallScore
 
         // Compute per-metric impact

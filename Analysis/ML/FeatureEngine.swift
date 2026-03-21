@@ -127,7 +127,7 @@ final class FeatureEngine {
 
         let metricsWithData = Array(metricByDate.keys)
 
-        // Update running statistics incrementally — only recompute if no prior state exists
+        // Update running statistics incrementally. only recompute if no prior state exists
         for (metric, dateMap) in metricByDate {
             if runningStats[metric] == nil || runningStats[metric]!.count == 0 {
                 // First time: build from scratch
@@ -137,7 +137,7 @@ final class FeatureEngine {
                 }
                 runningStats[metric] = state
             }
-            // Otherwise keep existing Welford state — incremental updates happen via updateIncremental()
+            // Otherwise keep existing Welford state. incremental updates happen via updateIncremental()
         }
 
         // Build weekday/weekend running means per metric (rebuild from scratch each time for correctness)

@@ -583,7 +583,7 @@ final class HealthStateClassifier {
 
     // MARK: - Emission Posteriors
 
-    /// Compute GMM posterior P(z=k|x) for each observation — used as HMM emission probabilities
+    /// Compute GMM posterior P(z=k|x) for each observation. used as HMM emission probabilities
     private func computeEmissionPosteriors(data: [[Double]]) -> [[Double]] {
         let n = data.count
         let k = numComponents

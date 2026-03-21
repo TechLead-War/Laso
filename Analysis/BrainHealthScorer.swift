@@ -419,7 +419,7 @@ final class BrainHealthScorer {
             totalWeight += 0.50
         }
 
-        // Resting HR component — lower is generally better, declining trend is good
+        // Resting HR component. lower is generally better, declining trend is good
         if let rhr = rhrSeries {
             let recentSamples = rhr.samples(lastDays: 7)
             let olderSamples = rhr.samples(lastDays: 14)
@@ -515,7 +515,7 @@ final class BrainHealthScorer {
     /// Z-score of a current value relative to a baseline
     private func zScore(current: Double, baseline: (mean: Double, sd: Double)) -> Double {
         guard baseline.sd > 0 else {
-            // No variability — return direction based on difference from mean
+            // No variability. return direction based on difference from mean
             if current > baseline.mean { return 1.0 }
             if current < baseline.mean { return -1.0 }
             return 0.0
@@ -696,7 +696,7 @@ final class BrainHealthScorer {
             if !hrvAbove && !remAbove {
                 return "Signals near your personal baseline today"
             } else {
-                return "Mixed signals — some metrics above, some below baseline"
+                return "Mixed signals. some metrics above, some below baseline"
             }
 
         case .foggy:
@@ -706,11 +706,11 @@ final class BrainHealthScorer {
                 return rem < base.mean * 0.85
             }()
             if hrvBelow && remBelow {
-                return "Low HRV + reduced REM — expect brain fog today"
+                return "Low HRV + reduced REM. expect brain fog today"
             } else if hrvBelow {
-                return "HRV well below baseline — cognitive load may feel heavier"
+                return "HRV well below baseline. cognitive load may feel heavier"
             } else {
-                return "Sleep quality below baseline — recovery is lagging"
+                return "Sleep quality below baseline. recovery is lagging"
             }
         }
     }

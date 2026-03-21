@@ -120,7 +120,7 @@ struct InsightGenerator {
             insights.append(insight)
         }
 
-        // Add reversal insights — these are high-signal events worth surfacing
+        // Add reversal insights. these are high-signal events worth surfacing
         for (metric, trendResult) in trends {
             guard trendResult.inflection == .reversing else { continue }
             guard !insights.contains(where: { $0.metric == metric }) else { continue }
@@ -137,8 +137,8 @@ struct InsightGenerator {
                 title: "\(metric.displayName) \(isPositiveReversal ? "Turning Around" : "Reversing Course")",
                 summary: "Your \(metric.displayName.lowercased()) trend has reversed direction in the past week. \(isPositiveReversal ? "Previous decline is now recovering." : "Previous improvement is now declining.")",
                 recommendation: isPositiveReversal
-                    ? "your \(metric.displayName.lowercased()) is recovering — now \(formatted) \(metric.unit) vs \(previousFormatted) \(metric.unit) previously"
-                    : "your \(metric.displayName.lowercased()) reversed direction — was improving, now declining at \(rateDescription) rate",
+                    ? "your \(metric.displayName.lowercased()) is recovering. now \(formatted) \(metric.unit) vs \(previousFormatted) \(metric.unit) previously"
+                    : "your \(metric.displayName.lowercased()) reversed direction. was improving, now declining at \(rateDescription) rate",
                 severity: isPositiveReversal ? .info : .warning,
                 trend: trendResult.direction,
                 currentValue: currentValue,
@@ -147,7 +147,7 @@ struct InsightGenerator {
             ))
         }
 
-        // Sort by priority — deduplication is handled by InsightCoordinator.coordinate()
+        // Sort by priority. deduplication is handled by InsightCoordinator.coordinate()
         // at the end of the full pipeline, so no intermediate dedup here.
         return insights.sorted { $0.priorityScore > $1.priorityScore }
     }

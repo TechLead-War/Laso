@@ -53,22 +53,23 @@ struct ConnectedDevicesView: View {
                     ForEach(viewModel.activeDevices) { info in
                         NavigationLink {
                             DeviceDetailView(device: info.device, deviceInfo: info)
+                                .onAppear {
+                                    AppAnalytics.shared.trackBlockTap(
+                                        title: info.device.displayName,
+                                        type: .deviceRow,
+                                        screen: .connectedDevices,
+                                        metadata: [
+                                            "device_id": info.device.rawValue,
+                                            "device_connected": 1,
+                                            "device_active": info.isActive ? 1 : 0,
+                                            "metric_count": info.metricCount
+                                        ]
+                                    )
+                                }
                         } label: {
                             deviceRow(info: info)
+                                .contentShape(Rectangle())
                         }
-                        .simultaneousGesture(TapGesture().onEnded {
-                            AppAnalytics.shared.trackBlockTap(
-                                title: info.device.displayName,
-                                type: .deviceRow,
-                                screen: .connectedDevices,
-                                metadata: [
-                                    "device_id": info.device.rawValue,
-                                    "device_connected": 1,
-                                    "device_active": info.isActive ? 1 : 0,
-                                    "metric_count": info.metricCount
-                                ]
-                            )
-                        })
                     }
                 }
             }
@@ -78,22 +79,23 @@ struct ConnectedDevicesView: View {
                     ForEach(viewModel.inactiveDevices) { info in
                         NavigationLink {
                             DeviceDetailView(device: info.device, deviceInfo: info)
+                                .onAppear {
+                                    AppAnalytics.shared.trackBlockTap(
+                                        title: info.device.displayName,
+                                        type: .deviceRow,
+                                        screen: .connectedDevices,
+                                        metadata: [
+                                            "device_id": info.device.rawValue,
+                                            "device_connected": 1,
+                                            "device_active": info.isActive ? 1 : 0,
+                                            "metric_count": info.metricCount
+                                        ]
+                                    )
+                                }
                         } label: {
                             deviceRow(info: info)
+                                .contentShape(Rectangle())
                         }
-                        .simultaneousGesture(TapGesture().onEnded {
-                            AppAnalytics.shared.trackBlockTap(
-                                title: info.device.displayName,
-                                type: .deviceRow,
-                                screen: .connectedDevices,
-                                metadata: [
-                                    "device_id": info.device.rawValue,
-                                    "device_connected": 1,
-                                    "device_active": info.isActive ? 1 : 0,
-                                    "metric_count": info.metricCount
-                                ]
-                            )
-                        })
                     }
                 } header: {
                     Text("Connected But Inactive")
@@ -107,6 +109,18 @@ struct ConnectedDevicesView: View {
                     ForEach(viewModel.unconnectedDevices) { device in
                         NavigationLink {
                             DeviceDetailView(device: device, deviceInfo: nil)
+                                .onAppear {
+                                    AppAnalytics.shared.trackBlockTap(
+                                        title: device.displayName,
+                                        type: .unconnectedDeviceRow,
+                                        screen: .connectedDevices,
+                                        metadata: [
+                                            "device_id": device.rawValue,
+                                            "device_connected": 0,
+                                            "metric_count": device.supportedMetrics.count
+                                        ]
+                                    )
+                                }
                         } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: device.systemImageName)
@@ -122,19 +136,8 @@ struct ConnectedDevicesView: View {
                                         .foregroundStyle(.secondary)
                                 }
                             }
+                            .contentShape(Rectangle())
                         }
-                        .simultaneousGesture(TapGesture().onEnded {
-                            AppAnalytics.shared.trackBlockTap(
-                                title: device.displayName,
-                                type: .unconnectedDeviceRow,
-                                screen: .connectedDevices,
-                                metadata: [
-                                    "device_id": device.rawValue,
-                                    "device_connected": 0,
-                                    "metric_count": device.supportedMetrics.count
-                                ]
-                            )
-                        })
                     }
                 } header: {
                     Text(viewModel.availableSourcesTitle)

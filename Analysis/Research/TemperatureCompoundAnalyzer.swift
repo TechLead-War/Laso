@@ -67,7 +67,7 @@ struct TemperatureCompoundAnalyzer {
             let hrvSuppressed = isHRVSuppressed(context: context)
 
             if hrvSuppressed && deviation >= mildElevationThreshold {
-                // Compound signal — already reported by InflammationRiskAnalyzer
+                // Compound signal. already reported by InflammationRiskAnalyzer
                 // We add the temperature-specific detail
                 insights.append(InsightFactory.make(
                     metric: .appleSleepingWristTemperature,
@@ -113,7 +113,7 @@ struct TemperatureCompoundAnalyzer {
                 insights.append(InsightFactory.observation(
                     metric: .appleSleepingWristTemperature,
                     title: "Temperature Cycle Pattern Detected",
-                    summary: "Your wrist temperature shows a recurring cyclical pattern with \(String(format: "%.1f", cycleAmplitude))°C amplitude — consistent with hormonal cycle influence. Research shows wrist temperature tracks ovulation with 82-93% accuracy.",
+                    summary: "Your wrist temperature shows a recurring cyclical pattern with \(String(format: "%.1f", cycleAmplitude))°C amplitude. consistent with hormonal cycle influence. Research shows wrist temperature tracks ovulation with 82-93% accuracy.",
                     recommendation: "The cyclical temperature variation of \(String(format: "%.1f", cycleAmplitude))°C around your baseline of \(String(format: "%.1f", baselineMean))°C reflects the biphasic pattern driven by progesterone. Post-ovulation temperatures typically rise 0.2-0.5°C above the follicular phase baseline.",
                     currentValue: cycleAmplitude,
                     baselineValue: 0.3,

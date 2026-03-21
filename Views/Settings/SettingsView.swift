@@ -67,6 +67,18 @@ struct SettingsView: View {
                                 healthKitManager: healthKitManager
                             )
                         )
+                        .onAppear {
+                            AppAnalytics.shared.trackBlockTap(
+                                title: "Manage Devices",
+                                type: .manageDevices,
+                                screen: .settings,
+                                metadata: [
+                                    "destination": "connected_devices",
+                                    "connected_devices_count": deviceSourceManager.connectedDevices.count
+                                ]
+                            )
+                            devicesTracker.tapped(target: "manage_devices")
+                        }
                     } label: {
                         HStack {
                             Label {
@@ -80,19 +92,8 @@ struct SettingsView: View {
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         }
+                        .contentShape(Rectangle())
                     }
-                    .simultaneousGesture(TapGesture().onEnded {
-                        AppAnalytics.shared.trackBlockTap(
-                            title: "Manage Devices",
-                            type: .manageDevices,
-                            screen: .settings,
-                            metadata: [
-                                "destination": "connected_devices",
-                                "connected_devices_count": deviceSourceManager.connectedDevices.count
-                            ]
-                        )
-                        devicesTracker.tapped(target: "manage_devices")
-                    })
                 }
                 .onAppear { devicesTracker.appeared() }
                 .onDisappear { devicesTracker.disappeared() }
@@ -244,6 +245,18 @@ struct SettingsView: View {
                 Section {
                     NavigationLink {
                         MetricAlertPickerView(selectedMetrics: $preferences)
+                            .onAppear {
+                                AppAnalytics.shared.trackBlockTap(
+                                    title: "Warning Alert Metrics",
+                                    type: .metricAlertsPicker,
+                                    screen: .settings,
+                                    metadata: [
+                                        "destination": "metric_alert_picker",
+                                        "selected_metrics_count": preferences.warningAlertMetrics.count
+                                    ]
+                                )
+                                metricAlertsTracker.tapped(target: "warning_alert_metrics")
+                            }
                     } label: {
                         HStack {
                             Text(Copy.Settings.warningAlertMetrics)
@@ -251,19 +264,8 @@ struct SettingsView: View {
                             Text(Copy.Settings.selectedCount(preferences.warningAlertMetrics.count))
                                 .foregroundStyle(.secondary)
                         }
+                        .contentShape(Rectangle())
                     }
-                    .simultaneousGesture(TapGesture().onEnded {
-                        AppAnalytics.shared.trackBlockTap(
-                            title: "Warning Alert Metrics",
-                            type: .metricAlertsPicker,
-                            screen: .settings,
-                            metadata: [
-                                "destination": "metric_alert_picker",
-                                "selected_metrics_count": preferences.warningAlertMetrics.count
-                            ]
-                        )
-                        metricAlertsTracker.tapped(target: "warning_alert_metrics")
-                    })
                 } header: {
                     Text(Copy.Settings.metricAlerts)
                 } footer: {

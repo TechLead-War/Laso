@@ -36,7 +36,7 @@ enum InsightDirective: String, Codable, Hashable, CaseIterable {
 
     // MARK: - Neutral
 
-    /// Continue current behavior — things are going well
+    /// Continue current behavior. things are going well
     case maintain
     /// Observational insight with no specific behavioral direction
     case informational
@@ -62,7 +62,7 @@ enum InsightDirective: String, Codable, Hashable, CaseIterable {
 
     // MARK: - Resolution Priority
 
-    /// Priority for conflict resolution — higher value wins.
+    /// Priority for conflict resolution. higher value wins.
     /// Safety-oriented directives (medical, rest) outrank performance pushes.
     var resolutionPriority: Int {
         switch self {

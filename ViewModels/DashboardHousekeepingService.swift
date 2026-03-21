@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 final class DashboardHousekeepingService {
     struct Payload {
         let currentScore: Int
@@ -30,8 +31,8 @@ final class DashboardHousekeepingService {
         persistenceManager: PersistenceManager,
         cloudBackupManager: any CloudBackupService = CloudBackupManager.shared,
         notificationManager: any NotificationAuthorizationService = NotificationManager.shared,
-        analytics: any AnalyticsTrackingService = AppAnalytics.shared,
-        sessionTracker: any SessionTrackingService = SessionTracker.shared
+        analytics: any AnalyticsTrackingService,
+        sessionTracker: any SessionTrackingService
     ) {
         self.persistenceManager = persistenceManager
         self.cloudBackupManager = cloudBackupManager
@@ -43,7 +44,7 @@ final class DashboardHousekeepingService {
     func perform(store: HealthDataStore, payload: Payload) async {
         await cloudBackupManager.backupIfNeeded(store: store, persistence: persistenceManager)
 
-        // HealthDataStore is @MainActor — batch SwiftData operations on main actor
+        // HealthDataStore is @MainActor. batch SwiftData operations on main actor
         await MainActor.run {
             RecommendationEvaluator.evaluatePending(store: store, timeSeries: payload.timeSeries)
             store.pruneOldRecommendations()

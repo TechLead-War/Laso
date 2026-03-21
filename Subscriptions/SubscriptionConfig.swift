@@ -1,7 +1,7 @@
 import Foundation
 
 /// Subscription product IDs and regional pricing configuration.
-/// Actual prices are set in App Store Connect — this serves as the source of truth
+/// Actual prices are set in App Store Connect. this serves as the source of truth
 /// for what tiers to configure per storefront and for analytics tagging.
 struct SubscriptionConfig {
 
@@ -51,7 +51,7 @@ struct SubscriptionConfig {
     /// Country code → pricing tier mapping.
     /// Add or move countries here, then mirror changes in App Store Connect.
     static let regionPricing: [String: PriceTier] = [
-        // Standard — mature markets
+        // Standard. mature markets
         "US": .standard, "CA": .standard, "GB": .standard,
         "DE": .standard, "FR": .standard, "AU": .standard,
         "JP": .standard, "KR": .standard, "IT": .standard,
@@ -61,7 +61,7 @@ struct SubscriptionConfig {
         "HK": .standard, "IL": .standard, "AE": .standard,
         "SA": .standard, "QA": .standard, "KW": .standard,
 
-        // Reduced — developing markets (lower purchasing power)
+        // Reduced. developing markets (lower purchasing power)
         "IN": .reduced, "BR": .reduced, "MX": .reduced,
         "TR": .reduced, "ID": .reduced, "PH": .reduced,
         "TH": .reduced, "VN": .reduced, "PK": .reduced,
@@ -71,7 +71,7 @@ struct SubscriptionConfig {
         "KE": .reduced, "GH": .reduced, "UA": .reduced,
         "RO": .reduced, "BG": .reduced, "MY": .reduced,
 
-        // Premium — high cost-of-living markets
+        // Premium. high cost-of-living markets
         "CH": .premium, "NO": .premium, "DK": .premium,
         "SE": .premium, "SG": .premium, "LU": .premium,
     ]

@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Today Briefing View
 
-/// Horizontal scroll strip of intelligence cards — non-obvious health findings
+/// Horizontal scroll strip of intelligence cards. non-obvious health findings
 /// surfaced by the on-device ML engine. Each card is a compact, information-dense
 /// tile showing a single predictive or analytical finding the user could not
 /// derive from raw metrics alone.
@@ -173,7 +173,7 @@ extension IntelligenceCard.AccentColor {
             icon: "arrow.triangle.swap",
             label: "REGIME SHIFT",
             headline: "Your sleep architecture shifted to a new pattern 5 days ago",
-            detail: "Deep sleep ratio dropped from 22% to 15% — monitoring",
+            detail: "Deep sleep ratio dropped from 22% to 15%. monitoring",
             severity: .notable,
             confidence: 0.74,
             priority: 0.78,

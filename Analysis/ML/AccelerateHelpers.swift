@@ -443,7 +443,7 @@ enum AccelerateML {
     static func solveLinearSystem(A: [Double], b: [Double], n: Int) -> [Double]? {
         guard A.count >= n * n, b.count >= n, n > 0 else { return nil }
 
-        // Augmented matrix [A|b] — work in-place
+        // Augmented matrix [A|b]. work in-place
         var aug = [Double](repeating: 0, count: n * (n + 1))
         for i in 0..<n {
             for j in 0..<n {

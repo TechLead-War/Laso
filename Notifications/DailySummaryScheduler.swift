@@ -23,7 +23,7 @@ struct DailySummaryScheduler {
             return
         }
 
-        // Dynamic title — leads with the most interesting psychological hook
+        // Dynamic title. leads with the most interesting psychological hook
         let title = Copy.Notifications.dynamicDailySummaryTitle(
             score: score,
             scoreDelta: scoreChangeFromYesterday,
@@ -38,7 +38,7 @@ struct DailySummaryScheduler {
             forKey: AppKeys.Notifications.lastDailyHookCategory
         )
 
-        // Dynamic body — adds context without repeating the title
+        // Dynamic body. adds context without repeating the title
         let topAction: String? = topInsights.first.map { firstSentence($0.recommendation) }
         let dayOfWeek = Calendar.current.component(.weekday, from: Date())
 

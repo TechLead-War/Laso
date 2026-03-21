@@ -266,7 +266,7 @@ struct JournalCorrelationAnalyzer {
         sampleCount: Int,
         journalValues: [Double]
     ) -> String {
-        let catName = pair.category.displayName.lowercased()
+        _ = pair.category.displayName.lowercased()
         let metricName = pair.metric.displayName.lowercased()
         let absDiff = String(format: "%.0f", abs(effect.percentDiff))
         let direction = effect.percentDiff > 0 ? "higher" : "lower"

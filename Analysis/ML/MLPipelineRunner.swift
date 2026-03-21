@@ -71,7 +71,7 @@ final class MLPipelineRunner {
             return nil
         }
         if thermalState == .serious {
-            logger.info("ML analysis starting under serious thermal state — will throttle between components")
+            logger.info("ML analysis starting under serious thermal state. will throttle between components")
         }
 
         var output = PipelineOutput()

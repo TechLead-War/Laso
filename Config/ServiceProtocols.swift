@@ -41,7 +41,7 @@ protocol NotificationAuthorizationService {
     func requestAuthorizationIfNeeded() async -> Bool
 }
 
-protocol AnalyticsTrackingService {
+@MainActor protocol AnalyticsTrackingService {
     func trackAnalysisCompleted(
         score: Int,
         insightsCount: Int,
@@ -55,7 +55,7 @@ protocol AnalyticsTrackingService {
     func trackValueDelivered(newInsightsCount: Int, scoreChanged: Bool, newAnomalies: Int, newCorrelations: Int)
 }
 
-protocol SessionTrackingService {
+@MainActor protocol SessionTrackingService {
     var streakDays: Int { get }
 }
 

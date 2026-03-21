@@ -37,7 +37,7 @@ struct LoadingView: View {
 
             // Animated icon with glow
             ZStack {
-                // Glow ring — one-shot scale on appear (no repeatForever)
+                // Glow ring. one-shot scale on appear (no repeatForever)
                 Circle()
                     .fill(currentColor.opacity(0.1))
                     .frame(width: 120, height: 120)
@@ -74,7 +74,7 @@ struct LoadingView: View {
                     .foregroundStyle(.tertiary)
             }
 
-            // Progress dots — fills up 1→2→3→4→5→6 then resets
+            // Progress dots. fills up 1→2→3→4→5→6 then resets
             HStack(spacing: 6) {
                 ForEach(0..<phases.count, id: \.self) { index in
                     let isActive = index < activeDots

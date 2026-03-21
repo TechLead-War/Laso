@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Visualizes the HealthStateClassifier output — calendar view with color-coded states,
+/// Visualizes the HealthStateClassifier output. calendar view with color-coded states,
 /// transition patterns, and distribution.
 struct HealthStateTimelineView: View {
     let viewModel: HealthStateTimelineViewModel

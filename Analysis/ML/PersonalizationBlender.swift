@@ -342,7 +342,7 @@ enum PersonalizationBlender {
     ///   - userDataDays: Number of days of user data available.
     ///   - personalModelAccuracy: Optional measured accuracy of the personal model.
     ///   - rampCenterDays: Day count at which blending is 50/50 (default 14).
-    ///   - rampScale: Sigmoid steepness — smaller = sharper transition (default 5.0).
+    ///   - rampScale: Sigmoid steepness. smaller = sharper transition (default 5.0).
     /// - Returns: Blended prediction and the personal weight used.
     static func blendPrediction(
         personalPrediction: Double,
@@ -390,7 +390,7 @@ enum PersonalizationBlender {
         userDataDays: Int
     ) -> (mean: Double, stdDev: Double, personalWeight: Double) {
         guard let prior = PopulationPriors.priors[metric] else {
-            // No population prior — fall back to personal or zeros.
+            // No population prior. fall back to personal or zeros.
             if let personal = personalBaseline {
                 return (mean: personal.mean, stdDev: personal.standardDeviation, personalWeight: 1.0)
             }
@@ -420,7 +420,7 @@ enum PersonalizationBlender {
 
     /// Generate a risk prediction when no personal model exists yet.
     ///
-    /// Uses population priors plus whatever data the user has — even a single day —
+    /// Uses population priors plus whatever data the user has. even a single day —
     /// by computing z-scores relative to population baselines and applying the
     /// population prediction weights.
     ///
@@ -443,7 +443,7 @@ enum PersonalizationBlender {
         let predPrior = PopulationPriors.predictionPrior
         var logit = predPrior.intercept
         var matchedFeatures = 0
-        var totalPriorFeatures = predPrior.featureWeights.count
+        let totalPriorFeatures = predPrior.featureWeights.count
         var riskFactors: [String] = []
         var protectiveFactors: [String] = []
 
@@ -635,7 +635,7 @@ enum PersonalizationBlender {
 
         case 3..<14:
             level = .emerging
-            description = "Your insights are \(Int(percent))% personalized — we're learning your unique patterns."
+            description = "Your insights are \(Int(percent))% personalized. we're learning your unique patterns."
             let remaining = 14 - userDataDays
             nextMilestone = "Track \(remaining) more day\(remaining == 1 ? "" : "s") for increasingly personal insights."
 
@@ -647,7 +647,7 @@ enum PersonalizationBlender {
 
         case 21..<30:
             level = .personalized
-            description = "Your insights are \(Int(percent))% personalized — predictions are tailored to you."
+            description = "Your insights are \(Int(percent))% personalized. predictions are tailored to you."
             let remaining = 30 - userDataDays
             nextMilestone = "Track \(remaining) more day\(remaining == 1 ? "" : "s") for fully personalized insights."
 
@@ -731,7 +731,7 @@ enum PersonalizationBlender {
         }
 
         if confidence < 0.5 {
-            parts.append("Confidence is low — more data will improve accuracy.")
+            parts.append("Confidence is low. more data will improve accuracy.")
         }
 
         return parts.joined(separator: " ")

@@ -49,7 +49,7 @@ struct CardioRespiratoryAgeAnalyzer {
         // Find which age bracket this VO2max is "average" for
         let fitnessAge = findFitnessAge(vo2max: currentVO2)
 
-        // Compute percentile (approximate — we don't know user's exact age)
+        // Compute percentile (approximate. we don't know user's exact age)
         // Use middle bracket as reference and find where they fall
         let refBracket = brackets[2] // 40-49 as middle reference
         let percentile = computePercentile(vo2max: currentVO2, bracket: refBracket)
@@ -79,7 +79,7 @@ struct CardioRespiratoryAgeAnalyzer {
         insights.append(InsightFactory.observation(
             metric: .vo2Max,
             title: "Cardio Fitness Age: ~\(String(format: "%.0f", fitnessAge))",
-            summary: "Your VO2max of \(String(format: "%.1f", currentVO2)) mL/kg/min is average for someone around age \(String(format: "%.0f", fitnessAge)). VO2max is the single strongest predictor of all-cause mortality — stronger than smoking, diabetes, or hypertension.",
+            summary: "Your VO2max of \(String(format: "%.1f", currentVO2)) mL/kg/min is average for someone around age \(String(format: "%.0f", fitnessAge)). VO2max is the single strongest predictor of all-cause mortality. stronger than smoking, diabetes, or hypertension.",
             recommendation: "At \(String(format: "%.1f", currentVO2)) mL/kg/min, your cardiorespiratory fitness places you approximately at the \(String(format: "%.0f", percentile))th percentile for a middle-aged adult. Each 1 MET (~3.5 mL/kg/min) improvement is associated with a 13% reduction in mortality risk.",
             severity: .info,
             trend: trajectory,
@@ -103,7 +103,7 @@ struct CardioRespiratoryAgeAnalyzer {
                 insights.append(InsightFactory.observation(
                     metric: .vo2Max,
                     title: "VO2max Improving: +\(String(format: "%.1f", changeOverPeriod)) Over \(monthsTracked) Months",
-                    summary: "Your cardiorespiratory fitness has improved by \(String(format: "%.1f", changeOverPeriod)) mL/kg/min over \(monthsTracked) months — equivalent to ~\(String(format: "%.0f", mortalityReduction))% estimated mortality risk reduction based on population studies.",
+                    summary: "Your cardiorespiratory fitness has improved by \(String(format: "%.1f", changeOverPeriod)) mL/kg/min over \(monthsTracked) months. equivalent to ~\(String(format: "%.0f", mortalityReduction))% estimated mortality risk reduction based on population studies.",
                     recommendation: "A \(String(format: "%.1f", changeOverPeriod)) mL/kg/min VO2max improvement (\(String(format: "%.1f", metImprovement * 100 / max(currentVO2, 1)))% gain) represents meaningful progress. This improvement shifts your fitness age younger and independently reduces all-cause mortality risk.",
                     currentValue: currentVO2,
                     baselineValue: currentVO2 - changeOverPeriod,
@@ -134,7 +134,7 @@ struct CardioRespiratoryAgeAnalyzer {
             insights.append(InsightFactory.medicalAdvice(
                 metric: .vo2Max,
                 title: "VO2max Below Clinical Threshold",
-                summary: "Your VO2max of \(String(format: "%.1f", currentVO2)) mL/kg/min is below 20 — a threshold associated with significantly elevated mortality risk and functional limitation across all age groups.",
+                summary: "Your VO2max of \(String(format: "%.1f", currentVO2)) mL/kg/min is below 20. a threshold associated with significantly elevated mortality risk and functional limitation across all age groups.",
                 recommendation: "A VO2max below 20 mL/kg/min places you in the lowest fitness category regardless of age. Meta-analyses consistently show this threshold as a clinical inflection point for cardiovascular events. Even modest improvements from this baseline yield disproportionately large risk reductions.",
                 trend: trajectory,
                 currentValue: currentVO2,

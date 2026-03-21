@@ -5,7 +5,7 @@ import SwiftUI
 
 /// Defines how a behavior value is captured in the UI
 enum BehaviorInputType: Equatable {
-    /// Simple toggle — logged or not (value: 0 or 1)
+    /// Simple toggle. logged or not (value: 0 or 1)
     case yesNo
     /// Numeric quantity with a unit, valid range, and step increment
     case quantity(unit: String, range: ClosedRange<Double>, step: Double)
@@ -66,7 +66,7 @@ enum JournalBehaviorGroup: String, CaseIterable, Identifiable, Codable {
 
 // MARK: - Journal Behavior
 
-/// Expanded behavior catalog — 55 trackable behaviors organized by group.
+/// Expanded behavior catalog. 55 trackable behaviors organized by group.
 /// Coexists with the legacy `JournalCategory` enum in JournalStore.swift.
 enum JournalBehavior: String, CaseIterable, Identifiable, Codable {
     var id: String { rawValue }
@@ -427,7 +427,7 @@ enum JournalBehavior: String, CaseIterable, Identifiable, Codable {
         case .noPhoneInBed:        return .yesNo
         case .coolRoom:            return .yesNo
         case .heavyMealBeforeBed:  return .yesNo
-        // Supplements — all yes/no (took it or didn't)
+        // Supplements. all yes/no (took it or didn't)
         case .vitaminD:            return .yesNo
         case .omega3:              return .yesNo
         case .magnesium:           return .yesNo

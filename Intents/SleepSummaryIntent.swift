@@ -1,7 +1,7 @@
 import AppIntents
 import SwiftUI
 
-/// "How did I sleep last night?" — Returns last night's sleep summary.
+/// "How did I sleep last night?". Returns last night's sleep summary.
 struct SleepSummaryIntent: AppIntent {
     static var title: LocalizedStringResource = "Check Sleep Summary"
     static var description = IntentDescription(
@@ -33,7 +33,7 @@ struct SleepSummaryIntent: AppIntent {
         let deepFormatted = formatHoursMinutes(sleep.deepHours)
         let remFormatted = formatHoursMinutes(sleep.remHours)
 
-        var dialogText = "You slept \(totalFormatted) last night — that's \(sleep.qualityLabel.lowercased()) quality."
+        var dialogText = "You slept \(totalFormatted) last night. that's \(sleep.qualityLabel.lowercased()) quality."
         if sleep.deepHours > 0 || sleep.remHours > 0 {
             dialogText += " You got \(deepFormatted) of deep sleep and \(remFormatted) of REM sleep."
         }

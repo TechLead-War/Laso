@@ -19,7 +19,7 @@ struct StressCard: View {
                     .padding(.vertical, 6)
 
                 HStack(spacing: 14) {
-                    // Stress icon — waveform in capsule, distinct from Brain Health
+                    // Stress icon. waveform in capsule, distinct from Brain Health
                     Image(systemName: "waveform.path.ecg")
                         .font(.callout.weight(.semibold))
                         .foregroundStyle(.white)

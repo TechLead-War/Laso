@@ -19,8 +19,8 @@ struct MobilityDeclineAnalyzer {
         let label: String
 
         enum DeclineDirection {
-            case decreasing // Walking speed, step length — lower is worse
-            case increasing // Double support %, asymmetry — higher is worse
+            case decreasing // Walking speed, step length. lower is worse
+            case increasing // Double support %, asymmetry. higher is worse
         }
     }
 
@@ -103,7 +103,7 @@ struct MobilityDeclineAnalyzer {
                 metric: decliningMetrics.first!.indicator.metric,
                 title: "Multi-Metric Mobility Decline",
                 summary: "\(decliningMetrics.count) of \(totalEvaluated) mobility metrics are declining over the past 6 months: \(metricList). Concurrent deterioration across multiple gait parameters warrants attention.",
-                recommendation: "Research shows simultaneous decline in walking speed, step length, and gait symmetry is a sensitive early marker of neuromuscular or neurological changes — detectable years before clinical symptoms in studies with 88-98% sensitivity for Parkinson's disease.",
+                recommendation: "Research shows simultaneous decline in walking speed, step length, and gait symmetry is a sensitive early marker of neuromuscular or neurological changes. detectable years before clinical symptoms in studies with 88-98% sensitivity for Parkinson's disease.",
                 severity: decliningMetrics.count >= 4 ? .warning : .info,
                 trend: .declining,
                 currentValue: Double(decliningMetrics.count),
@@ -126,7 +126,7 @@ struct MobilityDeclineAnalyzer {
             insights.append(InsightFactory.make(
                 metric: .walkingSpeed,
                 title: "Walking Speed Declining",
-                summary: "Your walking speed has decreased \(String(format: "%.0f", speedDecline.changePercent))% over the past 6 months. Walking speed is called the 'sixth vital sign' — it's one of the strongest predictors of functional health and longevity.",
+                summary: "Your walking speed has decreased \(String(format: "%.0f", speedDecline.changePercent))% over the past 6 months. Walking speed is called the 'sixth vital sign'. it's one of the strongest predictors of functional health and longevity.",
                 recommendation: "In population studies, each 0.1 m/s decrease in walking speed is associated with measurably higher mortality risk. Your \(String(format: "%.0f", speedDecline.changePercent))% decline across \(speedDecline.samples) measurements is worth monitoring.",
                 severity: speedDecline.changePercent >= 15 ? .warning : .info,
                 trend: .declining,
@@ -146,7 +146,7 @@ struct MobilityDeclineAnalyzer {
                 metric: .walkingAsymmetry,
                 title: "Gait Asymmetry Increasing",
                 summary: "Your walking asymmetry has increased \(String(format: "%.0f", asymDecline.changePercent))% over 6 months. Growing left-right imbalance in gait is an early neurological and musculoskeletal indicator.",
-                recommendation: "Increasing gait asymmetry — the difference between left and right step patterns — can reflect musculoskeletal compensation, joint issues, or early neurological changes. A \(String(format: "%.0f", asymDecline.changePercent))% increase warrants investigation.",
+                recommendation: "Increasing gait asymmetry. the difference between left and right step patterns. can reflect musculoskeletal compensation, joint issues, or early neurological changes. A \(String(format: "%.0f", asymDecline.changePercent))% increase warrants investigation.",
                 severity: asymDecline.changePercent >= 25 ? .warning : .info,
                 trend: .declining,
                 currentValue: asymDecline.changePercent,

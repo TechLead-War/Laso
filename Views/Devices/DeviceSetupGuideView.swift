@@ -35,17 +35,6 @@ struct DeviceSetupGuideView: View {
                             .font(.subheadline.weight(.medium))
                     }
                     .buttonStyle(.borderedProminent)
-                    .simultaneousGesture(TapGesture().onEnded {
-                        AppAnalytics.shared.trackBlockTap(
-                            title: "Open App Store — \(device.displayName)",
-                            type: .appStoreLink,
-                            screen: .deviceSetupGuide,
-                            metadata: [
-                                "device_id": device.rawValue,
-                                "destination": "app_store"
-                            ]
-                        )
-                    })
                 }
             }
         }

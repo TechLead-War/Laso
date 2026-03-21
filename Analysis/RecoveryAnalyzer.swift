@@ -52,8 +52,8 @@ struct RecoveryAnalyzer {
                     title: Copy.Analysis.Recovery.postWorkoutHRVRecovery,
                     summary: "Your HRV takes an average of \(String(format: "%.1f", avgRecovery)) days to return to baseline after workouts. Post-workout HRV averages ~\(postWorkoutAvg)ms vs your \(baselineStr)ms baseline.",
                     recommendation: avgRecovery > 2 ?
-                        "HRV recovery is averaging \(String(format: "%.1f", avgRecovery)) days — above your typical baseline window. Post-workout HRV drops to ~\(postWorkoutAvg)ms before recovering to \(baselineStr)ms." :
-                        "Your HRV returns to baseline in \(String(format: "%.1f", avgRecovery)) days on average — post-workout HRV ~\(postWorkoutAvg)ms recovering to your \(baselineStr)ms baseline.",
+                        "HRV recovery is averaging \(String(format: "%.1f", avgRecovery)) days. above your typical baseline window. Post-workout HRV drops to ~\(postWorkoutAvg)ms before recovering to \(baselineStr)ms." :
+                        "Your HRV returns to baseline in \(String(format: "%.1f", avgRecovery)) days on average. post-workout HRV ~\(postWorkoutAvg)ms recovering to your \(baselineStr)ms baseline.",
                     severity: avgRecovery > 3 ? .warning : .info,
                     trend: trend,
                     currentValue: avgRecovery,

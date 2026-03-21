@@ -30,7 +30,7 @@ struct MetricDetailView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "info.circle")
                                 .font(.caption)
-                            Text("Showing \(expandedTo)-day range — no data found in the last 30 days")
+                            Text("Showing \(expandedTo)-day range. no data found in the last 30 days")
                                 .font(.caption)
                         }
                         .foregroundStyle(.secondary)
@@ -61,7 +61,7 @@ struct MetricDetailView: View {
                         .controlSize(.small)
                     }
 
-                    // Action Banner — show recommendation if insight exists
+                    // Action Banner. show recommendation if insight exists
                     if let recommendation = viewModel.insights.first?.recommendation {
                         actionBanner(recommendation)
                     }
@@ -395,7 +395,7 @@ struct MetricDetailView: View {
 
     // MARK: - Shared Row Builder
 
-    /// Single row builder used by ALL sections — guarantees pixel-perfect alignment.
+    /// Single row builder used by ALL sections. guarantees pixel-perfect alignment.
     /// The icon, spacing, padding, and text position are identical for every row on the page.
     private func sectionRow(
         icon: String,

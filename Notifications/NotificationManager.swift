@@ -79,7 +79,7 @@ final class NotificationManager {
 
         let notifType = Self.notificationType(identifier)
 
-        // Kill switch — remotely disable all non-critical notifications
+        // Kill switch. remotely disable all non-critical notifications
         if RemoteConfigManager.shared.killNotifications && severity != .critical && !bypassCap {
             Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "kill_switch") }
             return
@@ -87,7 +87,7 @@ final class NotificationManager {
 
         // Everything except daily summaries and bypassed notifications is capped and optimized
         if !isDailySummary && !bypassCap {
-            // Priority filtering — skip low-priority unless critical
+            // Priority filtering. skip low-priority unless critical
             let priority = NotificationOptimizer.priorityScore(
                 severity: severity,
                 deviationPercent: deviationPercent,
@@ -100,7 +100,7 @@ final class NotificationManager {
             }
 
             // Dynamic budget based on fatigue detection.
-            // HealthDataStore is @MainActor — use assumeIsolated when on main thread,
+            // HealthDataStore is @MainActor. use assumeIsolated when on main thread,
             // otherwise fall back to the static maxPerDay budget.
             let dynamicBudget: Int
             if let store, Thread.isMainThread {
@@ -136,7 +136,7 @@ final class NotificationManager {
                 }
 
                 // Record the send event for optimizer tracking.
-                // HealthDataStore is @MainActor — dispatch to main actor for the write.
+                // HealthDataStore is @MainActor. dispatch to main actor for the write.
                 if let store = self?.store {
                     Task { @MainActor in
                         store.recordNotificationSent(id: identifier, type: notifType)

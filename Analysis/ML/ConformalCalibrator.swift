@@ -217,7 +217,7 @@ final class ConformalCalibrator {
         var bestT = 1.0
         var bestNLL = Double.infinity
 
-        // Grid search: T in {0.1, 0.2, ..., 5.0} — 50 candidates
+        // Grid search: T in {0.1, 0.2, ..., 5.0}. 50 candidates
         for step in 1...50 {
             let t = Double(step) * 0.1
             var nll = 0.0

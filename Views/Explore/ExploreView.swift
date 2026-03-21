@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-/// Data exploration tab — deep-dive dashboard surfacing score breakdown,
+/// Data exploration tab. deep-dive dashboard surfacing score breakdown,
 /// historical context, correlations, and category scores from the analysis engine.
 struct ExploreView: View {
     let viewModel: DashboardViewModel
@@ -46,7 +46,7 @@ struct ExploreView: View {
                     .onAppear { scoreHeroTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 15) }
                     .onDisappear { scoreHeroTracker.disappeared() }
 
-                    // 2. Data depth bar — Metrics, Data Points, Days
+                    // 2. Data depth bar. Metrics, Data Points, Days
                     ExploreDataSummarySection(
                         metricsTracked: viewModel.analysis.dataDepth.metricsTracked,
                         totalDataPoints: viewModel.analysis.dataDepth.totalDataPoints,
@@ -57,7 +57,7 @@ struct ExploreView: View {
                     .onAppear { dataSummaryTracker.appeared() }
                     .onDisappear { dataSummaryTracker.disappeared() }
 
-                    // 3. Your Trends — prominent trend-first section
+                    // 3. Your Trends. prominent trend-first section
                     if !trendMetrics.isEmpty {
                         ExploreYourTrendsSection(
                             trendMetrics: trendMetrics,
@@ -82,7 +82,7 @@ struct ExploreView: View {
                         .onDisappear { yourTrendsTracker.disappeared() }
                     }
 
-                    // 4. Categories — primary navigation
+                    // 4. Categories. primary navigation
                     ExploreCategoriesSection(
                         categories: sortedCategories,
                         insightCountProvider: { category in
@@ -127,7 +127,7 @@ struct ExploreView: View {
                         .padding(.horizontal)
                     }
 
-                    // 6. Strongest area — positive anchor before negative content
+                    // 6. Strongest area. positive anchor before negative content
                     if let strongest = viewModel.analysisEngine.categoryScores
                         .compactMap({ score -> (category: HealthCategory, score: Int)? in
                             guard let cat = score.category else { return nil }
@@ -146,7 +146,7 @@ struct ExploreView: View {
                         .padding(.horizontal)
                     }
 
-                    // 7. Needs Attention — negative factors
+                    // 7. Needs Attention. negative factors
                     ExploreNeedsAttentionSection(
                         scoreExplanation: viewModel.scores.scoreExplanation,
                         onFactorTapped: { factor in
@@ -217,6 +217,8 @@ struct ExploreView: View {
                     if FeatureGate.canAccess(.advancedAnalytics), !viewModel.analysis.topCorrelations.isEmpty {
                         ExploreCorrelationsSection(
                             correlations: viewModel.analysis.topCorrelations,
+                            topCompoundInsight: viewModel.analysis.compoundInsights.first,
+                            topCausalChain: viewModel.analysis.topCausalChain,
                             onSeeAllTapped: {
                                 AppAnalytics.shared.trackBlockTap(
                                     title: "See all",
@@ -288,7 +290,10 @@ struct ExploreView: View {
             AppAnalytics.shared.trackFeatureClose(.explore)
         }
         .sheet(isPresented: $showScoreGuide) {
-            ScoreGuideSheet()
+            ScoreGuideSheet(
+                score: viewModel.scores.rollingAverageScore,
+                weakestCategoryName: weakestCategory?.category.displayName
+            )
         }
         .refreshable {
             AppAnalytics.shared.trackPullToRefresh(screen: .explore)
@@ -360,7 +365,12 @@ struct ExploreView: View {
             viewModel: DashboardViewModel(
                 healthKitManager: HealthKitManager(),
                 analysisEngine: AnalysisEngine(),
-                store: HealthDataStore(modelContainer: container)
+                store: HealthDataStore(modelContainer: container),
+                housekeepingService: DashboardHousekeepingService(
+                    persistenceManager: PersistenceManager(),
+                    analytics: AppAnalytics.shared,
+                    sessionTracker: SessionTracker.shared
+                )
             ),
             navigationPath: .constant(NavigationPath())
         )

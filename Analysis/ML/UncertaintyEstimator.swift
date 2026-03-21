@@ -35,7 +35,7 @@ enum UncertaintyEstimator {
         let coverage = Swift.max(0.5, Swift.min(coverageLevel, 0.99))
 
         guard !calibrationResiduals.isEmpty else {
-            // No calibration data — return a degenerate interval
+            // No calibration data. return a degenerate interval
             return PredictionInterval(
                 lower: pointPrediction,
                 upper: pointPrediction,
@@ -321,7 +321,7 @@ enum UncertaintyEstimator {
         return ConfidenceGate(
             shouldShow: true,
             confidenceScore: effectiveConfidence,
-            reason: tier == .suggestive ? "Suggestive — based on limited data." : nil,
+            reason: tier == .suggestive ? "Suggestive. based on limited data." : nil,
             tier: tier
         )
     }

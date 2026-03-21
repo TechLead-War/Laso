@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Hero detail page for today's single action — shows the action, why it matters, and supporting insights.
+/// Hero detail page for today's single action. shows the action, why it matters, and supporting insights.
 struct TodaysActionDetailView: View {
     let action: DashboardViewModel.SmartAction
     let policyDecision: PolicyDecision?
@@ -183,10 +183,10 @@ struct TodaysActionDetailView: View {
     private var insightsSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
             HStack(spacing: 8) {
-                Image(systemName: "doc.text.magnifyingglass")
+                Image(systemName: "stethoscope")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.blue)
-                Text("What we're seeing")
+                Text("Your coach's notes")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
             }
@@ -222,24 +222,15 @@ struct TodaysActionDetailView: View {
                 Text(insight.title)
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(.primary)
+                    .lineLimit(1)
+
+                Text(insight.actionSummary)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                     .lineLimit(2)
-
-                HStack(spacing: 6) {
-                    Text(insight.category.displayName)
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(insight.category.color)
-
-                    if abs(insight.deviationPercent) > 0.5 {
-                        Text(impactText(insight))
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                }
             }
 
             Spacer()
-
-            severityDot(insight.severity)
 
             Image(systemName: "chevron.right")
                 .font(.caption2.weight(.semibold))
@@ -249,27 +240,7 @@ struct TodaysActionDetailView: View {
         .cardStyle()
     }
 
-    private func severityDot(_ severity: Severity) -> some View {
-        Circle()
-            .fill(severityColor(severity))
-            .frame(width: 8, height: 8)
-    }
-
     // MARK: - Helpers
-
-    private func impactText(_ insight: Insight) -> String {
-        let dev = abs(insight.deviationPercent)
-        let direction = insight.deviationPercent > 0 ? "above" : "below"
-        return String(format: "%.0f%% %@ baseline", dev, direction)
-    }
-
-    private func severityColor(_ severity: Severity) -> Color {
-        switch severity {
-        case .critical: return .red
-        case .warning: return .orange
-        case .info: return .blue
-        }
-    }
 
     private func confidenceLabel(_ value: Double) -> String {
         switch value {

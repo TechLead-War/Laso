@@ -58,7 +58,7 @@ struct HRRFitnessAnalyzer {
             insights.append(InsightFactory.make(
                 metric: .heartRateRecovery,
                 title: "Heart Rate Recovery Below Clinical Threshold",
-                summary: "Your heart rate recovery is \(String(format: "%.0f", currentHRR)) bpm — below the clinical threshold of \(Int(abnormalThreshold)) bpm. This indicates reduced parasympathetic reactivation after exercise.",
+                summary: "Your heart rate recovery is \(String(format: "%.0f", currentHRR)) bpm. below the clinical threshold of \(Int(abnormalThreshold)) bpm. This indicates reduced parasympathetic reactivation after exercise.",
                 recommendation: "A heart rate recovery <\(Int(abnormalThreshold)) bpm at 1 minute post-exercise is independently associated with increased all-cause mortality in multiple large studies. Your average HRR of \(String(format: "%.0f", currentHRR)) bpm across \(recent.count > 0 ? recent.count : allSamples.count) measurements suggests blunted autonomic recovery.",
                 severity: .warning,
                 trend: trajectory,
@@ -78,7 +78,7 @@ struct HRRFitnessAnalyzer {
             insights.append(InsightFactory.observation(
                 metric: .heartRateRecovery,
                 title: "Excellent Heart Rate Recovery",
-                summary: "Your heart rate drops \(String(format: "%.0f", currentHRR)) bpm after exercise — well above the \(Int(goodThreshold)) bpm threshold for good autonomic function. This indicates strong parasympathetic tone.",
+                summary: "Your heart rate drops \(String(format: "%.0f", currentHRR)) bpm after exercise. well above the \(Int(goodThreshold)) bpm threshold for good autonomic function. This indicates strong parasympathetic tone.",
                 recommendation: "An HRR of \(String(format: "%.0f", currentHRR)) bpm places you in the excellent range. Research shows this level of post-exercise recovery is associated with lower cardiovascular mortality risk and superior autonomic nervous system health.",
                 currentValue: currentHRR,
                 baselineValue: excellentThreshold,

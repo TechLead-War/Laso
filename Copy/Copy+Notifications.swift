@@ -100,13 +100,13 @@ extension Copy {
 
         // MARK: - Dynamic Daily Summary (Psychology-Driven)
 
-        /// Psychological hook categories — never repeat the same category two days in a row.
+        /// Psychological hook categories. never repeat the same category two days in a row.
         enum HookCategory: String, CaseIterable {
-            case curiosity      // Zeigarnik effect — open loop, must tap to resolve
-            case lossFrame      // Loss aversion — what you're about to lose
+            case curiosity      // Zeigarnik effect. open loop, must tap to resolve
+            case lossFrame      // Loss aversion. what you're about to lose
             case progress       // Endowed progress + goal gradient
-            case personalRecord // Self-reference effect — your personal data
-            case question       // Direct question — triggers inner dialogue
+            case personalRecord // Self-reference effect. your personal data
+            case question       // Direct question. triggers inner dialogue
         }
 
         /// Picks a title using the best available psychological hook.
@@ -162,7 +162,7 @@ extension Copy {
                 candidates.append((.personalRecord, "Your \(metric.lowercased()) hit a new high."))
             }
             if score >= 90 {
-                candidates.append((.personalRecord, "\(score) — your best score this month."))
+                candidates.append((.personalRecord, "\(score). your best score this month."))
             }
             if let delta = scoreDelta, delta >= 5 {
                 candidates.append((.personalRecord, "Biggest jump in weeks: +\(delta) points."))
@@ -192,7 +192,7 @@ extension Copy {
             return "Your morning health check is ready."
         }
 
-        /// Body text — short, data-rich, complements the title.
+        /// Body text. short, data-rich, complements the title.
         static func dynamicDailySummaryBody(
             score: Int,
             categoryBreakdown: String,
@@ -204,7 +204,7 @@ extension Copy {
         ) -> String {
             var parts: [String] = []
 
-            // Score context (always include — it's the payoff for tapping)
+            // Score context (always include. it's the payoff for tapping)
             parts.append("Score: \(score)/100.")
 
             // Most notable data point
@@ -223,7 +223,7 @@ extension Copy {
                 parts.append(variants[dayOfWeek % variants.count])
             }
 
-            // Action — first sentence only
+            // Action. first sentence only
             if let action = topInsightAction {
                 parts.append(action)
             }
@@ -261,7 +261,7 @@ extension Copy {
             "Your last health score was \(score)/100. Check in to see what's changed."
         }
         static let insightsReady = "Your Health Insights Are Ready"
-        static let insightsReadyBody = "It's been a few days — open Laso to see your latest health trends."
+        static let insightsReadyBody = "It's been a few days. open Laso to see your latest health trends."
 
         // MARK: - Engagement Sequence
 

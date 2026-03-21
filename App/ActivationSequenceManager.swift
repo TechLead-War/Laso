@@ -15,8 +15,7 @@ import Foundation
 /// - Day 4: First pattern hint (weekday vs weekend)
 /// - Day 5: First correlation discovered
 /// - Day 6: First anomaly detection active
-/// - Day 7: First prediction generated
-/// - Day 8: Full readiness score + all features unlocked
+/// - Day 7: First prediction generated + full intelligence unlocked
 final class ActivationSequenceManager {
 
     // MARK: - Types
@@ -27,8 +26,8 @@ final class ActivationSequenceManager {
         var installDate: Date
         var lastMilestoneDate: Date?
 
-        var isComplete: Bool { currentDay > 8 }
-        var progressFraction: Double { min(1.0, Double(currentDay - 1) / 7.0) }
+        var isComplete: Bool { currentDay > 7 }
+        var progressFraction: Double { min(1.0, Double(currentDay) / 7.0) }
     }
 
     enum Milestone: String, Codable, CaseIterable {
@@ -51,7 +50,7 @@ final class ActivationSequenceManager {
             case .firstCorrelation: return 5
             case .firstAnomaly: return 6
             case .firstPrediction: return 7
-            case .fullUnlock, .firstWeekComplete: return 8
+            case .fullUnlock, .firstWeekComplete: return 7
             }
         }
 
@@ -102,7 +101,7 @@ final class ActivationSequenceManager {
             case .fullUnlock:
                 return "All intelligence features are active. Your personal health AI is fully calibrated."
             case .firstWeekComplete:
-                return "One week of data — your insights will keep getting sharper over time."
+                return "One week of data. your insights will keep getting sharper over time."
             }
         }
     }
@@ -129,7 +128,7 @@ final class ActivationSequenceManager {
             return updated
         }
 
-        // First launch — initialize
+        // First launch. initialize
         let installDate = installDateFromDefaults() ?? Date()
         let state = ActivationState(
             currentDay: 1,
@@ -196,8 +195,8 @@ final class ActivationSequenceManager {
             newMilestones.append(MilestoneEvent(milestone: .firstPrediction, unlockedAt: now, dataPointCount: metricsAvailable))
         }
 
-        // Day 8: Full unlock
-        if state.currentDay >= 8 && !state.milestonesCompleted.contains(.fullUnlock) {
+        // Day 7: Full unlock
+        if state.currentDay >= 7 && !state.milestonesCompleted.contains(.fullUnlock) {
             state.milestonesCompleted.insert(.fullUnlock)
             state.milestonesCompleted.insert(.firstWeekComplete)
             newMilestones.append(MilestoneEvent(milestone: .fullUnlock, unlockedAt: now, dataPointCount: metricsAvailable))
@@ -221,15 +220,15 @@ final class ActivationSequenceManager {
     static func progressDescription(state: ActivationState) -> String {
         guard !state.isComplete else { return "Fully calibrated" }
 
-        let day = min(state.currentDay, 8)
+        let day = min(state.currentDay, 7)
         let nextMilestone = nextMilestone(state: state)
         let milestoneName = nextMilestone?.title ?? "Full calibration"
-        let daysLeft = max(0, 8 - state.currentDay)
+        let daysLeft = max(0, 7 - state.currentDay)
 
         if daysLeft == 0 {
-            return "Almost there — \(milestoneName) unlocking soon"
+            return "Almost there. \(milestoneName) unlocking soon"
         }
-        return "Day \(day) of 8 — \(milestoneName) in \(daysLeft) day\(daysLeft == 1 ? "" : "s")"
+        return "Day \(day) of 7. \(milestoneName) in \(daysLeft) day\(daysLeft == 1 ? "" : "s")"
     }
 
     // MARK: - Private Helpers

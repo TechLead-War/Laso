@@ -42,7 +42,7 @@ final class HealthKitManager {
     var error: String?
     var syncProgress: SyncProgress?
 
-    /// Result of a loadAndSync call — tells callers what changed
+    /// Result of a loadAndSync call. tells callers what changed
     struct SyncResult {
         let metricsWithNewData: Set<HealthMetric>
         let totalNewSamples: Int
@@ -294,7 +294,7 @@ final class HealthKitManager {
         store: HealthDataStore
     ) {
         if isFirstSync {
-            // First sync fetched full history for each populated metric — avoid full reload.
+            // First sync fetched full history for each populated metric. avoid full reload.
             if !newData.isEmpty {
                 var initialSeries = timeSeries
                 for (metric, series) in newData {

@@ -4,7 +4,7 @@ import SwiftUI
 import FirebaseFirestore
 #endif
 
-/// Non-annoying feedback form — feels collaborative, not like a survey.
+/// Non-annoying feedback form. feels collaborative, not like a survey.
 /// "Help us build what you need next."
 struct FeedbackSheet: View {
     @Environment(\.dismiss) private var dismiss
@@ -34,7 +34,7 @@ struct FeedbackSheet: View {
                     Text("What should we build next?")
                         .font(.title2.weight(.bold))
 
-                    Text("Tell us the feature you want most — we'll build it for you.")
+                    Text("Tell us the feature you want most. we'll build it for you.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -187,7 +187,7 @@ struct FeedbackSheet: View {
 
         // 1. Save locally as backup
         var allFeedback = UserDefaults.standard.stringArray(forKey: AppKeys.Feedback.entries) ?? []
-        let entry = "[\(selectedCategory.rawValue)] \(trimmed) — \(Date().formatted(.dateTime.month().day().year()))"
+        let entry = "[\(selectedCategory.rawValue)] \(trimmed). \(Date().formatted(.dateTime.month().day().year()))"
         allFeedback.append(entry)
         UserDefaults.standard.set(allFeedback, forKey: AppKeys.Feedback.entries)
 

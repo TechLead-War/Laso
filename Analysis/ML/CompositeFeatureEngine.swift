@@ -7,39 +7,39 @@ import Foundation
 /// `FeatureType` cases produced by `FeatureEngine`.
 enum CompositeFeatureType: String, Hashable, Codable, CaseIterable {
 
-    /// HRV / Resting Heart Rate — autonomic nervous system balance.
+    /// HRV / Resting Heart Rate. autonomic nervous system balance.
     /// Higher values indicate parasympathetic dominance (recovery state).
     case autonomicBalance
 
-    /// Sleep Duration * Deep Sleep Percentage — overall sleep effectiveness.
+    /// Sleep Duration * Deep Sleep Percentage. overall sleep effectiveness.
     /// Captures both quantity and quality in a single score.
     case sleepQuality
 
-    /// Active Calories / Steps — metabolic cost per step.
+    /// Active Calories / Steps. metabolic cost per step.
     /// Higher values indicate more intense movement patterns.
     case exerciseIntensity
 
-    /// (HRV_z + SleepDuration_z - RestingHR_z) / 3 — composite recovery signal.
+    /// (HRV_z + SleepDuration_z - RestingHR_z) / 3. composite recovery signal.
     /// Combines cardiac, sleep, and autonomic indicators into one readiness metric.
     case recoveryIndex
 
-    /// 7-day EWA of active calories / 28-day EWA — acute-to-chronic workload ratio.
+    /// 7-day EWA of active calories / 28-day EWA. acute-to-chronic workload ratio.
     /// Values above 1.5 indicate elevated injury risk; below 0.8 indicates detraining.
     case acuteChronicWorkloadRatio
 
-    /// Consecutive days with HRV below personal baseline — monotone fatigue accumulation.
+    /// Consecutive days with HRV below personal baseline. monotone fatigue accumulation.
     /// Rising counts signal sustained autonomic stress without recovery.
     case monotoneFatigueSignal
 
-    /// Standard deviation of sleep midpoint over past 7 days — circadian consistency.
+    /// Standard deviation of sleep midpoint over past 7 days. circadian consistency.
     /// Lower values indicate more regular sleep timing.
     case sleepConsistency
 
-    /// |weekday sleep midpoint - weekend sleep midpoint| in hours — social jet lag.
+    /// |weekday sleep midpoint - weekend sleep midpoint| in hours. social jet lag.
     /// Measures circadian disruption from inconsistent weekday/weekend schedules.
     case socialJetLag
 
-    /// 7-day mean workout load / 7-day StdDev — training load monotony.
+    /// 7-day mean workout load / 7-day StdDev. training load monotony.
     /// High monotony (>2.0) with high load predicts overtraining and illness risk.
     case trainingLoadMonotony
 
@@ -106,14 +106,14 @@ struct EnrichedDailyFeatureVector {
 
 /// Computes advanced composite features from basic daily feature vectors produced by `FeatureEngine`.
 ///
-/// This engine is **stateless** — every method is a pure function that takes input data and returns
+/// This engine is **stateless**. every method is a pure function that takes input data and returns
 /// enriched vectors. It is designed to run after `FeatureEngine.buildFeatureVectors(...)` and before
 /// downstream ML components (forecaster, anomaly detector, classifier, etc.).
 ///
 /// Composite features fall into three categories:
-/// 1. **Ratio features** — combine two metrics on the same day (autonomic balance, exercise intensity).
-/// 2. **Windowed aggregations** — compute rolling statistics across multiple days (ACWR, monotony, consistency).
-/// 3. **Streak/count features** — track consecutive days meeting a threshold (fatigue signal, behavioral streaks).
+/// 1. **Ratio features**. combine two metrics on the same day (autonomic balance, exercise intensity).
+/// 2. **Windowed aggregations**. compute rolling statistics across multiple days (ACWR, monotony, consistency).
+/// 3. **Streak/count features**. track consecutive days meeting a threshold (fatigue signal, behavioral streaks).
 enum CompositeFeatureEngine {
 
     // MARK: - Minimum Data Requirements
@@ -298,7 +298,7 @@ enum CompositeFeatureEngine {
     ///
     /// Combines total sleep time with the proportion spent in deep (slow-wave) sleep.
     /// Deep sleep percentage is derived as deepSleep / totalSleep. The product captures
-    /// both quantity and restorative quality — a short but deep sleep may score similarly
+    /// both quantity and restorative quality. a short but deep sleep may score similarly
     /// to a long but shallow one. Higher is better.
     private static func computeSleepQuality(
         day: Date,
@@ -315,7 +315,7 @@ enum CompositeFeatureEngine {
 
     // MARK: - 3. Exercise Intensity
 
-    /// Active Calories / Steps — energy expenditure per step.
+    /// Active Calories / Steps. energy expenditure per step.
     ///
     /// A proxy for movement intensity: walking produces low values (~0.03-0.05 kcal/step)
     /// while running or stair climbing yields higher values. Zero steps returns sentinel
@@ -360,7 +360,7 @@ enum CompositeFeatureEngine {
     ///
     /// The ACWR is a standard sports science metric for monitoring injury risk.
     /// - Values 0.8–1.3: safe training zone ("sweet spot").
-    /// - Values > 1.5: spike in acute load — elevated soft-tissue injury risk.
+    /// - Values > 1.5: spike in acute load. elevated soft-tissue injury risk.
     /// - Values < 0.8: undertraining / detraining zone.
     ///
     /// Uses exponentially weighted averages rather than simple moving averages for
@@ -406,7 +406,7 @@ enum CompositeFeatureEngine {
     ///
     /// Sustained periods of suppressed HRV indicate accumulated autonomic fatigue.
     /// Unlike single-day anomalies, the monotone count captures the *duration* of
-    /// sub-baseline performance — a critical factor in overtraining syndrome detection.
+    /// sub-baseline performance. a critical factor in overtraining syndrome detection.
     /// The count resets to zero whenever HRV returns to or above the baseline.
     ///
     /// Requires at least 7 days of HRV data and a computed HRV baseline.
@@ -600,7 +600,7 @@ enum CompositeFeatureEngine {
             let (mean, variance) = AccelerateML.welfordVariance(windowValues)
             let stdDev = variance.squareRoot()
 
-            // Avoid division by zero — if stdDev is near zero, load is perfectly uniform
+            // Avoid division by zero. if stdDev is near zero, load is perfectly uniform
             // which is itself a high-monotony signal. Cap at a practical maximum.
             guard stdDev > 1.0 else {
                 result[day] = mean > 0 ? 10.0 : 0.0  // Capped maximum monotony
@@ -617,7 +617,7 @@ enum CompositeFeatureEngine {
 
     /// Compute consecutive-day streak for a metric exceeding a threshold.
     ///
-    /// Streaks capture behavioral consistency — a powerful predictor of long-term health
+    /// Streaks capture behavioral consistency. a powerful predictor of long-term health
     /// outcomes. Each streak type tracks how many consecutive days the user has met a
     /// specific target:
     /// - **Sleep streak** (>= 7 hours): adequate sleep duration.

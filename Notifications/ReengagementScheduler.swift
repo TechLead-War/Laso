@@ -3,7 +3,7 @@ import UserNotifications
 
 /// Schedules a local notification that fires after 3 days of inactivity.
 /// On every app session, the pending notification is cancelled and rescheduled
-/// 3 days into the future — so it only delivers if the user stops opening the app.
+/// 3 days into the future. so it only delivers if the user stops opening the app.
 enum ReengagementScheduler {
 
     private static let identifier = AppConstants.NotificationID.reengagement
@@ -16,7 +16,7 @@ enum ReengagementScheduler {
     static func reschedule() {
         let center = UNUserNotificationCenter.current()
 
-        // Cancel existing — we always push the timer forward
+        // Cancel existing. we always push the timer forward
         center.removePendingNotificationRequests(withIdentifiers: [identifier])
 
         // Build content using last known score if available

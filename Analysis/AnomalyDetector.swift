@@ -1,7 +1,7 @@
 import Foundation
 
 /// Detects anomalies using z-score analysis against personal baselines.
-/// Z-scores adapt to each metric's natural variability — a 10% deviation
+/// Z-scores adapt to each metric's natural variability. a 10% deviation
 /// matters more when σ is small (stable metric) than when σ is large (volatile metric).
 struct AnomalyDetector {
 

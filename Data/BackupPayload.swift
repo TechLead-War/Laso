@@ -1,14 +1,14 @@
 import Foundation
 
 /// Single Codable struct combining all computed health data for CloudKit backup.
-/// Raw health samples are NOT included — HealthKit handles those system-wide.
+/// Raw health samples are NOT included. HealthKit handles those system-wide.
 struct BackupPayload: Codable {
     /// Schema version for future migration
     let version: Int
     /// When this backup was created
     let createdAt: Date
 
-    // MARK: - Analysis Snapshots (score history — most valuable)
+    // MARK: - Analysis Snapshots (score history. most valuable)
 
     let snapshots: [SnapshotEntry]
 

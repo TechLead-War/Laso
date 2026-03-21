@@ -14,6 +14,7 @@
 		AA20000000000000000003 /* AskYourDataView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA10000000000000000003 /* AskYourDataView.swift */; };
 		AA20000000000000000004 /* MorningCheckInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA10000000000000000004 /* MorningCheckInView.swift */; };
 		AA20000000000000000005 /* PersonalHealthForecastCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA10000000000000000005 /* PersonalHealthForecastCard.swift */; };
+		AA20000000000000000008 /* AskDataOrbView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA10000000000000000008 /* AskDataOrbView.swift */; };
 		006CDA3A4D29774653394190 /* LiveSleepSummaryBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAB4DA3CBBDEC06C8D15CBA7 /* LiveSleepSummaryBuilder.swift */; };
 		02742AE6A69FC06EE7BFA0E7 /* FeatureGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94551AAF738AFDD14DE0495E /* FeatureGate.swift */; };
 		04ED050606874EFD6454E9BA /* IntentDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E243948FF36A4942AF4A3858 /* IntentDataProvider.swift */; };
@@ -420,6 +421,7 @@
 		AA10000000000000000003 /* AskYourDataView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskYourDataView.swift; sourceTree = "<group>"; };
 		AA10000000000000000004 /* MorningCheckInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MorningCheckInView.swift; sourceTree = "<group>"; };
 		AA10000000000000000005 /* PersonalHealthForecastCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalHealthForecastCard.swift; sourceTree = "<group>"; };
+		AA10000000000000000008 /* AskDataOrbView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskDataOrbView.swift; sourceTree = "<group>"; };
 		0047C9C8364556BEE7BA357C /* ShareButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareButton.swift; sourceTree = "<group>"; };
 		009195A0425DD60F7C2663CD /* HealthMetric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthMetric.swift; sourceTree = "<group>"; };
 		00DBD1FE9CFD03F814D8B0A2 /* CardioRespiratoryAgeAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardioRespiratoryAgeAnalyzer.swift; sourceTree = "<group>"; };
@@ -1434,6 +1436,7 @@
 			children = (
 				AA10000000000000000002 /* ActivationProgressBanner.swift */,
 				AA10000000000000000003 /* AskYourDataView.swift */,
+				AA10000000000000000008 /* AskDataOrbView.swift */,
 				2A04A40A58D658CFA52E90DC /* BodyInsightsSection.swift */,
 				E09134B978471B615B19133A /* BrainHealthCard.swift */,
 				0A86EDC7F6D80B3B6CF7A909 /* CoachGreetingView.swift */,
@@ -1695,6 +1698,7 @@
 				AA20000000000000000001 /* ActivationSequenceManager.swift in Sources */,
 				AA20000000000000000002 /* ActivationProgressBanner.swift in Sources */,
 				AA20000000000000000003 /* AskYourDataView.swift in Sources */,
+				AA20000000000000000008 /* AskDataOrbView.swift in Sources */,
 				AA20000000000000000004 /* MorningCheckInView.swift in Sources */,
 				AA20000000000000000005 /* PersonalHealthForecastCard.swift in Sources */,
 				7EEAB445E180385043DF6A3A /* AppAnalytics.swift in Sources */,

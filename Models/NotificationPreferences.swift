@@ -2,7 +2,7 @@ import Foundation
 
 /// User preferences for notifications
 struct NotificationPreferences: Codable, Equatable {
-    // Only the daily summary is on by default — everything else is opt-in.
+    // Only the daily summary is on by default. everything else is opt-in.
     // Users hate notification spam; one morning briefing is enough.
 
     var dailySummaryEnabled: Bool = true
@@ -29,10 +29,10 @@ struct NotificationPreferences: Codable, Equatable {
 
     /// Heart rate spike/drop real-time alerts
     var heartRateSpikeAlertsEnabled: Bool = true
-    var heartRateSpikeThreshold: Double = 120 // bpm — alert if above
-    var heartRateDropThreshold: Double = 45   // bpm — alert if below
+    var heartRateSpikeThreshold: Double = 120 // bpm. alert if above
+    var heartRateDropThreshold: Double = 45   // bpm. alert if below
 
-    /// Trend reversal alerts (metric was declining, now improving — or vice versa)
+    /// Trend reversal alerts (metric was declining, now improving. or vice versa)
     var trendReversalAlertsEnabled: Bool = false
 
     /// Improvement celebration alerts
@@ -46,7 +46,7 @@ struct NotificationPreferences: Codable, Equatable {
 
     var maxNotificationsPerDay: Int = 2
 
-    /// Metrics for which warning alerts are enabled — only the most safety-critical metrics by default
+    /// Metrics for which warning alerts are enabled. only the most safety-critical metrics by default
     var warningAlertMetrics: Set<HealthMetric> = [
         .restingHeartRate, .heartRate, .heartRateVariability,
         .bloodOxygen,

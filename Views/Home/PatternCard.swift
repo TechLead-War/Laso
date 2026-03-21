@@ -16,7 +16,7 @@ struct PatternCard: View {
             onTap()
         }) {
             HStack(spacing: 0) {
-                // Left accent bar — category colour
+                // Left accent bar. category colour
                 RoundedRectangle(cornerRadius: DS.accentRadius)
                     .fill(insight.category.color)
                     .frame(width: 4)

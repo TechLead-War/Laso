@@ -1,7 +1,7 @@
 import AppIntents
 import SwiftUI
 
-/// "What's my health score?" — Returns the current overall health score with a brief summary.
+/// "What's my health score?". Returns the current overall health score with a brief summary.
 struct HealthScoreIntent: AppIntent {
     static var title: LocalizedStringResource = "Check Health Score"
     static var description = IntentDescription(
@@ -29,10 +29,10 @@ struct HealthScoreIntent: AppIntent {
             }
         }
 
-        var spoken = "Your health score is \(result.score) out of 100 — that's a \(result.grade)."
+        var spoken = "Your health score is \(result.score) out of 100. that's a \(result.grade)."
         if let readiness = result.readinessScore {
             let label = result.readinessLabel ?? ""
-            spoken += " Recovery is \(readiness)% — \(label.lowercased())."
+            spoken += " Recovery is \(readiness)%. \(label.lowercased())."
         }
 
         let dialog = IntentDialog(stringLiteral: spoken)

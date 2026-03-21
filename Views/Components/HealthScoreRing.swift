@@ -6,6 +6,7 @@ struct HealthScoreRing: View {
     let label: String
     let size: CGFloat
     let lineWidth: CGFloat
+    let showScore: Bool
 
     @State private var animatedProgress: Double = 0
 
@@ -14,19 +15,15 @@ struct HealthScoreRing: View {
     }
 
     private var ringColor: Color {
-        switch score {
-        case 80...100: return .green
-        case 60..<80: return .yellow
-        case 40..<60: return .orange
-        default: return .red
-        }
+        DS.scoreColor(score)
     }
 
-    init(score: Int, label: String = "Overall", size: CGFloat = 160, lineWidth: CGFloat = 14) {
+    init(score: Int, label: String = "Overall", size: CGFloat = 160, lineWidth: CGFloat = 14, showScore: Bool = true) {
         self.score = score
         self.label = label
         self.size = size
         self.lineWidth = lineWidth
+        self.showScore = showScore
     }
 
     var body: some View {
@@ -45,7 +42,7 @@ struct HealthScoreRing: View {
                 .rotationEffect(.degrees(-90))
                 .animation(.easeInOut(duration: 1.0), value: animatedProgress)
 
-            // Center text — always perfectly centered regardless of 1 or 2 lines
+            // Center text. always perfectly centered regardless of 1 or 2 lines
             centerContent
                 .frame(
                     width: size - (lineWidth * 2 + 16),
@@ -69,16 +66,18 @@ struct HealthScoreRing: View {
         VStack(spacing: 2) {
             Spacer(minLength: 0)
 
-            Text("\(score)")
-                .font(.system(size: size * 0.28, weight: .bold, design: .rounded))
-                .foregroundStyle(ringColor)
-                .contentTransition(.numericText())
-                .minimumScaleFactor(0.5)
-                .lineLimit(1)
+            if showScore {
+                Text("\(score)")
+                    .font(.system(size: size * 0.28, weight: .bold, design: .rounded))
+                    .foregroundStyle(ringColor)
+                    .contentTransition(.numericText())
+                    .minimumScaleFactor(0.5)
+                    .lineLimit(1)
+            }
 
             if !label.isEmpty {
                 Text(label)
-                    .font(.system(size: size * 0.12, weight: .medium, design: .rounded))
+                    .font(.system(size: showScore ? size * 0.12 : size * 0.15, weight: .medium, design: .rounded))
                     .foregroundStyle(.secondary)
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)

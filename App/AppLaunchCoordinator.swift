@@ -22,7 +22,7 @@ final class AppLaunchCoordinator {
             FirebaseApp.configure()
         }
 
-        // Anonymous auth — gives Firestore writes an auth context without requiring user credentials.
+        // Anonymous auth. gives Firestore writes an auth context without requiring user credentials.
         // Firestore rules check request.auth != null to prevent unauthenticated writes.
         if Auth.auth().currentUser == nil {
             Auth.auth().signInAnonymously { _, error in

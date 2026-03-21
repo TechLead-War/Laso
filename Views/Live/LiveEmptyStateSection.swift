@@ -27,7 +27,7 @@ struct LiveStaleVitalsPrompt: View {
             .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
             .padding(.horizontal)
 
-            // Last known readings — compact muted row
+            // Last known readings. compact muted row
             if vitals.hasAnyData {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 6) {

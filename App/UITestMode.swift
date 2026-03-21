@@ -29,7 +29,7 @@ enum UITestMode {
         // Disable all animations for deterministic screenshot captures
         UIView.setAnimationsEnabled(false)
 
-        // Set appearance override via UIWindow appearance proxy — applies to all future windows
+        // Set appearance override via UIWindow appearance proxy. applies to all future windows
         UIWindow.appearance().overrideUserInterfaceStyle = requestedAppearance
 
         let defaults = UserDefaults.standard

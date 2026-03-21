@@ -14,6 +14,7 @@ struct HomeView: View {
     @State private var readinessRefreshTimer = RepeatTimer()
     @State private var weeklyReviewViewModel: WeeklyReviewViewModel?
     @State private var showScoreGuide = false
+    @State private var showRecoveryInfo = false
     @State private var maxScrollDepth: Int = 0
     @State private var showMorningCheckIn = false
     @State private var showAskData = false
@@ -54,7 +55,13 @@ struct HomeView: View {
             )
         }
         .sheet(isPresented: $showScoreGuide) {
-            ScoreGuideSheet()
+            ScoreGuideSheet(
+                score: viewModel.overallScore.score,
+                weakestCategoryName: weakestCategoryName
+            )
+        }
+        .sheet(isPresented: $showRecoveryInfo) {
+            RecoveryInfoSheet(score: liveReadinessScore)
         }
         .refreshable {
             AppAnalytics.shared.trackPullToRefresh(screen: .home)
@@ -100,7 +107,7 @@ struct HomeView: View {
         }
     }
 
-    /// Periodically refresh home data — uses tiered polling to minimize HealthKit queries.
+    /// Periodically refresh home data. uses tiered polling to minimize HealthKit queries.
     /// Fast-changing data (steps, calories) every 60s; slow-changing (sleep, workout) every 10min.
     /// If timeSeries is empty (bad initial sync), retries the full sync instead of lightweight fetches.
     private static let minHomeRefreshInterval: TimeInterval = 60
@@ -122,7 +129,7 @@ struct HomeView: View {
 
     // MARK: - Live Readiness Score (30-minute refresh)
 
-    /// Live readiness score — falls back to daily score when no readiness data is available
+    /// Live readiness score. falls back to daily score when no readiness data is available
     private var liveReadinessScore: Int {
         liveViewModel.recovery.readinessScore ?? viewModel.overallScore.score
     }
@@ -130,6 +137,17 @@ struct HomeView: View {
     /// Whether we have a real live readiness score (not a fallback)
     private var hasLiveReadiness: Bool {
         liveViewModel.recovery.readinessScore != nil
+    }
+
+    /// Name of the lowest-scoring category for personalized score explanation
+    private var weakestCategoryName: String? {
+        viewModel.scores.categoryScores
+            .compactMap { s -> (String, Int)? in
+                guard let cat = s.category else { return nil }
+                return (cat.displayName, s.score)
+            }
+            .min(by: { $0.1 < $1.1 })?
+            .0
     }
 
     private static let readinessRefreshInterval: TimeInterval = 30 * 60
@@ -165,7 +183,7 @@ struct HomeView: View {
     private var homeContent: some View {
         ScrollView(.vertical) {
             VStack(spacing: 0) {
-                // 1. Greeting header — context-aware with recovery state
+                // 1. Greeting header. context-aware with recovery state
                 CoachGreetingView(
                     showSettings: $showSettings,
                     streakDays: SessionTracker.shared.streakDays,
@@ -181,7 +199,7 @@ struct HomeView: View {
                 } else if hasData {
                     // ── Above the fold ──
 
-                    // 1. Recovery Hero — live readiness score (updates every 30 min)
+                    // 1. Recovery Hero. live readiness score (updates every 30 min)
                     RecoveryHeroCard(
                         score: liveReadinessScore,
                         dailyScore: viewModel.overallScore.score,
@@ -192,7 +210,7 @@ struct HomeView: View {
                         scoreChangeFromLastWeek: viewModel.scores.scoreChangeFromLastWeek,
                         hasLiveReadiness: hasLiveReadiness,
                         lastRefresh: viewModel.lastRefresh,
-                        onTap: { showScoreGuide = true }
+                        onTap: { showRecoveryInfo = true }
                     )
                     .onAppear {
                         recoveryTracker.appeared()
@@ -204,7 +222,7 @@ struct HomeView: View {
                     }
                     .onDisappear { recoveryTracker.disappeared() }
 
-                    // 1b. Activation Progress (first 8 days — Paper 8)
+                    // 1b. Activation Progress (first 8 days. Paper 8)
                     ActivationProgressBanner(
                         state: viewModel.activationState,
                         latestMilestone: viewModel.latestMilestoneEvent,
@@ -227,11 +245,11 @@ struct HomeView: View {
                         .transition(.move(edge: .top).combined(with: .opacity))
                     }
 
-                    // 2. Today's Action — single source of truth for what to do
+                    // 2. Today's Action. single source of truth for what to do
                     primaryActionCard
                         .padding(.top, 8)
 
-                    // 2b. Body Intelligence — non-obvious ML findings
+                    // 2b. Body Intelligence. non-obvious ML findings
                     TodayBriefingView(cards: viewModel.intelligenceBriefing)
                         .padding(.top, 8)
                         .onAppear {
@@ -271,7 +289,7 @@ struct HomeView: View {
                         .onAppear { illnessTracker.appeared(); risksTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 20) }
                         .onDisappear { illnessTracker.disappeared(); risksTracker.disappeared() }
 
-                    // 4. Metric Strip — horizontal scroll replacing 6 vertical cards
+                    // 4. Metric Strip. horizontal scroll replacing 6 vertical cards
                     MetricStripView(tiles: buildMetricTiles()) { tile in
                         AppAnalytics.shared.trackBlockTap(
                             title: tile.label,
@@ -283,7 +301,7 @@ struct HomeView: View {
                     }
                     .padding(.top, 12)
 
-                    // 5. Level & Streaks — gamification (Endowed Progress)
+                    // 5. Level & Streaks. gamification (Endowed Progress)
                     LevelBadgeCard(
                         level: viewModel.gamificationEngine.currentLevel,
                         totalDaysTracked: viewModel.gamificationEngine.totalDaysTracked,
@@ -363,7 +381,7 @@ struct HomeView: View {
         .scrollIndicators(.hidden)
     }
 
-    // MARK: - Empty State — Waiting For First Sync
+    // MARK: - Empty State. Waiting For First Sync
 
     private var connectHealthView: some View {
         HomeConnectHealthView(
@@ -847,7 +865,12 @@ struct HomeView: View {
             viewModel: DashboardViewModel(
                 healthKitManager: hkManager,
                 analysisEngine: AnalysisEngine(),
-                store: HealthDataStore(modelContainer: container)
+                store: HealthDataStore(modelContainer: container),
+                housekeepingService: DashboardHousekeepingService(
+                    persistenceManager: PersistenceManager(),
+                    analytics: AppAnalytics.shared,
+                    sessionTracker: SessionTracker.shared
+                )
             ),
             liveViewModel: LiveViewModel(healthKitManager: hkManager),
             deviceSourceManager: DeviceSourceManager(healthStore: hkManager.healthStore),

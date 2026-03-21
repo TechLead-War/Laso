@@ -120,7 +120,7 @@ final class AnalysisEngine {
 
     /// Tracks when the heavy analysis tier last ran so we can skip it if fresh.
     private var lastHeavyAnalysisDate: Date?
-    /// TTL for heavy analysis — correlations/historical/cross-metric change slowly.
+    /// TTL for heavy analysis. correlations/historical/cross-metric change slowly.
     private static let heavyAnalysisTTL: TimeInterval = 3600  // 1 hour
 
     /// Whether the heavy analysis phase needs to run (expired or never ran).
@@ -220,7 +220,12 @@ final class AnalysisEngine {
             baselines: newBaselines,
             focusCategories: focusCategories
         )
-        let newOverallScore = HealthScorer.overallScore(categoryScores: newCategoryScores, weights: adaptiveWeights)
+        let rawOverallScore = HealthScorer.overallScore(categoryScores: newCategoryScores, weights: adaptiveWeights)
+        let newOverallScore = HealthScore(
+            score: HealthScorer.applyCoverageAdjustment(rawScore: rawOverallScore.score, baselines: newBaselines),
+            breakdown: rawOverallScore.breakdown,
+            generatedAt: rawOverallScore.generatedAt
+        )
         let newScoreExplanation = HealthScorer.explainOverallScore(
             categoryScores: newCategoryScores,
             weights: adaptiveWeights,

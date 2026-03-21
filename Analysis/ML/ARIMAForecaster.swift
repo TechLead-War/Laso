@@ -90,8 +90,8 @@ final class ARIMAForecaster {
         let d = model.d
         let q = model.q
         
-        var currentObs = model.lastObservations
-        var currentResids = model.lastResiduals
+        let currentObs = model.lastObservations
+        let currentResids = model.lastResiduals
         
         // Ensure we have enough history to difference back up
         var baseDifferencingHistory = currentObs

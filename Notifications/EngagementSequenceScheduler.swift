@@ -6,10 +6,10 @@ import UserNotifications
 ///
 /// Each notification is grounded in behavioral science:
 /// - Day 1: Implementation Intention trigger (fires at wake-up time)
-/// - Day 2: Variable Reward (recovery score reveal — they don't know what they'll see)
+/// - Day 2: Variable Reward (recovery score reveal. they don't know what they'll see)
 /// - Day 3: Zeigarnik Effect (incomplete info about sleep patterns pulls them back)
-/// - Day 5: Goal Gradient (personalization progress — acceleration toward completion)
-/// - Day 7: Loss Aversion (discovered patterns — losing them hurts 2.25x more than the cost)
+/// - Day 5: Goal Gradient (personalization progress. acceleration toward completion)
+/// - Day 7: Loss Aversion (discovered patterns. losing them hurts 2.25x more than the cost)
 ///
 /// All notifications use REAL data from the ML pipeline when available,
 /// with meaningful fallbacks when data isn't ready.
@@ -88,10 +88,10 @@ enum EngagementSequenceScheduler {
             let content: (title: String, body: String)
 
             if day <= currentDay {
-                // Day is today or past — generate with real data
+                // Day is today or past. generate with real data
                 content = await generateContent(day: day, dataStore: dataStore, userName: userName)
             } else {
-                // Future day — use preview content (will be rescheduled with real data on that day)
+                // Future day. use preview content (will be rescheduled with real data on that day)
                 content = previewContent(day: day, userName: userName)
             }
 
@@ -171,7 +171,7 @@ enum EngagementSequenceScheduler {
         )
     }
 
-    /// Day 2: Variable Reward — recovery score reveal
+    /// Day 2: Variable Reward. recovery score reveal
     private static func generateDay2(dataStore: HealthDataStore?) async -> (title: String, body: String) {
         let score = defaults.integer(forKey: AppKeys.Readiness.cachedScore)
 
@@ -199,10 +199,10 @@ enum EngagementSequenceScheduler {
         )
     }
 
-    /// Day 3: Zeigarnik Effect — incomplete sleep info
+    /// Day 3: Zeigarnik Effect. incomplete sleep info
     private static func generateDay3(dataStore: HealthDataStore?) async -> (title: String, body: String) {
         // Try to get a real sleep finding from stored data
-        // Store is @MainActor — hop to main actor for SwiftData reads
+        // Store is @MainActor. hop to main actor for SwiftData reads
         if let store = dataStore {
             let sleepMetrics: [HealthMetric] = [.sleepDuration, .sleepREM, .sleepDeep]
             for metric in sleepMetrics {
@@ -232,7 +232,7 @@ enum EngagementSequenceScheduler {
         )
     }
 
-    /// Day 5: Goal Gradient — personalization progress
+    /// Day 5: Goal Gradient. personalization progress
     private static func generateDay5() -> (title: String, body: String) {
         let days = daysSinceInstall
         let percent: Int
@@ -262,12 +262,12 @@ enum EngagementSequenceScheduler {
         )
     }
 
-    /// Day 7: Loss Aversion — personalized discovery count
+    /// Day 7: Loss Aversion. personalized discovery count
     private static func generateDay7(dataStore: HealthDataStore?) async -> (title: String, body: String) {
         var patternCount = 0
         var trendInfo: (metric: String, direction: String)?
 
-        // Store is @MainActor — batch all SwiftData reads on main actor
+        // Store is @MainActor. batch all SwiftData reads on main actor
         if let store = dataStore {
             let storeData = await MainActor.run { () -> (scoreCount: Int, metricSeries: [(HealthMetric, MetricTimeSeries)]) in
                 let scoreHistory = store.loadScoreHistory(days: 7)
@@ -416,13 +416,13 @@ enum EngagementSequenceScheduler {
         case 85...100:
             return "You're well recovered today."
         case 70..<85:
-            return "Solid recovery — a good day to stay active."
+            return "Solid recovery. a good day to stay active."
         case 55..<70:
-            return "Moderate recovery — listen to your body today."
+            return "Moderate recovery. listen to your body today."
         case 40..<55:
             return "Your body is still catching up."
         default:
-            return "Take it easy — your body needs rest."
+            return "Take it easy. your body needs rest."
         }
     }
 }

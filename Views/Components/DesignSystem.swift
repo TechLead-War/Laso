@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Centralized design tokens for visual consistency across Laso.
 enum DS {
-    /// Card corner radius — unified across all cards
+    /// Card corner radius. unified across all cards
     static let cardRadius: CGFloat = 16
     /// Icon background corner radius
     static let iconRadius: CGFloat = 10
@@ -105,7 +105,7 @@ enum DS {
 // MARK: - Unified Card Background
 
 extension View {
-    /// Tinted card — colored background, matching stroke, and shadow
+    /// Tinted card. colored background, matching stroke, and shadow
     func cardStyle(tint: Color) -> some View {
         self
             .background(tint.opacity(DS.tintBg), in: RoundedRectangle(cornerRadius: DS.cardRadius))
@@ -113,7 +113,7 @@ extension View {
             .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
     }
 
-    /// Neutral card — system background, subtle stroke, and shadow
+    /// Neutral card. system background, subtle stroke, and shadow
     func cardStyle() -> some View {
         self
             .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))

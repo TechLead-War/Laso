@@ -17,7 +17,7 @@ struct LasoApp: App {
     private var remoteConfig: RemoteConfigManager { container.remoteConfigManager }
 
     /// Show paywall only when onboarding is done and subscription is definitively expired.
-    /// Respects FeatureGate.freeYearActive — when active, paywall is disabled.
+    /// Respects FeatureGate.freeYearActive. when active, paywall is disabled.
     private var shouldShowPaywall: Bool {
         guard appStateStore.onboardingCompleted else { return false }
         return subscriptionManager.shouldEnforcePaywall && !FeatureGate.hasFullAccess
@@ -59,11 +59,11 @@ struct LasoApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
-                // -1. Integrity failure — blocks everything on compromised devices
+                // -1. Integrity failure. blocks everything on compromised devices
                 if let failure = integrityFailure {
                     CompromisedEnvironmentView(reason: failure)
                 }
-                // 0. Force update or maintenance — blocks everything (skip in UI test mode)
+                // 0. Force update or maintenance. blocks everything (skip in UI test mode)
                 else if !isUITestMode && remoteConfig.requiresForceUpdate {
                     ForceUpdateView()
                 } else if !isUITestMode && remoteConfig.killSwitchEnabled {
@@ -88,14 +88,14 @@ struct LasoApp: App {
                     // 2. Paywall (trial expired + not subscribed)
                     .fullScreenCover(isPresented: Binding(
                         get: { shouldShowPaywall },
-                        set: { _ in }  // Cannot dismiss — must subscribe
+                        set: { _ in }  // Cannot dismiss. must subscribe
                     )) {
                         PaywallView(subscriptionManager: subscriptionManager)
                             .interactiveDismissDisabled()
                     }
                 }
 
-                // Branded splash — matches system launch screen for seamless transition.
+                // Branded splash. matches system launch screen for seamless transition.
                 // Covers the gap between Firebase init and first meaningful render.
                 if showSplash {
                     splashView

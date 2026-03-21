@@ -44,7 +44,7 @@ struct InsightFactory {
 
     // MARK: - Convenience: Observation (no action)
 
-    /// Create an informational insight — observation only, no behavioral direction.
+    /// Create an informational insight. observation only, no behavioral direction.
     static func observation(
         metric: HealthMetric,
         title: String,

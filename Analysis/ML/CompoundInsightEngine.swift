@@ -2,7 +2,7 @@ import Foundation
 
 /// Synthesizes outputs from all ML components into compound, multi-metric insights
 /// that connect dots across metrics, time, and contexts. This is the crown jewel of the
-/// ML pipeline — producing narratives no user could derive from single-metric observation alone.
+/// ML pipeline. producing narratives no user could derive from single-metric observation alone.
 final class CompoundInsightEngine {
 
     // MARK: - Types
@@ -256,7 +256,7 @@ final class CompoundInsightEngine {
                     id: "trajectory_state_transition",
                     title: "New Health Phase: \(state.label)",
                     narrative: narrative,
-                    recommendation: "Transitioned from \"\(prevState.label)\" to \"\(state.label)\" — this transition had a \(formatPercent(transitionProb * 100)) historical probability.",
+                    recommendation: "Transitioned from \"\(prevState.label)\" to \"\(state.label)\". this transition had a \(formatPercent(transitionProb * 100)) historical probability.",
                     involvedMetrics: state.characteristics.map(\.metric),
                     severity: .notable,
                     category: .trajectory,
@@ -288,8 +288,8 @@ final class CompoundInsightEngine {
                         title: delta > 0 ? "Score Climbing: +\(Int(abs(delta))) This Week" : "Score Dipped \(Int(abs(delta))) Points",
                         narrative: narrative,
                         recommendation: delta > 0
-                            ? "Score moved from \(formatValue(priorAvg)) to \(formatValue(recentAvg)) week-over-week — a \(formatValue(abs(delta)))-point improvement."
-                            : "Score dropped from \(formatValue(priorAvg)) to \(formatValue(recentAvg)) week-over-week — a \(formatValue(abs(delta)))-point decline.",
+                            ? "Score moved from \(formatValue(priorAvg)) to \(formatValue(recentAvg)) week-over-week. a \(formatValue(abs(delta)))-point improvement."
+                            : "Score dropped from \(formatValue(priorAvg)) to \(formatValue(recentAvg)) week-over-week. a \(formatValue(abs(delta)))-point decline.",
                         involvedMetrics: trends.prefix(3).map(\.metric),
                         severity: abs(delta) >= 10 ? .important : .notable,
                         category: .trajectory,
@@ -373,7 +373,7 @@ final class CompoundInsightEngine {
             let rCoeff = "r=\(formatValue(strongest.pearsonR, decimals: 2))"
             let direction = strongest.pearsonR > 0 ? "move together" : "move opposite"
 
-            var narrative = "Your \(catA.rawValue) and \(catB.rawValue) metrics are \(rPct) correlated — they \(direction). "
+            var narrative = "Your \(catA.rawValue) and \(catB.rawValue) metrics are \(rPct) correlated. they \(direction). "
             narrative += "Specifically, \(strongest.metricA.displayName) and \(strongest.metricB.displayName) (\(rCoeff)). "
 
             if strongest.grangerCausal {
@@ -422,7 +422,7 @@ final class CompoundInsightEngine {
                         id: "hidden_variability_contrast",
                         title: "Your Most Responsive Metric",
                         narrative: narrative,
-                        recommendation: "\(mostVariable.0.displayName) has \(formatPercent(ratio * 100 - 100)) more day-to-day variability than \(leastVariable.0.displayName) — it responds most to daily changes in your data.",
+                        recommendation: "\(mostVariable.0.displayName) has \(formatPercent(ratio * 100 - 100)) more day-to-day variability than \(leastVariable.0.displayName). it responds most to daily changes in your data.",
                         involvedMetrics: [mostVariable.0, leastVariable.0],
                         severity: .fyi,
                         category: .hiddenPattern,
@@ -690,7 +690,7 @@ final class CompoundInsightEngine {
                 corr.grangerCausal && corr.grangerEffectSize > 0.05
             }
 
-            var narrative = "Your biggest lever right now is \(biggest.metric.displayName) — you're at \(currentStr) \(biggest.metric.unit), which is \(gapStr) \(biggest.metric.higherIsBetter ? "below" : "above") your personal baseline of \(baselineStr) \(biggest.metric.unit)."
+            var narrative = "Your biggest lever right now is \(biggest.metric.displayName). you're at \(currentStr) \(biggest.metric.unit), which is \(gapStr) \(biggest.metric.higherIsBetter ? "below" : "above") your personal baseline of \(baselineStr) \(biggest.metric.unit)."
 
             if let lever = scoreLever {
                 let other = lever.metricA == biggest.metric ? lever.metricB : lever.metricA
@@ -704,7 +704,7 @@ final class CompoundInsightEngine {
                 id: "optimization_biggest_gap",
                 title: "Biggest Opportunity: \(biggest.metric.displayName)",
                 narrative: narrative,
-                recommendation: "Your \(biggest.metric.displayName) is at \(currentStr) \(biggest.metric.unit) — \(gapStr) \(biggest.metric.higherIsBetter ? "below" : "above") your \(baselineStr) \(biggest.metric.unit) baseline. Estimated score impact: ~\(estimatedScoreImpact) points.",
+                recommendation: "Your \(biggest.metric.displayName) is at \(currentStr) \(biggest.metric.unit). \(gapStr) \(biggest.metric.higherIsBetter ? "below" : "above") your \(baselineStr) \(biggest.metric.unit) baseline. Estimated score impact: ~\(estimatedScoreImpact) points.",
                 involvedMetrics: [biggest.metric] + (scoreLever.map { [$0.metricA == biggest.metric ? $0.metricB : $0.metricA] } ?? []),
                 severity: abs(biggest.gap) > 20 ? .important : .notable,
                 category: .optimization,

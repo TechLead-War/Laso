@@ -517,7 +517,7 @@ enum ContextualSignalEngine {
         let cosDec = cos(declRad)
 
         guard cosLat * cosDec != 0 else {
-            // Exactly at poles — 24h or 0h depending on hemisphere/season
+            // Exactly at poles. 24h or 0h depending on hemisphere/season
             return latitude >= 0
                 ? (declinationDeg > 0 ? 24.0 : 0.0)
                 : (declinationDeg < 0 ? 24.0 : 0.0)

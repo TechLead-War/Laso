@@ -58,7 +58,7 @@ struct SleepRegularityAnalyzer {
             insights.append(InsightFactory.make(
                 metric: .sleepDuration,
                 title: "Irregular Sleep Pattern Detected",
-                summary: "Your Sleep Regularity Index is \(String(format: "%.0f", sri))/100 — placing you in the irregular category. Research shows this is a stronger predictor of disease risk than sleep duration alone.",
+                summary: "Your Sleep Regularity Index is \(String(format: "%.0f", sri))/100. placing you in the irregular category. Research shows this is a stronger predictor of disease risk than sleep duration alone.",
                 recommendation: "Across 5 large cohorts, irregular sleepers (SRI <60) face 26-53% higher dementia risk and 20-88% higher all-cause mortality, independent of how many hours they sleep. Your SRI of \(String(format: "%.0f", sri)) over \(samples.count) measured nights suggests significant night-to-night variability.\(socialJetLag > 60 ? " Social jet lag of \(String(format: "%.0f", socialJetLag)) min is also elevated." : "")",
                 severity: .warning,
                 trend: trendDirection,
@@ -77,7 +77,7 @@ struct SleepRegularityAnalyzer {
             insights.append(InsightFactory.make(
                 metric: .sleepDuration,
                 title: "Sleep Regularity Needs Attention",
-                summary: "Your Sleep Regularity Index is \(String(format: "%.0f", sri))/100 — moderate but room for improvement. Consistent sleep timing matters more than duration for long-term health.",
+                summary: "Your Sleep Regularity Index is \(String(format: "%.0f", sri))/100. moderate but room for improvement. Consistent sleep timing matters more than duration for long-term health.",
                 recommendation: "Your SRI of \(String(format: "%.0f", sri)) across \(samples.count) nights falls in the moderate range. Research links each 10-point SRI improvement to measurable reductions in cardiovascular and metabolic disease risk.\(socialJetLag > 45 ? " Reducing your \(String(format: "%.0f", socialJetLag))-min social jet lag would help most." : "")",
                 severity: .info,
                 trend: trendDirection,
@@ -92,7 +92,7 @@ struct SleepRegularityAnalyzer {
             insights.append(InsightFactory.observation(
                 metric: .sleepDuration,
                 title: "Excellent Sleep Regularity",
-                summary: "Your Sleep Regularity Index is \(String(format: "%.0f", sri))/100 — your sleep timing and duration are highly consistent. This is independently protective against chronic disease.",
+                summary: "Your Sleep Regularity Index is \(String(format: "%.0f", sri))/100. your sleep timing and duration are highly consistent. This is independently protective against chronic disease.",
                 recommendation: "An SRI of \(String(format: "%.0f", sri)) across \(samples.count) nights places you in the most regular category. Research shows this level of sleep consistency is associated with smaller hippocampal volume loss and substantially lower all-cause mortality risk.",
                 currentValue: sri,
                 baselineValue: Double(goodSRI),
@@ -107,7 +107,7 @@ struct SleepRegularityAnalyzer {
             insights.append(InsightFactory.make(
                 metric: .sleepDuration,
                 title: "Social Jet Lag: \(String(format: "%.0f", socialJetLag)) Minutes",
-                summary: "Your weekend sleep timing shifts by \(String(format: "%.0f", socialJetLag)) minutes compared to weekdays — equivalent to crossing a time zone every week. This is linked to metabolic syndrome independent of sleep duration.",
+                summary: "Your weekend sleep timing shifts by \(String(format: "%.0f", socialJetLag)) minutes compared to weekdays. equivalent to crossing a time zone every week. This is linked to metabolic syndrome independent of sleep duration.",
                 recommendation: "Social jet lag >\(60) min is associated with higher odds of metabolic syndrome, elevated inflammatory markers, and weight gain in adults with otherwise normal sleep duration. Your \(String(format: "%.0f", socialJetLag))-min shift suggests significant circadian misalignment on weekends.",
                 severity: socialJetLag > 90 ? .warning : .info,
                 trend: .stable,

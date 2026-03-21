@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Action-first insight card — leads with what to do, not what happened
+/// Action-first insight card. leads with what to do, not what happened
 struct InsightCard: View {
     let insight: Insight
 
@@ -42,7 +42,7 @@ struct InsightCard: View {
 }
 
 private extension InsightCard {
-    /// First sentence of the recommendation — the actionable part
+    /// First sentence of the recommendation. the actionable part
     var actionText: String {
         let rec = insight.recommendation
         // Find the first "." that ends a real sentence, not a numbered prefix like "1."

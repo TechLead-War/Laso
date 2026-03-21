@@ -828,7 +828,7 @@ final class TodayIntelligenceEngine {
         // Determine if coherence is unusually low
         // Use all correlations (not just significant) to see overall coupling
         let allAbsR = correlations.map { abs($0.pearsonR) }
-        let overallMeanR = AccelerateML.mean(allAbsR)
+        _ = AccelerateML.mean(allAbsR)
 
         let severity: IntelligenceCard.CardSeverity
         let color: IntelligenceCard.AccentColor

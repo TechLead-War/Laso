@@ -49,13 +49,13 @@ final class CloudBackupManager {
 
     /// Backup if enough time has passed since the last backup (throttled to once per 6 hours)
     func backupIfNeeded(store: HealthDataStore, persistence: PersistenceManager) async {
-        // Kill switch — remotely disable CloudKit backup if it's causing issues
+        // Kill switch. remotely disable CloudKit backup if it's causing issues
         guard !RemoteConfigManager.shared.killCloudBackup else {
             backupStatus = .disabled
             return
         }
 
-        // Backup is opt-in — disabled by default. User must explicitly enable it in Settings.
+        // Backup is opt-in. disabled by default. User must explicitly enable it in Settings.
         guard UserDefaults.standard.bool(forKey: AppKeys.Backup.backupEnabled) else {
             backupStatus = .disabled
             return
@@ -84,7 +84,7 @@ final class CloudBackupManager {
         backupStatus = .backingUp
 
         // Build payload from current on-device data
-        // Store is @MainActor — gather all SwiftData reads on main actor
+        // Store is @MainActor. gather all SwiftData reads on main actor
         let payload = await MainActor.run { buildPayload(store: store, persistence: persistence) }
 
         guard let compressedData = payload.compressedAndEncrypted() else {
@@ -108,7 +108,7 @@ final class CloudBackupManager {
         do {
             record = try await container.privateCloudDatabase.record(for: recordID)
         } catch {
-            // Record doesn't exist yet — create it
+            // Record doesn't exist yet. create it
             record = CKRecord(recordType: Self.recordType, recordID: recordID)
         }
 
@@ -145,7 +145,7 @@ final class CloudBackupManager {
         do {
             record = try await container.privateCloudDatabase.record(for: recordID)
         } catch {
-            // No backup found — first install or never backed up
+            // No backup found. first install or never backed up
             backupStatus = .idle
             return false
         }
@@ -167,11 +167,11 @@ final class CloudBackupManager {
         }
 
         guard let payload else {
-            backupStatus = .failed("Failed to decrypt backup — ensure iCloud Keychain is enabled")
+            backupStatus = .failed("Failed to decrypt backup. ensure iCloud Keychain is enabled")
             return false
         }
 
-        // Store is @MainActor — batch all SwiftData writes on main actor
+        // Store is @MainActor. batch all SwiftData writes on main actor
         await MainActor.run {
             for snapshot in payload.snapshots {
                 store.insertRestoredSnapshot(

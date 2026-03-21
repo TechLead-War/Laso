@@ -69,7 +69,7 @@ final class MenstrualCycleTracker {
         var exerciseRecommendation: String {
             switch self {
             case .menstrual:
-                return "Favor light movement — walking, gentle yoga, or stretching. Avoid heavy lifts or high-impact sessions if energy is low."
+                return "Favor light movement. walking, gentle yoga, or stretching. Avoid heavy lifts or high-impact sessions if energy is low."
             case .follicular:
                 return "Great time to push intensity. Try heavy strength training, HIIT, or learning new movement patterns. Recovery is fast."
             case .ovulation:
@@ -97,7 +97,7 @@ final class MenstrualCycleTracker {
             case .menstrual:
                 return "Focus on iron-rich foods (red meat, spinach, lentils) to offset menstrual losses. Anti-inflammatory foods like fatty fish and ginger can ease discomfort."
             case .follicular:
-                return "Support rising estrogen with cruciferous vegetables and lean protein. Carbohydrate tolerance is higher — a good window for complex carbs around workouts."
+                return "Support rising estrogen with cruciferous vegetables and lean protein. Carbohydrate tolerance is higher. a good window for complex carbs around workouts."
             case .ovulation:
                 return "Maintain balanced macros with emphasis on antioxidants and fiber. Hydration is important as energy expenditure peaks."
             case .luteal:
@@ -135,7 +135,7 @@ final class MenstrualCycleTracker {
         case .menstrual:
             return "Recovery is slower during menstruation. Allow extra rest between intense sessions and monitor HRV for readiness."
         case .follicular:
-            return "Recovery is at its fastest. The body adapts well to training stimulus — shorter rest periods are feasible."
+            return "Recovery is at its fastest. The body adapts well to training stimulus. shorter rest periods are feasible."
         case .ovulation:
             return "Recovery remains strong but joint laxity may increase injury risk. Warm up thoroughly and prioritize form."
         case .luteal:

@@ -275,7 +275,7 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
         case .appleWatch:
             return Set(HealthMetric.allCases)
         case .iPhone:
-            return [.steps, .distanceWalkingRunning, .flightsClimbed, .exerciseMinutes, .walkingSpeed]
+            return [.steps, .distanceWalkingRunning, .flightsClimbed, .exerciseMinutes, .walkingSpeed, .activeCalories]
         case .garmin:
             return Self.fullMetrics.union([.exerciseMinutes, .vo2Max, .respiratoryRate])
         case .ouraRing:

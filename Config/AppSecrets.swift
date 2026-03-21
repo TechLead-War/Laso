@@ -1,7 +1,7 @@
 import Foundation
 
 /// Single source of truth for all secrets, service identifiers, and sensitive configuration.
-/// Keep actual secret values out of source control — use environment variables or .xcconfig files
+/// Keep actual secret values out of source control. use environment variables or .xcconfig files
 /// for production secrets. This file centralizes the references so they're easy to find and rotate.
 enum AppSecrets {
 
@@ -49,8 +49,8 @@ enum AppSecrets {
     // MARK: - Legal URLs
 
     enum URLs {
-        static let termsOfUse = "https://lasohealth.com/terms"
-        static let privacyPolicy = "https://lasohealth.com/privacy"
+        static let termsOfUse = "https://lasohealth.fit/terms"
+        static let privacyPolicy = "https://lasohealth.fit/privacy"
         static let manageSubscriptions = "https://apps.apple.com/account/subscriptions"
     }
 

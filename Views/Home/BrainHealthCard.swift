@@ -19,7 +19,7 @@ struct BrainHealthCard: View {
                     .padding(.vertical, 6)
 
                 HStack(spacing: 14) {
-                    // Icon in rounded rectangle — distinct from Vitality (ring) and Strain (square)
+                    // Icon in rounded rectangle. distinct from Vitality (ring) and Strain (square)
                     Image(systemName: "brain")
                         .font(.title3.weight(.semibold))
                         .foregroundStyle(.white)

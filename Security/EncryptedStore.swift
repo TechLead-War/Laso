@@ -39,12 +39,12 @@ final class EncryptedStore {
     func migrateIfNeeded(forKey key: String) {
         guard let plainData = defaults.data(forKey: key) else { return }
         // Check if data is already encrypted (AES-GCM combined has nonce+ciphertext+tag)
-        // A simple heuristic: try to decrypt — if it works, it's already encrypted
+        // A simple heuristic: try to decrypt. if it works, it's already encrypted
         if let encryptionKey = getOrCreateKey(),
            let _ = decrypt(plainData, using: encryptionKey) {
             return // Already encrypted
         }
-        // Not encrypted yet — encrypt and overwrite
+        // Not encrypted yet. encrypt and overwrite
         save(plainData, forKey: key)
     }
 

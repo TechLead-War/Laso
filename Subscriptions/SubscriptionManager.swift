@@ -157,7 +157,7 @@ final class SubscriptionManager {
             if SubscriptionConfig.allProductIDs.contains(transaction.productID) {
                 if let expiration = transaction.expirationDate, expiration > Date() {
                     status = .subscribed(expirationDate: expiration)
-                    // Record that we were subscribed — used for grace period tracking
+                    // Record that we were subscribed. used for grace period tracking
                     defaults.set(Date(), forKey: Key.lastSubscribedDate)
                     clearGraceState()
                     return
@@ -165,14 +165,14 @@ final class SubscriptionManager {
             }
         }
 
-        // 2. No active entitlement — check if Apple is retrying the payment
+        // 2. No active entitlement. check if Apple is retrying the payment
         if await isInBillingRetry() {
             let graceDays = startOrContinueGrace()
             if graceDays <= Self.billingGraceDays {
                 status = .billingGrace(daysSinceExpiry: graceDays)
                 return
             }
-            // Grace period exhausted — fall through to trial/expired
+            // Grace period exhausted. fall through to trial/expired
             clearGraceState()
         }
 
@@ -187,7 +187,7 @@ final class SubscriptionManager {
             clearGraceState()
         }
 
-        // 4. No subscription and no grace — check trial
+        // 4. No subscription and no grace. check trial
         resolveTrialStatus()
     }
 
@@ -217,7 +217,7 @@ final class SubscriptionManager {
         if let existing = defaults.object(forKey: Key.graceStartDate) as? Date {
             return Calendar.current.dateComponents([.day], from: existing, to: Date()).day ?? 0
         }
-        // First time entering grace — record the start
+        // First time entering grace. record the start
         defaults.set(Date(), forKey: Key.graceStartDate)
         AppAnalytics.shared.trackBillingGraceStarted(daysSinceInstall: SessionTracker.shared.daysSinceInstall)
         return 0

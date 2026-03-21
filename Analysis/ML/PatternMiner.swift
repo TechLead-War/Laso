@@ -240,7 +240,7 @@ final class PatternMiner {
         }
 
         if lag == 7, let peak = peakDayName, let trough = troughDayName {
-            return "Your \(metric.displayName) follows a \(strengthLabel) \(periodLabel) cycle — peaks on \(peak)s, dips on \(trough)s"
+            return "Your \(metric.displayName) follows a \(strengthLabel) \(periodLabel) cycle. peaks on \(peak)s, dips on \(trough)s"
         }
 
         return "Your \(metric.displayName) shows a \(strengthLabel) \(periodLabel) pattern (r=\(String(format: "%.2f", strength)))"

@@ -23,7 +23,7 @@ enum AppIntegrityGuard {
 
     // MARK: - Jailbreak Detection
 
-    /// Multi-signal jailbreak detection — checks filesystem artifacts, writable system paths,
+    /// Multi-signal jailbreak detection. checks filesystem artifacts, writable system paths,
     /// dynamic libraries, and fork ability.
     private static func isJailbroken() -> Bool {
         // 1. Check for common jailbreak file paths
@@ -64,7 +64,7 @@ enum AppIntegrityGuard {
             try FileManager.default.removeItem(atPath: testPath)
             return true // Should not be able to write here
         } catch {
-            // Expected — sandbox is intact
+            // Expected. sandbox is intact
         }
 
         // 3. Check if suspicious URL schemes are available

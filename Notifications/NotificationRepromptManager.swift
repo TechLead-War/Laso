@@ -22,7 +22,7 @@ enum NotificationRepromptManager {
             await AppAnalytics.shared.trackBlockTap(title: "Notification Permission Denied", type: .dataSyncEvent, screen: .home, metadata: ["source": "notification_reprompt", "event": "permission_denied"])
             return shouldShowReprompt()
         case .authorized, .provisional, .ephemeral:
-            // Permission restored — clear denial tracking
+            // Permission restored. clear denial tracking
             clearDenialRecord()
             return false
         case .notDetermined:

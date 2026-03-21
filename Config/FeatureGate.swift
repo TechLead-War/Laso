@@ -17,7 +17,7 @@ struct FeatureGate {
     }
 
     /// Whether free-year mode is active (all features unlocked for PMF signal).
-    /// Controlled via Remote Config — flip from admin panel without an app update.
+    /// Controlled via Remote Config. flip from admin panel without an app update.
     private static var freeYearActive: Bool { config.freeYearActive }
 
     /// Whether the user can access a specific feature.

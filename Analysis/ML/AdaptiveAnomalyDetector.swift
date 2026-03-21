@@ -352,7 +352,7 @@ final class AdaptiveAnomalyDetector {
     /// Boost severity by one level (for cross-signal confirmation)
     private func boostSeverity(_ severity: AnomalySeverity) -> AnomalySeverity {
         switch severity {
-        case .none: return .none // Don't promote "none" — not an anomaly at all
+        case .none: return .none // Don't promote "none". not an anomaly at all
         case .info: return .warning
         case .warning: return .critical
         case .critical: return .critical // Already max
@@ -366,7 +366,7 @@ final class AdaptiveAnomalyDetector {
         let isWeekend = vector.context.isWeekend == 1.0
 
         // Exercise intensity: use baseline + 1σ as threshold (not arbitrary 1.5x multiplier)
-        // This adapts to each user's activity level — an elite athlete's "intense" differs from sedentary
+        // This adapts to each user's activity level. an elite athlete's "intense" differs from sedentary
         let hadIntenseExercise: Bool
         if let activeCalRaw = vector.rawValue(for: .activeCalories) {
             if let baseline = trainedBaselines[.activeCalories], baseline.mean > 0, baseline.standardDeviation > 0 {
@@ -590,7 +590,7 @@ final class AdaptiveAnomalyDetector {
         anomalousFeatures: [(key: FeatureKey, contribution: Double)]
     ) -> Int {
         guard severity >= .info else {
-            // No anomaly — reset streaks for metrics not flagged
+            // No anomaly. reset streaks for metrics not flagged
             return 0
         }
 
@@ -605,9 +605,9 @@ final class AdaptiveAnomalyDetector {
                 if daysBetween == 1 {
                     consecutiveAnomalyDays[metric, default: 0] += 1
                 } else if daysBetween == 0 {
-                    // Same day — no change
+                    // Same day. no change
                 } else {
-                    // Gap — reset streak
+                    // Gap. reset streak
                     consecutiveAnomalyDays[metric] = 1
                 }
             } else {
@@ -663,7 +663,7 @@ final class AdaptiveAnomalyDetector {
                 return Double(depth)
             }
             let value = point[featureIndex]
-            // Skip missing values — treat as average depth
+            // Skip missing values. treat as average depth
             if value == FeatureKey.missingSentinel {
                 return Double(depth) + averagePathLength(n: Self.subSampleSize / 2)
             }

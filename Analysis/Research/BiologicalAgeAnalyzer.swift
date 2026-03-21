@@ -1,11 +1,11 @@
 import Foundation
 
-/// Research: npj Digital Medicine (2024) — CosinorAge
+/// Research: npj Digital Medicine (2024). CosinorAge
 /// Finding: Biological age estimated purely from wearable accelerometry data
 /// correlates r=0.87-0.89 with blood-based biological age clocks.
 /// Uses cosinor analysis of rest-activity rhythms (amplitude, acrophase).
 ///
-/// Also: Apple Heart & Movement Study (2026) — VO2max age percentiles.
+/// Also: Apple Heart & Movement Study (2026). VO2max age percentiles.
 /// VO2max is stronger than smoking/diabetes/hypertension for mortality prediction.
 ///
 /// Implementation: Computes a composite Biological Age from activity rhythm
@@ -81,7 +81,7 @@ struct BiologicalAgeAnalyzer {
             metric: .vo2Max,
             title: "Biological Age Estimate: ~\(String(format: "%.0f", weightedAge))",
             summary: "Based on \(ageEstimates.count) physiological markers, your body functions like someone around \(String(format: "%.0f", weightedAge)) years old. Strongest area: \(youngestComponent.component). Area with most room: \(oldestComponent.component).",
-            recommendation: "Breakdown — \(componentBreakdown). Each component is mapped to population norms from large-scale studies. VO2max alone (your strongest mortality predictor) suggests a fitness age equivalent.",
+            recommendation: "Breakdown. \(componentBreakdown). Each component is mapped to population norms from large-scale studies. VO2max alone (your strongest mortality predictor) suggests a fitness age equivalent.",
             currentValue: weightedAge,
             baselineValue: weightedAge,
             deviationPercent: 0,
@@ -148,7 +148,7 @@ struct BiologicalAgeAnalyzer {
             }
         }
 
-        return ("Cardio Fitness", estimatedAge, 0.35) // Highest weight — strongest mortality predictor
+        return ("Cardio Fitness", estimatedAge, 0.35) // Highest weight. strongest mortality predictor
     }
 
     private static func computeRHRAge(context: AnalysisContext) -> (component: String, estimatedAge: Double, weight: Double)? {

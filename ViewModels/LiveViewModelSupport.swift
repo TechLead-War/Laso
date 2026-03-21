@@ -59,7 +59,7 @@ extension LiveViewModel {
         }
     }
 
-    /// Real-time vitals — HR, SpO2, respiratory rate, blood pressure, body temperature
+    /// Real-time vitals. HR, SpO2, respiratory rate, blood pressure, body temperature
     @Observable
     final class VitalsData {
         // Heart rate
@@ -223,7 +223,7 @@ extension LiveViewModel {
         }
     }
 
-    /// Recovery metrics — RHR, HRV, readiness score, stress
+    /// Recovery metrics. RHR, HRV, readiness score, stress
     @Observable
     final class RecoveryData {
         var latestRestingHeartRate: Double?

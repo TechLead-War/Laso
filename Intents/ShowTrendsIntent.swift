@@ -1,7 +1,7 @@
 import AppIntents
 import SwiftUI
 
-/// "Show my health trends" — Opens the app to the Explore/trends view.
+/// "Show my health trends". Opens the app to the Explore/trends view.
 struct ShowTrendsIntent: AppIntent {
     static var title: LocalizedStringResource = "Show Health Trends"
     static var description = IntentDescription(

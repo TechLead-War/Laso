@@ -107,7 +107,7 @@ final class UserProfileStore {
         // Always cache locally first
         saveLocal(profile)
 
-        // Prepare Firestore document data — anonymized only (no PII: name, email, DOB excluded)
+        // Prepare Firestore document data. anonymized only (no PII: name, email, DOB excluded)
         let data: [String: Any] = [
             "gender": profile.gender.rawValue,
             "ageBracket": profile.ageBracket,

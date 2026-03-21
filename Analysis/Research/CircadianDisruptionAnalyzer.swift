@@ -52,7 +52,7 @@ struct CircadianDisruptionAnalyzer {
             insights.append(InsightFactory.make(
                 metric: .steps,
                 title: "Circadian Rhythm Disrupted",
-                summary: "Your circadian health score is \(String(format: "%.0f", circadianScore))/100 — indicating significant disruption in your daily biological rhythm. Weakest area: \(weakestComponent.label) (\(String(format: "%.0f", weakestComponent.score))/100).",
+                summary: "Your circadian health score is \(String(format: "%.0f", circadianScore))/100. indicating significant disruption in your daily biological rhythm. Weakest area: \(weakestComponent.label) (\(String(format: "%.0f", weakestComponent.score))/100).",
                 recommendation: "Research shows circadian disruption underlies metabolic syndrome, cardiovascular disease, mood disorders, and accelerated aging. Your activity patterns lack the strong daily rhythm (high daytime activity, low nighttime activity) associated with healthy circadian function. Circadian rhythm amplitude measured from wearables correlates r=0.87 with blood-based biological age.",
                 severity: .warning,
                 trend: .declining,
@@ -87,7 +87,7 @@ struct CircadianDisruptionAnalyzer {
                 metric: .steps,
                 title: "Strong Circadian Rhythm",
                 summary: "Your circadian health score is \(String(format: "%.0f", circadianScore))/100. Your daily biological rhythm shows strong amplitude, good regularity, and clear rest-activity contrast. Strongest area: \(strongestComponent.label).",
-                recommendation: "A circadian score of \(String(format: "%.0f", circadianScore)) reflects a well-entrained biological clock. Research shows strong circadian rhythmicity is independently protective against metabolic disease, cognitive decline, and premature aging — correlating with younger biological age.",
+                recommendation: "A circadian score of \(String(format: "%.0f", circadianScore)) reflects a well-entrained biological clock. Research shows strong circadian rhythmicity is independently protective against metabolic disease, cognitive decline, and premature aging. correlating with younger biological age.",
                 currentValue: circadianScore,
                 baselineValue: 70,
                 deviationPercent: ((circadianScore - 70) / 70) * 100,

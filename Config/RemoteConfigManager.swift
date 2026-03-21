@@ -315,7 +315,7 @@ final class RemoteConfigManager {
 
     // MARK: - Kill Switches
 
-    /// Master kill switch — disables the entire app with a maintenance message
+    /// Master kill switch. disables the entire app with a maintenance message
     var killSwitchEnabled: Bool {
         boolValue(forKey: "kill_switch_enabled")
     }
@@ -415,7 +415,7 @@ extension RemoteConfigManager {
     /// In-app defaults used when Remote Config hasn't been fetched yet.
     /// These mirror the initial values set in the admin panel.
     private static let defaults: [String: NSObject] = [
-        // Feature access — all features enabled for pro, selected for free
+        // Feature access. all features enabled for pro, selected for free
         "feature_access_healthScore":       "free,pro" as NSString,
         "feature_access_categoryScores":    "free,pro" as NSString,
         "feature_access_basicMetrics":      "free,pro" as NSString,

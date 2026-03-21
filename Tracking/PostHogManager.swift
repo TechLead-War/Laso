@@ -1,7 +1,7 @@
 import Foundation
 import PostHog
 
-/// Central PostHog wrapper — sole analytics backend.
+/// Central PostHog wrapper. sole analytics backend.
 /// All events, user properties, screen views, and error tracking flow through here.
 final class PostHogManager {
 
@@ -88,7 +88,7 @@ final class PostHogManager {
         ]
         for (k, v) in metadata { props[k] = v }
         #if DEBUG
-        print("[PostHog] app_error_recorded: \(context) — \(message)")
+        print("[PostHog] app_error_recorded: \(context). \(message)")
         #endif
         PostHogSDK.shared.capture("app_error_recorded", properties: props)
     }

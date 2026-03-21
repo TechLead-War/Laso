@@ -98,12 +98,12 @@ final class PersistenceManager {
         }
     }
 
-    /// Write sensitive Data — encrypts before storing, never syncs to iCloud
+    /// Write sensitive Data. encrypts before storing, never syncs to iCloud
     private func saveEncrypted(_ data: Data, forKey key: String) {
         encrypted.save(data, forKey: key)
     }
 
-    /// Load sensitive Data — decrypts from storage
+    /// Load sensitive Data. decrypts from storage
     private func loadEncrypted(forKey key: String) -> Data? {
         encrypted.load(forKey: key)
     }

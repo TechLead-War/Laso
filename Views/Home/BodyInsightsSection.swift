@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Compact insight card on Home — shows a single actionable headline (causal chain or top insight).
-/// No section header, no extra chrome — just the card.
+/// Compact insight card on Home. shows a single actionable headline (causal chain or top insight).
+/// No section header, no extra chrome. just the card.
 struct BodyInsightsSection: View {
     let viewModel: DashboardViewModel
     let liveVM: LiveViewModel

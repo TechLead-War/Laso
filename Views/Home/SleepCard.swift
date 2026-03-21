@@ -13,7 +13,7 @@ struct SleepCard: View {
         if liveVM.sleep.hasSleepData {
             Button(action: onTap) {
                 HStack(spacing: 0) {
-                    // Left accent bar — indigo
+                    // Left accent bar. indigo
                     RoundedRectangle(cornerRadius: DS.accentRadius)
                         .fill(.indigo)
                         .frame(width: 4)
@@ -72,7 +72,7 @@ struct SleepCard: View {
                                 .lineLimit(2)
                         }
 
-                        // B=MAP prompt — visible when sleep quality is poor (high motivation moment)
+                        // B=MAP prompt. visible when sleep quality is poor (high motivation moment)
                         if liveVM.sleep.sleepQualityLabel == "Fair" || liveVM.sleep.sleepQualityLabel == "Poor" {
                             Text("See sleep tips \u{2192}")
                                 .font(.caption2.weight(.medium))

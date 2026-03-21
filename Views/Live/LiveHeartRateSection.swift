@@ -18,7 +18,7 @@ struct LiveHeartRateSection: View {
         VStack(spacing: 0) {
             // Top: pulsing heart + big number + zone
             HStack(alignment: .top, spacing: 16) {
-                // Animated pulsing heart — stops pulsing when stale
+                // Animated pulsing heart. stops pulsing when stale
                 ZStack {
                     Circle()
                         .fill(.red.opacity(isHeartRateStale ? 0.05 : 0.1))
@@ -85,7 +85,7 @@ struct LiveHeartRateSection: View {
                             }
                         }
                     } else {
-                        // Zone badge — only shown when data is fresh
+                        // Zone badge. only shown when data is fresh
                         HStack(spacing: 6) {
                             Text(currentHeartRateZone.rawValue)
                                 .font(.caption.weight(.bold))
@@ -107,7 +107,7 @@ struct LiveHeartRateSection: View {
             }
             .padding(DS.cardPadding)
 
-            // Zone bar — gradient from blue to red
+            // Zone bar. gradient from blue to red
             zoneProgressBar
                 .padding(.horizontal)
 
@@ -135,7 +135,7 @@ struct LiveHeartRateSection: View {
                 .padding(.bottom, 8)
             }
 
-            // Mini chart — last 30 minutes
+            // Mini chart. last 30 minutes
             if vitals.recentHeartRates.count > 1 {
                 heartRateMiniChart
                     .padding(.horizontal)

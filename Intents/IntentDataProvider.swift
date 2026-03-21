@@ -1,7 +1,7 @@
 import Foundation
 import HealthKit
 
-/// Shared data provider for all App Intents — fetches health data without requiring
+/// Shared data provider for all App Intents. fetches health data without requiring
 /// the full app's ViewModel/AnalysisEngine stack to be running.
 /// All methods are static and self-contained so intents can run from background contexts.
 enum IntentDataProvider {

@@ -35,7 +35,7 @@ struct RecoveryHeroCard: View {
     private var cardContent: some View {
         VStack(spacing: 16) {
             HStack(spacing: 20) {
-                // Score ring — hero size
+                // Score ring. hero size
                 HealthScoreRing(
                     score: score,
                     label: hasLiveReadiness ? "Recovery" : "Health",
@@ -139,7 +139,7 @@ struct RecoveryHeroCard: View {
             score: 82,
             dailyScore: 78,
             recoveryLabel: "Fully Recovered",
-            dayType: "Green Day — Push Hard",
+            dayType: "Green Day. Push Hard",
             scoreChangeFromLastWeek: 5
         )
 
@@ -147,7 +147,7 @@ struct RecoveryHeroCard: View {
             score: 58,
             dailyScore: 78,
             recoveryLabel: "Moderate Recovery",
-            dayType: "Yellow Day — Maintain",
+            dayType: "Yellow Day. Maintain",
             scoreChangeFromLastWeek: -3
         )
 
@@ -155,7 +155,7 @@ struct RecoveryHeroCard: View {
             score: 32,
             dailyScore: 78,
             recoveryLabel: "Low Recovery",
-            dayType: "Red Day — Recover",
+            dayType: "Red Day. Recover",
             scoreChangeFromLastWeek: -12
         )
     }

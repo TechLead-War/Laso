@@ -211,7 +211,7 @@ enum RiskFactorStatus: String {
 
 // MARK: - Focus Area
 
-/// A specific, actionable recommendation to reduce risk — ranked by impact
+/// A specific, actionable recommendation to reduce risk. ranked by impact
 struct FocusArea: Identifiable {
     let id = UUID()
     let title: String

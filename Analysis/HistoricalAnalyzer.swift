@@ -2,7 +2,7 @@ import Foundation
 
 /// Deep historical analysis that leverages up to 1 year of HealthKit data.
 /// Produces per-metric context: YoY change, all-time percentile, seasonal norms,
-/// long-term trajectory, and historical rarity — none of which exist in the
+/// long-term trajectory, and historical rarity. none of which exist in the
 /// 90-day-capped baseline/trend pipeline.
 struct HistoricalAnalyzer {
 

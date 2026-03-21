@@ -42,7 +42,7 @@ struct AlertEvaluator {
         // The daily summary (repeating) uses the other slot → total max 2/day.
         let maxPerDay = 1
 
-        // 1. Anomaly-based alerts (critical only — warnings disabled by default)
+        // 1. Anomaly-based alerts (critical only. warnings disabled by default)
         evaluateAnomalies(anomalies: anomalies, preferences: preferences, maxPerDay: maxPerDay)
 
         // 2. Heart rate spike/drop detection

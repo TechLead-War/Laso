@@ -1,6 +1,6 @@
 import Foundation
 
-/// Discovers each user's personal optimal conditions — what their best and worst days
+/// Discovers each user's personal optimal conditions. what their best and worst days
 /// look like, what combination of factors creates peak performance, ideal targets,
 /// recovery patterns, and resilience factors.
 ///

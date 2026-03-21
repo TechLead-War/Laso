@@ -13,17 +13,22 @@ struct AskYourDataView: View {
     @Environment(\.dismiss) private var dismiss
 
     private let suggestedQuestions = [
-        "How is my HRV trending?",
-        "Does sleep affect my resting heart rate?",
-        "What was my best sleep this month?",
-        "Anything unusual in my data?",
-        "How are my steps this week vs last week?",
-        "Predict my HRV for tomorrow",
+        "How is my body doing right now?",
+        "Am I at risk for anything?",
+        "What should I do to have a great day?",
+        "When's the best time for me to work out?",
+        "Why is my recovery score what it is?",
+        "What causes my HRV to change?",
+        "Do I have any weekly patterns?",
+        "How is my sleep trending?",
     ]
 
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
+                // AI assistant orb
+                AskDataOrbView(size: 200)
+
                 // Search bar
                 searchBar
 

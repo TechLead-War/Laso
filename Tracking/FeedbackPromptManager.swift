@@ -45,7 +45,7 @@ final class FeedbackPromptManager {
 
         let daysSinceInstall = Calendar.current.dateComponents([.day], from: installDate, to: Date()).day ?? 0
 
-        // Too early — wait at least daysBeforeFirstPrompt
+        // Too early. wait at least daysBeforeFirstPrompt
         if daysSinceInstall < daysBeforeFirstPrompt {
             return false
         }
@@ -55,7 +55,7 @@ final class FeedbackPromptManager {
         if hasSubmittedBefore {
             // User has submitted before → wait postSubmitCooldownDays (30) from last submission
             guard let lastSubmitted = defaults.object(forKey: Key.lastSubmittedDate) as? Date else {
-                // Submitted flag set but no date (legacy) — reset and re-ask
+                // Submitted flag set but no date (legacy). reset and re-ask
                 defaults.set(false, forKey: Key.feedbackSubmitted)
                 return true
             }
@@ -64,7 +64,7 @@ final class FeedbackPromptManager {
         } else {
             // User has never submitted → nag every nagIntervalDays (5) from last prompt shown
             guard let lastPrompt = defaults.object(forKey: Key.lastPromptDate) as? Date else {
-                // Never shown before — show now
+                // Never shown before. show now
                 return true
             }
             let daysSinceLastPrompt = Calendar.current.dateComponents([.day], from: lastPrompt, to: Date()).day ?? 0

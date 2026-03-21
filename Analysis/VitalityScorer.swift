@@ -8,7 +8,7 @@ import Observation
 /// Each table maps age -> expected median value for that age group.
 private enum VitalityNorms {
 
-    /// VO2 Max norms (mL/kg/min) by age — combined sex average.
+    /// VO2 Max norms (mL/kg/min) by age. combined sex average.
     /// Sources: ACSM Guidelines for Exercise Testing (11th ed.)
     static let vo2Max: [(age: Int, value: Double)] = [
         (20, 46), (25, 45), (30, 43), (35, 41), (40, 39),
@@ -16,7 +16,7 @@ private enum VitalityNorms {
         (70, 27), (75, 25), (80, 23)
     ]
 
-    /// Resting heart rate norms (bpm) by age — lower is better.
+    /// Resting heart rate norms (bpm) by age. lower is better.
     /// Sources: AHA, Framingham Heart Study population data.
     static let restingHeartRate: [(age: Int, value: Double)] = [
         (20, 63), (25, 64), (30, 65), (35, 66), (40, 67),
@@ -24,7 +24,7 @@ private enum VitalityNorms {
         (70, 73), (75, 74), (80, 76)
     ]
 
-    /// HRV (SDNN, ms) by age — higher is better.
+    /// HRV (SDNN, ms) by age. higher is better.
     /// Sources: Nunan et al. 2010, Meta-analysis of HRV norms.
     static let hrv: [(age: Int, value: Double)] = [
         (20, 62), (25, 58), (30, 54), (35, 50), (40, 46),
@@ -32,7 +32,7 @@ private enum VitalityNorms {
         (70, 24), (75, 22), (80, 20)
     ]
 
-    /// Sleep efficiency (%) by age — % of time in bed asleep.
+    /// Sleep efficiency (%) by age. % of time in bed asleep.
     /// Sources: Ohayon et al. 2004, meta-analysis of sleep parameters.
     static let sleepEfficiency: [(age: Int, value: Double)] = [
         (20, 92), (25, 91), (30, 90), (35, 89), (40, 88),
@@ -72,11 +72,11 @@ private enum VitalityNorms {
         (70, 20), (75, 18), (80, 15)
     ]
 
-    /// BMI norms by age — U-shaped relationship; 22-25 is optimal.
+    /// BMI norms by age. U-shaped relationship; 22-25 is optimal.
     /// For BMI we measure distance from optimal (22.5), so lower delta = younger.
     static let bmiOptimal: Double = 22.5
 
-    /// Body fat % norms by age — combined sex average.
+    /// Body fat % norms by age. combined sex average.
     /// Sources: Jackson & Pollock, ACE body fat norms.
     static let bodyFatPercent: [(age: Int, value: Double)] = [
         (20, 18), (25, 19), (30, 20), (35, 21), (40, 22),
@@ -86,7 +86,7 @@ private enum VitalityNorms {
 
     // MARK: - Interpolation
 
-    /// Given a value and a norm table, find the "metric age" — the age at
+    /// Given a value and a norm table, find the "metric age". the age at
     /// which this value would be the population median.
     /// Uses linear interpolation between reference points.
     ///
@@ -242,7 +242,7 @@ final class VitalityScorer {
 
     // MARK: - Weights
 
-    /// Metric contribution weights — sum to 1.0
+    /// Metric contribution weights. sum to 1.0
     private static let weights: [(metric: VitalityMetricKey, weight: Double)] = [
         (.vo2Max, 0.25),
         (.restingHeartRate, 0.15),
@@ -270,7 +270,7 @@ final class VitalityScorer {
     /// Days held at chronological age before allowing vitality divergence.
     private static let zeroDeltaDaysBeforeRamp = 7
 
-    /// Days of data available at last compute — 0 means no data yet.
+    /// Days of data available at last compute. 0 means no data yet.
     private(set) var availableDays: Int = 0
 
     /// Whether vitality age is fully personalized for presentation.
@@ -296,7 +296,7 @@ final class VitalityScorer {
         availableDays = usableDaysForPersonalization(from: allSeries)
         personalizationProgress = personalizationProgress(for: availableDays)
         computedBiologicalAge = chronologicalAge
-        // Always mark as ready — the orb is always shown.
+        // Always mark as ready. the orb is always shown.
         // With no data, vitality age defaults to chronological age.
 
         var components: [VitalityComponent] = []

@@ -108,7 +108,7 @@ final class ReceptivityEstimator {
             name: "Physiological State",
             score: stressScore,
             weight: 0.20,
-            reason: stressScore > 0.6 ? "Relaxed state detected" : "Elevated stress — not ideal timing"
+            reason: stressScore > 0.6 ? "Relaxed state detected" : "Elevated stress. not ideal timing"
         ))
 
         // 3. App engagement recency
@@ -163,7 +163,7 @@ final class ReceptivityEstimator {
             name: "Notification Fatigue",
             score: adjustedFatigueScore,
             weight: 0.15,
-            reason: adjustedFatigueScore > 0.5 ? "Fresh — not over-notified" : "Recent notifications may reduce receptivity"
+            reason: adjustedFatigueScore > 0.5 ? "Fresh. not over-notified" : "Recent notifications may reduce receptivity"
         ))
 
         // Weighted sum

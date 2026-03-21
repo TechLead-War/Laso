@@ -44,9 +44,9 @@ enum AppFeature: String, Hashable {
     case todaysActionDetail = "todays_action_detail"
 }
 
-/// Actionable block/card types — only user-initiated taps and meaningful interactions.
+/// Actionable block/card types. only user-initiated taps and meaningful interactions.
 enum BlockType: String {
-    // Home — user taps
+    // Home. user taps
     case recoveryCard = "recovery_card"
     case sleepCard = "sleep_card"
     case smartAction = "smart_action"
@@ -60,7 +60,7 @@ enum BlockType: String {
     case emptyStateRefresh = "empty_state_refresh"
     case errorRetry = "error_retry"
 
-    // Live — user taps
+    // Live. user taps
     case heartRateHeroCard = "heart_rate_hero_card"
     case vitalCardSpo2 = "vital_card_spo2"
     case vitalCardRespRate = "vital_card_resp_rate"
@@ -72,44 +72,44 @@ enum BlockType: String {
     case temperatureCard = "temperature_card"
     case lastWorkoutCard = "last_workout_card"
 
-    // Explore — user taps
+    // Explore. user taps
     case categoryRow = "category_row"
     case healthScoreHero = "health_score_hero"
     case focusBanner = "focus_banner"
 
-    // Category Detail — user taps
+    // Category Detail. user taps
     case metricRow = "metric_row"
 
-    // Devices — user taps
+    // Devices. user taps
     case manageDevices = "manage_devices"
     case deviceRow = "device_row"
     case unconnectedDeviceRow = "unconnected_device_row"
     case appStoreLink = "app_store_link"
 
-    // Settings — user taps
+    // Settings. user taps
     case exportReport = "export_report"
     case settingsDoneButton = "settings_done_button"
     case metricAlertsPicker = "metric_alerts_picker"
 
-    // Filters — user taps
+    // Filters. user taps
     case trendFilter = "trend_filter"
     case periodSelector = "period_selector"
     case correlationFilterChip = "correlation_filter_chip"
 
-    // Chart — user taps
+    // Chart. user taps
     case chartTouch = "chart_touch"
     case chartDrag = "chart_drag"
 
     // Data Sync
     case dataSyncEvent = "data_sync_event"
 
-    // Feedback — user taps
+    // Feedback. user taps
     case feedbackCategory = "feedback_category"
     case feedbackSubmit = "feedback_submit"
     case feedbackSkip = "feedback_skip"
     case feedbackDoneAfterSubmit = "feedback_done_after_submit"
 
-    // Onboarding — user taps
+    // Onboarding. user taps
     case onboardingConnectHealth = "onboarding_connect_health"
     case onboardingContinueAnyway = "onboarding_continue_anyway"
     case onboardingFocusChip = "onboarding_focus_chip"
@@ -198,7 +198,7 @@ enum BlockType: String {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// MARK: - Event Reference — 5 Product Questions
+// MARK: - Event Reference. 5 Product Questions
 // ──────────────────────────────────────────────────────────────────────────────
 //
 // NORTH-STAR METRICS:
@@ -354,7 +354,7 @@ final class AppAnalytics {
         let defaults = UserDefaults.standard
         var props: [String: Any] = [:]
 
-        // Age bracket — derived from stored age
+        // Age bracket. derived from stored age
         if let storedAge = defaults.object(forKey: AppKeys.Profile.dateOfBirth) as? Int, storedAge > 0 {
             let bracket: String
             switch storedAge {
@@ -408,7 +408,7 @@ final class AppAnalytics {
         let machine = withUnsafePointer(to: &systemInfo.machine) {
             $0.withMemoryRebound(to: CChar.self, capacity: 1) { String(cString: $0) }
         }
-        // Return the raw identifier — PostHog can map these, and it avoids maintaining a lookup table.
+        // Return the raw identifier. PostHog can map these, and it avoids maintaining a lookup table.
         return machine
     }
 
@@ -1025,7 +1025,7 @@ final class AppAnalytics {
         if let newDate = newExpirationDate,
            let lastDate = defaults.object(forKey: Key.lastRenewalExpirationDate) as? Date,
            abs(newDate.timeIntervalSince(lastDate)) < 60 {
-            // Same renewal period — skip
+            // Same renewal period. skip
             return
         }
 
@@ -1489,7 +1489,7 @@ final class AppAnalytics {
     // ══════════════════════════════════════════════════════════════════════
 
     /// Fires once per calendar day to power DAU/WAU/MAU in PostHog.
-    /// Call from session start — deduplicated by PostHog's unique user counting.
+    /// Call from session start. deduplicated by PostHog's unique user counting.
     func trackDailyActiveUser() {
         logEvent("daily_active", parameters: [
             "session_source": session.currentSessionSource.rawValue,
@@ -1649,7 +1649,7 @@ final class AppAnalytics {
         setUserProperty("metrics_available_count", value: "\(metricsAvailable)")
     }
 
-    /// Call when first score is generated — critical activation event.
+    /// Call when first score is generated. critical activation event.
     func trackFirstScoreGenerated(score: Int, timeSinceInstallSec: Int, metricsUsed: Int) {
         logEvent("first_score_generated", parameters: [
             "score": score,
@@ -1966,7 +1966,7 @@ final class AppAnalytics {
 
     // --- A. Ghost Sessions ---
     // A session where the user opened the app but did nothing meaningful.
-    // Strongest leading indicator of disengagement — they came, saw nothing worth doing, and left.
+    // Strongest leading indicator of disengagement. they came, saw nothing worth doing, and left.
 
     /// Call from `trackSessionEnd`. Automatically detects ghost sessions.
     func evaluateSessionQuality(durationSec: Int, screensVisited: Int, coreActionsCount: Int) {
@@ -2077,7 +2077,7 @@ final class AppAnalytics {
     }
 
     // --- D. Habit Pattern Detection ---
-    // Detect if the user is forming a "morning ritual" — checking the app at roughly the same
+    // Detect if the user is forming a "morning ritual". checking the app at roughly the same
     // time on consecutive days. This is the #1 predictor of 6-month retention.
 
     private enum HabitKey {

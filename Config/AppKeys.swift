@@ -67,7 +67,7 @@ enum AppKeys {
         static let deviceSourceScanDate  = "Laso.DeviceSource.lastScanDate"
     }
 
-    // MARK: - Intent Cache (lightweight, non-sensitive — used by Siri shortcuts)
+    // MARK: - Intent Cache (lightweight, non-sensitive. used by Siri shortcuts)
 
     enum Intent {
         static let score   = "healthpulse.intent.score"
@@ -133,7 +133,7 @@ enum AppKeys {
     // MARK: - Notifications
 
     enum Notifications {
-        /// Dynamic prefix — append the alert identifier to form the full key,
+        /// Dynamic prefix. append the alert identifier to form the full key,
         /// e.g. `AppKeys.Notifications.alertCooldownPrefix + identifier`.
         static let alertCooldownPrefix = "healthpulse.alertCooldown."
         static let notificationLog     = "healthpulse.notificationLog"

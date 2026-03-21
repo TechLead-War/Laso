@@ -1,6 +1,6 @@
 import Foundation
 
-/// Discovers temporal sequences — multi-step causal chains that unfold over days.
+/// Discovers temporal sequences. multi-step causal chains that unfold over days.
 /// Finds precursor patterns, compounding effects, and recovery sequences that users
 /// cannot figure out on their own from raw data.
 final class TemporalSequenceMiner {
@@ -865,7 +865,7 @@ final class TemporalSequenceMiner {
 
                 let directionText = result.direction == "declining" ? "declining" : (result.direction == "low" ? "low" : "elevated")
 
-                let description = "\(metric.displayName) \(directionText) (\(metric.formatValue(result.avgPrecursorValue))\(metric.unit)) \(leadDays) day\(leadDays == 1 ? "" : "s") before bad days — accurate \(Int(result.accuracy * 100))% of the time (\(result.hitCount)/\(result.totalChecked))"
+                let description = "\(metric.displayName) \(directionText) (\(metric.formatValue(result.avgPrecursorValue))\(metric.unit)) \(leadDays) day\(leadDays == 1 ? "" : "s") before bad days. accurate \(Int(result.accuracy * 100))% of the time (\(result.hitCount)/\(result.totalChecked))"
 
                 let pattern = PrecursorPattern(
                     warningSignals: [(metric: metric, direction: directionText, leadDays: leadDays)],
@@ -1205,7 +1205,7 @@ final class TemporalSequenceMiner {
         for date in recentDays.reversed() {
             guard let value = dailyValues[date]?[causeMetric] else { continue }
             if meetsCondition(value: value, condition: causeCondition, threshold: causeThreshold) {
-                // Step 1 is active — we're between cause and expected effect
+                // Step 1 is active. we're between cause and expected effect
                 return (true, 0)
             }
         }
@@ -1471,7 +1471,7 @@ final class TemporalSequenceMiner {
         var text = "When your \(causeDesc), your \(effectDesc) within \(avgLag) day\(avgLag == 1 ? "" : "s") (happened \(hits)/\(trials) times)"
 
         if isActive {
-            text += " — you're currently showing this pattern"
+            text += ". you're currently showing this pattern"
         }
 
         return text

@@ -2,7 +2,7 @@ import Foundation
 
 /// Detects statistically significant changepoints (regime shifts) in health metric time series.
 /// Uses CUSUM detection with Welch's t-test validation and co-occurrence analysis to find
-/// when a user's baselines fundamentally shifted — gradual changes invisible day-to-day.
+/// when a user's baselines fundamentally shifted. gradual changes invisible day-to-day.
 final class ChangePointDetector {
 
     static let minimumDays = 30
@@ -450,11 +450,11 @@ final class ChangePointDetector {
                     || (direction == .decrease && !metric.higherIsBetter)
         if positive {
             return cohenD >= 1.0
-                ? "This is a significant positive shift — whatever you changed is working well."
-                : "Positive trend — keep up what you're doing."
+                ? "This is a significant positive shift. whatever you changed is working well."
+                : "Positive trend. keep up what you're doing."
         }
         if cohenD >= 1.5 { return "This is a large shift worth discussing with your doctor if it persists." }
-        if cohenD >= 1.0 { return "This is a notable change — worth monitoring closely over the next few weeks." }
+        if cohenD >= 1.0 { return "This is a notable change. worth monitoring closely over the next few weeks." }
         return "Worth keeping an eye on to see if this trend continues."
     }
 

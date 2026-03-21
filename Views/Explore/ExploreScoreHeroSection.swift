@@ -11,9 +11,10 @@ struct ExploreScoreHeroSection: View {
             HStack(spacing: 20) {
                 HealthScoreRing(
                     score: overallScore,
-                    label: "",
+                    label: DS.scoreLabel(overallScore),
                     size: 100,
-                    lineWidth: 10
+                    lineWidth: 10,
+                    showScore: false
                 )
 
                 VStack(alignment: .leading, spacing: 6) {
@@ -83,12 +84,7 @@ struct ExploreScoreHeroSection: View {
     }
 
     private var gradeColor: Color {
-        switch overallScore {
-        case 80...100: return .green
-        case 60..<80: return .yellow
-        case 40..<60: return .orange
-        default: return .red
-        }
+        DS.scoreColor(overallScore)
     }
 
     private var scoreLabel: String {

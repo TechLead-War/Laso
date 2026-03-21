@@ -69,7 +69,7 @@ struct CausalChainEngine {
         baselines: [HealthMetric: UserBaseline]
     ) -> [CausalChain] {
 
-        // Step 1: Identify effect metrics — metrics that are problematically deviating
+        // Step 1: Identify effect metrics. metrics that are problematically deviating
         let effectMetrics = identifyEffectMetrics(anomalies: anomalies, trends: trends)
         guard !effectMetrics.isEmpty else { return [] }
 
@@ -403,7 +403,7 @@ struct CausalChainEngine {
         default: 1.0
         }
 
-        // Also factor in deviation magnitudes — bigger deviations = more convincing
+        // Also factor in deviation magnitudes. bigger deviations = more convincing
         let avgDeviation = links.map { abs($0.causeDeviation) }.mean
         let deviationBonus = min(avgDeviation / 50.0, 0.2) // Up to +0.2 for large deviations
 
@@ -419,7 +419,7 @@ struct CausalChainEngine {
         var result: [CausalChain] = []
 
         for (_, group) in grouped {
-            // Sort by link count descending — prefer longer chains
+            // Sort by link count descending. prefer longer chains
             let sorted = group.sorted { $0.links.count > $1.links.count }
 
             var kept: [CausalChain] = []
@@ -532,7 +532,7 @@ struct CausalChainEngine {
         let rootR = String(format: "%.2f", abs(rootLink.correlation))
 
         var narrative = "Your \(affectedName) \(affectedDirection) \(affectedDev) this week. "
-        narrative += "This appears connected to your \(intermediateName) — "
+        narrative += "This appears connected to your \(intermediateName). "
 
         if intermediateDirection == "decreased" {
             narrative += "your \(intermediateName) \(intermediateDirection) \(intermediateDev) over the same period. "
@@ -646,12 +646,12 @@ struct CausalChainEngine {
             }
         case .activity:
             if rootIsProblematic {
-                return "Your \(metricName) has dropped. Try gradually increasing your activity level — even short walks can help. This could positively influence your \(chain.affectedMetric.displayName.lowercased())."
+                return "Your \(metricName) has dropped. Try gradually increasing your activity level. even short walks can help. This could positively influence your \(chain.affectedMetric.displayName.lowercased())."
             } else {
                 return "Your increased \(metricName) may be putting extra strain on recovery. Consider adding rest days or reducing intensity to let your body adapt. Your \(chain.affectedMetric.displayName.lowercased()) may improve as a result."
             }
         case .heart:
-            return "Your \(metricName) change appears connected to other metrics. Focus on the root cause — the upstream factors in this chain — rather than the \(metricName) directly. Stress management, sleep quality, and exercise balance all play a role."
+            return "Your \(metricName) change appears connected to other metrics. Focus on the root cause. the upstream factors in this chain. rather than the \(metricName) directly. Stress management, sleep quality, and exercise balance all play a role."
         case .mindfulness:
             if rootIsProblematic {
                 return "Your \(metricName) has decreased. Even 5-10 minutes of mindfulness practice can help. This may have broader effects on your \(chain.affectedMetric.displayName.lowercased()) through stress reduction."

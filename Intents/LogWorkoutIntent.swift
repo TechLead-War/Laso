@@ -1,7 +1,7 @@
 import AppIntents
 import SwiftUI
 
-/// "Log workout" — Quick-log a workout type with duration.
+/// "Log workout". Quick-log a workout type with duration.
 struct LogWorkoutIntent: AppIntent {
     static var title: LocalizedStringResource = "Log Workout"
     static var description = IntentDescription(

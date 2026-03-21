@@ -193,7 +193,7 @@ struct WeeklyReviewView: View {
                 }
                 .foregroundStyle(delta >= 0 ? .green : .red)
             } else {
-                Text("First week — no comparison yet")
+                Text("First week. no comparison yet")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -279,7 +279,7 @@ struct WeeklyReviewView: View {
                 .padding(.horizontal)
 
             HStack(spacing: 12) {
-                // Best day — top win
+                // Best day. top win
                 if let topWin = review.wins.first {
                     dayHighlightCard(
                         label: "Best Metric",
@@ -290,7 +290,7 @@ struct WeeklyReviewView: View {
                     )
                 }
 
-                // Worst day — top decline
+                // Worst day. top decline
                 if let topDecline = review.watchOuts.first {
                     dayHighlightCard(
                         label: "Needs Attention",
@@ -650,7 +650,12 @@ struct WeeklyReviewView: View {
                 dashboardViewModel: DashboardViewModel(
                     healthKitManager: HealthKitManager(),
                     analysisEngine: AnalysisEngine(),
-                    store: HealthDataStore(modelContainer: container)
+                    store: HealthDataStore(modelContainer: container),
+                    housekeepingService: DashboardHousekeepingService(
+                        persistenceManager: PersistenceManager(),
+                        analytics: AppAnalytics.shared,
+                        sessionTracker: SessionTracker.shared
+                    )
                 )
             )
         )

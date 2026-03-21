@@ -40,11 +40,11 @@ struct LiveActivitySection: View {
             HStack(spacing: 16) {
                 // Triple ring
                 ZStack {
-                    // Stand (outer) — cyan
+                    // Stand (outer). cyan
                     ringArc(progress: activity.standProgress, color: .cyan, size: 90, lineWidth: 8)
-                    // Exercise (middle) — green
+                    // Exercise (middle). green
                     ringArc(progress: activity.exerciseProgress, color: .green, size: 70, lineWidth: 8)
-                    // Move (inner) — pink
+                    // Move (inner). pink
                     ringArc(progress: activity.moveProgress, color: .pink, size: 50, lineWidth: 8)
                 }
                 .frame(width: 100, height: 100)

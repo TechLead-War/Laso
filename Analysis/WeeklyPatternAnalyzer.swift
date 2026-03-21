@@ -68,8 +68,8 @@ struct WeeklyPatternAnalyzer {
             return Insight(
                 metric: entry.metric,
                 title: "Weakest Day: \(weakestName)",
-                summary: "\(weakestName) is your least active day with \(entry.metric.formatWithUnit(weakest.avg)) avg — \(String(format: "%.0f", deficit))% below your daily average. \(strongestName) is your strongest (\(entry.metric.formatWithUnit(strongest.avg))).",
-                recommendation: "\(weakestName) averages \(entry.metric.formatWithUnit(weakest.avg)) — \(String(format: "%.0f", deficit))% below your daily mean of \(entry.metric.formatWithUnit(overallAvg)). Your strongest day is \(strongestName) at \(entry.metric.formatWithUnit(strongest.avg)).",
+                summary: "\(weakestName) is your least active day with \(entry.metric.formatWithUnit(weakest.avg)) avg. \(String(format: "%.0f", deficit))% below your daily average. \(strongestName) is your strongest (\(entry.metric.formatWithUnit(strongest.avg))).",
+                recommendation: "\(weakestName) averages \(entry.metric.formatWithUnit(weakest.avg)). \(String(format: "%.0f", deficit))% below your daily mean of \(entry.metric.formatWithUnit(overallAvg)). Your strongest day is \(strongestName) at \(entry.metric.formatWithUnit(strongest.avg)).",
                 severity: deficit >= 25 ? .warning : .info,
                 trend: .stable,
                 currentValue: weakest.avg,
@@ -137,8 +137,8 @@ struct WeeklyPatternAnalyzer {
                 title: "\(entry.metric.displayName): Weekday vs Weekend",
                 summary: "Your \(entry.label) is \(String(format: "%.0f", abs(gap)))% higher on \(moreActive). Weekday avg: \(entry.metric.formatWithUnit(weekdayAvg)), weekend avg: \(entry.metric.formatWithUnit(weekendAvg)).",
                 recommendation: gap > 20 ?
-                    "Weekend \(entry.label) averages \(entry.metric.formatWithUnit(weekendAvg)) vs \(entry.metric.formatWithUnit(weekdayAvg)) on weekdays — a \(String(format: "%.0f", abs(gap)))% gap." :
-                    "Weekday avg: \(entry.metric.formatWithUnit(weekdayAvg)), weekend avg: \(entry.metric.formatWithUnit(weekendAvg)) — \(String(format: "%.0f", abs(gap)))% difference.",
+                    "Weekend \(entry.label) averages \(entry.metric.formatWithUnit(weekendAvg)) vs \(entry.metric.formatWithUnit(weekdayAvg)) on weekdays. a \(String(format: "%.0f", abs(gap)))% gap." :
+                    "Weekday avg: \(entry.metric.formatWithUnit(weekdayAvg)), weekend avg: \(entry.metric.formatWithUnit(weekendAvg)). \(String(format: "%.0f", abs(gap)))% difference.",
                 severity: abs(gap) >= 30 ? .warning : .info,
                 trend: .stable,
                 currentValue: weekendAvg,
@@ -184,7 +184,7 @@ struct WeeklyPatternAnalyzer {
                     "Your \(metric.displayName.lowercased()) is consistent across the week with a coefficient of variation of \(String(format: "%.0f", cv))%." :
                     "Your \(metric.displayName.lowercased()) varies \(String(format: "%.0f", cv))% across the week (coefficient of variation).",
                 recommendation: isConsistent ?
-                    "Day-to-day variation is \(String(format: "%.0f", cv))% (coefficient of variation) — your \(metric.displayName.lowercased()) is distributed evenly across the week." :
+                    "Day-to-day variation is \(String(format: "%.0f", cv))% (coefficient of variation). your \(metric.displayName.lowercased()) is distributed evenly across the week." :
                     "Day-to-day variation is \(String(format: "%.0f", cv))% (coefficient of variation). Your \(metric.displayName.lowercased()) swings significantly between your most and least active days.",
                 severity: cv > 35 ? .warning : .info,
                 trend: isConsistent ? .improving : .stable,

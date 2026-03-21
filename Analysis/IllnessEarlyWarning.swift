@@ -112,7 +112,7 @@ struct IllnessEarlyWarning {
             now: now
         )
 
-        // Step 4: Apply sleep-duration special rule — only count it if other signals are present
+        // Step 4: Apply sleep-duration special rule. only count it if other signals are present
         let nonSleepSignals = activeSignals.filter { $0.metric != .sleepDuration }
         let finalSignals: [MetricSignal]
         if nonSleepSignals.count >= 2 {
@@ -254,7 +254,7 @@ struct IllnessEarlyWarning {
     }
 
     /// Determine how many consecutive recent days had 2+ metrics signaling simultaneously.
-    /// Counts backwards from today — the streak must be unbroken from the most recent day.
+    /// Counts backwards from today. the streak must be unbroken from the most recent day.
     private static func computeConsecutiveMultiMetricDays(
         dailySignals: [HealthMetric: [Int: Double]]
     ) -> ConsecutiveResult {
@@ -424,7 +424,7 @@ struct IllnessEarlyWarning {
     // MARK: - Narrative Generation
 
     /// Build a human-readable narrative describing the multi-metric pattern.
-    /// Uses non-diagnostic language — describes physiological strain, not illness.
+    /// Uses non-diagnostic language. describes physiological strain, not illness.
     private static func generateNarrative(signals: [MetricSignal], daysElevated: Int) -> String {
         let daysLabel = daysElevated == 1 ? "day" : "days"
         var parts: [String] = []
@@ -494,7 +494,7 @@ struct IllnessEarlyWarning {
         // Core observation always present
         observations.append("Your body is showing strain across \(signals.count) metrics over \(daysElevated) consecutive days.")
 
-        // Rest priority — state data, not prescription
+        // Rest priority. state data, not prescription
         if severity >= .warning {
             observations.append("Your body is showing strain across \(signals.count) metrics simultaneously.")
         } else {
@@ -518,7 +518,7 @@ struct IllnessEarlyWarning {
 
         // Critical-level: state the severity of the data pattern
         if severity == .critical {
-            observations.append("This is a sustained multi-metric deviation — \(signals.count) signals active for \(daysElevated) consecutive days.")
+            observations.append("This is a sustained multi-metric deviation. \(signals.count) signals active for \(daysElevated) consecutive days.")
         }
 
         return observations.joined(separator: " ")

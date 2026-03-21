@@ -12,7 +12,7 @@ struct MetricTimeSeries: Identifiable {
         self.samples = samples.sorted { $0.date < $1.date }
     }
 
-    /// Samples in chronological order — O(1), already sorted at init.
+    /// Samples in chronological order. O(1), already sorted at init.
     var sortedSamples: [MetricSample] { samples }
 
     var values: [Double] {

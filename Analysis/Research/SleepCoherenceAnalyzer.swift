@@ -1,7 +1,7 @@
 import Foundation
 
 /// Research: Stanford SleepFM (Nature Medicine, Jan 2026)
-/// Finding: When body systems go out of sync during sleep — brain asleep but heart awake —
+/// Finding: When body systems go out of sync during sleep. brain asleep but heart awake —
 /// that signals disease risk. 130 conditions predictable from sleep signal coherence.
 ///
 /// Implementation: Measures whether HR/HRV/respiratory rate follow expected
@@ -119,14 +119,14 @@ struct SleepCoherenceAnalyzer {
             : recentCoherence < priorCoherence - 5 ? .declining : .stable
 
         let severity: Severity = avgCoherence < 35 ? .warning : .info
-        let incoherenceRate = Double(incoherentNights) / Double(totalNights) * 100
+        _ = Double(incoherentNights) / Double(totalNights) * 100
 
         if avgCoherence < 60 || incoherentNights >= 4 {
             insights.append(InsightFactory.make(
                 metric: .sleepDeep,
                 title: "Sleep Systems Out of Sync",
-                summary: "Your body's systems aren't fully aligning during sleep. On \(incoherentNights) of \(totalNights) recent nights, your heart rate and HRV didn't follow expected sleep-stage patterns — coherence score: \(String(format: "%.0f", avgCoherence))/100.",
-                recommendation: "Research shows that physiological incoherence during sleep — when your heart stays 'awake' while your brain sleeps — is associated with elevated disease risk. Your coherence score of \(String(format: "%.0f", avgCoherence)) suggests \(avgCoherence < 35 ? "significant" : "moderate") desynchronization across \(totalNights) measured nights.",
+                summary: "Your body's systems aren't fully aligning during sleep. On \(incoherentNights) of \(totalNights) recent nights, your heart rate and HRV didn't follow expected sleep-stage patterns. coherence score: \(String(format: "%.0f", avgCoherence))/100.",
+                recommendation: "Research shows that physiological incoherence during sleep. when your heart stays 'awake' while your brain sleeps. is associated with elevated disease risk. Your coherence score of \(String(format: "%.0f", avgCoherence)) suggests \(avgCoherence < 35 ? "significant" : "moderate") desynchronization across \(totalNights) measured nights.",
                 severity: severity,
                 trend: coherenceTrend,
                 currentValue: avgCoherence,
@@ -145,7 +145,7 @@ struct SleepCoherenceAnalyzer {
             insights.append(InsightFactory.observation(
                 metric: .sleepDeep,
                 title: "Strong Sleep Coherence",
-                summary: "Your body's systems sync well during sleep — heart rate drops appropriately, HRV rises, and sleep architecture looks healthy. Coherence score: \(String(format: "%.0f", avgCoherence))/100 across \(totalNights) nights.",
+                summary: "Your body's systems sync well during sleep. heart rate drops appropriately, HRV rises, and sleep architecture looks healthy. Coherence score: \(String(format: "%.0f", avgCoherence))/100 across \(totalNights) nights.",
                 recommendation: "A coherence score of \(String(format: "%.0f", avgCoherence)) means your cardiovascular and neurological systems are well-aligned during sleep. Research links high sleep coherence to lower risk across 130+ health conditions.",
                 currentValue: avgCoherence,
                 baselineValue: 70,

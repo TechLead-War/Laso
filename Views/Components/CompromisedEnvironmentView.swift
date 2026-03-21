@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Blocking screen shown when the app detects a compromised device environment
 /// (jailbreak, debugger, tampered binary, or emulator in release mode).
-/// Cannot be dismissed — the app is non-functional in this state.
+/// Cannot be dismissed. the app is non-functional in this state.
 struct CompromisedEnvironmentView: View {
     let reason: String
 

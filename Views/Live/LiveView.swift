@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Real-time health dashboard — live vitals, heart rate zones, activity rings, readiness
+/// Real-time health dashboard. live vitals, heart rate zones, activity rings, readiness
 struct LiveView: View {
     let viewModel: LiveViewModel
     let mlOrchestrator: MLOrchestrator?
@@ -98,7 +98,7 @@ struct LiveView: View {
                     )
                     LiveStatusFooter(lastUpdate: viewModel.lastUpdate)
                 } else {
-                    // Show full UI immediately — values fill in as they arrive.
+                    // Show full UI immediately. values fill in as they arrive.
                     // When streaming without vitals yet, show activity first + a loading indicator.
                     LiveHeartRateSection(
                         vitals: viewModel.vitals,
@@ -166,7 +166,7 @@ struct LiveView: View {
                     viewModel.startStreaming()
                 }
             } else if newPhase == .background {
-                // Only stop streaming on full background — not on .inactive (which fires
+                // Only stop streaming on full background. not on .inactive (which fires
                 // for brief interruptions like notification banners or control center).
                 if viewModel.isStreaming {
                     viewModel.stopStreaming()

@@ -133,7 +133,7 @@ final class StrainCoach {
     /// High strain threshold on the 0-21 scale
     private static let highStrainValue: Double = 14.0
 
-    /// Rest day threshold — strain below this counts as a rest day
+    /// Rest day threshold. strain below this counts as a rest day
     private static let restDayThreshold: Double = 5.0
 
     // MARK: - Public API

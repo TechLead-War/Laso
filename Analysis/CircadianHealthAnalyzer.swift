@@ -316,7 +316,7 @@ struct CircadianHealthAnalyzer: InsightAnalyzer {
         if biomarkers.sleepRegularityIndex >= 75 {
             parts.append("Sleep timing is consistent.")
         } else {
-            parts.append("Sleep timing varies — aim for a fixed schedule.")
+            parts.append("Sleep timing varies. aim for a fixed schedule.")
         }
 
         if biomarkers.socialJetLag > 1.0 {

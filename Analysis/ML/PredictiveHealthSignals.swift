@@ -792,7 +792,7 @@ struct PredictiveHealthSignals {
         case .moderate:
             parts.append("Some early burnout signals are appearing.")
             if let topFactor = factors.first, let baseline = baselines[topFactor.metric] {
-                parts.append("Watch your \(topFactor.metric.displayName) — aim for \(formatted(baseline.mean, metric: topFactor.metric)).")
+                parts.append("Watch your \(topFactor.metric.displayName). aim for \(formatted(baseline.mean, metric: topFactor.metric)).")
             }
             parts.append("Add an extra rest day and vary your exercise routine.")
         case .low:
@@ -1003,7 +1003,7 @@ struct PredictiveHealthSignals {
             parts.append("Your data is consistent with overtraining syndrome.")
             for factor in factors.prefix(2) {
                 if let baseline = baselines[factor.metric] {
-                    parts.append("\(factor.metric.displayName) at concerning levels — target: \(formatted(baseline.mean, metric: factor.metric)).")
+                    parts.append("\(factor.metric.displayName) at concerning levels. target: \(formatted(baseline.mean, metric: factor.metric)).")
                 }
             }
             parts.append("Stop high-intensity training for at least 1 week. Focus on sleep (9+ hours) and nutrition.\(recoveryText)")
@@ -1208,7 +1208,7 @@ struct PredictiveHealthSignals {
             recommendations.append("Tonight's sleep is at risk.")
             if hasCaffeineFactor {
                 if let baseline = baselines[.caffeineIntake] {
-                    recommendations.append("Your caffeine intake is above your usual \(formatted(baseline.mean, metric: .caffeineIntake)) — avoid all caffeine after noon.")
+                    recommendations.append("Your caffeine intake is above your usual \(formatted(baseline.mean, metric: .caffeineIntake)). avoid all caffeine after noon.")
                 } else {
                     recommendations.append("Avoid all caffeine after noon.")
                 }
@@ -1230,7 +1230,7 @@ struct PredictiveHealthSignals {
             recommendations.append("Some factors suggest sleep may be disrupted tonight.")
             if hasCaffeineFactor {
                 if let baseline = baselines[.caffeineIntake] {
-                    recommendations.append("Cut off caffeine by early afternoon — your baseline is \(formatted(baseline.mean, metric: .caffeineIntake)).")
+                    recommendations.append("Cut off caffeine by early afternoon. your baseline is \(formatted(baseline.mean, metric: .caffeineIntake)).")
                 } else {
                     recommendations.append("Cut off caffeine by early afternoon.")
                 }
@@ -1461,13 +1461,13 @@ struct PredictiveHealthSignals {
         case .high:
             parts.append("Multiple markers suggest your immune system is under strain.")
             if let topFactor = factors.first, let baseline = baselines[topFactor.metric] {
-                parts.append("Your \(topFactor.metric.displayName) is at concerning levels — target: \(formatted(baseline.mean, metric: topFactor.metric)).")
+                parts.append("Your \(topFactor.metric.displayName) is at concerning levels. target: \(formatted(baseline.mean, metric: topFactor.metric)).")
             }
             parts.append("Reduce exercise to light walking only for the next 48 hours. Focus on sleep quality, hydration, and nutrition.")
         case .moderate:
             parts.append("Some early immune compromise indicators are present.")
             if let topFactor = factors.first, let baseline = baselines[topFactor.metric] {
-                parts.append("Watch your \(topFactor.metric.displayName) — aim for \(formatted(baseline.mean, metric: topFactor.metric)).")
+                parts.append("Watch your \(topFactor.metric.displayName). aim for \(formatted(baseline.mean, metric: topFactor.metric)).")
             }
             parts.append("Be extra diligent about sleep (8+ hours), stay well-hydrated, and consider reducing training intensity by 30%.")
         case .low:
@@ -1670,7 +1670,7 @@ struct PredictiveHealthSignals {
         case .high:
             parts.append("You've been inactive for \(consecutiveDays) days.")
             if let topFactor = factors.first, let baseline = baselines[topFactor.metric] {
-                parts.append("Your \(topFactor.metric.displayName) has dropped — aim for \(formatted(baseline.mean, metric: topFactor.metric)).")
+                parts.append("Your \(topFactor.metric.displayName) has dropped. aim for \(formatted(baseline.mean, metric: topFactor.metric)).")
             }
             parts.append("Even a 15-minute walk can reverse the metabolic slowdown. Try to hit at least 4,000 steps today.")
         case .moderate:

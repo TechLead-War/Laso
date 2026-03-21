@@ -107,7 +107,7 @@ struct CycleInsightAnalyzer {
             }
         }
 
-        // Sort by magnitude of difference — most notable insights first
+        // Sort by magnitude of difference. most notable insights first
         return insights.sorted { abs($0.percentDifference) > abs($1.percentDifference) }
     }
 
@@ -268,13 +268,13 @@ struct CycleInsightAnalyzer {
         let direction = percentDiff > 0 ? "higher" : "lower"
         switch metric {
         case .heartRateVariability:
-            return "Your HRV typically peaks during your follicular phase — \(changeStr) \(direction) than your cycle average."
+            return "Your HRV typically peaks during your follicular phase. \(changeStr) \(direction) than your cycle average."
         case .restingHeartRate:
             return "Your resting heart rate is \(changeStr) \(direction) during your follicular phase compared to your cycle average."
         case .sleepDuration, .sleepDeep:
             return "Your \(metric.displayName.lowercased()) is \(changeStr) \(direction) during your follicular phase compared to your cycle average."
         case .activeCalories, .exerciseMinutes:
-            return "Your \(metric.displayName.lowercased()) is \(changeStr) \(direction) during your follicular phase — your highest-output phase in your data."
+            return "Your \(metric.displayName.lowercased()) is \(changeStr) \(direction) during your follicular phase. your highest-output phase in your data."
         case .steps:
             return "Your step count is \(changeStr) \(direction) during your follicular phase compared to your cycle average."
         default:

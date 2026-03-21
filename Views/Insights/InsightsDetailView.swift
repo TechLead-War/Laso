@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Full-screen view showing all analysis insights — explains why things are happening.
+/// Full-screen view showing all analysis insights. explains why things are happening.
 /// The Today screen tells you what to do; this screen tells you why.
 struct InsightsDetailView: View {
     let insightsByCategory: [(category: InsightCategory, insights: [Insight])]

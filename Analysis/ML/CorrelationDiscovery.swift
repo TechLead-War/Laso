@@ -16,7 +16,7 @@ final class CorrelationDiscovery {
     /// Discovered correlations
     private(set) var correlations: [MLCorrelation] = []
 
-    /// Last analysis date — guards against rerunning too frequently
+    /// Last analysis date. guards against rerunning too frequently
     private var lastAnalysisDate: Date?
 
     /// Whether a full reanalysis is needed (never run, or >30 days since last)
@@ -76,7 +76,7 @@ final class CorrelationDiscovery {
                 // 1. Pearson correlation
                 let pearsonR = [Double].pearsonCorrelation(valuesA, valuesB) ?? 0
 
-                // 2. Mutual information (always compute — catches non-linear relationships
+                // 2. Mutual information (always compute. catches non-linear relationships
                 // that Pearson misses, e.g., U-shaped dose-response curves)
                 let mi = mutualInformation(valuesA, valuesB)
 

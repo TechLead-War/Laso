@@ -31,6 +31,7 @@ struct ExploreCategoriesSection: View {
                         )
                     }
                     .buttonStyle(.plain)
+                    .contentShape(Rectangle())
 
                     if index < categories.count - 1 {
                         Divider()

@@ -91,8 +91,8 @@ struct StressScore {
 /// modeled after WHOOP's strain/recovery scale.
 ///
 /// The score combines two physiological signals:
-/// - HRV deviation below personal baseline (60% weight) — lower HRV indicates higher sympathetic activation
-/// - Heart rate elevation above personal resting HR (40% weight) — elevated HR indicates stress response
+/// - HRV deviation below personal baseline (60% weight). lower HRV indicates higher sympathetic activation
+/// - Heart rate elevation above personal resting HR (40% weight). elevated HR indicates stress response
 ///
 /// Requires at least 14 days of HRV data to establish a reliable personal baseline.
 @Observable
@@ -154,7 +154,7 @@ final class StressScorer {
 
         switch stress.level {
         case .low:
-            return "Your stress level is low (\(scoreText)/3.0). Your HRV and heart rate are within your normal range. Keep up your current routine — your body is recovering well."
+            return "Your stress level is low (\(scoreText)/3.0). Your HRV and heart rate are within your normal range. Keep up your current routine. your body is recovering well."
 
         case .mild:
             return "Your stress level is mildly elevated (\(scoreText)/3.0). "
@@ -320,7 +320,7 @@ final class StressScorer {
         if hasHR {
             rawScore = hrvComponent * Self.hrvWeight + hrComponent * Self.hrWeight
         } else {
-            // HRV only — use full weight
+            // HRV only. use full weight
             rawScore = hrvComponent
         }
 

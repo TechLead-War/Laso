@@ -141,7 +141,7 @@ struct PersonalRecordAnalyzer {
             let recordAgeDays = movingAverages.count - 1 - previousBestIndex
             let recordAgeNote = recordAgeDays > 7 ? " You beat a record that stood for \(recordAgeDays) days." : ""
 
-            // It's a new PR with real improvement — use variable templates for copy variety
+            // It's a new PR with real improvement. use variable templates for copy variety
             let templateVariant = metric.rawValue.count % 3
             let prSummary: String
             let prRecommendation: String

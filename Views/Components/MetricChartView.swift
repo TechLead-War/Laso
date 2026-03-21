@@ -48,7 +48,7 @@ struct MetricChartView: View {
         return "yearly"
     }
 
-    /// Adaptive X-axis stride based on data span — keeps ~4-6 labels visible
+    /// Adaptive X-axis stride based on data span. keeps ~4-6 labels visible
     private var xAxisStride: (component: Calendar.Component, count: Int) {
         switch dataSpanDays {
         case 0...10:   return (.day, 2)       // 7D  → every 2 days  (~4 labels)
@@ -60,7 +60,7 @@ struct MetricChartView: View {
         }
     }
 
-    /// Adaptive date format — shorter labels for longer spans
+    /// Adaptive date format. shorter labels for longer spans
     private var xAxisDateFormat: Date.FormatStyle {
         switch dataSpanDays {
         case 0...35:   return .dateTime.month(.abbreviated).day()   // "Jan 15"
@@ -163,7 +163,7 @@ struct MetricChartView: View {
                 )
                 .foregroundStyle(
                     .linearGradient(
-                        colors: [color.opacity(0.15), color.opacity(0.01)],
+                        colors: [color.opacity(0.15), .clear],
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -274,6 +274,7 @@ struct MetricChartView: View {
             }
         }
         .frame(height: 220)
+        .clipped()
         .contentShape(Rectangle())
         .chartOverlay { proxy in
             GeometryReader { geometry in

@@ -297,7 +297,7 @@ struct CrossMetricAnomalyDetector {
             correlationStructure: correlationStructure
         )
 
-        // Component 3: Historical rarity — how many similar days exist
+        // Component 3: Historical rarity. how many similar days exist
         let similarDays = countSimilarDays(day: day, history: historyVectors)
 
         // Build the metric deviations list
@@ -384,7 +384,7 @@ struct CrossMetricAnomalyDetector {
 
         guard count > 0 else { return 0 }
 
-        // Root mean squared deviation — like a simplified Mahalanobis distance
+        // Root mean squared deviation. like a simplified Mahalanobis distance
         return (sumSquaredDeviations / Double(count)).squareRoot()
     }
 

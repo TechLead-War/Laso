@@ -51,7 +51,7 @@ final class MLOrchestrator {
     /// Last full retrain date
     var lastFullRetrain: Date?
 
-    /// Last ML pipeline completion time — used for 1-hour TTL
+    /// Last ML pipeline completion time. used for 1-hour TTL
     private var lastPipelineCompletion: Date?
     private static let pipelineTTL: TimeInterval = 3600  // 1 hour
 
@@ -76,7 +76,7 @@ final class MLOrchestrator {
     var enrichedVectors: [EnrichedDailyFeatureVector] = []
     /// Predictive health signal report (fatigue, burnout, overtraining, insomnia, immune, inactivity)
     var healthSignalReport: PredictiveHealthSignals.HealthSignalReport?
-    /// Policy-based recommendation decision — single source of truth for daily action
+    /// Policy-based recommendation decision. single source of truth for daily action
     var policyDecision: PolicyDecision?
     /// Personalization status for the user
     var personalizationStatus: PersonalizationBlender.PersonalizationStatus?
@@ -177,7 +177,7 @@ final class MLOrchestrator {
         if let lastCompletion = lastPipelineCompletion,
            Date().timeIntervalSince(lastCompletion) < Self.pipelineTTL,
            hasRunOnce {
-            logger.info("Skipping ML analysis — pipeline ran \(Int(Date().timeIntervalSince(lastCompletion)))s ago (TTL: \(Int(Self.pipelineTTL))s)")
+            logger.info("Skipping ML analysis. pipeline ran \(Int(Date().timeIntervalSince(lastCompletion)))s ago (TTL: \(Int(Self.pipelineTTL))s)")
             return
         }
 

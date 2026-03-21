@@ -178,7 +178,7 @@ struct OnboardingView: View {
         saveUserProfile(focuses: focuses)
 
         // Notification permission is requested from the main app after the
-        // dashboard loads — asking here interrupts the onboarding→app transition.
+        // dashboard loads. asking here interrupts the onboarding→app transition.
 
         let totalDuration = Int(Date().timeIntervalSince(onboardingStartDate))
         AppAnalytics.shared.trackOnboardingCompleted(

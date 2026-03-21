@@ -248,13 +248,13 @@ struct CorrelationAnalyzer {
         return score
     }
 
-    /// Natural language insight title — reads like a discovery, not a formula.
+    /// Natural language insight title. reads like a discovery, not a formula.
     private static func insightTitle(_ c: HealthCorrelation) -> String {
         let diffPct = Int(c.effectPercentDiff)
         let bFormatted = c.metricB.formatValue(c.avgBAbove)
 
         if c.dayOffset > 0 {
-            // Lagged correlations — the most valuable ones
+            // Lagged correlations. the most valuable ones
             return "Your \(c.metricB.displayName.lowercased()) is \(diffPct)% \(c.isPositive ? "higher" : "lower") the day after more \(c.metricA.displayName.lowercased())"
         }
 
@@ -262,7 +262,7 @@ struct CorrelationAnalyzer {
         return "Days with more \(c.metricA.displayName.lowercased()) show \(diffPct)% \(c.isPositive ? "higher" : "lower") \(c.metricB.displayName.lowercased()) (\(bFormatted)\(c.metricB.unit))"
     }
 
-    /// Conversational recommendation — what this means for the user.
+    /// Conversational recommendation. what this means for the user.
     private static func insightRecommendation(_ c: HealthCorrelation) -> String {
         let aName = c.metricA.displayName.lowercased()
         let bName = c.metricB.displayName.lowercased()
@@ -271,13 +271,13 @@ struct CorrelationAnalyzer {
         let diffPct = Int(c.effectPercentDiff)
 
         if c.dayOffset > 0 {
-            return "In your data, higher \(aName) days are followed by \(bName) of \(formattedAbove)\(c.metricB.unit) vs \(formattedBelow)\(c.metricB.unit) — a \(diffPct)% difference that shows up the next day. This pattern held across \(c.sampleCount) days."
+            return "In your data, higher \(aName) days are followed by \(bName) of \(formattedAbove)\(c.metricB.unit) vs \(formattedBelow)\(c.metricB.unit). a \(diffPct)% difference that shows up the next day. This pattern held across \(c.sampleCount) days."
         }
 
         return "On your above-average \(aName) days, \(bName) reaches \(formattedAbove)\(c.metricB.unit) instead of \(formattedBelow)\(c.metricB.unit). That \(diffPct)% gap is consistent across \(c.sampleCount) days of your data."
     }
 
-    /// Legacy entry point — kept for backward compatibility
+    /// Legacy entry point. kept for backward compatibility
     static func generateInsights(timeSeries: [HealthMetric: MetricTimeSeries]) -> [Insight] {
         let correlations = analyzeAll(timeSeries: timeSeries)
         return generateInsights(from: correlations)
@@ -368,17 +368,17 @@ struct CorrelationAnalyzer {
         // Build a conversational explanation
         var parts: [String] = []
 
-        // Opening — the finding in plain language
-        parts.append("On days you hit \(threshold)+ \(aName), your \(bName) averages \(formattedAbove)\(metricB.unit) \(timing) — compared to \(formattedBelow)\(metricB.unit) on lighter days.")
+        // Opening. the finding in plain language
+        parts.append("On days you hit \(threshold)+ \(aName), your \(bName) averages \(formattedAbove)\(metricB.unit) \(timing). compared to \(formattedBelow)\(metricB.unit) on lighter days.")
 
-        // The "so what" — why this matters
+        // The "so what". why this matters
         parts.append("That's a \(diffPct)% difference.")
 
-        // Confidence note — builds trust
+        // Confidence note. builds trust
         if sampleCount >= 30 {
-            parts.append("This is based on \(sampleCount) days of your data — a reliable pattern.")
+            parts.append("This is based on \(sampleCount) days of your data. a reliable pattern.")
         } else {
-            parts.append("Seen across \(sampleCount) days so far — still building confidence.")
+            parts.append("Seen across \(sampleCount) days so far. still building confidence.")
         }
 
         return parts.joined(separator: " ")

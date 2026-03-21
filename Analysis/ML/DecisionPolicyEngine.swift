@@ -503,7 +503,7 @@ final class DecisionPolicyEngine {
         // Build a context suffix when we have strong historical signal
         let effectivenessSuffix: String
         if let eff = effectiveness, eff > 0.6 {
-            effectivenessSuffix = " — worked \(Int(eff * 100))% of the time for you"
+            effectivenessSuffix = ". worked \(Int(eff * 100))% of the time for you"
         } else {
             effectivenessSuffix = ""
         }
@@ -523,7 +523,7 @@ final class DecisionPolicyEngine {
             if let current = currentValue, let bl = baseline, bl.mean > 0 {
                 let deficit = bl.mean - current
                 if deficit > 0 {
-                    title = "Your sleep is averaging \(metric.formatValue(current)) \(metric.unit) — \(String(format: "%.1f", deficit)) \(metric.unit) below your \(metric.formatValue(bl.mean)) \(metric.unit) baseline"
+                    title = "Your sleep is averaging \(metric.formatValue(current)) \(metric.unit). \(String(format: "%.1f", deficit)) \(metric.unit) below your \(metric.formatValue(bl.mean)) \(metric.unit) baseline"
                 } else {
                     title = "Your sleep metrics shifted from baseline" + deviationContext()
                 }
@@ -540,9 +540,9 @@ final class DecisionPolicyEngine {
             if let bl = baseline, bl.mean > 0 {
                 let targetHrs = bl.mean + 0.5
                 if let current = currentValue, current < bl.mean {
-                    title = "Your sleep is averaging \(metric.formatValue(current)) \(metric.unit) — aim for \(String(format: "%.1f", targetHrs)) \(metric.unit) to exceed your \(String(format: "%.1f", bl.mean)) \(metric.unit) baseline"
+                    title = "Your sleep is averaging \(metric.formatValue(current)) \(metric.unit). aim for \(String(format: "%.1f", targetHrs)) \(metric.unit) to exceed your \(String(format: "%.1f", bl.mean)) \(metric.unit) baseline"
                 } else {
-                    title = "Your sleep baseline is \(String(format: "%.1f", bl.mean)) \(metric.unit) — target \(String(format: "%.1f", targetHrs)) \(metric.unit) for optimal recovery"
+                    title = "Your sleep baseline is \(String(format: "%.1f", bl.mean)) \(metric.unit). target \(String(format: "%.1f", targetHrs)) \(metric.unit) for optimal recovery"
                 }
             } else {
                 title = "Your sleep metrics are below baseline"
@@ -564,18 +564,18 @@ final class DecisionPolicyEngine {
             if let current = currentValue, let bl = baseline {
                 let pct = Int(abs(bl.deviationPercent(for: current)))
                 if pct >= 15 {
-                    title = "Your \(metric.displayName.lowercased()) is \(pct)% off baseline — recovery mode"
+                    title = "Your \(metric.displayName.lowercased()) is \(pct)% off baseline. recovery mode"
                 } else {
-                    title = "Your \(metric.displayName.lowercased()) is near baseline — light active recovery zone"
+                    title = "Your \(metric.displayName.lowercased()) is near baseline. light active recovery zone"
                 }
             } else {
                 title = "Your recovery metrics suggest active recovery"
             }
         case .intensifyExercise:
             if let current = currentValue, let bl = baseline, bl.mean > 0 {
-                title = "Your \(metric.displayName.lowercased()) is \(Int(abs(bl.deviationPercent(for: current))))% above baseline — recovery metrics are strong"
+                title = "Your \(metric.displayName.lowercased()) is \(Int(abs(bl.deviationPercent(for: current))))% above baseline. recovery metrics are strong"
             } else {
-                title = "Recovery metrics are above baseline — capacity is high"
+                title = "Recovery metrics are above baseline. capacity is high"
             }
         case .reduceExercise:
             if let current = currentValue, let bl = baseline, bl.mean > 0 {
@@ -585,13 +585,13 @@ final class DecisionPolicyEngine {
             }
         case .shiftCaffeineTiming:
             if let current = currentValue, let bl = baseline, bl.mean > 0 {
-                title = "Your \(metric.displayName.lowercased()) is \(metric.formatValue(current)) \(metric.unit) — baseline is \(metric.formatValue(bl.mean)) \(metric.unit)"
+                title = "Your \(metric.displayName.lowercased()) is \(metric.formatValue(current)) \(metric.unit). baseline is \(metric.formatValue(bl.mean)) \(metric.unit)"
             } else {
                 title = "Your sleep-related metrics shifted from baseline"
             }
         case .reduceCaffeine:
             if let current = currentValue, let bl = baseline {
-                title = "Your \(metric.displayName.lowercased()) is at \(metric.formatValue(current)) \(metric.unit) — baseline is \(metric.formatValue(bl.mean)) \(metric.unit)"
+                title = "Your \(metric.displayName.lowercased()) is at \(metric.formatValue(current)) \(metric.unit). baseline is \(metric.formatValue(bl.mean)) \(metric.unit)"
             } else {
                 title = "Your caffeine-related metrics are off baseline"
             }
@@ -614,13 +614,13 @@ final class DecisionPolicyEngine {
             }
         case .adjustMealTiming:
             if let current = currentValue, let bl = baseline, bl.mean > 0 {
-                title = "Your \(metric.displayName.lowercased()) is at \(metric.formatValue(current)) \(metric.unit) — baseline is \(metric.formatValue(bl.mean)) \(metric.unit)"
+                title = "Your \(metric.displayName.lowercased()) is at \(metric.formatValue(current)) \(metric.unit). baseline is \(metric.formatValue(bl.mean)) \(metric.unit)"
             } else {
                 title = "Your sleep metrics suggest a digestion-related pattern"
             }
         case .hydration:
             if let bl = baseline, let current = currentValue {
-                title = "Your hydration-related \(metric.displayName.lowercased()) is at \(metric.formatValue(current)) \(metric.unit) — baseline is \(metric.formatValue(bl.mean)) \(metric.unit)"
+                title = "Your hydration-related \(metric.displayName.lowercased()) is at \(metric.formatValue(current)) \(metric.unit). baseline is \(metric.formatValue(bl.mean)) \(metric.unit)"
             } else if let bl = baseline {
                 title = "Your hydration baseline is \(metric.formatValue(bl.mean)) \(metric.unit)"
             } else {
@@ -632,7 +632,7 @@ final class DecisionPolicyEngine {
                 if let current = currentValue {
                     let gap = rounded - Int(current)
                     if gap > 1000 {
-                        title = "Your steps are at \(Self.formatted(Int(current))) — \(Self.formatted(gap)) below your \(Self.formatted(rounded)) baseline"
+                        title = "Your steps are at \(Self.formatted(Int(current))). \(Self.formatted(gap)) below your \(Self.formatted(rounded)) baseline"
                     } else {
                         title = "Your steps are near your \(Self.formatted(rounded)) baseline"
                     }
@@ -644,7 +644,7 @@ final class DecisionPolicyEngine {
             }
         case .reduceSteps:
             if let current = currentValue, let bl = baseline, current > bl.mean * 1.3 {
-                title = "Your activity is at \(metric.formatValue(current)) \(metric.unit) — \(Int(bl.deviationPercent(for: current)))% above your \(metric.formatValue(bl.mean)) \(metric.unit) baseline"
+                title = "Your activity is at \(metric.formatValue(current)) \(metric.unit). \(Int(bl.deviationPercent(for: current)))% above your \(metric.formatValue(bl.mean)) \(metric.unit) baseline"
             } else {
                 title = "Your activity metrics are elevated above baseline"
             }
@@ -670,7 +670,7 @@ final class DecisionPolicyEngine {
         let metric = candidate.targetMetric
         var parts: [String] = []
 
-        // Lead with current state vs baseline — use actual numbers
+        // Lead with current state vs baseline. use actual numbers
         if let bl = baseline {
             let evidence = candidate.evidence
             if let historical = evidence.historicalResponseMean, evidence.historicalResponseCount >= 3 {
@@ -689,7 +689,7 @@ final class DecisionPolicyEngine {
                     let dir = dev < 0 ? "below" : "above"
                     parts.append(
                         "Your \(metric.displayName.lowercased()) is \(metric.formatValue(current)) \(metric.unit)"
-                        + " — \(absDevPct)% \(dir) your personal baseline of \(metric.formatValue(bl.mean)) \(metric.unit)."
+                        + ". \(absDevPct)% \(dir) your personal baseline of \(metric.formatValue(bl.mean)) \(metric.unit)."
                     )
                 } else {
                     parts.append(
@@ -710,7 +710,7 @@ final class DecisionPolicyEngine {
             let wowAbs = Int(abs(trend.weekOverWeekChange))
             if wowAbs > 8 {
                 parts.append(
-                    "It has dropped \(wowAbs)% this week alone — the decline is accelerating."
+                    "It has dropped \(wowAbs)% this week alone. the decline is accelerating."
                 )
             } else if wowAbs > 2 {
                 parts.append(
@@ -726,7 +726,7 @@ final class DecisionPolicyEngine {
             }
         }
 
-        // Source-specific detail — use actual evidence values
+        // Source-specific detail. use actual evidence values
         switch candidate.source {
         case .predictiveModel:
             let factors = candidate.evidence.contributingFeatures.prefix(2)
@@ -744,7 +744,7 @@ final class DecisionPolicyEngine {
                 let prob = Int(candidate.upliftConfidence * 100)
                 parts.append(
                     "Tomorrow's risk model (\(prob)% confidence) identified \(factorNames.joined(separator: " and "))"
-                    + " as the top drivers — this action targets the most impactful one."
+                    + " as the top drivers. this action targets the most impactful one."
                 )
             } else {
                 parts.append(
@@ -858,7 +858,7 @@ final class DecisionPolicyEngine {
             if let factor = topFactor {
                 return "Your risk score for tomorrow is elevated (\(prob)% model confidence)."
                     + " The #1 driver is your \(factor.metric.displayName.lowercased())"
-                    + " — this action directly targets it."
+                    + ". this action directly targets it."
             }
             return "Your risk score for tomorrow is elevated (\(prob)% confidence)."
                 + " This targets the top risk factor."
@@ -870,7 +870,7 @@ final class DecisionPolicyEngine {
             if let lag, lag > 0 {
                 return "Your data shows a \(effectLabel) causal link: changes in \(metric.displayName.lowercased())"
                     + " predict downstream health changes \(lag) day\(lag == 1 ? "" : "s") later."
-                    + " This isn't just correlation — it's a directional cause."
+                    + " This isn't just correlation. it's a directional cause."
             }
             return "Causal analysis identified \(metric.displayName.lowercased())"
                 + " as a \(effectLabel) upstream driver of your overall health."
@@ -879,7 +879,7 @@ final class DecisionPolicyEngine {
             return "Your body has been in its current state for"
                 + " \(max(1, Int(candidate.upliftConfidence / 0.03))) days."
                 + " \(metric.displayName) is the key metric differentiating this state"
-                + " from a healthier one — improving it accelerates the transition."
+                + " from a healthier one. improving it accelerates the transition."
 
         case .anomalyResponse:
             if let current = currentValue, let bl = baseline {
@@ -917,7 +917,7 @@ final class DecisionPolicyEngine {
                 let gap = metric.formatValue(abs(current - bl.mean))
                 return "You're \(gap) \(metric.unit) below your personal baseline."
                     + " Your body performs best near \(metric.formatValue(bl.mean)) \(metric.unit)"
-                    + " — closing this gap yields the biggest payoff right now."
+                    + ". closing this gap yields the biggest payoff right now."
             }
             return "Being below your personal baseline means your body"
                 + " isn't operating at its best. Returning to baseline"
@@ -926,7 +926,7 @@ final class DecisionPolicyEngine {
         case .counterfactual:
             if let delta = candidate.evidence.forecastedScoreDelta {
                 return "Simulated scenario: making this change could shift your overall score"
-                    + " by \(Int(abs(delta))) points tomorrow — the largest single-action impact available."
+                    + " by \(Int(abs(delta))) points tomorrow. the largest single-action impact available."
             }
             return "Scenario analysis shows this is the single change"
                 + " most likely to improve your overall score tomorrow."
@@ -996,7 +996,7 @@ final class DecisionPolicyEngine {
                 + " your \(metric.displayName.lowercased()) \(timeframe)."
         }
 
-        // Minimal fallback — still includes timeframe and confidence
+        // Minimal fallback. still includes timeframe and confidence
         let confPct = Int(candidate.upliftConfidence * 100)
         return "Expected to improve your \(metric.displayName.lowercased())"
             + " \(timeframe) (\(confPct)% model confidence)."

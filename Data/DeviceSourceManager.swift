@@ -42,6 +42,8 @@ final class DeviceSourceManager {
     private var hasScanned = false
     private var lastScanDate: Date?
     private static let scanTTL: TimeInterval = 24 * 3600
+    /// Bump this to invalidate stale device caches on app update
+    private static let cacheVersion = 2
 
     /// Only scan these representative metrics instead of all 83
     private static let representativeMetrics: [HealthMetric] = [
@@ -95,7 +97,7 @@ final class DeviceSourceManager {
         var deviceMap: [SupportedDevice: ConnectedDeviceInfo] = [:]
 
         for (bundleId, entry) in sourceMap {
-            let device = identifyDevice(bundleId: bundleId)
+            let device = identifyDevice(bundleId: bundleId, metricsProvided: entry.metrics)
             if var existing = deviceMap[device] {
                 existing.metricsProvided.formUnion(entry.metrics)
                 if let newDate = entry.lastDate,
@@ -207,9 +209,23 @@ final class DeviceSourceManager {
         }
     }
 
-    /// Match a bundle identifier to a known device
-    private func identifyDevice(bundleId: String) -> SupportedDevice {
-        for device in SupportedDevice.allCases where device != .generic {
+    /// Match a bundle identifier to a known device.
+    /// For Apple Health sources, uses discovered metrics to distinguish iPhone from Apple Watch.
+    private func identifyDevice(bundleId: String, metricsProvided: Set<HealthMetric> = []) -> SupportedDevice {
+        // Apple ecosystem: disambiguate iPhone vs Watch using metrics
+        let isAppleSource = bundleId.hasPrefix("com.apple.health")
+            || bundleId.hasPrefix("com.apple.Health")
+            || bundleId.hasPrefix("com.apple.watch")
+        if isAppleSource {
+            // Metrics that require a wearable sensor. iPhone alone cannot produce these
+            let watchOnlyMetrics: Set<HealthMetric> = [.heartRate, .bloodOxygen, .sleepDuration]
+            if bundleId.hasPrefix("com.apple.watch") || !metricsProvided.isDisjoint(with: watchOnlyMetrics) {
+                return .appleWatch
+            }
+            return .iPhone
+        }
+
+        for device in SupportedDevice.allCases where device != .generic && device != .appleWatch && device != .iPhone {
             for prefix in device.companionAppBundlePrefixes {
                 if bundleId.hasPrefix(prefix) {
                     return device
@@ -228,10 +244,19 @@ final class DeviceSourceManager {
             UserDefaults.standard.set(data, forKey: AppKeys.Data.cachedDeviceSources)
         }
         UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: AppKeys.Data.deviceSourceScanDate)
+        UserDefaults.standard.set(Self.cacheVersion, forKey: "deviceSourceCacheVersion")
     }
 
     /// Load cached devices from UserDefaults (called on init for instant availability)
     private func loadCachedDevices() {
+        // Invalidate stale cache when version changes (e.g. device detection logic updated)
+        let storedVersion = UserDefaults.standard.integer(forKey: "deviceSourceCacheVersion")
+        if storedVersion != Self.cacheVersion {
+            UserDefaults.standard.removeObject(forKey: AppKeys.Data.cachedDeviceSources)
+            UserDefaults.standard.removeObject(forKey: AppKeys.Data.deviceSourceScanDate)
+            return
+        }
+
         // Restore last scan date
         let storedTimestamp = UserDefaults.standard.double(forKey: AppKeys.Data.deviceSourceScanDate)
         if storedTimestamp > 0 {

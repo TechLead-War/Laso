@@ -66,7 +66,7 @@ struct WorkoutEffectivenessAnalyzer {
             summary: "\(Int(consistencyScore))% of the last 4 weeks had 3+ workout days (avg \(String(format: "%.1f", weeklyAvg))/week). Breakdown: \(weekBreakdown).",
             recommendation: consistencyScore >= 75 ?
                 "\(Int(consistencyScore))% of weeks hit 3+ sessions at \(String(format: "%.1f", weeklyAvg)) avg/week. Breakdown: \(weekBreakdown)." :
-                "Your weekly average is \(String(format: "%.1f", weeklyAvg)) sessions — \(weeksWithTarget) of the last 4 weeks reached 3+ workout days. Breakdown: \(weekBreakdown).",
+                "Your weekly average is \(String(format: "%.1f", weeklyAvg)) sessions. \(weeksWithTarget) of the last 4 weeks reached 3+ workout days. Breakdown: \(weekBreakdown).",
             severity: severity,
             trend: trend,
             currentValue: consistencyScore,
@@ -150,8 +150,8 @@ struct WorkoutEffectivenessAnalyzer {
             title: Copy.Analysis.Workout.calorieEfficiency,
             summary: "You're burning \(String(format: "%.1f", efficiency7d)) kcal/min this week vs \(String(format: "%.1f", efficiency30d)) kcal/min over 30 days (\(change > 0 ? "+" : "")\(String(format: "%.0f", change))%).",
             recommendation: change > 0 ?
-                "Calorie efficiency up \(String(format: "%.0f", change))% this week — burning \(String(format: "%.1f", efficiency7d)) kcal/min vs your 30-day average of \(String(format: "%.1f", efficiency30d)) kcal/min." :
-                "Calorie efficiency down \(String(format: "%.0f", abs(change)))% this week — \(String(format: "%.1f", efficiency7d)) kcal/min vs your 30-day average of \(String(format: "%.1f", efficiency30d)) kcal/min.",
+                "Calorie efficiency up \(String(format: "%.0f", change))% this week. burning \(String(format: "%.1f", efficiency7d)) kcal/min vs your 30-day average of \(String(format: "%.1f", efficiency30d)) kcal/min." :
+                "Calorie efficiency down \(String(format: "%.0f", abs(change)))% this week. \(String(format: "%.1f", efficiency7d)) kcal/min vs your 30-day average of \(String(format: "%.1f", efficiency30d)) kcal/min.",
             severity: .info,
             trend: trend,
             currentValue: efficiency7d,

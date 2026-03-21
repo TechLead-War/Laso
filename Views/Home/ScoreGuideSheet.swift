@@ -1,7 +1,10 @@
 import SwiftUI
 
-/// One-time tutorial sheet explaining the Health Score to new users.
+/// Tutorial sheet explaining the Health Score to users.
 struct ScoreGuideSheet: View {
+    let score: Int
+    let weakestCategoryName: String?
+
     @Environment(\.dismiss) private var dismiss
     @State private var contentTracker = SectionTracker(section: .scoreGuideContent, tab: .scoreGuide)
 
@@ -11,7 +14,7 @@ struct ScoreGuideSheet: View {
                 VStack(spacing: 28) {
                     // MARK: - Hero
                     VStack(spacing: 16) {
-                        HealthScoreRing(score: 76, label: Copy.Home.ScoreGuide.healthScore, size: 120, lineWidth: 12)
+                        HealthScoreRing(score: score, label: Copy.Home.ScoreGuide.healthScore, size: 120, lineWidth: 12)
 
                         Text(Copy.Home.ScoreGuide.title)
                             .font(.title3.weight(.semibold))
@@ -29,7 +32,7 @@ struct ScoreGuideSheet: View {
                         Text(Copy.Home.ScoreGuide.whatDoesItMean)
                             .font(.headline)
 
-                        Text(Copy.Home.ScoreGuide.whatDoesItMeanBody)
+                        Text(Copy.Home.ScoreGuide.whatDoesItMeanBody(score: score, weakestCategory: weakestCategoryName))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -80,6 +83,11 @@ struct ScoreGuideSheet: View {
                             .font(.headline)
                             .padding(.horizontal)
 
+                        Text(Copy.Home.ScoreGuide.howItsCalculatedBody)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal)
+
                         VStack(spacing: 0) {
                             categoryRow(icon: "heart.fill", color: .red, name: Copy.Home.ScoreGuide.heartCardioName, detail: Copy.Home.ScoreGuide.heartCardioDetail)
                             Divider().padding(.leading, 52)
@@ -91,41 +99,6 @@ struct ScoreGuideSheet: View {
                         }
                         .background(.background, in: RoundedRectangle(cornerRadius: 16))
                         .padding(.horizontal)
-                    }
-
-                    // MARK: - Recovery / Readiness
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(Copy.Home.ScoreGuide.recoveryAndReadiness)
-                            .font(.headline)
-                            .padding(.horizontal)
-
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(Copy.Home.ScoreGuide.readinessDescription(deviceName: DeviceMessaging.optionalDeviceName))
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-
-                            recoveryFactorRow(
-                                icon: "waveform.path.ecg",
-                                color: .purple,
-                                name: Copy.Home.ScoreGuide.hrvName,
-                                detail: Copy.Home.ScoreGuide.hrvDetail
-                            )
-                            Divider().padding(.leading, 40)
-                            recoveryFactorRow(
-                                icon: "heart.fill",
-                                color: .red,
-                                name: Copy.Home.ScoreGuide.restingHRName,
-                                detail: Copy.Home.ScoreGuide.restingHRDetail
-                            )
-                        }
-                        .padding()
-                        .background(.background, in: RoundedRectangle(cornerRadius: 16))
-                        .padding(.horizontal)
-
-                        Text(DeviceMessaging.wearOvernightMessage)
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
-                            .padding(.horizontal)
                     }
 
                     // MARK: - When does it update?
@@ -245,27 +218,6 @@ struct ScoreGuideSheet: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-    }
-
-    // MARK: - Recovery Factor Row
-
-    private func recoveryFactorRow(icon: String, color: Color, name: String, detail: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 16))
-                .foregroundStyle(color)
-                .frame(width: 24)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(name)
-                    .font(.subheadline.weight(.medium))
-                Text(detail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-        }
     }
 
     // MARK: - Category Row

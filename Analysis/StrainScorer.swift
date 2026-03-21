@@ -91,7 +91,7 @@ final class StrainScorer {
     /// Minimum days of calorie data required before computing strain
     private static let minimumDaysForBaseline: Int = 7
 
-    /// HR zone multipliers — higher zones contribute disproportionately more strain
+    /// HR zone multipliers. higher zones contribute disproportionately more strain
     private static let zoneMultipliers: [Int: Double] = [
         1: 1.0,    // Light: minimal strain contribution
         2: 2.0,    // Moderate: steady aerobic
@@ -279,7 +279,7 @@ final class StrainScorer {
             default:      zone = 5  // 90-100%
             }
 
-            // Below zone 1 threshold — negligible strain contribution
+            // Below zone 1 threshold. negligible strain contribution
             if intensityPct >= 0.4 {
                 zones[zone, default: 0] += 1.0
             }
@@ -304,11 +304,11 @@ final class StrainScorer {
         steps: Double,
         distance: Double
     ) -> Double {
-        // 1. Calorie load — normalized to baseline, contributes ~40% of max load
+        // 1. Calorie load. normalized to baseline, contributes ~40% of max load
         let calorieRatio = calories / max(calorieBaseline, 100.0)
         let calorieLoad = calorieRatio * 150.0
 
-        // 2. HR zone load — weighted sum with exponential zone multipliers
+        // 2. HR zone load. weighted sum with exponential zone multipliers
         //    Contributes ~40% of max load at extreme efforts
         var zoneLoad: Double = 0
         for (zone, minutes) in zoneMinutes {
@@ -316,12 +316,12 @@ final class StrainScorer {
             zoneLoad += minutes * multiplier
         }
 
-        // 3. Duration load — total exercise/workout time with square-root diminishing returns
+        // 3. Duration load. total exercise/workout time with square-root diminishing returns
         //    Prevents ultra-long low-intensity sessions from dominating
         let totalActiveMinutes = max(exerciseMinutes, workoutMinutes)
         let durationLoad = sqrt(totalActiveMinutes) * 10.0
 
-        // 4. Movement load — minor NEAT contribution from daily movement
+        // 4. Movement load. minor NEAT contribution from daily movement
         //    Steps and distance contribute modestly for non-exercise days
         let stepsLoad = min(30.0, (steps / 10000.0) * 15.0)
         let distanceLoad = min(20.0, distance * 2.0)  // distance in km

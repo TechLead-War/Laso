@@ -242,7 +242,7 @@ struct DiscoveryEngine {
             let diffFormatted = ladder.effect.formatValue(abs(best.diff))
             let direction = directionWord(for: ladder.effect, diff: best.diff)
 
-            let headline = "The magic number is \(causeFormatted) \(ladder.metric.unit) — your \(ladder.effect.displayName.lowercased()) \(direction) \(diffFormatted)\(ladder.effect.unit) past that point"
+            let headline = "The magic number is \(causeFormatted) \(ladder.metric.unit). your \(ladder.effect.displayName.lowercased()) \(direction) \(diffFormatted)\(ladder.effect.unit) past that point"
             let months = max(1, totalDays / 30)
             let evidence = "Based on \(totalDays) days over \(months) month\(months == 1 ? "" : "s")"
 
@@ -303,7 +303,7 @@ struct DiscoveryEngine {
             let botDayName = isHigherBetter ? worstDayName : bestDayName
             let label = isHigherBetter ? "most" : "best"
 
-            let headline = "\(topDayName) is your \(label) \(metric.displayName.lowercased()) day — \(formattedDiff) \(metric.unit) \(isHigherBetter ? "more" : "lower") than \(botDayName)"
+            let headline = "\(topDayName) is your \(label) \(metric.displayName.lowercased()) day. \(formattedDiff) \(metric.unit) \(isHigherBetter ? "more" : "lower") than \(botDayName)"
             let months = max(1, totalSamples / 30)
             let evidence = "Based on \(totalSamples) data points over \(months) month\(months == 1 ? "" : "s")"
 
@@ -344,7 +344,7 @@ struct DiscoveryEngine {
                 let totalDays = Double(context.totalDataPoints)
                 let absChange = abs(slope * totalDays)
                 let formatted = metric.formatValue(absChange)
-                absoluteDetail = " — that's \(formatted) \(metric.unit) total"
+                absoluteDetail = ". that's \(formatted) \(metric.unit) total"
             }
 
             let headline = "Your \(metric.displayName.lowercased()) has quietly \(direction) \(String(format: "%.0f", abs(changePercent)))% over the \(periodLabel)"

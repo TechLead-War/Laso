@@ -151,7 +151,7 @@ final class SessionTracker {
             if daysDiff == 1 {
                 streakDays += 1
             } else if daysDiff > 1 {
-                // Streak broken — record the previous streak for analytics
+                // Streak broken. record the previous streak for analytics
                 previousStreakBeforeBreak = defaults.integer(forKey: Key.streakDays)
                 streakDays = 1
             }
@@ -321,10 +321,10 @@ final class SessionTracker {
         let storedWeek = storedDays.count >= 2 ? Int(storedDays[1]) : 0
 
         if storedYear != currentYear || storedWeek != currentWeek {
-            // New week — reset
+            // New week. reset
             storedDays = [Double(currentYear), Double(currentWeek), today.timeIntervalSince1970]
         } else {
-            // Same week — add today if not already present
+            // Same week. add today if not already present
             let existingDays = storedDays.dropFirst(2).map { Date(timeIntervalSince1970: $0) }
             let alreadyRecorded = existingDays.contains { calendar.isDate($0, inSameDayAs: today) }
             if !alreadyRecorded {

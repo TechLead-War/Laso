@@ -3,7 +3,7 @@ import HealthKit
 import Observation
 import SwiftUI
 
-/// ViewModel for the Live tab — streams real-time health data from Apple Watch via HealthKit.
+/// ViewModel for the Live tab. streams real-time health data from Apple Watch via HealthKit.
 /// Properties are grouped into independently observable sub-objects so that changes in one group
 /// (e.g. heart rate) don't trigger re-renders in views that only read another group (e.g. sleep).
 @Observable
@@ -41,7 +41,7 @@ final class LiveViewModel {
     private static let cumulativeThrottleInterval: TimeInterval = 3
     private var respiratoryAvailabilityWorkItem: DispatchWorkItem?
 
-    /// Persistent observer for background delivery — survives app backgrounding so HealthKit
+    /// Persistent observer for background delivery. survives app backgrounding so HealthKit
     /// keeps syncing Apple Watch data to iPhone even when Laso is suspended.
     private var backgroundHRObserver: HKObserverQuery?
     private var backgroundDeliveryRegistered = false
@@ -64,6 +64,8 @@ final class LiveViewModel {
     private var lastReadinessBaselineRefresh: Date?
     private var readinessBaselineRefreshTask: Task<Void, Never>?
     private var smoothedReadinessScore: Double?
+    private var dailyLockedScore: Int?
+    private var dailyLockDate: Date?
     private var refreshState = LiveRefreshPlanner.State()
     private var lastHomeFetchDate: Date?
     private static let homeFetchDebounce: TimeInterval = 1.0
@@ -105,7 +107,7 @@ final class LiveViewModel {
             healthStore.enableBackgroundDelivery(for: type, frequency: frequency) { _, _ in }
         }
 
-        // Persistent observer query for heart rate — tells HealthKit to keep syncing
+        // Persistent observer query for heart rate. tells HealthKit to keep syncing
         // Apple Watch HR data to iPhone. Fires even when app is suspended.
         let heartRateType = HKQuantityType(.heartRate)
         let observer = HKObserverQuery(sampleType: heartRateType, predicate: nil) { [weak self] _, completionHandler, error in
@@ -132,7 +134,7 @@ final class LiveViewModel {
     // MARK: - Heart Rate Zone (needs healthStore for age)
 
     /// Estimated max heart rate (220 - age, defaults to 190 if unknown).
-    /// Cached on first access — date of birth never changes.
+    /// Cached on first access. date of birth never changes.
     private var _cachedMaxHR: Double?
     var estimatedMaxHR: Double {
         if let cached = _cachedMaxHR { return cached }
@@ -169,7 +171,7 @@ final class LiveViewModel {
 
     // MARK: - Readiness + Today Quick Fetch (for Home tab, no streams)
 
-    /// Full fetch — calls all tiers unconditionally (used on first appear and manual refresh).
+    /// Full fetch. calls all tiers unconditionally (used on first appear and manual refresh).
     /// Also pre-fetches latest vitals so the Live tab opens instantly with data.
     func fetchHomeData() {
         guard HKHealthStore.isHealthDataAvailable() else { return }
@@ -192,7 +194,7 @@ final class LiveViewModel {
         refreshPlanner.markFullRefresh(at: now, state: &refreshState)
     }
 
-    /// Tiered fetch — only queries data whose refresh interval has elapsed
+    /// Tiered fetch. only queries data whose refresh interval has elapsed
     func fetchHomeDataTiered() {
         guard HKHealthStore.isHealthDataAvailable() else { return }
         let now = Date()
@@ -225,16 +227,16 @@ final class LiveViewModel {
         // Reset flags from previous session so fresh data takes priority
         vitals.respiratoryRateUnavailable = false
 
-        // Priority 1: Real-time vital streams — anchored queries deliver samples instantly
+        // Priority 1: Real-time vital streams. anchored queries deliver samples instantly
         startHeartRateStream()
         startBloodOxygenStream()
         startRespiratoryRateStream()
 
-        // Priority 2: Cumulative activity — observer queries push updates in real time
+        // Priority 2: Cumulative activity. observer queries push updates in real time
         fetchTodayCumulativeStats()
         startActivityObservers()
 
-        // Priority 3: Fallback latest vitals — ensures data appears immediately even if
+        // Priority 3: Fallback latest vitals. ensures data appears immediately even if
         // the anchored query's narrow window (30 min) has no recent samples
         fetchFallbackHeartRate()
         fetchFallbackBloodOxygen()
@@ -249,7 +251,7 @@ final class LiveViewModel {
         respiratoryAvailabilityWorkItem = availabilityWorkItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: availabilityWorkItem)
 
-        // Priority 4: Deferred slow-changing data — don't compete with real-time queries
+        // Priority 4: Deferred slow-changing data. don't compete with real-time queries
         let now = Date()
         Task { @MainActor [weak self] in
             try? await Task.sleep(for: .milliseconds(300))
@@ -293,7 +295,7 @@ final class LiveViewModel {
         vitals.respiratoryRateUnavailable = false
     }
 
-    /// Restart streaming without clearing displayed data — keeps the UI populated
+    /// Restart streaming without clearing displayed data. keeps the UI populated
     /// while new queries spin up. Used on foreground return to avoid a blank flash.
     func restartStreaming() {
         stopAllQueries()
@@ -488,7 +490,7 @@ final class LiveViewModel {
         }
     }
 
-    /// Generic anchored object query for vital sign streaming — eliminates duplicate setup code
+    /// Generic anchored object query for vital sign streaming. eliminates duplicate setup code
     private func startVitalStream(
         identifier: HKQuantityTypeIdentifier,
         unit: HKUnit,
@@ -723,6 +725,16 @@ final class LiveViewModel {
     // MARK: - Readiness Score
 
     func computeReadinessScore() {
+        // Daily lock: once a confident score is set for today, keep returning it.
+        // This prevents the score from jumping on pull-to-refresh or background fetches,
+        // giving users a stable, trustworthy number that only changes the next day.
+        if let locked = dailyLockedScore,
+           let lockDate = dailyLockDate,
+           Calendar.current.isDateInToday(lockDate) {
+            recovery.readinessScore = locked
+            return
+        }
+
         let input = ReadinessScorer.Input(
             now: Date(),
             hrv: recovery.latestHRV,
@@ -752,6 +764,13 @@ final class LiveViewModel {
         recovery.readinessScore = assessment.score
         recovery.readinessConfidence = assessment.confidence
         readinessStore.saveCachedScore(assessment.score)
+
+        // Lock the score for today once we have sufficient confidence
+        // (meaning HRV + RHR + sleep data have all arrived)
+        if assessment.confidence >= 50 {
+            dailyLockedScore = assessment.score
+            dailyLockDate = Date()
+        }
     }
 
     // MARK: - Last Night's Sleep Fetch
@@ -832,7 +851,7 @@ final class LiveViewModel {
     }
 
     private func fetchFallbackHeartRate() {
-        // Fetch if nil or stale (>2h old) — ensures recovery after watch is put back on
+        // Fetch if nil or stale (>2h old). ensures recovery after watch is put back on
         let needsFetch = vitals.currentHeartRate == nil || vitals.isStale
         guard needsFetch else { return }
         let unit = HKUnit.count().unitDivided(by: .minute())

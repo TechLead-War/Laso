@@ -130,7 +130,7 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
 
 // MARK: - Insight Context
 
-/// Rich data carrier from analyzers to text generation — enables specific, data-backed recommendations
+/// Rich data carrier from analyzers to text generation. enables specific, data-backed recommendations
 struct InsightContext {
     var slope: Double?
     var projectedDaysToThreshold: Int?
@@ -222,7 +222,7 @@ struct Insight: Identifiable {
     let relatedMetrics: [HealthMetric]
     var context: InsightContext?
 
-    /// First sentence of the recommendation — used as a concise action summary
+    /// First sentence of the recommendation. used as a concise action summary
     var actionSummary: String {
         let rec = recommendation
         if let dotIndex = rec.firstIndex(of: ".") {

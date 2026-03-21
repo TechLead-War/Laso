@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Detail view for a single device — shows connected metrics or setup instructions
+/// Detail view for a single device. shows connected metrics or setup instructions
 struct DeviceDetailView: View {
     let device: SupportedDevice
     let deviceInfo: ConnectedDeviceInfo?
@@ -12,10 +12,10 @@ struct DeviceDetailView: View {
                 deviceHeader
 
                 if let info = deviceInfo {
-                    // Connected device — show metrics
+                    // Connected device. show metrics
                     connectedContent(info)
                 } else {
-                    // Not connected — show setup guide
+                    // Not connected. show setup guide
                     notConnectedContent
                 }
             }

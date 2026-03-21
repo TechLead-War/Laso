@@ -40,7 +40,7 @@ struct HealthScorer {
         var score = 100
         var components: [ScoreComponent] = []
 
-        // Anomaly deductions — proportional to z-score magnitude
+        // Anomaly deductions. proportional to z-score magnitude
         if let anomaly {
             let absZ = abs(anomaly.zScore)
 
@@ -78,7 +78,7 @@ struct HealthScorer {
             }
         }
 
-        // Trend adjustments — proportional to rate of change
+        // Trend adjustments. proportional to rate of change
         if let trend {
             switch trend.direction {
             case .declining:
@@ -111,7 +111,7 @@ struct HealthScorer {
 
     // MARK: - Category Scoring
 
-    /// Compute category score from metric scores (equal weighting — backward compatible)
+    /// Compute category score from metric scores (equal weighting. backward compatible)
     static func scoreCategory(
         category: HealthCategory,
         metricScores: [(metric: HealthMetric, score: Int, components: [ScoreComponent])]
@@ -155,7 +155,7 @@ struct HealthScorer {
 
     // MARK: - Overall Score
 
-    /// Compute overall score from category scores (backward compatible — equal weighting)
+    /// Compute overall score from category scores (backward compatible. equal weighting)
     static func overallScore(categoryScores: [HealthScore]) -> HealthScore {
         return overallScore(categoryScores: categoryScores, weights: nil)
     }
@@ -426,6 +426,47 @@ struct HealthScorer {
             categoryContributions: contributions,
             topFactors: topFactors
         )
+    }
+
+    // MARK: - Coverage-Adjusted Scoring
+
+    /// Apply coverage-based shrinkage to prevent sparse data from producing
+    /// misleadingly confident scores. With few data sources, the score is
+    /// pulled toward a neutral midpoint (75). As coverage grows, the raw
+    /// score is trusted more.
+    ///
+    /// Coverage formula:
+    ///   For each category with data, weight = min(metricsInCategory / 2, 1)
+    ///   weightedCoverage = sum(weights) / totalCategories
+    ///   effectiveCoverage = pow(weightedCoverage, 0.6)
+    ///   adjustedScore = effectiveCoverage * rawScore + (1 - effectiveCoverage) * 75
+    static func applyCoverageAdjustment(
+        rawScore: Int,
+        baselines: [HealthMetric: UserBaseline]
+    ) -> Int {
+        let totalCategories = HealthCategory.allCases.count
+        guard totalCategories > 0, !baselines.isEmpty else { return rawScore }
+
+        // Count metrics per category from baselines (metrics with actual data)
+        var metricsPerCategory: [HealthCategory: Int] = [:]
+        for metric in baselines.keys {
+            metricsPerCategory[metric.category, default: 0] += 1
+        }
+
+        // Each category contributes min(metricCount / 2, 1). full weight at 2+ metrics
+        var weightedCoverage = 0.0
+        for (_, metricCount) in metricsPerCategory {
+            weightedCoverage += min(Double(metricCount) / 2.0, 1.0)
+        }
+        weightedCoverage /= Double(totalCategories)
+
+        // Power curve. early categories pull away from neutral faster (diminishing returns)
+        let effectiveCoverage = pow(weightedCoverage, 0.6)
+
+        // Shrink toward neutral
+        let neutralScore = 75.0
+        let adjusted = effectiveCoverage * Double(rawScore) + (1.0 - effectiveCoverage) * neutralScore
+        return max(0, min(100, Int(adjusted.rounded())))
     }
 
     // MARK: - Private Helpers

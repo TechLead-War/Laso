@@ -108,7 +108,7 @@ struct ContentView: View {
                 await dashboardViewModel.load()
             }
             await refreshDeviceSourcesIfNeeded()
-            // HomeView.onAppear handles its own initial fetch — no duplicate needed here
+            // HomeView.onAppear handles its own initial fetch. no duplicate needed here
         }
         .onAppear {
             startSessionAnalytics()
@@ -124,7 +124,7 @@ struct ContentView: View {
                     }
                 }
                 if selectedTab == .home {
-                    // HomeView's own onChange(scenePhase) handles fetchHomeData — no duplicate needed here
+                    // HomeView's own onChange(scenePhase) handles fetchHomeData. no duplicate needed here
                     // Retry sync only when Home is visible and potentially stuck.
                     Task { await dashboardViewModel.retrySyncIfNeeded() }
                 }
@@ -254,6 +254,9 @@ struct ContentView: View {
         case .correlationsDetail:
             CorrelationsView(
                 correlations: dashboardViewModel.analysis.correlations,
+                causalChains: dashboardViewModel.analysis.causalChains,
+                compoundInsights: dashboardViewModel.analysis.compoundInsights,
+                interactionEffects: dashboardViewModel.analysis.interactionEffects,
                 onTapMetric: { metric in navigationPath.append(metric) }
             )
         case .healthStateTimeline:

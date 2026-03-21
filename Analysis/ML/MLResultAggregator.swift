@@ -58,7 +58,7 @@ final class MLResultAggregator {
             results.currentHealthState = components.stateClassifier.currentState
         }
 
-        // Tomorrow prediction — blend with population prior via PersonalizationBlender
+        // Tomorrow prediction. blend with population prior via PersonalizationBlender
         if components.predictiveScorer.isReady, let todayVector = vectors.last {
             let personalPrediction = components.predictiveScorer.predict(todayVector: todayVector)
             results.tomorrowRiskPrediction = personalPrediction
@@ -255,7 +255,7 @@ final class MLResultAggregator {
             insights.append(contentsOf: circadianAnalyzer.generateInsights())
         }
 
-        // Compound insights (crown jewel — cross-component synthesis)
+        // Compound insights (crown jewel. cross-component synthesis)
         if compoundInsightEngine.isReady {
             insights.append(contentsOf: compoundInsightEngine.toInsights())
         }
@@ -459,7 +459,7 @@ final class MLResultAggregator {
                     scorer: components.predictiveScorer
                 )
                 if let delta = delta, abs(delta) > 0.01 {
-                    var boosted = candidate
+                    let boosted = candidate
                     return boosted
                 }
                 return candidate
@@ -565,7 +565,7 @@ final class MLResultAggregator {
         case .biweekly:
             return "Your \(pattern.metric.displayName) shows a 2-week cycle (strength: \(Int(pattern.strength * 100))%). Consider a deload every 2 weeks to align with your body's natural load-recovery rhythm."
         case .monthly:
-            return "Your \(pattern.metric.displayName) follows a ~\(Int(pattern.periodDays))-day cycle (strength: \(Int(pattern.strength * 100))%). Track what changes around the cycle peak and trough — this may relate to hormonal or lifestyle rhythms."
+            return "Your \(pattern.metric.displayName) follows a ~\(Int(pattern.periodDays))-day cycle (strength: \(Int(pattern.strength * 100))%). Track what changes around the cycle peak and trough. this may relate to hormonal or lifestyle rhythms."
         case .seasonal:
             return "Your \(pattern.metric.displayName) shows seasonal variation (strength: \(Int(pattern.strength * 100))%). Adjust your targets based on the time of year rather than holding to a fixed standard."
         case .custom:
@@ -651,7 +651,7 @@ final class MLResultAggregator {
                 rec += " Watch your \(risk.metric.displayName.lowercased())."
             }
             if let protective = topProtective {
-                rec += " Your \(protective.metric.displayName.lowercased()) is helping — keep it up."
+                rec += " Your \(protective.metric.displayName.lowercased()) is helping. keep it up."
             }
             rec += " Prioritize consistent sleep tonight."
             return rec

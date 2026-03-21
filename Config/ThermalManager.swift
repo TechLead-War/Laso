@@ -17,12 +17,12 @@ final class ThermalManager {
     /// The current thermal state reported by the OS.
     private(set) var currentState: ProcessInfo.ThermalState
 
-    /// True when thermal state is `.serious` or `.critical` — defer non-essential heavy work.
+    /// True when thermal state is `.serious` or `.critical`. defer non-essential heavy work.
     var shouldThrottle: Bool {
         currentState == .serious || currentState == .critical
     }
 
-    /// True when thermal state is `.critical` — pause all heavy background work immediately.
+    /// True when thermal state is `.critical`. pause all heavy background work immediately.
     var shouldPauseHeavyWork: Bool {
         currentState == .critical
     }
@@ -50,9 +50,9 @@ final class ThermalManager {
         currentState = newState
 
         if newState == .critical {
-            logger.warning("Thermal state CRITICAL (\(oldLabel) → \(newLabel)) — pausing heavy work")
+            logger.warning("Thermal state CRITICAL (\(oldLabel) → \(newLabel)). pausing heavy work")
         } else if newState == .serious {
-            logger.warning("Thermal state SERIOUS (\(oldLabel) → \(newLabel)) — throttling heavy work")
+            logger.warning("Thermal state SERIOUS (\(oldLabel) → \(newLabel)). throttling heavy work")
         } else {
             logger.info("Thermal state changed: \(oldLabel) → \(newLabel)")
         }

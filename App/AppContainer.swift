@@ -38,12 +38,14 @@ final class AppContainer {
         if let modelContainer = HealthDataContainerFactory.makeModelContainer() {
             healthDataStore = HealthDataStore(modelContainer: modelContainer)
         } else {
-            print("[Laso] Running without SwiftData — all persistence disabled")
+            print("[Laso] Running without SwiftData. all persistence disabled")
             healthDataStore = HealthDataStore()
         }
         dashboardSmartActionAdvisor = DashboardSmartActionAdvisor()
         dashboardHousekeepingService = DashboardHousekeepingService(
-            persistenceManager: persistenceManager
+            persistenceManager: persistenceManager,
+            analytics: AppAnalytics.shared,
+            sessionTracker: SessionTracker.shared
         )
 
         subscriptionManager = .shared

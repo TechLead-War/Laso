@@ -335,31 +335,9 @@ struct PaywallView: View {
 
             HStack(spacing: 16) {
                 Link(Copy.Privacy.termsOfUse, destination: URL(string: AppSecrets.URLs.termsOfUse)!)
-                    .simultaneousGesture(TapGesture().onEnded {
-                        AppAnalytics.shared.trackBlockTap(
-                            title: "Terms of Use",
-                            type: .paywallTermsLink,
-                            screen: .paywall,
-                            metadata: [
-                                "destination": AppSecrets.URLs.termsOfUse
-                            ]
-                        )
-                        footerTracker.tapped(target: "terms_of_use")
-                    })
                 Text("\u{00B7}")
                     .foregroundStyle(.quaternary)
                 Link(Copy.Privacy.privacyPolicy, destination: URL(string: AppSecrets.URLs.privacyPolicy)!)
-                    .simultaneousGesture(TapGesture().onEnded {
-                        AppAnalytics.shared.trackBlockTap(
-                            title: "Privacy Policy",
-                            type: .paywallPrivacyLink,
-                            screen: .paywall,
-                            metadata: [
-                                "destination": AppSecrets.URLs.privacyPolicy
-                            ]
-                        )
-                        footerTracker.tapped(target: "privacy_policy")
-                    })
             }
             .font(.caption2)
             .foregroundStyle(.tertiary)

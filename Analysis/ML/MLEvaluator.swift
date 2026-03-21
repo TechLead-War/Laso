@@ -328,7 +328,7 @@ final class MLEvaluator {
         var rocPoints: [(fpr: Double, tpr: Double)] = []
         rocPoints.reserveCapacity(sorted.count + 2)
 
-        // Start with (0, 0) — threshold = 1.0+
+        // Start with (0, 0). threshold = 1.0+
         rocPoints.append((fpr: 0.0, tpr: 0.0))
 
         var tp = 0
@@ -346,7 +346,7 @@ final class MLEvaluator {
             rocPoints.append((fpr: fpr, tpr: tpr))
         }
 
-        // End with (1, 1) — threshold = 0.0
+        // End with (1, 1). threshold = 0.0
         if rocPoints.last?.fpr != 1.0 || rocPoints.last?.tpr != 1.0 {
             rocPoints.append((fpr: 1.0, tpr: 1.0))
         }

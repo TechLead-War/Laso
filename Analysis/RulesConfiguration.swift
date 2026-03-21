@@ -13,7 +13,7 @@ struct RulesConfiguration {
         }
     }
 
-    /// Critical absolute thresholds — values beyond these are medical emergencies
+    /// Critical absolute thresholds. values beyond these are medical emergencies
     /// regardless of personal baselines or z-scores.
     struct CriticalThreshold {
         /// Value below which the reading is critical (nil = no low critical threshold)
@@ -147,7 +147,7 @@ struct RulesConfiguration {
     static let outsideNormalRangeDeduction: Int = -15
     static let improvingTrendBonus: Int = 5
 
-    /// Recommendation templates — base version (no context)
+    /// Recommendation templates. base version (no context)
     static func recommendation(for metric: HealthMetric, severity: Severity, trend: TrendDirection) -> String {
         recommendation(for: metric, severity: severity, trend: trend, currentValue: nil, deviationPercent: nil, context: nil)
     }
@@ -198,7 +198,7 @@ struct RulesConfiguration {
 
     // MARK: - Context-Aware Recommendation
 
-    /// Full context-aware recommendation — uses context data when available, falls back to templates
+    /// Full context-aware recommendation. uses context data when available, falls back to templates
     static func recommendation(for metric: HealthMetric, severity: Severity, trend: TrendDirection, currentValue: Double?, deviationPercent: Double?, context: InsightContext?) -> String {
         let devStr = deviationPercent.map { String(format: "%.0f", abs($0)) + "% " } ?? ""
         let valStr = currentValue.map { metric.formatValue($0) + " " + metric.unit + " \u{2014} " } ?? ""
@@ -244,7 +244,7 @@ struct RulesConfiguration {
             return "\(valStr)VO2 Max has been flat or declining \(devStr)compared to your baseline." + projection + historical
 
         case .bloodOxygen:
-            // SpO2 <90% is a medical emergency — escalate with urgent language
+            // SpO2 <90% is a medical emergency. escalate with urgent language
             if severity == .critical, let value = currentValue, value < 90 {
                 return "\(valStr)Blood oxygen is critically low, below the 90% emergency threshold. This level of hypoxemia requires immediate attention. If you experience shortness of breath, confusion, bluish lips or fingertips, or chest pain, seek emergency medical care. Retake the reading to confirm, and if it remains below 90%, contact a healthcare provider urgently."
             }

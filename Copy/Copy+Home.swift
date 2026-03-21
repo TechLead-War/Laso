@@ -104,8 +104,31 @@ extension Copy {
             static let healthScore = "Health Score"
             static let title = "This is your Health Score"
             static let description = "A single number from 0 to 100 that reflects how your body is doing right now, based on your own data."
+
+            // Personalized "What does it mean?" based on score level
             static let whatDoesItMean = "What does it mean?"
-            static let whatDoesItMeanBody = "Your score rises when your metrics are steady or improving compared to your personal baseline. It drops when something changes. This isn\u{2019}t a medical diagnosis \u{2014} think of it as a daily check-in with your body."
+
+            static func whatDoesItMeanBody(score: Int, weakestCategory: String?) -> String {
+                let levelExplanation: String
+                switch score {
+                case 80...100:
+                    levelExplanation = "Your metrics are steady or improving across the board compared to your personal baseline. Everything looks well-balanced."
+                case 60..<80:
+                    levelExplanation = "Most of your metrics are on track, but a few areas have shifted slightly from your baseline."
+                case 40..<60:
+                    levelExplanation = "Several metrics have shifted from your personal baseline. This is worth paying attention to."
+                default:
+                    levelExplanation = "Multiple metrics are off from your personal baseline. Check your insights for specific areas to focus on."
+                }
+                let categoryHint: String
+                if let weakest = weakestCategory {
+                    categoryHint = " \(weakest) is the area pulling your score down the most right now."
+                } else {
+                    categoryHint = ""
+                }
+                return "\(levelExplanation)\(categoryHint) This isn\u{2019}t a medical diagnosis \u{2014} think of it as a daily check-in with your body."
+            }
+
             static let scoreLevels = "Score levels"
 
             // Score level ranges
@@ -124,6 +147,7 @@ extension Copy {
 
             // Categories
             static let howItsCalculated = "How it\u{2019}s calculated"
+            static let howItsCalculatedBody = "Your Health Score is a weighted average across four categories. Categories with more data and more variability carry greater weight. Each metric is scored against your personal baseline \u{2014} deviations and trends move the score up or down."
             static let heartCardioName = "Heart & Cardio"
             static let heartCardioDetail = "Resting heart rate, HRV, and cardio fitness"
             static let sleepName = "Sleep"
@@ -133,22 +157,9 @@ extension Copy {
             static let bodyVitalsName = "Body & Vitals"
             static let bodyVitalsDetail = "Weight, body fat, blood oxygen, and more"
 
-            // Recovery
-            static let recoveryAndReadiness = "Recovery"
-            static func readinessDescription(deviceName: String?) -> String {
-                if let deviceName {
-                    return "Your Recovery score (0\u{2013}100) tells you how recovered your body is. It\u{2019}s calculated from two signals your \(deviceName) measures while you sleep:"
-                }
-                return "Your Recovery score (0\u{2013}100) tells you how recovered your body is. It\u{2019}s calculated from HRV and resting heart rate samples that Apple Health collects overnight:"
-            }
-            static let hrvName = "Heart Rate Variability (HRV)"
-            static let hrvDetail = "Higher HRV means better recovery and lower stress."
-            static let restingHRName = "Resting Heart Rate"
-            static let restingHRDetail = "Lower resting HR means your heart is recovering well."
-
             // Refresh timing
             static let whenItUpdatesTitle = "When does it update?"
-            static let whenItUpdatesBody = "Your Recovery score recalculates each morning using overnight data. Wear your Apple Watch to sleep and open the app after waking up to see your latest score. It typically takes 1\u{2013}3 days of consistent overnight wear before changes in your routine show up in the score."
+            static let whenItUpdatesBody = "Your Health Score refreshes each time you open the app or pull to refresh. It uses the latest data from Apple Health, so changes in your metrics show up within minutes. Trends and baseline shifts typically take 1\u{2013}3 days to reflect in the score."
 
             // Baseline callout
             static let baselineCallout = "This score compares you to yourself \u{2014} not world averages. As we learn your patterns, it becomes more accurate."
@@ -160,11 +171,48 @@ extension Copy {
 
         enum RecoveryInfo {
             static let title = "How Recovery Works"
-            static let description = "Your Recovery score (0\u{2013}100) tells you how recovered your body is, based on two signals measured while you sleep."
+            static let description = "Your Recovery score (0\u{2013}100) tells you how recovered your body is, based on overnight data measured while you sleep."
+
+            // Score levels
+            static let scoreLevels = "Score levels"
+            static let fullyRecoveredRange = "80\u{2013}100"
+            static let fullyRecoveredLabel = "Fully Recovered"
+            static let fullyRecoveredDescription = "Your body is well-rested \u{2014} great day for a hard workout."
+            static let moderateRange = "50\u{2013}79"
+            static let moderateLabel = "Moderate"
+            static let moderateDescription = "Decent recovery \u{2014} moderate intensity is ideal."
+            static let lowRange = "Below 50"
+            static let lowLabel = "Low Recovery"
+            static let lowDescription = "Your body needs rest \u{2014} prioritize easy movement and sleep."
+
+            // How it's calculated
+            static let howItsCalculated = "How it\u{2019}s calculated"
+            static let howItsCalculatedBody = "Recovery is a weighted score from signals measured while you sleep. Each signal is compared to your personal baseline \u{2014} the further you deviate, the more it affects the score."
             static let hrvName = "Heart Rate Variability"
-            static let hrvDetail = "Higher HRV means better recovery and lower stress."
+            static let hrvWeight = "40% weight"
+            static let hrvDetail = "Higher HRV means better recovery and lower stress. Compared to your personal baseline."
             static let restingHRName = "Resting Heart Rate"
-            static let restingHRDetail = "Lower resting HR means your heart is recovering well."
+            static let restingHRWeight = "35% weight"
+            static let restingHRDetail = "Lower resting HR means your heart is recovering well. Compared to your baseline."
+            static let sleepDurationName = "Sleep Duration"
+            static let sleepDurationWeight = "15% weight"
+            static let sleepDurationDetail = "7.5 hours is optimal. Too little or too much reduces the score."
+            static let sleepQualityName = "Sleep Quality"
+            static let sleepQualityWeight = "6% weight"
+            static let sleepQualityDetail = "Deep and REM sleep stages contribute to recovery quality."
+            static let workoutRecoveryName = "Recent Workout"
+            static let workoutRecoveryWeight = "4% weight"
+            static let workoutRecoveryDetail = "Hard workouts lower recovery temporarily. The effect fades over 18\u{2013}36 hours."
+
+            // Device requirement
+            static func wearRequirement(deviceName: String?) -> String {
+                if let deviceName {
+                    return "Wear your \(deviceName) overnight so it can measure HRV and resting heart rate while you sleep."
+                }
+                return "Wear your Apple Watch overnight so it can measure HRV and resting heart rate while you sleep."
+            }
+
+            // Refresh timing
             static let whenItUpdatesTitle = "When does it update?"
             static let whenItUpdatesBody = "Your Recovery score recalculates each morning using overnight data. It typically takes 1\u{2013}3 days of consistent overnight wear before changes in your routine show up in the score."
         }

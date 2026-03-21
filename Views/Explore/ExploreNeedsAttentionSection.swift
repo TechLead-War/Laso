@@ -55,6 +55,7 @@ struct ExploreNeedsAttentionSection: View {
                                     .foregroundStyle(.red)
                             }
                             .padding(.vertical, 4)
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                     }

@@ -90,19 +90,7 @@ struct CategoryDetailView: View {
                                     .padding(.vertical, 9)
                                 }
                                 .buttonStyle(.plain)
-                                .simultaneousGesture(TapGesture().onEnded {
-                                    AppAnalytics.shared.trackBlockTap(
-                                        title: item.metric.displayName,
-                                        type: .metricRow,
-                                        screen: .categoryDetail,
-                                        metadata: [
-                                            "metric_id": item.metric.rawValue,
-                                            "metric_category": item.metric.category.rawValue,
-                                            "source_section": "history"
-                                        ]
-                                    )
-                                    historyTracker.tapped(target: item.metric.rawValue)
-                                })
+                                .contentShape(Rectangle())
                             }
                         }
                         .cardStyle()
@@ -137,7 +125,7 @@ struct CategoryDetailView: View {
                     .onDisappear { insightsTracker.disappeared() }
                 }
 
-                // Metric List — sorted by severity
+                // Metric List. sorted by severity
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Text("Metrics")
@@ -154,21 +142,9 @@ struct CategoryDetailView: View {
                     ForEach(viewModel.metricsSortedBySeverity) { metric in
                         NavigationLink(value: metric) {
                             metricRow(metric)
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .simultaneousGesture(TapGesture().onEnded {
-                            AppAnalytics.shared.trackBlockTap(
-                                title: metric.displayName,
-                                type: .metricRow,
-                                screen: .categoryDetail,
-                                metadata: [
-                                    "metric_id": metric.rawValue,
-                                    "metric_category": metric.category.rawValue,
-                                    "source_section": "metrics"
-                                ]
-                            )
-                            metricsTracker.tapped(target: metric.rawValue)
-                        })
                     }
                 }
                 .onAppear { metricsTracker.appeared() }

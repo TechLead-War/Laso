@@ -1,7 +1,7 @@
 import AppIntents
 import SwiftUI
 
-/// "What's my readiness?" — Returns readiness/recovery status.
+/// "What's my readiness?". Returns readiness/recovery status.
 struct ReadinessIntent: AppIntent {
     static var title: LocalizedStringResource = "Check Readiness"
     static var description = IntentDescription(
@@ -31,7 +31,7 @@ struct ReadinessIntent: AppIntent {
 
         let readinessLabel = readinessDescription(readiness.readinessScore)
         let dialog = IntentDialog(
-            "Your readiness is \(readiness.readinessScore)% — \(readinessLabel). Stress level is \(readiness.stressLabel.lowercased())."
+            "Your readiness is \(readiness.readinessScore)%. \(readinessLabel). Stress level is \(readiness.stressLabel.lowercased())."
         )
 
         return .result(dialog: dialog) {

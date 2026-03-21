@@ -59,17 +59,6 @@ struct HomeConnectHealthView: View {
                     .font(.subheadline.weight(.medium))
             }
             .buttonStyle(.bordered)
-            .simultaneousGesture(TapGesture().onEnded {
-                AppAnalytics.shared.trackBlockTap(
-                    title: "Manage Devices",
-                    type: .emptyStateManageDevices,
-                    screen: .home,
-                    metadata: [
-                        "destination": "connected_devices",
-                        "source": "empty_state"
-                    ]
-                )
-            })
 
             Spacer()
         }

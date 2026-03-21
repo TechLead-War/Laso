@@ -39,7 +39,7 @@ extension Copy {
         // MARK: - Focus Selection
 
         static let whatMatters = "What matters most to you?"
-        static let focusSubtitle = "Pick your areas — those insights get prioritized first."
+        static let focusSubtitle = "Pick your areas. those insights get prioritized first."
 
         // MARK: - Connect Health (personalized)
 
@@ -110,7 +110,7 @@ extension Copy {
         static func dataSpanSubtitle(_ span: String) -> String {
             "\(span) of health history analyzed"
         }
-        static let noDataYetMessage = "No health data available yet — Laso will start building your baseline as data arrives."
+        static let noDataYetMessage = "No health data available yet. Laso will start building your baseline as data arrives."
 
         // MARK: - Siri
 

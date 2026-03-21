@@ -165,9 +165,9 @@ struct WorkoutProgrammer {
                 if zone.rawValue != TrainingZone.restoring.rawValue {
                     zone = min(zone, .maintaining)
                 }
-                cycleNote = "During your menstrual phase, we've adjusted intensity to favor low-impact movements. Listen to your body — rest is productive."
+                cycleNote = "During your menstrual phase, we've adjusted intensity to favor low-impact movements. Listen to your body. rest is productive."
             case .luteal:
-                cycleNote = "Luteal phase detected — volume reduced ~15%. Steady-state cardio preferred over high-intensity intervals."
+                cycleNote = "Luteal phase detected. volume reduced ~15%. Steady-state cardio preferred over high-intensity intervals."
             case .follicular, .ovulatory:
                 break
             }
@@ -221,7 +221,7 @@ struct WorkoutProgrammer {
             duration: 5,
             exercises: [
                 Exercise(name: "Light Walking", instruction: "Easy pace, focus on deep breathing", muscleGroup: "Full Body", icon: "figure.walk"),
-                Exercise(name: "Arm Circles", instruction: "10 forward, 10 backward — slow and controlled", muscleGroup: "Shoulders", icon: "figure.arms.open"),
+                Exercise(name: "Arm Circles", instruction: "10 forward, 10 backward. slow and controlled", muscleGroup: "Shoulders", icon: "figure.arms.open"),
             ],
             heartRateTarget: HeartRateTarget.forZone(1, maxHR: maxHR)
         )
@@ -232,7 +232,7 @@ struct WorkoutProgrammer {
                 duration: 15,
                 exercises: [
                     Exercise(name: "Easy Walk", instruction: "Comfortable pace on flat terrain", muscleGroup: "Lower Body", icon: "figure.walk"),
-                    Exercise(name: "Gentle Yoga Flow", instruction: "Cat-cow, child's pose, downward dog — 30s each", muscleGroup: "Full Body", icon: "figure.yoga"),
+                    Exercise(name: "Gentle Yoga Flow", instruction: "Cat-cow, child's pose, downward dog. 30s each", muscleGroup: "Full Body", icon: "figure.yoga"),
                 ],
                 heartRateTarget: HeartRateTarget.forZone(1, maxHR: maxHR)
             ),
@@ -240,8 +240,8 @@ struct WorkoutProgrammer {
                 name: "Mobility & Recovery",
                 duration: 10,
                 exercises: [
-                    Exercise(name: "Foam Rolling", instruction: "Quads, hamstrings, calves — 60s each area", muscleGroup: "Lower Body", icon: "figure.roll"),
-                    Exercise(name: "Hip Openers", instruction: "Pigeon pose, hip circles — 30s each side", muscleGroup: "Hips", icon: "figure.flexibility"),
+                    Exercise(name: "Foam Rolling", instruction: "Quads, hamstrings, calves. 60s each area", muscleGroup: "Lower Body", icon: "figure.roll"),
+                    Exercise(name: "Hip Openers", instruction: "Pigeon pose, hip circles. 30s each side", muscleGroup: "Hips", icon: "figure.flexibility"),
                 ],
                 heartRateTarget: nil
             ),
@@ -251,8 +251,8 @@ struct WorkoutProgrammer {
             name: "Cool Down",
             duration: 5,
             exercises: [
-                Exercise(name: "Static Stretches", instruction: "Hold each stretch 30 seconds — hamstrings, quads, shoulders", muscleGroup: "Full Body", icon: "figure.cooldown"),
-                Exercise(name: "Deep Breathing", instruction: "4-count inhale, 6-count exhale — 5 rounds", muscleGroup: "Recovery", icon: "lungs.fill"),
+                Exercise(name: "Static Stretches", instruction: "Hold each stretch 30 seconds. hamstrings, quads, shoulders", muscleGroup: "Full Body", icon: "figure.cooldown"),
+                Exercise(name: "Deep Breathing", instruction: "4-count inhale, 6-count exhale. 5 rounds", muscleGroup: "Recovery", icon: "lungs.fill"),
             ],
             heartRateTarget: nil
         )
@@ -286,7 +286,7 @@ struct WorkoutProgrammer {
                 name: "Moderate Cardio",
                 duration: 20,
                 exercises: [
-                    Exercise(name: "Moderate Run / Jog", instruction: "Conversational pace — you should be able to talk", muscleGroup: "Full Body", icon: "figure.run"),
+                    Exercise(name: "Moderate Run / Jog", instruction: "Conversational pace. you should be able to talk", muscleGroup: "Full Body", icon: "figure.run"),
                 ],
                 heartRateTarget: HeartRateTarget.forZone(2, maxHR: maxHR)
             ),
@@ -307,7 +307,7 @@ struct WorkoutProgrammer {
             duration: 5,
             exercises: [
                 Exercise(name: "Light Walk", instruction: "2 minutes easy pace to bring heart rate down", muscleGroup: "Full Body", icon: "figure.walk"),
-                Exercise(name: "Stretching", instruction: "Focus on worked muscle groups — 30s each", muscleGroup: "Full Body", icon: "figure.cooldown"),
+                Exercise(name: "Stretching", instruction: "Focus on worked muscle groups. 30s each", muscleGroup: "Full Body", icon: "figure.cooldown"),
             ],
             heartRateTarget: nil
         )
@@ -331,7 +331,7 @@ struct WorkoutProgrammer {
             duration: 8,
             exercises: [
                 Exercise(name: "Jog", instruction: "Easy jog building to moderate pace", muscleGroup: "Full Body", icon: "figure.run"),
-                Exercise(name: "Dynamic Stretches", instruction: "High knees, butt kicks, walking lunges — 30s each", muscleGroup: "Full Body", icon: "figure.walk"),
+                Exercise(name: "Dynamic Stretches", instruction: "High knees, butt kicks, walking lunges. 30s each", muscleGroup: "Full Body", icon: "figure.walk"),
             ],
             heartRateTarget: HeartRateTarget.forZone(2, maxHR: maxHR)
         )
@@ -363,7 +363,7 @@ struct WorkoutProgrammer {
             duration: 7,
             exercises: [
                 Exercise(name: "Easy Jog / Walk", instruction: "3 minutes gradual pace reduction", muscleGroup: "Full Body", icon: "figure.walk"),
-                Exercise(name: "Full-Body Stretch", instruction: "Hold each stretch 30-45s — hips, shoulders, hamstrings", muscleGroup: "Full Body", icon: "figure.cooldown"),
+                Exercise(name: "Full-Body Stretch", instruction: "Hold each stretch 30-45s. hips, shoulders, hamstrings", muscleGroup: "Full Body", icon: "figure.cooldown"),
             ],
             heartRateTarget: nil
         )
@@ -387,7 +387,7 @@ struct WorkoutProgrammer {
             duration: 10,
             exercises: [
                 Exercise(name: "Progressive Run", instruction: "Start easy, build to 70% effort over 5 minutes", muscleGroup: "Full Body", icon: "figure.run"),
-                Exercise(name: "Activation Drills", instruction: "A-skips, B-skips, bounding — 30m each × 2", muscleGroup: "Full Body", icon: "figure.run"),
+                Exercise(name: "Activation Drills", instruction: "A-skips, B-skips, bounding. 30m each × 2", muscleGroup: "Full Body", icon: "figure.run"),
             ],
             heartRateTarget: HeartRateTarget.forZone(3, maxHR: maxHR)
         )
@@ -419,7 +419,7 @@ struct WorkoutProgrammer {
             duration: 10,
             exercises: [
                 Exercise(name: "Easy Walk", instruction: "5 minutes very easy pace", muscleGroup: "Full Body", icon: "figure.walk"),
-                Exercise(name: "Extended Stretching", instruction: "Focus on major muscle groups — 45-60s each hold", muscleGroup: "Full Body", icon: "figure.cooldown"),
+                Exercise(name: "Extended Stretching", instruction: "Focus on major muscle groups. 45-60s each hold", muscleGroup: "Full Body", icon: "figure.cooldown"),
             ],
             heartRateTarget: nil
         )

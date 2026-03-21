@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// "Your Focus Areas" section on the Home tab — shows top health risks with actionable recommendations
+/// "Your Focus Areas" section on the Home tab. shows top health risks with actionable recommendations
 struct FocusAreasSection: View {
     let risks: [HealthRisk]
     let onTapRisk: (HealthRisk) -> Void

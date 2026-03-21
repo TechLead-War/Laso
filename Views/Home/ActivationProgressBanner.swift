@@ -94,7 +94,7 @@ struct ActivationProgressBanner: View {
                     // Draw connecting lines first (behind dots)
                     ForEach(0..<7, id: \.self) { i in
                         let lineX = dotSize * CGFloat(i + 1) + gapWidth * CGFloat(i)
-                        let filled = (i + 1) < state.currentDay
+                        let filled = i < state.currentDay
                         RoundedRectangle(cornerRadius: 1)
                             .fill(filled ? Color.accentColor : Color(.systemFill))
                             .frame(width: gapWidth, height: 2)

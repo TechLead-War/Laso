@@ -21,7 +21,7 @@ struct ForceUpdateView: View {
                 .padding(.horizontal, 32)
 
             if let url = URL(string: AppSecrets.URLs.manageSubscriptions) {
-                // App Store link — in production, replace with your app's direct App Store URL
+                // App Store link. in production, replace with your app's direct App Store URL
                 Link(destination: url) {
                     Text("Update Now")
                         .font(.headline)

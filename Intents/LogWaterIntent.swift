@@ -1,7 +1,7 @@
 import AppIntents
 import SwiftUI
 
-/// "Log X liters of water" — Logs water intake to HealthKit with a specified amount.
+/// "Log X liters of water". Logs water intake to HealthKit with a specified amount.
 struct LogWaterIntent: AppIntent {
     static var title: LocalizedStringResource = "Log Water Intake"
     static var description = IntentDescription(

@@ -211,7 +211,7 @@ struct DiscoveryView: View {
                 Text("Your Dashboard is Ready")
                     .font(.title3.weight(.semibold))
 
-                Text("Track these patterns and more — updated every time you open the app.")
+                Text("Track these patterns and more. updated every time you open the app.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

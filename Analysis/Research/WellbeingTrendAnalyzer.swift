@@ -3,11 +3,11 @@ import Foundation
 /// Research: JMIR (Feb 2026) + systematic reviews on digital phenotyping.
 /// Finding: Sleep irregularity + reduced activity + decreased daylight exposure
 /// predicts depression/anxiety onset with clinical-grade accuracy.
-/// No invasive phone tracking needed — HealthKit metrics suffice.
+/// No invasive phone tracking needed. HealthKit metrics suffice.
 ///
 /// Implementation: Uses Sleep Regularity Index + steps trend + daylight exposure
 /// + mindful minutes to detect patterns associated with mood deterioration.
-/// Non-diagnostic — surfaces pattern observations only.
+/// Non-diagnostic. surfaces pattern observations only.
 struct WellbeingTrendAnalyzer {
 
     // MARK: - Signal Weights
@@ -74,7 +74,7 @@ struct WellbeingTrendAnalyzer {
                 metric: .sleepDuration,
                 title: "Wellbeing Pattern Shift Detected",
                 summary: "\(concerningSignals.count) of \(signals.count) behavioral indicators are trending in directions associated with mood decline: \(concernList).",
-                recommendation: "Research on digital phenotyping shows that simultaneous changes in sleep regularity, physical activity, daylight exposure, and autonomic tone predict mood shifts with clinical-grade accuracy. These patterns are observational — not diagnostic — but are worth noting. Score: \(String(format: "%.0f", (weightedScore + 1) * 50))/100.",
+                recommendation: "Research on digital phenotyping shows that simultaneous changes in sleep regularity, physical activity, daylight exposure, and autonomic tone predict mood shifts with clinical-grade accuracy. These patterns are observational. not diagnostic. but are worth noting. Score: \(String(format: "%.0f", (weightedScore + 1) * 50))/100.",
                 severity: concerningSignals.count >= 4 ? .warning : .info,
                 trend: .declining,
                 currentValue: (weightedScore + 1) * 50,
@@ -109,7 +109,7 @@ struct WellbeingTrendAnalyzer {
             insights.append(InsightFactory.observation(
                 metric: .steps,
                 title: "Strong Wellbeing Indicators",
-                summary: "Your behavioral pattern across \(signals.count) indicators — sleep regularity, activity, daylight exposure\(signals.count >= 4 ? ", mindfulness" : "") — is consistent with positive mental wellbeing.",
+                summary: "Your behavioral pattern across \(signals.count) indicators. sleep regularity, activity, daylight exposure\(signals.count >= 4 ? ", mindfulness" : ""). is consistent with positive mental wellbeing.",
                 recommendation: "Research on digital phenotyping shows that consistent sleep, regular activity, adequate daylight exposure, and strong autonomic tone are collectively protective for mental health. Your current patterns reflect all of these.",
                 currentValue: (weightedScore + 1) * 50,
                 baselineValue: 70,

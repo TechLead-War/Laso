@@ -616,7 +616,7 @@ struct BreathworkView: View {
             return
         }
 
-        // Phase complete — advance
+        // Phase complete. advance
         if phaseTimeRemaining <= 0 {
             advancePhase()
         }

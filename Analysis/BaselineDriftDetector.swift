@@ -72,7 +72,7 @@ struct BaselineDriftDetector {
         // Need at least 30 days of baseline history
         guard history.count >= 30 else { return nil }
 
-        // Compare across multiple time horizons — pick the most significant
+        // Compare across multiple time horizons. pick the most significant
         let calendar = Calendar.current
         let now = Date()
         let comparisons: [(days: Int, label: String)] = [

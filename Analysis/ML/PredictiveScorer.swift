@@ -146,7 +146,7 @@ final class PredictiveScorer {
 
         guard X.count >= Self.minimumDays else { return }
 
-        // Time-ordered train/validation split (80/20) — temporal split, not random
+        // Time-ordered train/validation split (80/20). temporal split, not random
         let splitIdx = Int(Double(X.count) * 0.8)
         let trainX = Array(X[..<splitIdx])
         let trainY = Array(y[..<splitIdx])
@@ -175,7 +175,7 @@ final class PredictiveScorer {
         let earlyStopPatience = 10
 
         // Boosting rounds with early stopping on validation set
-        for round in 0..<numTrees {
+        for _ in 0..<numTrees {
             // Compute gradients and hessians on training data (logistic loss)
             var gradients = [Double](repeating: 0, count: trainX.count)
             var hessians = [Double](repeating: 0, count: trainX.count)

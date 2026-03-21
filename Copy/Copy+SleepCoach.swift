@@ -75,11 +75,11 @@ extension Copy {
         static let tipCutCaffeineTitle = "Caffeine timing"
         static let tipCutCaffeineDetail = "Caffeine has a 6-hour half-life. Limiting it after 2 PM can protect your deep sleep."
         static let tipScreenCurfewTitle = "Screen wind-down"
-        static let tipScreenCurfewDetail = "Winding down screens 45 min before bed helps — blue light suppresses melatonin production."
+        static let tipScreenCurfewDetail = "Winding down screens 45 min before bed helps. blue light suppresses melatonin production."
 
         // General tips
         static let tipConsistentScheduleTitle = "Consistent schedule"
-        static let tipConsistentScheduleDetail = "A steady bed and wake time — even on weekends — is one of the strongest sleep levers."
+        static let tipConsistentScheduleDetail = "A steady bed and wake time. even on weekends. is one of the strongest sleep levers."
         static let tipCoolBedroomTitle = "Cool bedroom"
         static let tipCoolBedroomDetail = "65-68\u{00B0}F (18-20\u{00B0}C) is the sweet spot. A cooler room helps your body drop into deeper sleep."
         static let tipMorningSunlightTitle = "Morning sunlight"

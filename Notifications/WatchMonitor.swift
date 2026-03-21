@@ -7,14 +7,14 @@ import UserNotifications
 /// **How it works (all background-capable, no foreground required):**
 ///
 /// 1. An `HKObserverQuery` with `enableBackgroundDelivery(.immediate)` fires whenever
-///    new heart rate data arrives — even when the app is suspended or killed.
+///    new heart rate data arrives. even when the app is suspended or killed.
 ///
 /// 2. Each time fresh Apple Watch data arrives, a local notification is **scheduled**
 ///    to fire after `watchNotWornThresholdHours` (default 1h). This pushes the
-///    notification forward — as long as data keeps flowing, it never fires.
+///    notification forward. as long as data keeps flowing, it never fires.
 ///
 /// 3. When data stops (watch removed, battery dead, out of range), no more pushes
-///    happen and the scheduled notification fires automatically — no app needed.
+///    happen and the scheduled notification fires automatically. no app needed.
 ///
 /// 4. Battery: checked from HealthKit sample metadata on each background delivery.
 ///    If available and below threshold, a notification is sent immediately.
@@ -73,7 +73,7 @@ final class WatchMonitor {
     // MARK: - Heart Rate Observer (Background-Capable)
 
     /// Sets up HKObserverQuery + background delivery. This is the engine that drives
-    /// everything — it runs even when the app is suspended.
+    /// everything. it runs even when the app is suspended.
     private func startHeartRateObserver() {
         guard let healthStore,
               let heartRateType = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return }
@@ -88,7 +88,7 @@ final class WatchMonitor {
                 completionHandler()
                 return
             }
-            // This fires in BACKGROUND — check watch data and reschedule notification
+            // This fires in BACKGROUND. check watch data and reschedule notification
             self?.onHeartRateDelivery()
             completionHandler()
         }
@@ -105,7 +105,7 @@ final class WatchMonitor {
 
     // MARK: - Background Delivery Handler
 
-    /// Called every time HealthKit delivers new heart rate data — foreground OR background.
+    /// Called every time HealthKit delivers new heart rate data. foreground OR background.
     /// This is the single entry point for all watch monitoring logic.
     private func onHeartRateDelivery() {
         guard let healthStore,
@@ -126,13 +126,13 @@ final class WatchMonitor {
 
             for sample in samples {
                 if self.isFromAppleWatch(sample: sample) {
-                    // Watch is alive — record timestamp
+                    // Watch is alive. record timestamp
                     UserDefaults.standard.set(
                         sample.startDate.timeIntervalSince1970,
                         forKey: self.lastWatchDataKey
                     )
 
-                    // Push the "not worn" notification forward — it won't fire
+                    // Push the "not worn" notification forward. it won't fire
                     // as long as data keeps coming.
                     self.scheduleNotWornNotification()
 
@@ -143,7 +143,7 @@ final class WatchMonitor {
                 }
             }
 
-            // No fresh watch data — ensure a notification is pending
+            // No fresh watch data. ensure a notification is pending
             let lastDataTime = UserDefaults.standard.double(forKey: self.lastWatchDataKey)
             if lastDataTime > 0 {
                 self.ensureNotWornScheduled()
@@ -187,7 +187,7 @@ final class WatchMonitor {
 
     /// Cancels any pending "not worn" notification and schedules a new one to fire
     /// after `thresholdHours`. As long as watch data keeps arriving, this keeps
-    /// getting pushed forward. The moment data stops, it fires — no app needed.
+    /// getting pushed forward. The moment data stops, it fires. no app needed.
     private func scheduleNotWornNotification() {
         NotificationManager.shared.cancelNotification(identifier: scheduledNotWornIdentifier)
 
@@ -208,7 +208,7 @@ final class WatchMonitor {
     }
 
     /// Ensures a "not worn" notification is pending without cancelling an existing one.
-    /// Used at startup and when no fresh data is found — we don't want to reset the
+    /// Used at startup and when no fresh data is found. we don't want to reset the
     /// timer, just make sure one is scheduled.
     private func ensureNotWornScheduled() {
         UNUserNotificationCenter.current().getPendingNotificationRequests { [weak self] requests in
@@ -264,7 +264,7 @@ final class WatchMonitor {
 
             defaults.set(true, forKey: lowBatteryAlertShownKey)
         } else {
-            // Battery recovered — reset so we can alert again next cycle
+            // Battery recovered. reset so we can alert again next cycle
             defaults.set(false, forKey: lowBatteryAlertShownKey)
         }
     }
@@ -276,7 +276,7 @@ final class WatchMonitor {
 
     // MARK: - Foreground Re-evaluation
 
-    /// Called on foreground return — supplementary check, not the primary mechanism.
+    /// Called on foreground return. supplementary check, not the primary mechanism.
     /// The real work happens via background delivery above.
     func evaluateWatchStatus() {
         onHeartRateDelivery()

@@ -62,7 +62,7 @@ struct RHRTrajectoryAnalyzer {
                 insights.append(InsightFactory.make(
                     metric: .restingHeartRate,
                     title: "Resting Heart Rate Rising",
-                    summary: "Your resting heart rate has increased by \(String(format: "%.1f", abs(totalChange))) bpm over the past \(window.label) — from \(String(format: "%.0f", startRHR)) to \(String(format: "%.0f", currentRHR)) bpm — without a decline in your activity levels.",
+                    summary: "Your resting heart rate has increased by \(String(format: "%.1f", abs(totalChange))) bpm over the past \(window.label). from \(String(format: "%.0f", startRHR)) to \(String(format: "%.0f", currentRHR)) bpm. without a decline in your activity levels.",
                     recommendation: "Research on 692,000+ adults shows a rising resting heart rate is a stronger predictor of cardiovascular events than hypertension. A \(String(format: "%.1f", abs(totalChange))) bpm rise over \(window.label) while maintaining activity warrants attention.\(totalChange >= 3 ? " Consider discussing this trajectory with your doctor." : "")",
                     severity: severity,
                     trend: .declining,
@@ -86,7 +86,7 @@ struct RHRTrajectoryAnalyzer {
                 insights.append(InsightFactory.observation(
                     metric: .restingHeartRate,
                     title: "Heart Rate Trajectory Improving",
-                    summary: "Your resting heart rate has dropped \(String(format: "%.1f", abs(totalChange))) bpm over the past \(window.label) — from \(String(format: "%.0f", startRHR)) to \(String(format: "%.0f", currentRHR)) bpm. This trajectory is associated with reduced cardiovascular risk.",
+                    summary: "Your resting heart rate has dropped \(String(format: "%.1f", abs(totalChange))) bpm over the past \(window.label). from \(String(format: "%.0f", startRHR)) to \(String(format: "%.0f", currentRHR)) bpm. This trajectory is associated with reduced cardiovascular risk.",
                     recommendation: "A declining RHR trajectory reflects improved cardiovascular efficiency. Each 1 bpm decrease in long-term RHR is independently associated with reduced all-cause mortality risk across multiple cohort studies.",
                     currentValue: currentRHR,
                     baselineValue: startRHR,

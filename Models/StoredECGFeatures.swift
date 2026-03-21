@@ -14,7 +14,7 @@ final class StoredECGFeatures {
     var rmssd: Double        // Root mean square of successive differences (ms)
     var pnn50: Double        // Percentage of successive intervals differing > 50ms
 
-    // Waveform features (optional — may not be derivable from all recordings)
+    // Waveform features (optional. may not be derivable from all recordings)
     var qrsWidth: Double?        // QRS complex width (ms)
     var qtcInterval: Double?     // Corrected QT interval (ms, Bazett)
 

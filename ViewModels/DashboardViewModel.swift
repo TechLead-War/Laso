@@ -42,10 +42,10 @@ final class DashboardViewModel {
     private var lastConnectivityRecoverySync: Date?
     @MainActor private var refreshRunToken = UUID()
 
-    /// Previous trend directions — used for trend reversal detection
+    /// Previous trend directions. used for trend reversal detection
     private var previousTrends: [HealthMetric: TrendDirection] = [:]
 
-    /// Cached daily action — computed once per calendar day (or after analysis refresh)
+    /// Cached daily action. computed once per calendar day (or after analysis refresh)
     @MainActor private var _cachedDailyAction: SmartAction?
     @MainActor private var _cachedDailyActionDate: Date?
 
@@ -127,7 +127,7 @@ final class DashboardViewModel {
 
     @Observable
     final class InsightState {
-        /// Raw health focuses from encrypted store — cached to avoid repeated Keychain + AES-GCM decryption.
+        /// Raw health focuses from encrypted store. cached to avoid repeated Keychain + AES-GCM decryption.
         fileprivate(set) var cachedHealthFocuses: Set<HealthFocus> = []
         fileprivate(set) var cachedFocusCategories: Set<HealthCategory> = []
         fileprivate(set) var cachedFocusedInsights: [Insight] = []
@@ -175,6 +175,9 @@ final class DashboardViewModel {
         fileprivate(set) var crossMetricAnomalies: [CrossMetricAnomalyDetector.CrossMetricAnomaly] = []
         fileprivate(set) var causalChains: [CausalChain] = []
         fileprivate(set) var topCausalChain: CausalChain?
+        fileprivate(set) var compoundInsights: [CompoundInsightEngine.CompoundInsight] = []
+        fileprivate(set) var interactionEffects: [InteractionEffectEngine.InteractionEffect] = []
+        fileprivate(set) var doseResponseCurves: [InteractionEffectEngine.DoseResponseCurve] = []
         fileprivate(set) var dataDepth: (metricsTracked: Int, totalDataPoints: Int, daysOfData: Int) = (0, 0, 0)
     }
 
@@ -488,7 +491,7 @@ final class DashboardViewModel {
     let strainCoach = StrainCoach()
     let todayIntelligenceEngine = TodayIntelligenceEngine()
 
-    /// Intelligence briefing cards — non-obvious findings from ML algorithms
+    /// Intelligence briefing cards. non-obvious findings from ML algorithms
     @MainActor var intelligenceBriefing: [IntelligenceCard] = []
 
     // MARK: - Research-Backed Feature State (Papers 1-10)
@@ -514,14 +517,14 @@ final class DashboardViewModel {
         appStateStore: AppStateStore = AppStateStore(),
         intentCacheStore: IntentCacheStore = IntentCacheStore(),
         smartActionAdvisor: DashboardSmartActionAdvisor = DashboardSmartActionAdvisor(),
-        housekeepingService: DashboardHousekeepingService? = nil,
+        housekeepingService: DashboardHousekeepingService,
         derivedStateBuilder: DashboardDerivedStateBuilder = DashboardDerivedStateBuilder()
     ) {
         self.persistence = persistence
         self.appStateStore = appStateStore
         self.intentCacheStore = intentCacheStore
         self.smartActionAdvisor = smartActionAdvisor
-        self.housekeepingService = housekeepingService ?? DashboardHousekeepingService(persistenceManager: persistence)
+        self.housekeepingService = housekeepingService
         self.derivedStateBuilder = derivedStateBuilder
         ui = UIState(appStateStore: appStateStore)
         self.healthKitManager = healthKitManager
@@ -581,7 +584,7 @@ final class DashboardViewModel {
         )
         ui.hasCompletedInitialLoad = true
 
-        // Day 0 discovery generation — after refresh so all data is available.
+        // Day 0 discovery generation. after refresh so all data is available.
         // Skipped when onboarding already provides a dedicated calibration flow.
         if ui.isFirstLaunchSync && !skipDiscovery {
             ui.syncPhase = .discovering
@@ -647,7 +650,7 @@ final class DashboardViewModel {
 
     /// Refresh data from HealthKit, sync to on-device store, and re-run analysis.
     /// Skips the heavy analysis pipeline if no new data arrived and we analyzed recently.
-    /// Note: Does NOT manage `isLoading` — callers (`load()`, `.refreshable`) manage their own loading state.
+    /// Note: Does NOT manage `isLoading`. callers (`load()`, `.refreshable`) manage their own loading state.
     func refresh(
         awaitDeferredAnalysis: Bool = false,
         forceHeavyDeferred: Bool = false,
@@ -682,11 +685,11 @@ final class DashboardViewModel {
 
         let ts = healthKitManager.timeSeries
         async let cycleFlowSamplesTask = healthKitManager.fetchMenstrualFlowSamples(days: 365)
-        // Fetch raw per-sample HR for today — needed for accurate strain zone classification.
+        // Fetch raw per-sample HR for today. needed for accurate strain zone classification.
         // The stored time series only has daily averages, losing per-minute granularity.
         async let todayRawHRTask = healthKitManager.fetchTodayRawHeartRateSamples()
 
-        // Phase 1: Core analysis — scores, trends, baselines (blocks until done, UI needs these)
+        // Phase 1: Core analysis. scores, trends, baselines (blocks until done, UI needs these)
         // Pass user's onboarding focus categories so focused areas weigh more in scoring.
         // Use cached focuses if available; otherwise load once (first refresh before updateCachedProperties runs).
         let focusCats: Set<HealthCategory>
@@ -713,7 +716,7 @@ final class DashboardViewModel {
                 categoryScores: analysisEngine.categoryScores,
                 baselines: analysisEngine.baselines
             )
-            // Invalidate score history cache after saving — the new snapshot is now part of the data
+            // Invalidate score history cache after saving. the new snapshot is now part of the data
             invalidateScoreHistoryCache()
             updateCachedProperties()
             computeNewEngines(todayRawHR: todayRawHR)
@@ -731,7 +734,7 @@ final class DashboardViewModel {
         previousTrends = analysisEngine.trends.mapValues { $0.direction }
 
         // Phase 2: Deferred analysis + housekeeping (fire-and-forget background)
-        // Insight generators, health risks, notifications, analytics — all non-blocking
+        // Insight generators, health risks, notifications, analytics. all non-blocking
         let currentScore = overallScore.score
         let currentAnomalies = analysisEngine.anomalies
         let currentTrends = analysisEngine.trends
@@ -772,13 +775,13 @@ final class DashboardViewModel {
             )
 
             guard await MainActor.run(resultType: Bool.self, body: { self.refreshRunToken == refreshToken }) else { return }
-            // ML pipeline — runs after rule-based analysis completes
+            // ML pipeline. runs after rule-based analysis completes
             await runMLPhase(timeSeries: ts)
 
             return
         }
 
-        // Phase 2A: Essential insights — lightweight (~15K ops), runs immediately
+        // Phase 2A: Essential insights. lightweight (~15K ops), runs immediately
         let cycleFlowSamples = await cycleFlowSamplesTask
 
         // Compute menstrual cycle if applicable
@@ -797,20 +800,20 @@ final class DashboardViewModel {
             await MainActor.run { self.updateCachedProperties() }
         }
 
-        // Phase 2B: Heavy analysis + housekeeping — delayed for thermal relief
+        // Phase 2B: Heavy analysis + housekeeping. delayed for thermal relief
         Task.detached(priority: .background) { [weak self, prevTrends] in
             guard let self else { return }
             let analysisEngine = self.analysisEngine
             let logger = Logger(subsystem: "com.healthpulse", category: "Dashboard")
 
-            // Thermal break — let CPU cool after core + essentials
+            // Thermal break. let CPU cool after core + essentials
             try? await Task.sleep(for: .seconds(10))
             guard !Task.isCancelled else { return }
             guard await MainActor.run(resultType: Bool.self, body: { self.refreshRunToken == refreshToken }) else { return }
 
-            // Gate on thermal state — skip heavy work entirely if device is overheating
+            // Gate on thermal state. skip heavy work entirely if device is overheating
             if ThermalManager.shared.shouldThrottle {
-                logger.warning("Skipping deferred heavy analysis — thermal state is elevated")
+                logger.warning("Skipping deferred heavy analysis. thermal state is elevated")
                 return
             }
 
@@ -846,7 +849,7 @@ final class DashboardViewModel {
             )
             guard await MainActor.run(resultType: Bool.self, body: { self.refreshRunToken == refreshToken }) else { return }
 
-            // ML pipeline — runs after rule-based analysis completes
+            // ML pipeline. runs after rule-based analysis completes
             await self.runMLPhase(timeSeries: ts)
         }
     }
@@ -866,7 +869,7 @@ final class DashboardViewModel {
         let currentCorrelations = analysisEngine.correlations
 
         // Score trajectory + baseline drift insights (need stored history)
-        // Store is @MainActor — hop to main actor for SwiftData reads
+        // Store is @MainActor. hop to main actor for SwiftData reads
         let scoreHistory = await MainActor.run { scoreHistoryCached(days: 60) }
         let trajectoryInsights = ScoreTrajectoryAnalyzer.generateInsights(
             scoreHistory: scoreHistory,
@@ -941,7 +944,7 @@ final class DashboardViewModel {
     /// Runs the on-device ML analysis pipeline after rule-based analysis completes.
     /// Uses score history from SwiftData and anomaly counts derived from stored snapshots.
     private func runMLPhase(timeSeries: [HealthMetric: MetricTimeSeries]) async {
-        // Use cached score history — already fetched earlier in the refresh cycle
+        // Use cached score history. already fetched earlier in the refresh cycle
         let scoreHistory = await MainActor.run { scoreHistoryCached() }
 
         // Build anomaly counts per day from stored analysis snapshots.
@@ -957,7 +960,7 @@ final class DashboardViewModel {
 
         guard !RemoteConfigManager.shared.killMLPipeline else { return }
 
-        // Use cached focus categories — already loaded by refresh() or updateCachedProperties()
+        // Use cached focus categories. already loaded by refresh() or updateCachedProperties()
         let focusCats = insights.cachedFocusCategories
         await analysisEngine.runMLAnalysis(
             timeSeries: timeSeries,
@@ -972,7 +975,7 @@ final class DashboardViewModel {
 
     @MainActor
     private func updateCachedProperties() {
-        // Cache raw focuses + derived categories (Keychain + AES-GCM decrypt — do once, not per view access)
+        // Cache raw focuses + derived categories (Keychain + AES-GCM decrypt. do once, not per view access)
         let focuses = persistence.loadHealthFocuses()
         insights.cachedHealthFocuses = focuses
         insights.cachedFocusCategories = HealthFocus.categories(for: focuses)
@@ -1012,6 +1015,9 @@ final class DashboardViewModel {
         analysis.crossMetricAnomalies = analysisEngine.crossMetricAnomalies
         analysis.causalChains = analysisEngine.causalChains
         analysis.topCausalChain = analysisEngine.causalChains.first
+        analysis.compoundInsights = analysisEngine.mlOrchestrator.compoundInsights
+        analysis.interactionEffects = analysisEngine.mlOrchestrator.interactionEffects
+        analysis.doseResponseCurves = analysisEngine.mlOrchestrator.doseResponseCurves
 
         // Update data depth
         let series = healthKitManager.timeSeries
@@ -1059,7 +1065,7 @@ final class DashboardViewModel {
         let timeSeries = healthKitManager.timeSeries
         let sleepSeries = timeSeries[.sleepDuration]
 
-        // Strain — pass raw per-sample HR for accurate zone classification,
+        // Strain. pass raw per-sample HR for accurate zone classification,
         // and in-memory time series for freshest data (avoids SwiftData read lag).
         strainScorer.compute(
             from: store,
@@ -1080,7 +1086,7 @@ final class DashboardViewModel {
         // Stress
         stressScorer.compute(from: store, timeSeries: timeSeries)
 
-        // Brain Health — pass in-memory timeSeries for guaranteed freshness
+        // Brain Health. pass in-memory timeSeries for guaranteed freshness
         brainHealthScorer.compute(from: store, timeSeries: timeSeries)
 
         // Sleep debt
@@ -1107,10 +1113,10 @@ final class DashboardViewModel {
             timeSeries: timeSeries
         )
 
-        // Vitality Age — pass in-memory timeSeries for guaranteed freshness
+        // Vitality Age. pass in-memory timeSeries for guaranteed freshness
         vitalityScorer.compute(from: store, chronologicalAge: age, timeSeries: timeSeries)
 
-        // Menstrual cycle — female users + explicit onboarding opt-in.
+        // Menstrual cycle. female users + explicit onboarding opt-in.
         // Backward compatibility: if preference is absent (older installs), keep prior behavior.
         let isFemale = profile?.gender == .female
         let cyclePreference = UserDefaults.standard.object(forKey: AppKeys.Cycle.trackingEnabled) as? Bool
@@ -1255,7 +1261,7 @@ final class DashboardViewModel {
             let improving = metric.higherIsBetter ? change > 0 : change < 0
             let direction = change > 0 ? "up" : "down"
             let rec = improving
-                ? "Good trend — keep it going this week."
+                ? "Good trend. keep it going this week."
                 : RulesConfiguration.recommendation(for: metric, severity: .warning, trend: .declining)
 
             highlights.append(HistoricalHighlight(
@@ -1335,7 +1341,7 @@ final class DashboardViewModel {
     }
 
     /// Single source of truth for what to do today.
-    /// Cached per calendar day — stable within a day, refreshed on new day or after analysis re-run.
+    /// Cached per calendar day. stable within a day, refreshed on new day or after analysis re-run.
     @MainActor
     func smartDailyAction(liveVM: LiveViewModel) -> SmartAction {
         let today = Calendar.current.startOfDay(for: Date())
@@ -1377,7 +1383,7 @@ final class DashboardViewModel {
             subtitle: recommendation.subtitle,
             source: recommendation.source,
             rationale: recommendation.rationale,
-            supportingInsights: Array(sortedInsights.prefix(5))
+            supportingInsights: Array(sortedInsights.prefix(2))
         )
 
         _cachedDailyAction = action
@@ -1387,7 +1393,7 @@ final class DashboardViewModel {
         return action
     }
 
-    /// Invalidate the cached daily action — called after analysis refresh so new data takes effect.
+    /// Invalidate the cached daily action. called after analysis refresh so new data takes effect.
     @MainActor
     func invalidateDailyActionCache() {
         _cachedDailyAction = nil
@@ -1449,7 +1455,7 @@ final class DashboardViewModel {
             updatedAt: Date()
         )
 
-        // Sleep — pull from latest time series if available
+        // Sleep. pull from latest time series if available
         let sleepSeries = healthKitManager.timeSeries[.sleepDuration]
         let sleepHours = sleepSeries?.latestValue ?? 0
         let sleep = WidgetSleepSnapshot(
@@ -1460,7 +1466,7 @@ final class DashboardViewModel {
             updatedAt: Date()
         )
 
-        // Action — from daily action cache
+        // Action. from daily action cache
         let actionText = _cachedDailyAction
         let action = actionText.map {
             WidgetActionSnapshot(
@@ -1471,7 +1477,7 @@ final class DashboardViewModel {
             )
         }
 
-        // Intelligence — top card
+        // Intelligence. top card
         let intelligence = intelligenceBriefing.first.map {
             WidgetIntelligenceSnapshot(
                 headline: $0.headline,
@@ -1645,16 +1651,29 @@ final class DashboardViewModel {
         return max(0, min(100, base + subjectiveReadinessAdjustment))
     }
 
-    /// Run NL health query (Papers 1 & 2: PHIA)
+    /// Run NL health query (Papers 1 & 2: PHIA). uses full ML pipeline context
     func queryHealthData(_ question: String) -> HealthDataQueryEngine.QueryResult {
-        analysisEngine.mlOrchestrator.healthDataQueryEngine.query(
-            question: question,
+        let orch = analysisEngine.mlOrchestrator
+        let ctx = HealthDataQueryEngine.QueryContext(
             timeSeries: healthKitManager.timeSeries,
             baselines: analysisEngine.baselines,
             trends: analysisEngine.trends,
-            correlations: analysisEngine.mlOrchestrator.mlCorrelations,
-            forecasts: analysisEngine.mlOrchestrator.multiHorizonForecasts
+            correlations: orch.mlCorrelations,
+            forecasts: orch.multiHorizonForecasts,
+            healthSignalReport: orch.healthSignalReport,
+            currentHealthState: orch.currentHealthState,
+            discoveredPatterns: orch.discoveredPatterns,
+            circadianProfile: orch.circadianProfile,
+            timingRecommendations: orch.timingRecommendations,
+            optimalProfile: orch.optimalProfile,
+            idealDay: orch.idealDay,
+            scoreSensitivities: orch.scoreSensitivities,
+            tomorrowRiskPrediction: orch.tomorrowRiskPrediction,
+            compoundInsights: orch.compoundInsights,
+            temporalSequences: orch.temporalSequences,
+            overallScore: scores.overallScore.score
         )
+        return orch.healthDataQueryEngine.query(question: question, context: ctx)
     }
 
     /// Assess current receptivity for nudge delivery (Paper 5 & 6: JITAI)
