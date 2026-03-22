@@ -5,7 +5,18 @@ struct TodaysActionDetailView: View {
     let action: DashboardViewModel.SmartAction
     let policyDecision: PolicyDecision?
     let readinessScore: Int
+    let workoutRecoveryBand: WorkoutRecoveryBand
+    let cyclePhase: CyclePhaseModifier?
     let onTapMetric: (HealthMetric) -> Void
+
+    @State private var isShowingWorkoutPlan = false
+
+    private var todayWorkoutPlan: WorkoutPlan {
+        WorkoutProgrammer.generatePlan(
+            recoveryBand: workoutRecoveryBand,
+            cyclePhase: cyclePhase
+        )
+    }
 
     var body: some View {
         ScrollView {
@@ -25,6 +36,9 @@ struct TodaysActionDetailView: View {
                         }
                     }
 
+                    // Today's Workout
+                    todayWorkoutSection
+
                     // Supporting insights
                     if !action.supportingInsights.isEmpty {
                         insightsSection
@@ -38,6 +52,16 @@ struct TodaysActionDetailView: View {
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("Today's Action")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $isShowingWorkoutPlan) {
+            NavigationStack {
+                WorkoutPlanSheet(
+                    plan: todayWorkoutPlan,
+                    recoveryBand: workoutRecoveryBand,
+                    cyclePhase: cyclePhase
+                )
+            }
+            .presentationDetents([.large])
+        }
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.todaysActionDetail, metadata: [
                 "source": action.source,
@@ -93,7 +117,7 @@ struct TodaysActionDetailView: View {
         let rationale = effectiveRationale
         return Group {
             if !rationale.isEmpty {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 8) {
                         Image(systemName: "lightbulb.fill")
                             .font(.subheadline.weight(.semibold))
@@ -102,29 +126,31 @@ struct TodaysActionDetailView: View {
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.primary)
                     }
+                    .padding(.horizontal)
 
-                    Text(rationale)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(rationale)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
 
-                    // Confidence indicator
-                    if let decision = policyDecision, decision.decisionConfidence >= 0.3 {
-                        HStack(spacing: 6) {
-                            Circle()
-                                .fill(confidenceColor(decision.decisionConfidence))
-                                .frame(width: 8, height: 8)
-                            Text("\(confidenceLabel(decision.decisionConfidence)) confidence")
-                                .font(.caption)
-                                .foregroundStyle(.tertiary)
+                        // Confidence indicator
+                        if let decision = policyDecision, decision.decisionConfidence >= 0.3 {
+                            HStack(spacing: 6) {
+                                Circle()
+                                    .fill(confidenceColor(decision.decisionConfidence))
+                                    .frame(width: 8, height: 8)
+                                Text("\(confidenceLabel(decision.decisionConfidence)) confidence")
+                                    .font(.caption)
+                                    .foregroundStyle(.tertiary)
+                            }
                         }
-                        .padding(.top, 2)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(DS.cardPadding + 2)
+                    .cardStyle()
+                    .padding(.horizontal)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(DS.cardPadding + 2)
-                .cardStyle()
-                .padding(.horizontal)
             }
         }
     }
@@ -238,6 +264,42 @@ struct TodaysActionDetailView: View {
         }
         .padding(DS.cardPadding)
         .cardStyle()
+    }
+
+    // MARK: - Today's Workout
+
+    private var todayWorkoutSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "figure.run.circle.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.orange)
+                Text("Today's Workout")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
+            }
+            .padding(.horizontal)
+
+            TodayWorkoutCard(
+                plan: todayWorkoutPlan,
+                recoveryBand: workoutRecoveryBand,
+                cyclePhase: cyclePhase
+            ) {
+                AppAnalytics.shared.trackWorkoutPlanOpened(
+                    plan: todayWorkoutPlan,
+                    recoveryBand: workoutRecoveryBand,
+                    cyclePhase: cyclePhase,
+                    screen: .todaysActionDetail
+                )
+                AppAnalytics.shared.trackRecommendationViewed(
+                    type: "todays_action_workout_plan",
+                    metric: todayWorkoutPlan.zone.rawValue,
+                    difficulty: workoutRecoveryBand.rawValue
+                )
+                isShowingWorkoutPlan = true
+            }
+            .padding(.horizontal)
+        }
     }
 
     // MARK: - Helpers

@@ -282,10 +282,13 @@ struct ContentView: View {
         case .journalEntry:
             JournalEntryView()
         case .todaysAction:
+            let readinessScore = liveViewModel.recovery.readinessScore ?? dashboardViewModel.overallScore.score
             TodaysActionDetailView(
                 action: dashboardViewModel.smartDailyAction(liveVM: liveViewModel),
                 policyDecision: dashboardViewModel.analysisEngine.mlOrchestrator.policyDecision,
-                readinessScore: liveViewModel.recovery.readinessScore ?? dashboardViewModel.overallScore.score,
+                readinessScore: readinessScore,
+                workoutRecoveryBand: WorkoutRecoveryBand(score: readinessScore),
+                cyclePhase: dashboardViewModel.menstrualCycleTracker.currentCycle?.currentPhase.workoutModifier,
                 onTapMetric: { metric in navigationPath.append(metric) }
             )
         case .askYourData:

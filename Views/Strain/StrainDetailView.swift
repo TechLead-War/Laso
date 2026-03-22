@@ -62,17 +62,9 @@ struct StrainDetailView: View {
     private let maxStrain: Double = 21.0
 
     @State private var animatedProgress: Double = 0
-    @State private var isShowingWorkoutPlan = false
 
     private var progress: Double {
         min(strainValue / maxStrain, 1.0)
-    }
-
-    private var todayWorkoutPlan: WorkoutPlan {
-        WorkoutProgrammer.generatePlan(
-            recoveryBand: workoutRecoveryBand,
-            cyclePhase: cyclePhase
-        )
     }
 
     var body: some View {
@@ -87,18 +79,15 @@ struct StrainDetailView: View {
                 // 3. Strain Coach
                 coachSection
 
-                // 4. Today's Workout
-                todayWorkoutSection
-
-                // 5. HR Zone breakdown
+                // 4. HR Zone breakdown
                 zoneBreakdownSection
 
-                // 6. 7-day history
+                // 5. 7-day history
                 if !weekHistory.isEmpty {
                     historySection
                 }
 
-                // 7. Disclaimer
+                // 6. Disclaimer
                 disclaimerNote
             }
             .padding(.bottom, 24)
@@ -106,24 +95,8 @@ struct StrainDetailView: View {
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle(Copy.Strain.title)
         .navigationBarTitleDisplayMode(.large)
-        .sheet(isPresented: $isShowingWorkoutPlan) {
-            NavigationStack {
-                WorkoutPlanSheet(
-                    plan: todayWorkoutPlan,
-                    recoveryBand: workoutRecoveryBand,
-                    cyclePhase: cyclePhase
-                )
-            }
-            .presentationDetents([.large])
-        }
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.strainDetail)
-            AppAnalytics.shared.trackWorkoutPlanGenerated(
-                plan: todayWorkoutPlan,
-                recoveryBand: workoutRecoveryBand,
-                cyclePhase: cyclePhase,
-                screen: .strainDetail
-            )
         }
         .onDisappear {
             AppAnalytics.shared.trackFeatureClose(.strainDetail)
@@ -324,35 +297,7 @@ struct StrainDetailView: View {
         }
     }
 
-    // MARK: - 4. Today's Workout
-
-    private var todayWorkoutSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            sectionHeader(icon: "figure.run.circle.fill", title: "Today's Workout")
-
-            TodayWorkoutCard(
-                plan: todayWorkoutPlan,
-                recoveryBand: workoutRecoveryBand,
-                cyclePhase: cyclePhase
-            ) {
-                AppAnalytics.shared.trackWorkoutPlanOpened(
-                    plan: todayWorkoutPlan,
-                    recoveryBand: workoutRecoveryBand,
-                    cyclePhase: cyclePhase,
-                    screen: .strainDetail
-                )
-                AppAnalytics.shared.trackRecommendationViewed(
-                    type: "strain_detail_workout_plan",
-                    metric: todayWorkoutPlan.zone.rawValue,
-                    difficulty: workoutRecoveryBand.rawValue
-                )
-                isShowingWorkoutPlan = true
-            }
-            .padding(.horizontal)
-        }
-    }
-
-    // MARK: - 5. HR Zone Breakdown
+    // MARK: - 4. HR Zone Breakdown
 
     private var zoneBreakdownSection: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -421,7 +366,7 @@ struct StrainDetailView: View {
         .padding(.vertical, 11)
     }
 
-    // MARK: - 6. 7-Day History
+    // MARK: - 5. 7-Day History
 
     private var historySection: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -501,7 +446,7 @@ struct StrainDetailView: View {
         }
     }
 
-    // MARK: - 7. Disclaimer
+    // MARK: - 6. Disclaimer
 
     private var disclaimerNote: some View {
         HStack(alignment: .top, spacing: 8) {
