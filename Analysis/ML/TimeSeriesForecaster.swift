@@ -308,6 +308,7 @@ final class TimeSeriesForecaster {
     ) -> FourierDecomposition? {
         let n = values.count
         guard n > 0 else { return nil }
+        guard harmonics > 0, periods.allSatisfy({ $0 > 0 }) else { return nil }
 
         // Total number of Fourier terms: 2 * harmonics per period (cos + sin) + 1 for intercept
         let numFourierTerms = periods.count * harmonics * 2

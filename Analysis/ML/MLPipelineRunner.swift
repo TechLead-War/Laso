@@ -63,17 +63,17 @@ final class MLPipelineRunner {
         input: PipelineInput,
         components: Components,
         needsFullRetrain: Bool,
-        cachedVectorsSetter: ([DailyFeatureVector]) -> Void
+        cachedVectorsSetter: @escaping @Sendable ([DailyFeatureVector]) -> Void
     ) async -> PipelineOutput? {
         let thermalState = ProcessInfo.processInfo.thermalState
-        if thermalState == .critical {
-            logger.warning("Skipping ML analysis: device thermal state is critical")
+        if thermalState == .critical || thermalState == .serious {
+            logger.warning("Skipping ML analysis: device thermal state is \(thermalState == .critical ? "critical" : "serious")")
             return nil
         }
-        if thermalState == .serious {
-            logger.info("ML analysis starting under serious thermal state. will throttle between components")
-        }
 
+        // Explicitly run heavy ML computation at background priority to target E-cores,
+        // reducing thermal impact even when caller is at higher QoS (e.g., calibration path).
+        return await Task.detached(priority: .background) { [self] in
         var output = PipelineOutput()
 
         // Step 0: Build feature vectors (required by most components)
@@ -106,15 +106,13 @@ final class MLPipelineRunner {
             metricsTracked: input.timeSeries.count
         )
 
-        // Step 0a: Enrich feature vectors with composite features
-        logger.debug("Building composite features")
-        output.enrichedVectors = CompositeFeatureEngine.enrich(
-            vectors: vectors,
-            timeSeries: input.timeSeries,
-            baselines: input.baselines
-        )
+        // Step 0a: Composite feature enrichment skipped — enrichedVectors are assigned
+        // to MLOrchestrator then immediately cleared (line 233) with no downstream consumer.
+        // Removing this eliminates 12 composite features × all historical days of wasted work.
 
-        if await shouldStopForThermal(after: "CompositeFeatureEngine") { output.stoppedEarly = true; return output }
+        if await shouldStopForThermal(after: "FeatureEngine") { output.stoppedEarly = true; return output }
+
+        let thermal = ThermalManager.shared
 
         // --- 1. TimeSeriesForecaster (21+ days) ---
         if totalDays >= TimeSeriesForecaster.minimumDays {
@@ -143,8 +141,8 @@ final class MLPipelineRunner {
 
         if await shouldStopForThermal(after: "PredictiveScorer") { output.stoppedEarly = true; return output }
 
-        // --- 3. CorrelationDiscovery (30+ days) ---
-        if totalDays >= CorrelationDiscovery.minimumDays {
+        // --- 3. CorrelationDiscovery (30+ days, tier 1) ---
+        if thermal.shouldRunComponent(tier: 1), totalDays >= CorrelationDiscovery.minimumDays {
             if components.correlationDiscovery.needsRetrain || !components.correlationDiscovery.isReady {
                 logger.debug("Running CorrelationDiscovery")
                 components.correlationDiscovery.discover(timeSeries: input.timeSeries)
@@ -154,8 +152,8 @@ final class MLPipelineRunner {
 
         if await shouldStopForThermal(after: "CorrelationDiscovery") { output.stoppedEarly = true; return output }
 
-        // --- 4. HealthStateClassifier (60+ days) ---
-        if totalDays >= HealthStateClassifier.minimumDays {
+        // --- 4. HealthStateClassifier (60+ days, tier 1) ---
+        if thermal.shouldRunComponent(tier: 1), totalDays >= HealthStateClassifier.minimumDays {
             if components.stateClassifier.needsRetrain || !components.stateClassifier.isReady {
                 logger.debug("Running HealthStateClassifier")
                 components.stateClassifier.train(vectors: vectors, orderedKeys: orderedKeys)
@@ -165,8 +163,8 @@ final class MLPipelineRunner {
 
         if await shouldStopForThermal(after: "HealthStateClassifier") { output.stoppedEarly = true; return output }
 
-        // --- 5. PatternMiner (60+ days) ---
-        if totalDays >= PatternMiner.minimumDays {
+        // --- 5. PatternMiner (60+ days, tier 1) ---
+        if thermal.shouldRunComponent(tier: 1), totalDays >= PatternMiner.minimumDays {
             if !components.patternMiner.isReady || needsFullRetrain {
                 logger.debug("Running PatternMiner")
                 components.patternMiner.mine(timeSeries: input.timeSeries)
@@ -176,8 +174,8 @@ final class MLPipelineRunner {
 
         if await shouldStopForThermal(after: "PatternMiner") { output.stoppedEarly = true; return output }
 
-        // --- 6. AdaptiveAnomalyDetector (60+ days) ---
-        if totalDays >= AdaptiveAnomalyDetector.minimumDays {
+        // --- 6. AdaptiveAnomalyDetector (60+ days, tier 1) ---
+        if thermal.shouldRunComponent(tier: 1), totalDays >= AdaptiveAnomalyDetector.minimumDays {
             if components.anomalyDetector.needsRetrain || !components.anomalyDetector.isReady {
                 logger.debug("Running AdaptiveAnomalyDetector")
                 components.anomalyDetector.train(vectors: vectors, orderedKeys: orderedKeys, baselines: input.baselines)
@@ -223,16 +221,11 @@ final class MLPipelineRunner {
             }
         }
 
-        // --- 6c. Multivariate Granger (after pairwise correlations, 45+ days) ---
-        if totalDays >= 45 && components.correlationDiscovery.isReady {
-            logger.debug("Running multivariate Granger")
-            output.multivariateResults = Self.runMultivariateGranger(
-                timeSeries: input.timeSeries,
-                correlations: components.correlationDiscovery.correlations
-            )
-        }
+        // --- 6c. Multivariate Granger skipped — multivariateResults stored on MLOrchestrator
+        // but never read by any ViewModel, View, or downstream system. Removing this
+        // eliminates O(N³) OLS regression per target metric of wasted CPU.
 
-        if await shouldStopForThermal(after: "MultivariateGranger") { output.stoppedEarly = true; return output }
+        if await shouldStopForThermal(after: "PipelineStep6") { output.stoppedEarly = true; return output }
 
         // --- 7. Predictive Health Signals (7+ days for fatigue, more for others) ---
         logger.debug("Running PredictiveHealthSignals")
@@ -251,14 +244,8 @@ final class MLPipelineRunner {
         let scoreMap: [(date: Date, score: Double)] = input.scoreHistory.map { (date: $0.date, score: Double($0.score)) }
         components.mlEvaluator.resolveExpiredEvents(timeSeries: input.timeSeries, scores: scoreMap)
 
-        output.driftAlerts = []
-        for component in ["PredictiveScorer", "TimeSeriesForecaster"] {
-            if let drift = components.mlEvaluator.detectModelDrift(componentName: component),
-               drift.isDrifting {
-                output.driftAlerts.append(drift)
-                logger.warning("Model drift detected in \(component): \(drift.recommendation)")
-            }
-        }
+        // Drift detection skipped — driftAlerts stored on MLOrchestrator but never read
+        // by any ViewModel, View, or notification system. Welch's t-test runs for nothing.
 
         for component in ["PredictiveScorer", "TimeSeriesForecaster", "HealthStateClassifier"] {
             if let eval = components.mlEvaluator.evaluateComponent(name: component, horizon: .nextDay) {
@@ -266,8 +253,10 @@ final class MLPipelineRunner {
             }
         }
 
-        // --- 9. InteractionEffectEngine (45+ days) ---
-        if totalDays >= InteractionEffectEngine.minimumDays {
+        // --- Tier 2 (Exploratory): Skipped under thermal pressure (.fair skips these) ---
+
+        // --- 9. InteractionEffectEngine (45+ days, tier 2) ---
+        if thermal.shouldRunComponent(tier: 2), totalDays >= InteractionEffectEngine.minimumDays {
             logger.debug("Running InteractionEffectEngine")
             output.interactionEffects = components.interactionEngine.discover(timeSeries: input.timeSeries, baselines: input.baselines)
             output.doseResponseCurves = components.interactionEngine.doseResponseCurves
@@ -275,8 +264,8 @@ final class MLPipelineRunner {
 
         if await shouldStopForThermal(after: "InteractionEffectEngine") { output.stoppedEarly = true; return output }
 
-        // --- 10. TemporalSequenceMiner (30+ days) ---
-        if totalDays >= TemporalSequenceMiner.minimumDays {
+        // --- 10. TemporalSequenceMiner (30+ days, tier 2) ---
+        if thermal.shouldRunComponent(tier: 2), totalDays >= TemporalSequenceMiner.minimumDays {
             logger.debug("Running TemporalSequenceMiner")
             components.temporalMiner.mine(
                 timeSeries: input.timeSeries,
@@ -290,8 +279,8 @@ final class MLPipelineRunner {
 
         if await shouldStopForThermal(after: "TemporalSequenceMiner") { output.stoppedEarly = true; return output }
 
-        // --- 11. ChangePointDetector (30+ days) ---
-        if totalDays >= ChangePointDetector.minimumDays {
+        // --- 11. ChangePointDetector (30+ days, tier 2) ---
+        if thermal.shouldRunComponent(tier: 2), totalDays >= ChangePointDetector.minimumDays {
             logger.debug("Running ChangePointDetector")
             components.changePointDetector.detect(timeSeries: input.timeSeries, baselines: input.baselines)
             output.changePoints = components.changePointDetector.changePoints
@@ -300,8 +289,8 @@ final class MLPipelineRunner {
 
         if await shouldStopForThermal(after: "ChangePointDetector") { output.stoppedEarly = true; return output }
 
-        // --- 12. PersonalOptimizer (21+ days, needs score history) ---
-        if totalDays >= PersonalOptimizer.minimumDays && !input.scoreHistory.isEmpty {
+        // --- 12. PersonalOptimizer (21+ days, tier 2) ---
+        if thermal.shouldRunComponent(tier: 2), totalDays >= PersonalOptimizer.minimumDays && !input.scoreHistory.isEmpty {
             logger.debug("Running PersonalOptimizer")
             components.personalOptimizer.analyze(
                 timeSeries: input.timeSeries,
@@ -317,17 +306,18 @@ final class MLPipelineRunner {
         if await shouldStopForThermal(after: "PersonalOptimizer") { output.stoppedEarly = true; return output }
 
         return output
+        }.value
     }
 
     func shouldStopForThermal(after component: String) async -> Bool {
         let state = ProcessInfo.processInfo.thermalState
-        if state == .critical {
-            logger.warning("Stopping ML analysis after \(component): thermal state critical")
+        if state == .critical || state == .serious {
+            logger.warning("Stopping ML pipeline after \(component): thermal state \(state == .critical ? "critical" : "serious"), returning partial results")
             return true
         }
-        if state == .serious {
-            logger.info("Thermal cooldown after \(component): state is serious, pausing 2s")
-            try? await Task.sleep(for: .seconds(2))
+        if state == .fair {
+            // Yield to let system cool slightly between components
+            try? await Task.sleep(for: .milliseconds(100))
         }
         await Task.yield()
         return false

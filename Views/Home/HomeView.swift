@@ -11,6 +11,7 @@ struct HomeView: View {
     @Binding var showSettings: Bool
     @Environment(\.scenePhase) private var scenePhase
 
+    @State private var thermalManager = ThermalManager.shared
     @State private var homeRefreshTimer = RepeatTimer()
     @State private var readinessRefreshTimer = RepeatTimer()
     @State private var weeklyReviewViewModel: WeeklyReviewViewModel?
@@ -71,16 +72,18 @@ struct HomeView: View {
             AppAnalytics.shared.trackCoreAction(.pulledToRefresh, screen: .home)
             await viewModel.refresh()
             liveViewModel.fetchHomeData()
+            rebuildMetricTilesFromLive()
         }
         .sensoryFeedback(.success, trigger: viewModel.lastRefresh)
+        .onChange(of: viewModel.lastRefresh) { _, _ in
+            rebuildMetricTilesFromLive()
+        }
         .onAppear {
             ensureWeeklyReviewVM()
             startHomeRefresh()
             startReadinessRefresh()
+            rebuildMetricTilesFromLive()
             showMorningCheckIn = MorningCheckInManager.shouldShowCheckIn()
-            viewModel.checkActivationMilestones()
-            viewModel.refreshHealthForecasts()
-            viewModel.refreshCircadianBiomarkers()
             if let checkIn = MorningCheckInManager.todaysCheckIn() {
                 viewModel.subjectiveReadinessAdjustment = checkIn.readinessAdjustment
             }
@@ -95,28 +98,37 @@ struct HomeView: View {
             }
             AppAnalytics.shared.trackFeatureClose(.home)
         }
-        .onChange(of: scenePhase) { _, newPhase in
+        .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .active {
                 startHomeRefresh()
                 startReadinessRefresh()
-                // Immediately refresh readiness on foreground return
-                liveViewModel.fetchHomeDataTiered()
+                // Only force an immediate fetch after true background return.
+                if oldPhase == .background {
+                    liveViewModel.fetchHomeDataTiered()
+                }
             } else {
                 stopHomeRefresh()
                 stopReadinessRefresh()
                 stopFirstLaunchDotTimer()
             }
         }
+        .onChange(of: thermalManager.currentState) { _, _ in
+            guard scenePhase == .active else { return }
+            startHomeRefresh()
+            startReadinessRefresh()
+        }
     }
 
     /// Periodically refresh home data. uses tiered polling to minimize HealthKit queries.
     /// Fast-changing data (steps, calories) every 60s; slow-changing (sleep, workout) every 10min.
     /// If timeSeries is empty (bad initial sync), retries the full sync instead of lightweight fetches.
-    private static let minHomeRefreshInterval: TimeInterval = 60
     private func startHomeRefresh() {
+        homeRefreshTimer.stop()
+
         let requestedInterval = TimeInterval(RemoteConfigManager.shared.homeRefreshIntervalSeconds)
-        let interval = max(requestedInterval, Self.minHomeRefreshInterval)
-        homeRefreshTimer.start(interval: interval) {
+        guard let interval = thermalManager.homeRefreshInterval(for: requestedInterval) else { return }
+
+        homeRefreshTimer.start(interval: interval, tolerance: min(60, interval * 0.25)) {
             if viewModel.needsSyncRetry {
                 Task { await viewModel.retrySyncIfNeeded() }
             } else {
@@ -141,21 +153,17 @@ struct HomeView: View {
         liveViewModel.recovery.readinessScore != nil
     }
 
-    /// Name of the lowest-scoring category for personalized score explanation
+    /// Name of the lowest-scoring category for personalized score explanation.
+    /// Cached in DashboardViewModel.updateCachedProperties() to avoid recomputing on every render.
     private var weakestCategoryName: String? {
-        viewModel.scores.categoryScores
-            .compactMap { s -> (String, Int)? in
-                guard let cat = s.category else { return nil }
-                return (cat.displayName, s.score)
-            }
-            .min(by: { $0.1 < $1.1 })?
-            .0
+        viewModel.cachedWeakestCategoryName
     }
 
-    private static let readinessRefreshInterval: TimeInterval = 30 * 60
-
     private func startReadinessRefresh() {
-        readinessRefreshTimer.start(interval: Self.readinessRefreshInterval, tolerance: 60) {
+        readinessRefreshTimer.stop()
+        guard let interval = thermalManager.liveReadinessRefreshInterval else { return }
+
+        readinessRefreshTimer.start(interval: interval, tolerance: min(120, interval * 0.2)) {
             liveViewModel.fetchHomeDataTiered()
         }
     }
@@ -171,6 +179,15 @@ struct HomeView: View {
         }
     }
 
+    /// Rebuild cached metric tiles, passing current live sleep data to the viewModel.
+    private func rebuildMetricTilesFromLive() {
+        viewModel.rebuildMetricTiles(
+            hasSleepData: liveViewModel.sleep.hasSleepData,
+            lastNightSleepDuration: liveViewModel.sleep.lastNightSleepDuration,
+            sleepQualityLabel: liveViewModel.sleep.sleepQualityLabel
+        )
+    }
+
     private var hasData: Bool {
         !viewModel.healthKitManager.timeSeries.isEmpty
     }
@@ -184,7 +201,7 @@ struct HomeView: View {
 
     private var homeContent: some View {
         ScrollView(.vertical) {
-            VStack(spacing: 0) {
+            LazyVStack(spacing: 0) {
                 // 1. Greeting header. context-aware with recovery state
                 CoachGreetingView(
                     showSettings: $showSettings,
@@ -254,9 +271,6 @@ struct HomeView: View {
                     // 2b. Body Intelligence. non-obvious ML findings
                     TodayBriefingView(cards: viewModel.intelligenceBriefing)
                         .padding(.top, 8)
-                        .onAppear {
-                            viewModel.refreshIntelligenceBriefing(liveVM: liveViewModel)
-                        }
 
                     // 2c. Personal Health Forecast (Paper 3: Conformal Prediction)
                     PersonalHealthForecastCard(
@@ -292,7 +306,7 @@ struct HomeView: View {
                         .onDisappear { illnessTracker.disappeared(); risksTracker.disappeared() }
 
                     // 4. Metric Strip. horizontal scroll replacing 6 vertical cards
-                    MetricStripView(tiles: buildMetricTiles()) { tile in
+                    MetricStripView(tiles: viewModel.cachedMetricTiles) { tile in
                         AppAnalytics.shared.trackBlockTap(
                             title: tile.label,
                             type: .recoveryCard,
@@ -529,76 +543,6 @@ struct HomeView: View {
             }
             .padding(.horizontal)
         }
-    }
-
-    // MARK: - Metric Strip Tile Builder
-
-    private func buildMetricTiles() -> [MetricTile] {
-        var tiles: [MetricTile] = []
-
-        // Vitality
-        let vDelta = viewModel.vitalityScorer.delta
-        let vBadge: String
-        if vDelta < 0 { vBadge = "\(abs(vDelta))y younger" }
-        else if vDelta > 0 { vBadge = "\(vDelta)y older" }
-        else { vBadge = "On track" }
-        let vColor: Color = vDelta <= 0 ? .green : (vDelta <= 3 ? .orange : .red)
-        tiles.append(MetricTile(
-            id: "vitality_detail", icon: "figure.run", label: "Vitality",
-            value: "\(viewModel.vitalityScorer.vitalityAge)",
-            badge: vBadge, color: vColor, route: .vitalityDetail
-        ))
-
-        // Sleep
-        if liveViewModel.sleep.hasSleepData {
-            let sleepHours = liveViewModel.sleep.lastNightSleepDuration / 3600
-            let h = Int(sleepHours)
-            let m = Int((sleepHours - Double(h)) * 60)
-            let sleepValue = h == 0 ? "\(m)m" : "\(h)h \(String(format: "%02d", m))m"
-            let qualityLabel = liveViewModel.sleep.sleepQualityLabel
-            let sleepTileColor: Color = qualityLabel == "Great" || qualityLabel == "Good" ? .indigo : .orange
-            tiles.append(MetricTile(
-                id: "sleep_coach", icon: "moon.fill", label: "Sleep",
-                value: sleepValue, badge: qualityLabel, color: sleepTileColor, route: .sleepCoach
-            ))
-        }
-
-        // Strain
-        let strain = viewModel.strainScorer
-        tiles.append(MetricTile(
-            id: "strain_detail", icon: "flame.fill", label: "Strain",
-            value: String(format: "%.1f", strain.currentStrain),
-            badge: strain.strainLevel.displayName, color: strain.strainLevel.color, route: .strainDetail
-        ))
-
-        // Brain Health
-        if let brain = viewModel.brainHealthScorer.currentScore {
-            let brainColor: Color = brain.score >= 80 ? .green : brain.score >= 65 ? .blue : brain.score >= 45 ? .gray : .orange
-            tiles.append(MetricTile(
-                id: "brain_health", icon: "brain", label: "Brain",
-                value: "\(brain.score)", badge: brain.state.displayName, color: brainColor, route: .brainHealth
-            ))
-        }
-
-        // Stress
-        if let stress = viewModel.stressScorer.currentStress {
-            tiles.append(MetricTile(
-                id: "stress_monitor", icon: "waveform.path.ecg", label: "Stress",
-                value: String(format: "%.1f", stress.score),
-                badge: stress.level.displayName, color: stress.level.color, route: .stressMonitor
-            ))
-        }
-
-        // Cycle
-        if let cycle = viewModel.menstrualCycleTracker.currentCycle {
-            tiles.append(MetricTile(
-                id: "cycle_detail", icon: cycle.currentPhase.icon, label: "Cycle",
-                value: "Day \(cycle.dayInCycle)",
-                badge: cycle.currentPhase.displayName, color: cycle.currentPhase.color, route: .cycleDetail
-            ))
-        }
-
-        return tiles
     }
 
     // MARK: - Today's Action Card (single source of truth)

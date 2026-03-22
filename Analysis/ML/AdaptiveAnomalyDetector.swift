@@ -56,6 +56,15 @@ final class AdaptiveAnomalyDetector {
     /// Baselines provided during training for context computation
     private var trainedBaselines: [HealthMetric: UserBaseline] = [:]
 
+    /// Cached per-feature training statistics (computed once in train(), reused in score()).
+    /// Eliminates 7x redundant full-dataset conversion + mean/std computation per pipeline.
+    private var cachedTrainingMeans: [Double] = []
+    private var cachedTrainingStds: [Double] = []
+    /// Cached global centroid for legacyContextualZScore fallback path
+    private var cachedCentroid: [Double] = []
+    private var cachedPeerDistanceMean: Double = 0
+    private var cachedPeerDistanceStd: Double = 0
+
     // MARK: - Context Buckets
 
     /// A context vector describing the conditions of a specific day
@@ -112,6 +121,10 @@ final class AdaptiveAnomalyDetector {
     /// Last anomaly date per metric for streak tracking
     private var lastAnomalyDate: [HealthMetric: Date] = [:]
 
+    /// Cached isolation scores keyed by date. Isolation forest scoring is deterministic
+    /// (same features → same score), so we cache results and invalidate on retrain.
+    private var isolationScoreCache: [Date: Double] = [:]
+
     // MARK: - Training
 
     /// Build the isolation forest from daily feature vectors.
@@ -150,9 +163,47 @@ final class AdaptiveAnomalyDetector {
         // Learn severity thresholds from training score distribution
         learnSeverityThresholds(dataArrays: dataArrays)
 
-        // Reset persistence tracking on retrain
+        // Precompute per-feature mean/std for findAnomalousFeatures (avoids 7x recomputation per pipeline)
+        let dim = orderedKeys.count
+        cachedTrainingMeans = [Double](repeating: 0, count: dim)
+        cachedTrainingStds = [Double](repeating: 0, count: dim)
+        for i in 0..<dim {
+            let vals = dataArrays.compactMap { row -> Double? in
+                guard i < row.count else { return nil }
+                let v = row[i]
+                return v == FeatureKey.missingSentinel ? nil : v
+            }
+            guard !vals.isEmpty else { continue }
+            let mean = vals.reduce(0, +) / Double(vals.count)
+            cachedTrainingMeans[i] = mean
+            let variance = vals.reduce(0.0) { $0 + ($1 - mean) * ($1 - mean) } / Double(vals.count)
+            cachedTrainingStds[i] = variance.squareRoot()
+        }
+
+        // Precompute centroid + peer distance stats for legacyContextualZScore fallback
+        cachedCentroid = [Double](repeating: 0, count: dim)
+        var centroidCounts = [Double](repeating: 0, count: dim)
+        for arr in dataArrays {
+            for i in 0..<dim where arr[i] != FeatureKey.missingSentinel {
+                cachedCentroid[i] += arr[i]
+                centroidCounts[i] += 1
+            }
+        }
+        for i in 0..<dim {
+            if centroidCounts[i] > 0 { cachedCentroid[i] /= centroidCounts[i] }
+        }
+        var peerDistances: [Double] = []
+        for arr in dataArrays {
+            peerDistances.append(euclideanDistanceIgnoringMissing(arr, cachedCentroid))
+        }
+        cachedPeerDistanceMean = peerDistances.isEmpty ? 0 : peerDistances.reduce(0, +) / Double(peerDistances.count)
+        let peerVar = peerDistances.reduce(0.0) { $0 + ($1 - cachedPeerDistanceMean) * ($1 - cachedPeerDistanceMean) } / Double(max(peerDistances.count, 1))
+        cachedPeerDistanceStd = peerVar.squareRoot()
+
+        // Reset persistence tracking and score cache on retrain
         consecutiveAnomalyDays = [:]
         lastAnomalyDate = [:]
+        isolationScoreCache = [:]
 
         lastRetrainDate = Date()
     }
@@ -257,8 +308,16 @@ final class AdaptiveAnomalyDetector {
     func score(vector: DailyFeatureVector, allVectors: [DailyFeatureVector]? = nil) -> AdaptiveAnomaly {
         let features = vector.toArray(orderedKeys: trainedKeys)
 
-        // Global isolation score (unchanged)
-        let globalScore = isolationScore(features)
+        // Global isolation score — use cache to avoid redundant 50-tree traversals.
+        // Isolation forest is deterministic: same features always produce the same score.
+        let globalScore: Double
+        if let cached = isolationScoreCache[vector.date] {
+            globalScore = cached
+        } else {
+            let computed = isolationScore(features)
+            isolationScoreCache[vector.date] = computed
+            globalScore = computed
+        }
 
         // Compute context for this vector
         let context: DayContext
@@ -495,37 +554,13 @@ final class AdaptiveAnomalyDetector {
         return maxZ
     }
 
-    /// Legacy distance-based contextual z-score (fallback when bucket has < 5 peers)
+    /// Legacy distance-based contextual z-score (fallback when bucket has < 5 peers).
+    /// Uses cached centroid and peer distance stats from train() instead of recomputing.
     private func legacyContextualZScore(features: [Double]) -> Double {
-        let dim = trainedKeys.count
-        guard dim > 0 else { return 0 }
+        guard !cachedCentroid.isEmpty, cachedPeerDistanceStd > 0 else { return 0 }
 
-        let allArrays = trainingVectors.map { $0.toArray(orderedKeys: trainedKeys) }
-
-        // Compute global centroid
-        var centroid = [Double](repeating: 0, count: dim)
-        var counts = [Double](repeating: 0, count: dim)
-        for arr in allArrays {
-            for i in 0..<dim where arr[i] != FeatureKey.missingSentinel {
-                centroid[i] += arr[i]
-                counts[i] += 1
-            }
-        }
-        for i in 0..<dim {
-            if counts[i] > 0 { centroid[i] /= counts[i] }
-        }
-
-        var peerDistances: [Double] = []
-        for arr in allArrays {
-            peerDistances.append(euclideanDistanceIgnoringMissing(arr, centroid))
-        }
-
-        let targetDist = euclideanDistanceIgnoringMissing(features, centroid)
-        let meanDist = peerDistances.mean
-        let stdDist = peerDistances.standardDeviation
-
-        guard stdDist > 0 else { return 0 }
-        return (targetDist - meanDist) / stdDist
+        let targetDist = euclideanDistanceIgnoringMissing(features, cachedCentroid)
+        return (targetDist - cachedPeerDistanceMean) / cachedPeerDistanceStd
     }
 
     // MARK: - Cross-Signal Confirmation
@@ -561,24 +596,17 @@ final class AdaptiveAnomalyDetector {
         return (!allConfirming.isEmpty, Array(allConfirming))
     }
 
-    /// Compute the z-score of a single metric's raw value vs training distribution
+    /// Compute the z-score of a single metric's raw value vs training distribution.
+    /// Uses cached training means/stds from train() instead of recomputing from training vectors.
     private func featureZScoreVsTraining(metric: HealthMetric, vector: DailyFeatureVector) -> Double {
         let key = FeatureKey(metric: metric, type: .raw)
         guard let keyIndex = trainedKeys.firstIndex(of: key) else { return 0 }
         guard let value = vector.features[key], value != FeatureKey.missingSentinel else { return 0 }
+        guard keyIndex < cachedTrainingMeans.count, keyIndex < cachedTrainingStds.count else { return 0 }
 
-        let trainingValues = trainingVectors.compactMap { v -> Double? in
-            guard let val = v.features[key], val != FeatureKey.missingSentinel else { return nil }
-            return val
-        }
-
-        guard !trainingValues.isEmpty else { return 0 }
-        let mean = trainingValues.mean
-        let sd = trainingValues.standardDeviation
+        let sd = cachedTrainingStds[keyIndex]
         guard sd > 0 else { return 0 }
-        _ = keyIndex // suppress unused warning; index validated above
-
-        return (value - mean) / sd
+        return (value - cachedTrainingMeans[keyIndex]) / sd
     }
 
     // MARK: - Persistence Gating
@@ -759,31 +787,22 @@ final class AdaptiveAnomalyDetector {
 
     // MARK: - Feature Attribution
 
-    /// Find which features contribute most to anomaly score
+    /// Find which features contribute most to anomaly score.
+    /// Uses cached per-feature mean/std from train() instead of recomputing from scratch.
     private func findAnomalousFeatures(features: [Double]) -> [(key: FeatureKey, contribution: Double)] {
-        guard !trainedKeys.isEmpty else { return [] }
+        guard !trainedKeys.isEmpty, !cachedTrainingMeans.isEmpty else { return [] }
 
-        // Simple approach: for each feature, compute how different it is from training mean
         var contributions: [(key: FeatureKey, contribution: Double)] = []
-
-        let allArrays = trainingVectors.map { $0.toArray(orderedKeys: trainedKeys) }
 
         for (i, key) in trainedKeys.enumerated() {
             let featureValue = i < features.count ? features[i] : 0
             guard featureValue != FeatureKey.missingSentinel else { continue }
+            guard i < cachedTrainingMeans.count, i < cachedTrainingStds.count else { continue }
 
-            let trainingValues = allArrays.compactMap { row -> Double? in
-                guard i < row.count else { return nil }
-                let v = row[i]
-                return v == FeatureKey.missingSentinel ? nil : v
-            }
-
-            guard !trainingValues.isEmpty else { continue }
-            let mean = trainingValues.mean
-            let sd = trainingValues.standardDeviation
+            let sd = cachedTrainingStds[i]
             guard sd > 0 else { continue }
 
-            let deviation = abs(featureValue - mean) / sd
+            let deviation = abs(featureValue - cachedTrainingMeans[i]) / sd
             if deviation > featureAttributionThreshold {
                 contributions.append((key: key, contribution: deviation))
             }

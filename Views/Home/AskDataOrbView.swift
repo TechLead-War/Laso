@@ -4,21 +4,97 @@ import SwiftUI
 /// All math, colors, and layer composition ported precisely from index.astro.
 struct AskDataOrbView: View {
     let size: CGFloat
+    @State private var thermalManager = ThermalManager.shared
 
     init(size: CGFloat = 200) {
         self.size = size
     }
 
     var body: some View {
-        TimelineView(.animation) { timeline in
-            let elapsed = timeline.date.timeIntervalSinceReferenceDate
-            Canvas { ctx, canvasSize in
-                render(ctx: ctx, size: canvasSize, time: elapsed * 0.4)
+        Group {
+            if thermalManager.shouldThrottle {
+                staticOrb
+            } else {
+                TimelineView(.periodic(from: .now, by: frameInterval)) { timeline in
+                    let elapsed = timeline.date.timeIntervalSinceReferenceDate
+                    Canvas(opaque: false, colorMode: .linear, rendersAsynchronously: true) { ctx, canvasSize in
+                        render(ctx: ctx, size: canvasSize, time: elapsed * 0.4)
+                    }
+                }
+                .drawingGroup()
             }
         }
         .frame(width: size, height: size)
-        .drawingGroup()
         .accessibilityHidden(true)
+    }
+
+    private var frameInterval: TimeInterval {
+        switch thermalManager.currentState {
+        case .nominal:
+            return 1.0 / 30.0
+        case .fair:
+            return 1.0 / 20.0
+        case .serious, .critical:
+            return 1.0 / 8.0
+        @unknown default:
+            return 1.0 / 20.0
+        }
+    }
+
+    private var staticOrb: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [
+                            Color(.sRGB, red: 0.06, green: 0.35, blue: 0.74, opacity: 0.36),
+                            Color(.sRGB, red: 0.04, green: 0.12, blue: 0.32, opacity: 0.18),
+                            Color.clear,
+                        ],
+                        center: .center,
+                        startRadius: 0,
+                        endRadius: size * 0.72
+                    )
+                )
+                .blur(radius: size * 0.06)
+
+            Circle()
+                .strokeBorder(
+                    AngularGradient(
+                        colors: [
+                            Color.white.opacity(0.9),
+                            Color(.sRGB, red: 0.02, green: 0.44, blue: 0.89, opacity: 0.9),
+                            Color(.sRGB, red: 0.02, green: 0.71, blue: 0.83, opacity: 0.85),
+                            Color.white.opacity(0.9),
+                        ],
+                        center: .center
+                    ),
+                    lineWidth: size * 0.02
+                )
+                .frame(width: size * 0.62, height: size * 0.62)
+                .blur(radius: size * 0.01)
+
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [
+                            Color(.sRGB, red: 0.02, green: 0.09, blue: 0.24, opacity: 0.9),
+                            Color(.sRGB, red: 0.01, green: 0.05, blue: 0.16, opacity: 0.98),
+                        ],
+                        center: UnitPoint(x: 0.42, y: 0.38),
+                        startRadius: 0,
+                        endRadius: size * 0.28
+                    )
+                )
+                .frame(width: size * 0.5, height: size * 0.5)
+
+            Circle()
+                .fill(Color(.sRGB, red: 0.56, green: 0.94, blue: 1.0, opacity: 0.16))
+                .frame(width: size * 0.16, height: size * 0.16)
+                .offset(x: -size * 0.1, y: -size * 0.08)
+                .blur(radius: size * 0.03)
+        }
+        .compositingGroup()
     }
 
     // MARK: - Composition
@@ -82,7 +158,7 @@ struct AskDataOrbView: View {
         return path
     }
 
-    private func traceBlob(cx: Double, cy: Double, baseR: Double, wobble: Double, drift: Double, ripple: Double, squashX: Double, squashY: Double, offsetX: Double, offsetY: Double, t: Double, detail: Int = 260) -> Path {
+    private func traceBlob(cx: Double, cy: Double, baseR: Double, wobble: Double, drift: Double, ripple: Double, squashX: Double, squashY: Double, offsetX: Double, offsetY: Double, t: Double, detail: Int = 130) -> Path {
         let TAU = Double.pi * 2
         var path = Path()
         for i in 0...detail {
@@ -124,8 +200,8 @@ struct AskDataOrbView: View {
             center: center, startRadius: R * 0.2, endRadius: R * 1.58
         ))
 
-        // Clipped body
-        let clipPath = traceLoop(cx: cx, cy: cy, radius: R * 0.968, t: t * 0.31, wobble: R * 0.02, drift: 1.3, detail: 300, rippleScale: 0.1)
+        // Clipped body — halved detail from 300→150
+        let clipPath = traceLoop(cx: cx, cy: cy, radius: R * 0.968, t: t * 0.31, wobble: R * 0.02, drift: 1.3, detail: 150, rippleScale: 0.1)
         var clipped = ctx
         clipped.clip(to: clipPath)
 
@@ -200,9 +276,10 @@ struct AskDataOrbView: View {
             let r: Double, g: Double, b: Double
         }
 
+        // Halved ribs and points for ~60% fewer particles per frame (visually indistinguishable at device size)
         let shells: [ShellConfig] = [
-            ShellConfig(base: R * 1.35, spread: R * 0.08, ribs: 22, points: 200, offset: 0, alpha: 0.74, size: 2.2, speed: 1.35, spin: 0.42, r: 0, g: 113, b: 227),
-            ShellConfig(base: R * 1.3, spread: R * 0.064, ribs: 16, points: 180, offset: 1.34, alpha: 0.56, size: 1.7, speed: 0.95, spin: -0.24, r: 6, g: 182, b: 212),
+            ShellConfig(base: R * 1.35, spread: R * 0.08, ribs: 12, points: 100, offset: 0, alpha: 0.74, size: 2.2, speed: 1.35, spin: 0.42, r: 0, g: 113, b: 227),
+            ShellConfig(base: R * 1.3, spread: R * 0.064, ribs: 8, points: 90, offset: 1.34, alpha: 0.56, size: 1.7, speed: 0.95, spin: -0.24, r: 6, g: 182, b: 212),
         ]
 
         func outerRadius(a: Double, phase: Double, base: Double, spread: Double) -> Double {
@@ -244,21 +321,17 @@ struct AskDataOrbView: View {
 
     private func drawRings(_ ctx: inout GraphicsContext, cx: Double, cy: Double, R: Double, t: Double) {
         let pulse = 0.92 + 0.08 * sin(t * 1.25)
-        let center = CGPoint(x: cx, y: cy)
 
-        // Wide glow blur ring
-        var glow30 = ctx
-        glow30.addFilter(.blur(radius: R * 0.136))
-        let glowPath = traceLoop(cx: cx, cy: cy, radius: R * 0.982, t: t * 0.52, wobble: R * 0.008, drift: 0.2, detail: 360, rippleScale: 0.08)
-        glow30.stroke(glowPath, with: .color(rgba(0, 113, 227, 0.18 * pulse)), lineWidth: R * 0.22)
+        // Shared ring path (reuse for glow + main ring — same radius, saves one traceLoop)
+        let glowPath = traceLoop(cx: cx, cy: cy, radius: R * 0.982, t: t * 0.52, wobble: R * 0.008, drift: 0.2, detail: 180, rippleScale: 0.08)
 
-        // Mid blur ring
-        var glow11 = ctx
-        glow11.addFilter(.blur(radius: R * 0.05))
-        glow11.stroke(glowPath, with: .color(rgba(6, 182, 212, 0.22 * pulse)), lineWidth: R * 0.07)
+        // Single combined glow (merged wide + mid blur into one pass to halve blur operations)
+        var glow = ctx
+        glow.addFilter(.blur(radius: R * 0.09))
+        glow.stroke(glowPath, with: .color(rgba(3, 148, 220, 0.2 * pulse)), lineWidth: R * 0.15)
 
-        // Main ring (gradient stroke)
-        let mainPath = traceLoop(cx: cx, cy: cy, radius: R * 0.982, t: t * 0.52, wobble: R * 0.0065, drift: 0.2, detail: 360, rippleScale: 0.08)
+        // Main ring (gradient stroke) — reuse same path
+        let mainPath = glowPath
         var mainRing = ctx
         mainRing.opacity = 0.9
         mainRing.stroke(mainPath, with: .linearGradient(
@@ -272,8 +345,8 @@ struct AskDataOrbView: View {
             endPoint: CGPoint(x: cx + R, y: cy + R)
         ), lineWidth: R * 0.0155)
 
-        // Second ring (blur layer)
-        let secondPath = traceLoop(cx: cx, cy: cy, radius: R * 1.016, t: -t * 0.64, wobble: R * 0.049, drift: 2.1, detail: 400, rippleScale: 0.38)
+        // Second ring (blur layer) — halved detail from 400→200
+        let secondPath = traceLoop(cx: cx, cy: cy, radius: R * 1.016, t: -t * 0.64, wobble: R * 0.049, drift: 2.1, detail: 200, rippleScale: 0.38)
         var blur7 = ctx
         blur7.addFilter(.blur(radius: R * 0.032))
         blur7.stroke(secondPath, with: .linearGradient(
@@ -331,8 +404,8 @@ struct AskDataOrbView: View {
         let driftX = sin(t * 0.63) * R * 0.032
         let driftY = cos(t * 0.47) * R * 0.026
 
-        // Dark outer blob
-        let outerBlob = traceBlob(cx: cx, cy: cy, baseR: R * 0.79, wobble: R * 0.078, drift: 0.9, ripple: 0.72, squashX: 0.14, squashY: -0.12, offsetX: driftX, offsetY: driftY, t: t, detail: 320)
+        // Dark outer blob — halved detail from 320→160
+        let outerBlob = traceBlob(cx: cx, cy: cy, baseR: R * 0.79, wobble: R * 0.078, drift: 0.9, ripple: 0.72, squashX: 0.14, squashY: -0.12, offsetX: driftX, offsetY: driftY, t: t, detail: 160)
         let outerCenter = CGPoint(x: cx - R * 0.12 + driftX, y: cy + R * 0.06 + driftY)
         ctx.fill(outerBlob, with: .radialGradient(
             Gradient(stops: [
@@ -343,8 +416,8 @@ struct AskDataOrbView: View {
             center: outerCenter, startRadius: R * 0.08, endRadius: R * 0.92
         ))
 
-        // Cavity blob
-        let cavityBlob = traceBlob(cx: cx, cy: cy, baseR: R * 0.56, wobble: R * 0.062, drift: 2.4, ripple: 0.78, squashX: -0.16, squashY: 0.12, offsetX: -driftX * 0.8, offsetY: -driftY * 0.6, t: t, detail: 280)
+        // Cavity blob — halved detail from 280→140
+        let cavityBlob = traceBlob(cx: cx, cy: cy, baseR: R * 0.56, wobble: R * 0.062, drift: 2.4, ripple: 0.78, squashX: -0.16, squashY: 0.12, offsetX: -driftX * 0.8, offsetY: -driftY * 0.6, t: t, detail: 140)
         let cavityCenter = CGPoint(x: cx + R * 0.03 - driftX * 0.6, y: cy - R * 0.05 - driftY * 0.3)
         ctx.fill(cavityBlob, with: .radialGradient(
             Gradient(stops: [
@@ -354,8 +427,8 @@ struct AskDataOrbView: View {
             center: cavityCenter, startRadius: 0, endRadius: R * 0.66
         ))
 
-        // Pocket blob
-        let pocketBlob = traceBlob(cx: cx, cy: cy, baseR: R * 0.37, wobble: R * 0.048, drift: 4.1, ripple: 0.82, squashX: 0.2, squashY: -0.18, offsetX: R * 0.06, offsetY: -R * 0.03, t: t, detail: 240)
+        // Pocket blob — halved detail from 240→120
+        let pocketBlob = traceBlob(cx: cx, cy: cy, baseR: R * 0.37, wobble: R * 0.048, drift: 4.1, ripple: 0.82, squashX: 0.2, squashY: -0.18, offsetX: R * 0.06, offsetY: -R * 0.03, t: t, detail: 120)
         let pocketCenter = CGPoint(x: cx + R * 0.08, y: cy - R * 0.08)
         ctx.fill(pocketBlob, with: .radialGradient(
             Gradient(stops: [
@@ -370,10 +443,10 @@ struct AskDataOrbView: View {
         glowInner.blendMode = .plusLighter
         glowInner.addFilter(.blur(radius: R * 0.045))
 
-        let innerRing1 = traceBlob(cx: cx, cy: cy, baseR: R * 0.62, wobble: R * 0.022, drift: 1.2, ripple: 0.5, squashX: 0.08, squashY: -0.05, offsetX: driftX * 0.3, offsetY: driftY * 0.3, t: t, detail: 260)
+        let innerRing1 = traceBlob(cx: cx, cy: cy, baseR: R * 0.62, wobble: R * 0.022, drift: 1.2, ripple: 0.5, squashX: 0.08, squashY: -0.05, offsetX: driftX * 0.3, offsetY: driftY * 0.3, t: t, detail: 130)
         glowInner.stroke(innerRing1, with: .color(rgba(6, 182, 212, 0.1)), lineWidth: R * 0.038)
 
-        let innerRing2 = traceBlob(cx: cx, cy: cy, baseR: R * 0.46, wobble: R * 0.02, drift: 3.1, ripple: 0.55, squashX: -0.09, squashY: 0.07, offsetX: -R * 0.05, offsetY: R * 0.03, t: t, detail: 260)
+        let innerRing2 = traceBlob(cx: cx, cy: cy, baseR: R * 0.46, wobble: R * 0.02, drift: 3.1, ripple: 0.55, squashX: -0.09, squashY: 0.07, offsetX: -R * 0.05, offsetY: R * 0.03, t: t, detail: 130)
         glowInner.stroke(innerRing2, with: .color(rgba(0, 113, 227, 0.08)), lineWidth: R * 0.03)
 
         // Energy glow

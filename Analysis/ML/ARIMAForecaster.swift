@@ -109,21 +109,23 @@ final class ARIMAForecaster {
             // AR term
             if p > 0 {
                 let history = differencedPredictions.isEmpty ? diffHistory : diffHistory + differencedPredictions
-                for lag in 1...p {
+                for lagIndex in 0..<p {
+                    let lag = lagIndex + 1
                     if lag <= history.count {
-                        forecastValue += model.arCoefficients[lag - 1] * history[history.count - lag]
+                        forecastValue += model.arCoefficients[lagIndex] * history[history.count - lag]
                     }
                 }
             }
             
             // MA term
             if q > 0 {
-                for lag in 1...q {
+                for lagIndex in 0..<q {
+                    let lag = lagIndex + 1
                     if lag <= currentResids.count {
                         // Assuming expected value of future white noise residuals is 0,
                         // we only multiply actual historic residuals.
                         if step == 0 {
-                            forecastValue += model.maCoefficients[lag - 1] * currentResids[currentResids.count - lag]
+                            forecastValue += model.maCoefficients[lagIndex] * currentResids[currentResids.count - lag]
                         }
                     }
                 }
@@ -188,8 +190,9 @@ final class ARIMAForecaster {
             // Compute AR residuals
             for i in p..<n {
                 var arPrediction = 0.0
-                for lag in 1...p {
-                    arPrediction += arCoeffs[lag - 1] * centeredSeries[i - lag]
+                for lagIndex in 0..<p {
+                    let lag = lagIndex + 1
+                    arPrediction += arCoeffs[lagIndex] * centeredSeries[i - lag]
                 }
                 residuals[i] = centeredSeries[i] - arPrediction
             }
@@ -202,8 +205,9 @@ final class ARIMAForecaster {
             // Just AR residuals
             for i in p..<n {
                 var arPrediction = 0.0
-                for lag in 1...p {
-                    arPrediction += arCoeffs[lag - 1] * centeredSeries[i - lag]
+                for lagIndex in 0..<p {
+                    let lag = lagIndex + 1
+                    arPrediction += arCoeffs[lagIndex] * centeredSeries[i - lag]
                 }
                 residuals[i] = centeredSeries[i] - arPrediction
             }
@@ -214,12 +218,14 @@ final class ARIMAForecaster {
         let startIndex = max(p, q)
         for i in startIndex..<n {
             var arTerm = 0.0
-            for lag in 1...max(p, 1) {
-                if p > 0 { arTerm += arCoeffs[lag - 1] * centeredSeries[i - lag] }
+            for lagIndex in 0..<p {
+                let lag = lagIndex + 1
+                arTerm += arCoeffs[lagIndex] * centeredSeries[i - lag]
             }
             var maTerm = 0.0
-            for lag in 1...max(q, 1) {
-                if q > 0 { maTerm += maCoeffs[lag - 1] * residuals[i - lag] }
+            for lagIndex in 0..<q {
+                let lag = lagIndex + 1
+                maTerm += maCoeffs[lagIndex] * residuals[i - lag]
             }
             
             let prediction = intercept + arTerm + maTerm
@@ -325,8 +331,9 @@ final class ARIMAForecaster {
         
         for i in q..<n {
             y[i - q] = residuals[i]
-            for lag in 1...q {
-                X[(i - q) * q + (lag - 1)] = residuals[i - lag]
+            for lagIndex in 0..<q {
+                let lag = lagIndex + 1
+                X[(i - q) * q + lagIndex] = residuals[i - lag]
             }
         }
         

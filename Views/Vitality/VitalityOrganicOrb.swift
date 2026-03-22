@@ -6,37 +6,32 @@ struct OrganicParticleOrbView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var glowPulse = false
-    @State private var thermalState: ProcessInfo.ThermalState = ProcessInfo.processInfo.thermalState
+    @State private var thermalManager = ThermalManager.shared
 
-    private static let fullParticles: [ParticleSeed] = makeParticles(count: 80)
-    private static let reducedParticles: [ParticleSeed] = makeParticles(count: 40)
+    private static let fullParticles: [ParticleSeed] = makeParticles(count: 50)
+    private static let reducedParticles: [ParticleSeed] = makeParticles(count: 25)
 
     private var effectiveParticles: [ParticleSeed] {
         if reduceMotion { return [] }
-        if thermalState == .fair || thermalState == .serious || thermalState == .critical {
+        if thermalManager.shouldReduceVisualEffects {
             return Self.reducedParticles
         }
         return Self.fullParticles
     }
 
     private var animationPaused: Bool {
-        reduceMotion || thermalState == .critical
+        reduceMotion || thermalManager.shouldThrottle
     }
 
     var body: some View {
         let blobShape = OrganicBlobShape(phase: phase)
 
         return Group {
-            if reduceMotion {
+            if reduceMotion || thermalManager.shouldThrottle {
                 staticOrb(blobShape: blobShape)
             } else {
                 animatedOrb(blobShape: blobShape)
             }
-        }
-        .onReceive(
-            NotificationCenter.default.publisher(for: ProcessInfo.thermalStateDidChangeNotification)
-        ) { _ in
-            thermalState = ProcessInfo.processInfo.thermalState
         }
     }
 
@@ -57,7 +52,7 @@ struct OrganicParticleOrbView: View {
             tint: tint,
             particles: effectiveParticles,
             paused: animationPaused,
-            frameRate: thermalState == .nominal ? 24.0 : (thermalState == .serious || thermalState == .critical ? 8.0 : 15.0)
+            frameRate: thermalManager.currentState == .nominal ? 24.0 : 15.0
         )
         .clipShape(OrganicBlobShape(phase: phase))
         .overlay(
@@ -202,7 +197,7 @@ private struct OrganicBlobShape: Shape {
     func path(in rect: CGRect) -> Path {
         let center = CGPoint(x: rect.midX, y: rect.midY)
         let baseRadius = min(rect.width, rect.height) * 0.43
-        let steps = 160
+        let steps = 80
 
         var path = Path()
         for step in 0...steps {

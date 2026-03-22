@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import SwiftUI
 import os
 
 /// ViewModel for the main dashboard showing overall score, top insights, and category cards.
@@ -41,6 +42,13 @@ final class DashboardViewModel {
     private static let connectivityRecoveryMinInterval: TimeInterval = 900  // 15 minutes
     private var lastConnectivityRecoverySync: Date?
     @MainActor private var refreshRunToken = UUID()
+    /// Handles for detached Phase 2A/2B tasks so we can cancel stale work on new refresh
+    private var deferredEssentialsTask: Task<Void, Never>?
+    private var deferredHeavyTask: Task<Void, Never>?
+
+    /// Deduplicates overlapping refresh calls (e.g., ContentView .task + HomeView .onAppear + scene phase .active).
+    /// Each new call cancels the previous task and debounces by 0.5s so rapid-fire triggers coalesce into one refresh.
+    private var refreshTask: Task<Void, Never>?
 
     /// Previous trend directions. used for trend reversal detection
     private var previousTrends: [HealthMetric: TrendDirection] = [:]
@@ -494,6 +502,14 @@ final class DashboardViewModel {
     /// Intelligence briefing cards. non-obvious findings from ML algorithms
     @MainActor var intelligenceBriefing: [IntelligenceCard] = []
 
+    // MARK: - Cached View Properties (computed once per refresh, not per render)
+
+    /// Name of the lowest-scoring category. used by ScoreGuideSheet for personalized explanation
+    @MainActor var cachedWeakestCategoryName: String?
+
+    /// Pre-built metric tiles for MetricStripView. rebuilt after scorer computation
+    @MainActor var cachedMetricTiles: [MetricTile] = []
+
     // MARK: - Research-Backed Feature State (Papers 1-10)
 
     /// Personal health forecast cards (Paper 3: Conformal Prediction + Digital Twin)
@@ -651,11 +667,57 @@ final class DashboardViewModel {
     /// Refresh data from HealthKit, sync to on-device store, and re-run analysis.
     /// Skips the heavy analysis pipeline if no new data arrived and we analyzed recently.
     /// Note: Does NOT manage `isLoading`. callers (`load()`, `.refreshable`) manage their own loading state.
+    ///
+    /// Deduplicates overlapping calls: cancels any pending debounced refresh, waits 0.5s for
+    /// rapid-fire triggers to coalesce, then runs the actual refresh. Callers that pass
+    /// `awaitDeferredAnalysis: true` (e.g., onboarding calibration) bypass the debounce.
     func refresh(
         awaitDeferredAnalysis: Bool = false,
         forceHeavyDeferred: Bool = false,
         runHousekeeping: Bool = true
     ) async {
+        // Calibration/onboarding needs immediate execution — skip debounce
+        if awaitDeferredAnalysis {
+            await refreshCore(
+                awaitDeferredAnalysis: true,
+                forceHeavyDeferred: forceHeavyDeferred,
+                runHousekeeping: runHousekeeping
+            )
+            return
+        }
+
+        // Cancel any pending debounced refresh so the latest call wins
+        refreshTask?.cancel()
+
+        let task = Task { @MainActor [weak self] in
+            // Debounce: wait 0.5s for rapid-fire calls to coalesce
+            try? await Task.sleep(for: .milliseconds(500))
+            guard !Task.isCancelled else { return }
+
+            await self?.refreshCore(
+                awaitDeferredAnalysis: false,
+                forceHeavyDeferred: forceHeavyDeferred,
+                runHousekeeping: runHousekeeping
+            )
+        }
+        refreshTask = task
+
+        // Await the debounced task so callers (e.g., .refreshable) know when it finishes
+        await task.value
+    }
+
+    /// Core refresh implementation. Called by the debounced `refresh()` wrapper.
+    private func refreshCore(
+        awaitDeferredAnalysis: Bool = false,
+        forceHeavyDeferred: Bool = false,
+        runHousekeeping: Bool = true
+    ) async {
+        // Cancel any in-flight deferred work from a previous refresh.
+        // The refreshRunToken prevents stale results from being applied, but the CPU work
+        // itself kept running until hitting a token check. Cancelling here stops it sooner.
+        deferredEssentialsTask?.cancel()
+        deferredHeavyTask?.cancel()
+
         let refreshToken = await MainActor.run { () -> UUID in
             let next = UUID()
             refreshRunToken = next
@@ -673,12 +735,19 @@ final class DashboardViewModel {
 
         // Skip full analysis only if no new data, analyzed within 5 minutes, AND same calendar day
         let now = Date()
-        let recentlyAnalyzed = lastAnalysisDate.map { now.timeIntervalSince($0) < Self.analysisMinInterval } ?? false
+        let thermalManager = ThermalManager.shared
+        let recentlyAnalyzed = lastAnalysisDate.map { now.timeIntervalSince($0) < thermalManager.analysisRefreshInterval } ?? false
         let sameDay = lastAnalysisDate.map { Calendar.current.isDate($0, inSameDayAs: now) } ?? false
-        if !syncResult.hasNewData && recentlyAnalyzed && sameDay && !syncResult.isFirstSync {
-            // Still refresh lightweight cached properties (data depth, scores display)
-            await MainActor.run { updateCachedProperties() }
-            return
+        let shouldReuseThermalSnapshot = thermalManager.shouldThrottle && lastAnalysisDate != nil
+        if recentlyAnalyzed && sameDay && !syncResult.isFirstSync {
+            if !syncResult.hasNewData || thermalManager.shouldThrottle {
+                // Still refresh lightweight cached properties (data depth, scores display)
+                await MainActor.run {
+                    updateCachedProperties()
+                    writeWidgetSnapshots()
+                }
+                return
+            }
         }
 
         if ui.isFirstLaunchSync { ui.syncPhase = .analyzing }
@@ -719,19 +788,30 @@ final class DashboardViewModel {
             // Invalidate score history cache after saving. the new snapshot is now part of the data
             invalidateScoreHistoryCache()
             updateCachedProperties()
-            computeNewEngines(todayRawHR: todayRawHR)
+            if !shouldReuseThermalSnapshot {
+                computeNewEngines(todayRawHR: todayRawHR)
+            }
         }
 
         // Mark analysis timestamp so subsequent no-change refreshes can skip
         lastAnalysisDate = Date()
         await MainActor.run {
             invalidateDailyActionCache()
-            refreshIntelligenceBriefing()
+            if !shouldReuseThermalSnapshot {
+                refreshIntelligenceBriefing()
+                refreshHealthForecasts()
+                refreshCircadianBiomarkers()
+                checkActivationMilestones()
+            }
             writeWidgetSnapshots()
         }
 
         // Store current trends for next refresh comparison
         previousTrends = analysisEngine.trends.mapValues { $0.direction }
+
+        if thermalManager.shouldThrottle {
+            return
+        }
 
         // Phase 2: Deferred analysis + housekeeping (fire-and-forget background)
         // Insight generators, health risks, notifications, analytics. all non-blocking
@@ -789,7 +869,7 @@ final class DashboardViewModel {
             await menstrualCycleTracker.compute(from: healthKitManager)
         }
 
-        Task.detached(priority: .utility) { [weak self] in
+        deferredEssentialsTask = Task.detached(priority: .utility) { [weak self] in
             guard let self else { return }
             try? Task.checkCancellation()
             self.analysisEngine.runDeferredEssentials(
@@ -801,7 +881,7 @@ final class DashboardViewModel {
         }
 
         // Phase 2B: Heavy analysis + housekeeping. delayed for thermal relief
-        Task.detached(priority: .background) { [weak self, prevTrends] in
+        deferredHeavyTask = Task.detached(priority: .background) { [weak self, prevTrends] in
             guard let self else { return }
             let analysisEngine = self.analysisEngine
             let logger = Logger(subsystem: "com.healthpulse", category: "Dashboard")
@@ -890,7 +970,7 @@ final class DashboardViewModel {
         }
 
         // Circadian analysis (weekly, hourly data fetch)
-        if analysisEngine.mlOrchestrator.needsCircadianAnalysis {
+        if analysisEngine.mlOrchestrator.needsCircadianAnalysis && !ThermalManager.shared.shouldThrottle {
             let metricsForCircadian = CircadianAnalyzer.metricsToAnalyze + CircadianAnalyzer.optionalMetrics
             var hourlyData: [HealthMetric: [[Double]]] = [:]
             await withTaskGroup(of: (HealthMetric, [[Double]]?).self) { group in
@@ -945,6 +1025,8 @@ final class DashboardViewModel {
     /// Uses score history from SwiftData and anomaly counts derived from stored snapshots.
     private func runMLPhase(timeSeries: [HealthMetric: MetricTimeSeries]) async {
         // Use cached score history. already fetched earlier in the refresh cycle
+        guard !ThermalManager.shared.shouldThrottle else { return }
+
         let scoreHistory = await MainActor.run { scoreHistoryCached() }
 
         // Build anomaly counts per day from stored analysis snapshots.
@@ -994,17 +1076,32 @@ final class DashboardViewModel {
         scores.rollingAverageScore = computeRollingAverageScore()
         scores.scoreExplanation = analysisEngine.scoreExplanation
 
+        // Update weakest category name (used by ScoreGuideSheet)
+        cachedWeakestCategoryName = scores.categoryScores
+            .compactMap { s -> (String, Int)? in
+                guard let cat = s.category else { return nil }
+                return (cat.displayName, s.score)
+            }
+            .min(by: { $0.1 < $1.1 })?
+            .0
+
         // Update trend state
         trends.cachedTrendsSummary = computeTrendsSummary()
-        trends.cachedTrendMetricsByTimeframe = [
-            7: computeTrendMetrics(days: 7),
-            30: computeTrendMetrics(days: 30),
-            90: computeTrendMetrics(days: 90),
-        ]
+        if !(ThermalManager.shared.shouldThrottle && !trends.cachedTrendMetricsByTimeframe.isEmpty) {
+            trends.cachedTrendMetricsByTimeframe = [
+                7: computeTrendMetrics(days: 7),
+                30: computeTrendMetrics(days: 30),
+                90: computeTrendMetrics(days: 90),
+            ]
+        }
 
         // Update analysis state
-        analysis.cachedHistoricalHighlights = computeHistoricalHighlights()
-        analysis.cachedTopCorrelations = computeTopCorrelations()
+        if !(ThermalManager.shared.shouldThrottle && !analysis.cachedHistoricalHighlights.isEmpty) {
+            analysis.cachedHistoricalHighlights = computeHistoricalHighlights()
+        }
+        if !(ThermalManager.shared.shouldThrottle && !analysis.cachedTopCorrelations.isEmpty) {
+            analysis.cachedTopCorrelations = computeTopCorrelations()
+        }
         analysis.correlations = analysisEngine.correlations
         analysis.healthRisks = analysisEngine.healthRisks
         analysis.topHealthRisks = analysisEngine.healthRisks.filter { $0.riskGrade != .low }
@@ -1124,6 +1221,82 @@ final class DashboardViewModel {
         menstrualCycleTracker.isApplicable = isFemale && cycleTrackingEnabled
     }
 
+    // MARK: - Metric Tiles Cache
+
+    /// Rebuild the cached metric tiles array. Call after scorer computation or when live sleep data changes.
+    /// Accepts sleep data from LiveViewModel since DashboardViewModel doesn't own it.
+    @MainActor
+    func rebuildMetricTiles(
+        hasSleepData: Bool = false,
+        lastNightSleepDuration: TimeInterval = 0,
+        sleepQualityLabel: String = ""
+    ) {
+        var tiles: [MetricTile] = []
+
+        // Vitality
+        let vDelta = vitalityScorer.delta
+        let vBadge: String
+        if vDelta < 0 { vBadge = "\(abs(vDelta))y younger" }
+        else if vDelta > 0 { vBadge = "\(vDelta)y older" }
+        else { vBadge = "On track" }
+        let vColor: Color = vDelta <= 0 ? .green : (vDelta <= 3 ? .orange : .red)
+        tiles.append(MetricTile(
+            id: "vitality_detail", icon: "figure.run", label: "Vitality",
+            value: "\(vitalityScorer.vitalityAge)",
+            badge: vBadge, color: vColor, route: .vitalityDetail
+        ))
+
+        // Sleep
+        if hasSleepData {
+            let sleepHours = lastNightSleepDuration / 3600
+            let h = Int(sleepHours)
+            let m = Int((sleepHours - Double(h)) * 60)
+            let sleepValue = h == 0 ? "\(m)m" : "\(h)h \(String(format: "%02d", m))m"
+            let sleepTileColor: Color = sleepQualityLabel == "Great" || sleepQualityLabel == "Good" ? .indigo : .orange
+            tiles.append(MetricTile(
+                id: "sleep_coach", icon: "moon.fill", label: "Sleep",
+                value: sleepValue, badge: sleepQualityLabel, color: sleepTileColor, route: .sleepCoach
+            ))
+        }
+
+        // Strain
+        let strain = strainScorer
+        tiles.append(MetricTile(
+            id: "strain_detail", icon: "flame.fill", label: "Strain",
+            value: String(format: "%.1f", strain.currentStrain),
+            badge: strain.strainLevel.displayName, color: strain.strainLevel.color, route: .strainDetail
+        ))
+
+        // Brain Health
+        if let brain = brainHealthScorer.currentScore {
+            let brainColor: Color = brain.score >= 80 ? .green : brain.score >= 65 ? .blue : brain.score >= 45 ? .gray : .orange
+            tiles.append(MetricTile(
+                id: "brain_health", icon: "brain", label: "Brain",
+                value: "\(brain.score)", badge: brain.state.displayName, color: brainColor, route: .brainHealth
+            ))
+        }
+
+        // Stress
+        if let stress = stressScorer.currentStress {
+            tiles.append(MetricTile(
+                id: "stress_monitor", icon: "waveform.path.ecg", label: "Stress",
+                value: String(format: "%.1f", stress.score),
+                badge: stress.level.displayName, color: stress.level.color, route: .stressMonitor
+            ))
+        }
+
+        // Cycle
+        if let cycle = menstrualCycleTracker.currentCycle {
+            tiles.append(MetricTile(
+                id: "cycle_detail", icon: cycle.currentPhase.icon, label: "Cycle",
+                value: "Day \(cycle.dayInCycle)",
+                badge: cycle.currentPhase.displayName, color: cycle.currentPhase.color, route: .cycleDetail
+            ))
+        }
+
+        cachedMetricTiles = tiles
+    }
+
     // MARK: - Score History Cache
 
     /// Returns the cached 365-day score history, fetching once per refresh cycle.
@@ -1240,19 +1413,22 @@ final class DashboardViewModel {
     private func computeHistoricalHighlights() -> [HistoricalHighlight] {
         var highlights: [HistoricalHighlight] = []
         let focuses = insights.focusCategories
+        let now = Date()
+        let calendar = Calendar.current
+        guard let thisWeekStart = calendar.date(byAdding: .day, value: -7, to: now),
+              let lastWeekStart = calendar.date(byAdding: .day, value: -14, to: now) else {
+            return []
+        }
 
         // Week-over-week comparison for the Home/Coach screen
         for (metric, series) in healthKitManager.timeSeries {
             let thisWeek = series.samples(lastDays: 7)
-            let lastWeek = series.sortedSamples.filter { sample in
-                let daysAgo = Calendar.current.dateComponents([.day], from: sample.date, to: Date()).day ?? 0
-                return daysAgo >= 7 && daysAgo < 14
-            }
+            let lastWeek = series.samples(from: lastWeekStart, until: thisWeekStart)
 
             guard !thisWeek.isEmpty, !lastWeek.isEmpty else { continue }
 
-            let thisAvg = thisWeek.map(\.value).mean
-            let lastAvg = lastWeek.map(\.value).mean
+            let thisAvg = thisWeek.mean(of: \.value)
+            let lastAvg = lastWeek.mean(of: \.value)
             guard lastAvg != 0 else { continue }
 
             let change = ((thisAvg - lastAvg) / lastAvg) * 100
@@ -1496,16 +1672,18 @@ final class DashboardViewModel {
             updatedAt: Date()
         )
 
-        WidgetDataStore.shared.writeAllSnapshots(
+        let snapshotsWritten = WidgetDataStore.shared.writeAllSnapshots(
             readiness: readiness,
             sleep: sleep,
             action: action,
             intelligence: intelligence,
             recoveryDebt: recoveryDebt
         )
+        guard snapshotsWritten > 0 else { return }
+
         AppAnalytics.shared.trackWidgetSnapshotUpdated(
             trigger: "analysis_refresh",
-            snapshotsWritten: [true, true, action != nil, intelligence != nil, true].filter { $0 }.count,
+            snapshotsWritten: snapshotsWritten,
             hasReadiness: true,
             hasSleep: true,
             hasAction: action != nil,
@@ -1651,10 +1829,20 @@ final class DashboardViewModel {
         return max(0, min(100, base + subjectiveReadinessAdjustment))
     }
 
-    /// Run NL health query (Papers 1 & 2: PHIA). uses full ML pipeline context
-    func queryHealthData(_ question: String) -> HealthDataQueryEngine.QueryResult {
+    struct HealthDataQueryRequest {
+        let engine: HealthDataQueryEngine
+        let context: HealthDataQueryEngine.QueryContext
+        let matchingMode: HealthDataQueryEngine.MatchingMode
+
+        func execute(question: String) -> HealthDataQueryEngine.QueryResult {
+            engine.query(question: question, context: context, matchingMode: matchingMode)
+        }
+    }
+
+    func makeHealthDataQueryRequest() -> HealthDataQueryRequest {
         let orch = analysisEngine.mlOrchestrator
-        let ctx = HealthDataQueryEngine.QueryContext(
+        let matchingMode: HealthDataQueryEngine.MatchingMode = ThermalManager.shared.shouldThrottle ? .keywordOnly : .full
+        let context = HealthDataQueryEngine.QueryContext(
             timeSeries: healthKitManager.timeSeries,
             baselines: analysisEngine.baselines,
             trends: analysisEngine.trends,
@@ -1673,7 +1861,16 @@ final class DashboardViewModel {
             temporalSequences: orch.temporalSequences,
             overallScore: scores.overallScore.score
         )
-        return orch.healthDataQueryEngine.query(question: question, context: ctx)
+        return HealthDataQueryRequest(
+            engine: orch.healthDataQueryEngine,
+            context: context,
+            matchingMode: matchingMode
+        )
+    }
+
+    /// Run NL health query (Papers 1 & 2: PHIA). uses full ML pipeline context
+    func queryHealthData(_ question: String) -> HealthDataQueryEngine.QueryResult {
+        makeHealthDataQueryRequest().execute(question: question)
     }
 
     /// Assess current receptivity for nudge delivery (Paper 5 & 6: JITAI)

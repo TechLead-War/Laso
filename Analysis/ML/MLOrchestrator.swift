@@ -169,7 +169,8 @@ final class MLOrchestrator {
     ) async {
         // Bail out entirely if device is already under thermal pressure
         let thermalState = ProcessInfo.processInfo.thermalState
-        if thermalState == .critical {
+        if thermalState == .critical || thermalState == .serious {
+            logger.warning("Skipping ML analysis: thermal state is \(thermalState == .critical ? "critical" : "serious"). deferring to next cycle")
             return
         }
 
@@ -181,6 +182,11 @@ final class MLOrchestrator {
             return
         }
 
+        guard !isRunning else {
+            logger.info("Skipping ML analysis: pipeline already running")
+            return
+        }
+
         isRunning = true
         let pipelineStart = Date()
         var componentsRunCount = 0
@@ -188,6 +194,8 @@ final class MLOrchestrator {
             isRunning = false
             hasRunOnce = true
             lastPipelineCompletion = Date()
+            // Record completion time for BackgroundRefreshCoordinator incremental skip logic
+            UserDefaults.standard.set(Date(), forKey: "lastMLPipelineCompletion")
             if componentsRunCount > 0 {
                 let pipelineDurationMs = Int(Date().timeIntervalSince(pipelineStart) * 1000)
                 let totalDataPoints = timeSeries.values.reduce(0) { $0 + $1.samples.count }
@@ -229,8 +237,13 @@ final class MLOrchestrator {
         // Apply pipeline output to observable state
         applyPipelineOutput(pipelineOutput)
 
-        // Clear bulky intermediates to reduce memory pressure
+        // Clear bulky intermediates and dead results to reduce memory pressure.
+        // These properties are computed but never consumed by any ViewModel or View:
         enrichedVectors = []
+        multivariateResults = []  // Granger multivariate: O(N³) results, no consumer
+        driftAlerts = []          // Welch's t-test drift: no consumer
+        regimeComparisons = []    // ChangePoint regimes: no consumer
+        compoundingEffects = []   // TemporalMiner compounding: intentionally disabled
 
         if !pipelineOutput.stoppedEarly {
             // Step 13: CompoundInsightEngine (uses current self.* state from previous run)

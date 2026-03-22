@@ -21,6 +21,16 @@ final class PostHogManager {
         let config = PostHogConfig(apiKey: PHConfig.apiKey, host: PHConfig.host)
         config.captureApplicationLifecycleEvents = true
         config.captureScreenViews = false // We track screens manually via AppAnalytics
+        config.enableSwizzling = false
+        #if os(iOS) || targetEnvironment(macCatalyst)
+        config.captureElementInteractions = false
+        #endif
+        #if os(iOS)
+        config.sessionReplay = false
+        if #available(iOS 15.0, *) {
+            config.surveys = false
+        }
+        #endif
         PostHogSDK.shared.setup(config)
         isConfigured = true
     }

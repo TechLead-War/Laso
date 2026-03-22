@@ -169,9 +169,44 @@ final class HealthKitManager {
         var newData: [(HealthMetric, MetricTimeSeries)] = []
         var fetchedMetrics = Set<HealthMetric>()
 
+        // Core metrics are always fetched regardless of staleness
+        let coreMetrics: Set<HealthMetric> = [
+            .heartRate, .restingHeartRate, .heartRateVariability,
+            .steps, .activeCalories, .exerciseMinutes,
+            .sleepDuration, .sleepREM, .sleepDeep, .sleepCore,
+            .bloodOxygen, .respiratoryRate, .vo2Max,
+            .weight, .workoutCount, .workoutDuration
+        ]
+
+        // Sync counter for periodic full fetch of stale metrics (persisted across sessions)
+        let syncCountKey = "Laso.HealthKitManager.syncCount"
+        let syncCount = UserDefaults.standard.integer(forKey: syncCountKey)
+        UserDefaults.standard.set(syncCount + 1, forKey: syncCountKey)
+
+        let staleCutoff = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+        let recentSyncCutoff = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
+
         await withTaskGroup(of: (HealthMetric, MetricTimeSeries?).self) { group in
             for metric in HealthMetric.allCases {
                 let lastSync = syncDates[metric]
+
+                // Skip stale metrics: if the metric was synced within the last day AND
+                // its most recent data is older than 7 days, skip it -- unless it's a
+                // core metric or every 7th sync (to catch newly-appearing data).
+                if !isFirstSync,
+                   !coreMetrics.contains(metric),
+                   syncCount % 7 != 0,
+                   let lastSync,
+                   lastSync > recentSyncCutoff {
+                    // Check if this metric's latest sample is stale
+                    let latestSampleDate = timeSeries[metric]?.samples.last?.date
+                    if let latestSampleDate, latestSampleDate < staleCutoff {
+                        syncProgress?.metricsCompleted += 1
+                        fetchedMetrics.insert(metric)
+                        continue
+                    }
+                }
+
                 group.addTask { [self] in
                     let startDate: Date
                     if let lastSync {
@@ -277,8 +312,8 @@ final class HealthKitManager {
             endDate: endDate
         )
 
-        // Invalidate in-memory caches so future reads pick up the new data
-        store.invalidateTimeSeriesCache()
+        // Invalidate only the metrics that actually changed, not the entire cache
+        store.invalidateTimeSeriesCache(for: batchResult.metricsWithChanges)
 
         return PersistedSyncSummary(
             metricsWithChanges: batchResult.metricsWithChanges,

@@ -10,6 +10,7 @@ struct AskYourDataView: View {
     @State private var query = ""
     @State private var result: HealthDataQueryEngine.QueryResult?
     @State private var isSearching = false
+    @State private var activeQueryID = UUID()
     @Environment(\.dismiss) private var dismiss
 
     private let suggestedQuestions = [
@@ -45,6 +46,10 @@ struct AskYourDataView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.home, metadata: ["subscreen": "ask_your_data"])
+        }
+        .onDisappear {
+            activeQueryID = UUID()
+            isSearching = false
         }
     }
 
@@ -186,17 +191,23 @@ struct AskYourDataView: View {
     // MARK: - Query Execution
 
     private func runQuery() {
-        guard !query.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalizedQuery.isEmpty else { return }
         isSearching = true
+        let requestID = UUID()
+        activeQueryID = requestID
 
         AppAnalytics.shared.trackCoreAction(.askedHealthQuery, screen: .home)
         AppAnalytics.shared.trackBlockTap(title: "Query Submitted", type: .smartAction, screen: .home, metadata: ["source": "ask_your_data", "query_length": query.count])
 
         // Run on background to avoid blocking UI
-        let q = query
-        DispatchQueue.global(qos: .userInitiated).async {
-            let queryResult = viewModel.queryHealthData(q)
+        let q = normalizedQuery
+        let queryRequest = viewModel.makeHealthDataQueryRequest()
+        let qos: DispatchQoS.QoSClass = ThermalManager.shared.shouldThrottle ? .utility : .userInitiated
+        DispatchQueue.global(qos: qos).async {
+            let queryResult = queryRequest.execute(question: q)
             DispatchQueue.main.async {
+                guard activeQueryID == requestID else { return }
                 withAnimation(.snappy(duration: 0.3)) {
                     result = queryResult
                     isSearching = false

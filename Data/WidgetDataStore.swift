@@ -39,6 +39,39 @@ struct WidgetRecoveryDebtSnapshot: Codable {
     let updatedAt: Date
 }
 
+private extension WidgetReadinessSnapshot {
+    func matchesContent(of other: Self) -> Bool {
+        score == other.score && grade == other.grade && dayType == other.dayType
+    }
+}
+
+private extension WidgetSleepSnapshot {
+    func matchesContent(of other: Self) -> Bool {
+        hoursSlept == other.hoursSlept &&
+        deepMinutes == other.deepMinutes &&
+        remMinutes == other.remMinutes &&
+        quality == other.quality
+    }
+}
+
+private extension WidgetActionSnapshot {
+    func matchesContent(of other: Self) -> Bool {
+        headline == other.headline && detail == other.detail && icon == other.icon
+    }
+}
+
+private extension WidgetIntelligenceSnapshot {
+    func matchesContent(of other: Self) -> Bool {
+        headline == other.headline && severityRaw == other.severityRaw && cardType == other.cardType
+    }
+}
+
+private extension WidgetRecoveryDebtSnapshot {
+    func matchesContent(of other: Self) -> Bool {
+        debtHours == other.debtHours && trend == other.trend && detail == other.detail
+    }
+}
+
 // MARK: - Widget Data Store
 
 /// Bridges main app data to the widget extension via App Group UserDefaults.
@@ -57,20 +90,65 @@ final class WidgetDataStore {
         save(snapshot, forKey: AppKeys.Widget.readiness)
     }
 
+    @discardableResult
+    func saveReadinessIfChanged(_ snapshot: WidgetReadinessSnapshot) -> Bool {
+        if let current = loadReadiness(), current.matchesContent(of: snapshot) {
+            return false
+        }
+        saveReadiness(snapshot)
+        return true
+    }
+
     func saveSleep(_ snapshot: WidgetSleepSnapshot) {
         save(snapshot, forKey: AppKeys.Widget.sleep)
+    }
+
+    @discardableResult
+    func saveSleepIfChanged(_ snapshot: WidgetSleepSnapshot) -> Bool {
+        if let current = loadSleep(), current.matchesContent(of: snapshot) {
+            return false
+        }
+        saveSleep(snapshot)
+        return true
     }
 
     func saveAction(_ snapshot: WidgetActionSnapshot) {
         save(snapshot, forKey: AppKeys.Widget.action)
     }
 
+    @discardableResult
+    func saveActionIfChanged(_ snapshot: WidgetActionSnapshot) -> Bool {
+        if let current = loadAction(), current.matchesContent(of: snapshot) {
+            return false
+        }
+        saveAction(snapshot)
+        return true
+    }
+
     func saveIntelligence(_ snapshot: WidgetIntelligenceSnapshot) {
         save(snapshot, forKey: AppKeys.Widget.intelligence)
     }
 
+    @discardableResult
+    func saveIntelligenceIfChanged(_ snapshot: WidgetIntelligenceSnapshot) -> Bool {
+        if let current = loadIntelligence(), current.matchesContent(of: snapshot) {
+            return false
+        }
+        saveIntelligence(snapshot)
+        return true
+    }
+
     func saveRecoveryDebt(_ snapshot: WidgetRecoveryDebtSnapshot) {
         save(snapshot, forKey: AppKeys.Widget.recoveryDebt)
+    }
+
+    @discardableResult
+    func saveRecoveryDebtIfChanged(_ snapshot: WidgetRecoveryDebtSnapshot) -> Bool {
+        if let current = loadRecoveryDebt(), current.matchesContent(of: snapshot) {
+            return false
+        }
+        saveRecoveryDebt(snapshot)
+        return true
     }
 
     func markLastUpdate() {
@@ -116,20 +194,28 @@ final class WidgetDataStore {
         return try? JSONDecoder().decode(T.self, from: data)
     }
 
-    /// Write all widget snapshots and reload timelines.
+    /// Write all widget snapshots and reload timelines only if user-visible content changed.
+    @discardableResult
     func writeAllSnapshots(
         readiness: WidgetReadinessSnapshot?,
         sleep: WidgetSleepSnapshot?,
         action: WidgetActionSnapshot?,
         intelligence: WidgetIntelligenceSnapshot?,
         recoveryDebt: WidgetRecoveryDebtSnapshot?
-    ) {
-        if let readiness { saveReadiness(readiness) }
-        if let sleep { saveSleep(sleep) }
-        if let action { saveAction(action) }
-        if let intelligence { saveIntelligence(intelligence) }
-        if let recoveryDebt { saveRecoveryDebt(recoveryDebt) }
-        markLastUpdate()
-        WidgetCenter.shared.reloadAllTimelines()
+    ) -> Int {
+        var changedSnapshots = 0
+
+        if let readiness, saveReadinessIfChanged(readiness) { changedSnapshots += 1 }
+        if let sleep, saveSleepIfChanged(sleep) { changedSnapshots += 1 }
+        if let action, saveActionIfChanged(action) { changedSnapshots += 1 }
+        if let intelligence, saveIntelligenceIfChanged(intelligence) { changedSnapshots += 1 }
+        if let recoveryDebt, saveRecoveryDebtIfChanged(recoveryDebt) { changedSnapshots += 1 }
+
+        if changedSnapshots > 0 {
+            markLastUpdate()
+            WidgetCenter.shared.reloadAllTimelines()
+        }
+
+        return changedSnapshots
     }
 }

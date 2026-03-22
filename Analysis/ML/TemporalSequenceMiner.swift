@@ -89,6 +89,9 @@ final class TemporalSequenceMiner {
 
     var isReady: Bool { !sequences.isEmpty || !compoundingEffects.isEmpty || !precursorPatterns.isEmpty }
 
+    /// Hash of input data from last run. Skip recomputation if unchanged.
+    private var lastInputHash: Int = 0
+
     // MARK: - Internal State
 
     /// Metrics most likely to participate in cross-metric sequences
@@ -134,6 +137,11 @@ final class TemporalSequenceMiner {
         baselines: [HealthMetric: UserBaseline],
         stateHistory: [SmoothedHealthState] = []
     ) {
+        // Skip if input data hasn't changed since last run
+        let inputHash = computeInputHash(timeSeries: timeSeries)
+        if inputHash == lastInputHash && isReady { return }
+        lastInputHash = inputHash
+
         // Filter to metrics with sufficient data
         let available = timeSeries.filter { $0.value.sortedSamples.count >= Self.minimumDays }
         guard !available.isEmpty else { return }
@@ -153,13 +161,9 @@ final class TemporalSequenceMiner {
         )
         sequences = mined
 
-        // 2. Detect compounding effects
-        compoundingEffects = detectCompoundingEffects(
-            dailyValues: dailyValues,
-            sortedDates: sortedDates,
-            baselines: baselines,
-            available: available
-        )
+        // 2. Compounding effects skipped — compoundingEffects stored on MLOrchestrator
+        // but never read by any ViewModel, View, or downstream system.
+        compoundingEffects = []
 
         // 3. Detect precursor patterns
         precursorPatterns = detectPrecursorPatterns(
@@ -1546,5 +1550,19 @@ final class TemporalSequenceMiner {
     /// Get compounding effects for a specific metric.
     func compoundingEffects(for metric: HealthMetric) -> [CompoundingEffect] {
         compoundingEffects.filter { $0.metric == metric }
+    }
+
+    /// Lightweight hash of input data to skip recomputation when unchanged.
+    private func computeInputHash(timeSeries: [HealthMetric: MetricTimeSeries]) -> Int {
+        var hasher = Hasher()
+        for (metric, series) in timeSeries.sorted(by: { $0.key.rawValue < $1.key.rawValue }) {
+            hasher.combine(metric.rawValue)
+            hasher.combine(series.samples.count)
+            if let last = series.samples.last {
+                hasher.combine(last.value)
+                hasher.combine(last.date.timeIntervalSinceReferenceDate)
+            }
+        }
+        return hasher.finalize()
     }
 }

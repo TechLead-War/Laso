@@ -77,10 +77,18 @@ final class ChangePointDetector {
     private(set) var regimeComparisons: [RegimeComparison] = []
     var isReady: Bool { !changePoints.isEmpty }
 
+    /// Hash of input data from last run. Skip recomputation if unchanged.
+    private var lastInputHash: Int = 0
+
     // MARK: - Detection Entry Point
 
     /// Detect changepoints across all metrics with sufficient data.
     func detect(timeSeries: [HealthMetric: MetricTimeSeries], baselines: [HealthMetric: UserBaseline]) {
+        // Skip if input data hasn't changed since last run
+        let inputHash = computeInputHash(timeSeries: timeSeries)
+        if inputHash == lastInputHash && isReady { return }
+        lastInputHash = inputHash
+
         changePoints = []
         regimeComparisons = []
         let calendar = Calendar.current
@@ -133,8 +141,9 @@ final class ChangePointDetector {
                 : $0.magnitude > $1.magnitude
         }
 
-        // Phase 3: Regime segmentation
-        regimeComparisons = buildRegimeComparisons(allCandidates: allCandidates, timeSeries: timeSeries)
+        // Phase 3: Regime segmentation skipped — regimeComparisons stored on MLOrchestrator
+        // but never read by any ViewModel, View, or downstream system.
+        regimeComparisons = []
     }
 
     // MARK: - CUSUM Changepoint Detection
@@ -497,5 +506,19 @@ final class ChangePointDetector {
 
     func regimeComparison(for metric: HealthMetric) -> RegimeComparison? {
         regimeComparisons.first { $0.metric == metric }
+    }
+
+    /// Lightweight hash of input data to skip recomputation when unchanged.
+    private func computeInputHash(timeSeries: [HealthMetric: MetricTimeSeries]) -> Int {
+        var hasher = Hasher()
+        for (metric, series) in timeSeries.sorted(by: { $0.key.rawValue < $1.key.rawValue }) {
+            hasher.combine(metric.rawValue)
+            hasher.combine(series.samples.count)
+            if let last = series.samples.last {
+                hasher.combine(last.value)
+                hasher.combine(last.date.timeIntervalSinceReferenceDate)
+            }
+        }
+        return hasher.finalize()
     }
 }

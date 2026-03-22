@@ -9,6 +9,11 @@ struct MetricChartView: View {
     let normalRange: RulesConfiguration.NormalRange?
     let trendLine: [MetricSample]?
     let forecastPoints: [MetricSample]?
+    private let dataSpanDays: Int
+    private let periodLabel: String
+    private let xAxisStride: (component: Calendar.Component, count: Int)
+    private let xAxisDateFormat: Date.FormatStyle
+    private let yDomain: ClosedRange<Double>
 
     @State private var selectedDate: Date?
     @State private var isDragging = false
@@ -21,105 +26,45 @@ struct MetricChartView: View {
         trendLine: [MetricSample]? = nil,
         forecastPoints: [MetricSample]? = nil
     ) {
+        let dataSpanDays = Self.makeDataSpanDays(samples: samples)
         self.samples = samples
         self.metric = metric
         self.baseline = baseline
         self.normalRange = normalRange
         self.trendLine = trendLine
         self.forecastPoints = forecastPoints
+        self.dataSpanDays = dataSpanDays
+        self.periodLabel = Self.makePeriodLabel(dataSpanDays: dataSpanDays)
+        self.xAxisStride = Self.makeXAxisStride(dataSpanDays: dataSpanDays)
+        self.xAxisDateFormat = Self.makeXAxisDateFormat(dataSpanDays: dataSpanDays)
+        self.yDomain = Self.makeYDomain(
+            samples: samples,
+            baseline: baseline,
+            trendLine: trendLine,
+            forecastPoints: forecastPoints
+        )
     }
 
     private var color: Color {
         metric.category.color
     }
 
-    /// Days spanned by the current sample set
-    private var dataSpanDays: Int {
-        guard let first = samples.first?.date, let last = samples.last?.date else { return 7 }
-        return max(1, Calendar.current.dateComponents([.day], from: first, to: last).day ?? 7)
-    }
-
-    /// Human-readable period label for analytics
-    private var periodLabel: String {
-        if dataSpanDays <= 1 { return "daily" }
-        if dataSpanDays <= 7 { return "weekly" }
-        if dataSpanDays <= 31 { return "monthly" }
-        if dataSpanDays <= 93 { return "quarterly" }
-        return "yearly"
-    }
-
-    /// Adaptive X-axis stride based on data span. keeps ~4-6 labels visible
-    private var xAxisStride: (component: Calendar.Component, count: Int) {
-        switch dataSpanDays {
-        case 0...10:   return (.day, 2)       // 7D  → every 2 days  (~4 labels)
-        case 11...35:  return (.day, 7)       // 30D → every 7 days  (~4 labels)
-        case 36...100: return (.day, 14)      // 3M  → every 2 weeks (~6 labels)
-        case 101...200: return (.month, 1)    // 6M  → every month   (~6 labels)
-        case 201...400: return (.month, 2)    // 1Y  → every 2 months(~6 labels)
-        default:       return (.month, 3)     // All → every quarter (~4-5 labels)
-        }
-    }
-
-    /// Adaptive date format. shorter labels for longer spans
-    private var xAxisDateFormat: Date.FormatStyle {
-        switch dataSpanDays {
-        case 0...35:   return .dateTime.month(.abbreviated).day()   // "Jan 15"
-        case 36...200: return .dateTime.month(.abbreviated).day()   // "Jan 15"
-        default:       return .dateTime.month(.abbreviated).year(.twoDigits) // "Jan '25"
-        }
-    }
-
-    /// Focused Y-axis domain based on actual data, not the full normal range.
-    /// Prevents small-variation metrics (e.g. walking asymmetry 2-5%) from looking
-    /// flat when the normal range is much wider (0-15%).
-    private var yDomain: ClosedRange<Double> {
-        guard !samples.isEmpty else { return 0...1 }
-
-        var minVal = samples.map(\.value).min()!
-        var maxVal = samples.map(\.value).max()!
-
-        // Include baseline in the visible range if present
-        if let baseline {
-            minVal = min(minVal, baseline)
-            maxVal = max(maxVal, baseline)
-        }
-
-        // Include forecast points in the visible range
-        if let forecastPoints, !forecastPoints.isEmpty {
-            let fMin = forecastPoints.map(\.value).min()!
-            let fMax = forecastPoints.map(\.value).max()!
-            minVal = min(minVal, fMin)
-            maxVal = max(maxVal, fMax)
-        }
-
-        // Include trend line in the visible range
-        if let trendLine, !trendLine.isEmpty {
-            let tMin = trendLine.map(\.value).min()!
-            let tMax = trendLine.map(\.value).max()!
-            minVal = min(minVal, tMin)
-            maxVal = max(maxVal, tMax)
-        }
-
-        let span = maxVal - minVal
-        // Add 20% padding so the line doesn't hug the edges
-        let padding = max(span * 0.2, maxVal * 0.05)
-
-        let low = max(0, minVal - padding) // don't go below zero for most metrics
-        let high = maxVal + padding
-
-        // Ensure the domain isn't degenerate (all same values)
-        if low >= high {
-            return max(0, low - 1)...(high + 1)
-        }
-        return low...high
-    }
-
     /// Find the closest sample to the selected date
     private var selectedSample: MetricSample? {
-        guard let selectedDate else { return nil }
-        return samples.min(by: {
-            abs($0.date.timeIntervalSince(selectedDate)) < abs($1.date.timeIntervalSince(selectedDate))
-        })
+        guard let selectedDate, !samples.isEmpty else { return nil }
+        let insertionIndex = Self.firstIndex(onOrAfter: selectedDate, in: samples)
+        if insertionIndex <= 0 {
+            return samples.first
+        }
+        if insertionIndex >= samples.count {
+            return samples.last
+        }
+
+        let previous = samples[insertionIndex - 1]
+        let next = samples[insertionIndex]
+        return abs(previous.date.timeIntervalSince(selectedDate)) <= abs(next.date.timeIntervalSince(selectedDate))
+            ? previous
+            : next
     }
 
     var body: some View {
@@ -144,7 +89,7 @@ struct MetricChartView: View {
                 .foregroundStyle(.green.opacity(0.05))
             }
 
-            // Data line
+            // Data line + area under curve (single pass)
             ForEach(samples) { sample in
                 LineMark(
                     x: .value("Date", sample.date),
@@ -153,10 +98,7 @@ struct MetricChartView: View {
                 .foregroundStyle(color.gradient)
                 .lineStyle(StrokeStyle(lineWidth: 2))
                 .interpolationMethod(.catmullRom)
-            }
 
-            // Area under curve
-            ForEach(samples) { sample in
                 AreaMark(
                     x: .value("Date", sample.date),
                     y: .value(metric.displayName, sample.value)
@@ -386,6 +328,101 @@ struct MetricChartView: View {
         default:
             return String(format: "%.1f", value)
         }
+    }
+
+    private static func makeDataSpanDays(samples: [MetricSample]) -> Int {
+        guard let first = samples.first?.date, let last = samples.last?.date else { return 7 }
+        return max(1, Calendar.current.dateComponents([.day], from: first, to: last).day ?? 7)
+    }
+
+    private static func makePeriodLabel(dataSpanDays: Int) -> String {
+        if dataSpanDays <= 1 { return "daily" }
+        if dataSpanDays <= 7 { return "weekly" }
+        if dataSpanDays <= 31 { return "monthly" }
+        if dataSpanDays <= 93 { return "quarterly" }
+        return "yearly"
+    }
+
+    private static func makeXAxisStride(dataSpanDays: Int) -> (component: Calendar.Component, count: Int) {
+        switch dataSpanDays {
+        case 0...10: return (.day, 2)
+        case 11...35: return (.day, 7)
+        case 36...100: return (.day, 14)
+        case 101...200: return (.month, 1)
+        case 201...400: return (.month, 2)
+        default: return (.month, 3)
+        }
+    }
+
+    private static func makeXAxisDateFormat(dataSpanDays: Int) -> Date.FormatStyle {
+        switch dataSpanDays {
+        case 0...35:
+            return .dateTime.month(.abbreviated).day()
+        case 36...200:
+            return .dateTime.month(.abbreviated).day()
+        default:
+            return .dateTime.month(.abbreviated).year(.twoDigits)
+        }
+    }
+
+    private static func makeYDomain(
+        samples: [MetricSample],
+        baseline: Double?,
+        trendLine: [MetricSample]?,
+        forecastPoints: [MetricSample]?
+    ) -> ClosedRange<Double> {
+        guard let firstSample = samples.first else { return 0...1 }
+
+        var minVal = firstSample.value
+        var maxVal = firstSample.value
+
+        for sample in samples.dropFirst() {
+            minVal = min(minVal, sample.value)
+            maxVal = max(maxVal, sample.value)
+        }
+
+        if let baseline {
+            minVal = min(minVal, baseline)
+            maxVal = max(maxVal, baseline)
+        }
+
+        if let trendLine {
+            for point in trendLine {
+                minVal = min(minVal, point.value)
+                maxVal = max(maxVal, point.value)
+            }
+        }
+
+        if let forecastPoints {
+            for point in forecastPoints {
+                minVal = min(minVal, point.value)
+                maxVal = max(maxVal, point.value)
+            }
+        }
+
+        let span = maxVal - minVal
+        let padding = max(span * 0.2, maxVal * 0.05)
+        let low = max(0, minVal - padding)
+        let high = maxVal + padding
+
+        if low >= high {
+            return max(0, low - 1)...(high + 1)
+        }
+        return low...high
+    }
+
+    private static func firstIndex(onOrAfter date: Date, in samples: [MetricSample]) -> Int {
+        var low = 0
+        var high = samples.count
+        while low < high {
+            let mid = (low + high) / 2
+            if samples[mid].date < date {
+                low = mid + 1
+            } else {
+                high = mid
+            }
+        }
+        return low
     }
 }
 

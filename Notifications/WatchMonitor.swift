@@ -29,6 +29,8 @@ final class WatchMonitor {
     private let lastWatchDataKey = AppKeys.Watch.lastWatchDataTime
     private let lastNotWornNotificationKey = AppKeys.Watch.lastNotWornNotification
     private let lowBatteryAlertShownKey = AppKeys.Watch.lowBatteryAlertShown
+    private let lastObserverProcessingKey = AppKeys.Watch.lastObserverProcessing
+    private let lastScheduleRefreshKey = AppKeys.Watch.lastScheduleRefresh
 
     /// Minimum hours between repeated "not worn" notifications
     private var notWornCooldownHours: Double { RemoteConfigManager.shared.watchNotWornCooldownHours }
@@ -36,6 +38,14 @@ final class WatchMonitor {
     /// Cached preferences to avoid repeated Keychain + AES-GCM decryption
     private var cachedPreferences: NotificationPreferences?
     private var preferencesLoadedAt: Date?
+
+    private var observerProcessingInterval: TimeInterval {
+        ThermalManager.shared.watchMonitorQueryInterval
+    }
+
+    private var scheduleRefreshInterval: TimeInterval {
+        ThermalManager.shared.watchNotificationRefreshInterval
+    }
 
     private let scheduledNotWornIdentifier = AppConstants.NotificationID.watchNotWornScheduled
 
@@ -111,15 +121,38 @@ final class WatchMonitor {
         guard let healthStore,
               let heartRateType = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return }
 
+        let now = Date()
         let freshnessWindow = RemoteConfigManager.shared.watchDataFreshnessHours * 3600
-        let windowStart = Date().addingTimeInterval(-freshnessWindow)
-        let predicate = HKQuery.predicateForSamples(withStart: windowStart, end: Date(), options: .strictStartDate)
+        let defaults = UserDefaults.standard
+
+        if canUseRecentWatchConfirmation(now: now, defaults: defaults, freshnessWindow: freshnessWindow) {
+            let lastScheduleRefresh = defaults.double(forKey: lastScheduleRefreshKey)
+            let shouldRefreshSchedule = lastScheduleRefresh == 0 ||
+                now.timeIntervalSince(Date(timeIntervalSince1970: lastScheduleRefresh)) >= scheduleRefreshInterval
+
+            if shouldRefreshSchedule {
+                defaults.set(now.timeIntervalSince1970, forKey: lastWatchDataKey)
+                scheduleNotWornNotification()
+            }
+
+            let lastProcessed = defaults.double(forKey: lastObserverProcessingKey)
+            let processedRecently = lastProcessed > 0 &&
+                now.timeIntervalSince(Date(timeIntervalSince1970: lastProcessed)) < observerProcessingInterval
+            if processedRecently {
+                return
+            }
+        }
+
+        defaults.set(now.timeIntervalSince1970, forKey: lastObserverProcessingKey)
+
+        let windowStart = now.addingTimeInterval(-freshnessWindow)
+        let predicate = HKQuery.predicateForSamples(withStart: windowStart, end: now, options: .strictStartDate)
         let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
 
         let query = HKSampleQuery(
             sampleType: heartRateType,
             predicate: predicate,
-            limit: 5,
+            limit: 3,
             sortDescriptors: [sortDescriptor]
         ) { [weak self] _, samples, error in
             guard let self, let samples, error == nil else { return }
@@ -127,10 +160,7 @@ final class WatchMonitor {
             for sample in samples {
                 if self.isFromAppleWatch(sample: sample) {
                     // Watch is alive. record timestamp
-                    UserDefaults.standard.set(
-                        sample.startDate.timeIntervalSince1970,
-                        forKey: self.lastWatchDataKey
-                    )
+                    defaults.set(sample.startDate.timeIntervalSince1970, forKey: self.lastWatchDataKey)
 
                     // Push the "not worn" notification forward. it won't fire
                     // as long as data keeps coming.
@@ -144,13 +174,23 @@ final class WatchMonitor {
             }
 
             // No fresh watch data. ensure a notification is pending
-            let lastDataTime = UserDefaults.standard.double(forKey: self.lastWatchDataKey)
+            let lastDataTime = defaults.double(forKey: self.lastWatchDataKey)
             if lastDataTime > 0 {
                 self.ensureNotWornScheduled()
             }
         }
 
         healthStore.execute(query)
+    }
+
+    private func canUseRecentWatchConfirmation(
+        now: Date,
+        defaults: UserDefaults,
+        freshnessWindow: TimeInterval
+    ) -> Bool {
+        let lastConfirmedWatchData = defaults.double(forKey: lastWatchDataKey)
+        guard lastConfirmedWatchData > 0 else { return false }
+        return now.timeIntervalSince(Date(timeIntervalSince1970: lastConfirmedWatchData)) < freshnessWindow
     }
 
     // MARK: - Watch Detection
@@ -205,6 +245,7 @@ final class WatchMonitor {
             maxPerDay: 1,
             bypassCap: true
         )
+        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: lastScheduleRefreshKey)
     }
 
     /// Ensures a "not worn" notification is pending without cancelling an existing one.

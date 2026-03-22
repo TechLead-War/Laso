@@ -94,45 +94,125 @@ struct TrendAnalyzer {
         return "\(sign)\(String(format: "%.1f", change))%"
     }
 
-    /// Analyze trend for a metric's time series within a specific time range
+    /// Analyze trend for a metric's time series within a specific time range.
+    ///
+    /// Computes all moving averages, regression slope, period-over-period change,
+    /// and inflection in a single reverse pass through the sorted samples, avoiding
+    /// repeated O(n) scans for each statistic.
     static func analyze(series: MetricTimeSeries, higherIsBetter: Bool, days: Int?) -> TrendResult {
-        // Filter samples to the requested period
-        let periodSamples: [MetricSample]
-        if let days {
-            periodSamples = series.samples(lastDays: days)
-        } else {
-            periodSamples = series.sortedSamples
-        }
-
-        guard !periodSamples.isEmpty else {
+        let allSamples = series.sortedSamples  // already sorted chronologically
+        guard !allSamples.isEmpty else {
             return TrendResult(direction: .stable, slope: 0, weekOverWeekChange: 0, movingAverage7d: 0, movingAverage30d: 0, movingAverage90d: 0, movingAverage180d: 0, movingAverage365d: 0, inflection: .steady)
         }
 
-        // Linear regression on the period's data (use last 1/3 of period for slope)
-        let regressionDays = max((days ?? 30) / 3, 7)
-        let regressionSamples = series.samples(lastDays: regressionDays).map(\.value)
-        let slope = regressionSamples.linearRegression.slope
+        let now = Date()
+        let calendar = Calendar.current
 
-        // Moving averages (always from full dataset for comparison)
-        let ma7 = series.mean(lastDays: 7)
-        let ma30 = series.mean(lastDays: 30)
-        let ma90 = series.mean(lastDays: 90)
-        let ma180 = series.mean(lastDays: 180)
-        let ma365 = series.mean(lastDays: 365)
-
-        // Period-over-period comparison (this period vs previous same-length period)
+        // Pre-compute all day-boundary cutoffs once
         let periodDays = days ?? 30
         let halfPeriod = periodDays / 2
-        let recentHalf = series.samples(lastDays: halfPeriod).map(\.value)
-        let olderHalfSamples = periodSamples.filter { sample in
-            let daysAgo = Calendar.current.dateComponents([.day], from: sample.date, to: Date()).day ?? 0
-            return daysAgo >= halfPeriod && daysAgo < periodDays
-        }
-        let olderHalf = olderHalfSamples.map(\.value)
+        let regressionDays = max(periodDays / 3, 7)
 
+        let cutoff7   = calendar.date(byAdding: .day, value: -7,   to: now) ?? now
+        let cutoff14  = calendar.date(byAdding: .day, value: -14,  to: now) ?? now
+        let cutoff30  = calendar.date(byAdding: .day, value: -30,  to: now) ?? now
+        let cutoff90  = calendar.date(byAdding: .day, value: -90,  to: now) ?? now
+        let cutoff180 = calendar.date(byAdding: .day, value: -180, to: now) ?? now
+        let cutoff365 = calendar.date(byAdding: .day, value: -365, to: now) ?? now
+
+        let cutoffHalfPeriod = calendar.date(byAdding: .day, value: -halfPeriod,  to: now) ?? now
+        let cutoffFullPeriod = calendar.date(byAdding: .day, value: -periodDays,  to: now) ?? now
+        let cutoffRegression = calendar.date(byAdding: .day, value: -regressionDays, to: now) ?? now
+
+        // Accumulators for moving averages
+        var sum7   = 0.0, count7   = 0
+        var sum30  = 0.0, count30  = 0
+        var sum90  = 0.0, count90  = 0
+        var sum180 = 0.0, count180 = 0
+        var sum365 = 0.0, count365 = 0
+
+        // Accumulators for period halves
+        var sumRecentHalf = 0.0, countRecentHalf = 0
+        var sumOlderHalf  = 0.0, countOlderHalf  = 0
+
+        // Collect regression and inflection values (reversed, will flip for regression)
+        var regressionValues: [Double] = []
+        var recent7Values: [Double] = []   // last 7 days (for inflection)
+        var older7to14Values: [Double] = [] // 7-14 days ago (for inflection)
+
+        var hasPeriodSample = false
+
+        // Hoist per-iteration period check outside the loop
+        let cutoffPeriod: Date? = days.flatMap { calendar.date(byAdding: .day, value: -$0, to: now) }
+
+        // Single reverse pass: walk from newest to oldest, stop at 365-day boundary
+        for i in stride(from: allSamples.count - 1, through: 0, by: -1) {
+            let sample = allSamples[i]
+            let date = sample.date
+            let value = sample.value
+
+            // Stop early if we're past the widest window we need
+            if date < cutoff365 { break }
+
+            // Moving averages — each bucket includes all narrower ones
+            sum365 += value; count365 += 1
+            if date >= cutoff180 { sum180 += value; count180 += 1 }
+            if date >= cutoff90  { sum90  += value; count90  += 1 }
+            if date >= cutoff30  { sum30  += value; count30  += 1 }
+            if date >= cutoff7   { sum7   += value; count7   += 1 }
+
+            // Period half buckets (recentHalf = last halfPeriod days, olderHalf = halfPeriod..fullPeriod days ago)
+            if date >= cutoffHalfPeriod {
+                sumRecentHalf += value; countRecentHalf += 1
+            } else if date >= cutoffFullPeriod {
+                sumOlderHalf += value; countOlderHalf += 1
+            }
+
+            // Regression values (last regressionDays)
+            if date >= cutoffRegression {
+                regressionValues.append(value)
+            }
+
+            // Inflection buckets
+            if date >= cutoff7 {
+                recent7Values.append(value)
+            } else if date >= cutoff14 {
+                older7to14Values.append(value)
+            }
+
+            // Check if any sample falls within the requested period
+            if let cp = cutoffPeriod {
+                if date >= cp { hasPeriodSample = true }
+            } else {
+                hasPeriodSample = true
+            }
+        }
+
+        guard hasPeriodSample else {
+            return TrendResult(direction: .stable, slope: 0, weekOverWeekChange: 0, movingAverage7d: 0, movingAverage30d: 0, movingAverage90d: 0, movingAverage180d: 0, movingAverage365d: 0, inflection: .steady)
+        }
+
+        // Compute moving averages
+        let ma7   = count7   > 0 ? sum7   / Double(count7)   : 0
+        let ma30  = count30  > 0 ? sum30  / Double(count30)  : 0
+        let ma90  = count90  > 0 ? sum90  / Double(count90)  : 0
+        let ma180 = count180 > 0 ? sum180 / Double(count180) : 0
+        let ma365 = count365 > 0 ? sum365 / Double(count365) : 0
+
+        // Compute regression slope (values were collected newest-first, reverse for chronological order)
+        regressionValues.reverse()
+        let slope = regressionValues.linearRegression.slope
+
+        // Period-over-period change
         let periodChange: Double
-        if !olderHalf.isEmpty && olderHalf.mean != 0 {
-            periodChange = ((recentHalf.mean - olderHalf.mean) / olderHalf.mean) * 100
+        if countOlderHalf > 0 {
+            let olderMean = sumOlderHalf / Double(countOlderHalf)
+            if olderMean != 0 {
+                let recentMean = countRecentHalf > 0 ? sumRecentHalf / Double(countRecentHalf) : 0
+                periodChange = ((recentMean - olderMean) / olderMean) * 100
+            } else {
+                periodChange = 0
+            }
         } else {
             periodChange = 0
         }
@@ -143,8 +223,32 @@ struct TrendAnalyzer {
             higherIsBetter: higherIsBetter
         )
 
-        // Inflection detection: compare recent slope vs older slope
-        let inflection = detectInflection(series: series, currentSlope: slope, higherIsBetter: higherIsBetter)
+        // Inflection detection (inline, using already-collected buckets)
+        let inflection: Inflection
+        // Values were collected newest-first; reverse for chronological regression
+        recent7Values.reverse()
+        older7to14Values.reverse()
+        if recent7Values.count >= 3, older7to14Values.count >= 3 {
+            let recentSlope = slope  // regression is already on recent data
+            let olderSlope = older7to14Values.linearRegression.slope
+
+            let effectiveRecent = higherIsBetter ? recentSlope : -recentSlope
+            let effectiveOlder = higherIsBetter ? olderSlope : -olderSlope
+
+            if effectiveRecent > 0.01 && effectiveOlder < -0.01 {
+                inflection = .reversing
+            } else if effectiveRecent < -0.01 && effectiveOlder > 0.01 {
+                inflection = .reversing
+            } else if abs(effectiveRecent) > abs(effectiveOlder) * 1.5 && abs(effectiveRecent) > 0.01 {
+                inflection = .accelerating
+            } else if abs(effectiveRecent) < abs(effectiveOlder) * 0.5 && abs(effectiveOlder) > 0.01 {
+                inflection = .decelerating
+            } else {
+                inflection = .steady
+            }
+        } else {
+            inflection = .steady
+        }
 
         return TrendResult(
             direction: direction,
@@ -157,40 +261,6 @@ struct TrendAnalyzer {
             movingAverage365d: ma365,
             inflection: inflection
         )
-    }
-
-    /// Detect inflection by comparing recent 7-day slope to previous 7-14 day slope
-    private static func detectInflection(series: MetricTimeSeries, currentSlope: Double, higherIsBetter: Bool) -> Inflection {
-        let recentSamples = series.samples(lastDays: 7).map(\.value)
-        let olderSamples = series.sortedSamples.filter { sample in
-            let daysAgo = Calendar.current.dateComponents([.day], from: sample.date, to: Date()).day ?? 0
-            return daysAgo >= 7 && daysAgo < 14
-        }.map(\.value)
-
-        guard recentSamples.count >= 3, olderSamples.count >= 3 else { return .steady }
-
-        let recentSlope = recentSamples.linearRegression.slope
-        let olderSlope = olderSamples.linearRegression.slope
-
-        // Normalize: positive slope = "good direction" for the metric
-        let effectiveRecent = higherIsBetter ? recentSlope : -recentSlope
-        let effectiveOlder = higherIsBetter ? olderSlope : -olderSlope
-
-        // Reversal: slopes in opposite directions with sufficient magnitude
-        if effectiveRecent > 0.01 && effectiveOlder < -0.01 { return .reversing }
-        if effectiveRecent < -0.01 && effectiveOlder > 0.01 { return .reversing }
-
-        // Acceleration: same direction but getting steeper
-        if abs(effectiveRecent) > abs(effectiveOlder) * 1.5 && abs(effectiveRecent) > 0.01 {
-            return .accelerating
-        }
-
-        // Deceleration: same direction but flattening out
-        if abs(effectiveRecent) < abs(effectiveOlder) * 0.5 && abs(effectiveOlder) > 0.01 {
-            return .decelerating
-        }
-
-        return .steady
     }
 
     private static func classifyDirection(slope: Double, weekOverWeekChange: Double, higherIsBetter: Bool) -> TrendDirection {

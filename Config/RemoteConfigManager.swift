@@ -482,7 +482,7 @@ extension RemoteConfigManager {
         "analysis_trend_slope_threshold":   0.02 as NSNumber,
 
         // UI intervals
-        "home_refresh_interval_seconds":       60 as NSNumber,
+        "home_refresh_interval_seconds":       120 as NSNumber,
         "feedback_days_before_first_prompt":   5 as NSNumber,
 
         // Data retention (days)

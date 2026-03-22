@@ -54,6 +54,11 @@ final class HealthDataQueryEngine {
         enum BestWorst { case best, worst }
     }
 
+    enum MatchingMode {
+        case full
+        case keywordOnly
+    }
+
     /// Intermediate category for semantic matching (no associated values)
     private enum IntentCategory: String, CaseIterable {
         case trend, comparison, correlation, forecast, anomaly, bestWorst, status
@@ -107,6 +112,9 @@ final class HealthDataQueryEngine {
     // MARK: - Properties
 
     private let nlAnalyzer = NLEmbeddingAnalyzer()
+    private let semanticCacheLock = NSLock()
+    private var semanticIntentCache: [String: IntentCategory] = [:]
+    private var semanticMissCache = Set<String>()
 
     // MARK: - Metric Vocabulary
 
@@ -241,10 +249,14 @@ final class HealthDataQueryEngine {
         ],
     ]
 
+    private static let semanticCorpus: [(category: IntentCategory, exemplar: String)] = IntentCategory.allCases.flatMap { category in
+        (intentExemplars[category] ?? []).map { (category: category, exemplar: $0) }
+    }
+
     // MARK: - Query Processing
 
     /// Primary entry point. uses full ML pipeline context.
-    func query(question: String, context: QueryContext) -> QueryResult {
+    func query(question: String, context: QueryContext, matchingMode: MatchingMode = .full) -> QueryResult {
         let normalized = question.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
 
         // Handle conversational inputs before parsing health intent
@@ -252,7 +264,7 @@ final class HealthDataQueryEngine {
             return conversational
         }
 
-        let intent = parseIntent(normalized, context: context)
+        let intent = parseIntent(normalized, context: context, matchingMode: matchingMode)
 
         switch intent {
         case .trend(let metric, let period):
@@ -310,7 +322,7 @@ final class HealthDataQueryEngine {
 
     // MARK: - Intent Parsing
 
-    private func parseIntent(_ question: String, context: QueryContext) -> QueryIntent {
+    private func parseIntent(_ question: String, context: QueryContext, matchingMode: MatchingMode) -> QueryIntent {
         let detectedMetrics = detectMetrics(in: question)
         let detectedPeriods = detectPeriods(in: question)
         let primaryMetric = detectedMetrics.first
@@ -322,7 +334,7 @@ final class HealthDataQueryEngine {
         }
 
         // Semantic matching fallback via NLEmbedding
-        if let category = semanticIntentMatch(question) {
+        if matchingMode == .full, let category = semanticIntentMatch(question) {
             return resolveCategory(category, metrics: detectedMetrics, periods: detectedPeriods)
         }
 
@@ -420,23 +432,46 @@ final class HealthDataQueryEngine {
 
     /// Sentence-embedding semantic match for ambiguous queries.
     private func semanticIntentMatch(_ question: String) -> IntentCategory? {
-        guard let embedding = NLEmbedding.sentenceEmbedding(for: .english) else { return nil }
+        let normalized = question.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard normalized.count >= 8 else { return nil }
+
+        semanticCacheLock.lock()
+        if let cached = semanticIntentCache[normalized] {
+            semanticCacheLock.unlock()
+            return cached
+        }
+        if semanticMissCache.contains(normalized) {
+            semanticCacheLock.unlock()
+            return nil
+        }
+        semanticCacheLock.unlock()
 
         var bestCategory: IntentCategory?
         var bestDistance = Double.infinity
 
-        for (category, exemplars) in Self.intentExemplars {
-            for exemplar in exemplars {
-                let dist = embedding.distance(between: question, and: exemplar)
-                if dist < bestDistance {
-                    bestDistance = dist
-                    bestCategory = category
-                }
+        for (category, exemplar) in Self.semanticCorpus {
+            let dist = nlAnalyzer.computeSemanticDistance(sentenceA: normalized, sentenceB: exemplar)
+            if dist < bestDistance {
+                bestDistance = dist
+                bestCategory = category
             }
         }
 
-        // Threshold: only accept if reasonably close
-        return bestDistance < 1.2 ? bestCategory : nil
+        let match = bestDistance < 1.2 ? bestCategory : nil
+
+        semanticCacheLock.lock()
+        if semanticIntentCache.count + semanticMissCache.count > 256 {
+            semanticIntentCache.removeAll(keepingCapacity: true)
+            semanticMissCache.removeAll(keepingCapacity: true)
+        }
+        if let match {
+            semanticIntentCache[normalized] = match
+        } else {
+            semanticMissCache.insert(normalized)
+        }
+        semanticCacheLock.unlock()
+
+        return match
     }
 
     /// Convert a category (from semantic match) into a full QueryIntent with extracted params.

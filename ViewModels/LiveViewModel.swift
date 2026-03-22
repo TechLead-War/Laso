@@ -38,7 +38,7 @@ final class LiveViewModel {
     private var respiratoryRateQuery: HKAnchoredObjectQuery?
     private var activityObserverQueries: [HKObserverQuery] = []
     private var lastCumulativeFetch: Date = .distantPast
-    private static let cumulativeThrottleInterval: TimeInterval = 3
+    private static let cumulativeThrottleInterval: TimeInterval = 15
     private var respiratoryAvailabilityWorkItem: DispatchWorkItem?
 
     /// Persistent observer for background delivery. survives app backgrounding so HealthKit
@@ -68,7 +68,12 @@ final class LiveViewModel {
     private var dailyLockDate: Date?
     private var refreshState = LiveRefreshPlanner.State()
     private var lastHomeFetchDate: Date?
+    private var lastTieredFetchDate: Date?
+    private var isFetchingCumulativeStats = false
+    private var pendingCumulativeStatsCallbacks = 0
     private static let homeFetchDebounce: TimeInterval = 1.0
+    private static let tieredFetchDebounceNominal: TimeInterval = 10
+    private static let tieredFetchDebounceFair: TimeInterval = 20
 
     private typealias PendingHRUpdate = LiveHeartRateTimelineReducer.PendingUpdate
 
@@ -180,7 +185,11 @@ final class LiveViewModel {
         if let last = lastHomeFetchDate, now.timeIntervalSince(last) < Self.homeFetchDebounce {
             return
         }
+        if ThermalManager.shared.shouldThrottle {
+            return
+        }
         lastHomeFetchDate = now
+        lastTieredFetchDate = now
         fetchLatestDailyValues()
         fetchTodayCumulativeStats()
         fetchActivityGoals()
@@ -197,7 +206,15 @@ final class LiveViewModel {
     /// Tiered fetch. only queries data whose refresh interval has elapsed
     func fetchHomeDataTiered() {
         guard HKHealthStore.isHealthDataAvailable() else { return }
+        if ThermalManager.shared.shouldThrottle {
+            return
+        }
         let now = Date()
+        let debounceInterval = tieredFetchDebounceInterval(for: ThermalManager.shared.currentState)
+        if let last = lastTieredFetchDate, now.timeIntervalSince(last) < debounceInterval {
+            return
+        }
+        lastTieredFetchDate = now
         let decision = refreshPlanner.decisionForTieredRefresh(now: now, state: refreshState)
 
         if decision.shouldFetchFast {
@@ -539,24 +556,71 @@ final class LiveViewModel {
     // MARK: - Today's Cumulative Stats
 
     func fetchTodayCumulativeStats() {
+        guard beginCumulativeStatsFetch(expectedCallbacks: 6) else { return }
         let startOfDay = Calendar.current.startOfDay(for: Date())
         fetchTodayStat(.stepCount, unit: .count(), from: startOfDay) { [weak self] v in
-            Task { @MainActor in self?.activity.todaySteps = v }
+            Task { @MainActor in
+                self?.activity.todaySteps = v
+                self?.finishCumulativeStatsFetch()
+            }
         }
         fetchTodayStat(.activeEnergyBurned, unit: .kilocalorie(), from: startOfDay) { [weak self] v in
-            Task { @MainActor in self?.activity.todayActiveCalories = v }
+            Task { @MainActor in
+                self?.activity.todayActiveCalories = v
+                self?.finishCumulativeStatsFetch()
+            }
         }
         fetchTodayStat(.appleExerciseTime, unit: .minute(), from: startOfDay) { [weak self] v in
-            Task { @MainActor in self?.activity.todayExerciseMinutes = v }
+            Task { @MainActor in
+                self?.activity.todayExerciseMinutes = v
+                self?.finishCumulativeStatsFetch()
+            }
         }
         fetchTodayStat(.appleStandTime, unit: .hour(), from: startOfDay) { [weak self] v in
-            Task { @MainActor in self?.activity.todayStandHours = v }
+            Task { @MainActor in
+                self?.activity.todayStandHours = v
+                self?.finishCumulativeStatsFetch()
+            }
         }
         fetchTodayStat(.distanceWalkingRunning, unit: .meterUnit(with: .kilo), from: startOfDay) { [weak self] v in
-            Task { @MainActor in self?.activity.todayDistance = v }
+            Task { @MainActor in
+                self?.activity.todayDistance = v
+                self?.finishCumulativeStatsFetch()
+            }
         }
         fetchTodayStat(.flightsClimbed, unit: .count(), from: startOfDay) { [weak self] v in
-            Task { @MainActor in self?.activity.todayFlightsClimbed = v }
+            Task { @MainActor in
+                self?.activity.todayFlightsClimbed = v
+                self?.finishCumulativeStatsFetch()
+            }
+        }
+    }
+
+    private func beginCumulativeStatsFetch(expectedCallbacks: Int) -> Bool {
+        guard !isFetchingCumulativeStats else { return false }
+        isFetchingCumulativeStats = true
+        pendingCumulativeStatsCallbacks = expectedCallbacks
+        return true
+    }
+
+    private func finishCumulativeStatsFetch() {
+        guard isFetchingCumulativeStats else { return }
+        pendingCumulativeStatsCallbacks = max(0, pendingCumulativeStatsCallbacks - 1)
+        if pendingCumulativeStatsCallbacks == 0 {
+            isFetchingCumulativeStats = false
+        }
+    }
+
+    private func tieredFetchDebounceInterval(for thermalState: ProcessInfo.ThermalState) -> TimeInterval {
+        switch thermalState {
+        case .nominal:
+            return Self.tieredFetchDebounceNominal
+        case .fair:
+            return Self.tieredFetchDebounceFair
+        case .serious, .critical:
+            return Self.tieredFetchDebounceFair
+        @unknown default:
+            return Self.tieredFetchDebounceFair
         }
     }
 
@@ -615,18 +679,21 @@ final class LiveViewModel {
     func fetchLatestDailyValues() {
         refreshReadinessBaselinesIfNeeded()
 
+        // Batch recovery metric updates — each callback sets properties + recomputes readiness
         fetchLatestSampleWithDate(.restingHeartRate, unit: HKUnit.count().unitDivided(by: .minute()), maxAge: 48 * 3600) { [weak self] value, date in
             Task { @MainActor in
-                self?.recovery.latestRestingHeartRate = value
-                self?.recovery.latestRestingHeartRateTimestamp = date
-                self?.computeReadinessScore()
+                guard let self else { return }
+                self.recovery.latestRestingHeartRate = value
+                self.recovery.latestRestingHeartRateTimestamp = date
+                self.computeReadinessScore()
             }
         }
         fetchLatestSampleWithDate(.heartRateVariabilitySDNN, unit: HKUnit.secondUnit(with: .milli), maxAge: 48 * 3600) { [weak self] value, date in
             Task { @MainActor in
-                self?.recovery.latestHRV = value
-                self?.recovery.latestHRVTimestamp = date
-                self?.computeReadinessScore()
+                guard let self else { return }
+                self.recovery.latestHRV = value
+                self.recovery.latestHRVTimestamp = date
+                self.computeReadinessScore()
             }
         }
     }

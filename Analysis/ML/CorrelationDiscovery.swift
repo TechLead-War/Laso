@@ -52,9 +52,19 @@ final class CorrelationDiscovery {
             dateValues[metric] = dv
         }
 
-        // Test all N*(N-1)/2 pairs
+        // Test all N*(N-1)/2 pairs, bailing out if the device gets hot
+        var pairCount = 0
         for i in 0..<metrics.count {
+            // Check thermal state between outer loop iterations to avoid
+            // burning CPU for minutes on O(N²) pair testing
+            if i > 0 {
+                let thermalState = ProcessInfo.processInfo.thermalState
+                if thermalState == .serious || thermalState == .critical {
+                    break
+                }
+            }
             for j in (i + 1)..<metrics.count {
+                pairCount += 1
                 let metricA = metrics[i]
                 let metricB = metrics[j]
 
@@ -98,7 +108,7 @@ final class CorrelationDiscovery {
                 var effectSize: Double = 0
                 var optimalLagDays: Int = 0
 
-                if abs(pearsonR) >= 0.25 || mi > miSignificanceThreshold * 3 {
+                if abs(pearsonR) >= 0.30 || mi > miSignificanceThreshold * 3 {
                     // 3. Granger causality (A → B) using proper OLS + F-distribution
                     let grangerResult = GrangerCausalityEngine.test(
                         cause: valuesA, effect: valuesB,

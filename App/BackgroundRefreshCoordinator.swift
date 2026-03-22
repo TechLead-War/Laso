@@ -11,6 +11,11 @@ final class BackgroundRefreshCoordinator {
 
     private var hasRegistered = false
 
+    /// Tracks last successful foreground analysis completion for incremental skip logic.
+    /// If the foreground pipeline completed recently, background task only refreshes
+    /// readiness + widget snapshot without re-running the full ML pipeline.
+    private static let incrementalSkipInterval: TimeInterval = 2 * 3600 // 2 hours
+
     init(
         taskIdentifier: String = AppConstants.BackgroundTask.readinessRefresh,
         earliestBeginInterval: TimeInterval = AppConstants.BackgroundTask.earliestBeginInterval,
@@ -60,15 +65,31 @@ final class BackgroundRefreshCoordinator {
     }
 
     func handle(_ task: BGAppRefreshTask) {
+        if ThermalManager.shared.shouldThrottle {
+            task.setTaskCompleted(success: false)
+            schedule() // re-schedule for later
+            return
+        }
+
         schedule()
 
         let startTime = Date()
-        task.expirationHandler = {}
         let delay = completionDelay
 
-        Task { @MainActor in
+        let workTask = Task { @MainActor in
             let liveViewModel = liveViewModelFactory()
-            liveViewModel.fetchHomeData()
+
+            // Incremental mode: if foreground ML pipeline ran recently, only fetch
+            // lightweight readiness data instead of triggering full analysis.
+            let lastMLRun = UserDefaults.standard.object(forKey: "lastMLPipelineCompletion") as? Date
+            let isRecentForegroundRun = lastMLRun.map { Date().timeIntervalSince($0) < Self.incrementalSkipInterval } ?? false
+
+            if isRecentForegroundRun {
+                // Lightweight: just fetch readiness inputs (RHR, HRV, sleep)
+                liveViewModel.fetchHomeDataTiered()
+            } else {
+                liveViewModel.fetchHomeData()
+            }
 
             try? await Task.sleep(for: .seconds(delay))
 
@@ -82,18 +103,19 @@ final class BackgroundRefreshCoordinator {
                     dayType: "",
                     updatedAt: Date()
                 )
-                WidgetDataStore.shared.saveReadiness(snapshot)
-                WidgetDataStore.shared.markLastUpdate()
-                WidgetCenter.shared.reloadAllTimelines()
-                AppAnalytics.shared.trackWidgetSnapshotUpdated(
-                    trigger: "background_refresh",
-                    snapshotsWritten: 1,
-                    hasReadiness: true,
-                    hasSleep: false,
-                    hasAction: false,
-                    hasIntelligence: false,
-                    hasRecoveryDebt: false
-                )
+                if WidgetDataStore.shared.saveReadinessIfChanged(snapshot) {
+                    WidgetDataStore.shared.markLastUpdate()
+                    WidgetCenter.shared.reloadAllTimelines()
+                    AppAnalytics.shared.trackWidgetSnapshotUpdated(
+                        trigger: "background_refresh",
+                        snapshotsWritten: 1,
+                        hasReadiness: true,
+                        hasSleep: false,
+                        hasAction: false,
+                        hasIntelligence: false,
+                        hasRecoveryDebt: false
+                    )
+                }
             }
 
             task.setTaskCompleted(success: success)
@@ -102,6 +124,10 @@ final class BackgroundRefreshCoordinator {
                 durationMs: durationMs,
                 samplesLoaded: success ? 1 : 0
             )
+        }
+
+        task.expirationHandler = {
+            workTask.cancel()
         }
     }
 }

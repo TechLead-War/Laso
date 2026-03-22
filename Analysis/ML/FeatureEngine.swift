@@ -16,9 +16,11 @@ final class FeatureEngine {
     /// Running statistics per metric for incremental z-score normalization
     private var runningStats: [HealthMetric: WelfordState] = [:]
 
-    /// Running weekday/weekend means per metric for offset features
+    /// Running weekday/weekend means per metric for offset features (maintained incrementally)
     private var weekdayStats: [HealthMetric: WelfordState] = [:]
     private var weekendStats: [HealthMetric: WelfordState] = [:]
+    /// Tracks which dates have been incorporated into weekday/weekend stats (prevents double-counting)
+    private var weekdayWeekendProcessedDates: [HealthMetric: Set<Date>] = [:]
 
     /// Ordered feature keys for deterministic array output
     private(set) var orderedKeys: [FeatureKey] = []
@@ -28,6 +30,13 @@ final class FeatureEngine {
 
     /// The set of interaction pairs computed during the last build.
     private(set) var interactionPairs: [InteractionFeature] = []
+
+    /// Cached feature vectors from previous builds. Only the most recent `rebuildWindowDays`
+    /// are recomputed each call; older days reuse cached vectors.
+    private var cachedVectors: [Date: DailyFeatureVector] = [:]
+    private var cachedInteractionsByDate: [Date: [InteractionFeature: Double]] = [:]
+    /// Days within this window are always recomputed (handles late-arriving data).
+    private static let rebuildWindowDays = 3
 
     // MARK: - Key Interaction Metric Pairs
 
@@ -140,22 +149,23 @@ final class FeatureEngine {
             // Otherwise keep existing Welford state. incremental updates happen via updateIncremental()
         }
 
-        // Build weekday/weekend running means per metric (rebuild from scratch each time for correctness)
-        weekdayStats = [:]
-        weekendStats = [:]
+        // Build weekday/weekend running means per metric incrementally.
+        // Only process dates not yet incorporated to avoid O(N) full rebuild each run.
         for (metric, dateMap) in metricByDate {
-            var wdState = WelfordState()
-            var weState = WelfordState()
+            if weekdayStats[metric] == nil { weekdayStats[metric] = WelfordState() }
+            if weekendStats[metric] == nil { weekendStats[metric] = WelfordState() }
+            var processed = weekdayWeekendProcessedDates[metric] ?? []
             for (date, value) in dateMap {
+                guard !processed.contains(date) else { continue }
+                processed.insert(date)
                 let dow = calendar.component(.weekday, from: date) // 1=Sun, 7=Sat
                 if dow == 1 || dow == 7 {
-                    weState.update(value: value)
+                    weekendStats[metric]?.update(value: value)
                 } else {
-                    wdState.update(value: value)
+                    weekdayStats[metric]?.update(value: value)
                 }
             }
-            weekdayStats[metric] = wdState
-            weekendStats[metric] = weState
+            weekdayWeekendProcessedDates[metric] = processed
         }
 
         // Build ordered keys for deterministic array output
@@ -189,13 +199,33 @@ final class FeatureEngine {
             zDateIndex[metric] = idx
         }
 
+        // Pre-build the complete date array ONCE to eliminate ~300K Calendar.date(byAdding:)
+        // calls from the inner loops. allDays[0] = today, allDays[1] = yesterday, etc.
+        var allDays: [Date] = []
+        allDays.reserveCapacity(totalDays)
+        for offset in 0..<totalDays {
+            guard let d = calendar.date(byAdding: .day, value: -offset, to: today) else { continue }
+            allDays.append(calendar.startOfDay(for: d))
+        }
+
         // Build vectors for each day
         var vectors: [DailyFeatureVector] = []
         var interactionsAccumulator: [Date: [InteractionFeature: Double]] = [:]
 
-        for dayOffset in 0..<totalDays {
-            guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) else { continue }
-            let day = calendar.startOfDay(for: date)
+        for dayOffset in 0..<allDays.count {
+            let day = allDays[dayOffset]
+
+            // Reuse cached vector for days outside the rebuild window.
+            // Only the most recent days need recomputation (new/late data).
+            if dayOffset >= Self.rebuildWindowDays,
+               let cached = cachedVectors[day] {
+                vectors.append(cached)
+                if let cachedInt = cachedInteractionsByDate[day] {
+                    interactionsAccumulator[day] = cachedInt
+                }
+                continue
+            }
+
             let dow = calendar.component(.weekday, from: day) // 1=Sun, 7=Sat
             let isWeekendDay = (dow == 1 || dow == 7)
 
@@ -228,10 +258,11 @@ final class FeatureEngine {
                 // --- Raw z-score ---
                 features[FeatureKey(metric: metric, type: .raw)] = zScore
 
-                // --- Rate of change (day-over-day) ---
+                // --- Rate of change (day-over-day) --- uses allDays index instead of Calendar
                 let prevRoc: Double
-                if let prevDate = calendar.date(byAdding: .day, value: -1, to: day),
-                   let prevValue = dateMap[prevDate] {
+                let prev1Idx = dayOffset + 1
+                if prev1Idx < allDays.count,
+                   let prevValue = dateMap[allDays[prev1Idx]] {
                     let prevZ = stats.zScore(for: prevValue)
                     prevRoc = zScore - prevZ
                 } else {
@@ -240,11 +271,12 @@ final class FeatureEngine {
                 features[FeatureKey(metric: metric, type: .roc)] = prevRoc
 
                 // --- Acceleration (2nd derivative) --- requires 3+ days
+                let prev2Idx = dayOffset + 2
                 if stats.count >= 3,
-                   let prev1Date = calendar.date(byAdding: .day, value: -1, to: day),
-                   let prev2Date = calendar.date(byAdding: .day, value: -2, to: day),
-                   let prev1Value = dateMap[prev1Date],
-                   let prev2Value = dateMap[prev2Date] {
+                   prev1Idx < allDays.count,
+                   prev2Idx < allDays.count,
+                   let prev1Value = dateMap[allDays[prev1Idx]],
+                   let prev2Value = dateMap[allDays[prev2Idx]] {
                     let prev1Z = stats.zScore(for: prev1Value)
                     let prev2Z = stats.zScore(for: prev2Value)
                     let roc1 = zScore - prev1Z
@@ -255,15 +287,15 @@ final class FeatureEngine {
                 }
 
                 // --- Rolling volatility helpers ---
-                // Collect z-score windows for various lookback periods
-                let vol7Values = collectRecentZScores(
-                    dateMap: dateMap, stats: stats, day: day, windowDays: 7, calendar: calendar
+                // Collect z-score windows using pre-built allDays array (no Calendar calls)
+                let vol7Values = collectRecentZScoresIndexed(
+                    dateMap: dateMap, stats: stats, dayOffset: dayOffset, windowDays: 7, allDays: allDays
                 )
-                let vol14Values = collectRecentZScores(
-                    dateMap: dateMap, stats: stats, day: day, windowDays: 14, calendar: calendar
+                let vol14Values = collectRecentZScoresIndexed(
+                    dateMap: dateMap, stats: stats, dayOffset: dayOffset, windowDays: 14, allDays: allDays
                 )
-                let vol28Values = collectRecentZScores(
-                    dateMap: dateMap, stats: stats, day: day, windowDays: 28, calendar: calendar
+                let vol28Values = collectRecentZScoresIndexed(
+                    dateMap: dateMap, stats: stats, dayOffset: dayOffset, windowDays: 28, allDays: allDays
                 )
 
                 // --- 7-day rolling volatility ---
@@ -290,14 +322,15 @@ final class FeatureEngine {
                     features[FeatureKey(metric: metric, type: .vol28)] = FeatureKey.missingSentinel
                 }
 
-                // --- Lag features ---
+                // --- Lag features --- uses allDays index instead of Calendar
                 let lagConfigs: [(Int, FeatureType)] = [
                     (1, .lag1), (3, .lag3), (7, .lag7),
                     (14, .lag14), (28, .lag28), (60, .lag60),
                 ]
                 for (lagDays, lagType) in lagConfigs {
-                    if let lagDate = calendar.date(byAdding: .day, value: -lagDays, to: day),
-                       let lagValue = dateMap[lagDate] {
+                    let lagIdx = dayOffset + lagDays
+                    if lagIdx < allDays.count,
+                       let lagValue = dateMap[allDays[lagIdx]] {
                         features[FeatureKey(metric: metric, type: lagType)] = stats.zScore(for: lagValue)
                     } else {
                         features[FeatureKey(metric: metric, type: lagType)] = FeatureKey.missingSentinel
@@ -379,6 +412,14 @@ final class FeatureEngine {
         interactionsByDate = interactionsAccumulator
         interactionPairs = buildOrderedInteractionKeys(metricsAvailable: Set(sortedMetrics))
 
+        // Update cache with freshly computed vectors
+        for vector in vectors {
+            cachedVectors[vector.date] = vector
+        }
+        for (date, ints) in interactionsAccumulator {
+            cachedInteractionsByDate[date] = ints
+        }
+
         return vectors.sorted { $0.date < $1.date }
     }
 
@@ -425,19 +466,21 @@ final class FeatureEngine {
 
     // MARK: - Private Helpers
 
-    /// Collect z-scored values within a lookback window ending on `day`.
-    private func collectRecentZScores(
+    /// Collect z-scored values using pre-built date array (zero Calendar calls).
+    /// `dayOffset` is the index into `allDays` for the current day.
+    private func collectRecentZScoresIndexed(
         dateMap: [Date: Double],
         stats: WelfordState,
-        day: Date,
+        dayOffset: Int,
         windowDays: Int,
-        calendar: Calendar
+        allDays: [Date]
     ) -> [Double] {
         var values: [Double] = []
         values.reserveCapacity(windowDays)
         for d in 0..<windowDays {
-            if let pastDate = calendar.date(byAdding: .day, value: -d, to: day),
-               let v = dateMap[pastDate] {
+            let idx = dayOffset + d
+            guard idx < allDays.count else { break }
+            if let v = dateMap[allDays[idx]] {
                 values.append(stats.zScore(for: v))
             }
         }

@@ -156,10 +156,11 @@ struct LiveView: View {
             AppAnalytics.shared.trackFeatureClose(.live)
             AppAnalytics.shared.trackStreamingStopped()
         }
-        .onChange(of: scenePhase) { _, newPhase in
+        .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .active {
-                // Warm restart: keep existing data visible while new queries spin up.
-                // This avoids the blank-flash that full stop→start causes.
+                // Only restart after a true background return. Avoid restarting on
+                // brief .inactive interruptions (notification shade, Control Center).
+                guard oldPhase == .background else { return }
                 if viewModel.isStreaming {
                     viewModel.restartStreaming()
                 } else {

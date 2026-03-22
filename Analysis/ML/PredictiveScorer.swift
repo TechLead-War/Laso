@@ -41,6 +41,8 @@ final class PredictiveScorer {
     private var featureImportance: [Int: Double] = [:] // feature index -> total gain
 
     private(set) var currentPrediction: MLPrediction?
+    /// Date of the last cached prediction. Invalidated on new training data.
+    private var lastPredictionDate: Date?
 
     // MARK: - Decision Tree Node
 
@@ -350,13 +352,13 @@ final class PredictiveScorer {
 
             // Scan bins for best split
             var leftG = 0.0, leftH = 0.0
+            var leftCount = 0
             for binIdx in 0..<bins.count - 1 {
                 leftG += bins[binIdx].gradientSum
                 leftH += bins[binIdx].hessianSum
+                leftCount += bins[binIdx].count
                 let rightG = G - leftG
                 let rightH = H - leftH
-
-                let leftCount = (0...binIdx).reduce(0) { $0 + bins[$1].count }
                 let rightCount = indices.count - leftCount
                 guard leftCount >= minSamplesLeaf, rightCount >= minSamplesLeaf else { continue }
 
@@ -367,7 +369,7 @@ final class PredictiveScorer {
                 if gain > bestGain {
                     bestGain = gain
                     bestFeature = featureIdx
-                    bestThreshold = binIdx < edges.count ? edges[binIdx] : edges.last! + 1
+                    bestThreshold = binIdx < edges.count ? edges[binIdx] : edges[edges.count - 1] + 1
                 }
             }
         }
@@ -436,6 +438,14 @@ final class PredictiveScorer {
     func predict(todayVector: DailyFeatureVector) -> MLPrediction? {
         guard !trees.isEmpty else { return nil }
 
+        // Return cached prediction if it was computed today (tree walk is deterministic for same input)
+        let calendar = Calendar.current
+        if let cached = currentPrediction,
+           let lastDate = lastPredictionDate,
+           calendar.isDateInToday(lastDate) {
+            return cached
+        }
+
         let features = buildFeatureArray(from: todayVector, orderedKeys: featureKeys)
         guard !features.isEmpty else { return nil }
 
@@ -465,6 +475,7 @@ final class PredictiveScorer {
         )
 
         currentPrediction = prediction
+        lastPredictionDate = Date()
         return prediction
     }
 
@@ -475,6 +486,9 @@ final class PredictiveScorer {
 
         let features = buildFeatureArray(from: todayVector, orderedKeys: featureKeys)
         guard !features.isEmpty else { return }
+
+        // Invalidate cached prediction since model weights are about to change
+        lastPredictionDate = nil
 
         trainingCount += 1
 

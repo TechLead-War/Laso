@@ -18,7 +18,7 @@ final class CoreMLEngine {
         // Attempt to load the dynamically generated model from bundle
         do {
             let config = MLModelConfiguration()
-            config.computeUnits = .all // Allows ANE (Apple Neural Engine), GPU, or CPU
+            config.computeUnits = .cpuOnly // Small 7-feature model: CPU-only avoids GPU/ANE wake overhead that generates heat
             
             // Note: In a real app, HealthStateModel.mlmodelc would be compiled into the app bundle.
             // For this R&D environment, we try to load it if available from the bundle.

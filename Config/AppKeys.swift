@@ -93,6 +93,8 @@ enum AppKeys {
         static let lastWatchDataTime        = "healthpulse.watchMonitor.lastWatchDataTime"
         static let lastNotWornNotification  = "healthpulse.watchMonitor.lastNotWornNotification"
         static let lowBatteryAlertShown     = "healthpulse.watchMonitor.lowBatteryAlertShown"
+        static let lastObserverProcessing   = "healthpulse.watchMonitor.lastObserverProcessing"
+        static let lastScheduleRefresh      = "healthpulse.watchMonitor.lastScheduleRefresh"
     }
 
     // MARK: - UI Dismissals

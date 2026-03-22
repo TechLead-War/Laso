@@ -121,7 +121,7 @@ final class AnalysisEngine {
     /// Tracks when the heavy analysis tier last ran so we can skip it if fresh.
     private var lastHeavyAnalysisDate: Date?
     /// TTL for heavy analysis. correlations/historical/cross-metric change slowly.
-    private static let heavyAnalysisTTL: TimeInterval = 3600  // 1 hour
+    private static let heavyAnalysisTTL: TimeInterval = 21600  // 6 hours
 
     /// Whether the heavy analysis phase needs to run (expired or never ran).
     var needsHeavyAnalysis: Bool {

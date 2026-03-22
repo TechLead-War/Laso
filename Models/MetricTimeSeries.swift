@@ -6,10 +6,65 @@ struct MetricTimeSeries: Identifiable {
     let metric: HealthMetric
     /// All samples, stored in chronological order (sorted once at initialization).
     let samples: [MetricSample]
+    private let distinctDayCount: Int
+
+    // Cached statistics — computed once at init, O(1) access thereafter.
+    private let _mean: Double
+    private let _standardDeviation: Double
+    private let _min: Double?
+    private let _max: Double?
 
     init(metric: HealthMetric, samples: [MetricSample]) {
+        let sortedSamples = samples.sorted { $0.date < $1.date }
         self.metric = metric
-        self.samples = samples.sorted { $0.date < $1.date }
+        self.samples = sortedSamples
+
+        let calendar = Calendar.current
+        var distinctDayCount = 0
+        var previousDay: Date?
+
+        // Single pass: compute distinct days, sum, min, max simultaneously
+        var total = 0.0
+        var minimum: Double?
+        var maximum: Double?
+        for sample in sortedSamples {
+            let currentDay = calendar.startOfDay(for: sample.date)
+            if currentDay != previousDay {
+                distinctDayCount += 1
+                previousDay = currentDay
+            }
+            total += sample.value
+            if let curMin = minimum {
+                if sample.value < curMin { minimum = sample.value }
+            } else {
+                minimum = sample.value
+            }
+            if let curMax = maximum {
+                if sample.value > curMax { maximum = sample.value }
+            } else {
+                maximum = sample.value
+            }
+        }
+        self.distinctDayCount = distinctDayCount
+        self._min = minimum
+        self._max = maximum
+
+        // Compute mean
+        let n = sortedSamples.count
+        let mean = n > 0 ? total / Double(n) : 0
+        self._mean = mean
+
+        // Compute standard deviation (second pass, unavoidable without online algo)
+        if n > 1 {
+            var sumOfSquares = 0.0
+            for sample in sortedSamples {
+                let delta = sample.value - mean
+                sumOfSquares += delta * delta
+            }
+            self._standardDeviation = (sumOfSquares / Double(n)).squareRoot()
+        } else {
+            self._standardDeviation = 0
+        }
     }
 
     /// Samples in chronological order. O(1), already sorted at init.
@@ -23,55 +78,17 @@ struct MetricTimeSeries: Identifiable {
         samples.last?.value
     }
 
-    var mean: Double {
-        guard !samples.isEmpty else { return 0 }
-        var total = 0.0
-        for sample in samples {
-            total += sample.value
-        }
-        return total / Double(samples.count)
-    }
+    var mean: Double { _mean }
 
-    var standardDeviation: Double {
-        guard samples.count > 1 else { return 0 }
-        let avg = mean
-        var sumOfSquares = 0.0
-        for sample in samples {
-            let delta = sample.value - avg
-            sumOfSquares += delta * delta
-        }
-        return (sumOfSquares / Double(samples.count)).squareRoot()
-    }
+    var standardDeviation: Double { _standardDeviation }
 
-    var min: Double? {
-        guard let first = samples.first else { return nil }
-        var minimum = first.value
-        for sample in samples.dropFirst() where sample.value < minimum {
-            minimum = sample.value
-        }
-        return minimum
-    }
+    var min: Double? { _min }
 
-    var max: Double? {
-        guard let first = samples.first else { return nil }
-        var maximum = first.value
-        for sample in samples.dropFirst() where sample.value > maximum {
-            maximum = sample.value
-        }
-        return maximum
-    }
+    var max: Double? { _max }
 
     var range: Double {
-        guard let first = samples.first else { return 0 }
-        var minimum = first.value
-        var maximum = first.value
-
-        for sample in samples.dropFirst() {
-            if sample.value < minimum { minimum = sample.value }
-            if sample.value > maximum { maximum = sample.value }
-        }
-
-        return maximum - minimum
+        guard let lo = _min, let hi = _max else { return 0 }
+        return hi - lo
     }
 
     /// Samples within the last N days
@@ -79,19 +96,9 @@ struct MetricTimeSeries: Identifiable {
         let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
         guard !samples.isEmpty else { return [] }
 
-        var low = 0
-        var high = samples.count
-        while low < high {
-            let mid = (low + high) / 2
-            if samples[mid].date < cutoff {
-                low = mid + 1
-            } else {
-                high = mid
-            }
-        }
-
-        guard low < samples.count else { return [] }
-        return Array(samples[low...])
+        let startIndex = firstIndex(onOrAfter: cutoff)
+        guard startIndex < samples.count else { return [] }
+        return Array(samples[startIndex...])
     }
 
     /// Mean value over the last N days
@@ -118,7 +125,20 @@ struct MetricTimeSeries: Identifiable {
 
     /// Samples from a date range (inclusive)
     func samples(from start: Date, to end: Date) -> [MetricSample] {
-        samples.filter { $0.date >= start && $0.date <= end }
+        guard start <= end, !samples.isEmpty else { return [] }
+        let startIndex = firstIndex(onOrAfter: start)
+        let endIndex = firstIndex(after: end)
+        guard startIndex < endIndex else { return [] }
+        return Array(samples[startIndex..<endIndex])
+    }
+
+    /// Samples from a date range using an exclusive upper bound.
+    func samples(from start: Date, until endExclusive: Date) -> [MetricSample] {
+        guard start < endExclusive, !samples.isEmpty else { return [] }
+        let startIndex = firstIndex(onOrAfter: start)
+        let endIndex = firstIndex(onOrAfter: endExclusive)
+        guard startIndex < endIndex else { return [] }
+        return Array(samples[startIndex..<endIndex])
     }
 
     /// Percentile rank of a value in all-time data (0-100)
@@ -140,16 +160,37 @@ struct MetricTimeSeries: Identifiable {
 
     /// Number of distinct calendar days with actual data points
     var daysOfData: Int {
-        guard !samples.isEmpty else { return 0 }
-        let calendar = Calendar.current
-        var uniqueDays = Set<Date>()
-        uniqueDays.reserveCapacity(samples.count)
-        for sample in samples {
-            uniqueDays.insert(calendar.startOfDay(for: sample.date))
-        }
-        return uniqueDays.count
+        distinctDayCount
     }
 
     /// Total number of data points
     var totalDataPoints: Int { samples.count }
+
+    private func firstIndex(onOrAfter date: Date) -> Int {
+        var low = 0
+        var high = samples.count
+        while low < high {
+            let mid = (low + high) / 2
+            if samples[mid].date < date {
+                low = mid + 1
+            } else {
+                high = mid
+            }
+        }
+        return low
+    }
+
+    private func firstIndex(after date: Date) -> Int {
+        var low = 0
+        var high = samples.count
+        while low < high {
+            let mid = (low + high) / 2
+            if samples[mid].date <= date {
+                low = mid + 1
+            } else {
+                high = mid
+            }
+        }
+        return low
+    }
 }

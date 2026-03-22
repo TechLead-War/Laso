@@ -223,6 +223,17 @@ final class HealthDataStore {
         metricSeriesCache.removeAll(keepingCapacity: true)
     }
 
+    /// Invalidate cached series only for the given metrics, leaving unrelated caches intact.
+    func invalidateTimeSeriesCache(for metrics: Set<HealthMetric>) {
+        guard !metrics.isEmpty else { return }
+        // The allSeriesCache is a single dictionary for all metrics, so it must be cleared
+        // if any metric changes (stale entries would be served otherwise).
+        allSeriesCache = nil
+        for metric in metrics {
+            metricSeriesCache.removeValue(forKey: metric)
+        }
+    }
+
     init(modelContainer: ModelContainer) {
         self.modelContainer = modelContainer
         self.modelContext = ModelContext(modelContainer)
