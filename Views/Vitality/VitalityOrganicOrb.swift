@@ -52,7 +52,7 @@ struct OrganicParticleOrbView: View {
             tint: tint,
             particles: effectiveParticles,
             paused: animationPaused,
-            frameRate: thermalManager.currentState == .nominal ? 24.0 : 15.0
+            frameRate: thermalManager.maxFrameRate
         )
         .clipShape(OrganicBlobShape(phase: phase))
         .overlay(

@@ -114,7 +114,10 @@ final class InteractionEffectEngine {
         var allCurves: [DoseResponseCurve] = []
         var allConditional: [InteractionEffect] = []
 
-        for (cause, effect) in pairs {
+        for (idx, (cause, effect)) in pairs.enumerated() {
+            // Bail out mid-loop if device reaches critical thermal state
+            if idx % 5 == 0 && ProcessInfo.processInfo.thermalState == .critical { break }
+
             let (cv, ev) = aligned(cause, effect, dateValues, calendar)
             guard cv.count >= Self.minimumDays else { continue }
 

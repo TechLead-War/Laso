@@ -53,6 +53,11 @@ final class DashboardViewModel {
     /// Previous trend directions. used for trend reversal detection
     private var previousTrends: [HealthMetric: TrendDirection] = [:]
 
+    /// Fingerprint of timeSeries input from last computeNewEngines call.
+    /// Scorers skip recomputation if data hasn't changed within the same calendar day.
+    @MainActor private var lastScorerInputHash: Int = 0
+    @MainActor private var lastScorerDay: Int = 0
+
     /// Cached daily action. computed once per calendar day (or after analysis refresh)
     @MainActor private var _cachedDailyAction: SmartAction?
     @MainActor private var _cachedDailyActionDate: Date?
@@ -770,7 +775,7 @@ final class DashboardViewModel {
             focusCats = HealthFocus.categories(for: freshFocuses)
             insights.cachedFocusCategories = focusCats
         }
-        await Task.detached(priority: .userInitiated) { [analysisEngine, focusCats] in
+        await Task.detached(priority: .utility) { [analysisEngine, focusCats] in
             analysisEngine.runCoreAnalysis(timeSeries: ts, focusCategories: focusCats)
         }.value
 
@@ -1157,9 +1162,31 @@ final class DashboardViewModel {
 
     @MainActor
     private func computeNewEngines(todayRawHR: [MetricSample] = []) {
+        let timeSeries = healthKitManager.timeSeries
+
+        // Memoize: skip recomputation if timeSeries hasn't changed within the same calendar day.
+        // Scorers produce identical output for identical input, so this saves ~300-500ms per refresh.
+        let today = Calendar.current.ordinality(of: .day, in: .year, for: Date()) ?? 0
+        var inputHasher = Hasher()
+        inputHasher.combine(timeSeries.count)
+        for (metric, series) in timeSeries {
+            inputHasher.combine(metric)
+            inputHasher.combine(series.sortedSamples.count)
+            if let last = series.sortedSamples.last {
+                inputHasher.combine(last.value)
+                inputHasher.combine(Int(last.date.timeIntervalSinceReferenceDate))
+            }
+        }
+        inputHasher.combine(todayRawHR.count)
+        let inputHash = inputHasher.finalize()
+        if inputHash == lastScorerInputHash && today == lastScorerDay {
+            return
+        }
+        lastScorerInputHash = inputHash
+        lastScorerDay = today
+
         let profile = UserProfileStore.shared.loadLocal()
         let age = profile?.ageFromDateOfBirth ?? 30
-        let timeSeries = healthKitManager.timeSeries
         let sleepSeries = timeSeries[.sleepDuration]
 
         // Strain. pass raw per-sample HR for accurate zone classification,

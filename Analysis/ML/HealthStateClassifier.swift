@@ -118,6 +118,8 @@ final class HealthStateClassifier {
         var consecutiveIncreases = 0
         for k in Self.kRange {
             guard k < cleanData.count else { break }
+            // Bail out of BIC grid search if device reaches critical thermal state
+            if ProcessInfo.processInfo.thermalState == .critical { break }
 
             let result = fitGMM(data: cleanData, k: k, dim: dim)
             guard let result else { continue }

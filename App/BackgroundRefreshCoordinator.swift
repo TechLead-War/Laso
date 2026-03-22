@@ -77,6 +77,13 @@ final class BackgroundRefreshCoordinator {
         let delay = completionDelay
 
         let workTask = Task { @MainActor in
+            // Re-check thermal state before doing work — device may have heated up
+            // between the initial check and actual execution.
+            guard !ThermalManager.shared.shouldThrottle else {
+                task.setTaskCompleted(success: false)
+                return
+            }
+
             let liveViewModel = liveViewModelFactory()
 
             // Incremental mode: if foreground ML pipeline ran recently, only fetch

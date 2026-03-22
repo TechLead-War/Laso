@@ -161,6 +161,9 @@ final class TemporalSequenceMiner {
         )
         sequences = mined
 
+        // Bail out if device reaches critical thermal state between steps
+        guard ProcessInfo.processInfo.thermalState != .critical else { return }
+
         // 2. Compounding effects skipped — compoundingEffects stored on MLOrchestrator
         // but never read by any ViewModel, View, or downstream system.
         compoundingEffects = []
@@ -172,6 +175,9 @@ final class TemporalSequenceMiner {
             baselines: baselines,
             stateHistory: stateHistory
         )
+
+        // Bail out if device reaches critical thermal state between steps
+        guard ProcessInfo.processInfo.thermalState != .critical else { return }
 
         // 4. Detect recovery sequences
         recoveryProfiles = detectRecoverySequences(

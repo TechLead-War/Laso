@@ -203,7 +203,7 @@ struct AskYourDataView: View {
         // Run on background to avoid blocking UI
         let q = normalizedQuery
         let queryRequest = viewModel.makeHealthDataQueryRequest()
-        let qos: DispatchQoS.QoSClass = ThermalManager.shared.shouldThrottle ? .utility : .userInitiated
+        let qos: DispatchQoS.QoSClass = ThermalManager.shared.shouldThrottle ? .background : .utility
         DispatchQueue.global(qos: qos).async {
             let queryResult = queryRequest.execute(question: q)
             DispatchQueue.main.async {

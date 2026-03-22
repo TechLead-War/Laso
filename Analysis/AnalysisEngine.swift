@@ -120,13 +120,41 @@ final class AnalysisEngine {
 
     /// Tracks when the heavy analysis tier last ran so we can skip it if fresh.
     private var lastHeavyAnalysisDate: Date?
-    /// TTL for heavy analysis. correlations/historical/cross-metric change slowly.
-    private static let heavyAnalysisTTL: TimeInterval = 21600  // 6 hours
+
+    /// TTL for heavy analysis scales with thermal state to reduce heat under pressure.
+    private var heavyAnalysisTTL: TimeInterval {
+        switch ThermalManager.shared.currentState {
+        case .nominal:              return 21600   // 6 hours
+        case .fair:                 return 43200   // 12 hours
+        case .serious, .critical:   return 86400   // 24 hours
+        @unknown default:           return 43200
+        }
+    }
 
     /// Whether the heavy analysis phase needs to run (expired or never ran).
     var needsHeavyAnalysis: Bool {
         guard let last = lastHeavyAnalysisDate else { return true }
-        return Date().timeIntervalSince(last) >= Self.heavyAnalysisTTL
+        return Date().timeIntervalSince(last) >= heavyAnalysisTTL
+    }
+
+    // MARK: - Essential Analyzer Change Detection
+
+    /// Fingerprint of analysis state from last essential analyzer run.
+    /// If anomalies + trend directions haven't changed, skip re-running essentials.
+    private var lastEssentialFingerprint: Int = 0
+
+    private func essentialFingerprint() -> Int {
+        var hasher = Hasher()
+        hasher.combine(anomalies.count)
+        for anomaly in anomalies.prefix(20) {
+            hasher.combine(anomaly.metric)
+            hasher.combine(anomaly.severity)
+        }
+        for (metric, trend) in trends.sorted(by: { $0.key.rawValue < $1.key.rawValue }).prefix(30) {
+            hasher.combine(metric)
+            hasher.combine(trend.direction)
+        }
+        return hasher.finalize()
     }
 
     // MARK: - ML Integration
@@ -249,6 +277,14 @@ final class AnalysisEngine {
         timeSeries: [HealthMetric: MetricTimeSeries],
         cycleFlowSamples: [HealthKitManager.MenstrualFlowSample] = []
     ) {
+        // Skip if anomalies + trend directions haven't changed since last run.
+        // This avoids re-running 10 insight analyzers (~600ms) when nothing meaningful changed.
+        let fingerprint = essentialFingerprint()
+        if fingerprint == lastEssentialFingerprint && !insights.isEmpty {
+            return
+        }
+        lastEssentialFingerprint = fingerprint
+
         // Pre-compute results needed by specific analyzers and stored on engine
         let newHealthRisks = HealthRiskEngine.assessAllRisks(
             timeSeries: timeSeries, baselines: baselines, trends: trends, anomalies: anomalies
