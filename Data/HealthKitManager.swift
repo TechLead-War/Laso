@@ -114,7 +114,7 @@ final class HealthKitManager {
         }
     }
 
-    func fetchAllMetrics(days: Int = 365) async {
+    func fetchAllMetrics(days: Int = 3650) async {
         isLoading = true
         defer { isLoading = false }
 
@@ -212,7 +212,9 @@ final class HealthKitManager {
                     if let lastSync {
                         startDate = Calendar.current.date(byAdding: .day, value: -1, to: lastSync) ?? lastSync
                     } else {
-                        startDate = Calendar.current.date(byAdding: .year, value: -1, to: endDate) ?? endDate
+                        // Fetch all available HealthKit history (up to 10 years) so the
+                        // Explore "days" counter reflects the user's full data span.
+                        startDate = Calendar.current.date(byAdding: .year, value: -10, to: endDate) ?? endDate
                     }
                     let series = await self.fetchMetric(metric, from: startDate, to: endDate)
                     return (metric, series)
@@ -828,7 +830,10 @@ final class HealthKitManager {
     @MainActor
     func refreshMetric(_ metric: HealthMetric, store: HealthDataStore) async {
         let endDate = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Date())) ?? Date()
-        let startDate = Date().daysAgo(365)
+        // Use the existing stored data's oldest date to preserve full history,
+        // falling back to 10 years for metrics without stored data yet.
+        let existingOldest = timeSeries[metric]?.samples.first?.date
+        let startDate = existingOldest ?? Calendar.current.date(byAdding: .year, value: -10, to: endDate) ?? endDate
         guard let series = await fetchMetric(metric, from: startDate, to: endDate) else { return }
         store.saveSamples(series.samples, for: metric)
         let reloaded = store.loadTimeSeries(for: metric)

@@ -16,7 +16,7 @@ extension Copy {
         static let strainBalance = "Strain Balance"
         static let underTraining = "Under-Training"
         static let optimal = "Optimal"
-        static let overreaching = "Overreaching"
+        static let overreaching = "Peak"
 
         static let underTrainingDescription = "Your strain is below your target range. Consider increasing activity to maintain fitness."
         static let optimalDescription = "You're training within your ideal strain range for your current recovery."

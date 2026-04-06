@@ -133,7 +133,7 @@ struct StrainDetailView: View {
             .onChange(of: strainValue) { animatedProgress = progress }
 
             // Strain level badge
-            Text(strainLevel.rawValue)
+            Text(strainLevel.displayName)
                 .font(.subheadline.weight(.bold))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 14)
@@ -148,9 +148,11 @@ struct StrainDetailView: View {
                             .fill(level.color)
                             .frame(height: 4)
 
-                        Text(level.rawValue)
+                        Text(level.displayName)
                             .font(.caption2.weight(.medium))
                             .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -417,9 +419,11 @@ struct StrainDetailView: View {
                     ForEach(StrainLevel.allCases, id: \.rawValue) { level in
                         HStack(spacing: 4) {
                             Circle().fill(level.color).frame(width: 6, height: 6)
-                            Text(level.rawValue)
+                            Text(level.displayName)
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
                         }
                     }
                 }
@@ -432,7 +436,7 @@ struct StrainDetailView: View {
                         .foregroundStyle(.secondary)
                     Text(String(format: "%.1f", avgStrain))
                         .font(.caption.weight(.bold).monospacedDigit())
-                    Text(StrainLevel(strain: avgStrain).rawValue)
+                    Text(StrainLevel(strain: avgStrain).displayName)
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(StrainLevel(strain: avgStrain).color)
                         .padding(.horizontal, DS.badgeH)

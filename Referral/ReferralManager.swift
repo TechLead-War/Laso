@@ -140,6 +140,7 @@ final class ReferralManager {
 
             guard let referrerDoc = snapshot.documents.first else {
                 redeemError = "Invalid referral code."
+                AppAnalytics.shared.trackReferralCodeRedeemed(code: trimmed, success: false, failureReason: "invalid_code")
                 return false
             }
 
@@ -147,6 +148,7 @@ final class ReferralManager {
 
             guard referrerDeviceId != deviceId else {
                 redeemError = "You can't use your own referral code."
+                AppAnalytics.shared.trackReferralCodeRedeemed(code: trimmed, success: false, failureReason: "own_code")
                 return false
             }
 
@@ -158,6 +160,7 @@ final class ReferralManager {
 
             guard existing.documents.isEmpty else {
                 redeemError = "You've already been referred."
+                AppAnalytics.shared.trackReferralCodeRedeemed(code: trimmed, success: false, failureReason: "already_referred")
                 return false
             }
 
@@ -177,9 +180,11 @@ final class ReferralManager {
 
             redeemedCode = trimmed
             defaults.set(trimmed, forKey: AppKeys.Referral.redeemedCode)
+            AppAnalytics.shared.trackReferralCodeRedeemed(code: trimmed, success: true)
             return true
         } catch {
             redeemError = "Something went wrong. Try again."
+            AppAnalytics.shared.trackReferralCodeRedeemed(code: trimmed, success: false, failureReason: "firestore_error")
             return false
         }
         #else
@@ -221,6 +226,7 @@ final class ReferralManager {
             ], merge: true)
             referralFreeUntil = oneMonth
             defaults.set(oneMonth.timeIntervalSince1970, forKey: AppKeys.Referral.freeUntil)
+            AppAnalytics.shared.trackReferralCompleted(role: "referee")
 
             // Grant referrer 1 month free (stacked on existing)
             let refDoc = try await db.collection("user_profiles").document(referrerDeviceId).getDocument()

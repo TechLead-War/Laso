@@ -10,7 +10,7 @@ import Accelerate
 /// - **State versioning**: Tracks schema version across retrains with old→new state mapping.
 final class HealthStateClassifier {
     /// Minimum days of data required
-    static let minimumDays = 60
+    static let minimumDays = 14
 
     /// Range of k values to try
     private static let kRange = 2...7

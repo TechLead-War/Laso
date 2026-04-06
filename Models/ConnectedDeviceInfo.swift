@@ -8,6 +8,8 @@ struct ConnectedDeviceInfo: Identifiable {
     let sourceBundleId: String
     var metricsProvided: Set<HealthMetric>
     var lastDataDate: Date?
+    /// Specific device model name from HKDevice (e.g. "Apple Watch Series 10", "Garmin Fenix 8")
+    var deviceModelName: String?
 
     /// Device is considered active if it contributed data within the last 7 days
     var isActive: Bool {

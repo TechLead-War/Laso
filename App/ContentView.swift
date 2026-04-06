@@ -274,7 +274,7 @@ struct ContentView: View {
         case .brainHealth:
             brainHealthDestination
         case .sleepCoach:
-            EmptyView()
+            sleepCoachDestination
         case .cycleDetail:
             cycleDetailDestination
         case .achievements:

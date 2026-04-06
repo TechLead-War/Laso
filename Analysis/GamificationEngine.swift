@@ -200,6 +200,10 @@ final class GamificationEngine {
             calendar: calendar
         )
 
+        // Capture previous state for change detection
+        let previouslyUnlockedIds = Set(achievements.filter(\.isUnlocked).map(\.id))
+        let previousLevel = currentLevel
+
         // Evaluate achievements
         achievements = evaluateAchievements(
             sessionDays: sessionDays,
@@ -212,6 +216,28 @@ final class GamificationEngine {
             calendar: calendar,
             today: today
         )
+
+        // Track newly unlocked achievements
+        let newlyUnlocked = achievements.filter { $0.isUnlocked && !previouslyUnlockedIds.contains($0.id) }
+        let didLevelUp = currentLevel > previousLevel && !previouslyUnlockedIds.isEmpty
+        let newLevelName = currentLevel.displayName
+        if !newlyUnlocked.isEmpty || didLevelUp {
+            Task { @MainActor in
+                for achievement in newlyUnlocked {
+                    AppAnalytics.shared.trackAchievementUnlocked(
+                        id: achievement.id,
+                        title: achievement.title,
+                        category: achievement.category.rawValue
+                    )
+                }
+                if didLevelUp {
+                    AppAnalytics.shared.trackLevelUp(
+                        newLevel: newLevelName,
+                        totalDaysTracked: sessionDays
+                    )
+                }
+            }
+        }
     }
 
     // MARK: - Day Map Builders

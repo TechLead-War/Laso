@@ -183,7 +183,7 @@ const DEFAULTS = {
   "max_local_analytics_events":        "500",
   "session_timeout_seconds":           "1800",
   "home_refresh_interval_seconds":     "60",
-  "retention_daily_sample_days":       "730",
+  "retention_daily_sample_days":       "0",
   "retention_analysis_snapshot_days":  "365",
   "retention_daily_strain_days":       "365",
   "retention_recommendation_days":     "90",

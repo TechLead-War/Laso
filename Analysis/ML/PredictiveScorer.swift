@@ -5,7 +5,7 @@ import Accelerate
 /// Standard algorithm used by XGBoost/LightGBM, implemented with Apple Accelerate.
 /// Far superior to logistic regression for tabular health data.
 final class PredictiveScorer {
-    static let minimumDays = 30
+    static let minimumDays = 14
     private static let maxConfidenceSamples = 90
 
     // Bad day detection: personalized percentile-based thresholds

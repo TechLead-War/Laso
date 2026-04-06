@@ -672,14 +672,22 @@ final class HealthDataQueryEngine {
             )
         }
 
+        // Provide current values even when no correlation is found
+        var dataPoints: [QueryResult.DataPoint] = []
+        if let seriesA = ctx.timeSeries[metricA], let latestA = seriesA.samples.last {
+            dataPoints.append(.init(label: metricA.displayName, value: latestA.value, unit: metricA.unit, date: latestA.date))
+        }
+        if let seriesB = ctx.timeSeries[metricB], let latestB = seriesB.samples.last {
+            dataPoints.append(.init(label: metricB.displayName, value: latestB.value, unit: metricB.unit, date: latestB.date))
+        }
         return QueryResult(
             question: "Does \(metricA.displayName) affect \(metricB.displayName)?",
-            answer: "I haven't found a clear connection between your \(metricA.displayName) and \(metricB.displayName) yet. As more data comes in, patterns may emerge. keep tracking.",
-            dataPoints: [],
+            answer: "I haven't found a clear statistical connection between your \(metricA.displayName) and \(metricB.displayName) so far. They appear to move independently based on the data I have.",
+            dataPoints: dataPoints,
             confidence: 0.5,
             relatedQuestions: [
-                "What correlates with my \(metricA.displayName)?",
-                "What affects my \(metricB.displayName)?",
+                "How is my \(metricA.displayName) trending?",
+                "How is my \(metricB.displayName) trending?",
             ]
         )
     }
@@ -687,9 +695,28 @@ final class HealthDataQueryEngine {
     private func answerForecast(metric: HealthMetric, horizon: Int, ctx: QueryContext) -> QueryResult {
         guard let forecast = ctx.forecasts[metric],
               let result = forecast.horizons.first(where: { $0.horizon == horizon }) ?? forecast.horizons.first else {
+            // Graceful fallback: use recent trend to give a rough projection
+            if let series = ctx.timeSeries[metric] {
+                let recent = recentSamples(from: series, days: 7)
+                if recent.count >= 2 {
+                    let avg = recent.map(\.value).reduce(0, +) / Double(recent.count)
+                    let latest = recent.last?.value ?? avg
+                    let when = horizon == 1 ? "tomorrow" : "in \(horizon) days"
+                    return QueryResult(
+                        question: "What will my \(metric.displayName) be?",
+                        answer: "I don't have a full forecasting model for \(metric.displayName) yet, but based on your recent trend (averaging \(formatValue(avg, metric: metric)) over the past week, latest at \(formatValue(latest, metric: metric))), you can expect it to stay in a similar range \(when).",
+                        dataPoints: [
+                            .init(label: "7-day avg", value: avg, unit: metric.unit, date: nil),
+                            .init(label: "Latest", value: latest, unit: metric.unit, date: recent.last?.date),
+                        ],
+                        confidence: 0.4,
+                        relatedQuestions: ["How is my \(metric.displayName) trending?"]
+                    )
+                }
+            }
             return QueryResult(
                 question: "What will my \(metric.displayName) be?",
-                answer: "I don't have enough history to forecast your \(metric.displayName) yet. I need at least 21 days of data. In the meantime, I can tell you about your current trend.",
+                answer: "I need a bit more \(metric.displayName) data to make a prediction. Once I have a couple of weeks of history, I'll be able to forecast ahead for you.",
                 dataPoints: [],
                 confidence: 0.3,
                 relatedQuestions: ["How is my \(metric.displayName) trending?"]
@@ -762,9 +789,12 @@ final class HealthDataQueryEngine {
         }
 
         let sorted = series.samples.sorted { $0.value < $1.value }
+        guard let first = sorted.first, let last = sorted.last else {
+            return noDataResult(for: metric)
+        }
         let target = seeking == .best
-            ? (metric.higherIsBetter ? sorted.last! : sorted.first!)
-            : (metric.higherIsBetter ? sorted.first! : sorted.last!)
+            ? (metric.higherIsBetter ? last : first)
+            : (metric.higherIsBetter ? first : last)
 
         let dateStr = DateFormatter.localizedString(from: target.date, dateStyle: .medium, timeStyle: .none)
         let label = seeking == .best ? "best" : "worst"
@@ -831,12 +861,50 @@ final class HealthDataQueryEngine {
 
     private func answerHealthState(ctx: QueryContext) -> QueryResult {
         guard let state = ctx.currentHealthState else {
+            // Graceful fallback: summarize whatever time series data we have
+            let activeMetrics = ctx.timeSeries.filter { !$0.value.samples.isEmpty }
+            let metricCount = activeMetrics.count
+            if metricCount == 0 {
+                return QueryResult(
+                    question: "How is my body doing?",
+                    answer: "No health data available yet. Once you connect your Apple Watch or allow Health access, I'll be able to tell you how your body is doing.",
+                    dataPoints: [],
+                    confidence: 0.3,
+                    relatedQuestions: ["What data do I have?"]
+                )
+            }
+            // Build a basic summary from available baselines and latest values
+            var highlights: [String] = []
+            var dataPoints: [QueryResult.DataPoint] = []
+            let keyMetrics: [HealthMetric] = [.restingHeartRate, .heartRateVariability, .sleepDuration, .steps, .activeCalories]
+            for metric in keyMetrics {
+                guard let series = ctx.timeSeries[metric], let latest = series.samples.last else { continue }
+                let label = metric.displayName
+                if let baseline = ctx.baselines[metric] {
+                    let dev = (latest.value - baseline.mean) / max(1, baseline.standardDeviation)
+                    if dev > 1 {
+                        highlights.append("\(label) is a bit high at \(formatValue(latest.value, metric: metric))")
+                    } else if dev < -1 {
+                        highlights.append("\(label) is on the low side at \(formatValue(latest.value, metric: metric))")
+                    } else {
+                        highlights.append("\(label) is normal at \(formatValue(latest.value, metric: metric))")
+                    }
+                } else {
+                    highlights.append("\(label) is at \(formatValue(latest.value, metric: metric))")
+                }
+                dataPoints.append(.init(label: label, value: latest.value, unit: metric.unit, date: latest.date))
+                if dataPoints.count >= 4 { break }
+            }
+            let summary = highlights.isEmpty
+                ? "I'm tracking \(metricCount) metrics. Everything I see looks within expected ranges."
+                : highlights.joined(separator: ". ") + "."
+            let answer = "Here's a snapshot of your body right now. \(summary) As I gather more history, I'll be able to classify your body's overall state automatically."
             return QueryResult(
                 question: "How is my body doing?",
-                answer: "I'm still building your personal health profile. I need a few more days of data before I can classify your body's state. In the meantime, everything I'm tracking looks within expected ranges.",
-                dataPoints: [],
-                confidence: 0.4,
-                relatedQuestions: ["Am I at risk for anything?", "How is my HRV trending?"]
+                answer: answer,
+                dataPoints: dataPoints,
+                confidence: 0.5,
+                relatedQuestions: ["Am I at risk for anything?", "How is my HRV trending?", "How is my sleep trending?"]
             )
         }
 
@@ -888,12 +956,34 @@ final class HealthDataQueryEngine {
                     relatedQuestions: ["What state is my body in?", "What should I do today?"]
                 )
             }
+            // Graceful fallback: check baselines for any outlier metrics
+            var warnings: [(metric: HealthMetric, deviation: Double, value: Double)] = []
+            for (metric, series) in ctx.timeSeries {
+                guard let latest = series.samples.last, let baseline = ctx.baselines[metric] else { continue }
+                let dev = (latest.value - baseline.mean) / max(1, baseline.standardDeviation)
+                let isBad = (dev < -1.5 && metric.higherIsBetter) || (dev > 1.5 && !metric.higherIsBetter)
+                if isBad { warnings.append((metric, abs(dev), latest.value)) }
+            }
+            if !warnings.isEmpty {
+                warnings.sort { $0.deviation > $1.deviation }
+                let top = warnings[0]
+                let answer = "Based on your recent readings, your \(top.metric.displayName) at \(formatValue(top.value, metric: top.metric)) is outside your usual range. Worth keeping an eye on. As I build a longer history, I'll be able to run deeper risk assessments."
+                return QueryResult(
+                    question: "Am I at risk?",
+                    answer: answer,
+                    dataPoints: warnings.prefix(3).map {
+                        .init(label: $0.metric.displayName, value: $0.value, unit: $0.metric.unit, date: nil)
+                    },
+                    confidence: 0.5,
+                    relatedQuestions: ["How is my \(top.metric.displayName) trending?", "How am I doing overall?"]
+                )
+            }
             return QueryResult(
                 question: "Am I at risk?",
-                answer: "I don't have enough data yet to assess your health risks. Keep wearing your device. the more data I have, the better I can watch out for you.",
+                answer: "Based on the data I have, nothing looks concerning right now. All your recent readings are within your normal ranges. I'll keep monitoring and alert you if anything changes.",
                 dataPoints: [],
-                confidence: 0.3,
-                relatedQuestions: ["How am I doing overall?"]
+                confidence: 0.5,
+                relatedQuestions: ["How am I doing overall?", "Anything unusual in my data?"]
             )
         }
 
@@ -994,12 +1084,37 @@ final class HealthDataQueryEngine {
             )
         }
 
+        // Graceful fallback: use baselines and trends to suggest improvements
+        var suggestions: [(metric: HealthMetric, tip: String, value: Double)] = []
+        let improvableMetrics: [HealthMetric] = [.heartRateVariability, .sleepDuration, .steps, .exerciseMinutes, .activeCalories]
+        for metric in improvableMetrics {
+            guard let series = ctx.timeSeries[metric], let latest = series.samples.last,
+                  let baseline = ctx.baselines[metric] else { continue }
+            let dev = (latest.value - baseline.mean) / max(1, baseline.standardDeviation)
+            let isBelowOptimal = (dev < -0.5 && metric.higherIsBetter) || (dev > 0.5 && !metric.higherIsBetter)
+            if isBelowOptimal {
+                suggestions.append((metric, "\(metric.displayName) is below your usual level", latest.value))
+            }
+        }
+        if !suggestions.isEmpty {
+            let topSuggestions = suggestions.prefix(3)
+            let tips = topSuggestions.map { $0.tip }.joined(separator: "; ")
+            return QueryResult(
+                question: "How do I improve?",
+                answer: "Here's where you have the most room to improve right now: \(tips). Focus on bringing these back to your baseline and you should feel the difference.",
+                dataPoints: topSuggestions.map {
+                    .init(label: $0.metric.displayName, value: $0.value, unit: $0.metric.unit, date: nil)
+                },
+                confidence: 0.5,
+                relatedQuestions: topSuggestions.map { "How is my \($0.metric.displayName) trending?" }
+            )
+        }
         return QueryResult(
             question: "How do I improve?",
-            answer: "I need more data to build your personal optimization profile. about 30 days of tracking. Keep going and I'll learn what makes your best days tick.",
+            answer: "Your key metrics are all close to your personal baselines right now, which is a great sign. Keep up the consistency, and as I learn more about what drives your best days, I'll give you more targeted advice.",
             dataPoints: [],
-            confidence: 0.3,
-            relatedQuestions: ["How am I doing overall?", "Am I at risk for anything?"]
+            confidence: 0.5,
+            relatedQuestions: ["How am I doing overall?", "Am I at risk for anything?", "Do I have any patterns?"]
         )
     }
 
@@ -1014,10 +1129,28 @@ final class HealthDataQueryEngine {
         let strong = patterns.filter { $0.strength > 0.3 }.sorted { $0.strength > $1.strength }
 
         guard let top = strong.first else {
+            // Show weaker patterns if any exist, otherwise give helpful fallback
+            let weaker = patterns.sorted { $0.strength > $1.strength }
+            if let weakTop = weaker.first {
+                let target = metric?.displayName ?? weakTop.metric.displayName
+                var answer = "I'm seeing some emerging patterns in your \(target), but they're not strong enough to be definitive yet."
+                if let peakDay = weakTop.peakDayOfWeek {
+                    answer += " There's a hint of a \(weakTop.patternType.rawValue) cycle, with a mild peak on \(weekdayName(peakDay))s."
+                }
+                return QueryResult(
+                    question: "Any patterns?",
+                    answer: answer,
+                    dataPoints: weaker.prefix(2).map {
+                        .init(label: $0.metric.displayName, value: $0.strength * 100, unit: "% strength", date: nil)
+                    },
+                    confidence: 0.4,
+                    relatedQuestions: ["How is my \(weakTop.metric.displayName) trending?", "Anything unusual in my data?"]
+                )
+            }
             let target = metric?.displayName ?? "your metrics"
             return QueryResult(
                 question: "Any patterns?",
-                answer: "I haven't found any strong recurring patterns in \(target) yet. These usually emerge after 2-3 weeks of consistent tracking as I look for weekly and monthly rhythms.",
+                answer: "No recurring patterns detected in \(target) at this time. This can actually be a good sign. it means your body is responding consistently. I'll keep looking for weekly and monthly rhythms.",
                 dataPoints: [],
                 confidence: 0.4,
                 relatedQuestions: ["How is my HRV trending?", "Anything unusual in my data?"]
@@ -1053,11 +1186,34 @@ final class HealthDataQueryEngine {
 
     private func answerCircadian(ctx: QueryContext) -> QueryResult {
         guard let profile = ctx.circadianProfile else {
+            // Graceful fallback: use available sleep and activity data for basic timing insights
+            var answer = "I'm still building your full circadian profile."
+            var dataPoints: [QueryResult.DataPoint] = []
+
+            if let sleepSeries = ctx.timeSeries[.sleepDuration] {
+                let recent = recentSamples(from: sleepSeries, days: 7)
+                if !recent.isEmpty {
+                    let avgSleep = recent.map(\.value).reduce(0, +) / Double(recent.count)
+                    answer += " Based on your recent sleep (\(formatValue(avgSleep, metric: .sleepDuration)) average), aim to be consistent with your bedtime."
+                    dataPoints.append(.init(label: "Avg sleep", value: avgSleep / 3600, unit: "hrs", date: nil))
+                }
+            }
+            if let stepsSeries = ctx.timeSeries[.steps] {
+                let recent = recentSamples(from: stepsSeries, days: 7)
+                if !recent.isEmpty {
+                    let avgSteps = recent.map(\.value).reduce(0, +) / Double(recent.count)
+                    answer += " You're averaging \(Int(avgSteps)) steps. a morning or afternoon walk is generally a great time to move."
+                    dataPoints.append(.init(label: "Avg steps", value: avgSteps, unit: "steps", date: nil))
+                }
+            }
+            if answer == "I'm still building your full circadian profile." {
+                answer += " In the meantime, a good general rule: exercise in the morning or early afternoon, wind down 1-2 hours before bed, and keep your sleep schedule consistent."
+            }
             return QueryResult(
                 question: "When should I work out?",
-                answer: "I need more data to map your body clock. After about 2 weeks of consistent wear, I'll know your chronotype and can suggest optimal timing for workouts, sleep, and focused work.",
-                dataPoints: [],
-                confidence: 0.3,
+                answer: answer,
+                dataPoints: dataPoints,
+                confidence: 0.4,
                 relatedQuestions: ["How is my sleep trending?", "Do I have any patterns?"]
             )
         }
@@ -1147,12 +1303,29 @@ final class HealthDataQueryEngine {
             )
         }
 
-        // Simple fallback
-        let answer = "Your score is \(score). \(conclusion(sentiment)) I need about 30 days of data to break down exactly what's driving it."
+        // Fallback: use available baselines to provide some context
+        var noteworthy: [(metric: HealthMetric, direction: String, value: Double)] = []
+        let keyMetrics: [HealthMetric] = [.heartRateVariability, .restingHeartRate, .sleepDuration, .steps, .activeCalories, .exerciseMinutes]
+        for metric in keyMetrics {
+            guard let series = ctx.timeSeries[metric], let latest = series.samples.last,
+                  let baseline = ctx.baselines[metric] else { continue }
+            let dev = (latest.value - baseline.mean) / max(1, baseline.standardDeviation)
+            if abs(dev) > 0.8 {
+                let isBad = (dev < 0 && metric.higherIsBetter) || (dev > 0 && !metric.higherIsBetter)
+                noteworthy.append((metric, isBad ? "below optimal" : "looking good", latest.value))
+            }
+        }
+        var answer = "Your score is \(score). \(conclusion(sentiment))"
+        if !noteworthy.isEmpty {
+            let details = noteworthy.prefix(3).map { "\($0.metric.displayName) is \($0.direction)" }.joined(separator: ", ")
+            answer += " Looking at your key metrics: \(details)."
+        }
         return QueryResult(
             question: "Why is my score \(score)?",
             answer: answer,
-            dataPoints: [.init(label: "Score", value: Double(score), unit: "", date: nil)],
+            dataPoints: noteworthy.prefix(3).map {
+                .init(label: $0.metric.displayName, value: $0.value, unit: $0.metric.unit, date: nil)
+            },
             confidence: 0.5,
             relatedQuestions: ["How am I doing overall?", "Am I at risk for anything?"]
         )
@@ -1221,12 +1394,28 @@ final class HealthDataQueryEngine {
             )
         }
 
+        // Graceful fallback: provide the data we do have
+        if let series = ctx.timeSeries[metric], !series.samples.isEmpty {
+            let recent = recentSamples(from: series, days: 7)
+            let avg = recent.isEmpty ? nil : recent.map(\.value).reduce(0, +) / Double(recent.count)
+            var answer = "I haven't mapped out the causal drivers for your \(metric.displayName) yet."
+            if let avg = avg {
+                answer += " Your recent average is \(formatValue(avg, metric: metric)). As I gather more history, I'll identify what specifically makes it go up or down."
+            }
+            return QueryResult(
+                question: "What causes my \(metric.displayName) to change?",
+                answer: answer,
+                dataPoints: avg.map { [QueryResult.DataPoint(label: "Recent avg", value: $0, unit: metric.unit, date: nil)] } ?? [],
+                confidence: 0.4,
+                relatedQuestions: ["How is my \(metric.displayName) trending?", "Anything unusual in my \(metric.displayName)?"]
+            )
+        }
         return QueryResult(
             question: "What causes my \(metric.displayName) to change?",
-            answer: "I need more data to figure out what drives your \(metric.displayName). Causal analysis requires about 30 days of history. keep tracking and I'll map out the relationships.",
+            answer: "I don't have \(metric.displayName) data yet. Once it starts coming in, I'll be able to analyze what drives it.",
             dataPoints: [],
             confidence: 0.3,
-            relatedQuestions: ["How is my \(metric.displayName) trending?"]
+            relatedQuestions: ["What data do I have?"]
         )
     }
 
@@ -1506,10 +1695,10 @@ final class HealthDataQueryEngine {
     private func noDataResult(for metric: HealthMetric) -> QueryResult {
         QueryResult(
             question: "About \(metric.displayName)",
-            answer: "I don't have enough \(metric.displayName) data yet. Keep wearing your device and I'll be able to answer this soon.",
+            answer: "I don't have \(metric.displayName) data available right now. This metric may need a compatible device (like Apple Watch) or manual entry in the Health app. Try asking about a different metric.",
             dataPoints: [],
             confidence: 0.3,
-            relatedQuestions: ["What data do I have?"]
+            relatedQuestions: ["How am I doing overall?", "What should I focus on?"]
         )
     }
 

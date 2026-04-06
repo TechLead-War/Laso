@@ -153,13 +153,13 @@ struct PredictiveHealthSignals {
         /// EMA alpha for trend smoothing
         static let emaAlpha: Double = 0.3
 
-        // Minimum data guards (days)
-        static let fatigueMinDays: Int = 7
-        static let burnoutMinDays: Int = 14
-        static let overtrainingMinDays: Int = 28
-        static let insomniaMinDays: Int = 7
-        static let immuneMinDays: Int = 7
-        static let inactivityMinDays: Int = 3
+        // Minimum data guards (days) — kept low so the feature works for newer users
+        static let fatigueMinDays: Int = 3
+        static let burnoutMinDays: Int = 7
+        static let overtrainingMinDays: Int = 7
+        static let insomniaMinDays: Int = 3
+        static let immuneMinDays: Int = 3
+        static let inactivityMinDays: Int = 1
     }
 
     // MARK: - Public API
@@ -505,7 +505,7 @@ struct PredictiveHealthSignals {
         guard availableMetrics >= 2, !componentScores.isEmpty else {
             return FatigueSignal(
                 riskLevel: .low, score: 0, confidence: 0,
-                explanation: "Insufficient data to assess fatigue accumulation. At least 7 days of HRV and resting heart rate data are needed.",
+                explanation: "Insufficient data to assess fatigue accumulation. At least 3 days of HRV and resting heart rate data are needed.",
                 recommendation: "Keep recent HRV and resting heart rate data syncing into Apple Health to build a fatigue baseline.",
                 contributingFactors: []
             )
@@ -721,7 +721,7 @@ struct PredictiveHealthSignals {
         guard availableSignals >= 2, !componentScores.isEmpty else {
             return BurnoutSignal(
                 riskLevel: .low, score: 0, confidence: 0,
-                explanation: "Insufficient data to assess burnout risk. At least 14 days of heart rate and activity data are needed.",
+                explanation: "Insufficient data to assess burnout risk. At least 7 days of heart rate and activity data are needed.",
                 recommendation: "Continue tracking to enable burnout risk detection.",
                 contributingFactors: []
             )
@@ -932,7 +932,7 @@ struct PredictiveHealthSignals {
         guard availableSignals >= 2, !componentScores.isEmpty else {
             return OvertrainingSignal(
                 riskLevel: .low, score: 0, confidence: 0,
-                explanation: "Insufficient data to assess overtraining risk. At least 28 days of exercise and heart rate data are needed.",
+                explanation: "Insufficient data to assess overtraining risk. At least 7 days of exercise and heart rate data are needed.",
                 recommendation: "Continue tracking workouts and heart rate to enable overtraining detection.",
                 contributingFactors: [],
                 projectedRecoveryDays: nil
@@ -1150,7 +1150,7 @@ struct PredictiveHealthSignals {
         guard availableSignals >= 2, !componentScores.isEmpty else {
             return InsomniaSignal(
                 riskLevel: .low, score: 0, confidence: 0,
-                explanation: "Insufficient data to predict insomnia risk. At least 7 days of sleep data are needed.",
+                explanation: "Insufficient data to predict insomnia risk. At least 3 days of sleep data are needed.",
                 recommendation: "Continue tracking sleep to enable insomnia risk prediction.",
                 contributingFactors: []
             )

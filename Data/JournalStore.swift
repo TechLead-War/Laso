@@ -141,6 +141,15 @@ struct JournalStore {
         )
         modelContext?.insert(entry)
         try? modelContext?.save()
+        let categoryRaw = category.rawValue
+        let hasNotes = notes != nil && !(notes?.isEmpty ?? true)
+        Task { @MainActor in
+            AppAnalytics.shared.trackJournalEntryCreated(
+                category: categoryRaw,
+                value: value,
+                hasNotes: hasNotes
+            )
+        }
     }
 
     // MARK: - Query: Entries for Date
@@ -235,7 +244,11 @@ struct JournalStore {
 
     /// Delete a specific journal entry
     func delete(_ entry: StoredJournalEntry) {
+        let category = entry.category?.rawValue ?? "unknown"
         modelContext?.delete(entry)
         try? modelContext?.save()
+        Task { @MainActor in
+            AppAnalytics.shared.trackJournalEntryDeleted(category: category)
+        }
     }
 }

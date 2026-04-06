@@ -6,7 +6,7 @@ import Foundation
 /// **Statistical methods:** Pearson correlation in subgroups, Fisher's z-test for comparing
 /// two correlations, lack-of-fit F-test for non-linearity, multiple comparison correction (p < 0.01).
 final class InteractionEffectEngine {
-    static let minimumDays = 45
+    static let minimumDays = 14
 
     // MARK: - Result Types
 

@@ -122,13 +122,14 @@ enum UncertaintyEstimator {
     /// Component minimum day requirements (from each ML class's `minimumDays`).
     private static let componentMinimums: [String: Int] = [
         "FeatureEngine": FeatureEngine.minimumDays,            // 7
+        "CorrelationDiscovery": CorrelationDiscovery.minimumDays, // 7
+        "TimeSeriesForecaster": TimeSeriesForecaster.minimumDays, // 7
+        "PersonalOptimizer": PersonalOptimizer.minimumDays,    // 7
         "CircadianAnalyzer": CircadianAnalyzer.minimumDays,    // 14
-        "TimeSeriesForecaster": TimeSeriesForecaster.minimumDays, // 21
-        "PredictiveScorer": PredictiveScorer.minimumDays,      // 30
-        "CorrelationDiscovery": CorrelationDiscovery.minimumDays, // 30
-        "PatternMiner": PatternMiner.minimumDays,              // 60
-        "HealthStateClassifier": HealthStateClassifier.minimumDays, // 60
-        "AdaptiveAnomalyDetector": AdaptiveAnomalyDetector.minimumDays, // 60
+        "PredictiveScorer": PredictiveScorer.minimumDays,      // 14
+        "PatternMiner": PatternMiner.minimumDays,              // 14
+        "HealthStateClassifier": HealthStateClassifier.minimumDays, // 14
+        "AdaptiveAnomalyDetector": AdaptiveAnomalyDetector.minimumDays, // 14
     ]
 
     /// Assess how sufficient the user's data is for ML analysis.

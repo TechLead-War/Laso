@@ -9,6 +9,7 @@ private struct CachedDeviceEntry: Codable {
     let sourceBundleId: String
     let metricRawValues: [String]
     let lastDataDate: Date?
+    let deviceModelName: String?
 
     init(from info: ConnectedDeviceInfo) {
         self.deviceRawValue = info.device.rawValue
@@ -16,6 +17,7 @@ private struct CachedDeviceEntry: Codable {
         self.sourceBundleId = info.sourceBundleId
         self.metricRawValues = info.metricsProvided.map(\.rawValue)
         self.lastDataDate = info.lastDataDate
+        self.deviceModelName = info.deviceModelName
     }
 
     func toConnectedDeviceInfo() -> ConnectedDeviceInfo? {
@@ -26,7 +28,8 @@ private struct CachedDeviceEntry: Codable {
             sourceName: sourceName,
             sourceBundleId: sourceBundleId,
             metricsProvided: metrics,
-            lastDataDate: lastDataDate
+            lastDataDate: lastDataDate,
+            deviceModelName: deviceModelName
         )
     }
 }
@@ -43,7 +46,7 @@ final class DeviceSourceManager {
     private var lastScanDate: Date?
     private static let scanTTL: TimeInterval = 24 * 3600
     /// Bump this to invalidate stale device caches on app update
-    private static let cacheVersion = 2
+    private static let cacheVersion = 3
 
     /// Only scan these representative metrics instead of all 83
     private static let representativeMetrics: [HealthMetric] = [
@@ -68,9 +71,12 @@ final class DeviceSourceManager {
         isScanning = true
         defer { isScanning = false }
 
-        var sourceMap: [String: (source: HKSource, metrics: Set<HealthMetric>, lastDate: Date?)] = [:]
+        // Snapshot previously active devices for disconnect detection
+        let previouslyActive = Set(connectedDevices.filter(\.isActive).map(\.device))
 
-        await withTaskGroup(of: [(HKSource, HealthMetric, Date?)].self) { group in
+        var sourceMap: [String: (source: HKSource, metrics: Set<HealthMetric>, lastDate: Date?, deviceName: String?)] = [:]
+
+        await withTaskGroup(of: [(HKSource, HealthMetric, Date?, String?)].self) { group in
             for metric in Self.representativeMetrics {
                 let config = HealthKitMetricRegistry.config(for: metric)
                 guard let sampleType = config.sampleType else { continue }
@@ -81,12 +87,15 @@ final class DeviceSourceManager {
             }
 
             for await results in group {
-                for (source, metric, lastDate) in results {
+                for (source, metric, lastDate, deviceName) in results {
                     let key = source.bundleIdentifier
-                    var entry = sourceMap[key] ?? (source: source, metrics: [], lastDate: nil)
+                    var entry = sourceMap[key] ?? (source: source, metrics: [], lastDate: nil, deviceName: nil)
                     entry.metrics.insert(metric)
                     if let lastDate, entry.lastDate == nil || lastDate > entry.lastDate! {
                         entry.lastDate = lastDate
+                    }
+                    if entry.deviceName == nil, let deviceName {
+                        entry.deviceName = deviceName
                     }
                     sourceMap[key] = entry
                 }
@@ -104,6 +113,9 @@ final class DeviceSourceManager {
                    existing.lastDataDate == nil || newDate > existing.lastDataDate! {
                     existing.lastDataDate = newDate
                 }
+                if existing.deviceModelName == nil, let name = entry.deviceName {
+                    existing.deviceModelName = name
+                }
                 deviceMap[device] = existing
             } else {
                 deviceMap[device] = ConnectedDeviceInfo(
@@ -111,7 +123,8 @@ final class DeviceSourceManager {
                     sourceName: entry.source.name,
                     sourceBundleId: bundleId,
                     metricsProvided: entry.metrics,
-                    lastDataDate: entry.lastDate
+                    lastDataDate: entry.lastDate,
+                    deviceModelName: entry.deviceName
                 )
             }
         }
@@ -130,6 +143,8 @@ final class DeviceSourceManager {
         let activeCount = connectedDevices.filter(\.isActive).count
         let primary = connectedDevices.first?.device.rawValue ?? "none"
         let hasWatch = connectedDevices.contains { $0.device == .appleWatch && $0.isActive }
+        let watchModel = connectedDevices.first(where: { $0.device == .appleWatch })?.deviceModelName
+        let primaryWearableModel = connectedDevices.first(where: { $0.device != .iPhone })?.deviceModelName
         UserDefaults.standard.set(primary, forKey: AppKeys.Data.primaryDevice)
         let devices = connectedDevices
         await MainActor.run {
@@ -137,7 +152,8 @@ final class DeviceSourceManager {
                 AppAnalytics.shared.trackDeviceDetected(
                     deviceType: device.device.rawValue,
                     metricsCount: device.metricCount,
-                    isActive: device.isActive
+                    isActive: device.isActive,
+                    modelName: device.deviceModelName
                 )
                 if device.isActive {
                     AppAnalytics.shared.trackSourceConnected(
@@ -151,13 +167,33 @@ final class DeviceSourceManager {
                 hasAppleWatch: hasWatch,
                 sourceCount: activeCount,
                 primarySource: primary,
-                daysSinceFirstSync: SessionTracker.shared.daysSinceInstall
+                daysSinceFirstSync: SessionTracker.shared.daysSinceInstall,
+                watchModel: watchModel,
+                wearableModel: primaryWearableModel
             )
+
+            // Detect devices that were active but are now inactive
+            let currentlyActive = Set(devices.filter(\.isActive).map(\.device))
+            let disconnected = previouslyActive.subtracting(currentlyActive)
+            for deviceType in disconnected {
+                let info = devices.first { $0.device == deviceType }
+                let daysSince: Int
+                if let lastDate = info?.lastDataDate {
+                    daysSince = Calendar.current.dateComponents([.day], from: lastDate, to: Date()).day ?? 0
+                } else {
+                    daysSince = 0
+                }
+                AppAnalytics.shared.trackDeviceDisconnected(
+                    deviceType: deviceType.rawValue,
+                    daysSinceLastData: daysSince,
+                    modelName: info?.deviceModelName
+                )
+            }
         }
     }
 
-    /// Query sources for a given sample type and return (source, metric, lastSampleDate) tuples
-    private func querySources(for sampleType: HKSampleType, metric: HealthMetric) async -> [(HKSource, HealthMetric, Date?)] {
+    /// Query sources for a given sample type and return (source, metric, lastSampleDate, deviceName) tuples
+    private func querySources(for sampleType: HKSampleType, metric: HealthMetric) async -> [(HKSource, HealthMetric, Date?, String?)] {
         let healthStore = self.healthStore
         return await withCheckedContinuation { continuation in
             let query = HKSourceQuery(sampleType: sampleType, samplePredicate: nil) { _, sourcesOrNil, error in
@@ -171,15 +207,15 @@ final class DeviceSourceManager {
                         continuation.resume(returning: [])
                         return
                     }
-                    var results: [(HKSource, HealthMetric, Date?)] = []
+                    var results: [(HKSource, HealthMetric, Date?, String?)] = []
                     results.reserveCapacity(sources.count)
                     for source in sources {
-                        let lastDate = await Self.latestSampleDate(
+                        let info = await Self.latestSampleInfo(
                             in: healthStore,
                             for: sampleType,
                             source: source
                         )
-                        results.append((source, metric, lastDate))
+                        results.append((source, metric, info.date, info.deviceName))
                     }
                     continuation.resume(returning: results)
                 }
@@ -188,8 +224,8 @@ final class DeviceSourceManager {
         }
     }
 
-    /// Fetch the most recent sample date for a specific source + type.
-    private static func latestSampleDate(in healthStore: HKHealthStore, for sampleType: HKSampleType, source: HKSource) async -> Date? {
+    /// Fetch the most recent sample date and HKDevice for a specific source + type.
+    private static func latestSampleInfo(in healthStore: HKHealthStore, for sampleType: HKSampleType, source: HKSource) async -> (date: Date?, deviceName: String?) {
         await withCheckedContinuation { continuation in
             let sourcePredicate = HKQuery.predicateForObjects(from: [source])
             let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
@@ -200,10 +236,12 @@ final class DeviceSourceManager {
                 sortDescriptors: [sort]
             ) { _, samples, error in
                 guard error == nil else {
-                    continuation.resume(returning: nil)
+                    continuation.resume(returning: (nil, nil))
                     return
                 }
-                continuation.resume(returning: samples?.first?.endDate)
+                let sample = samples?.first
+                let deviceName = sample?.device?.name ?? sample?.device?.model
+                continuation.resume(returning: (sample?.endDate, deviceName))
             }
             healthStore.execute(query)
         }

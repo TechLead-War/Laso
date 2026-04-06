@@ -5,7 +5,7 @@ import Foundation
 /// when a user's baselines fundamentally shifted. gradual changes invisible day-to-day.
 final class ChangePointDetector {
 
-    static let minimumDays = 30
+    static let minimumDays = 14
 
     // MARK: - Configuration
 

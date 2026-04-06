@@ -53,7 +53,7 @@ final class CircadianAnalyzer {
 
     // MARK: - Configuration
 
-    static let minimumDays = 14
+    static let minimumDays = 7
     static let metricsToAnalyze: [HealthMetric] = [
         .heartRate, .restingHeartRate, .heartRateVariability,
         .steps, .activeCalories

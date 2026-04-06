@@ -7,7 +7,7 @@ import Foundation
 /// activates when data >= 60 days, otherwise falls back to single-season mode.
 final class TimeSeriesForecaster {
     /// Minimum days of data required for forecasting
-    static let minimumDays = 21
+    static let minimumDays = 7
 
     /// Minimum days to activate monthly seasonality
     private static let monthlyMinimumDays = 60

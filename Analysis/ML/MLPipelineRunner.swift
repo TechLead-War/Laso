@@ -114,7 +114,7 @@ final class MLPipelineRunner {
 
         let thermal = ThermalManager.shared
 
-        // --- 1. TimeSeriesForecaster (21+ days) ---
+        // --- 1. TimeSeriesForecaster (7+ days) ---
         if totalDays >= TimeSeriesForecaster.minimumDays {
             if components.forecaster.needsRetrain || !components.forecaster.isReady {
                 logger.debug("Running TimeSeriesForecaster")
@@ -125,7 +125,7 @@ final class MLPipelineRunner {
 
         if await shouldStopForThermal(after: "TimeSeriesForecaster") { output.stoppedEarly = true; return output }
 
-        // --- 2. PredictiveScorer (30+ days) ---
+        // --- 2. PredictiveScorer (14+ days) ---
         if totalDays >= PredictiveScorer.minimumDays {
             if !components.predictiveScorer.isReady || needsFullRetrain {
                 logger.debug("Running PredictiveScorer")
@@ -141,7 +141,7 @@ final class MLPipelineRunner {
 
         if await shouldStopForThermal(after: "PredictiveScorer") { output.stoppedEarly = true; return output }
 
-        // --- 3. CorrelationDiscovery (30+ days, tier 1) ---
+        // --- 3. CorrelationDiscovery (7+ days, tier 1) ---
         if thermal.shouldRunComponent(tier: 1), totalDays >= CorrelationDiscovery.minimumDays {
             if components.correlationDiscovery.needsRetrain || !components.correlationDiscovery.isReady {
                 logger.debug("Running CorrelationDiscovery")
@@ -152,7 +152,7 @@ final class MLPipelineRunner {
 
         if await shouldStopForThermal(after: "CorrelationDiscovery") { output.stoppedEarly = true; return output }
 
-        // --- 4. HealthStateClassifier (60+ days, tier 1) ---
+        // --- 4. HealthStateClassifier (14+ days, tier 1) ---
         if thermal.shouldRunComponent(tier: 1), totalDays >= HealthStateClassifier.minimumDays {
             if components.stateClassifier.needsRetrain || !components.stateClassifier.isReady {
                 logger.debug("Running HealthStateClassifier")
@@ -163,7 +163,7 @@ final class MLPipelineRunner {
 
         if await shouldStopForThermal(after: "HealthStateClassifier") { output.stoppedEarly = true; return output }
 
-        // --- 5. PatternMiner (60+ days, tier 1) ---
+        // --- 5. PatternMiner (14+ days, tier 1) ---
         if thermal.shouldRunComponent(tier: 1), totalDays >= PatternMiner.minimumDays {
             if !components.patternMiner.isReady || needsFullRetrain {
                 logger.debug("Running PatternMiner")
@@ -174,7 +174,7 @@ final class MLPipelineRunner {
 
         if await shouldStopForThermal(after: "PatternMiner") { output.stoppedEarly = true; return output }
 
-        // --- 6. AdaptiveAnomalyDetector (60+ days, tier 1) ---
+        // --- 6. AdaptiveAnomalyDetector (14+ days, tier 1) ---
         if thermal.shouldRunComponent(tier: 1), totalDays >= AdaptiveAnomalyDetector.minimumDays {
             if components.anomalyDetector.needsRetrain || !components.anomalyDetector.isReady {
                 logger.debug("Running AdaptiveAnomalyDetector")
@@ -227,14 +227,14 @@ final class MLPipelineRunner {
 
         if await shouldStopForThermal(after: "PipelineStep6") { output.stoppedEarly = true; return output }
 
-        // --- 7. Predictive Health Signals (7+ days for fatigue, more for others) ---
+        // --- 7. Predictive Health Signals (3+ days for fatigue, more for others) ---
         logger.debug("Running PredictiveHealthSignals")
         output.healthSignalReport = PredictiveHealthSignals.analyze(
             timeSeries: input.timeSeries,
             baselines: input.baselines,
             trends: input.trends,
             healthState: components.stateClassifier.isReady ? components.stateClassifier.currentState : nil,
-            prediction: components.predictiveScorer.isReady ? components.predictiveScorer.predict(todayVector: vectors.last!) : nil
+            prediction: (components.predictiveScorer.isReady && vectors.last != nil) ? components.predictiveScorer.predict(todayVector: vectors[vectors.count - 1]) : nil
         )
 
         if await shouldStopForThermal(after: "PredictiveHealthSignals") { output.stoppedEarly = true; return output }
@@ -255,7 +255,7 @@ final class MLPipelineRunner {
 
         // --- Tier 2 (Exploratory): Skipped under thermal pressure (.fair skips these) ---
 
-        // --- 9. InteractionEffectEngine (45+ days, tier 2) ---
+        // --- 9. InteractionEffectEngine (14+ days, tier 2) ---
         if thermal.shouldRunComponent(tier: 2), totalDays >= InteractionEffectEngine.minimumDays {
             logger.debug("Running InteractionEffectEngine")
             output.interactionEffects = components.interactionEngine.discover(timeSeries: input.timeSeries, baselines: input.baselines)
@@ -264,7 +264,7 @@ final class MLPipelineRunner {
 
         if await shouldStopForThermal(after: "InteractionEffectEngine") { output.stoppedEarly = true; return output }
 
-        // --- 10. TemporalSequenceMiner (30+ days, tier 2) ---
+        // --- 10. TemporalSequenceMiner (14+ days, tier 2) ---
         if thermal.shouldRunComponent(tier: 2), totalDays >= TemporalSequenceMiner.minimumDays {
             logger.debug("Running TemporalSequenceMiner")
             components.temporalMiner.mine(
@@ -279,7 +279,7 @@ final class MLPipelineRunner {
 
         if await shouldStopForThermal(after: "TemporalSequenceMiner") { output.stoppedEarly = true; return output }
 
-        // --- 11. ChangePointDetector (30+ days, tier 2) ---
+        // --- 11. ChangePointDetector (14+ days, tier 2) ---
         if thermal.shouldRunComponent(tier: 2), totalDays >= ChangePointDetector.minimumDays {
             logger.debug("Running ChangePointDetector")
             components.changePointDetector.detect(timeSeries: input.timeSeries, baselines: input.baselines)
@@ -289,7 +289,7 @@ final class MLPipelineRunner {
 
         if await shouldStopForThermal(after: "ChangePointDetector") { output.stoppedEarly = true; return output }
 
-        // --- 12. PersonalOptimizer (21+ days, tier 2) ---
+        // --- 12. PersonalOptimizer (7+ days, tier 2) ---
         if thermal.shouldRunComponent(tier: 2), totalDays >= PersonalOptimizer.minimumDays && !input.scoreHistory.isEmpty {
             logger.debug("Running PersonalOptimizer")
             components.personalOptimizer.analyze(

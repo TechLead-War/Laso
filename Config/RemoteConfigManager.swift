@@ -486,7 +486,7 @@ extension RemoteConfigManager {
         "feedback_days_before_first_prompt":   5 as NSNumber,
 
         // Data retention (days)
-        "retention_daily_sample_days":        730 as NSNumber,   // 2 years
+        "retention_daily_sample_days":        0 as NSNumber,     // No pruning — days counter must grow unbounded
         "retention_analysis_snapshot_days":   365 as NSNumber,   // 1 year
         "retention_daily_strain_days":        365 as NSNumber,   // 1 year
         "retention_recommendation_days":      90 as NSNumber,

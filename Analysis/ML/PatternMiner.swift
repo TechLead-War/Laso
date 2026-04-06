@@ -4,7 +4,7 @@ import Foundation
 /// Finds cycles the user didn't know about: 7-day, 14-day, 28-day, seasonal.
 final class PatternMiner {
     /// Minimum days of data required
-    static let minimumDays = 60
+    static let minimumDays = 14
 
     /// Standard lags to check for periodicity
     private static let standardLags = [7, 14, 28]

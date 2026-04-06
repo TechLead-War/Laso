@@ -387,8 +387,10 @@ final class AppAnalytics {
         // Timezone (e.g. "America/New_York")
         props["timezone"] = TimeZone.current.identifier
 
-        // Device model (marketing name)
-        props["device_model"] = deviceModelName()
+        // Device model (raw hw.machine + marketing name)
+        let rawModel = deviceMachineIdentifier()
+        props["device_model"] = rawModel
+        props["phone_model"] = Self.iPhoneMarketingName(for: rawModel)
 
         // OS version
         props["os_version"] = UIDevice.current.systemVersion
@@ -401,15 +403,54 @@ final class AppAnalytics {
         }
     }
 
-    /// Returns the marketing device name (e.g. "iPhone 15 Pro") from the hw.machine identifier.
-    private func deviceModelName() -> String {
+    /// Returns the raw hw.machine identifier (e.g. "iPhone16,1").
+    private func deviceMachineIdentifier() -> String {
         var systemInfo = utsname()
         uname(&systemInfo)
-        let machine = withUnsafePointer(to: &systemInfo.machine) {
+        return withUnsafePointer(to: &systemInfo.machine) {
             $0.withMemoryRebound(to: CChar.self, capacity: 1) { String(cString: $0) }
         }
-        // Return the raw identifier. PostHog can map these, and it avoids maintaining a lookup table.
-        return machine
+    }
+
+    /// Maps hw.machine identifiers to marketing names.
+    private static func iPhoneMarketingName(for identifier: String) -> String {
+        let map: [String: String] = [
+            // iPhone 12
+            "iPhone13,1": "iPhone 12 mini",
+            "iPhone13,2": "iPhone 12",
+            "iPhone13,3": "iPhone 12 Pro",
+            "iPhone13,4": "iPhone 12 Pro Max",
+            // iPhone 13
+            "iPhone14,4": "iPhone 13 mini",
+            "iPhone14,5": "iPhone 13",
+            "iPhone14,2": "iPhone 13 Pro",
+            "iPhone14,3": "iPhone 13 Pro Max",
+            // iPhone SE 3rd gen
+            "iPhone14,6": "iPhone SE (3rd gen)",
+            // iPhone 14
+            "iPhone14,7": "iPhone 14",
+            "iPhone14,8": "iPhone 14 Plus",
+            "iPhone15,2": "iPhone 14 Pro",
+            "iPhone15,3": "iPhone 14 Pro Max",
+            // iPhone 15
+            "iPhone15,4": "iPhone 15",
+            "iPhone15,5": "iPhone 15 Plus",
+            "iPhone16,1": "iPhone 15 Pro",
+            "iPhone16,2": "iPhone 15 Pro Max",
+            // iPhone 16
+            "iPhone17,1": "iPhone 16 Pro",
+            "iPhone17,2": "iPhone 16 Pro Max",
+            "iPhone17,3": "iPhone 16",
+            "iPhone17,4": "iPhone 16 Plus",
+            "iPhone17,5": "iPhone 16e",
+            // iPhone 17
+            "iPhone18,1": "iPhone 17 Pro",
+            "iPhone18,2": "iPhone 17 Pro Max",
+            "iPhone18,3": "iPhone 17",
+            "iPhone18,4": "iPhone 17 Plus",
+            "iPhone18,5": "iPhone 17 Air",
+        ]
+        return map[identifier] ?? identifier
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -1167,12 +1208,14 @@ final class AppAnalytics {
     // MARK: - 12. Device & Data Events
     // ══════════════════════════════════════════════════════════════════════
 
-    func trackDeviceDetected(deviceType: String, metricsCount: Int, isActive: Bool) {
-        logEvent("device_detected", parameters: [
+    func trackDeviceDetected(deviceType: String, metricsCount: Int, isActive: Bool, modelName: String? = nil) {
+        var params: [String: Any] = [
             "device_type": deviceType,
             "metrics_count": metricsCount,
             "is_active": isActive ? 1 : 0
-        ])
+        ]
+        if let modelName { params["device_model_name"] = modelName }
+        logEvent("device_detected", parameters: params)
     }
 
     func updateDeviceProperties(activeCount: Int, primaryDevice: String) {
@@ -1362,14 +1405,34 @@ final class AppAnalytics {
         }
 
         let cal = Calendar.current
-        logEvent("notification_opened", parameters: [
+
+        // Extract metric name from structured alert identifiers
+        // Formats: healthpulse.triage.[metric].[level], healthpulse.spike.[metric].[type],
+        //          healthpulse.reversal.[metric].[direction], healthpulse.celebration.[metric]
+        let parts = identifier.split(separator: ".")
+        let alertMetric: String? = parts.count >= 3 ? String(parts[2]) : nil
+        let alertSubtype: String? = parts.count >= 4 ? String(parts[3]) : nil
+
+        var params: [String: Any] = [
             "notification_id": identifier,
             "type": type,
             "hook_category": hookCategory,
             "latency_minutes": latencyMinutes,
             "hour_opened": cal.component(.hour, from: now),
             "day_of_week": cal.component(.weekday, from: now)
-        ])
+        ]
+        if let alertMetric { params["alert_metric"] = alertMetric }
+        if let alertSubtype { params["alert_subtype"] = alertSubtype }
+        logEvent("notification_opened", parameters: params)
+
+        // Also fire alert_acted_on for health alert types
+        if type == "alert" || type == "watch_monitor" {
+            trackAlertActedOn(
+                alertType: type,
+                metric: alertMetric,
+                action: "opened"
+            )
+        }
 
         // Clean up stored context
         defaults.removeObject(forKey: "healthpulse.notif.hook.\(identifier)")
@@ -1916,19 +1979,120 @@ final class AppAnalytics {
         hasAppleWatch: Bool,
         sourceCount: Int,
         primarySource: String,
-        daysSinceFirstSync: Int
+        daysSinceFirstSync: Int,
+        watchModel: String? = nil,
+        wearableModel: String? = nil
     ) {
-        PostHogManager.shared.setUserProperties([
+        var props: [String: Any] = [
             "has_apple_watch": hasAppleWatch ? "yes" : "no",
             "health_source_count": "\(sourceCount)",
             "primary_health_source": primarySource,
             "days_since_first_sync": "\(daysSinceFirstSync)"
-        ])
+        ]
+        if let watchModel { props["watch_model"] = watchModel }
+        if let wearableModel { props["wearable_model"] = wearableModel }
+        PostHogManager.shared.setUserProperties(props)
     }
 
     /// Update notification permission state as user property.
     func updateNotificationProperties(enabled: Bool) {
         setUserProperty("notifications_enabled", value: enabled ? "yes" : "no")
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 20b. Referral Events
+    // ══════════════════════════════════════════════════════════════════════
+
+    func trackReferralCodeShared(code: String) {
+        logEvent("referral_code_shared", parameters: [
+            "code": code
+        ])
+    }
+
+    func trackReferralCodeRedeemed(code: String, success: Bool, failureReason: String? = nil) {
+        var params: [String: Any] = [
+            "code": code,
+            "success": success ? 1 : 0
+        ]
+        if let failureReason { params["failure_reason"] = failureReason }
+        logEvent("referral_code_redeemed", parameters: params)
+    }
+
+    func trackReferralCompleted(role: String) {
+        logEvent("referral_completed", parameters: [
+            "role": role
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 20c. Achievement Events
+    // ══════════════════════════════════════════════════════════════════════
+
+    func trackAchievementUnlocked(id: String, title: String, category: String) {
+        logEvent("achievement_unlocked", parameters: [
+            "achievement_id": id,
+            "achievement_title": title,
+            "achievement_category": category
+        ])
+    }
+
+    func trackLevelUp(newLevel: String, totalDaysTracked: Int) {
+        logEvent("level_up", parameters: [
+            "new_level": newLevel,
+            "total_days_tracked": totalDaysTracked
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 20d. Device Disconnect Events
+    // ══════════════════════════════════════════════════════════════════════
+
+    func trackDeviceDisconnected(deviceType: String, daysSinceLastData: Int, modelName: String? = nil) {
+        var params: [String: Any] = [
+            "device_type": deviceType,
+            "days_since_last_data": daysSinceLastData
+        ]
+        if let modelName { params["device_model_name"] = modelName }
+        logEvent("device_disconnected", parameters: params)
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 20e. Alert Interaction Events
+    // ══════════════════════════════════════════════════════════════════════
+
+    func trackAlertActedOn(alertType: String, metric: String? = nil, action: String) {
+        var params: [String: Any] = [
+            "alert_type": alertType,
+            "action": action
+        ]
+        if let metric { params["metric"] = metric }
+        logEvent("alert_acted_on", parameters: params)
+    }
+
+    func trackAlertDismissed(alertType: String, metric: String? = nil) {
+        var params: [String: Any] = [
+            "alert_type": alertType
+        ]
+        if let metric { params["metric"] = metric }
+        logEvent("alert_dismissed", parameters: params)
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 20f. Journal Lifecycle Events
+    // ══════════════════════════════════════════════════════════════════════
+
+    func trackJournalEntryCreated(category: String, value: Double, hasNotes: Bool) {
+        logEvent("journal_entry_created", parameters: [
+            "category": category,
+            "value": value,
+            "has_notes": hasNotes ? 1 : 0
+        ])
+    }
+
+    func trackJournalEntryDeleted(category: String) {
+        logEvent("journal_entry_deleted", parameters: [
+            "category": category
+        ])
     }
 
     // ══════════════════════════════════════════════════════════════════════

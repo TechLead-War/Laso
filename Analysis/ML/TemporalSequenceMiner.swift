@@ -6,7 +6,7 @@ import Foundation
 final class TemporalSequenceMiner {
 
     /// Minimum days of data required for meaningful sequence mining
-    static let minimumDays = 30
+    static let minimumDays = 14
 
     // MARK: - Result Types
 

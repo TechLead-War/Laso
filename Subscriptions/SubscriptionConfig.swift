@@ -38,9 +38,9 @@ struct SubscriptionConfig {
     //
     // Tier       | Yearly (USD equiv) | Monthly (USD equiv) | Storefronts
     // ─────────────────────────────────────────────────────────────────────
-    // standard   | $29.99             | $5.99               | US, CA, GB, EU, AU, JP, KR
-    // reduced    | $14.99             | $2.99               | IN, BR, MX, TR, ID, PH, TH, VN, PK, NG, EG, ZA, AR, CL, CO
-    // premium    | $34.99             | $6.99               | CH, NO, DK, SE, SG
+    // standard   | $29.99         | $5.99       | US, CA, GB, EU, AU, JP, KR
+    // reduced    | $14.99         | $2.99       | IN, BR, MX, TR, ID, PH, TH, VN, PK, NG, EG, ZA, AR, CL, CO
+    // premium    | $34.99         | $6.99       | CH, NO, DK, SE, SG
 
     enum PriceTier: String, Codable {
         case standard

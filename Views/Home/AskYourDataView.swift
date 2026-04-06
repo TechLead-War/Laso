@@ -200,17 +200,17 @@ struct AskYourDataView: View {
         AppAnalytics.shared.trackCoreAction(.askedHealthQuery, screen: .home)
         AppAnalytics.shared.trackBlockTap(title: "Query Submitted", type: .smartAction, screen: .home, metadata: ["source": "ask_your_data", "query_length": query.count])
 
-        // Run on background to avoid blocking UI
         let q = normalizedQuery
         let queryRequest = viewModel.makeHealthDataQueryRequest()
-        let qos: DispatchQoS.QoSClass = ThermalManager.shared.shouldThrottle ? .background : .utility
-        DispatchQueue.global(qos: qos).async {
-            let queryResult = queryRequest.execute(question: q)
-            DispatchQueue.main.async {
-                guard activeQueryID == requestID else { return }
+        let priority: TaskPriority = ThermalManager.shared.shouldThrottle ? .background : .utility
+
+        Task.detached(priority: priority) {
+            let queryResult = await queryRequest.execute(question: q)
+            await MainActor.run {
+                guard self.activeQueryID == requestID else { return }
                 withAnimation(.snappy(duration: 0.3)) {
-                    result = queryResult
-                    isSearching = false
+                    self.result = queryResult
+                    self.isSearching = false
                 }
                 AppAnalytics.shared.trackBlockTap(title: "Query Result Viewed", type: .smartAction, screen: .home, metadata: ["source": "ask_your_data", "confidence": Int(queryResult.confidence * 100), "data_points_count": queryResult.dataPoints.count, "related_questions_count": queryResult.relatedQuestions.count])
             }

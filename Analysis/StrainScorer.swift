@@ -29,7 +29,7 @@ enum StrainLevel: String, CaseIterable {
         case .light:        return "Light"
         case .moderate:     return "Moderate"
         case .high:         return "High"
-        case .overreaching: return "Overreaching"
+        case .overreaching: return "Peak"
         case .allOut:       return "All Out"
         }
     }

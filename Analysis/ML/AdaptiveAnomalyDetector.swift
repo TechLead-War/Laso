@@ -5,7 +5,7 @@ import Foundation
 /// Learns "normal for this user on a Monday after a hard workout" instead of using static thresholds.
 final class AdaptiveAnomalyDetector {
     /// Minimum days of data required
-    static let minimumDays = 60
+    static let minimumDays = 14
 
     /// Number of isolation trees
     private static let numTrees = 50

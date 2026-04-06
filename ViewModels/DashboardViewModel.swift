@@ -1857,18 +1857,26 @@ final class DashboardViewModel {
     }
 
     struct HealthDataQueryRequest {
-        let engine: HealthDataQueryEngine
+        let engine: any HealthQueryEngine
         let context: HealthDataQueryEngine.QueryContext
-        let matchingMode: HealthDataQueryEngine.MatchingMode
 
-        func execute(question: String) -> HealthDataQueryEngine.QueryResult {
-            engine.query(question: question, context: context, matchingMode: matchingMode)
+        func execute(question: String) async -> HealthDataQueryEngine.QueryResult {
+            do {
+                return try await engine.query(question: question, context: context)
+            } catch {
+                return HealthDataQueryEngine.QueryResult(
+                    question: question,
+                    answer: "Something went wrong processing your question. Try asking again.",
+                    dataPoints: [],
+                    confidence: 0.0,
+                    relatedQuestions: ["How am I doing overall?"]
+                )
+            }
         }
     }
 
     func makeHealthDataQueryRequest() -> HealthDataQueryRequest {
         let orch = analysisEngine.mlOrchestrator
-        let matchingMode: HealthDataQueryEngine.MatchingMode = ThermalManager.shared.shouldThrottle ? .keywordOnly : .full
         let context = HealthDataQueryEngine.QueryContext(
             timeSeries: healthKitManager.timeSeries,
             baselines: analysisEngine.baselines,
@@ -1888,16 +1896,24 @@ final class DashboardViewModel {
             temporalSequences: orch.temporalSequences,
             overallScore: scores.overallScore.score
         )
-        return HealthDataQueryRequest(
-            engine: orch.healthDataQueryEngine,
-            context: context,
-            matchingMode: matchingMode
-        )
+
+        let engine: any HealthQueryEngine
+        #if canImport(FoundationModels)
+        if #available(iOS 26, *), !ThermalManager.shared.shouldThrottle {
+            engine = FoundationModelQueryEngine(fallback: orch.healthDataQueryEngine)
+        } else {
+            engine = orch.healthDataQueryEngine
+        }
+        #else
+        engine = orch.healthDataQueryEngine
+        #endif
+
+        return HealthDataQueryRequest(engine: engine, context: context)
     }
 
     /// Run NL health query (Papers 1 & 2: PHIA). uses full ML pipeline context
-    func queryHealthData(_ question: String) -> HealthDataQueryEngine.QueryResult {
-        makeHealthDataQueryRequest().execute(question: question)
+    func queryHealthData(_ question: String) async -> HealthDataQueryEngine.QueryResult {
+        await makeHealthDataQueryRequest().execute(question: question)
     }
 
     /// Assess current receptivity for nudge delivery (Paper 5 & 6: JITAI)

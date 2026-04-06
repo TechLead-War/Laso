@@ -7,7 +7,7 @@ import Foundation
 /// All thresholds and ranges are derived from the user's own data distribution,
 /// not population averages. Requires at least 21 days of scored data.
 final class PersonalOptimizer {
-    static let minimumDays = 21
+    static let minimumDays = 7
 
     // MARK: - Public Types
 

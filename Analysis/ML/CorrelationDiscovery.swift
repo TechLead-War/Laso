@@ -4,7 +4,7 @@ import Foundation
 /// partial correlation, and dynamic stability tracking.
 final class CorrelationDiscovery {
     /// Minimum days of paired data required
-    static let minimumDays = 30
+    static let minimumDays = 7
 
     /// Minimum bins for mutual information estimation (adaptive: sqrt(n))
     private static let minMIBins = 5
@@ -327,7 +327,7 @@ final class CorrelationDiscovery {
     // MARK: - Multivariate Extension
 
     /// Minimum days required for multivariate regression
-    static let minimumDaysMultivariate = 45
+    static let minimumDaysMultivariate = 21
 
     /// Run multivariate Granger regression for a target metric using individually
     /// significant pairwise predictors. This reduces spurious causality from omitted variables.

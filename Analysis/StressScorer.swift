@@ -100,7 +100,7 @@ final class StressScorer {
 
     // MARK: - Configuration
 
-    private static let minimumDaysRequired = 14
+    private static let minimumDaysRequired = 3
     private static let baselineWindowDays = 14
     private static let historyWindowDays = 30
     private static let hrvWeight = 0.6
@@ -147,7 +147,7 @@ final class StressScorer {
     /// Human-readable description of current stress state with actionable advice
     var stressDescription: String {
         guard let stress = currentStress else {
-            return "Not enough data to assess stress. Keep heart rate and HRV data syncing consistently for at least 14 days to establish your personal baseline."
+            return "Not enough data to assess stress yet. Keep heart rate and HRV data syncing to establish your personal baseline."
         }
 
         let scoreText = String(format: "%.1f", stress.score)
