@@ -27,7 +27,7 @@ final class AppLaunchCoordinator {
         if Auth.auth().currentUser == nil {
             Auth.auth().signInAnonymously { _, error in
                 if let error {
-                    print("[Auth] Anonymous sign-in failed: \(error.localizedDescription)")
+                    PostHogManager.shared.captureError(error, context: "anonymous_auth")
                 }
             }
         }
@@ -37,6 +37,7 @@ final class AppLaunchCoordinator {
         }
 
         analyticsManager.configure()
+        analyticsManager.installCrashHandlers()
         Task { @MainActor in
             AppAnalytics.shared.startScreenshotTracking()
         }

@@ -28,13 +28,22 @@ final class NotificationManager {
 
     /// Request notification authorization
     @discardableResult
-    func requestAuthorization() async -> Bool {
+    func requestAuthorization(source: String = "system") async -> Bool {
+        await MainActor.run {
+            AppAnalytics.shared.trackNotificationPermissionRequested(source: source)
+        }
         do {
             let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
-            await MainActor.run { AppAnalytics.shared.updateNotificationProperties(enabled: granted) }
+            await MainActor.run {
+                AppAnalytics.shared.updateNotificationProperties(enabled: granted)
+                AppAnalytics.shared.trackNotificationPermissionResult(granted: granted, source: source)
+            }
             return granted
         } catch {
-            await MainActor.run { AppAnalytics.shared.updateNotificationProperties(enabled: false) }
+            await MainActor.run {
+                AppAnalytics.shared.updateNotificationProperties(enabled: false)
+                AppAnalytics.shared.trackNotificationPermissionResult(granted: false, source: source)
+            }
             print("Notification authorization failed: \(error.localizedDescription)")
             return false
         }

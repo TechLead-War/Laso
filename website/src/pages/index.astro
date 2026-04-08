@@ -24,7 +24,7 @@ const jsonLd = [
       "HRV-derived stress monitoring with guided breathwork",
       "Illness prediction 2-3 days before symptoms",
       "Biological age (Vitality Age) computed from 9 key health metrics",
-      "86 health metrics across 8 categories",
+      "Apple Health metrics across 7 categories",
       "What-if workout simulation",
       "Overtraining and burnout detection",
       "Menstrual cycle tracking with phase-specific training guidance",
@@ -74,7 +74,7 @@ const jsonLd = [
         "name": "What devices work with Laso?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Laso works with over 50 devices that sync to Apple Health, including Apple Watch, Oura Ring, Garmin, WHOOP, Fitbit, Polar, Samsung Galaxy Watch, COROS, Suunto, Withings, Ultrahuman Ring Air, Dexcom, Eight Sleep, and more. If your device writes data to Apple Health, Laso can read and analyze it. iPhone built-in sensors for steps and activity tracking also work without any wearable."
+          "text": "Laso reads Apple Health on iPhone, so Apple Watch works natively and many companion apps can feed data in once Apple Health sharing is enabled. Publicly mapped sources include Garmin, Oura Ring, WHOOP, Polar, COROS, Withings, Dexcom, Ultrahuman Ring Air, RingConn, Circular Ring, Renpho, Omron, Biostrap, Myzone, Peloton, and more. Laso shows the exact metrics after the source writes samples. iPhone built-in sensors for steps, distance, and activity also work without a wearable."
         }
       },
       {
@@ -106,7 +106,7 @@ const jsonLd = [
         "name": "How is Laso different from WHOOP or Oura?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Three key differences: (1) No new hardware: Laso works with the wearable you already own (Apple Watch, Oura, Garmin, etc.), while WHOOP requires their $30/month band. (2) Broader analysis: Laso cross-analyzes 86 health metrics using causal inference (Granger causality), not just correlations. It covers recovery, strain, sleep, stress, illness prediction, biological age, and more in one app. (3) Complete privacy: all analysis runs on-device with no cloud processing, unlike WHOOP and Oura which require cloud accounts."
+          "text": "Three key differences: (1) No new hardware: Laso works with the wearable you already own (Apple Watch, Oura, Garmin, etc.), while WHOOP requires their $30/month band. (2) Broader analysis: Laso analyzes Apple Health signals across recovery, strain, sleep, stress, illness prediction, biological age, and more in one app. (3) Complete privacy: all analysis runs on-device with no cloud processing, unlike WHOOP and Oura which require cloud accounts."
         }
       }
     ]
@@ -115,8 +115,8 @@ const jsonLd = [
 ---
 
 <Base
-  title="Laso.Recovery Score, Strain Tracking, Sleep Coaching & Health Intelligence for Apple Watch, Oura, Garmin"
-  description="Laso turns Apple Watch, Oura, Garmin, and WHOOP data into daily recovery scores, strain targets, sleep debt tracking, illness prediction, and biological age. 86 health metrics analyzed on-device. Private. No new hardware needed."
+  title="Laso — Recovery Score, Strain & Sleep Tracking | Apple Watch & Oura"
+  description="Laso turns Apple Watch, Oura, and Garmin data into recovery scores, strain targets, sleep coaching, illness prediction, and biological age. Private, on-device."
   jsonLd={jsonLd}
 >
   <div class="min-h-screen bg-white">
@@ -176,7 +176,7 @@ const jsonLd = [
         </span>
         <span class="flex items-center gap-1.5">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3"/></svg>
-          50+ devices supported
+          Apple Health compatible
         </span>
         <span class="flex items-center gap-1.5">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"/></svg>
@@ -389,7 +389,7 @@ const jsonLd = [
           <img src="https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80&auto=format&fit=crop" alt="Sprinter in starting blocks on track, close-up detail" class="w-full h-full object-cover" loading="lazy" />
           <div class="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent"></div>
           <div class="absolute bottom-6 left-6 md:bottom-8 md:left-8">
-            <p class="text-white text-sm md:text-base font-semibold max-w-xs">86 metrics from the device on your wrist. One app that makes sense of all of them.</p>
+            <p class="text-white text-sm md:text-base font-semibold max-w-xs">Dozens of Apple Health signals from the device on your wrist. One app that makes sense of them.</p>
           </div>
         </div>
 
@@ -414,7 +414,7 @@ const jsonLd = [
             </div>
             <h3 class="text-lg font-semibold text-apple-dark">It connects the dots</h3>
             <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">
-              Most apps show you 86 metrics and leave you to figure out what they mean. Laso runs causal analysis across all of them and tells you which ones are actually affecting your recovery and sleep.
+              Most apps dump dozens of Apple Health signals on you and leave you to figure them out. Laso runs causal analysis across them and tells you which ones are actually affecting your recovery and sleep.
             </p>
           </div>
 
@@ -548,8 +548,8 @@ const jsonLd = [
             <p class="text-xs text-apple-secondary mt-1">Trends, PRs, streaks, and year-over-year comparisons</p>
           </div>
           <div class="section-reveal text-center py-4" style="transition-delay:180ms">
-            <p class="text-sm font-semibold text-apple-dark">86 Metrics</p>
-            <p class="text-xs text-apple-secondary mt-1">Heart, sleep, activity, body, respiratory, mobility, and more</p>
+            <p class="text-sm font-semibold text-apple-dark">Apple Health Signals</p>
+            <p class="text-xs text-apple-secondary mt-1">Heart, sleep, activity, body, respiratory, mindfulness, mobility</p>
           </div>
         </div>
       </div>
@@ -559,10 +559,10 @@ const jsonLd = [
     <section id="devices" data-section="devices" class="bg-apple-gray py-20 md:py-28 px-5">
       <div class="max-w-5xl mx-auto text-center">
         <h2 class="section-reveal text-2xl md:text-3xl font-semibold tracking-tight text-apple-dark text-balance">
-          Compatible with Apple Watch, Oura, Garmin, WHOOP, and 30+ more devices.
+          Works through Apple Health, with mapped support for Apple Watch, Oura, Garmin, WHOOP, and other known sources.
         </h2>
         <p class="section-reveal mt-3 text-[15px] text-apple-secondary max-w-lg mx-auto">
-          If it syncs to Apple Health, Laso can read and analyze it. No extra apps. No manual setup.
+          Most third-party devices still need their companion app and Apple Health sharing enabled. Laso confirms the exact metrics after the first sync.
         </p>
 
         <!-- Smartwatches & Sports Watches -->
@@ -571,23 +571,30 @@ const jsonLd = [
           <div class="flex flex-wrap justify-center gap-2.5">
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark"><span class="w-2 h-2 bg-blue-500 rounded-full"></span> Apple Watch</span>
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:20ms"><span class="w-2 h-2 bg-cyan-500 rounded-full"></span> Garmin</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:40ms"><span class="w-2 h-2 bg-teal-500 rounded-full"></span> Fitbit</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:60ms"><span class="w-2 h-2 bg-indigo-500 rounded-full"></span> Samsung Galaxy</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:80ms"><span class="w-2 h-2 bg-red-500 rounded-full"></span> Polar</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:100ms"><span class="w-2 h-2 bg-blue-500 rounded-full"></span> COROS</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:120ms"><span class="w-2 h-2 bg-indigo-500 rounded-full"></span> Suunto</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:140ms"><span class="w-2 h-2 bg-green-500 rounded-full"></span> Google Pixel Watch</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:160ms"><span class="w-2 h-2 bg-red-400 rounded-full"></span> Huawei Watch</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:180ms"><span class="w-2 h-2 bg-red-500 rounded-full"></span> Amazfit</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:200ms"><span class="w-2 h-2 bg-green-400 rounded-full"></span> Xiaomi Smart Band</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:220ms"><span class="w-2 h-2 bg-orange-500 rounded-full"></span> Wahoo</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:240ms"><span class="w-2 h-2 bg-purple-500 rounded-full"></span> TicWatch</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:260ms"><span class="w-2 h-2 bg-purple-500 rounded-full"></span> Fossil</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:280ms"><span class="w-2 h-2 bg-yellow-500 rounded-full"></span> Casio G-Shock</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:300ms"><span class="w-2 h-2 bg-gray-700 rounded-full"></span> TAG Heuer</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:320ms"><span class="w-2 h-2 bg-red-400 rounded-full"></span> Noise</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:340ms"><span class="w-2 h-2 bg-red-400 rounded-full"></span> boAt</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:360ms"><span class="w-2 h-2 bg-orange-400 rounded-full"></span> Fire-Boltt</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:40ms"><span class="w-2 h-2 bg-red-500 rounded-full"></span> Polar</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:60ms"><span class="w-2 h-2 bg-blue-500 rounded-full"></span> COROS</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:80ms"><span class="w-2 h-2 bg-indigo-500 rounded-full"></span> Suunto</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:100ms"><span class="w-2 h-2 bg-red-400 rounded-full"></span> Huawei Watch</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:120ms"><span class="w-2 h-2 bg-red-500 rounded-full"></span> Amazfit</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:140ms"><span class="w-2 h-2 bg-green-400 rounded-full"></span> Xiaomi Smart Band</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:160ms"><span class="w-2 h-2 bg-purple-500 rounded-full"></span> TicWatch</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:180ms"><span class="w-2 h-2 bg-yellow-500 rounded-full"></span> Casio G-Shock</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:200ms"><span class="w-2 h-2 bg-gray-700 rounded-full"></span> TAG Heuer</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:220ms"><span class="w-2 h-2 bg-red-400 rounded-full"></span> Noise</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:240ms"><span class="w-2 h-2 bg-red-400 rounded-full"></span> boAt</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:260ms"><span class="w-2 h-2 bg-orange-400 rounded-full"></span> Fire-Boltt</span>
+          </div>
+        </div>
+
+        <!-- Performance & Fitness -->
+        <div class="mt-7">
+          <p class="section-reveal text-xs font-medium text-apple-secondary/70 uppercase tracking-wider mb-3">Performance &amp; Fitness</p>
+          <div class="flex flex-wrap justify-center gap-2.5">
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark"><span class="w-2 h-2 bg-orange-500 rounded-full"></span> WHOOP</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:30ms"><span class="w-2 h-2 bg-orange-500 rounded-full"></span> Wahoo</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:60ms"><span class="w-2 h-2 bg-purple-500 rounded-full"></span> Biostrap</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:90ms"><span class="w-2 h-2 bg-red-500 rounded-full"></span> Myzone</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:120ms"><span class="w-2 h-2 bg-red-500 rounded-full"></span> Peloton</span>
           </div>
         </div>
 
@@ -599,7 +606,6 @@ const jsonLd = [
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:30ms"><span class="w-2 h-2 bg-emerald-500 rounded-full"></span> Ultrahuman Ring Air</span>
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:60ms"><span class="w-2 h-2 bg-pink-500 rounded-full"></span> RingConn</span>
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:90ms"><span class="w-2 h-2 bg-emerald-500 rounded-full"></span> Circular Ring</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:120ms"><span class="w-2 h-2 bg-orange-500 rounded-full"></span> WHOOP</span>
           </div>
         </div>
 
@@ -611,21 +617,17 @@ const jsonLd = [
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:30ms"><span class="w-2 h-2 bg-teal-500 rounded-full"></span> Omron</span>
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:60ms"><span class="w-2 h-2 bg-teal-500 rounded-full"></span> Renpho</span>
             <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:90ms"><span class="w-2 h-2 bg-green-500 rounded-full"></span> Dexcom</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:120ms"><span class="w-2 h-2 bg-green-400 rounded-full"></span> Freestyle Libre</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:150ms"><span class="w-2 h-2 bg-cyan-500 rounded-full"></span> Eight Sleep</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:180ms"><span class="w-2 h-2 bg-purple-500 rounded-full"></span> Biostrap</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:210ms"><span class="w-2 h-2 bg-red-500 rounded-full"></span> Myzone</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:240ms"><span class="w-2 h-2 bg-red-500 rounded-full"></span> Peloton</span>
+            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:120ms"><span class="w-2 h-2 bg-cyan-500 rounded-full"></span> Eight Sleep</span>
           </div>
         </div>
 
-        <p class="section-reveal mt-8 text-[13px] text-apple-secondary/60">Plus iPhone built-in sensors for steps, distance, and activity tracking. No wearable required.</p>
+        <p class="section-reveal mt-8 text-[13px] text-apple-secondary/60">iPhone built-in sensors also work for steps, distance, and activity. Other Apple Health sources can still appear automatically after their first sync.</p>
       </div>
     </section>
 
     <!-- ════════ LIFESTYLE BREAK ════════ -->
     <section class="relative h-[280px] md:h-[420px] overflow-hidden">
-      <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1400&q=80&auto=format&fit=crop" alt="Active lifestyle and fitness training" class="w-full h-full object-cover" loading="lazy" />
+      <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1400&q=80&auto=format&fit=crop" alt="Person training with weights in a gym, representing an active fitness lifestyle" class="w-full h-full object-cover" loading="lazy" />
       <div class="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-white"></div>
     </section>
 
@@ -727,7 +729,7 @@ const jsonLd = [
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-apple-secondary transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             </summary>
             <div class="px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
-              Laso works with over 50 devices that sync to Apple Health, including Apple Watch, Oura Ring, Garmin, WHOOP, Fitbit, Polar, Samsung Galaxy Watch, COROS, Suunto, Withings, Ultrahuman Ring Air, Dexcom, Eight Sleep, Peloton, and more. If your device writes data to Apple Health, Laso can read and analyze it. iPhone built-in sensors for steps, distance, and activity tracking work without any wearable.
+              Laso reads Apple Health on iPhone, so Apple Watch works natively and many companion apps can feed data in once Apple Health sharing is enabled. Publicly mapped sources include Garmin, Oura Ring, WHOOP, Polar, COROS, Withings, Dexcom, Ultrahuman Ring Air, RingConn, Circular Ring, Renpho, Omron, Biostrap, Myzone, Peloton, and more. Laso shows the exact metrics after the source writes samples. iPhone built-in sensors for steps, distance, and activity also work without a wearable.
             </div>
           </details>
 

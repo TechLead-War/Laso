@@ -38,7 +38,7 @@ final class AppContainer {
         if let modelContainer = HealthDataContainerFactory.makeModelContainer() {
             healthDataStore = HealthDataStore(modelContainer: modelContainer)
         } else {
-            print("[Laso] Running without SwiftData. all persistence disabled")
+            PostHogManager.shared.captureError("Running without SwiftData — all persistence disabled", context: "app_container_init")
             healthDataStore = HealthDataStore()
         }
         dashboardSmartActionAdvisor = DashboardSmartActionAdvisor()

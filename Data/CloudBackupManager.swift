@@ -126,10 +126,24 @@ final class CloudBackupManager {
             lastBackupDate = now
             UserDefaults.standard.set(now, forKey: AppKeys.Backup.lastBackupDate)
             backupStatus = .idle
+            await MainActor.run {
+                AppAnalytics.shared.trackCloudBackupCompleted(
+                    snapshotCount: payload.snapshots.count,
+                    mlStateCount: payload.mlStates.count
+                )
+            }
         } catch let error as CKError {
-            backupStatus = .failed(Self.friendlyError(error))
+            let reason = Self.friendlyError(error)
+            backupStatus = .failed(reason)
+            await MainActor.run {
+                AppAnalytics.shared.trackCloudBackupFailed(reason: reason)
+            }
         } catch {
-            backupStatus = .failed(error.localizedDescription)
+            let reason = error.localizedDescription
+            backupStatus = .failed(reason)
+            await MainActor.run {
+                AppAnalytics.shared.trackCloudBackupFailed(reason: reason)
+            }
         }
     }
 
@@ -154,6 +168,9 @@ final class CloudBackupManager {
               let fileURL = asset.fileURL,
               let compressedData = try? Data(contentsOf: fileURL) else {
             backupStatus = .failed("Failed to read backup data")
+            await MainActor.run {
+                AppAnalytics.shared.trackCloudRestoreCompleted(snapshotCount: 0, mlStateCount: 0, success: false)
+            }
             return false
         }
 
@@ -168,6 +185,9 @@ final class CloudBackupManager {
 
         guard let payload else {
             backupStatus = .failed("Failed to decrypt backup. ensure iCloud Keychain is enabled")
+            await MainActor.run {
+                AppAnalytics.shared.trackCloudRestoreCompleted(snapshotCount: 0, mlStateCount: 0, success: false)
+            }
             return false
         }
 
@@ -237,6 +257,13 @@ final class CloudBackupManager {
         }
 
         backupStatus = .idle
+        await MainActor.run {
+            AppAnalytics.shared.trackCloudRestoreCompleted(
+                snapshotCount: payload.snapshots.count,
+                mlStateCount: payload.mlStates.count,
+                success: true
+            )
+        }
         return true
     }
 

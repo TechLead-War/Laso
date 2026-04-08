@@ -47,13 +47,13 @@ extension Copy {
         static let menstrualNutrition = "Focus on iron-rich foods (leafy greens, red meat, lentils) and anti-inflammatory choices. Stay well hydrated."
         static let follicularNutrition = "Support rising energy with complex carbs and lean protein. Fermented foods can support gut health during this phase."
         static let ovulatoryNutrition = "Lighter meals with plenty of fiber and antioxidants. Cruciferous vegetables help metabolize the estrogen peak."
-        static let lutealNutrition = "Increased caloric needs. add healthy fats and magnesium-rich foods. Dark chocolate and nuts can help with cravings."
+        static let lutealNutrition = "Increased caloric needs. Add healthy fats and magnesium-rich foods. Dark chocolate and nuts can help with cravings."
 
         // MARK: - Exercise Recommendations
 
         static let menstrualExercise = "Gentle yoga, walking, light stretching, or swimming. Reduce intensity and focus on movement that feels good."
         static let follicularExercise = "High-intensity training, strength work, HIIT, and skill-based activities. Your body is primed for performance gains."
-        static let ovulatoryExercise = "Peak performance window. heavy lifts, sprint intervals, competitive sports. Push toward personal records."
+        static let ovulatoryExercise = "Peak performance window. Heavy lifts, sprint intervals, competitive sports. Push toward personal records."
         static let lutealExercise = "Moderate cardio, Pilates, strength maintenance. Taper intensity in the late luteal phase as energy declines."
 
         // MARK: - Section Headers

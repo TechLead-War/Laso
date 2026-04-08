@@ -10,7 +10,7 @@ extension Copy {
         // MARK: - Empty State
 
         static let connectHealthData = "Connect Your Health Data"
-        static let connectHealthDescription = "Laso reads from Apple Health, which syncs with your wearable automatically. No extra setup needed."
+        static let connectHealthDescription = "Laso reads from Apple Health. Most third-party wearables need their companion app with Apple Health sharing enabled."
         static let worksWith = "Works with"
         static let syncsAutomatically = "Syncs automatically"
         static func viaApp(_ name: String) -> String { "Via \(name) app" }
@@ -29,7 +29,7 @@ extension Copy {
 
         // MARK: - First Launch Sync
 
-        static let syncingHealthData = "Syncing your last 1 year of health data"
+        static let syncingHealthData = "Syncing your past year of health data"
         static func analyzingDataPoints(_ count: Int) -> String { "Analyzing \(count) data points" }
         static let analyzingYourData = "Analyzing your data"
         static let discoveringPatterns = "Discovering patterns"
@@ -80,7 +80,7 @@ extension Copy {
         static let redDayRecover = "Red Day \u{2014} Recover"
 
         // Simple strain guidance
-        static let greenStrainGuidance = "High intensity training recommended. Your body is ready for a challenge."
+        static let greenStrainGuidance = "High-intensity training recommended. Your body is ready for a challenge."
         static let yellowStrainGuidance = "Moderate activity is ideal. Focus on technique over intensity."
         static let redStrainGuidance = "Prioritize rest and gentle movement. Your body needs recovery time."
 
@@ -140,7 +140,7 @@ extension Copy {
             static let goodDescription = "Most things are on track with minor areas to watch."
             static let fairRange = "40\u{2013}59"
             static let fairLabel = "Fair"
-            static let fairDescription = "A few metrics have shifted \u{2014} worth paying attention."
+            static let fairDescription = "A few metrics have shifted \u{2014} worth paying attention to."
             static let needsAttentionRange = "Below 40"
             static let needsAttentionLabel = "Room to Grow"
             static let needsAttentionDescription = "Several things are off from your norm \u{2014} check your insights."

@@ -7,8 +7,8 @@ extension Copy {
 
         static let excellentHeadlines = [
             "Recovery metrics are well above baseline",
-            "All key metrics recovered -- above baseline across the board",
-            "Full recovery -- metrics are in the green",
+            "All key metrics recovered \u{2014} above baseline across the board",
+            "Full recovery \u{2014} metrics are in the green",
             "Recovery metrics at their strongest this week"
         ]
 
@@ -16,8 +16,8 @@ extension Copy {
 
         static let goodHeadlines = [
             "Recovery metrics are above baseline",
-            "Metrics bounced back -- sitting above baseline",
-            "Good recovery signal -- most metrics above baseline",
+            "Metrics bounced back \u{2014} sitting above baseline",
+            "Good recovery signal \u{2014} most metrics above baseline",
             "Recovery metrics trending positive"
         ]
 
@@ -25,8 +25,8 @@ extension Copy {
 
         static let moderateHeadlines = [
             "Recovery metrics are near baseline",
-            "Metrics are mixed -- some above, some below baseline",
-            "Moderate recovery -- metrics hovering around baseline",
+            "Metrics are mixed \u{2014} some above, some below baseline",
+            "Moderate recovery \u{2014} metrics hovering around baseline",
             "Recovery metrics are partially restored"
         ]
 
@@ -35,7 +35,7 @@ extension Copy {
         static let poorHeadlines = [
             "Recovery metrics are below baseline",
             "Multiple metrics sitting below baseline",
-            "Recovery is low -- metrics are off baseline",
+            "Recovery is low \u{2014} metrics are off baseline",
             "Several metrics are below your normal range"
         ]
 
@@ -43,7 +43,7 @@ extension Copy {
 
         static let depletedHeadlines = [
             "Recovery metrics are significantly below baseline",
-            "Metrics show deep deficit -- well below baseline",
+            "Metrics show deep deficit \u{2014} well below baseline",
             "Multiple metrics at their lowest this week",
             "Low recovery signal across all key metrics"
         ]

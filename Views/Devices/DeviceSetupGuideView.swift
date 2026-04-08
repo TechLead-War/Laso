@@ -70,7 +70,7 @@ struct DeviceSetupGuideView: View {
         case .iPhone:
             return "Enable motion and fitness permissions so iPhone data can flow into Apple Health and Laso."
         default:
-            return "Use \(device.companionAppName) to enable Apple Health sharing, then refresh Laso."
+            return "Most third-party devices need \(device.companionAppName) to enable Apple Health sharing before Laso can detect them."
         }
     }
 }

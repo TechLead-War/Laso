@@ -11,6 +11,7 @@ struct ContentView: View {
     @State private var selectedTab: AppTab = .home
     @State private var showSettings = false
     @State private var showNotificationReprompt = false
+    @State private var showPMFSurvey = false
     @State private var navigationPath = NavigationPath()
     @State private var connectivityMonitor = ConnectivityMonitor.shared
 
@@ -89,6 +90,9 @@ struct ContentView: View {
                     .padding(.top, 8)
                     .animation(.spring(duration: 0.4), value: showNotificationReprompt)
             }
+        }
+        .sheet(isPresented: $showPMFSurvey) {
+            PMFSurveySheet()
         }
         .sheet(isPresented: $showSettings) {
             SettingsView(
@@ -463,6 +467,11 @@ struct ContentView: View {
         // Push re-engagement notification 3 days into the future on every session.
         // If the user keeps opening the app, this never fires.
         ReengagementScheduler.reschedule()
+
+        // Show PMF survey when eligible (14+ days, 10+ sessions, 90-day cooldown)
+        if PMFSurveyManager.shared.shouldShowSurvey() {
+            showPMFSurvey = true
+        }
     }
 
     // MARK: - Billing Grace Banner (subtle, non-blocking, only after 16 days)

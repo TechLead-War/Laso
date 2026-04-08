@@ -31,7 +31,7 @@ enum HealthDataContainerFactory {
         let currentSchemaVersion = allModels.count
         let storedSchemaVersion = userDefaults.integer(forKey: schemaVersionKey)
         if storedSchemaVersion != 0 && storedSchemaVersion != currentSchemaVersion {
-            print("[Laso] Schema changed (\(storedSchemaVersion) -> \(currentSchemaVersion)), deleting DB")
+            PostHogManager.shared.captureError("Schema changed (\(storedSchemaVersion) -> \(currentSchemaVersion)), deleting DB", context: "model_container_init")
             removeDatabaseArtifacts(at: dbURL, fileManager: fileManager)
         }
 
@@ -41,7 +41,7 @@ enum HealthDataContainerFactory {
             userDefaults.set(currentSchemaVersion, forKey: schemaVersionKey)
             return container
         } catch {
-            print("[Laso] Step 1 (disk, all models) failed: \(error)")
+            PostHogManager.shared.captureError(error, context: "model_container_step1_disk")
         }
 
         removeDatabaseArtifacts(at: dbURL, fileManager: fileManager)
@@ -51,7 +51,7 @@ enum HealthDataContainerFactory {
             userDefaults.set(currentSchemaVersion, forKey: schemaVersionKey)
             return container
         } catch {
-            print("[Laso] Step 2 (clean disk, all models) failed: \(error)")
+            PostHogManager.shared.captureError(error, context: "model_container_step2_clean_disk")
         }
 
         let fallbackSets: [[any PersistentModel.Type]] = [
@@ -66,14 +66,14 @@ enum HealthDataContainerFactory {
                 let config = ModelConfiguration(isStoredInMemoryOnly: true)
                 return try ModelContainer(for: Schema(models), configurations: [config])
             } catch {
-                print("[Laso] Step \(index + 3) (in-memory, \(models.count) model\(models.count == 1 ? "" : "s")) failed: \(error)")
+                PostHogManager.shared.captureError(error, context: "model_container_step\(index + 3)_memory", metadata: ["model_count": models.count])
             }
         }
 
         do {
             return try ModelContainer(for: StoredDailySample.self, StoredDailyStrain.self)
         } catch {
-            print("[Laso] All ModelContainer attempts failed: \(error)")
+            PostHogManager.shared.captureError(error, context: "model_container_all_failed")
             return nil
         }
     }

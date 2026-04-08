@@ -110,6 +110,53 @@ final class PostHogManager {
         guard isConfigured else { return }
         PostHogSDK.shared.flush()
     }
+
+    // MARK: - Crash Handling
+
+    /// Install handlers for uncaught exceptions and signals.
+    /// Captures a `app_crash` event with stack trace and flushes before death.
+    /// Call once at launch, after `configure()`.
+    func installCrashHandlers() {
+        guard isConfigured else { return }
+
+        // 1. Uncaught NSException handler (Obj-C exceptions, Swift fatalError reaching Obj-C boundary)
+        NSSetUncaughtExceptionHandler { exception in
+            let stackTrace = exception.callStackSymbols.prefix(15).joined(separator: "\n")
+            PostHogSDK.shared.capture("app_crash", properties: [
+                "crash_type": "uncaught_exception",
+                "exception_name": exception.name.rawValue,
+                "exception_reason": exception.reason ?? "unknown",
+                "stack_trace": String(stackTrace.prefix(2000))
+            ])
+            PostHogSDK.shared.flush()
+        }
+
+        // 2. POSIX signal handlers for Swift runtime crashes (EXC_BAD_ACCESS, SIGABRT, etc.)
+        let crashSignals: [Int32] = [SIGABRT, SIGBUS, SIGSEGV, SIGFPE, SIGILL, SIGTRAP]
+        for sig in crashSignals {
+            signal(sig) { signalNumber in
+                let signalName: String
+                switch signalNumber {
+                case SIGABRT: signalName = "SIGABRT"
+                case SIGBUS:  signalName = "SIGBUS"
+                case SIGSEGV: signalName = "SIGSEGV"
+                case SIGFPE:  signalName = "SIGFPE"
+                case SIGILL:  signalName = "SIGILL"
+                case SIGTRAP: signalName = "SIGTRAP"
+                default:      signalName = "SIGNAL_\(signalNumber)"
+                }
+                PostHogSDK.shared.capture("app_crash", properties: [
+                    "crash_type": "signal",
+                    "signal_name": signalName,
+                    "signal_number": signalNumber
+                ])
+                PostHogSDK.shared.flush()
+                // Re-raise so the default handler produces the crash report
+                signal(signalNumber, SIG_DFL)
+                raise(signalNumber)
+            }
+        }
+    }
 }
 
 // MARK: - PostHog Configuration

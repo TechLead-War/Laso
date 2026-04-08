@@ -339,14 +339,14 @@ final class HealthDataStore {
         }
 
         guard modelContext != nil else {
-            print("[HealthDataStore] loadAllTimeSeries: modelContext is nil. SwiftData unavailable")
+            AppAnalytics.shared.recordNonFatal("modelContext is nil — SwiftData unavailable", context: "load_all_time_series")
             return [:]
         }
         var descriptor = FetchDescriptor<StoredDailySample>()
         descriptor.sortBy = [SortDescriptor(\.date)]
 
         guard let allSamples = try? modelContext?.fetch(descriptor) else {
-            print("[HealthDataStore] loadAllTimeSeries: fetch failed")
+            AppAnalytics.shared.recordNonFatal("fetch failed", context: "load_all_time_series")
             return [:]
         }
 

@@ -94,6 +94,14 @@ struct ShareButton: View {
             popover.permittedArrowDirections = []
         }
 
+        activityVC.completionWithItemsHandler = { activityType, completed, _, _ in
+            AppAnalytics.shared.trackShareCompleted(
+                contentType: "health_card",
+                activityType: activityType?.rawValue,
+                completed: completed
+            )
+        }
+
         topVC.present(activityVC, animated: true)
     }
 }

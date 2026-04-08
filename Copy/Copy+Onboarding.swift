@@ -39,7 +39,7 @@ extension Copy {
         // MARK: - Focus Selection
 
         static let whatMatters = "What matters most to you?"
-        static let focusSubtitle = "Pick your areas. those insights get prioritized first."
+        static let focusSubtitle = "Pick your areas — those insights get prioritized first."
 
         // MARK: - Connect Health (personalized)
 

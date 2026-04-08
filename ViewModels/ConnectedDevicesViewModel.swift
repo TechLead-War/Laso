@@ -64,7 +64,7 @@ final class ConnectedDevicesViewModel {
 
     var statusHeadline: String {
         if let info = primaryDeviceInfo {
-            return info.isActive ? "\(info.device.displayName) is active" : "\(info.device.displayName) is connected"
+            return info.isActive ? "\(info.presentationName) is active" : "\(info.presentationName) is connected"
         }
         if isScanning {
             return "Checking connected sources"
@@ -74,13 +74,13 @@ final class ConnectedDevicesViewModel {
 
     var statusDetail: String {
         if let info = primaryDeviceInfo {
-            return "\(info.metricCount) metrics are arriving through \(info.sourceName)."
+            return "\(info.metricCount) metrics are arriving through \(info.sourceDisplayName)."
         }
         if isScanning {
             return "Scanning Apple Health for devices and companion apps that are already syncing."
         }
         if healthKitManager.isAuthorized {
-            return "We'll list each wearable, app, and accessory here as soon as it writes its first samples into Apple Health."
+            return "We'll list each wearable, app, and accessory here as soon as it writes its first samples into Apple Health, including sources detected dynamically."
         }
         return "Enable Health access to start importing data from iPhone, Apple Watch, and partner apps."
     }
@@ -106,13 +106,13 @@ final class ConnectedDevicesViewModel {
     }
 
     var availableSourcesTitle: String {
-        connectedDevices.isEmpty ? "Available Sources" : "Compatible Sources"
+        "Known Source Profiles"
     }
 
     var availableSourcesFooter: String {
         connectedDevices.isEmpty
-            ? "Supported wearables, medical devices, and companion apps appear here after they write their first samples to Apple Health."
-            : "Add more sources through their companion apps to expand the metrics Laso can import."
+            ? "These are known Apple Health setup profiles. Other sources can still appear automatically after they write their first samples."
+            : "Laso confirms actual metric coverage only after a source writes samples into Apple Health."
     }
 
     init(deviceSourceManager: DeviceSourceManager, healthKitManager: HealthKitManager) {

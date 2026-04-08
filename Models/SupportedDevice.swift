@@ -103,7 +103,7 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
         case .withings: return "Withings Health Mate"
         case .polar: return "Polar Flow"
         case .xiaomiSmartBand: return "Mi Fitness"
-        case .googlePixelWatch: return "Google Fit"
+        case .googlePixelWatch: return "Fitbit"
         case .noise: return "NoiseFit"
         case .boAt: return "boAt Wearables"
         case .fireBoltt: return "FireBoltt"
@@ -182,7 +182,7 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
         case .withings: return URL(string: "https://apps.apple.com/app/withings-health-mate/id542701020")
         case .polar: return URL(string: "https://apps.apple.com/app/polar-flow/id717172678")
         case .xiaomiSmartBand: return URL(string: "https://apps.apple.com/app/mi-fitness/id1502091498")
-        case .googlePixelWatch: return URL(string: "https://apps.apple.com/app/google-fit/id1433864494")
+        case .googlePixelWatch: return URL(string: "https://apps.apple.com/app/fitbit-health-fitness/id462638897")
         case .noise: return URL(string: "https://apps.apple.com/app/noisefit-health-fitness/id1498457147")
         case .boAt: return URL(string: "https://apps.apple.com/app/boat-wearables/id1542443145")
         case .fireBoltt: return URL(string: "https://apps.apple.com/app/fireboltt-pro/id6480042961")
@@ -205,6 +205,29 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
         case .biostrap: return URL(string: "https://apps.apple.com/app/biostrap/id1187459498")
         case .myzone: return URL(string: "https://apps.apple.com/app/myzone/id874028498")
         case .peloton: return URL(string: "https://apps.apple.com/app/peloton/id792750948")
+        }
+    }
+
+    /// Only show sources in the pre-sync catalog when the public support claim
+    /// is not currently high risk. Detection can still surface hidden sources
+    /// dynamically once they actually write samples into Apple Health.
+    var isPublicCatalogSource: Bool {
+        switch self {
+        case .generic, .iPhone, .fitbit, .samsungGalaxy, .googlePixelWatch, .fossil, .freestyleLibre:
+            return false
+        default:
+            return true
+        }
+    }
+
+    var syncSummary: String {
+        switch self {
+        case .appleWatch:
+            return "Syncs directly through Apple Health"
+        case .iPhone:
+            return "Built-in sensors feed Apple Health"
+        default:
+            return "\(companionAppName) writes into Apple Health"
         }
     }
 
@@ -285,7 +308,7 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
             return Self.fullMetrics.union([.respiratoryRate])
                 .subtracting([.steps, .distanceWalkingRunning])
         case .withings:
-            return Self.fullMetrics.union([.weight, .bmi, .bodyFatPercentage, .bloodPressureSystolic, .bloodPressureDiastolic])
+            return Self.fullMetrics.union([.weight, .bmi, .bodyFatPercentage, .bloodPressureSystolic, .bloodPressureDiastolic, .vo2Max])
         case .polar:
             return Self.fullMetrics.union([.vo2Max]).subtracting([.bloodOxygen])
         case .coros:
@@ -293,12 +316,31 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
         case .suunto:
             return Self.fullMetrics.union([.vo2Max]).subtracting([.bloodOxygen])
         case .huawei:
-            return Self.fullMetrics
-        case .fitbit, .samsungGalaxy, .amazfit, .xiaomiSmartBand, .googlePixelWatch, .ticWatch, .fossil:
+            // Official iPhone app only verifies weight + exercise/motion via HealthKit
+            return [.heartRate, .restingHeartRate, .steps, .activeCalories,
+                    .distanceWalkingRunning, .weight, .workoutCount, .workoutDuration]
+        case .fitbit, .samsungGalaxy, .googlePixelWatch, .fossil:
+            // Hidden from public catalog — kept for dynamic detection
             return Self.midMetrics
-        case .noise, .boAt, .fireBoltt, .casioGShock, .tagHeuer:
+        case .amazfit, .xiaomiSmartBand, .ticWatch:
+            // Official docs confirm basic metrics; sleep stages not explicitly verified
             return Self.basicMetrics
+        case .casioGShock:
+            return Self.basicMetrics
+        case .noise, .fireBoltt:
+            // Official docs confirm movement/calories/sleep; SpO2 not tied to AH export
+            return Self.basicMetrics.subtracting([.bloodOxygen])
+        case .boAt:
+            // Official source confirms HealthKit integration and steps
+            return [.steps, .activeCalories, .sleepDuration,
+                    .distanceWalkingRunning, .workoutCount, .workoutDuration]
+        case .tagHeuer:
+            // Official FAQ confirms sport sessions only
+            return [.workoutCount, .workoutDuration, .activeCalories]
         case .ultrahumanRing, .ringConn, .circularRing:
+            if self == .ringConn {
+                return Self.ringMetrics.union([.steps])
+            }
             return Self.ringMetrics
         case .omron:
             return [.bloodPressureSystolic, .bloodPressureDiastolic, .heartRate, .restingHeartRate]
@@ -307,13 +349,13 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
         case .dexcom, .freestyleLibre:
             return [.bloodGlucose]
         case .eightSleep:
-            return [.sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .sleepAwake,
-                    .heartRate, .restingHeartRate, .bodyTemperature]
+            // Official terms allow Apple Health but exact metric list is not documented
+            return [.sleepDuration, .heartRate, .restingHeartRate]
         case .biostrap:
             return Self.fullMetrics.union([.respiratoryRate])
         case .myzone:
             return [.heartRate, .restingHeartRate, .activeCalories,
-                    .workoutCount, .workoutDuration]
+                    .workoutCount, .workoutDuration, .weight, .bmi, .bodyFatPercentage]
         case .peloton:
             return [.heartRate, .restingHeartRate, .activeCalories,
                     .workoutCount, .workoutDuration, .distanceCycling]
@@ -377,6 +419,6 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
 
     /// Devices that appear in the "Add More Devices" section (excludes generic and iPhone)
     static var discoverableDevices: [SupportedDevice] {
-        allCases.filter { $0 != .generic && $0 != .iPhone }
+        allCases.filter(\.isPublicCatalogSource)
     }
 }

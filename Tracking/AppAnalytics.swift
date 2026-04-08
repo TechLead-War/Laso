@@ -299,6 +299,22 @@ enum BlockType: String {
 //  lifetime_core_actions 0, 1, 2, ...             health_score_bracket low | medium | high
 //  organic_session_pct 0-100                      health_focus         sleep,fitness,...
 //  nps_category        promoter | passive | detractor
+//  pmf_response        very_disappointed | somewhat | not
+//
+// ─── PMF-SPECIFIC EVENTS (direct measurement) ──────────────────────────
+//  pmf_survey_response           response, source                    Sean Ellis canonical Q
+//  pmf_segment_response          segment                             Ideal user persona
+//  pmf_benefit_response          benefit                             Core value proposition
+//  pmf_improvement_response      text_length                         What to build next
+//  share_completed               content_type, activity_type, completed  Viral loop closure
+//  cloud_backup_completed        snapshot_count, ml_state_count      Data safety signal
+//  cloud_backup_failed           reason                              Trust risk
+//  cloud_restore_completed       snapshot_count, success             Returning user signal
+//  app_store_review_prompted     trigger                             Review velocity
+//  deep_link_opened              url, source, campaign               Attribution
+//  notification_permission_requested  source                         Permission funnel start
+//  notification_permission_result     granted, source                Permission conversion
+//  query_feedback                helpful, confidence, query_length   LLM quality signal
 //
 // ─── BEHAVIORAL INTELLIGENCE (auto-computed, non-obvious) ───────────────────
 //  ghost_session                 duration_sec, screens_visited      Opened but did nothing
@@ -2590,6 +2606,32 @@ final class AppAnalytics {
             return "background_refresh_completed"
         case "value_delivered":
             return "analysis_value_delivered"
+        case "pmf_survey_response":
+            return "pmf_survey_response_submitted"
+        case "pmf_segment_response":
+            return "pmf_segment_response_submitted"
+        case "pmf_benefit_response":
+            return "pmf_benefit_response_submitted"
+        case "pmf_improvement_response":
+            return "pmf_improvement_response_submitted"
+        case "share_completed":
+            return composedEventName([contentType, "share", "completed"], fallback: "share_completed")
+        case "cloud_backup_completed":
+            return "cloud_backup_completed"
+        case "cloud_backup_failed":
+            return "cloud_backup_failed"
+        case "cloud_restore_completed":
+            return "cloud_restore_completed"
+        case "app_store_review_prompted":
+            return composedEventName([trigger, "app_store_review", "prompted"], fallback: "app_store_review_prompted")
+        case "deep_link_opened":
+            return composedEventName([source, "deep_link", "opened"], fallback: "deep_link_opened")
+        case "notification_permission_requested":
+            return composedEventName([source, "notification", "permission", "requested"], fallback: "notification_permission_requested")
+        case "notification_permission_result":
+            return composedEventName([source, "notification", "permission", "result"], fallback: "notification_permission_result")
+        case "query_feedback":
+            return "ask_your_data_query_feedback"
         default:
             return name
         }
@@ -2648,6 +2690,148 @@ final class AppAnalytics {
         let collapsed = String(normalized).replacingOccurrences(of: "__+", with: "_", options: .regularExpression)
         let cleaned = collapsed.trimmingCharacters(in: CharacterSet(charactersIn: "_"))
         return cleaned.isEmpty ? "unknown" : String(cleaned.prefix(64))
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 23. Sean Ellis PMF Survey
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// The canonical PMF question: "How would you feel if you could no longer use Laso?"
+    /// Responses: "very_disappointed", "somewhat_disappointed", "not_disappointed"
+    /// >40% "very disappointed" = PMF achieved (Rahul Vohra / Superhuman benchmark).
+    func trackPMFSurveyResponse(response: String, source: String) {
+        logEvent("pmf_survey_response", parameters: [
+            "response": response,
+            "source": source,
+            "total_sessions": session.totalSessions,
+            "lifetime_core_actions": session.lifetimeCoreActions,
+            "was_activated": session.isActivated ? 1 : 0
+        ])
+        setUserProperty("pmf_response", value: response)
+    }
+
+    /// Track the secondary PMF question: "What type of person do you think would benefit
+    /// most from Laso?" — used to identify your ideal user segment.
+    func trackPMFSegmentResponse(segment: String) {
+        logEvent("pmf_segment_response", parameters: [
+            "segment": segment
+        ])
+    }
+
+    /// Track the tertiary PMF question: "What is the main benefit you get from Laso?"
+    func trackPMFBenefitResponse(benefit: String) {
+        logEvent("pmf_benefit_response", parameters: [
+            "benefit": benefit
+        ])
+    }
+
+    /// Track the improvement question: "How can we improve Laso for you?"
+    func trackPMFImprovementResponse(improvement: String) {
+        logEvent("pmf_improvement_response", parameters: [
+            "text_length": improvement.count
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 24. Share Completion
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Call from UIActivityViewController's completion handler.
+    /// Tracks whether the user actually completed a share or cancelled it.
+    func trackShareCompleted(contentType: String, activityType: String?, completed: Bool) {
+        logEvent("share_completed", parameters: [
+            "content_type": contentType,
+            "activity_type": activityType ?? "unknown",
+            "completed": completed ? 1 : 0
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 25. Cloud Backup Lifecycle
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Call after a cloud backup succeeds.
+    func trackCloudBackupCompleted(snapshotCount: Int, mlStateCount: Int) {
+        logEvent("cloud_backup_completed", parameters: [
+            "snapshot_count": snapshotCount,
+            "ml_state_count": mlStateCount
+        ])
+    }
+
+    /// Call after a cloud backup fails.
+    func trackCloudBackupFailed(reason: String) {
+        logEvent("cloud_backup_failed", parameters: [
+            "reason": reason
+        ])
+    }
+
+    /// Call after a cloud restore completes.
+    func trackCloudRestoreCompleted(snapshotCount: Int, mlStateCount: Int, success: Bool) {
+        logEvent("cloud_restore_completed", parameters: [
+            "snapshot_count": snapshotCount,
+            "ml_state_count": mlStateCount,
+            "success": success ? 1 : 0
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 26. App Store Review Prompt
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Call when we present the App Store review prompt (SKStoreReviewController).
+    func trackAppStoreReviewPrompted(trigger: String) {
+        logEvent("app_store_review_prompted", parameters: [
+            "trigger": trigger,
+            "total_sessions": session.totalSessions,
+            "lifetime_core_actions": session.lifetimeCoreActions,
+            "was_activated": session.isActivated ? 1 : 0
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 27. Deep Link / Attribution
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Call when the app is opened via a deep link or universal link.
+    func trackDeepLinkOpened(url: String, source: String, campaign: String? = nil) {
+        var params: [String: Any] = [
+            "url": String(url.prefix(200)),
+            "source": source
+        ]
+        if let campaign { params["campaign"] = campaign }
+        logEvent("deep_link_opened", parameters: params)
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 28. Notification Permission Funnel
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Call when the notification permission dialog is about to be shown.
+    func trackNotificationPermissionRequested(source: String) {
+        logEvent("notification_permission_requested", parameters: [
+            "source": source
+        ])
+    }
+
+    /// Call after the user responds to the notification permission dialog.
+    func trackNotificationPermissionResult(granted: Bool, source: String) {
+        logEvent("notification_permission_result", parameters: [
+            "granted": granted ? 1 : 0,
+            "source": source
+        ])
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 29. LLM Query Satisfaction
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Call when the user provides feedback on an "Ask Your Data" result.
+    func trackQueryFeedback(helpful: Bool, confidence: Int, queryLength: Int) {
+        logEvent("query_feedback", parameters: [
+            "helpful": helpful ? 1 : 0,
+            "confidence": confidence,
+            "query_length": queryLength
+        ])
     }
 
     // MARK: - PostHog Backend (all events)

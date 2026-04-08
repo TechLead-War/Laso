@@ -22,17 +22,17 @@ struct DeviceDetailView: View {
             .padding(.bottom)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
-        .navigationTitle(device.displayName)
+        .navigationTitle(displayTitle)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.deviceDetail, metadata: [
-                "device": device.displayName,
+                "device": displayTitle,
                 "is_connected": deviceInfo != nil ? "true" : "false"
             ])
         }
         .onDisappear {
             AppAnalytics.shared.trackFeatureClose(.deviceDetail, metadata: [
-                "device": device.displayName
+                "device": displayTitle
             ])
         }
     }
@@ -43,7 +43,7 @@ struct DeviceDetailView: View {
                 .font(.system(size: 44))
                 .foregroundStyle(device.iconColor)
 
-            Text(device.displayName)
+            Text(displayTitle)
                 .font(.title2.weight(.bold))
 
             statusBadge
@@ -65,7 +65,7 @@ struct DeviceDetailView: View {
                     .padding(.vertical, 4)
                     .background(info.isActive ? .green : .orange, in: Capsule())
             } else {
-                Text("Available Source")
+                Text("Setup Guide")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 10)
@@ -90,7 +90,7 @@ struct DeviceDetailView: View {
                 Divider().frame(height: 40)
 
                 VStack(spacing: 4) {
-                    Text(info.sourceName)
+                    Text(info.sourceDisplayName)
                         .font(.title3.weight(.semibold))
                     Text("Source App")
                         .font(.caption2)
@@ -166,7 +166,7 @@ struct DeviceDetailView: View {
                 Text("Data Source")
                     .font(.subheadline.weight(.semibold))
                 HStack {
-                    Text("App: \(info.sourceName)")
+                    Text("App: \(info.sourceDisplayName)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Spacer()
@@ -187,7 +187,7 @@ struct DeviceDetailView: View {
     private var notConnectedContent: some View {
         VStack(spacing: 16) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("\(device.supportedMetrics.count) metrics available")
+                Text("How This Source Connects")
                     .font(.subheadline.weight(.semibold))
                     .padding(.horizontal)
 
@@ -203,7 +203,7 @@ struct DeviceDetailView: View {
             .padding(.horizontal)
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("How It Fits Your Setup")
+                Text("What Laso Confirms After Sync")
                     .font(.subheadline.weight(.semibold))
                 Text(setupFitDescription)
                     .font(.caption)
@@ -219,9 +219,13 @@ struct DeviceDetailView: View {
         }
     }
 
+    private var displayTitle: String {
+        deviceInfo?.presentationName ?? device.displayName
+    }
+
     private var sourceSubtitle: String {
-        if let sourceName = deviceInfo?.sourceName {
-            return sourceName
+        if let info = deviceInfo {
+            return info.sourceDisplayName
         }
         switch device {
         case .appleWatch:
@@ -229,7 +233,7 @@ struct DeviceDetailView: View {
         case .iPhone:
             return "iPhone sensors + Apple Health"
         default:
-            return "\(device.companionAppName) + Apple Health"
+            return "\(device.companionAppName) → Apple Health"
         }
     }
 
@@ -239,19 +243,21 @@ struct DeviceDetailView: View {
             return "Apple Watch records samples, Apple Health keeps them synced to iPhone, and Laso imports them automatically on refresh."
         case .iPhone:
             return "iPhone sensors write to Apple Health directly, and Laso imports those samples automatically on refresh."
+        case .generic:
+            return "\(info.sourceDisplayName) writes samples into Apple Health, and Laso imports the categories it actually detects there."
         default:
-            return "\(device.displayName) writes to \(info.sourceName), Apple Health receives the samples, and Laso imports them automatically on refresh."
+            return "\(device.displayName) writes to \(info.sourceDisplayName), Apple Health receives the samples, and Laso imports them automatically on refresh."
         }
     }
 
     private var notConnectedDescription: String {
         switch device {
         case .appleWatch:
-            return "Apple Watch starts appearing here after it records health samples and syncs them into Apple Health."
+            return "Apple Watch appears here after it records health samples and Apple Health syncs them to iPhone. Laso then shows the exact metrics that arrived."
         case .iPhone:
-            return "iPhone motion and activity metrics appear here after Apple Health records the first samples."
+            return "iPhone motion and activity metrics appear here after Apple Health records the first samples. Laso shows the exact categories once they exist."
         default:
-            return "\(device.displayName) can feed data into Laso once \(device.companionAppName) is allowed to write to Apple Health."
+            return "\(device.companionAppName) must be allowed to write data into Apple Health before Laso can detect \(device.displayName). After the first sync, this screen shows the exact metrics that source actually exported."
         }
     }
 
@@ -262,7 +268,7 @@ struct DeviceDetailView: View {
         case .iPhone:
             return "iPhone-only tracking still gives Laso steps, distance, workouts, and other Health data even without a wearable."
         default:
-            return "Your main device can stay connected. Add \(device.displayName) only if you want broader metric coverage or a different source app."
+            return "Metric coverage depends on the device model, enabled permissions, and what \(device.companionAppName) actually exports. Laso confirms that from live Apple Health samples instead of assuming a fixed export list."
         }
     }
 }

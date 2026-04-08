@@ -170,7 +170,7 @@ extension Copy {
             static let brainPrimedForWork = "Your brain is primed for demanding work today. Take advantage of this high-energy state for complex tasks."
 
             // Recovery day
-            static let recoveryDayRecommendation = "Take a genuine rest day tomorrow. Light walking only, no intense exercise. Your patterns show HRV typically rebounds within 48 hrs of reduced intensity."
+            static let recoveryDayRecommendation = "Take a genuine rest day tomorrow. Light walking only, no intense exercise. Your patterns show HRV typically rebounds within 48 hours of reduced intensity."
         }
 
         // MARK: - Illness Early Warning

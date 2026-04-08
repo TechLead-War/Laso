@@ -146,12 +146,38 @@ struct AskYourDataView: View {
                 .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 10))
             }
 
-            // Confidence
+            // Confidence + feedback
             HStack(spacing: 4) {
                 Image(systemName: "checkmark.seal")
                     .font(.caption2)
                 Text("Confidence: \(Int(result.confidence * 100))%")
                     .font(.caption2)
+
+                Spacer()
+
+                Button {
+                    AppAnalytics.shared.trackQueryFeedback(
+                        helpful: true,
+                        confidence: Int(result.confidence * 100),
+                        queryLength: query.count
+                    )
+                } label: {
+                    Image(systemName: "hand.thumbsup")
+                        .font(.caption)
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    AppAnalytics.shared.trackQueryFeedback(
+                        helpful: false,
+                        confidence: Int(result.confidence * 100),
+                        queryLength: query.count
+                    )
+                } label: {
+                    Image(systemName: "hand.thumbsdown")
+                        .font(.caption)
+                }
+                .buttonStyle(.plain)
             }
             .foregroundStyle(.secondary)
 

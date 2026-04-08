@@ -47,7 +47,7 @@ extension Copy {
         // MARK: - Apple Watch Reminders
 
         static let watchNotWornReminder = "Watch Not Worn Reminder"
-        static let watchNotWornDescription = "Get notified if your Apple Watch hasn't recorded data for over 1 hour."
+        static let watchNotWornDescription = "Get notified if your Apple Watch hasn't recorded data for over an hour."
         static let lowBatteryReminder = "Low Battery Reminder"
         static let lowBatteryDescription = "Get a one-time alert when your watch battery drops below 10%."
         static let watchRemindersFooter = "These reminders help you keep your watch on and charged so you never miss health data."

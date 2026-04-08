@@ -87,6 +87,11 @@ final class DashboardHousekeepingService {
             delta: scoreChange
         )
 
+        // Prompt for App Store review after meaningful score improvement
+        if scoreChange >= 3 {
+            AppStoreReviewManager.shared.requestReviewIfEligible(trigger: "score_improved")
+        }
+
         // Track whether this refresh delivered new value to the user
         analytics.trackValueDelivered(
             newInsightsCount: payload.insights.count,

@@ -21,6 +21,35 @@ struct ConnectedDeviceInfo: Identifiable {
         metricsProvided.count
     }
 
+    /// Prefer the concrete model or source name for dynamically discovered sources.
+    var presentationName: String {
+        if device != .generic {
+            return device.displayName
+        }
+
+        if let deviceModelName {
+            let trimmed = deviceModelName.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                return trimmed
+            }
+        }
+
+        let source = sourceName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !source.isEmpty {
+            return source
+        }
+
+        return device.displayName
+    }
+
+    var sourceDisplayName: String {
+        let source = sourceName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !source.isEmpty {
+            return source
+        }
+        return device == .generic ? "Apple Health Source" : device.companionAppName
+    }
+
     var lastSyncText: String {
         guard let lastDate = lastDataDate else { return "No data" }
         let days = Calendar.current.dateComponents([.day], from: lastDate, to: Date()).day ?? 0

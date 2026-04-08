@@ -55,7 +55,7 @@ struct ConnectedDevicesView: View {
                             DeviceDetailView(device: info.device, deviceInfo: info)
                                 .onAppear {
                                     AppAnalytics.shared.trackBlockTap(
-                                        title: info.device.displayName,
+                                        title: info.presentationName,
                                         type: .deviceRow,
                                         screen: .connectedDevices,
                                         metadata: [
@@ -81,7 +81,7 @@ struct ConnectedDevicesView: View {
                             DeviceDetailView(device: info.device, deviceInfo: info)
                                 .onAppear {
                                     AppAnalytics.shared.trackBlockTap(
-                                        title: info.device.displayName,
+                                        title: info.presentationName,
                                         type: .deviceRow,
                                         screen: .connectedDevices,
                                         metadata: [
@@ -116,8 +116,7 @@ struct ConnectedDevicesView: View {
                                         screen: .connectedDevices,
                                         metadata: [
                                             "device_id": device.rawValue,
-                                            "device_connected": 0,
-                                            "metric_count": device.supportedMetrics.count
+                                            "device_connected": 0
                                         ]
                                     )
                                 }
@@ -131,7 +130,7 @@ struct ConnectedDevicesView: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(device.displayName)
                                         .font(.subheadline.weight(.medium))
-                                    Text("\(device.supportedMetrics.count) metrics via \(device.companionAppName)")
+                                    Text(device.syncSummary)
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
@@ -176,17 +175,26 @@ struct ConnectedDevicesView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
-                    Text(info.device.displayName)
+                    Text(info.presentationName)
                         .font(.subheadline.weight(.medium))
-                    Text(info.isActive ? "Active" : "Idle")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(info.isActive ? .green : .orange)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background((info.isActive ? Color.green : Color.orange).opacity(0.12), in: Capsule())
+                    if info.device == .generic {
+                        Text("Detected")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.blue)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(Color.blue.opacity(0.12), in: Capsule())
+                    } else {
+                        Text(info.isActive ? "Active" : "Idle")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(info.isActive ? .green : .orange)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background((info.isActive ? Color.green : Color.orange).opacity(0.12), in: Capsule())
+                    }
                 }
 
-                Text(info.sourceName)
+                Text(info.sourceDisplayName)
                     .font(.caption)
                     .foregroundStyle(.secondary)
 

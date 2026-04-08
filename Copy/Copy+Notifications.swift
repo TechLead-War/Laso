@@ -56,7 +56,7 @@ extension Copy {
         // MARK: - Anomaly Alerts
 
         static func anomalyBody(metric: String, deviation: String, direction: String, current: String, unit: String) -> String {
-            "Your \(metric) is \(deviation)% \(direction) your baseline. Current: \(current) \(unit)"
+            "Your \(metric) is \(deviation)% \(direction) your baseline. Current: \(current) \(unit)."
         }
         static func anomalyWarningBody(metric: String, deviation: String, direction: String) -> String {
             "Your \(metric) is \(deviation)% \(direction) your baseline."
@@ -162,7 +162,7 @@ extension Copy {
                 candidates.append((.personalRecord, "Your \(metric.lowercased()) hit a new high."))
             }
             if score >= 90 {
-                candidates.append((.personalRecord, "\(score). your best score this month."))
+                candidates.append((.personalRecord, "\(score). Your best score this month."))
             }
             if let delta = scoreDelta, delta >= 5 {
                 candidates.append((.personalRecord, "Biggest jump in weeks: +\(delta) points."))
@@ -261,7 +261,7 @@ extension Copy {
             "Your last health score was \(score)/100. Check in to see what's changed."
         }
         static let insightsReady = "Your Health Insights Are Ready"
-        static let insightsReadyBody = "It's been a few days. open Laso to see your latest health trends."
+        static let insightsReadyBody = "It's been a few days. Open Laso to see your latest health trends."
 
         // MARK: - Engagement Sequence
 
