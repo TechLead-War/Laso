@@ -80,7 +80,7 @@ final class WidgetDataStore {
 
     private let userDefaults: UserDefaults?
 
-    init(userDefaults: UserDefaults? = UserDefaults(suiteName: "group.com.lasohealth.com")) {
+    init(userDefaults: UserDefaults? = UserDefaults(suiteName: "group.com.lasohealth.app")) {
         self.userDefaults = userDefaults
     }
 

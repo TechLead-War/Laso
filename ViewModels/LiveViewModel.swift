@@ -94,23 +94,11 @@ final class LiveViewModel {
 
     // MARK: - Background Delivery
 
-    /// Register for background delivery of vital signs so HealthKit syncs Apple Watch data
-    /// to iPhone even when Laso is suspended. Also starts a persistent observer query for
-    /// heart rate that survives app backgrounding. Called once per app session.
+    /// Start a persistent observer query for heart rate so HealthKit keeps syncing
+    /// Apple Watch HR data to iPhone even when Laso is suspended. Called once per app session.
     func registerBackgroundDelivery() {
         guard !backgroundDeliveryRegistered, HKHealthStore.isHealthDataAvailable() else { return }
         backgroundDeliveryRegistered = true
-
-        let vitalTypes: [(HKQuantityTypeIdentifier, HKUpdateFrequency)] = [
-            (.heartRate, .immediate),
-            (.oxygenSaturation, .immediate),
-            (.respiratoryRate, .hourly)
-        ]
-
-        for (identifier, frequency) in vitalTypes {
-            let type = HKQuantityType(identifier)
-            healthStore.enableBackgroundDelivery(for: type, frequency: frequency) { _, _ in }
-        }
 
         // Persistent observer query for heart rate. tells HealthKit to keep syncing
         // Apple Watch HR data to iPhone. Fires even when app is suspended.

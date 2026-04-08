@@ -57,20 +57,10 @@ enum AppIntegrityGuard {
             }
         }
 
-        // 2. Check if app can write outside its sandbox
-        let testPath = "/private/jailbreak_test_\(UUID().uuidString)"
-        do {
-            try "test".write(toFile: testPath, atomically: true, encoding: .utf8)
-            try FileManager.default.removeItem(atPath: testPath)
-            return true // Should not be able to write here
-        } catch {
-            // Expected. sandbox is intact
-        }
-
-        // 3. Check if suspicious URL schemes are available
+        // 2. Check if suspicious URL schemes are available
         // (Can't use UIApplication.canOpenURL in a non-UI context, so check dylibs instead)
 
-        // 4. Check for suspicious dynamic libraries
+        // 3. Check for suspicious dynamic libraries
         let suspiciousLibs = [
             "SubstrateLoader",
             "MobileSubstrate",
@@ -94,12 +84,6 @@ enum AppIntegrityGuard {
                     }
                 }
             }
-        }
-
-        // 5. Check if /etc/fstab has been modified (common jailbreak indicator)
-        if let fstab = try? String(contentsOfFile: "/etc/fstab", encoding: .utf8),
-           fstab.contains("nosuid") == false {
-            return true
         }
 
         return false

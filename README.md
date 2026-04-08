@@ -2,7 +2,7 @@
 
 iOS health app. Reads HealthKit, scores metrics, surfaces insights, tracks risks, streams live vitals.
 
-**Bundle ID:** `com.lasohealth.com` | **iOS 17+** | **Swift 5.9** | **Firebase:** `laso-health-v1`
+**Bundle ID:** `com.lasohealth.app` | **iOS 17+** | **Swift 5.9** | **Firebase:** `laso-health-v1`
 
 ---
 

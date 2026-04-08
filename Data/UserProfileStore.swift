@@ -66,6 +66,7 @@ final class UserProfileStore {
     static let shared = UserProfileStore()
 
     private let defaults = UserDefaults.standard
+    private let encryptedStore = EncryptedStore.shared
     private let localKey = "healthpulse.userProfile"
     private let collectionName = "user_profiles"
 
@@ -87,23 +88,30 @@ final class UserProfileStore {
 
     // MARK: - Local Persistence
 
-    /// Save profile to UserDefaults as local cache
+    /// Save profile to encrypted local cache
     func saveLocal(_ profile: UserProfile) {
         guard let data = try? JSONEncoder().encode(profile) else { return }
-        defaults.set(data, forKey: localKey)
+        encryptedStore.save(data, forKey: localKey)
         persistProfileFields(profile)
     }
 
-    /// Persist individual profile fields for quick access across the app
+    /// Persist individual profile fields for quick access across the app.
+    /// Sensitive PII (name, email, dateOfBirth) is encrypted via EncryptedStore.
+    /// Non-sensitive flags (gender, profileCompleted, deviceId) remain in plain UserDefaults.
     func persistProfileFields(_ profile: UserProfile) {
-        if !profile.name.isEmpty {
-            defaults.set(profile.name, forKey: AppKeys.Profile.name)
+        if !profile.name.isEmpty,
+           let nameData = profile.name.data(using: .utf8) {
+            encryptedStore.save(nameData, forKey: AppKeys.Profile.name)
         }
-        if !profile.email.isEmpty {
-            defaults.set(profile.email, forKey: AppKeys.Profile.email)
+        if !profile.email.isEmpty,
+           let emailData = profile.email.data(using: .utf8) {
+            encryptedStore.save(emailData, forKey: AppKeys.Profile.email)
         }
+        let dobInterval = profile.dateOfBirth.timeIntervalSince1970
+        var dobValue = dobInterval
+        let dobData = Swift.withUnsafeBytes(of: &dobValue) { Data($0) }
+        encryptedStore.save(dobData, forKey: AppKeys.Profile.dateOfBirth)
         defaults.set(profile.gender.rawValue, forKey: AppKeys.Profile.gender)
-        defaults.set(profile.dateOfBirth.timeIntervalSince1970, forKey: AppKeys.Profile.dateOfBirth)
         defaults.set(true, forKey: AppKeys.Profile.profileCompleted)
         defaults.set(profile.deviceId, forKey: AppKeys.Profile.deviceId)
     }
@@ -113,10 +121,33 @@ final class UserProfileStore {
         defaults.set(deviceId, forKey: AppKeys.Profile.deviceId)
     }
 
-    /// Load cached profile from UserDefaults
+    /// Load cached profile from encrypted local store
     func loadLocal() -> UserProfile? {
-        guard let data = defaults.data(forKey: localKey) else { return nil }
+        guard let data = encryptedStore.load(forKey: localKey) else { return nil }
         return try? JSONDecoder().decode(UserProfile.self, from: data)
+    }
+
+    // MARK: - Encrypted Field Accessors
+
+    /// Decrypt and return the stored user name, or nil if absent.
+    /// Use this instead of reading AppKeys.Profile.name from UserDefaults directly.
+    func storedName() -> String? {
+        guard let data = encryptedStore.load(forKey: AppKeys.Profile.name) else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    /// Decrypt and return the stored email, or nil if absent.
+    func storedEmail() -> String? {
+        guard let data = encryptedStore.load(forKey: AppKeys.Profile.email) else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    /// Decrypt and return the stored date of birth, or nil if absent.
+    func storedDateOfBirth() -> Date? {
+        guard let data = encryptedStore.load(forKey: AppKeys.Profile.dateOfBirth),
+              data.count == MemoryLayout<TimeInterval>.size else { return nil }
+        let interval = data.withUnsafeBytes { $0.load(as: TimeInterval.self) }
+        return Date(timeIntervalSince1970: interval)
     }
 
     // MARK: - Save to Firestore

@@ -1218,11 +1218,27 @@ final class DashboardViewModel {
 
         // Sleep need
         let debtHours = sleepDebtTracker.currentDebt?.totalDebtHours ?? 0
+
+        // Use circadian analyzer's optimal sleep window end as wake time if available
+        let circadianWakeTime: Date? = {
+            let sleepRec = analysisEngine.mlOrchestrator.circadianAnalyzer.recommendations
+                .first(where: { $0.activity == .sleep })
+            guard let rec = sleepRec, analysisEngine.mlOrchestrator.circadianAnalyzer.isReady else {
+                return nil
+            }
+            let calendar = Calendar.current
+            let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: Date()))
+            guard let base = tomorrow else { return nil }
+            return calendar.date(bySettingHour: rec.optimalWindowEnd, minute: 0, second: 0, of: base)
+        }()
+
         let need = sleepNeedCalculator.compute(
             from: store,
             currentStrain: strainScorer.currentStrain,
             sleepDebt: debtHours,
-            targetWakeTime: nil,
+            targetWakeTime: circadianWakeTime,
+            age: age,
+            recoveryScore: Double(scores.overallScore.score),
             sleepSeries: sleepSeries
         )
         _ = need  // stored internally in sleepNeedCalculator

@@ -370,19 +370,22 @@ final class AppAnalytics {
         let defaults = UserDefaults.standard
         var props: [String: Any] = [:]
 
-        // Age bracket. derived from stored age
-        if let storedAge = defaults.object(forKey: AppKeys.Profile.dateOfBirth) as? Int, storedAge > 0 {
-            let bracket: String
-            switch storedAge {
-            case ..<18:   bracket = "under_18"
-            case 18...24: bracket = "18-24"
-            case 25...34: bracket = "25-34"
-            case 35...44: bracket = "35-44"
-            case 45...54: bracket = "45-54"
-            case 55...64: bracket = "55-64"
-            default:      bracket = "65+"
+        // Age bracket. derived from encrypted date of birth
+        if let dob = UserProfileStore.shared.storedDateOfBirth() {
+            let age = Calendar.current.dateComponents([.year], from: dob, to: Date()).year ?? 0
+            if age > 0 {
+                let bracket: String
+                switch age {
+                case ..<18:   bracket = "under_18"
+                case 18...24: bracket = "18-24"
+                case 25...34: bracket = "25-34"
+                case 35...44: bracket = "35-44"
+                case 45...54: bracket = "45-54"
+                case 55...64: bracket = "55-64"
+                default:      bracket = "65+"
+                }
+                props["age_bracket"] = bracket
             }
-            props["age_bracket"] = bracket
         }
 
         // Gender
@@ -901,9 +904,7 @@ final class AppAnalytics {
         else { direction = "stable" }
 
         logEvent("weekly_score_change", parameters: [
-            "new_score": newScore,
-            "previous_score": previousScore ?? -1,
-            "delta": delta,
+            "score_bracket": scoreBracket(newScore),
             "direction": direction,
             "days_since_install": session.daysSinceInstall
         ])
@@ -941,7 +942,7 @@ final class AppAnalytics {
             "correlations_count": correlationsCount,
             "illness_warnings_count": illnessWarningsCount,
             "metrics_analyzed": metricsAnalyzed,
-            "score": score,
+            "score_bracket": scoreBracket(score),
             "insights_per_metric": insightsPerMetric,
             "signal_density": signalDensity,
             "analysis_depth": analysisDepth
@@ -949,7 +950,7 @@ final class AppAnalytics {
 
         setUserProperty("data_richness", value: metricsAnalyzed < 10 ? "low" : metricsAnalyzed < 30 ? "medium" : "high")
         setUserProperty("analysis_depth", value: analysisDepth)
-        setUserProperty("last_score", value: "\(score)")
+        setUserProperty("last_score_bracket", value: scoreBracket(score))
         setUserProperty("insight_density", value: insightsPerMetric >= 0.75 ? "high" : insightsPerMetric >= 0.35 ? "medium" : "low")
 
         let bracket: String
@@ -1250,7 +1251,7 @@ final class AppAnalytics {
 
     func trackReportExported(score: Int, metricsCount: Int, insightsCount: Int) {
         logEvent("report_exported", parameters: [
-            "score": score,
+            "score_bracket": scoreBracket(score),
             "metrics_count": metricsCount,
             "insights_count": insightsCount
         ])
@@ -1731,7 +1732,7 @@ final class AppAnalytics {
     /// Call when first score is generated. critical activation event.
     func trackFirstScoreGenerated(score: Int, timeSinceInstallSec: Int, metricsUsed: Int) {
         logEvent("first_score_generated", parameters: [
-            "score": score,
+            "score_bracket": scoreBracket(score),
             "time_since_install_sec": timeSinceInstallSec,
             "metrics_used": metricsUsed
         ])
@@ -2100,7 +2101,6 @@ final class AppAnalytics {
     func trackJournalEntryCreated(category: String, value: Double, hasNotes: Bool) {
         logEvent("journal_entry_created", parameters: [
             "category": category,
-            "value": value,
             "has_notes": hasNotes ? 1 : 0
         ])
     }
@@ -2199,8 +2199,7 @@ final class AppAnalytics {
         else { direction = "big_decline" }
 
         logEvent("score_viewed", parameters: [
-            "score": score,
-            "delta": delta,
+            "score_bracket": scoreBracket(score),
             "direction": direction,
             "days_since_install": session.daysSinceInstall
         ])
@@ -2450,6 +2449,19 @@ final class AppAnalytics {
     }
 
     // MARK: - Private Helpers
+
+    /// Returns a privacy-safe bracket string for a health score (0-100).
+    /// Exact scores are considered identifiable health data and must never
+    /// be sent to third-party analytics.
+    private func scoreBracket(_ score: Int) -> String {
+        switch score {
+        case ..<20:  return "0-19"
+        case 20..<40: return "20-39"
+        case 40..<60: return "40-59"
+        case 60..<80: return "60-79"
+        default:      return "80-100"
+        }
+    }
 
     private func updateJourneyProperties() {
         let onboardingCompleted = defaults.bool(forKey: AppKeys.App.onboardingCompleted)

@@ -23,6 +23,13 @@ struct LasoApp: App {
         return subscriptionManager.shouldEnforcePaywall && !FeatureGate.hasFullAccess
     }
 
+    /// Detects TestFlight or App Store Review sandbox environment.
+    /// Apple's review process uses a sandbox receipt, so remote config blockers
+    /// (kill switch, force update) are bypassed to prevent App Store rejection.
+    private var isTestFlightOrAppReview: Bool {
+        Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt"
+    }
+
     /// Runs one-time initial calibration (historical sync + baseline analysis) during onboarding.
     /// Returns an error message when calibration fails; nil indicates success.
     @MainActor
@@ -63,10 +70,11 @@ struct LasoApp: App {
                 if let failure = integrityFailure {
                     CompromisedEnvironmentView(reason: failure)
                 }
-                // 0. Force update or maintenance. blocks everything (skip in UI test mode)
-                else if !isUITestMode && remoteConfig.requiresForceUpdate {
+                // 0. Force update or maintenance. blocks everything
+                // Skip in UI test mode and during App Store review / TestFlight
+                else if !isUITestMode && !isTestFlightOrAppReview && remoteConfig.requiresForceUpdate {
                     ForceUpdateView()
-                } else if !isUITestMode && remoteConfig.killSwitchEnabled {
+                } else if !isUITestMode && !isTestFlightOrAppReview && remoteConfig.killSwitchEnabled {
                     MaintenanceView(message: remoteConfig.killSwitchMessage)
                 } else {
                     ContentView(container: container)

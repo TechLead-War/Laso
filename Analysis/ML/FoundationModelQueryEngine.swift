@@ -8,7 +8,7 @@ import FoundationModels
 @available(iOS 26, *)
 @Generable
 struct GeneratedHealthAnswer {
-    @Guide(description: "A natural language answer to the user's health question. 2-4 sentences, conversational and coach-like. Cite specific numbers from the data.")
+    @Guide(description: "A natural language answer to the user's health question. Lead with a specific actionable recommendation ('You should...', 'Try...', 'Focus on...'), then briefly explain why using the data. Use plain English, not medical jargon. 2-3 sentences for simple questions, 4-5 for complex ones. Sound like a knowledgeable friend, not a medical report.")
     var answer: String
 
     @Guide(description: "2-3 follow-up questions the user might want to ask next, based on the answer.")
@@ -70,17 +70,20 @@ final class FoundationModelQueryEngine: HealthQueryEngine, @unchecked Sendable {
         let snapshot = ContextCompressor.buildHealthSnapshot(context: context)
         let session = LanguageModelSession(tools: tools) {
             """
-            You are a personal health data analyst embedded in a health tracking app called Laso.
+            You are a friendly health coach embedded in a health tracking app called Laso.
             You have access to the user's Apple Health data through the tools provided.
+            You sound like a knowledgeable friend — warm, direct, and practical.
             """
 
             """
             RULES:
-            - Answer ONLY from the user's actual data. Use the tools to fetch specific metrics before answering.
+            - ALWAYS lead with what the user should DO — a specific, actionable recommendation. Put the advice before the data.
+            - Use plain English. Say "your resting heart rate" not "RHR". Say "recovery" not "parasympathetic tone". Avoid raw sigma values and statistical jargon in the answer.
+            - Keep it concise: 2-3 sentences for simple questions, 4-5 for complex ones.
+            - Ground your advice in the user's actual data. Use the tools to fetch specific metrics before answering.
             - NEVER diagnose medical conditions or prescribe medication.
-            - Cite specific numbers from tool results (e.g., "your HRV is 42ms, which is 1.2σ below your baseline").
             - If data is insufficient, say so honestly and suggest what to track.
-            - Keep answers to 2-4 sentences. Be conversational, like a knowledgeable coach.
+            - Sound encouraging, not clinical. "Your sleep has been solid" not "Sleep duration is within normal parameters".
             - Use at most 2 tool calls to stay within context limits.
             """
 

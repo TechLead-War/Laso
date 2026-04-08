@@ -372,13 +372,13 @@ struct ContentView: View {
         if let need = dashboardViewModel.sleepNeedCalculator.currentNeed {
             let debt = dashboardViewModel.sleepDebtTracker.currentDebt
             let baseline = debt?.personalBaseline ?? need.totalHoursNeeded
-            let dailyHistory = (debt?.dailyDeficits ?? []).suffix(7).map { entry in
+            let dailyHistory = (debt?.dailyDeficits ?? []).suffix(14).map { entry in
                 SleepCoachView.DayEntry(date: entry.date, actual: max(0, baseline - entry.deficit), needed: baseline)
             }
             SleepCoachView(
                 baseHoursNeeded: need.totalHoursNeeded,
-                bedtime: need.recommendedBedtime.map { $0.formatted(date: .omitted, time: .shortened) },
-                wakeTime: need.recommendedWakeTime.map { $0.formatted(date: .omitted, time: .shortened) },
+                bedtime: need.recommendedBedtime,
+                wakeTime: need.recommendedWakeTime,
                 debtHours: debt?.totalDebtHours ?? 0,
                 dailyHistory: dailyHistory,
                 consistencyScore: Int(dashboardViewModel.sleepNeedCalculator.sleepConsistencyScore)

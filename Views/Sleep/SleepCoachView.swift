@@ -4,8 +4,8 @@ import SwiftUI
 /// sleep debt tracking, 14-day history, consistency score, and tips.
 struct SleepCoachView: View {
     let baseHoursNeeded: Double
-    let bedtime: String?
-    let wakeTime: String?
+    let bedtime: Date?
+    let wakeTime: Date?
     let debtHours: Double
     let dailyHistory: [DayEntry]
     let consistencyScore: Int
@@ -20,7 +20,7 @@ struct SleepCoachView: View {
         let needed: Double   // hours needed
     }
 
-    @State private var performanceLevel: PerformanceLevel = .perform
+    @State private var performanceLevel: PerformanceLevel = .peak
 
     enum PerformanceLevel: String, CaseIterable, Identifiable {
         case peak = "Peak"
@@ -41,6 +41,20 @@ struct SleepCoachView: View {
 
     private var adjustedNeed: Double {
         max(4, baseHoursNeeded + performanceLevel.adjustment)
+    }
+
+    /// Bedtime shifted by the performance-level adjustment so
+    /// that bedtime + adjustedNeed ≈ wakeTime.
+    private var adjustedBedtime: Date? {
+        bedtime?.addingTimeInterval(-performanceLevel.adjustment * 3600)
+    }
+
+    private var formattedBedtime: String {
+        adjustedBedtime?.formatted(date: .omitted, time: .shortened) ?? "--:--"
+    }
+
+    private var formattedWakeTime: String {
+        wakeTime?.formatted(date: .omitted, time: .shortened) ?? "--:--"
     }
 
     var body: some View {
@@ -128,14 +142,14 @@ struct SleepCoachView: View {
             scheduleItem(
                 icon: "moon.zzz.fill",
                 label: Copy.SleepCoach.bedtime,
-                value: bedtime ?? "--:--",
+                value: formattedBedtime,
                 color: .indigo
             )
 
             scheduleItem(
                 icon: "sunrise.fill",
                 label: Copy.SleepCoach.wakeUp,
-                value: wakeTime ?? "--:--",
+                value: formattedWakeTime,
                 color: .orange
             )
         }

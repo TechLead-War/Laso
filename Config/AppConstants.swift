@@ -61,7 +61,7 @@ enum AppConstants {
     // MARK: - Background Tasks
 
     enum BackgroundTask {
-        static let readinessRefresh = "com.lasohealth.background-refresh"
+        static let readinessRefresh = "com.lasohealth.app.background-refresh"
         static let earliestBeginInterval: TimeInterval = 30 * 60
         static let completionDelay: TimeInterval = 5
     }

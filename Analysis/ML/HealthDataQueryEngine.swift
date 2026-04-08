@@ -581,9 +581,8 @@ final class HealthDataQueryEngine {
             sentiment = metric.higherIsBetter ? .negative : .positive
         }
 
-        let opening = openingPhrase(sentiment)
-        let interpretation = trendInterpretation(metric: metric, pctChange: pctChange, sentiment: sentiment)
-        let answer = "\(opening)Your \(metric.displayName) is \(direction) over \(period.displayName), averaging \(formatValue(avg, metric: metric)). that's a \(String(format: "%.1f%%", abs(pctChange))) \(pctChange >= 0 ? "increase" : "decrease"). \(interpretation)"
+        let actionAdvice = trendActionAdvice(metric: metric, pctChange: pctChange, sentiment: sentiment)
+        let answer = "\(actionAdvice) Your \(metric.displayName) is \(direction) over \(period.displayName), averaging \(formatValue(avg, metric: metric))."
 
         return QueryResult(
             question: "How is my \(metric.displayName) trending?",
@@ -623,7 +622,8 @@ final class HealthDataQueryEngine {
             verdict = better ? "looking better" : "a bit lower"
         }
 
-        let answer = "Your \(metric.displayName) \(periodA.displayName) is \(verdict) compared to \(periodB.displayName). You averaged \(formatValue(avgA, metric: metric)) vs \(formatValue(avgB, metric: metric)). a \(String(format: "%.1f%%", abs(pctDiff))) \(pctDiff >= 0 ? "increase" : "decrease")."
+        let comparisonAction = better ? "Keep up whatever you changed — it's working." : (abs(pctDiff) < 3 ? "You're holding steady, which is a good sign." : "Try to get back to your \(periodB.displayName) routine — your body did better then.")
+        let answer = "\(comparisonAction) Your \(metric.displayName) \(periodA.displayName) is \(verdict) compared to \(periodB.displayName) (\(formatValue(avgA, metric: metric)) vs \(formatValue(avgB, metric: metric)))."
 
         return QueryResult(
             question: "Compare my \(metric.displayName)",
@@ -650,11 +650,13 @@ final class HealthDataQueryEngine {
             let strength = abs(corr.pearsonR) >= 0.7 ? "strong" : abs(corr.pearsonR) >= 0.4 ? "moderate" : abs(corr.pearsonR) >= 0.2 ? "mild" : "very weak"
             let direction = corr.pearsonR > 0 ? "move together" : "move in opposite directions"
 
-            var answer = "Yes. there's a \(strength) link between your \(metricA.displayName) and \(metricB.displayName). They tend to \(direction) (r=\(String(format: "%.2f", corr.pearsonR)))."
-
+            var answer: String
             if corr.grangerCausal {
-                let lagText = corr.grangerOptimalLag == 1 ? "about a day" : "about \(corr.grangerOptimalLag) days"
-                answer += " In fact, changes in \(corr.metricA.displayName) seem to predict changes in \(corr.metricB.displayName) \(lagText) later."
+                let lagText = corr.grangerOptimalLag == 1 ? "the next day" : "\(corr.grangerOptimalLag) days later"
+                answer = "Pay attention to your \(corr.metricA.displayName) — when it changes, your \(corr.metricB.displayName) tends to follow \(lagText). There's a \(strength) link between the two, and they \(direction)."
+            } else {
+                let actionableMetric = metricA.higherIsBetter == metricB.higherIsBetter ? metricA : metricB
+                answer = "Yes, improving your \(actionableMetric.displayName) is likely to help your \(actionableMetric == metricA ? metricB.displayName : metricA.displayName) too — there's a \(strength) connection and they \(direction)."
             }
 
             return QueryResult(
@@ -724,7 +726,8 @@ final class HealthDataQueryEngine {
         }
 
         let when = horizon == 1 ? "tomorrow" : "in \(horizon) days"
-        let answer = "Based on your patterns, I'm expecting your \(metric.displayName) to land around \(formatValue(result.value, metric: metric)) \(when). The range could be anywhere from \(formatValue(result.ciLower, metric: metric)) to \(formatValue(result.ciUpper, metric: metric)), depending on how today goes."
+        let forecastAction = forecastActionAdvice(metric: metric, predicted: result.value, context: ctx)
+        let answer = "\(forecastAction) I'm expecting your \(metric.displayName) to be around \(formatValue(result.value, metric: metric)) \(when), based on your patterns."
 
         return QueryResult(
             question: "What will my \(metric.displayName) be \(when)?",
@@ -766,10 +769,11 @@ final class HealthDataQueryEngine {
         anomalies.sort { $0.deviation > $1.deviation }
         let top = anomalies[0]
         let dir = (ctx.baselines[top.metric].map { top.value > $0.mean } ?? true) ? "higher" : "lower"
-        var answer = "Your \(top.metric.displayName) is standing out right now. \(formatValue(top.value, metric: top.metric)) is significantly \(dir) than usual (\(String(format: "%.1f", top.deviation))x your normal variation)."
+        let anomalyAction = anomalyActionAdvice(metric: top.metric, isHigh: dir == "higher")
+        var answer = "\(anomalyAction) Your \(top.metric.displayName) at \(formatValue(top.value, metric: top.metric)) is noticeably \(dir) than your usual."
         if anomalies.count > 1 {
             let others = anomalies.dropFirst().prefix(2).map { $0.metric.displayName }.joined(separator: " and ")
-            answer += " I'm also seeing unusual readings in your \(others)."
+            answer += " Your \(others) \(anomalies.count > 2 ? "are" : "is") also outside the usual range."
         }
 
         return QueryResult(
@@ -824,21 +828,27 @@ final class HealthDataQueryEngine {
         let avg = recent.map(\.value).reduce(0, +) / Double(recent.count)
         let latest = recent.last?.value ?? avg
 
-        var answer = "Your \(m.displayName) is currently at \(formatValue(latest, metric: m)), with a 7-day average of \(formatValue(avg, metric: m)). "
+        var answer: String
 
         if let baseline = ctx.baselines[m] {
             let dev = (avg - baseline.mean) / max(1, baseline.standardDeviation)
             if dev > 1 {
-                answer += metric?.higherIsBetter == true
-                    ? "That's above your personal baseline. nice work."
-                    : "That's running a bit high compared to your baseline."
+                if m.higherIsBetter {
+                    answer = "Keep doing what you're doing — your \(m.displayName) is above your personal baseline at \(formatValue(latest, metric: m)). Whatever your routine is right now, it's working."
+                } else {
+                    answer = "Try to ease up a bit today — your \(m.displayName) is running high at \(formatValue(latest, metric: m)), above your usual baseline."
+                }
             } else if dev < -1 {
-                answer += metric?.higherIsBetter == true
-                    ? "That's below your usual baseline. might be worth paying attention to."
-                    : "That's below your baseline, which is a good sign."
+                if m.higherIsBetter {
+                    answer = "Your \(m.displayName) has dipped to \(formatValue(latest, metric: m)), below your usual level. Focus on recovery — sleep, hydration, and lighter activity can help bring it back up."
+                } else {
+                    answer = "Nice — your \(m.displayName) is at \(formatValue(latest, metric: m)), below your baseline, which is a good sign. Keep it up."
+                }
             } else {
-                answer += "Right in line with your normal range."
+                answer = "Your \(m.displayName) is right where it should be at \(formatValue(latest, metric: m)). Steady and consistent — that's what you want to see."
             }
+        } else {
+            answer = "Your \(m.displayName) is at \(formatValue(latest, metric: m)) with a 7-day average of \(formatValue(avg, metric: m)). As I learn your patterns, I'll be able to give you more personalized advice."
         }
 
         return QueryResult(
@@ -918,11 +928,11 @@ final class HealthDataQueryEngine {
         }
 
         let durationNote = state.daysInState > 1
-            ? "You've been in this state for \(state.daysInState) days. "
+            ? " You've been in this state for \(state.daysInState) days."
             : ""
 
         let traitList = traitDescriptions.joined(separator: ", ")
-        let answer = "Your body is currently in a \"\(state.label)\" state. \(traitList). \(durationNote)\(healthStateConclusion(state: state))"
+        let answer = "\(healthStateConclusion(state: state)) Your body is in a \"\(state.label)\" state right now — \(traitList).\(durationNote)"
 
         let dataPoints: [QueryResult.DataPoint] = topTraits.map {
             .init(label: $0.metric.displayName, value: $0.zScore, unit: "z", date: nil)
@@ -1014,10 +1024,10 @@ final class HealthDataQueryEngine {
         }
 
         let top = elevated[0]
-        var answer = "Heads up. your \(top.name.lowercased()) is \(top.risk == .critical ? "at a critical level" : top.risk == .high ? "elevated" : "worth watching"). \(top.explanation) \(top.recommendation)"
+        var answer = "\(top.recommendation) Your \(top.name.lowercased()) is \(top.risk == .critical ? "at a critical level" : top.risk == .high ? "elevated" : "worth watching") — \(top.explanation.lowercased())"
         if elevated.count > 1 {
             let others = elevated.dropFirst().prefix(2).map { $0.name.lowercased() }.joined(separator: " and ")
-            answer += " I'm also keeping an eye on your \(others)."
+            answer += " Also keep an eye on your \(others)."
         }
 
         return QueryResult(
@@ -1044,16 +1054,21 @@ final class HealthDataQueryEngine {
             }
             let targetList = targetLines.joined(separator: "; ")
 
-            var answer = "For your best days, here's what your data says to target. \(targetList). When you hit these numbers, your predicted score is \(Int(ideal.predictedScore))."
+            var answer: String
 
-            // Add gap info from optimal profile
+            // Add gap info from optimal profile — lead with what to focus on
             if let profile = ctx.optimalProfile {
                 let unmet = profile.conditions.filter { !$0.isCurrentlyMet }.prefix(2)
                 if !unmet.isEmpty {
                     let gaps = unmet.map { $0.metric.displayName }.joined(separator: " and ")
-                    answer += " Right now, your \(gaps) \(unmet.count == 1 ? "is" : "are") the biggest gap between where you are and where you could be."
+                    answer = "Focus on your \(gaps) today — that's your biggest opportunity to improve. "
+                } else {
+                    answer = "You're close to your ideal day — keep your current routine going. "
                 }
+            } else {
+                answer = ""
             }
+            answer += "Your data says to aim for: \(targetList). Hit those targets and you're looking at a score of \(Int(ideal.predictedScore))."
 
             return QueryResult(
                 question: "How do I have a great day?",
@@ -1157,9 +1172,11 @@ final class HealthDataQueryEngine {
             )
         }
 
-        var answer = "Yes. your \(top.metric.displayName) follows a clear \(top.patternType.rawValue) cycle."
+        var answer: String
         if let peakDay = top.peakDayOfWeek, let troughDay = top.troughDayOfWeek {
-            answer += " It tends to peak on \(weekdayName(peakDay))s and dip on \(weekdayName(troughDay))s."
+            answer = "Plan your toughest activities for \(weekdayName(peakDay))s when your \(top.metric.displayName) peaks, and take it easier on \(weekdayName(troughDay))s when it dips. Your \(top.metric.displayName) follows a clear \(top.patternType.rawValue) cycle."
+        } else {
+            answer = "Your \(top.metric.displayName) follows a clear \(top.patternType.rawValue) cycle — use that rhythm to your advantage by scheduling harder days around your peaks."
         }
         if let peakVal = top.peakMeanValue, let troughVal = top.troughMeanValue {
             answer += " The swing is about \(formatValue(peakVal - troughVal, metric: top.metric)) \(top.metric.unit) between highs and lows."
@@ -1219,18 +1236,20 @@ final class HealthDataQueryEngine {
         }
 
         let chronotype = profile.chronotype.rawValue
-        var answer = "You're a \(chronotype). Your body's activity peak is around \(formatHour(profile.activityAcrophaseHour)), and your heart rate hits its lowest point around \(formatHour(profile.hrNadirHour))."
-
-        if let hrvPeak = profile.hrvAcrophaseHour {
-            answer += " Your HRV. a key recovery marker. peaks around \(formatHour(hrvPeak))."
-        }
+        var answer: String
 
         if !ctx.timingRecommendations.isEmpty {
             let recs = ctx.timingRecommendations.prefix(3)
             let timingLines = recs.map { rec -> String in
                 "\(rec.activity.rawValue): \(formatHour(Double(rec.optimalWindowStart)))-\(formatHour(Double(rec.optimalWindowEnd)))"
             }
-            answer += " Based on all this, here are your optimal windows. \(timingLines.joined(separator: "; "))."
+            answer = "Here are your best windows based on your body clock: \(timingLines.joined(separator: "; ")). You're a \(chronotype), with peak energy around \(formatHour(profile.activityAcrophaseHour))."
+        } else {
+            answer = "You're a \(chronotype) — your peak energy is around \(formatHour(profile.activityAcrophaseHour)), so schedule your hardest workout or deep work then."
+        }
+
+        if let hrvPeak = profile.hrvAcrophaseHour {
+            answer += " Your recovery peaks around \(formatHour(hrvPeak)), which is a good time for lighter activity."
         }
 
         return QueryResult(
@@ -1276,17 +1295,15 @@ final class HealthDataQueryEngine {
                 }
             }
 
-            var answer = "Your score is \(score). "
+            var answer: String
             if !dragging.isEmpty {
-                answer += "The biggest thing pulling it down right now is your \(dragging.joined(separator: " and ")). "
+                answer = "Work on improving your \(dragging.joined(separator: " and ")) — that's what's holding your score back the most. "
+            } else if !boosting.isEmpty {
+                answer = "Keep up what you're doing with your \(boosting.joined(separator: " and ")) — that's carrying your score right now. "
+            } else {
+                answer = "Stay consistent — all your key metrics are near baseline, so small improvements anywhere will help. "
             }
-            if !boosting.isEmpty {
-                answer += "On the bright side, your \(boosting.joined(separator: " and ")) \(boosting.count == 1 ? "is" : "are") helping. "
-            }
-            if dragging.isEmpty && boosting.isEmpty {
-                answer += "All your key metrics are close to baseline. no single factor is dominating. "
-            }
-            answer += conclusion(sentiment)
+            answer += "Your score is \(score). \(conclusion(sentiment))"
 
             return QueryResult(
                 question: "Why is my score \(score)?",
@@ -1339,12 +1356,14 @@ final class HealthDataQueryEngine {
 
         if !causalRelations.isEmpty {
             let topCauses = causalRelations.prefix(3)
-            var answer = "Here's what your data shows drives your \(metric.displayName):"
+            let topDriver = topCauses.first.map { $0.metricA == metric ? $0.metricB : $0.metricA }
+            let topDirection = topCauses.first.map { $0.pearsonR > 0 ? "improving" : "lowering" } ?? "changing"
+            var answer = topDriver.map { "Focus on your \($0.displayName) — it's the biggest lever for \(topDirection) your \(metric.displayName). " } ?? ""
             for cause in topCauses {
                 let driver = cause.metricA == metric ? cause.metricB : cause.metricA
                 let lagText = cause.grangerOptimalLag == 1 ? "the next day" : "\(cause.grangerOptimalLag) days later"
                 let direction = cause.pearsonR > 0 ? "higher" : "lower"
-                answer += " When your \(driver.displayName) goes up, your \(metric.displayName) tends to go \(direction) \(lagText)."
+                answer += "When your \(driver.displayName) goes up, your \(metric.displayName) tends to go \(direction) \(lagText). "
             }
 
             // Check temporal sequences for richer chains
@@ -1631,18 +1650,101 @@ final class HealthDataQueryEngine {
         }
     }
 
+    private func trendActionAdvice(metric: HealthMetric, pctChange: Double, sentiment: Sentiment) -> String {
+        if abs(pctChange) < 2 {
+            return "Your routine is working — keep it consistent."
+        }
+        switch (metric, sentiment) {
+        case (.heartRateVariability, .negative):
+            return "Try getting to bed 30 minutes earlier tonight — your recovery needs a boost."
+        case (.heartRateVariability, .positive):
+            return "Whatever you've been doing for recovery, keep it up — it's paying off."
+        case (.restingHeartRate, .negative):
+            return "Take it easy today and focus on hydration — your heart rate is trending the wrong way."
+        case (.restingHeartRate, .positive):
+            return "Great progress — your heart is getting more efficient."
+        case (.sleepDuration, .negative), (.sleepDeep, .negative), (.sleepREM, .negative):
+            return "Prioritize your wind-down routine tonight — dim lights and put screens away an hour before bed."
+        case (.sleepDuration, .positive), (.sleepDeep, .positive), (.sleepREM, .positive):
+            return "Your sleep is heading in the right direction — stick with your current bedtime routine."
+        case (.steps, .negative), (.activeCalories, .negative), (.exerciseMinutes, .negative):
+            return "Try adding a short walk or movement break today to get things back on track."
+        case (.steps, .positive), (.activeCalories, .positive), (.exerciseMinutes, .positive):
+            return "You're moving more — keep building on that momentum."
+        case (.weight, .negative):
+            return "Small daily choices add up — focus on whole foods and staying active."
+        case (.weight, .positive):
+            return "You're making progress — stay consistent with what's working."
+        case (_, .positive):
+            return "Keep doing what you're doing — your \(metric.displayName) is heading in a great direction."
+        case (_, .negative):
+            return "Pay extra attention to your \(metric.displayName) this week and see if a routine change helps."
+        case (_, .neutral):
+            return "Steady and consistent — your \(metric.displayName) is holding its ground."
+        }
+    }
+
+    private func forecastActionAdvice(metric: HealthMetric, predicted: Double, context: QueryContext) -> String {
+        guard let baseline = context.baselines[metric] else {
+            return "Here's what to expect —"
+        }
+        let dev = (predicted - baseline.mean) / max(1, baseline.standardDeviation)
+        let isBad = (dev < -0.5 && metric.higherIsBetter) || (dev > 0.5 && !metric.higherIsBetter)
+        if isBad {
+            switch metric {
+            case .heartRateVariability:
+                return "Your recovery might be lower than usual — plan for lighter activity and an earlier bedtime."
+            case .sleepDuration, .sleepDeep, .sleepREM:
+                return "Your sleep may dip — try to protect your bedtime tonight."
+            case .restingHeartRate:
+                return "Your heart rate may run high — take it easy and stay hydrated."
+            default:
+                return "Your \(metric.displayName) may be below its best — plan accordingly."
+            }
+        } else {
+            return "Looking good ahead — your \(metric.displayName) should be in a solid range."
+        }
+    }
+
+    private func anomalyActionAdvice(metric: HealthMetric, isHigh: Bool) -> String {
+        switch (metric, isHigh) {
+        case (.heartRate, true), (.restingHeartRate, true):
+            return "Take it easy and hydrate well today — something is pushing your heart rate up."
+        case (.heartRateVariability, false):
+            return "Prioritize rest and recovery today — your body is showing signs of extra stress."
+        case (.sleepDuration, false), (.sleepDeep, false), (.sleepREM, false):
+            return "Make tonight's sleep a priority — get to bed early and keep your room cool and dark."
+        case (.steps, false), (.activeCalories, false), (.exerciseMinutes, false):
+            return "Try to get some movement in today, even a short walk would help."
+        case (.bloodOxygen, false):
+            return "Keep an eye on this and get some fresh air — your blood oxygen is lower than usual."
+        case (.weight, true):
+            return "This could be water retention or a temporary spike — stay consistent with your routine."
+        case (.respiratoryRate, true):
+            return "Your breathing rate is elevated — take some deep breaths and see if you can ease any tension."
+        default:
+            if isHigh && !metric.higherIsBetter {
+                return "Keep an eye on this and consider what might have changed in your routine."
+            } else if !isHigh && metric.higherIsBetter {
+                return "Focus on recovery today — your body could use some extra care."
+            } else {
+                return "This is outside your norm — pay attention to how you're feeling."
+            }
+        }
+    }
+
     private func healthStateConclusion(state: HealthState) -> String {
         let label = state.label.lowercased()
         if label.contains("recovery") || label.contains("resting") {
-            return "Your body is in repair mode. honor that with lighter activity."
+            return "Take it easy today — your body is in repair mode, so stick to lighter activity and rest up."
         }
         if label.contains("peak") || label.contains("performance") || label.contains("active") {
-            return "You're primed for a strong effort today."
+            return "Go for it today — you're primed for a strong workout or big effort."
         }
         if label.contains("stress") || label.contains("fatigue") {
-            return "Your nervous system is under load. prioritize rest and sleep tonight."
+            return "Prioritize sleep and take it easy — your body is under extra stress right now."
         }
-        return "Listen to how you're feeling and adjust your day accordingly."
+        return "Listen to how you're feeling today and adjust your plans accordingly."
     }
 
     private func riskFactorSummary(_ factors: [PredictionFactor]) -> String {

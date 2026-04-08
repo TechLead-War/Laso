@@ -33,12 +33,12 @@ struct BrainHealthDetailView: View {
         VStack(spacing: 14) {
             Text("\(brainScore.score)")
                 .font(.system(size: 56, weight: .bold, design: .rounded).monospacedDigit())
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
 
             Text("BRAIN HEALTH")
                 .font(.system(size: 13, weight: .semibold))
                 .tracking(2)
-                .foregroundStyle(.white.opacity(0.68))
+                .foregroundStyle(.secondary)
 
             Text(brainScore.state.displayName)
                 .font(.title3.weight(.bold))
@@ -46,7 +46,7 @@ struct BrainHealthDetailView: View {
 
             Text(brainScore.headline)
                 .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.72))
+                .foregroundStyle(.primary)
                 .multilineTextAlignment(.center)
 
             if brainScore.confidence < 0.7 {
@@ -56,15 +56,15 @@ struct BrainHealthDetailView: View {
                     Text("Building your brain profile")
                         .font(.caption.weight(.semibold))
                 }
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(.tertiary)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
-                .background(.white.opacity(0.1), in: Capsule())
+                .background(.secondary.opacity(0.1), in: Capsule())
             }
         }
         .padding(18)
         .frame(maxWidth: .infinity)
-        .background(Color.black.opacity(0.95), in: RoundedRectangle(cornerRadius: 26, style: .continuous))
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 26, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 26, style: .continuous)
                 .strokeBorder(brainScore.state.color.opacity(0.42), lineWidth: 1)
@@ -346,6 +346,10 @@ struct BrainHealthDetailView: View {
                 HStack(alignment: .bottom, spacing: 6) {
                     ForEach(Array(weeklyHistory.enumerated()), id: \.offset) { _, entry in
                         VStack(spacing: 4) {
+                            Text("\(entry.score)")
+                                .font(.caption2.weight(.bold).monospacedDigit())
+                                .foregroundStyle(chartBarColor(for: entry.score))
+
                             RoundedRectangle(cornerRadius: 4)
                                 .fill(chartBarColor(for: entry.score))
                                 .frame(height: max(chartBarHeight(for: entry.score), 4))
@@ -353,11 +357,12 @@ struct BrainHealthDetailView: View {
                             Text(abbreviatedDay(entry.date))
                                 .font(.caption2.weight(.medium))
                                 .foregroundStyle(.secondary)
+                                .frame(width: 32, alignment: .center)
                         }
                         .frame(maxWidth: .infinity)
                     }
                 }
-                .frame(height: 100)
+                .frame(height: 120)
 
                 HStack {
                     Text("0")

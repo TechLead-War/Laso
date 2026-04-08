@@ -118,8 +118,14 @@ final class SleepDebtTracker {
 
     // MARK: - Computation
 
+    /// Recommended minimum sleep for adults (hours). Used as a floor for
+    /// the personal baseline so that chronically short sleepers still
+    /// accumulate debt against a science-backed target (NSF guidelines: 7-9h).
+    private static let recommendedMinimumSleep: Double = 7.5
+
     /// Compute sleep debt from the data store's sleep duration time series.
-    /// Requires at least 14 days of sleep data; uses 30-day average as the personal baseline.
+    /// Requires at least 7 days of sleep data; uses max(30-day average, 7.5h)
+    /// as the personal baseline so chronic short-sleepers accumulate realistic debt.
     @MainActor
     func compute(from store: HealthDataStore, sleepSeries: MetricTimeSeries? = nil) {
         guard let sleepSeries = sleepSeries ?? store.loadTimeSeries(for: .sleepDuration) else {
@@ -131,7 +137,7 @@ final class SleepDebtTracker {
         let last30 = sleepSeries.samples(lastDays: 30)
         let last14 = sleepSeries.samples(lastDays: 14)
 
-        guard last14.count >= 14 else {
+        guard last14.count >= 7 else {
             isReady = false
             currentDebt = nil
             return
@@ -139,9 +145,12 @@ final class SleepDebtTracker {
 
         isReady = true
 
-        // Personal baseline: 30-day average (fall back to 14-day if less data)
+        // Personal baseline: 30-day average (fall back to 14-day if less data),
+        // but never below the recommended minimum so chronic short sleepers
+        // still accumulate meaningful debt.
         let baselineSamples = last30.count >= 21 ? last30 : last14
-        let personalBaseline = baselineSamples.map(\.value).reduce(0, +) / Double(baselineSamples.count)
+        let averageSleepBaseline = baselineSamples.map(\.value).reduce(0, +) / Double(baselineSamples.count)
+        let personalBaseline = Swift.max(averageSleepBaseline, Self.recommendedMinimumSleep)
 
         // Build a date-indexed map of the last 14 days of sleep
         let calendar = Calendar.current

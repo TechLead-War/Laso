@@ -9,10 +9,13 @@ xcuserdata/
 IDEFindNavigatorScopes.plist
 
 # Firebase secrets
+# NOTE: GoogleService-Info.plist was committed before this rule existed.
+# Run `git rm --cached GoogleService-Info.plist` to stop tracking it.
+# Use GoogleService-Info.plist.template for onboarding new developers.
 GoogleService-Info.plist
 **/serviceAccount.json
-laso-health-v1-firebase-adminsdk-*.json
-Config/firebase-adminsdk-*.json
+*-firebase-adminsdk-*.json
+**/firebase-adminsdk-*.json
 
 # Build secrets
 Secrets.xcconfig

@@ -333,6 +333,12 @@ struct PaywallView: View {
                 .buttonStyle(.plain)
             }
 
+            Text("Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless it is canceled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. You can manage and cancel your subscriptions by going to your App Store account settings after purchase.")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
+
             HStack(spacing: 16) {
                 Link(Copy.Privacy.termsOfUse, destination: URL(string: AppSecrets.URLs.termsOfUse)!)
                 Text("\u{00B7}")

@@ -164,7 +164,7 @@ enum EngagementSequenceScheduler {
 
     /// Day 1: Implementation Intention trigger
     private static func generateDay1(userName: String?) -> (title: String, body: String) {
-        let name = userName ?? defaults.string(forKey: AppKeys.Profile.name)
+        let name = userName ?? UserProfileStore.shared.storedName()
         return (
             title: Copy.Notifications.engagementDay1Title(name: name),
             body: Copy.Notifications.engagementDay1Body

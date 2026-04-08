@@ -82,17 +82,45 @@ final class HealthKitManager {
             return
         }
 
-        var readTypes = HealthKitMetricRegistry.allSampleTypes
-        if let menstrualFlowType = HKObjectType.categoryType(forIdentifier: .menstrualFlow) {
-            readTypes.insert(menstrualFlowType)
-        }
-        readTypes.insert(HKObjectType.electrocardiogramType())
-
-        let writeTypes: Set<HKSampleType> = [
+        // Core read types only — request the minimal set needed for primary
+        // features. HealthKit will still return data for types the user has
+        // authorized via other apps, so non-core metrics work opportunistically.
+        let readTypes: Set<HKObjectType> = [
+            // Heart
+            HKQuantityType(.heartRate),
+            HKQuantityType(.restingHeartRate),
+            HKQuantityType(.heartRateVariabilitySDNN),
+            // Blood
+            HKQuantityType(.oxygenSaturation),
+            HKQuantityType(.bloodPressureSystolic),
+            HKQuantityType(.bloodPressureDiastolic),
+            // Activity
+            HKQuantityType(.stepCount),
+            HKQuantityType(.activeEnergyBurned),
+            HKQuantityType(.appleExerciseTime),
+            HKQuantityType(.appleStandTime),
+            HKQuantityType(.distanceWalkingRunning),
+            // Sleep
+            HKCategoryType(.sleepAnalysis),
+            // Body
             HKQuantityType(.bodyMass),
-            HKQuantityType(.dietaryWater),
-            HKCategoryType(.mindfulSession)
+            HKQuantityType(.bodyFatPercentage),
+            HKQuantityType(.height),
+            // Respiratory
+            HKQuantityType(.respiratoryRate),
+            // Other
+            HKQuantityType(.bodyTemperature),
+            HKCategoryType(.mindfulSession),
+            // Menstrual
+            HKCategoryType(.menstrualFlow),
+            // ECG
+            HKObjectType.electrocardiogramType(),
         ]
+
+        // Write permissions removed from onboarding — requested lazily in
+        // each save method via requestWriteAuthorizationIfNeeded(for:) so
+        // the system prompt appears only when the user actually logs data.
+        let shareTypes: Set<HKSampleType> = []
 
         let totalRequested = readTypes.count
 
@@ -102,7 +130,7 @@ final class HealthKitManager {
                     metrics: HealthMetric.allCases.map(\.rawValue) + ["menstrual_flow", "electrocardiogram"]
                 )
             }
-            try await healthStore.requestAuthorization(toShare: writeTypes, read: readTypes)
+            try await healthStore.requestAuthorization(toShare: shareTypes, read: readTypes)
             isAuthorized = true
             await MainActor.run { AppAnalytics.shared.trackHealthPermissionResult(granted: totalRequested, denied: 0, total: totalRequested) }
         } catch {
@@ -412,7 +440,7 @@ final class HealthKitManager {
                 sortDescriptors: [sort]
             ) { _, results, error in
                 if let error {
-                    PostHogManager.shared.captureError(error, context: "healthkit_fetch_menstrual")
+                    PostHogManager.shared.captureError(error, context: "healthkit_fetch")
                 }
                 guard let results = results as? [HKCategorySample], error == nil else {
                     continuation.resume(returning: [])
@@ -711,6 +739,8 @@ final class HealthKitManager {
                     HKCategoryValueSleepAnalysis.asleepREM.rawValue
                 ]
 
+                var dailyWakeTimes: [Date: Date] = [:]
+
                 for sample in results {
                     let day = sample.endDate.startOfDay
                     let duration = sample.endDate.timeIntervalSince(sample.startDate) / 3600.0 // hours
@@ -733,10 +763,25 @@ final class HealthKitManager {
 
                     if matchesStage {
                         dailyDurations[day, default: 0] += duration
+                        // Track wake time from overnight sleep only (ends 4 AM–noon).
+                        // This filters out afternoon naps that would skew the average.
+                        let endHour = Calendar.current.component(.hour, from: sample.endDate)
+                        if endHour >= 4 && endHour < 12 {
+                            if let existing = dailyWakeTimes[day] {
+                                if sample.endDate > existing { dailyWakeTimes[day] = sample.endDate }
+                            } else {
+                                dailyWakeTimes[day] = sample.endDate
+                            }
+                        }
                     }
                 }
 
-                let samples = dailyDurations.map { MetricSample(date: $0.key, value: $0.value) }
+                // Use actual wake time as the sample date so downstream
+                // consumers (e.g. SleepNeedCalculator) can infer when the
+                // user woke up instead of seeing midnight for every sample.
+                let samples = dailyDurations.map { entry in
+                    MetricSample(date: dailyWakeTimes[entry.key] ?? entry.key, value: entry.value)
+                }
                     .sorted { $0.date < $1.date }
 
                 let series = MetricTimeSeries(metric: metric, samples: samples)
@@ -792,7 +837,17 @@ final class HealthKitManager {
 
     static let writableMetrics: Set<HealthMetric> = [.weight, .waterIntake, .mindfulMinutes]
 
+    /// Lazily requests write authorization for the given sample types.
+    /// Called just before saving so the system prompt appears at the
+    /// contextually appropriate moment (when the user taps "Log"),
+    /// not during onboarding.
+    func requestWriteAuthorizationIfNeeded(for types: Set<HKSampleType>) async throws {
+        try await healthStore.requestAuthorization(toShare: types, read: [])
+    }
+
     func saveWeight(_ kg: Double, date: Date = Date()) async throws {
+        let weightType = HKQuantityType(.bodyMass)
+        try await requestWriteAuthorizationIfNeeded(for: [weightType])
         let quantity = HKQuantity(unit: .gramUnit(with: .kilo), doubleValue: kg)
         let sample = HKQuantitySample(
             type: HKQuantityType(.bodyMass),
@@ -804,6 +859,8 @@ final class HealthKitManager {
     }
 
     func saveWaterIntake(milliliters: Double, date: Date = Date()) async throws {
+        let waterType = HKQuantityType(.dietaryWater)
+        try await requestWriteAuthorizationIfNeeded(for: [waterType])
         let liters = milliliters / 1000.0
         let quantity = HKQuantity(unit: .liter(), doubleValue: liters)
         let sample = HKQuantitySample(
@@ -816,6 +873,8 @@ final class HealthKitManager {
     }
 
     func saveMindfulSession(minutes: Double) async throws {
+        let mindfulType = HKCategoryType(.mindfulSession)
+        try await requestWriteAuthorizationIfNeeded(for: [mindfulType])
         let endDate = Date()
         let startDate = endDate.addingTimeInterval(-minutes * 60)
         let sample = HKCategorySample(

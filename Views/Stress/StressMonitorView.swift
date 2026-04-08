@@ -91,7 +91,7 @@ struct StressMonitorView: View {
         let angle = 150 + scoreFraction * 240
 
         return Circle()
-            .fill(.white)
+            .fill(.primary)
             .frame(width: 10, height: 10)
             .shadow(color: .black.opacity(0.2), radius: 2, y: 1)
             .offset(y: -80)
@@ -193,6 +193,7 @@ struct StressMonitorView: View {
                             Text(point.dayLabel)
                                 .font(.caption2.weight(.medium))
                                 .foregroundStyle(.secondary)
+                                .frame(width: 32, alignment: .center)
                         }
                         .frame(maxWidth: .infinity)
                     }

@@ -23,11 +23,12 @@ enum PerformanceLevel: String, CaseIterable, Sendable {
         }
     }
 
-    var multiplier: Double {
+    /// Base sleep need per level (replaces the old multiplier approach)
+    var baseHours: Double {
         switch self {
-        case .peak: 1.0
-        case .perform: 0.85
-        case .getBy: 0.70
+        case .peak: 7.5
+        case .perform: 7.0
+        case .getBy: 6.5
         }
     }
 }
@@ -60,12 +61,13 @@ final class SleepNeedCalculator {
     private static let minimumDaysRequired = 7
     private static let baselineWindowDays = 30
     private static let wakeTimeWindowDays = 14
-    private static let minBaselineHours = 6.0
-    private static let maxBaselineHours = 10.0
-    private static let strainThreshold = 10.0
-    private static let strainIncrementPerPoints = 5.0
-    private static let strainSleepBonus = 0.5
-    private static let debtPayoffFraction = 0.25
+
+    // Hard bounds (science-backed: NSF, AASM, Cappuccio 2010)
+    private static let floorHours = 6.5
+    private static let ceilingHours = 9.0
+
+    // Debt
+    private static let maxDebtAdjustment = 0.5
 
     // MARK: - Compute
 
@@ -76,6 +78,8 @@ final class SleepNeedCalculator {
         sleepDebt: Double,
         targetWakeTime: Date?,
         performanceLevel: PerformanceLevel = .peak,
+        age: Int = 30,
+        recoveryScore: Double = 70,
         sleepSeries: MetricTimeSeries? = nil
     ) -> SleepNeed {
         guard let sleepSeries = sleepSeries ?? store.loadTimeSeries(for: .sleepDuration) else {
@@ -85,35 +89,60 @@ final class SleepNeedCalculator {
         let recentSamples = sleepSeries.samples(lastDays: Self.minimumDaysRequired)
         isReady = recentSamples.count >= Self.minimumDaysRequired
 
-        // Base need: 30-day rolling average, clamped
-        let baselineSamples = sleepSeries.samples(lastDays: Self.baselineWindowDays)
-        let rawBaseline = baselineSamples.isEmpty ? 8.0 : baselineSamples.mean(of: \.value)
-        let baselineNeed = min(max(rawBaseline, Self.minBaselineHours), Self.maxBaselineHours)
+        // --- New formula: base + adjustments, clamped to [6.5, 9.0] ---
 
-        // Strain adjustment: +0.5hr per 5 strain points above 10
-        let strainAdjustment: Double
-        if currentStrain > Self.strainThreshold {
-            let excessStrain = currentStrain - Self.strainThreshold
-            strainAdjustment = (excessStrain / Self.strainIncrementPerPoints) * Self.strainSleepBonus
+        // 1. Base from performance level
+        let base = performanceLevel.baseHours
+
+        // 2. Age adjustment
+        let ageAdjustment: Double
+        if age < 26 {
+            ageAdjustment = 0.25       // Young adults need slightly more
+        } else if age <= 64 {
+            ageAdjustment = 0           // Standard adult range
         } else {
-            strainAdjustment = 0
+            ageAdjustment = -0.25       // Older adults need slightly less (NSF)
         }
 
-        // Debt adjustment: pay off 25% of accumulated debt per night
-        let debtAdjustment = max(0, sleepDebt * Self.debtPayoffFraction)
+        // 3. Recovery adjustment (how recovered is the body right now)
+        let recoveryAdjustment: Double
+        if recoveryScore < 40 {
+            recoveryAdjustment = 0.5    // Low recovery — body needs more sleep
+        } else if recoveryScore < 60 {
+            recoveryAdjustment = 0.25   // Moderate recovery
+        } else if recoveryScore < 80 {
+            recoveryAdjustment = 0      // Good recovery — on track
+        } else {
+            recoveryAdjustment = -0.25  // Excellent recovery — can get by with less
+        }
 
-        // Total need scaled by performance level
-        let rawTotal = baselineNeed + strainAdjustment + debtAdjustment
-        let totalHoursNeeded = rawTotal * performanceLevel.multiplier
+        // 4. Strain adjustment (how hard was today)
+        let strainAdjustment: Double
+        if currentStrain > 15 {
+            strainAdjustment = 0.5      // Heavy strain day
+        } else if currentStrain > 10 {
+            strainAdjustment = 0.25     // Moderate strain
+        } else {
+            strainAdjustment = 0        // Light day
+        }
 
-        // Wake time: use provided or estimate from 14-day average
+        // 5. Debt adjustment (accumulated sleep deficit, capped)
+        let debtAdjustment = sleepDebt > 0 ? Self.maxDebtAdjustment : 0.0
+
+        // 6. Sleep quality trend (declining quality over 7+ days)
+        let trendAdjustment = sleepQualityDeclining(sleepSeries) ? 0.25 : 0.0
+
+        // Total, clamped to hard bounds
+        let rawTotal = base + ageAdjustment + recoveryAdjustment + strainAdjustment + debtAdjustment + trendAdjustment
+        let totalHoursNeeded = min(max(rawTotal, Self.floorHours), Self.ceilingHours)
+
+        // Wake time: use circadian-optimal or estimate from 14-day average
         let wakeTime = targetWakeTime ?? estimateWakeTime(from: sleepSeries)
 
         // Bedtime: wake time minus total need
         let recommendedBedtime: Date?
         if let wake = wakeTime {
-            let secondsNeeded = totalHoursNeeded * 3600
-            recommendedBedtime = wake.addingTimeInterval(-secondsNeeded)
+            recommendedBedtime = wake.addingTimeInterval(-totalHoursNeeded * 3600)
         } else {
             recommendedBedtime = nil
         }
@@ -123,7 +152,7 @@ final class SleepNeedCalculator {
 
         let need = SleepNeed(
             totalHoursNeeded: totalHoursNeeded,
-            baselineNeed: baselineNeed,
+            baselineNeed: base,
             strainAdjustment: strainAdjustment,
             debtAdjustment: debtAdjustment,
             recommendedBedtime: recommendedBedtime,
@@ -145,7 +174,7 @@ final class SleepNeedCalculator {
     }
 
     var formattedNeed: String {
-        let hours = currentNeed?.totalHoursNeeded ?? 8.0
+        let hours = currentNeed?.totalHoursNeeded ?? 7.5
         let (h, m) = hoursToHoursMinutes(hours)
         return "\(h)h \(m)m"
     }
@@ -156,6 +185,20 @@ final class SleepNeedCalculator {
     }
 
     // MARK: - Private Helpers
+
+    /// Check if sleep quality has been declining over the last 7 days
+    /// compared to the 30-day average.
+    private func sleepQualityDeclining(_ sleepSeries: MetricTimeSeries) -> Bool {
+        let recent = sleepSeries.samples(lastDays: 7)
+        let baseline = sleepSeries.samples(lastDays: 30)
+        guard recent.count >= 5, baseline.count >= 14 else { return false }
+
+        let recentAvg = recent.map(\.value).reduce(0, +) / Double(recent.count)
+        let baselineAvg = baseline.map(\.value).reduce(0, +) / Double(baseline.count)
+
+        // Declining if recent 7-day average is 30+ minutes below 30-day average
+        return baselineAvg - recentAvg > 0.5
+    }
 
     private func estimateWakeTime(from sleepSeries: MetricTimeSeries) -> Date? {
         let recentSamples = sleepSeries.samples(lastDays: Self.wakeTimeWindowDays)
@@ -169,10 +212,6 @@ final class SleepNeedCalculator {
         for sample in recentSamples {
             let components = calendar.dateComponents([.hour, .minute], from: sample.date)
             let minutesFromMidnight = Double(components.hour ?? 7) * 60 + Double(components.minute ?? 0)
-
-            // Sleep duration values represent hours of sleep, and the sample date
-            // is typically the end of the sleep period. Use the date directly to
-            // infer wake time.
             totalMinutesFromMidnight += minutesFromMidnight
         }
 
@@ -217,7 +256,7 @@ final class SleepNeedCalculator {
             let components = calendar.dateComponents([.hour, .minute], from: estimatedBedtime)
             var minutesFromMidnight = Double(components.hour ?? 0) * 60 + Double(components.minute ?? 0)
             // Normalize: bedtimes after 6 PM are treated as negative offset from midnight
-            if minutesFromMidnight > 360 {
+            if minutesFromMidnight > 1080 {
                 minutesFromMidnight -= 1440
             }
             bedtimeMinutes.append(minutesFromMidnight)
@@ -240,10 +279,9 @@ final class SleepNeedCalculator {
     }
 
     private func fallbackNeed(performanceLevel: PerformanceLevel) -> SleepNeed {
-        let baseline = 8.0
-        return SleepNeed(
-            totalHoursNeeded: baseline * performanceLevel.multiplier,
-            baselineNeed: baseline,
+        SleepNeed(
+            totalHoursNeeded: performanceLevel.baseHours,
+            baselineNeed: performanceLevel.baseHours,
             strainAdjustment: 0,
             debtAdjustment: 0,
             recommendedBedtime: nil,

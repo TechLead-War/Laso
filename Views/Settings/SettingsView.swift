@@ -8,6 +8,8 @@ struct SettingsView: View {
     @State private var preferences: NotificationPreferences
     @State private var showExportSheet = false
     @State private var showMetricAlertPicker = false
+    @State private var showDeleteDataAlert = false
+    @State private var isDeleting = false
 
     @State private var saveDebounceTask: DispatchWorkItem?
 
@@ -407,6 +409,32 @@ struct SettingsView: View {
                 .onAppear { aboutTracker.appeared() }
                 .onDisappear { aboutTracker.disappeared() }
 
+                // Delete All Data
+                Section {
+                    Button(role: .destructive) {
+                        showDeleteDataAlert = true
+                    } label: {
+                        HStack {
+                            Label("Delete All My Data", systemImage: "trash")
+                            Spacer()
+                        }
+                    }
+                    .disabled(isDeleting)
+                    .accessibilityIdentifier("settings.deleteAllDataButton")
+                } header: {
+                    Text("Data Management")
+                } footer: {
+                    Text("Permanently removes all local data including your profile, preferences, health cache, and encrypted storage. This cannot be undone.")
+                }
+                .alert("Delete All Data?", isPresented: $showDeleteDataAlert) {
+                    Button("Cancel", role: .cancel) { }
+                    Button("Delete Everything", role: .destructive) {
+                        performDataDeletion()
+                    }
+                } message: {
+                    Text("This will permanently erase all of your data from this device, including your profile, preferences, and cached health data. This action is irreversible. The app will close so changes take full effect.")
+                }
+
                 // Medical Disclaimer
                 Section {
                     Text(Copy.medicalDisclaimer)
@@ -456,6 +484,32 @@ struct SettingsView: View {
                         }
                 }
             }
+        }
+    }
+
+    private func performDataDeletion() {
+        isDeleting = true
+
+        // 1. Clear all encrypted profile keys individually
+        let encryptedStore = EncryptedStore.shared
+        encryptedStore.remove(forKey: AppKeys.Profile.name)
+        encryptedStore.remove(forKey: AppKeys.Profile.email)
+        encryptedStore.remove(forKey: AppKeys.Profile.dateOfBirth)
+        encryptedStore.remove(forKey: "healthpulse.userProfile")
+
+        // 2. Wipe the entire UserDefaults persistent domain for this app
+        if let bundleId = Bundle.main.bundleIdentifier {
+            UserDefaults.standard.removePersistentDomain(forName: bundleId)
+        }
+        UserDefaults.standard.synchronize()
+
+        // 3. Post notification for any listeners, then terminate so the
+        //    in-memory AppStateStore resets on next launch and onboarding shows.
+        NotificationCenter.default.post(name: .init("HealthPulseDidDeleteAllData"), object: nil)
+
+        // Brief delay so the alert can dismiss before the process exits
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            exit(0)
         }
     }
 
