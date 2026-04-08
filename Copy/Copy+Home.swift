@@ -18,7 +18,7 @@ extension Copy {
         static let connectStep1 = "Open the Settings app on your iPhone"
         static let connectStep2 = "Tap Health \u{2192} Data Access & Devices"
         static let connectStep3 = "Enable your wearable's companion app"
-        static let connectStep4 = "Come back here \u{2014} data appears automatically"
+        static let connectStep4 = "Come back here. Data appears automatically."
         static let manageDevices = "Manage Devices"
         static let refresh = "Refresh"
 
@@ -75,9 +75,9 @@ extension Copy {
         static let lowRecovery = "Low Recovery"
 
         // Day type labels
-        static let greenDayPushHard = "Green Day \u{2014} Push Hard"
-        static let yellowDayMaintain = "Yellow Day \u{2014} Maintain"
-        static let redDayRecover = "Red Day \u{2014} Recover"
+        static let greenDayPushHard = "Green Day. Push Hard."
+        static let yellowDayMaintain = "Yellow Day. Maintain."
+        static let redDayRecover = "Red Day. Recover."
 
         // Simple strain guidance
         static let greenStrainGuidance = "High-intensity training recommended. Your body is ready for a challenge."
@@ -126,7 +126,7 @@ extension Copy {
                 } else {
                     categoryHint = ""
                 }
-                return "\(levelExplanation)\(categoryHint) This isn\u{2019}t a medical diagnosis \u{2014} think of it as a daily check-in with your body."
+                return "\(levelExplanation)\(categoryHint) This is not a medical diagnosis. Think of it as a daily check in with your body."
             }
 
             static let scoreLevels = "Score levels"
@@ -134,20 +134,20 @@ extension Copy {
             // Score level ranges
             static let excellentRange = "80\u{2013}100"
             static let excellentLabel = "Excellent"
-            static let excellentDescription = "Everything looks great \u{2014} keep doing what you\u{2019}re doing."
+            static let excellentDescription = "Everything looks great. Keep doing what you are doing."
             static let goodRange = "60\u{2013}79"
             static let goodLabel = "Good"
             static let goodDescription = "Most things are on track with minor areas to watch."
             static let fairRange = "40\u{2013}59"
             static let fairLabel = "Fair"
-            static let fairDescription = "A few metrics have shifted \u{2014} worth paying attention to."
+            static let fairDescription = "A few metrics have shifted. Worth paying attention to."
             static let needsAttentionRange = "Below 40"
             static let needsAttentionLabel = "Room to Grow"
-            static let needsAttentionDescription = "Several things are off from your norm \u{2014} check your insights."
+            static let needsAttentionDescription = "Several things are off from your norm. Check your insights."
 
             // Categories
             static let howItsCalculated = "How it\u{2019}s calculated"
-            static let howItsCalculatedBody = "Your Health Score is a weighted average across four categories. Categories with more data and more variability carry greater weight. Each metric is scored against your personal baseline \u{2014} deviations and trends move the score up or down."
+            static let howItsCalculatedBody = "Your Health Score is a weighted average across four categories. Categories with more data and more variability carry greater weight. Each metric is scored against your personal baseline, and deviations and trends move the score up or down."
             static let heartCardioName = "Heart & Cardio"
             static let heartCardioDetail = "Resting heart rate, HRV, and cardio fitness"
             static let sleepName = "Sleep"
@@ -162,7 +162,7 @@ extension Copy {
             static let whenItUpdatesBody = "Your Health Score refreshes each time you open the app or pull to refresh. It uses the latest data from Apple Health, so changes in your metrics show up within minutes. Trends and baseline shifts typically take 1\u{2013}3 days to reflect in the score."
 
             // Baseline callout
-            static let baselineCallout = "This score compares you to yourself \u{2014} not world averages. As we learn your patterns, it becomes more accurate."
+            static let baselineCallout = "This score compares you to yourself, not world averages. As we learn your patterns, it becomes more accurate."
 
             static let gotIt = "Got It"
         }
@@ -177,17 +177,17 @@ extension Copy {
             static let scoreLevels = "Score levels"
             static let fullyRecoveredRange = "80\u{2013}100"
             static let fullyRecoveredLabel = "Fully Recovered"
-            static let fullyRecoveredDescription = "Your body is well-rested \u{2014} great day for a hard workout."
+            static let fullyRecoveredDescription = "Your body is well-rested. Great day for a hard workout."
             static let moderateRange = "50\u{2013}79"
             static let moderateLabel = "Moderate"
-            static let moderateDescription = "Decent recovery \u{2014} moderate intensity is ideal."
+            static let moderateDescription = "Decent recovery. Moderate intensity is ideal."
             static let lowRange = "Below 50"
             static let lowLabel = "Low Recovery"
-            static let lowDescription = "Your body needs rest \u{2014} prioritize easy movement and sleep."
+            static let lowDescription = "Your body needs rest. Prioritize easy movement and sleep."
 
             // How it's calculated
             static let howItsCalculated = "How it\u{2019}s calculated"
-            static let howItsCalculatedBody = "Recovery is a weighted score from signals measured while you sleep. Each signal is compared to your personal baseline \u{2014} the further you deviate, the more it affects the score."
+            static let howItsCalculatedBody = "Recovery is a weighted score from signals measured while you sleep. Each signal is compared to your personal baseline. The further you deviate, the more it affects the score."
             static let hrvName = "Heart Rate Variability"
             static let hrvWeight = "40% weight"
             static let hrvDetail = "Higher HRV means better recovery and lower stress. Compared to your personal baseline."

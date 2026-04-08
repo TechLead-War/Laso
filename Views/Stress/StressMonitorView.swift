@@ -123,6 +123,7 @@ struct StressMonitorView: View {
                 color: driverColor(hrElevation)
             )
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DS.cardPadding)
         .cardStyle()
     }
@@ -212,6 +213,7 @@ struct StressMonitorView: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DS.cardPadding)
         .cardStyle()
     }
@@ -311,6 +313,7 @@ struct StressMonitorView: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DS.cardPadding)
         .cardStyle()
     }

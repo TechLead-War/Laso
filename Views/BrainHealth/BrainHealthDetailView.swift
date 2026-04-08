@@ -115,6 +115,7 @@ struct BrainHealthDetailView: View {
                 isEstimate: durationValue == nil
             )
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DS.cardPadding)
         .cardStyle()
     }
@@ -215,6 +216,7 @@ struct BrainHealthDetailView: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DS.cardPadding)
         .cardStyle()
     }
@@ -285,6 +287,7 @@ struct BrainHealthDetailView: View {
             }
             .frame(maxWidth: .infinity)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DS.cardPadding)
         .cardStyle()
     }
@@ -325,6 +328,7 @@ struct BrainHealthDetailView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DS.cardPadding)
         .cardStyle()
     }
@@ -401,6 +405,7 @@ struct BrainHealthDetailView: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DS.cardPadding)
         .cardStyle()
     }
@@ -466,6 +471,7 @@ struct BrainHealthDetailView: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DS.cardPadding)
         .cardStyle()
     }

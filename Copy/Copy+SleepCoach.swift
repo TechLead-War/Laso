@@ -79,7 +79,7 @@ extension Copy {
 
         // General tips
         static let tipConsistentScheduleTitle = "Consistent schedule"
-        static let tipConsistentScheduleDetail = "A steady bed and wake time — even on weekends — is one of the strongest sleep levers."
+        static let tipConsistentScheduleDetail = "A steady bed and wake time, even on weekends, is one of the strongest sleep levers."
         static let tipCoolBedroomTitle = "Cool bedroom"
         static let tipCoolBedroomDetail = "65-68\u{00B0}F (18-20\u{00B0}C) is the sweet spot. A cooler room helps your body drop into deeper sleep."
         static let tipMorningSunlightTitle = "Morning sunlight"

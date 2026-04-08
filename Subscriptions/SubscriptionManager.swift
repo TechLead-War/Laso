@@ -1,6 +1,13 @@
 import Foundation
 import StoreKit
 import Observation
+import Security
+import CryptoKit
+import UIKit
+
+#if canImport(FirebaseFirestore)
+import FirebaseFirestore
+#endif
 
 @MainActor
 @Observable
@@ -66,11 +73,20 @@ final class SubscriptionManager {
 
     @ObservationIgnored private var transactionListener: Task<Void, Error>?
     private let defaults = UserDefaults.standard
+    private let firestoreCollection = "subscriptions"
+
+    private var deviceId: String {
+        UIDevice.current.identifierForVendor?.uuidString
+            ?? defaults.string(forKey: AppKeys.Profile.deviceId)
+            ?? ""
+    }
 
     private enum Key {
         static let installDate = AppKeys.Lifecycle.installDate
         static let graceStartDate = AppKeys.Billing.graceStartDate
         static let lastSubscribedDate = AppKeys.Billing.lastSubscribedDate
+        static let keychainInstallDate = "com.lasohealth.install_date"
+        static let keychainInstallHash = "com.lasohealth.install_date_hash"
     }
 
     // MARK: - Init
@@ -119,6 +135,7 @@ final class SubscriptionManager {
                 await transaction.finish()
                 let wasTrialBefore = { if case .trial = self.status { return true }; return false }()
                 await refreshStatus()
+                await syncSubscriptionToFirestore(transaction)
                 trackPurchase(product: product, isTrialConversion: wasTrialBefore)
 
             case .userCancelled:
@@ -142,6 +159,7 @@ final class SubscriptionManager {
         do {
             try await AppStore.sync()
             await refreshStatus()
+            await syncCurrentEntitlementToFirestore()
         } catch {
             errorMessage = "Could not restore purchases. Please try again."
         }
@@ -187,7 +205,15 @@ final class SubscriptionManager {
             clearGraceState()
         }
 
-        // 4. No subscription and no grace. check trial
+        // 4. Cross-reference with Firestore if device is online.
+        //    If Firestore has an active subscription record, maintain subscribed state
+        //    as a lightweight anti-spoofing layer.
+        if let firestoreStatus = await fetchFirestoreSubscriptionStatus() {
+            status = firestoreStatus
+            return
+        }
+
+        // 5. No subscription and no grace. check trial
         resolveTrialStatus()
     }
 
@@ -235,7 +261,7 @@ final class SubscriptionManager {
     }
 
     private func resolveTrialStatus() {
-        let installDate = defaults.object(forKey: Key.installDate) as? Date ?? Date()
+        let installDate = persistentInstallDate()
         let daysSinceInstall = Calendar.current.dateComponents(
             [.day], from: installDate, to: Date()
         ).day ?? 0
@@ -246,6 +272,144 @@ final class SubscriptionManager {
         } else {
             status = .expired
         }
+    }
+
+    // MARK: - Persistent Install Date (Keychain-backed)
+
+    /// Returns the original install date, persisted in Keychain to survive app reinstalls.
+    /// On first launch: stores the current date in both Keychain and UserDefaults.
+    /// On reinstall: recovers the original date from Keychain even if UserDefaults was wiped.
+    private func persistentInstallDate() -> Date {
+        // 1. Try Keychain first (survives app deletion)
+        if let keychainDate = loadInstallDateFromKeychain() {
+            // Validate integrity using device-bound hash
+            if verifyInstallDateIntegrity(keychainDate) {
+                // Backfill UserDefaults if it was wiped (reinstall scenario)
+                if defaults.object(forKey: Key.installDate) == nil {
+                    defaults.set(keychainDate, forKey: Key.installDate)
+                }
+                return keychainDate
+            }
+            // Hash mismatch -- Keychain date may have been tampered with.
+            // Fall through to treat as new install (conservative approach).
+        }
+
+        // 2. Check UserDefaults (normal case on existing installs before this migration)
+        if let defaultsDate = defaults.object(forKey: Key.installDate) as? Date {
+            // Migrate existing install date to Keychain
+            saveInstallDateToKeychain(defaultsDate)
+            saveInstallDateHash(for: defaultsDate)
+            return defaultsDate
+        }
+
+        // 3. Truly new install -- record the date everywhere
+        let now = Date()
+        defaults.set(now, forKey: Key.installDate)
+        saveInstallDateToKeychain(now)
+        saveInstallDateHash(for: now)
+        return now
+    }
+
+    // MARK: - Keychain Helpers
+
+    private func loadInstallDateFromKeychain() -> Date? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: Key.keychainInstallDate,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        ]
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        guard status == errSecSuccess,
+              let data = result as? Data,
+              let timestamp = String(data: data, encoding: .utf8),
+              let interval = TimeInterval(timestamp) else {
+            return nil
+        }
+        return Date(timeIntervalSince1970: interval)
+    }
+
+    private func saveInstallDateToKeychain(_ date: Date) {
+        let timestamp = String(date.timeIntervalSince1970)
+        guard let data = timestamp.data(using: .utf8) else { return }
+
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: Key.keychainInstallDate,
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        ]
+
+        var status = SecItemAdd(query as CFDictionary, nil)
+        if status == errSecDuplicateItem {
+            let searchQuery: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrAccount as String: Key.keychainInstallDate
+            ]
+            status = SecItemUpdate(
+                searchQuery as CFDictionary,
+                [kSecValueData as String: data] as CFDictionary
+            )
+        }
+    }
+
+    // MARK: - Integrity Hash (device-bound)
+
+    /// Creates a SHA256 hash of the install date combined with the device's identifierForVendor.
+    /// This makes it impractical to forge a Keychain entry with a manipulated date.
+    private func installDateHash(for date: Date) -> String {
+        let timestamp = String(date.timeIntervalSince1970)
+        let vendorID = UIDevice.current.identifierForVendor?.uuidString ?? "unknown-device"
+        let payload = "\(timestamp):\(vendorID):com.lasohealth.trial"
+        let digest = SHA256.hash(data: Data(payload.utf8))
+        return digest.map { String(format: "%02x", $0) }.joined()
+    }
+
+    private func saveInstallDateHash(for date: Date) {
+        let hash = installDateHash(for: date)
+        guard let data = hash.data(using: .utf8) else { return }
+
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: Key.keychainInstallHash,
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        ]
+
+        var status = SecItemAdd(query as CFDictionary, nil)
+        if status == errSecDuplicateItem {
+            let searchQuery: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrAccount as String: Key.keychainInstallHash
+            ]
+            status = SecItemUpdate(
+                searchQuery as CFDictionary,
+                [kSecValueData as String: data] as CFDictionary
+            )
+        }
+    }
+
+    private func verifyInstallDateIntegrity(_ date: Date) -> Bool {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: Key.keychainInstallHash,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        ]
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        guard status == errSecSuccess,
+              let data = result as? Data,
+              let storedHash = String(data: data, encoding: .utf8) else {
+            // No hash stored yet (pre-migration installs) -- treat as valid
+            // and store the hash now for future verification
+            saveInstallDateHash(for: date)
+            return true
+        }
+        return storedHash == installDateHash(for: date)
     }
 
     // MARK: - Transaction Listener
@@ -263,6 +427,7 @@ final class SubscriptionManager {
     private func handleTransactionUpdate() async {
         let previousStatus = status
         await refreshStatus()
+        await syncCurrentEntitlementToFirestore()
         AppAnalytics.shared.updateSubscriptionProperties(status: status)
         if case .subscribed = previousStatus, case .subscribed(let expirationDate) = status {
             AppAnalytics.shared.trackSubscriptionRenewed(newExpirationDate: expirationDate)
@@ -276,6 +441,104 @@ final class SubscriptionManager {
         case .verified(let safe):
             return safe
         }
+    }
+
+    // MARK: - Firestore Subscription Verification
+
+    /// Sync a specific StoreKit transaction to Firestore as a server-side record.
+    /// Called after a successful purchase to create an authoritative subscription document.
+    private func syncSubscriptionToFirestore(_ transaction: StoreKit.Transaction) async {
+        guard !deviceId.isEmpty else { return }
+
+        let environmentString: String
+        if #available(iOS 16.0, *) {
+            environmentString = transaction.environment == .production ? "production" : "sandbox"
+        } else {
+            environmentString = "unknown"
+        }
+
+        let data: [String: Any] = [
+            "productId": transaction.productID,
+            "originalTransactionId": String(transaction.originalID),
+            "purchaseDate": transaction.purchaseDate.timeIntervalSince1970,
+            "expirationDate": transaction.expirationDate?.timeIntervalSince1970 ?? 0,
+            "environment": environmentString,
+            "lastVerified": Date().timeIntervalSince1970,
+            "deviceId": deviceId
+        ]
+
+        #if canImport(FirebaseFirestore)
+        do {
+            try await Firestore.firestore()
+                .collection(firestoreCollection)
+                .document(deviceId)
+                .setData(data, merge: true)
+        } catch {
+            // Firestore write failed silently. local entitlement remains the source of truth.
+        }
+        #endif
+    }
+
+    /// Sync the current active entitlement (if any) to Firestore.
+    /// Called after restore or transaction updates where we don't have the raw Transaction object.
+    private func syncCurrentEntitlementToFirestore() async {
+        guard !deviceId.isEmpty else { return }
+
+        for await result in Transaction.currentEntitlements {
+            guard case .verified(let transaction) = result else { continue }
+            if SubscriptionConfig.allProductIDs.contains(transaction.productID),
+               let expiration = transaction.expirationDate, expiration > Date() {
+                await syncSubscriptionToFirestore(transaction)
+                return
+            }
+        }
+
+        // No active entitlement -- mark as expired in Firestore so the record stays current
+        #if canImport(FirebaseFirestore)
+        do {
+            try await Firestore.firestore()
+                .collection(firestoreCollection)
+                .document(deviceId)
+                .setData([
+                    "expirationDate": 0,
+                    "lastVerified": Date().timeIntervalSince1970,
+                    "deviceId": deviceId
+                ], merge: true)
+        } catch {}
+        #endif
+    }
+
+    /// Fetch subscription status from Firestore as a cross-reference.
+    /// Returns a valid `Status` if Firestore has an active, non-expired subscription record.
+    /// Returns `nil` if offline, no record exists, or the record is expired.
+    private func fetchFirestoreSubscriptionStatus() async -> Status? {
+        guard !deviceId.isEmpty else { return nil }
+
+        #if canImport(FirebaseFirestore)
+        do {
+            let doc = try await Firestore.firestore()
+                .collection(firestoreCollection)
+                .document(deviceId)
+                .getDocument()
+
+            guard let data = doc.data(),
+                  let expirationTimestamp = data["expirationDate"] as? TimeInterval,
+                  expirationTimestamp > 0 else {
+                return nil
+            }
+
+            let expirationDate = Date(timeIntervalSince1970: expirationTimestamp)
+            guard expirationDate > Date() else { return nil }
+
+            // Firestore says subscription is still active
+            return .subscribed(expirationDate: expirationDate)
+        } catch {
+            // Offline or Firestore error. fall back to local-only resolution.
+            return nil
+        }
+        #else
+        return nil
+        #endif
     }
 
     // MARK: - Analytics

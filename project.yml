@@ -132,6 +132,8 @@ schemes:
       targets:
         Laso: all
         LasoWidgets: [build]
+    run:
+      storeKitConfiguration: Laso.storekit
 
   LasoWidgets:
     build:

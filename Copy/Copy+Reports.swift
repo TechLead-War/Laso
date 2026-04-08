@@ -53,7 +53,7 @@ extension Copy {
         static func lookingAhead(_ year: Int) -> String { "Looking Ahead to \(year)" }
         static let biggestOpportunities = "Biggest Opportunities"
         static func averageScoreMessage(score: Int, message: String) -> String {
-            "Average score: \(score) \u{2014} \(message)"
+            "Average score: \(score). \(message)"
         }
         static let suggestedFocusAreas = "Suggested Focus Areas"
         static func heresTo(_ year: Int) -> String { "Here\u{2019}s to a healthier \(year)" }
@@ -77,7 +77,7 @@ extension Copy {
         static func deltaFromLastMonth(_ delta: Int) -> String {
             "\(delta >= 0 ? "+" : "")\(delta) from last month"
         }
-        static let firstMonthNoComparison = "First month \u{2014} no comparison yet"
+        static let firstMonthNoComparison = "First month. No comparison yet."
         static let notEnoughData = "Not enough data"
         static let categoryPerformance = "Category Performance"
         static let behaviorCorrelations = "Behavior Correlations"

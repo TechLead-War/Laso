@@ -10,7 +10,7 @@ extension Copy {
             static let elevatedPulsePressure = "Elevated Pulse Pressure"
             static let bloodGlucoseTrendingUp = "Blood Glucose Trending Up"
             static let abnormalRespiratoryRate = "Abnormal Respiratory Rate"
-            static let medicalDisclaimer = "This is informational only \u{2014} consult your healthcare provider for clinical decisions."
+            static let medicalDisclaimer = "This is informational only. Consult your healthcare provider for clinical decisions."
 
             // BP recommendations
             static let bpRecommendation = "Consider reducing sodium intake, increasing aerobic exercise, and monitoring stress levels."
@@ -179,7 +179,7 @@ extension Copy {
             static let significantStrain = "Body Showing Signs of Significant Strain"
             static let multipleMetricStrain = "Multiple Metrics Suggest Physical Strain"
             static let earlyPhysiologicalStrain = "Early Signs of Physiological Strain"
-            static let multiMetricPattern = "This multi-metric pattern \u{2014} where several physiological markers shift unfavorably at the same time \u{2014} may reflect increased physiological strain."
+            static let multiMetricPattern = "Several physiological markers have shifted unfavorably at the same time. This pattern may reflect increased physiological strain."
             static let multipleMetricsShifted = "Multiple metrics shifted from baseline simultaneously."
             static let consistentWithPhysiologicalStrain = "Your multi-metric pattern suggests your body is under increased physiological strain."
             static let cardiacMetricsStrain = "Your cardiac metrics indicate autonomic strain."
@@ -248,7 +248,7 @@ extension Copy {
 
             // Recommendations
             static let betterShapeLongTerm = "You're in better shape this year. Your long-term trajectory is positive."
-            static let exceptionalPersonalBest = "This is exceptional \u{2014} you're at a personal best level. Whatever you're doing, it's working across your entire history."
+            static let exceptionalPersonalBest = "This is exceptional. You are at a personal best level. Whatever you are doing, it is working across your entire history."
             static let rareLevelMayWarrantAttention = "This level is rare in your history. It may warrant attention if it persists beyond a few days."
             static let outperformingSeasonalNorm = "You're outperforming your seasonal norm. This suggests genuine improvement beyond seasonal patterns."
             static let longTermImprovementReliable = "This long-term improvement is the most reliable signal. Short-term dips don't erase months of positive change."

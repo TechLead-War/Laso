@@ -12,7 +12,7 @@ extension Copy {
 
         static let restingHRTitle = "Resting Heart Rate Elevated"
         static func restingHRElevated(current: Int, average: Int) -> String {
-            "Your resting heart rate (\(current) bpm) is significantly above your recent average (\(average) bpm). Rest and recheck \u{2014} if it stays elevated, consider speaking with a healthcare provider."
+            "Your resting heart rate (\(current) bpm) is significantly above your recent average (\(average) bpm). Rest and recheck. If it stays elevated, consider speaking with a healthcare provider."
         }
 
         static let highHRTitle = "High Heart Rate Detected"
@@ -37,7 +37,7 @@ extension Copy {
         static let spo2CriticalTitle = "Blood Oxygen Below Typical Range"
         static func spo2CriticalBody(value: String) -> String {
             let threshold = Int(RemoteConfigManager.shared.spo2CriticalThreshold)
-            return "Your blood oxygen is \(value)%. Values below \(threshold)% are unusually low \u{2014} consider speaking with a healthcare provider."
+            return "Your blood oxygen is \(value)%. Values below \(threshold)% are unusually low. Consider speaking with a healthcare provider."
         }
 
         static let spo2WarningTitle = "Blood Oxygen Worth Monitoring"

@@ -6,14 +6,14 @@ extension Copy {
         // MARK: - Inflection Notes
 
         static let accelerating = " The rate of change is accelerating."
-        static let decelerating = " The decline is slowing \u{2014} a recovery may be starting."
+        static let decelerating = " The decline is slowing. A recovery may be starting."
         static let reversing = " The trend has recently reversed direction."
 
         // MARK: - Inflection Suffixes (for titles)
 
         static let andAccelerating = " & Accelerating"
         static let slowing = " (Slowing)"
-        static let dashReversing = " \u{2014} Reversing"
+        static let dashReversing = " (Reversing)"
         static let andGainingMomentum = " & Gaining Momentum"
 
         // MARK: - Title Patterns
@@ -97,7 +97,7 @@ extension Copy {
             "your activity is \(dev)% \(direction) your recent average"
         }
         static func hrvTrending(direction: String, dev: Int) -> String {
-            "your HRV is trending \(direction) \u{2014} \(dev)% from baseline"
+            "your HRV is trending \(direction), \(dev)% from baseline"
         }
         static func rhrShifted(dev: Int) -> String {
             "your resting heart rate shifted \(dev)% from baseline"
@@ -109,14 +109,14 @@ extension Copy {
             "your daylight exposure is \(dev)% \(direction) your average"
         }
         static let bpOutsideRange = "your blood pressure reading is outside your typical range"
-        static let recheckSingleReading = "recheck to confirm \u{2014} single readings can vary"
-        static let readingOutsideRange = "this reading is outside your typical range \u{2014} monitor for changes"
+        static let recheckSingleReading = "recheck to confirm, since single readings can vary"
+        static let readingOutsideRange = "this reading is outside your typical range. Monitor for changes."
         static let recheckMetricTrend = "recheck this metric to confirm the trend"
         static func bodyMetricsShifted(dev: Int) -> String {
             "your body metrics shifted \(dev)% from baseline"
         }
         static func vo2MaxTrending(direction: String, dev: Int) -> String {
-            "your VO2 max is trending \(direction) \u{2014} \(dev)% from baseline"
+            "your VO2 max is trending \(direction), \(dev)% from baseline"
         }
         static func mobilityMetricsOff(dev: Int) -> String {
             "your mobility metrics are \(dev)% off baseline"

@@ -75,7 +75,7 @@ extension Copy {
         static let improveHRV = "Prioritize sleep quality, practice deep breathing, and maintain consistent exercise to improve HRV."
         static let improveSleep = "Aim for 7-9 hours of sleep with a consistent schedule. Limit screens and caffeine before bed."
         static let improveWalkingSpeed = "Walking speed reflects overall fitness. Regular walking, strength training, and balance work can help."
-        static let improveSteps = "Increase daily movement \u{2014} take walking meetings, use stairs, and add a daily walk to your routine."
+        static let improveSteps = "Increase daily movement. Take walking meetings, use stairs, and add a daily walk to your routine."
         static let improveExercise = "Build up to 150+ minutes of moderate exercise per week through activities you enjoy."
         static let improveBodyComp = "Focus on sustainable nutrition and regular exercise. Small consistent changes have the biggest impact."
         static let improveDefault = "Track this metric consistently and look for patterns in your data."
