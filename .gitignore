@@ -43,3 +43,9 @@ values.txt
 
 # Agent flow
 .agentflow/
+
+# IDE
+.idea/
+
+# Wrangler
+.wrangler/
