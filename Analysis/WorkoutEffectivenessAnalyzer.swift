@@ -148,9 +148,9 @@ struct WorkoutEffectivenessAnalyzer {
         return Insight(
             metric: .activeCalories,
             title: Copy.Analysis.Workout.calorieEfficiency,
-            summary: "You're burning \(String(format: "%.1f", efficiency7d)) kcal/min this week vs \(String(format: "%.1f", efficiency30d)) kcal/min over 30 days (\(change > 0 ? "+" : "")\(String(format: "%.0f", change))%).",
+            summary: "You are burning \(String(format: "%.1f", efficiency7d)) kcal/min this week vs \(String(format: "%.1f", efficiency30d)) kcal/min over 30 days (\(change > 0 ? "+" : "")\(String(format: "%.0f", change))%).",
             recommendation: change > 0 ?
-                "Calorie efficiency up \(String(format: "%.0f", change))% this week. burning \(String(format: "%.1f", efficiency7d)) kcal/min vs your 30-day average of \(String(format: "%.1f", efficiency30d)) kcal/min." :
+                "Calorie efficiency up \(String(format: "%.0f", change))% this week. Burning \(String(format: "%.1f", efficiency7d)) kcal/min vs your 30-day average of \(String(format: "%.1f", efficiency30d)) kcal/min." :
                 "Calorie efficiency down \(String(format: "%.0f", abs(change)))% this week. \(String(format: "%.1f", efficiency7d)) kcal/min vs your 30-day average of \(String(format: "%.1f", efficiency30d)) kcal/min.",
             severity: .info,
             trend: trend,

@@ -308,7 +308,7 @@ struct HealthRiskEngine {
         case (.cardiac, .atrialFibrillationBurden):
             return (
                 "Monitor AFib Patterns",
-                "Track when episodes occur. Reduce alcohol, caffeine, and stress. Consult a cardiologist if burden increases.",
+                "Track when episodes occur. Reduce alcohol, caffeine, and stress. Worth monitoring closely if burden increases.",
                 "Target: <1% burden"
             )
 

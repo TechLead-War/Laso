@@ -17,10 +17,26 @@ extension Copy {
         static let alerts = "Alerts"
         static let metricAlerts = "Metric Alerts"
         static let dataExport = "Data Export"
-        static let onDeviceData = "On-Device Data"
+        static let onDeviceData = "On Device Data"
         static let siriAndShortcuts = "Siri & Shortcuts"
         static let about = "About"
         static let alertMetrics = "Alert Metrics"
+        static let notifications = "Notifications"
+
+        // MARK: - Profile Header
+
+        static let proMember = "Pro Member"
+        static let freePlan = "Free Plan"
+        static let trialActive = "Trial Active"
+
+        // MARK: - Subscription Management
+
+        static let manageSubscription = "Manage Subscription"
+
+        // MARK: - Section Icons & Labels
+
+        static let devices = "Devices"
+        static let aboutAndLegal = "About & Legal"
 
         // MARK: - Device Management
 
@@ -42,15 +58,15 @@ extension Copy {
         static let highHRThreshold = "High HR Threshold"
         static let lowHRThreshold = "Low HR Threshold"
         static func bpmValue(_ bpm: Int) -> String { "\(bpm) bpm" }
-        static let heartRateAlertsFooter = "Get notified when your heart rate goes above or below your thresholds while not exercising."
+        static let heartRateAlertsFooter = "Get notified when your heart rate goes too high or too low while you are not working out."
 
         // MARK: - Apple Watch Reminders
 
         static let watchNotWornReminder = "Watch Not Worn Reminder"
-        static let watchNotWornDescription = "Get notified if your Apple Watch hasn't recorded data for over an hour."
+        static let watchNotWornDescription = "Get notified if your Apple Watch has not recorded data for over an hour."
         static let lowBatteryReminder = "Low Battery Reminder"
         static let lowBatteryDescription = "Get a one-time alert when your watch battery drops below 10%."
-        static let watchRemindersFooter = "These reminders help you keep your watch on and charged so you never miss health data."
+        static let watchRemindersFooter = "These reminders help you keep your watch on and charged so you do not miss any health data."
 
         // MARK: - Alerts
 
@@ -64,23 +80,27 @@ extension Copy {
 
         static let warningAlertMetrics = "Warning Alert Metrics"
         static func selectedCount(_ count: Int) -> String { "\(count) selected" }
-        static let metricAlertsFooter = "Choose which metrics trigger warning-level notifications when they deviate from your baseline."
+        static let metricAlertsFooter = "Choose which health numbers send you a warning when they move away from your usual."
 
         // MARK: - Export
 
         static let generateWebReport = "Generate Web Report"
         static let generatingReport = "Generating report..."
+        static let exportHealthReport = "Export Health Report"
 
         // MARK: - Data Storage
 
         static let storedSamples = "Stored Samples"
         static let dataHistory = "Data History"
         static let metricsTracked = "Metrics Tracked"
-        static let dataStorageFooter = "All your health data is stored securely on this device. The longer you use the app, the better your insights become."
+        static let dataStorageFooter = "All your health data is stored safely on this phone. The longer you use the app, the better your insights get."
+        static let samples = "Samples"
+        static let history = "History"
+        static let metrics = "Metrics"
 
         // MARK: - Siri
 
-        static let siriFooter = "Say \"Hey Siri, what's my health score in Laso\" to check your score hands-free."
+        static let siriFooter = "Say \"Hey Siri, what's my health score in Laso\" to check your score hands free."
 
         // MARK: - About
 
@@ -90,5 +110,19 @@ extension Copy {
 
         static let loadingPrices = "Loading prices..."
         static let retryLoadingPlans = "Retry loading plans"
+
+        // MARK: - Device Status
+
+        static let checkingSources = "Checking sources"
+        static let healthAccessEnabled = "Health access enabled"
+
+        // MARK: - Data Management
+
+        static let dataManagement = "Data Management"
+        static let deleteAllMyData = "Delete All My Data"
+        static let deleteAllDataQuestion = "Delete All Data?"
+        static let deleteEverything = "Delete Everything"
+        static let deleteDataWarning = "This will permanently erase all of your data from this device, including your profile, preferences, and cached health data. This cannot be undone. The app will close so changes take full effect."
+        static let deleteDataFooter = "Permanently removes all local data including your profile, preferences, health cache, and encrypted storage. This cannot be undone."
     }
 }

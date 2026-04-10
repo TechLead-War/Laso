@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Deep-dive view for a single health risk showing all contributing factors and actionable focus areas
+/// Deep-dive view for a single health pattern showing all contributing factors and actionable focus areas
 struct HealthRiskDetailView: View {
     let risk: HealthRisk
     let onTapMetric: (HealthMetric) -> Void
@@ -84,7 +84,7 @@ struct HealthRiskDetailView: View {
             .padding(.top)
 
             // Measured metrics count
-            Text("\(risk.measuredFactors.count) of \(risk.factors.count) metrics measured")
+            Text(Copy.Analysis.RiskDetail.metricsMeasured(measured: risk.measuredFactors.count, total: risk.factors.count))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -100,7 +100,7 @@ struct HealthRiskDetailView: View {
                 Image(systemName: "target")
                     .font(.headline)
                     .foregroundStyle(.primary)
-                Text("What to Focus On")
+                Text(Copy.Analysis.RiskDetail.whatToFocusOn)
                     .font(.headline)
             }
             .padding(.horizontal)
@@ -122,7 +122,7 @@ struct HealthRiskDetailView: View {
 
     private var contributingFactorsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Contributing Factors")
+            Text(Copy.Analysis.RiskDetail.contributingFactors)
                 .font(.headline)
                 .padding(.horizontal)
 
@@ -175,7 +175,7 @@ struct HealthRiskDetailView: View {
                     .lineLimit(2)
 
                 HStack {
-                    Text("Optimal: \(factor.optimalRange)")
+                    Text(Copy.Analysis.RiskDetail.optimalRange(factor.optimalRange))
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
 
@@ -207,16 +207,17 @@ struct HealthRiskDetailView: View {
 
     private var disclaimerSection: some View {
         HStack(alignment: .top, spacing: 8) {
-            Image(systemName: "info.circle")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Image(systemName: "info.circle.fill")
+                .font(.subheadline)
+                .foregroundStyle(.orange)
 
-            Text("Risk assessments are based on patterns in your health data and published clinical ranges. They are not medical diagnoses. Always consult a healthcare provider for medical decisions.")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+            Text(Copy.Analysis.RiskDetail.disclaimer)
+                .font(.caption)
+                .foregroundStyle(.primary)
         }
         .padding()
-        .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 12))
+        .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.orange.opacity(0.3), lineWidth: 1))
         .padding(.horizontal)
     }
 

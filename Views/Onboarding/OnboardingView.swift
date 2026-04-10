@@ -10,6 +10,7 @@ struct OnboardingView: View {
         case profileCapture = "profile_capture"
         case connectHealth = "connect_health"
         case cycleOptIn = "cycle_opt_in"
+        case notifications
         case focusCalibration = "focus_calibration"
     }
 
@@ -43,6 +44,7 @@ struct OnboardingView: View {
         if includesCycleStep {
             steps.append(.cycleOptIn)
         }
+        steps.append(.notifications)
         steps.append(.focusCalibration)
         return steps
     }
@@ -88,7 +90,7 @@ struct OnboardingView: View {
                 // Page 3: Connect Apple Health
                 OnboardingConnectHealthStep(healthKitManager: healthKitManager, age: profileAge) {
                     withAnimation(.smooth(duration: 0.4)) {
-                        currentStep = includesCycleStep ? .cycleOptIn : .focusCalibration
+                        currentStep = includesCycleStep ? .cycleOptIn : .notifications
                     }
                 }
                 .tag(OnboardingStep.connectHealth)
@@ -98,17 +100,23 @@ struct OnboardingView: View {
                     OnboardingCycleOptInStep(
                         onEnable: {
                             persistCyclePreference(true, trackAnalytics: true)
-                            withAnimation(.smooth(duration: 0.4)) { currentStep = .focusCalibration }
+                            withAnimation(.smooth(duration: 0.4)) { currentStep = .notifications }
                         },
                         onSkip: {
                             persistCyclePreference(false, trackAnalytics: true)
-                            withAnimation(.smooth(duration: 0.4)) { currentStep = .focusCalibration }
+                            withAnimation(.smooth(duration: 0.4)) { currentStep = .notifications }
                         }
                     )
                     .tag(OnboardingStep.cycleOptIn)
                 }
 
-                // Page 5 (or 4): Focus + Calibration
+                // Page 5 (or 4): Notification permission
+                OnboardingNotificationStep {
+                    withAnimation(.smooth(duration: 0.4)) { currentStep = .focusCalibration }
+                }
+                .tag(OnboardingStep.notifications)
+
+                // Page 6 (or 5): Focus + Calibration
                 OnboardingFocusCalibrationStep(
                     isActive: currentStep == .focusCalibration,
                     selectedFocuses: $selectedFocuses,
@@ -177,8 +185,8 @@ struct OnboardingView: View {
         // Save user profile to local + Firestore
         saveUserProfile(focuses: focuses)
 
-        // Notification permission is requested from the main app after the
-        // dashboard loads. asking here interrupts the onboarding→app transition.
+        // Notification permission is requested during the dedicated onboarding
+        // notification step. No need to request it again here.
 
         let totalDuration = Int(Date().timeIntervalSince(onboardingStartDate))
         AppAnalytics.shared.trackOnboardingCompleted(

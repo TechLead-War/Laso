@@ -131,7 +131,7 @@ struct TemperatureCompoundAnalyzer {
                 metric: .appleSleepingWristTemperature,
                 title: "High Temperature Variability",
                 summary: "Your nighttime wrist temperature varies significantly night to night (\u{00B1}\(String(format: "%.2f", baselineSD))°C). High thermoregulatory variability is associated with disrupted circadian rhythm and metabolic health.",
-                recommendation: "Temperature coefficient of variation: \(String(format: "%.1f", cv * 100))%. Research links elevated nighttime temperature variability to circadian disruption, poor sleep quality, and metabolic syndrome risk. Stable temperatures reflect stronger circadian entrainment.",
+                recommendation: "Temperature coefficient of variation: \(String(format: "%.1f", cv * 100))%. Research links elevated nighttime temperature variability to circadian disruption, poor sleep quality, and reduced metabolic wellness. Stable temperatures reflect stronger circadian entrainment.",
                 currentValue: cv * 100,
                 baselineValue: 3,
                 deviationPercent: ((cv * 100 - 3) / 3) * 100,

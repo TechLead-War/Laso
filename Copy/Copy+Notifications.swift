@@ -12,38 +12,36 @@ extension Copy {
 
         static let restingHRTitle = "Resting Heart Rate Elevated"
         static func restingHRElevated(current: Int, average: Int) -> String {
-            "Your resting heart rate (\(current) bpm) is significantly above your recent average (\(average) bpm). Rest and recheck. If it stays elevated, consider speaking with a healthcare provider."
+            "Your resting heart rate (\(current) bpm) is well above your recent average (\(average) bpm). Rest and check again. Worth keeping an eye on if it stays elevated."
         }
 
         static let highHRTitle = "High Heart Rate Detected"
         static func highHRBody(current: Int, threshold: Int) -> String {
-            "Your heart rate reached \(current) bpm (threshold: \(threshold) bpm). If you weren't exercising, you may want to check with a healthcare provider."
+            "Your heart rate reached \(current) bpm (your limit is \(threshold) bpm). If you were not working out, consider checking in on this."
         }
 
         static let lowHRTitle = "Low Heart Rate Detected"
         static func lowHRBody(current: Int, threshold: Int) -> String {
-            "Your heart rate dropped to \(current) bpm (threshold: \(threshold) bpm). If you feel dizzy or faint, consider contacting a healthcare provider."
+            "Your heart rate dropped to \(current) bpm (your limit is \(threshold) bpm). If you feel dizzy or faint, this is worth paying attention to."
         }
 
         // MARK: - HRV
 
         static let hrvLowTitle = "HRV Significantly Low"
         static func hrvLowBody(current: Int, dropPercent: Int) -> String {
-            "Your heart rate variability (\(current) ms) dropped \(dropPercent)% below your recent average. This may indicate stress or overtraining."
+            "Your heart rate variability (\(current) ms) dropped \(dropPercent)% below your recent average. This can mean stress or too much training."
         }
 
         // MARK: - Blood Oxygen
 
         static let spo2CriticalTitle = "Blood Oxygen Below Typical Range"
         static func spo2CriticalBody(value: String) -> String {
-            let threshold = Int(RemoteConfigManager.shared.spo2CriticalThreshold)
-            return "Your blood oxygen is \(value)%. Values below \(threshold)% are unusually low. Consider speaking with a healthcare provider."
+            return "Your blood oxygen is \(value)%, which is lower than your usual range. Worth keeping an eye on if this continues."
         }
 
         static let spo2WarningTitle = "Blood Oxygen Worth Monitoring"
         static func spo2WarningBody(value: String) -> String {
-            let threshold = Int(RemoteConfigManager.shared.spo2WarningThreshold)
-            return "Your blood oxygen is \(value)%. Normal range is \(threshold)-100%. Monitor closely."
+            return "Your blood oxygen is \(value)%, which is a bit lower than your typical readings. Worth monitoring."
         }
 
         // MARK: - Respiratory Rate
@@ -140,7 +138,7 @@ extension Copy {
                 candidates.append((.lossFrame, "Your \(streakDays)-day streak expires tonight."))
             }
             if let delta = scoreDelta, delta <= -3 {
-                candidates.append((.lossFrame, "You're losing ground from last week."))
+                candidates.append((.lossFrame, "You are losing ground from last week."))
             }
             if improvingDays == 0, let delta = scoreDelta, delta < 0 {
                 candidates.append((.lossFrame, "Yesterday's gains are slipping."))
@@ -154,7 +152,7 @@ extension Copy {
                 candidates.append((.progress, "\(streakDays) days in. New milestone."))
             }
             if score >= 80 {
-                candidates.append((.progress, "Score: \(score). You're in the top tier."))
+                candidates.append((.progress, "Score: \(score). You are in the top tier."))
             }
 
             // ── Personal record hooks ──
@@ -174,7 +172,7 @@ extension Copy {
                 candidates.append((.question, "Why did your \(metric.lowercased()) change?"))
             }
             if score < 65 {
-                candidates.append((.question, "What's pulling your score down?"))
+                candidates.append((.question, "What is pulling your score down?"))
             }
 
             // Filter out the last-used category
@@ -258,10 +256,10 @@ extension Copy {
 
         static let healthSnapshot = "Your Health Snapshot"
         static func lastScoreBody(score: Int) -> String {
-            "Your last health score was \(score)/100. Check in to see what's changed."
+            "Your last health score was \(score)/100. Check in to see what has changed."
         }
         static let insightsReady = "Your Health Insights Are Ready"
-        static let insightsReadyBody = "It's been a few days. Open Laso to see your latest health trends."
+        static let insightsReadyBody = "It has been a few days. Open Laso to see your latest health trends."
 
         // MARK: - Engagement Sequence
 
@@ -290,7 +288,7 @@ extension Copy {
             "\(finding) Open Laso to see what changed."
         }
 
-        static let engagementDay3Fallback = "We're starting to detect changes in your sleep. Open Laso to see the early pattern."
+        static let engagementDay3Fallback = "We are starting to detect changes in your sleep. Open Laso to see the early pattern."
 
         static func engagementDay5Title(percent: Int) -> String {
             "Personalization is \(percent)% complete"
@@ -304,7 +302,7 @@ extension Copy {
         }
 
         static func engagementDay7Title(patternCount: Int) -> String {
-            "We've found \(patternCount) early signals"
+            "We have found \(patternCount) early signals"
         }
 
         static func engagementDay7BodyTrend(metric: String, direction: String) -> String {
@@ -322,19 +320,19 @@ extension Copy {
             "Your \(device) battery is at \(percent)%. Charge it soon to avoid missing health data."
         }
         static func watchNotWornScheduled(device: String, wearToTrack: String) -> String {
-            "\(device) hasn't recorded data for a while. \(wearToTrack)"
+            "\(device) has not recorded data for a while. \(wearToTrack)"
         }
         static func watchNotWornHours(device: String, hours: Int, minutes: Int, wearToTrack: String) -> String {
-            "\(device) hasn't recorded data for \(hours)h \(minutes)m. \(wearToTrack)"
+            "\(device) has not recorded data for \(hours)h \(minutes)m. \(wearToTrack)"
         }
         static func watchNotWornRecent(device: String, wearToTrack: String) -> String {
-            "\(device) hasn't recorded data recently. \(wearToTrack)"
+            "\(device) has not recorded data recently. \(wearToTrack)"
         }
 
         // MARK: - Permission Re-prompt
 
         static let repromptTitle = "Stay on top of your health"
-        static let repromptBody = "Notifications are turned off. You're missing alerts about unusual heart rate, sleep changes, and weekly progress updates."
+        static let repromptBody = "Notifications are off. You are missing alerts about unusual heart rate, sleep changes, and your weekly progress."
         static let repromptAction = "Turn On in Settings"
         static let repromptDismiss = "Not Now"
     }

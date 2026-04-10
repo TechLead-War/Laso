@@ -57,7 +57,7 @@ struct StressMonitorView: View {
                     Text(String(format: "%.1f", stressScore))
                         .font(.system(size: 42, weight: .bold, design: .rounded).monospacedDigit())
 
-                    Text("of 3.0")
+                    Text(Copy.StressMonitor.ofScale)
                         .font(.caption2.weight(.medium))
                         .foregroundStyle(.tertiary)
                 }
@@ -106,18 +106,18 @@ struct StressMonitorView: View {
 
     private var driverSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text("What's Driving Your Stress")
+            Text(Copy.StressMonitor.whatsDrivingStress)
                 .font(.headline)
 
             driverRow(
-                label: "HRV Deviation",
+                label: Copy.StressMonitor.hrvDeviation,
                 icon: "waveform.path.ecg",
                 value: hrvDeviation,
                 color: driverColor(hrvDeviation)
             )
 
             driverRow(
-                label: "HR Elevation",
+                label: Copy.StressMonitor.hrElevation,
                 icon: "heart.fill",
                 value: hrElevation,
                 color: driverColor(hrElevation)
@@ -174,11 +174,11 @@ struct StressMonitorView: View {
 
     private var weeklyChartSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text("7-Day Stress")
+            Text(Copy.StressMonitor.sevenDayStress)
                 .font(.headline)
 
             if weeklyScores.isEmpty {
-                Text("Not enough data yet")
+                Text(Copy.StressMonitor.notEnoughData)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -295,7 +295,7 @@ struct StressMonitorView: View {
 
     private var tipsSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text("Reduce Stress")
+            Text(Copy.StressMonitor.reduceStress)
                 .font(.headline)
 
             ForEach(tipsForLevel, id: \.self) { tip in
@@ -374,7 +374,7 @@ struct StressMonitorView: View {
                 Image(systemName: "lungs.fill")
                     .font(.body.weight(.semibold))
 
-                Text("Start Breathing Exercise")
+                Text(Copy.StressMonitor.startBreathingExercise)
                     .font(.subheadline.weight(.bold))
             }
             .frame(maxWidth: .infinity)

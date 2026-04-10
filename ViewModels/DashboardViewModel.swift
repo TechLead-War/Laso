@@ -1596,13 +1596,17 @@ final class DashboardViewModel {
             )
         )
 
+        let proofSummary = RecommendationEvaluator.buildActionProof(store: store)
+
         let action = SmartAction(
             icon: recommendation.icon,
             title: recommendation.title,
             subtitle: recommendation.subtitle,
             source: recommendation.source,
             rationale: recommendation.rationale,
-            supportingInsights: Array(sortedInsights.prefix(2))
+            supportingInsights: Array(sortedInsights.prefix(2)),
+            proofLine: proofSummary.cardProofLine,
+            proofSummary: proofSummary
         )
 
         _cachedDailyAction = action
@@ -1783,6 +1787,10 @@ final class DashboardViewModel {
         var source: String = "context_rules"
         var rationale: String = ""
         var supportingInsights: [Insight] = []
+        /// Historical proof line shown on the home card (e.g. "The last 5 times you followed this advice, things went well")
+        var proofLine: String?
+        /// Full proof summary for the detail view
+        var proofSummary: RecommendationEvaluator.ActionProofSummary?
     }
 
     private var recentActivityTrendDirection: TrendDirection? {
@@ -1891,6 +1899,33 @@ final class DashboardViewModel {
         }
     }
 
+    // MARK: - Explore Tab Derived Data
+
+    var exploreSortedCategories: [(category: HealthCategory, score: Int?)] {
+        let focuses = insights.focusCategories
+        return HealthCategory.allCases.map { cat in
+            (category: cat, score: analysisEngine.score(for: cat)?.score)
+        }
+        .sorted { a, b in
+            let aHasScore = a.score != nil
+            let bHasScore = b.score != nil
+            if aHasScore != bHasScore { return aHasScore }
+            guard let aScore = a.score, let bScore = b.score else { return false }
+            let aFocused = focuses.contains(a.category)
+            let bFocused = focuses.contains(b.category)
+            if aFocused != bFocused { return aFocused }
+            return aScore < bScore
+        }
+    }
+
+    var exploreWeakestCategory: (category: HealthCategory, score: Int)? {
+        let scored = HealthCategory.allCases.compactMap { cat -> (category: HealthCategory, score: Int)? in
+            guard let score = analysisEngine.score(for: cat)?.score else { return nil }
+            return (category: cat, score: score)
+        }
+        return scored.min(by: { $0.score < $1.score })
+    }
+
     func makeHealthDataQueryRequest() -> HealthDataQueryRequest {
         let orch = analysisEngine.mlOrchestrator
         let context = HealthDataQueryEngine.QueryContext(
@@ -1930,6 +1965,15 @@ final class DashboardViewModel {
     /// Run NL health query (Papers 1 & 2: PHIA). uses full ML pipeline context
     func queryHealthData(_ question: String) async -> HealthDataQueryEngine.QueryResult {
         await makeHealthDataQueryRequest().execute(question: question)
+    }
+
+    /// Execute a health data query with thermal-aware priority
+    nonisolated func executeHealthQuery(_ question: String) async -> HealthDataQueryEngine.QueryResult {
+        let request = await makeHealthDataQueryRequest()
+        let priority: TaskPriority = ThermalManager.shared.shouldThrottle ? .background : .utility
+        return await Task.detached(priority: priority) {
+            await request.execute(question: question)
+        }.value
     }
 
     /// Assess current receptivity for nudge delivery (Paper 5 & 6: JITAI)

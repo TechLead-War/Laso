@@ -1,9 +1,8 @@
 import Foundation
 
-/// Research: AHA (Nov 2024) + Nature (Sept 2024) + Lancet (Jan 2025)
-/// Finding: Rising resting heart rate over years = 65% higher heart failure risk,
-/// 69% higher all-cause mortality. RHR is "the forgotten risk factor" —
-/// stronger predictor than hypertension in 692K adults.
+/// Based on population wellness studies (AHA, Nature, Lancet).
+/// Finding: A rising resting heart rate over time is one of the most important
+/// long-term fitness indicators. Tracking RHR trends helps spot changes early.
 ///
 /// Implementation: Computes multi-month RHR trajectory slope.
 /// Flags rising RHR when activity level hasn't declined.
@@ -63,7 +62,7 @@ struct RHRTrajectoryAnalyzer {
                     metric: .restingHeartRate,
                     title: "Resting Heart Rate Rising",
                     summary: "Your resting heart rate has increased by \(String(format: "%.1f", abs(totalChange))) bpm over the past \(window.label). from \(String(format: "%.0f", startRHR)) to \(String(format: "%.0f", currentRHR)) bpm. without a decline in your activity levels.",
-                    recommendation: "Research on 692,000+ adults shows a rising resting heart rate is a stronger predictor of cardiovascular events than hypertension. A \(String(format: "%.1f", abs(totalChange))) bpm rise over \(window.label) while maintaining activity warrants attention.\(totalChange >= 3 ? " Consider discussing this trajectory with your doctor." : "")",
+                    recommendation: "Population studies show a rising resting heart rate is an important long-term fitness indicator. A \(String(format: "%.1f", abs(totalChange))) bpm rise over \(window.label) while maintaining activity is worth paying attention to.\(totalChange >= 3 ? " Consider discussing this trend with your doctor." : "")",
                     severity: severity,
                     trend: .declining,
                     currentValue: currentRHR,
@@ -86,8 +85,8 @@ struct RHRTrajectoryAnalyzer {
                 insights.append(InsightFactory.observation(
                     metric: .restingHeartRate,
                     title: "Heart Rate Trajectory Improving",
-                    summary: "Your resting heart rate has dropped \(String(format: "%.1f", abs(totalChange))) bpm over the past \(window.label). from \(String(format: "%.0f", startRHR)) to \(String(format: "%.0f", currentRHR)) bpm. This trajectory is associated with reduced cardiovascular risk.",
-                    recommendation: "A declining RHR trajectory reflects improved cardiovascular efficiency. Each 1 bpm decrease in long-term RHR is independently associated with reduced all-cause mortality risk across multiple cohort studies.",
+                    summary: "Your resting heart rate has dropped \(String(format: "%.1f", abs(totalChange))) bpm over the past \(window.label). from \(String(format: "%.0f", startRHR)) to \(String(format: "%.0f", currentRHR)) bpm. This is a positive trend for your heart fitness.",
+                    recommendation: "A declining RHR trajectory reflects improved cardiovascular efficiency. A lower resting heart rate over time is associated with better overall fitness and wellness in population studies.",
                     currentValue: currentRHR,
                     baselineValue: startRHR,
                     deviationPercent: ((currentRHR - startRHR) / max(startRHR, 1)) * 100,

@@ -40,3 +40,13 @@ struct MetricSample: Identifiable, Codable {
         return samplesByDay.values.sorted { $0.date < $1.date }
     }
 }
+
+// MARK: - MetricSample Array Convenience
+
+extension Array where Element == MetricSample {
+    /// Arithmetic mean of sample values. Returns 0 for an empty array.
+    var valueMean: Double {
+        guard !isEmpty else { return 0 }
+        return map(\.value).reduce(0, +) / Double(count)
+    }
+}

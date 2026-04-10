@@ -97,7 +97,7 @@ final class MenstrualCycleTracker {
             case .menstrual:
                 return "Focus on iron-rich foods (red meat, spinach, lentils) to offset menstrual losses. Anti-inflammatory foods like fatty fish and ginger can ease discomfort."
             case .follicular:
-                return "Support rising estrogen with cruciferous vegetables and lean protein. Carbohydrate tolerance is higher. a good window for complex carbs around workouts."
+                return "Support rising estrogen with cruciferous vegetables and lean protein. Carbohydrate tolerance is higher. A good window for complex carbs around workouts."
             case .ovulation:
                 return "Maintain balanced macros with emphasis on antioxidants and fiber. Hydration is important as energy expenditure peaks."
             case .luteal:

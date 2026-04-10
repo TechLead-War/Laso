@@ -49,17 +49,14 @@ final class NotificationManager {
         }
     }
 
-    /// Request authorization only if status is not determined yet.
-    @discardableResult
-    func requestAuthorizationIfNeeded() async -> Bool {
+    /// Check whether notifications are currently authorized without prompting the user.
+    func isCurrentlyAuthorized() async -> Bool {
         let settings = await center.notificationSettings()
         switch settings.authorizationStatus {
         case .authorized, .provisional, .ephemeral:
             await MainActor.run { AppAnalytics.shared.updateNotificationProperties(enabled: true) }
             return true
-        case .notDetermined:
-            return await requestAuthorization()
-        case .denied:
+        case .notDetermined, .denied:
             await MainActor.run { AppAnalytics.shared.updateNotificationProperties(enabled: false) }
             return false
         @unknown default:

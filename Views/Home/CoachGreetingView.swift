@@ -36,7 +36,7 @@ struct CoachGreetingView: View {
                         HStack(spacing: 3) {
                             Image(systemName: "flame.fill")
                                 .font(.caption)
-                            Text("\(streakDays)d streak")
+                            Text(Copy.Home.Greeting.streakBadge(streakDays))
                                 .font(.caption.weight(.bold).monospacedDigit())
                         }
                         .foregroundStyle(.orange)
@@ -62,8 +62,11 @@ struct CoachGreetingView: View {
                 showSettings.wrappedValue = true
             } label: {
                 Image(systemName: "gearshape.fill")
-                    .font(.title3)
+                    .font(.subheadline.weight(.medium))
                     .foregroundStyle(.secondary)
+                    .frame(width: 36, height: 36)
+                    .background(.ultraThinMaterial, in: Circle())
+                    .overlay(Circle().strokeBorder(.primary.opacity(0.06), lineWidth: 0.5))
             }
             .accessibilityLabel("Settings")
             .accessibilityIdentifier("home.settingsButton")
@@ -79,7 +82,7 @@ struct CoachGreetingView: View {
     @ViewBuilder
     private var streakMilestoneOverlay: some View {
         if let milestone = SessionTracker.shared.checkStreakMilestone() {
-            Text("\(milestone)-day streak!")
+            Text(Copy.Home.Greeting.streakMilestone(milestone))
                 .font(.caption.weight(.bold))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 12)
@@ -108,10 +111,10 @@ struct CoachGreetingView: View {
 
     private var contextGreeting: String {
         switch timeOfDay {
-        case .morning: return "Good Morning"
-        case .afternoon: return "Good Afternoon"
-        case .evening: return "Good Evening"
-        case .night: return "Good Night"
+        case .morning: return Copy.Home.Greeting.goodMorning
+        case .afternoon: return Copy.Home.Greeting.goodAfternoon
+        case .evening: return Copy.Home.Greeting.goodEvening
+        case .night: return Copy.Home.Greeting.goodNight
         }
     }
 
@@ -121,37 +124,18 @@ struct CoachGreetingView: View {
         guard let state = recoveryState else { return nil }
 
         switch (timeOfDay, state) {
-        // Morning
-        case (.morning, .green):
-            return "Your body bounced back well. Great day for a challenge."
-        case (.morning, .yellow):
-            return "Decent recovery overnight. Listen to your body today."
-        case (.morning, .red):
-            return "Recovery is catching up. A lighter day might work well."
-
-        // Afternoon
-        case (.afternoon, .green):
-            return "Still riding high on solid recovery. Keep it going."
-        case (.afternoon, .yellow):
-            return "Holding steady this afternoon. Pacing yourself pays off."
-        case (.afternoon, .red):
-            return "Recovery is still building. Your body might appreciate a gentler afternoon."
-
-        // Evening
-        case (.evening, .green):
-            return "Strong day all around. Wind down and keep the streak."
-        case (.evening, .yellow):
-            return "Not bad today. A good night\u{2019}s sleep will help."
-        case (.evening, .red):
-            return "Your body might benefit from a reset. Sleep could be your best recovery tool tonight."
-
-        // Late night
-        case (.night, .green):
-            return "You\u{2019}re in good shape. Get some rest to stay there."
-        case (.night, .yellow):
-            return "Decent day. Sleep well and tomorrow\u{2019}s looking better."
-        case (.night, .red):
-            return "Recovery is still building. Sleep is your strongest ally right now."
+        case (.morning, .green):  return Copy.Home.Greeting.morningGreen
+        case (.morning, .yellow): return Copy.Home.Greeting.morningYellow
+        case (.morning, .red):    return Copy.Home.Greeting.morningRed
+        case (.afternoon, .green):  return Copy.Home.Greeting.afternoonGreen
+        case (.afternoon, .yellow): return Copy.Home.Greeting.afternoonYellow
+        case (.afternoon, .red):    return Copy.Home.Greeting.afternoonRed
+        case (.evening, .green):  return Copy.Home.Greeting.eveningGreen
+        case (.evening, .yellow): return Copy.Home.Greeting.eveningYellow
+        case (.evening, .red):    return Copy.Home.Greeting.eveningRed
+        case (.night, .green):  return Copy.Home.Greeting.nightGreen
+        case (.night, .yellow): return Copy.Home.Greeting.nightYellow
+        case (.night, .red):    return Copy.Home.Greeting.nightRed
         }
     }
 

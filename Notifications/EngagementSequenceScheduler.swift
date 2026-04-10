@@ -414,15 +414,15 @@ enum EngagementSequenceScheduler {
     private static func insightForScore(_ score: Int) -> String {
         switch score {
         case 85...100:
-            return "You're well recovered today."
+            return "You are well recovered today."
         case 70..<85:
-            return "Solid recovery. a good day to stay active."
+            return "Solid recovery. A good day to stay active."
         case 55..<70:
-            return "Moderate recovery. listen to your body today."
+            return "Moderate recovery. Listen to your body today."
         case 40..<55:
             return "Your body is still catching up."
         default:
-            return "Take it easy. your body needs rest."
+            return "Take it easy. Your body needs rest."
         }
     }
 }

@@ -193,8 +193,8 @@ final class SleepNeedCalculator {
         let baseline = sleepSeries.samples(lastDays: 30)
         guard recent.count >= 5, baseline.count >= 14 else { return false }
 
-        let recentAvg = recent.map(\.value).reduce(0, +) / Double(recent.count)
-        let baselineAvg = baseline.map(\.value).reduce(0, +) / Double(baseline.count)
+        let recentAvg = recent.valueMean
+        let baselineAvg = baseline.valueMean
 
         // Declining if recent 7-day average is 30+ minutes below 30-day average
         return baselineAvg - recentAvg > 0.5

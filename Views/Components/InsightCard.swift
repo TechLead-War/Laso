@@ -32,6 +32,21 @@ struct InsightCard: View {
                         .font(.caption.weight(.medium))
                         .foregroundStyle(insight.severity.color)
                 }
+
+                // Causation context (only when data exists)
+                if let becauseLine = causationLine {
+                    Text(becauseLine)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+
+                if let basisLine = dataBasisLine {
+                    Text(basisLine)
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(1)
+                }
             }
 
         }
@@ -59,6 +74,40 @@ private extension InsightCard {
             return String(prefix)
         }
         return rec
+    }
+
+    /// "Because" line explaining root cause, if context data exists
+    var causationLine: String? {
+        guard let context = insight.context else { return nil }
+        if let rootMetric = context.rootCauseMetric {
+            if let deviation = context.rootCauseDeviation {
+                return Copy.Insights.InsightCard.linkedToMetric(
+                    rootMetric.displayName,
+                    deviationPercent: abs(Int(deviation))
+                )
+            }
+            return Copy.Insights.InsightCard.connectedToMetric(rootMetric.displayName)
+        }
+        return nil
+    }
+
+    /// Data basis line showing sample size or confidence, if available
+    var dataBasisLine: String? {
+        guard let context = insight.context else { return nil }
+        if let dayCount = context.dataPointCount, dayCount > 0 {
+            return Copy.Insights.InsightCard.basedOnDays(dayCount)
+        }
+        if let confidence = context.confidenceLevel {
+            let level: String = if confidence >= 0.8 {
+                "High"
+            } else if confidence >= 0.5 {
+                "Moderate"
+            } else {
+                "Early"
+            }
+            return Copy.Insights.InsightCard.confidenceQualifier(level)
+        }
+        return nil
     }
 }
 

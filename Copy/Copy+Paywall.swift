@@ -6,15 +6,15 @@ extension Copy {
         // MARK: - Header
 
         static let unlockTitle = "Unlock Laso"
-        static let unlockSubtitle = "Your personal health intelligence,\npowered by Apple Health and wearable data."
+        static let unlockSubtitle = "Your personal health guide,\npowered by Apple Health and your wearable."
 
         // MARK: - Features
 
         static var featureLiveVitals: String { "Live vitals & \(HealthMetric.allCases.count)+ health metrics" }
-        static let featureInsights = "Personalized insights & root cause analysis"
-        static let featureTrends = "Trends, correlations & weekly reports"
-        static let featureAlerts = "Smart alerts with custom thresholds"
-        static let featurePrivacy = "Health data stays on-device; anonymous usage analytics and optional feedback improve Laso"
+        static let featureInsights = "Personalized insights that explain why things change"
+        static let featureTrends = "Trends, connections, and weekly reports"
+        static let featureAlerts = "Smart alerts you can customize"
+        static let featurePrivacy = "Your health data stays on your phone"
 
         // MARK: - Pricing
 
@@ -25,5 +25,10 @@ extension Copy {
         static func perMonth(_ price: String) -> String { "\(price)/month" }
         static func perYear(_ price: String) -> String { "\(price)/year" }
         static func savePercent(_ pct: Int) -> String { "Save \(pct)%" }
+
+        // MARK: - Trial Disclosure
+
+        static func trialDuration(_ days: Int) -> String { "\(days)-day free trial" }
+        static func afterTrial(_ price: String) -> String { "After your free trial, \(price) will be charged automatically" }
     }
 }

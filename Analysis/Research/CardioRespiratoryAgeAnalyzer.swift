@@ -1,9 +1,9 @@
 import Foundation
 
-/// Research: Apple Heart & Movement Study (2026) + multiple meta-analyses.
-/// Finding: VO2max is STRONGER than smoking, diabetes, and hypertension
-/// as a predictor of all-cause mortality. Each 1 MET increase = 13% mortality
-/// reduction. Age/sex percentile tables now available from large populations.
+/// Research: Apple Heart & Movement Study (2026) + multiple population studies.
+/// Finding: VO2max is one of the strongest indicators of long-term fitness and
+/// overall wellness. Each 1 MET increase is associated with meaningful improvements.
+/// Age/sex percentile tables now available from large populations.
 ///
 /// Implementation: Maps user's VO2max to population percentile by age bracket,
 /// computes a Cardiorespiratory Age, and tracks VO2max trajectory over months.
@@ -79,8 +79,8 @@ struct CardioRespiratoryAgeAnalyzer {
         insights.append(InsightFactory.observation(
             metric: .vo2Max,
             title: "Cardio Fitness Age: ~\(String(format: "%.0f", fitnessAge))",
-            summary: "Your VO2max of \(String(format: "%.1f", currentVO2)) mL/kg/min is average for someone around age \(String(format: "%.0f", fitnessAge)). VO2max is the single strongest predictor of all-cause mortality. stronger than smoking, diabetes, or hypertension.",
-            recommendation: "At \(String(format: "%.1f", currentVO2)) mL/kg/min, your cardiorespiratory fitness places you approximately at the \(String(format: "%.0f", percentile))th percentile for a middle-aged adult. Each 1 MET (~3.5 mL/kg/min) improvement is associated with a 13% reduction in mortality risk.",
+            summary: "Your VO2max of \(String(format: "%.1f", currentVO2)) mL/kg/min is average for someone around age \(String(format: "%.0f", fitnessAge)). VO2max is one of the most important indicators of long-term fitness and overall wellness.",
+            recommendation: "At \(String(format: "%.1f", currentVO2)) mL/kg/min, your cardiorespiratory fitness places you approximately at the \(String(format: "%.0f", percentile))th percentile for a middle-aged adult. Each 1 MET (~3.5 mL/kg/min) improvement is associated with meaningful health benefits.",
             severity: .info,
             trend: trajectory,
             currentValue: currentVO2,
@@ -97,14 +97,11 @@ struct CardioRespiratoryAgeAnalyzer {
         // Insight 2: VO2max trajectory
         if monthsTracked >= 3 && allSamples.count >= 5 {
             if trajectory == .improving && changeOverPeriod >= 1.0 {
-                let metImprovement = changeOverPeriod / 3.5
-                let mortalityReduction = metImprovement * 13
-
                 insights.append(InsightFactory.observation(
                     metric: .vo2Max,
                     title: "VO2max Improving: +\(String(format: "%.1f", changeOverPeriod)) Over \(monthsTracked) Months",
-                    summary: "Your cardiorespiratory fitness has improved by \(String(format: "%.1f", changeOverPeriod)) mL/kg/min over \(monthsTracked) months. equivalent to ~\(String(format: "%.0f", mortalityReduction))% estimated mortality risk reduction based on population studies.",
-                    recommendation: "A \(String(format: "%.1f", changeOverPeriod)) mL/kg/min VO2max improvement (\(String(format: "%.1f", metImprovement * 100 / max(currentVO2, 1)))% gain) represents meaningful progress. This improvement shifts your fitness age younger and independently reduces all-cause mortality risk.",
+                    summary: "Your cardiorespiratory fitness has improved by \(String(format: "%.1f", changeOverPeriod)) mL/kg/min over \(monthsTracked) months. This is a meaningful fitness gain based on population wellness studies.",
+                    recommendation: "A \(String(format: "%.1f", changeOverPeriod)) mL/kg/min VO2max improvement represents real progress. This shifts your fitness age younger and is associated with better long-term wellness outcomes.",
                     currentValue: currentVO2,
                     baselineValue: currentVO2 - changeOverPeriod,
                     deviationPercent: (changeOverPeriod / max(currentVO2 - changeOverPeriod, 1)) * 100,
@@ -115,8 +112,8 @@ struct CardioRespiratoryAgeAnalyzer {
                 insights.append(InsightFactory.make(
                     metric: .vo2Max,
                     title: "VO2max Declining: \(String(format: "%.1f", changeOverPeriod)) Over \(monthsTracked) Months",
-                    summary: "Your cardiorespiratory fitness has dropped by \(String(format: "%.1f", abs(changeOverPeriod))) mL/kg/min over \(monthsTracked) months. Since VO2max is the top mortality predictor, this trajectory is worth reversing.",
-                    recommendation: "A \(String(format: "%.1f", abs(changeOverPeriod))) mL/kg/min decline shifts your fitness age older. The decline rate of \(String(format: "%.1f", abs(changeOverPeriod / Double(monthsTracked)))) mL/kg/min per month exceeds normal aging (~1-2 mL/kg/min per decade). Increasing aerobic exercise frequency or intensity can reverse this.",
+                    summary: "Your cardiorespiratory fitness has dropped by \(String(format: "%.1f", abs(changeOverPeriod))) mL/kg/min over \(monthsTracked) months. Since VO2max is a key fitness indicator, this trend is worth reversing.",
+                    recommendation: "A \(String(format: "%.1f", abs(changeOverPeriod))) mL/kg/min decline shifts your fitness age older. The decline rate of \(String(format: "%.1f", abs(changeOverPeriod / Double(monthsTracked)))) mL/kg/min per month is faster than typical aging (~1 to 2 mL/kg/min per decade). Increasing aerobic exercise frequency or intensity can help reverse this.",
                     severity: abs(changeOverPeriod) >= 2.0 ? .warning : .info,
                     trend: .declining,
                     currentValue: currentVO2,
@@ -133,9 +130,9 @@ struct CardioRespiratoryAgeAnalyzer {
         if currentVO2 < 20 {
             insights.append(InsightFactory.medicalAdvice(
                 metric: .vo2Max,
-                title: "VO2max Below Clinical Threshold",
-                summary: "Your VO2max of \(String(format: "%.1f", currentVO2)) mL/kg/min is below 20. a threshold associated with significantly elevated mortality risk and functional limitation across all age groups.",
-                recommendation: "A VO2max below 20 mL/kg/min places you in the lowest fitness category regardless of age. Meta-analyses consistently show this threshold as a clinical inflection point for cardiovascular events. Even modest improvements from this baseline yield disproportionately large risk reductions.",
+                title: "VO2max Below Typical Threshold",
+                summary: "Your VO2max of \(String(format: "%.1f", currentVO2)) mL/kg/min is below 20. a threshold associated with reduced fitness capacity across all age groups.",
+                recommendation: "A VO2max below 20 mL/kg/min places you in the lowest fitness category regardless of age. Population studies consistently show this threshold as an important point for overall wellness. Even modest improvements from this baseline can make a meaningful difference.",
                 trend: trajectory,
                 currentValue: currentVO2,
                 baselineValue: 20,

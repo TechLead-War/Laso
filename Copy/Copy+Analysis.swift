@@ -7,23 +7,23 @@ extension Copy {
 
         enum Clinical {
             static let bloodPressureTrendingUp = "Blood Pressure Trending Up"
-            static let elevatedPulsePressure = "Elevated Pulse Pressure"
+            static let elevatedPulsePressure = "Pulse Pressure is High"
             static let bloodGlucoseTrendingUp = "Blood Glucose Trending Up"
-            static let abnormalRespiratoryRate = "Abnormal Respiratory Rate"
-            static let medicalDisclaimer = "This is informational only. Consult your healthcare provider for clinical decisions."
+            static let abnormalRespiratoryRate = "Unusual Breathing Rate"
+            static let medicalDisclaimer = "This is for informational purposes only and is not medical advice. This is for informational purposes only."
 
             // BP recommendations
-            static let bpRecommendation = "Consider reducing sodium intake, increasing aerobic exercise, and monitoring stress levels."
-            static let pulsePressureRecommendation = "Wide pulse pressure can be an independent cardiovascular risk factor."
-            static let glucoseRecommendation = "Focus on reducing refined carbohydrates, increasing fiber intake, and maintaining regular physical activity."
-            static let respiratoryRecommendation = "If your respiratory rate stays outside normal range, consider speaking with a healthcare provider."
+            static let bpRecommendation = "Try eating less salt, moving more, and keeping stress in check."
+            static let pulsePressureRecommendation = "A wider gap between your blood pressure numbers can sometimes indicate your cardiovascular system is working harder than usual."
+            static let glucoseRecommendation = "Cut back on sugar and white bread. Eat more fiber. Stay active."
+            static let respiratoryRecommendation = "If your breathing rate stays unusual for a few days, consider checking in on this."
 
             // Projection templates
             static func projectedToReach(label: String, days: Int) -> String {
-                "Based on current trends, this metric may approach \(label) territory within ~\(days) days."
+                "At this rate, this could reach \(label) levels in about \(days) days."
             }
             static func projectedToReachRange(label: String, days: Int) -> String {
-                "Based on current trends, this may approach the \(label) range within ~\(days) days."
+                "At this rate, this could reach the \(label) range in about \(days) days."
             }
 
             // BP summary templates
@@ -44,10 +44,10 @@ extension Copy {
         // MARK: - Recovery Analyzer
 
         enum Recovery {
-            static let postWorkoutHRVRecovery = "Post-Workout HRV Recovery"
-            static let restDayDeficit = "Rest Day Deficit"
-            static let overtrainingWarning = "Overtraining Warning"
-            static let earlyOvertrainingSignal = "Early Overtraining Signal"
+            static let postWorkoutHRVRecovery = "Recovery After Workout"
+            static let restDayDeficit = "Not Enough Rest Days"
+            static let overtrainingWarning = "You May Be Overdoing It"
+            static let earlyOvertrainingSignal = "Early Signs of Overdoing It"
         }
 
         // MARK: - Workout Effectiveness
@@ -78,8 +78,8 @@ extension Copy {
 
         enum CyclePhase {
             static func title(_ phaseName: String) -> String { "Cycle Phase Analyzer: \(phaseName)" }
-            static let scaleIntensityNote = " Your current shift is stronger than your norm, so scale intensity for 48 hours and monitor how you feel."
-            static let keepLoggingNote = " Keep logging daily so the phase model can keep adapting to your own baseline."
+            static let scaleIntensityNote = " Your body is reacting more than usual right now. Take it easier for the next 2 days and see how you feel."
+            static let keepLoggingNote = " Keep logging every day so we can better learn what is normal for you."
         }
 
         // MARK: - Personal Records
@@ -107,7 +107,7 @@ extension Copy {
 
             // Summary templates
             static func streakSummary(label: String, days: Int) -> String {
-                "You've hit \(label.lowercased()) for \(days) consecutive days."
+                "You have hit \(label.lowercased()) for \(days) consecutive days."
             }
             static func milestoneSummary(_ label: String) -> String {
                 "You achieved \(label.lowercased()) for the first time this week."
@@ -122,14 +122,14 @@ extension Copy {
         enum ScoreTrajectory {
             static let healthScoreTrendingUp = "Health Score Trending Up"
             static let healthScoreDeclining = "Health Score Declining"
-            static let improvementAccelerating = "Improvement Accelerating"
-            static let declineAccelerating = "Decline Accelerating"
-            static let consistentlyStrongHealth = "Consistently Strong Health"
-            static let extendedLowScorePeriod = "Extended Low Score Period"
+            static let improvementAccelerating = "Getting Better Faster"
+            static let declineAccelerating = "Getting Worse Faster"
+            static let consistentlyStrongHealth = "Staying Strong"
+            static let extendedLowScorePeriod = "Low Score for a While"
 
             // Momentum summaries
-            static let gainsPickingUpSpeed = "Your health gains are picking up speed. This week's improvement was stronger than last week's."
-            static let droppingFaster = "Your health score is dropping faster this week than last. Multiple areas may need attention."
+            static let gainsPickingUpSpeed = "You are improving faster this week than last."
+            static let droppingFaster = "Your score is dropping faster this week. A few areas need a look."
         }
 
         // MARK: - Baseline Drift
@@ -155,35 +155,49 @@ extension Copy {
             static let lowCognitiveReadiness = "Low Cognitive Energy"
             static let strongCognitiveReadiness = "Strong Cognitive Energy"
             static let sleepDebtAccumulating = "Sleep Balance Declining"
-            static let mentalFatiguePatternDetected = "Mental Fatigue Pattern Detected"
+            static let mentalFatiguePatternDetected = "Signs of Mental Fatigue"
             static let lowPhysicalEnergy = "Low Physical Energy"
             static let recoveryDayNeeded = "Recovery Day Needed"
-            static let daylightSleepCognitionChain = "Daylight-Sleep-Cognition Chain"
+            static let daylightSleepCognitionChain = "Sunlight, Sleep, and Focus"
 
             // Cognitive energy narratives
             static func cognitiveReadinessLow(score: Int, componentText: String) -> String {
-                "Your cognitive energy is at \(score)/100\(componentText). Together these predict reduced mental clarity and slower processing."
+                "Your mental energy is at \(score) out of 100\(componentText). You may feel less sharp and think slower today."
             }
             static func cognitiveReadinessStrong(score: Int) -> String {
-                "Your cognitive energy is strong at \(score)/100. HRV, sleep quality, and recovery markers are all above baseline."
+                "Your mental energy is strong at \(score) out of 100. Your heart, sleep, and recovery numbers are all better than usual."
             }
-            static let brainPrimedForWork = "Your brain is primed for demanding work today. Take advantage of this high-energy state for complex tasks."
+            static let brainPrimedForWork = "Great day for hard thinking. Use this energy for your toughest tasks."
 
             // Recovery day
-            static let recoveryDayRecommendation = "Take a genuine rest day tomorrow. Light walking only, no intense exercise. Your patterns show HRV typically rebounds within 48 hours of reduced intensity."
+            static let recoveryDayRecommendation = "Take a real rest day tomorrow. Just light walking, no hard exercise. Your body usually bounces back within 2 days of taking it easy."
         }
 
         // MARK: - Illness Early Warning
 
         enum IllnessWarning {
-            static let significantStrain = "Body Showing Signs of Significant Strain"
-            static let multipleMetricStrain = "Multiple Metrics Suggest Physical Strain"
-            static let earlyPhysiologicalStrain = "Early Signs of Physiological Strain"
-            static let multiMetricPattern = "Several physiological markers have shifted unfavorably at the same time. This pattern may reflect increased physiological strain."
-            static let multipleMetricsShifted = "Multiple metrics shifted from baseline simultaneously."
-            static let consistentWithPhysiologicalStrain = "Your multi-metric pattern suggests your body is under increased physiological strain."
-            static let cardiacMetricsStrain = "Your cardiac metrics indicate autonomic strain."
-            static let activityNotReturned = "Your activity metrics haven't returned to baseline yet."
+            static let significantStrain = "Your Body is Under Stress"
+            static let multipleMetricStrain = "Several Numbers Show Your Body is Stressed"
+            static let earlyPhysiologicalStrain = "Early Signs Your Body is Stressed"
+            static let multiMetricPattern = "Several health numbers shifted at the same time. Your body may be under extra stress."
+            static let multipleMetricsShifted = "Several numbers moved away from your usual at the same time."
+            static let consistentWithPhysiologicalStrain = "The pattern across your numbers suggests your body is under extra stress."
+            static let cardiacMetricsStrain = "Your heart numbers show your body is stressed."
+            static let activityNotReturned = "Your activity numbers have not gone back to normal yet."
+        }
+
+        // MARK: - Health Risk Detail
+
+        enum RiskDetail {
+            static let whatToFocusOn = "What to Focus On"
+            static let contributingFactors = "Contributing Factors"
+            static func optimalRange(_ range: String) -> String {
+                "Optimal: \(range)"
+            }
+            static func metricsMeasured(measured: Int, total: Int) -> String {
+                "\(measured) of \(total) metrics measured"
+            }
+            static let disclaimer = "These scores are based on patterns in your health data and published wellness ranges. They are not medical diagnoses and should not replace professional medical advice. These scores are for informational purposes only and should not replace professional guidance."
         }
 
         // MARK: - Correlation
@@ -211,9 +225,9 @@ extension Copy {
             static func unusualPattern(metricA: String, metricB: String) -> String {
                 "\(metricA) & \(metricB) Unusual Pattern"
             }
-            static let unusualMultiMetricPattern = "Unusual Multi-Metric Pattern Detected"
-            static let rareMetricCombination = "Rare Metric Combination"
-            static let unusualCombinationDetected = "Unusual combination of metric values detected."
+            static let unusualMultiMetricPattern = "Unusual Pattern Across Multiple Numbers"
+            static let rareMetricCombination = "Unusual Combination"
+            static let unusualCombinationDetected = "An unusual combination of health numbers was found."
         }
 
         // MARK: - Causal Chain
@@ -247,13 +261,13 @@ extension Copy {
             }
 
             // Recommendations
-            static let betterShapeLongTerm = "You're in better shape this year. Your long-term trajectory is positive."
-            static let exceptionalPersonalBest = "This is exceptional. You are at a personal best level. Whatever you are doing, it is working across your entire history."
-            static let rareLevelMayWarrantAttention = "This level is rare in your history. It may warrant attention if it persists beyond a few days."
-            static let outperformingSeasonalNorm = "You're outperforming your seasonal norm. This suggests genuine improvement beyond seasonal patterns."
-            static let longTermImprovementReliable = "This long-term improvement is the most reliable signal. Short-term dips don't erase months of positive change."
-            static let sustainedDeclineStructural = "A sustained decline suggests something structural has changed. Consider consulting a healthcare provider if this trend continues."
-            static let unusualValuesMonitor = "Unusual values that persist for days are more meaningful than single-day spikes. Monitor over the next few days."
+            static let betterShapeLongTerm = "You are in better shape this year. Things are heading in the right direction."
+            static let exceptionalPersonalBest = "This is your best ever. Whatever you are doing, keep it up."
+            static let rareLevelMayWarrantAttention = "This is rare for you. If it stays like this for more than a few days, it is worth looking into."
+            static let outperformingSeasonalNorm = "You are doing better than usual for this time of year. That is real progress."
+            static let longTermImprovementReliable = "Your long term trend is positive. A few bad days do not erase months of good progress."
+            static let sustainedDeclineStructural = "This has been going down for a while. If it keeps up, it is worth paying closer attention to."
+            static let unusualValuesMonitor = "One bad day does not mean much. If this lasts a few days, pay closer attention."
         }
     }
 }

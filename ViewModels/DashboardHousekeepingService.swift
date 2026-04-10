@@ -42,6 +42,28 @@ final class DashboardHousekeepingService {
     }
 
     func perform(store: HealthDataStore, payload: Payload) async {
+        await backupAndPruneData(store: store, payload: payload)
+
+        trackAnalyticsForRefresh(payload: payload)
+
+        let preferences = persistenceManager.loadPreferences()
+        let notificationsAuthorized = await resolveNotificationAuthorization(preferences: preferences)
+
+        let scoreChange = recordAndTrackWeeklyScore(payload: payload)
+
+        trackValueDelivered(payload: payload, scoreChange: scoreChange)
+
+        await scheduleNotifications(
+            payload: payload,
+            preferences: preferences,
+            notificationsAuthorized: notificationsAuthorized,
+            scoreChange: scoreChange
+        )
+    }
+
+    // MARK: - Housekeeping Steps
+
+    private func backupAndPruneData(store: HealthDataStore, payload: Payload) async {
         await cloudBackupManager.backupIfNeeded(store: store, persistence: persistenceManager)
 
         // HealthDataStore is @MainActor. batch SwiftData operations on main actor
@@ -50,7 +72,9 @@ final class DashboardHousekeepingService {
             store.pruneOldRecommendations()
             store.pruneOldNotificationEvents()
         }
+    }
 
+    private func trackAnalyticsForRefresh(payload: Payload) {
         analytics.trackAnalysisCompleted(
             score: payload.currentScore,
             insightsCount: payload.insights.count,
@@ -60,8 +84,9 @@ final class DashboardHousekeepingService {
             illnessWarningsCount: payload.illnessWarningsCount,
             metricsAnalyzed: payload.metricsCount
         )
+    }
 
-        let preferences = persistenceManager.loadPreferences()
+    private func resolveNotificationAuthorization(preferences: NotificationPreferences) async -> Bool {
         let notificationsEnabled =
             preferences.dailySummaryEnabled ||
             preferences.eveningSummaryEnabled ||
@@ -73,10 +98,14 @@ final class DashboardHousekeepingService {
             preferences.improvementAlertsEnabled ||
             preferences.watchNotWornReminderEnabled ||
             preferences.lowBatteryReminderEnabled
-        let notificationsAuthorized = notificationsEnabled
-            ? await notificationManager.requestAuthorizationIfNeeded()
+        // Check current authorization status without prompting. Permission is
+        // requested during onboarding so we should not show a random dialog here.
+        return notificationsEnabled
+            ? await notificationManager.isCurrentlyAuthorized()
             : false
+    }
 
+    private func recordAndTrackWeeklyScore(payload: Payload) -> Int {
         let previousScore = persistenceManager.loadPreviousWeekScore()
         let scoreChange = previousScore.map { payload.currentScore - $0 } ?? 0
         persistenceManager.recordWeeklyScore(payload.currentScore)
@@ -92,14 +121,24 @@ final class DashboardHousekeepingService {
             AppStoreReviewManager.shared.requestReviewIfEligible(trigger: "score_improved")
         }
 
-        // Track whether this refresh delivered new value to the user
+        return scoreChange
+    }
+
+    private func trackValueDelivered(payload: Payload, scoreChange: Int) {
         analytics.trackValueDelivered(
             newInsightsCount: payload.insights.count,
             scoreChanged: scoreChange != 0,
             newAnomalies: payload.currentAnomalies.filter { $0.severity >= .warning }.count,
             newCorrelations: payload.correlationsCount
         )
+    }
 
+    private func scheduleNotifications(
+        payload: Payload,
+        preferences: NotificationPreferences,
+        notificationsAuthorized: Bool,
+        scoreChange: Int
+    ) async {
         let anomalyCount = payload.currentAnomalies.filter { $0.severity >= .warning }.count
         let categoryBreakdown = payload.currentCategoryScores.compactMap { score -> String? in
             guard let category = score.category else { return nil }

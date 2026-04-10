@@ -1,11 +1,11 @@
 import Foundation
 
-/// Longitudinal ECG analysis: AFib recurrence tracking, waveform evolution,
-/// QTc prolongation observations, and autonomic balance trends.
+/// Longitudinal ECG analysis: rhythm pattern tracking, waveform evolution,
+/// QTc observations, and autonomic balance trends.
 ///
 /// **Important:** This analysis is for informational and educational purposes only.
 /// It does not provide medical diagnosis. ECG data from consumer devices has limitations
-/// and should not replace clinical-grade ECG interpretation by a qualified healthcare provider.
+/// and should not be used as a substitute for professional ECG interpretation.
 struct ECGIntelligence {
 
     // MARK: - Types
@@ -174,11 +174,11 @@ struct ECGIntelligence {
 
         let isWorrisome = secondRate > firstRate && secondRate >= 2
         let description = rateChange > 0
-            ? "AFib episodes increasing: \(String(format: "%.1f", firstRate))/mo → \(String(format: "%.1f", secondRate))/mo"
-            : "AFib episode rate stable or decreasing"
+            ? "Irregular rhythm episodes increasing: \(String(format: "%.1f", firstRate))/mo → \(String(format: "%.1f", secondRate))/mo"
+            : "Irregular rhythm episode rate stable or decreasing"
 
         return ECGTrend(
-            metric: "AFib Burden",
+            metric: "Irregular Rhythm Pattern",
             slope: rateChange,
             currentValue: secondRate,
             isWorrisome: isWorrisome,
@@ -239,7 +239,7 @@ struct ECGIntelligence {
 
     // MARK: - Insight Generation
 
-    private static let medicalDisclaimer = " This is informational only and not a medical diagnosis. Consult your healthcare provider for clinical interpretation of ECG data."
+    private static let medicalDisclaimer = " This is informational only and not a substitute for professional guidance."
 
     private static func generateInsights(
         afibCount: Int,
@@ -259,17 +259,17 @@ struct ECGIntelligence {
             let severity: Severity = afibFrequency == .persistent || afibFrequency == .frequent ? .critical :
                                      afibFrequency == .occasional ? .warning : .info
 
-            var summary = "Detected \(afibCount) AFib episode\(afibCount == 1 ? "" : "s") across \(totalECGs) ECG recordings."
-            summary += " Frequency classification: \(afibFrequency.rawValue) (\(afibFrequency.rateDescription))."
+            var summary = "Found \(afibCount) irregular rhythm episode\(afibCount == 1 ? "" : "s") across \(totalECGs) ECG recordings."
+            summary += " Frequency: \(afibFrequency.rawValue) (\(afibFrequency.rateDescription))."
             if let trend = afibTrend {
                 summary += " " + trend.description
             }
 
             insights.append(Insight(
                 metric: .heartRate,
-                title: "AFib Pattern: \(afibFrequency.rawValue)",
+                title: "Irregular Rhythm Pattern: \(afibFrequency.rawValue)",
                 summary: summary,
-                recommendation: "Track your AFib episodes and share this data with your healthcare provider." + medicalDisclaimer,
+                recommendation: "Track your irregular rhythm episodes over time to understand your personal patterns." + medicalDisclaimer,
                 severity: severity,
                 trend: afibTrend?.slope ?? 0 > 0 ? .declining : .stable,
                 currentValue: Double(afibCount),
@@ -288,8 +288,8 @@ struct ECGIntelligence {
             insights.append(Insight(
                 metric: .heartRate,
                 title: "QTc Prolongation Trend",
-                summary: qtc.description + ". QTc values above \(Int(qtcThreshold))ms may warrant further review by a healthcare provider.",
-                recommendation: "Changes in QTc can have many causes. Share this trend data with your healthcare provider for proper evaluation." + medicalDisclaimer,
+                summary: qtc.description + ". QTc values above \(Int(qtcThreshold))ms are worth monitoring closely.",
+                recommendation: "Changes in QTc can have many causes. Keep tracking this trend to understand your personal pattern." + medicalDisclaimer,
                 severity: qtc.currentValue > 500 ? .critical : .warning,
                 trend: qtc.slope > 0 ? .declining : .stable,
                 currentValue: qtc.currentValue,
@@ -309,7 +309,7 @@ struct ECGIntelligence {
                 metric: .heartRate,
                 title: "QRS Width Trend",
                 summary: qrs.description + ". QRS values above 120ms may warrant further review.",
-                recommendation: "Share this QRS trend data with your healthcare provider for evaluation." + medicalDisclaimer,
+                recommendation: "Keep tracking this QRS trend to understand your personal pattern." + medicalDisclaimer,
                 severity: .warning,
                 trend: qrs.slope > 0 ? .declining : .stable,
                 currentValue: qrs.currentValue,

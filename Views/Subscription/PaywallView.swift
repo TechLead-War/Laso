@@ -23,6 +23,17 @@ struct PaywallView: View {
         return product.subscription?.introductoryOffer != nil ? Copy.Paywall.startFreeTrial : Copy.Paywall.subscribeNow
     }
 
+    /// Whether the selected product offers a free trial via its introductory offer.
+    private var selectedProductHasTrial: Bool {
+        selectedProduct?.subscription?.introductoryOffer != nil
+    }
+
+    /// Display price string for the after-trial disclosure text.
+    private var afterTrialPriceText: String? {
+        guard let product = selectedProduct else { return nil }
+        return product.displayPrice
+    }
+
     /// Monthly cost if paying yearly, for "save X%" label.
     private var yearlySavingsPercent: Int? {
         guard let y = yearly, let m = monthly else { return nil }
@@ -281,6 +292,20 @@ struct PaywallView: View {
             .controlSize(.large)
             .disabled(selectedProduct == nil || subscriptionManager.isPurchasing)
 
+            // Trial duration and auto-renewal disclosure
+            if selectedProductHasTrial {
+                Text(Copy.Paywall.trialDuration(SubscriptionConfig.trialDays))
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.primary)
+
+                if let price = afterTrialPriceText {
+                    Text(Copy.Paywall.afterTrial(price))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+            }
+
             Button {
                 AppAnalytics.shared.trackBlockTap(
                     title: "Restore Purchases",
@@ -340,10 +365,14 @@ struct PaywallView: View {
                 .padding(.horizontal, 24)
 
             HStack(spacing: 16) {
-                Link(Copy.Privacy.termsOfUse, destination: URL(string: AppSecrets.URLs.termsOfUse)!)
+                if let termsURL = URL(string: AppSecrets.URLs.termsOfUse) {
+                    Link(Copy.Privacy.termsOfUse, destination: termsURL)
+                }
                 Text("\u{00B7}")
                     .foregroundStyle(.quaternary)
-                Link(Copy.Privacy.privacyPolicy, destination: URL(string: AppSecrets.URLs.privacyPolicy)!)
+                if let privacyURL = URL(string: AppSecrets.URLs.privacyPolicy) {
+                    Link(Copy.Privacy.privacyPolicy, destination: privacyURL)
+                }
             }
             .font(.caption2)
             .foregroundStyle(.tertiary)

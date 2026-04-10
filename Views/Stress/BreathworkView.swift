@@ -20,9 +20,9 @@ enum BreathingProtocol: String, CaseIterable, Identifiable {
     var description: String {
         switch self {
         case .cyclicSighing:
-            return "Double inhale, long exhale. Backed by Stanford research for rapid calm."
+            return Copy.Breathwork.cyclicSighingDescription
         case .boxBreathing:
-            return "Equal-timed breathing used by Navy SEALs for focus under pressure."
+            return Copy.Breathwork.boxBreathingDescription
         }
     }
 
@@ -202,7 +202,7 @@ struct BreathworkView: View {
             Button("End", role: .destructive) { endSession() }
             Button("Continue", role: .cancel) { }
         } message: {
-            Text("Your breathing session is still in progress.")
+            Text(Copy.Breathwork.sessionInProgress)
         }
     }
 
@@ -231,10 +231,10 @@ struct BreathworkView: View {
                         .foregroundStyle(accent)
                         .padding(.top, 24)
 
-                    Text("Choose Your Practice")
+                    Text(Copy.Breathwork.chooseYourPractice)
                         .font(.title2.weight(.bold))
 
-                    Text("Select a breathing technique to begin")
+                    Text(Copy.Breathwork.selectTechnique)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -253,7 +253,7 @@ struct BreathworkView: View {
                         Image(systemName: "play.fill")
                             .font(.body.weight(.semibold))
 
-                        Text("Begin Session")
+                        Text(Copy.Breathwork.beginSession)
                             .font(.body.weight(.bold))
                     }
                     .frame(maxWidth: .infinity)
@@ -495,7 +495,7 @@ struct BreathworkView: View {
                 .foregroundStyle(accent)
 
             VStack(spacing: 6) {
-                Text("Session Complete")
+                Text(Copy.Breathwork.sessionComplete)
                     .font(.title.weight(.bold))
 
                 Text("\(formattedDuration(selectedProtocol.sessionDuration)) of \(selectedProtocol.subtitle.lowercased())")
@@ -508,7 +508,7 @@ struct BreathworkView: View {
 
             // Mood selector
             VStack(spacing: DS.itemSpacing) {
-                Text("How do you feel?")
+                Text(Copy.Breathwork.howDoYouFeel)
                     .font(.headline)
 
                 HStack(spacing: 16) {

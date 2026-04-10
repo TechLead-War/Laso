@@ -63,6 +63,7 @@ final class LiveViewModel {
     private var readinessBaselines: [ReadinessMetric: ReadinessScorer.BaselineStats] = [:]
     private var lastReadinessBaselineRefresh: Date?
     private var readinessBaselineRefreshTask: Task<Void, Never>?
+    private var deferredRefreshTask: Task<Void, Never>?
     private var smoothedReadinessScore: Double?
     private var dailyLockedScore: Int?
     private var dailyLockDate: Date?
@@ -258,7 +259,8 @@ final class LiveViewModel {
 
         // Priority 4: Deferred slow-changing data. don't compete with real-time queries
         let now = Date()
-        Task { @MainActor [weak self] in
+        deferredRefreshTask?.cancel()
+        deferredRefreshTask = Task { @MainActor [weak self] in
             try? await Task.sleep(for: .milliseconds(300))
             guard let self, self.isStreaming else { return }
 
@@ -286,6 +288,8 @@ final class LiveViewModel {
 
     func stopStreaming() {
         isStreaming = false
+        deferredRefreshTask?.cancel()
+        deferredRefreshTask = nil
         stopAllQueries()
 
         // Clear stale vital data so fresh queries populate on next startStreaming().

@@ -4,7 +4,22 @@ struct HomePrimaryActionCard: View {
     let action: DashboardViewModel.SmartAction
     let overallScore: Int
     let recoveryStateRawValue: String
+    let proofLine: String?
     let onTap: () -> Void
+
+    init(
+        action: DashboardViewModel.SmartAction,
+        overallScore: Int,
+        recoveryStateRawValue: String,
+        proofLine: String? = nil,
+        onTap: @escaping () -> Void
+    ) {
+        self.action = action
+        self.overallScore = overallScore
+        self.recoveryStateRawValue = recoveryStateRawValue
+        self.proofLine = proofLine
+        self.onTap = onTap
+    }
 
     var body: some View {
         Button {
@@ -47,6 +62,13 @@ struct HomePrimaryActionCard: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .lineLimit(2)
+
+                        if let proof = proofLine {
+                            Text(proof)
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                                .lineLimit(2)
+                        }
                     }
 
                     Spacer()

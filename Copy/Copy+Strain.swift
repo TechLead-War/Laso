@@ -18,9 +18,9 @@ extension Copy {
         static let optimal = "Optimal"
         static let overreaching = "Peak"
 
-        static let underTrainingDescription = "Your strain is below your target range. Consider increasing activity to maintain fitness."
-        static let optimalDescription = "You're training within your ideal strain range for your current recovery."
-        static let overreachingDescription = "Your strain exceeds your recovery capacity. Prioritize rest and lighter sessions."
+        static let underTrainingDescription = "Your strain is below your target. Try adding more activity to stay on track."
+        static let optimalDescription = "You are training in your ideal range for your current recovery. Nice work."
+        static let overreachingDescription = "You are pushing harder than your body can recover from. Rest and go lighter."
 
         // MARK: - Coach
 
@@ -46,6 +46,6 @@ extension Copy {
 
         // MARK: - Disclaimer
 
-        static let strainDisclaimer = "Strain is calculated from cardiovascular load using heart rate data. It is not a medical measurement. Consult your doctor before making changes to your exercise routine."
+        static let strainDisclaimer = "Strain is based on your heart rate during activity. It is not a medical measurement. Consider consulting a qualified professional before significantly changing your exercise routine."
     }
 }

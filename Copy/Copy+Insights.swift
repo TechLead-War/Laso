@@ -124,5 +124,74 @@ extension Copy {
         static func genericMetricDeviation(metricName: String, dev: Int) -> String {
             "your \(metricName) is \(dev)% from your baseline"
         }
+
+        // MARK: - Correlations
+
+        enum Correlations {
+            static let keyDiscoveries = "Key Discoveries"
+            static let whyThingsChanged = "Why Things Changed"
+            static let howMuchMatters = "How Much It Matters"
+            static let allConnections = "All Connections"
+            static let buildingIntelligence = "Still building your intelligence profile."
+            static let keepWearingDevice = "Keep wearing your device and syncing daily so we can find patterns in your data."
+        }
+
+        // MARK: - Metric Detail
+
+        enum MetricDetail {
+            static func expandedRangeNotice(_ days: Int) -> String {
+                "Expanded to \(days) days to show available data"
+            }
+
+            static let noDataYet = "No Data Yet"
+
+            static func noDataDescription(_ metricName: String) -> String {
+                "We do not have enough \(metricName) data to show charts yet. Keep wearing your device and syncing daily."
+            }
+
+            static let insights = "Insights"
+            static let outsideNormalRange = "Outside Range"
+
+            static func baselineDeviation(_ deviation: String) -> String {
+                "\(deviation) from your baseline"
+            }
+
+            static let trend = "Trend"
+            static let forecast = "Forecast"
+            static let periodAvg = "Period Avg"
+            static let outsideRange = "Outside Range"
+            static let withinRange = "Within Range"
+            static let thisMonthVsLastMonth = "This Month vs Last Month"
+            static let scoreImpact = "Score Impact"
+            static let historicalContext = "Historical Context"
+
+            static func dataPointsSummary(_ count: Int) -> String {
+                "Based on \(count) data points"
+            }
+        }
+
+        // MARK: - InsightCard Context Lines
+
+        enum InsightCard {
+            /// "Because" line showing the root cause metric and its deviation
+            static func linkedToMetric(_ metricName: String, deviationPercent: Int) -> String {
+                "Likely linked to your \(metricName) being \(deviationPercent)% off"
+            }
+
+            /// Fallback when we have a root cause metric but no deviation value
+            static func connectedToMetric(_ metricName: String) -> String {
+                "Likely connected to your \(metricName)"
+            }
+
+            /// Data basis line showing how many days of data back the finding
+            static func basedOnDays(_ count: Int) -> String {
+                "Based on \(count) days of your data"
+            }
+
+            /// Confidence qualifier when we have a confidence level but no day count
+            static func confidenceQualifier(_ level: String) -> String {
+                "\(level) confidence from your history"
+            }
+        }
     }
 }

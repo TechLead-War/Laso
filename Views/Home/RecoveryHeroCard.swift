@@ -9,6 +9,7 @@ struct RecoveryHeroCard: View {
     let recoveryLabel: String
     let dayType: String
     let scoreChangeFromLastWeek: Int?
+    var recoveryWhyLine: String? = nil
     var hasLiveReadiness: Bool = true
     var lastRefresh: Date? = nil
     var onTap: (() -> Void)? = nil
@@ -50,6 +51,15 @@ struct RecoveryHeroCard: View {
                         .font(.title3.weight(.bold))
                         .foregroundStyle(.primary)
                         .contentTransition(.numericText())
+
+                    // Why line: one-line explanation of the score
+                    if let whyLine = recoveryWhyLine {
+                        Text(whyLine)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
 
                     // Score change from last week (stable comparison, not intra-day noise)
                     if let weekDelta = scoreChangeFromLastWeek, weekDelta != 0 {
@@ -122,7 +132,7 @@ struct RecoveryHeroCard: View {
         )
         .shadow(color: scoreColor.opacity(0.15), radius: 12, y: 4)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(hasLiveReadiness ? "Recovery" : "Health") score \(score). \(recoveryLabel). \(dayType).")
+        .accessibilityLabel("\(hasLiveReadiness ? "Recovery" : "Health") score \(score). \(recoveryLabel). \(recoveryWhyLine ?? ""). \(dayType).")
         .accessibilityHint("Opens score breakdown")
         .accessibilityIdentifier("home.recoveryCard")
     }
@@ -140,7 +150,8 @@ struct RecoveryHeroCard: View {
             dailyScore: 78,
             recoveryLabel: "Fully Recovered",
             dayType: "Green Day. Push Hard",
-            scoreChangeFromLastWeek: 5
+            scoreChangeFromLastWeek: 5,
+            recoveryWhyLine: "HRV bounced back and resting heart rate is low"
         )
 
         RecoveryHeroCard(
@@ -148,7 +159,8 @@ struct RecoveryHeroCard: View {
             dailyScore: 78,
             recoveryLabel: "Moderate Recovery",
             dayType: "Yellow Day. Maintain",
-            scoreChangeFromLastWeek: -3
+            scoreChangeFromLastWeek: -3,
+            recoveryWhyLine: "Sleep was short, keeping recovery moderate"
         )
 
         RecoveryHeroCard(
@@ -156,7 +168,8 @@ struct RecoveryHeroCard: View {
             dailyScore: 78,
             recoveryLabel: "Low Recovery",
             dayType: "Red Day. Recover",
-            scoreChangeFromLastWeek: -12
+            scoreChangeFromLastWeek: -12,
+            recoveryWhyLine: "HRV has not recovered yet and sleep was short"
         )
     }
     .padding(.vertical)

@@ -81,7 +81,6 @@ private struct BriefingCardView: View {
                 Text(card.label)
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(accent)
-                    .textCase(.uppercase)
                     .lineLimit(1)
 
                 // Headline
@@ -101,7 +100,7 @@ private struct BriefingCardView: View {
 
                 // Bottom row: confidence pill + severity dot
                 HStack(spacing: 6) {
-                    Text("\(Int(card.confidence * 100))% conf")
+                    Text(Copy.Briefing.confidenceBadge(percent: Int(card.confidence * 100)))
                         .font(.system(.caption2, design: .monospaced))
                         .foregroundStyle(accent)
                         .padding(.horizontal, DS.badgeH)
@@ -156,60 +155,55 @@ extension IntelligenceCard.AccentColor {
 #Preview("Body Intelligence Strip") {
     let sampleCards: [IntelligenceCard] = [
         IntelligenceCard(
-
             type: .predictiveRisk,
             icon: "exclamationmark.triangle.fill",
-            label: "PREDICTIVE RISK",
-            headline: "HRV trending 18% below your 14-day baseline",
-            detail: "Correlates with elevated resting HR over the past 3 nights",
+            label: Copy.Briefing.Labels.headsUp,
+            headline: "Your HRV has been dropping since Friday. The last time this happened, it was because you had less deep sleep for 3 nights in a row. You bounced back after 2 good nights.",
+            detail: "This is mainly because your resting heart rate has been off. Based on how your body has responded before, getting extra sleep tonight could help.",
             severity: .warning,
             confidence: 0.87,
             priority: 0.92,
             accentColor: .orange
         ),
         IntelligenceCard(
-
             type: .regimeShift,
-            icon: "arrow.triangle.swap",
-            label: "REGIME SHIFT",
-            headline: "Your sleep architecture shifted to a new pattern 5 days ago",
-            detail: "Deep sleep ratio dropped from 22% to 15%. monitoring",
+            icon: "chart.line.uptrend.xyaxis",
+            label: Copy.Briefing.Labels.somethingChanged,
+            headline: "Your deep sleep has been lower since last Tuesday, shifting by 45 min.",
+            detail: "It went from 1h 30min to 45min. Your resting heart rate changed around the same time, which is probably connected.",
             severity: .notable,
             confidence: 0.74,
             priority: 0.78,
             accentColor: .purple
         ),
         IntelligenceCard(
-
             type: .hiddenDriver,
-            icon: "eye.trianglebadge.exclamationmark.fill",
-            label: "HIDDEN DRIVER",
-            headline: "Weekend activity spikes are suppressing Monday recovery by ~12%",
-            detail: "Granger causality detected with 2-day lag",
+            icon: "link.circle.fill",
+            label: Copy.Briefing.Labels.whyThisIsHappening,
+            headline: "Your weekend activity pushes down your Monday recovery about 2 days later. This connection has been consistent in your data.",
+            detail: "Even after accounting for other factors, this link holds up (strength: 0.64). Based on 90 days of data.",
             severity: .info,
             confidence: 0.81,
             priority: 0.65,
             accentColor: .blue
         ),
         IntelligenceCard(
-
             type: .autonomicBalance,
             icon: "waveform.path.ecg",
-            label: "AUTONOMIC BALANCE",
-            headline: "Sympathetic dominance detected for 3 consecutive days",
-            detail: "Consider active recovery or breathwork today",
+            label: Copy.Briefing.Labels.nervousSystem,
+            headline: "Your nervous system has not fully recovered. Your HRV is 28 ms and resting heart rate is 72 bpm, which suggests your body is still under stress. Consider going easy today.",
+            detail: "HRV: 28 ms, resting heart rate: 72 bpm.",
             severity: .critical,
             confidence: 0.93,
             priority: 0.95,
             accentColor: .red
         ),
         IntelligenceCard(
-
             type: .bodyClockStatus,
-            icon: "clock.arrow.2.circlepath",
-            label: "BODY CLOCK",
-            headline: "Circadian phase delayed by ~40 minutes vs your norm",
-            detail: "Light exposure timing may be a factor",
+            icon: "clock.arrow.circlepath",
+            label: Copy.Briefing.Labels.yourBodyClock,
+            headline: "Your body is at its best for exercise between 4:00 PM and 7:00 PM.",
+            detail: "Your ideal bedtime based on your patterns is around 10:30 PM. Your body tends to be most recovered around 6:00 AM.",
             severity: .info,
             confidence: 0.68,
             priority: 0.52,
@@ -230,12 +224,11 @@ extension IntelligenceCard.AccentColor {
 #Preview("Single Card") {
     TodayBriefingView(cards: [
         IntelligenceCard(
-
             type: .systemCoherence,
-            icon: "circle.hexagongrid.fill",
-            label: "SYSTEM COHERENCE",
-            headline: "All major biomarkers aligned within optimal range today",
-            detail: "Highest coherence score in 30 days",
+            icon: "circle.hexagonpath.fill",
+            label: Copy.Briefing.Labels.everythingLooksGood,
+            headline: "Your body's systems are working well together. 12 strong connections across 8 health measures.",
+            detail: "12 connections across 8 tracked measures.",
             severity: .info,
             confidence: 0.91,
             priority: 0.70,

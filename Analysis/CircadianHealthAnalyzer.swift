@@ -175,9 +175,6 @@ struct CircadianHealthAnalyzer: InsightAnalyzer {
         let samples = stepsSeries.samples.sorted { $0.date < $1.date }
         let daysAnalyzed = samples.count
 
-        // Build hourly activity profile (approximated from daily data)
-        // For true circadian analysis, we'd want hourly data, but we approximate
-        // using the daily value distribution across known active/rest periods
         let dailyValues = samples.map(\.value)
 
         // 1. Activity Amplitude (M10/L5 ratio, normalized)
@@ -186,33 +183,46 @@ struct CircadianHealthAnalyzer: InsightAnalyzer {
         let m10Count = max(1, (sorted.count * 2) / 3)  // highest two-thirds
         let l5Mean = sorted.prefix(l5Count).reduce(0.0, +) / Double(l5Count)
         let m10Mean = sorted.suffix(m10Count).reduce(0.0, +) / Double(m10Count)
-        let overallMean = dailyValues.reduce(0.0, +) / Double(dailyValues.count)
+
+        // Single pass over dailyValues: compute overall mean, total squared sum,
+        // consecutive diff squared sum, and weekday buckets simultaneously.
+        let n = Double(dailyValues.count)
+        let overallMean = dailyValues.reduce(0.0, +) / n
+        var totalSquaredSum = 0.0
+        var consecutiveDiffSquaredSum = 0.0
+        var weekdayBuckets: [Int: (sum: Double, count: Int)] = [:]
+        for i in 0..<dailyValues.count {
+            let val = dailyValues[i]
+            let dev = val - overallMean
+            totalSquaredSum += dev * dev
+
+            if i > 0 {
+                let diff = val - dailyValues[i - 1]
+                consecutiveDiffSquaredSum += diff * diff
+            }
+
+            let weekday = calendar.component(.weekday, from: samples[i].date)
+            let existing = weekdayBuckets[weekday, default: (sum: 0, count: 0)]
+            weekdayBuckets[weekday] = (sum: existing.sum + val, count: existing.count + 1)
+        }
+
         let relativeAmplitude = overallMean > 0 ? (m10Mean - l5Mean) / (m10Mean + l5Mean) : 0
 
         // 2. Inter-daily Stability (IS)
         // IS = (N * Σ(x̄_h - x̄)²) / (p * Σ(x_i - x̄)²)
         // Simplified for daily data: variance of day-of-week means / total variance
-        let weekdayMeans = computeWeekdayMeans(samples: samples, calendar: calendar)
+        let weekdayMeans = weekdayBuckets.mapValues { $0.sum / Double($0.count) }
         let weekdayVariance = weekdayMeans.values.map { ($0 - overallMean) * ($0 - overallMean) }.reduce(0, +) / max(1, Double(weekdayMeans.count))
-        let totalVariance = dailyValues.map { ($0 - overallMean) * ($0 - overallMean) }.reduce(0, +) / max(1, Double(dailyValues.count))
+        let totalVariance = totalSquaredSum / max(1, n)
         let is_value = totalVariance > 0 ? min(1.0, weekdayVariance / totalVariance * Double(weekdayMeans.count)) : 0
 
         // 3. Intra-daily Variability (IV)
         // IV = (N * Σ(x_i - x_{i-1})²) / ((N-1) * Σ(x_i - x̄)²)
-        var consecutiveDiffSquaredSum = 0.0
-        for i in 1..<dailyValues.count {
-            let diff = dailyValues[i] - dailyValues[i - 1]
-            consecutiveDiffSquaredSum += diff * diff
-        }
-        let totalSquaredSum = dailyValues.map { ($0 - overallMean) * ($0 - overallMean) }.reduce(0, +)
-        let n = Double(dailyValues.count)
         let iv_value = totalSquaredSum > 0 ? (n * consecutiveDiffSquaredSum) / ((n - 1) * totalSquaredSum) : 0
 
-        // 4. Sleep Regularity Index (SRI)
-        let sri = computeSleepRegularity(sleepSeries: sleepSeries, calendar: calendar)
-
-        // 5. Social Jet Lag
-        let socialJetLag = computeSocialJetLag(sleepSeries: sleepSeries, calendar: calendar)
+        // 4 & 5. Sleep Regularity Index (SRI) and Social Jet Lag
+        // Computed in a single pass over sleep samples
+        let (sri, socialJetLag) = computeSleepMetrics(sleepSeries: sleepSeries, calendar: calendar)
 
         // 6. Component Scores (each normalized to 0-100)
         let amplitudeScore = min(100, max(0, relativeAmplitude * 200))  // RA of 0.5 = 100
@@ -252,61 +262,60 @@ struct CircadianHealthAnalyzer: InsightAnalyzer {
 
     // MARK: - Helpers
 
-    private static func computeWeekdayMeans(samples: [MetricSample], calendar: Calendar) -> [Int: Double] {
-        var buckets: [Int: [Double]] = [:]
-        for sample in samples {
-            let weekday = calendar.component(.weekday, from: sample.date)
-            buckets[weekday, default: []].append(sample.value)
-        }
-        return buckets.mapValues { $0.reduce(0, +) / Double($0.count) }
-    }
-
-    private static func computeSleepRegularity(sleepSeries: MetricTimeSeries?, calendar: Calendar) -> Double {
+    /// Computes sleep regularity index and social jet lag in a single pass over sleep samples.
+    private static func computeSleepMetrics(sleepSeries: MetricTimeSeries?, calendar: Calendar) -> (sri: Double, socialJetLag: Double) {
         guard let series = sleepSeries, series.samples.count >= 7 else {
-            return 50 // default moderate when no sleep data
+            return (sri: 50, socialJetLag: 0) // defaults when insufficient data
         }
 
-        let sorted = series.samples.sorted { $0.date < $1.date }
-        let durations = sorted.map(\.value)
-
-        // SRI approximation: consistency of sleep duration
-        // Perfect regularity = same duration every day
-        let mean = durations.reduce(0, +) / Double(durations.count)
-        guard mean > 0 else { return 50 }
-
-        let coefficientOfVariation = sqrt(durations.map { ($0 - mean) * ($0 - mean) }.reduce(0, +) / Double(durations.count)) / mean
-
-        // CV of 0 = 100 (perfect), CV of 0.3+ = 0 (highly irregular)
-        return min(100, max(0, (0.3 - coefficientOfVariation) / 0.3 * 100))
-    }
-
-    private static func computeSocialJetLag(sleepSeries: MetricTimeSeries?, calendar: Calendar) -> Double {
-        guard let series = sleepSeries, series.samples.count >= 7 else {
-            return 0
-        }
-
-        var weekdayDurations: [Double] = []
-        var weekendDurations: [Double] = []
+        // Single pass: accumulate stats for SRI (mean + variance) and social jet lag (weekday/weekend split)
+        var sum = 0.0
+        var sqSum = 0.0
+        var weekdaySum = 0.0
+        var weekdayCount = 0
+        var weekendSum = 0.0
+        var weekendCount = 0
 
         for sample in series.samples {
+            let value = sample.value
+            sum += value
+            sqSum += value * value
+
             let weekday = calendar.component(.weekday, from: sample.date)
-            let isWeekend = weekday == 1 || weekday == 7
-            if isWeekend {
-                weekendDurations.append(sample.value)
+            if weekday == 1 || weekday == 7 {
+                weekendSum += value
+                weekendCount += 1
             } else {
-                weekdayDurations.append(sample.value)
+                weekdaySum += value
+                weekdayCount += 1
             }
         }
 
-        guard !weekdayDurations.isEmpty, !weekendDurations.isEmpty else { return 0 }
+        let n = Double(series.samples.count)
+        let mean = sum / n
 
-        let weekdayMean = weekdayDurations.reduce(0, +) / Double(weekdayDurations.count)
-        let weekendMean = weekendDurations.reduce(0, +) / Double(weekendDurations.count)
+        // SRI: coefficient of variation approach
+        // CV of 0 = 100 (perfect regularity), CV of 0.3+ = 0 (highly irregular)
+        let sri: Double
+        if mean > 0 {
+            let variance = sqSum / n - mean * mean
+            let cv = sqrt(max(0, variance)) / mean
+            sri = min(100, max(0, (0.3 - cv) / 0.3 * 100))
+        } else {
+            sri = 50
+        }
 
-        // Social jet lag approximation: difference in sleep duration
-        // as proxy for sleep midpoint shift (longer weekend sleep = later midpoint)
-        // Convert from seconds to hours difference
-        return abs(weekendMean - weekdayMean) / 3600.0
+        // Social jet lag: difference in weekday vs weekend sleep duration as proxy for midpoint shift
+        let socialJetLag: Double
+        if weekdayCount > 0, weekendCount > 0 {
+            let weekdayMean = weekdaySum / Double(weekdayCount)
+            let weekendMean = weekendSum / Double(weekendCount)
+            socialJetLag = abs(weekendMean - weekdayMean) / 3600.0
+        } else {
+            socialJetLag = 0
+        }
+
+        return (sri: sri, socialJetLag: socialJetLag)
     }
 
     private static func circadianDetailText(_ biomarkers: CircadianBiomarkers) -> String {

@@ -995,7 +995,7 @@ final class CompoundInsightEngine {
 
             let baselineMean: Double
             if !priorSamples.isEmpty {
-                baselineMean = priorSamples.map(\.value).reduce(0, +) / Double(priorSamples.count)
+                baselineMean = priorSamples.valueMean
             } else if let bl = baselines[metric] {
                 baselineMean = bl.mean
             } else {
@@ -1181,7 +1181,7 @@ final class CompoundInsightEngine {
         let recentSamples = samples.filter { $0.date >= cutoff }
         guard recentSamples.count >= 14 else { return 0 }
 
-        let overallMean = recentSamples.map(\.value).reduce(0, +) / Double(recentSamples.count)
+        let overallMean = recentSamples.valueMean
         guard overallMean != 0 else { return 0 }
 
         var weekendDeviationCount = 0

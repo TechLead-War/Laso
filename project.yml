@@ -81,6 +81,7 @@ targets:
       base:
         INFOPLIST_FILE: Info.plist
         CODE_SIGN_ENTITLEMENTS: Laso.entitlements
+        CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: S2MAH8X8JM
         PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.app
         MARKETING_VERSION: "1.0.0"
@@ -114,6 +115,7 @@ targets:
       base:
         INFOPLIST_FILE: LasoWidgets/Info.plist
         CODE_SIGN_ENTITLEMENTS: LasoWidgets/LasoWidgets.entitlements
+        CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: S2MAH8X8JM
         PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.app.widgets
         MARKETING_VERSION: "1.0.0"

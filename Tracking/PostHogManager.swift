@@ -26,7 +26,7 @@ final class PostHogManager {
         config.captureElementInteractions = false
         #endif
         #if os(iOS)
-        config.sessionReplay = false
+        config.sessionReplay = true
         if #available(iOS 15.0, *) {
             config.surveys = false
         }

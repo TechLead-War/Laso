@@ -7,6 +7,18 @@ struct SetupStep: Identifiable {
     let instruction: String
 }
 
+/// Static metadata for a supported wearable device
+struct SupportedDeviceInfo {
+    let displayName: String
+    let companionAppName: String
+    let bundlePrefixes: [String]
+    let appStoreURL: URL?
+    let isPublicCatalogSource: Bool
+    let syncSummary: String?
+    let systemImageName: String?
+    let iconColor: Color?
+}
+
 /// All supported wearable devices and their HealthKit integration details
 enum SupportedDevice: String, CaseIterable, Identifiable {
     var id: String { rawValue }
@@ -51,220 +63,70 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
     case peloton
     case generic
 
-    var displayName: String {
-        switch self {
-        case .appleWatch: return "Apple Watch"
-        case .iPhone: return "iPhone"
-        case .garmin: return "Garmin"
-        case .fitbit: return "Fitbit"
-        case .ouraRing: return "Oura Ring"
-        case .whoop: return "Whoop"
-        case .samsungGalaxy: return "Samsung Galaxy"
-        case .amazfit: return "Amazfit"
-        case .withings: return "Withings"
-        case .polar: return "Polar"
-        case .xiaomiSmartBand: return "Xiaomi Smart Band"
-        case .googlePixelWatch: return "Google Pixel Watch"
-        case .noise: return "Noise"
-        case .boAt: return "boAt"
-        case .fireBoltt: return "Fire-Boltt"
-        case .huawei: return "Huawei Watch"
-        case .coros: return "COROS"
-        case .suunto: return "Suunto"
-        case .wahoo: return "Wahoo"
-        case .ticWatch: return "TicWatch"
-        case .casioGShock: return "Casio G-Shock"
-        case .tagHeuer: return "TAG Heuer"
-        case .fossil: return "Fossil"
-        case .ultrahumanRing: return "Ultrahuman Ring Air"
-        case .ringConn: return "RingConn"
-        case .circularRing: return "Circular Ring"
-        case .omron: return "Omron"
-        case .renpho: return "Renpho"
-        case .dexcom: return "Dexcom"
-        case .freestyleLibre: return "Freestyle Libre"
-        case .eightSleep: return "Eight Sleep"
-        case .biostrap: return "Biostrap"
-        case .myzone: return "Myzone"
-        case .peloton: return "Peloton"
-        case .generic: return "Unknown Device"
-        }
+    // MARK: - Metadata Lookup
+
+    private static let deviceInfo: [SupportedDevice: SupportedDeviceInfo] = [
+        .appleWatch: SupportedDeviceInfo(displayName: "Apple Watch", companionAppName: "Apple Health", bundlePrefixes: ["com.apple.health", "com.apple.watch"], appStoreURL: nil, isPublicCatalogSource: true, syncSummary: "Syncs directly through Apple Health", systemImageName: "applewatch", iconColor: .blue),
+        .iPhone: SupportedDeviceInfo(displayName: "iPhone", companionAppName: "Apple Health", bundlePrefixes: ["com.apple.Health", "com.apple.health"], appStoreURL: nil, isPublicCatalogSource: false, syncSummary: "Built-in sensors feed Apple Health", systemImageName: "iphone", iconColor: .blue),
+        .garmin: SupportedDeviceInfo(displayName: "Garmin", companionAppName: "Garmin Connect", bundlePrefixes: ["com.garmin"], appStoreURL: URL(string: "https://apps.apple.com/app/garmin-connect/id583446403"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: nil, iconColor: .cyan),
+        .fitbit: SupportedDeviceInfo(displayName: "Fitbit", companionAppName: "Fitbit", bundlePrefixes: ["com.fitbit"], appStoreURL: URL(string: "https://apps.apple.com/app/fitbit-health-fitness/id462638897"), isPublicCatalogSource: true, syncSummary: "Syncs to Apple Health through a bridge app", systemImageName: nil, iconColor: .teal),
+        .ouraRing: SupportedDeviceInfo(displayName: "Oura Ring", companionAppName: "Oura", bundlePrefixes: ["com.ouraring"], appStoreURL: URL(string: "https://apps.apple.com/app/oura-ring/id1043837948"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: "circle.circle", iconColor: .mint),
+        .whoop: SupportedDeviceInfo(displayName: "Whoop", companionAppName: "Whoop", bundlePrefixes: ["com.whoop"], appStoreURL: URL(string: "https://apps.apple.com/app/whoop/id933944389"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: "waveform.path.ecg.rectangle", iconColor: .orange),
+        .samsungGalaxy: SupportedDeviceInfo(displayName: "Samsung Galaxy", companionAppName: "Samsung Health", bundlePrefixes: ["com.sec.samsung", "com.samsung.health"], appStoreURL: URL(string: "https://apps.apple.com/app/samsung-health/id1224498498"), isPublicCatalogSource: false, syncSummary: nil, systemImageName: nil, iconColor: .indigo),
+        .amazfit: SupportedDeviceInfo(displayName: "Amazfit", companionAppName: "Zepp", bundlePrefixes: ["com.huami", "com.amazfit"], appStoreURL: URL(string: "https://apps.apple.com/app/zepp-formerly-amazfit/id1127269366"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: nil, iconColor: .red),
+        .withings: SupportedDeviceInfo(displayName: "Withings", companionAppName: "Withings Health Mate", bundlePrefixes: ["com.withings"], appStoreURL: URL(string: "https://apps.apple.com/app/withings-health-mate/id542701020"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: "scalemass.fill", iconColor: .green),
+        .polar: SupportedDeviceInfo(displayName: "Polar", companionAppName: "Polar Flow", bundlePrefixes: ["com.polar"], appStoreURL: URL(string: "https://apps.apple.com/app/polar-flow/id717172678"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: nil, iconColor: .red),
+        .xiaomiSmartBand: SupportedDeviceInfo(displayName: "Xiaomi Smart Band", companionAppName: "Mi Fitness", bundlePrefixes: ["com.xiaomi", "com.mi."], appStoreURL: URL(string: "https://apps.apple.com/app/mi-fitness/id1502091498"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: nil, iconColor: .orange),
+        .googlePixelWatch: SupportedDeviceInfo(displayName: "Google Pixel Watch", companionAppName: "Fitbit", bundlePrefixes: ["com.google.ios.fit", "com.google.Fit"], appStoreURL: URL(string: "https://apps.apple.com/app/fitbit-health-fitness/id462638897"), isPublicCatalogSource: false, syncSummary: nil, systemImageName: nil, iconColor: .green),
+        .noise: SupportedDeviceInfo(displayName: "Noise", companionAppName: "NoiseFit", bundlePrefixes: ["com.noisefit"], appStoreURL: URL(string: "https://apps.apple.com/app/noisefit-health-fitness/id1498457147"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: nil, iconColor: .red),
+        .boAt: SupportedDeviceInfo(displayName: "boAt", companionAppName: "boAt Wearables", bundlePrefixes: ["com.boat", "com.imaginmarketing"], appStoreURL: URL(string: "https://apps.apple.com/app/boat-wearables/id1542443145"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: nil, iconColor: .red),
+        .fireBoltt: SupportedDeviceInfo(displayName: "Fire-Boltt", companionAppName: "FireBoltt", bundlePrefixes: ["com.fireboltt"], appStoreURL: URL(string: "https://apps.apple.com/app/fireboltt-pro/id6480042961"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: nil, iconColor: .orange),
+        .huawei: SupportedDeviceInfo(displayName: "Huawei Watch", companionAppName: "Huawei Health", bundlePrefixes: ["com.huawei.health"], appStoreURL: URL(string: "https://apps.apple.com/app/huawei-health/id1174646498"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: nil, iconColor: .red),
+        .coros: SupportedDeviceInfo(displayName: "COROS", companionAppName: "COROS", bundlePrefixes: ["com.coros"], appStoreURL: URL(string: "https://apps.apple.com/app/coros/id1169521325"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: nil, iconColor: .blue),
+        .suunto: SupportedDeviceInfo(displayName: "Suunto", companionAppName: "Suunto", bundlePrefixes: ["com.suunto"], appStoreURL: URL(string: "https://apps.apple.com/app/suunto/id1230327951"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: nil, iconColor: .indigo),
+        .wahoo: SupportedDeviceInfo(displayName: "Wahoo", companionAppName: "Wahoo Fitness", bundlePrefixes: ["com.wahoofitness"], appStoreURL: URL(string: "https://apps.apple.com/app/wahoo-fitness/id391599899"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: "figure.indoor.cycle", iconColor: .blue),
+        .ticWatch: SupportedDeviceInfo(displayName: "TicWatch", companionAppName: "Mobvoi", bundlePrefixes: ["com.mobvoi"], appStoreURL: URL(string: "https://apps.apple.com/app/mobvoi/id1454523498"), isPublicCatalogSource: false, syncSummary: nil, systemImageName: nil, iconColor: .purple),
+        .casioGShock: SupportedDeviceInfo(displayName: "Casio G-Shock", companionAppName: "G-SHOCK MOVE", bundlePrefixes: ["jp.co.casio"], appStoreURL: URL(string: "https://apps.apple.com/app/g-shock-move/id1472764049"), isPublicCatalogSource: false, syncSummary: nil, systemImageName: nil, iconColor: .yellow),
+        .tagHeuer: SupportedDeviceInfo(displayName: "TAG Heuer", companionAppName: "TAG Heuer Connected", bundlePrefixes: ["com.tagheuer"], appStoreURL: URL(string: "https://apps.apple.com/app/tag-heuer-connected/id1456817498"), isPublicCatalogSource: false, syncSummary: nil, systemImageName: nil, iconColor: .indigo),
+        .fossil: SupportedDeviceInfo(displayName: "Fossil", companionAppName: "Fossil Smartwatches", bundlePrefixes: ["com.fossil"], appStoreURL: URL(string: "https://apps.apple.com/app/fossil-smartwatches/id1027498498"), isPublicCatalogSource: false, syncSummary: nil, systemImageName: nil, iconColor: .purple),
+        .ultrahumanRing: SupportedDeviceInfo(displayName: "Ultrahuman Ring Air", companionAppName: "Ultrahuman", bundlePrefixes: ["com.ultrahuman"], appStoreURL: URL(string: "https://apps.apple.com/app/ultrahuman/id1547498498"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: "circle.circle", iconColor: .mint),
+        .ringConn: SupportedDeviceInfo(displayName: "RingConn", companionAppName: "RingConn", bundlePrefixes: ["com.ringconn"], appStoreURL: URL(string: "https://apps.apple.com/app/ringconn/id6443824498"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: "circle.circle", iconColor: .pink),
+        .circularRing: SupportedDeviceInfo(displayName: "Circular Ring", companionAppName: "Circular", bundlePrefixes: ["com.circular"], appStoreURL: URL(string: "https://apps.apple.com/app/circular/id1571234498"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: "circle.circle", iconColor: .mint),
+        .omron: SupportedDeviceInfo(displayName: "Omron", companionAppName: "OMRON connect", bundlePrefixes: ["jp.co.omron.healthcare"], appStoreURL: URL(string: "https://apps.apple.com/app/omron-connect/id1003177498"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: "waveform.path.ecg", iconColor: .teal),
+        .renpho: SupportedDeviceInfo(displayName: "Renpho", companionAppName: "Renpho", bundlePrefixes: ["com.renpho"], appStoreURL: URL(string: "https://apps.apple.com/app/renpho/id1219889498"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: "scalemass.fill", iconColor: .teal),
+        .dexcom: SupportedDeviceInfo(displayName: "Dexcom", companionAppName: "Dexcom", bundlePrefixes: ["com.dexcom"], appStoreURL: URL(string: "https://apps.apple.com/app/dexcom-g7/id1431476498"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: "drop.fill", iconColor: .green),
+        .freestyleLibre: SupportedDeviceInfo(displayName: "Freestyle Libre", companionAppName: "LibreLink", bundlePrefixes: ["com.abbott.librelink"], appStoreURL: URL(string: "https://apps.apple.com/app/librelink/id1307476498"), isPublicCatalogSource: false, syncSummary: nil, systemImageName: "drop.fill", iconColor: .green),
+        .eightSleep: SupportedDeviceInfo(displayName: "Eight Sleep", companionAppName: "Eight Sleep", bundlePrefixes: ["com.eightsleep"], appStoreURL: URL(string: "https://apps.apple.com/app/eight-sleep/id1127389498"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: "bed.double.fill", iconColor: .cyan),
+        .biostrap: SupportedDeviceInfo(displayName: "Biostrap", companionAppName: "Biostrap", bundlePrefixes: ["com.biostrap"], appStoreURL: URL(string: "https://apps.apple.com/app/biostrap/id1187459498"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: nil, iconColor: .purple),
+        .myzone: SupportedDeviceInfo(displayName: "Myzone", companionAppName: "Myzone", bundlePrefixes: ["com.myzone"], appStoreURL: URL(string: "https://apps.apple.com/app/myzone/id874028498"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: "heart.fill", iconColor: .orange),
+        .peloton: SupportedDeviceInfo(displayName: "Peloton", companionAppName: "Peloton", bundlePrefixes: ["com.onepeloton"], appStoreURL: URL(string: "https://apps.apple.com/app/peloton/id792750948"), isPublicCatalogSource: true, syncSummary: nil, systemImageName: "figure.indoor.cycle", iconColor: .red),
+        .generic: SupportedDeviceInfo(displayName: "Unknown Device", companionAppName: "Companion App", bundlePrefixes: [], appStoreURL: nil, isPublicCatalogSource: false, syncSummary: nil, systemImageName: "sensor.fill", iconColor: .secondary),
+    ]
+
+    private var info: SupportedDeviceInfo {
+        Self.deviceInfo[self] ?? SupportedDeviceInfo(displayName: rawValue, companionAppName: "Companion App", bundlePrefixes: [], appStoreURL: nil, isPublicCatalogSource: false, syncSummary: nil, systemImageName: nil, iconColor: nil)
     }
 
-    var companionAppName: String {
-        switch self {
-        case .appleWatch, .iPhone: return "Apple Health"
-        case .garmin: return "Garmin Connect"
-        case .fitbit: return "Fitbit"
-        case .ouraRing: return "Oura"
-        case .whoop: return "Whoop"
-        case .samsungGalaxy: return "Samsung Health"
-        case .amazfit: return "Zepp"
-        case .withings: return "Withings Health Mate"
-        case .polar: return "Polar Flow"
-        case .xiaomiSmartBand: return "Mi Fitness"
-        case .googlePixelWatch: return "Fitbit"
-        case .noise: return "NoiseFit"
-        case .boAt: return "boAt Wearables"
-        case .fireBoltt: return "FireBoltt"
-        case .huawei: return "Huawei Health"
-        case .coros: return "COROS"
-        case .suunto: return "Suunto"
-        case .wahoo: return "Wahoo Fitness"
-        case .ticWatch: return "Mobvoi"
-        case .casioGShock: return "G-SHOCK MOVE"
-        case .tagHeuer: return "TAG Heuer Connected"
-        case .fossil: return "Fossil Smartwatches"
-        case .ultrahumanRing: return "Ultrahuman"
-        case .ringConn: return "RingConn"
-        case .circularRing: return "Circular"
-        case .omron: return "OMRON connect"
-        case .renpho: return "Renpho"
-        case .dexcom: return "Dexcom"
-        case .freestyleLibre: return "LibreLink"
-        case .eightSleep: return "Eight Sleep"
-        case .biostrap: return "Biostrap"
-        case .myzone: return "Myzone"
-        case .peloton: return "Peloton"
-        case .generic: return "Companion App"
-        }
-    }
+    var displayName: String { info.displayName }
 
-    var companionAppBundlePrefixes: [String] {
-        switch self {
-        case .appleWatch: return ["com.apple.health", "com.apple.watch"]
-        case .iPhone: return ["com.apple.Health", "com.apple.health"]
-        case .garmin: return ["com.garmin"]
-        case .fitbit: return ["com.fitbit"]
-        case .ouraRing: return ["com.ouraring"]
-        case .whoop: return ["com.whoop"]
-        case .samsungGalaxy: return ["com.sec.samsung", "com.samsung.health"]
-        case .amazfit: return ["com.huami", "com.amazfit"]
-        case .withings: return ["com.withings"]
-        case .polar: return ["com.polar"]
-        case .xiaomiSmartBand: return ["com.xiaomi", "com.mi."]
-        case .googlePixelWatch: return ["com.google.ios.fit", "com.google.Fit"]
-        case .noise: return ["com.noisefit"]
-        case .boAt: return ["com.boat", "com.imaginmarketing"]
-        case .fireBoltt: return ["com.fireboltt"]
-        case .huawei: return ["com.huawei.health"]
-        case .coros: return ["com.coros"]
-        case .suunto: return ["com.suunto"]
-        case .wahoo: return ["com.wahoofitness"]
-        case .ticWatch: return ["com.mobvoi"]
-        case .casioGShock: return ["jp.co.casio"]
-        case .tagHeuer: return ["com.tagheuer"]
-        case .fossil: return ["com.fossil"]
-        case .ultrahumanRing: return ["com.ultrahuman"]
-        case .ringConn: return ["com.ringconn"]
-        case .circularRing: return ["com.circular"]
-        case .omron: return ["jp.co.omron.healthcare"]
-        case .renpho: return ["com.renpho"]
-        case .dexcom: return ["com.dexcom"]
-        case .freestyleLibre: return ["com.abbott.librelink"]
-        case .eightSleep: return ["com.eightsleep"]
-        case .biostrap: return ["com.biostrap"]
-        case .myzone: return ["com.myzone"]
-        case .peloton: return ["com.onepeloton"]
-        case .generic: return []
-        }
-    }
+    var companionAppName: String { info.companionAppName }
 
-    var appStoreURL: URL? {
-        switch self {
-        case .appleWatch, .iPhone, .generic: return nil
-        case .garmin: return URL(string: "https://apps.apple.com/app/garmin-connect/id583446403")
-        case .fitbit: return URL(string: "https://apps.apple.com/app/fitbit-health-fitness/id462638897")
-        case .ouraRing: return URL(string: "https://apps.apple.com/app/oura-ring/id1043837948")
-        case .whoop: return URL(string: "https://apps.apple.com/app/whoop/id933944389")
-        case .samsungGalaxy: return URL(string: "https://apps.apple.com/app/samsung-health/id1224498498")
-        case .amazfit: return URL(string: "https://apps.apple.com/app/zepp-formerly-amazfit/id1127269366")
-        case .withings: return URL(string: "https://apps.apple.com/app/withings-health-mate/id542701020")
-        case .polar: return URL(string: "https://apps.apple.com/app/polar-flow/id717172678")
-        case .xiaomiSmartBand: return URL(string: "https://apps.apple.com/app/mi-fitness/id1502091498")
-        case .googlePixelWatch: return URL(string: "https://apps.apple.com/app/fitbit-health-fitness/id462638897")
-        case .noise: return URL(string: "https://apps.apple.com/app/noisefit-health-fitness/id1498457147")
-        case .boAt: return URL(string: "https://apps.apple.com/app/boat-wearables/id1542443145")
-        case .fireBoltt: return URL(string: "https://apps.apple.com/app/fireboltt-pro/id6480042961")
-        case .huawei: return URL(string: "https://apps.apple.com/app/huawei-health/id1174646498")
-        case .coros: return URL(string: "https://apps.apple.com/app/coros/id1169521325")
-        case .suunto: return URL(string: "https://apps.apple.com/app/suunto/id1230327951")
-        case .wahoo: return URL(string: "https://apps.apple.com/app/wahoo-fitness/id391599899")
-        case .ticWatch: return URL(string: "https://apps.apple.com/app/mobvoi/id1454523498")
-        case .casioGShock: return URL(string: "https://apps.apple.com/app/g-shock-move/id1472764049")
-        case .tagHeuer: return URL(string: "https://apps.apple.com/app/tag-heuer-connected/id1456817498")
-        case .fossil: return URL(string: "https://apps.apple.com/app/fossil-smartwatches/id1027498498")
-        case .ultrahumanRing: return URL(string: "https://apps.apple.com/app/ultrahuman/id1547498498")
-        case .ringConn: return URL(string: "https://apps.apple.com/app/ringconn/id6443824498")
-        case .circularRing: return URL(string: "https://apps.apple.com/app/circular/id1571234498")
-        case .omron: return URL(string: "https://apps.apple.com/app/omron-connect/id1003177498")
-        case .renpho: return URL(string: "https://apps.apple.com/app/renpho/id1219889498")
-        case .dexcom: return URL(string: "https://apps.apple.com/app/dexcom-g7/id1431476498")
-        case .freestyleLibre: return URL(string: "https://apps.apple.com/app/librelink/id1307476498")
-        case .eightSleep: return URL(string: "https://apps.apple.com/app/eight-sleep/id1127389498")
-        case .biostrap: return URL(string: "https://apps.apple.com/app/biostrap/id1187459498")
-        case .myzone: return URL(string: "https://apps.apple.com/app/myzone/id874028498")
-        case .peloton: return URL(string: "https://apps.apple.com/app/peloton/id792750948")
-        }
-    }
+    var companionAppBundlePrefixes: [String] { info.bundlePrefixes }
 
-    /// Only show sources in the pre-sync catalog when the public support claim
-    /// is not currently high risk. Detection can still surface hidden sources
-    /// dynamically once they actually write samples into Apple Health.
-    var isPublicCatalogSource: Bool {
-        switch self {
-        case .generic, .iPhone, .fitbit, .samsungGalaxy, .googlePixelWatch, .fossil, .freestyleLibre:
-            return false
-        default:
-            return true
-        }
-    }
+    var appStoreURL: URL? { info.appStoreURL }
+
+    var isPublicCatalogSource: Bool { info.isPublicCatalogSource }
 
     var syncSummary: String {
-        switch self {
-        case .appleWatch:
-            return "Syncs directly through Apple Health"
-        case .iPhone:
-            return "Built-in sensors feed Apple Health"
-        default:
-            return "\(companionAppName) writes into Apple Health"
-        }
+        info.syncSummary ?? "\(companionAppName) writes into Apple Health"
     }
 
     var systemImageName: String {
-        switch self {
-        case .appleWatch: return "applewatch"
-        case .iPhone: return "iphone"
-        case .ouraRing, .ultrahumanRing, .ringConn, .circularRing: return "circle.circle"
-        case .whoop: return "waveform.path.ecg.rectangle"
-        case .withings, .renpho: return "scalemass.fill"
-        case .omron: return "waveform.path.ecg"
-        case .dexcom, .freestyleLibre: return "drop.fill"
-        case .eightSleep: return "bed.double.fill"
-        case .myzone: return "heart.fill"
-        case .wahoo, .peloton: return "figure.indoor.cycle"
-        case .generic: return "sensor.fill"
-        default: return "watchface.applewatch.case"
-        }
+        info.systemImageName ?? "watchface.applewatch.case"
     }
 
     var iconColor: Color {
-        switch self {
-        case .appleWatch, .iPhone, .coros, .wahoo: return .blue
-        case .garmin: return .cyan
-        case .fitbit: return .teal
-        case .ouraRing, .ultrahumanRing, .circularRing: return .mint
-        case .whoop, .xiaomiSmartBand, .fireBoltt, .myzone: return .orange
-        case .samsungGalaxy, .suunto, .tagHeuer: return .indigo
-        case .amazfit, .polar, .noise, .boAt, .huawei, .peloton: return .red
-        case .withings, .googlePixelWatch, .dexcom, .freestyleLibre: return .green
-        case .ticWatch, .fossil, .biostrap: return .purple
-        case .casioGShock: return .yellow
-        case .ringConn: return .pink
-        case .omron, .renpho: return .teal
-        case .eightSleep: return .cyan
-        case .generic: return .secondary
-        }
+        info.iconColor ?? .secondary
     }
 
     // MARK: - Metric Tiers (shared sets to reduce duplication)
@@ -402,6 +264,14 @@ enum SupportedDevice: String, CaseIterable, Identifiable {
                 SetupStep(instruction: "iPhone sensors track steps, distance, and flights automatically"),
                 SetupStep(instruction: "Open Settings → Privacy & Security → Motion & Fitness → enable Fitness Tracking"),
                 SetupStep(instruction: "Data appears in Apple Health automatically")
+            ]
+        case .fitbit:
+            return [
+                SetupStep(instruction: "Install Fitbit from the App Store and pair your device"),
+                SetupStep(instruction: "Install a bridge app such as Sync Solver for Fitbit from the App Store"),
+                SetupStep(instruction: "Open the bridge app and sign in with your Fitbit account"),
+                SetupStep(instruction: "Enable Apple Health sync inside the bridge app"),
+                SetupStep(instruction: "Allow the bridge app to write to Apple Health when prompted")
             ]
         default:
             // Standard 4-step flow for all third-party devices

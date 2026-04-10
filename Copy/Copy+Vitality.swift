@@ -19,21 +19,21 @@ extension Copy {
 
         // MARK: - Narratives
 
-        static let buildingProfileNarrative = "We are building your profile. For now, your vitality age stays aligned with your chronological age."
+        static let buildingProfileNarrative = "We are building your profile. For now, your vitality age matches your real age."
         static func earlyYoungerNarrative(delta: Int) -> String {
-            "Early estimate: your body currently appears about \(delta) years younger. Confidence improves as more data is collected."
+            "Early estimate: your body looks about \(delta) years younger. This gets more accurate with more data."
         }
         static func earlyOlderNarrative(delta: Int) -> String {
-            "Early estimate: your body currently appears about \(delta) years older. Confidence improves as more data is collected."
+            "Early estimate: your body looks about \(delta) years older. This gets more accurate with more data."
         }
-        static let earlyAlignedNarrative = "Early estimate: your vitality age is currently aligned with your chronological age."
+        static let earlyAlignedNarrative = "Early estimate: your vitality age matches your real age."
         static func personalYoungerNarrative(delta: Int) -> String {
-            "Your body is performing about \(delta) years younger than your chronological age."
+            "Your body is performing about \(delta) years younger than your actual age."
         }
         static func personalOlderNarrative(delta: Int) -> String {
-            "Your trend suggests ~\(delta) years above your chronological age. The top improvement levers below can help close this gap."
+            "Your numbers suggest about \(delta) years above your actual age. The tips below can help close this gap."
         }
-        static let personalAlignedNarrative = "Your vitality age is aligned with your chronological age. Maintaining your current routine can preserve this trend."
+        static let personalAlignedNarrative = "Your vitality age matches your real age. Keep doing what you are doing to stay on track."
 
         // MARK: - Pace
 
@@ -51,14 +51,14 @@ extension Copy {
         static let topImprovements = "Top Improvements"
         static let metricContributions = "Metric Contributions"
         static let howThisWorks = "How this works"
-        static let methodology = "Vitality Age compares your key metrics against age-adjusted population norms and combines them into one performance age estimate. It is for wellness guidance only and is not a medical diagnosis."
+        static let methodology = "Vitality Age compares your health numbers to what is typical for your age and turns that into a single number. This is for wellness and informational purposes only."
         static func ageLabel(_ age: Int) -> String { "Age \(age)" }
         static func metricSubtitle(current: String, expected: String) -> String { "\(current) now, typical \(expected)" }
 
         // MARK: - Data Maturity
 
-        static let buildingProfileDescription = "Your vitality age matches your real age while we learn your baseline. Keep wearing your device."
-        static let earlyEstimateDescription = "Early estimate. Accuracy improves each day as we learn your patterns."
+        static let buildingProfileDescription = "Your vitality age matches your real age while we learn what is normal for you. Keep wearing your device."
+        static let earlyEstimateDescription = "Early estimate. Gets more accurate each day as we learn your patterns."
         static func dataProgress(days: Int, target: Int) -> String { "\(days) of \(target) days" }
 
         // MARK: - Trend
@@ -70,15 +70,15 @@ extension Copy {
 
         // MARK: - Improvement Suggestions
 
-        static let improveVO2Max = "Add 2-3 sessions of vigorous cardio per week (running, cycling, swimming) to boost aerobic capacity."
-        static let improveRHR = "Regular aerobic exercise and stress management can lower resting heart rate over time."
-        static let improveHRV = "Prioritize sleep quality, practice deep breathing, and maintain consistent exercise to improve HRV."
-        static let improveSleep = "Aim for 7-9 hours of sleep with a consistent schedule. Limit screens and caffeine before bed."
-        static let improveWalkingSpeed = "Walking speed reflects overall fitness. Regular walking, strength training, and balance work can help."
-        static let improveSteps = "Increase daily movement. Take walking meetings, use stairs, and add a daily walk to your routine."
-        static let improveExercise = "Build up to 150+ minutes of moderate exercise per week through activities you enjoy."
-        static let improveBodyComp = "Focus on sustainable nutrition and regular exercise. Small consistent changes have the biggest impact."
-        static let improveDefault = "Track this metric consistently and look for patterns in your data."
+        static let improveVO2Max = "Try running, cycling, or swimming 2 to 3 times a week to build your cardio fitness."
+        static let improveRHR = "Regular exercise and less stress can bring your resting heart rate down over time."
+        static let improveHRV = "Better sleep, deep breathing, and regular exercise all help improve HRV."
+        static let improveSleep = "Try for 7 to 9 hours of sleep on a regular schedule. Cut screens and caffeine before bed."
+        static let improveWalkingSpeed = "Walking speed reflects overall fitness. Regular walks, strength work, and balance exercises can help."
+        static let improveSteps = "Move more during the day. Take walking meetings, use stairs, and add a daily walk."
+        static let improveExercise = "Work up to 150 or more minutes of exercise per week doing things you enjoy."
+        static let improveBodyComp = "Focus on eating well and staying active. Small steady changes make the biggest difference."
+        static let improveDefault = "Keep tracking this and look for patterns in your data."
 
         // MARK: - Pace Labels (VitalityScorer)
 

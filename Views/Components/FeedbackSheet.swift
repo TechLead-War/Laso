@@ -30,14 +30,14 @@ struct FeedbackSheet: View {
                     Text("What should we build next?")
                         .font(.title2.weight(.bold))
 
-                    Text("Tell us the feature you want most. we'll build it for you.")
+                    Text("Tell us the feature you want most. We will build it for you.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
 
                 // Category picker
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("What's this about?")
+                    Text("What is this about?")
                         .font(.subheadline.weight(.medium))
 
                     HStack(spacing: 8) {
@@ -148,7 +148,7 @@ struct FeedbackSheet: View {
             Text("Thank You!")
                 .font(.title2.weight(.bold))
 
-            Text("We'll get to work on it. Your input shapes what comes next.")
+            Text("We will get to work on it. Your input shapes what comes next.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

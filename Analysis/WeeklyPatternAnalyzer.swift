@@ -39,6 +39,9 @@ struct WeeklyPatternAnalyzer {
             (.steps, "steps"), (.activeCalories, "active calories"), (.exerciseMinutes, "exercise minutes")
         ]
 
+        var bestInsight: Insight?
+        var bestDeficit: Double = 0
+
         for entry in metricsToCheck {
             guard let series = timeSeries[entry.metric] else { continue }
 
@@ -65,21 +68,24 @@ struct WeeklyPatternAnalyzer {
 
             guard deficit >= 10 else { continue }
 
-            return Insight(
-                metric: entry.metric,
-                title: "Weakest Day: \(weakestName)",
-                summary: "\(weakestName) is your least active day with \(entry.metric.formatWithUnit(weakest.avg)) avg. \(String(format: "%.0f", deficit))% below your daily average. \(strongestName) is your strongest (\(entry.metric.formatWithUnit(strongest.avg))).",
-                recommendation: "\(weakestName) averages \(entry.metric.formatWithUnit(weakest.avg)). \(String(format: "%.0f", deficit))% below your daily mean of \(entry.metric.formatWithUnit(overallAvg)). Your strongest day is \(strongestName) at \(entry.metric.formatWithUnit(strongest.avg)).",
-                severity: deficit >= 25 ? .warning : .info,
-                trend: .stable,
-                currentValue: weakest.avg,
-                baselineValue: overallAvg,
-                deviationPercent: -deficit,
-                category: .weeklyPattern,
-                relatedMetrics: [entry.metric]
-            )
+            if deficit > bestDeficit {
+                bestDeficit = deficit
+                bestInsight = Insight(
+                    metric: entry.metric,
+                    title: "Weakest Day: \(weakestName)",
+                    summary: "\(weakestName) is your least active day with \(entry.metric.formatWithUnit(weakest.avg)) avg. \(String(format: "%.0f", deficit))% below your daily average. \(strongestName) is your strongest (\(entry.metric.formatWithUnit(strongest.avg))).",
+                    recommendation: "\(weakestName) averages \(entry.metric.formatWithUnit(weakest.avg)). \(String(format: "%.0f", deficit))% below your daily mean of \(entry.metric.formatWithUnit(overallAvg)). Your strongest day is \(strongestName) at \(entry.metric.formatWithUnit(strongest.avg)).",
+                    severity: deficit >= 25 ? .warning : .info,
+                    trend: .stable,
+                    currentValue: weakest.avg,
+                    baselineValue: overallAvg,
+                    deviationPercent: -deficit,
+                    category: .weeklyPattern,
+                    relatedMetrics: [entry.metric]
+                )
+            }
         }
-        return nil
+        return bestInsight
     }
 
     // MARK: - Weekend Gap (multi-metric)
@@ -92,6 +98,9 @@ struct WeeklyPatternAnalyzer {
             (.activeCalories, "active calories"),
             (.sleepDuration, "sleep")
         ]
+
+        var bestInsight: Insight?
+        var bestGap: Double = 0
 
         for entry in metricsToCheck {
             guard let series = timeSeries[entry.metric] else { continue }
@@ -130,25 +139,28 @@ struct WeeklyPatternAnalyzer {
 
             guard abs(gap) >= 15 else { continue }
 
-            let moreActive = gap > 0 ? "weekdays" : "weekends"
+            if abs(gap) > abs(bestGap) {
+                bestGap = gap
+                let moreActive = gap > 0 ? "weekdays" : "weekends"
 
-            return Insight(
-                metric: entry.metric,
-                title: "\(entry.metric.displayName): Weekday vs Weekend",
-                summary: "Your \(entry.label) is \(String(format: "%.0f", abs(gap)))% higher on \(moreActive). Weekday avg: \(entry.metric.formatWithUnit(weekdayAvg)), weekend avg: \(entry.metric.formatWithUnit(weekendAvg)).",
-                recommendation: gap > 20 ?
-                    "Weekend \(entry.label) averages \(entry.metric.formatWithUnit(weekendAvg)) vs \(entry.metric.formatWithUnit(weekdayAvg)) on weekdays. a \(String(format: "%.0f", abs(gap)))% gap." :
-                    "Weekday avg: \(entry.metric.formatWithUnit(weekdayAvg)), weekend avg: \(entry.metric.formatWithUnit(weekendAvg)). \(String(format: "%.0f", abs(gap)))% difference.",
-                severity: abs(gap) >= 30 ? .warning : .info,
-                trend: .stable,
-                currentValue: weekendAvg,
-                baselineValue: weekdayAvg,
-                deviationPercent: -gap,
-                category: .weeklyPattern,
-                relatedMetrics: [entry.metric]
-            )
+                bestInsight = Insight(
+                    metric: entry.metric,
+                    title: "\(entry.metric.displayName): Weekday vs Weekend",
+                    summary: "Your \(entry.label) is \(String(format: "%.0f", abs(gap)))% higher on \(moreActive). Weekday avg: \(entry.metric.formatWithUnit(weekdayAvg)), weekend avg: \(entry.metric.formatWithUnit(weekendAvg)).",
+                    recommendation: gap > 20 ?
+                        "Weekend \(entry.label) averages \(entry.metric.formatWithUnit(weekendAvg)) vs \(entry.metric.formatWithUnit(weekdayAvg)) on weekdays. A \(String(format: "%.0f", abs(gap)))% gap." :
+                        "Weekday avg: \(entry.metric.formatWithUnit(weekdayAvg)), weekend avg: \(entry.metric.formatWithUnit(weekendAvg)). \(String(format: "%.0f", abs(gap)))% difference.",
+                    severity: abs(gap) >= 30 ? .warning : .info,
+                    trend: .stable,
+                    currentValue: weekendAvg,
+                    baselineValue: weekdayAvg,
+                    deviationPercent: -gap,
+                    category: .weeklyPattern,
+                    relatedMetrics: [entry.metric]
+                )
+            }
         }
-        return nil
+        return bestInsight
     }
 
     // MARK: - Weekly Consistency (multi-metric)
@@ -156,6 +168,9 @@ struct WeeklyPatternAnalyzer {
     private static func analyzeWeeklyConsistency(timeSeries: [HealthMetric: MetricTimeSeries]) -> Insight? {
         // Analyze consistency across the best available metric
         let metricsToCheck: [HealthMetric] = [.steps, .exerciseMinutes, .activeCalories, .sleepDuration]
+
+        var bestInsight: Insight?
+        var bestCV: Double = 0
 
         for metric in metricsToCheck {
             guard let series = timeSeries[metric] else { continue }
@@ -175,27 +190,30 @@ struct WeeklyPatternAnalyzer {
 
             let cv = dayAverages.standardDeviation / mean * 100
 
-            let isConsistent = cv < 20
+            if cv > bestCV {
+                bestCV = cv
+                let isConsistent = cv < 20
 
-            return Insight(
-                metric: metric,
-                title: "\(metric.displayName) Consistency",
-                summary: isConsistent ?
-                    "Your \(metric.displayName.lowercased()) is consistent across the week with a coefficient of variation of \(String(format: "%.0f", cv))%." :
-                    "Your \(metric.displayName.lowercased()) varies \(String(format: "%.0f", cv))% across the week (coefficient of variation).",
-                recommendation: isConsistent ?
-                    "Day-to-day variation is \(String(format: "%.0f", cv))% (coefficient of variation). your \(metric.displayName.lowercased()) is distributed evenly across the week." :
-                    "Day-to-day variation is \(String(format: "%.0f", cv))% (coefficient of variation). Your \(metric.displayName.lowercased()) swings significantly between your most and least active days.",
-                severity: cv > 35 ? .warning : .info,
-                trend: isConsistent ? .improving : .stable,
-                currentValue: cv,
-                baselineValue: 20,
-                deviationPercent: cv - 20,
-                category: .weeklyPattern,
-                relatedMetrics: [metric]
-            )
+                bestInsight = Insight(
+                    metric: metric,
+                    title: "\(metric.displayName) Consistency",
+                    summary: isConsistent ?
+                        "Your \(metric.displayName.lowercased()) is consistent across the week with a coefficient of variation of \(String(format: "%.0f", cv))%." :
+                        "Your \(metric.displayName.lowercased()) varies \(String(format: "%.0f", cv))% across the week (coefficient of variation).",
+                    recommendation: isConsistent ?
+                        "Day-to-day variation is \(String(format: "%.0f", cv))% (coefficient of variation). Your \(metric.displayName.lowercased()) is distributed evenly across the week." :
+                        "Day-to-day variation is \(String(format: "%.0f", cv))% (coefficient of variation). Your \(metric.displayName.lowercased()) swings significantly between your most and least active days.",
+                    severity: cv > 35 ? .warning : .info,
+                    trend: isConsistent ? .improving : .stable,
+                    currentValue: cv,
+                    baselineValue: 20,
+                    deviationPercent: cv - 20,
+                    category: .weeklyPattern,
+                    relatedMetrics: [metric]
+                )
+            }
         }
-        return nil
+        return bestInsight
     }
 
     // MARK: - Helpers
@@ -366,7 +384,7 @@ struct CyclePhaseAnalyzer {
                 return "\(signal.label) \(direction) \(String(format: "%.0f", abs(signal.deviationPercent)))%"
             }
 
-        var summary = "You're in your \(currentPhase.rawValue) phase (day \(dayInCycle) of ~\(estimatedCycleLength)). \(currentPhase.baselineExpectation)"
+        var summary = "You are in your \(currentPhase.rawValue) phase (day \(dayInCycle) of ~\(estimatedCycleLength)). \(currentPhase.baselineExpectation)"
         if !highlights.isEmpty {
             summary += " Compared with your cycle average: \(highlights.joined(separator: ", "))."
         }

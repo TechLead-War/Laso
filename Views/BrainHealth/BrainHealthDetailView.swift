@@ -20,7 +20,7 @@ struct BrainHealthDetailView: View {
             .padding(.horizontal)
             .padding(.bottom, 32)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("Brain Health")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { AppAnalytics.shared.trackFeatureOpen(.brainHealth) }
@@ -35,7 +35,7 @@ struct BrainHealthDetailView: View {
                 .font(.system(size: 56, weight: .bold, design: .rounded).monospacedDigit())
                 .foregroundStyle(.primary)
 
-            Text("BRAIN HEALTH")
+            Text(Copy.BrainHealth.brainHealthLabel)
                 .font(.system(size: 13, weight: .semibold))
                 .tracking(2)
                 .foregroundStyle(.secondary)
@@ -53,7 +53,7 @@ struct BrainHealthDetailView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "clock.arrow.circlepath")
                         .font(.caption2.weight(.bold))
-                    Text("Building your brain profile")
+                    Text(Copy.BrainHealth.learningPatterns)
                         .font(.caption.weight(.semibold))
                 }
                 .foregroundStyle(.tertiary)
@@ -80,11 +80,11 @@ struct BrainHealthDetailView: View {
         let durationValue = brainScore.sleepDurationScore.map { $0 / 100 }
 
         return VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text("Cognitive Recovery")
+            Text(Copy.BrainHealth.sleepRecovery)
                 .font(.headline)
 
             driverRow(
-                label: "HRV Signal",
+                label: Copy.BrainHealth.heartRecovery,
                 icon: "waveform.path.ecg",
                 value: brainScore.cognitiveReadiness / 100,
                 color: readinessColor(brainScore.cognitiveReadiness / 100),
@@ -133,7 +133,7 @@ struct BrainHealthDetailView: View {
                         .font(.subheadline.weight(.medium))
 
                     if isEstimate {
-                        Text("Est.")
+                        Text(Copy.BrainHealth.estimated)
                             .font(.caption2.weight(.medium))
                             .foregroundStyle(.secondary)
                             .padding(.horizontal, 5)
@@ -179,12 +179,12 @@ struct BrainHealthDetailView: View {
         let hasSleepStages = brainScore.remSleepScore != nil || brainScore.deepSleepScore != nil
 
         return VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text("Memory & Recovery")
+            Text(Copy.BrainHealth.sleepAndMemory)
                 .font(.headline)
 
             HStack(spacing: 16) {
                 statBox(
-                    label: brainScore.remSleepScore != nil ? "REM Quality" : "REM Quality (Est.)",
+                    label: brainScore.remSleepScore != nil ? "Dream Sleep" : "Dream Sleep (Est.)",
                     value: "\(Int(remDisplay))%",
                     color: readinessColor(remDisplay / 100)
                 )
@@ -207,11 +207,11 @@ struct BrainHealthDetailView: View {
             }
 
             if !hasSleepStages {
-                Text("Sleep stage data not available. Values are estimated from other signals.")
+                Text(Copy.BrainHealth.noSleepStageData)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
-                Text("Deep sleep clears brain waste. REM consolidates memory.")
+                Text(Copy.BrainHealth.sleepBrainExplanation)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -257,7 +257,7 @@ struct BrainHealthDetailView: View {
 
     private var stressLoadSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text("Cognitive Capacity")
+            Text(Copy.BrainHealth.mentalEnergy)
                 .font(.headline)
 
             VStack(spacing: 8) {
@@ -281,7 +281,7 @@ struct BrainHealthDetailView: View {
                 }
                 .frame(height: 10)
 
-                Text("Available cognitive bandwidth after stress load")
+                Text(Copy.BrainHealth.mentalEnergyExplanation)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -303,12 +303,12 @@ struct BrainHealthDetailView: View {
 
     private var fitnessSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text("Long-Term Brain Fitness")
+            Text(Copy.BrainHealth.brainHealthOverTime)
                 .font(.headline)
 
             HStack(spacing: 16) {
                 statBox(
-                    label: "Neurovascular",
+                    label: Copy.BrainHealth.heartAndBrain,
                     value: "\(Int(brainScore.neurovascularFitness))%",
                     color: readinessColor(brainScore.neurovascularFitness / 100)
                 )
@@ -318,13 +318,13 @@ struct BrainHealthDetailView: View {
                     .frame(width: 1, height: DS.dividerHeight)
 
                 statBox(
-                    label: "Circadian",
+                    label: Copy.BrainHealth.sleepRhythm,
                     value: "\(Int(brainScore.circadianAlignment))%",
                     color: readinessColor(brainScore.circadianAlignment / 100)
                 )
             }
 
-            Text("Cardiovascular fitness and sleep regularity predict long-term brain health.")
+            Text(Copy.BrainHealth.longTermExplanation)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -337,7 +337,7 @@ struct BrainHealthDetailView: View {
 
     private var weeklyChartSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text("7-Day Brain Health")
+            Text(Copy.BrainHealth.lastSevenDays)
                 .font(.headline)
 
             if weeklyHistory.isEmpty {
@@ -451,7 +451,7 @@ struct BrainHealthDetailView: View {
 
     private var insightsSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text("Key Factors")
+            Text(Copy.BrainHealth.whatHelpedAndHurt)
                 .font(.headline)
 
             ForEach(brainScore.topFactors, id: \.label) { factor in

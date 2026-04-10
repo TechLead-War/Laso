@@ -72,9 +72,9 @@ struct InflammationRiskAnalyzer {
         if isCompoundSignal {
             insights.append(InsightFactory.make(
                 metric: .heartRateVariability,
-                title: "Immune Activation Signal",
-                summary: "Your HRV has dropped \(String(format: "%.0f", hrvDropPercent))% below baseline while wrist temperature is elevated. a compound pattern strongly associated with immune system activation or early infection.",
-                recommendation: "The combination of suppressed HRV (autonomic stress) and elevated body temperature is a well-validated early warning of inflammatory response. In clinical studies, this pattern appears 1-3 days before symptom onset. Current HRV: \(String(format: "%.0f", currentHRV)) ms vs baseline \(String(format: "%.0f", hrvBaseline.mean)) ms.",
+                title: "Body Stress Signal",
+                summary: "Your HRV has dropped \(String(format: "%.0f", hrvDropPercent))% below baseline while wrist temperature is elevated. a compound pattern suggesting your body may be under increased stress.",
+                recommendation: "The combination of suppressed HRV (autonomic stress) and elevated body temperature is a well-validated early signal that your body is working harder than usual to recover. In research studies, this pattern often appears 1 to 3 days before you feel off. Current HRV: \(String(format: "%.0f", currentHRV)) ms vs baseline \(String(format: "%.0f", hrvBaseline.mean)) ms.",
                 severity: .warning,
                 trend: .declining,
                 currentValue: currentHRV,
@@ -93,9 +93,9 @@ struct InflammationRiskAnalyzer {
             // HRV-only inflammation signal
             insights.append(InsightFactory.make(
                 metric: .heartRateVariability,
-                title: "Elevated Inflammation Risk",
-                summary: "Your HRV has been declining for \(consecutiveDeclines) consecutive measurement windows. currently \(String(format: "%.0f", hrvDropPercent))% below your personal baseline. This sustained drop pattern is associated with systemic inflammation.",
-                recommendation: "Research shows sustained HRV suppression (without increased exercise load) reflects vagal withdrawal. the autonomic signature of inflammatory activation. In wearable studies, this pattern preceded IBD flares and RA episodes by days. HRV: \(String(format: "%.0f", currentHRV)) ms vs baseline \(String(format: "%.0f", hrvBaseline.mean)) ms over \(recent14.count) days.",
+                title: "Elevated Body Stress",
+                summary: "Your HRV has been declining for \(consecutiveDeclines) consecutive measurement windows. currently \(String(format: "%.0f", hrvDropPercent))% below your personal baseline. This sustained drop pattern suggests your body may be under increased stress.",
+                recommendation: "Research shows sustained HRV suppression (without increased exercise load) reflects reduced recovery capacity. In wearable studies, this pattern often appeared days before people felt run down. HRV: \(String(format: "%.0f", currentHRV)) ms vs baseline \(String(format: "%.0f", hrvBaseline.mean)) ms over \(recent14.count) days.",
                 severity: hrvDeviation < -2.0 ? .warning : .info,
                 trend: .declining,
                 currentValue: currentHRV,
@@ -116,9 +116,9 @@ struct InflammationRiskAnalyzer {
         if hrvDeviation > 1.0 && currentHRV > hrvBaseline.mean * 1.1 {
             insights.append(InsightFactory.observation(
                 metric: .heartRateVariability,
-                title: "Strong Anti-Inflammatory Tone",
-                summary: "Your HRV is \(String(format: "%.0f", abs(hrvDropPercent)))% above baseline. indicating strong vagal tone. Research links elevated parasympathetic activity to lower systemic inflammation markers (CRP, IL-6).",
-                recommendation: "An HRV of \(String(format: "%.0f", currentHRV)) ms (vs baseline \(String(format: "%.0f", hrvBaseline.mean)) ms) reflects robust parasympathetic dominance. The cholinergic anti-inflammatory pathway suppresses cytokine production when vagal tone is high.",
+                title: "Strong Recovery Tone",
+                summary: "Your HRV is \(String(format: "%.0f", abs(hrvDropPercent)))% above baseline. indicating strong vagal tone. Research links elevated parasympathetic activity to better overall recovery and resilience.",
+                recommendation: "An HRV of \(String(format: "%.0f", currentHRV)) ms (vs baseline \(String(format: "%.0f", hrvBaseline.mean)) ms) reflects robust parasympathetic dominance. When vagal tone is high, your body is in a strong recovery state.",
                 currentValue: currentHRV,
                 baselineValue: hrvBaseline.mean,
                 deviationPercent: ((currentHRV - hrvBaseline.mean) / max(hrvBaseline.mean, 1)) * 100,

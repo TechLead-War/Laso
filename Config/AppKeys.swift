@@ -12,6 +12,7 @@ enum AppKeys {
         static let hasSeenScoreGuide   = "healthpulse.hasSeenScoreGuide"
         static let hasSeenRecoveryInfo = "healthpulse.hasSeenRecoveryInfo"
         static let pendingCalibrationHydration = "healthpulse.pendingCalibrationHydration"
+        static let disclaimerAcknowledged      = "healthpulse.disclaimerAcknowledged"
     }
 
     // MARK: - Session & Lifecycle
@@ -130,6 +131,15 @@ enum AppKeys {
     enum Backup {
         static let lastBackupDate = "healthpulse.backup.lastBackupDate"
         static let backupEnabled  = "healthpulse.backup.enabled"
+    }
+
+    // MARK: - HealthKit Reprompt
+
+    enum HealthKit {
+        /// Timestamp when empty data was first detected despite authorization
+        static let emptyDataDetectedDate  = "healthpulse.healthkit.emptyDataDetectedDate"
+        /// Timestamp when the HealthKit re-prompt banner was last shown
+        static let repromptLastShownDate   = "healthpulse.healthkit.repromptLastShown"
     }
 
     // MARK: - Notifications

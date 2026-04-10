@@ -280,7 +280,7 @@ class HealthRiskEngine {
             } else if (glucose > 100) {
                 signals += 1.0
                 involvedMetrics += HealthMetric.BLOOD_GLUCOSE
-                reasons += "Blood glucose in pre-diabetic range (${glucose.toInt()} mg/dL)"
+                reasons += "Blood glucose in elevated range (${glucose.toInt()} mg/dL)"
             }
         }
 

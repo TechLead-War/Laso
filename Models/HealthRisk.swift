@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-/// A health risk assessment combining multiple metric signals to predict potential health issues
+/// A health pattern assessment combining multiple metric signals to identify potential trends
 struct HealthRisk: Identifiable {
     let id = UUID()
     let riskType: HealthRiskType
@@ -77,7 +77,7 @@ enum RiskGrade: String {
 
 // MARK: - Risk Types
 
-/// Types of health risk profiles assessed by the engine
+/// Types of health pattern profiles assessed by the engine
 enum HealthRiskType: String, CaseIterable, Identifiable, Hashable {
     var id: String { rawValue }
 
@@ -91,13 +91,13 @@ enum HealthRiskType: String, CaseIterable, Identifiable, Hashable {
 
     var displayName: String {
         switch self {
-        case .cardiac: return "Cardiac Risk"
-        case .sleepDeficit: return "Sleep Deficit"
-        case .overtraining: return "Overtraining"
-        case .respiratory: return "Respiratory Risk"
-        case .metabolic: return "Metabolic Risk"
+        case .cardiac: return "Heart Health Pattern"
+        case .sleepDeficit: return "Sleep Pattern"
+        case .overtraining: return "Training Load Pattern"
+        case .respiratory: return "Respiratory Pattern"
+        case .metabolic: return "Metabolic Pattern"
         case .stress: return "Stress & Recovery"
-        case .mobilityDecline: return "Mobility Decline"
+        case .mobilityDecline: return "Mobility Trend"
         }
     }
 
@@ -127,13 +127,13 @@ enum HealthRiskType: String, CaseIterable, Identifiable, Hashable {
 
     var description: String {
         switch self {
-        case .cardiac: return "Evaluates heart health signals including heart rate, HRV, blood pressure, and recovery patterns."
-        case .sleepDeficit: return "Assesses sleep quality and quantity patterns that affect recovery and cognitive function."
-        case .overtraining: return "Detects signs of excessive training load without adequate recovery."
-        case .respiratory: return "Monitors lung function and blood oxygen patterns for respiratory health."
-        case .metabolic: return "Tracks body composition and activity patterns related to metabolic health."
-        case .stress: return "Combines autonomic nervous system signals to assess chronic stress levels."
-        case .mobilityDecline: return "Evaluates gait and movement patterns that indicate mobility changes."
+        case .cardiac: return "Looks at heart health signals including heart rate, HRV, blood pressure, and recovery patterns."
+        case .sleepDeficit: return "Tracks sleep quality and quantity patterns that affect recovery and how you feel."
+        case .overtraining: return "Watches for signs of high training load without enough recovery."
+        case .respiratory: return "Tracks lung function and blood oxygen patterns over time."
+        case .metabolic: return "Tracks body composition and activity patterns related to your metabolism."
+        case .stress: return "Combines nervous system signals to understand your stress and recovery balance."
+        case .mobilityDecline: return "Looks at gait and movement patterns to spot mobility changes over time."
         }
     }
 

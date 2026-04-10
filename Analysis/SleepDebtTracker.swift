@@ -149,7 +149,7 @@ final class SleepDebtTracker {
         // but never below the recommended minimum so chronic short sleepers
         // still accumulate meaningful debt.
         let baselineSamples = last30.count >= 21 ? last30 : last14
-        let averageSleepBaseline = baselineSamples.map(\.value).reduce(0, +) / Double(baselineSamples.count)
+        let averageSleepBaseline = baselineSamples.valueMean
         let personalBaseline = Swift.max(averageSleepBaseline, Self.recommendedMinimumSleep)
 
         // Build a date-indexed map of the last 14 days of sleep
@@ -187,7 +187,7 @@ final class SleepDebtTracker {
         let cappedDebt = Swift.min(cumulativeDebt, 20)
 
         // Average sleep duration over the 14-day window
-        let averageSleep = last14.map(\.value).reduce(0, +) / Double(last14.count)
+        let averageSleep = last14.valueMean
 
         // Estimate days to pay off at 25% payoff per night
         // Each night you can recoup ~25% of the deficit (sleeping 25% extra beyond baseline)

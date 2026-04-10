@@ -92,14 +92,36 @@ extension Copy {
 
         enum WeeklyReview {
             static func keepingUp(currentTarget: String, nextTarget: String) -> String {
-                "You are consistently hitting your \(currentTarget)/day target. Next week, we will progress to \(nextTarget)/day."
+                "You are hitting your \(currentTarget)/day target. Next week, we will bump it up to \(nextTarget)/day."
             }
             static func plateauing(currentTarget: String) -> String {
-                "You are close to your \(currentTarget)/day target. We will hold steady this week and build consistency before increasing."
+                "You are close to your \(currentTarget)/day target. Let us hold here this week and build the habit before pushing higher."
             }
             static func struggling(currentTarget: String, nextTarget: String) -> String {
-                "This week looked tough at \(currentTarget)/day. We will reduce next week to \(nextTarget)/day so the plan stays realistic."
+                "This week was tough at \(currentTarget)/day. We will drop to \(nextTarget)/day next week so it feels doable."
             }
+        }
+
+        // MARK: - Weekly Review View
+
+        enum WeeklyReviewView {
+            static let title = "Your Weekly Review"
+            static func score(_ score: Int) -> String { "Score \(score)" }
+            static func coachTarget(_ steps: String) -> String { "Coach target: \(steps)/day" }
+            static let notEnoughData = "Not enough data yet"
+            static let keepSyncing = "Keep syncing health data for a few days and check back."
+            static let firstWeekNoComparison = "First week. No comparison yet."
+            static func consistencyPayingOff(_ category: String) -> String {
+                "Consistency in \(category) is paying off. Keep the momentum going into next week."
+            }
+            static let stableWeek = "A stable week across the board."
+            static let noMajorChanges = "No major changes. Consistency is a strength."
+            static let currentTarget = "Current target"
+            static let currentAverage = "Current average"
+            static let status = "Status"
+            static let nextWeekTarget = "Next week target"
+            static func stepTarget(_ steps: String) -> String { "Step target: \(steps)/day" }
+            static let poweredByModel = "Powered by your personal health data"
         }
     }
 }

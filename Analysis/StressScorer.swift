@@ -154,7 +154,7 @@ final class StressScorer {
 
         switch stress.level {
         case .low:
-            return "Your stress level is low (\(scoreText)/3.0). Your HRV and heart rate are within your normal range. Keep up your current routine. your body is recovering well."
+            return "Your stress level is low (\(scoreText)/3.0). Your HRV and heart rate are within your normal range. Keep up your current routine. Your body is recovering well."
 
         case .mild:
             return "Your stress level is mildly elevated (\(scoreText)/3.0). "

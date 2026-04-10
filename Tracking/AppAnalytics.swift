@@ -119,6 +119,7 @@ enum BlockType: String {
     case onboardingCalibrationSkip = "onboarding_calibration_skip"
     case onboardingProfileContinue = "onboarding_profile_continue"
     case onboardingProfileSkip = "onboarding_profile_skip"
+    case onboardingNotifications = "onboarding_notifications"
     case scoreGuideGotIt = "score_guide_got_it"
 
     // Navigation
@@ -417,6 +418,12 @@ final class AppAnalytics {
         // App version
         props["app_version"] = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
 
+        // Accessibility settings
+        props["uses_voiceover"] = UIAccessibility.isVoiceOverRunning ? "yes" : "no"
+        props["uses_reduce_motion"] = UIAccessibility.isReduceMotionEnabled ? "yes" : "no"
+        let contentSize = UIApplication.shared.preferredContentSizeCategory.rawValue
+        props["uses_dynamic_type"] = contentSize != "UICTContentSizeCategoryLarge" ? contentSize : "default"
+
         if !props.isEmpty {
             PostHogManager.shared.setUserProperties(props)
         }
@@ -650,6 +657,10 @@ final class AppAnalytics {
         let weekday = calendar.component(.weekday, from: now)
         let dayNames = ["", "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
 
+        let networkType: String = ConnectivityMonitor.shared.isOnline
+            ? (ConnectivityMonitor.shared.isExpensive ? "cellular" : "wifi")
+            : "offline"
+
         logEvent("session_start", parameters: [
             "session_id": session.sessionId,
             "hour_of_day": hour,
@@ -658,7 +669,8 @@ final class AppAnalytics {
             "session_source": session.currentSessionSource.rawValue,
             "app_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown",
             "days_since_install": session.daysSinceInstall,
-            "weekly_active_days": session.weeklyActiveDays
+            "weekly_active_days": session.weeklyActiveDays,
+            "network_type": networkType
         ])
 
         setUserProperty("streak_days", value: "\(session.streakDays)")
@@ -1044,10 +1056,10 @@ final class AppAnalytics {
     }
 
     /// Call after a successful purchase.
-    func trackSubscriptionPurchased(productID: String, price: String, isTrialConversion: Bool) {
+    func trackSubscriptionPurchased(productID: String, price: String, isTrialConversion: Bool, revenueAmount: Double? = nil, currency: String? = nil, subscriptionPeriod: String? = nil) {
         let region = Locale.current.region?.identifier ?? "unknown"
 
-        logEvent("subscription_purchased", parameters: [
+        var params: [String: Any] = [
             "product_id": productID,
             "price": price,
             "region": region,
@@ -1057,7 +1069,11 @@ final class AppAnalytics {
             "total_sessions": session.totalSessions,
             "milestones_completed": session.completedMilestones.count,
             "lifetime_core_actions": session.lifetimeCoreActions
-        ])
+        ]
+        if let revenue = revenueAmount { params["revenue"] = revenue }
+        if let curr = currency { params["currency"] = curr }
+        if let period = subscriptionPeriod { params["subscription_period"] = period }
+        logEvent("subscription_purchased", parameters: params)
 
         if isTrialConversion {
             setUserProperty("trial_converted", value: "yes")
@@ -1241,12 +1257,16 @@ final class AppAnalytics {
     }
 
     func trackDataSync(metricsCount: Int, newSamplesCount: Int, durationSec: Int, isFirstSync: Bool) {
-        logEvent("data_sync_completed", parameters: [
+        var params: [String: Any] = [
             "metrics_count": metricsCount,
             "new_samples_count": newSamplesCount,
             "duration_sec": durationSec,
             "is_first_sync": isFirstSync ? 1 : 0
-        ])
+        ]
+        if isFirstSync {
+            params["first_sync_duration_sec"] = durationSec
+        }
+        logEvent("data_sync_completed", parameters: params)
     }
 
     func trackReportExported(score: Int, metricsCount: Int, insightsCount: Int) {
@@ -2501,7 +2521,10 @@ final class AppAnalytics {
     private func canonicalEventName(_ name: String, parameters: [String: Any]) -> String {
         let screen = scopedValue("screen", in: parameters)
         let action = scopedValue("action", in: parameters)
-        let metric = scopedValue("metric", in: parameters)
+        let rawMetric = scopedValue("metric", in: parameters)
+        // Anonymize metric names in event names so specific health conditions
+        // (e.g. "bloodPressure") are never embedded in PostHog event identifiers.
+        let metric = rawMetric.map { anonymizeMetricValue($0) }
         let filterType = scopedValue("filter_type", in: parameters)
         let context = scopedValue("context", in: parameters)
         let section = scopedValue("section_id", in: parameters)
@@ -2665,6 +2688,30 @@ final class AppAnalytics {
         return components.joined(separator: "_")
     }
 
+    /// Parameter keys whose string values may contain identifiable health metric names.
+    /// These are replaced with the metric's generic HealthCategory before sending to PostHog
+    /// so that specific conditions (e.g. "bloodPressure", "menstrualFlow") are never transmitted.
+    private static let metricParameterKeys: Set<String> = [
+        "metric", "metric_a", "metric_b", "alert_metric",
+        "nutrition_metric", "outcome_metric", "metric_preview"
+    ]
+
+    /// Replaces a recognizable HealthMetric rawValue with its parent category name.
+    /// Returns the original string unchanged when no matching metric is found.
+    private func anonymizeMetricValue(_ value: String) -> String {
+        // Handle comma-separated lists (used by metric_preview)
+        if value.contains(",") {
+            return value
+                .split(separator: ",")
+                .map { anonymizeMetricValue(String($0).trimmingCharacters(in: .whitespaces)) }
+                .joined(separator: ",")
+        }
+        if let metric = HealthMetric(rawValue: value) {
+            return metric.category.rawValue
+        }
+        return value
+    }
+
     private func sanitizeParameters(_ parameters: [String: Any]) -> [String: Any] {
         var sanitized: [String: Any] = [:]
 
@@ -2674,7 +2721,13 @@ final class AppAnalytics {
 
             switch rawValue {
             case let value as String:
-                sanitized[key] = value.count > 100 ? String(value.prefix(100)) : value
+                let truncated = value.count > 100 ? String(value.prefix(100)) : value
+                // Anonymize health metric names so specific conditions are not sent to PostHog
+                if Self.metricParameterKeys.contains(key) {
+                    sanitized[key] = anonymizeMetricValue(truncated)
+                } else {
+                    sanitized[key] = truncated
+                }
             case let value as Int:
                 sanitized[key] = value
             case let value as Double:
@@ -2904,5 +2957,40 @@ final class AppAnalytics {
 
     private func setUserProperty(_ name: String, value: String) {
         PostHogManager.shared.setUserProperty(name: name, value: value)
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // MARK: - 25. Widget & Watch Engagement
+    // ══════════════════════════════════════════════════════════════════════
+
+    /// Call when user taps the home screen widget.
+    func trackWidgetTapped(widgetKind: String) {
+        logEvent("widget_tapped", parameters: [
+            "widget_kind": widgetKind,
+            "days_since_install": session.daysSinceInstall
+        ])
+    }
+
+    /// Call when the widget is rendered on the home screen.
+    func trackWidgetDisplayed(widgetKind: String, hasData: Bool) {
+        logEvent("widget_displayed", parameters: [
+            "widget_kind": widgetKind,
+            "has_data": hasData ? 1 : 0
+        ])
+    }
+
+    /// Call when the Apple Watch companion app opens.
+    func trackWatchAppSessionStart() {
+        logEvent("watch_app_session_start", parameters: [
+            "days_since_install": session.daysSinceInstall
+        ])
+    }
+
+    /// Call when the Apple Watch companion app goes to background.
+    func trackWatchAppSessionEnd(durationSec: Int) {
+        logEvent("watch_app_session_end", parameters: [
+            "duration_sec": durationSec,
+            "days_since_install": session.daysSinceInstall
+        ])
     }
 }

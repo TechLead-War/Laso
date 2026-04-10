@@ -314,11 +314,7 @@ struct ExploreView: View {
     }
 
     private var weakestCategory: (category: HealthCategory, score: Int)? {
-        let scored = HealthCategory.allCases.compactMap { cat -> (category: HealthCategory, score: Int)? in
-            guard let score = viewModel.analysisEngine.score(for: cat)?.score else { return nil }
-            return (category: cat, score: score)
-        }
-        return scored.min(by: { $0.score < $1.score })
+        viewModel.exploreWeakestCategory
     }
 
     private var grade: String {
@@ -340,20 +336,7 @@ struct ExploreView: View {
     }
 
     private var sortedCategories: [(category: HealthCategory, score: Int?)] {
-        let focuses = viewModel.insights.focusCategories
-        return HealthCategory.allCases.map { cat in
-            (category: cat, score: viewModel.analysisEngine.score(for: cat)?.score)
-        }
-        .sorted { a, b in
-            let aHasScore = a.score != nil
-            let bHasScore = b.score != nil
-            if aHasScore != bHasScore { return aHasScore }
-            guard let aScore = a.score, let bScore = b.score else { return false }
-            let aFocused = focuses.contains(a.category)
-            let bFocused = focuses.contains(b.category)
-            if aFocused != bFocused { return aFocused }
-            return aScore < bScore
-        }
+        viewModel.exploreSortedCategories
     }
 }
 

@@ -1,12 +1,11 @@
 import Foundation
 
-/// Detects early signs of illness by monitoring sustained multi-day deviations across
-/// key physiological metrics simultaneously. Inspired by Stanford's COVID detection study
-/// (81% detection rate, 2.75 days pre-symptomatic) and Oura's Symptom Radar.
+/// Monitors body stress patterns by watching for sustained multi-day deviations across
+/// key physiological metrics simultaneously.
 ///
 /// The core insight: single-metric deviations are noisy. When resting heart rate, HRV,
 /// sleep, activity, and respiratory rate all shift unfavorably at the same time for
-/// multiple consecutive days, the probability of illness onset is significantly higher.
+/// multiple consecutive days, the probability of increased body stress is significantly higher.
 struct IllnessEarlyWarning {
 
     // MARK: - Public Types
@@ -20,7 +19,7 @@ struct IllnessEarlyWarning {
         let direction: String           // "elevated" or "depressed"
     }
 
-    /// An illness early warning combining signals from multiple metrics
+    /// A body stress warning combining signals from multiple metrics
     struct Warning: Identifiable {
         let id = UUID()
         let severity: Severity
@@ -32,8 +31,8 @@ struct IllnessEarlyWarning {
 
     // MARK: - Signal Configuration
 
-    /// Defines how each monitored metric should be interpreted for illness detection.
-    /// `unfavorableDirection` is the direction that indicates illness:
+    /// Defines how each monitored metric should be interpreted for body stress detection.
+    /// `unfavorableDirection` is the direction that indicates stress:
     ///   - `.above` means values above baseline are concerning (e.g., resting HR going up)
     ///   - `.below` means values below baseline are concerning (e.g., HRV dropping)
     private enum UnfavorableDirection {
@@ -61,21 +60,21 @@ struct IllnessEarlyWarning {
     /// Minimum days of historical data required to establish a reliable baseline
     private static let minimumDataDays: Int = 14
 
-    /// How many recent days to check for illness signals
+    /// How many recent days to check for body stress signals
     private static let recentWindowDays: Int = 3
 
-    /// How many days to skip (these may already be part of illness onset)
+    /// How many days to skip (these may already be part of the stress pattern)
     private static let baselineGapDays: Int = 3
 
     /// Days before the gap to use for baseline computation (days 4-17 ago)
     private static let baselineWindowDays: Int = 14
 
-    /// Active calories multiplier above baseline that suggests exercise recovery, not illness
+    /// Active calories multiplier above baseline that suggests exercise recovery, not body stress
     private static let exerciseRecoveryMultiplier: Double = 1.5
 
     // MARK: - Public API
 
-    /// Evaluate all signal metrics for illness early warning patterns.
+    /// Evaluate all signal metrics for body stress patterns.
     ///
     /// - Parameters:
     ///   - timeSeries: Time series data keyed by health metric
@@ -89,7 +88,7 @@ struct IllnessEarlyWarning {
         let now = Date()
 
         // If the user had intense workouts during the signal window, skip detection
-        // (elevated RHR + depressed HRV after a hard workout is normal recovery, not illness)
+        // (elevated RHR + depressed HRV after a hard workout is normal recovery, not body stress)
         if isExerciseRecoveryLikely(timeSeries: timeSeries, baselines: baselines, calendar: calendar, now: now) {
             return []
         }
@@ -337,7 +336,7 @@ struct IllnessEarlyWarning {
 
     /// Check if the user had intense workouts during the signal window.
     /// If activeCalories on any of the signal days were > 1.5x their baseline,
-    /// it is more likely exercise recovery than illness.
+    /// it is more likely exercise recovery than body stress.
     private static func isExerciseRecoveryLikely(
         timeSeries: [HealthMetric: MetricTimeSeries],
         baselines: [HealthMetric: UserBaseline],
@@ -371,9 +370,9 @@ struct IllnessEarlyWarning {
 
     // MARK: - Severity Determination
 
-    /// Severity is based on how many metrics are signaling and for how many consecutive days.
+    /// Level is based on how many metrics are signaling and for how many consecutive days.
     ///
-    /// - 2 metrics for 2+ days = `.info` (early heads-up)
+    /// - 2 metrics for 2+ days = `.info` (early heads up)
     /// - 3+ metrics for 2 days = `.warning` (clear multi-system deviation)
     /// - 3+ metrics for 3+ days = `.critical` (sustained multi-system strain)
     private static func determineSeverity(signalCount: Int, daysElevated: Int) -> Severity {
@@ -424,7 +423,7 @@ struct IllnessEarlyWarning {
     // MARK: - Narrative Generation
 
     /// Build a human-readable narrative describing the multi-metric pattern.
-    /// Uses non-diagnostic language. describes physiological strain, not illness.
+    /// Uses non-diagnostic language. describes physiological strain, not specific conditions.
     private static func generateNarrative(signals: [MetricSignal], daysElevated: Int) -> String {
         let daysLabel = daysElevated == 1 ? "day" : "days"
         var parts: [String] = []

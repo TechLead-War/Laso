@@ -126,7 +126,7 @@ extension Copy {
                 } else {
                     categoryHint = ""
                 }
-                return "\(levelExplanation)\(categoryHint) This is not a medical diagnosis. Think of it as a daily check in with your body."
+                return "\(levelExplanation)\(categoryHint) This is for informational purposes only. Think of it as a daily check in with your body."
             }
 
             static let scoreLevels = "Score levels"
@@ -165,6 +165,139 @@ extension Copy {
             static let baselineCallout = "This score compares you to yourself, not world averages. As we learn your patterns, it becomes more accurate."
 
             static let gotIt = "Got It"
+        }
+
+        // MARK: - Action Proof
+
+        enum ActionProof {
+            /// Card proof line shown on the home card below the subtitle
+            static func followedAdviceImproved(count: Int, metric: String) -> String {
+                "The last \(count) times you followed this advice, your \(metric) improved"
+            }
+
+            /// Proof line for recovery staying green after pushing hard
+            static func recoveryStayedGreen(goodCount: Int, totalCount: Int) -> String {
+                "When you were in this state before and pushed hard, recovery stayed green \(goodCount) out of \(totalCount) times"
+            }
+
+            /// General proof line referencing personal history timeframe
+            static func basedOnHistory(days: Int) -> String {
+                "Based on your personal history over \(days) days"
+            }
+
+            /// Short proof line for the home card when we have a win rate
+            static func thingsWentWell(count: Int) -> String {
+                "The last \(count) times you were in this state and followed this advice, things went well"
+            }
+
+            /// Detail view section title
+            static let whatHappenedBefore = "What happened before"
+
+            /// Detail: no history yet
+            static let notEnoughHistory = "We are still learning your patterns. After a few more days of data, this section will show how past recommendations worked out for you."
+
+            /// Detail: summary of positive outcomes
+            static func pastOutcomeSummary(improved: Int, total: Int, metric: String) -> String {
+                "Out of \(total) similar recommendations, \(improved) led to measurable improvement in your \(metric)"
+            }
+
+            /// Detail: timeframe context
+            static func trackingWindow(days: Int) -> String {
+                "Based on your data from the last \(days) days"
+            }
+        }
+
+        // MARK: - Recovery Hero Why Lines
+
+        enum RecoveryHero {
+            static func whyLineGreen(topFactor: String, secondFactor: String) -> String {
+                "\(topFactor) and \(secondFactor)"
+            }
+            static func whyLineYellow(topFactor: String) -> String {
+                "\(topFactor), keeping recovery moderate"
+            }
+            static func whyLineRed(topFactor: String, secondFactor: String) -> String {
+                "\(topFactor) and \(secondFactor)"
+            }
+
+            // Factor descriptions (positive)
+            static let hrvBounced = "HRV bounced back"
+            static let hrvHigh = "HRV is above your usual"
+            static let rhrLow = "resting heart rate is low"
+            static let rhrDropped = "resting heart rate dropped back down"
+            static let sleepSolid = "solid night of sleep"
+            static let sleepGreat = "sleep was long and restorative"
+            static let sleepGood = "decent sleep duration"
+
+            // Factor descriptions (negative)
+            static let hrvLow = "HRV has not recovered yet"
+            static let hrvBelow = "HRV is below your usual"
+            static let rhrElevated = "resting heart rate is elevated"
+            static let rhrHigh = "resting heart rate is still high"
+            static let sleepShort = "sleep was short"
+            static let sleepPoor = "sleep quality was low"
+            static let recentHardWorkout = "still recovering from a hard workout"
+        }
+
+        // MARK: - Greeting
+
+        enum Greeting {
+            static let goodMorning = "Good Morning"
+            static let goodAfternoon = "Good Afternoon"
+            static let goodEvening = "Good Evening"
+            static let goodNight = "Good Night"
+
+            static func streakBadge(_ days: Int) -> String { "\(days) days" }
+            static func streakMilestone(_ days: Int) -> String { "\(days) day streak!" }
+
+            // Morning
+            static let morningGreen = "Your body is recovered and ready. Great day to push hard."
+            static let morningYellow = "Recovery is moderate. Steady effort today, nothing extreme."
+            static let morningRed = "Your body needs rest. Go easy and prioritize sleep tonight."
+
+            // Afternoon
+            static let afternoonGreen = "Still looking strong. Good time for a workout if you have not done one yet."
+            static let afternoonYellow = "Holding steady. Keep the pace moderate this afternoon."
+            static let afternoonRed = "Recovery is still low. Light movement and hydration are your best bet."
+
+            // Evening
+            static let eveningGreen = "Solid day. Wind down and protect your sleep tonight."
+            static let eveningYellow = "Decent day overall. An early bedtime would help recovery."
+            static let eveningRed = "Tough day for your body. Get to bed early tonight."
+
+            // Night
+            static let nightGreen = "Good day. Rest well tonight and you will wake up strong."
+            static let nightYellow = "Your body could use a solid night. Try to get to sleep soon."
+            static let nightRed = "Your body is running low. Sleep is the most important thing right now."
+        }
+
+        // MARK: - Morning Check-In
+
+        enum MorningCheckIn {
+            static let greeting = "Good Morning"
+            static let subtitle = "How are you feeling today?"
+        }
+
+        // MARK: - Ask Your Data
+
+        enum AskYourData {
+            static let title = "Ask Your Data"
+            static let placeholder = "Ask anything about your health..."
+            static let tryAsking = "Try asking"
+            static let related = "Related questions"
+
+            static func confidence(_ percent: Int) -> String {
+                "\(percent)% confidence"
+            }
+
+            static let suggestedQuestions: [String] = [
+                "How is my sleep this week?",
+                "What affects my HRV the most?",
+                "Am I getting enough deep sleep?",
+                "How does exercise affect my recovery?",
+                "What is my resting heart rate trend?",
+                "How consistent is my sleep schedule?"
+            ]
         }
 
         // MARK: - Recovery Info
@@ -215,6 +348,15 @@ extension Copy {
             // Refresh timing
             static let whenItUpdatesTitle = "When does it update?"
             static let whenItUpdatesBody = "Your Recovery score recalculates each morning using overnight data. It typically takes 1\u{2013}3 days of consistent overnight wear before changes in your routine show up in the score."
+        }
+
+        // MARK: - HealthKit Reprompt
+
+        enum HealthKitReprompt {
+            static let title = "Laso needs access to your health data"
+            static let body = "It looks like health data sharing is turned off. Open Settings and enable the categories you want Laso to track, like heart rate, sleep, and activity."
+            static let action = "Open Settings"
+            static let dismiss = "Not Now"
         }
     }
 }

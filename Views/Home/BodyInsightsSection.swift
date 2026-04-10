@@ -46,10 +46,19 @@ struct BodyInsightsSection: View {
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.8))
 
-            Text(insight.recommendation)
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.white)
-                .lineLimit(2)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(insight.recommendation)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+
+                if let causeLine = compactCausationLine(for: insight) {
+                    Text(causeLine)
+                        .font(.caption2)
+                        .foregroundStyle(.white.opacity(0.7))
+                        .lineLimit(1)
+                }
+            }
 
             Spacer(minLength: 0)
 
@@ -62,6 +71,20 @@ struct BodyInsightsSection: View {
         .padding(.horizontal)
     }
 
+    /// Build a short causation summary for the compact card
+    private func compactCausationLine(for insight: Insight) -> String? {
+        if let context = insight.context, let rootMetric = context.rootCauseMetric {
+            if let deviation = context.rootCauseDeviation {
+                return Copy.Insights.InsightCard.linkedToMetric(
+                    rootMetric.displayName,
+                    deviationPercent: abs(Int(deviation))
+                )
+            }
+            return Copy.Insights.InsightCard.connectedToMetric(rootMetric.displayName)
+        }
+        return nil
+    }
+
     // MARK: - Compact Causal Chain Card
 
     private func compactCausalCard(_ chain: CausalChain) -> some View {
@@ -70,10 +93,19 @@ struct BodyInsightsSection: View {
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.8))
 
-            Text(chain.narrative)
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.white)
-                .lineLimit(2)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(chain.narrative)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+
+                if let confidenceLine = causalChainConfidenceLine(chain) {
+                    Text(confidenceLine)
+                        .font(.caption2)
+                        .foregroundStyle(.white.opacity(0.7))
+                        .lineLimit(1)
+                }
+            }
 
             Spacer(minLength: 0)
 
@@ -84,5 +116,19 @@ struct BodyInsightsSection: View {
         .padding(DS.cardPadding)
         .background(.indigo.gradient, in: RoundedRectangle(cornerRadius: DS.cardRadius))
         .padding(.horizontal)
+    }
+
+    /// Confidence qualifier for a causal chain
+    private func causalChainConfidenceLine(_ chain: CausalChain) -> String? {
+        let confidence = chain.confidence
+        guard confidence > 0 else { return nil }
+        let level: String = if confidence >= 0.8 {
+            "High"
+        } else if confidence >= 0.5 {
+            "Moderate"
+        } else {
+            "Early"
+        }
+        return Copy.Insights.InsightCard.confidenceQualifier(level)
     }
 }

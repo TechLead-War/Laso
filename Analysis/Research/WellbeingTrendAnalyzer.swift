@@ -74,7 +74,7 @@ struct WellbeingTrendAnalyzer {
                 metric: .sleepDuration,
                 title: "Wellbeing Pattern Shift Detected",
                 summary: "\(concerningSignals.count) of \(signals.count) behavioral indicators are trending in directions associated with mood decline: \(concernList).",
-                recommendation: "Research on digital phenotyping shows that simultaneous changes in sleep regularity, physical activity, daylight exposure, and autonomic tone predict mood shifts with clinical-grade accuracy. These patterns are observational. not diagnostic. but are worth noting. Score: \(String(format: "%.0f", (weightedScore + 1) * 50))/100.",
+                recommendation: "Research on digital phenotyping shows that simultaneous changes in sleep regularity, physical activity, daylight exposure, and autonomic tone predict mood shifts with high accuracy. These patterns are observational. not diagnostic. but are worth noting. Score: \(String(format: "%.0f", (weightedScore + 1) * 50))/100.",
                 severity: concerningSignals.count >= 4 ? .warning : .info,
                 trend: .declining,
                 currentValue: (weightedScore + 1) * 50,

@@ -1,8 +1,11 @@
 import SwiftUI
 
 /// Shown when the master kill switch is enabled via Remote Config.
+/// When an `onContinue` closure is provided the user can dismiss the notice
+/// and keep using the app. Without the closure it behaves as an informational banner.
 struct MaintenanceView: View {
     let message: String
+    var onContinue: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 24) {
@@ -20,6 +23,27 @@ struct MaintenanceView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
+
+            if let onContinue {
+                Text("Some features may not work as expected right now.")
+                    .font(.footnote)
+                    .foregroundStyle(.tertiary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+
+                Button {
+                    onContinue()
+                } label: {
+                    Text("Continue Anyway")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(.orange)
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+                .padding(.horizontal, 32)
+            }
 
             Spacer()
         }

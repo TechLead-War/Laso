@@ -38,7 +38,7 @@ protocol CloudBackupService {
 }
 
 protocol NotificationAuthorizationService {
-    func requestAuthorizationIfNeeded() async -> Bool
+    func isCurrentlyAuthorized() async -> Bool
 }
 
 @MainActor protocol AnalyticsTrackingService {

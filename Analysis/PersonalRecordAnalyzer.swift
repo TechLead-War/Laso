@@ -153,7 +153,7 @@ struct PersonalRecordAnalyzer {
                 prSummary = "Record broken: \(metric.displayName.lowercased()) at \(String(format: "%.1f", currentAvg)) \(metric.unit). Keep this trajectory going.\(recordAgeNote)"
                 prRecommendation = "New \(windowLabel) record for \(metric.displayName.lowercased()): \(String(format: "%.1f", currentAvg)) \(metric.unit), surpassing previous best of \(String(format: "%.1f", bestPrevious)) \(metric.unit)."
             default:
-                prSummary = "Your \(windowLabel) average \(metric.displayName.lowercased()) hit a personal record: \(String(format: "%.1f", currentAvg)) \(metric.unit). Previous best: \(String(format: "%.1f", bestPrevious)) \(metric.unit) (\(String(format: "%.1f", improvement))% improvement). You're building real momentum.\(recordAgeNote)"
+                prSummary = "Your \(windowLabel) average \(metric.displayName.lowercased()) hit a personal record: \(String(format: "%.1f", currentAvg)) \(metric.unit). Previous best: \(String(format: "%.1f", bestPrevious)) \(metric.unit) (\(String(format: "%.1f", improvement))% improvement). You are building real momentum.\(recordAgeNote)"
                 prRecommendation = "New \(windowLabel) record for \(metric.displayName.lowercased()): \(String(format: "%.1f", currentAvg)) \(metric.unit), surpassing previous best of \(String(format: "%.1f", bestPrevious)) \(metric.unit)."
             }
 

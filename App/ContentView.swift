@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 import Network
 import Observation
 
@@ -11,6 +10,7 @@ struct ContentView: View {
     @State private var selectedTab: AppTab = .home
     @State private var showSettings = false
     @State private var showNotificationReprompt = false
+    @State private var showHealthKitReprompt = false
     @State private var showPMFSurvey = false
     @State private var navigationPath = NavigationPath()
     @State private var connectivityMonitor = ConnectivityMonitor.shared
@@ -85,10 +85,16 @@ struct ContentView: View {
                 }
         }
         .overlay(alignment: .top) {
+            // Show at most one reprompt banner at a time.
+            // Notification reprompt takes priority since the user explicitly denied it.
             if showNotificationReprompt {
                 NotificationRepromptBanner(isPresented: $showNotificationReprompt)
                     .padding(.top, 8)
                     .animation(.spring(duration: 0.4), value: showNotificationReprompt)
+            } else if showHealthKitReprompt {
+                HealthKitRepromptBanner(isPresented: $showHealthKitReprompt)
+                    .padding(.top, 8)
+                    .animation(.spring(duration: 0.4), value: showHealthKitReprompt)
             }
         }
         .sheet(isPresented: $showPMFSurvey) {
@@ -113,6 +119,15 @@ struct ContentView: View {
             }
             await refreshDeviceSourcesIfNeeded()
             // HomeView.onAppear handles its own initial fetch. no duplicate needed here
+
+            // After initial load, check if HealthKit data is empty despite authorization
+            let shouldShowHKReprompt = HealthKitRepromptManager.checkEmptyData(
+                isAuthorized: healthKitManager.isAuthorized,
+                timeSeriesCount: healthKitManager.timeSeries.count
+            )
+            if shouldShowHKReprompt {
+                showHealthKitReprompt = true
+            }
         }
         .onAppear {
             startSessionAnalytics()
@@ -125,6 +140,18 @@ struct ContentView: View {
                 Task {
                     if await NotificationRepromptManager.checkAndRecordDenial() {
                         showNotificationReprompt = true
+                    }
+                }
+                // Check for HealthKit empty-data state (user authorized but toggled off all categories)
+                if dashboardViewModel.ui.hasCompletedInitialLoad {
+                    let shouldShow = HealthKitRepromptManager.checkEmptyData(
+                        isAuthorized: healthKitManager.isAuthorized,
+                        timeSeriesCount: healthKitManager.timeSeries.count
+                    )
+                    if shouldShow {
+                        showHealthKitReprompt = true
+                    } else {
+                        showHealthKitReprompt = false
                     }
                 }
                 if selectedTab == .home {

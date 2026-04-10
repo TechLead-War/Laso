@@ -79,9 +79,9 @@ struct BiologicalAgeAnalyzer {
         // Primary insight: Biological age estimate
         insights.append(InsightFactory.observation(
             metric: .vo2Max,
-            title: "Biological Age Estimate: ~\(String(format: "%.0f", weightedAge))",
-            summary: "Based on \(ageEstimates.count) physiological markers, your body functions like someone around \(String(format: "%.0f", weightedAge)) years old. Strongest area: \(youngestComponent.component). Area with most room: \(oldestComponent.component).",
-            recommendation: "Breakdown. \(componentBreakdown). Each component is mapped to population norms from large-scale studies. VO2max alone (your strongest mortality predictor) suggests a fitness age equivalent.",
+            title: "Fitness Age Estimate: ~\(String(format: "%.0f", weightedAge))",
+            summary: "Based on \(ageEstimates.count) physiological markers, your body performs like someone around \(String(format: "%.0f", weightedAge)) years old. Strongest area: \(youngestComponent.component). Area with most room: \(oldestComponent.component).",
+            recommendation: "Breakdown. \(componentBreakdown). Each component is mapped to population norms from large-scale studies. VO2max alone (one of the most meaningful indicators of your overall fitness) suggests a fitness age equivalent.",
             currentValue: weightedAge,
             baselineValue: weightedAge,
             deviationPercent: 0,
@@ -99,7 +99,7 @@ struct BiologicalAgeAnalyzer {
                 metric: .vo2Max,
                 title: "Age Component Imbalance",
                 summary: "There's a \(String(format: "%.0f", ageSpread))-year gap between your youngest system (\(youngestComponent.component): ~\(String(format: "%.0f", youngestComponent.estimatedAge))) and oldest (\(oldestComponent.component): ~\(String(format: "%.0f", oldestComponent.estimatedAge))). This imbalance is worth addressing.",
-                recommendation: "A large spread between biological age components suggests one system is aging faster than others. Focusing on your \(oldestComponent.component) could bring your overall biological age down significantly.",
+                recommendation: "A large spread between fitness age components suggests one system is aging faster than others. Focusing on your \(oldestComponent.component) could bring your overall fitness age down significantly.",
                 severity: .info,
                 trend: .stable,
                 currentValue: ageSpread,

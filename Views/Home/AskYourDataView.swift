@@ -13,16 +13,7 @@ struct AskYourDataView: View {
     @State private var activeQueryID = UUID()
     @Environment(\.dismiss) private var dismiss
 
-    private let suggestedQuestions = [
-        "How is my body doing right now?",
-        "Am I at risk for anything?",
-        "What should I do to have a great day?",
-        "When's the best time for me to work out?",
-        "Why is my recovery score what it is?",
-        "What causes my HRV to change?",
-        "Do I have any weekly patterns?",
-        "How is my sleep trending?",
-    ]
+    private let suggestedQuestions = Copy.Home.AskYourData.suggestedQuestions
 
     var body: some View {
         ScrollView {
@@ -42,7 +33,7 @@ struct AskYourDataView: View {
             }
             .padding()
         }
-        .navigationTitle("Ask Your Data")
+        .navigationTitle(Copy.Home.AskYourData.title)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.home, metadata: ["subscreen": "ask_your_data"])
@@ -60,7 +51,7 @@ struct AskYourDataView: View {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
 
-            TextField("Ask about your health data...", text: $query)
+            TextField(Copy.Home.AskYourData.placeholder, text: $query)
                 .textFieldStyle(.plain)
                 .font(.subheadline)
                 .submitLabel(.search)
@@ -91,7 +82,7 @@ struct AskYourDataView: View {
 
     private var suggestionsGrid: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Try asking")
+            Text(Copy.Home.AskYourData.tryAsking)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.secondary)
 
@@ -150,7 +141,7 @@ struct AskYourDataView: View {
             HStack(spacing: 4) {
                 Image(systemName: "checkmark.seal")
                     .font(.caption2)
-                Text("Confidence: \(Int(result.confidence * 100))%")
+                Text(Copy.Home.AskYourData.confidence(Int(result.confidence * 100)))
                     .font(.caption2)
 
                 Spacer()
@@ -184,7 +175,7 @@ struct AskYourDataView: View {
             // Related questions
             if !result.relatedQuestions.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Related")
+                    Text(Copy.Home.AskYourData.related)
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
 
@@ -226,20 +217,14 @@ struct AskYourDataView: View {
         AppAnalytics.shared.trackCoreAction(.askedHealthQuery, screen: .home)
         AppAnalytics.shared.trackBlockTap(title: "Query Submitted", type: .smartAction, screen: .home, metadata: ["source": "ask_your_data", "query_length": query.count])
 
-        let q = normalizedQuery
-        let queryRequest = viewModel.makeHealthDataQueryRequest()
-        let priority: TaskPriority = ThermalManager.shared.shouldThrottle ? .background : .utility
-
-        Task.detached(priority: priority) {
-            let queryResult = await queryRequest.execute(question: q)
-            await MainActor.run {
-                guard self.activeQueryID == requestID else { return }
-                withAnimation(.snappy(duration: 0.3)) {
-                    self.result = queryResult
-                    self.isSearching = false
-                }
-                AppAnalytics.shared.trackBlockTap(title: "Query Result Viewed", type: .smartAction, screen: .home, metadata: ["source": "ask_your_data", "confidence": Int(queryResult.confidence * 100), "data_points_count": queryResult.dataPoints.count, "related_questions_count": queryResult.relatedQuestions.count])
+        Task {
+            let queryResult = await viewModel.executeHealthQuery(normalizedQuery)
+            guard activeQueryID == requestID else { return }
+            withAnimation(.snappy(duration: 0.3)) {
+                result = queryResult
+                isSearching = false
             }
+            AppAnalytics.shared.trackBlockTap(title: "Query Result Viewed", type: .smartAction, screen: .home, metadata: ["source": "ask_your_data", "confidence": Int(queryResult.confidence * 100), "data_points_count": queryResult.dataPoints.count, "related_questions_count": queryResult.relatedQuestions.count])
         }
     }
 }

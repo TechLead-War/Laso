@@ -27,10 +27,10 @@ struct MorningCheckInView: View {
             // Header
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Good morning")
+                    Text(Copy.Home.MorningCheckIn.greeting)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
-                    Text("Quick check-in to improve your score accuracy")
+                    Text(Copy.Home.MorningCheckIn.subtitle)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }

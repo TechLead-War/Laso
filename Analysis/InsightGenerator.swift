@@ -130,20 +130,62 @@ struct InsightGenerator {
             let isPositiveReversal = (trendResult.direction == .improving)
             let formatted = formatValue(currentValue, metric: metric)
             let previousFormatted = formatValue(baseline.mean, metric: metric)
-            let rateDescription = trendResult.rateOfChange.displayLabel
+
+            let reversalContext = buildContext(
+                metric: metric,
+                baselines: baselines,
+                historicalContext: historicalContext,
+                correlations: correlations,
+                timeSeries: timeSeries,
+                trends: trends
+            )
+
+            let rootCauseName = reversalContext?.rootCauseMetric?.displayName
+            let topFactorSampleCount = reversalContext?.correlatedFactors.first?.sampleCount
+
+            let reversalSummary = Copy.Causation.reversalWithContext(
+                metricName: metric.displayName,
+                isPositive: isPositiveReversal,
+                rootCauseName: rootCauseName,
+                sampleCount: topFactorSampleCount
+            )
+
+            let reversalRecommendation: String
+            if isPositiveReversal {
+                if let cause = rootCauseName {
+                    reversalRecommendation = Copy.Causation.reversalRecoveringWithCause(
+                        metricName: metric.displayName, current: formatted,
+                        unit: metric.unit, previous: previousFormatted, causeName: cause
+                    )
+                } else {
+                    reversalRecommendation = Copy.Causation.reversalRecovering(
+                        metricName: metric.displayName, current: formatted,
+                        unit: metric.unit, previous: previousFormatted
+                    )
+                }
+            } else {
+                if let cause = rootCauseName {
+                    reversalRecommendation = Copy.Causation.reversalDeclinedWithCause(
+                        metricName: metric.displayName, causeName: cause
+                    )
+                } else {
+                    reversalRecommendation = Copy.Causation.reversalDeclined(
+                        metricName: metric.displayName
+                    )
+                }
+            }
 
             insights.append(Insight(
                 metric: metric,
                 title: "\(metric.displayName) \(isPositiveReversal ? "Turning Around" : "Reversing Course")",
-                summary: "Your \(metric.displayName.lowercased()) trend has reversed direction in the past week. \(isPositiveReversal ? "Previous decline is now recovering." : "Previous improvement is now declining.")",
-                recommendation: isPositiveReversal
-                    ? "your \(metric.displayName.lowercased()) is recovering. now \(formatted) \(metric.unit) vs \(previousFormatted) \(metric.unit) previously"
-                    : "your \(metric.displayName.lowercased()) reversed direction. was improving, now declining at \(rateDescription) rate",
+                summary: reversalSummary,
+                recommendation: reversalRecommendation,
                 severity: isPositiveReversal ? .info : .warning,
                 trend: trendResult.direction,
                 currentValue: currentValue,
                 baselineValue: baseline.mean,
-                deviationPercent: trendResult.weekOverWeekChange
+                deviationPercent: trendResult.weekOverWeekChange,
+                context: reversalContext
             ))
         }
 
@@ -213,7 +255,12 @@ struct InsightGenerator {
             if !ctx.correlatedFactors.isEmpty { score += 10 }
             if ctx.projectedDaysToThreshold != nil { score += 5 }
             if ctx.rootCauseMetric != nil { score += 10 }
+            if ctx.dataPointCount ?? 0 >= 30 { score += 5 }
         }
+
+        // Boost causation-style narratives (they contain "because" or "the last N times")
+        if summaryLower.contains("because") { score += 10 }
+        if summaryLower.contains("the last") && summaryLower.contains("times") { score += 10 }
 
         return max(0, min(100, score))
     }
@@ -267,7 +314,8 @@ struct InsightGenerator {
             trend: trend,
             severity: effectiveSeverity,
             rateOfChange: rateOfChange,
-            inflection: inflection
+            inflection: inflection,
+            insightContext: insightContext
         )
         var summary = generateSummary(
             metric: metric,
@@ -625,9 +673,25 @@ struct InsightGenerator {
         trend: TrendDirection,
         severity: Severity,
         rateOfChange: TrendAnalyzer.RateOfChange = .negligible,
-        inflection: TrendAnalyzer.Inflection = .steady
+        inflection: TrendAnalyzer.Inflection = .steady,
+        insightContext: InsightContext? = nil
     ) -> String {
         let metricName = metric.displayName
+
+        // Causation-style title when we know the root cause
+        if let rootCause = insightContext?.rootCauseMetric {
+            let rootCauseName = rootCause.displayName
+            switch trend {
+            case .declining, .stable where severity >= .warning:
+                return Copy.Causation.causationTitle(metricName: metricName, rootCauseName: rootCauseName)
+            case .improving:
+                return Copy.Causation.improvingCausationTitle(metricName: metricName, rootCauseName: rootCauseName)
+            default:
+                break
+            }
+        }
+
+        // Fallback to standard titles when no root cause is known
         let ratePrefix = rateOfChange >= .moderate ? "\(rateOfChange.displayLabel.capitalized) " : ""
         let inflectionSuffix: String
         switch inflection {
@@ -657,6 +721,175 @@ struct InsightGenerator {
         inflection: TrendAnalyzer.Inflection = .steady,
         historicalContext: HistoricalAnalyzer.HistoricalContext? = nil,
         insightContext: InsightContext? = nil
+    ) -> String {
+        // Try causation-style summary first when we have rich context
+        if let causationSummary = generateCausationSummary(
+            metric: metric,
+            currentValue: currentValue,
+            baselineValue: baselineValue,
+            deviationPercent: deviationPercent,
+            trend: trend,
+            inflection: inflection,
+            historicalContext: historicalContext,
+            insightContext: insightContext
+        ) {
+            return causationSummary
+        }
+
+        // Fallback to standard summary when context is insufficient
+        return generateStandardSummary(
+            metric: metric,
+            currentValue: currentValue,
+            baselineValue: baselineValue,
+            deviationPercent: deviationPercent,
+            trend: trend,
+            inflection: inflection,
+            historicalContext: historicalContext,
+            insightContext: insightContext
+        )
+    }
+
+    /// Build a WHOOP-style causation narrative from InsightContext data.
+    /// Returns nil when there is not enough context to form a causation sentence.
+    private static func generateCausationSummary(
+        metric: HealthMetric,
+        currentValue: Double,
+        baselineValue: Double,
+        deviationPercent: Double,
+        trend: TrendDirection,
+        inflection: TrendAnalyzer.Inflection,
+        historicalContext: HistoricalAnalyzer.HistoricalContext?,
+        insightContext: InsightContext?
+    ) -> String? {
+        guard let ctx = insightContext else { return nil }
+
+        var sentences: [String] = []
+
+        // Lead sentence: "Your HRV dropped 18% because deep sleep was low yesterday."
+        if let rootCause = ctx.rootCauseMetric, let rootDeviation = ctx.rootCauseDeviation {
+            let bestDayOffset = ctx.correlatedFactors
+                .first { $0.metric == rootCause }?.dayOffset ?? 0
+
+            if trend == .improving {
+                sentences.append(
+                    Copy.Causation.improvementCauseSentence(
+                        metricName: metric.displayName,
+                        deviationPercent: deviationPercent,
+                        rootCauseName: rootCause.displayName,
+                        rootCauseDeviation: rootDeviation
+                    )
+                )
+            } else {
+                sentences.append(
+                    Copy.Causation.rootCauseSentence(
+                        metricName: metric.displayName,
+                        deviationPercent: deviationPercent,
+                        trend: trend,
+                        rootCauseName: rootCause.displayName,
+                        rootCauseDeviation: rootDeviation,
+                        dayOffset: bestDayOffset
+                    )
+                )
+            }
+
+            // Pattern evidence: "The last N times that happened, HRV followed."
+            if let factor = ctx.correlatedFactors.first(where: { $0.metric == rootCause }),
+               factor.sampleCount >= 3 {
+                let rootDirection = rootDeviation < 0 ? "low" : "high"
+                let metricDirection = trend == .improving ? "improved" : "dropped"
+                sentences.append(
+                    Copy.Causation.patternEvidenceSentence(
+                        rootCauseName: rootCause.displayName,
+                        rootCauseDirection: rootDirection,
+                        sampleCount: factor.sampleCount,
+                        metricName: metric.displayName,
+                        metricDirection: metricDirection
+                    )
+                )
+            }
+        } else if let topFactor = ctx.correlatedFactors.first,
+                  topFactor.sampleCount >= 5,
+                  abs(topFactor.correlation) >= 0.35 {
+            // No root cause but a strong correlated factor
+            sentences.append(
+                Copy.Causation.correlatedFactorSentence(
+                    factorName: topFactor.metric.displayName,
+                    metricName: metric.displayName,
+                    sampleCount: topFactor.sampleCount,
+                    dayOffset: topFactor.dayOffset,
+                    effectPercent: topFactor.effectPercent
+                )
+            )
+        } else {
+            // Not enough causal data to form a causation summary
+            return nil
+        }
+
+        // Projection with cause if declining
+        if trend == .declining, let days = ctx.projectedDaysToThreshold, days > 0, days <= 21 {
+            if let rootCause = ctx.rootCauseMetric {
+                sentences.append(
+                    Copy.Causation.projectionWithCause(
+                        metricName: metric.displayName,
+                        days: days,
+                        rootCauseName: rootCause.displayName
+                    )
+                )
+            } else {
+                sentences.append(
+                    Copy.Causation.projectionWithoutCause(
+                        metricName: metric.displayName,
+                        days: days
+                    )
+                )
+            }
+        }
+
+        // Week comparison with cause
+        if let weekChange = ctx.comparisonToLastWeek, abs(weekChange) >= 3 {
+            if let rootCause = ctx.rootCauseMetric {
+                sentences.append(
+                    Copy.Causation.weekComparisonWithCause(
+                        changePercent: weekChange,
+                        rootCauseName: rootCause.displayName
+                    )
+                )
+            } else {
+                sentences.append(
+                    Copy.Causation.weekComparisonSimple(changePercent: weekChange)
+                )
+            }
+        }
+
+        // Percentile context
+        if let percentile = ctx.allTimePercentile {
+            let percentileText = Copy.Causation.percentileSentence(percentile: percentile)
+            if !percentileText.isEmpty {
+                sentences.append(percentileText)
+            }
+        }
+
+        // Data depth: "Based on 45 days of your data."
+        if let dataPoints = ctx.dataPointCount, dataPoints >= 14 {
+            sentences.append(Copy.Causation.dataDepthSentence(dataPoints: dataPoints))
+        } else if let confidence = ctx.confidenceLevel, confidence < 0.45 {
+            sentences.append(Copy.Causation.lowConfidenceNote)
+        }
+
+        guard !sentences.isEmpty else { return nil }
+        return sentences.joined(separator: " ")
+    }
+
+    /// Standard summary without causation context (original logic).
+    private static func generateStandardSummary(
+        metric: HealthMetric,
+        currentValue: Double,
+        baselineValue: Double,
+        deviationPercent: Double,
+        trend: TrendDirection,
+        inflection: TrendAnalyzer.Inflection,
+        historicalContext: HistoricalAnalyzer.HistoricalContext?,
+        insightContext: InsightContext?
     ) -> String {
         let formattedCurrent = formatValue(currentValue, metric: metric)
         let formattedBaseline = formatValue(baselineValue, metric: metric)
@@ -709,7 +942,7 @@ struct InsightGenerator {
         // Projection sentence from InsightContext
         let projectionNote: String
         if trend == .declining, let days = insightContext?.projectedDaysToThreshold, days > 0, days <= 21 {
-            projectionNote = " At the current rate, this could reach warning level in ~\(days) days."
+            projectionNote = " At the current rate, this could reach warning level in about \(days) days."
         } else {
             projectionNote = ""
         }

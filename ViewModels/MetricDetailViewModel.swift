@@ -224,8 +224,8 @@ final class MetricDetailViewModel {
 
         guard !thisMonthSamples.isEmpty, !lastMonthSamples.isEmpty else { return nil }
 
-        let thisAvg = thisMonthSamples.map(\.value).reduce(0, +) / Double(thisMonthSamples.count)
-        let lastAvg = lastMonthSamples.map(\.value).reduce(0, +) / Double(lastMonthSamples.count)
+        let thisAvg = thisMonthSamples.valueMean
+        let lastAvg = lastMonthSamples.valueMean
         guard lastAvg != 0 else { return nil }
 
         let change = ((thisAvg - lastAvg) / lastAvg) * 100

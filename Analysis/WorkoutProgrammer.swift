@@ -165,9 +165,9 @@ struct WorkoutProgrammer {
                 if zone.rawValue != TrainingZone.restoring.rawValue {
                     zone = min(zone, .maintaining)
                 }
-                cycleNote = "During your menstrual phase, we've adjusted intensity to favor low-impact movements. Listen to your body. rest is productive."
+                cycleNote = "During your menstrual phase, we have adjusted intensity to favor low-impact movements. Listen to your body. Rest is productive."
             case .luteal:
-                cycleNote = "Luteal phase detected. volume reduced ~15%. Steady-state cardio preferred over high-intensity intervals."
+                cycleNote = "Luteal phase detected. Volume reduced ~15%. Steady-state cardio preferred over high-intensity intervals."
             case .follicular, .ovulatory:
                 break
             }
@@ -221,7 +221,7 @@ struct WorkoutProgrammer {
             duration: 5,
             exercises: [
                 Exercise(name: "Light Walking", instruction: "Easy pace, focus on deep breathing", muscleGroup: "Full Body", icon: "figure.walk"),
-                Exercise(name: "Arm Circles", instruction: "10 forward, 10 backward. slow and controlled", muscleGroup: "Shoulders", icon: "figure.arms.open"),
+                Exercise(name: "Arm Circles", instruction: "10 forward, 10 backward. Slow and controlled", muscleGroup: "Shoulders", icon: "figure.arms.open"),
             ],
             heartRateTarget: HeartRateTarget.forZone(1, maxHR: maxHR)
         )
@@ -251,7 +251,7 @@ struct WorkoutProgrammer {
             name: "Cool Down",
             duration: 5,
             exercises: [
-                Exercise(name: "Static Stretches", instruction: "Hold each stretch 30 seconds. hamstrings, quads, shoulders", muscleGroup: "Full Body", icon: "figure.cooldown"),
+                Exercise(name: "Static Stretches", instruction: "Hold each stretch 30 seconds. Hamstrings, quads, shoulders", muscleGroup: "Full Body", icon: "figure.cooldown"),
                 Exercise(name: "Deep Breathing", instruction: "4-count inhale, 6-count exhale. 5 rounds", muscleGroup: "Recovery", icon: "lungs.fill"),
             ],
             heartRateTarget: nil
@@ -286,7 +286,7 @@ struct WorkoutProgrammer {
                 name: "Moderate Cardio",
                 duration: 20,
                 exercises: [
-                    Exercise(name: "Moderate Run / Jog", instruction: "Conversational pace. you should be able to talk", muscleGroup: "Full Body", icon: "figure.run"),
+                    Exercise(name: "Moderate Run / Jog", instruction: "Conversational pace. You should be able to talk", muscleGroup: "Full Body", icon: "figure.run"),
                 ],
                 heartRateTarget: HeartRateTarget.forZone(2, maxHR: maxHR)
             ),
@@ -363,7 +363,7 @@ struct WorkoutProgrammer {
             duration: 7,
             exercises: [
                 Exercise(name: "Easy Jog / Walk", instruction: "3 minutes gradual pace reduction", muscleGroup: "Full Body", icon: "figure.walk"),
-                Exercise(name: "Full-Body Stretch", instruction: "Hold each stretch 30-45s. hips, shoulders, hamstrings", muscleGroup: "Full Body", icon: "figure.cooldown"),
+                Exercise(name: "Full-Body Stretch", instruction: "Hold each stretch 30-45s. Hips, shoulders, hamstrings", muscleGroup: "Full Body", icon: "figure.cooldown"),
             ],
             heartRateTarget: nil
         )
@@ -426,7 +426,7 @@ struct WorkoutProgrammer {
 
         return WorkoutPlan(
             title: "Peak Performance",
-            summary: "You're fully recovered and primed. Max-effort sprints and heavy compounds to push your limits.",
+            summary: "You are fully recovered and primed. Max-effort sprints and heavy compounds to push your limits.",
             targetDuration: 60,
             estimatedCalories: 600,
             warmup: warmup,

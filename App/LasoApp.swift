@@ -10,6 +10,8 @@ struct LasoApp: App {
 
     /// Controls optional branded splash overlay.
     @State private var showSplash = true
+    /// Tracks whether the user dismissed the kill switch maintenance notice.
+    @State private var killSwitchDismissed = false
     private let isUITestMode: Bool
 
     private var appStateStore: AppStateStore { container.appStateStore }
@@ -74,8 +76,10 @@ struct LasoApp: App {
                 // Skip in UI test mode and during App Store review / TestFlight
                 else if !isUITestMode && !isTestFlightOrAppReview && remoteConfig.requiresForceUpdate {
                     ForceUpdateView()
-                } else if !isUITestMode && !isTestFlightOrAppReview && remoteConfig.killSwitchEnabled {
-                    MaintenanceView(message: remoteConfig.killSwitchMessage)
+                } else if !isUITestMode && !isTestFlightOrAppReview && remoteConfig.killSwitchEnabled && !killSwitchDismissed {
+                    MaintenanceView(message: remoteConfig.killSwitchMessage) {
+                        killSwitchDismissed = true
+                    }
                 } else {
                     ContentView(container: container)
                     // 1. Onboarding (first launch)
@@ -93,7 +97,16 @@ struct LasoApp: App {
                             appStateStore.markOnboardingCompleted()
                         }
                     }
-                    // 2. Paywall (trial expired + not subscribed)
+                    // 2. Medical disclaimer (first launch after update)
+                    .fullScreenCover(isPresented: Binding(
+                        get: { appStateStore.onboardingCompleted && !appStateStore.disclaimerAcknowledged },
+                        set: { if !$0 { appStateStore.markDisclaimerAcknowledged() } }
+                    )) {
+                        MedicalDisclaimerView {
+                            appStateStore.markDisclaimerAcknowledged()
+                        }
+                    }
+                    // 3. Paywall (trial expired + not subscribed)
                     .fullScreenCover(isPresented: Binding(
                         get: { shouldShowPaywall },
                         set: { _ in }  // Cannot dismiss. must subscribe

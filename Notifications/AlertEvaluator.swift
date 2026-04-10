@@ -1,31 +1,49 @@
 import Foundation
 
-/// Evaluates real-time health data and triggers critical/warning/spike/trend alerts
-struct AlertEvaluator {
+/// Manages cooldown tracking for alert deduplication
+struct CooldownManager {
+    private let defaults: UserDefaults
+    private let prefix: String
 
-    /// Minimum hours between repeated alerts for the same identifier
-    private static var cooldownHours: Double { RemoteConfigManager.shared.alertCooldownHours }
+    init(defaults: UserDefaults = .standard, prefix: String = AppKeys.Notifications.alertCooldownPrefix) {
+        self.defaults = defaults
+        self.prefix = prefix
+    }
 
-    /// Check if an alert was recently sent (within cooldown window)
-    private static func isOnCooldown(identifier: String) -> Bool {
-        let key = AppKeys.Notifications.alertCooldownPrefix + identifier
-        let lastFired = UserDefaults.standard.double(forKey: key)
+    func isOnCooldown(identifier: String, cooldownHours: Double) -> Bool {
+        let key = prefix + identifier
+        let lastFired = defaults.double(forKey: key)
         guard lastFired > 0 else { return false }
         let elapsed = Date().timeIntervalSince1970 - lastFired
         return elapsed < cooldownHours * 3600
     }
 
-    /// Record that an alert was sent
-    private static func recordAlert(identifier: String) {
-        let key = AppKeys.Notifications.alertCooldownPrefix + identifier
-        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: key)
+    func recordAlert(identifier: String) {
+        let key = prefix + identifier
+        defaults.set(Date().timeIntervalSince1970, forKey: key)
     }
+}
+
+/// Evaluates real-time health data and triggers critical/warning/spike/trend alerts
+struct AlertEvaluator {
+
+    private let cooldownManager: CooldownManager
+
+    /// Shared instance for production use, preserving the static call-site API
+    static let shared = AlertEvaluator()
+
+    init(cooldownManager: CooldownManager = CooldownManager()) {
+        self.cooldownManager = cooldownManager
+    }
+
+    /// Minimum hours between repeated alerts for the same identifier
+    private var cooldownHours: Double { RemoteConfigManager.shared.alertCooldownHours }
 
     // MARK: - Main Evaluation Entry Point
 
     /// Full evaluation: anomalies + heart rate spikes + trend reversals + improvements.
     /// Suppressed within 1 hour of the daily summary time to avoid duplicate morning alerts.
-    static func evaluate(
+    func evaluate(
         anomalies: [AnomalyDetector.AnomalyResult],
         trends: [HealthMetric: TrendAnalyzer.TrendResult],
         timeSeries: [HealthMetric: MetricTimeSeries],
@@ -71,16 +89,35 @@ struct AlertEvaluator {
     }
 
     /// Legacy entry point for backward compatibility
-    static func evaluate(
+    func evaluate(
         anomalies: [AnomalyDetector.AnomalyResult],
         preferences: NotificationPreferences
     ) {
         evaluateAnomalies(anomalies: anomalies, preferences: preferences, maxPerDay: 1)
     }
 
+    // MARK: - Static convenience (preserves existing call sites)
+
+    static func evaluate(
+        anomalies: [AnomalyDetector.AnomalyResult],
+        trends: [HealthMetric: TrendAnalyzer.TrendResult],
+        timeSeries: [HealthMetric: MetricTimeSeries],
+        previousTrends: [HealthMetric: TrendDirection],
+        preferences: NotificationPreferences
+    ) {
+        shared.evaluate(anomalies: anomalies, trends: trends, timeSeries: timeSeries, previousTrends: previousTrends, preferences: preferences)
+    }
+
+    static func evaluate(
+        anomalies: [AnomalyDetector.AnomalyResult],
+        preferences: NotificationPreferences
+    ) {
+        shared.evaluate(anomalies: anomalies, preferences: preferences)
+    }
+
     // MARK: - Anomaly Alerts
 
-    private static func evaluateAnomalies(
+    private func evaluateAnomalies(
         anomalies: [AnomalyDetector.AnomalyResult],
         preferences: NotificationPreferences,
         maxPerDay: Int
@@ -109,7 +146,7 @@ struct AlertEvaluator {
 
     // MARK: - Heart Rate Spike/Drop Detection
 
-    private static func evaluateHeartRateSpikes(
+    private func evaluateHeartRateSpikes(
         timeSeries: [HealthMetric: MetricTimeSeries],
         spikeThreshold: Double,
         dropThreshold: Double,
@@ -259,7 +296,7 @@ struct AlertEvaluator {
 
     // MARK: - Trend Reversal Alerts
 
-    private static func evaluateTrendReversals(
+    private func evaluateTrendReversals(
         currentTrends: [HealthMetric: TrendAnalyzer.TrendResult],
         previousTrends: [HealthMetric: TrendDirection],
         maxPerDay: Int
@@ -289,7 +326,7 @@ struct AlertEvaluator {
 
     // MARK: - Improvement Celebration
 
-    private static func evaluateImprovements(
+    private func evaluateImprovements(
         trends: [HealthMetric: TrendAnalyzer.TrendResult],
         maxPerDay: Int
     ) {
@@ -310,7 +347,7 @@ struct AlertEvaluator {
 
     // MARK: - Alert Senders
 
-    private static func sendCriticalAlert(anomaly: AnomalyDetector.AnomalyResult, maxPerDay: Int) {
+    private func sendCriticalAlert(anomaly: AnomalyDetector.AnomalyResult, maxPerDay: Int) {
         let triage = triageAssessment(for: anomaly)
         if triage.level != .normal {
             sendSafetyTriageAlert(
@@ -337,7 +374,7 @@ struct AlertEvaluator {
         )
     }
 
-    private static func sendWarningAlert(anomaly: AnomalyDetector.AnomalyResult, maxPerDay: Int) {
+    private func sendWarningAlert(anomaly: AnomalyDetector.AnomalyResult, maxPerDay: Int) {
         let triage = triageAssessment(for: anomaly)
         if triage.level != .normal {
             sendSafetyTriageAlert(
@@ -362,7 +399,7 @@ struct AlertEvaluator {
         )
     }
 
-    private static func sendSafetyTriageAlert(
+    private func sendSafetyTriageAlert(
         assessment: SafetyTriageAssessment,
         identifier: String,
         maxPerDay: Int,
@@ -386,7 +423,7 @@ struct AlertEvaluator {
         }
     }
 
-    private static func triageAssessment(for anomaly: AnomalyDetector.AnomalyResult) -> SafetyTriageAssessment {
+    private func triageAssessment(for anomaly: AnomalyDetector.AnomalyResult) -> SafetyTriageAssessment {
         SafetyTriageEngine.assess(
             metric: anomaly.metric,
             currentValue: anomaly.currentValue,
@@ -394,8 +431,8 @@ struct AlertEvaluator {
         )
     }
 
-    private static func sendAlert(title: String, body: String, identifier: String, maxPerDay: Int) {
-        guard !isOnCooldown(identifier: identifier) else { return }
+    private func sendAlert(title: String, body: String, identifier: String, maxPerDay: Int) {
+        guard !cooldownManager.isOnCooldown(identifier: identifier, cooldownHours: cooldownHours) else { return }
 
         NotificationManager.shared.scheduleNotification(
             title: title,
@@ -403,11 +440,11 @@ struct AlertEvaluator {
             identifier: identifier,
             maxPerDay: maxPerDay
         )
-        recordAlert(identifier: identifier)
+        cooldownManager.recordAlert(identifier: identifier)
     }
 
-    private static func sendHeartRateAlert(title: String, body: String, identifier: String, maxPerDay: Int) {
-        guard !isOnCooldown(identifier: identifier) else { return }
+    private func sendHeartRateAlert(title: String, body: String, identifier: String, maxPerDay: Int) {
+        guard !cooldownManager.isOnCooldown(identifier: identifier, cooldownHours: cooldownHours) else { return }
 
         NotificationManager.shared.scheduleNotification(
             title: title,
@@ -415,11 +452,11 @@ struct AlertEvaluator {
             identifier: identifier,
             maxPerDay: min(RemoteConfigManager.shared.heartAlertCap, maxPerDay)  // Heart alerts capped, but respect user's lower cap
         )
-        recordAlert(identifier: identifier)
+        cooldownManager.recordAlert(identifier: identifier)
     }
 
     /// Returns true if the current time is within 1 hour of the daily summary time.
-    private static func isNearDailySummaryTime(_ summaryTime: DateComponents) -> Bool {
+    private func isNearDailySummaryTime(_ summaryTime: DateComponents) -> Bool {
         let cal = Calendar.current
         let now = Date()
         let hour = cal.component(.hour, from: now)
@@ -430,7 +467,7 @@ struct AlertEvaluator {
         return diff <= 60 || diff >= (24 * 60 - 60) // handle midnight wrap
     }
 
-    private static func hasSubdailyResolution(_ series: MetricTimeSeries) -> Bool {
+    private func hasSubdailyResolution(_ series: MetricTimeSeries) -> Bool {
         let calendar = Calendar.current
         return series.sortedSamples.contains { sample in
             let components = calendar.dateComponents([.hour, .minute, .second], from: sample.date)

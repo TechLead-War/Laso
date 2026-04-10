@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import AppIntents
 
 struct HomeView: View {
     let viewModel: DashboardViewModel
@@ -19,7 +18,6 @@ struct HomeView: View {
     @State private var showRecoveryInfo = false
     @State private var maxScrollDepth: Int = 0
     @State private var showMorningCheckIn = false
-    @State private var showAskData = false
     // Section trackers
     @State private var recoveryTracker = SectionTracker(section: .homeRecovery, tab: .home)
     @State private var illnessTracker = SectionTracker(section: .homeIllness, tab: .home)
@@ -227,6 +225,7 @@ struct HomeView: View {
                             : "Daily Health Score",
                         dayType: DashboardViewModel.RecoveryState(score: liveReadinessScore).dayType,
                         scoreChangeFromLastWeek: viewModel.scores.scoreChangeFromLastWeek,
+                        recoveryWhyLine: recoveryWhyLine,
                         hasLiveReadiness: hasLiveReadiness,
                         lastRefresh: viewModel.lastRefresh,
                         onTap: { showRecoveryInfo = true }
@@ -592,6 +591,13 @@ struct HomeView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .lineLimit(2)
+
+                        if let proof = action.proofLine {
+                            Text(proof)
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                                .lineLimit(2)
+                        }
                     }
 
                     Spacer()
@@ -652,6 +658,90 @@ struct HomeView: View {
     /// recovery/rest to insights. Defaults to insightsDetail.
     private func routeForAction(_ action: DashboardViewModel.SmartAction) -> Route {
         .todaysAction
+    }
+
+    // MARK: - Recovery Why Line
+
+    /// Builds a short plain-English explanation of why the recovery score is what it is.
+    /// Inspects live HRV, resting heart rate, sleep duration, and recent workout data to
+    /// identify the top contributing factors, then templates them via Copy.Home.RecoveryHero.
+    private var recoveryWhyLine: String? {
+        guard hasLiveReadiness else { return nil }
+
+        let score = liveReadinessScore
+        let state = DashboardViewModel.RecoveryState(score: score)
+
+        // Gather factor descriptions based on whether each signal is positive or negative.
+        var positiveFactors: [String] = []
+        var negativeFactors: [String] = []
+
+        // HRV (40% weight, most important)
+        if let hrv = liveViewModel.recovery.latestHRV {
+            // Without baseline, use a rough heuristic: above 40ms is decent
+            if hrv >= 50 {
+                positiveFactors.append(Copy.Home.RecoveryHero.hrvBounced)
+            } else if hrv >= 35 {
+                positiveFactors.append(Copy.Home.RecoveryHero.hrvHigh)
+            } else if hrv < 25 {
+                negativeFactors.append(Copy.Home.RecoveryHero.hrvLow)
+            } else {
+                negativeFactors.append(Copy.Home.RecoveryHero.hrvBelow)
+            }
+        }
+
+        // Resting Heart Rate (35% weight)
+        if let rhr = liveViewModel.recovery.latestRestingHeartRate {
+            if rhr <= 55 {
+                positiveFactors.append(Copy.Home.RecoveryHero.rhrLow)
+            } else if rhr <= 65 {
+                positiveFactors.append(Copy.Home.RecoveryHero.rhrDropped)
+            } else if rhr > 75 {
+                negativeFactors.append(Copy.Home.RecoveryHero.rhrHigh)
+            } else {
+                negativeFactors.append(Copy.Home.RecoveryHero.rhrElevated)
+            }
+        }
+
+        // Sleep Duration (15% weight)
+        let sleepHours = liveViewModel.sleep.lastNightSleepDuration / 3600.0
+        if sleepHours > 0 {
+            if sleepHours >= 7.5 {
+                positiveFactors.append(Copy.Home.RecoveryHero.sleepGreat)
+            } else if sleepHours >= 6.5 {
+                positiveFactors.append(Copy.Home.RecoveryHero.sleepGood)
+            } else if sleepHours >= 5.5 {
+                negativeFactors.append(Copy.Home.RecoveryHero.sleepShort)
+            } else {
+                negativeFactors.append(Copy.Home.RecoveryHero.sleepShort)
+            }
+        }
+
+        // Recent Workout (4% weight, only mention if it is a drag)
+        if let workoutTime = liveViewModel.workout.lastWorkoutTimestamp {
+            let hoursSince = Date().timeIntervalSince(workoutTime) / 3600.0
+            if hoursSince < 18, (liveViewModel.workout.lastWorkoutDuration ?? 0) > 30 {
+                negativeFactors.append(Copy.Home.RecoveryHero.recentHardWorkout)
+            }
+        }
+
+        // Build the line based on recovery state
+        switch state {
+        case .green:
+            let top = positiveFactors.first ?? Copy.Home.RecoveryHero.hrvBounced
+            let second = positiveFactors.dropFirst().first ?? Copy.Home.RecoveryHero.sleepSolid
+            return Copy.Home.RecoveryHero.whyLineGreen(topFactor: top, secondFactor: second)
+
+        case .yellow:
+            // Lead with the top negative factor if available, otherwise the top positive one
+            let factor = negativeFactors.first ?? positiveFactors.first
+            guard let top = factor else { return nil }
+            return Copy.Home.RecoveryHero.whyLineYellow(topFactor: top)
+
+        case .red:
+            let top = negativeFactors.first ?? Copy.Home.RecoveryHero.hrvLow
+            let second = negativeFactors.dropFirst().first ?? Copy.Home.RecoveryHero.sleepShort
+            return Copy.Home.RecoveryHero.whyLineRed(topFactor: top, secondFactor: second)
+        }
     }
 
     static func recoveryLabel(_ score: Int) -> String {

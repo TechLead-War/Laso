@@ -889,4 +889,30 @@ final class HealthDataStore {
         )
         return (try? modelContext?.fetch(descriptor)) ?? []
     }
+
+    // MARK: - Delete All Data
+
+    /// Deletes every record across all SwiftData model types and clears in-memory caches.
+    /// Called during account data deletion to satisfy App Store data deletion requirements.
+    func deleteAllData() {
+        guard let ctx = modelContext else { return }
+
+        do { try ctx.delete(model: StoredDailySample.self) } catch { /* best effort */ }
+        do { try ctx.delete(model: StoredSyncMetadata.self) } catch { /* best effort */ }
+        do { try ctx.delete(model: StoredAnalysisSnapshot.self) } catch { /* best effort */ }
+        do { try ctx.delete(model: StoredDailyStrain.self) } catch { /* best effort */ }
+        do { try ctx.delete(model: StoredRecommendation.self) } catch { /* best effort */ }
+        do { try ctx.delete(model: StoredNotificationEvent.self) } catch { /* best effort */ }
+        do { try ctx.delete(model: StoredMLModelState.self) } catch { /* best effort */ }
+        do { try ctx.delete(model: StoredAdherenceRecord.self) } catch { /* best effort */ }
+        do { try ctx.delete(model: StoredECGFeatures.self) } catch { /* best effort */ }
+        do { try ctx.delete(model: StoredModelEvaluation.self) } catch { /* best effort */ }
+        do { try ctx.delete(model: StoredJournalEntry.self) } catch { /* best effort */ }
+
+        saveContext("swiftdata_delete_all_data")
+
+        // Clear in-memory caches so stale data is never served
+        allSeriesCache = nil
+        metricSeriesCache.removeAll()
+    }
 }

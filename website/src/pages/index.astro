@@ -16,14 +16,14 @@ const jsonLd = [
       "priceCurrency": "USD",
       "description": "Free 7-day trial, then $29.99/year"
     },
-    "description": "Health intelligence app that turns Apple Watch, Oura, Garmin, and WHOOP data into daily recovery scores, strain targets, sleep debt tracking, stress monitoring, illness prediction, and biological age. All processed on-device.",
+    "description": "Health intelligence app that turns Apple Watch, Oura, Garmin, and WHOOP data into daily recovery scores, strain targets, sleep debt tracking, stress monitoring, early wellness pattern detection, and fitness age estimates. All processed on-device.",
     "featureList": [
       "Recovery score based on HRV, resting heart rate, and sleep quality",
       "Strain tracking with recovery-adjusted daily targets",
       "Personalized sleep need and sleep debt tracking",
       "HRV-derived stress monitoring with guided breathwork",
-      "Illness prediction 2-3 days before symptoms",
-      "Biological age (Vitality Age) computed from 9 key health metrics",
+      "Early wellness pattern detection from body stress signals",
+      "Fitness age estimate (Vitality Age) computed from 9 key health metrics",
       "Apple Health metrics across 7 categories",
       "What-if workout simulation",
       "Overtraining and burnout detection",
@@ -79,18 +79,18 @@ const jsonLd = [
       },
       {
         "@type": "Question",
-        "name": "How does illness prediction work?",
+        "name": "How does early wellness pattern detection work?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Laso monitors multiple health metrics simultaneously: HRV, resting heart rate, sleep patterns, respiratory rate, body temperature, and activity levels. When several of these metrics deviate from your personal baselines in a pattern consistent with immune system activation, Laso flags a potential illness signal 2 to 3 days before symptoms appear. The app also tracks 6 predictive health signals: fatigue, burnout, overtraining, insomnia risk, immune dip, and inactivity patterns."
+          "text": "Laso monitors multiple health metrics simultaneously: HRV, resting heart rate, sleep patterns, respiratory rate, body temperature, and activity levels. When several of these metrics deviate from your personal baselines in a recognizable pattern, Laso flags body stress signals early so you can adjust your routine. The app also tracks 6 wellness signals: fatigue, burnout, overtraining, insomnia risk, recovery dips, and inactivity patterns."
         }
       },
       {
         "@type": "Question",
-        "name": "What is Vitality Age and how is it different from biological age?",
+        "name": "What is Vitality Age and how is it different from other fitness age estimates?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Vitality Age is Laso's biological age metric, computed daily from 9 key health indicators: VO2 Max, HRV, resting heart rate, sleep efficiency, deep sleep percentage, walking speed, daily steps, exercise minutes, and body composition. Unlike lab-based biological age tests that require blood draws, Vitality Age updates every day using data from your wearable. It shows whether you're aging faster or slower than your chronological age, tracks your 90-day trajectory, and identifies which 2–3 metrics to focus on to improve."
+          "text": "Vitality Age is Laso's fitness age estimate, computed daily from 9 key health indicators: VO2 Max, HRV, resting heart rate, sleep efficiency, deep sleep percentage, walking speed, daily steps, exercise minutes, and body composition. Unlike lab-based tests that require blood draws, Vitality Age updates every day using data from your wearable. It shows how your body is trending relative to your chronological age, tracks your 90-day trajectory, and identifies which 2 to 3 metrics to focus on to improve."
         }
       },
       {
@@ -106,7 +106,7 @@ const jsonLd = [
         "name": "How is Laso different from WHOOP or Oura?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Three key differences: (1) No new hardware: Laso works with the wearable you already own (Apple Watch, Oura, Garmin, etc.), while WHOOP requires their $30/month band. (2) Broader analysis: Laso analyzes Apple Health signals across recovery, strain, sleep, stress, illness prediction, biological age, and more in one app. (3) Complete privacy: all analysis runs on-device with no cloud processing, unlike WHOOP and Oura which require cloud accounts."
+          "text": "Three key differences: (1) No new hardware: Laso works with the wearable you already own (Apple Watch, Oura, Garmin, etc.), while WHOOP requires their $30/month band. (2) Broader analysis: Laso analyzes Apple Health signals across recovery, strain, sleep, stress, wellness patterns, fitness age, and more in one app. (3) Complete privacy: all analysis runs on-device with no cloud processing, unlike WHOOP and Oura which require cloud accounts."
         }
       }
     ]
@@ -116,20 +116,20 @@ const jsonLd = [
 
 <Base
   title="Laso — Recovery Score, Strain & Sleep Tracking | Apple Watch & Oura"
-  description="Laso turns Apple Watch, Oura, and Garmin data into recovery scores, strain targets, sleep coaching, illness prediction, and biological age. Private, on-device."
+  description="Laso turns Apple Watch, Oura, and Garmin data into recovery scores, strain targets, sleep coaching, wellness pattern detection, and fitness age estimates. Private, on-device."
   jsonLd={jsonLd}
 >
   <div class="min-h-screen bg-white">
     <header>
     <!-- ════════ NAV ════════ -->
     <nav aria-label="Main navigation" class="nav-blur fixed top-0 inset-x-0 z-50 border-b border-gray-100/60">
-      <div class="max-w-6xl mx-auto px-5 h-12 flex items-center justify-between">
-        <a href="#" class="text-[22px] font-bold tracking-tight text-apple-dark hover:opacity-80 transition-opacity">Laso</a>
-        <div class="hidden sm:flex items-center gap-7">
-          <a href="#features" class="text-[13px] font-medium text-apple-secondary hover:text-apple-dark transition-colors">Features</a>
-          <a href="#devices" class="text-[13px] font-medium text-apple-secondary hover:text-apple-dark transition-colors">Devices</a>
+      <div class="max-w-6xl mx-auto px-4 sm:px-5 h-12 flex items-center justify-between gap-2">
+        <a href="#" class="text-[22px] font-bold tracking-tight text-apple-dark hover:opacity-80 transition-opacity shrink-0">Laso</a>
+        <div class="hidden xs:flex items-center gap-4 sm:gap-7">
+          <a href="#features" class="text-[13px] font-medium text-apple-secondary hover:text-apple-dark transition-colors whitespace-nowrap">Features</a>
+          <a href="#devices" class="text-[13px] font-medium text-apple-secondary hover:text-apple-dark transition-colors whitespace-nowrap">Devices</a>
         </div>
-        <a href="#early-access" class="bg-apple-dark text-white text-xs font-medium rounded-full px-4 py-1.5 hover:bg-black transition-colors">
+        <a href="#early-access" class="bg-apple-dark text-white text-xs font-medium rounded-full px-3 sm:px-4 py-1.5 min-h-[44px] flex items-center hover:bg-black transition-colors shrink-0 whitespace-nowrap">
           Get Early Access
         </a>
       </div>
@@ -138,29 +138,29 @@ const jsonLd = [
 
     <main>
     <!-- ════════ HERO ════════ -->
-    <section data-section="hero" class="hero-gradient pt-32 pb-16 md:pt-44 md:pb-24 px-5 text-center">
+    <section data-section="hero" class="hero-gradient pt-24 pb-12 sm:pt-32 sm:pb-16 md:pt-44 md:pb-24 px-5 text-center">
       <div class="inline-flex items-center gap-2 bg-apple-blue/10 text-apple-blue text-sm font-medium rounded-full px-4 py-1.5 mb-6">
         <span class="w-2 h-2 bg-apple-blue rounded-full animate-pulse"></span>
         iOS Early Access Open
       </div>
-      <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-apple-dark text-balance max-w-4xl mx-auto leading-[1.08]">
+      <h1 class="text-[2rem] leading-[1.12] sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-apple-dark text-balance max-w-4xl mx-auto sm:leading-[1.08]">
         Health scores that are
         <span class="gradient-text">actually about you.</span>
       </h1>
-      <p class="mt-5 text-lg md:text-xl text-apple-secondary max-w-2xl mx-auto text-balance leading-relaxed">
+      <p class="mt-5 text-base sm:text-lg md:text-xl text-apple-secondary max-w-2xl mx-auto text-balance leading-relaxed">
         Laso learns what's normal for your body and tells you what to do about it. Recovery, strain, sleep, stress, illness risk. All from the wearable you already own.
       </p>
-      <div class="mt-8 max-w-md mx-auto">
+      <div class="mt-8 max-w-md mx-auto w-full px-1 sm:px-0">
         <form id="hero-form" class="flex flex-col sm:flex-row gap-3">
           <input
             type="email"
             placeholder="your@email.com"
             required
-            class="hero-email-input flex-1 rounded-full border border-gray-200 px-5 py-3 text-[15px] text-apple-dark placeholder:text-apple-secondary/50 focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue/30 transition-colors"
+            class="hero-email-input w-full sm:flex-1 rounded-full border border-gray-200 px-5 py-3 min-h-[48px] text-[16px] sm:text-[15px] text-apple-dark placeholder:text-apple-secondary/50 focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue/30 transition-colors"
           />
           <button
             type="submit"
-            class="bg-apple-dark text-white font-medium rounded-full px-7 py-3 text-[15px] hover:bg-black transition-colors active:scale-[0.97] cursor-pointer shrink-0"
+            class="bg-apple-dark text-white font-medium rounded-full px-7 py-3 min-h-[48px] text-[16px] sm:text-[15px] hover:bg-black transition-colors active:scale-[0.97] cursor-pointer shrink-0"
           >
             Join Early Access
           </button>
@@ -169,7 +169,7 @@ const jsonLd = [
         <p class="mt-3 text-[13px] text-apple-secondary/60">Free 7-day trial. <strong class="text-apple-dark"><span class="signup-counter">550</span> have joined</strong>.</p>
       </div>
       <!-- Hero trust strip -->
-      <div class="mt-8 flex flex-wrap justify-center gap-5 text-[13px] text-apple-secondary/70">
+      <div class="mt-8 flex flex-wrap justify-center gap-3 sm:gap-5 text-[13px] text-apple-secondary/70">
         <span class="flex items-center gap-1.5">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
           100% on-device
@@ -187,7 +187,7 @@ const jsonLd = [
     </section>
 
     <!-- ════════ YOUR MORNING BRIEF ════════ -->
-    <section data-section="brief" class="bg-apple-gray py-20 md:py-28 px-5">
+    <section data-section="brief" class="bg-apple-gray py-14 sm:py-20 md:py-28 px-5">
       <div class="max-w-4xl mx-auto">
         <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
           Every morning, five numbers that actually mean something.
@@ -196,8 +196,8 @@ const jsonLd = [
           Each one is compared to your own history. Not an age group average, not a generic benchmark. Your data, your baseline.
         </p>
 
-        <div class="mt-14 grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div class="section-reveal bg-white rounded-2xl p-5 text-center">
+        <div class="mt-14 grid grid-cols-2 md:grid-cols-5 gap-4 justify-items-center">
+          <div class="section-reveal bg-white rounded-2xl p-5 text-center w-full">
             <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-3">
               <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
             </div>
@@ -233,7 +233,7 @@ const jsonLd = [
             <p class="text-[11px] text-apple-secondary mt-0.5">Below your normal</p>
           </div>
 
-          <div class="section-reveal bg-white rounded-2xl p-5 text-center col-span-2 md:col-span-1" style="transition-delay:240ms">
+          <div class="section-reveal bg-white rounded-2xl p-5 text-center col-span-2 md:col-span-1 max-w-[calc(50%-0.5rem)] sm:max-w-none" style="transition-delay:240ms">
             <div class="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center mx-auto mb-3">
               <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="1.5" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
             </div>
@@ -385,7 +385,7 @@ const jsonLd = [
         </h2>
 
         <!-- Differentiator image -->
-        <div class="section-reveal mt-10 relative rounded-2xl overflow-hidden h-[200px] md:h-[300px]">
+        <div class="section-reveal mt-10 relative rounded-2xl overflow-hidden h-[180px] sm:h-[200px] md:h-[300px]">
           <img src="https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80&auto=format&fit=crop" alt="Sprinter in starting blocks on track, close-up detail" class="w-full h-full object-cover" loading="lazy" />
           <div class="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent"></div>
           <div class="absolute bottom-6 left-6 md:bottom-8 md:left-8">
@@ -437,25 +437,25 @@ const jsonLd = [
     <section data-section="vitality" class="bg-apple-gray py-20 md:py-28 px-5">
       <div class="max-w-4xl mx-auto">
         <div class="section-reveal md:grid md:grid-cols-2 md:gap-14 items-center">
-          <div>
+          <div class="text-center md:text-left">
             <p class="text-apple-blue text-sm font-semibold mb-3">Vitality Age</p>
             <h2 class="text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark leading-snug">
-              Your biological age,<br/>updated daily.
+              Your fitness age estimate,<br/>updated daily.
             </h2>
             <p class="mt-4 text-[15px] text-apple-secondary leading-relaxed">
-              Laso looks at 9 things — VO2 Max, HRV, resting heart rate, sleep quality, walking speed, and more — and computes how old your body actually is. No blood test. No lab visit. Just open the app.
+              Laso looks at 9 things — VO2 Max, HRV, resting heart rate, sleep quality, walking speed, and more — and estimates your overall fitness age. No blood test. No lab visit. Just open the app.
             </p>
-            <div class="mt-5 space-y-2">
+            <div class="mt-5 space-y-2 inline-block text-left">
               <div class="flex items-center gap-3">
-                <span class="w-1.5 h-1.5 bg-apple-blue rounded-full"></span>
+                <span class="w-1.5 h-1.5 bg-apple-blue rounded-full shrink-0"></span>
                 <p class="text-sm text-apple-dark">Updates every day so you can see if what you're doing is working</p>
               </div>
               <div class="flex items-center gap-3">
-                <span class="w-1.5 h-1.5 bg-apple-blue rounded-full"></span>
+                <span class="w-1.5 h-1.5 bg-apple-blue rounded-full shrink-0"></span>
                 <p class="text-sm text-apple-dark">Shows you the 2-3 things that would move it the most</p>
               </div>
               <div class="flex items-center gap-3">
-                <span class="w-1.5 h-1.5 bg-apple-blue rounded-full"></span>
+                <span class="w-1.5 h-1.5 bg-apple-blue rounded-full shrink-0"></span>
                 <p class="text-sm text-apple-dark">90-day trend so you're looking at the big picture, not daily noise</p>
               </div>
             </div>
@@ -480,7 +480,7 @@ const jsonLd = [
     <section id="features" data-section="features" class="py-20 md:py-28 px-5">
       <div class="max-w-5xl mx-auto">
         <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
-          Recovery, strain, sleep, and illness prediction. One app.
+          Recovery, strain, sleep, and early wellness insights. One app.
         </h2>
 
         <div class="mt-14 grid md:grid-cols-3 gap-6">
@@ -525,8 +525,8 @@ const jsonLd = [
               <h3 class="text-lg font-semibold text-apple-dark">Catch problems early</h3>
             </div>
             <ul class="space-y-2.5 text-sm text-apple-secondary">
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>Illness prediction 2-3 days before you feel anything</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>Watches for fatigue, burnout, overtraining, insomnia, immune dips</li>
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>Early wellness pattern detection from body stress signals</li>
+              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>Watches for fatigue, burnout, overtraining, insomnia, and recovery dips</li>
               <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>Picks up slow changes you wouldn't notice yourself</li>
               <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>HRV-based stress score with guided breathwork when it's high</li>
             </ul>
@@ -534,7 +534,7 @@ const jsonLd = [
         </div>
 
         <!-- Secondary capabilities strip -->
-        <div class="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+        <div class="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto text-center">
           <div class="section-reveal text-center py-4">
             <p class="text-sm font-semibold text-apple-dark">Cycle Tracking</p>
             <p class="text-xs text-apple-secondary mt-1">4-phase model with phase-specific training guidance</p>
@@ -556,9 +556,9 @@ const jsonLd = [
     </section>
 
     <!-- ════════ DEVICES ════════ -->
-    <section id="devices" data-section="devices" class="bg-apple-gray py-20 md:py-28 px-5">
+    <section id="devices" data-section="devices" class="bg-apple-gray py-20 md:py-28 px-5 overflow-hidden">
       <div class="max-w-5xl mx-auto text-center">
-        <h2 class="section-reveal text-2xl md:text-3xl font-semibold tracking-tight text-apple-dark text-balance">
+        <h2 class="section-reveal text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight text-apple-dark text-balance">
           Works through Apple Health, with mapped support for Apple Watch, Oura, Garmin, WHOOP, and other known sources.
         </h2>
         <p class="section-reveal mt-3 text-[15px] text-apple-secondary max-w-lg mx-auto">
@@ -626,7 +626,7 @@ const jsonLd = [
     </section>
 
     <!-- ════════ LIFESTYLE BREAK ════════ -->
-    <section class="relative h-[280px] md:h-[420px] overflow-hidden">
+    <section class="relative h-[220px] sm:h-[280px] md:h-[420px] overflow-hidden">
       <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1400&q=80&auto=format&fit=crop" alt="Person training with weights in a gym, representing an active fitness lifestyle" class="w-full h-full object-cover" loading="lazy" />
       <div class="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-white"></div>
     </section>
@@ -640,17 +640,17 @@ const jsonLd = [
         <p class="section-reveal mt-4 text-apple-secondary text-[15px] md:text-base leading-relaxed max-w-lg mx-auto">
           You already have the wearable. Laso does the rest. No credit card needed.
         </p>
-        <div class="section-reveal mt-10 max-w-md mx-auto">
+        <div class="section-reveal mt-10 max-w-md mx-auto w-full px-1 sm:px-0">
           <form id="early-access-form" class="flex flex-col sm:flex-row gap-3">
             <input
               type="email"
               placeholder="your@email.com"
               required
-              class="ea-email-input flex-1 rounded-full border border-gray-200 px-5 py-3 text-[15px] text-apple-dark placeholder:text-apple-secondary/50 focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue/30 transition-colors"
+              class="ea-email-input w-full sm:flex-1 rounded-full border border-gray-200 px-5 py-3 min-h-[48px] text-[16px] sm:text-[15px] text-apple-dark placeholder:text-apple-secondary/50 focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue/30 transition-colors"
             />
             <button
               type="submit"
-              class="bg-apple-dark text-white font-medium rounded-full px-7 py-3 text-[15px] hover:bg-black transition-colors active:scale-[0.97] cursor-pointer shrink-0"
+              class="bg-apple-dark text-white font-medium rounded-full px-7 py-3 min-h-[48px] text-[16px] sm:text-[15px] hover:bg-black transition-colors active:scale-[0.97] cursor-pointer shrink-0"
             >
               Join Early Access
             </button>
@@ -659,13 +659,13 @@ const jsonLd = [
           <p class="mt-3 text-[13px] text-apple-secondary/60"><strong class="text-apple-dark"><span class="signup-counter">550</span> have joined</strong>. We'll notify you when it's ready.</p>
         </div>
         <div class="section-reveal mt-10 flex flex-wrap justify-center gap-3">
-          <a href="mailto:hello@lasohealth.fit" class="inline-flex items-center gap-2 bg-white rounded-full px-5 py-2.5 text-sm font-medium text-apple-dark hover:bg-gray-100 transition-colors">
+          <a href="mailto:hello@lasohealth.fit" class="inline-flex items-center gap-2 bg-white rounded-full px-5 py-2.5 min-h-[44px] text-sm font-medium text-apple-dark hover:bg-gray-100 transition-colors">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/>
             </svg>
             Say Hello
           </a>
-          <a href="https://twitter.com/lasohealth" target="_blank" rel="noopener" class="inline-flex items-center gap-2 bg-white rounded-full px-5 py-2.5 text-sm font-medium text-apple-dark hover:bg-gray-100 transition-colors">
+          <a href="https://twitter.com/lasohealth" target="_blank" rel="noopener" class="inline-flex items-center gap-2 bg-white rounded-full px-5 py-2.5 min-h-[44px] text-sm font-medium text-apple-dark hover:bg-gray-100 transition-colors">
             <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
               <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
             </svg>
@@ -684,71 +684,71 @@ const jsonLd = [
 
         <div class="mt-14 space-y-6">
           <details class="section-reveal group border border-gray-100 rounded-2xl">
-            <summary class="flex items-center justify-between cursor-pointer px-6 py-5 text-[15px] font-semibold text-apple-dark select-none">
+            <summary class="flex items-center justify-between cursor-pointer px-5 sm:px-6 py-5 text-[15px] font-semibold text-apple-dark select-none min-h-[56px]">
               What is a recovery score and how does Laso calculate it?
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-apple-secondary transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             </summary>
-            <div class="px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
+            <div class="px-5 sm:px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
               It's a number from 0 to 100 that tells you how ready your body is today. Laso calculates it from your HRV, resting heart rate, sleep quality, sleep duration, respiratory rate, and how hard you've been training. The important part: it's based on your own baseline, not a population average. So if your HRV is naturally 42ms, Laso doesn't tell you you're "below average" like other apps do. It tells you whether 42 is good or bad for you specifically.
             </div>
           </details>
 
           <details class="section-reveal group border border-gray-100 rounded-2xl" style="transition-delay:60ms">
-            <summary class="flex items-center justify-between cursor-pointer px-6 py-5 text-[15px] font-semibold text-apple-dark select-none">
+            <summary class="flex items-center justify-between cursor-pointer px-5 sm:px-6 py-5 text-[15px] font-semibold text-apple-dark select-none min-h-[56px]">
               How does strain tracking work?
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-apple-secondary transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             </summary>
-            <div class="px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
+            <div class="px-5 sm:px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
               Laso calculates a strain score from 0 to 21 based on heart rate zone distribution throughout the day. It sets a personalized daily strain target based on your current recovery level: higher recovery means you can push harder, lower recovery means you should hold back. The app also includes what-if simulation so you can preview how a planned workout would affect your recovery the next day.
             </div>
           </details>
 
           <details class="section-reveal group border border-gray-100 rounded-2xl" style="transition-delay:120ms">
-            <summary class="flex items-center justify-between cursor-pointer px-6 py-5 text-[15px] font-semibold text-apple-dark select-none">
-              How does illness prediction work?
+            <summary class="flex items-center justify-between cursor-pointer px-5 sm:px-6 py-5 text-[15px] font-semibold text-apple-dark select-none min-h-[56px]">
+              How does early wellness pattern detection work?
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-apple-secondary transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             </summary>
-            <div class="px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
-              Laso monitors HRV, resting heart rate, sleep patterns, respiratory rate, body temperature, and activity levels simultaneously. When several of these metrics deviate from your personal baselines in a pattern consistent with immune system activation, Laso flags a potential illness signal 2 to 3 days before symptoms appear. It also tracks 6 predictive health signals: fatigue, burnout, overtraining, insomnia risk, immune dip, and inactivity patterns.
+            <div class="px-5 sm:px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
+              Laso monitors HRV, resting heart rate, sleep patterns, respiratory rate, body temperature, and activity levels simultaneously. When several of these metrics deviate from your personal baselines in a recognizable pattern, Laso flags body stress signals early so you can adjust your routine. It also tracks 6 wellness signals: fatigue, burnout, overtraining, insomnia risk, recovery dips, and inactivity patterns.
             </div>
           </details>
 
           <details class="section-reveal group border border-gray-100 rounded-2xl" style="transition-delay:180ms">
-            <summary class="flex items-center justify-between cursor-pointer px-6 py-5 text-[15px] font-semibold text-apple-dark select-none">
+            <summary class="flex items-center justify-between cursor-pointer px-5 sm:px-6 py-5 text-[15px] font-semibold text-apple-dark select-none min-h-[56px]">
               What is Vitality Age?
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-apple-secondary transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             </summary>
-            <div class="px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
-              Vitality Age is Laso's biological age metric, computed daily from 9 key health indicators: VO2 Max, HRV, resting heart rate, sleep efficiency, deep sleep percentage, walking speed, daily steps, exercise minutes, and body composition. Unlike lab-based biological age tests, Vitality Age updates every day from your wearable data. It shows whether you're aging faster or slower than your chronological age, tracks your 90-day trend, and identifies which 2–3 metrics to focus on.
+            <div class="px-5 sm:px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
+              Vitality Age is Laso's fitness age estimate, computed daily from 9 key health indicators: VO2 Max, HRV, resting heart rate, sleep efficiency, deep sleep percentage, walking speed, daily steps, exercise minutes, and body composition. Unlike lab tests, Vitality Age updates every day from your wearable data. It shows how your body is trending relative to your chronological age, tracks your 90-day trend, and identifies which 2 to 3 metrics to focus on.
             </div>
           </details>
 
           <details class="section-reveal group border border-gray-100 rounded-2xl" style="transition-delay:240ms">
-            <summary class="flex items-center justify-between cursor-pointer px-6 py-5 text-[15px] font-semibold text-apple-dark select-none">
+            <summary class="flex items-center justify-between cursor-pointer px-5 sm:px-6 py-5 text-[15px] font-semibold text-apple-dark select-none min-h-[56px]">
               What devices are compatible with Laso?
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-apple-secondary transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             </summary>
-            <div class="px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
+            <div class="px-5 sm:px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
               Laso reads Apple Health on iPhone, so Apple Watch works natively and many companion apps can feed data in once Apple Health sharing is enabled. Publicly mapped sources include Garmin, Oura Ring, WHOOP, Polar, COROS, Withings, Dexcom, Ultrahuman Ring Air, RingConn, Circular Ring, Renpho, Omron, Biostrap, Myzone, Peloton, and more. Laso shows the exact metrics after the source writes samples. iPhone built-in sensors for steps, distance, and activity also work without a wearable.
             </div>
           </details>
 
           <details class="section-reveal group border border-gray-100 rounded-2xl" style="transition-delay:300ms">
-            <summary class="flex items-center justify-between cursor-pointer px-6 py-5 text-[15px] font-semibold text-apple-dark select-none">
+            <summary class="flex items-center justify-between cursor-pointer px-5 sm:px-6 py-5 text-[15px] font-semibold text-apple-dark select-none min-h-[56px]">
               Is my health data private?
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-apple-secondary transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             </summary>
-            <div class="px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
+            <div class="px-5 sm:px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
               Yes. Every analysis in Laso runs entirely on your iPhone. No health data is ever sent to a server. All stored data is AES-256 encrypted with keys in the Secure Enclave. You don't need an account to use the app. No one sees your health data but you.
             </div>
           </details>
 
           <details class="section-reveal group border border-gray-100 rounded-2xl" style="transition-delay:360ms">
-            <summary class="flex items-center justify-between cursor-pointer px-6 py-5 text-[15px] font-semibold text-apple-dark select-none">
+            <summary class="flex items-center justify-between cursor-pointer px-5 sm:px-6 py-5 text-[15px] font-semibold text-apple-dark select-none min-h-[56px]">
               How is Laso different from WHOOP or Oura?
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-apple-secondary transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
             </summary>
-            <div class="px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
+            <div class="px-5 sm:px-6 pb-5 text-sm text-apple-secondary leading-relaxed">
               Three things. First, Laso compares you to yourself, not to population averages. Your 30-day history is the benchmark, so the scores actually mean something. Second, it works with whatever wearable you already have. No buying a WHOOP band for $30/month. Third, everything runs on your phone. WHOOP and Oura upload your data to their servers. Laso doesn't send anything anywhere.
             </div>
           </details>
@@ -760,12 +760,12 @@ const jsonLd = [
 
     <!-- ════════ FOOTER ════════ -->
     <footer class="border-t border-gray-100 py-8 px-5">
-      <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-apple-secondary">
+      <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left text-xs text-apple-secondary">
         <p>&copy; 2026 Laso Health. All rights reserved. Not medical advice.</p>
-        <div class="flex items-center gap-5">
-          <a href="/privacy" class="hover:text-apple-dark transition-colors">Privacy</a>
-          <a href="/terms" class="hover:text-apple-dark transition-colors">Terms</a>
-          <a href="mailto:support@lasohealth.fit" class="hover:text-apple-dark transition-colors">Contact</a>
+        <div class="flex items-center justify-center gap-5">
+          <a href="/privacy" class="hover:text-apple-dark transition-colors min-h-[44px] flex items-center">Privacy</a>
+          <a href="/terms" class="hover:text-apple-dark transition-colors min-h-[44px] flex items-center">Terms</a>
+          <a href="mailto:support@lasohealth.fit" class="hover:text-apple-dark transition-colors min-h-[44px] flex items-center">Contact</a>
         </div>
       </div>
     </footer>

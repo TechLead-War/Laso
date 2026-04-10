@@ -274,7 +274,7 @@ struct CycleInsightAnalyzer {
         case .sleepDuration, .sleepDeep:
             return "Your \(metric.displayName.lowercased()) is \(changeStr) \(direction) during your follicular phase compared to your cycle average."
         case .activeCalories, .exerciseMinutes:
-            return "Your \(metric.displayName.lowercased()) is \(changeStr) \(direction) during your follicular phase. your highest-output phase in your data."
+            return "Your \(metric.displayName.lowercased()) is \(changeStr) \(direction) during your follicular phase. Your highest-output phase in your data."
         case .steps:
             return "Your step count is \(changeStr) \(direction) during your follicular phase compared to your cycle average."
         default:

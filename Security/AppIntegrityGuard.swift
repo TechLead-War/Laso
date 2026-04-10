@@ -9,14 +9,29 @@ enum AppIntegrityGuard {
     // MARK: - Public API
 
     /// Runs all integrity checks. Returns a failure reason string, or nil if the environment is clean.
+    ///
+    /// Checks still execute for analytics visibility but no longer block the UI.
+    /// Apple App Store Review guidelines discourage hard-blocking users based on
+    /// jailbreak or environment detection, so results are logged only.
     static func performChecks() -> String? {
         #if DEBUG
-        return nil // Skip integrity checks in debug builds
+        return nil
         #else
-        if isJailbroken() { return "unsupported_environment" }
-        if isDebuggerAttached() { return "debugger_detected" }
-        if isTampered() { return "integrity_failure" }
-        if isRunningInEmulator() { return "emulator_detected" }
+        // Run checks for analytics tracking but never block the app.
+        var reason: String?
+        if isJailbroken() { reason = "unsupported_environment" }
+        else if isDebuggerAttached() { reason = "debugger_detected" }
+        else if isTampered() { reason = "integrity_failure" }
+        else if isRunningInEmulator() { reason = "emulator_detected" }
+
+        if let reason {
+            PostHogManager.shared.captureError(
+                "Integrity check flagged: \(reason)",
+                context: "app_integrity_guard"
+            )
+        }
+
+        // Always return nil so the app is never blocked.
         return nil
         #endif
     }

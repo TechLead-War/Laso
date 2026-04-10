@@ -74,7 +74,7 @@ struct CorrelationsView: View {
 
     private var discoverySection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            sectionHeader(title: "Key Discoveries", icon: "lightbulb.max.fill", color: .orange)
+            sectionHeader(title: Copy.Insights.Correlations.keyDiscoveries, icon: "lightbulb.max.fill", color: .orange)
                 .padding(.horizontal)
 
             ForEach(Array(compoundInsights.prefix(5).enumerated()), id: \.offset) { _, insight in
@@ -92,7 +92,7 @@ struct CorrelationsView: View {
 
     private var causalChainsSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            sectionHeader(title: "Why Things Changed", icon: "arrow.triangle.branch", color: .purple)
+            sectionHeader(title: Copy.Insights.Correlations.whyThingsChanged, icon: "arrow.triangle.branch", color: .purple)
                 .padding(.horizontal)
 
             ForEach(causalChains.prefix(4)) { chain in
@@ -108,7 +108,7 @@ struct CorrelationsView: View {
 
     private var interactionEffectsSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            sectionHeader(title: "How Much Matters", icon: "chart.line.uptrend.xyaxis", color: .cyan)
+            sectionHeader(title: Copy.Insights.Correlations.howMuchMatters, icon: "chart.line.uptrend.xyaxis", color: .cyan)
                 .padding(.horizontal)
 
             ForEach(Array(interactionEffects.prefix(4).enumerated()), id: \.offset) { _, effect in
@@ -131,7 +131,7 @@ struct CorrelationsView: View {
             } label: {
                 HStack {
                     sectionHeader(
-                        title: "All Connections",
+                        title: Copy.Insights.Correlations.allConnections,
                         icon: "point.3.connected.trianglepath.dotted",
                         color: .secondary
                     )
@@ -190,10 +190,10 @@ struct CorrelationsView: View {
             Image(systemName: "brain.head.profile")
                 .font(.system(size: 36))
                 .foregroundStyle(.tertiary)
-            Text("Building your health intelligence")
+            Text(Copy.Insights.Correlations.buildingIntelligence)
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(.secondary)
-            Text("Keep wearing your device. discoveries appear after 7+ days of data.")
+            Text(Copy.Insights.Correlations.keepWearingDevice)
                 .font(.caption)
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)

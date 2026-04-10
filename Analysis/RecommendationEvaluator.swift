@@ -26,7 +26,7 @@ enum RecommendationEvaluator {
                 let end24h = rec.shownDate.addingTimeInterval(86_400)
                 let samples = series.samples(from: rec.shownDate, to: end24h)
                 if !samples.isEmpty {
-                    let avg = samples.map(\.value).reduce(0, +) / Double(samples.count)
+                    let avg = samples.valueMean
                     let lift = rec.baselineValue != 0 ? ((avg - rec.baselineValue) / rec.baselineValue) * 100 : 0
                     rec.lift24h = lift
                     rec.evaluated24h = true
@@ -40,7 +40,7 @@ enum RecommendationEvaluator {
                 let end7d = rec.shownDate.addingTimeInterval(604_800)
                 let samples = series.samples(from: rec.shownDate, to: end7d)
                 if !samples.isEmpty {
-                    let avg = samples.map(\.value).reduce(0, +) / Double(samples.count)
+                    let avg = samples.valueMean
                     let lift = rec.baselineValue != 0 ? ((avg - rec.baselineValue) / rec.baselineValue) * 100 : 0
                     rec.lift7d = lift
                     rec.evaluated7d = true

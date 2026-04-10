@@ -139,9 +139,9 @@ final class TodayIntelligenceEngine {
                 return IntelligenceCard(
                     type: .predictiveRisk,
                     icon: "exclamationmark.triangle.fill",
-                    label: "PREDICTIVE RISK",
-                    headline: "\(pctStr) \(topSignal.signalName.lowercased()) risk detected",
-                    detail: topSignal.explanation,
+                    label: Copy.Briefing.Labels.headsUp,
+                    headline: Copy.Briefing.PredictiveRisk.urgentHeadline(riskPercent: pctStr, signalName: topSignal.signalName),
+                    detail: Copy.Briefing.PredictiveRisk.urgentDetail(explanation: topSignal.explanation),
                     severity: severity,
                     confidence: topSignal.confidence,
                     priority: priorityBase + topSignal.score * 5,
@@ -166,16 +166,16 @@ final class TodayIntelligenceEngine {
 
         let topFactorDesc: String
         if let topFactor = prediction.topFactors.first {
-            topFactorDesc = "Driven primarily by \(topFactor.metric.displayName.lowercased())"
+            topFactorDesc = Copy.Briefing.PredictiveRisk.tomorrowDetailWithFactor(metricName: topFactor.metric.displayName)
         } else {
-            topFactorDesc = "Based on multi-metric analysis"
+            topFactorDesc = Copy.Briefing.PredictiveRisk.tomorrowDetailGeneric
         }
 
         return IntelligenceCard(
             type: .predictiveRisk,
             icon: "exclamationmark.triangle.fill",
-            label: "PREDICTIVE RISK",
-            headline: "\(pctStr) probability of a rough day tomorrow",
+            label: Copy.Briefing.Labels.headsUp,
+            headline: Copy.Briefing.PredictiveRisk.tomorrowHeadline(probability: pctStr),
             detail: topFactorDesc,
             severity: severity,
             confidence: prediction.confidence,
@@ -198,7 +198,7 @@ final class TodayIntelligenceEngine {
         guard let topCP = sortedCPs.first else { return nil }
 
         let isIncrease = topCP.direction == ChangePointDetector.ChangePoint.ChangeDirection.increase
-        let directionWord = isIncrease ? "up" : "down"
+        let directionWord = isIncrease ? "higher" : "lower"
         let delta = abs(topCP.afterMean - topCP.beforeMean)
         let metricName = topCP.metric.displayName
         let deltaStr = topCP.metric.formatWithUnit(delta)
@@ -222,11 +222,12 @@ final class TodayIntelligenceEngine {
 
         let beforeStr = topCP.metric.formatWithUnit(topCP.beforeMean)
         let afterStr = topCP.metric.formatWithUnit(topCP.afterMean)
-        var detail = "Before: \(beforeStr) \u{2192} After: \(afterStr)"
-        if !topCP.coOccurringChanges.isEmpty {
-            let coChanges = Array(topCP.coOccurringChanges.prefix(2))
-            let coNames = coChanges.map { $0.metric.displayName }
-            detail += ". Co-shifted with \(coNames.joined(separator: " and "))"
+        let coNames = Array(topCP.coOccurringChanges.prefix(2)).map { $0.metric.displayName }
+        let detail: String
+        if !coNames.isEmpty {
+            detail = Copy.Briefing.SomethingChanged.detailWithCoChanges(before: beforeStr, after: afterStr, coChanges: coNames)
+        } else {
+            detail = Copy.Briefing.SomethingChanged.detailSimple(before: beforeStr, after: afterStr)
         }
 
         let priority: Double = isPositive ? 55 + topCP.magnitude * 5 : 70 + topCP.magnitude * 5
@@ -234,8 +235,8 @@ final class TodayIntelligenceEngine {
         return IntelligenceCard(
             type: .regimeShift,
             icon: "chart.line.uptrend.xyaxis",
-            label: "REGIME SHIFT",
-            headline: "Your \(metricName) baseline shifted \(directionWord) \(deltaStr) since \(dateStr)",
+            label: Copy.Briefing.Labels.somethingChanged,
+            headline: Copy.Briefing.SomethingChanged.headline(metricName: metricName, direction: directionWord, delta: deltaStr, dateStr: dateStr),
             detail: detail,
             severity: severity,
             confidence: topCP.confidence,
@@ -254,14 +255,14 @@ final class TodayIntelligenceEngine {
             let pctStr = formatPercent(top.historicalAccuracy)
             let signalDesc = top.warningSignals.prefix(2).map { signal in
                 "\(signal.metric.displayName) \(signal.direction)"
-            }.joined(separator: " + ")
+            }.joined(separator: " and ")
 
             return IntelligenceCard(
                 type: .cascadeForecast,
                 icon: "arrow.triangle.branch",
-                label: "CASCADE ALERT",
-                headline: "\(signalDesc) \u{2192} \(top.predictedEvent) (\(pctStr) historical accuracy)",
-                detail: top.description,
+                label: Copy.Briefing.Labels.cascadeAlert,
+                headline: Copy.Briefing.WhatMightHappen.precursorHeadline(signalDescription: signalDesc, predictedEvent: top.predictedEvent, accuracy: pctStr),
+                detail: Copy.Briefing.WhatMightHappen.precursorDetail(description: top.description),
                 severity: .warning,
                 confidence: top.historicalAccuracy,
                 priority: 90 + top.historicalAccuracy * 10,
@@ -297,9 +298,9 @@ final class TodayIntelligenceEngine {
         return IntelligenceCard(
             type: .cascadeForecast,
             icon: "arrow.triangle.branch",
-            label: "CASCADE FORECAST",
-            headline: "Pattern in progress \u{2192} expect \(outcomeStr) (\(pctStr) confidence)",
-            detail: topSeq.description,
+            label: Copy.Briefing.Labels.cascadeForecast,
+            headline: Copy.Briefing.WhatMightHappen.sequenceHeadline(outcome: outcomeStr, confidence: pctStr),
+            detail: Copy.Briefing.WhatMightHappen.sequenceDetail(description: topSeq.description),
             severity: .notable,
             confidence: topSeq.confidence,
             priority: 75 + topSeq.confidence * 15,
@@ -324,26 +325,19 @@ final class TodayIntelligenceEngine {
         let direction = top.pearsonR > 0 ? "drives" : "inversely drives"
         let pVal = top.grangerPValue
 
-        let pValStr: String
-        if pVal < 0.001 { pValStr = "p < 0.001" }
-        else if pVal < 0.01 { pValStr = "p < 0.01" }
-        else { pValStr = String(format: "p = %.3f", pVal) }
-
-        let lagStr = lagDays == 1 ? "1-day lag" : "\(lagDays)-day lag"
-
         let detail: String
         if let partial = top.partialCorrelation {
             let partialStr = String(format: "%.2f", abs(partial))
-            detail = "Partial r = \(partialStr) after controlling for confounders. Stability: \(formatPercent(top.stability))"
+            detail = Copy.Briefing.WhyThisIsHappening.detailWithPartial(partialR: partialStr, stability: formatPercent(top.stability), sampleCount: top.sampleCount)
         } else {
-            detail = "Based on \(top.sampleCount) paired observations. Stability: \(formatPercent(top.stability))"
+            detail = Copy.Briefing.WhyThisIsHappening.detailSimple(sampleCount: top.sampleCount, stability: formatPercent(top.stability))
         }
 
         return IntelligenceCard(
             type: .hiddenDriver,
             icon: "link.circle.fill",
-            label: "HIDDEN DRIVER",
-            headline: "\(causeMetric) \(direction) your \(effectMetric.lowercased()) with a \(lagStr) (\(pValStr))",
+            label: Copy.Briefing.Labels.whyThisIsHappening,
+            headline: Copy.Briefing.WhyThisIsHappening.headline(causeMetric: causeMetric, effectMetric: effectMetric, lagDays: lagDays, direction: direction),
             detail: detail,
             severity: .notable,
             confidence: 1.0 - pVal,
@@ -366,32 +360,23 @@ final class TodayIntelligenceEngine {
         let workoutRec = recommendations.first { $0.activity == .workout }
         let sleepRec = recommendations.first { $0.activity == .sleep }
 
-        var headline: String
-        var detail: String
-
+        let headline: String
         if let workout = workoutRec {
             let startStr = formatHour(workout.optimalWindowStart)
             let endStr = formatHour(workout.optimalWindowEnd)
-            headline = "Your body clock peaks for exercise at \(startStr)\u{2013}\(endStr)"
-            detail = "Chronotype: \(chronotype). Activity peak at \(formatHourDecimal(profile.activityAcrophaseHour))"
+            headline = Copy.Briefing.YourBodyClock.workoutTimingHeadline(startTime: startStr, endTime: endStr)
         } else {
-            headline = "Chronotype: \(chronotype) \u{2014} activity peaks at \(formatHourDecimal(profile.activityAcrophaseHour))"
-            detail = "HR nadir at \(formatHourDecimal(profile.hrNadirHour))"
+            headline = Copy.Briefing.YourBodyClock.generalHeadline(peakTime: formatHourDecimal(profile.activityAcrophaseHour))
         }
 
-        if let sleep = sleepRec {
-            let sleepStart = formatHour(sleep.optimalWindowStart)
-            detail += ". Optimal bedtime: \(sleepStart)"
-        }
-
-        if let hrvPeak = profile.hrvAcrophaseHour {
-            detail += ". HRV peaks at \(formatHourDecimal(hrvPeak))"
-        }
+        let bedtime: String? = sleepRec.map { formatHour($0.optimalWindowStart) }
+        let hrvPeakStr: String? = profile.hrvAcrophaseHour.map { formatHourDecimal($0) }
+        let detail = Copy.Briefing.YourBodyClock.detail(bedtime: bedtime, hrvPeak: hrvPeakStr)
 
         return IntelligenceCard(
             type: .bodyClockStatus,
             icon: "clock.arrow.circlepath",
-            label: "BODY CLOCK",
+            label: Copy.Briefing.Labels.yourBodyClock,
             headline: headline,
             detail: detail,
             severity: .info,
@@ -501,26 +486,24 @@ final class TodayIntelligenceEngine {
         let indexStr = String(format: "%.0f", allostaticIndex)
         let headline: String
         if allostaticIndex >= 62 {
-            headline = "Stress burden: \(indexStr)/100 \u{2014} \(worstSystem.name.lowercased()) system under most strain"
+            headline = Copy.Briefing.StressAndRecovery.highStressHeadline(score: indexStr, worstSystem: worstSystem.name)
         } else if allostaticIndex <= 40 {
-            headline = "Stress burden: \(indexStr)/100 \u{2014} your body is well-recovered"
+            headline = Copy.Briefing.StressAndRecovery.lowStressHeadline(score: indexStr)
         } else {
-            headline = "Stress burden: \(indexStr)/100 \u{2014} within your normal range"
+            headline = Copy.Briefing.StressAndRecovery.normalStressHeadline(score: indexStr)
         }
+
+        let systemSummaryItems = (percentileStr != nil ? sortedSystems.prefix(2) : sortedSystems.prefix(sortedSystems.count)).map { s in
+            let label = s.score > 0.5 ? "elevated" : (s.score < -0.5 ? "low" : "normal")
+            return "\(s.name): \(label)"
+        }
+        let systemSummary = systemSummaryItems.joined(separator: ", ")
 
         let detail: String
         if let pctStr = percentileStr {
-            let systemSummary = sortedSystems.prefix(2).map { s in
-                let label = s.score > 0.5 ? "elevated" : (s.score < -0.5 ? "low" : "normal")
-                return "\(s.name): \(label)"
-            }.joined(separator: ", ")
-            detail = "\(pctStr). \(systemSummary)"
+            detail = Copy.Briefing.StressAndRecovery.detailWithPercentile(percentileStr: pctStr, systemSummary: systemSummary)
         } else {
-            let systemSummary = sortedSystems.map { s in
-                let label = s.score > 0.5 ? "elevated" : (s.score < -0.5 ? "low" : "normal")
-                return "\(s.name): \(label)"
-            }.joined(separator: ", ")
-            detail = systemSummary
+            detail = Copy.Briefing.StressAndRecovery.detailSimple(systemSummary: systemSummary)
         }
 
         let priority: Double
@@ -531,7 +514,7 @@ final class TodayIntelligenceEngine {
         return IntelligenceCard(
             type: .allostaticLoad,
             icon: "gauge.with.dots.needle.67percent",
-            label: "STRESS LOAD",
+            label: Copy.Briefing.Labels.stressAndRecovery,
             headline: headline,
             detail: detail,
             severity: severity,
@@ -594,22 +577,22 @@ final class TodayIntelligenceEngine {
         let color: IntelligenceCard.AccentColor
 
         if sigma > 1.0 {
-            // Parasympathetic dominant = recovery mode
-            headline = "Parasympathetic dominance (\(sigmaStr) above baseline) \u{2014} your body is in recovery mode"
-            detail = "HRV \(hrvStr), RHR \(rhrStr). Your autonomic balance favors rest and repair."
+            // Recovery mode
+            headline = Copy.Briefing.NervousSystem.recoveryModeHeadline(hrvStr: hrvStr)
+            detail = Copy.Briefing.NervousSystem.detail(hrvStr: hrvStr, rhrStr: rhrStr)
             severity = abs(sigma) >= 2.0 ? .notable : .info
             color = .green
         } else if sigma < -1.0 {
-            // Sympathetic dominant = stress/fight-or-flight
-            headline = "Sympathetic dominance (\(sigmaStr) below baseline) \u{2014} your nervous system hasn't recovered"
-            detail = "HRV \(hrvStr), RHR \(rhrStr). Elevated fight-or-flight tone. Consider a lighter day."
+            // Stress mode
+            headline = Copy.Briefing.NervousSystem.stressModeHeadline(hrvStr: hrvStr, rhrStr: rhrStr)
+            detail = Copy.Briefing.NervousSystem.detail(hrvStr: hrvStr, rhrStr: rhrStr)
             severity = abs(sigma) >= 2.0 ? .warning : .notable
             color = abs(sigma) >= 2.0 ? .red : .orange
         } else {
             // Mild shift (0.8 - 1.0 sigma)
-            let direction = sigma > 0 ? "toward recovery" : "toward stress activation"
-            headline = "Autonomic balance shifting \(direction) (\(sigmaStr) from baseline)"
-            detail = "HRV \(hrvStr), RHR \(rhrStr). Mild autonomic shift."
+            let direction = sigma > 0 ? "toward recovery" : "toward stress"
+            headline = Copy.Briefing.NervousSystem.mildShiftHeadline(direction: direction)
+            detail = Copy.Briefing.NervousSystem.detail(hrvStr: hrvStr, rhrStr: rhrStr)
             severity = .info
             color = sigma > 0 ? .green : .yellow
         }
@@ -622,7 +605,7 @@ final class TodayIntelligenceEngine {
         return IntelligenceCard(
             type: .autonomicBalance,
             icon: "waveform.path.ecg",
-            label: "AUTONOMIC BALANCE",
+            label: Copy.Briefing.Labels.nervousSystem,
             headline: headline,
             detail: detail,
             severity: severity,
@@ -724,9 +707,9 @@ final class TodayIntelligenceEngine {
             let thisWeekAvg = AccelerateML.mean(thisWeekValues)
             let lastWeekAvg = AccelerateML.mean(lastWeekValues)
             if thisWeekAvg > lastWeekAvg + 0.2 {
-                trendDescription = " Improving from last week."
+                trendDescription = Copy.Briefing.SleepDebt.trendImproving
             } else if thisWeekAvg < lastWeekAvg - 0.2 {
-                trendDescription = " Worsening from last week."
+                trendDescription = Copy.Briefing.SleepDebt.trendWorsening
             }
         }
 
@@ -741,28 +724,28 @@ final class TodayIntelligenceEngine {
         default: severity = hrvDeficitScore >= 3.0 ? .notable : .info; color = .yellow
         }
 
-        var headline: String
+        let headline: String
         if estimatedRecoveryDays > 0 {
-            headline = "\(sleepDebtStr) sleep debt accumulated \u{2014} est. \(estimatedRecoveryDays) day\(estimatedRecoveryDays == 1 ? "" : "s") to recover"
+            headline = Copy.Briefing.SleepDebt.headlineWithRecovery(debtHours: sleepDebtStr, recoveryDays: estimatedRecoveryDays)
         } else {
-            headline = "Recovery debt building: HRV suppressed \(String(format: "%.0f", hrvDeficitScore)) of last \(hrvWindowDays) days"
+            headline = Copy.Briefing.SleepDebt.headlineHRVSuppressed(dayCount: String(format: "%.0f", hrvDeficitScore), windowDays: hrvWindowDays)
         }
 
         var detailParts: [String] = []
         if sleepDebtHours >= 1.0 {
-            detailParts.append("Sleep deficit: \(sleepDebtStr) (decay-weighted over \(sleepWindowDays) days)")
+            detailParts.append(Copy.Briefing.SleepDebt.detailSleepDeficit(debtHours: sleepDebtStr, windowDays: sleepWindowDays))
         }
         if hrvDeficitScore >= 2.0 {
-            detailParts.append("HRV below baseline \(String(format: "%.0f", hrvDeficitScore)) of \(hrvWindowDays) recent days")
+            detailParts.append(Copy.Briefing.SleepDebt.detailHRVBelow(dayCount: String(format: "%.0f", hrvDeficitScore), windowDays: hrvWindowDays))
         }
         if activityDeficitDays >= 3 {
-            detailParts.append("Exercise below goal \(activityDeficitDays) of \(activityWindowDays) days")
+            detailParts.append(Copy.Briefing.SleepDebt.detailExerciseBelow(missedDays: activityDeficitDays, windowDays: activityWindowDays))
         }
         if !trendDescription.isEmpty {
-            detailParts.append(trendDescription.trimmingCharacters(in: .whitespaces))
+            detailParts.append(trendDescription)
         }
 
-        let detail = detailParts.joined(separator: ". ")
+        let detail = detailParts.joined(separator: " ")
 
         let priority: Double
         if sleepDebtHours >= 5.0 { priority = 72 }
@@ -772,7 +755,7 @@ final class TodayIntelligenceEngine {
         return IntelligenceCard(
             type: .recoveryDebt,
             icon: "battery.25percent",
-            label: "RECOVERY DEBT",
+            label: Copy.Briefing.Labels.sleepDebt,
             headline: headline,
             detail: detail,
             severity: severity,
@@ -846,28 +829,33 @@ final class TodayIntelligenceEngine {
             color = .blue
         }
 
-        var headline: String
+        let headline: String
         if meanStability > 0 && coherence < meanStability * 0.7 {
             let dropPct = String(format: "%.0f%%", (1.0 - coherence / meanStability) * 100)
-            headline = "Body systems \(dropPct) less coupled than your baseline"
+            headline = Copy.Briefing.BodySystems.decoupledHeadline(dropPercent: dropPct)
+        } else if coherence > 0.55 && density > 0.3 {
+            headline = Copy.Briefing.BodySystems.alignedHeadline(connectionCount: significantPairs.count, metricCount: n)
         } else {
-            headline = "System coherence: \(coherenceStr) across \(significantPairs.count) linked metric pairs (\(densityPct) network density)"
+            headline = Copy.Briefing.BodySystems.normalHeadline(connectionCount: significantPairs.count)
         }
 
-        var detail = "\(significantPairs.count) significant connections among \(n) tracked metrics."
+        let detail: String
         if let weak = weakestLink {
-            let gap = String(format: "%.2f", weak.stability - abs(weak.pearsonR))
-            detail += " Weakest link: \(weak.metricA.displayName)\u{2013}\(weak.metricB.displayName) (gap: \(gap))"
+            detail = Copy.Briefing.BodySystems.detailWithWeakLink(connectionCount: significantPairs.count, metricCount: n, metricA: weak.metricA.displayName, metricB: weak.metricB.displayName)
+        } else {
+            detail = Copy.Briefing.BodySystems.detailSimple(connectionCount: significantPairs.count, metricCount: n)
         }
 
         let priority: Double
         if coherence < 0.35 { priority = 52 }
         else { priority = 30 }
 
+        let cardLabel = (coherence > 0.55 && density > 0.3) ? Copy.Briefing.Labels.everythingLooksGood : Copy.Briefing.Labels.stressAndRecovery
+
         return IntelligenceCard(
             type: .systemCoherence,
             icon: "circle.hexagonpath.fill",
-            label: "SYSTEM COHERENCE",
+            label: cardLabel,
             headline: headline,
             detail: detail,
             severity: severity,
@@ -953,7 +941,6 @@ final class TodayIntelligenceEngine {
         let topDeviators = Array(sortedByAbsZ.prefix(2))
 
         let todayDayName = dayName(for: todayWeekday)
-        let rmsStr = String(format: "%.1f\u{03C3}", rmsZ)
 
         let severity: IntelligenceCard.CardSeverity
         let color: IntelligenceCard.AccentColor
@@ -965,14 +952,19 @@ final class TodayIntelligenceEngine {
         default: severity = .info; color = .blue
         }
 
-        let headline = "Today is \(rmsStr) from your typical \(todayDayName)"
+        let headline = Copy.Briefing.UnusualDay.headline(dayName: todayDayName)
 
         let deviatorDescriptions = topDeviators.map { dev in
             let direction = dev.zScore > 0 ? "above" : "below"
-            let absZ = String(format: "%.1f\u{03C3}", abs(dev.zScore))
-            return "\(dev.metric.displayName): \(dev.metric.formatWithUnit(dev.todayVal)) (\(absZ) \(direction) your \(todayDayName) avg of \(dev.metric.formatWithUnit(dev.weekdayMean)))"
+            return Copy.Briefing.UnusualDay.deviatorDescription(
+                metricName: dev.metric.displayName,
+                currentValue: dev.metric.formatWithUnit(dev.todayVal),
+                direction: direction,
+                weekdayAvg: dev.metric.formatWithUnit(dev.weekdayMean),
+                dayName: todayDayName
+            )
         }
-        let detail = "Biggest outliers: " + deviatorDescriptions.joined(separator: "; ")
+        let detail = Copy.Briefing.UnusualDay.detail(descriptions: deviatorDescriptions)
 
         let priority: Double
         if rmsZ >= 2.5 { priority = 68 }
@@ -982,7 +974,7 @@ final class TodayIntelligenceEngine {
         return IntelligenceCard(
             type: .rhythmDeviation,
             icon: "waveform.badge.exclamationmark",
-            label: "RHYTHM CHECK",
+            label: Copy.Briefing.Labels.unusualDay,
             headline: headline,
             detail: detail,
             severity: severity,

@@ -39,6 +39,9 @@ struct TodaysActionDetailView: View {
                     // Today's Workout
                     todayWorkoutSection
 
+                    // What happened before (historical proof)
+                    proofSection
+
                     // Supporting insights
                     if !action.supportingInsights.isEmpty {
                         insightsSection
@@ -152,6 +155,47 @@ struct TodaysActionDetailView: View {
                     .padding(.horizontal)
                 }
             }
+        }
+    }
+
+    // MARK: - Proof Section
+
+    @ViewBuilder
+    private var proofSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "clock.arrow.circlepath")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.green)
+                Text(Copy.Home.ActionProof.whatHappenedBefore)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
+            }
+            .padding(.horizontal)
+
+            VStack(alignment: .leading, spacing: 12) {
+                if let summary = action.proofSummary, summary.hasProof {
+                    if let detailLine = summary.detailProofLine {
+                        Text(detailLine)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Text(summary.timeframeLine)
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                } else {
+                    Text(Copy.Home.ActionProof.notEnoughHistory)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(DS.cardPadding + 2)
+            .cardStyle()
+            .padding(.horizontal)
         }
     }
 

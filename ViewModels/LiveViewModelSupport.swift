@@ -59,6 +59,12 @@ extension LiveViewModel {
         }
     }
 
+    /// Whether an optional timestamp is within the given threshold from now.
+    static func isFresh(_ timestamp: Date?, threshold: TimeInterval) -> Bool {
+        guard let ts = timestamp else { return false }
+        return Date().timeIntervalSince(ts) < threshold
+    }
+
     /// Real-time vitals. HR, SpO2, respiratory rate, blood pressure, body temperature
     @Observable
     final class VitalsData {
@@ -126,18 +132,15 @@ extension LiveViewModel {
         }
 
         var isHeartRateFresh: Bool {
-            guard let ts = heartRateTimestamp else { return false }
-            return Date().timeIntervalSince(ts) < Self.freshnessThreshold
+            LiveViewModel.isFresh(heartRateTimestamp, threshold: Self.freshnessThreshold)
         }
 
         var isBloodOxygenFresh: Bool {
-            guard let ts = bloodOxygenTimestamp else { return false }
-            return Date().timeIntervalSince(ts) < Self.freshnessThreshold
+            LiveViewModel.isFresh(bloodOxygenTimestamp, threshold: Self.freshnessThreshold)
         }
 
         var isRespiratoryRateFresh: Bool {
-            guard let ts = respiratoryRateTimestamp else { return false }
-            return Date().timeIntervalSince(ts) < Self.freshnessThreshold
+            LiveViewModel.isFresh(respiratoryRateTimestamp, threshold: Self.freshnessThreshold)
         }
 
         var hasAnyData: Bool {
@@ -150,11 +153,9 @@ extension LiveViewModel {
 
         var hasRecentData: Bool {
             let twoHours: TimeInterval = 2 * 3600
-            let now = Date()
-            if let ts = heartRateTimestamp, now.timeIntervalSince(ts) < twoHours { return true }
-            if let ts = bloodOxygenTimestamp, now.timeIntervalSince(ts) < twoHours { return true }
-            if let ts = respiratoryRateTimestamp, now.timeIntervalSince(ts) < twoHours { return true }
-            return false
+            return LiveViewModel.isFresh(heartRateTimestamp, threshold: twoHours)
+                || LiveViewModel.isFresh(bloodOxygenTimestamp, threshold: twoHours)
+                || LiveViewModel.isFresh(respiratoryRateTimestamp, threshold: twoHours)
         }
 
         var isStale: Bool { hasAnyData && !hasRecentData }
@@ -242,10 +243,8 @@ extension LiveViewModel {
 
         var isReadinessDataFresh: Bool {
             let fortyEightHours: TimeInterval = 48 * 3600
-            let now = Date()
-            let rhrFresh = latestRestingHeartRateTimestamp.map { now.timeIntervalSince($0) < fortyEightHours } ?? false
-            let hrvFresh = latestHRVTimestamp.map { now.timeIntervalSince($0) < fortyEightHours } ?? false
-            return rhrFresh || hrvFresh
+            return LiveViewModel.isFresh(latestRestingHeartRateTimestamp, threshold: fortyEightHours)
+                || LiveViewModel.isFresh(latestHRVTimestamp, threshold: fortyEightHours)
         }
 
         var stressLevel: Int? {

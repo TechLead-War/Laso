@@ -33,19 +33,19 @@ extension Copy {
         // MARK: - Prescriptive Headlines (Poor)
 
         static let poorHeadlines = [
-            "Recovery metrics are below baseline",
-            "Multiple metrics sitting below baseline",
-            "Recovery is low. Metrics are off baseline.",
-            "Several metrics are below your normal range"
+            "Recovery numbers are below your usual",
+            "Several numbers sitting below your usual",
+            "Recovery is low. Numbers are off from normal.",
+            "A few numbers are below your normal range"
         ]
 
         // MARK: - Prescriptive Headlines (Depleted)
 
         static let depletedHeadlines = [
-            "Recovery metrics are significantly below baseline",
-            "Metrics show deep deficit. Well below baseline.",
-            "Multiple metrics at their lowest this week",
-            "Low recovery signal across all key metrics"
+            "Recovery numbers are well below your usual",
+            "Numbers show a big drop. Well below normal.",
+            "Several numbers at their lowest this week",
+            "Low recovery across all key numbers"
         ]
 
         // MARK: - Strain Budget

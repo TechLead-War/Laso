@@ -696,7 +696,7 @@ final class BrainHealthScorer {
             if !hrvAbove && !remAbove {
                 return "Signals near your personal baseline today"
             } else {
-                return "Mixed signals. some metrics above, some below baseline"
+                return "Mixed signals. Some metrics above, some below baseline"
             }
 
         case .foggy:
@@ -706,11 +706,11 @@ final class BrainHealthScorer {
                 return rem < base.mean * 0.85
             }()
             if hrvBelow && remBelow {
-                return "Low HRV + reduced REM. expect brain fog today"
+                return "Low HRV + reduced REM. Expect brain fog today"
             } else if hrvBelow {
-                return "HRV well below baseline. cognitive load may feel heavier"
+                return "HRV well below baseline. Cognitive load may feel heavier"
             } else {
-                return "Sleep quality below baseline. recovery is lagging"
+                return "Sleep quality below baseline. Recovery is lagging"
             }
         }
     }

@@ -544,10 +544,19 @@ final class SubscriptionManager {
     // MARK: - Analytics
 
     private func trackPurchase(product: Product, isTrialConversion: Bool) {
+        let period: String = switch product.subscription?.subscriptionPeriod.unit {
+        case .month: "monthly"
+        case .year: "yearly"
+        case .week: "weekly"
+        default: "unknown"
+        }
         AppAnalytics.shared.trackSubscriptionPurchased(
             productID: product.id,
             price: product.displayPrice,
-            isTrialConversion: isTrialConversion
+            isTrialConversion: isTrialConversion,
+            revenueAmount: NSDecimalNumber(decimal: product.price).doubleValue,
+            currency: product.priceFormatStyle.currencyCode,
+            subscriptionPeriod: period
         )
         AppAnalytics.shared.updateSubscriptionProperties(status: status)
     }

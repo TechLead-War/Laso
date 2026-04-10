@@ -6,7 +6,16 @@ enum Copy {
 
     // MARK: - Medical Disclaimer
 
-    static let medicalDisclaimer = "Laso provides health insights for wellness and informational purposes only. It is not a medical device and does not provide medical diagnosis or treatment. Always consult a qualified healthcare provider before making health-related decisions."
+    static let medicalDisclaimer = "Laso is not a medical device. It gives you health information, not medical advice. Always consult a qualified professional before making health decisions."
+
+    // MARK: - Medical Disclaimer Screen
+
+    enum Disclaimer {
+        static let title = "Important Health Information"
+        static let body = "Laso is not a medical device. It gives you health information, not medical advice. Always consult a qualified professional before making health decisions."
+        static let secondaryBody = "The scores, patterns, and insights in this app are based on your Apple Health data and are for informational purposes only. They should not be used as a substitute for professional health guidance."
+        static let acknowledge = "I Understand"
+    }
 
     // MARK: - Common Buttons
 

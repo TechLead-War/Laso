@@ -610,8 +610,8 @@ final class HealthDataQueryEngine {
         let samplesB = recentSamples(from: series, days: periodB.days, offset: periodA.days)
         guard !samplesA.isEmpty, !samplesB.isEmpty else { return noDataResult(for: metric) }
 
-        let avgA = samplesA.map(\.value).reduce(0, +) / Double(samplesA.count)
-        let avgB = samplesB.map(\.value).reduce(0, +) / Double(samplesB.count)
+        let avgA = samplesA.valueMean
+        let avgB = samplesB.valueMean
         let pctDiff = avgB != 0 ? ((avgA - avgB) / avgB) * 100 : 0
 
         let better = (pctDiff > 0 && metric.higherIsBetter) || (pctDiff < 0 && !metric.higherIsBetter)
@@ -701,7 +701,7 @@ final class HealthDataQueryEngine {
             if let series = ctx.timeSeries[metric] {
                 let recent = recentSamples(from: series, days: 7)
                 if recent.count >= 2 {
-                    let avg = recent.map(\.value).reduce(0, +) / Double(recent.count)
+                    let avg = recent.valueMean
                     let latest = recent.last?.value ?? avg
                     let when = horizon == 1 ? "tomorrow" : "in \(horizon) days"
                     return QueryResult(
@@ -825,7 +825,7 @@ final class HealthDataQueryEngine {
         let recent = recentSamples(from: series, days: 7)
         guard !recent.isEmpty else { return noDataResult(for: m) }
 
-        let avg = recent.map(\.value).reduce(0, +) / Double(recent.count)
+        let avg = recent.valueMean
         let latest = recent.last?.value ?? avg
 
         var answer: String
@@ -1210,7 +1210,7 @@ final class HealthDataQueryEngine {
             if let sleepSeries = ctx.timeSeries[.sleepDuration] {
                 let recent = recentSamples(from: sleepSeries, days: 7)
                 if !recent.isEmpty {
-                    let avgSleep = recent.map(\.value).reduce(0, +) / Double(recent.count)
+                    let avgSleep = recent.valueMean
                     answer += " Based on your recent sleep (\(formatValue(avgSleep, metric: .sleepDuration)) average), aim to be consistent with your bedtime."
                     dataPoints.append(.init(label: "Avg sleep", value: avgSleep / 3600, unit: "hrs", date: nil))
                 }
@@ -1218,7 +1218,7 @@ final class HealthDataQueryEngine {
             if let stepsSeries = ctx.timeSeries[.steps] {
                 let recent = recentSamples(from: stepsSeries, days: 7)
                 if !recent.isEmpty {
-                    let avgSteps = recent.map(\.value).reduce(0, +) / Double(recent.count)
+                    let avgSteps = recent.valueMean
                     answer += " You're averaging \(Int(avgSteps)) steps. a morning or afternoon walk is generally a great time to move."
                     dataPoints.append(.init(label: "Avg steps", value: avgSteps, unit: "steps", date: nil))
                 }
@@ -1416,7 +1416,7 @@ final class HealthDataQueryEngine {
         // Graceful fallback: provide the data we do have
         if let series = ctx.timeSeries[metric], !series.samples.isEmpty {
             let recent = recentSamples(from: series, days: 7)
-            let avg = recent.isEmpty ? nil : recent.map(\.value).reduce(0, +) / Double(recent.count)
+            let avg: Double? = recent.isEmpty ? nil : recent.valueMean
             var answer = "I haven't mapped out the causal drivers for your \(metric.displayName) yet."
             if let avg = avg {
                 answer += " Your recent average is \(formatValue(avg, metric: metric)). As I gather more history, I'll identify what specifically makes it go up or down."

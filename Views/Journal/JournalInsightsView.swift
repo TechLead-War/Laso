@@ -19,7 +19,7 @@ struct JournalInsightsView: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
-        .navigationTitle("Journal Insights")
+        .navigationTitle(Copy.Journal.Insights.title)
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.journalInsights)
@@ -35,11 +35,11 @@ struct JournalInsightsView: View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
             // Header
             VStack(alignment: .leading, spacing: 4) {
-                Text("Your Top Discoveries")
+                Text(Copy.Journal.Insights.topDiscoveries)
                     .font(.headline)
                     .padding(.horizontal)
 
-                Text("Patterns found from your journal entries and health data")
+                Text(Copy.Journal.Insights.topDiscoveriesSubtitle)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal)
@@ -62,10 +62,10 @@ struct JournalInsightsView: View {
                 .font(.system(size: 56))
                 .foregroundStyle(.secondary)
 
-            Text("Insights Unlocking...")
+            Text(Copy.Journal.Insights.insightsUnlocking)
                 .font(.title3.weight(.semibold))
 
-            Text("Log 14+ days of journal entries to discover how your behaviors affect your health. The more you log, the more patterns we can find.")
+            Text(Copy.Journal.Insights.emptyStateDescription)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -94,7 +94,7 @@ struct JournalInsightsView: View {
             }
             .padding(.top, 8)
 
-            Text("Start logging to see connections")
+            Text(Copy.Journal.Insights.startLogging)
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }

@@ -108,7 +108,7 @@ struct MetricDetailTool: Tool {
         lines.append("Latest: \(ContextCompressor.formatValue(latest.value, metric: metric)) (\(metric.unit))")
         let recent7 = series.samples.suffix(7)
         if recent7.count > 1 {
-            let avg = recent7.map(\.value).reduce(0, +) / Double(recent7.count)
+            let avg = recent7.mean(of: \.value)
             lines.append("7-day avg: \(ContextCompressor.formatValue(avg, metric: metric))")
         }
         if let baseline = context.baselines[metric] {

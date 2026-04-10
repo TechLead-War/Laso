@@ -39,29 +39,65 @@ struct DashboardSmartActionAdvisor {
         analysis: AnalysisSnapshot
     ) -> Recommendation {
         // 1. ML policy engine. highest quality, fully personalized
-        if let decision = analysis.policyDecision,
-           decision.decisionConfidence >= 0.3 {
-            return Recommendation(
-                icon: icon(for: decision.primaryAction.candidate.actionType),
-                title: decision.prescriptiveHeadline,
-                subtitle: decision.primaryAction.description,
-                source: "policy_engine",
-                rationale: decision.primaryAction.whyItMatters
-            )
-        }
+        if let r = recommendFromPolicyEngine(analysis: analysis) { return r }
 
         // 2. Insight-driven. derive action from the highest-priority insight
-        if let topInsight = analysis.topInsights.first,
-           topInsight.severity >= .warning || topInsight.priorityScore > 3.0 {
+        if let r = recommendFromHighPriorityInsight(analysis: analysis) { return r }
+
+        // 3. Live-data rules (only when data signals something notable)
+        if let r = recommendFromLiveDataRules(live: live) { return r }
+
+        // 4. Any insight available. use it
+        if let topInsight = analysis.topInsights.first {
             return insightDrivenRecommendation(topInsight)
         }
 
-        // 3. Live-data rules (only when data signals something notable)
+        // 5. Focus-aware rules
+        if let focusAction = focusAwareRecommendation(live: live, analysis: analysis) {
+            return focusAction
+        }
+
+        // 6. Activity progress
+        if let r = recommendFromActivityProgress(live: live) { return r }
+
+        // 7. Late-hour wind-down
+        if let r = recommendLateHourWindDown(live: live) { return r }
+
+        // 8. Default fallback
+        return Recommendation(
+            icon: "figure.walk",
+            title: "Get moving for 15 minutes",
+            subtitle: "A short walk boosts mood, energy, and sleep quality tonight",
+            rationale: "No specific signals today. A walk is the single highest-ROI activity for overall health."
+        )
+    }
+
+    // MARK: - Recommendation Sources
+
+    private func recommendFromPolicyEngine(analysis: AnalysisSnapshot) -> Recommendation? {
+        guard let decision = analysis.policyDecision,
+              decision.decisionConfidence >= 0.3 else { return nil }
+        return Recommendation(
+            icon: icon(for: decision.primaryAction.candidate.actionType),
+            title: decision.prescriptiveHeadline,
+            subtitle: decision.primaryAction.description,
+            source: "policy_engine",
+            rationale: decision.primaryAction.whyItMatters
+        )
+    }
+
+    private func recommendFromHighPriorityInsight(analysis: AnalysisSnapshot) -> Recommendation? {
+        guard let topInsight = analysis.topInsights.first,
+              topInsight.severity >= .warning || topInsight.priorityScore > 3.0 else { return nil }
+        return insightDrivenRecommendation(topInsight)
+    }
+
+    private func recommendFromLiveDataRules(live: LiveSnapshot) -> Recommendation? {
         if let stress = live.stressLevel, stress >= 60 {
             return Recommendation(
                 icon: "wind",
                 title: "Your stress is elevated right now",
-                subtitle: "Box breathing (4-4-4-4) for 5 min can bring it down. your body is asking for a reset",
+                subtitle: "Box breathing (4-4-4-4) for 5 min can bring it down. Your body is asking for a reset",
                 rationale: "Real-time stress reading is \(stress)%, which is above your comfortable range."
             )
         }
@@ -78,29 +114,22 @@ struct DashboardSmartActionAdvisor {
         if let readiness = live.readinessScore, readiness < 40 {
             return Recommendation(
                 icon: "figure.mind.and.body",
-                title: "Recovery day. your body needs it",
+                title: "Recovery day. Your body needs it",
                 subtitle: "Readiness is \(readiness)%. stretching or yoga only",
-                rationale: "Multiple signals (HRV, resting HR, sleep) indicate your body hasn't recovered from recent strain."
+                rationale: "Multiple signals (HRV, resting HR, sleep) indicate your body has not recovered from recent strain."
             )
         }
 
-        // 4. Any insight available. use it
-        if let topInsight = analysis.topInsights.first {
-            return insightDrivenRecommendation(topInsight)
-        }
+        return nil
+    }
 
-        // 5. Focus-aware rules
-        if let focusAction = focusAwareRecommendation(live: live, analysis: analysis) {
-            return focusAction
-        }
-
-        // 6. Activity progress
+    private func recommendFromActivityProgress(live: LiveSnapshot) -> Recommendation? {
         if live.exerciseMinutes >= live.exerciseGoal {
             return Recommendation(
                 icon: "checkmark.seal.fill",
                 title: "Exercise goal reached!",
                 subtitle: "\(Int(live.exerciseMinutes)) min today. stay active and hydrate",
-                rationale: "You've already hit your daily exercise target."
+                rationale: "You have already hit your daily exercise target."
             )
         }
 
@@ -109,25 +138,21 @@ struct DashboardSmartActionAdvisor {
             return Recommendation(
                 icon: "bolt.heart.fill",
                 title: "You have \(remaining) min to go",
-                subtitle: "Recovery is strong. a run or workout would be great",
+                subtitle: "Recovery is strong. A run or workout would be great",
                 rationale: "Your body is well-recovered and ready for effort. Closing the exercise gap today would build momentum."
             )
         }
 
-        if live.hour >= 20 {
-            return Recommendation(
-                icon: "moon.fill",
-                title: "Wind down for sleep",
-                subtitle: "Dim screens and skip caffeine for better rest tonight",
-                rationale: "It's late evening. Limiting blue light and stimulants now directly improves tonight's sleep quality."
-            )
-        }
+        return nil
+    }
 
+    private func recommendLateHourWindDown(live: LiveSnapshot) -> Recommendation? {
+        guard live.hour >= 20 else { return nil }
         return Recommendation(
-            icon: "figure.walk",
-            title: "Get moving for 15 minutes",
-            subtitle: "A short walk boosts mood, energy, and sleep quality tonight",
-            rationale: "No specific signals today. a walk is the single highest-ROI activity for overall health."
+            icon: "moon.fill",
+            title: "Wind down for sleep",
+            subtitle: "Dim screens and skip caffeine for better rest tonight",
+            rationale: "It is late evening. Limiting blue light and stimulants now directly improves tonight's sleep quality."
         )
     }
 
@@ -186,7 +211,7 @@ struct DashboardSmartActionAdvisor {
                     icon: "bed.double.fill",
                     title: "Get to bed 30 min earlier",
                     subtitle: "\(Self.formatHoursMinutes(live.sleepHours)) last night. aim for 7+ hours",
-                    rationale: "Sleep is your top focus area and you're falling short. Even 30 minutes more makes a measurable difference."
+                    rationale: "Sleep is your top focus area and you are falling short. Even 30 minutes more makes a measurable difference."
                 )
             }
         }
@@ -220,7 +245,7 @@ struct DashboardSmartActionAdvisor {
                 icon: "figure.mind.and.body",
                 title: "Focus on recovery today",
                 subtitle: "Readiness is \(readiness)%. light stretching and hydration will help",
-                rationale: "Recovery is your focus area and your readiness score indicates your body hasn't fully bounced back yet."
+                rationale: "Recovery is your focus area and your readiness score indicates your body has not fully bounced back yet."
             )
         }
 

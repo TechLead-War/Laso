@@ -30,7 +30,7 @@ struct MetricDetailView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "info.circle")
                                 .font(.caption)
-                            Text("Showing \(expandedTo)-day range. no data found in the last 30 days")
+                            Text(Copy.Insights.MetricDetail.expandedRangeNotice(expandedTo))
                                 .font(.caption)
                         }
                         .foregroundStyle(.secondary)
@@ -172,10 +172,10 @@ struct MetricDetailView: View {
                 .font(.system(size: 44))
                 .foregroundStyle(viewModel.metric.category.color.opacity(0.6))
 
-            Text("No Data Yet")
+            Text(Copy.Insights.MetricDetail.noDataYet)
                 .font(.title3.weight(.semibold))
 
-            Text("We don't have enough \(viewModel.metric.displayName.lowercased()) data to show trends yet. Keep your Health data syncing and check back after the next import.")
+            Text(Copy.Insights.MetricDetail.noDataDescription(viewModel.metric.displayName.lowercased()))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -184,7 +184,7 @@ struct MetricDetailView: View {
             // Still show insights if they exist (they come from analysis, not chart data)
             if !viewModel.insights.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Insights")
+                    Text(Copy.Insights.MetricDetail.insights)
                         .font(.headline)
                         .padding(.horizontal)
 
@@ -217,7 +217,7 @@ struct MetricDetailView: View {
                 )
 
                 if viewModel.isOutsideNormalRange {
-                    Text("Outside Normal Range")
+                    Text(Copy.Insights.MetricDetail.outsideNormalRange)
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(.white)
                         .padding(.horizontal, DS.badgeH)
@@ -228,7 +228,7 @@ struct MetricDetailView: View {
 
             // Deviation from baseline
             if viewModel.baseline != nil {
-                Text("Baseline deviation: \(viewModel.deviationFromBaseline)")
+                Text(Copy.Insights.MetricDetail.baselineDeviation(viewModel.deviationFromBaseline))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -266,7 +266,7 @@ struct MetricDetailView: View {
                             RoundedRectangle(cornerRadius: 1)
                                 .fill(.orange.opacity(0.7))
                                 .frame(width: 16, height: 2)
-                            Text("Trend")
+                            Text(Copy.Insights.MetricDetail.trend)
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                         }
@@ -276,7 +276,7 @@ struct MetricDetailView: View {
                             RoundedRectangle(cornerRadius: 1)
                                 .fill(viewModel.metric.category.color.opacity(0.5))
                                 .frame(width: 16, height: 2)
-                            Text("Forecast")
+                            Text(Copy.Insights.MetricDetail.forecast)
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                         }
@@ -314,10 +314,10 @@ struct MetricDetailView: View {
             VStack(spacing: 6) {
                 Text(viewModel.averageValue)
                     .font(.title3.weight(.bold).monospacedDigit())
-                Text("Period Avg")
+                Text(Copy.Insights.MetricDetail.periodAvg)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
-                Text(viewModel.isOutsideNormalRange ? "Outside Range" : "Within Range")
+                Text(viewModel.isOutsideNormalRange ? Copy.Insights.MetricDetail.outsideRange : Copy.Insights.MetricDetail.withinRange)
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(viewModel.isOutsideNormalRange ? .red : .green)
             }
@@ -350,7 +350,7 @@ struct MetricDetailView: View {
     private var monthComparisonSection: some View {
         if let comp = viewModel.monthComparison {
             VStack(alignment: .leading, spacing: 8) {
-                sectionHeader(icon: "calendar", title: "This Month vs Last Month")
+                sectionHeader(icon: "calendar", title: Copy.Insights.MetricDetail.thisMonthVsLastMonth)
 
                 HStack(spacing: 0) {
                     // This month
@@ -454,7 +454,7 @@ struct MetricDetailView: View {
 
     private var scoreBreakdownSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionHeader(icon: "chart.bar.fill", title: "Score Impact")
+            sectionHeader(icon: "chart.bar.fill", title: Copy.Insights.MetricDetail.scoreImpact)
 
             VStack(spacing: 0) {
                 ForEach(Array(viewModel.scoreBreakdown.enumerated()), id: \.element.id) { index, component in
@@ -480,7 +480,7 @@ struct MetricDetailView: View {
 
     private var historicalContextSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionHeader(icon: "clock.arrow.circlepath", title: "Historical Context")
+            sectionHeader(icon: "clock.arrow.circlepath", title: Copy.Insights.MetricDetail.historicalContext)
 
             VStack(spacing: 0) {
                 ForEach(Array(viewModel.historicalFacts.enumerated()), id: \.element.id) { index, fact in
@@ -499,7 +499,7 @@ struct MetricDetailView: View {
             .padding(.horizontal)
 
             if let ctx = viewModel.historicalContext {
-                Text("Based on \(ctx.totalDataPoints) data points over the past year")
+                Text(Copy.Insights.MetricDetail.dataPointsSummary(ctx.totalDataPoints))
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .padding(.horizontal)
@@ -511,7 +511,7 @@ struct MetricDetailView: View {
 
     private var insightsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionHeader(icon: "lightbulb.fill", title: "Insights")
+            sectionHeader(icon: "lightbulb.fill", title: Copy.Insights.MetricDetail.insights)
 
             VStack(spacing: 0) {
                 ForEach(Array(viewModel.insights.enumerated()), id: \.element.id) { index, insight in

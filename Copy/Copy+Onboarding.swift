@@ -47,21 +47,21 @@ extension Copy {
             guard let age else { return connectHealthDescription }
             switch age {
             case ..<25:
-                return "At your age, establishing health baselines early gives you a lifetime of personal insights."
+                return "Starting early means a lifetime of knowing what is normal for your body."
             case 25..<35:
-                return "In your late 20s and 30s, HRV and recovery patterns are especially revealing."
+                return "At your age, heart and recovery patterns can tell you a lot about how you are doing."
             case 35..<45:
-                return "In your 40s, tracking heart health and recovery trends becomes increasingly valuable."
+                return "At your age, keeping an eye on heart health and recovery trends is really valuable."
             case 45..<55:
-                return "At your stage, monitoring heart, sleep, and mobility metrics reveals important trends."
+                return "At your age, tracking heart, sleep, and mobility data shows you important changes."
             default:
-                return "Your health data will be calibrated against norms for your age and profile."
+                return "Your health data will be compared to what is typical for your age."
             }
         }
 
         // MARK: - Focus Confirmation
 
-        static let focusConfirmationTitle = "Here's what we'll focus on"
+        static let focusConfirmationTitle = "Here is what we will focus on"
 
         static func focusConfirmationItems(for focuses: Set<HealthFocus>) -> [(icon: String, text: String)] {
             let effective = focuses.isEmpty ? Set(HealthFocus.allCases) : focuses
@@ -89,8 +89,8 @@ extension Copy {
         static let calibratingTitle = "Calibrating Your Baseline"
         static let calibrationComplete = "Calibration Complete"
         static let calibrationIncomplete = "Calibration Incomplete"
-        static let calibratingMessage = "Your baseline is being built from historical Apple Health data. This happens only once."
-        static let calibrationSuccessMessage = "Your historical baseline is ready. You will now start with personalized insights instead of generic ones."
+        static let calibratingMessage = "We are building your personal baseline from your Apple Health data. This only happens once."
+        static let calibrationSuccessMessage = "Your baseline is ready. From now on, your insights are personalized to you."
         static let enterLaso = "Start Your Journey"
         static let retryCalibration = "Retry Calibration"
 
@@ -111,6 +111,12 @@ extension Copy {
             "\(span) of health history analyzed"
         }
         static let noDataYetMessage = "No health data available yet. Laso will start building your baseline as data arrives."
+
+        // MARK: - Notifications
+
+        static let enableNotifications = "Stay in the Loop"
+        static let notificationDescription = "Laso can send you a morning health briefing, alert you when something unusual happens with your body, and share weekly progress updates."
+        static let enableNotificationsButton = "Turn On Notifications"
 
         // MARK: - Siri
 

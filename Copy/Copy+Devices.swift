@@ -59,11 +59,11 @@ extension Copy {
         // MARK: - Notifications
 
         static func notWornBody(deviceName: String, hours: Int, minutes: Int, wearToTrack: String) -> String {
-            "Your \(deviceName) hasn't recorded data for \(hours)h \(max(0, minutes))m. \(wearToTrack)"
+            "Your \(deviceName) has not recorded data for \(hours)h \(max(0, minutes))m. \(wearToTrack)"
         }
 
         static func notWornBodyRecent(deviceName: String, wearToTrack: String) -> String {
-            "Your \(deviceName) hasn't recorded data recently. \(wearToTrack)"
+            "Your \(deviceName) has not recorded data recently. \(wearToTrack)"
         }
 
         /// Device classification for string selection

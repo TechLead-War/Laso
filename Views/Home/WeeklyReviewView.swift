@@ -17,12 +17,12 @@ struct WeeklyReviewEntryCard: View {
                             .foregroundStyle(.blue)
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Your Weekly Review")
+                            Text(Copy.Reports.WeeklyReviewView.title)
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(.primary)
 
                             HStack(spacing: 6) {
-                                Text("Score \(review.currentScore)")
+                                Text(Copy.Reports.WeeklyReviewView.score(review.currentScore))
                                     .font(.caption.weight(.medium).monospacedDigit())
                                     .foregroundStyle(.secondary)
 
@@ -128,9 +128,9 @@ struct WeeklyReviewView: View {
                         Image(systemName: "calendar.badge.exclamationmark")
                             .font(.system(size: 48))
                             .foregroundStyle(.secondary)
-                        Text("Not enough data yet")
+                        Text(Copy.Reports.WeeklyReviewView.notEnoughData)
                             .font(.title3.weight(.semibold))
-                        Text("Keep syncing health data for a few days and check back.")
+                        Text(Copy.Reports.WeeklyReviewView.keepSyncing)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -193,7 +193,7 @@ struct WeeklyReviewView: View {
                 }
                 .foregroundStyle(delta >= 0 ? .green : .red)
             } else {
-                Text("First week. no comparison yet")
+                Text(Copy.Reports.WeeklyReviewView.firstWeekNoComparison)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -412,10 +412,10 @@ struct WeeklyReviewView: View {
                             .foregroundStyle(.secondary)
                     }
                 } else {
-                    Text("A stable week across the board.")
+                    Text(Copy.Reports.WeeklyReviewView.stableWeek)
                         .font(.subheadline.weight(.medium))
 
-                    Text("No major changes detected. Consistency is a strength.")
+                    Text(Copy.Reports.WeeklyReviewView.noMajorChanges)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -587,7 +587,7 @@ struct WeeklyReviewView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "sparkles")
                         .font(.caption2)
-                    Text("Powered by your personal health model")
+                    Text(Copy.Reports.WeeklyReviewView.poweredByModel)
                         .font(.caption2)
                 }
                 .foregroundStyle(.tertiary)
