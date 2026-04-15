@@ -35,16 +35,19 @@ import com.lasohealth.android.feature.detail.CycleDetailScreen
 import com.lasohealth.android.feature.detail.DeviceDetailScreen
 import com.lasohealth.android.feature.detail.DeviceSetupGuideScreen
 import com.lasohealth.android.feature.detail.DiscoveryScreen
+import com.lasohealth.android.feature.detail.HealthRiskDetailScreen
 import com.lasohealth.android.feature.detail.HealthStateTimelineScreen
 import com.lasohealth.android.feature.detail.InsightsDetailScreen
 import com.lasohealth.android.feature.detail.MetricDetailScreen
 import com.lasohealth.android.feature.detail.PaywallScreen
 import com.lasohealth.android.feature.detail.PerformanceProfileScreen
+import com.lasohealth.android.feature.detail.RecoveryInfoScreen
 import com.lasohealth.android.feature.detail.ScoreGuideScreen
 import com.lasohealth.android.feature.detail.SimulationScreen
 import com.lasohealth.android.feature.detail.SleepCoachScreen
 import com.lasohealth.android.feature.detail.StrainDetailScreen
 import com.lasohealth.android.feature.detail.StressMonitorScreen
+import com.lasohealth.android.feature.detail.TodayWorkoutScreen
 import com.lasohealth.android.feature.detail.VitalityDetailScreen
 import com.lasohealth.android.feature.detail.WeeklyReviewScreen
 import com.lasohealth.android.feature.explore.ExploreScreen
@@ -280,6 +283,18 @@ fun LasoNavScaffold(
             composable(AppRoute.JournalInsights.route) {
                 JournalInsightsScreen(navController = navController)
             }
+            composable(AppRoute.RecoveryInfo.route) {
+                RecoveryInfoScreen(
+                    score = homeState.dailyScore,
+                    navController = navController,
+                )
+            }
+            composable(AppRoute.TodayWorkout.route) {
+                TodayWorkoutScreen(
+                    state = repository.todayWorkoutState(),
+                    navController = navController,
+                )
+            }
 
             // Parameterized routes
             composable(
@@ -311,6 +326,16 @@ fun LasoNavScaffold(
                 val deviceId = backStack.arguments?.getString("deviceId") ?: return@composable
                 DeviceDetailScreen(
                     state = repository.deviceDetailState(deviceId),
+                    navController = navController,
+                )
+            }
+            composable(
+                route = AppRoute.HealthRiskDetail.route,
+                arguments = listOf(navArgument("riskId") { type = NavType.StringType }),
+            ) { backStack ->
+                val riskId = backStack.arguments?.getString("riskId") ?: return@composable
+                HealthRiskDetailScreen(
+                    state = repository.healthRiskDetailState(riskId),
                     navController = navController,
                 )
             }

@@ -1,0 +1,224 @@
+---
+import Base from '../layouts/Base.astro'
+import SiteNav from '../components/SiteNav.astro'
+import SiteFooter from '../components/SiteFooter.astro'
+import CtaSection from '../components/CtaSection.astro'
+import '../styles/globals.css'
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Laso Health",
+  "url": "https://lasohealth.fit",
+  "logo": "https://lasohealth.fit/favicon.svg",
+  "description": "Privacy-first health intelligence app that turns wearable data into personal recovery scores, strain targets, sleep coaching, and early wellness detection. All processed on-device.",
+  "sameAs": ["https://twitter.com/lasohealth"],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "email": "support@lasohealth.fit",
+    "contactType": "customer support"
+  },
+  "foundingDate": "2025"
+}
+---
+
+<Base title="About Laso — Privacy First Health Intelligence | Laso" description="Laso is a health intelligence app that turns wearable data into actionable insights. Built on the belief that your health data should stay on your device and your scores should be about you." jsonLd={jsonLd}>
+  <SiteNav current="about" />
+
+  <main>
+    <!-- Hero -->
+    <section class="pt-20 pb-16 md:pt-28 md:pb-24 px-5">
+      <div class="max-w-3xl mx-auto text-center">
+        <h1 class="text-3xl md:text-5xl font-semibold tracking-tight text-[#1d1d1f] text-balance leading-tight">
+          Health scores that are actually about you.
+        </h1>
+        <p class="mt-5 text-base md:text-lg text-[#6e6e73] max-w-2xl mx-auto text-balance leading-relaxed">
+          Laso is a health intelligence app that turns the data from your wearable into recovery scores, strain targets, sleep coaching, and early wellness detection. Everything is processed on your device, calibrated to your body, and designed to help you make better decisions about how you train, rest, and recover.
+        </p>
+        <div class="mt-8">
+          <a href="/#early-access" class="inline-flex items-center justify-center bg-[#1d1d1f] text-white font-medium rounded-full px-7 py-3 min-h-[48px] text-[15px] hover:bg-black transition-colors">
+            Join Early Access
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- The problem we're solving -->
+    <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-4">
+          The problem we're solving
+        </h2>
+        <p class="text-[15px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-10 leading-relaxed">
+          Most health apps compare you to population averages. That means a naturally low HRV person gets told they are "below average" every single day, even when they feel great. Someone with a high resting heart rate is flagged as unhealthy when it is actually their normal.
+        </p>
+        <div class="max-w-2xl mx-auto space-y-4">
+          <p class="text-[15px] text-[#1d1d1f] leading-relaxed">
+            Generic benchmarks create noise. They generate anxiety for people who are perfectly healthy and false reassurance for people who should be paying attention. The result is that millions of people track their health data every day but don't actually learn anything useful from it.
+          </p>
+          <p class="text-[15px] text-[#1d1d1f] leading-relaxed">
+            Your body is the only valid benchmark. A meaningful health score has to reflect what is normal for you, how you are changing over time, and what you should do differently today. That is the problem Laso was built to solve.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Our approach -->
+    <section class="py-16 md:py-24 px-5">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-4">
+          Our approach
+        </h2>
+        <p class="text-[15px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-12 leading-relaxed">
+          Laso is built on three principles that guide every product decision we make.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Personal baselines -->
+          <div class="bg-[#f5f5f7] rounded-2xl p-6">
+            <div class="w-10 h-10 rounded-xl bg-[#0071e3]/10 flex items-center justify-center mb-4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#0071e3" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+            </div>
+            <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Personal baselines</h3>
+            <p class="text-[13px] text-[#6e6e73] leading-relaxed">
+              On-device machine learning builds a picture of what is normal for you. Your <a href="/recovery-score" class="text-[#0071e3] hover:underline">recovery score</a>, <a href="/strain-tracking" class="text-[#0071e3] hover:underline">strain targets</a>, and <a href="/sleep-coaching" class="text-[#0071e3] hover:underline">sleep recommendations</a> are all calibrated to your unique physiology, not population averages.
+            </p>
+          </div>
+
+          <!-- On-device processing -->
+          <div class="bg-[#f5f5f7] rounded-2xl p-6">
+            <div class="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center mb-4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+            </div>
+            <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">On-device processing</h3>
+            <p class="text-[13px] text-[#6e6e73] leading-relaxed">
+              Every calculation, every model, every analysis runs locally on your iPhone. Your health data never leaves your device. There is no cloud, no account, and no server that stores your information.
+            </p>
+          </div>
+
+          <!-- Actionable output -->
+          <div class="bg-[#f5f5f7] rounded-2xl p-6">
+            <div class="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center mb-4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+            </div>
+            <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Actionable output</h3>
+            <p class="text-[13px] text-[#6e6e73] leading-relaxed">
+              Laso does not just show you data. It tells you what to do about it. How hard to train today. When to go to bed. Whether a pattern in your metrics suggests you should ease off before you get sick.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Privacy by architecture -->
+    <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-4">
+          Privacy by architecture
+        </h2>
+        <p class="text-[15px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-10 leading-relaxed">
+          This is not a marketing choice. It is an engineering one.
+        </p>
+        <div class="max-w-2xl mx-auto space-y-4">
+          <p class="text-[15px] text-[#1d1d1f] leading-relaxed">
+            Your health data never leaves your device because the app is designed so it does not need to. All machine learning models run on-device. All scores are computed locally. There is no server that receives, processes, or stores your health information.
+          </p>
+          <p class="text-[15px] text-[#1d1d1f] leading-relaxed">
+            No account is required to use Laso. There is no sign up flow that collects your email, name, or any identifying information. Sensitive data is encrypted with AES-256, and encryption keys are stored in the Secure Enclave on your iPhone.
+          </p>
+          <p class="text-[15px] text-[#1d1d1f] leading-relaxed">
+            We built it this way because health data is some of the most personal information that exists. You should not have to trust a company's privacy policy to feel safe using a health app. The architecture itself should make misuse impossible.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- What powers the analysis -->
+    <section class="py-16 md:py-24 px-5">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-4">
+          What powers the analysis
+        </h2>
+        <p class="text-[15px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-12 leading-relaxed">
+          Laso combines established health science with on-device machine learning to turn raw wearable data into meaningful insights.
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <!-- HRV recovery -->
+          <div class="bg-[#f5f5f7] rounded-2xl p-6">
+            <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">HRV based recovery and stress assessment</h3>
+            <p class="text-[13px] text-[#6e6e73] leading-relaxed">
+              Heart rate variability is a well established biomarker for autonomic nervous system balance. Laso tracks your HRV trends against your personal baseline to assess <a href="/recovery-score" class="text-[#0071e3] hover:underline">recovery</a> and <a href="/stress-monitor" class="text-[#0071e3] hover:underline">stress levels</a> with context that is specific to your body.
+            </p>
+          </div>
+
+          <!-- Circadian rhythm -->
+          <div class="bg-[#f5f5f7] rounded-2xl p-6">
+            <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Circadian rhythm analysis</h3>
+            <p class="text-[13px] text-[#6e6e73] leading-relaxed">
+              Laso analyzes your sleep and wake patterns to understand your natural circadian rhythm. This drives personalized <a href="/sleep-coaching" class="text-[#0071e3] hover:underline">sleep coaching</a> that accounts for your actual schedule, not a one-size-fits-all bedtime recommendation.
+            </p>
+          </div>
+
+          <!-- Anomaly detection -->
+          <div class="bg-[#f5f5f7] rounded-2xl p-6">
+            <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Multi-metric anomaly detection</h3>
+            <p class="text-[13px] text-[#6e6e73] leading-relaxed">
+              By monitoring changes across HRV, resting heart rate, respiratory rate, and sleep patterns simultaneously, Laso can detect <a href="/illness-detection" class="text-[#0071e3] hover:underline">early wellness pattern changes</a> before you feel symptoms. A spike in one metric might be noise. Correlated shifts across several are a signal.
+            </p>
+          </div>
+
+          <!-- Baseline drift -->
+          <div class="bg-[#f5f5f7] rounded-2xl p-6">
+            <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Personal baseline drift detection</h3>
+            <p class="text-[13px] text-[#6e6e73] leading-relaxed">
+              Your baselines are not static. As your fitness improves, your normal changes. Laso uses on-device ML to detect when your baselines have shifted so your scores and recommendations stay accurate over months and years.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Built for people who already track -->
+    <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+      <div class="max-w-3xl mx-auto text-center">
+        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-4">
+          Built for people who already track
+        </h2>
+        <p class="text-[15px] text-[#6e6e73] max-w-2xl mx-auto mb-6 leading-relaxed">
+          You already own a wearable. You already generate health data every day. Laso makes that data useful without asking you to buy anything new or change your setup.
+        </p>
+        <p class="text-[15px] text-[#1d1d1f] leading-relaxed max-w-2xl mx-auto">
+          Laso works with Apple Watch, Oura, Garmin, WHOOP, and <a href="/devices" class="text-[#0071e3] hover:underline">20+ other devices</a> through Apple HealthKit. If your device writes data to the Health app on your iPhone, Laso can use it.
+        </p>
+      </div>
+    </section>
+
+    <!-- Get in touch -->
+    <section class="py-16 md:py-24 px-5">
+      <div class="max-w-3xl mx-auto text-center">
+        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-4">
+          Get in touch
+        </h2>
+        <p class="text-[15px] text-[#6e6e73] max-w-lg mx-auto mb-8 leading-relaxed">
+          Have a question, feedback, or just want to say hello? We would love to hear from you.
+        </p>
+        <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+          <a href="mailto:support@lasohealth.fit" class="inline-flex items-center gap-2 text-[15px] text-[#0071e3] hover:underline font-medium">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg>
+            support@lasohealth.fit
+          </a>
+          <a href="https://twitter.com/lasohealth" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-[15px] text-[#0071e3] hover:underline font-medium">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            @lasohealth
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <CtaSection heading="See what your wearable data is really telling you." subheading="Laso turns the numbers into answers. Try it free for 7 days." />
+  </main>
+
+  <SiteFooter />
+</Base>

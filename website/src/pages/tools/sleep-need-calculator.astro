@@ -1,0 +1,270 @@
+---
+import Base from '../../layouts/Base.astro'
+import SiteNav from '../../components/SiteNav.astro'
+import SiteFooter from '../../components/SiteFooter.astro'
+import CtaSection from '../../components/CtaSection.astro'
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Sleep Need Calculator",
+    "description": "Calculate your personal sleep need based on your age, activity level, and goals. Find out how much sleep debt you might be carrying.",
+    "url": "https://lasohealth.fit/tools/sleep-need-calculator",
+    "applicationCategory": "HealthApplication",
+    "operatingSystem": "All",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "provider": {
+      "@type": "Organization",
+      "name": "Laso Health",
+      "url": "https://lasohealth.fit"
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How much sleep do I actually need?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sleep need varies by age and individual factors. Most adults need 7 to 9 hours per night based on National Sleep Foundation guidelines. Active people, younger adults, and those seeking peak performance often need more. Your genetics, activity level, and health status all influence your personal requirement."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is sleep debt and how does it accumulate?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sleep debt is the difference between the sleep your body needs and the sleep you actually get. It accumulates nightly. For example, if you need 8 hours but only sleep 6.5, you accrue 1.5 hours of debt each night, totaling 10.5 hours over a week. Research shows that chronic sleep debt impairs cognitive performance, recovery, and immune function."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can a calculator tell me my exact sleep need?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A calculator provides a useful estimate based on population guidelines, but your true sleep need is individual. Factors like genetics, fitness level, stress, and health conditions affect it. Tools like Laso learn your actual sleep need from wearable data and recovery patterns over time, providing a more personalized figure."
+        }
+      }
+    ]
+  }
+]
+---
+
+<Base title="Sleep Need Calculator: How Much Sleep Do You Actually Need? | Laso" description="Calculate your personal sleep need based on your age, activity level, and goals. Find out how much sleep debt you might be carrying and how to pay it off." jsonLd={jsonLd}>
+  <SiteNav />
+
+  <section class="max-w-3xl mx-auto px-5 py-12 md:py-16">
+    <div class="mb-8 flex flex-wrap items-center gap-3 text-[13px] text-[#6e6e73]">
+      <a href="/tools" class="hover:text-[#0071e3] transition-colors">Tools</a>
+      <span>/</span>
+      <span>Sleep</span>
+    </div>
+
+    <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-[#1d1d1f] mb-4">Sleep Need Calculator</h1>
+    <p class="text-[17px] text-[#6e6e73] leading-relaxed mb-10">Most people are told they need 8 hours. The reality is more nuanced. Your age, activity level, and goals all influence how much sleep your body actually requires.</p>
+
+    <!-- Calculator form -->
+    <div class="bg-white border border-[#e5e5e7] rounded-2xl p-6 md:p-8 mb-10">
+      <form id="sleep-calc-form" class="space-y-6">
+        <div>
+          <label for="calc-age" class="block text-[14px] font-semibold text-[#1d1d1f] mb-2">Your age</label>
+          <input type="number" id="calc-age" min="6" max="100" value="30" class="w-full border border-[#d2d2d7] rounded-xl px-4 py-3 text-[15px] text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:border-transparent" required />
+        </div>
+
+        <div>
+          <label for="calc-activity" class="block text-[14px] font-semibold text-[#1d1d1f] mb-2">Activity level</label>
+          <select id="calc-activity" class="w-full border border-[#d2d2d7] rounded-xl px-4 py-3 text-[15px] text-[#1d1d1f] bg-white focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:border-transparent">
+            <option value="0">Sedentary</option>
+            <option value="0.25">Lightly active</option>
+            <option value="0.5" selected>Moderately active</option>
+            <option value="0.75">Very active</option>
+            <option value="1.0">Extremely active</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="calc-current" class="block text-[14px] font-semibold text-[#1d1d1f] mb-2">Current average sleep (hours per night)</label>
+          <input type="number" id="calc-current" min="2" max="14" step="0.25" value="7" class="w-full border border-[#d2d2d7] rounded-xl px-4 py-3 text-[15px] text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:border-transparent" required />
+        </div>
+
+        <div>
+          <label for="calc-goal" class="block text-[14px] font-semibold text-[#1d1d1f] mb-2">Goal</label>
+          <select id="calc-goal" class="w-full border border-[#d2d2d7] rounded-xl px-4 py-3 text-[15px] text-[#1d1d1f] bg-white focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:border-transparent">
+            <option value="0.5">Peak performance</option>
+            <option value="0" selected>Solid performance</option>
+            <option value="-0.5">Get by</option>
+          </select>
+        </div>
+
+        <button type="submit" class="w-full bg-[#1d1d1f] text-white font-medium rounded-full px-7 py-3.5 text-[15px] hover:bg-black transition-colors">
+          Calculate my sleep need
+        </button>
+      </form>
+
+      <!-- Result -->
+      <div id="sleep-result" class="hidden mt-8 bg-[#f5f5f7] rounded-2xl p-6">
+        <h3 class="text-[13px] font-semibold text-[#6e6e73] uppercase tracking-wider mb-4">Your estimated sleep need</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div class="text-center">
+            <p id="result-need" class="text-3xl font-bold text-[#1d1d1f]"></p>
+            <p class="text-[13px] text-[#6e6e73] mt-1">hours per night</p>
+          </div>
+          <div class="text-center">
+            <p id="result-deficit" class="text-3xl font-bold"></p>
+            <p class="text-[13px] text-[#6e6e73] mt-1">nightly deficit</p>
+          </div>
+          <div class="text-center">
+            <p id="result-weekly" class="text-3xl font-bold"></p>
+            <p class="text-[13px] text-[#6e6e73] mt-1">weekly debt</p>
+          </div>
+        </div>
+        <div id="result-assessment" class="text-[15px] text-[#1d1d1f] leading-relaxed p-4 rounded-xl"></div>
+      </div>
+    </div>
+
+    <!-- How this works -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">How this calculator works</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">This calculator starts with the National Sleep Foundation's age based guidelines for recommended sleep duration. It then adjusts for two additional factors:</p>
+      <ul class="list-disc pl-6 space-y-2 text-[15px] text-[#1d1d1f] leading-relaxed mb-3">
+        <li><strong>Activity level:</strong> Physical activity increases your body's need for recovery sleep. More active individuals generally need more sleep for adequate muscle repair, glycogen replenishment, and nervous system recovery.</li>
+        <li><strong>Performance goal:</strong> If you are optimizing for peak performance in athletics or cognitively demanding work, the research supports sleeping at the higher end of recommended ranges. If you simply need to function well, the midpoint is sufficient.</li>
+      </ul>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">The deficit and weekly debt calculations show the gap between your estimated need and what you currently average. Sleep debt accumulates over time and affects cognitive performance, recovery, immune function, and mood.</p>
+      <p class="text-[14px] text-[#6e6e73] leading-relaxed">Note: This calculator provides a general estimate. Individual sleep needs vary based on genetics, health conditions, stress levels, and other factors that a population based formula cannot capture.</p>
+    </section>
+
+    <!-- CTA bridge -->
+    <section class="mb-10">
+      <div class="bg-[#f5f5f7] rounded-2xl p-6 md:p-8">
+        <h2 class="text-xl font-semibold text-[#1d1d1f] mb-3">Want precision instead of estimates?</h2>
+        <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-4">This calculator uses general guidelines. Laso learns your actual sleep need from your wearable data and recovery patterns. It adjusts daily based on your strain, sleep quality, and individual physiology, so you get a number that reflects your body, not a formula.</p>
+        <a href="/#early-access" class="inline-flex items-center justify-center bg-[#1d1d1f] text-white font-medium rounded-full px-6 py-3 text-[15px] hover:bg-black transition-colors">
+          Try Laso free for 7 days
+        </a>
+      </div>
+    </section>
+
+    <!-- Related -->
+    <div class="flex flex-wrap gap-3 mb-8">
+      <a href="/learn/how-much-sleep-do-i-need" class="text-[14px] text-[#0071e3] hover:underline">How Much Sleep Do You Need?</a>
+      <span class="text-[#e5e5e7]">|</span>
+      <a href="/sleep-coaching" class="text-[14px] text-[#0071e3] hover:underline">Sleep Coaching</a>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+      <p class="text-[13px] text-amber-800 leading-relaxed">
+        <strong>Disclaimer:</strong> This calculator is for educational purposes only. It uses general population guidelines and does not account for individual medical conditions. Consult a healthcare provider for personalized sleep advice.
+      </p>
+    </div>
+  </section>
+
+  <SiteFooter />
+</Base>
+
+<script is:inline>
+(function() {
+  var form = document.getElementById('sleep-calc-form');
+  var resultEl = document.getElementById('sleep-result');
+
+  function getBaseNeed(age) {
+    if (age <= 5) return 11;
+    if (age <= 13) return 10;
+    if (age <= 17) return 9;
+    if (age <= 25) return 8.25;
+    if (age <= 64) return 8;
+    return 7.5;
+  }
+
+  function formatHours(h) {
+    var rounded = Math.round(h * 4) / 4;
+    var whole = Math.floor(rounded);
+    var frac = rounded - whole;
+    if (frac === 0) return whole + 'h';
+    if (frac === 0.25) return whole + 'h 15m';
+    if (frac === 0.5) return whole + 'h 30m';
+    return whole + 'h 45m';
+  }
+
+  function getAssessment(deficit) {
+    if (deficit <= 0) {
+      return {
+        text: 'You are meeting or exceeding your estimated sleep need. Keep it up. Consistent, adequate sleep is one of the most impactful things you can do for recovery and long term health.',
+        bg: 'bg-green-50',
+        color: 'text-green-800'
+      };
+    }
+    if (deficit <= 0.5) {
+      return {
+        text: 'You are close to your estimated need. A small adjustment, such as going to bed 15 to 30 minutes earlier, could close the gap and improve your recovery and daytime performance.',
+        bg: 'bg-yellow-50',
+        color: 'text-yellow-800'
+      };
+    }
+    if (deficit <= 1.5) {
+      return {
+        text: 'You are carrying a moderate sleep deficit. Over a week, this adds up to a meaningful amount of lost recovery time. Prioritizing an earlier bedtime could noticeably improve your energy, focus, and physical recovery.',
+        bg: 'bg-orange-50',
+        color: 'text-orange-800'
+      };
+    }
+    return {
+      text: 'You are carrying a significant sleep deficit. At this level, research shows measurable impairments to cognitive function, immune health, and physical recovery. This should be a priority to address.',
+      bg: 'bg-red-50',
+      color: 'text-red-800'
+    };
+  }
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    var age = parseFloat(document.getElementById('calc-age').value);
+    var activityAdj = parseFloat(document.getElementById('calc-activity').value);
+    var currentSleep = parseFloat(document.getElementById('calc-current').value);
+    var goalAdj = parseFloat(document.getElementById('calc-goal').value);
+
+    if (isNaN(age) || isNaN(currentSleep)) return;
+
+    var baseNeed = getBaseNeed(age);
+    var totalNeed = baseNeed + activityAdj + goalAdj;
+    totalNeed = Math.round(totalNeed * 4) / 4;
+
+    var deficit = Math.max(0, totalNeed - currentSleep);
+    deficit = Math.round(deficit * 4) / 4;
+
+    var weeklyDebt = Math.round(deficit * 7 * 4) / 4;
+
+    document.getElementById('result-need').textContent = formatHours(totalNeed);
+
+    var deficitEl = document.getElementById('result-deficit');
+    if (deficit <= 0) {
+      deficitEl.textContent = 'None';
+      deficitEl.className = 'text-3xl font-bold text-green-600';
+    } else {
+      deficitEl.textContent = formatHours(deficit);
+      deficitEl.className = 'text-3xl font-bold text-orange-600';
+    }
+
+    var weeklyEl = document.getElementById('result-weekly');
+    if (weeklyDebt <= 0) {
+      weeklyEl.textContent = 'None';
+      weeklyEl.className = 'text-3xl font-bold text-green-600';
+    } else {
+      weeklyEl.textContent = formatHours(weeklyDebt);
+      weeklyEl.className = 'text-3xl font-bold text-orange-600';
+    }
+
+    var assessment = getAssessment(deficit);
+    var assessmentEl = document.getElementById('result-assessment');
+    assessmentEl.textContent = assessment.text;
+    assessmentEl.className = 'text-[15px] leading-relaxed p-4 rounded-xl ' + assessment.bg + ' ' + assessment.color;
+
+    resultEl.classList.remove('hidden');
+    resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+})();
+</script>

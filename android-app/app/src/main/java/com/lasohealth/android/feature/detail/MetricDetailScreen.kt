@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.NorthEast
 import androidx.compose.material.icons.filled.SouthEast
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material.icons.filled.TrendingUp
@@ -43,6 +44,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -79,6 +81,7 @@ fun MetricDetailScreen(
     modifier: Modifier = Modifier,
 ) {
     var selectedTimeRange by remember { mutableIntStateOf(30) }
+    var showLogSheet by remember { mutableStateOf(false) }
     val categoryColor = state.metric.category.accentColor
     val filteredChartValues = remember(state.chartValues, selectedTimeRange) {
         state.chartValues.takeLast(selectedTimeRange)
@@ -103,6 +106,14 @@ fun MetricDetailScreen(
                         )
                     }
                 },
+                actions = {
+                    IconButton(onClick = { showLogSheet = true }) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Log",
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
                 ),
@@ -110,6 +121,15 @@ fun MetricDetailScreen(
         },
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
+
+        // MetricLogSheet overlay
+        if (showLogSheet) {
+            MetricLogSheet(
+                metric = state.metric,
+                onDismiss = { showLogSheet = false },
+                onLog = { _, _ -> showLogSheet = false },
+            )
+        }
         LazyColumn(
             modifier = Modifier.padding(padding),
             verticalArrangement = Arrangement.spacedBy(LasoTokens.SectionGap),

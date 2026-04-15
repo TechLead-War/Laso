@@ -10,6 +10,7 @@ import com.lasohealth.android.core.model.DeviceDetailUiState
 import com.lasohealth.android.core.model.ExploreUiState
 import com.lasohealth.android.core.model.HealthCategory
 import com.lasohealth.android.core.model.HealthMetric
+import com.lasohealth.android.core.model.HealthRiskDetailUiState
 import com.lasohealth.android.core.model.HealthStateTimelineUiState
 import com.lasohealth.android.core.model.HomeUiState
 import com.lasohealth.android.core.model.LiveUiState
@@ -22,6 +23,7 @@ import com.lasohealth.android.core.model.SleepCoachUiState
 import com.lasohealth.android.core.model.StrainDetailUiState
 import com.lasohealth.android.core.model.StressMonitorUiState
 import com.lasohealth.android.core.model.VitalityDetailUiState
+import com.lasohealth.android.core.model.TodayWorkoutUiState
 import com.lasohealth.android.core.model.WeeklyReviewDetailUiState
 
 interface HealthDataRepository {
@@ -50,4 +52,10 @@ interface HealthDataRepository {
     fun annualReportState(): AnnualReportUiState
     fun monthlyReviewState(): MonthlyReviewUiState
     fun performanceProfileState(): PerformanceProfileUiState
+
+    // Today's Workout
+    fun todayWorkoutState(): TodayWorkoutUiState
+
+    // Health Risk Detail
+    fun healthRiskDetailState(riskId: String): HealthRiskDetailUiState
 }

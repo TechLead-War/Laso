@@ -1,0 +1,246 @@
+---
+import Base from '../../layouts/Base.astro'
+import SiteNav from '../../components/SiteNav.astro'
+import SiteFooter from '../../components/SiteFooter.astro'
+import CtaSection from '../../components/CtaSection.astro'
+import LearnArticle from '../../components/LearnArticle.astro'
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Heart Rate Zones Explained: How to Train in the Right Zone",
+    "description": "Heart rate zones determine training intensity. Learn the 5 zones, how to calculate yours, what each zone does for your fitness, and how to use them effectively.",
+    "datePublished": "2026-04-11",
+    "dateModified": "2026-04-11",
+    "author": {
+      "@type": "Organization",
+      "name": "Laso Health"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Laso Health",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://lasohealth.fit/favicon.svg"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://lasohealth.fit/learn/heart-rate-zones"
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I calculate my heart rate zones?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The simplest method is to estimate your maximum heart rate (MHR) using the formula 220 minus your age, then calculate each zone as a percentage of that number. A more accurate approach is the Karvonen method, which uses your heart rate reserve (MHR minus resting heart rate) to account for your fitness level. The most accurate method is a lab-based or field-based maximum heart rate test."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the 80/20 rule in heart rate training?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The 80/20 rule suggests spending roughly 80 percent of your training time in low-intensity zones (Zones 1 and 2) and 20 percent in high-intensity zones (Zones 4 and 5). Research on elite endurance athletes consistently shows this distribution produces better results than spending more time at moderate intensity. Zone 3 is sometimes called the gray zone because it is too hard for easy recovery but not hard enough to drive significant performance gains."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Which heart rate zone burns the most fat?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Zone 2 (60 to 70 percent of maximum heart rate) uses the highest proportion of fat as fuel. However, higher-intensity zones burn more total calories per minute. For overall fat loss, total energy expenditure matters more than the fuel source used during exercise. Zone 2 is valuable for building aerobic fitness, which in turn improves your body's ability to use fat as fuel at all intensities."
+        }
+      }
+    ]
+  }
+]
+---
+
+<Base title="Heart Rate Zones Explained: How to Train in the Right Zone | Laso" description="Heart rate zones determine training intensity. Learn the 5 zones, how to calculate yours, what each zone does for your fitness, and how to use them effectively." jsonLd={jsonLd}>
+  <SiteNav />
+
+  <LearnArticle category="Training" readingTime="9 min" lastUpdated="April 2026">
+    <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-[#1d1d1f] text-balance">
+      Heart Rate Zones: A Practical Guide
+    </h1>
+
+    <p class="mt-4 text-[17px] text-[#6e6e73] leading-relaxed max-w-2xl">
+      Your heart rate during exercise tells you exactly how hard your body is working. Heart rate zones give that number context, translating raw beats per minute into actionable training guidance. Here is how the five zones work, how to find yours, and how to use them.
+    </p>
+
+    <!-- What are heart rate zones? -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">What are heart rate zones?</h2>
+      <p class="mt-4 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Heart rate zones are ranges of heart rate intensity, each expressed as a percentage of your maximum heart rate (MHR). Each zone targets different physiological adaptations. Training in different zones produces different results, from building an aerobic base to improving speed and power.
+      </p>
+      <p class="mt-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+        The concept was developed in exercise physiology to give athletes and coaches a simple framework for controlling training intensity. Instead of relying on subjective effort ("easy" or "hard"), heart rate zones provide an objective, measurable target that you can monitor in real time using a wearable device.
+      </p>
+    </section>
+
+    <!-- The 5 zones -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">The 5 heart rate zones</h2>
+
+      <div class="mt-6 overflow-x-auto">
+        <table class="w-full text-[14px] text-left border-collapse">
+          <thead>
+            <tr class="border-b border-[#e5e5e7]">
+              <th class="py-3 pr-4 font-semibold text-[#1d1d1f]">Zone</th>
+              <th class="py-3 pr-4 font-semibold text-[#1d1d1f]">Intensity</th>
+              <th class="py-3 pr-4 font-semibold text-[#1d1d1f]">% of MHR</th>
+              <th class="py-3 pr-4 font-semibold text-[#1d1d1f]">Effort</th>
+              <th class="py-3 font-semibold text-[#1d1d1f]">Primary benefit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b border-[#e5e5e7]">
+              <td class="py-3 pr-4 text-[#1d1d1f] font-medium">Zone 1</td>
+              <td class="py-3 pr-4 text-[#6e6e73]">Very light</td>
+              <td class="py-3 pr-4 text-[#6e6e73]">50 to 60%</td>
+              <td class="py-3 pr-4 text-[#6e6e73]">Warm-up, cool-down, active recovery</td>
+              <td class="py-3 text-[#6e6e73]">Promotes recovery, light fat burning</td>
+            </tr>
+            <tr class="border-b border-[#e5e5e7]">
+              <td class="py-3 pr-4 text-[#1d1d1f] font-medium">Zone 2</td>
+              <td class="py-3 pr-4 text-[#6e6e73]">Light</td>
+              <td class="py-3 pr-4 text-[#6e6e73]">60 to 70%</td>
+              <td class="py-3 pr-4 text-[#6e6e73]">Conversational pace, easy endurance</td>
+              <td class="py-3 text-[#6e6e73]">Aerobic base building, mitochondrial development</td>
+            </tr>
+            <tr class="border-b border-[#e5e5e7]">
+              <td class="py-3 pr-4 text-[#1d1d1f] font-medium">Zone 3</td>
+              <td class="py-3 pr-4 text-[#6e6e73]">Moderate</td>
+              <td class="py-3 pr-4 text-[#6e6e73]">70 to 80%</td>
+              <td class="py-3 pr-4 text-[#6e6e73]">Tempo, comfortably hard</td>
+              <td class="py-3 text-[#6e6e73]">Aerobic efficiency, stamina</td>
+            </tr>
+            <tr class="border-b border-[#e5e5e7]">
+              <td class="py-3 pr-4 text-[#1d1d1f] font-medium">Zone 4</td>
+              <td class="py-3 pr-4 text-[#6e6e73]">Hard</td>
+              <td class="py-3 pr-4 text-[#6e6e73]">80 to 90%</td>
+              <td class="py-3 pr-4 text-[#6e6e73]">Threshold, hard effort</td>
+              <td class="py-3 text-[#6e6e73]">Increases lactate threshold, improves VO2 max</td>
+            </tr>
+            <tr>
+              <td class="py-3 pr-4 text-[#1d1d1f] font-medium">Zone 5</td>
+              <td class="py-3 pr-4 text-[#6e6e73]">Maximum</td>
+              <td class="py-3 pr-4 text-[#6e6e73]">90 to 100%</td>
+              <td class="py-3 pr-4 text-[#6e6e73]">Sprints, intervals, all-out effort</td>
+              <td class="py-3 text-[#6e6e73]">Builds speed, power, anaerobic capacity</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="mt-8 text-lg font-semibold text-[#1d1d1f]">Zone 2: the most important zone for most people</h3>
+      <p class="mt-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Zone 2 deserves special attention because it is the foundation of aerobic fitness. Training in Zone 2 stimulates mitochondrial biogenesis (the creation of new mitochondria in your cells), improves your body's ability to metabolize fat as fuel, and builds the cardiovascular base that supports all higher-intensity work.
+      </p>
+      <p class="mt-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Most coaches and exercise physiologists agree that the majority of training time should be spent in this zone. It feels easy, which is counterintuitive for people who believe harder always means better. But the aerobic adaptations that occur in Zone 2 are the bedrock of endurance performance and long-term cardiovascular health.
+      </p>
+
+      <h3 class="mt-8 text-lg font-semibold text-[#1d1d1f]">Zone 5: powerful but demanding</h3>
+      <p class="mt-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Zone 5 is only sustainable for short bursts, typically 30 seconds to 3 minutes depending on fitness level. It drives anaerobic adaptations, increases maximum cardiac output, and improves the body's ability to buffer lactate. However, it generates significant fatigue and requires adequate recovery between sessions. Most people need 48 to 72 hours between Zone 5 workouts.
+      </p>
+    </section>
+
+    <!-- How to calculate your zones -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">How to calculate your zones</h2>
+      <p class="mt-4 text-[15px] text-[#1d1d1f] leading-relaxed">
+        There are three common methods, ranging from simple estimates to precise laboratory testing:
+      </p>
+
+      <h3 class="mt-6 text-lg font-semibold text-[#1d1d1f]">Method 1: Age-based formula</h3>
+      <p class="mt-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        The most common formula is <strong>220 minus your age</strong>. For a 35 year old, this gives an estimated MHR of 185 bpm. It is a rough starting point but can be off by 10 to 15 beats per minute in either direction, since maximum heart rate varies significantly between individuals and is influenced by genetics, not just age.
+      </p>
+
+      <h3 class="mt-6 text-lg font-semibold text-[#1d1d1f]">Method 2: Karvonen method (heart rate reserve)</h3>
+      <p class="mt-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        The Karvonen method accounts for your fitness level by using heart rate reserve (HRR), which is your MHR minus your resting heart rate (RHR). The formula for a target zone is:
+      </p>
+      <div class="mt-3 bg-[#f5f5f7] rounded-xl p-4">
+        <p class="text-[14px] text-[#1d1d1f] font-mono">
+          Target HR = ((MHR - RHR) x zone percentage) + RHR
+        </p>
+      </div>
+      <p class="mt-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+        For example, if your MHR is 185, your RHR is 55, and you want the bottom of Zone 2 (60%), the calculation is: ((185 - 55) x 0.60) + 55 = 133 bpm. This method produces more personalized zones because it factors in your resting fitness.
+      </p>
+
+      <h3 class="mt-6 text-lg font-semibold text-[#1d1d1f]">Method 3: Lab or field test</h3>
+      <p class="mt-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        The most accurate method is a graded exercise test, either in a lab setting (VO2 max test) or through a field test like a 20-minute all-out time trial. These methods determine your actual MHR and lactate threshold, removing the guesswork entirely. If you are serious about training with heart rate zones, a lab test is worth the investment.
+      </p>
+    </section>
+
+    <!-- The 80/20 rule -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">The 80/20 rule</h2>
+      <p class="mt-4 text-[15px] text-[#1d1d1f] leading-relaxed">
+        One of the most robust findings in exercise science is that elite endurance athletes consistently train with a polarized intensity distribution: roughly 80% of their training volume is at low intensity (Zones 1 and 2) and 20% is at high intensity (Zones 4 and 5).
+      </p>
+      <p class="mt-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Research by Stephen Seiler, a prominent exercise physiologist, has shown this pattern across multiple endurance sports including running, cycling, rowing, and cross-country skiing. The pattern holds regardless of the specific sport or performance level.
+      </p>
+      <p class="mt-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Zone 3, often called the "gray zone," is where many recreational athletes spend too much time. It feels productively hard, but it is too intense for optimal aerobic development and not intense enough to drive the high-end adaptations that come from Zone 4 and 5 work. The result is moderate fatigue with suboptimal improvement, a pattern sometimes called "junk miles."
+      </p>
+      <p class="mt-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+        For most people, the practical takeaway is: slow down your easy days (they should feel genuinely easy) and go harder on your hard days. The contrast between easy and hard is what drives adaptation.
+      </p>
+    </section>
+
+    <!-- How zones relate to strain -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">How heart rate zones relate to strain</h2>
+      <p class="mt-4 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Your strain score is fundamentally derived from how much time you spend in each heart rate zone. More time in higher zones generates a higher strain score because higher zones place greater demand on your cardiovascular and muscular systems and require more recovery time.
+      </p>
+      <p class="mt-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Laso calculates <a href="/strain-tracking" class="text-[#0071e3] hover:underline">strain</a> from your heart rate zone distribution throughout the day. A Zone 2 run generates moderate strain. A Zone 4 interval session generates high strain. The strain score helps you ensure that your daily training load matches your <a href="/recovery-score" class="text-[#0071e3] hover:underline">recovery state</a>, preventing you from training too hard on days when your body is not ready for it.
+      </p>
+      <p class="mt-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Over time, tracking the relationship between your zone distribution and your recovery response helps you understand your personal capacity. You learn how much Zone 4 and 5 work you can handle in a week, how much Zone 2 you need for recovery, and how your <a href="/vitality-age" class="text-[#0071e3] hover:underline">vitality age</a> responds to different training patterns.
+      </p>
+    </section>
+
+    <!-- Practical tips -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">Practical tips for zone training</h2>
+      <ul class="mt-4 space-y-3">
+        <li class="flex gap-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+          <span class="text-[#0071e3] font-medium">&#x2022;</span>
+          <span><strong>Use a chest strap or wrist-based optical sensor</strong> for real-time heart rate monitoring during workouts. Wrist sensors are convenient and accurate enough for zone training in most situations.</span>
+        </li>
+        <li class="flex gap-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+          <span class="text-[#0071e3] font-medium">&#x2022;</span>
+          <span><strong>Recalculate your zones periodically.</strong> As your fitness improves, your resting heart rate may decrease, which changes your heart rate reserve and shifts your zone boundaries.</span>
+        </li>
+        <li class="flex gap-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+          <span class="text-[#0071e3] font-medium">&#x2022;</span>
+          <span><strong>Do not chase zones obsessively.</strong> Heart rate is influenced by heat, humidity, caffeine, stress, and fatigue. If your heart rate is higher than expected at a given effort level, it may be an external factor rather than a change in fitness.</span>
+        </li>
+        <li class="flex gap-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+          <span class="text-[#0071e3] font-medium">&#x2022;</span>
+          <span><strong>Combine heart rate with perceived effort.</strong> Zones are a guide, not a rigid constraint. If you feel significantly worse than your heart rate suggests, listen to your body. Context matters.</span>
+        </li>
+      </ul>
+    </section>
+  </LearnArticle>
+
+  <CtaSection heading="See your zones in real time with Laso." subheading="Strain scores built from heart rate zone data. Train in the right zone, recover smarter." />
+  <SiteFooter />
+</Base>

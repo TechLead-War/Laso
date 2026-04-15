@@ -30,8 +30,8 @@ import com.lasohealth.android.core.data.OnboardingPrefs
 /**
  * Main onboarding flow container that manages the multi-step pager.
  *
- * Steps (without cycle):  Welcome -> ValueProp -> Profile -> ConnectHealth -> FocusSelection -> Calibration
- * Steps (with cycle):     Welcome -> ValueProp -> Profile -> ConnectHealth -> CycleOptIn -> FocusSelection -> Calibration
+ * Steps (without cycle):  Welcome -> ValueProp -> Profile -> ConnectHealth -> Notification -> FocusSelection -> Calibration
+ * Steps (with cycle):     Welcome -> ValueProp -> Profile -> ConnectHealth -> CycleOptIn -> Notification -> FocusSelection -> Calibration
  */
 @Composable
 fun OnboardingFlow(
@@ -46,16 +46,17 @@ fun OnboardingFlow(
 
     // Cycle step is only included for female users.
     val includesCycleStep = profileGender.lowercase() == "female"
-    val totalSteps = if (includesCycleStep) 7 else 6
+    val totalSteps = if (includesCycleStep) 8 else 7
 
     // Step indices:
     //   0 = Welcome
     //   1 = ValueProp
     //   2 = Profile
     //   3 = ConnectHealth
-    //   4 = CycleOptIn (female) | FocusSelection (non-female)
-    //   5 = FocusSelection (female) | Calibration (non-female)
-    //   6 = Calibration (female only)
+    //   4 = CycleOptIn (female) | Notification (non-female)
+    //   5 = Notification (female) | FocusSelection (non-female)
+    //   6 = FocusSelection (female) | Calibration (non-female)
+    //   7 = Calibration (female only)
 
     Box(
         modifier = Modifier
@@ -105,19 +106,29 @@ fun OnboardingFlow(
                         },
                     )
                 } else {
-                    FocusSelectionStep(
-                        onContinue = { focuses ->
-                            prefs.healthFocuses = focuses.map { it.name }.toSet()
-                            currentStep = 5
-                        },
+                    NotificationStep(
+                        onNext = { currentStep = 5 },
                     )
                 }
 
                 5 -> if (includesCycleStep) {
+                    NotificationStep(
+                        onNext = { currentStep = 6 },
+                    )
+                } else {
                     FocusSelectionStep(
                         onContinue = { focuses ->
                             prefs.healthFocuses = focuses.map { it.name }.toSet()
                             currentStep = 6
+                        },
+                    )
+                }
+
+                6 -> if (includesCycleStep) {
+                    FocusSelectionStep(
+                        onContinue = { focuses ->
+                            prefs.healthFocuses = focuses.map { it.name }.toSet()
+                            currentStep = 7
                         },
                     )
                 } else {
@@ -129,7 +140,7 @@ fun OnboardingFlow(
                     )
                 }
 
-                6 -> CalibrationStep(
+                7 -> CalibrationStep(
                     onComplete = {
                         prefs.onboardingCompleted = true
                         onComplete()

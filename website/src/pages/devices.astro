@@ -1,0 +1,331 @@
+---
+import Base from '../layouts/Base.astro'
+import SiteNav from '../components/SiteNav.astro'
+import SiteFooter from '../components/SiteFooter.astro'
+import CtaSection from '../components/CtaSection.astro'
+import '../styles/globals.css'
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What devices work with Laso?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Laso works with any device that syncs data to Apple Health on iPhone. This includes Apple Watch, Oura Ring, Garmin, WHOOP, Polar, COROS, Suunto, Withings, Dexcom, Ultrahuman Ring Air, RingConn, Amazfit, Xiaomi Smart Band, Huawei Watch, TicWatch, Biostrap, Myzone, Peloton, Omron, Renpho, Eight Sleep, and many more. If your wearable has a companion app that writes health data to Apple Health, Laso can read it."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need an Apple Watch to use Laso?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Apple Watch provides the most complete data set because it writes natively to Apple Health, but Laso works with any wearable that syncs to Apple Health through a companion app. You can also use Laso with just an iPhone, which tracks steps, distance, and basic activity through its built-in sensors."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I connect my Garmin/Oura/WHOOP to Laso?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Open your wearable's companion app (Garmin Connect, Oura, WHOOP, etc.) and enable Apple Health integration in its settings. Once the companion app writes data to Apple Health, Laso automatically reads it. There is no separate pairing step inside Laso. Just grant Laso permission to read Apple Health data and your metrics will appear."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What if my device isn't listed?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "If your device has a companion iOS app that can write to Apple Health, it will very likely work with Laso. Check your device's app settings for an Apple Health or HealthKit integration option. If you enable it and data appears in the Apple Health app, Laso will be able to read it. If your device does not support Apple Health at all, it will not work with Laso at this time."
+      }
+    }
+  ]
+}
+---
+
+<Base
+  title="Compatible Devices — Apple Watch, Oura, Garmin, WHOOP & More | Laso"
+  description="Laso works with any device that syncs to Apple Health. Full compatibility for Apple Watch, Oura Ring, Garmin, WHOOP, Polar, COROS, Withings, and 20+ more wearables."
+  jsonLd={jsonLd}
+>
+  <div class="min-h-screen bg-white">
+    <SiteNav current="devices" />
+
+    <main>
+      <!-- Hero -->
+      <section class="pt-24 pb-12 md:pt-32 md:pb-20 px-5 text-center">
+        <div class="max-w-3xl mx-auto">
+          <p class="text-[13px] font-semibold text-[#0071e3] uppercase tracking-wider mb-4">Compatible Devices</p>
+          <h1 class="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-[#1d1d1f] text-balance leading-tight">
+            Works with the wearable you already own.
+          </h1>
+          <p class="mt-5 text-base md:text-lg text-[#6e6e73] max-w-2xl mx-auto text-balance leading-relaxed">
+            Laso reads data from Apple Health, which means any wearable or health device that syncs to Apple Health works with Laso. No proprietary hardware. No extra accessories. Just the device on your wrist (or finger) and your iPhone.
+          </p>
+          <div class="mt-8">
+            <a href="/#early-access" class="inline-flex items-center justify-center bg-[#1d1d1f] text-white font-medium rounded-full px-7 py-3 min-h-[48px] text-[15px] hover:bg-black transition-colors">
+              Join Early Access
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- How It Works -->
+      <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-4">
+            How the sync works
+          </h2>
+          <p class="text-[15px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-10">
+            Apple Health acts as a central hub for health data on iPhone. Most wearables have companion apps that write heart rate, sleep, workouts, and other metrics directly into Apple Health. Laso reads from that hub.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white rounded-2xl p-6 border border-black/[0.04] text-center">
+              <div class="w-10 h-10 rounded-xl bg-[#0071e3]/10 flex items-center justify-center mx-auto mb-4">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#0071e3" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-1">1. Your wearable collects data</h3>
+              <p class="text-[13px] text-[#6e6e73] leading-relaxed">Heart rate, sleep stages, workouts, steps, and more are recorded by your device throughout the day and night.</p>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 border border-black/[0.04] text-center">
+              <div class="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center mx-auto mb-4">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
+              </div>
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-1">2. Companion app syncs to Apple Health</h3>
+              <p class="text-[13px] text-[#6e6e73] leading-relaxed">Your device's companion app (Garmin Connect, Oura, WHOOP, etc.) writes health samples into Apple Health automatically.</p>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 border border-black/[0.04] text-center">
+              <div class="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center mx-auto mb-4">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h4.5l2.25-6 3 12 2.25-6h4.5" /></svg>
+              </div>
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-1">3. Laso reads and analyzes</h3>
+              <p class="text-[13px] text-[#6e6e73] leading-relaxed">Laso pulls the data from Apple Health, builds your personal baselines, and generates your recovery score, strain, sleep analysis, and more.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Device Categories -->
+      <section class="py-16 md:py-24 px-5">
+        <div class="max-w-4xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-4">
+            Supported devices
+          </h2>
+          <p class="text-[15px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-12">
+            If it syncs to Apple Health, it works with Laso. Here are the most popular devices organized by category.
+          </p>
+
+          <!-- Smartwatches -->
+          <div class="mb-10">
+            <h3 class="text-[17px] font-semibold text-[#1d1d1f] mb-4">Smartwatches</h3>
+            <div class="flex flex-wrap gap-2">
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Apple Watch</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Garmin</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Polar</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">COROS</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Suunto</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Huawei Watch</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Amazfit</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Xiaomi Smart Band</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">TicWatch</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Casio G-Shock</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">TAG Heuer</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Noise</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">boAt</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Fire-Boltt</span>
+            </div>
+          </div>
+
+          <!-- Smart Rings -->
+          <div class="mb-10">
+            <h3 class="text-[17px] font-semibold text-[#1d1d1f] mb-4">Smart Rings</h3>
+            <div class="flex flex-wrap gap-2">
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Oura Ring</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Ultrahuman Ring Air</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">RingConn</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Circular Ring</span>
+            </div>
+          </div>
+
+          <!-- Performance -->
+          <div class="mb-10">
+            <h3 class="text-[17px] font-semibold text-[#1d1d1f] mb-4">Performance</h3>
+            <div class="flex flex-wrap gap-2">
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">WHOOP</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Wahoo</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Biostrap</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Myzone</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Peloton</span>
+            </div>
+          </div>
+
+          <!-- Health Devices -->
+          <div class="mb-10">
+            <h3 class="text-[17px] font-semibold text-[#1d1d1f] mb-4">Health Devices</h3>
+            <div class="flex flex-wrap gap-2">
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Withings</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Omron</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Renpho</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Dexcom</span>
+              <span class="inline-flex items-center px-4 py-2 rounded-full bg-[#f5f5f7] text-[13px] font-medium text-[#1d1d1f]">Eight Sleep</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- What Metrics Each Device Provides -->
+      <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+        <div class="max-w-4xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-4">
+            What metrics each device provides
+          </h2>
+          <p class="text-[15px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-12">
+            Apple Watch provides the most complete data because it writes natively to Apple Health. Other devices vary depending on what their companion app shares. Laso adapts to whatever data is available.
+          </p>
+
+          <div class="overflow-x-auto rounded-2xl border border-black/[0.04] bg-white">
+            <table class="w-full text-left text-[13px]">
+              <thead>
+                <tr class="border-b border-black/[0.06]">
+                  <th class="px-5 py-4 font-semibold text-[#1d1d1f]">Metric</th>
+                  <th class="px-5 py-4 font-semibold text-[#1d1d1f]">Apple Watch</th>
+                  <th class="px-5 py-4 font-semibold text-[#1d1d1f]">Oura / Rings</th>
+                  <th class="px-5 py-4 font-semibold text-[#1d1d1f]">Garmin / Polar</th>
+                  <th class="px-5 py-4 font-semibold text-[#1d1d1f]">WHOOP</th>
+                </tr>
+              </thead>
+              <tbody class="text-[#6e6e73]">
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Heart rate</td>
+                  <td class="px-5 py-3">Yes</td>
+                  <td class="px-5 py-3">Yes</td>
+                  <td class="px-5 py-3">Yes</td>
+                  <td class="px-5 py-3">Yes</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">HRV</td>
+                  <td class="px-5 py-3">Yes</td>
+                  <td class="px-5 py-3">Yes</td>
+                  <td class="px-5 py-3">Varies</td>
+                  <td class="px-5 py-3">Yes</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Sleep stages</td>
+                  <td class="px-5 py-3">Yes</td>
+                  <td class="px-5 py-3">Yes</td>
+                  <td class="px-5 py-3">Varies</td>
+                  <td class="px-5 py-3">Yes</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Respiratory rate</td>
+                  <td class="px-5 py-3">Yes</td>
+                  <td class="px-5 py-3">Yes</td>
+                  <td class="px-5 py-3">Limited</td>
+                  <td class="px-5 py-3">Yes</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Blood oxygen (SpO2)</td>
+                  <td class="px-5 py-3">Yes</td>
+                  <td class="px-5 py-3">Yes</td>
+                  <td class="px-5 py-3">Varies</td>
+                  <td class="px-5 py-3">Yes</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Workouts</td>
+                  <td class="px-5 py-3">Yes</td>
+                  <td class="px-5 py-3">Limited</td>
+                  <td class="px-5 py-3">Yes</td>
+                  <td class="px-5 py-3">Yes</td>
+                </tr>
+                <tr>
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Steps and distance</td>
+                  <td class="px-5 py-3">Yes</td>
+                  <td class="px-5 py-3">Yes</td>
+                  <td class="px-5 py-3">Yes</td>
+                  <td class="px-5 py-3">Limited</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="mt-4 text-[13px] text-[#6e6e73] text-center">
+            "Varies" means the companion app may or may not write this data to Apple Health depending on the model and app version.
+          </p>
+        </div>
+      </section>
+
+      <!-- No Wearable Section -->
+      <section class="py-16 md:py-24 px-5">
+        <div class="max-w-3xl mx-auto text-center">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-4">
+            No wearable? iPhone works too.
+          </h2>
+          <p class="text-[15px] text-[#6e6e73] max-w-2xl mx-auto leading-relaxed">
+            Your iPhone has built-in sensors that track steps, walking distance, flights climbed, and general activity levels without any wearable at all. While a wearable gives Laso access to heart rate, HRV, and sleep data for the fullest analysis, iPhone on its own still provides useful activity and mobility insights. You can always add a wearable later and Laso will automatically pick up the additional data.
+          </p>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-10">
+            Frequently asked questions
+          </h2>
+
+          <div class="space-y-4">
+            <details class="group border border-black/[0.06] rounded-2xl bg-white">
+              <summary class="flex items-center justify-between cursor-pointer px-5 sm:px-6 py-5 text-[15px] font-semibold text-[#1d1d1f] select-none min-h-[56px]">
+                What devices work with Laso?
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-[#6e6e73] transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+              </summary>
+              <div class="px-5 sm:px-6 pb-5 text-[14px] text-[#6e6e73] leading-relaxed">
+                Laso works with any device that syncs data to Apple Health on iPhone. This includes Apple Watch, Oura Ring, Garmin, WHOOP, Polar, COROS, Suunto, Withings, Dexcom, Ultrahuman Ring Air, RingConn, Amazfit, Xiaomi Smart Band, Huawei Watch, TicWatch, Biostrap, Myzone, Peloton, Omron, Renpho, Eight Sleep, and many more. If your wearable has a companion app that writes health data to Apple Health, Laso can read it.
+              </div>
+            </details>
+
+            <details class="group border border-black/[0.06] rounded-2xl bg-white">
+              <summary class="flex items-center justify-between cursor-pointer px-5 sm:px-6 py-5 text-[15px] font-semibold text-[#1d1d1f] select-none min-h-[56px]">
+                Do I need an Apple Watch to use Laso?
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-[#6e6e73] transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+              </summary>
+              <div class="px-5 sm:px-6 pb-5 text-[14px] text-[#6e6e73] leading-relaxed">
+                No. Apple Watch provides the most complete data set because it writes natively to Apple Health, but Laso works with any wearable that syncs to Apple Health through a companion app. You can also use Laso with just an iPhone, which tracks steps, distance, and basic activity through its built-in sensors.
+              </div>
+            </details>
+
+            <details class="group border border-black/[0.06] rounded-2xl bg-white">
+              <summary class="flex items-center justify-between cursor-pointer px-5 sm:px-6 py-5 text-[15px] font-semibold text-[#1d1d1f] select-none min-h-[56px]">
+                How do I connect my Garmin, Oura, or WHOOP to Laso?
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-[#6e6e73] transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+              </summary>
+              <div class="px-5 sm:px-6 pb-5 text-[14px] text-[#6e6e73] leading-relaxed">
+                Open your wearable's companion app (Garmin Connect, Oura, WHOOP, etc.) and enable Apple Health integration in its settings. Once the companion app writes data to Apple Health, Laso automatically reads it. There is no separate pairing step inside Laso. Just grant Laso permission to read Apple Health data and your metrics will appear.
+              </div>
+            </details>
+
+            <details class="group border border-black/[0.06] rounded-2xl bg-white">
+              <summary class="flex items-center justify-between cursor-pointer px-5 sm:px-6 py-5 text-[15px] font-semibold text-[#1d1d1f] select-none min-h-[56px]">
+                What if my device is not listed?
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-[#6e6e73] transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+              </summary>
+              <div class="px-5 sm:px-6 pb-5 text-[14px] text-[#6e6e73] leading-relaxed">
+                If your device has a companion iOS app that can write to Apple Health, it will very likely work with Laso. Check your device's app settings for an Apple Health or HealthKit integration option. If you enable it and data appears in the Apple Health app, Laso will be able to read it. If your device does not support Apple Health at all, it will not work with Laso at this time.
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <CtaSection />
+    </main>
+
+    <SiteFooter />
+  </div>
+</Base>

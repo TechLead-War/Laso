@@ -1,0 +1,310 @@
+---
+import Base from '../layouts/Base.astro'
+import SiteNav from '../components/SiteNav.astro'
+import SiteFooter from '../components/SiteFooter.astro'
+import CtaSection from '../components/CtaSection.astro'
+import '../styles/globals.css'
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Laso",
+    "alternateName": "Laso Health",
+    "applicationCategory": "HealthApplication",
+    "operatingSystem": "iOS",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "description": "Free 7-day trial, then $29.99/year"
+    },
+    "description": "Laso calculates a daily recovery score from 0 to 100 using HRV, resting heart rate, sleep quality, sleep duration, respiratory rate, and recent strain. Personal baselines are built on-device so your score reflects your unique physiology.",
+    "featureList": [
+      "Daily recovery score from 0 to 100",
+      "Personal baselines calibrated to your body",
+      "HRV, resting heart rate, sleep, respiratory rate, and strain inputs",
+      "On-device machine learning with no cloud processing",
+      "Recovery-adjusted strain targets"
+    ],
+    "url": "https://lasohealth.fit/recovery-score",
+    "image": "https://lasohealth.fit/og-image.png"
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is a recovery score?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A recovery score is a single number from 0 to 100 that tells you how ready your body is to take on physical and mental stress today. It synthesizes several overnight and recent-day metrics into one actionable readiness measure. A high score means your body has recovered well and can handle a harder training day. A low score means your body is still adapting and you should prioritize rest or light activity."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does Laso calculate recovery differently than WHOOP?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The biggest difference is personal baselines. WHOOP compares your metrics against population averages, which means a naturally low HRV person might always look 'under-recovered' even when they feel great. Laso builds a rolling baseline from your own data, so your score reflects changes relative to your normal. Laso also runs entirely on-device with no cloud dependency, works with the wearable you already own, and factors in six inputs including respiratory rate and cumulative strain load."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What metrics go into the recovery score?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Laso uses six inputs to calculate your recovery score: heart rate variability (HRV), resting heart rate (RHR), sleep quality (efficiency, disturbances, and time in restorative stages), sleep duration relative to your personal sleep need, respiratory rate, and recent cumulative strain. Each metric is weighted based on how much it has deviated from your personal baseline, and the overall score is computed using on-device machine learning."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How long does it take to get an accurate recovery score?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Laso generates a recovery score from your very first night of data, but it becomes more accurate over time as it builds your personal baselines. After about 14 days of consistent wear, Laso has a strong baseline for your HRV, resting heart rate, and sleep patterns. By 30 days, the model is well-calibrated to your individual physiology and can detect meaningful deviations with high confidence."
+        }
+      }
+    ]
+  }
+]
+---
+
+<Base
+  title="Recovery Score — How Laso Measures Your Readiness | Laso"
+  description="Laso calculates a daily recovery score (0 to 100) from your HRV, resting heart rate, sleep quality, and recent strain. Learn how it works and why personal baselines matter."
+  jsonLd={jsonLd}
+>
+  <div class="min-h-screen bg-white">
+    <SiteNav current="recovery-score" />
+
+    <main>
+      <!-- Hero -->
+      <section class="pt-24 pb-12 md:pt-32 md:pb-20 px-5 text-center">
+        <div class="max-w-3xl mx-auto">
+          <p class="text-[13px] font-semibold text-[#0071e3] uppercase tracking-wider mb-4">Recovery Score</p>
+          <h1 class="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-[#1d1d1f] text-balance leading-tight">
+            Your daily readiness, measured against your own body.
+          </h1>
+          <p class="mt-5 text-base md:text-lg text-[#6e6e73] max-w-2xl mx-auto text-balance leading-relaxed">
+            Every morning, Laso gives you a single number from 0 to 100 that tells you how recovered you are. Not compared to the average person. Compared to you, on your best days and your worst. So you always know whether to push hard, go easy, or take the day off.
+          </p>
+          <div class="mt-8">
+            <a href="/#early-access" class="inline-flex items-center justify-center bg-[#1d1d1f] text-white font-medium rounded-full px-7 py-3 min-h-[48px] text-[15px] hover:bg-black transition-colors">
+              Join Early Access
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- How It Works -->
+      <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+        <div class="max-w-4xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-4">
+            How it works
+          </h2>
+          <p class="text-[15px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-12">
+            Laso pulls six key signals from your wearable each morning, compares them to your rolling personal baselines, and combines them into a single recovery score using on-device machine learning.
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- HRV -->
+            <div class="bg-white rounded-2xl p-6 border border-black/[0.04]">
+              <div class="w-10 h-10 rounded-xl bg-[#0071e3]/10 flex items-center justify-center mb-4">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#0071e3" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h4.5l2.25-6 3 12 2.25-6h4.5" /></svg>
+              </div>
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-1">Heart Rate Variability</h3>
+              <p class="text-[13px] text-[#6e6e73] leading-relaxed">The variation in time between heartbeats. Higher HRV relative to your baseline generally indicates stronger recovery and parasympathetic activity.</p>
+            </div>
+
+            <!-- RHR -->
+            <div class="bg-white rounded-2xl p-6 border border-black/[0.04]">
+              <div class="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center mb-4">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
+              </div>
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-1">Resting Heart Rate</h3>
+              <p class="text-[13px] text-[#6e6e73] leading-relaxed">Your lowest sustained heart rate during sleep. When it rises above your baseline, it often signals that your body is under stress or still recovering.</p>
+            </div>
+
+            <!-- Sleep Quality -->
+            <div class="bg-white rounded-2xl p-6 border border-black/[0.04]">
+              <div class="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center mb-4">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" /></svg>
+              </div>
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-1">Sleep Quality</h3>
+              <p class="text-[13px] text-[#6e6e73] leading-relaxed">Efficiency, disturbances, and time spent in deep and REM stages. Poor sleep quality suppresses recovery even when total duration looks fine.</p>
+            </div>
+
+            <!-- Sleep Duration -->
+            <div class="bg-white rounded-2xl p-6 border border-black/[0.04]">
+              <div class="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center mb-4">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-1">Sleep Duration</h3>
+              <p class="text-[13px] text-[#6e6e73] leading-relaxed">Total time asleep relative to your personal sleep need. Laso learns how much sleep you actually need, not just the generic 8 hour recommendation.</p>
+            </div>
+
+            <!-- Respiratory Rate -->
+            <div class="bg-white rounded-2xl p-6 border border-black/[0.04]">
+              <div class="w-10 h-10 rounded-xl bg-teal-500/10 flex items-center justify-center mb-4">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#14b8a6" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-1">Respiratory Rate</h3>
+              <p class="text-[13px] text-[#6e6e73] leading-relaxed">Breaths per minute during sleep. Elevated respiratory rate is one of the earliest indicators of physiological stress or oncoming illness.</p>
+            </div>
+
+            <!-- Recent Strain -->
+            <div class="bg-white rounded-2xl p-6 border border-black/[0.04]">
+              <div class="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center mb-4">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1.001A3.75 3.75 0 0012 18z" /></svg>
+              </div>
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-1">Recent Strain</h3>
+              <p class="text-[13px] text-[#6e6e73] leading-relaxed">Cumulative physical load over the past few days. Back-to-back high strain days without adequate recovery will pull your score down.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Why Personal Baselines Matter -->
+      <section class="py-16 md:py-24 px-5">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-4">
+            Why personal baselines matter
+          </h2>
+          <p class="text-[15px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-10">
+            Most health apps compare you to population averages. That creates a fundamental problem.
+          </p>
+
+          <div class="space-y-6">
+            <div class="bg-[#f5f5f7] rounded-2xl p-6 md:p-8">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Everyone is different</h3>
+              <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                A healthy HRV for one person might be 35ms. For another, it could be 80ms. If an app uses a single population curve, the first person would always look under-recovered and the second would always look great, regardless of how they actually feel. Your normal is not someone else's normal.
+              </p>
+            </div>
+
+            <div class="bg-[#f5f5f7] rounded-2xl p-6 md:p-8">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Changes from your baseline are what count</h3>
+              <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                What matters is not your absolute HRV number, but whether it went up or down relative to your own trend. If your resting heart rate is usually 52 and it spikes to 58, that is a meaningful signal. Laso detects these shifts because it maintains a rolling baseline built exclusively from your data, updated every day.
+              </p>
+            </div>
+
+            <div class="bg-[#f5f5f7] rounded-2xl p-6 md:p-8">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Baselines improve over time</h3>
+              <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                Laso starts learning from day one and gets more precise with every night of data. After two weeks, the model has a solid understanding of your patterns. After a month, it can detect subtle shifts that generic algorithms would miss entirely. And because baselines are computed on-device, your data never leaves your phone.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- What Your Score Means -->
+      <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+        <div class="max-w-4xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-4">
+            What your score means
+          </h2>
+          <p class="text-[15px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-12">
+            Your recovery score falls into one of three zones. Each comes with clear, actionable guidance so you never have to guess what to do with the number.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Low -->
+            <div class="bg-white rounded-2xl p-6 border border-black/[0.04]">
+              <div class="flex items-center gap-3 mb-4">
+                <span class="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-600 text-[15px] font-bold">0</span>
+                <span class="text-[13px] text-[#6e6e73]">to</span>
+                <span class="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-600 text-[15px] font-bold">33</span>
+              </div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f] mb-2">Low Recovery</h3>
+              <p class="text-[13px] text-[#6e6e73] leading-relaxed mb-3">
+                Your body is under significant stress or has not recovered from recent demands. Multiple inputs are deviating from your baselines.
+              </p>
+              <p class="text-[13px] text-[#1d1d1f] font-medium">What to do:</p>
+              <ul class="mt-1 space-y-1 text-[13px] text-[#6e6e73]">
+                <li>Prioritize rest and light movement like walking</li>
+                <li>Focus on sleep hygiene and getting to bed earlier</li>
+                <li>Avoid high intensity training</li>
+                <li>Check for illness or external stressors</li>
+              </ul>
+            </div>
+
+            <!-- Moderate -->
+            <div class="bg-white rounded-2xl p-6 border border-black/[0.04]">
+              <div class="flex items-center gap-3 mb-4">
+                <span class="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-600 text-[15px] font-bold">34</span>
+                <span class="text-[13px] text-[#6e6e73]">to</span>
+                <span class="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-600 text-[15px] font-bold">66</span>
+              </div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f] mb-2">Moderate Recovery</h3>
+              <p class="text-[13px] text-[#6e6e73] leading-relaxed mb-3">
+                You are partially recovered. Some metrics are back to baseline, others are still catching up. This is the most common range for active people.
+              </p>
+              <p class="text-[13px] text-[#1d1d1f] font-medium">What to do:</p>
+              <ul class="mt-1 space-y-1 text-[13px] text-[#6e6e73]">
+                <li>Moderate intensity training is fine</li>
+                <li>Avoid going all out or setting personal records</li>
+                <li>Stay hydrated and maintain nutrition</li>
+                <li>A good night of sleep could push you into the green</li>
+              </ul>
+            </div>
+
+            <!-- High -->
+            <div class="bg-white rounded-2xl p-6 border border-black/[0.04]">
+              <div class="flex items-center gap-3 mb-4">
+                <span class="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-600 text-[15px] font-bold">67</span>
+                <span class="text-[13px] text-[#6e6e73]">to</span>
+                <span class="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-600 text-[15px] font-bold">100</span>
+              </div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f] mb-2">High Recovery</h3>
+              <p class="text-[13px] text-[#6e6e73] leading-relaxed mb-3">
+                Your body is well recovered and ready for performance. HRV, RHR, and sleep metrics are at or above your personal baselines.
+              </p>
+              <p class="text-[13px] text-[#1d1d1f] font-medium">What to do:</p>
+              <ul class="mt-1 space-y-1 text-[13px] text-[#6e6e73]">
+                <li>Great day for high intensity or long duration training</li>
+                <li>Push toward your strain target ceiling</li>
+                <li>This is when adaptation and fitness gains happen</li>
+                <li>Take advantage of it; high recovery days are earned</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Related Features -->
+      <section class="py-16 md:py-24 px-5">
+        <div class="max-w-3xl mx-auto text-center">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-4">
+            Recovery works best with the full picture
+          </h2>
+          <p class="text-[15px] text-[#6e6e73] max-w-2xl mx-auto mb-10">
+            Your recovery score feeds directly into other Laso features. Together they create a complete daily action plan.
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-left">
+            <a href="/strain-tracking" class="group bg-[#f5f5f7] rounded-2xl p-6 hover:bg-[#eeeef0] transition-colors">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2 group-hover:text-[#0071e3] transition-colors">Strain Tracking</h3>
+              <p class="text-[13px] text-[#6e6e73] leading-relaxed">Your recovery score sets the daily strain target. High recovery means you can push harder. Low recovery means the target drops to protect you from overtraining.</p>
+            </a>
+            <a href="/sleep-coaching" class="group bg-[#f5f5f7] rounded-2xl p-6 hover:bg-[#eeeef0] transition-colors">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2 group-hover:text-[#0071e3] transition-colors">Sleep Coaching</h3>
+              <p class="text-[13px] text-[#6e6e73] leading-relaxed">Sleep is the single biggest driver of recovery. Laso tracks your sleep debt, learns your personal sleep need, and gives you a target bedtime to optimize recovery.</p>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <CtaSection
+        heading="See your recovery score tomorrow morning."
+        subheading="Connect your wearable, sleep tonight, and wake up to your first personalized recovery score."
+      />
+    </main>
+
+    <SiteFooter />
+  </div>
+</Base>

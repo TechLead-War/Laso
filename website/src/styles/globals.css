@@ -14,8 +14,6 @@
   body {
     color: #1d1d1f;
     background: #ffffff;
-    -webkit-user-select: none;
-    user-select: none;
     overscroll-behavior: none;
     overflow-x: hidden;
     position: relative;

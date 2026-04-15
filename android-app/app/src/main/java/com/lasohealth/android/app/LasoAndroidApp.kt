@@ -16,16 +16,51 @@ import com.lasohealth.android.ui.theme.LasoTheme
 fun LasoAndroidApp() {
     val context = LocalContext.current
     val prefs = remember { OnboardingPrefs(context) }
+    val disclaimerPrefs = remember { DisclaimerPrefs(context) }
+
     var showOnboarding by remember { mutableStateOf(!prefs.onboardingCompleted) }
+    var disclaimerAcknowledged by remember { mutableStateOf(disclaimerPrefs.acknowledged) }
+
+    // Placeholder flags for Firebase Remote Config integration.
+    // Set these to true to test the respective blocking screens.
+    var forceUpdateRequired by remember { mutableStateOf(false) }
+    var killSwitchEnabled by remember { mutableStateOf(false) }
+    var killSwitchMessage by remember { mutableStateOf("We are performing scheduled maintenance. We will be back soon.") }
+    var killSwitchDismissed by remember { mutableStateOf(false) }
 
     LasoTheme {
-        if (showOnboarding) {
-            OnboardingFlow(
-                onComplete = { showOnboarding = false },
-            )
-        } else {
-            val repository = remember { SampleHealthDataRepository() }
-            LasoNavScaffold(repository = repository)
+        when {
+            // Priority 1: Force update blocks everything
+            forceUpdateRequired -> {
+                ForceUpdateScreen()
+            }
+            // Priority 2: Maintenance / kill switch (dismissible)
+            killSwitchEnabled && !killSwitchDismissed -> {
+                MaintenanceScreen(
+                    message = killSwitchMessage,
+                    onContinue = { killSwitchDismissed = true },
+                )
+            }
+            // Priority 3: Onboarding (first launch)
+            showOnboarding -> {
+                OnboardingFlow(
+                    onComplete = { showOnboarding = false },
+                )
+            }
+            // Priority 4: Medical disclaimer (shown once after onboarding)
+            !disclaimerAcknowledged -> {
+                MedicalDisclaimerScreen(
+                    onAcknowledge = {
+                        disclaimerPrefs.acknowledged = true
+                        disclaimerAcknowledged = true
+                    },
+                )
+            }
+            // Priority 5: Main app
+            else -> {
+                val repository = remember { SampleHealthDataRepository() }
+                LasoNavScaffold(repository = repository)
+            }
         }
     }
 }

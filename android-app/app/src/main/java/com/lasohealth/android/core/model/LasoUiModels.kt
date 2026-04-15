@@ -31,6 +31,11 @@ data class HomeUiState(
     val activityStreak: Int = 0,
     val sleepStreak: Int = 0,
     val recoveryStreak: Int = 0,
+    val recoveryWhyLine: String? = null,
+    val activationProgress: ActivationProgressUi? = null,
+    val showMorningCheckIn: Boolean = false,
+    val intelligenceBriefing: List<IntelligenceCardUi> = emptyList(),
+    val healthForecasts: List<MetricForecastUi> = emptyList(),
 )
 
 data class IllnessWarningUi(
@@ -566,4 +571,109 @@ data class PersonalRecordUi(
     val value: String,
     val date: String,
     val emoji: String,
+)
+
+// ── Activation Progress (first 8 days calibration) ─────────────────────────
+
+data class ActivationProgressUi(
+    val currentDay: Int,
+    val progressFraction: Float,
+    val progressDescription: String,
+    val isComplete: Boolean,
+    val latestMilestone: MilestoneEventUi? = null,
+)
+
+data class MilestoneEventUi(
+    val icon: String,
+    val title: String,
+    val detail: String,
+)
+
+// ── Intelligence Briefing Cards ────────────────────────────────────────────
+
+data class IntelligenceCardUi(
+    val id: String,
+    val label: String,
+    val headline: String,
+    val detail: String,
+    val confidencePercent: Int,
+    val severity: IntelligenceSeverity,
+    val accentColor: IntelligenceAccent,
+)
+
+enum class IntelligenceSeverity { CRITICAL, WARNING, NOTABLE, INFO }
+
+enum class IntelligenceAccent(val color: Color) {
+    RED(AccentRed),
+    ORANGE(AccentOrange),
+    YELLOW(AccentYellow),
+    GREEN(Color(0xFF4F8A62)),
+    BLUE(Color(0xFF3478F6)),
+    PURPLE(Color(0xFF8B5CF6)),
+}
+
+// ── Personal Health Forecast ───────────────────────────────────────────────
+
+data class MetricForecastUi(
+    val metric: HealthMetric,
+    val predictedValueFormatted: String,
+    val rangeDescription: String,
+    val directionIcon: ForecastDirection,
+    val isFavorable: Boolean,
+    val confidencePercent: Int,
+)
+
+enum class ForecastDirection { UP, DOWN, STABLE }
+
+// ── Morning Check-In ───────────────────────────────────────────────────────
+
+data class MorningCheckInResult(
+    val sleepQuality: Int,
+    val energyLevel: Int,
+    val soreness: Int,
+)
+
+// ── Health Risk Detail ────────────────────────────────────────────────────
+
+data class HealthRiskDetailUiState(
+    val riskName: String,
+    val riskScore: Int,
+    val riskGrade: String, // Low / Medium / High
+    val description: String,
+    val focusAreas: List<RiskFocusAreaUi>,
+    val contributingFactors: List<RiskFactorUi>,
+)
+
+data class RiskFocusAreaUi(
+    val title: String,
+    val impact: String,
+    val description: String,
+)
+
+data class RiskFactorUi(
+    val metricName: String,
+    val currentValue: String,
+    val status: String,
+    val optimalRange: String,
+    val riskContribution: Float,
+)
+
+// ── Today's Workout Models ───────────────────────────────────────────────────
+
+data class TodayWorkoutUiState(
+    val title: String,
+    val summary: String,
+    val targetZone: String,
+    val targetDuration: Int,
+    val targetCalories: Int,
+    val recoveryBand: String,
+    val blocks: List<WorkoutBlockUi>,
+)
+
+data class WorkoutBlockUi(
+    val name: String,
+    val duration: Int,
+    val targetHeartRateZone: Int,
+    val targetBpm: String,
+    val exercises: List<String>,
 )

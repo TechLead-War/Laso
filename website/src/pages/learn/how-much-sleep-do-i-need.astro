@@ -1,0 +1,209 @@
+---
+import Base from '../../layouts/Base.astro'
+import SiteNav from '../../components/SiteNav.astro'
+import SiteFooter from '../../components/SiteFooter.astro'
+import CtaSection from '../../components/CtaSection.astro'
+import LearnArticle from '../../components/LearnArticle.astro'
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "How Much Sleep Do You Actually Need? The Science Behind Sleep Requirements",
+    "description": "Your sleep need is personal, not a fixed 8 hours. Learn what determines how much sleep you need, how sleep debt works, and how to find your ideal amount.",
+    "datePublished": "2026-04-11",
+    "dateModified": "2026-04-11",
+    "author": { "@type": "Organization", "name": "Laso Health", "url": "https://lasohealth.fit" },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Laso Health",
+      "url": "https://lasohealth.fit",
+      "logo": { "@type": "ImageObject", "url": "https://lasohealth.fit/og-image.png" }
+    },
+    "image": "https://lasohealth.fit/og-image.png",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lasohealth.fit/learn/how-much-sleep-do-i-need" }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Is 6 hours of sleep enough?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "For the vast majority of adults, 6 hours is not enough. The National Sleep Foundation recommends 7 to 9 hours for adults aged 18 to 64. While a very small percentage of people carry a genetic variant (DEC2) that allows them to function on less sleep, this is extremely rare."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can you catch up on sleep?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Short term sleep debt from a few days can be recovered with extra sleep. However, chronic sleep deprivation over weeks or months has compounding effects and takes much longer to resolve. Consistent sleep is more effective than trying to catch up on weekends."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does sleep quality matter more than sleep quantity?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Both matter. Seven hours of uninterrupted, high quality sleep with adequate deep sleep and REM stages can be more restorative than nine hours of fragmented, light sleep. Tracking both duration and quality gives you the full picture."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I know if I am getting enough sleep?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Signs of adequate sleep include waking up without an alarm feeling refreshed, maintaining stable energy throughout the day, and not feeling the need for caffeine to function. If you consistently need an alarm to wake up, you may not be sleeping enough."
+        }
+      }
+    ]
+  }
+]
+---
+
+<Base title="How Much Sleep Do You Actually Need? The Science Behind Sleep Requirements | Laso" description="Your sleep need is personal, not a fixed 8 hours. Learn what determines how much sleep you need, how sleep debt works, and how to find your ideal amount." jsonLd={jsonLd}>
+  <SiteNav />
+  <LearnArticle category="Sleep" readingTime="8 min" lastUpdated="April 2026">
+
+    <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-[#1d1d1f] mb-4">How Much Sleep Do You Actually Need?</h1>
+    <p class="text-[17px] text-[#6e6e73] leading-relaxed mb-10">The answer is not "8 hours for everyone." Your ideal sleep need is shaped by your genetics, activity level, age, and health. Here is what the science says, and how to find your personal number.</p>
+
+    <!-- The 8-hour myth -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">The 8 hour myth</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Eight hours of sleep has become conventional wisdom, but the reality is more nuanced. The National Sleep Foundation recommends 7 to 9 hours for adults aged 18 to 64, which means there is a two hour range of what is considered healthy.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Individual sleep needs vary significantly due to several factors:</p>
+      <ul class="list-disc pl-6 space-y-2 text-[15px] text-[#1d1d1f] leading-relaxed mb-3">
+        <li><strong>Genetics:</strong> A small percentage of people carry a variant of the DEC2 gene that allows them to function well on as little as 6 hours. This is genuinely rare, affecting an estimated 1 to 3 percent of the population.</li>
+        <li><strong>Activity level:</strong> Higher physical and mental strain increases your body's need for restorative sleep.</li>
+        <li><strong>Age:</strong> Sleep architecture and needs change throughout life.</li>
+        <li><strong>Health status:</strong> Recovery from illness or injury typically requires more sleep.</li>
+      </ul>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed">The takeaway: rather than aiming for a fixed number, the goal should be finding the duration that consistently leaves you feeling rested and alert.</p>
+    </section>
+
+    <!-- Sleep need by age -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">Recommended sleep by age</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-4">The following guidelines come from the National Sleep Foundation and are based on a review of over 300 published studies on sleep duration.</p>
+      <div class="overflow-x-auto mb-4">
+        <table class="w-full text-[14px] text-left border-collapse">
+          <thead>
+            <tr class="border-b border-[#e5e5e7]">
+              <th class="py-3 pr-4 font-semibold text-[#1d1d1f]">Age group</th>
+              <th class="py-3 pr-4 font-semibold text-[#1d1d1f]">Recommended hours</th>
+            </tr>
+          </thead>
+          <tbody class="text-[#424245]">
+            <tr class="border-b border-[#f0f0f0]"><td class="py-2.5 pr-4">Newborns (0 to 3 months)</td><td class="py-2.5">14 to 17 hours</td></tr>
+            <tr class="border-b border-[#f0f0f0]"><td class="py-2.5 pr-4">Infants (4 to 11 months)</td><td class="py-2.5">12 to 15 hours</td></tr>
+            <tr class="border-b border-[#f0f0f0]"><td class="py-2.5 pr-4">Toddlers (1 to 2 years)</td><td class="py-2.5">11 to 14 hours</td></tr>
+            <tr class="border-b border-[#f0f0f0]"><td class="py-2.5 pr-4">Preschoolers (3 to 5 years)</td><td class="py-2.5">10 to 13 hours</td></tr>
+            <tr class="border-b border-[#f0f0f0]"><td class="py-2.5 pr-4">School age (6 to 13 years)</td><td class="py-2.5">9 to 11 hours</td></tr>
+            <tr class="border-b border-[#f0f0f0]"><td class="py-2.5 pr-4">Teenagers (14 to 17 years)</td><td class="py-2.5">8 to 10 hours</td></tr>
+            <tr class="border-b border-[#f0f0f0]"><td class="py-2.5 pr-4">Young adults (18 to 25 years)</td><td class="py-2.5">7 to 9 hours</td></tr>
+            <tr class="border-b border-[#f0f0f0]"><td class="py-2.5 pr-4">Adults (26 to 64 years)</td><td class="py-2.5">7 to 9 hours</td></tr>
+            <tr><td class="py-2.5 pr-4">Older adults (65+ years)</td><td class="py-2.5">7 to 8 hours</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-[14px] text-[#6e6e73] leading-relaxed">These are guidelines, not rigid rules. Some individuals may genuinely need slightly more or less than the recommended range.</p>
+    </section>
+
+    <!-- What affects sleep need -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">What affects your sleep need</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Your required sleep duration is not a fixed number. It shifts based on what is happening in your life:</p>
+      <ul class="list-disc pl-6 space-y-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        <li><strong>Physical activity:</strong> Higher training loads increase the body's demand for deep sleep to support muscle repair, hormone regulation, and immune function.</li>
+        <li><strong>Cognitive load:</strong> Intense mental work, learning new skills, or processing emotional stress increases the need for REM sleep.</li>
+        <li><strong>Illness:</strong> The immune system is highly active during sleep. When fighting an infection, the body often needs substantially more sleep than usual.</li>
+        <li><strong>Age:</strong> As noted in the table above, sleep needs decrease gradually from infancy through adulthood.</li>
+        <li><strong>Genetics:</strong> Your genetic baseline sets a range, but lifestyle factors determine where you fall within it.</li>
+      </ul>
+    </section>
+
+    <!-- Sleep debt -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">Sleep debt: real or myth?</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Sleep debt is real. When you consistently sleep less than your body needs, the deficit accumulates and impairs your performance in measurable ways.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Research from the University of Pennsylvania demonstrated that people limited to 6 hours of sleep per night for two weeks showed cognitive impairment equivalent to someone who had been awake for 48 hours straight. Critically, the participants often did not realize how impaired they were, rating their own alertness as "fine."</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">The good news is that short term sleep debt from a few days can be recovered relatively quickly with extra sleep. The challenge is chronic sleep deprivation lasting weeks or months. Research suggests that while you can recover, it takes significantly longer than the debt itself. Sleeping an extra hour on the weekend does not erase five days of sleeping two hours less than you need.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed">The most effective approach is prevention: maintaining a consistent sleep schedule rather than accumulating and trying to repay sleep debt.</p>
+    </section>
+
+    <!-- Finding your number -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">How to find your personal sleep need</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">The best way to determine your ideal sleep duration is a simple experiment:</p>
+      <ol class="list-decimal pl-6 space-y-2 text-[15px] text-[#1d1d1f] leading-relaxed mb-3">
+        <li>Choose a two to three week period where your schedule is relatively consistent.</li>
+        <li>Set a fixed bedtime and do not use an alarm clock.</li>
+        <li>Track how long you naturally sleep each night and how you feel the next day, including your energy levels, mood, and alertness.</li>
+        <li>After the first few days of catching up on any existing sleep debt, your body will settle into its natural rhythm.</li>
+        <li>The amount that consistently leaves you feeling alert and energized without an alarm is your baseline sleep need.</li>
+      </ol>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed">Laso automates a version of this process by correlating your sleep duration with your recovery scores over time. Instead of running a manual experiment, the app identifies patterns in your data and learns how much sleep you need to wake up recovered.</p>
+    </section>
+
+    <!-- Signs of sleep deprivation -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">Signs you are not sleeping enough</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Many people who are chronically under-slept do not recognize it because they have adapted to feeling less than their best. Common signs of insufficient sleep include:</p>
+      <ul class="list-disc pl-6 space-y-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        <li>Needing an alarm clock every morning to wake up on time.</li>
+        <li>Relying on caffeine to feel alert, especially in the afternoon.</li>
+        <li>Falling asleep within five minutes of lying down. This is often mistaken for being a "good sleeper" but actually indicates significant sleep deprivation.</li>
+        <li>Difficulty concentrating, increased irritability, or mood swings.</li>
+        <li>Consistently elevated resting heart rate or suppressed HRV compared to your personal baseline.</li>
+        <li>Catching colds or infections more frequently. Sleep deprivation impairs immune function.</li>
+      </ul>
+    </section>
+
+    <!-- Tips for better sleep -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">Evidence based tips for better sleep</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Sleep hygiene is well studied. The following practices are supported by research:</p>
+      <ul class="list-disc pl-6 space-y-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        <li><strong>Keep a consistent schedule:</strong> Going to bed and waking up at the same time every day, including weekends, helps regulate your circadian rhythm.</li>
+        <li><strong>Keep your bedroom cool:</strong> Research suggests an ambient temperature of 65 to 68 degrees Fahrenheit (18 to 20 degrees Celsius) is optimal for sleep.</li>
+        <li><strong>Limit screens before bed:</strong> Blue light from phones and laptops suppresses melatonin production. Reducing screen exposure 30 to 60 minutes before bed can help.</li>
+        <li><strong>Avoid caffeine after early afternoon:</strong> Caffeine has a half life of 5 to 7 hours. A coffee at 3 PM means roughly half the caffeine is still in your system at 9 PM.</li>
+        <li><strong>Limit alcohol:</strong> While alcohol may help you fall asleep faster, it fragments sleep architecture, reduces REM sleep, and leads to lower quality rest overall.</li>
+        <li><strong>Get morning sunlight:</strong> Exposure to bright light within the first hour of waking helps set your circadian clock, making it easier to fall asleep at night.</li>
+      </ul>
+    </section>
+
+    <!-- Quality vs quantity -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">Sleep quality vs quantity</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Duration is only half the equation. Sleep quality, determined by how much time you spend in each sleep stage, matters just as much.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Healthy sleep cycles through four stages:</p>
+      <ul class="list-disc pl-6 space-y-2 text-[15px] text-[#1d1d1f] leading-relaxed mb-3">
+        <li><strong>Light sleep (N1 and N2):</strong> The transition into sleep and the stage where you spend the most time. Important for memory consolidation.</li>
+        <li><strong>Deep sleep (N3):</strong> The most physically restorative stage. Critical for muscle repair, hormone release, and immune function. Adults typically need 1 to 2 hours per night.</li>
+        <li><strong>REM sleep:</strong> Important for emotional regulation, learning, and memory. Most REM occurs in the second half of the night.</li>
+      </ul>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed">Seven hours of high quality, uninterrupted sleep with adequate deep sleep and REM can be more restorative than nine hours of fragmented, light sleep. Factors that fragment sleep include alcohol, screen exposure before bed, an inconsistent schedule, and sleeping in an environment that is too warm or noisy.</p>
+    </section>
+
+    <!-- Key takeaway -->
+    <div class="bg-[#f5f5f7] rounded-2xl p-6 mb-8">
+      <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Key takeaway</h3>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed">Your sleep need is personal, not universal. Most adults need 7 to 9 hours, but your exact requirement depends on your genetics, activity level, and health. Track both duration and quality to understand what your body truly needs.</p>
+    </div>
+
+    <!-- Related -->
+    <div class="flex flex-wrap gap-3">
+      <a href="/sleep-coaching" class="text-[14px] text-[#0071e3] hover:underline">Sleep Coaching</a>
+      <span class="text-[#e5e5e7]">|</span>
+      <a href="/recovery-score" class="text-[14px] text-[#0071e3] hover:underline">Recovery Score</a>
+    </div>
+
+  </LearnArticle>
+  <CtaSection heading="Find your ideal sleep with Laso." subheading="Laso learns how much sleep you need by correlating duration, quality, and next day recovery." />
+  <SiteFooter />
+</Base>

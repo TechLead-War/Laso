@@ -1,0 +1,264 @@
+---
+import Base from '../layouts/Base.astro'
+import SiteNav from '../components/SiteNav.astro'
+import SiteFooter from '../components/SiteFooter.astro'
+import CtaSection from '../components/CtaSection.astro'
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Laso",
+    "alternateName": "Laso Health",
+    "applicationCategory": "HealthApplication",
+    "operatingSystem": "iOS",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "description": "Free 7-day trial, then $29.99/year"
+    },
+    "description": "Laso computes your Vitality Age daily from 9 health indicators including VO2 Max, HRV, resting heart rate, and sleep quality. Track your 90-day trajectory and see what to improve.",
+    "featureList": [
+      "Daily Vitality Age computed from 9 health indicators",
+      "90-day trajectory tracking",
+      "Personalized focus area recommendations",
+      "No lab tests required",
+      "On-device machine learning with personal baselines"
+    ],
+    "url": "https://lasohealth.fit/vitality-age",
+    "image": "https://lasohealth.fit/og-image.png"
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is Vitality Age?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Vitality Age is Laso's daily fitness age estimate. It compares your current health metrics against population-level data to determine how old your body is performing relative to your actual age. If you are 35 but your metrics match a typical healthy 29-year-old, your Vitality Age would be 29. It updates every day using data from your wearable, with no lab tests needed."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What 9 metrics go into Vitality Age?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Laso computes Vitality Age from nine health indicators: VO2 Max (cardiorespiratory fitness), heart rate variability (nervous system resilience), resting heart rate (cardiovascular efficiency), sleep efficiency (percentage of time in bed spent asleep), deep sleep percentage (restorative sleep quality), walking speed (functional mobility), daily steps (overall activity), exercise minutes (intentional physical activity), and body composition (lean mass to fat ratio)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How is Vitality Age different from biological age tests?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Traditional biological age tests use blood biomarkers or DNA methylation and cost hundreds of dollars per test. They give you a snapshot a few times per year at best. Vitality Age updates every single day using data your wearable already collects, so you can see the impact of lifestyle changes in weeks rather than waiting months for your next lab draw. It measures functional fitness markers rather than molecular markers."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How can I lower my Vitality Age?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Laso identifies the 2 to 3 metrics where you have the most room for improvement and highlights them as your focus areas. For most people, the biggest gains come from consistent cardiovascular exercise (improving VO2 Max), better sleep habits (improving sleep efficiency and deep sleep), and daily movement (steps and walking speed). Small, sustained improvements in these areas can shift your Vitality Age by several years over a few months."
+        }
+      }
+    ]
+  }
+]
+---
+
+<Base
+  title="Vitality Age — Your Daily Fitness Age Estimate | Laso"
+  description="Laso computes your Vitality Age daily from 9 health indicators including VO2 Max, HRV, resting heart rate, and sleep quality. Track your 90-day trajectory and see what to improve."
+  jsonLd={jsonLd}
+>
+  <SiteNav current="vitality-age" />
+
+  <main class="bg-white">
+
+    <!-- Hero -->
+    <section class="pt-24 pb-16 md:pt-32 md:pb-24 px-5">
+      <div class="max-w-3xl mx-auto text-center">
+        <p class="text-[13px] font-semibold uppercase tracking-widest text-[#0071e3] mb-4">Vitality Age</p>
+        <h1 class="text-4xl md:text-5xl font-semibold tracking-tight text-[#1d1d1f] text-balance leading-tight">
+          Your fitness age, updated every day.
+        </h1>
+        <p class="mt-5 text-lg md:text-xl text-[#6e6e73] max-w-2xl mx-auto text-balance leading-relaxed">
+          Traditional fitness age tests cost hundreds of dollars and give you a number a few times per year. Laso computes your Vitality Age daily from 9 health indicators your wearable already tracks. No lab visits, no blood draws, no waiting.
+        </p>
+        <div class="mt-8">
+          <a href="/#early-access" class="inline-flex items-center justify-center bg-[#1d1d1f] text-white font-medium rounded-full px-7 py-3 min-h-[48px] text-[15px] hover:bg-black transition-colors">
+            Join Early Access
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9 Health Indicators -->
+    <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">
+          9 health indicators
+        </h2>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          Vitality Age is not based on a single measurement. Laso combines nine indicators that together paint a comprehensive picture of how your body is functioning. Each one contributes to your overall score, weighted by how strongly it correlates with long-term health outcomes.
+        </p>
+        <div class="mt-8 grid sm:grid-cols-2 gap-x-8 gap-y-6">
+          <div>
+            <h3 class="text-[15px] font-semibold text-[#1d1d1f]">VO2 Max</h3>
+            <p class="mt-1 text-[14px] text-[#6e6e73] leading-relaxed">Your estimated maximum oxygen uptake, widely considered the strongest single predictor of cardiovascular health and longevity. Higher VO2 Max means your heart and lungs deliver oxygen more efficiently.</p>
+          </div>
+          <div>
+            <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Heart rate variability</h3>
+            <p class="mt-1 text-[14px] text-[#6e6e73] leading-relaxed">The variation in time between heartbeats, reflecting your autonomic nervous system balance. Higher HRV generally indicates better stress resilience, recovery capacity, and overall fitness.</p>
+          </div>
+          <div>
+            <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Resting heart rate</h3>
+            <p class="mt-1 text-[14px] text-[#6e6e73] leading-relaxed">Your heart rate at complete rest, measured overnight for accuracy. A lower resting heart rate typically means your heart pumps blood more efficiently, a hallmark of cardiovascular fitness.</p>
+          </div>
+          <div>
+            <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Sleep efficiency</h3>
+            <p class="mt-1 text-[14px] text-[#6e6e73] leading-relaxed">The percentage of time in bed that you actually spend asleep. High sleep efficiency means you fall asleep quickly and stay asleep, which is associated with better metabolic health and cognitive function.</p>
+          </div>
+          <div>
+            <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Deep sleep percentage</h3>
+            <p class="mt-1 text-[14px] text-[#6e6e73] leading-relaxed">The proportion of your total sleep spent in deep, restorative stages. Deep sleep is when your body repairs muscle tissue, consolidates memory, and releases growth hormone. It tends to decline with age, making it a strong aging signal.</p>
+          </div>
+          <div>
+            <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Walking speed</h3>
+            <p class="mt-1 text-[14px] text-[#6e6e73] leading-relaxed">Your average walking pace during daily movement. Walking speed is one of the most reliable functional fitness markers and has been shown in multiple studies to correlate with longevity and overall physical capability.</p>
+          </div>
+          <div>
+            <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Daily steps</h3>
+            <p class="mt-1 text-[14px] text-[#6e6e73] leading-relaxed">Your total step count throughout the day. Beyond formal exercise, daily movement is a strong indicator of overall activity level and has a well-documented relationship with cardiovascular health and metabolic function.</p>
+          </div>
+          <div>
+            <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Exercise minutes</h3>
+            <p class="mt-1 text-[14px] text-[#6e6e73] leading-relaxed">Time spent in intentional physical activity at moderate or higher intensity. Regular exercise improves VO2 Max, HRV, sleep quality, and body composition, making it one of the most impactful levers for lowering your Vitality Age.</p>
+          </div>
+          <div>
+            <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Body composition</h3>
+            <p class="mt-1 text-[14px] text-[#6e6e73] leading-relaxed">The ratio of lean mass to body fat. A healthy body composition supports better metabolic health, joint function, and hormonal balance. Laso uses available measurements from Apple Health to factor this into your overall score.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 90-Day Trajectory -->
+    <section class="py-16 md:py-24 px-5">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">
+          90 day trajectory
+        </h2>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          Your Vitality Age on any single day is interesting, but the trend over time is what really matters. A bad night of sleep or a recovery day can cause a temporary spike. That does not mean your health is declining. What matters is the direction you are heading over weeks and months.
+        </p>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          Laso tracks your Vitality Age over a rolling 90 day window and shows you the overall trajectory. You can see whether your fitness age is trending younger or older, how quickly it is moving, and whether recent lifestyle changes are having an effect. This long-term view helps you stay motivated and focused on sustainable progress rather than reacting to daily noise.
+        </p>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          When you start a new exercise routine or improve your sleep habits, the trajectory is where you will see the payoff first. Small, consistent improvements in your daily metrics compound over 90 days into a measurably younger Vitality Age.
+        </p>
+      </div>
+    </section>
+
+    <!-- Focus Areas -->
+    <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">
+          Focus areas
+        </h2>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          Not all nine metrics are equally important for you. Someone with great cardiovascular fitness but poor sleep will benefit most from improving sleep efficiency and deep sleep. Someone who sleeps well but is sedentary will see bigger gains from increasing daily steps and exercise minutes.
+        </p>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          Laso analyzes your metrics relative to your age group and identifies the 2 to 3 areas where you have the most room for improvement. These become your focus areas, and the app highlights them so you know exactly where to direct your effort for the biggest impact on your Vitality Age.
+        </p>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          As you improve in one area, your focus areas update automatically. This keeps your attention on the next highest leverage change, creating a continuous feedback loop that drives steady progress without overwhelming you with everything at once.
+        </p>
+      </div>
+    </section>
+
+    <!-- No Lab Required -->
+    <section class="py-16 md:py-24 px-5">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">
+          No lab required
+        </h2>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          Traditional biological age tests rely on blood biomarkers or DNA methylation analysis. They can provide deep molecular insights, but they cost hundreds of dollars per test, require a lab visit, and give you results a few times per year at best. You make a change, then wait months to see whether it moved the needle.
+        </p>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          Vitality Age takes a different approach. It measures functional fitness markers, things like how efficiently your heart works, how well you sleep, and how active you are, using data your wearable collects every day. You see the effect of a new workout routine or sleep habit within weeks, not months.
+        </p>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          This does not replace lab-based biological age testing. The two approaches measure different things and complement each other well. But for a daily, actionable picture of your functional fitness age, Vitality Age gives you something that lab tests simply cannot: continuous feedback at zero additional cost.
+        </p>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-8">
+          Frequently asked questions
+        </h2>
+        <div class="space-y-8">
+          <div>
+            <h3 class="text-[17px] font-semibold text-[#1d1d1f]">What is Vitality Age?</h3>
+            <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+              Vitality Age is Laso's daily fitness age estimate. It compares your current health metrics against population-level data to determine how old your body is performing relative to your actual age. If you are 35 but your metrics match a typical healthy 29 year old, your Vitality Age would be 29. It updates every day using data from your wearable, with no lab tests needed.
+            </p>
+          </div>
+          <div>
+            <h3 class="text-[17px] font-semibold text-[#1d1d1f]">What 9 metrics go into Vitality Age?</h3>
+            <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+              Laso computes Vitality Age from VO2 Max, heart rate variability, resting heart rate, sleep efficiency, deep sleep percentage, walking speed, daily steps, exercise minutes, and body composition. Each is weighted by how strongly it correlates with long-term health outcomes, and together they capture cardiovascular, sleep, mobility, and body health.
+            </p>
+          </div>
+          <div>
+            <h3 class="text-[17px] font-semibold text-[#1d1d1f]">How is Vitality Age different from biological age tests?</h3>
+            <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+              Traditional biological age tests use blood biomarkers or DNA methylation and cost hundreds of dollars per test. They give you a snapshot a few times per year. Vitality Age updates every day using data your wearable already collects, so you can see the impact of lifestyle changes in weeks rather than months. It measures functional fitness markers rather than molecular markers, and the two approaches complement each other well.
+            </p>
+          </div>
+          <div>
+            <h3 class="text-[17px] font-semibold text-[#1d1d1f]">How can I lower my Vitality Age?</h3>
+            <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+              Laso identifies the 2 to 3 metrics where you have the most room for improvement and highlights them as your focus areas. For most people, the biggest gains come from consistent cardiovascular exercise, better sleep habits, and daily movement. Small, sustained improvements in these areas can shift your Vitality Age by several years over a few months.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Internal Links -->
+    <section class="py-16 md:py-24 px-5">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-6">
+          Related features
+        </h2>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <a href="/recovery-score" class="block p-6 rounded-2xl border border-black/[0.06] hover:border-[#0071e3]/30 hover:shadow-md transition-all">
+            <p class="text-[15px] font-semibold text-[#1d1d1f]">Recovery Score</p>
+            <p class="mt-1 text-[13px] text-[#6e6e73]">See how sleep, strain, and HRV combine into a daily readiness score that guides your training intensity.</p>
+          </a>
+          <a href="/strain-tracking" class="block p-6 rounded-2xl border border-black/[0.06] hover:border-[#0071e3]/30 hover:shadow-md transition-all">
+            <p class="text-[15px] font-semibold text-[#1d1d1f]">Strain Tracking</p>
+            <p class="mt-1 text-[13px] text-[#6e6e73]">Track your daily strain load and get recovery adjusted targets so you train at the right intensity every day.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <CtaSection heading="Know your real fitness age." subheading="Laso turns your wearable data into a daily Vitality Age with zero lab visits." />
+
+  </main>
+
+  <SiteFooter />
+</Base>

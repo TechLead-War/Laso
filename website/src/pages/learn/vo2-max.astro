@@ -1,0 +1,200 @@
+---
+import Base from '../../layouts/Base.astro'
+import SiteNav from '../../components/SiteNav.astro'
+import SiteFooter from '../../components/SiteFooter.astro'
+import CtaSection from '../../components/CtaSection.astro'
+import LearnArticle from '../../components/LearnArticle.astro'
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "VO2 Max Explained: What It Is, Good Ranges, and How to Improve It",
+    "description": "VO2 Max is the gold standard for cardiorespiratory fitness. Learn what it measures, how Apple Watch estimates it, what good ranges look like, and how to increase yours.",
+    "datePublished": "2026-04-11",
+    "dateModified": "2026-04-11",
+    "author": { "@type": "Organization", "name": "Laso Health", "url": "https://lasohealth.fit" },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Laso Health",
+      "url": "https://lasohealth.fit",
+      "logo": { "@type": "ImageObject", "url": "https://lasohealth.fit/og-image.png" }
+    },
+    "image": "https://lasohealth.fit/og-image.png",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lasohealth.fit/learn/vo2-max" }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is a good VO2 Max?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A good VO2 Max depends on your age and sex. For men aged 30 to 39, a VO2 Max of 38 to 44 mL/kg/min is considered good. For women in the same age group, 32 to 38 mL/kg/min is good. Higher values indicate better cardiorespiratory fitness."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How accurate is Apple Watch VO2 Max?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Apple Watch estimates VO2 Max using heart rate and GPS pace data during outdoor walks and runs. While not as precise as a laboratory graded exercise test, studies have shown wearable estimates are useful for tracking trends over time. The absolute number may differ from a lab result, but the direction of change is generally reliable."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I improve my VO2 Max after 40?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. While VO2 Max naturally declines with age, it is highly trainable at any age. Research shows that previously sedentary adults can improve VO2 Max by 10 to 20 percent within 8 to 12 weeks of consistent aerobic training, regardless of starting age."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Why is VO2 Max considered the best predictor of longevity?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A landmark 2018 study in JAMA involving over 122,000 participants found that cardiorespiratory fitness, measured by VO2 Max, was the single strongest predictor of long-term survival. Low fitness carried a greater risk than smoking, diabetes, or hypertension."
+        }
+      }
+    ]
+  }
+]
+---
+
+<Base title="VO2 Max Explained: What It Is, Good Ranges, and How to Improve It | Laso" description="VO2 Max is the gold standard for cardiorespiratory fitness. Learn what it measures, how Apple Watch estimates it, what good ranges look like, and how to increase yours." jsonLd={jsonLd}>
+  <SiteNav />
+  <LearnArticle category="Fitness" readingTime="9 min" lastUpdated="April 2026">
+
+    <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-[#1d1d1f] mb-4">VO2 Max: The Gold Standard for Fitness</h1>
+    <p class="text-[17px] text-[#6e6e73] leading-relaxed mb-10">If you could choose a single number to predict your long term health and lifespan, it would be VO2 Max. Here is what it measures, where you stand, and how to improve it.</p>
+
+    <!-- What is VO2 Max -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">What is VO2 Max?</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">VO2 Max is the maximum rate of oxygen your body can consume during intense exercise. It is measured in milliliters of oxygen per kilogram of body weight per minute (mL/kg/min).</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">When you exercise, your muscles need oxygen to produce energy. The harder you work, the more oxygen you consume, up to a limit. That limit is your VO2 Max. It reflects how efficiently your lungs absorb oxygen, your heart pumps oxygenated blood, and your muscles extract and use that oxygen.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">VO2 Max is considered the gold standard measurement of cardiorespiratory fitness. In a laboratory, it is measured directly during a graded exercise test where intensity is progressively increased until exhaustion while oxygen consumption is recorded through a face mask.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed">Wearable devices like Apple Watch do not measure VO2 Max directly. They estimate it using algorithms that analyze heart rate data and walking or running pace.</p>
+    </section>
+
+    <!-- VO2 Max ranges -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">VO2 Max ranges by age and sex</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-4">The following classifications are based on guidelines from the American College of Sports Medicine (ACSM). All values are in mL/kg/min.</p>
+
+      <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-3">Men</h3>
+      <div class="overflow-x-auto mb-6">
+        <table class="w-full text-[14px] text-left border-collapse">
+          <thead>
+            <tr class="border-b border-[#e5e5e7]">
+              <th class="py-3 pr-3 font-semibold text-[#1d1d1f]">Age</th>
+              <th class="py-3 pr-3 font-semibold text-[#1d1d1f]">Poor</th>
+              <th class="py-3 pr-3 font-semibold text-[#1d1d1f]">Fair</th>
+              <th class="py-3 pr-3 font-semibold text-[#1d1d1f]">Good</th>
+              <th class="py-3 pr-3 font-semibold text-[#1d1d1f]">Excellent</th>
+              <th class="py-3 font-semibold text-[#1d1d1f]">Superior</th>
+            </tr>
+          </thead>
+          <tbody class="text-[#424245]">
+            <tr class="border-b border-[#f0f0f0]"><td class="py-2.5 pr-3">20 to 29</td><td class="py-2.5 pr-3">&lt;34</td><td class="py-2.5 pr-3">34 to 40</td><td class="py-2.5 pr-3">40 to 48</td><td class="py-2.5 pr-3">48 to 56</td><td class="py-2.5">56+</td></tr>
+            <tr class="border-b border-[#f0f0f0]"><td class="py-2.5 pr-3">30 to 39</td><td class="py-2.5 pr-3">&lt;32</td><td class="py-2.5 pr-3">32 to 38</td><td class="py-2.5 pr-3">38 to 44</td><td class="py-2.5 pr-3">44 to 52</td><td class="py-2.5">52+</td></tr>
+            <tr class="border-b border-[#f0f0f0]"><td class="py-2.5 pr-3">40 to 49</td><td class="py-2.5 pr-3">&lt;28</td><td class="py-2.5 pr-3">28 to 34</td><td class="py-2.5 pr-3">34 to 42</td><td class="py-2.5 pr-3">42 to 50</td><td class="py-2.5">50+</td></tr>
+            <tr><td class="py-2.5 pr-3">50 to 59</td><td class="py-2.5 pr-3">&lt;24</td><td class="py-2.5 pr-3">24 to 32</td><td class="py-2.5 pr-3">32 to 40</td><td class="py-2.5 pr-3">40 to 46</td><td class="py-2.5">46+</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-3">Women</h3>
+      <div class="overflow-x-auto mb-4">
+        <table class="w-full text-[14px] text-left border-collapse">
+          <thead>
+            <tr class="border-b border-[#e5e5e7]">
+              <th class="py-3 pr-3 font-semibold text-[#1d1d1f]">Age</th>
+              <th class="py-3 pr-3 font-semibold text-[#1d1d1f]">Poor</th>
+              <th class="py-3 pr-3 font-semibold text-[#1d1d1f]">Fair</th>
+              <th class="py-3 pr-3 font-semibold text-[#1d1d1f]">Good</th>
+              <th class="py-3 pr-3 font-semibold text-[#1d1d1f]">Excellent</th>
+              <th class="py-3 font-semibold text-[#1d1d1f]">Superior</th>
+            </tr>
+          </thead>
+          <tbody class="text-[#424245]">
+            <tr class="border-b border-[#f0f0f0]"><td class="py-2.5 pr-3">20 to 29</td><td class="py-2.5 pr-3">&lt;28</td><td class="py-2.5 pr-3">28 to 34</td><td class="py-2.5 pr-3">34 to 40</td><td class="py-2.5 pr-3">40 to 48</td><td class="py-2.5">48+</td></tr>
+            <tr class="border-b border-[#f0f0f0]"><td class="py-2.5 pr-3">30 to 39</td><td class="py-2.5 pr-3">&lt;26</td><td class="py-2.5 pr-3">26 to 32</td><td class="py-2.5 pr-3">32 to 38</td><td class="py-2.5 pr-3">38 to 44</td><td class="py-2.5">44+</td></tr>
+            <tr class="border-b border-[#f0f0f0]"><td class="py-2.5 pr-3">40 to 49</td><td class="py-2.5 pr-3">&lt;24</td><td class="py-2.5 pr-3">24 to 30</td><td class="py-2.5 pr-3">30 to 36</td><td class="py-2.5 pr-3">36 to 42</td><td class="py-2.5">42+</td></tr>
+            <tr><td class="py-2.5 pr-3">50 to 59</td><td class="py-2.5 pr-3">&lt;20</td><td class="py-2.5 pr-3">20 to 26</td><td class="py-2.5 pr-3">26 to 34</td><td class="py-2.5 pr-3">34 to 40</td><td class="py-2.5">40+</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-[14px] text-[#6e6e73] leading-relaxed">These ranges are population level benchmarks. Your personal trend over time is more actionable than where you rank in a table.</p>
+    </section>
+
+    <!-- How Apple Watch estimates VO2 Max -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">How Apple Watch estimates VO2 Max</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Apple Watch estimates VO2 Max (shown as "Cardio Fitness" in the Health app) by analyzing your heart rate response during outdoor walks and runs. The algorithm combines heart rate data from the optical sensor with GPS pace data to estimate how hard your cardiovascular system is working relative to your speed.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">This method is not as precise as a laboratory test with gas exchange analysis. Factors like terrain, wind, temperature, and running form can affect the estimate. However, research has shown that wearable VO2 Max estimates are useful for tracking trends over time, even if the absolute value may differ from a lab measurement.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed">For Apple Watch to generate a VO2 Max estimate, you typically need to record outdoor walks or runs of at least 20 minutes while wearing the watch. Indoor treadmill workouts without GPS generally do not produce estimates.</p>
+    </section>
+
+    <!-- Why VO2 Max matters -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">Why VO2 Max matters for longevity</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">VO2 Max is not just a fitness metric for athletes. It is one of the strongest predictors of long term health and survival that we have.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">A landmark 2018 study published in <em>JAMA Network Open</em> followed over 122,000 patients who underwent exercise treadmill testing. The results showed that cardiorespiratory fitness, as measured by VO2 Max, was the single strongest predictor of long term mortality. Low fitness carried a greater risk than smoking, diabetes, or hypertension. Every 1 mL/kg/min increase in VO2 Max was associated with approximately a 9 percent reduction in mortality risk.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed">The researchers found no upper limit at which higher fitness became harmful. Even among the most fit individuals, more fitness was associated with longer survival. This makes VO2 Max one of the few health metrics where improvement at any starting point translates to meaningful benefit.</p>
+    </section>
+
+    <!-- How to improve VO2 Max -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">How to improve VO2 Max</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">VO2 Max is highly trainable. Research consistently shows that most people can improve their VO2 Max by 10 to 20 percent within 8 to 12 weeks of proper training.</p>
+      <ul class="list-disc pl-6 space-y-2 text-[15px] text-[#1d1d1f] leading-relaxed mb-3">
+        <li><strong>High intensity interval training (HIIT):</strong> The most effective method for improving VO2 Max. Intervals of 3 to 5 minutes at 90 to 95 percent of maximum heart rate, followed by equal recovery periods, have been shown to produce significant gains.</li>
+        <li><strong>Zone 2 training:</strong> Longer sessions at a conversational pace build your aerobic base and support the mitochondrial density that underpins VO2 Max. Most training volume should be at this lower intensity.</li>
+        <li><strong>Consistency:</strong> Regular training over months and years matters more than individual workout intensity. Three to five cardio sessions per week is a common recommendation.</li>
+        <li><strong>Progressive overload:</strong> Gradually increasing duration, frequency, or intensity over time ensures continued adaptation.</li>
+      </ul>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed">A well balanced training plan typically follows the 80/20 rule: roughly 80 percent of training at low intensity (Zone 2) and 20 percent at high intensity (HIIT, tempo work). This approach maximizes aerobic development while managing fatigue and injury risk.</p>
+    </section>
+
+    <!-- Factors that affect VO2 Max -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">What affects your VO2 Max</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Several factors determine your VO2 Max, some within your control and some not:</p>
+      <ul class="list-disc pl-6 space-y-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        <li><strong>Genetics:</strong> Your genetic ceiling for VO2 Max is predetermined. Elite endurance athletes often have genetic advantages in oxygen transport. However, most people never come close to their genetic limit, meaning there is room to improve.</li>
+        <li><strong>Age:</strong> VO2 Max declines by roughly 1 percent per year after age 25 in sedentary individuals. Active people experience a slower decline, approximately 0.5 percent per year.</li>
+        <li><strong>Sex:</strong> On average, men have 10 to 15 percent higher VO2 Max than women of the same age and fitness level, primarily due to differences in hemoglobin levels, heart size, and body composition.</li>
+        <li><strong>Training status:</strong> Regular aerobic training is the strongest modifiable factor. Sedentary individuals typically have the most room for improvement.</li>
+        <li><strong>Body composition:</strong> Because VO2 Max is expressed per kilogram of body weight, excess body fat lowers the number even if absolute oxygen consumption is unchanged. Losing excess weight can raise your VO2 Max without any change in fitness.</li>
+        <li><strong>Altitude:</strong> Living or training at high altitude can affect VO2 Max measurements due to lower oxygen availability in the air.</li>
+      </ul>
+    </section>
+
+    <!-- VO2 Max and Vitality Age -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">VO2 Max and Vitality Age</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Laso uses VO2 Max as one of 9 inputs to calculate your Vitality Age, a single number that reflects how your body is aging compared to your chronological age. Because of the strong relationship between VO2 Max and mortality, it is one of the most heavily weighted factors in the calculation.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed">If your VO2 Max is above average for your age, your Vitality Age will trend younger. If it is below average, it will trend older. The good news: because VO2 Max is highly trainable, this is one of the most actionable levers you have for improving your Vitality Age.</p>
+    </section>
+
+    <!-- Key takeaway -->
+    <div class="bg-[#f5f5f7] rounded-2xl p-6 mb-8">
+      <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Key takeaway</h3>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed">VO2 Max is the strongest predictor of long term survival we have, and it is one of the most trainable health metrics. Whether you are starting from a low baseline or already fit, improving your VO2 Max translates directly to a longer, healthier life.</p>
+    </div>
+
+    <!-- Related -->
+    <div class="flex flex-wrap gap-3">
+      <a href="/vitality-age" class="text-[14px] text-[#0071e3] hover:underline">Vitality Age</a>
+      <span class="text-[#e5e5e7]">|</span>
+      <a href="/strain-tracking" class="text-[14px] text-[#0071e3] hover:underline">Strain Tracking</a>
+    </div>
+
+  </LearnArticle>
+  <CtaSection heading="Track your VO2 Max trends with Laso." subheading="See how your cardiorespiratory fitness shapes your Vitality Age over time." />
+  <SiteFooter />
+</Base>

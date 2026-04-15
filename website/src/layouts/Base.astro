@@ -21,7 +21,11 @@ const canonicalURL = new URL(Astro.url.pathname, 'https://lasohealth.fit')
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
   <link rel="canonical" href={canonicalURL.href} />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="sitemap" href="/sitemap-index.xml" />
+  <link rel="preconnect" href="https://www.googletagmanager.com" />
+  <link rel="preconnect" href="https://us-central1-laso-health-v1.cloudfunctions.net" crossorigin />
+  <noscript><style>.section-reveal{opacity:1!important;transform:none!important}</style></noscript>
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />

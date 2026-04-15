@@ -22,6 +22,8 @@ import com.lasohealth.android.core.model.SleepCoachUiState
 import com.lasohealth.android.core.model.StrainDetailUiState
 import com.lasohealth.android.core.model.StressMonitorUiState
 import com.lasohealth.android.core.model.VitalityDetailUiState
+import com.lasohealth.android.core.model.HealthRiskDetailUiState
+import com.lasohealth.android.core.model.TodayWorkoutUiState
 import com.lasohealth.android.core.model.WeeklyReviewDetailUiState
 
 /**
@@ -105,4 +107,10 @@ class HealthConnectRepository : HealthDataRepository {
 
     override fun performanceProfileState(): PerformanceProfileUiState =
         TODO("Wire Health Connect: build performance profile from real data")
+
+    override fun todayWorkoutState(): TodayWorkoutUiState =
+        TODO("Wire Health Connect: generate today's workout from recovery and strain data")
+
+    override fun healthRiskDetailState(riskId: String): HealthRiskDetailUiState =
+        TODO("Wire Health Connect: compute health risk detail for $riskId")
 }

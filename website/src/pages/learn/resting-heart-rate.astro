@@ -1,0 +1,200 @@
+---
+import Base from '../../layouts/Base.astro'
+import SiteNav from '../../components/SiteNav.astro'
+import SiteFooter from '../../components/SiteFooter.astro'
+import CtaSection from '../../components/CtaSection.astro'
+import LearnArticle from '../../components/LearnArticle.astro'
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Resting Heart Rate: Normal Ranges, What Affects It, and How to Lower It",
+    "description": "Everything you need to know about resting heart rate. Normal ranges by age and fitness level, what causes it to change, and how to improve it.",
+    "datePublished": "2026-04-11",
+    "dateModified": "2026-04-11",
+    "author": { "@type": "Organization", "name": "Laso Health", "url": "https://lasohealth.fit" },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Laso Health",
+      "url": "https://lasohealth.fit",
+      "logo": { "@type": "ImageObject", "url": "https://lasohealth.fit/og-image.png" }
+    },
+    "image": "https://lasohealth.fit/og-image.png",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lasohealth.fit/learn/resting-heart-rate" }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is a normal resting heart rate?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The American Heart Association considers 60 to 100 beats per minute (bpm) normal for adults. Well-trained athletes can have a resting heart rate as low as 40 bpm. Some people naturally fall outside these ranges while being perfectly healthy."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Why is my resting heart rate suddenly higher?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A sudden increase in resting heart rate can be caused by poor sleep, stress, dehydration, illness, overtraining, caffeine, or alcohol. If it stays elevated for more than a few days without an obvious cause, consider consulting your doctor."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does a lower resting heart rate mean I am healthier?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "In general, a lower resting heart rate indicates better cardiovascular fitness. Studies have linked lower RHR to reduced mortality risk. However, a very low heart rate (below 40 bpm) in non-athletes can indicate a condition called bradycardia that may need medical evaluation."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How long does it take to lower resting heart rate?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "With consistent aerobic exercise, most people can see their resting heart rate decrease by a few beats per minute within 4 to 12 weeks. Long term training over months and years can produce more significant reductions."
+        }
+      }
+    ]
+  }
+]
+---
+
+<Base title="Resting Heart Rate: Normal Ranges, What Affects It, and How to Lower It | Laso" description="Everything you need to know about resting heart rate. Normal ranges by age and fitness level, what causes it to change, and how to improve it." jsonLd={jsonLd}>
+  <SiteNav />
+  <LearnArticle category="Heart Health" readingTime="8 min" lastUpdated="April 2026">
+
+    <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-[#1d1d1f] mb-4">Resting Heart Rate: What You Need to Know</h1>
+    <p class="text-[17px] text-[#6e6e73] leading-relaxed mb-10">Your resting heart rate is one of the simplest and most informative vital signs you can track.
+      Small changes can reveal a lot about your fitness, recovery, and overall health.</p>
+
+    <!-- What is resting heart rate -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">What is resting heart rate?</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Resting heart rate (RHR) is the number of times your heart beats per minute when you are completely at rest. It reflects how efficiently your heart pumps blood when there are no physical or emotional demands on the body.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">The most accurate time to measure RHR is first thing in the morning, before getting out of bed. This eliminates the effects of caffeine, physical activity, stress, and other factors that elevate heart rate throughout the day.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">The American Heart Association considers 60 to 100 beats per minute (bpm) normal for adults. However, well trained athletes often have a RHR as low as 40 bpm because their hearts are more efficient at pumping blood with each beat.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed">Why does fitness lower RHR? Regular aerobic exercise strengthens the heart muscle, increasing its stroke volume, which is the amount of blood pumped per beat. A stronger heart delivers the same cardiac output with fewer beats, so it can beat more slowly at rest while still meeting the body's demands.</p>
+    </section>
+
+    <!-- Normal ranges -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">Normal ranges by fitness level</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-4">RHR is strongly influenced by cardiovascular fitness. The table below shows general ranges for adults.</p>
+      <div class="overflow-x-auto mb-4">
+        <table class="w-full text-[14px] text-left border-collapse">
+          <thead>
+            <tr class="border-b border-[#e5e5e7]">
+              <th class="py-3 pr-4 font-semibold text-[#1d1d1f]">Fitness level</th>
+              <th class="py-3 pr-4 font-semibold text-[#1d1d1f]">Resting heart rate</th>
+            </tr>
+          </thead>
+          <tbody class="text-[#424245]">
+            <tr class="border-b border-[#f0f0f0]"><td class="py-2.5 pr-4">Athlete</td><td class="py-2.5">40 to 60 bpm</td></tr>
+            <tr class="border-b border-[#f0f0f0]"><td class="py-2.5 pr-4">Excellent fitness</td><td class="py-2.5">50 to 60 bpm</td></tr>
+            <tr class="border-b border-[#f0f0f0]"><td class="py-2.5 pr-4">Good fitness</td><td class="py-2.5">60 to 70 bpm</td></tr>
+            <tr class="border-b border-[#f0f0f0]"><td class="py-2.5 pr-4">Average</td><td class="py-2.5">70 to 80 bpm</td></tr>
+            <tr class="border-b border-[#f0f0f0]"><td class="py-2.5 pr-4">Below average</td><td class="py-2.5">80 to 90 bpm</td></tr>
+            <tr><td class="py-2.5 pr-4">Poor</td><td class="py-2.5">90 to 100+ bpm</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-[14px] text-[#6e6e73] leading-relaxed">Some people naturally have a higher or lower resting heart rate that falls outside these ranges. Medications such as beta blockers can significantly lower RHR, while stimulant medications can raise it. If your RHR consistently falls outside the normal range and you are not on medication, consider discussing it with your doctor.</p>
+    </section>
+
+    <!-- What makes RHR go up -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">What makes RHR go up</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">An increase in your resting heart rate can be an early signal that something is off. Common causes include:</p>
+      <ul class="list-disc pl-6 space-y-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        <li><strong>Poor sleep:</strong> Insufficient or fragmented sleep prevents full cardiovascular recovery overnight.</li>
+        <li><strong>Stress:</strong> Both physical and psychological stress activate the sympathetic nervous system, raising heart rate.</li>
+        <li><strong>Dehydration:</strong> When blood volume drops, the heart must beat faster to maintain circulation.</li>
+        <li><strong>Illness:</strong> An elevated RHR is often one of the earliest detectable signs of illness, sometimes appearing before other symptoms. The body raises heart rate to support immune function.</li>
+        <li><strong>Overtraining:</strong> Training beyond your body's ability to recover leads to chronic sympathetic nervous system activation.</li>
+        <li><strong>Caffeine:</strong> As a stimulant, caffeine temporarily raises heart rate, especially in those who are not habitual consumers.</li>
+        <li><strong>Alcohol:</strong> Alcohol disrupts sleep quality and increases cardiac workload, raising RHR for hours after consumption.</li>
+      </ul>
+    </section>
+
+    <!-- What makes RHR go down -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">What makes RHR go down</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Lowering your resting heart rate over time is one of the clearest indicators of improving cardiovascular fitness. People who go from sedentary to regularly active often see their RHR drop by 10 to 20 bpm within a few months.</p>
+      <ul class="list-disc pl-6 space-y-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        <li><strong>Consistent aerobic exercise:</strong> This is the strongest factor. Regular cardio training increases stroke volume (the amount of blood pumped per beat), so the heart does not need to beat as often at rest.</li>
+        <li><strong>Improved sleep:</strong> Better sleep quality and consistency supports parasympathetic tone, which lowers resting heart rate.</li>
+        <li><strong>Stress reduction:</strong> Managing stress through meditation, breathwork, or lifestyle changes reduces sympathetic activation.</li>
+        <li><strong>Weight loss:</strong> Excess body weight increases the cardiovascular workload. Losing weight reduces the demand on the heart.</li>
+      </ul>
+    </section>
+
+    <!-- RHR and health -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">RHR and long term health</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Resting heart rate is more than just a fitness metric. It is a well established predictor of cardiovascular health and longevity.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">A 2018 study published in <em>Open Heart</em> (a British Medical Journal publication) analyzed data from over 46,000 participants and found that each 10 bpm increase in resting heart rate was associated with a 15 to 20 percent higher risk of all cause mortality. This association held even after adjusting for age, fitness level, and other risk factors.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Other large scale studies have consistently shown that adults with a resting heart rate above 80 bpm face a significantly higher risk of cardiovascular events compared to those below 60 bpm.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">The good news is that RHR is modifiable through exercise and lifestyle changes. A 2016 meta-analysis in the Canadian Medical Association Journal confirmed that regular endurance training can reduce resting heart rate by an average of 7 to 9 bpm.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed">This means that improving your resting heart rate is not just a fitness metric. It carries direct implications for long term cardiovascular health and lifespan.</p>
+    </section>
+
+    <!-- How wearables track RHR -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">How Apple Watch tracks your resting heart rate</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Apple Watch uses an optical heart rate sensor to sample your heart rate throughout the day. It identifies your resting heart rate by filtering out readings taken during activity, movement, or elevated stress. The value shown in the Apple Health app represents your lowest sustained heart rate during periods of inactivity.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">For the most accurate daily reading, the best data comes from overnight measurements when the body is in its most relaxed state. Apple Watch samples heart rate during sleep and uses these readings to establish your resting baseline.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed">Wrist-based optical sensors are generally accurate to within a few beats per minute of a medical ECG for resting measurements. This level of precision is more than sufficient for tracking personal trends over time.</p>
+    </section>
+
+    <!-- RHR and age -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">RHR and age</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Unlike heart rate variability, resting heart rate does not change dramatically with age in healthy adults. A healthy 25 year old and a healthy 55 year old can have similar resting heart rates if both maintain good cardiovascular fitness.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">However, RHR tends to creep upward with age in the general population, largely because of declining fitness levels, weight gain, and increased prevalence of conditions like hypertension. This is not inevitable. Maintaining regular exercise throughout life is the most effective way to keep your resting heart rate in a healthy range as you age.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Children typically have higher resting heart rates than adults. For example, a healthy newborn may have a RHR of 120 to 160 bpm, while school age children average 70 to 100 bpm. Resting heart rate gradually decreases through childhood and adolescence, settling into the adult range by the late teenage years.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed">For adults, the key insight is that a low resting heart rate maintained into middle age and beyond is one of the strongest indicators of sustained cardiovascular health, regardless of what the number was in your 20s.</p>
+    </section>
+
+    <!-- When to see a doctor -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">When to talk to your doctor</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">While RHR is a useful wellness metric, certain situations warrant medical attention:</p>
+      <ul class="list-disc pl-6 space-y-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        <li>A resting heart rate consistently above 100 bpm (tachycardia) without obvious cause such as caffeine or stress.</li>
+        <li>A resting heart rate consistently below 40 bpm in non-athletes, especially if accompanied by dizziness, fatigue, or fainting (bradycardia).</li>
+        <li>A sudden sustained change of 10+ bpm from your established baseline without a clear explanation.</li>
+        <li>Irregular or skipping heartbeats that you can feel (palpitations) along with changes in RHR.</li>
+      </ul>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mt-3">Consumer wearables are wellness tools, not medical devices. They can surface patterns that are worth discussing with a doctor, but they should not be used to diagnose or rule out any medical condition.</p>
+    </section>
+
+    <!-- Trends matter more -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">Trends matter more than single readings</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Your resting heart rate naturally fluctuates from day to day. A single reading that is a few beats higher or lower than usual is completely normal and not cause for concern.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">What does matter is a sustained change. A 3 to 5 bpm increase that persists for several days is more meaningful than your absolute number. It may signal accumulated fatigue, oncoming illness, or chronic stress.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed">This is how Laso uses resting heart rate. Rather than telling you whether a single reading is "good" or "bad," Laso tracks your RHR against your personal baseline over time and flags meaningful deviations that may need your attention.</p>
+    </section>
+
+    <!-- Key takeaway -->
+    <div class="bg-[#f5f5f7] rounded-2xl p-6 mb-8">
+      <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Key takeaway</h3>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed">Your resting heart rate is a simple but powerful window into your cardiovascular health. Track it daily, watch the trends, and use sustained changes as early signals to adjust your training, sleep, or recovery.</p>
+    </div>
+
+    <!-- Related -->
+    <div class="flex flex-wrap gap-3">
+      <a href="/recovery-score" class="text-[14px] text-[#0071e3] hover:underline">Recovery Score</a>
+      <span class="text-[#e5e5e7]">|</span>
+      <a href="/illness-detection" class="text-[14px] text-[#0071e3] hover:underline">Wellness Detection</a>
+    </div>
+
+  </LearnArticle>
+  <CtaSection heading="Track your resting heart rate with Laso." subheading="Spot trends early and understand what your body is telling you." />
+  <SiteFooter />
+</Base>

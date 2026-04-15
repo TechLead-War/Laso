@@ -1,0 +1,239 @@
+---
+import Base from '../../layouts/Base.astro'
+import SiteNav from '../../components/SiteNav.astro'
+import SiteFooter from '../../components/SiteFooter.astro'
+import CtaSection from '../../components/CtaSection.astro'
+import LearnArticle from '../../components/LearnArticle.astro'
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "How Stress Affects Your HRV and What You Can Do About It",
+    "description": "Stress directly suppresses heart rate variability. Learn the science behind the stress-HRV connection, how to recognize stress in your data, and evidence-based ways to manage it.",
+    "datePublished": "2026-04-11",
+    "dateModified": "2026-04-11",
+    "author": {
+      "@type": "Organization",
+      "name": "Laso Health"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Laso Health",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://lasohealth.fit/favicon.svg"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://lasohealth.fit/learn/stress-and-hrv"
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Does stress lower HRV?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Both psychological and physical stress activate the sympathetic nervous system, which directly suppresses heart rate variability. Acute stress causes an immediate HRV drop that is measurable within minutes. Chronic stress produces sustained HRV suppression over days or weeks. Work stress, relationship stress, poor sleep, overtraining, and illness all lower HRV through the same autonomic mechanism."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can breathing exercises increase HRV?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Slow, controlled breathing at approximately 6 breaths per minute has been shown to increase HRV through a mechanism called respiratory sinus arrhythmia. Extending the exhale relative to the inhale activates the parasympathetic nervous system via the vagus nerve. Studies show that even 5 minutes of slow breathing can produce a measurable increase in HRV."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is a good HRV number?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "HRV varies widely between individuals and is influenced by age, fitness level, and genetics. There is no single 'good' number. What matters most is your personal trend over time. A higher HRV relative to your own baseline generally indicates better recovery and lower stress. Comparing your HRV to population averages is less useful than tracking your own changes day to day and week to week."
+        }
+      }
+    ]
+  }
+]
+---
+
+<Base title="How Stress Affects Your HRV and What You Can Do About It | Laso" description="Stress directly suppresses heart rate variability. Learn the science behind the stress-HRV connection, how to recognize stress in your data, and evidence-based ways to manage it." jsonLd={jsonLd}>
+  <SiteNav />
+
+  <LearnArticle category="Recovery" readingTime="10 min" lastUpdated="April 2026">
+    <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-[#1d1d1f] text-balance">
+      Stress and HRV: What Your Body Is Telling You
+    </h1>
+
+    <p class="mt-4 text-[17px] text-[#6e6e73] leading-relaxed max-w-2xl">
+      Heart rate variability is one of the most sensitive markers of how your body handles stress. When stress goes up, HRV goes down. Understanding this relationship gives you a window into your autonomic nervous system and a practical tool for managing stress before it affects your health and performance.
+    </p>
+
+    <!-- The autonomic nervous system -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">The autonomic nervous system</h2>
+      <p class="mt-4 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Your autonomic nervous system (ANS) is the control system that operates below conscious awareness. It regulates heart rate, digestion, respiratory rate, and dozens of other functions. It has two main branches:
+      </p>
+
+      <div class="mt-6 overflow-x-auto">
+        <table class="w-full text-[14px] text-left border-collapse">
+          <thead>
+            <tr class="border-b border-[#e5e5e7]">
+              <th class="py-3 pr-4 font-semibold text-[#1d1d1f]">Branch</th>
+              <th class="py-3 pr-4 font-semibold text-[#1d1d1f]">Role</th>
+              <th class="py-3 font-semibold text-[#1d1d1f]">Effect on HRV</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b border-[#e5e5e7]">
+              <td class="py-3 pr-4 text-[#1d1d1f] font-medium">Sympathetic ("fight or flight")</td>
+              <td class="py-3 pr-4 text-[#6e6e73]">Activates during stress, exercise, danger. Increases heart rate, redirects blood to muscles, heightens alertness.</td>
+              <td class="py-3 text-[#6e6e73]">Decreases HRV</td>
+            </tr>
+            <tr>
+              <td class="py-3 pr-4 text-[#1d1d1f] font-medium">Parasympathetic ("rest and digest")</td>
+              <td class="py-3 pr-4 text-[#6e6e73]">Activates during rest, recovery, digestion. Slows heart rate, promotes repair, conserves energy.</td>
+              <td class="py-3 text-[#6e6e73]">Increases HRV</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="mt-4 text-[15px] text-[#1d1d1f] leading-relaxed">
+        HRV measures the variation in time between consecutive heartbeats. When the parasympathetic branch is dominant (rest and recovery), there is more variation between beats, meaning higher HRV. When the sympathetic branch is dominant (stress and exertion), the heart beats more uniformly, meaning lower HRV.
+      </p>
+      <p class="mt-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+        This is why HRV is such a useful stress marker. It reflects the real-time balance between these two branches. A healthy, resilient nervous system can flexibly shift between sympathetic and parasympathetic dominance as needed. Chronic stress tilts the balance toward sympathetic dominance, and HRV drops as a result.
+      </p>
+    </section>
+
+    <!-- How stress shows up in HRV -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">How stress shows up in HRV</h2>
+      <p class="mt-4 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Stress affects HRV in two distinct patterns depending on whether the stress is acute or chronic:
+      </p>
+
+      <h3 class="mt-6 text-lg font-semibold text-[#1d1d1f]">Acute stress</h3>
+      <p class="mt-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        A stressful event, whether a difficult conversation, a near miss in traffic, or a hard workout, triggers an immediate sympathetic response. HRV drops within minutes. This is normal and adaptive. Your body is marshaling resources to deal with the situation. Once the stressor passes, HRV should recover within hours, assuming your overall stress load is manageable.
+      </p>
+
+      <h3 class="mt-6 text-lg font-semibold text-[#1d1d1f]">Chronic stress</h3>
+      <p class="mt-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        When stress is sustained over days or weeks, whether from work pressure, relationship difficulties, poor sleep, overtraining, or illness, HRV remains suppressed. The sympathetic nervous system stays activated, and the parasympathetic system does not get adequate opportunity to restore balance. This sustained HRV suppression is associated with increased risk of cardiovascular disease, metabolic dysfunction, and mental health issues.
+      </p>
+
+      <h3 class="mt-6 text-lg font-semibold text-[#1d1d1f]">All types of stress affect HRV</h3>
+      <p class="mt-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        An important insight is that the autonomic nervous system does not distinguish between types of stress. Psychological stress (work deadlines, financial worry), physical stress (overtraining, illness, injury), and lifestyle stress (poor sleep, excessive alcohol, jet lag) all suppress HRV through the same sympathetic activation pathway. Your body experiences the total stress load as a single aggregate signal.
+      </p>
+    </section>
+
+    <!-- Recognizing stress patterns -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">Recognizing stress patterns in your data</h2>
+      <p class="mt-4 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Not every low HRV reading means you are stressed. HRV fluctuates naturally from day to day based on dozens of factors. The key is distinguishing signal from noise:
+      </p>
+
+      <ul class="mt-4 space-y-3">
+        <li class="flex gap-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+          <span class="text-[#0071e3] font-medium">&#x2022;</span>
+          <span><strong>A single-day drop</strong> is usually noise. It could reflect a late meal, alcohol, a hard workout, or simply normal biological variation. Do not overreact to a single reading.</span>
+        </li>
+        <li class="flex gap-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+          <span class="text-[#0071e3] font-medium">&#x2022;</span>
+          <span><strong>Multi-day HRV suppression</strong> (3 or more consecutive days below your baseline) combined with elevated resting heart rate is a strong signal that something is affecting your recovery, whether stress, illness, overtraining, or a combination.</span>
+        </li>
+        <li class="flex gap-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+          <span class="text-[#0071e3] font-medium">&#x2022;</span>
+          <span><strong>The pattern matters more than any single number.</strong> A gradual downward trend over a week is more meaningful than a single low reading. This is why tracking HRV against your personal baseline, rather than comparing it to population averages, is essential.</span>
+        </li>
+      </ul>
+
+      <p class="mt-4 text-[15px] text-[#1d1d1f] leading-relaxed">
+        The most actionable approach is to measure HRV at the same time each day (ideally first thing in the morning, before caffeine or activity) and track the trend over time. Morning measurements during the resting state capture overnight recovery and provide the most consistent, comparable readings.
+      </p>
+    </section>
+
+    <!-- Evidence-based stress management -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">Evidence-based stress management</h2>
+      <p class="mt-4 text-[15px] text-[#1d1d1f] leading-relaxed">
+        The following strategies have been shown in peer-reviewed research to improve HRV and reduce autonomic stress:
+      </p>
+
+      <h3 class="mt-6 text-lg font-semibold text-[#1d1d1f]">Slow, controlled breathing</h3>
+      <p class="mt-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Breathing at approximately 6 breaths per minute (5 seconds in, 5 seconds out) has been shown to maximize HRV through a mechanism called respiratory sinus arrhythmia. At this rate, heart rate naturally accelerates during inhalation and decelerates during exhalation, amplifying the parasympathetic signal. Multiple studies have demonstrated that even 5 minutes of this breathing pattern produces a measurable HRV increase.
+      </p>
+
+      <h3 class="mt-6 text-lg font-semibold text-[#1d1d1f]">Regular aerobic exercise</h3>
+      <p class="mt-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Consistent aerobic exercise is one of the most reliable ways to increase resting HRV over time. It strengthens parasympathetic tone, lowers resting heart rate, and improves the body's ability to recover from stress. The key is consistency and appropriate intensity, as overtraining produces the opposite effect.
+      </p>
+
+      <h3 class="mt-6 text-lg font-semibold text-[#1d1d1f]">Sleep consistency</h3>
+      <p class="mt-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Sleep is when the parasympathetic nervous system is most active. Poor sleep or irregular sleep timing suppresses HRV. Maintaining consistent bed and wake times, even on weekends, supports healthy autonomic function. Research consistently shows that both sleep duration and sleep consistency influence next-day HRV.
+      </p>
+
+      <h3 class="mt-6 text-lg font-semibold text-[#1d1d1f]">Time in nature</h3>
+      <p class="mt-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Studies have found that spending time in natural environments (forests, parks, near water) increases parasympathetic activity and reduces cortisol levels. A 2019 study published in Frontiers in Psychology found that as little as 20 minutes in a natural setting significantly reduced cortisol. The Japanese practice of shinrin-yoku (forest bathing) has been associated with improved HRV in multiple controlled studies.
+      </p>
+
+      <h3 class="mt-6 text-lg font-semibold text-[#1d1d1f]">Social connection</h3>
+      <p class="mt-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Positive social interaction activates the parasympathetic nervous system. Loneliness and social isolation are associated with suppressed HRV and elevated sympathetic tone. Regular, meaningful social contact is a physiological buffer against stress, not just a psychological one.
+      </p>
+
+      <h3 class="mt-6 text-lg font-semibold text-[#1d1d1f]">Reducing alcohol and caffeine</h3>
+      <p class="mt-2 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Alcohol, even in moderate amounts, suppresses HRV for up to 24 hours after consumption. It disrupts sleep architecture and activates the sympathetic nervous system. Caffeine in high doses or consumed late in the day can elevate sympathetic activity and reduce sleep quality, both of which lower HRV. Reducing or timing these substances strategically can have a measurable impact on your HRV baseline.
+      </p>
+    </section>
+
+    <!-- Breathwork and HRV -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">Breathwork and HRV: the vagal connection</h2>
+      <p class="mt-4 text-[15px] text-[#1d1d1f] leading-relaxed">
+        The vagus nerve is the primary channel through which the parasympathetic nervous system communicates with the heart. It is the longest cranial nerve in the body, running from the brainstem down through the neck and into the chest and abdomen. Stimulating the vagus nerve increases parasympathetic activity and raises HRV.
+      </p>
+      <p class="mt-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Slow breathing is the most accessible way to stimulate the vagus nerve. Specifically, extending the exhale relative to the inhale activates the parasympathetic branch. A common and well-studied pattern is to inhale for 4 seconds and exhale for 6 seconds, which yields approximately 6 breaths per minute.
+      </p>
+      <p class="mt-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Research published in the journal Psychophysiology has shown that this breathing pattern increases HRV not only during the breathing exercise but can also improve baseline HRV over time with regular practice. The effect is thought to result from strengthening vagal tone, essentially training the parasympathetic nervous system to be more responsive.
+      </p>
+      <p class="mt-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Even 5 minutes of slow, focused breathing can produce a measurable shift in autonomic balance. This makes breathwork one of the most time-efficient stress management tools available. It requires no equipment, can be done anywhere, and the effects are immediate.
+      </p>
+    </section>
+
+    <!-- How Laso tracks stress -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">How Laso tracks stress</h2>
+      <p class="mt-4 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Laso uses the deviation between your current HRV and your personal baseline, combined with resting heart rate elevation, to produce a <a href="/stress-monitor" class="text-[#0071e3] hover:underline">stress score</a>. Rather than relying on a single measurement, Laso looks at multi-day trends and compares them against your established patterns.
+      </p>
+      <p class="mt-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+        When your stress score is elevated, Laso offers guided breathwork sessions designed around the 6 breaths per minute pattern that research has shown to be most effective for HRV improvement. You can see the real-time effect on your heart rate during the session.
+      </p>
+      <p class="mt-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Combined with the <a href="/recovery-score" class="text-[#0071e3] hover:underline">recovery score</a>, which factors stress load into your daily readiness assessment, Laso helps you understand when stress is affecting your capacity and when your recovery practices are working. The goal is not to eliminate stress, which is neither possible nor desirable, but to recognize it, respond to it, and build the resilience to handle it.
+      </p>
+    </section>
+  </LearnArticle>
+
+  <CtaSection heading="Understand your stress with Laso." subheading="See how stress affects your HRV and recovery. Get guided breathwork when you need it." />
+  <SiteFooter />
+</Base>

@@ -1,0 +1,292 @@
+---
+import Base from '../layouts/Base.astro'
+import SiteNav from '../components/SiteNav.astro'
+import SiteFooter from '../components/SiteFooter.astro'
+import CtaSection from '../components/CtaSection.astro'
+import '../styles/globals.css'
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is Laso a good alternative to WHOOP?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Laso is a strong alternative to WHOOP for people who want recovery and strain tracking without paying for dedicated hardware. Laso works with the wearable you already own (Apple Watch, Garmin, Oura, or others that sync to Apple Health), uses personal baselines instead of population averages, and runs entirely on your iPhone with no cloud processing. WHOOP offers consistent sensor placement with its own band and has a longer track record, so the best choice depends on whether you value hardware independence and privacy or prefer a dedicated wearable."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How much does Laso cost compared to WHOOP?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Laso costs $29.99 per year after a free 7-day trial. WHOOP costs $30 per month ($360 per year) and requires the WHOOP band. Over two years, Laso would cost about $60 total while WHOOP would cost $720 plus the cost of the band. Laso works with whatever wearable you already own, so there is no additional hardware expense."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can Laso replace WHOOP for recovery tracking?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "For most users, yes. Laso provides a daily recovery score from 0 to 100, strain tracking on a 0 to 21 scale, sleep coaching with personal sleep need and debt calculations, and stress monitoring. The key difference is that Laso builds personal baselines from your own data rather than comparing to population averages. If you rely heavily on WHOOP's social features or team analytics for a sports team, those are not available in Laso."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Laso work without a WHOOP band?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Laso does not require a WHOOP band or any specific hardware. It reads health data from Apple Health, so it works with Apple Watch, Garmin, Oura Ring, Polar, COROS, and many other wearables. You can also use it with just an iPhone for basic activity tracking."
+      }
+    }
+  ]
+}
+---
+
+<Base
+  title="Laso vs WHOOP — Honest Comparison for 2026 | Laso"
+  description="Comparing Laso and WHOOP: recovery scores, strain tracking, sleep analysis, privacy, pricing, and device requirements. See which one fits your training."
+  jsonLd={jsonLd}
+>
+  <div class="min-h-screen bg-white">
+    <SiteNav current="vs-whoop" />
+
+    <main>
+      <!-- Hero -->
+      <section class="pt-24 pb-12 md:pt-32 md:pb-20 px-5 text-center">
+        <div class="max-w-3xl mx-auto">
+          <p class="text-[13px] font-semibold text-[#0071e3] uppercase tracking-wider mb-4">Comparison</p>
+          <h1 class="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-[#1d1d1f] text-balance leading-tight">
+            Laso vs WHOOP: which one actually fits your life?
+          </h1>
+          <p class="mt-5 text-base md:text-lg text-[#6e6e73] max-w-2xl mx-auto text-balance leading-relaxed">
+            Both Laso and WHOOP help you understand recovery and training load. They take different approaches to get there. Here is an honest look at where each one excels so you can decide which makes sense for you.
+          </p>
+        </div>
+      </section>
+
+      <!-- Comparison Table -->
+      <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+        <div class="max-w-4xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-10">
+            Feature comparison
+          </h2>
+
+          <div class="overflow-x-auto rounded-2xl border border-black/[0.04] bg-white">
+            <table class="w-full text-left text-[13px]">
+              <thead>
+                <tr class="border-b border-black/[0.06]">
+                  <th class="px-5 py-4 font-semibold text-[#1d1d1f] min-w-[140px]">Feature</th>
+                  <th class="px-5 py-4 font-semibold text-[#0071e3] min-w-[200px]">Laso</th>
+                  <th class="px-5 py-4 font-semibold text-[#1d1d1f] min-w-[200px]">WHOOP</th>
+                </tr>
+              </thead>
+              <tbody class="text-[#6e6e73]">
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Hardware required</td>
+                  <td class="px-5 py-3">No, uses your existing wearable</td>
+                  <td class="px-5 py-3">Yes, WHOOP band ($30/month)</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Recovery score</td>
+                  <td class="px-5 py-3">Yes, personal baselines</td>
+                  <td class="px-5 py-3">Yes, population calibrated</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Strain tracking</td>
+                  <td class="px-5 py-3">Yes, 0 to 21 scale</td>
+                  <td class="px-5 py-3">Yes, 0 to 21 scale</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Sleep coaching</td>
+                  <td class="px-5 py-3">Yes, personal sleep need + debt</td>
+                  <td class="px-5 py-3">Yes, sleep coach</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Stress monitoring</td>
+                  <td class="px-5 py-3">Yes, HRV based</td>
+                  <td class="px-5 py-3">Limited</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Fitness age</td>
+                  <td class="px-5 py-3">Yes, Vitality Age</td>
+                  <td class="px-5 py-3">No</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Illness detection</td>
+                  <td class="px-5 py-3">Yes, multi metric</td>
+                  <td class="px-5 py-3">No</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Cycle tracking</td>
+                  <td class="px-5 py-3">Yes, 4 phase model</td>
+                  <td class="px-5 py-3">Yes</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Privacy</td>
+                  <td class="px-5 py-3">100% on device, no cloud</td>
+                  <td class="px-5 py-3">Cloud based, requires account</td>
+                </tr>
+                <tr>
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Price</td>
+                  <td class="px-5 py-3">$29.99/year after free trial</td>
+                  <td class="px-5 py-3">$30/month ($360/year) + hardware</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Where Laso Is Stronger -->
+      <section class="py-16 md:py-24 px-5">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-4">
+            Where Laso is stronger
+          </h2>
+          <p class="text-[15px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-10">
+            Laso takes a different approach to health analytics that has some meaningful advantages over WHOOP.
+          </p>
+
+          <div class="space-y-6">
+            <div class="bg-[#f5f5f7] rounded-2xl p-6 md:p-8">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Personal baselines, not population averages</h3>
+              <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                WHOOP calibrates recovery against population data. That means someone with a naturally low HRV might always look under-recovered, even on their best days. Laso builds a rolling baseline from your own history, so your recovery score reflects real changes in your body rather than how you compare to strangers.
+              </p>
+            </div>
+
+            <div class="bg-[#f5f5f7] rounded-2xl p-6 md:p-8">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">No hardware cost or commitment</h3>
+              <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                WHOOP requires its proprietary band and a $30/month subscription. Laso works with whatever wearable you already own. If you have an Apple Watch, Garmin, Oura Ring, or any device that syncs to Apple Health, you are already set. That means no extra device to charge, no second strap to wear, and dramatically lower cost at $29.99 per year.
+              </p>
+            </div>
+
+            <div class="bg-[#f5f5f7] rounded-2xl p-6 md:p-8">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Complete privacy</h3>
+              <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                Everything in Laso runs on your iPhone. Your health data never leaves your device. There is no account required, no cloud processing, and no data sharing. WHOOP requires an account and processes data on its servers. If data privacy matters to you, this is a significant difference.
+              </p>
+            </div>
+
+            <div class="bg-[#f5f5f7] rounded-2xl p-6 md:p-8">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Broader analysis</h3>
+              <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                Laso includes features WHOOP does not offer: Vitality Age (a fitness age estimate updated daily from 9 health indicators), multi metric illness detection that flags early warning patterns, and HRV based stress monitoring with guided breathwork.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Where WHOOP Is Stronger -->
+      <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-4">
+            Where WHOOP is stronger
+          </h2>
+          <p class="text-[15px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-10">
+            WHOOP has real strengths that are worth acknowledging. It is a well built product that has earned its reputation.
+          </p>
+
+          <div class="space-y-6">
+            <div class="bg-white rounded-2xl p-6 md:p-8 border border-black/[0.04]">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Dedicated hardware with consistent sensor placement</h3>
+              <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                Because WHOOP controls both the hardware and software, it can optimize sensor placement and data collection in ways that third-party apps cannot. The WHOOP band is designed specifically for continuous heart rate and HRV monitoring, which can produce more consistent raw readings in some situations.
+              </p>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 md:p-8 border border-black/[0.04]">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Longer track record</h3>
+              <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                WHOOP has been refining its recovery and strain algorithms for years and is widely used by professional athletes and sports teams. That experience and research base is meaningful. Laso is newer and still in early access.
+              </p>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 md:p-8 border border-black/[0.04]">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Social features and team analytics</h3>
+              <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                WHOOP has built-in team functionality that lets coaches and teammates see each other's recovery and strain. If you are part of a sports team or training group that uses WHOOP for coordination, that social layer is something Laso does not provide. Laso is designed as a personal, private tool.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- The Bottom Line -->
+      <section class="py-16 md:py-24 px-5">
+        <div class="max-w-3xl mx-auto text-center">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-4">
+            The bottom line
+          </h2>
+          <p class="text-[15px] text-[#6e6e73] max-w-2xl mx-auto leading-relaxed">
+            WHOOP is a solid product with dedicated hardware and a proven ecosystem. If you are on a team that uses WHOOP or you want a single vertically integrated device, it is a great choice. Laso makes more sense if you already own a wearable, want personal baselines instead of population averages, care about data privacy, or simply do not want to spend $360 a year plus hardware costs. Both will help you train smarter. The right one depends on what you value most.
+          </p>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-10">
+            Frequently asked questions
+          </h2>
+
+          <div class="space-y-4">
+            <details class="group border border-black/[0.06] rounded-2xl bg-white">
+              <summary class="flex items-center justify-between cursor-pointer px-5 sm:px-6 py-5 text-[15px] font-semibold text-[#1d1d1f] select-none min-h-[56px]">
+                Is Laso a good alternative to WHOOP?
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-[#6e6e73] transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+              </summary>
+              <div class="px-5 sm:px-6 pb-5 text-[14px] text-[#6e6e73] leading-relaxed">
+                Laso is a strong alternative for people who want recovery and strain tracking without paying for dedicated hardware. It works with the wearable you already own, uses personal baselines instead of population averages, and runs entirely on your iPhone with no cloud processing. WHOOP offers consistent sensor placement with its own band and has a longer track record, so the best choice depends on whether you value hardware independence and privacy or prefer a dedicated wearable ecosystem.
+              </div>
+            </details>
+
+            <details class="group border border-black/[0.06] rounded-2xl bg-white">
+              <summary class="flex items-center justify-between cursor-pointer px-5 sm:px-6 py-5 text-[15px] font-semibold text-[#1d1d1f] select-none min-h-[56px]">
+                How much does Laso cost compared to WHOOP?
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-[#6e6e73] transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+              </summary>
+              <div class="px-5 sm:px-6 pb-5 text-[14px] text-[#6e6e73] leading-relaxed">
+                Laso costs $29.99 per year after a free 7 day trial. WHOOP costs $30 per month ($360 per year) and requires the WHOOP band. Over two years, Laso would cost about $60 total while WHOOP would cost $720 plus the cost of the band. Laso works with whatever wearable you already own, so there is no additional hardware expense.
+              </div>
+            </details>
+
+            <details class="group border border-black/[0.06] rounded-2xl bg-white">
+              <summary class="flex items-center justify-between cursor-pointer px-5 sm:px-6 py-5 text-[15px] font-semibold text-[#1d1d1f] select-none min-h-[56px]">
+                Can Laso replace WHOOP for recovery tracking?
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-[#6e6e73] transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+              </summary>
+              <div class="px-5 sm:px-6 pb-5 text-[14px] text-[#6e6e73] leading-relaxed">
+                For most users, yes. Laso provides a daily recovery score from 0 to 100, strain tracking on a 0 to 21 scale, sleep coaching with personal sleep need and debt calculations, and stress monitoring. The key difference is that Laso builds personal baselines from your own data rather than comparing to population averages. If you rely heavily on WHOOP's social features or team analytics for a sports team, those are not available in Laso.
+              </div>
+            </details>
+
+            <details class="group border border-black/[0.06] rounded-2xl bg-white">
+              <summary class="flex items-center justify-between cursor-pointer px-5 sm:px-6 py-5 text-[15px] font-semibold text-[#1d1d1f] select-none min-h-[56px]">
+                Does Laso work without a WHOOP band?
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-[#6e6e73] transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+              </summary>
+              <div class="px-5 sm:px-6 pb-5 text-[14px] text-[#6e6e73] leading-relaxed">
+                Yes. Laso does not require a WHOOP band or any specific hardware. It reads health data from Apple Health, so it works with Apple Watch, Garmin, Oura Ring, Polar, COROS, and many other wearables. You can also use it with just an iPhone for basic activity tracking.
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <CtaSection
+        heading="Ready to try a different approach?"
+        subheading="Use the wearable you already have. Get personal baselines, not population averages."
+      />
+    </main>
+
+    <SiteFooter />
+  </div>
+</Base>

@@ -127,7 +127,9 @@ const jsonLd = [
         <a href="#" class="text-[22px] font-bold tracking-tight text-apple-dark hover:opacity-80 transition-opacity shrink-0">Laso</a>
         <div class="hidden xs:flex items-center gap-4 sm:gap-7">
           <a href="#features" class="text-[13px] font-medium text-apple-secondary hover:text-apple-dark transition-colors whitespace-nowrap">Features</a>
-          <a href="#devices" class="text-[13px] font-medium text-apple-secondary hover:text-apple-dark transition-colors whitespace-nowrap">Devices</a>
+          <a href="/devices" class="text-[13px] font-medium text-apple-secondary hover:text-apple-dark transition-colors whitespace-nowrap">Devices</a>
+          <a href="/faq" class="text-[13px] font-medium text-apple-secondary hover:text-apple-dark transition-colors whitespace-nowrap">FAQ</a>
+          <a href="/about" class="text-[13px] font-medium text-apple-secondary hover:text-apple-dark transition-colors whitespace-nowrap">About</a>
         </div>
         <a href="#early-access" class="bg-apple-dark text-white text-xs font-medium rounded-full px-3 sm:px-4 py-1.5 min-h-[44px] flex items-center hover:bg-black transition-colors shrink-0 whitespace-nowrap">
           Get Early Access
@@ -759,13 +761,55 @@ const jsonLd = [
     </main>
 
     <!-- ════════ FOOTER ════════ -->
-    <footer class="border-t border-gray-100 py-8 px-5">
-      <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left text-xs text-apple-secondary">
-        <p>&copy; 2026 Laso Health. All rights reserved. Not medical advice.</p>
-        <div class="flex items-center justify-center gap-5">
-          <a href="/privacy" class="hover:text-apple-dark transition-colors min-h-[44px] flex items-center">Privacy</a>
-          <a href="/terms" class="hover:text-apple-dark transition-colors min-h-[44px] flex items-center">Terms</a>
-          <a href="mailto:support@lasohealth.fit" class="hover:text-apple-dark transition-colors min-h-[44px] flex items-center">Contact</a>
+    <footer class="border-t border-gray-100 bg-white">
+      <div class="max-w-5xl mx-auto px-5 py-12">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+          <div>
+            <p class="text-[12px] font-semibold text-apple-dark uppercase tracking-wider mb-3">Features</p>
+            <ul class="space-y-2">
+              <li><a href="/recovery-score" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">Recovery Score</a></li>
+              <li><a href="/strain-tracking" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">Strain Tracking</a></li>
+              <li><a href="/sleep-coaching" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">Sleep Coaching</a></li>
+              <li><a href="/vitality-age" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">Vitality Age</a></li>
+              <li><a href="/stress-monitor" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">Stress Monitor</a></li>
+              <li><a href="/illness-detection" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">Wellness Detection</a></li>
+              <li><a href="/cycle-tracking" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">Cycle Tracking</a></li>
+            </ul>
+          </div>
+          <div>
+            <p class="text-[12px] font-semibold text-apple-dark uppercase tracking-wider mb-3">Compare</p>
+            <ul class="space-y-2">
+              <li><a href="/vs-whoop" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">Laso vs WHOOP</a></li>
+              <li><a href="/vs-oura" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">Laso vs Oura</a></li>
+              <li><a href="/devices" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">Compatible Devices</a></li>
+            </ul>
+          </div>
+          <div>
+            <p class="text-[12px] font-semibold text-apple-dark uppercase tracking-wider mb-3">Resources</p>
+            <ul class="space-y-2">
+              <li><a href="/faq" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">FAQ</a></li>
+              <li><a href="/about" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">About</a></li>
+              <li><a href="mailto:support@lasohealth.fit" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">Contact</a></li>
+            </ul>
+          </div>
+          <div>
+            <p class="text-[12px] font-semibold text-apple-dark uppercase tracking-wider mb-3">Legal</p>
+            <ul class="space-y-2">
+              <li><a href="/privacy" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">Privacy Policy</a></li>
+              <li><a href="/terms" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">Terms of Use</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="border-t border-gray-100 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p class="text-[12px] text-apple-secondary">&copy; 2026 Laso Health. All rights reserved. Not medical advice.</p>
+          <div class="flex items-center gap-4">
+            <a href="https://twitter.com/lasohealth" target="_blank" rel="noopener" class="text-apple-secondary hover:text-apple-dark transition-colors" aria-label="Follow Laso on X">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </a>
+            <a href="mailto:hello@lasohealth.fit" class="text-apple-secondary hover:text-apple-dark transition-colors" aria-label="Email Laso">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg>
+            </a>
+          </div>
         </div>
       </div>
     </footer>
@@ -1038,18 +1082,6 @@ const jsonLd = [
       }
     })
 
-    // ── Source protection ──
-    document.addEventListener('contextmenu', (e) => e.preventDefault())
-    document.addEventListener('keydown', (e) => {
-      if (
-        (e.ctrlKey && e.key === 'u') ||
-        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) ||
-        (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) ||
-        (e.metaKey && e.key === 'u') ||
-        e.key === 'F12'
-      ) { e.preventDefault() }
-    })
-    document.addEventListener('dragstart', (e) => e.preventDefault())
 
     // ── Vitality Orb - neon plasma ring replica ──
     ;(function initVitalityOrb() {

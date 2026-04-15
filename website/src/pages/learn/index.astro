@@ -1,0 +1,155 @@
+---
+import Base from '../../layouts/Base.astro'
+import SiteNav from '../../components/SiteNav.astro'
+import SiteFooter from '../../components/SiteFooter.astro'
+import CtaSection from '../../components/CtaSection.astro'
+
+const articles = [
+  {
+    category: "Heart Health",
+    title: "Heart Rate Variability: The Complete Guide",
+    description: "What HRV is, why it matters, normal ranges by age, and how to improve it.",
+    href: "/learn/heart-rate-variability",
+    readingTime: "9 min",
+  },
+  {
+    category: "Heart Health",
+    title: "Resting Heart Rate: What Your Baseline Says About You",
+    description: "How resting heart rate reflects cardiovascular fitness and long term health.",
+    href: "/learn/resting-heart-rate",
+    readingTime: "7 min",
+  },
+  {
+    category: "Heart Health",
+    title: "Stress and HRV: How Your Body Responds to Pressure",
+    description: "The connection between chronic stress, autonomic balance, and heart rate variability.",
+    href: "/learn/stress-and-hrv",
+    readingTime: "7 min",
+  },
+  {
+    category: "Sleep",
+    title: "How Much Sleep Do You Actually Need?",
+    description: "Evidence based sleep recommendations by age, activity level, and individual factors.",
+    href: "/learn/how-much-sleep-do-i-need",
+    readingTime: "8 min",
+  },
+  {
+    category: "Sleep",
+    title: "Sleep Debt: Can You Pay It Back?",
+    description: "What sleep debt is, how it accumulates, and what the research says about recovering it.",
+    href: "/learn/sleep-debt",
+    readingTime: "7 min",
+  },
+  {
+    category: "Training",
+    title: "Heart Rate Zones Explained",
+    description: "What each heart rate zone means, how to find yours, and when to train in each one.",
+    href: "/learn/heart-rate-zones",
+    readingTime: "8 min",
+  },
+  {
+    category: "Training",
+    title: "Overtraining Syndrome: Signs, Science, and Prevention",
+    description: "How to recognize overtraining before it derails your progress.",
+    href: "/learn/overtraining",
+    readingTime: "8 min",
+  },
+  {
+    category: "Recovery",
+    title: "The Science of Recovery: Why Rest Is Where Fitness Happens",
+    description: "The physiology behind recovery, why HRV is the best recovery marker, and how to optimize rest.",
+    href: "/learn/recovery-science",
+    readingTime: "8 min",
+  },
+  {
+    category: "Fitness",
+    title: "VO2 Max: The Single Best Predictor of Longevity",
+    description: "What VO2 Max measures, why it matters for healthspan, and how to improve it.",
+    href: "/learn/vo2-max",
+    readingTime: "8 min",
+  },
+  {
+    category: "Fitness",
+    title: "Biological Age: Is Your Body Older or Younger Than You?",
+    description: "How biological age differs from chronological age and what biomarkers matter.",
+    href: "/learn/biological-age",
+    readingTime: "8 min",
+  },
+]
+
+const categoryColors: Record<string, string> = {
+  "Heart Health": "bg-red-50 text-red-700",
+  "Sleep": "bg-indigo-50 text-indigo-700",
+  "Training": "bg-orange-50 text-orange-700",
+  "Recovery": "bg-green-50 text-green-700",
+  "Fitness": "bg-sky-50 text-sky-700",
+}
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Health and Fitness Knowledge Base",
+  "description": "Evidence-based articles on HRV, sleep, recovery, VO2 Max, heart rate zones, stress, overtraining, and more. Learn the science behind the metrics that matter.",
+  "url": "https://lasohealth.fit/learn",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Laso Health",
+    "url": "https://lasohealth.fit"
+  }
+}
+---
+
+<Base title="Health and Fitness Knowledge Base | Laso" description="Evidence-based articles on HRV, sleep, recovery, VO2 Max, heart rate zones, stress, overtraining, and more. Learn the science behind the metrics that matter." jsonLd={jsonLd}>
+  <SiteNav current="learn" />
+
+  <section class="max-w-5xl mx-auto px-5 py-12 md:py-16">
+    <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-[#1d1d1f] mb-4">Learn: The Science Behind Your Health Data</h1>
+    <p class="text-[17px] text-[#6e6e73] leading-relaxed max-w-3xl mb-12">Understanding your health data starts with understanding the metrics. These articles cover the science behind the numbers your wearable collects, written in plain language with references to established research.</p>
+
+    <!-- Category filters -->
+    <div class="flex flex-wrap gap-2 mb-8">
+      <span class="text-[12px] font-semibold text-[#1d1d1f] uppercase tracking-wider px-3 py-1.5 rounded-full bg-[#1d1d1f] text-white">All</span>
+      <span class="text-[12px] font-semibold uppercase tracking-wider px-3 py-1.5 rounded-full bg-red-50 text-red-700">Heart Health</span>
+      <span class="text-[12px] font-semibold uppercase tracking-wider px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-700">Sleep</span>
+      <span class="text-[12px] font-semibold uppercase tracking-wider px-3 py-1.5 rounded-full bg-orange-50 text-orange-700">Training</span>
+      <span class="text-[12px] font-semibold uppercase tracking-wider px-3 py-1.5 rounded-full bg-green-50 text-green-700">Recovery</span>
+      <span class="text-[12px] font-semibold uppercase tracking-wider px-3 py-1.5 rounded-full bg-sky-50 text-sky-700">Fitness</span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {articles.map((article) => (
+        <a href={article.href} class="group block bg-white border border-[#e5e5e7] rounded-2xl p-6 hover:shadow-lg hover:border-[#d2d2d7] transition-all duration-200">
+          <div class="flex items-center gap-3 mb-4">
+            <span class={`text-[11px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full ${categoryColors[article.category] || "bg-gray-50 text-gray-700"}`}>
+              {article.category}
+            </span>
+            <span class="text-[12px] text-[#6e6e73]">{article.readingTime}</span>
+          </div>
+          <h2 class="text-[16px] font-semibold text-[#1d1d1f] mb-2 group-hover:text-[#0071e3] transition-colors leading-snug">{article.title}</h2>
+          <p class="text-[14px] text-[#6e6e73] leading-relaxed">{article.description}</p>
+        </a>
+      ))}
+    </div>
+
+    <!-- Tools section -->
+    <div class="mt-16 pt-12 border-t border-[#e5e5e7]">
+      <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-3">Interactive Tools</h2>
+      <p class="text-[15px] text-[#6e6e73] leading-relaxed mb-8">Put the concepts into practice with these free calculators.</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <a href="/tools/sleep-need-calculator" class="group block bg-indigo-50 border border-indigo-100 rounded-2xl p-6 hover:shadow-lg hover:border-indigo-200 transition-all duration-200">
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-indigo-700 mb-3 block">Sleep Tool</span>
+          <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2 group-hover:text-[#0071e3] transition-colors">Sleep Need Calculator</h3>
+          <p class="text-[14px] text-[#6e6e73] leading-relaxed">Estimate your personal sleep need based on age, activity level, and goals.</p>
+        </a>
+        <a href="/tools/hrv-score-interpreter" class="group block bg-red-50 border border-red-100 rounded-2xl p-6 hover:shadow-lg hover:border-red-200 transition-all duration-200">
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-red-700 mb-3 block">Heart Health Tool</span>
+          <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2 group-hover:text-[#0071e3] transition-colors">HRV Score Interpreter</h3>
+          <p class="text-[14px] text-[#6e6e73] leading-relaxed">See where your HRV falls for your age and understand what it means.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <CtaSection heading="Put the science into practice." subheading="Laso turns these metrics into personalized, actionable insights from your wearable data." />
+  <SiteFooter />
+</Base>

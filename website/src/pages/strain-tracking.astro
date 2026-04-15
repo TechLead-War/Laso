@@ -1,0 +1,348 @@
+---
+import Base from '../layouts/Base.astro'
+import SiteNav from '../components/SiteNav.astro'
+import SiteFooter from '../components/SiteFooter.astro'
+import CtaSection from '../components/CtaSection.astro'
+import '../styles/globals.css'
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Laso",
+    "alternateName": "Laso Health",
+    "applicationCategory": "HealthApplication",
+    "operatingSystem": "iOS",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "description": "Free 7-day trial, then $29.99/year"
+    },
+    "description": "Laso calculates a strain score from 0 to 21 based on heart rate zone distribution and sets recovery-adjusted daily strain targets. Includes what-if workout simulation and overtraining detection.",
+    "featureList": [
+      "Strain score from 0 to 21 based on heart rate zones",
+      "Recovery-adjusted daily strain targets",
+      "What-if workout simulation",
+      "Overtraining and burnout detection",
+      "On-device machine learning with no cloud processing"
+    ],
+    "url": "https://lasohealth.fit/strain-tracking",
+    "image": "https://lasohealth.fit/og-image.png"
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is a strain score?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A strain score is a measure of cardiovascular load on a scale from 0 to 21. It quantifies how much physical stress your body has accumulated throughout the day based on the amount of time you spend in different heart rate zones. Light activity like walking adds minimal strain, while intense exercise like sprinting or heavy lifting pushes the score up quickly. The scale is logarithmic, meaning the difference between 18 and 21 represents significantly more effort than the difference between 5 and 8."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does Laso set daily strain targets?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Every morning, Laso calculates your recovery score and uses it to set a personalized strain target range for the day. If your recovery is high (67 to 100), the target is higher because your body can handle more load and that load will drive fitness adaptation. If recovery is moderate (34 to 66), the target shifts to a moderate range. If recovery is low (0 to 33), the target drops significantly to help you avoid digging a deeper recovery hole. The targets adjust as your fitness level changes over time."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is what-if workout simulation?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "What-if simulation lets you preview the impact of a planned workout before you do it. You select a workout type and estimated duration, and Laso projects how it would affect your strain score and estimated next-day recovery. This helps you decide whether to do the hard interval session today or save it for tomorrow when recovery might be better. It is especially useful for athletes managing training across a full week."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does overtraining detection work?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Laso monitors the balance between your cumulative strain and your recovery trend over a rolling window. When strain consistently exceeds recovery capacity for multiple days in a row, and when key biomarkers like HRV, resting heart rate, and sleep quality start trending in the wrong direction together, Laso flags an overtraining risk. The detection is based on your personal baselines, not population averages, so it catches the early warning signs before symptoms like persistent fatigue, mood changes, or performance decline become obvious."
+        }
+      }
+    ]
+  }
+]
+---
+
+<Base
+  title="Strain Tracking — Recovery-Adjusted Daily Targets | Laso"
+  description="Laso calculates a strain score (0 to 21) from heart rate zones and sets a daily target based on your recovery. Includes what-if workout simulation and overtraining detection."
+  jsonLd={jsonLd}
+>
+  <div class="min-h-screen bg-white">
+    <SiteNav current="strain-tracking" />
+
+    <main>
+      <!-- Hero -->
+      <section class="pt-24 pb-12 md:pt-32 md:pb-20 px-5 text-center">
+        <div class="max-w-3xl mx-auto">
+          <p class="text-[13px] font-semibold text-[#0071e3] uppercase tracking-wider mb-4">Strain Tracking</p>
+          <h1 class="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-[#1d1d1f] text-balance leading-tight">
+            Know exactly how hard to push. Every day.
+          </h1>
+          <p class="mt-5 text-base md:text-lg text-[#6e6e73] max-w-2xl mx-auto text-balance leading-relaxed">
+            Laso tracks your cardiovascular load throughout the day and tells you how much more you can handle based on how recovered you are. No guessing, no fixed plans. Just a daily target calibrated to your body right now.
+          </p>
+          <div class="mt-8">
+            <a href="/#early-access" class="inline-flex items-center justify-center bg-[#1d1d1f] text-white font-medium rounded-full px-7 py-3 min-h-[48px] text-[15px] hover:bg-black transition-colors">
+              Join Early Access
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Strain Score Explained -->
+      <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+        <div class="max-w-4xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-4">
+            Strain score explained
+          </h2>
+          <p class="text-[15px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-12">
+            Your strain score runs from 0 to 21 and measures cumulative cardiovascular load based on how much time you spend in each heart rate zone throughout the day.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white rounded-2xl p-6 md:p-8 border border-black/[0.04]">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-3">Heart rate zones drive the score</h3>
+              <p class="text-[15px] text-[#6e6e73] leading-relaxed mb-4">
+                Laso divides your heart rate into five zones based on your personal max heart rate. Time in higher zones contributes exponentially more strain than time in lower zones.
+              </p>
+              <div class="space-y-2">
+                <div class="flex items-center gap-3">
+                  <span class="w-3 h-3 rounded-full bg-blue-300 shrink-0"></span>
+                  <span class="text-[13px] text-[#6e6e73]"><span class="text-[#1d1d1f] font-medium">Zone 1</span> (50 to 60% max HR) — Light activity, minimal strain</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="w-3 h-3 rounded-full bg-green-400 shrink-0"></span>
+                  <span class="text-[13px] text-[#6e6e73]"><span class="text-[#1d1d1f] font-medium">Zone 2</span> (60 to 70%) — Easy aerobic, fat burning</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="w-3 h-3 rounded-full bg-yellow-400 shrink-0"></span>
+                  <span class="text-[13px] text-[#6e6e73]"><span class="text-[#1d1d1f] font-medium">Zone 3</span> (70 to 80%) — Moderate effort, tempo work</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="w-3 h-3 rounded-full bg-orange-400 shrink-0"></span>
+                  <span class="text-[13px] text-[#6e6e73]"><span class="text-[#1d1d1f] font-medium">Zone 4</span> (80 to 90%) — Hard, threshold training</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="w-3 h-3 rounded-full bg-red-500 shrink-0"></span>
+                  <span class="text-[13px] text-[#6e6e73]"><span class="text-[#1d1d1f] font-medium">Zone 5</span> (90 to 100%) — All out, max effort</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 md:p-8 border border-black/[0.04]">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-3">The scale is logarithmic</h3>
+              <p class="text-[15px] text-[#6e6e73] leading-relaxed mb-4">
+                Strain does not increase linearly. Getting from 0 to 10 is relatively easy with normal daily activity and light exercise. Getting from 10 to 15 requires moderate training. Getting above 18 takes sustained high intensity effort.
+              </p>
+              <div class="space-y-3">
+                <div class="bg-[#f5f5f7] rounded-xl p-4">
+                  <p class="text-[13px] font-medium text-[#1d1d1f]">0 to 9 — Light day</p>
+                  <p class="text-[13px] text-[#6e6e73]">Walking, desk work, errands. Normal daily living.</p>
+                </div>
+                <div class="bg-[#f5f5f7] rounded-xl p-4">
+                  <p class="text-[13px] font-medium text-[#1d1d1f]">10 to 14 — Moderate</p>
+                  <p class="text-[13px] text-[#6e6e73]">A solid run, gym session, or active sports day.</p>
+                </div>
+                <div class="bg-[#f5f5f7] rounded-xl p-4">
+                  <p class="text-[13px] font-medium text-[#1d1d1f]">15 to 18 — High</p>
+                  <p class="text-[13px] text-[#6e6e73]">Intense training. Interval work, long endurance sessions.</p>
+                </div>
+                <div class="bg-[#f5f5f7] rounded-xl p-4">
+                  <p class="text-[13px] font-medium text-[#1d1d1f]">18 to 21 — Maximal</p>
+                  <p class="text-[13px] text-[#6e6e73]">Race day or extreme efforts. Rare and very demanding.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recovery-Adjusted Targets -->
+      <section class="py-16 md:py-24 px-5">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-4">
+            Recovery-adjusted targets
+          </h2>
+          <p class="text-[15px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-10">
+            A strain score by itself is just a number. The real value is knowing what your target should be today, and that depends entirely on how recovered you are.
+          </p>
+
+          <div class="space-y-6">
+            <div class="bg-[#f5f5f7] rounded-2xl p-6 md:p-8">
+              <div class="flex items-start gap-4">
+                <span class="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                </span>
+                <div>
+                  <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-1">High recovery (67 to 100) — Push it</h3>
+                  <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                    Your body is primed for adaptation. Laso sets a higher strain target, typically in the 14 to 18 range. This is when hard intervals, long runs, and heavy lifting sessions pay off the most. Training on high recovery days is how you actually get fitter.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-[#f5f5f7] rounded-2xl p-6 md:p-8">
+              <div class="flex items-start gap-4">
+                <span class="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+                </span>
+                <div>
+                  <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-1">Moderate recovery (34 to 66) — Stay controlled</h3>
+                  <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                    You can train, but going all out would likely dig a deeper hole. Laso recommends a moderate strain target, usually between 10 and 14. Think steady state cardio, technique work, or a regular gym session without chasing personal records.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-[#f5f5f7] rounded-2xl p-6 md:p-8">
+              <div class="flex items-start gap-4">
+                <span class="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                </span>
+                <div>
+                  <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-1">Low recovery (0 to 33) — Protect yourself</h3>
+                  <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                    Your body needs more time. Laso drops the target below 10, recommending light activity like walking, stretching, or yoga. Pushing through a low recovery day does not build fitness. It delays recovery and increases injury risk.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- What-If Simulation -->
+      <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-4">
+            What-if simulation
+          </h2>
+          <p class="text-[15px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-10">
+            Preview the impact of a planned workout before you do it. Make smarter training decisions by seeing the trade-off in advance.
+          </p>
+
+          <div class="bg-white rounded-2xl p-6 md:p-8 border border-black/[0.04]">
+            <div class="space-y-6">
+              <div>
+                <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">How it works</h3>
+                <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                  Select a workout type (running, cycling, strength, HIIT, and more) and an estimated duration. Laso uses your current strain, recovery, and historical response patterns to project the resulting strain increase and its estimated impact on tomorrow's recovery score.
+                </p>
+              </div>
+
+              <div>
+                <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">When it is most useful</h3>
+                <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                  Imagine you are moderately recovered and debating between a 60 minute hard run today or saving it for tomorrow. The simulator shows you that the hard run today would push your strain to 17 and drop projected recovery to 38, while waiting until tomorrow (when recovery might be 72) would let you handle the same session and still wake up at 55. That is the kind of trade-off that changes training outcomes over weeks and months.
+                </p>
+              </div>
+
+              <div>
+                <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Built on your personal data</h3>
+                <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                  The projections are not generic estimates. They are based on how your body has historically responded to similar strain loads at similar recovery levels. The more data Laso has, the more accurate the simulation becomes. After about 30 days of training data, the projections are quite reliable.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Overtraining Detection -->
+      <section class="py-16 md:py-24 px-5">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-4">
+            Overtraining detection
+          </h2>
+          <p class="text-[15px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-10">
+            Burnout does not happen suddenly. It builds gradually over days and weeks. Laso spots the pattern before you feel the symptoms.
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="bg-[#f5f5f7] rounded-2xl p-6">
+              <div class="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center mb-4">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
+              </div>
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Strain vs recovery balance</h3>
+              <p class="text-[13px] text-[#6e6e73] leading-relaxed">
+                Laso watches the rolling ratio between how much strain you accumulate and how well you recover. When strain consistently outpaces recovery for several days, the imbalance triggers an alert before performance drops.
+              </p>
+            </div>
+
+            <div class="bg-[#f5f5f7] rounded-2xl p-6">
+              <div class="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center mb-4">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6L9 12.75l4.286-4.286a11.948 11.948 0 014.306 6.43l.776 2.898m0 0l3.182-5.511m-3.182 5.51l-5.511-3.181" /></svg>
+              </div>
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Biomarker trend analysis</h3>
+              <p class="text-[13px] text-[#6e6e73] leading-relaxed">
+                Individual bad nights happen. Overtraining shows up as a multi-day trend: HRV drifting down, resting heart rate drifting up, sleep quality declining. Laso tracks these trends and alerts you when the pattern is consistent enough to be concerning.
+              </p>
+            </div>
+
+            <div class="bg-[#f5f5f7] rounded-2xl p-6">
+              <div class="w-10 h-10 rounded-xl bg-[#0071e3]/10 flex items-center justify-center mb-4">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#0071e3" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
+              </div>
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Early warning alerts</h3>
+              <p class="text-[13px] text-[#6e6e73] leading-relaxed">
+                When Laso detects an overtraining pattern forming, it recommends a specific recovery protocol: reduced strain targets, earlier bedtimes, and a projected timeline for when you should be back to baseline.
+              </p>
+            </div>
+
+            <div class="bg-[#f5f5f7] rounded-2xl p-6">
+              <div class="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center mb-4">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" /></svg>
+              </div>
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Personal, not generic</h3>
+              <p class="text-[13px] text-[#6e6e73] leading-relaxed">
+                Some people overtrain at 5 hard sessions per week. Others can handle 7. Laso does not use a one-size-fits-all threshold. It learns your specific capacity and flags when you are exceeding your pattern, not a textbook guideline.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Related Features -->
+      <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+        <div class="max-w-3xl mx-auto text-center">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-4">
+            Strain tracking is part of a bigger picture
+          </h2>
+          <p class="text-[15px] text-[#6e6e73] max-w-2xl mx-auto mb-10">
+            Your strain data connects to every other insight in Laso. Recovery fuels strain targets. Sleep fuels recovery. It all works together.
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-left">
+            <a href="/recovery-score" class="group bg-white rounded-2xl p-6 border border-black/[0.04] hover:border-[#0071e3]/20 transition-colors">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2 group-hover:text-[#0071e3] transition-colors">Recovery Score</h3>
+              <p class="text-[13px] text-[#6e6e73] leading-relaxed">Your daily readiness score determines your strain targets. High recovery unlocks higher targets. Low recovery scales everything back to protect you.</p>
+            </a>
+            <a href="/sleep-coaching" class="group bg-white rounded-2xl p-6 border border-black/[0.04] hover:border-[#0071e3]/20 transition-colors">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2 group-hover:text-[#0071e3] transition-colors">Sleep Coaching</h3>
+              <p class="text-[13px] text-[#6e6e73] leading-relaxed">Sleep is where recovery happens. After a high strain day, Laso adjusts your sleep recommendations to make sure you get the restorative rest you need.</p>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <CtaSection
+        heading="Start training smarter tomorrow."
+        subheading="Connect your wearable and let Laso calculate your first strain target."
+      />
+    </main>
+
+    <SiteFooter />
+  </div>
+</Base>

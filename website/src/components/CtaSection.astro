@@ -1,0 +1,24 @@
+---
+interface Props {
+  heading?: string
+  subheading?: string
+}
+const { heading = "Try Laso free for 7 days.", subheading = "You already have the wearable. Laso does the rest." } = Astro.props
+---
+
+<section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+  <div class="max-w-2xl mx-auto text-center">
+    <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-balance">
+      {heading}
+    </h2>
+    <p class="mt-3 text-[15px] text-[#6e6e73] max-w-lg mx-auto">
+      {subheading}
+    </p>
+    <div class="mt-8 flex flex-col sm:flex-row justify-center gap-3">
+      <a href="/#early-access" class="inline-flex items-center justify-center bg-[#1d1d1f] text-white font-medium rounded-full px-7 py-3 min-h-[48px] text-[15px] hover:bg-black transition-colors">
+        Join Early Access
+      </a>
+    </div>
+    <p class="mt-3 text-[13px] text-[#6e6e73]/60">Free 7-day trial. No credit card needed.</p>
+  </div>
+</section>

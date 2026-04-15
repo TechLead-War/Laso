@@ -1,0 +1,318 @@
+---
+import Base from '../../layouts/Base.astro'
+import SiteNav from '../../components/SiteNav.astro'
+import SiteFooter from '../../components/SiteFooter.astro'
+import CtaSection from '../../components/CtaSection.astro'
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "HRV Score Interpreter",
+    "description": "Enter your HRV reading to see where it falls for your age and what it means for your health. Understand your HRV score in context.",
+    "url": "https://lasohealth.fit/tools/hrv-score-interpreter",
+    "applicationCategory": "HealthApplication",
+    "operatingSystem": "All",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "provider": {
+      "@type": "Organization",
+      "name": "Laso Health",
+      "url": "https://lasohealth.fit"
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is a good HRV score?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A good HRV score depends on your age, gender, and fitness level. For adults in their 30s, an RMSSD above 45 to 50 ms is generally considered above average. However, individual baselines vary enormously, and your personal trend matters far more than any single number or population comparison."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Why does HRV decrease with age?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "HRV naturally declines with age due to changes in autonomic nervous system function. The parasympathetic nervous system, which drives higher HRV, becomes less dominant as we age. Regular exercise, good sleep, and stress management can slow this decline significantly."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Should I compare my HRV to population averages?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Population averages provide a rough reference point, but your personal baseline is far more useful. An HRV of 35 ms can be excellent for one person and below normal for another. Tracking your own HRV consistently and watching for trends above or below your baseline provides much more actionable information."
+        }
+      }
+    ]
+  }
+]
+---
+
+<Base title="HRV Score Interpreter: Is Your Heart Rate Variability Good? | Laso" description="Enter your HRV reading to see where it falls for your age and what it means for your health. Understand your HRV score in context." jsonLd={jsonLd}>
+  <SiteNav />
+
+  <section class="max-w-3xl mx-auto px-5 py-12 md:py-16">
+    <div class="mb-8 flex flex-wrap items-center gap-3 text-[13px] text-[#6e6e73]">
+      <a href="/tools" class="hover:text-[#0071e3] transition-colors">Tools</a>
+      <span>/</span>
+      <span>Heart Health</span>
+    </div>
+
+    <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-[#1d1d1f] mb-4">HRV Score Interpreter</h1>
+    <p class="text-[17px] text-[#6e6e73] leading-relaxed mb-10">Enter your HRV reading to see where it falls compared to others your age. Keep in mind that your personal baseline is always more meaningful than a population comparison.</p>
+
+    <!-- Important caveat -->
+    <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-8">
+      <p class="text-[14px] text-blue-800 leading-relaxed">
+        <strong>Important:</strong> Your personal baseline matters more than these ranges. An HRV of 35 ms can be excellent for one person and below normal for another. Use this tool as a rough reference, not a diagnosis.
+      </p>
+    </div>
+
+    <!-- Calculator form -->
+    <div class="bg-white border border-[#e5e5e7] rounded-2xl p-6 md:p-8 mb-10">
+      <form id="hrv-form" class="space-y-6">
+        <div>
+          <label for="hrv-value" class="block text-[14px] font-semibold text-[#1d1d1f] mb-2">Your HRV value (ms)</label>
+          <input type="number" id="hrv-value" min="1" max="300" step="0.1" placeholder="e.g. 42" class="w-full border border-[#d2d2d7] rounded-xl px-4 py-3 text-[15px] text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:border-transparent" required />
+        </div>
+
+        <div>
+          <label for="hrv-age" class="block text-[14px] font-semibold text-[#1d1d1f] mb-2">Your age</label>
+          <input type="number" id="hrv-age" min="18" max="100" value="30" class="w-full border border-[#d2d2d7] rounded-xl px-4 py-3 text-[15px] text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:border-transparent" required />
+        </div>
+
+        <div>
+          <label for="hrv-gender" class="block text-[14px] font-semibold text-[#1d1d1f] mb-2">Gender</label>
+          <select id="hrv-gender" class="w-full border border-[#d2d2d7] rounded-xl px-4 py-3 text-[15px] text-[#1d1d1f] bg-white focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:border-transparent">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="hrv-type" class="block text-[14px] font-semibold text-[#1d1d1f] mb-2">Measurement type</label>
+          <select id="hrv-type" class="w-full border border-[#d2d2d7] rounded-xl px-4 py-3 text-[15px] text-[#1d1d1f] bg-white focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:border-transparent">
+            <option value="rmssd">RMSSD (most wearables, Apple Watch)</option>
+            <option value="sdnn">SDNN (clinical, some Garmin devices)</option>
+          </select>
+        </div>
+
+        <button type="submit" class="w-full bg-[#1d1d1f] text-white font-medium rounded-full px-7 py-3.5 text-[15px] hover:bg-black transition-colors">
+          Interpret my HRV
+        </button>
+      </form>
+
+      <!-- Result -->
+      <div id="hrv-result" class="hidden mt-8">
+        <div id="hrv-result-card" class="rounded-2xl p-6">
+          <h3 class="text-[13px] font-semibold text-[#6e6e73] uppercase tracking-wider mb-4">Your HRV assessment</h3>
+          <div class="text-center mb-6">
+            <p id="hrv-classification" class="text-2xl font-bold mb-1"></p>
+            <p id="hrv-percentile" class="text-[15px] text-[#6e6e73]"></p>
+          </div>
+
+          <!-- Visual bar -->
+          <div class="mb-6">
+            <div class="flex justify-between text-[11px] text-[#6e6e73] mb-1.5">
+              <span>Below average</span>
+              <span>Average</span>
+              <span>Above average</span>
+              <span>Excellent</span>
+            </div>
+            <div class="relative h-3 bg-gray-200 rounded-full overflow-hidden">
+              <div class="absolute inset-y-0 left-0 bg-gradient-to-r from-orange-400 via-yellow-400 via-green-400 to-emerald-500 rounded-full" style="width:100%"></div>
+              <div id="hrv-marker" class="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-[#1d1d1f] rounded-full shadow" style="left:50%"></div>
+            </div>
+          </div>
+
+          <div id="hrv-context" class="text-[15px] text-[#1d1d1f] leading-relaxed p-4 bg-[#f5f5f7] rounded-xl mb-4"></div>
+
+          <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <p class="text-[13px] text-blue-800 leading-relaxed">
+              <strong>Remember:</strong> This comparison uses population averages. Your personal baseline, tracked consistently over weeks, is always more meaningful than a single comparison to a reference table.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Understanding your result -->
+    <section class="mb-10">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">Understanding your result</h2>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Your HRV is influenced by many factors including age, fitness level, genetics, sleep quality, stress, hydration, and recent alcohol consumption. A single reading is a snapshot, not a diagnosis.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Here is what each classification generally means:</p>
+      <ul class="list-disc pl-6 space-y-2 text-[15px] text-[#1d1d1f] leading-relaxed mb-3">
+        <li><strong>Below average:</strong> Your HRV falls below the typical range for your age and gender. This does not necessarily indicate a problem. It could reflect recent intense training, poor sleep, elevated stress, or simply your individual physiology. If consistently low, it may be worth examining lifestyle factors.</li>
+        <li><strong>Average:</strong> Your HRV falls within the typical range. This is where most people land and is perfectly normal.</li>
+        <li><strong>Above average:</strong> Your HRV is higher than most people your age. This often correlates with good cardiovascular fitness and effective recovery.</li>
+        <li><strong>Excellent:</strong> Your HRV is in the top tier for your age group. This typically reflects high aerobic fitness, good sleep habits, and effective stress management.</li>
+      </ul>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed">The most important thing is not where you fall on a population chart today. It is whether your HRV is trending up, staying stable, or declining over time relative to your own baseline.</p>
+    </section>
+
+    <!-- CTA bridge -->
+    <section class="mb-10">
+      <div class="bg-[#f5f5f7] rounded-2xl p-6 md:p-8">
+        <h2 class="text-xl font-semibold text-[#1d1d1f] mb-3">Your baseline matters more than any chart</h2>
+        <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-4">Laso builds your personal HRV baseline from 30 days of data and tells you when your HRV is above or below your normal, not a population average. This makes your recovery insights relevant to your body, not a reference table.</p>
+        <a href="/#early-access" class="inline-flex items-center justify-center bg-[#1d1d1f] text-white font-medium rounded-full px-6 py-3 text-[15px] hover:bg-black transition-colors">
+          Try Laso free for 7 days
+        </a>
+      </div>
+    </section>
+
+    <!-- Related -->
+    <div class="flex flex-wrap gap-3 mb-8">
+      <a href="/learn/heart-rate-variability" class="text-[14px] text-[#0071e3] hover:underline">Heart Rate Variability Guide</a>
+      <span class="text-[#e5e5e7]">|</span>
+      <a href="/recovery-score" class="text-[14px] text-[#0071e3] hover:underline">Recovery Score</a>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+      <p class="text-[13px] text-amber-800 leading-relaxed">
+        <strong>Disclaimer:</strong> This tool is for educational purposes only. HRV reference ranges are approximate and based on published population data. This is not a medical assessment. Consult a healthcare provider for clinical interpretation of HRV data.
+      </p>
+    </div>
+  </section>
+
+  <SiteFooter />
+</Base>
+
+<script is:inline>
+(function() {
+  var form = document.getElementById('hrv-form');
+  var resultEl = document.getElementById('hrv-result');
+
+  // RMSSD reference data by age group: [p25, p50, p75] for male and female
+  // Based on aggregated published data (Nunan et al., van den Berg et al.)
+  var rmssdRanges = {
+    male: {
+      20: [42, 62, 90],
+      25: [38, 58, 85],
+      30: [34, 52, 78],
+      35: [30, 46, 70],
+      40: [26, 40, 62],
+      45: [23, 36, 56],
+      50: [20, 32, 50],
+      55: [18, 28, 45],
+      60: [16, 25, 40],
+      65: [14, 22, 36],
+      70: [12, 20, 32],
+      80: [10, 17, 28]
+    },
+    female: {
+      20: [40, 58, 84],
+      25: [36, 54, 80],
+      30: [32, 48, 72],
+      35: [28, 43, 65],
+      40: [25, 38, 58],
+      45: [22, 34, 52],
+      50: [19, 30, 46],
+      55: [17, 27, 42],
+      60: [15, 24, 38],
+      65: [13, 21, 34],
+      70: [11, 19, 30],
+      80: [9, 16, 26]
+    }
+  };
+
+  // SDNN ranges are typically ~1.5x RMSSD ranges in resting conditions
+  var sdnnMultiplier = 1.5;
+
+  function interpolateRange(ranges, age) {
+    var keys = Object.keys(ranges).map(Number).sort(function(a,b){return a-b;});
+    if (age <= keys[0]) return ranges[keys[0]];
+    if (age >= keys[keys.length - 1]) return ranges[keys[keys.length - 1]];
+
+    var lower = keys[0];
+    var upper = keys[keys.length - 1];
+    for (var i = 0; i < keys.length - 1; i++) {
+      if (age >= keys[i] && age < keys[i+1]) {
+        lower = keys[i];
+        upper = keys[i+1];
+        break;
+      }
+    }
+
+    var t = (age - lower) / (upper - lower);
+    var lowerRange = ranges[lower];
+    var upperRange = ranges[upper];
+    return [
+      lowerRange[0] + t * (upperRange[0] - lowerRange[0]),
+      lowerRange[1] + t * (upperRange[1] - lowerRange[1]),
+      lowerRange[2] + t * (upperRange[2] - lowerRange[2])
+    ];
+  }
+
+  function classify(value, range) {
+    // range = [p25, p50, p75]
+    if (value < range[0]) return { label: 'Below average', pct: Math.max(5, Math.round((value / range[0]) * 25)), color: 'text-orange-600' };
+    if (value < range[1]) return { label: 'Average', pct: 25 + Math.round(((value - range[0]) / (range[1] - range[0])) * 25), color: 'text-yellow-600' };
+    if (value < range[2]) return { label: 'Above average', pct: 50 + Math.round(((value - range[1]) / (range[2] - range[1])) * 25), color: 'text-green-600' };
+    var extra = Math.min(20, Math.round(((value - range[2]) / range[2]) * 40));
+    return { label: 'Excellent', pct: Math.min(95, 75 + extra), color: 'text-emerald-600' };
+  }
+
+  function getContext(classification, age) {
+    if (classification.label === 'Below average') {
+      return 'Your HRV falls below the typical range for someone your age. This could reflect recent intense exercise, poor sleep, elevated stress, dehydration, or alcohol consumption. It could also simply be your individual baseline. If your readings are consistently in this range, consider whether lifestyle factors like sleep quality, stress, and training load might be contributing.';
+    }
+    if (classification.label === 'Average') {
+      return 'Your HRV falls within the normal range for your age group. This is where most healthy adults land. To move your HRV higher over time, the most effective strategies are consistent aerobic exercise, improving sleep quality, and managing stress.';
+    }
+    if (classification.label === 'Above average') {
+      return 'Your HRV is higher than most people your age, which generally reflects good cardiovascular fitness and effective recovery. This often correlates with regular exercise habits, consistent sleep, and manageable stress levels.';
+    }
+    return 'Your HRV is in the top tier for your age group. This typically reflects excellent aerobic fitness, strong recovery capacity, and healthy lifestyle habits. Keep doing what you are doing.';
+  }
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    var hrv = parseFloat(document.getElementById('hrv-value').value);
+    var age = parseFloat(document.getElementById('hrv-age').value);
+    var gender = document.getElementById('hrv-gender').value;
+    var type = document.getElementById('hrv-type').value;
+
+    if (isNaN(hrv) || isNaN(age)) return;
+
+    var genderRanges = rmssdRanges[gender] || rmssdRanges.male;
+    var range = interpolateRange(genderRanges, age);
+
+    // If SDNN, scale the ranges up
+    if (type === 'sdnn') {
+      range = range.map(function(v) { return v * sdnnMultiplier; });
+    }
+
+    var result = classify(hrv, range);
+    var context = getContext(result, age);
+
+    document.getElementById('hrv-classification').textContent = result.label;
+    document.getElementById('hrv-classification').className = 'text-2xl font-bold mb-1 ' + result.color;
+
+    var pctText = 'Approximately ' + result.pct + getSuffix(result.pct) + ' percentile for ' + gender + 's age ' + Math.round(age);
+    document.getElementById('hrv-percentile').textContent = pctText;
+
+    // Position marker
+    var markerPct = Math.max(2, Math.min(98, result.pct));
+    document.getElementById('hrv-marker').style.left = markerPct + '%';
+
+    document.getElementById('hrv-context').textContent = context;
+
+    resultEl.classList.remove('hidden');
+    resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+
+  function getSuffix(n) {
+    var s = ['th','st','nd','rd'];
+    var v = n % 100;
+    return s[(v - 20) % 10] || s[v] || s[0];
+  }
+})();
+</script>

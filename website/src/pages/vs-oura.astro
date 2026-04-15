@@ -1,0 +1,319 @@
+---
+import Base from '../layouts/Base.astro'
+import SiteNav from '../components/SiteNav.astro'
+import SiteFooter from '../components/SiteFooter.astro'
+import CtaSection from '../components/CtaSection.astro'
+import '../styles/globals.css'
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is Laso a good alternative to the Oura app?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Laso is a good alternative or complement to the Oura app. It reads Oura data from Apple Health and adds deeper analysis on top, including strain tracking, Vitality Age (fitness age), multi-metric illness detection, and sleep debt calculations. Laso also uses personal baselines instead of population-based scoring and runs entirely on-device for complete privacy. The Oura app has the advantage of native integration with the ring hardware and features like temperature trending and SpO2 monitoring that depend on Oura-specific sensors."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use Laso with my Oura Ring?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. If you enable Apple Health integration in the Oura app, Laso will automatically read your Oura data including heart rate, HRV, sleep stages, respiratory rate, and more. You can use both apps side by side. Laso adds strain tracking, fitness age, illness detection, and personal baselines on top of the data your Oura Ring collects."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does Laso compare to Oura for sleep tracking?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Both Laso and Oura provide detailed sleep analysis, but they focus on different things. Oura gives you a sleep score based on stages, efficiency, and timing. Laso goes further by calculating your personal sleep need (how much sleep your body actually requires), tracking cumulative sleep debt, and showing how your sleep directly impacts recovery and next-day strain targets. Laso also uses personal baselines, so your sleep scoring reflects changes relative to your own patterns rather than population averages."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Laso replace the Oura app?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Laso can replace many Oura app features like readiness scoring, sleep analysis, and activity tracking, while adding strain tracking, fitness age, and illness detection that Oura does not offer. However, some Oura-specific features like temperature trending, SpO2 charts, and ring firmware updates require the Oura app. Many people use both: the Oura app for ring management and raw sensor data, and Laso for deeper analysis and actionable insights."
+      }
+    }
+  ]
+}
+---
+
+<Base
+  title="Laso vs Oura Ring — Honest Comparison for 2026 | Laso"
+  description="Comparing Laso and Oura Ring: readiness scores, sleep tracking, activity tracking, privacy, and pricing. See how Laso uses Oura data to go further."
+  jsonLd={jsonLd}
+>
+  <div class="min-h-screen bg-white">
+    <SiteNav current="vs-oura" />
+
+    <main>
+      <!-- Hero -->
+      <section class="pt-24 pb-12 md:pt-32 md:pb-20 px-5 text-center">
+        <div class="max-w-3xl mx-auto">
+          <p class="text-[13px] font-semibold text-[#0071e3] uppercase tracking-wider mb-4">Comparison</p>
+          <h1 class="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-[#1d1d1f] text-balance leading-tight">
+            Laso vs Oura: what if your ring could tell you more?
+          </h1>
+          <p class="mt-5 text-base md:text-lg text-[#6e6e73] max-w-2xl mx-auto text-balance leading-relaxed">
+            Oura Ring is great hardware. The data it collects is rich and reliable. The question is what happens with that data after it reaches your phone. Laso reads your Oura data from Apple Health and adds deeper, more personal analysis on top.
+          </p>
+        </div>
+      </section>
+
+      <!-- Comparison Table -->
+      <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+        <div class="max-w-4xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-10">
+            Feature comparison
+          </h2>
+
+          <div class="overflow-x-auto rounded-2xl border border-black/[0.04] bg-white">
+            <table class="w-full text-left text-[13px]">
+              <thead>
+                <tr class="border-b border-black/[0.06]">
+                  <th class="px-5 py-4 font-semibold text-[#1d1d1f] min-w-[140px]">Feature</th>
+                  <th class="px-5 py-4 font-semibold text-[#0071e3] min-w-[200px]">Laso</th>
+                  <th class="px-5 py-4 font-semibold text-[#1d1d1f] min-w-[200px]">Oura</th>
+                </tr>
+              </thead>
+              <tbody class="text-[#6e6e73]">
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Hardware</td>
+                  <td class="px-5 py-3">Uses any wearable (including Oura)</td>
+                  <td class="px-5 py-3">Oura Ring required</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Works with Oura</td>
+                  <td class="px-5 py-3">Yes, reads Oura data from Apple Health</td>
+                  <td class="px-5 py-3">Native</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Recovery / Readiness</td>
+                  <td class="px-5 py-3">Personal baselines, 0 to 100</td>
+                  <td class="px-5 py-3">Population based, 0 to 100</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Strain tracking</td>
+                  <td class="px-5 py-3">Yes, 0 to 21 scale</td>
+                  <td class="px-5 py-3">Limited (activity score)</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Sleep coaching</td>
+                  <td class="px-5 py-3">Sleep need + debt tracking</td>
+                  <td class="px-5 py-3">Sleep score + stages</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Stress monitoring</td>
+                  <td class="px-5 py-3">HRV based with breathwork</td>
+                  <td class="px-5 py-3">Daytime stress (Gen 3)</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Fitness age</td>
+                  <td class="px-5 py-3">Yes, Vitality Age</td>
+                  <td class="px-5 py-3">No</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Illness detection</td>
+                  <td class="px-5 py-3">Multi metric early warning</td>
+                  <td class="px-5 py-3">Temperature deviation alerts</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Cycle tracking</td>
+                  <td class="px-5 py-3">4 phase training guidance</td>
+                  <td class="px-5 py-3">Period prediction</td>
+                </tr>
+                <tr class="border-b border-black/[0.04]">
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Privacy</td>
+                  <td class="px-5 py-3">100% on device</td>
+                  <td class="px-5 py-3">Cloud based</td>
+                </tr>
+                <tr>
+                  <td class="px-5 py-3 font-medium text-[#1d1d1f]">Price</td>
+                  <td class="px-5 py-3">$29.99/year</td>
+                  <td class="px-5 py-3">$5.99/month ($72/year) + ring ($299+)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Use Them Together -->
+      <section class="py-16 md:py-24 px-5">
+        <div class="max-w-3xl mx-auto text-center">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-4">
+            Use them together
+          </h2>
+          <p class="text-[15px] text-[#6e6e73] max-w-2xl mx-auto leading-relaxed mb-6">
+            Laso and Oura Ring are not mutually exclusive. In fact, they complement each other well. Your Oura Ring collects high quality heart rate, HRV, sleep stages, respiratory rate, and temperature data. The Oura app syncs that data to Apple Health. Laso reads it from there and adds layers of analysis that the Oura app does not provide.
+          </p>
+          <p class="text-[15px] text-[#6e6e73] max-w-2xl mx-auto leading-relaxed">
+            With both, you get the best ring hardware on the market and the deeper analytical engine. Laso builds personal baselines from your Oura data, calculates strain from your workouts, tracks sleep debt over time, and computes Vitality Age from multiple health indicators. Think of it as upgrading the software layer while keeping the hardware you already trust.
+          </p>
+        </div>
+      </section>
+
+      <!-- Where Laso Is Stronger -->
+      <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-4">
+            Where Laso is stronger
+          </h2>
+          <p class="text-[15px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-10">
+            Laso adds capabilities that the Oura app does not currently offer.
+          </p>
+
+          <div class="space-y-6">
+            <div class="bg-white rounded-2xl p-6 md:p-8 border border-black/[0.04]">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Deeper analysis with personal baselines</h3>
+              <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                Oura's readiness score uses population based calibration. Laso builds a rolling baseline from your own data, so your scores reflect genuine changes in your physiology rather than how you compare to an average. This matters because healthy ranges vary dramatically from person to person.
+              </p>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 md:p-8 border border-black/[0.04]">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Real strain tracking</h3>
+              <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                Oura provides an activity score, but it does not offer the kind of detailed strain tracking that serious athletes need. Laso calculates a strain score from 0 to 21 based on heart rate zone distribution throughout the day, sets recovery adjusted strain targets, and even lets you simulate how a planned workout would affect tomorrow's recovery.
+              </p>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 md:p-8 border border-black/[0.04]">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Vitality Age</h3>
+              <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                Laso computes a fitness age estimate daily from 9 key health indicators including VO2 Max, HRV, resting heart rate, sleep efficiency, and more. Oura does not have a comparable feature. Vitality Age gives you a single number that tracks your long term health trajectory.
+              </p>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 md:p-8 border border-black/[0.04]">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Complete privacy</h3>
+              <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                All Laso analysis runs on your iPhone. No data is sent to servers, no account is required. Oura processes data in the cloud and requires an account. If you want your health data to stay entirely on your device, Laso gives you that guarantee.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Where Oura Is Stronger -->
+      <section class="py-16 md:py-24 px-5">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-4">
+            Where Oura is stronger
+          </h2>
+          <p class="text-[15px] text-[#6e6e73] text-center max-w-2xl mx-auto mb-10">
+            The Oura Ring has real advantages that come from being a dedicated piece of hardware.
+          </p>
+
+          <div class="space-y-6">
+            <div class="bg-[#f5f5f7] rounded-2xl p-6 md:p-8">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Dedicated ring hardware</h3>
+              <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                The Oura Ring is purpose built for health tracking. Its form factor means it stays on your finger 24/7, including during sleep, when many people take off their watch. The ring's sensors are optimized for heart rate, HRV, temperature, and SpO2 in a way that general purpose watches are not.
+              </p>
+            </div>
+
+            <div class="bg-[#f5f5f7] rounded-2xl p-6 md:p-8">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Temperature sensing</h3>
+              <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                Oura tracks skin temperature deviations continuously, which is valuable for illness detection and menstrual cycle prediction. This data comes from the ring hardware itself and is not available through most other wearables.
+              </p>
+            </div>
+
+            <div class="bg-[#f5f5f7] rounded-2xl p-6 md:p-8">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">SpO2 and longer battery life</h3>
+              <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                The Oura Ring measures blood oxygen levels and lasts up to 7 days on a single charge. That battery life means fewer interruptions in data collection compared to watches that need daily charging.
+              </p>
+            </div>
+
+            <div class="bg-[#f5f5f7] rounded-2xl p-6 md:p-8">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f] mb-2">Standalone device</h3>
+              <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+                If you do not want to wear a watch at all, the Oura Ring works as a completely standalone health tracker. It is discreet, lightweight, and comfortable enough to forget you are wearing it. Laso is software only and needs some form of data source.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- The Bottom Line -->
+      <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+        <div class="max-w-3xl mx-auto text-center">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-4">
+            The bottom line
+          </h2>
+          <p class="text-[15px] text-[#6e6e73] max-w-2xl mx-auto leading-relaxed">
+            Oura Ring is excellent hardware with a good app. If you are happy with its readiness scores and sleep tracking, it works well on its own. Laso makes sense if you want to go deeper with that same data: personal baselines, real strain tracking, sleep debt calculations, fitness age, and complete on device privacy. The best setup for many people might be using both together, letting Oura collect the data and Laso analyze it. But even without an Oura Ring, Laso works with whatever wearable you have.
+          </p>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section class="py-16 md:py-24 px-5">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] text-center mb-10">
+            Frequently asked questions
+          </h2>
+
+          <div class="space-y-4">
+            <details class="group border border-black/[0.06] rounded-2xl bg-white">
+              <summary class="flex items-center justify-between cursor-pointer px-5 sm:px-6 py-5 text-[15px] font-semibold text-[#1d1d1f] select-none min-h-[56px]">
+                Is Laso a good alternative to the Oura app?
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-[#6e6e73] transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+              </summary>
+              <div class="px-5 sm:px-6 pb-5 text-[14px] text-[#6e6e73] leading-relaxed">
+                Laso is a strong alternative or complement to the Oura app. It reads Oura data from Apple Health and adds deeper analysis on top, including strain tracking, Vitality Age, multi metric illness detection, and sleep debt calculations. Laso also uses personal baselines instead of population based scoring and runs entirely on device for complete privacy. The Oura app has the advantage of native integration with the ring hardware and features like temperature trending and SpO2 that depend on Oura specific sensors.
+              </div>
+            </details>
+
+            <details class="group border border-black/[0.06] rounded-2xl bg-white">
+              <summary class="flex items-center justify-between cursor-pointer px-5 sm:px-6 py-5 text-[15px] font-semibold text-[#1d1d1f] select-none min-h-[56px]">
+                Can I use Laso with my Oura Ring?
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-[#6e6e73] transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+              </summary>
+              <div class="px-5 sm:px-6 pb-5 text-[14px] text-[#6e6e73] leading-relaxed">
+                Yes. If you enable Apple Health integration in the Oura app, Laso will automatically read your Oura data including heart rate, HRV, sleep stages, respiratory rate, and more. You can use both apps side by side. Laso adds strain tracking, fitness age, illness detection, and personal baselines on top of the data your Oura Ring collects.
+              </div>
+            </details>
+
+            <details class="group border border-black/[0.06] rounded-2xl bg-white">
+              <summary class="flex items-center justify-between cursor-pointer px-5 sm:px-6 py-5 text-[15px] font-semibold text-[#1d1d1f] select-none min-h-[56px]">
+                How does Laso compare to Oura for sleep tracking?
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-[#6e6e73] transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+              </summary>
+              <div class="px-5 sm:px-6 pb-5 text-[14px] text-[#6e6e73] leading-relaxed">
+                Both Laso and Oura provide detailed sleep analysis, but they focus on different things. Oura gives you a sleep score based on stages, efficiency, and timing. Laso goes further by calculating your personal sleep need (how much sleep your body actually requires), tracking cumulative sleep debt, and showing how your sleep directly impacts recovery and next day strain targets. Laso also uses personal baselines, so your sleep scoring reflects changes relative to your own patterns rather than population averages.
+              </div>
+            </details>
+
+            <details class="group border border-black/[0.06] rounded-2xl bg-white">
+              <summary class="flex items-center justify-between cursor-pointer px-5 sm:px-6 py-5 text-[15px] font-semibold text-[#1d1d1f] select-none min-h-[56px]">
+                Does Laso replace the Oura app?
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5 shrink-0 text-[#6e6e73] transition-transform group-open:rotate-45"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+              </summary>
+              <div class="px-5 sm:px-6 pb-5 text-[14px] text-[#6e6e73] leading-relaxed">
+                Laso can replace many Oura app features like readiness scoring, sleep analysis, and activity tracking, while adding strain tracking, fitness age, and illness detection that Oura does not offer. However, some Oura specific features like temperature trending, SpO2 charts, and ring firmware updates require the Oura app. Many people use both: the Oura app for ring management and raw sensor data, and Laso for deeper analysis and actionable insights.
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <CtaSection
+        heading="Get more from your Oura Ring."
+        subheading="Laso reads your Oura data and adds personal baselines, strain tracking, and deeper analysis."
+      />
+    </main>
+
+    <SiteFooter />
+  </div>
+</Base>

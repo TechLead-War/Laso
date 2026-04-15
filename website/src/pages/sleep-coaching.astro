@@ -1,0 +1,232 @@
+---
+import Base from '../layouts/Base.astro'
+import SiteNav from '../components/SiteNav.astro'
+import SiteFooter from '../components/SiteFooter.astro'
+import CtaSection from '../components/CtaSection.astro'
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Laso",
+    "alternateName": "Laso Health",
+    "applicationCategory": "HealthApplication",
+    "operatingSystem": "iOS",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "description": "Free 7-day trial, then $29.99/year"
+    },
+    "description": "Laso calculates how much sleep you actually need, tracks your sleep debt over time, suggests bedtimes based on your patterns, and shows how sleep affects next-day performance.",
+    "featureList": [
+      "Personalized sleep need calculation",
+      "Rolling 14-day sleep debt tracking",
+      "Smart bedtime recommendations",
+      "Sleep and next-day performance correlation",
+      "On-device machine learning with personal baselines"
+    ],
+    "url": "https://lasohealth.fit/sleep-coaching",
+    "image": "https://lasohealth.fit/og-image.png"
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How does Laso calculate my sleep need?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Laso uses on-device machine learning to analyze your sleep patterns, recovery metrics, and next-day performance over several weeks. Instead of assuming everyone needs 8 hours, it identifies the sleep duration where your HRV, resting heart rate, and recovery scores consistently perform best. Your personal sleep need updates as your fitness level, stress, and lifestyle change."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is sleep debt and can I pay it off?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sleep debt is the gap between how much sleep you need and how much you actually get. Laso tracks this over a rolling 14-day window. Research shows that short-term sleep debt from the past two weeks can be recovered with consistent extra sleep. Laso helps you build a payoff strategy by recommending slightly earlier bedtimes until your debt returns to a healthy range."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does sleep quality affect my recovery score?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sleep quality is one of the strongest predictors of next-day recovery. Laso factors in deep sleep percentage, sleep efficiency, time to fall asleep, and overnight HRV stability. A night with 7 hours of high quality sleep often produces a better recovery score than 9 hours of fragmented sleep. The app shows you exactly which sleep metrics are helping or hurting your recovery."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does Laso replace my sleep tracker?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. Laso works with the sleep tracker you already have. It reads sleep data from Apple Health, which means Apple Watch, Oura Ring, Garmin, WHOOP, and other compatible devices all feed data into Laso automatically. Laso adds the intelligence layer on top: personalized sleep need, debt tracking, bedtime recommendations, and performance correlation that most trackers do not provide."
+        }
+      }
+    ]
+  }
+]
+---
+
+<Base
+  title="Sleep Coaching — Personalized Sleep Need and Debt Tracking | Laso"
+  description="Laso calculates how much sleep you actually need, tracks your sleep debt over time, suggests bedtimes based on your patterns, and shows how sleep affects next-day performance."
+  jsonLd={jsonLd}
+>
+  <SiteNav current="sleep-coaching" />
+
+  <main class="bg-white">
+
+    <!-- Hero -->
+    <section class="pt-24 pb-16 md:pt-32 md:pb-24 px-5">
+      <div class="max-w-3xl mx-auto text-center">
+        <p class="text-[13px] font-semibold uppercase tracking-widest text-[#0071e3] mb-4">Sleep Coaching</p>
+        <h1 class="text-4xl md:text-5xl font-semibold tracking-tight text-[#1d1d1f] text-balance leading-tight">
+          Stop guessing how much sleep you need.
+        </h1>
+        <p class="mt-5 text-lg md:text-xl text-[#6e6e73] max-w-2xl mx-auto text-balance leading-relaxed">
+          Most people assume they need 8 hours. The truth is your sleep need is unique. Laso learns your personal requirement, tracks your debt, and helps you build a sleep routine that actually improves how you feel and perform.
+        </p>
+        <div class="mt-8">
+          <a href="/#early-access" class="inline-flex items-center justify-center bg-[#1d1d1f] text-white font-medium rounded-full px-7 py-3 min-h-[48px] text-[15px] hover:bg-black transition-colors">
+            Join Early Access
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Your Personal Sleep Need -->
+    <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">
+          Your personal sleep need
+        </h2>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          The idea that everyone needs exactly 8 hours is a myth. Some people thrive on 7 hours and 15 minutes. Others need closer to 9. Your ideal sleep duration depends on your genetics, fitness level, daily strain, and stress load.
+        </p>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          Laso analyzes the relationship between your sleep duration and your next-day recovery metrics over several weeks. It identifies the sweet spot where your HRV is highest, your resting heart rate is lowest, and your recovery scores are consistently strong. That becomes your personal sleep need, and it updates automatically as your body and lifestyle change.
+        </p>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          Instead of chasing a generic number, you get a target that is calibrated to your body. When your training volume increases or you go through a stressful period, Laso adjusts your sleep need upward so you know to prioritize rest.
+        </p>
+      </div>
+    </section>
+
+    <!-- Sleep Debt Tracking -->
+    <section class="py-16 md:py-24 px-5">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">
+          Sleep debt tracking
+        </h2>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          Every night you sleep less than your personal need, the difference accumulates as sleep debt. Miss 45 minutes three nights in a row and you are carrying over two hours of debt. That debt directly affects your recovery, cognitive performance, and how much strain your body can handle.
+        </p>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          Laso tracks your sleep debt over a rolling 14 day window. Research suggests that recent sleep debt from the past two weeks is the most actionable because your body can still recover from it with consistent extra sleep. Debt older than two weeks has diminishing returns and is harder to measure precisely.
+        </p>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          When your debt climbs, Laso builds a payoff strategy. Rather than telling you to sleep 12 hours on the weekend, it recommends adding 30 to 60 minutes to your nightly sleep over several days. This gradual approach is more sustainable and more effective than trying to catch up all at once.
+        </p>
+      </div>
+    </section>
+
+    <!-- Bedtime Recommendations -->
+    <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">
+          Bedtime recommendations
+        </h2>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          Knowing your sleep need is only useful if you actually hit it. Laso suggests a bedtime each evening based on three factors: your personal sleep need, your current sleep debt, and when you typically need to wake up.
+        </p>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          The recommendation also accounts for your sleep onset patterns. If you typically take 15 minutes to fall asleep, Laso factors that in so you are not shortchanging yourself. And if you had a high strain day, the suggested bedtime shifts earlier to give your body the extra recovery time it needs.
+        </p>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          Over time, consistent bedtimes reinforce your circadian rhythm, which improves both how fast you fall asleep and how much deep sleep you get. Laso helps you build that consistency by gently nudging your schedule toward a pattern that works for your body.
+        </p>
+      </div>
+    </section>
+
+    <!-- Sleep and Performance -->
+    <section class="py-16 md:py-24 px-5">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">
+          Sleep and performance
+        </h2>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          Last night's sleep is the single biggest factor in today's recovery score. Laso makes this connection visible so you can see exactly how your sleep drives your readiness and strain capacity each day.
+        </p>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          When you sleep well, your HRV tends to be higher, your resting heart rate lower, and your body can handle more strain before hitting fatigue. When sleep is poor or short, recovery drops and Laso automatically lowers your recommended strain target to prevent overtraining.
+        </p>
+        <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+          The app also tracks sleep quality metrics that matter most for performance: deep sleep percentage, sleep efficiency, and overnight HRV stability. You can see which specific aspects of your sleep had the biggest impact on how you feel today. Over weeks and months, this feedback loop helps you identify what actually improves your sleep, whether that is an earlier bedtime, lower evening screen time, or adjusting your training schedule.
+        </p>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-8">
+          Frequently asked questions
+        </h2>
+        <div class="space-y-8">
+          <div>
+            <h3 class="text-[17px] font-semibold text-[#1d1d1f]">How does Laso calculate my sleep need?</h3>
+            <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+              Laso uses on-device machine learning to analyze your sleep patterns, recovery metrics, and next-day performance over several weeks. Instead of assuming everyone needs 8 hours, it identifies the sleep duration where your HRV, resting heart rate, and recovery scores consistently perform best. Your personal sleep need updates as your fitness level, stress, and lifestyle change.
+            </p>
+          </div>
+          <div>
+            <h3 class="text-[17px] font-semibold text-[#1d1d1f]">What is sleep debt and can I pay it off?</h3>
+            <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+              Sleep debt is the gap between how much sleep you need and how much you actually get. Laso tracks this over a rolling 14 day window. Research shows that short-term sleep debt from the past two weeks can be recovered with consistent extra sleep. Laso helps you build a payoff strategy by recommending slightly earlier bedtimes until your debt returns to a healthy range.
+            </p>
+          </div>
+          <div>
+            <h3 class="text-[17px] font-semibold text-[#1d1d1f]">How does sleep quality affect my recovery score?</h3>
+            <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+              Sleep quality is one of the strongest predictors of next-day recovery. Laso factors in deep sleep percentage, sleep efficiency, time to fall asleep, and overnight HRV stability. A night with 7 hours of high quality sleep often produces a better recovery score than 9 hours of fragmented sleep.
+            </p>
+          </div>
+          <div>
+            <h3 class="text-[17px] font-semibold text-[#1d1d1f]">Does Laso replace my sleep tracker?</h3>
+            <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+              No. Laso works with the sleep tracker you already have. It reads sleep data from Apple Health, which means Apple Watch, Oura Ring, Garmin, WHOOP, and other compatible devices all feed data into Laso automatically. Laso adds the intelligence layer on top: personalized sleep need, debt tracking, bedtime recommendations, and performance correlation.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Internal Links -->
+    <section class="py-16 md:py-24 px-5">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-6">
+          Related features
+        </h2>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <a href="/recovery-score" class="block p-6 rounded-2xl border border-black/[0.06] hover:border-[#0071e3]/30 hover:shadow-md transition-all">
+            <p class="text-[15px] font-semibold text-[#1d1d1f]">Recovery Score</p>
+            <p class="mt-1 text-[13px] text-[#6e6e73]">See how sleep, strain, and HRV combine into a daily readiness score that guides your training.</p>
+          </a>
+          <a href="/stress-monitor" class="block p-6 rounded-2xl border border-black/[0.06] hover:border-[#0071e3]/30 hover:shadow-md transition-all">
+            <p class="text-[15px] font-semibold text-[#1d1d1f]">Stress Monitor</p>
+            <p class="mt-1 text-[13px] text-[#6e6e73]">Track how daytime stress affects your sleep quality and recovery with HRV based stress detection.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <CtaSection heading="Sleep better, recover faster." subheading="Laso learns your body so you can stop guessing and start improving." />
+
+  </main>
+
+  <SiteFooter />
+</Base>

@@ -1,0 +1,41 @@
+---
+interface Props {
+  current?: string
+}
+const { current } = Astro.props
+---
+
+<nav aria-label="Main navigation" class="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-black/[0.06]">
+  <div class="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between gap-3">
+    <a href="/" class="text-[22px] font-bold text-[#1d1d1f] tracking-tight hover:opacity-80 transition-opacity shrink-0">
+      Laso
+    </a>
+
+    <div class="hidden md:flex items-center gap-6">
+      <div class="relative group">
+        <button class="text-[13px] font-medium text-[#6e6e73] hover:text-[#1d1d1f] transition-colors flex items-center gap-1">
+          Features
+          <svg viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5 transition-transform group-hover:rotate-180"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+        </button>
+        <div class="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 absolute top-full left-1/2 -translate-x-1/2 pt-2 w-52">
+          <div class="bg-white rounded-xl shadow-lg border border-black/[0.06] py-2">
+            <a href="/recovery-score" class:list={["block px-4 py-2 text-[13px] hover:bg-[#f5f5f7] transition-colors", current === 'recovery-score' ? 'text-[#0071e3] font-semibold' : 'text-[#424245]']}>Recovery Score</a>
+            <a href="/strain-tracking" class:list={["block px-4 py-2 text-[13px] hover:bg-[#f5f5f7] transition-colors", current === 'strain-tracking' ? 'text-[#0071e3] font-semibold' : 'text-[#424245]']}>Strain Tracking</a>
+            <a href="/sleep-coaching" class:list={["block px-4 py-2 text-[13px] hover:bg-[#f5f5f7] transition-colors", current === 'sleep-coaching' ? 'text-[#0071e3] font-semibold' : 'text-[#424245]']}>Sleep Coaching</a>
+            <a href="/vitality-age" class:list={["block px-4 py-2 text-[13px] hover:bg-[#f5f5f7] transition-colors", current === 'vitality-age' ? 'text-[#0071e3] font-semibold' : 'text-[#424245]']}>Vitality Age</a>
+            <a href="/stress-monitor" class:list={["block px-4 py-2 text-[13px] hover:bg-[#f5f5f7] transition-colors", current === 'stress-monitor' ? 'text-[#0071e3] font-semibold' : 'text-[#424245]']}>Stress Monitor</a>
+            <a href="/illness-detection" class:list={["block px-4 py-2 text-[13px] hover:bg-[#f5f5f7] transition-colors", current === 'illness-detection' ? 'text-[#0071e3] font-semibold' : 'text-[#424245]']}>Wellness Detection</a>
+            <a href="/cycle-tracking" class:list={["block px-4 py-2 text-[13px] hover:bg-[#f5f5f7] transition-colors", current === 'cycle-tracking' ? 'text-[#0071e3] font-semibold' : 'text-[#424245]']}>Cycle Tracking</a>
+          </div>
+        </div>
+      </div>
+      <a href="/devices" class:list={["text-[13px] font-medium transition-colors", current === 'devices' ? 'text-[#0071e3]' : 'text-[#6e6e73] hover:text-[#1d1d1f]']}>Devices</a>
+      <a href="/faq" class:list={["text-[13px] font-medium transition-colors", current === 'faq' ? 'text-[#0071e3]' : 'text-[#6e6e73] hover:text-[#1d1d1f]']}>FAQ</a>
+      <a href="/about" class:list={["text-[13px] font-medium transition-colors", current === 'about' ? 'text-[#0071e3]' : 'text-[#6e6e73] hover:text-[#1d1d1f]']}>About</a>
+    </div>
+
+    <a href="/#early-access" class="bg-[#1d1d1f] text-white text-xs font-medium rounded-full px-4 py-2 min-h-[44px] flex items-center hover:bg-black transition-colors shrink-0">
+      Get Early Access
+    </a>
+  </div>
+</nav>

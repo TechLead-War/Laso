@@ -1,0 +1,180 @@
+---
+import Base from '../layouts/Base.astro'
+import SiteNav from '../components/SiteNav.astro'
+import SiteFooter from '../components/SiteFooter.astro'
+import CtaSection from '../components/CtaSection.astro'
+import '../styles/globals.css'
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How does Laso measure stress?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Laso measures stress by analyzing your heart rate variability (HRV) and resting heart rate in real time. When your HRV drops below your personal baseline and your heart rate rises above its usual resting level, Laso combines these two signals into a single stress score from 0 to 100. Because it uses your own baseline rather than population averages, even subtle shifts are detected early."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is HRV-based stress tracking?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "HRV-based stress tracking uses the variation in time between heartbeats as a window into your autonomic nervous system. When you are relaxed, the interval between beats varies more. When you are stressed, it becomes more rigid and uniform. Laso tracks this pattern continuously using data from your wearable and flags periods where your nervous system is under elevated load."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does the breathwork feature actually help?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Guided slow breathing activates the parasympathetic nervous system, which directly increases HRV and lowers heart rate. Laso triggers a breathwork session when your stress score crosses a threshold you set. Clinical research shows that even 2 to 3 minutes of paced breathing at 6 breaths per minute can measurably reduce acute stress markers. Laso tracks the before and after so you can see the effect on your own data."
+      }
+    }
+  ]
+}
+---
+
+<Base
+  title="Stress Monitor — HRV Based Stress Tracking with Breathwork | Laso"
+  description="Laso uses HRV and heart rate to calculate a real-time stress score, tracks your weekly stress trends, and provides guided breathwork when stress is elevated."
+  jsonLd={jsonLd}
+>
+  <div class="min-h-screen bg-white">
+    <SiteNav current="stress-monitor" />
+
+    <main>
+      <!-- Hero -->
+      <section class="pt-24 pb-14 md:pt-36 md:pb-20 px-5 text-center bg-gradient-to-b from-white to-[#f5f5f7]">
+        <div class="max-w-3xl mx-auto">
+          <p class="text-[13px] font-semibold text-[#0071e3] uppercase tracking-wider mb-4">Stress Monitor</p>
+          <h1 class="text-3xl md:text-5xl font-semibold tracking-tight text-[#1d1d1f] text-balance leading-tight">
+            Know when stress is building. Before you feel it.
+          </h1>
+          <p class="mt-5 text-[17px] md:text-[19px] text-[#6e6e73] max-w-2xl mx-auto text-balance leading-relaxed">
+            Laso turns heart rate variability and heart rate data from your wearable into a real time stress score. It spots stress patterns across your week and offers guided breathwork when you need it most.
+          </p>
+          <div class="mt-8">
+            <a href="/#early-access" class="inline-flex items-center justify-center bg-[#1d1d1f] text-white font-medium rounded-full px-7 py-3 min-h-[48px] text-[15px] hover:bg-black transition-colors">
+              Join Early Access
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- How stress scoring works -->
+      <section class="py-16 md:py-24 px-5">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">How stress scoring works</h2>
+          <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+            Your body has two clear signals when stress is elevated. Heart rate variability drops and resting heart rate rises. Laso watches both continuously and combines them into a single score from 0 to 100.
+          </p>
+          <div class="mt-10 grid md:grid-cols-3 gap-8">
+            <div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">HRV deviation</h3>
+              <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+                Laso builds a rolling personal HRV baseline over time. When your current HRV dips below that baseline, it means your autonomic nervous system is working harder than usual. The further the drop, the higher the stress signal.
+              </p>
+            </div>
+            <div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">Heart rate elevation</h3>
+              <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+                A resting heart rate that is higher than your personal average often indicates that your body is under load, whether from mental pressure, poor sleep, or physical overexertion. Laso factors the magnitude of this elevation into your score.
+              </p>
+            </div>
+            <div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">Combined score</h3>
+              <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+                Rather than showing you two separate numbers, Laso weights HRV deviation and heart rate elevation together into one stress score. A score under 30 means your nervous system is calm. Above 70 means stress is significantly elevated and action may help.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Weekly trends -->
+      <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">Weekly trends that reveal your stress patterns</h2>
+          <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+            A single stress reading is useful in the moment, but the real insight comes from seeing how stress moves across your week. Laso charts your daily stress scores so you can spot recurring patterns.
+          </p>
+          <div class="mt-10 space-y-6">
+            <div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">Pattern recognition</h3>
+              <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+                Maybe your stress spikes every Monday morning. Maybe it climbs steadily through the work week and only drops on Saturday. Laso surfaces these rhythms automatically so you do not have to guess which days are hardest on your body.
+              </p>
+            </div>
+            <div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">Stress triggers</h3>
+              <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+                By comparing your stress trends with sleep quality, strain load, and recovery data, Laso helps you connect the dots. A night of poor sleep followed by a high strain day is a reliable recipe for elevated stress, and the weekly view makes that connection obvious.
+              </p>
+            </div>
+            <div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">Why personal baselines matter here</h3>
+              <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+                A stress score of 50 means different things for different people. Someone with naturally low HRV variability will have a different baseline than an endurance athlete with high HRV. Laso calibrates to your normal over time, so the weekly trends you see reflect genuine changes in your stress load, not noise from population averages.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Guided breathwork -->
+      <section class="py-16 md:py-24 px-5">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">Guided breathwork when stress is elevated</h2>
+          <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+            Knowing your stress score is step one. Doing something about it is step two. Laso includes a guided breathwork feature that activates when your stress score crosses a threshold you define.
+          </p>
+          <div class="mt-10 space-y-6">
+            <div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">When it triggers</h3>
+              <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+                You set the threshold. When your stress score reaches that level, Laso sends a gentle prompt offering a short breathwork session. The default is a score of 60, but you can adjust it higher or lower depending on your preference. The idea is simple: intervene before stress compounds.
+              </p>
+            </div>
+            <div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">How it helps</h3>
+              <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+                Slow, paced breathing at about 6 breaths per minute activates the parasympathetic branch of your nervous system. This directly increases HRV and lowers heart rate. Clinical research supports that even 2 to 3 minutes of this kind of breathing can measurably reduce acute stress markers.
+              </p>
+              <p class="mt-3 text-[15px] text-[#6e6e73] leading-relaxed">
+                Laso tracks your HRV before and after each session so you can see the impact on your own data. Over time, you build a personal record of how effective breathwork is for your body, which helps you understand when and how to use it best.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Related features -->
+      <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">Related features</h2>
+          <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+            Stress does not exist in isolation. It affects your recovery and your sleep, and those affect your stress in return. Explore how Laso connects the full picture.
+          </p>
+          <div class="mt-8 flex flex-col sm:flex-row gap-4">
+            <a href="/recovery-score" class="flex-1 bg-white rounded-2xl p-6 border border-black/[0.06] hover:shadow-md transition-shadow">
+              <p class="text-[13px] font-semibold text-[#0071e3] uppercase tracking-wider">Recovery Score</p>
+              <p class="mt-2 text-[15px] text-[#6e6e73]">See how stress affects your daily readiness and recovery trajectory.</p>
+            </a>
+            <a href="/sleep-coaching" class="flex-1 bg-white rounded-2xl p-6 border border-black/[0.06] hover:shadow-md transition-shadow">
+              <p class="text-[13px] font-semibold text-[#0071e3] uppercase tracking-wider">Sleep Coaching</p>
+              <p class="mt-2 text-[15px] text-[#6e6e73]">Poor sleep is the most common stress amplifier. Laso helps you fix it.</p>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <CtaSection heading="Start tracking your stress patterns." subheading="Your wearable already collects the data. Laso turns it into clarity." />
+    </main>
+
+    <SiteFooter />
+  </div>
+</Base>

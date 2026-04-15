@@ -3,6 +3,7 @@ package com.lasohealth.android.core.design
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.lasohealth.android.ui.theme.AccentGreen
 import com.lasohealth.android.ui.theme.AccentOrange
 import com.lasohealth.android.ui.theme.AccentRed
@@ -18,6 +19,9 @@ object LasoTokens {
     const val BadgeBgOpacity = 0.12f
     const val BorderOpacity = 0.10f
     val DividerHeight = 32.dp
+    val BadgeH = 6.dp
+    val BadgeV = 3.dp
+    val LabelLetterSpacing = 1.5.sp
 
     // iOS thresholds: 75+ green, 50-74 yellow, 30-49 orange, 0-29 red
     fun scoreColor(score: Int): Color = when {

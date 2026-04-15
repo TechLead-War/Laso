@@ -36,6 +36,12 @@ sealed class AppRoute(val route: String) {
     data object JournalInsights : AppRoute("journalInsights")
     data object Feedback : AppRoute("feedback")
     data object RecoveryInfo : AppRoute("recoveryInfo")
+    data object TodayWorkout : AppRoute("todayWorkout")
+
+    // Health Risk Detail (parameterized by risk ID)
+    data object HealthRiskDetail : AppRoute("healthRiskDetail/{riskId}") {
+        fun createRoute(riskId: String): String = "healthRiskDetail/$riskId"
+    }
 
     // Parameterized routes
     data object MetricDetail : AppRoute("metricDetail/{metricId}") {

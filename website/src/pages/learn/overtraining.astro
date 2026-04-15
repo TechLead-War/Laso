@@ -1,0 +1,249 @@
+---
+import Base from '../../layouts/Base.astro'
+import SiteNav from '../../components/SiteNav.astro'
+import SiteFooter from '../../components/SiteFooter.astro'
+import CtaSection from '../../components/CtaSection.astro'
+import LearnArticle from '../../components/LearnArticle.astro'
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Overtraining Syndrome: Signs, Prevention, and Recovery",
+    "description": "Overtraining happens when exercise exceeds your body's ability to recover. Learn the warning signs, how to distinguish it from normal fatigue, and how to prevent it.",
+    "datePublished": "2026-04-11",
+    "dateModified": "2026-04-11",
+    "author": {
+      "@type": "Organization",
+      "name": "Laso Health"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Laso Health",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://lasohealth.fit/favicon.svg"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://lasohealth.fit/learn/overtraining"
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is the difference between overreaching and overtraining?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Overreaching is a short-term state where training temporarily exceeds recovery capacity. Functional overreaching resolves in days and can be a deliberate training strategy. Non-functional overreaching takes weeks to recover from. Overtraining syndrome is the most severe form and can take months to recover from, with symptoms including persistent fatigue, declining performance, elevated resting heart rate, and mood disturbances."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How long does it take to recover from overtraining?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Recovery from true overtraining syndrome typically takes weeks to months. The first step is reducing training volume by 50 to 75 percent for 1 to 2 weeks. If performance does not improve, complete rest may be needed. If symptoms persist beyond a month, it is advisable to see a sports medicine physician for evaluation."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can HRV detect overtraining?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Heart rate variability (HRV) is one of the most sensitive early indicators of overtraining. A sustained decline in HRV over multiple days, combined with elevated resting heart rate and declining performance, is a strong signal that recovery is insufficient. Tracking HRV trends against your personal baseline is more useful than looking at any single reading."
+        }
+      }
+    ]
+  }
+]
+---
+
+<Base title="Overtraining Syndrome: Signs, Prevention, and Recovery | Laso" description="Overtraining happens when exercise exceeds your body's ability to recover. Learn the warning signs, how to distinguish it from normal fatigue, and how to prevent it." jsonLd={jsonLd}>
+  <SiteNav />
+
+  <LearnArticle category="Training" readingTime="9 min" lastUpdated="April 2026">
+    <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-[#1d1d1f] text-balance">
+      Overtraining: How to Spot It Before It Stops You
+    </h1>
+
+    <p class="mt-4 text-[17px] text-[#6e6e73] leading-relaxed max-w-2xl">
+      Training hard is how you improve. But there is a line where training becomes counterproductive, where pushing harder actually makes you weaker. Overtraining syndrome is what happens when you cross that line repeatedly without adequate recovery.
+    </p>
+
+    <!-- What is overtraining? -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">What is overtraining?</h2>
+      <p class="mt-4 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Overtraining syndrome (OTS) is a state where chronic excessive training load without adequate recovery leads to a prolonged decline in performance. It is not the same as being tired after a hard workout or a tough training week. Those are normal responses to training stress.
+      </p>
+      <p class="mt-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+        OTS develops when the balance between training stress and recovery tips too far toward stress, sustained over weeks or months. The body's adaptive systems become overwhelmed. Instead of getting fitter, you get weaker, more fatigued, and more susceptible to illness and injury.
+      </p>
+      <p class="mt-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+        The condition is recognized by sports medicine organizations worldwide, including the European College of Sport Science and the American College of Sports Medicine. It affects athletes across all disciplines, from endurance sports to strength training, and is particularly common among highly motivated individuals who equate more training with better results.
+      </p>
+    </section>
+
+    <!-- Warning signs -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">Warning signs of overtraining</h2>
+      <p class="mt-4 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Overtraining rarely announces itself with a single dramatic symptom. Instead, it presents as a cluster of signs that gradually worsen over time. The challenge is that many of these symptoms can also have other causes, which is why pattern recognition is so important.
+      </p>
+
+      <div class="mt-6 overflow-x-auto">
+        <table class="w-full text-[14px] text-left border-collapse">
+          <thead>
+            <tr class="border-b border-[#e5e5e7]">
+              <th class="py-3 pr-4 font-semibold text-[#1d1d1f]">Category</th>
+              <th class="py-3 font-semibold text-[#1d1d1f]">Signs</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b border-[#e5e5e7]">
+              <td class="py-3 pr-4 text-[#1d1d1f] font-medium">Performance</td>
+              <td class="py-3 text-[#6e6e73]">Declining performance despite continued training, inability to complete workouts that were previously manageable</td>
+            </tr>
+            <tr class="border-b border-[#e5e5e7]">
+              <td class="py-3 pr-4 text-[#1d1d1f] font-medium">Physical</td>
+              <td class="py-3 text-[#6e6e73]">Persistent fatigue that does not improve with rest, elevated resting heart rate (3 to 5+ bpm above baseline), persistent muscle soreness, loss of appetite</td>
+            </tr>
+            <tr class="border-b border-[#e5e5e7]">
+              <td class="py-3 pr-4 text-[#1d1d1f] font-medium">Physiological</td>
+              <td class="py-3 text-[#6e6e73]">Suppressed HRV, disrupted sleep (difficulty falling asleep or frequent waking), increased susceptibility to illness</td>
+            </tr>
+            <tr>
+              <td class="py-3 pr-4 text-[#1d1d1f] font-medium">Psychological</td>
+              <td class="py-3 text-[#6e6e73]">Irritability, anxiety, loss of motivation, mood swings, feeling of dread before training sessions</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="mt-4 text-[15px] text-[#1d1d1f] leading-relaxed">
+        The most reliable early warning sign is declining performance combined with elevated resting heart rate and suppressed HRV. If you are training consistently but getting slower or weaker, and your body's recovery markers are trending in the wrong direction, those signals should not be ignored.
+      </p>
+    </section>
+
+    <!-- Overreaching vs overtraining -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">Overreaching vs overtraining</h2>
+      <p class="mt-4 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Sports science distinguishes three levels of training-induced fatigue. Understanding the spectrum is important because the treatment for each level is different.
+      </p>
+
+      <div class="mt-6 overflow-x-auto">
+        <table class="w-full text-[14px] text-left border-collapse">
+          <thead>
+            <tr class="border-b border-[#e5e5e7]">
+              <th class="py-3 pr-4 font-semibold text-[#1d1d1f]">Stage</th>
+              <th class="py-3 pr-4 font-semibold text-[#1d1d1f]">Recovery time</th>
+              <th class="py-3 font-semibold text-[#1d1d1f]">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b border-[#e5e5e7]">
+              <td class="py-3 pr-4 text-[#1d1d1f] font-medium">Functional overreaching</td>
+              <td class="py-3 pr-4 text-[#6e6e73]">Days</td>
+              <td class="py-3 text-[#6e6e73]">A normal part of training. Short-term fatigue followed by adaptation. Often used deliberately in periodized training plans to trigger improvement.</td>
+            </tr>
+            <tr class="border-b border-[#e5e5e7]">
+              <td class="py-3 pr-4 text-[#1d1d1f] font-medium">Non-functional overreaching</td>
+              <td class="py-3 pr-4 text-[#6e6e73]">Weeks</td>
+              <td class="py-3 text-[#6e6e73]">Training stress has exceeded recovery capacity. Performance stalls or declines. Requires a deliberate reduction in training volume to recover.</td>
+            </tr>
+            <tr>
+              <td class="py-3 pr-4 text-[#1d1d1f] font-medium">Overtraining syndrome</td>
+              <td class="py-3 pr-4 text-[#6e6e73]">Months</td>
+              <td class="py-3 text-[#6e6e73]">Prolonged and severe. Systemic symptoms including hormonal disruption, immune suppression, and psychological disturbances. May require medical evaluation.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="mt-4 text-[15px] text-[#1d1d1f] leading-relaxed">
+        The key differentiator between these stages is recovery time. Functional overreaching resolves with a rest day or two. Non-functional overreaching needs a dedicated recovery week. True overtraining syndrome can sideline an athlete for months. The earlier you catch the pattern, the faster you recover.
+      </p>
+    </section>
+
+    <!-- How to prevent it -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">How to prevent overtraining</h2>
+      <p class="mt-4 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Prevention is fundamentally about matching your training load to your recovery capacity. Here are the most effective strategies:
+      </p>
+
+      <ul class="mt-4 space-y-3">
+        <li class="flex gap-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+          <span class="text-[#0071e3] font-semibold mt-0.5">1.</span>
+          <span><strong>Follow recovery-based training.</strong> Train hard when your body is recovered. Back off when it is not. This sounds simple but requires objective data, since perceived readiness often does not match physiological readiness.</span>
+        </li>
+        <li class="flex gap-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+          <span class="text-[#0071e3] font-semibold mt-0.5">2.</span>
+          <span><strong>Periodize your training.</strong> Alternate between weeks of higher and lower volume. Build in recovery weeks every 3 to 4 weeks. Periodization gives your body the stimulus it needs to adapt without overwhelming it.</span>
+        </li>
+        <li class="flex gap-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+          <span class="text-[#0071e3] font-semibold mt-0.5">3.</span>
+          <span><strong>Monitor HRV trends.</strong> A sustained decline in HRV over multiple days is one of the most sensitive early warning signs. A single low reading can be noise. Three or more consecutive days of suppressed HRV relative to your baseline is a red flag.</span>
+        </li>
+        <li class="flex gap-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+          <span class="text-[#0071e3] font-semibold mt-0.5">4.</span>
+          <span><strong>Prioritize sleep.</strong> Sleep is when most physical recovery occurs. Growth hormone release, muscle repair, and nervous system restoration all happen primarily during sleep. Compromising sleep while maintaining high training volume is a direct path to overtraining.</span>
+        </li>
+        <li class="flex gap-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+          <span class="text-[#0071e3] font-semibold mt-0.5">5.</span>
+          <span><strong>Eat enough to support your training.</strong> Underfueling while training hard accelerates the progression toward overtraining. Caloric intake needs to match expenditure, especially for protein and carbohydrates, which are critical for muscle repair and glycogen replenishment.</span>
+        </li>
+      </ul>
+    </section>
+
+    <!-- What to do if you suspect overtraining -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">What to do if you suspect overtraining</h2>
+      <p class="mt-4 text-[15px] text-[#1d1d1f] leading-relaxed">
+        If you recognize multiple warning signs, take action early. Waiting to see if things improve on their own usually makes the situation worse.
+      </p>
+
+      <ul class="mt-4 space-y-3">
+        <li class="flex gap-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+          <span class="text-[#0071e3] font-medium">&#x2022;</span>
+          <span><strong>Reduce training volume by 50 to 75 percent</strong> for 1 to 2 weeks. Maintain some light activity but eliminate high-intensity work.</span>
+        </li>
+        <li class="flex gap-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+          <span class="text-[#0071e3] font-medium">&#x2022;</span>
+          <span><strong>Prioritize sleep.</strong> Aim for 8 to 9 hours per night during the recovery period. Sleep is the most powerful recovery tool available.</span>
+        </li>
+        <li class="flex gap-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+          <span class="text-[#0071e3] font-medium">&#x2022;</span>
+          <span><strong>Monitor your recovery markers.</strong> Track resting heart rate and HRV daily. You should see these metrics begin to normalize within the first week if the issue is non-functional overreaching.</span>
+        </li>
+        <li class="flex gap-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+          <span class="text-[#0071e3] font-medium">&#x2022;</span>
+          <span><strong>If performance does not return within 2 weeks,</strong> consider complete rest. If symptoms persist beyond a month, see a sports medicine physician. Persistent overtraining syndrome can mimic other conditions including thyroid disorders and iron deficiency, which require medical evaluation.</span>
+        </li>
+      </ul>
+    </section>
+
+    <!-- How wearable data helps -->
+    <section class="mt-12">
+      <h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">How wearable data helps</h2>
+      <p class="mt-4 text-[15px] text-[#1d1d1f] leading-relaxed">
+        The challenge with overtraining is that it develops gradually. By the time you feel overtrained, you have already been overtrained for a while. This is where objective physiological data becomes invaluable.
+      </p>
+      <p class="mt-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+        HRV trend monitoring is the most sensitive early warning system for overtraining. Research has consistently shown that HRV suppression precedes subjective feelings of overtraining by days or even weeks. Laso tracks your multi-day HRV trends against your personal baseline and flags sustained deviations before they become a problem.
+      </p>
+      <p class="mt-3 text-[15px] text-[#1d1d1f] leading-relaxed">
+        Combined with <a href="/strain-tracking" class="text-[#0071e3] hover:underline">strain tracking</a> (which quantifies your daily training load), the <a href="/recovery-score" class="text-[#0071e3] hover:underline">recovery score</a> (which tells you how much capacity you have), and <a href="/illness-detection" class="text-[#0071e3] hover:underline">wellness detection</a> (which catches immune suppression early), Laso gives you the data to train hard and recover smarter.
+      </p>
+    </section>
+  </LearnArticle>
+
+  <CtaSection heading="Train smarter with Laso." subheading="Get early warnings before overtraining sets in. Recovery-based strain targets keep you in the zone." />
+  <SiteFooter />
+</Base>

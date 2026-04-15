@@ -28,6 +28,7 @@ import com.lasohealth.android.core.model.DiscoveryUi
 import com.lasohealth.android.core.model.ExploreUiState
 import com.lasohealth.android.core.model.HealthCategory
 import com.lasohealth.android.core.model.HealthMetric
+import com.lasohealth.android.core.model.HealthRiskDetailUiState
 import com.lasohealth.android.core.model.HealthStateEntryUi
 import com.lasohealth.android.core.model.HealthStateTimelineUiState
 import com.lasohealth.android.core.model.HomeUiState
@@ -45,6 +46,8 @@ import com.lasohealth.android.core.model.PersonalRecordUi
 import com.lasohealth.android.core.model.PhaseDurationUi
 import com.lasohealth.android.core.model.PlatformStatus
 import com.lasohealth.android.core.model.RecommendationUi
+import com.lasohealth.android.core.model.RiskFactorUi
+import com.lasohealth.android.core.model.RiskFocusAreaUi
 import com.lasohealth.android.core.model.SettingsUiState
 import com.lasohealth.android.core.model.SleepCoachUiState
 import com.lasohealth.android.core.model.SleepDayUi
@@ -52,14 +55,22 @@ import com.lasohealth.android.core.model.StrainDetailUiState
 import com.lasohealth.android.core.model.StreakUi
 import com.lasohealth.android.core.model.StreaksUi
 import com.lasohealth.android.core.model.StressMonitorUiState
+import com.lasohealth.android.core.model.TodayWorkoutUiState
 import com.lasohealth.android.core.analysis.TrendDirection
 import com.lasohealth.android.core.model.TrendMetricUi
 import com.lasohealth.android.core.model.VitalityDetailUiState
 import com.lasohealth.android.core.model.VitalityImprovementUi
 import com.lasohealth.android.core.model.WeeklyReviewDetailUiState
 import com.lasohealth.android.core.model.WeeklyReviewUi
+import com.lasohealth.android.core.model.WorkoutBlockUi
 import com.lasohealth.android.core.model.HeartRateEntry
 import com.lasohealth.android.core.model.WorkoutUi
+import com.lasohealth.android.core.model.ActivationProgressUi
+import com.lasohealth.android.core.model.IntelligenceCardUi
+import com.lasohealth.android.core.model.IntelligenceAccent
+import com.lasohealth.android.core.model.IntelligenceSeverity
+import com.lasohealth.android.core.model.MetricForecastUi
+import com.lasohealth.android.core.model.ForecastDirection
 import java.util.Calendar
 
 class SampleHealthDataRepository : HealthDataRepository {
@@ -175,6 +186,70 @@ class SampleHealthDataRepository : HealthDataRepository {
             activityStreak = 12,
             sleepStreak = 5,
             recoveryStreak = 8,
+            recoveryWhyLine = "Your HRV bounced back overnight and resting heart rate is low. Sleep was solid at 7h 12m.",
+            activationProgress = ActivationProgressUi(
+                currentDay = 5,
+                progressFraction = 0.62f,
+                progressDescription = "Day 5 of 8 \u2014 Building your baseline",
+                isComplete = false,
+                latestMilestone = null,
+            ),
+            showMorningCheckIn = true,
+            intelligenceBriefing = listOf(
+                IntelligenceCardUi(
+                    id = "1",
+                    label = "Heads Up",
+                    headline = "Your HRV has been dropping since Friday. The last time this happened, you had less deep sleep for 3 nights in a row.",
+                    detail = "Getting extra sleep tonight could help based on your history.",
+                    confidencePercent = 87,
+                    severity = IntelligenceSeverity.WARNING,
+                    accentColor = IntelligenceAccent.ORANGE,
+                ),
+                IntelligenceCardUi(
+                    id = "2",
+                    label = "Something Changed",
+                    headline = "Your deep sleep has been lower since last Tuesday, shifting by 45 min.",
+                    detail = "Your resting heart rate changed around the same time.",
+                    confidencePercent = 74,
+                    severity = IntelligenceSeverity.NOTABLE,
+                    accentColor = IntelligenceAccent.PURPLE,
+                ),
+                IntelligenceCardUi(
+                    id = "3",
+                    label = "Why This Is Happening",
+                    headline = "Your weekend activity pushes down your Monday recovery about 2 days later.",
+                    detail = "This connection has been consistent in your data (strength: 0.64).",
+                    confidencePercent = 81,
+                    severity = IntelligenceSeverity.INFO,
+                    accentColor = IntelligenceAccent.BLUE,
+                ),
+            ),
+            healthForecasts = listOf(
+                MetricForecastUi(
+                    metric = HealthMetric.HEART_RATE_VARIABILITY,
+                    predictedValueFormatted = "52ms",
+                    rangeDescription = "Expected: 42ms \u2013 62ms",
+                    directionIcon = ForecastDirection.UP,
+                    isFavorable = true,
+                    confidencePercent = 85,
+                ),
+                MetricForecastUi(
+                    metric = HealthMetric.SLEEP_DURATION,
+                    predictedValueFormatted = "7.5h",
+                    rangeDescription = "Expected: 6.7h \u2013 8.3h",
+                    directionIcon = ForecastDirection.UP,
+                    isFavorable = true,
+                    confidencePercent = 78,
+                ),
+                MetricForecastUi(
+                    metric = HealthMetric.RESTING_HEART_RATE,
+                    predictedValueFormatted = "58 bpm",
+                    rangeDescription = "Expected: 55 \u2013 61 bpm",
+                    directionIcon = ForecastDirection.DOWN,
+                    isFavorable = true,
+                    confidencePercent = 82,
+                ),
+            ),
         )
     }
 
@@ -1094,6 +1169,133 @@ class SampleHealthDataRepository : HealthDataRepository {
             recoveryDays = 24,
             activeDaysPerWeek = 5.2f,
             performanceTrend = "Improving",
+        )
+    }
+
+    override fun healthRiskDetailState(riskId: String): HealthRiskDetailUiState {
+        return HealthRiskDetailUiState(
+            riskName = "Cardiovascular Risk",
+            riskScore = 34,
+            riskGrade = "Medium",
+            description = "Your cardiovascular risk profile shows some areas that could benefit from attention. Elevated resting heart rate and reduced HRV are the primary contributors.",
+            focusAreas = listOf(
+                RiskFocusAreaUi(
+                    title = "Improve Resting Heart Rate",
+                    impact = "High",
+                    description = "Consistent aerobic exercise and stress management can lower your resting heart rate over time.",
+                ),
+                RiskFocusAreaUi(
+                    title = "Increase HRV Through Recovery",
+                    impact = "High",
+                    description = "Prioritize sleep quality and add recovery days between intense workouts to boost HRV.",
+                ),
+                RiskFocusAreaUi(
+                    title = "Monitor Blood Pressure",
+                    impact = "Medium",
+                    description = "Regular blood pressure checks can help catch early trends before they become concerning.",
+                ),
+            ),
+            contributingFactors = listOf(
+                RiskFactorUi(
+                    metricName = "Resting Heart Rate",
+                    currentValue = "72 bpm",
+                    status = "warning",
+                    optimalRange = "50\u201365 bpm",
+                    riskContribution = 0.45f,
+                ),
+                RiskFactorUi(
+                    metricName = "Heart Rate Variability",
+                    currentValue = "38 ms",
+                    status = "warning",
+                    optimalRange = "50\u201380 ms",
+                    riskContribution = 0.35f,
+                ),
+                RiskFactorUi(
+                    metricName = "Blood Oxygen",
+                    currentValue = "97%",
+                    status = "ok",
+                    optimalRange = "95\u2013100%",
+                    riskContribution = 0.05f,
+                ),
+                RiskFactorUi(
+                    metricName = "VO2 Max",
+                    currentValue = "42.5 mL/kg/min",
+                    status = "ok",
+                    optimalRange = "40\u201355 mL/kg/min",
+                    riskContribution = 0.08f,
+                ),
+                RiskFactorUi(
+                    metricName = "Blood Pressure",
+                    currentValue = "128/82 mmHg",
+                    status = "warning",
+                    optimalRange = "< 120/80 mmHg",
+                    riskContribution = 0.30f,
+                ),
+                RiskFactorUi(
+                    metricName = "Respiratory Rate",
+                    currentValue = "14 br/min",
+                    status = "ok",
+                    optimalRange = "12\u201320 br/min",
+                    riskContribution = 0.03f,
+                ),
+            ),
+        )
+    }
+
+    override fun todayWorkoutState(): TodayWorkoutUiState {
+        return TodayWorkoutUiState(
+            title = "Zone 2 Aerobic Builder",
+            summary = "Moderate-intensity session focused on building aerobic base while staying within your recovery capacity.",
+            targetZone = "Zone 2-3",
+            targetDuration = 45,
+            targetCalories = 320,
+            recoveryBand = "Green recovery",
+            blocks = listOf(
+                WorkoutBlockUi(
+                    name = "Warm-Up",
+                    duration = 8,
+                    targetHeartRateZone = 1,
+                    targetBpm = "100-120 bpm",
+                    exercises = listOf(
+                        "Light jogging or brisk walking",
+                        "Dynamic stretches (leg swings, arm circles)",
+                        "Gradually increase pace over 3 minutes",
+                    ),
+                ),
+                WorkoutBlockUi(
+                    name = "Main Block 1",
+                    duration = 15,
+                    targetHeartRateZone = 2,
+                    targetBpm = "120-140 bpm",
+                    exercises = listOf(
+                        "Steady-state running at conversational pace",
+                        "Focus on nasal breathing where possible",
+                        "Keep cadence around 170 steps per minute",
+                    ),
+                ),
+                WorkoutBlockUi(
+                    name = "Main Block 2",
+                    duration = 12,
+                    targetHeartRateZone = 3,
+                    targetBpm = "140-155 bpm",
+                    exercises = listOf(
+                        "Tempo run at moderate effort",
+                        "2 min hard, 1 min easy (repeat 4 times)",
+                        "Maintain form and breathing rhythm",
+                    ),
+                ),
+                WorkoutBlockUi(
+                    name = "Cooldown",
+                    duration = 10,
+                    targetHeartRateZone = 1,
+                    targetBpm = "90-110 bpm",
+                    exercises = listOf(
+                        "Slow jog transitioning to walk",
+                        "Static stretches: quads, hamstrings, calves",
+                        "Deep breathing for 2 minutes",
+                    ),
+                ),
+            ),
         )
     }
 

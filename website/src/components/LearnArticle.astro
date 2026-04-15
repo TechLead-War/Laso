@@ -1,0 +1,28 @@
+---
+interface Props {
+  category: string
+  readingTime: string
+  lastUpdated: string
+}
+const { category, readingTime, lastUpdated } = Astro.props
+---
+
+<article class="max-w-3xl mx-auto px-5 py-12 md:py-16" itemscope itemtype="https://schema.org/Article">
+  <div class="mb-8 flex flex-wrap items-center gap-3 text-[13px] text-[#6e6e73]">
+    <a href="/learn" class="hover:text-[#0071e3] transition-colors">Learn</a>
+    <span>/</span>
+    <span>{category}</span>
+    <span class="mx-1">|</span>
+    <span>{readingTime} read</span>
+    <span class="mx-1">|</span>
+    <time datetime={lastUpdated}>Updated {lastUpdated}</time>
+  </div>
+  <slot />
+  <div class="mt-12 pt-8 border-t border-[#e5e5e7]">
+    <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+      <p class="text-[13px] text-amber-800 leading-relaxed">
+        <strong>Medical disclaimer:</strong> This article is for educational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider with questions about a medical condition. Laso is a wellness tool, not a medical device.
+      </p>
+    </div>
+  </div>
+</article>

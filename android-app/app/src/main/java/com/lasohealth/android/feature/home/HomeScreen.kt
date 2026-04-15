@@ -115,8 +115,31 @@ fun HomeScreen(
                 recoveryStateLabel = state.recoveryStateLabel,
                 scoreDelta = state.scoreDelta,
                 dayClassification = state.dayClassification,
+                recoveryWhyLine = state.recoveryWhyLine,
                 onClick = { navController.navigate(AppRoute.ScoreGuide.route) },
             )
+        }
+
+        // 2b. Activation Progress (first 8 days, Paper 8) — .padding(.top, 4)
+        if (state.activationProgress != null) {
+            item {
+                Spacer(modifier = Modifier.height(4.dp))
+                ActivationProgressBanner(
+                    state = state.activationProgress,
+                    onDismissCelebration = { /* clear milestone in ViewModel */ },
+                )
+            }
+        }
+
+        // 2c. Morning Check-In (Paper 10: Subjective + Objective) — .padding(.top, 8)
+        if (state.showMorningCheckIn) {
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                MorningCheckInCard(
+                    onComplete = { /* apply to readiness in ViewModel */ },
+                    onDismiss = { /* dismiss in ViewModel */ },
+                )
+            }
         }
 
         // 3. Today's Action Card — .padding(.top, 8)
@@ -128,6 +151,35 @@ fun HomeScreen(
                 iconEmoji = state.primaryAction.iconEmoji,
                 scoreColor = LasoTokens.scoreColor(state.score),
                 onClick = { navController.navigate(AppRoute.InsightsDetail.route) },
+            )
+        }
+
+        // 3b. Body Intelligence — non-obvious ML findings — .padding(.top, 8)
+        if (state.intelligenceBriefing.isNotEmpty()) {
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                TodayBriefingSection(cards = state.intelligenceBriefing)
+            }
+        }
+
+        // 3c. Personal Health Forecast (Paper 3: Conformal Prediction) — .padding(.top, 8)
+        if (state.healthForecasts.isNotEmpty()) {
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                PersonalHealthForecastCard(
+                    forecasts = state.healthForecasts,
+                    onTapMetric = { metric ->
+                        navController.navigate(AppRoute.MetricDetail.createRoute(metric))
+                    },
+                )
+            }
+        }
+
+        // 3d. Ask Your Data (Papers 1 & 2: PHIA) — .padding(.top, 8)
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+            AskYourDataCard(
+                onClick = { /* navigate to Ask Your Data screen */ },
             )
         }
 
@@ -313,6 +365,7 @@ private fun RecoveryHeroCard(
     recoveryStateLabel: String,
     scoreDelta: Int?,
     dayClassification: String,
+    recoveryWhyLine: String?,
     onClick: () -> Unit,
 ) {
     val scoreColor = LasoTokens.scoreColor(score)
@@ -447,6 +500,17 @@ private fun RecoveryHeroCard(
                             )
                         }
                     }
+                }
+
+                // Recovery why-line (iOS: plain-English recovery explanation)
+                if (recoveryWhyLine != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = recoveryWhyLine,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                        maxLines = 2,
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))

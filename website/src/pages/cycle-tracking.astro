@@ -1,0 +1,193 @@
+---
+import Base from '../layouts/Base.astro'
+import SiteNav from '../components/SiteNav.astro'
+import SiteFooter from '../components/SiteFooter.astro'
+import CtaSection from '../components/CtaSection.astro'
+import '../styles/globals.css'
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How does cycle tracking work in Laso?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Laso tracks your menstrual cycle across four distinct phases: menstrual, follicular, ovulatory, and luteal. Based on which phase you are in, Laso adjusts your strain targets, recovery expectations, and training guidance. Hormonal fluctuations throughout the cycle affect heart rate variability, resting heart rate, body temperature, and energy levels. Laso accounts for these natural shifts so your scores and recommendations stay accurate throughout the month."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What are the 4 cycle phases?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The four phases are: Menstrual (days 1 through 5 approximately), when the uterine lining sheds and energy is typically lower. Follicular (days 6 through 13), when estrogen rises and energy, strength, and endurance tend to peak. Ovulatory (days 14 through 16), when estrogen and testosterone peak and performance capacity is often highest. Luteal (days 17 through 28), when progesterone rises, body temperature increases, HRV tends to drop, and the body shifts toward recovery mode."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does my cycle affect training?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Hormonal changes across your cycle directly affect how your body responds to exercise. During the follicular and ovulatory phases, higher estrogen supports better performance, faster recovery, and higher pain tolerance. During the luteal phase, elevated progesterone increases body temperature and resting heart rate, which can make the same workout feel harder and require longer recovery. Laso adjusts strain targets and recovery expectations based on your current phase so you train with your biology rather than against it."
+      }
+    }
+  ]
+}
+---
+
+<Base
+  title="Cycle Tracking — Phase Specific Training Guidance | Laso"
+  description="Laso tracks your menstrual cycle across 4 phases and adjusts training guidance, recovery expectations, and strain targets based on where you are in your cycle."
+  jsonLd={jsonLd}
+>
+  <div class="min-h-screen bg-white">
+    <SiteNav current="cycle-tracking" />
+
+    <main>
+      <!-- Hero -->
+      <section class="pt-24 pb-14 md:pt-36 md:pb-20 px-5 text-center bg-gradient-to-b from-white to-[#f5f5f7]">
+        <div class="max-w-3xl mx-auto">
+          <p class="text-[13px] font-semibold text-[#0071e3] uppercase tracking-wider mb-4">Cycle Tracking</p>
+          <h1 class="text-3xl md:text-5xl font-semibold tracking-tight text-[#1d1d1f] text-balance leading-tight">
+            Training guidance that adapts to your cycle.
+          </h1>
+          <p class="mt-5 text-[17px] md:text-[19px] text-[#6e6e73] max-w-2xl mx-auto text-balance leading-relaxed">
+            Your hormones shift throughout the month, and so does your body's capacity for training and recovery. Laso tracks all four cycle phases and adjusts your strain targets, recovery expectations, and guidance accordingly.
+          </p>
+          <div class="mt-8">
+            <a href="/#early-access" class="inline-flex items-center justify-center bg-[#1d1d1f] text-white font-medium rounded-full px-7 py-3 min-h-[48px] text-[15px] hover:bg-black transition-colors">
+              Join Early Access
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4-phase model -->
+      <section class="py-16 md:py-24 px-5">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">The 4 phase cycle model</h2>
+          <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+            Laso divides your menstrual cycle into four phases, each with distinct hormonal profiles that affect how your body performs and recovers. Understanding these phases is the foundation for smarter training.
+          </p>
+          <div class="mt-10 grid sm:grid-cols-2 gap-6">
+            <div class="bg-[#f5f5f7] rounded-2xl p-6 border border-black/[0.06]">
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">Menstrual phase</h3>
+              <p class="mt-1 text-[13px] text-[#0071e3] font-medium">Approximately days 1 through 5</p>
+              <p class="mt-3 text-[15px] text-[#6e6e73] leading-relaxed">
+                Hormone levels are at their lowest. Energy and motivation often dip. This is a natural recovery period. Laso lowers your strain target and emphasizes rest, gentle movement, and sleep quality during this phase.
+              </p>
+            </div>
+            <div class="bg-[#f5f5f7] rounded-2xl p-6 border border-black/[0.06]">
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">Follicular phase</h3>
+              <p class="mt-1 text-[13px] text-[#0071e3] font-medium">Approximately days 6 through 13</p>
+              <p class="mt-3 text-[15px] text-[#6e6e73] leading-relaxed">
+                Estrogen rises steadily, boosting energy, endurance, and muscle recovery. This is when your body is primed for harder training. Laso increases your recommended strain range and you may notice your HRV trending higher during this window.
+              </p>
+            </div>
+            <div class="bg-[#f5f5f7] rounded-2xl p-6 border border-black/[0.06]">
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">Ovulatory phase</h3>
+              <p class="mt-1 text-[13px] text-[#0071e3] font-medium">Approximately days 14 through 16</p>
+              <p class="mt-3 text-[15px] text-[#6e6e73] leading-relaxed">
+                Estrogen and testosterone both peak. Strength, power output, and pain tolerance are typically at their highest. Laso sets your strain target at its maximum for the cycle. This is the window for personal records and high intensity sessions.
+              </p>
+            </div>
+            <div class="bg-[#f5f5f7] rounded-2xl p-6 border border-black/[0.06]">
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">Luteal phase</h3>
+              <p class="mt-1 text-[13px] text-[#0071e3] font-medium">Approximately days 17 through 28</p>
+              <p class="mt-3 text-[15px] text-[#6e6e73] leading-relaxed">
+                Progesterone rises and body temperature increases. Resting heart rate climbs and HRV often drops. The same workout that felt easy last week may feel significantly harder. Laso scales down your strain targets and adjusts recovery expectations to match.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Phase-specific training -->
+      <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">Phase specific training guidance</h2>
+          <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+            Most fitness apps treat every day the same. They do not account for the fact that your body's capacity shifts predictably throughout the month. Laso does.
+          </p>
+          <div class="mt-10 space-y-6">
+            <div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">Strain targets that flex with your biology</h3>
+              <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+                During the follicular and ovulatory phases, Laso nudges your strain target higher because your body can handle and recover from more. During the luteal and menstrual phases, the target comes down. This is not about doing less overall. It is about distributing effort across the month in a way that works with your hormonal rhythm rather than against it.
+              </p>
+            </div>
+            <div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">Recovery expectations that make sense</h3>
+              <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+                A recovery score of 65 during the luteal phase means something different than the same score during the follicular phase. Laso contextualizes your recovery within your current cycle phase so you do not panic about a "low" score that is actually normal for where you are in your cycle.
+              </p>
+            </div>
+            <div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">No more guessing why a workout felt harder</h3>
+              <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+                If you have ever wondered why the same run felt easy one week and brutal the next, your cycle is often the answer. Laso shows you the connection between your current phase and your performance, so what used to feel random starts to make sense.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cycle and recovery -->
+      <section class="py-16 md:py-24 px-5">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">How your cycle affects HRV and recovery</h2>
+          <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+            Hormonal changes do not just affect how you feel. They create measurable shifts in the same metrics Laso uses for recovery scoring. Understanding this connection is what makes cycle aware training so valuable.
+          </p>
+          <div class="mt-10 space-y-6">
+            <div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">Progesterone and HRV</h3>
+              <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+                During the luteal phase, rising progesterone levels typically cause a measurable drop in HRV. This is a normal physiological response, not a sign that something is wrong. Without cycle awareness, a recovery app would see lower HRV and assume you are under stress. Laso knows it is your cycle and adjusts accordingly.
+              </p>
+            </div>
+            <div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">Temperature and resting heart rate</h3>
+              <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+                Body temperature rises by about 0.3 to 0.5 degrees Celsius in the luteal phase, and resting heart rate often increases by 2 to 5 beats per minute. These shifts affect recovery calculations. Laso accounts for them so your recovery score reflects actual readiness, not hormonal noise.
+              </p>
+            </div>
+            <div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">The monthly pattern</h3>
+              <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+                Over time, Laso builds a picture of how your unique cycle affects your metrics. Some people see dramatic HRV swings across the month. Others see more subtle shifts. By tracking your personal pattern, Laso gives you context that generic cycle apps cannot provide.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Related features -->
+      <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">Related features</h2>
+          <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+            Cycle tracking integrates with the rest of the Laso system. Your cycle phase feeds directly into recovery scoring and strain recommendations.
+          </p>
+          <div class="mt-8 flex flex-col sm:flex-row gap-4">
+            <a href="/recovery-score" class="flex-1 bg-white rounded-2xl p-6 border border-black/[0.06] hover:shadow-md transition-shadow">
+              <p class="text-[13px] font-semibold text-[#0071e3] uppercase tracking-wider">Recovery Score</p>
+              <p class="mt-2 text-[15px] text-[#6e6e73]">See how your cycle phase influences daily recovery and readiness.</p>
+            </a>
+            <a href="/strain-tracking" class="flex-1 bg-white rounded-2xl p-6 border border-black/[0.06] hover:shadow-md transition-shadow">
+              <p class="text-[13px] font-semibold text-[#0071e3] uppercase tracking-wider">Strain Tracking</p>
+              <p class="mt-2 text-[15px] text-[#6e6e73]">Strain targets adjust automatically based on your current cycle phase.</p>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <CtaSection heading="Train with your cycle, not against it." subheading="Smarter training starts with understanding your body's rhythm." />
+    </main>
+
+    <SiteFooter />
+  </div>
+</Base>

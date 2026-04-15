@@ -1,0 +1,321 @@
+---
+import Base from '../layouts/Base.astro'
+import SiteNav from '../components/SiteNav.astro'
+import SiteFooter from '../components/SiteFooter.astro'
+import CtaSection from '../components/CtaSection.astro'
+import '../styles/globals.css'
+
+const faqItems = [
+  {
+    question: "What is Laso?",
+    answer: "Laso is a health intelligence app for iPhone that turns your wearable data into personal recovery scores, strain targets, sleep coaching, and early wellness detection. Everything is processed on your device using machine learning calibrated to your unique physiology."
+  },
+  {
+    question: "How much does Laso cost?",
+    answer: "Laso offers a free 7 day trial so you can explore every feature. After that, it is $29.99 per year. There is no monthly plan and no hidden fees."
+  },
+  {
+    question: "Is there a free trial?",
+    answer: "Yes. Every new user gets a full 7 day free trial with access to all features. No credit card is required to start the trial."
+  },
+  {
+    question: "What devices work with Laso?",
+    answer: "Laso works with any device that writes health data to Apple HealthKit. That includes Apple Watch, Oura Ring, Garmin watches, WHOOP, Polar, Suunto, Amazfit, Withings, and 20+ others. Visit the compatible devices page for the full list."
+  },
+  {
+    question: "Do I need an Apple Watch?",
+    answer: "No. While Apple Watch is one of the most popular sources, Laso works with any wearable that syncs to Apple Health on your iPhone. If your device writes heart rate, sleep, or activity data to the Health app, Laso can use it."
+  },
+  {
+    question: "What is a recovery score and how does Laso calculate it?",
+    answer: "Your recovery score is a number from 0 to 100 that tells you how ready your body is for physical and mental stress today. Laso calculates it using six inputs: HRV, resting heart rate, sleep quality, sleep duration, respiratory rate, and recent strain. Each metric is compared to your personal baseline, not population averages."
+  },
+  {
+    question: "What is a strain score?",
+    answer: "Your strain score measures the total cardiovascular load your body experienced during the day on a scale from 0 to 21. Laso uses heart rate data from your workouts and daily activity to calculate it. Your optimal strain target adjusts each day based on your recovery score."
+  },
+  {
+    question: "What is Vitality Age?",
+    answer: "Vitality Age is Laso's estimate of your biological age based on key health metrics like HRV, resting heart rate, VO2 max, sleep quality, and activity levels. It is compared to your chronological age so you can see whether your body is aging faster or slower than expected."
+  },
+  {
+    question: "How long until my scores are accurate?",
+    answer: "Laso begins building your personal baselines from day one. Most users see well-calibrated recovery and strain scores within about two weeks of consistent wear. Sleep need estimates and longer term trend detection improve over the first month."
+  },
+  {
+    question: "How does Laso calculate my sleep need?",
+    answer: "Laso tracks how your recovery, HRV, and cognitive readiness respond to different amounts of sleep over time. Using this data, it learns the amount of sleep your body actually needs to fully recover, rather than defaulting to the generic 8 hour recommendation."
+  },
+  {
+    question: "What is sleep debt?",
+    answer: "Sleep debt is the gap between how much sleep you needed and how much you actually got, accumulated over recent nights. Laso tracks your running sleep debt and factors it into your recovery score and sleep coaching recommendations."
+  },
+  {
+    question: "How does early wellness detection work?",
+    answer: "Laso monitors several metrics simultaneously, including HRV, resting heart rate, respiratory rate, and sleep patterns. When multiple metrics shift from your baselines at the same time, it can indicate the early stages of illness or overtraining. Laso alerts you to these correlated changes before you might notice symptoms."
+  },
+  {
+    question: "How does stress monitoring work?",
+    answer: "Laso tracks stress through changes in your heart rate variability and resting heart rate relative to your personal norms. When your autonomic nervous system shows signs of elevated sympathetic activity, Laso reflects that in your stress level and adjusts your recovery assessment accordingly."
+  },
+  {
+    question: "Does Laso track menstrual cycles?",
+    answer: "Yes. Laso integrates cycle tracking data from Apple Health and uses it to provide cycle-aware recovery scores and training recommendations. Hormonal fluctuations affect HRV and recovery, and Laso accounts for that so your scores make sense throughout your cycle."
+  },
+  {
+    question: "Is my health data private?",
+    answer: "Yes. All processing happens on your iPhone. Your health data never leaves your device. There is no cloud server that receives or stores your information. Sensitive data is encrypted with AES-256 and encryption keys are stored in the Secure Enclave."
+  },
+  {
+    question: "Does Laso upload my data to the cloud?",
+    answer: "No. Laso is designed so it never needs to send your health data anywhere. All machine learning models and score calculations run locally on your device. There is no backend server that processes or stores health information."
+  },
+  {
+    question: "Do I need to create an account?",
+    answer: "No. Laso does not require an account, email address, or any personal information to use. You install the app, grant HealthKit access, and it works. Your data stays entirely on your device."
+  },
+  {
+    question: "How is Laso different from WHOOP?",
+    answer: "WHOOP requires a dedicated wrist band and a monthly subscription. It compares your metrics to population averages and processes data in the cloud. Laso works with the wearable you already own, builds scores from your personal baselines, processes everything on-device, and costs $29.99 per year with no hardware purchase."
+  },
+  {
+    question: "How is Laso different from Oura?",
+    answer: "Oura requires purchasing the Oura Ring and a monthly membership. While it provides solid sleep tracking, its readiness scores use population-level baselines. Laso works with the Oura Ring and any other wearable, calibrates everything to your personal data, runs entirely on-device for full privacy, and adds strain tracking and early wellness detection."
+  }
+]
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqItems.map(item => ({
+    "@type": "Question",
+    "name": item.question,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": item.answer
+    }
+  }))
+}
+---
+
+<Base title="Frequently Asked Questions | Laso" description="Answers to common questions about Laso: how recovery scores work, compatible devices, privacy, pricing, sleep tracking, strain targets, and more." jsonLd={jsonLd}>
+  <SiteNav current="faq" />
+
+  <main>
+    <!-- Hero -->
+    <section class="pt-20 pb-12 md:pt-28 md:pb-16 px-5">
+      <div class="max-w-3xl mx-auto text-center">
+        <h1 class="text-3xl md:text-5xl font-semibold tracking-tight text-[#1d1d1f] text-balance leading-tight">
+          Frequently asked questions
+        </h1>
+        <p class="mt-5 text-base md:text-lg text-[#6e6e73] max-w-2xl mx-auto text-balance leading-relaxed">
+          Everything you need to know about Laso, from how scores are calculated to privacy and device compatibility.
+        </p>
+      </div>
+    </section>
+
+    <!-- General -->
+    <section class="py-12 md:py-16 px-5">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-xl md:text-2xl font-semibold tracking-tight text-[#1d1d1f] mb-8">
+          General
+        </h2>
+
+        <div class="space-y-10">
+          <article>
+            <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2">What is Laso?</h3>
+            <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+              Laso is a health intelligence app for iPhone that turns your wearable data into personal <a href="/recovery-score" class="text-[#0071e3] hover:underline">recovery scores</a>, <a href="/strain-tracking" class="text-[#0071e3] hover:underline">strain targets</a>, <a href="/sleep-coaching" class="text-[#0071e3] hover:underline">sleep coaching</a>, and <a href="/illness-detection" class="text-[#0071e3] hover:underline">early wellness detection</a>. Everything is processed on your device using machine learning calibrated to your unique physiology.
+            </p>
+          </article>
+
+          <article>
+            <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2">How much does Laso cost?</h3>
+            <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+              Laso offers a free 7 day trial so you can explore every feature. After that, it is $29.99 per year. There is no monthly plan and no hidden fees.
+            </p>
+          </article>
+
+          <article>
+            <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2">Is there a free trial?</h3>
+            <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+              Yes. Every new user gets a full 7 day free trial with access to all features. No credit card is required to start the trial.
+            </p>
+          </article>
+
+          <article>
+            <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2">What devices work with Laso?</h3>
+            <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+              Laso works with any device that writes health data to Apple HealthKit. That includes Apple Watch, Oura Ring, Garmin watches, WHOOP, Polar, Suunto, Amazfit, Withings, and 20+ others. Visit the <a href="/devices" class="text-[#0071e3] hover:underline">compatible devices</a> page for the full list.
+            </p>
+          </article>
+
+          <article>
+            <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2">Do I need an Apple Watch?</h3>
+            <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+              No. While Apple Watch is one of the most popular sources, Laso works with any wearable that syncs to Apple Health on your iPhone. If your device writes heart rate, sleep, or activity data to the Health app, Laso can use it.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recovery & Scores -->
+    <section class="py-12 md:py-16 px-5 bg-[#f5f5f7]">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-xl md:text-2xl font-semibold tracking-tight text-[#1d1d1f] mb-8">
+          Recovery and Scores
+        </h2>
+
+        <div class="space-y-10">
+          <article>
+            <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2">What is a recovery score and how does Laso calculate it?</h3>
+            <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+              Your <a href="/recovery-score" class="text-[#0071e3] hover:underline">recovery score</a> is a number from 0 to 100 that tells you how ready your body is for physical and mental stress today. Laso calculates it using six inputs: HRV, resting heart rate, sleep quality, sleep duration, respiratory rate, and recent strain. Each metric is compared to your personal baseline, not population averages.
+            </p>
+          </article>
+
+          <article>
+            <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2">What is a strain score?</h3>
+            <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+              Your <a href="/strain-tracking" class="text-[#0071e3] hover:underline">strain score</a> measures the total cardiovascular load your body experienced during the day on a scale from 0 to 21. Laso uses heart rate data from your workouts and daily activity to calculate it. Your optimal strain target adjusts each day based on your recovery score.
+            </p>
+          </article>
+
+          <article>
+            <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2">What is Vitality Age?</h3>
+            <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+              <a href="/vitality-age" class="text-[#0071e3] hover:underline">Vitality Age</a> is Laso's estimate of your biological age based on key health metrics like HRV, resting heart rate, VO2 max, sleep quality, and activity levels. It is compared to your chronological age so you can see whether your body is aging faster or slower than expected.
+            </p>
+          </article>
+
+          <article>
+            <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2">How long until my scores are accurate?</h3>
+            <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+              Laso begins building your personal baselines from day one. Most users see well calibrated recovery and strain scores within about two weeks of consistent wear. Sleep need estimates and longer term trend detection improve over the first month.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sleep -->
+    <section class="py-12 md:py-16 px-5">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-xl md:text-2xl font-semibold tracking-tight text-[#1d1d1f] mb-8">
+          Sleep
+        </h2>
+
+        <div class="space-y-10">
+          <article>
+            <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2">How does Laso calculate my sleep need?</h3>
+            <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+              Laso tracks how your recovery, HRV, and cognitive readiness respond to different amounts of sleep over time. Using this data, it learns the amount of sleep your body actually needs to fully recover, rather than defaulting to the generic 8 hour recommendation. Learn more about <a href="/sleep-coaching" class="text-[#0071e3] hover:underline">sleep coaching</a>.
+            </p>
+          </article>
+
+          <article>
+            <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2">What is sleep debt?</h3>
+            <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+              Sleep debt is the gap between how much sleep you needed and how much you actually got, accumulated over recent nights. Laso tracks your running sleep debt and factors it into your <a href="/recovery-score" class="text-[#0071e3] hover:underline">recovery score</a> and <a href="/sleep-coaching" class="text-[#0071e3] hover:underline">sleep coaching</a> recommendations.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Health Monitoring -->
+    <section class="py-12 md:py-16 px-5 bg-[#f5f5f7]">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-xl md:text-2xl font-semibold tracking-tight text-[#1d1d1f] mb-8">
+          Health Monitoring
+        </h2>
+
+        <div class="space-y-10">
+          <article>
+            <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2">How does early wellness detection work?</h3>
+            <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+              Laso monitors several metrics simultaneously, including HRV, resting heart rate, respiratory rate, and sleep patterns. When multiple metrics shift from your baselines at the same time, it can indicate the early stages of illness or overtraining. Laso alerts you to these correlated changes before you might notice symptoms. Learn more about <a href="/illness-detection" class="text-[#0071e3] hover:underline">wellness detection</a>.
+            </p>
+          </article>
+
+          <article>
+            <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2">How does stress monitoring work?</h3>
+            <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+              Laso tracks stress through changes in your heart rate variability and resting heart rate relative to your personal norms. When your autonomic nervous system shows signs of elevated sympathetic activity, Laso reflects that in your stress level and adjusts your recovery assessment accordingly. See the <a href="/stress-monitor" class="text-[#0071e3] hover:underline">stress monitor</a> page for details.
+            </p>
+          </article>
+
+          <article>
+            <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2">Does Laso track menstrual cycles?</h3>
+            <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+              Yes. Laso integrates <a href="/cycle-tracking" class="text-[#0071e3] hover:underline">cycle tracking</a> data from Apple Health and uses it to provide cycle aware recovery scores and training recommendations. Hormonal fluctuations affect HRV and recovery, and Laso accounts for that so your scores make sense throughout your cycle.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Privacy -->
+    <section class="py-12 md:py-16 px-5">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-xl md:text-2xl font-semibold tracking-tight text-[#1d1d1f] mb-8">
+          Privacy
+        </h2>
+
+        <div class="space-y-10">
+          <article>
+            <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2">Is my health data private?</h3>
+            <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+              Yes. All processing happens on your iPhone. Your health data never leaves your device. There is no cloud server that receives or stores your information. Sensitive data is encrypted with AES-256 and encryption keys are stored in the Secure Enclave. Read the full <a href="/privacy" class="text-[#0071e3] hover:underline">privacy policy</a> for details.
+            </p>
+          </article>
+
+          <article>
+            <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2">Does Laso upload my data to the cloud?</h3>
+            <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+              No. Laso is designed so it never needs to send your health data anywhere. All machine learning models and score calculations run locally on your device. There is no backend server that processes or stores health information.
+            </p>
+          </article>
+
+          <article>
+            <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2">Do I need to create an account?</h3>
+            <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+              No. Laso does not require an account, email address, or any personal information to use. You install the app, grant HealthKit access, and it works. Your data stays entirely on your device.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comparisons -->
+    <section class="py-12 md:py-16 px-5 bg-[#f5f5f7]">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-xl md:text-2xl font-semibold tracking-tight text-[#1d1d1f] mb-8">
+          Comparisons
+        </h2>
+
+        <div class="space-y-10">
+          <article>
+            <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2">How is Laso different from WHOOP?</h3>
+            <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+              WHOOP requires a dedicated wrist band and a monthly subscription. It compares your metrics to population averages and processes data in the cloud. Laso works with the wearable you already own, builds scores from your personal baselines, processes everything on-device, and costs $29.99 per year with no hardware purchase. See the full <a href="/vs-whoop" class="text-[#0071e3] hover:underline">Laso vs WHOOP</a> comparison.
+            </p>
+          </article>
+
+          <article>
+            <h3 class="text-[16px] font-semibold text-[#1d1d1f] mb-2">How is Laso different from Oura?</h3>
+            <p class="text-[15px] text-[#6e6e73] leading-relaxed">
+              Oura requires purchasing the Oura Ring and a monthly membership. While it provides solid sleep tracking, its readiness scores use population level baselines. Laso works with the Oura Ring and any other wearable, calibrates everything to your personal data, runs entirely on-device for full privacy, and adds strain tracking and early wellness detection. See the full <a href="/vs-oura" class="text-[#0071e3] hover:underline">Laso vs Oura</a> comparison.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <CtaSection heading="Still have questions? Try it yourself." subheading="Laso comes with a free 7 day trial. No credit card needed." />
+  </main>
+
+  <SiteFooter />
+</Base>

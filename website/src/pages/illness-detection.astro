@@ -1,0 +1,210 @@
+---
+import Base from '../layouts/Base.astro'
+import SiteNav from '../components/SiteNav.astro'
+import SiteFooter from '../components/SiteFooter.astro'
+import CtaSection from '../components/CtaSection.astro'
+import '../styles/globals.css'
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How does Laso detect illness early?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Laso monitors six key health metrics from your wearable: HRV, resting heart rate, sleep patterns, respiratory rate, body temperature trends, and activity levels. When multiple metrics deviate from your personal baselines at the same time, Laso flags that your body may be under stress from illness, overtraining, or burnout. This multi-metric approach catches subtle shifts that single-metric tools miss."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What metrics does Laso monitor for wellness changes?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Laso tracks heart rate variability (HRV), resting heart rate, sleep efficiency and duration, respiratory rate, skin temperature deviation, and daily activity patterns. Each metric is compared against your own rolling baseline, not population averages. When several of these metrics shift together, it often signals the early stages of illness or body stress before you notice symptoms."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How accurate is early illness detection from wearable data?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Research from Stanford, Scripps, and other institutions has shown that wearable data can flag physiological changes hours to days before symptoms appear. Laso does not diagnose illness. Instead, it identifies wellness pattern changes that suggest your body is fighting something. The accuracy depends on consistent wear and the quality of your wearable sensors. Laso works best when you wear your device consistently so it can build a reliable personal baseline."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What are the 6 wellness signals Laso tracks?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The six wellness signals are: fatigue patterns from sustained low recovery, burnout indicators from chronic stress accumulation, overtraining markers from excessive strain without adequate rest, insomnia risk from degraded sleep metrics, recovery dips from unexplained drops in readiness, and inactivity patterns from sudden changes in movement behavior. Together, these form a comprehensive picture of your body's wellness state."
+      }
+    }
+  ]
+}
+---
+
+<Base
+  title="Early Wellness Detection — Spot Body Stress Signals Early | Laso"
+  description="Laso monitors HRV, resting heart rate, sleep, respiratory rate, and body temperature to detect early wellness pattern changes from body stress signals before symptoms appear."
+  jsonLd={jsonLd}
+>
+  <div class="min-h-screen bg-white">
+    <SiteNav current="illness-detection" />
+
+    <main>
+      <!-- Hero -->
+      <section class="pt-24 pb-14 md:pt-36 md:pb-20 px-5 text-center bg-gradient-to-b from-white to-[#f5f5f7]">
+        <div class="max-w-3xl mx-auto">
+          <p class="text-[13px] font-semibold text-[#0071e3] uppercase tracking-wider mb-4">Wellness Detection</p>
+          <h1 class="text-3xl md:text-5xl font-semibold tracking-tight text-[#1d1d1f] text-balance leading-tight">
+            Your body sends signals before you feel symptoms. Laso reads them.
+          </h1>
+          <p class="mt-5 text-[17px] md:text-[19px] text-[#6e6e73] max-w-2xl mx-auto text-balance leading-relaxed">
+            By tracking HRV, heart rate, sleep, respiratory rate, temperature, and activity against your personal baselines, Laso spots the early signs of body stress before they become full blown symptoms.
+          </p>
+          <div class="mt-8">
+            <a href="/#early-access" class="inline-flex items-center justify-center bg-[#1d1d1f] text-white font-medium rounded-full px-7 py-3 min-h-[48px] text-[15px] hover:bg-black transition-colors">
+              Join Early Access
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Multi-metric monitoring -->
+      <section class="py-16 md:py-24 px-5">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">Multi metric monitoring</h2>
+          <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+            No single metric tells the full story. A dip in HRV alone could mean a tough workout. A short night of sleep might just mean a late evening. But when HRV drops, resting heart rate rises, sleep quality falls, and respiratory rate climbs all at the same time, that combination is a strong signal that something is going on inside your body.
+          </p>
+          <div class="mt-10 grid md:grid-cols-3 gap-8">
+            <div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">HRV and heart rate</h3>
+              <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+                These two metrics reflect your autonomic nervous system. When your body fights infection or manages chronic stress, HRV typically drops and heart rate rises. Laso watches both against your personal rolling averages.
+              </p>
+            </div>
+            <div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">Sleep and respiratory rate</h3>
+              <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+                Disrupted sleep and elevated breathing rate during sleep are among the earliest detectable changes when illness is developing. Laso tracks sleep efficiency, total duration, and breaths per minute to identify shifts you would not notice on your own.
+              </p>
+            </div>
+            <div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">Temperature and activity</h3>
+              <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+                Skin temperature deviations from baseline can precede a fever by hours. Sudden drops in daily activity, when you typically move a lot, can signal fatigue your conscious mind has not registered yet. Laso incorporates both into its wellness model.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- The 6 wellness signals -->
+      <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">The 6 wellness signals</h2>
+          <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+            Laso does not just flag "something is off." It categorizes the pattern into one of six specific wellness signals so you have a clearer picture of what your body may be dealing with.
+          </p>
+          <div class="mt-10 grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div class="bg-white rounded-2xl p-6 border border-black/[0.06]">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Fatigue</h3>
+              <p class="mt-2 text-[14px] text-[#6e6e73] leading-relaxed">Sustained low recovery scores across multiple days, indicating your body is not bouncing back from daily demands.</p>
+            </div>
+            <div class="bg-white rounded-2xl p-6 border border-black/[0.06]">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Burnout</h3>
+              <p class="mt-2 text-[14px] text-[#6e6e73] leading-relaxed">Chronic stress accumulation over weeks, where elevated stress scores become the norm rather than the exception.</p>
+            </div>
+            <div class="bg-white rounded-2xl p-6 border border-black/[0.06]">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Overtraining</h3>
+              <p class="mt-2 text-[14px] text-[#6e6e73] leading-relaxed">Excessive strain load without adequate recovery windows. Laso spots when your training volume outpaces your body's ability to adapt.</p>
+            </div>
+            <div class="bg-white rounded-2xl p-6 border border-black/[0.06]">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Insomnia risk</h3>
+              <p class="mt-2 text-[14px] text-[#6e6e73] leading-relaxed">Degraded sleep efficiency, longer time to fall asleep, and increased wakefulness that may indicate developing sleep problems.</p>
+            </div>
+            <div class="bg-white rounded-2xl p-6 border border-black/[0.06]">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Recovery dips</h3>
+              <p class="mt-2 text-[14px] text-[#6e6e73] leading-relaxed">Unexplained drops in your recovery score that do not correlate with recent strain or sleep changes, suggesting an internal stressor.</p>
+            </div>
+            <div class="bg-white rounded-2xl p-6 border border-black/[0.06]">
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Inactivity patterns</h3>
+              <p class="mt-2 text-[14px] text-[#6e6e73] leading-relaxed">Sudden changes in your movement behavior. When someone who normally takes 8,000 steps drops to 3,000 for several days, the body may be signaling fatigue.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Personal baselines -->
+      <section class="py-16 md:py-24 px-5">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">Personal baselines are the key</h2>
+          <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+            Population averages are a poor tool for individual health monitoring. An HRV of 40 might be perfectly normal for one person and a red flag for another. Laso builds personal baselines from your own data over time, so every comparison is against your normal, not someone else's.
+          </p>
+          <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+            This is why Laso gets more useful the longer you wear your device. After just one week, the baselines begin to stabilize. After a month, Laso can detect deviations that are subtle but meaningful. A 5% drop in HRV that lasts three days means something different than a one day fluctuation, and Laso knows the difference because it knows your pattern.
+          </p>
+        </div>
+      </section>
+
+      <!-- What to do -->
+      <section class="py-16 md:py-24 px-5 bg-[#f5f5f7]">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">What to do when Laso flags something</h2>
+          <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+            Laso is not a medical device and does not diagnose illness. What it does is give you an early heads up that your body is under unusual stress. When you see a wellness flag, here is what to consider.
+          </p>
+          <div class="mt-10 space-y-6">
+            <div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">Reduce your strain target</h3>
+              <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+                If Laso detects early wellness signals, it automatically lowers your recommended strain target. This is your cue to take it easier. Skip the intense workout. Go for a walk instead. Let your body allocate its resources toward recovery.
+              </p>
+            </div>
+            <div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">Prioritize sleep</h3>
+              <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+                Sleep is when your body does its heaviest repair work. When Laso flags a wellness concern, aim for extra sleep. Even 30 to 60 additional minutes can make a meaningful difference in how quickly your metrics return to baseline.
+              </p>
+            </div>
+            <div>
+              <h3 class="text-[17px] font-semibold text-[#1d1d1f]">Watch the trend</h3>
+              <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
+                If your metrics return to normal within a day or two, it was likely a transient stressor. If the pattern persists for three or more days, that is a stronger signal and it may be worth consulting a healthcare professional.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Related features -->
+      <section class="py-16 md:py-24 px-5">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f]">Related features</h2>
+          <p class="mt-4 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed">
+            Wellness detection works best alongside the rest of the Laso system. Recovery scores, stress monitoring, and sleep coaching all feed into the same personal model.
+          </p>
+          <div class="mt-8 flex flex-col sm:flex-row gap-4">
+            <a href="/recovery-score" class="flex-1 bg-[#f5f5f7] rounded-2xl p-6 border border-black/[0.06] hover:shadow-md transition-shadow">
+              <p class="text-[13px] font-semibold text-[#0071e3] uppercase tracking-wider">Recovery Score</p>
+              <p class="mt-2 text-[15px] text-[#6e6e73]">Your daily readiness score is the foundation of wellness detection.</p>
+            </a>
+            <a href="/stress-monitor" class="flex-1 bg-[#f5f5f7] rounded-2xl p-6 border border-black/[0.06] hover:shadow-md transition-shadow">
+              <p class="text-[13px] font-semibold text-[#0071e3] uppercase tracking-wider">Stress Monitor</p>
+              <p class="mt-2 text-[15px] text-[#6e6e73]">Chronic stress is one of the biggest contributors to wellness dips.</p>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <CtaSection heading="Catch what you cannot feel yet." subheading="Your wearable data holds clues. Laso connects them for you." />
+    </main>
+
+    <SiteFooter />
+  </div>
+</Base>
