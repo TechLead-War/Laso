@@ -42,6 +42,7 @@ struct VitalityCard: View {
                     HStack(spacing: 8) {
                         Text("\(scorer.vitalityAge)")
                             .font(.title2.weight(.bold).monospacedDigit())
+                            .postHogMask()
 
                         deltaBadge
                     }
@@ -127,6 +128,7 @@ struct VitalityCard: View {
             .padding(.horizontal, DS.badgeH)
             .padding(.vertical, DS.badgeV)
             .background(accentColor.opacity(DS.badgeBg), in: Capsule())
+            .postHogMask()
     }
 
     // MARK: - Computed Properties

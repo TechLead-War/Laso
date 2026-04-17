@@ -56,11 +56,11 @@ extension Copy {
 
         // MARK: - Source Descriptions
 
-        static let sourcePredictive = "health risk assessment"
+        static let sourcePredictive = "wellness trend analysis"
         static let sourceCausal = "pattern analysis"
         static let sourceCircadian = "circadian rhythm analysis"
         static let sourceState = "health state analysis"
-        static let sourceAnomaly = "unusual activity detection"
+        static let sourceAnomaly = "pattern change notification"
         static let sourceTrend = "trend analysis"
         static let sourceBaseline = "baseline comparison"
         static let sourceCounterfactual = "what-if analysis"

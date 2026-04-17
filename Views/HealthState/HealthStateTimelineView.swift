@@ -53,6 +53,7 @@ struct HealthStateTimelineView: View {
             .padding(.vertical)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .accessibilityIdentifier("screen.healthStateTimeline")
         .navigationTitle("Health States")
         .navigationBarTitleDisplayMode(.large)
         .onAppear {

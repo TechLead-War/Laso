@@ -237,10 +237,10 @@ struct PredictiveHealthSignals {
             let severity: Severity
             switch signal.riskLevel {
             case .critical:
-                category = .illnessWarning
+                category = .watchSignal
                 severity = .critical
             case .high:
-                category = .illnessWarning
+                category = .watchSignal
                 severity = .warning
             case .moderate:
                 category = .mlPrediction

@@ -5,6 +5,10 @@ import UIKit
 import FirebaseFirestore
 #endif
 
+#if canImport(FirebaseAuth)
+import FirebaseAuth
+#endif
+
 /// Manages the referral system: code generation, redemption, reward tracking.
 /// Referral state is cached locally and synced with Firestore.
 @MainActor
@@ -28,6 +32,15 @@ final class ReferralManager {
         UIDevice.current.identifierForVendor?.uuidString
             ?? defaults.string(forKey: AppKeys.Profile.deviceId)
             ?? ""
+    }
+
+    /// Current Firebase Auth UID (anonymous). Empty string if not signed in.
+    private var firebaseUid: String {
+        #if canImport(FirebaseAuth)
+        return Auth.auth().currentUser?.uid ?? ""
+        #else
+        return ""
+        #endif
     }
 
     private init() {
@@ -173,9 +186,12 @@ final class ReferralManager {
                 "createdAt": Date().timeIntervalSince1970
             ])
 
-            // Mark on own profile
+            // Mark on own profile. Include firebaseUid + deviceId so that if
+            // the profile doc does not yet exist, the create rule is satisfied.
             try await db.collection("user_profiles").document(deviceId).setData([
-                "redeemedReferralCode": trimmed
+                "redeemedReferralCode": trimmed,
+                "firebaseUid": firebaseUid,
+                "deviceId": deviceId
             ], merge: true)
 
             redeemedCode = trimmed
@@ -220,9 +236,12 @@ final class ReferralManager {
 
             let oneMonth = Calendar.current.date(byAdding: .month, value: 1, to: Date())!
 
-            // Grant self (referred user) 1 month free
+            // Grant self (referred user) 1 month free. Include ownership fields
+            // so merge-writes on a new doc still satisfy the create rule.
             try await db.collection("user_profiles").document(deviceId).setData([
-                "referralFreeUntil": oneMonth.timeIntervalSince1970
+                "referralFreeUntil": oneMonth.timeIntervalSince1970,
+                "firebaseUid": firebaseUid,
+                "deviceId": deviceId
             ], merge: true)
             referralFreeUntil = oneMonth
             defaults.set(oneMonth.timeIntervalSince1970, forKey: AppKeys.Referral.freeUntil)

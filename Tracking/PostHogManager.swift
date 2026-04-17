@@ -27,6 +27,13 @@ final class PostHogManager {
         #endif
         #if os(iOS)
         config.sessionReplay = true
+        // Harden session replay: never record any text, images, or embedded system views.
+        // SwiftUI Text views that render health values (HRV, HR, SpO2, scores, etc.) are
+        // surgically masked at the view layer via `.postHogMask()`. This blanket config
+        // ensures no inputs, images, or sandboxed subsystems (e.g. WebView, Map) leak.
+        config.sessionReplayConfig.maskAllTextInputs = true
+        config.sessionReplayConfig.maskAllImages = true
+        config.sessionReplayConfig.maskAllSandboxedViews = true
         if #available(iOS 15.0, *) {
             config.surveys = false
         }

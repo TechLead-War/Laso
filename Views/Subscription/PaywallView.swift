@@ -68,6 +68,7 @@ struct PaywallView: View {
                 .onDisappear { footerTracker.disappeared() }
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .accessibilityIdentifier("screen.paywall")
         .onAppear {
             selectedProduct = yearly ?? monthly
             paywallOpenDate = Date()
@@ -152,6 +153,7 @@ struct PaywallView: View {
                     detail: yearlyDetail(yearly),
                     badge: savingsBadge
                 )
+                .accessibilityIdentifier("paywall.annualPlan")
             }
 
             if let monthly {
@@ -161,6 +163,7 @@ struct PaywallView: View {
                     detail: Copy.Paywall.perMonth(monthly.displayPrice),
                     badge: nil
                 )
+                .accessibilityIdentifier("paywall.monthlyPlan")
             }
 
             if subscriptionManager.products.isEmpty {
@@ -291,6 +294,7 @@ struct PaywallView: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .disabled(selectedProduct == nil || subscriptionManager.isPurchasing)
+            .accessibilityIdentifier("paywall.startTrialButton")
 
             // Trial duration and auto-renewal disclosure
             if selectedProductHasTrial {
@@ -338,6 +342,7 @@ struct PaywallView: View {
                 }
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("paywall.restoreButton")
 
             if subscriptionManager.products.isEmpty {
                 Button {

@@ -46,6 +46,14 @@ struct TodaysActionDetailView: View {
                     if !action.supportingInsights.isEmpty {
                         insightsSection
                     }
+
+                    Text(Copy.Analysis.RiskDetail.disclaimer)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.leading)
+                        .padding(.horizontal)
+                        .padding(.top, 24)
+                        .padding(.bottom, 16)
                 }
                 .padding(.top, 24)
                 .padding(.bottom, 32)
@@ -53,6 +61,7 @@ struct TodaysActionDetailView: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .accessibilityIdentifier("screen.todaysAction")
         .navigationTitle("Today's Action")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $isShowingWorkoutPlan) {

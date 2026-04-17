@@ -72,6 +72,7 @@ struct ProfileCaptureView: View {
                             .keyboardType(.numberPad)
                             .focused($isAgeFieldFocused)
                             .frame(width: 80)
+                            .accessibilityIdentifier("onboarding.profileAge")
                     }
                 }
 
@@ -82,11 +83,14 @@ struct ProfileCaptureView: View {
                     Picker("Gender *", selection: $gender) {
                         Text("Select gender").tag(Optional<Gender>.none)
                         ForEach(Gender.allCases) { option in
-                            Text(option.displayName).tag(Optional(option))
+                            Text(option.displayName)
+                                .tag(Optional(option))
+                                .accessibilityIdentifier("onboarding.profileGender.\(option.rawValue)")
                         }
                     }
                     .font(.subheadline)
                     .pickerStyle(.menu)
+                    .accessibilityIdentifier("onboarding.profileGender")
                 }
             }
             .background(.background, in: RoundedRectangle(cornerRadius: 16))
@@ -148,6 +152,7 @@ struct ProfileCaptureView: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 48)
             .sensoryFeedback(.selection, trigger: buttonTapCount)
+            .accessibilityIdentifier("onboarding.profileContinue")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

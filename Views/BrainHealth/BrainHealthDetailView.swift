@@ -16,12 +16,20 @@ struct BrainHealthDetailView: View {
                 fitnessSection
                 weeklyChartSection
                 insightsSection
+
+                Text(Copy.Analysis.RiskDetail.disclaimer)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.leading)
+                    .padding(.horizontal)
+                    .padding(.top, 24)
+                    .padding(.bottom, 16)
             }
             .padding(.horizontal)
             .padding(.bottom, 32)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
-        .navigationTitle("Brain Health")
+        .navigationTitle(Copy.BrainHealth.title)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { AppAnalytics.shared.trackFeatureOpen(.brainHealth) }
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.brainHealth) }
@@ -34,6 +42,7 @@ struct BrainHealthDetailView: View {
             Text("\(brainScore.score)")
                 .font(.system(size: 56, weight: .bold, design: .rounded).monospacedDigit())
                 .foregroundStyle(.primary)
+                .postHogMask()
 
             Text(Copy.BrainHealth.brainHealthLabel)
                 .font(.system(size: 13, weight: .semibold))
@@ -146,6 +155,7 @@ struct BrainHealthDetailView: View {
                     Text("\(Int(min(max(value, 0), 1.0) * 100))%")
                         .font(.subheadline.weight(.bold).monospacedDigit())
                         .foregroundStyle(color)
+                        .postHogMask()
                 }
 
                 GeometryReader { geo in
@@ -230,6 +240,7 @@ struct BrainHealthDetailView: View {
             Text(value)
                 .font(.title3.weight(.bold).monospacedDigit())
                 .foregroundStyle(color)
+                .postHogMask()
         }
         .frame(maxWidth: .infinity)
     }
@@ -264,6 +275,7 @@ struct BrainHealthDetailView: View {
                 Text("\(Int(brainScore.stressCognitionLoad))%")
                     .font(.system(size: 36, weight: .bold, design: .rounded).monospacedDigit())
                     .foregroundStyle(capacityColor)
+                    .postHogMask()
 
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
@@ -353,6 +365,7 @@ struct BrainHealthDetailView: View {
                             Text("\(entry.score)")
                                 .font(.caption2.weight(.bold).monospacedDigit())
                                 .foregroundStyle(chartBarColor(for: entry.score))
+                                .postHogMask()
 
                             RoundedRectangle(cornerRadius: 4)
                                 .fill(chartBarColor(for: entry.score))
@@ -386,6 +399,7 @@ struct BrainHealthDetailView: View {
                                 .foregroundStyle(.secondary)
                             Text("\(avg)")
                                 .font(.caption.weight(.bold).monospacedDigit())
+                                .postHogMask()
                         }
 
                         Spacer()

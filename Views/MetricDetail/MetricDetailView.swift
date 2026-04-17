@@ -124,12 +124,21 @@ struct MetricDetailView: View {
                             .onDisappear { insightsTracker.disappeared() }
                     }
                 }
+
+                Text(Copy.Analysis.RiskDetail.disclaimer)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.leading)
+                    .padding(.horizontal)
+                    .padding(.top, 24)
+                    .padding(.bottom, 16)
             }
             .padding(.bottom)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle(viewModel.metric.displayName)
         .navigationBarTitleDisplayMode(.inline)
+        .accessibilityIdentifier("screen.metricDetail")
         .sheet(isPresented: $showLogSheet) {
             if let hkManager = healthKitManager, let store = healthDataStore {
                 MetricLogSheet(

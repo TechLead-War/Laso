@@ -50,6 +50,7 @@ struct MedicalDisclaimerView: View {
                 .padding(.bottom, 40)
             }
         }
+        .accessibilityIdentifier("screen.medicalDisclaimer")
         .interactiveDismissDisabled()
     }
 }

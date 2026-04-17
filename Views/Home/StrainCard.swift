@@ -44,6 +44,7 @@ struct StrainCard: View {
                             HStack(spacing: 8) {
                                 Text(String(format: "%.1f", strainValue))
                                     .font(.title2.weight(.bold).monospacedDigit())
+                                    .postHogMask()
 
                                 Text(strainLevel.displayName)
                                     .font(.caption.weight(.bold))
@@ -125,6 +126,7 @@ struct StrainCard: View {
                         Text("\(Int(minutes))")
                             .font(.caption2.weight(.medium).monospacedDigit())
                             .foregroundStyle(.secondary)
+                            .postHogMask()
                     }
                 }
             }

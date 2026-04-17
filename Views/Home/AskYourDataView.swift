@@ -33,6 +33,7 @@ struct AskYourDataView: View {
             }
             .padding()
         }
+        .accessibilityIdentifier("screen.askYourData")
         .navigationTitle(Copy.Home.AskYourData.title)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {

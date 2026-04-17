@@ -63,6 +63,7 @@ struct ProFeatureOverlay: View {
             Spacer()
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .accessibilityIdentifier("screen.proFeatureOverlay")
         .sheet(isPresented: $showPaywall) {
             PaywallView(subscriptionManager: SubscriptionManager.shared)
         }

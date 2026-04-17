@@ -137,6 +137,14 @@ struct InsightsDetailView: View {
                     }
                     .frame(maxWidth: .infinity)
                 }
+
+                Text(Copy.Analysis.RiskDetail.disclaimer)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.leading)
+                    .padding(.horizontal)
+                    .padding(.top, 24)
+                    .padding(.bottom, 16)
             }
             .padding(.vertical)
             .frame(maxWidth: .infinity)

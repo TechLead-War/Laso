@@ -42,6 +42,7 @@ struct VitalityMetricContributionSection: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
+                        .postHogMask()
                 }
 
                 Spacer(minLength: 8)
@@ -50,10 +51,12 @@ struct VitalityMetricContributionSection: View {
                     Text(Copy.Vitality.ageLabel(component.metricAge))
                         .font(.caption.weight(.bold).monospacedDigit())
                         .foregroundStyle(tint)
+                        .postHogMask()
 
                     Text(vitalityMetricDeltaLabel(metricDelta))
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(tint.opacity(0.85))
+                        .postHogMask()
                 }
             }
 

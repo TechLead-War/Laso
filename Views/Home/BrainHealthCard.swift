@@ -35,7 +35,7 @@ struct BrainHealthCard: View {
 
                     // Center text
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Brain Health")
+                        Text(Copy.BrainHealth.title)
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.secondary)
                             .textCase(.uppercase)
@@ -43,6 +43,7 @@ struct BrainHealthCard: View {
                         HStack(spacing: 8) {
                             Text("\(score)")
                                 .font(.title2.weight(.bold).monospacedDigit())
+                                .postHogMask()
 
                             // State badge
                             Text(stateLabel)

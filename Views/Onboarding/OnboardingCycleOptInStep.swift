@@ -53,6 +53,7 @@ struct OnboardingCycleOptInStep: View {
             .controlSize(.large)
             .font(.headline)
             .padding(.horizontal, 24)
+            .accessibilityIdentifier("onboarding.cycleEnable")
 
             Button(Copy.Buttons.notNow) {
                 AppAnalytics.shared.trackBlockTap(
@@ -70,6 +71,7 @@ struct OnboardingCycleOptInStep: View {
             .foregroundStyle(.secondary)
             .padding(.top, 12)
             .padding(.bottom, 48)
+            .accessibilityIdentifier("onboarding.cycleSkip")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

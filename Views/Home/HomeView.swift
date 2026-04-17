@@ -44,6 +44,10 @@ struct HomeView: View {
         .accessibilityIdentifier("screen.home")
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        // UI-test only: zero-size accessible triggers for sheets that otherwise
+        // lack a stable, always-visible entry point (ScoreGuideSheet is not
+        // wired to any gesture; the journal prompt only appears after 6pm).
+        .overlay(alignment: .topLeading) { uiTestHiddenTriggers }
         .fullScreenCover(isPresented: Binding(
             get: { viewModel.ui.showDiscovery },
             set: { if !$0 { viewModel.dismissDiscovery() } }
@@ -82,6 +86,7 @@ struct HomeView: View {
             startReadinessRefresh()
             rebuildMetricTilesFromLive()
             showMorningCheckIn = MorningCheckInManager.shouldShowCheckIn()
+                || (UITestMode.isEnabled && UITestMode.forceMorningCheckIn)
             if let checkIn = MorningCheckInManager.todaysCheckIn() {
                 viewModel.subjectiveReadinessAdjustment = checkIn.readinessAdjustment
             }
@@ -612,6 +617,7 @@ struct HomeView: View {
         }
         .buttonStyle(.plain)
         .padding(.horizontal)
+        .accessibilityIdentifier("home.todaysActionCard")
     }
 
     // MARK: - Journal Prompt Card
@@ -851,6 +857,25 @@ struct HomeView: View {
 
     private func stopFirstLaunchDotTimer() {
         firstLaunchDotTimer.stop()
+    }
+
+    /// Zero-size, UI-test-only buttons that expose entry points for sheets the
+    /// production UI does not offer as a direct tap target. Only compiled into
+    /// the tree when running under `UITestMode`; in production this returns an
+    /// `EmptyView` and has zero visual or accessibility impact.
+    @ViewBuilder
+    private var uiTestHiddenTriggers: some View {
+        if UITestMode.isEnabled {
+            VStack(spacing: 0) {
+                Button("Open Score Guide") { showScoreGuide = true }
+                    .accessibilityIdentifier("uitest.openScoreGuide")
+                NavigationLink("Open Journal", value: Route.journalEntry)
+                    .accessibilityIdentifier("uitest.openJournalEntry")
+            }
+            .opacity(0.001)
+            .frame(width: 1, height: 1)
+            .allowsHitTesting(true)
+        }
     }
 
     private func errorView(_ message: String) -> some View {

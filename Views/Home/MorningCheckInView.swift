@@ -101,6 +101,7 @@ struct MorningCheckInView: View {
         )
         .padding(.horizontal)
         .animation(.snappy(duration: 0.25), value: isComplete)
+        .accessibilityIdentifier("home.morningCheckInCard")
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.home, metadata: ["subscreen": "morning_checkin"])
         }

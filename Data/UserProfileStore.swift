@@ -5,6 +5,10 @@ import UIKit
 import FirebaseFirestore
 #endif
 
+#if canImport(FirebaseAuth)
+import FirebaseAuth
+#endif
+
 // MARK: - Gender
 
 enum Gender: String, Codable, CaseIterable, Identifiable {
@@ -159,6 +163,14 @@ final class UserProfileStore {
         saveLocal(profile)
 
         // Prepare Firestore document data. anonymized only (no PII: name, email, DOB excluded)
+        // firebaseUid is required by security rules to bind ownership to the
+        // anonymous Firebase Auth user.
+        #if canImport(FirebaseAuth)
+        let firebaseUid = Auth.auth().currentUser?.uid ?? ""
+        #else
+        let firebaseUid = ""
+        #endif
+
         let data: [String: Any] = [
             "gender": profile.gender.rawValue,
             "ageBracket": profile.ageBracket,
@@ -167,7 +179,8 @@ final class UserProfileStore {
             "createdAt": profile.createdAt.timeIntervalSince1970,
             "updatedAt": profile.updatedAt.timeIntervalSince1970,
             "appVersion": profile.appVersion,
-            "region": profile.region
+            "region": profile.region,
+            "firebaseUid": firebaseUid
         ]
 
 #if canImport(FirebaseFirestore)

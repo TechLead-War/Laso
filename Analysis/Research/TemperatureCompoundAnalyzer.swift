@@ -79,7 +79,7 @@ struct TemperatureCompoundAnalyzer {
                     currentValue: recentMean,
                     baselineValue: baselineMean,
                     deviationPercent: (deviation / max(abs(baselineMean), 0.1)) * 100,
-                    category: .illnessWarning,
+                    category: .watchSignal,
                     directive: .rest,
                     relatedMetrics: [.appleSleepingWristTemperature, .heartRateVariability, .restingHeartRate],
                     context: InsightContext(
@@ -99,7 +99,7 @@ struct TemperatureCompoundAnalyzer {
                     currentValue: recentMean,
                     baselineValue: baselineMean,
                     deviationPercent: (deviation / max(abs(baselineMean), 0.1)) * 100,
-                    category: .illnessWarning,
+                    category: .watchSignal,
                     directive: .informational,
                     relatedMetrics: [.appleSleepingWristTemperature, .heartRateVariability]
                 ))
@@ -199,5 +199,5 @@ struct TemperatureCompoundAnalyzer {
 
 extension TemperatureCompoundAnalyzer: InsightAnalyzer {
     static var analyzerID: String { "temperatureCompound" }
-    static var insightCategory: InsightCategory { .illnessWarning }
+    static var insightCategory: InsightCategory { .watchSignal }
 }

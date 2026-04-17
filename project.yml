@@ -83,7 +83,7 @@ targets:
         CODE_SIGN_ENTITLEMENTS: Laso.entitlements
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: S2MAH8X8JM
-        PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.fit
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
         GENERATE_INFOPLIST_FILE: false
@@ -97,6 +97,23 @@ targets:
           enabled: true
         com.apple.BackgroundModes:
           enabled: true
+
+  LasoUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: LasoUITests
+    dependencies:
+      - target: Laso
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.fit.uitests
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: S2MAH8X8JM
+        TEST_TARGET_NAME: Laso
+        SWIFT_EMIT_LOC_STRINGS: "NO"
+        GENERATE_INFOPLIST_FILE: "YES"
+        TARGETED_DEVICE_FAMILY: "1"
 
   LasoWidgets:
     type: app-extension
@@ -117,7 +134,7 @@ targets:
         CODE_SIGN_ENTITLEMENTS: LasoWidgets/LasoWidgets.entitlements
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: S2MAH8X8JM
-        PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.app.widgets
+        PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.fit.widgets
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
         GENERATE_INFOPLIST_FILE: false
@@ -134,8 +151,12 @@ schemes:
       targets:
         Laso: all
         LasoWidgets: [build]
+        LasoUITests: [test]
     run:
       storeKitConfiguration: Laso.storekit
+    test:
+      targets:
+        - LasoUITests
 
   LasoWidgets:
     build:

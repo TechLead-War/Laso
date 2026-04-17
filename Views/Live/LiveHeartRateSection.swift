@@ -51,6 +51,7 @@ struct LiveHeartRateSection: View {
                                 .foregroundStyle(.primary.opacity(isHeartRateStale ? 0.4 : 1.0))
                                 .contentTransition(.numericText())
                                 .animation(.easeInOut(duration: 0.3), value: hr)
+                                .postHogMask()
 
                             Text("bpm")
                                 .font(.title3)
@@ -130,6 +131,7 @@ struct LiveHeartRateSection: View {
                         .font(.caption2)
                     Text("Today: \(Int(minHR))–\(Int(maxHR)) bpm")
                         .font(.caption2)
+                        .postHogMask()
                 }
                 .foregroundStyle(.tertiary)
                 .padding(.bottom, 8)
@@ -218,6 +220,7 @@ struct LiveHeartRateSection: View {
                     Text(String(format: "%.0f", value))
                         .font(.subheadline.weight(.bold).monospacedDigit())
                         .foregroundStyle(color)
+                        .postHogMask()
                     Text(unit)
                         .font(.caption2)
                         .foregroundStyle(.tertiary)

@@ -24,6 +24,7 @@ struct VitalityHeroSection: View {
                             .font(.system(size: 56, weight: .bold, design: .rounded))
                             .monospacedDigit()
                             .foregroundStyle(.white)
+                            .postHogMask()
 
                         Text(Copy.Vitality.vitalityAgeLabel)
                             .font(.system(size: 13, weight: .semibold))
@@ -34,6 +35,7 @@ struct VitalityHeroSection: View {
                             .font(.title3.weight(.bold))
                             .foregroundStyle(vitalityDeltaColor(for: scorer.delta))
                             .monospacedDigit()
+                            .postHogMask()
                     }
 
                     if heroComponents.indices.contains(0) {
@@ -208,6 +210,7 @@ struct OrbMetricChip: View {
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.9))
                     .lineLimit(1)
+                    .postHogMask()
 
                 Spacer(minLength: 4)
 
@@ -215,6 +218,7 @@ struct OrbMetricChip: View {
                     .font(.system(size: 11, weight: .bold, design: .rounded))
                     .foregroundStyle(deltaTint)
                     .monospacedDigit()
+                    .postHogMask()
             }
 
             chipGauge

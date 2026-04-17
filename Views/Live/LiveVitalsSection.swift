@@ -87,6 +87,7 @@ struct LiveVitalsSection: View {
                         .font(.title2.weight(.bold).monospacedDigit())
                         .foregroundStyle(.primary.opacity(isStale ? 0.4 : 1.0))
                         .contentTransition(.numericText())
+                        .postHogMask()
 
                     Text(unit)
                         .font(.caption2.weight(.medium))

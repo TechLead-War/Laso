@@ -25,6 +25,7 @@ struct LiveBloodPressureTempSection: View {
                         HStack(alignment: .firstTextBaseline, spacing: 2) {
                             Text("\(Int(sys))/\(Int(dia))")
                                 .font(.title2.weight(.bold).monospacedDigit())
+                                .postHogMask()
                             Text("mmHg")
                                 .font(.caption2.weight(.medium))
                                 .foregroundStyle(.secondary)
@@ -72,6 +73,7 @@ struct LiveBloodPressureTempSection: View {
                         HStack(alignment: .firstTextBaseline, spacing: 2) {
                             Text(String(format: "%.1f", temp))
                                 .font(.title2.weight(.bold).monospacedDigit())
+                                .postHogMask()
                             Text("°C")
                                 .font(.caption2.weight(.medium))
                                 .foregroundStyle(.secondary)

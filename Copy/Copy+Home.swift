@@ -41,9 +41,9 @@ extension Copy {
         static let todaysAction = "Today's Action"
         static let bodyIntelligence = "Body Intelligence"
 
-        // MARK: - Early Warning
+        // MARK: - Watch This
 
-        static let earlyWarning = "Early Warning"
+        static let earlyWarning = "Watch This"
         static let severityHigh = "High"
         static let severityModerate = "Moderate"
         static let severityLow = "Low"

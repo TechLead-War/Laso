@@ -80,7 +80,7 @@ struct InflammationRiskAnalyzer {
                 currentValue: currentHRV,
                 baselineValue: hrvBaseline.mean,
                 deviationPercent: -hrvDropPercent,
-                category: .illnessWarning,
+                category: .watchSignal,
                 directive: .rest,
                 relatedMetrics: [.heartRateVariability, .appleSleepingWristTemperature, .restingHeartRate],
                 context: InsightContext(
@@ -101,7 +101,7 @@ struct InflammationRiskAnalyzer {
                 currentValue: currentHRV,
                 baselineValue: hrvBaseline.mean,
                 deviationPercent: -hrvDropPercent,
-                category: .illnessWarning,
+                category: .watchSignal,
                 directive: hrvDeviation < -2.0 ? .rest : .informational,
                 relatedMetrics: [.heartRateVariability, .restingHeartRate],
                 context: InsightContext(
@@ -164,5 +164,5 @@ struct InflammationRiskAnalyzer {
 
 extension InflammationRiskAnalyzer: InsightAnalyzer {
     static var analyzerID: String { "inflammationRisk" }
-    static var insightCategory: InsightCategory { .illnessWarning }
+    static var insightCategory: InsightCategory { .watchSignal }
 }

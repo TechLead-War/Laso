@@ -37,6 +37,7 @@ struct SleepCard: View {
                                 HStack(spacing: 6) {
                                     Text(formatDuration(hours))
                                         .font(.title3.weight(.bold).monospacedDigit())
+                                        .postHogMask()
 
                                     if let baseline = sleepBaseline, baseline > 0 {
                                         deltaLabel(current: hours, baseline: baseline)
@@ -137,6 +138,7 @@ struct SleepCard: View {
             Text("\(label) \(formatDuration(duration / 3600))")
                 .font(.caption2.weight(.medium))
                 .foregroundStyle(.secondary)
+                .postHogMask()
         }
     }
 
@@ -152,6 +154,7 @@ struct SleepCard: View {
             .padding(.horizontal, DS.badgeH)
             .padding(.vertical, DS.badgeV)
             .background((diff >= 0 ? Color.green : Color.orange).opacity(0.1), in: Capsule())
+            .postHogMask()
     }
 
     private var qualityColor: Color {

@@ -73,6 +73,7 @@ struct HealthScoreRing: View {
                     .contentTransition(.numericText())
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
+                    .postHogMask()
             }
 
             if !label.isEmpty {

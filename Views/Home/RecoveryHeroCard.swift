@@ -68,6 +68,7 @@ struct RecoveryHeroCard: View {
                                 .font(.caption.weight(.bold))
                             Text(weekDelta > 0 ? "+\(weekDelta)" : "\(weekDelta)")
                                 .font(.subheadline.weight(.semibold).monospacedDigit())
+                                .postHogMask()
                             Text("vs last week")
                                 .font(.caption)
                         }
@@ -108,6 +109,7 @@ struct RecoveryHeroCard: View {
                         Text("Daily baseline: \(daily)")
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
+                            .postHogMask()
                     }
                 }
 

@@ -173,9 +173,9 @@ extension Copy {
             static let recoveryDayRecommendation = "Take a real rest day tomorrow. Just light walking, no hard exercise. Your body usually bounces back within 2 days of taking it easy."
         }
 
-        // MARK: - Illness Early Warning
+        // MARK: - Strain Signals
 
-        enum IllnessWarning {
+        enum StrainSignals {
             static let significantStrain = "Your Body is Under Stress"
             static let multipleMetricStrain = "Several Numbers Show Your Body is Stressed"
             static let earlyPhysiologicalStrain = "Early Signs Your Body is Stressed"

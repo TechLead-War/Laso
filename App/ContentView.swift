@@ -248,6 +248,14 @@ struct ContentView: View {
         case .live:
             if !UITestMode.isEnabled && RemoteConfigManager.shared.killLiveTab {
                 MaintenanceView(message: "Live monitoring is temporarily unavailable. We're working on a fix.")
+            } else if UITestMode.isEnabled && UITestMode.forceProLock {
+                // Test override: render the pro overlay even though UI test users
+                // normally bypass gates. Lets us capture ProFeatureOverlay reliably.
+                ProFeatureOverlay(
+                    feature: "Live Vitals",
+                    icon: "waveform.path.ecg",
+                    description: "Monitor your heart rate, SpO2, activity rings, and readiness in real time."
+                )
             } else if FeatureGate.canAccess(.liveTab) {
                 LiveView(
                     viewModel: liveViewModel,

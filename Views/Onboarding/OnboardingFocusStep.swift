@@ -114,6 +114,7 @@ struct OnboardingFocusConfirmationStep: View {
             .font(.headline)
             .padding(.horizontal, 24)
             .padding(.bottom, 48)
+            .accessibilityIdentifier("onboarding.focusStartCalibration")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -214,6 +215,7 @@ struct OnboardingFocusSelectionStep: View {
             .font(.headline)
             .padding(.horizontal, 24)
             .padding(.bottom, 48)
+            .accessibilityIdentifier("onboarding.focusSelectionContinue")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

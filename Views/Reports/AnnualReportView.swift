@@ -57,6 +57,14 @@ struct AnnualReportView: View {
                     categoryScores: categoryScores,
                     focusAreas: focusAreas
                 )
+
+                Text(Copy.Analysis.RiskDetail.disclaimer)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.leading)
+                    .padding(.horizontal)
+                    .padding(.top, 24)
+                    .padding(.bottom, 16)
             }
             .padding(.horizontal)
             .padding(.bottom, 40)

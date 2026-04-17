@@ -99,6 +99,7 @@ struct OnboardingConnectHealthStep: View {
                 .controlSize(.large)
                 .font(.headline)
                 .padding(.horizontal, 24)
+                .accessibilityIdentifier("onboarding.connectHealthButton")
 
                 Button(Copy.Buttons.skipForNow) {
                     AppAnalytics.shared.trackBlockTap(
@@ -117,6 +118,7 @@ struct OnboardingConnectHealthStep: View {
                 .foregroundStyle(.secondary)
                 .padding(.top, 12)
                 .padding(.bottom, 48)
+                .accessibilityIdentifier("onboarding.connectHealthSkip")
             } else {
                 VStack(spacing: 12) {
                     Text(Copy.Onboarding.healthKitUnavailable)
@@ -142,6 +144,7 @@ struct OnboardingConnectHealthStep: View {
                     .controlSize(.large)
                     .font(.headline)
                     .padding(.horizontal, 24)
+                    .accessibilityIdentifier("onboarding.connectHealthContinueAnyway")
                 }
                 .padding(.bottom, 48)
             }

@@ -85,6 +85,7 @@ struct OnboardingNotificationStep: View {
             .controlSize(.large)
             .font(.headline)
             .padding(.horizontal, 24)
+            .accessibilityIdentifier("onboarding.notificationsEnable")
 
             Button(Copy.Buttons.skipForNow) {
                 AppAnalytics.shared.trackBlockTap(
@@ -102,6 +103,7 @@ struct OnboardingNotificationStep: View {
             .foregroundStyle(.secondary)
             .padding(.top, 12)
             .padding(.bottom, 48)
+            .accessibilityIdentifier("onboarding.notificationsSkip")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

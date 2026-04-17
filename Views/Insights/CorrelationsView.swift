@@ -59,6 +59,7 @@ struct CorrelationsView: View {
             .padding(.vertical)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .accessibilityIdentifier("screen.correlations")
         .navigationTitle("Health Intelligence")
         .navigationBarTitleDisplayMode(.large)
         .onAppear {

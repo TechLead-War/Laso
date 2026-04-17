@@ -36,6 +36,7 @@ struct StressCard: View {
                         HStack(spacing: 8) {
                             Text(String(format: "%.1f", stressScore))
                                 .font(.title2.weight(.bold).monospacedDigit())
+                                .postHogMask()
 
                             Text(stressLevel)
                                 .font(.caption.weight(.bold))

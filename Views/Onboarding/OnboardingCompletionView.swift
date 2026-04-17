@@ -95,6 +95,7 @@ struct OnboardingCompletionView: View {
             .font(.headline)
             .padding(.horizontal, 24)
             .padding(.bottom, 48)
+            .accessibilityIdentifier("onboarding.completionStart")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

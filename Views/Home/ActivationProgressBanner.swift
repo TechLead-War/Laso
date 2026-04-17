@@ -210,6 +210,7 @@ struct AskYourDataCard: View {
         }
         .buttonStyle(.plain)
         .padding(.horizontal)
+        .accessibilityIdentifier("home.askYourDataCard")
     }
 }
 

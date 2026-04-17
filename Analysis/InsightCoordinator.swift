@@ -34,7 +34,7 @@ struct InsightCoordinator {
     static func inferDirective(for insight: Insight) -> InsightDirective {
         // Category-level fast paths
         switch insight.category {
-        case .illnessWarning: return .rest
+        case .watchSignal: return .rest
         case .clinicalTrajectory: return insight.severity >= .warning ? .seekMedical : .informational
         case .personalRecord: return .maintain
         case .cyclePhase: return .informational

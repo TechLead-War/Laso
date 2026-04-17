@@ -29,6 +29,7 @@ struct SleepCoachCard: View {
                         Text(formatDuration(hoursNeeded))
                             .font(.title3.weight(.bold).monospacedDigit())
                             .foregroundStyle(.primary)
+                            .postHogMask()
 
                         if let debt = debtHours, debt > 0 {
                             debtPill(debt)
@@ -39,6 +40,7 @@ struct SleepCoachCard: View {
                         Text("Bed by \(bedtime)")
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                            .postHogMask()
                     }
                 }
 
@@ -70,6 +72,7 @@ struct SleepCoachCard: View {
             .padding(.horizontal, DS.badgeH)
             .padding(.vertical, DS.badgeV)
             .background(Color.orange.opacity(DS.badgeBg), in: Capsule())
+            .postHogMask()
     }
 
     // MARK: - Helpers

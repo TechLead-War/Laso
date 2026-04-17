@@ -293,6 +293,7 @@ struct SettingsView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("settings.row.connectedDevices")
         }
         .cardStyle()
     }
@@ -600,6 +601,7 @@ struct SettingsView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("settings.row.metricAlerts")
         }
         .cardStyle()
     }
@@ -696,6 +698,7 @@ struct SettingsView: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityIdentifier("settings.row.dataExport")
 
                     if let error = webExportViewModel.error {
                         Text(error)
@@ -843,6 +846,7 @@ struct SettingsView: View {
                         .padding(DS.cardPadding)
                         .contentShape(Rectangle())
                     }
+                    .accessibilityIdentifier("settings.row.subscription")
                 }
             }
         }

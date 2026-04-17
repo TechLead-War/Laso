@@ -42,6 +42,7 @@ struct JournalEntryView: View {
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .navigationTitle("Log Entry")
             .navigationBarTitleDisplayMode(.inline)
+            .accessibilityIdentifier("screen.journalEntry")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {

@@ -60,7 +60,7 @@ extension LiveViewModel {
     }
 
     /// Whether an optional timestamp is within the given threshold from now.
-    static func isFresh(_ timestamp: Date?, threshold: TimeInterval) -> Bool {
+    nonisolated static func isFresh(_ timestamp: Date?, threshold: TimeInterval) -> Bool {
         guard let ts = timestamp else { return false }
         return Date().timeIntervalSince(ts) < threshold
     }

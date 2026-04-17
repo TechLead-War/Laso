@@ -42,6 +42,7 @@ struct ExploreScoreHeroSection: View {
                     Text(grade)
                         .font(.system(size: 44, weight: .bold, design: .rounded).monospacedDigit())
                         .foregroundStyle(gradeColor)
+                        .postHogMask()
 
                     if let delta = scoreChangeFromLastWeek {
                         HStack(spacing: 4) {
@@ -49,6 +50,7 @@ struct ExploreScoreHeroSection: View {
                                 .font(.caption2.weight(.bold))
                             Text(Copy.Explore.ptsThisWeek(delta))
                                 .font(.caption.weight(.medium))
+                                .postHogMask()
                         }
                         .foregroundStyle(delta > 0 ? .green : .red)
                     } else {

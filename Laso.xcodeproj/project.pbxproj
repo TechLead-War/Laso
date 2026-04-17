@@ -51,6 +51,7 @@
 		2237E03DC8AC9E3CC5708753 /* FrequencyCapManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A4F8FE01B7C6F5215CE3F48 /* FrequencyCapManager.swift */; };
 		225C12D1742E965B74721E5F /* ExploreNeedsAttentionSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C03D1D0096FE2A3A12C778E /* ExploreNeedsAttentionSection.swift */; };
 		22812B68F041F0BC04404D81 /* SampleDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79D307F2173910B0A37FB5E9 /* SampleDataProvider.swift */; };
+		23790836DCA10FF7DD03B395 /* ReportsAndExploreUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 256BAE6BFDD5F193DE1033E7 /* ReportsAndExploreUITests.swift */; };
 		240CAC7CE074C7793D3FDDA5 /* LLMInsightGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0320E8EB2C4001B7F884551B /* LLMInsightGenerator.swift */; };
 		2421253B497B667B0F6E3D80 /* CategoryDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2039A71BE618E89C7492947 /* CategoryDetailViewModel.swift */; };
 		25035DE9D1E95C91DADB7972 /* Copy+Paywall.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274D10F579EB7D7189471A05 /* Copy+Paywall.swift */; };
@@ -93,6 +94,7 @@
 		3CDF4DE00DC0C267D6A68190 /* Severity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 291FF6754216CC0155D82D17 /* Severity.swift */; };
 		3D2D88324A80F48A1BC63B5D /* CalibrationDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00ADE915B28E375ADFFA8F03 /* CalibrationDiscovery.swift */; };
 		3DAC7135ACED9E305202DA83 /* CoachGreetingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A86EDC7F6D80B3B6CF7A909 /* CoachGreetingView.swift */; };
+		3DB31CEBA1C9F2DE9E67010E /* ModalSheetsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CD4C44F2DBA18DB04B23520 /* ModalSheetsUITests.swift */; };
 		3E33C801F934610B3B272496 /* TrendBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 801516F2D278ADFFFB3C5130 /* TrendBadge.swift */; };
 		3E88F5E4D5A3883F83A12544 /* Copy+Home.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54099BD73AF6C29FCC27277F /* Copy+Home.swift */; };
 		3F15AA031DC849499F54286C /* BreathworkLiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A20D652FD4F81F695E1884 /* BreathworkLiveActivityManager.swift */; };
@@ -237,6 +239,7 @@
 		9ABD1828F6DD3F93BA70AB61 /* BreathworkActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42507233E471636899246378 /* BreathworkActivityAttributes.swift */; };
 		9BEE10F57D2D4C62D50570CD /* JournalCorrelationAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDE4C0201DCF23A07430057F /* JournalCorrelationAnalyzer.swift */; };
 		9C1DBC825C7403078B8432CF /* RemoteConfigManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB6194E7222F766DA593120A /* RemoteConfigManager.swift */; };
+		9CB982B863301E6760DE5D9B /* LasoScreenshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F4AB99164DE4D91AC4A1E0 /* LasoScreenshotTests.swift */; };
 		9CCE658EC294684896CAF84E /* VitalityHeroSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6787EB21641925CF3B82F1F /* VitalityHeroSection.swift */; };
 		9D13CCF92B515E8D72DBBB1C /* CardioRespiratoryAgeAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00DBD1FE9CFD03F814D8B0A2 /* CardioRespiratoryAgeAnalyzer.swift */; };
 		9D4630B8E5210C01E8F3D599 /* ExploreDecliningTrendsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C69934ED6E641A31480F4E51 /* ExploreDecliningTrendsSection.swift */; };
@@ -340,6 +343,7 @@
 		D11DA637D8D6FE7C263B9ECD /* JournalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B027E818D3613B1A44D2DB7E /* JournalStore.swift */; };
 		D1AC5C3A6F5739E0E5E589A8 /* StressScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92721F5650D4BFC572EE38EA /* StressScorer.swift */; };
 		D208EEED6FCC396A8ADBA50A /* HealthScoreIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9351B5CAD39C5A9B22417CA0 /* HealthScoreIntent.swift */; };
+		D2D16768BC4A3BB0B889E7C4 /* MetricDrillDownUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2503A9A5A541ED5603016F08 /* MetricDrillDownUITests.swift */; };
 		D2ECF301E9B97CE6AD381D32 /* DailySummaryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96CCC1456BB235C6C41BF9E /* DailySummaryScheduler.swift */; };
 		D395AD217BCB100BF7537ECB /* MetricChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AE023120456B0FF10708544 /* MetricChartView.swift */; };
 		D3CCFFFEBD37F864D523E918 /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0A12061DC73AA4746DA1D13 /* Date+Extensions.swift */; };
@@ -389,6 +393,7 @@
 		F5576884174BED7033877D40 /* MonthlyReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5168C7361647B1693B361C3F /* MonthlyReviewView.swift */; };
 		F729FCCD00CF8EF283DA2FAE /* CircadianDisruptionAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C34F5DE693B09601BBA1BC0 /* CircadianDisruptionAnalyzer.swift */; };
 		F80A56B881A1965481054C2A /* SimulationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69D3E2B719745569784A7A4C /* SimulationView.swift */; };
+		F84CF13B2D062363184BF9DA /* HomeDetailsExtendedUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12697A8CC60C21D94F71D53 /* HomeDetailsExtendedUITests.swift */; };
 		F8C520FC46BC7ADA63EF75F4 /* TimeSeriesForecaster.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8431050C5D036636922C00D2 /* TimeSeriesForecaster.swift */; };
 		FADABCD94A1600C20A27F817 /* HealthStateTimelineViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB2BF87D30B483C683584666 /* HealthStateTimelineViewModel.swift */; };
 		FB14358D9A8E3D6B69F7B36B /* VitalityMetricContributionSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAB41436BEEE6CAFBBE5FD2A /* VitalityMetricContributionSection.swift */; };
@@ -411,6 +416,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 2131E0565430F53E4EC2F615;
 			remoteInfo = LasoWidgets;
+		};
+		ADBCAD5F3B66B6E557B42044 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A0999A277A055E4CFCBB5F7A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 08AD24A007F4503B8999A065;
+			remoteInfo = Laso;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -487,7 +499,9 @@
 		244BAE562EA2A618168FF6A8 /* ReferralManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferralManager.swift; sourceTree = "<group>"; };
 		24A8F0F0FE7C288021E46BEB /* ExploreYourTrendsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreYourTrendsSection.swift; sourceTree = "<group>"; };
 		24BFF272759A76CC1A5AA370 /* LevelBadgeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelBadgeCard.swift; sourceTree = "<group>"; };
+		2503A9A5A541ED5603016F08 /* MetricDrillDownUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricDrillDownUITests.swift; sourceTree = "<group>"; };
 		253DCE97A8955675B69DEA7A /* PatternCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatternCard.swift; sourceTree = "<group>"; };
+		256BAE6BFDD5F193DE1033E7 /* ReportsAndExploreUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportsAndExploreUITests.swift; sourceTree = "<group>"; };
 		261F9FD084DA1583BDCC9670 /* Copy+Reports.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+Reports.swift"; sourceTree = "<group>"; };
 		2641335038F22564BE08BFB4 /* DashboardSmartActionAdvisor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardSmartActionAdvisor.swift; sourceTree = "<group>"; };
 		274D10F579EB7D7189471A05 /* Copy+Paywall.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+Paywall.swift"; sourceTree = "<group>"; };
@@ -596,6 +610,7 @@
 		6C797A2F6811EAFD7A2F31D5 /* AnnualReportStatsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnualReportStatsSection.swift; sourceTree = "<group>"; };
 		6CADAF64870E4AEE898A5248 /* NutritionCorrelationAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionCorrelationAnalyzer.swift; sourceTree = "<group>"; };
 		6CC1285A146F7413444E60E0 /* ROIRanker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ROIRanker.swift; sourceTree = "<group>"; };
+		6CD4C44F2DBA18DB04B23520 /* ModalSheetsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalSheetsUITests.swift; sourceTree = "<group>"; };
 		6D17B54A22B9579BC11DFF59 /* JournalInsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalInsightsView.swift; sourceTree = "<group>"; };
 		6F7E32BD9347DEB587015015 /* DataRetentionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataRetentionManager.swift; sourceTree = "<group>"; };
 		6FB5504157ADC79757B717BF /* AdaptiveAnomalyDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveAnomalyDetector.swift; sourceTree = "<group>"; };
@@ -676,6 +691,7 @@
 		A0A12061DC73AA4746DA1D13 /* Date+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Extensions.swift"; sourceTree = "<group>"; };
 		A0FEFA8B2E9C3EAD5191FC58 /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
 		A1254D614EB28C2A16BA3436 /* MultiMetricClusterAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiMetricClusterAnalyzer.swift; sourceTree = "<group>"; };
+		A12697A8CC60C21D94F71D53 /* HomeDetailsExtendedUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeDetailsExtendedUITests.swift; sourceTree = "<group>"; };
 		A12DC96FEA93961AEC887B76 /* PeriodSummarySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeriodSummarySection.swift; sourceTree = "<group>"; };
 		A145A890F4B1D41E135D4379 /* PatternMiner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatternMiner.swift; sourceTree = "<group>"; };
 		A2090C8C6FD19B5F22AE4D94 /* NotificationPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPreferences.swift; sourceTree = "<group>"; };
@@ -753,14 +769,16 @@
 		D344C521C4E0AA274F7731CB /* FeedbackSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackSheet.swift; sourceTree = "<group>"; };
 		D49EB1716056B1C23897AD31 /* AnnualReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnualReportView.swift; sourceTree = "<group>"; };
 		D75874AB667FE9157670042E /* DiscoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryView.swift; sourceTree = "<group>"; };
+		D7F4AB99164DE4D91AC4A1E0 /* LasoScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LasoScreenshotTests.swift; sourceTree = "<group>"; };
 		D831542D1DF88ADF75D61259 /* TrendAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendAnalyzer.swift; sourceTree = "<group>"; };
 		D8C3681D2C3CA017DE542FE5 /* MLTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLTypes.swift; sourceTree = "<group>"; };
 		D9085B00F528D36FD65EBA0B /* AnnualReportScoreSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnualReportScoreSection.swift; sourceTree = "<group>"; };
 		D96CCC1456BB235C6C41BF9E /* DailySummaryScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySummaryScheduler.swift; sourceTree = "<group>"; };
 		D97AF9C348FF8FC82F9A6411 /* WorkoutProgrammer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutProgrammer.swift; sourceTree = "<group>"; };
+		DB5737EEB9C2C63A4808E158 /* LasoUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LasoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DB6194E7222F766DA593120A /* RemoteConfigManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteConfigManager.swift; sourceTree = "<group>"; };
 		DB64CE551229B9165432537B /* AnalysisWidgetProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisWidgetProvider.swift; sourceTree = "<group>"; };
-		DC1489C7446344221C0AA886 /* LasoWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = LasoWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		DC1489C7446344221C0AA886 /* LasoWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LasoWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC6D57D97ABF4DCD529CF70B /* PerformanceProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceProfileView.swift; sourceTree = "<group>"; };
 		DD281CA396957983B12D0A3C /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
 		DD49838EC97E56CFD6466B44 /* ShowTrendsIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowTrendsIntent.swift; sourceTree = "<group>"; };
@@ -925,6 +943,18 @@
 				34D7829C67813F4AD75CC9CF /* EncryptedStore.swift */,
 			);
 			path = Security;
+			sourceTree = "<group>";
+		};
+		0FBA80065D66CD82E801C536 /* LasoUITests */ = {
+			isa = PBXGroup;
+			children = (
+				A12697A8CC60C21D94F71D53 /* HomeDetailsExtendedUITests.swift */,
+				D7F4AB99164DE4D91AC4A1E0 /* LasoScreenshotTests.swift */,
+				2503A9A5A541ED5603016F08 /* MetricDrillDownUITests.swift */,
+				6CD4C44F2DBA18DB04B23520 /* ModalSheetsUITests.swift */,
+				256BAE6BFDD5F193DE1033E7 /* ReportsAndExploreUITests.swift */,
+			);
+			path = LasoUITests;
 			sourceTree = "<group>";
 		};
 		10589CED01EF41B0E1208B66 /* Discovery */ = {
@@ -1374,6 +1404,7 @@
 			isa = PBXGroup;
 			children = (
 				2E6A79C6A57A85AF78D95A7B /* Laso.app */,
+				DB5737EEB9C2C63A4808E158 /* LasoUITests.xctest */,
 				DC1489C7446344221C0AA886 /* LasoWidgets.appex */,
 			);
 			name = Products;
@@ -1545,6 +1576,7 @@
 				4DF76B0EA2E2F3B29CA0952B /* Extensions */,
 				E539D755BFE39275A3539FF3 /* HealthPulse */,
 				45AE2A419181359990E719C2 /* Intents */,
+				0FBA80065D66CD82E801C536 /* LasoUITests */,
 				08ACFB443AD621527464CB1D /* LasoWidgets */,
 				7EA6477D2DB502A753631BAB /* Models */,
 				A643DD719B04411780FAB17C /* Notifications */,
@@ -1641,6 +1673,24 @@
 			productReference = 2E6A79C6A57A85AF78D95A7B /* Laso.app */;
 			productType = "com.apple.product-type.application";
 		};
+		1029A915F9487DD209F51551 /* LasoUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 48DE100EB1F63A3438AE86F0 /* Build configuration list for PBXNativeTarget "LasoUITests" */;
+			buildPhases = (
+				F6A01CB564460C51976AF556 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				5B66791FC7824D564260130D /* PBXTargetDependency */,
+			);
+			name = LasoUITests;
+			packageProductDependencies = (
+			);
+			productName = LasoUITests;
+			productReference = DB5737EEB9C2C63A4808E158 /* LasoUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		2131E0565430F53E4EC2F615 /* LasoWidgets */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 5167C896B93CD4487CA329FC /* Build configuration list for PBXNativeTarget "LasoWidgets" */;
@@ -1678,8 +1728,12 @@
 							};
 						};
 					};
-					2131E0565430F53E4EC2F615 = {
+					1029A915F9487DD209F51551 = {
 						DevelopmentTeam = S2MAH8X8JM;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 08AD24A007F4503B8999A065;
+					};
+					2131E0565430F53E4EC2F615 = {
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
@@ -1707,6 +1761,7 @@
 			projectRoot = "";
 			targets = (
 				08AD24A007F4503B8999A065 /* Laso */,
+				1029A915F9487DD209F51551 /* LasoUITests */,
 				2131E0565430F53E4EC2F615 /* LasoWidgets */,
 			);
 		};
@@ -2125,6 +2180,18 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F6A01CB564460C51976AF556 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F84CF13B2D062363184BF9DA /* HomeDetailsExtendedUITests.swift in Sources */,
+				9CB982B863301E6760DE5D9B /* LasoScreenshotTests.swift in Sources */,
+				D2D16768BC4A3BB0B889E7C4 /* MetricDrillDownUITests.swift in Sources */,
+				3DB31CEBA1C9F2DE9E67010E /* ModalSheetsUITests.swift in Sources */,
+				23790836DCA10FF7DD03B395 /* ReportsAndExploreUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -2132,6 +2199,11 @@
 			isa = PBXTargetDependency;
 			target = 2131E0565430F53E4EC2F615 /* LasoWidgets */;
 			targetProxy = 0C86E945CAB8E19410CC6FCA /* PBXContainerItemProxy */;
+		};
+		5B66791FC7824D564260130D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 08AD24A007F4503B8999A065 /* Laso */;
+			targetProxy = ADBCAD5F3B66B6E557B42044 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -2209,7 +2281,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 8834G6Q4GF;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2217,7 +2289,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -2287,7 +2359,7 @@
 				CODE_SIGN_ENTITLEMENTS = LasoWidgets/LasoWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2296,7 +2368,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.app.widgets;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.widgets;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -2313,7 +2385,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 8834G6Q4GF;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2321,7 +2393,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -2335,7 +2407,7 @@
 				CODE_SIGN_ENTITLEMENTS = LasoWidgets/LasoWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2344,16 +2416,65 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.app.widgets;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.widgets;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
+		D94466599A60960A5455D2B3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.uitests;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = Laso;
+			};
+			name = Debug;
+		};
+		E605AC9D552AD00B0DBE602C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.uitests;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = Laso;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		48DE100EB1F63A3438AE86F0 /* Build configuration list for PBXNativeTarget "LasoUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D94466599A60960A5455D2B3 /* Debug */,
+				E605AC9D552AD00B0DBE602C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		5167C896B93CD4487CA329FC /* Build configuration list for PBXNativeTarget "LasoWidgets" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

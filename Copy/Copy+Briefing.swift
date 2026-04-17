@@ -22,9 +22,9 @@ extension Copy {
             static let unusualDay = "Unusual Day"
         }
 
-        // MARK: - Predictive Risk Card
+        // MARK: - Trend Signal Card
 
-        enum PredictiveRisk {
+        enum TrendSignal {
 
             /// Urgent health signal detected.
             static func urgentHeadline(riskPercent: String, signalName: String) -> String {
@@ -75,7 +75,7 @@ extension Copy {
 
             /// Triggered precursor pattern.
             static func precursorHeadline(signalDescription: String, predictedEvent: String, accuracy: String) -> String {
-                "The last time your \(signalDescription.lowercased()) looked like this, \(predictedEvent.lowercased()) followed. That pattern has been right \(accuracy) of the time."
+                "The last time your \(signalDescription.lowercased()) looked like this, \(predictedEvent.lowercased()) followed. This pattern has appeared in your data before."
             }
 
             static func precursorDetail(description: String) -> String {

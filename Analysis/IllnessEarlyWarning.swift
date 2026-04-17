@@ -172,7 +172,7 @@ struct IllnessEarlyWarning {
                 currentValue: Double(warning.confidence),
                 baselineValue: 0,
                 deviationPercent: Double(warning.activeSignals.count * 10),
-                category: .illnessWarning,
+                category: .watchSignal,
                 relatedMetrics: relatedMetrics
             )
         }
@@ -463,7 +463,7 @@ struct IllnessEarlyWarning {
             signalSummary = allButLast.joined(separator: ", ") + ", and " + last + "."
         }
 
-        let patternNote = Copy.Analysis.IllnessWarning.multiMetricPattern
+        let patternNote = Copy.Analysis.StrainSignals.multiMetricPattern
 
         return signalSummary + " " + patternNote
     }
@@ -474,11 +474,11 @@ struct IllnessEarlyWarning {
     private static func insightTitle(for warning: Warning) -> String {
         switch warning.severity {
         case .critical:
-            return Copy.Analysis.IllnessWarning.significantStrain
+            return Copy.Analysis.StrainSignals.significantStrain
         case .warning:
-            return Copy.Analysis.IllnessWarning.multipleMetricStrain
+            return Copy.Analysis.StrainSignals.multipleMetricStrain
         case .info:
-            return Copy.Analysis.IllnessWarning.earlyPhysiologicalStrain
+            return Copy.Analysis.StrainSignals.earlyPhysiologicalStrain
         }
     }
 
@@ -497,22 +497,22 @@ struct IllnessEarlyWarning {
         if severity >= .warning {
             observations.append("Your body is showing strain across \(signals.count) metrics simultaneously.")
         } else {
-            observations.append(Copy.Analysis.IllnessWarning.multipleMetricsShifted)
+            observations.append(Copy.Analysis.StrainSignals.multipleMetricsShifted)
         }
 
         // State data observation
-        observations.append(Copy.Analysis.IllnessWarning.consistentWithPhysiologicalStrain)
+        observations.append(Copy.Analysis.StrainSignals.consistentWithPhysiologicalStrain)
 
         // Sleep-specific observation if HRV or RHR are signaling
         let hasCardiacSignal = signals.contains { $0.metric == .restingHeartRate || $0.metric == .heartRateVariability }
         if hasCardiacSignal {
-            observations.append(Copy.Analysis.IllnessWarning.cardiacMetricsStrain)
+            observations.append(Copy.Analysis.StrainSignals.cardiacMetricsStrain)
         }
 
         // Activity-specific observation
         let hasActivityDecline = signals.contains { $0.metric == .steps }
         if hasActivityDecline {
-            observations.append(Copy.Analysis.IllnessWarning.activityNotReturned)
+            observations.append(Copy.Analysis.StrainSignals.activityNotReturned)
         }
 
         // Critical-level: state the severity of the data pattern
@@ -528,7 +528,7 @@ struct IllnessEarlyWarning {
 
 extension IllnessEarlyWarning: InsightAnalyzer {
     static var analyzerID: String { "illnessEarlyWarning" }
-    static var insightCategory: InsightCategory { .illnessWarning }
+    static var insightCategory: InsightCategory { .watchSignal }
 
     static func generateInsights(context: AnalysisContext) -> [Insight] {
         generateInsights(from: context.illnessWarnings)

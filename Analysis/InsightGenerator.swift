@@ -240,7 +240,7 @@ struct InsightGenerator {
         if !insight.relatedMetrics.isEmpty { score += 20 }
 
         // Is a causal chain or illness warning → +20 (inherently actionable)
-        if insight.category == .causalChain || insight.category == .illnessWarning { score += 20 }
+        if insight.category == .causalChain || insight.category == .watchSignal { score += 20 }
 
         // Penalize generic stable/improving platitudes → -30
         let summaryLower = insight.summary.lowercased()

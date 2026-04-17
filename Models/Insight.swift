@@ -18,7 +18,7 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
     case scoreTrajectory
     case baselineDrift
     case multiMetricCluster
-    case illnessWarning      // "Early Warning"
+    case watchSignal         // "Watch Signal"
     case causalChain         // "Cause & Effect"
     case crossMetricAnomaly  // "Cross-Metric"
     case cognitiveEnergy     // "Cognitive & Energy"
@@ -47,11 +47,11 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .scoreTrajectory: return "Trajectory"
         case .baselineDrift: return "Drift"
         case .multiMetricCluster: return "Cluster"
-        case .illnessWarning: return "Early Warning"
+        case .watchSignal: return "Watch Signal"
         case .causalChain: return "Cause & Effect"
         case .crossMetricAnomaly: return "Cross-Metric"
         case .cognitiveEnergy: return "Cognitive & Energy"
-        case .brainHealth: return "Brain Health"
+        case .brainHealth: return "Cognitive Wellness"
         case .cyclePhase: return "Cycle Phase"
         case .mlPattern: return "ML Pattern"
         case .mlState: return "ML State"
@@ -78,7 +78,7 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .scoreTrajectory: return "chart.line.uptrend.xyaxis.circle.fill"
         case .baselineDrift: return "arrow.up.and.down.circle.fill"
         case .multiMetricCluster: return "exclamationmark.3"
-        case .illnessWarning: return "shield.lefthalf.filled.badge.checkmark"
+        case .watchSignal: return "shield.lefthalf.filled.badge.checkmark"
         case .causalChain: return "arrow.triangle.turn.up.right.diamond.fill"
         case .crossMetricAnomaly: return "circle.grid.cross.fill"
         case .cognitiveEnergy: return "brain.head.profile"
@@ -109,7 +109,7 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .scoreTrajectory: return .mint
         case .baselineDrift: return .cyan
         case .multiMetricCluster: return Color.red.opacity(0.8)
-        case .illnessWarning: return .red
+        case .watchSignal: return .red
         case .causalChain: return .indigo
         case .crossMetricAnomaly: return .purple
         case .cognitiveEnergy: return .orange

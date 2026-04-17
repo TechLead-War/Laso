@@ -49,6 +49,7 @@ struct CyclePhaseCard: View {
                                 Text("Day \(dayInCycle) of \(cycleLength)")
                                     .font(.caption.weight(.medium).monospacedDigit())
                                     .foregroundStyle(.secondary)
+                                    .postHogMask()
 
                                 periodCountdownBadge
                             }
@@ -91,6 +92,7 @@ struct CyclePhaseCard: View {
             .padding(.horizontal, DS.badgeH)
             .padding(.vertical, DS.badgeV)
             .background(phaseColor.opacity(DS.badgeBg), in: Capsule())
+            .postHogMask()
     }
 
     // MARK: - Cycle Progress Bar

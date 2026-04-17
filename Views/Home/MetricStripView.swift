@@ -54,6 +54,7 @@ private struct MetricTileView: View {
                     .font(.headline.weight(.bold).monospacedDigit())
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
+                    .postHogMask()
 
                 Text(tile.label)
                     .font(.caption2.weight(.medium))
@@ -66,6 +67,7 @@ private struct MetricTileView: View {
                         .foregroundStyle(tile.color)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
+                        .postHogMask()
                 } else {
                     // Placeholder to keep consistent height
                     Text(" ")

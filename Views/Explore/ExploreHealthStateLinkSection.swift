@@ -47,5 +47,6 @@ struct ExploreHealthStateLinkSection: View {
             .cardStyle()
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("explore.healthStateLink")
     }
 }

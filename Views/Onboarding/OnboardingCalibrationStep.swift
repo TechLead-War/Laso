@@ -160,6 +160,7 @@ struct OnboardingCalibrationStep: View {
                 .controlSize(.large)
                 .font(.headline)
                 .padding(.horizontal, 24)
+                .accessibilityIdentifier("onboarding.calibrationRetry")
 
                 Button(Copy.Buttons.skipForNow) {
                     AppAnalytics.shared.trackBlockTap(
@@ -175,6 +176,7 @@ struct OnboardingCalibrationStep: View {
                 }
                 .buttonStyle(.bordered)
                 .font(.subheadline.weight(.medium))
+                .accessibilityIdentifier("onboarding.calibrationSkip")
             }
         }
     }

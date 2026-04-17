@@ -139,10 +139,19 @@ struct RecoveryInfoSheet: View {
                     .background(.background, in: RoundedRectangle(cornerRadius: 16))
                     .padding(.horizontal)
                     .padding(.bottom, 16)
+
+                    Text(Copy.Analysis.RiskDetail.disclaimer)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.leading)
+                        .padding(.horizontal)
+                        .padding(.top, 24)
+                        .padding(.bottom, 16)
                 }
             }
             .background(Color(.systemGroupedBackground))
             .navigationBarTitleDisplayMode(.inline)
+            .accessibilityIdentifier("screen.recoveryInfo")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(Copy.Buttons.done) {

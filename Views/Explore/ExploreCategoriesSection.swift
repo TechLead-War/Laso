@@ -32,6 +32,7 @@ struct ExploreCategoriesSection: View {
                     }
                     .buttonStyle(.plain)
                     .contentShape(Rectangle())
+                    .accessibilityIdentifier("explore.category.\(item.category.rawValue)")
 
                     if index < categories.count - 1 {
                         Divider()

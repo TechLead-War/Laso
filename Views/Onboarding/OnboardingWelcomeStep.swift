@@ -40,6 +40,7 @@ struct OnboardingWelcomeStep: View {
             .font(.headline)
             .padding(.horizontal, 24)
             .padding(.bottom, 48)
+            .accessibilityIdentifier("onboarding.getStartedButton")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

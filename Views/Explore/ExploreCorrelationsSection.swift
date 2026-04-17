@@ -49,6 +49,7 @@ struct ExploreCorrelationsSection: View {
                     .foregroundStyle(.tint)
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("explore.correlations.seeAll")
             }
             .padding(.horizontal)
 

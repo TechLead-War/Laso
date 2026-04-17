@@ -145,15 +145,25 @@ struct CategoryDetailView: View {
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
+                        .accessibilityIdentifier("category.metric.\(metric.rawValue)")
                     }
                 }
                 .onAppear { metricsTracker.appeared() }
                 .onDisappear { metricsTracker.disappeared() }
+
+                Text(Copy.Analysis.RiskDetail.disclaimer)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.leading)
+                    .padding(.horizontal)
+                    .padding(.top, 24)
+                    .padding(.bottom, 16)
             }
             .padding(.bottom)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle(viewModel.category.displayName)
+        .accessibilityIdentifier("screen.categoryDetail")
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.categoryDetail, metadata: [
                 "category": viewModel.category.displayName,

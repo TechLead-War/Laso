@@ -140,8 +140,8 @@ final class TodayIntelligenceEngine {
                     type: .predictiveRisk,
                     icon: "exclamationmark.triangle.fill",
                     label: Copy.Briefing.Labels.headsUp,
-                    headline: Copy.Briefing.PredictiveRisk.urgentHeadline(riskPercent: pctStr, signalName: topSignal.signalName),
-                    detail: Copy.Briefing.PredictiveRisk.urgentDetail(explanation: topSignal.explanation),
+                    headline: Copy.Briefing.TrendSignal.urgentHeadline(riskPercent: pctStr, signalName: topSignal.signalName),
+                    detail: Copy.Briefing.TrendSignal.urgentDetail(explanation: topSignal.explanation),
                     severity: severity,
                     confidence: topSignal.confidence,
                     priority: priorityBase + topSignal.score * 5,
@@ -166,16 +166,16 @@ final class TodayIntelligenceEngine {
 
         let topFactorDesc: String
         if let topFactor = prediction.topFactors.first {
-            topFactorDesc = Copy.Briefing.PredictiveRisk.tomorrowDetailWithFactor(metricName: topFactor.metric.displayName)
+            topFactorDesc = Copy.Briefing.TrendSignal.tomorrowDetailWithFactor(metricName: topFactor.metric.displayName)
         } else {
-            topFactorDesc = Copy.Briefing.PredictiveRisk.tomorrowDetailGeneric
+            topFactorDesc = Copy.Briefing.TrendSignal.tomorrowDetailGeneric
         }
 
         return IntelligenceCard(
             type: .predictiveRisk,
             icon: "exclamationmark.triangle.fill",
             label: Copy.Briefing.Labels.headsUp,
-            headline: Copy.Briefing.PredictiveRisk.tomorrowHeadline(probability: pctStr),
+            headline: Copy.Briefing.TrendSignal.tomorrowHeadline(probability: pctStr),
             detail: topFactorDesc,
             severity: severity,
             confidence: prediction.confidence,

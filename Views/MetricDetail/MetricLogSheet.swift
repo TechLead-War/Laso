@@ -47,6 +47,7 @@ struct MetricLogSheet: View {
             }
             .navigationTitle("Log \(metric.displayName)")
             .navigationBarTitleDisplayMode(.inline)
+            .accessibilityIdentifier("screen.metricLog")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {

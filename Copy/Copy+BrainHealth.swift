@@ -5,11 +5,11 @@ extension Copy {
 
         // MARK: - Navigation
 
-        static let title = "Brain Health"
+        static let title = "Cognitive Wellness"
 
         // MARK: - Hero
 
-        static let brainHealthLabel = "BRAIN HEALTH"
+        static let brainHealthLabel = "COGNITIVE WELLNESS"
         static let learningPatterns = "Learning your patterns"
 
         // MARK: - Sleep Recovery
@@ -34,9 +34,9 @@ extension Copy {
         static let mentalEnergy = "Mental Energy"
         static let mentalEnergyExplanation = "How much mental energy you have after stress"
 
-        // MARK: - Brain Health Over Time
+        // MARK: - Cognitive Wellness Over Time
 
-        static let brainHealthOverTime = "Brain Health Over Time"
+        static let brainHealthOverTime = "Cognitive Wellness Over Time"
         static let heartAndBrain = "Heart and Brain"
         static let sleepRhythm = "Sleep Rhythm"
         static let longTermExplanation = "A healthy heart and a regular sleep schedule help keep your brain sharp over time."

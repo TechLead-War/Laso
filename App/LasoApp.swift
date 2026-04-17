@@ -20,7 +20,11 @@ struct LasoApp: App {
 
     /// Show paywall only when onboarding is done and subscription is definitively expired.
     /// Respects FeatureGate.freeYearActive. when active, paywall is disabled.
+    /// UI test override: `--ui-test-show-paywall` forces it on for screenshot capture.
     private var shouldShowPaywall: Bool {
+        if isUITestMode && UITestMode.forceShowPaywall {
+            return appStateStore.onboardingCompleted && appStateStore.disclaimerAcknowledged
+        }
         guard appStateStore.onboardingCompleted else { return false }
         return subscriptionManager.shouldEnforcePaywall && !FeatureGate.hasFullAccess
     }
@@ -60,7 +64,11 @@ struct LasoApp: App {
     init() {
         UITestMode.configureDefaults()
         isUITestMode = UITestMode.isEnabled
-        _container = State(wrappedValue: AppContainer())
+        let newContainer = AppContainer()
+        if UITestMode.isEnabled {
+            newContainer.injectUITestMockData()
+        }
+        _container = State(wrappedValue: newContainer)
         _showSplash = State(initialValue: !isUITestMode)
         integrityFailure = AppIntegrityGuard.performChecks()
     }

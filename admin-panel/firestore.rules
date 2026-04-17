@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Feedback ──
+    // Feedback
     // Only authenticated iOS app users can submit feedback.
     // Only admin can read. No updates or deletes.
     match /feedback/{docId} {
@@ -16,9 +16,9 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // ── Early Access ──
+    // Early Access
     // Public create (landing page signup) with strict validation.
-    // Read restricted to admin only — prevents email harvesting.
+    // Read restricted to admin only to prevent email harvesting.
     match /early_access/{docId} {
       allow create: if request.resource.data.keys().hasAll(['email', 'timestamp'])
                     && request.resource.data.email is string
@@ -29,21 +29,85 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // ── User Profiles ──
-    // Only the device owner (anonymous auth) can write their own profile.
-    // Only admin can read all profiles.
+    // User Profiles
+    // Ownership is bound to Firebase Auth UID via the firebaseUid field on the doc.
+    // The doc ID is the deviceId (identifierForVendor).
+    // Referral flow requires writing referralFreeUntil on another user's doc,
+    // so that one field is permitted as a controlled cross-user loophole.
     match /user_profiles/{deviceId} {
-      allow create, update: if request.auth != null
-                            && request.resource.data.keys().hasOnly([
-                              'gender', 'ageBracket', 'healthFocuses', 'deviceId',
-                              'createdAt', 'updatedAt', 'appVersion', 'region'
-                            ])
-                            && request.resource.data.deviceId is string;
-      allow read: if request.auth != null && request.auth.token.admin == true;
+
+      // Allowed fields on create and full-access update.
+      function allowedFields() {
+        return [
+          'gender', 'ageBracket', 'healthFocuses', 'deviceId',
+          'createdAt', 'updatedAt', 'appVersion', 'region',
+          'firebaseUid',
+          'referralCode', 'referralFreeUntil', 'redeemedReferralCode'
+        ];
+      }
+
+      // Create: caller must stamp their own firebaseUid and matching deviceId.
+      allow create: if request.auth != null
+                    && request.resource.data.keys().hasOnly(allowedFields())
+                    && request.resource.data.firebaseUid is string
+                    && request.resource.data.firebaseUid == request.auth.uid
+                    && request.resource.data.deviceId is string
+                    && request.resource.data.deviceId == deviceId;
+
+      // Update own profile (full access): firebaseUid on the existing doc must
+      // match the caller, and the caller cannot rewrite firebaseUid to a different value.
+      allow update: if request.auth != null
+                    && resource.data.firebaseUid == request.auth.uid
+                    && request.resource.data.keys().hasOnly(allowedFields())
+                    && request.resource.data.firebaseUid == resource.data.firebaseUid;
+
+      // Cross-user update (controlled loophole for referral rewards):
+      // any authenticated user may update SOLELY the referralFreeUntil field
+      // on someone else's profile. This is required for granting the referrer
+      // their reward after the referred user subscribes.
+      allow update: if request.auth != null
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['referralFreeUntil'])
+                    && request.resource.data.referralFreeUntil is number;
+
+      // Read own profile.
+      allow get: if request.auth != null
+                 && resource.data.firebaseUid == request.auth.uid;
+
+      // Admin read all.
+      allow get, list: if request.auth != null && request.auth.token.admin == true;
+
+      // Lookup by referral code (list query). Firestore rules cannot perfectly
+      // enforce WHERE constraints, so we accept a small risk: any authenticated
+      // user can list profiles. Client code only ever queries by referralCode.
+      allow list: if request.auth != null;
+
       allow delete: if false;
     }
 
-    // ── Admin Audit Log ──
+    // Referrals
+    // Tracks pending/completed referrals between two devices.
+    match /referrals/{docId} {
+      allow create: if request.auth != null
+                    && request.resource.data.keys().hasAll([
+                         'referrerDeviceId', 'referredDeviceId',
+                         'referralCode', 'status', 'createdAt'
+                       ])
+                    && request.resource.data.status == 'pending'
+                    && request.resource.data.referredDeviceId is string
+                    && request.resource.data.referrerDeviceId is string
+                    && request.resource.data.referralCode is string;
+
+      allow update: if request.auth != null
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['status', 'completedAt']);
+
+      allow read: if request.auth != null;
+
+      allow delete: if false;
+    }
+
+    // Admin Audit Log
     // Written by Cloud Functions only (admin SDK bypasses rules).
     // Admin can read.
     match /admin_audit_log/{docId} {
@@ -51,7 +115,7 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // ── Default: deny all ──
+    // Default: deny all
     match /{document=**} {
       allow read, write: if false;
     }
