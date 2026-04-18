@@ -18,7 +18,6 @@ final class MLPipelineRunner {
     struct PipelineOutput {
         var componentsRunCount: Int = 0
         var vectors: [DailyFeatureVector] = []
-        var enrichedVectors: [EnrichedDailyFeatureVector] = []
         var smoothedStates: [SmoothedHealthState] = []
         var multiHorizonForecasts: [HealthMetric: TimeSeriesForecaster.MultiHorizonForecast] = [:]
         var multivariateResults: [MultivariateRegressionResult] = []
@@ -105,10 +104,6 @@ final class MLPipelineRunner {
             userDataDays: totalDays,
             metricsTracked: input.timeSeries.count
         )
-
-        // Step 0a: Composite feature enrichment skipped — enrichedVectors are assigned
-        // to MLOrchestrator then immediately cleared (line 233) with no downstream consumer.
-        // Removing this eliminates 12 composite features × all historical days of wasted work.
 
         if await shouldStopForThermal(after: "FeatureEngine") { output.stoppedEarly = true; return output }
 

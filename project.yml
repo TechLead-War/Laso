@@ -63,14 +63,17 @@ targets:
       path: Info.plist
       properties:
         CFBundleDisplayName: Laso
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSSiriUsageDescription: "Laso uses Siri to let you check your health score, log water, view sleep data, and track workouts hands-free."
         NSHealthShareUsageDescription: "Laso reads your health data from Apple Watch and iPhone to provide real-time vitals, personalized health scores, trend analysis, and actionable insights."
         NSHealthUpdateUsageDescription: "Laso requests write access to Apple Health to allow future features like logging workouts and health entries directly from the app."
         POSTHOG_API_KEY: $(POSTHOG_API_KEY)
         POSTHOG_HOST: $(POSTHOG_HOST)
         NSSupportsLiveActivities: true
-        UIBackgroundModes: [health-update]
-        BGTaskSchedulerPermittedIdentifiers: ["com.lasohealth.app.background-refresh"]
+        ITSAppUsesNonExemptEncryption: false
+        UIBackgroundModes: [fetch, processing]
+        BGTaskSchedulerPermittedIdentifiers: ["com.lasohealth.fit.background-refresh"]
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         UILaunchScreen:
           UIColorName: LaunchBackground
@@ -85,12 +88,50 @@ targets:
         DEVELOPMENT_TEAM: S2MAH8X8JM
         PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.fit
         MARKETING_VERSION: "1.0.0"
-        CURRENT_PROJECT_VERSION: "1"
+        CURRENT_PROJECT_VERSION: "4"
         GENERATE_INFOPLIST_FILE: false
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         SWIFT_EMIT_LOC_STRINGS: "YES"
         TARGETED_DEVICE_FAMILY: "1"
+        DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+      configs:
+        Release:
+          DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+    postBuildScripts:
+      - name: Generate dSYMs for Embedded Frameworks
+        runOnlyWhenInstalling: true
+        basedOnDependencyAnalysis: false
+        script: |
+          set -eu
+          if [ "${ACTION:-}" != "install" ]; then
+            echo "Skipping dSYM generation (ACTION=${ACTION:-none})"
+            exit 0
+          fi
+          FRAMEWORKS_DIR="${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}"
+          if [ ! -d "$FRAMEWORKS_DIR" ]; then
+            echo "No embedded Frameworks folder, skipping"
+            exit 0
+          fi
+          echo "Scanning: $FRAMEWORKS_DIR"
+          echo "Target dSYM folder: $DWARF_DSYM_FOLDER_PATH"
+          mkdir -p "$DWARF_DSYM_FOLDER_PATH"
+          COUNT=0
+          for FRAMEWORK in "$FRAMEWORKS_DIR"/*.framework; do
+            [ -d "$FRAMEWORK" ] || continue
+            NAME=$(basename "$FRAMEWORK" .framework)
+            BINARY="$FRAMEWORK/$NAME"
+            [ -f "$BINARY" ] || continue
+            DSYM_PATH="$DWARF_DSYM_FOLDER_PATH/$NAME.framework.dSYM"
+            if [ -d "$DSYM_PATH" ]; then
+              echo "  dSYM already present: $NAME"
+              continue
+            fi
+            echo "  generating dSYM for: $NAME"
+            dsymutil "$BINARY" -o "$DSYM_PATH" 2>&1 | grep -v "no debug symbols" || true
+            COUNT=$((COUNT+1))
+          done
+          echo "Generated $COUNT dSYM bundles"
     attributes:
       SystemCapabilities:
         com.apple.HealthKit:
@@ -126,6 +167,9 @@ targets:
     info:
       path: LasoWidgets/Info.plist
       properties:
+        CFBundleDisplayName: Laso Widgets
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
@@ -136,7 +180,7 @@ targets:
         DEVELOPMENT_TEAM: S2MAH8X8JM
         PRODUCT_BUNDLE_IDENTIFIER: com.lasohealth.fit.widgets
         MARKETING_VERSION: "1.0.0"
-        CURRENT_PROJECT_VERSION: "1"
+        CURRENT_PROJECT_VERSION: "4"
         GENERATE_INFOPLIST_FILE: false
         APPLICATION_EXTENSION_API_ONLY: true
         SWIFT_EMIT_LOC_STRINGS: "YES"

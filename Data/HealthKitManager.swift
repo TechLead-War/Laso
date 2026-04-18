@@ -42,6 +42,18 @@ final class HealthKitManager {
     var error: String?
     var syncProgress: SyncProgress?
 
+    // MARK: - Dashboard Observer State
+
+    /// Persistent observer queries that wake the app when core dashboard metrics
+    /// (Steps, Sleep, HR, HRV, Active Energy, Resting HR) receive new samples
+    /// (typically after an Apple Watch sync).
+    @ObservationIgnored
+    private var dashboardObserverQueries: [HKObserverQuery] = []
+    @ObservationIgnored
+    private var hasSetupDashboardObservers = false
+    @ObservationIgnored
+    private var dashboardObserverDebounceTask: Task<Void, Never>?
+
     /// Result of a loadAndSync call. tells callers what changed
     struct SyncResult {
         let metricsWithNewData: Set<HealthMetric>
@@ -830,6 +842,87 @@ final class HealthKitManager {
             }
 
             healthStore.execute(query)
+        }
+    }
+
+    // MARK: - Dashboard Background Observers
+
+    /// Core dashboard metrics that should trigger an auto-refresh when new data
+    /// arrives (typically via Apple Watch sync). Kept deliberately small to avoid
+    /// refresh storms from seldom-changing metrics.
+    private static let dashboardObserverMetrics: [HealthMetric] = [
+        .steps,
+        .activeCalories,
+        .heartRate,
+        .restingHeartRate,
+        .heartRateVariability,
+        .sleepDuration
+    ]
+
+    /// Coalesce debounce window: wait this long after the last observer ping
+    /// before invoking the change callback so multiple metric updates in the
+    /// same sync burst collapse into a single refresh.
+    private static let dashboardObserverDebounce: Duration = .seconds(8)
+
+    /// Start `HKObserverQuery` + `enableBackgroundDelivery(.immediate)` for the
+    /// core dashboard metrics so new HealthKit data (e.g. fresh Apple Watch
+    /// samples) automatically triggers a dashboard refresh without user
+    /// interaction.
+    ///
+    /// `onCoreDataChanged` is invoked on the MainActor after a short debounce
+    /// window coalesces rapid-fire per-metric notifications into one callback.
+    /// Callers should wire this to a throttled, idempotent refresh entry point
+    /// (e.g. `DashboardViewModel.refreshOnForegroundIfNeeded()`).
+    ///
+    /// Idempotent: repeat calls are a no-op. Requires `isAuthorized` to be true.
+    @MainActor
+    func setupDashboardObservers(onCoreDataChanged: @escaping @MainActor @Sendable () async -> Void) {
+        guard isHealthKitAvailable else { return }
+        guard isAuthorized else { return }
+        guard !hasSetupDashboardObservers else { return }
+        hasSetupDashboardObservers = true
+
+        for metric in Self.dashboardObserverMetrics {
+            let config = HealthKitMetricRegistry.config(for: metric)
+            guard let sampleType = config.sampleType else { continue }
+
+            let observer = HKObserverQuery(sampleType: sampleType, predicate: nil) { [weak self] _, completionHandler, error in
+                defer { completionHandler() }
+                if error != nil { return }
+                guard let self else { return }
+                Task { @MainActor in
+                    self.scheduleDashboardObserverRefresh(onCoreDataChanged: onCoreDataChanged)
+                }
+            }
+
+            healthStore.execute(observer)
+            dashboardObserverQueries.append(observer)
+
+            // .immediate = wake the app as soon as new data arrives, not
+            // hourly-batched. Matches the pattern in WatchMonitor.
+            healthStore.enableBackgroundDelivery(for: sampleType, frequency: .immediate) { _, bgError in
+                if let bgError {
+                    PostHogManager.shared.captureError(
+                        bgError,
+                        context: "healthkit_enable_background_delivery",
+                        metadata: ["metric": metric.rawValue]
+                    )
+                }
+            }
+        }
+    }
+
+    /// Cancel and reschedule the debounced refresh callback. Multiple observer
+    /// pings in the same sync burst collapse into a single invocation.
+    @MainActor
+    private func scheduleDashboardObserverRefresh(
+        onCoreDataChanged: @escaping @MainActor @Sendable () async -> Void
+    ) {
+        dashboardObserverDebounceTask?.cancel()
+        dashboardObserverDebounceTask = Task { @MainActor in
+            try? await Task.sleep(for: Self.dashboardObserverDebounce)
+            guard !Task.isCancelled else { return }
+            await onCoreDataChanged()
         }
     }
 

@@ -110,7 +110,8 @@ final class LiveViewModel {
 
             // If actively streaming, the anchored query handles updates.
             // Otherwise, pre-fetch latest HR so it's ready when Live tab opens.
-            if !self.isStreaming {
+            Task { @MainActor in
+                guard !self.isStreaming else { return }
                 let unit = HKUnit.count().unitDivided(by: .minute())
                 self.fetchLatestSampleWithDate(.heartRate, unit: unit, maxAge: 24 * 3600) { [weak self] value, date in
                     Task { @MainActor in
@@ -366,9 +367,10 @@ final class LiveViewModel {
             let type = HKQuantityType(identifier)
             let observerQuery = HKObserverQuery(sampleType: type, predicate: predicate) { [weak self] _, completionHandler, error in
                 defer { completionHandler() }
-                guard error == nil, let self, self.isStreaming else { return }
+                guard error == nil, let self else { return }
 
                 Task { @MainActor in
+                    guard self.isStreaming else { return }
                     // Throttle: coalesce rapid-fire notifications to at most once per 3 seconds
                     let now = Date()
                     guard now.timeIntervalSince(self.lastCumulativeFetch) >= Self.cumulativeThrottleInterval else { return }

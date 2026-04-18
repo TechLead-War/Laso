@@ -39,7 +39,7 @@ extension Copy {
 
         static let normalOrSlower = "Normal or slower"
         static let agingTooQuickly = "Accelerating"
-        static let agingVeryFast = "Needs attention"
+        static let agingVeryFast = "Could use some care"
 
         // MARK: - Delta Labels
 

@@ -19,6 +19,9 @@ final class DashboardHousekeepingService {
         let improvingDays: Int
         let periodSummary: DashboardViewModel.PeriodSummary
         let intelligenceBriefing: [IntelligenceCard]
+        /// Target bedtime for tonight, from `SleepNeedCalculator.currentNeed?.recommendedBedtime`.
+        /// `nil` when we lack data to predict one. Never fake this.
+        let recommendedBedtime: Date?
     }
 
     private let persistenceManager: PersistenceManager
@@ -90,6 +93,7 @@ final class DashboardHousekeepingService {
         let notificationsEnabled =
             preferences.dailySummaryEnabled ||
             preferences.eveningSummaryEnabled ||
+            preferences.windDownEnabled ||
             preferences.weeklySummaryEnabled ||
             preferences.criticalAlertsEnabled ||
             preferences.warningAlertsEnabled ||
@@ -172,6 +176,28 @@ final class DashboardHousekeepingService {
                 preferences: preferences
             )
 
+            // Persist a lightweight last-known snapshot used by the re-engagement push
+            // when the user lapses (3+ days inactive). Safe to write non-sensitive
+            // Int values to plain UserDefaults.
+            let hrvSnapshot = Self.hrvSnapshot(
+                timeSeries: payload.timeSeries,
+                trends: payload.currentTrends
+            )
+            let defaults = UserDefaults.standard
+            defaults.set(payload.currentScore, forKey: AppKeys.Notifications.lastRecoveryScore)
+            if let hrvSnapshot {
+                defaults.set(hrvSnapshot.valueMs, forKey: AppKeys.Notifications.lastHRVValue)
+                defaults.set(hrvSnapshot.trend.rawValue, forKey: AppKeys.Notifications.lastHRVTrend)
+            }
+
+            // Evening wind-down (~60 min before predicted bedtime). Skips if no bedtime.
+            WindDownScheduler.schedule(
+                recommendedBedtime: payload.recommendedBedtime,
+                lastHRV: hrvSnapshot?.valueMs,
+                hrvIsLow: hrvSnapshot?.isLow ?? false,
+                preferences: preferences
+            )
+
             let topTrends: [(metric: String, direction: String, change: Double)] = payload.currentTrends
                 .sorted { abs($0.value.weekOverWeekChange) > abs($1.value.weekOverWeekChange) }
                 .prefix(5)
@@ -201,5 +227,44 @@ final class DashboardHousekeepingService {
                 )
             }
         }
+    }
+
+    // MARK: - HRV Snapshot
+
+    /// Small helper struct for capturing the last HRV reading and its trend direction.
+    /// Consumed by `WindDownScheduler` (to personalise the hint) and by the lapsed-user
+    /// re-engagement push (for the data-grounded body).
+    private struct HRVSnapshot {
+        let valueMs: Int
+        let trend: TrendDirection
+        /// `true` if the last HRV is notably below the recent 30-day average.
+        let isLow: Bool
+    }
+
+    /// Derive the most recent HRV reading + trend direction from the refresh payload.
+    /// Returns `nil` when HRV data or trend info is not available.
+    private static func hrvSnapshot(
+        timeSeries: [HealthMetric: MetricTimeSeries],
+        trends: [HealthMetric: TrendAnalyzer.TrendResult]
+    ) -> HRVSnapshot? {
+        guard let series = timeSeries[.heartRateVariability],
+              let latest = series.samples.last,
+              latest.value.isFinite,
+              latest.value > 0 else {
+            return nil
+        }
+
+        let direction = trends[.heartRateVariability]?.direction ?? .stable
+        let valueMs = Int(latest.value.rounded())
+
+        // "Low" heuristic: last value is 10%+ below the 30-day average, if available.
+        let isLow: Bool
+        if let baseline = trends[.heartRateVariability]?.movingAverage30d, baseline > 0 {
+            isLow = (latest.value / baseline) <= 0.9
+        } else {
+            isLow = false
+        }
+
+        return HRVSnapshot(valueMs: valueMs, trend: direction, isLow: isLow)
     }
 }

@@ -293,7 +293,7 @@ struct WeeklyReviewView: View {
                 // Worst day. top decline
                 if let topDecline = review.watchOuts.first {
                     dayHighlightCard(
-                        label: "Needs Attention",
+                        label: "Worth Noticing",
                         metric: topDecline.metric.displayName,
                         change: topDecline.changePercent,
                         icon: "arrow.down.right.circle.fill",

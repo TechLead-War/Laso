@@ -244,7 +244,7 @@ struct LiveHeartRateSection: View {
                     x: .value("Time", entry.date),
                     y: .value("BPM", entry.value)
                 )
-                .foregroundStyle(.red.opacity(0.7))
+                .foregroundStyle(.red.opacity(0.8))
                 .interpolationMethod(.catmullRom)
                 .lineStyle(StrokeStyle(lineWidth: 2))
 
@@ -254,7 +254,7 @@ struct LiveHeartRateSection: View {
                 )
                 .foregroundStyle(
                     LinearGradient(
-                        colors: [.red.opacity(0.15), .red.opacity(0.02)],
+                        colors: [.red.opacity(0.2), .red.opacity(0.02)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -264,17 +264,20 @@ struct LiveHeartRateSection: View {
         }
         .chartYScale(domain: .automatic(includesZero: false))
         .chartXAxis {
-            AxisMarks(values: .stride(by: .minute, count: 10)) { value in
+            AxisMarks(values: .automatic(desiredCount: 3)) { value in
                 AxisValueLabel {
                     if let date = value.as(Date.self) {
-                        Text(date, format: .dateTime.hour().minute())
+                        Text(date, format: .dateTime.hour(.defaultDigits(amPM: .abbreviated)).minute())
                             .font(.caption2)
+                            .foregroundStyle(.tertiary)
                     }
                 }
+                AxisGridLine()
+                    .foregroundStyle(.white.opacity(0.05))
             }
         }
         .chartYAxis {
-            AxisMarks(position: .trailing) { value in
+            AxisMarks(position: .trailing, values: .automatic(desiredCount: 3)) { value in
                 AxisValueLabel {
                     if let v = value.as(Double.self) {
                         Text("\(Int(v))")
@@ -282,8 +285,11 @@ struct LiveHeartRateSection: View {
                             .foregroundStyle(.tertiary)
                     }
                 }
+                AxisGridLine()
+                    .foregroundStyle(.white.opacity(0.05))
             }
         }
-        .frame(height: 80)
+        .frame(height: 90)
+        .padding(.top, 4)
     }
 }

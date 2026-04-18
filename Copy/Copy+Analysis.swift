@@ -14,7 +14,7 @@ extension Copy {
 
             // BP recommendations
             static let bpRecommendation = "Try eating less salt, moving more, and keeping stress in check."
-            static let pulsePressureRecommendation = "A wider gap between your blood pressure numbers can sometimes indicate your cardiovascular system is working harder than usual."
+            static let pulsePressureRecommendation = "A wider gap between your blood pressure numbers can sometimes mean your heart is working harder than usual. Try some gentle movement and easy breathing today."
             static let glucoseRecommendation = "Cut back on sugar and white bread. Eat more fiber. Stay active."
             static let respiratoryRecommendation = "If your breathing rate stays unusual for a few days, consider checking in on this."
 
@@ -31,7 +31,7 @@ extension Copy {
                 "Your systolic BP has been rising \(slopePerMonth) mmHg/month over the past \(dayCount) days. Current stage: \(stage). \(nextStageInfo)"
             }
             static func pulsePressureSummary(pulsePressure: Int) -> String {
-                "Your pulse pressure (\(pulsePressure) mmHg) is above the typical range of 40-60 mmHg, which is sometimes associated with arterial stiffness."
+                "Your pulse pressure (\(pulsePressure) mmHg) is above the typical range of 40 to 60 mmHg. Based on your patterns, this is worth noticing."
             }
             static func glucoseTrendingSummary(slopePerMonth: String, latest: String, stage: String, nextInfo: String) -> String {
                 "Your fasting glucose has been rising \(slopePerMonth) mg/dL per month. Current: \(latest) mg/dL (\(stage)). \(nextInfo)"

@@ -72,8 +72,6 @@ final class MLOrchestrator {
 
     // MARK: - New ML Results
 
-    /// Enriched feature vectors with composite features
-    var enrichedVectors: [EnrichedDailyFeatureVector] = []
     /// Predictive health signal report (fatigue, burnout, overtraining, insomnia, immune, inactivity)
     var healthSignalReport: PredictiveHealthSignals.HealthSignalReport?
     /// Policy-based recommendation decision. single source of truth for daily action
@@ -239,7 +237,6 @@ final class MLOrchestrator {
 
         // Clear bulky intermediates and dead results to reduce memory pressure.
         // These properties are computed but never consumed by any ViewModel or View:
-        enrichedVectors = []
         multivariateResults = []  // Granger multivariate: O(N³) results, no consumer
         driftAlerts = []          // Welch's t-test drift: no consumer
         regimeComparisons = []    // ChangePoint regimes: no consumer
@@ -368,7 +365,6 @@ final class MLOrchestrator {
     }
 
     private func applyPipelineOutput(_ output: MLPipelineRunner.PipelineOutput) {
-        enrichedVectors = output.enrichedVectors
         dataSufficiency = output.dataSufficiency
         componentReadiness = output.componentReadiness
         personalizationStatus = output.personalizationStatus

@@ -15,9 +15,16 @@ struct RecoveryHeroCard: View {
     var onTap: (() -> Void)? = nil
 
     @State private var appeared = false
+    @State private var pulse = false
 
     private var scoreColor: Color {
         DS.scoreColor(score)
+    }
+
+    private var isFresh: Bool {
+        guard hasLiveReadiness else { return false }
+        guard let refresh = lastRefresh else { return true }
+        return !isStale(refresh)
     }
 
     var body: some View {
@@ -28,13 +35,42 @@ struct RecoveryHeroCard: View {
         }
         .buttonStyle(.plain)
         .padding(.horizontal)
-        .onAppear { appeared = true }
+        .onAppear {
+            appeared = true
+            // Activation gate for the engagement sequence.
+            // Only count this as "first recovery score seen" when it is a real
+            // live readiness reading, not the placeholder health score card.
+            if hasLiveReadiness, score > 0 {
+                if UserDefaults.standard.bool(forKey: AppKeys.Engagement.firstRecoveryScoreSeen) {
+                    // Promote to the second score gate on any subsequent real score.
+                    EngagementSequenceScheduler.markActivation(.secondRecoveryScore)
+                } else {
+                    EngagementSequenceScheduler.markActivation(.firstRecoveryScore)
+                }
+            }
+        }
     }
 
     // MARK: - Card Content
 
     private var cardContent: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 12) {
+            // Real-time indicator. tells user this score reflects their body right now
+            if isFresh {
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(Color.green)
+                        .frame(width: 7, height: 7)
+                        .opacity(pulse ? 0.35 : 1.0)
+                        .animation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true), value: pulse)
+                    Text("Right now")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.primary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .onAppear { pulse = true }
+            }
+
             HStack(spacing: 20) {
                 // Score ring. hero size
                 HealthScoreRing(

@@ -157,7 +157,7 @@ private enum Tier: String, CaseIterable, Hashable {
         switch self {
         case .starter:  return "Insights at 7d"
         case .building: return "Correlations at 21d"
-        case .growing:  return "Anomalies at 60d"
+        case .growing:  return "Unusual patterns at 60d"
         case .mature:   return "Predictions at 90d"
         case .expert:   return nil
         }

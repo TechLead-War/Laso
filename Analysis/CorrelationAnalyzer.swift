@@ -150,15 +150,6 @@ struct CorrelationAnalyzer {
             )
             guard effectResult.percentDiff >= 8.0 else { continue }
 
-            // Update labels if the discovered lag differs from the predefined one
-            let effectLabel: String
-            if best.lag != pair.dayOffset && best.lag > 0 {
-                let baseName = pair.effectLabel.replacingOccurrences(of: " next day", with: "")
-                effectLabel = best.lag == 1 ? "\(baseName) next day" : "\(baseName) after \(best.lag) days"
-            } else {
-                effectLabel = pair.effectLabel
-            }
-
             let strengthLabel = Self.strengthLabel(for: abs(best.r))
 
             // Build personalized labels using the user's actual data

@@ -19,10 +19,10 @@ extension Copy {
         // MARK: - Title Patterns
 
         static func criticallyLow(_ metric: String, suffix: String) -> String {
-            "\(metric) Critically Low\(suffix)"
+            "\(metric) Running Low\(suffix)"
         }
         static func needsAttention(_ metric: String, prefix: String, suffix: String) -> String {
-            "\(metric) \(prefix)Needs Attention\(suffix)"
+            "\(metric) \(prefix)Worth a Look\(suffix)"
         }
         static func declining(_ metric: String, prefix: String, suffix: String) -> String {
             "\(metric) \(prefix)Declining\(suffix)"
@@ -31,10 +31,10 @@ extension Copy {
             "\(metric) \(prefix)Improving\(momentum)"
         }
         static func outsideSafeRange(_ metric: String) -> String {
-            "\(metric) Outside Safe Range"
+            "\(metric) Outside Your Usual Range"
         }
         static func elevated(_ metric: String) -> String {
-            "\(metric) Elevated"
+            "\(metric) Higher Than Usual"
         }
         static func stable(_ metric: String) -> String {
             "\(metric) Stable"
@@ -78,7 +78,7 @@ extension Copy {
         // MARK: - Causal Hints
 
         static let causalHintHRV = "Based on your history, this level typically follows nights with less than 6 hours of sleep."
-        static let causalHintRHR = "Based on your history, elevated resting heart rate often follows periods of reduced sleep or high stress."
+        static let causalHintRHR = "Based on your history, a higher resting heart rate often follows periods of reduced sleep or high stress. Try for an earlier bedtime tonight."
         static let causalHintBloodOxygen = "Based on your history, lower blood oxygen typically correlates with disrupted sleep patterns."
         static let causalHintSleepDuration = "Based on your history, shorter sleep often follows days with low physical activity or late exercise."
         static let causalHintSleepDeep = "Based on your history, deep sleep decreases often correlate with higher stress or inconsistent bedtimes."

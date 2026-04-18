@@ -5,7 +5,7 @@ import SwiftUI
 struct LogWorkoutIntent: AppIntent {
     static var title: LocalizedStringResource = "Log Workout"
     static var description = IntentDescription(
-        "Quickly log a workout to Apple Health with a type and duration.",
+        "Quickly log a workout to your Health app with a type and duration.",
         categoryName: "Health"
     )
 

@@ -682,7 +682,9 @@ struct InsightGenerator {
         if let rootCause = insightContext?.rootCauseMetric {
             let rootCauseName = rootCause.displayName
             switch trend {
-            case .declining, .stable where severity >= .warning:
+            case .declining:
+                return Copy.Causation.causationTitle(metricName: metricName, rootCauseName: rootCauseName)
+            case .stable where severity >= .warning:
                 return Copy.Causation.causationTitle(metricName: metricName, rootCauseName: rootCauseName)
             case .improving:
                 return Copy.Causation.improvingCausationTitle(metricName: metricName, rootCauseName: rootCauseName)

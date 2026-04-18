@@ -10,6 +10,7 @@ enum AppConstants {
         static let dailySummary = "healthpulse.dailySummary"
         static let eveningSummary = "healthpulse.eveningSummary"
         static let weeklySummary = "healthpulse.weeklySummary"
+        static let windDown = "healthpulse.windDown"
         static let reengagement = "healthpulse.reengagement.3day"
         static let watchNotWornScheduled = "healthpulse.watch.notWorn.scheduled"
         static let watchNotWorn = "healthpulse.watch.notWorn"
@@ -58,10 +59,26 @@ enum AppConstants {
         static let preferencesCacheDuration: TimeInterval = 300
     }
 
+    // MARK: - Notification Fatigue Suppression
+
+    enum NotificationFatigue {
+        /// Window within which an app open is considered a "response" to a
+        /// fired notification. Opens beyond this window count as a dismiss.
+        static let openResponseWindow: TimeInterval = 2 * 60 * 60
+
+        /// Consecutive dismiss-without-open events on non-critical
+        /// notifications that trigger a suppression window.
+        static let dismissStreakThreshold: Int = 3
+
+        /// How long to suppress non-critical notifications after the
+        /// dismiss streak threshold is reached.
+        static let suppressionDuration: TimeInterval = 48 * 60 * 60
+    }
+
     // MARK: - Background Tasks
 
     enum BackgroundTask {
-        static let readinessRefresh = "com.lasohealth.app.background-refresh"
+        static let readinessRefresh = "com.lasohealth.fit.background-refresh"
         static let earliestBeginInterval: TimeInterval = 30 * 60
         static let completionDelay: TimeInterval = 5
     }

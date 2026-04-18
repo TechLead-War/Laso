@@ -21,7 +21,6 @@ struct HomeView: View {
     // Section trackers
     @State private var recoveryTracker = SectionTracker(section: .homeRecovery, tab: .home)
     @State private var illnessTracker = SectionTracker(section: .homeIllness, tab: .home)
-    @State private var bodyInsightsTracker = SectionTracker(section: .homeBodyInsights, tab: .home)
     @State private var risksTracker = SectionTracker(section: .homeRisks, tab: .home)
     @State private var weeklyReviewTracker = SectionTracker(section: .homeWeeklyReview, tab: .home)
 
@@ -340,30 +339,6 @@ struct HomeView: View {
                     .padding(.top, 8)
 
                     // ── Below the fold ──
-
-                    // 6. Body Insights
-                    BodyInsightsSection(
-                        viewModel: viewModel,
-                        liveVM: liveViewModel,
-                        onTapMetric: { metric in
-                            AppAnalytics.shared.trackBlockTap(
-                                title: metric.displayName,
-                                type: .metricRow,
-                                screen: .home,
-                                metadata: [
-                                    "metric_id": metric.rawValue,
-                                    "metric_category": metric.category.rawValue
-                                ]
-                            )
-                            navigationPath.append(metric)
-                        },
-                        onTapSeeAll: {
-                            navigationPath.append(Route.insightsDetail)
-                        }
-                    )
-                    .padding(.top, 8)
-                    .onAppear { bodyInsightsTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 50) }
-                    .onDisappear { bodyInsightsTracker.disappeared() }
 
                     // 7. Weekly Review
                     WeeklyReviewEntryCard(

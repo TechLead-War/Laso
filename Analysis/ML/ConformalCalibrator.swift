@@ -271,15 +271,10 @@ final class ConformalCalibrator {
 
         // Sort by predicted probability ascending
         let indices = (0..<n).sorted { predictions[$0] < predictions[$1] }
-        var sortedPreds = indices.map { predictions[$0] }
-        var sortedLabels = indices.map { labels[$0] }
+        let sortedPreds = indices.map { predictions[$0] }
+        let sortedLabels = indices.map { labels[$0] }
 
         // PAV: pool adjacent violators to ensure monotone non-decreasing calibrated values
-        // Use weighted pooling: each block tracks (sum of labels, count)
-        var blockSums = sortedLabels     // Running sums of labels within each block
-        var blockCounts = [Double](repeating: 1.0, count: n)
-        var blockPreds = sortedPreds     // Representative prediction for each block
-
         // Track which blocks are active (not yet merged)
         var blockValues = (0..<n).map { i -> (predSum: Double, labelSum: Double, count: Double) in
             (predSum: sortedPreds[i], labelSum: sortedLabels[i], count: 1.0)

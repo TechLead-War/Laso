@@ -354,7 +354,6 @@ final class TodayIntelligenceEngine {
         guard profile.confidence >= 0.3 else { return nil }
 
         let recommendations = orchestrator.timingRecommendations
-        let chronotype = profile.chronotype.rawValue
 
         // Find workout timing recommendation
         let workoutRec = recommendations.first { $0.activity == .workout }
@@ -567,7 +566,6 @@ final class TodayIntelligenceEngine {
         // Not noteworthy if within +/- 0.8 sigma
         guard abs(sigma) >= 0.8 else { return nil }
 
-        let sigmaStr = String(format: "%.1f\u{03C3}", abs(sigma))
         let hrvStr = HealthMetric.heartRateVariability.formatWithUnit(hrv)
         let rhrStr = HealthMetric.restingHeartRate.formatWithUnit(rhr)
 
@@ -815,8 +813,6 @@ final class TodayIntelligenceEngine {
 
         let severity: IntelligenceCard.CardSeverity
         let color: IntelligenceCard.AccentColor
-        let densityPct = String(format: "%.0f%%", density * 100)
-        let coherenceStr = String(format: "%.2f", coherence)
 
         if coherence < 0.35 || density < 0.15 {
             severity = .notable

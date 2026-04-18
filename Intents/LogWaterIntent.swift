@@ -5,7 +5,7 @@ import SwiftUI
 struct LogWaterIntent: AppIntent {
     static var title: LocalizedStringResource = "Log Water Intake"
     static var description = IntentDescription(
-        "Logs water intake to Apple Health. Specify the amount in liters.",
+        "Logs water intake to your Health app. Specify the amount in liters.",
         categoryName: "Health"
     )
 

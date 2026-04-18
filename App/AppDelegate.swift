@@ -40,6 +40,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     ) {
         let identifier = response.notification.request.identifier
         NotificationManager.shared.store?.recordNotificationOpened(id: identifier)
+        NotificationManager.shared.recordAppOpen()
         SessionTracker.shared.pendingSessionSource = .notification
         AppAnalytics.shared.trackNotificationOpened(identifier: identifier)
         completionHandler()

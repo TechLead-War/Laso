@@ -19,6 +19,17 @@ struct OnboardingCalibrationStep: View {
     @State private var calibrationTask: Task<Void, Never>?
     @State private var calibrationStartTime: Date?
     @State private var discovery: CalibrationDiscovery?
+    @State private var reassuranceIndex = 0
+    @State private var reassuranceTimer: Timer?
+
+    private static let reassuranceMessages = [
+        "Reading your Apple Watch history",
+        "Finding patterns in your heart rate",
+        "Analyzing sleep cycles",
+        "Building your personal baseline",
+        "This may take a moment for large histories",
+        "Almost there, finalizing your profile"
+    ]
 
     init(
         isActive: Bool,
@@ -55,6 +66,7 @@ struct OnboardingCalibrationStep: View {
             calibrationTask = nil
             calibrationStartTime = nil
             stopDotTimer()
+            stopReassuranceTimer()
         }
     }
 
@@ -93,17 +105,41 @@ struct OnboardingCalibrationStep: View {
 
             if case .running = state {
                 if let progress = healthKitManager.syncProgress {
-                    VStack(spacing: 8) {
+                    VStack(spacing: 12) {
+                        let percent = Int((Double(progress.metricsCompleted) / Double(max(progress.totalMetrics, 1))) * 100)
+
                         ProgressView(value: Double(progress.metricsCompleted), total: Double(max(progress.totalMetrics, 1)))
                             .tint(.blue)
                             .padding(.horizontal, 48)
 
-                        Text("\(progress.metricsCompleted) of \(max(progress.totalMetrics, 1)) metrics synced")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        HStack(spacing: 6) {
+                            Text("\(percent)%")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.primary)
+                                .contentTransition(.numericText())
+                            Text("•")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(progress.phase.title)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .animation(.smooth, value: percent)
 
-                        // Live discovery stats
+                        if let currentMetric = progress.latestMetric {
+                            Text("Processing: \(currentMetric.displayName)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .transition(.opacity)
+                                .id(currentMetric)
+                        }
+
                         VStack(spacing: 4) {
+                            Text("\(progress.metricsCompleted) of \(max(progress.totalMetrics, 1)) metrics synced")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .contentTransition(.numericText())
+
                             if progress.samplesDiscovered > 0 {
                                 Text("\(Self.formatCount(progress.samplesDiscovered)) data points found")
                                     .font(.caption)
@@ -112,11 +148,20 @@ struct OnboardingCalibrationStep: View {
                             }
                             if let oldest = progress.oldestSampleDate {
                                 Text("Data going back to \(oldest.formatted(.dateTime.month(.wide).year()))")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
                             }
                         }
                         .animation(.smooth, value: progress.samplesDiscovered)
+
+                        Text(Self.reassuranceMessages[reassuranceIndex % Self.reassuranceMessages.count])
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 32)
+                            .padding(.top, 8)
+                            .id(reassuranceIndex)
+                            .transition(.opacity.combined(with: .move(edge: .bottom)))
                     }
                     .padding(.top, 12)
                 } else {
@@ -224,12 +269,14 @@ struct OnboardingCalibrationStep: View {
         discovery = nil
         calibrationStartTime = Date()
         startDotTimer()
+        startReassuranceTimer()
 
         let task = Task {
             let errorMessage = await runCalibration()
             guard !Task.isCancelled else { return }
             await MainActor.run {
                 stopDotTimer()
+                stopReassuranceTimer()
                 let elapsed = calibrationStartTime.map { Int(Date().timeIntervalSince($0)) } ?? 0
                 if let errorMessage {
                     state = .failed(errorMessage)
@@ -265,5 +312,22 @@ struct OnboardingCalibrationStep: View {
     private func stopDotTimer() {
         dotTimer?.invalidate()
         dotTimer = nil
+    }
+
+    private func startReassuranceTimer() {
+        stopReassuranceTimer()
+        reassuranceIndex = 0
+        let timer = Timer.scheduledTimer(withTimeInterval: 3.5, repeats: true) { _ in
+            withAnimation(.smooth(duration: 0.4)) {
+                reassuranceIndex += 1
+            }
+        }
+        timer.tolerance = 0.5
+        reassuranceTimer = timer
+    }
+
+    private func stopReassuranceTimer() {
+        reassuranceTimer?.invalidate()
+        reassuranceTimer = nil
     }
 }

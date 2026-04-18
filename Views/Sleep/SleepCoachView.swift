@@ -252,7 +252,7 @@ struct SleepCoachView: View {
                     .padding(.horizontal)
             } else {
                 VStack(spacing: 6) {
-                    ForEach(dailyHistory.suffix(14)) { day in
+                    ForEach(Array(dailyHistory.suffix(14).reversed())) { day in
                         historyBar(day)
                     }
                 }

@@ -210,21 +210,40 @@ struct SettingsView: View {
                 Spacer()
 
                 // Subscription status badge
-                Text(subscriptionBadgeText)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(FeatureGate.hasFullAccess ? .white : .secondary)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(
-                        FeatureGate.hasFullAccess
-                            ? AnyShapeStyle(LinearGradient(
-                                colors: [.blue, .purple],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                              ))
-                            : AnyShapeStyle(.fill.tertiary),
-                        in: Capsule()
-                    )
+                HStack(spacing: 5) {
+                    if FeatureGate.hasFullAccess {
+                        Image(systemName: "crown.fill")
+                            .font(.footnote.weight(.bold))
+                    }
+                    Text(subscriptionBadgeText)
+                        .font(.footnote.weight(.bold))
+                }
+                .foregroundStyle(FeatureGate.hasFullAccess ? Color(red: 0.35, green: 0.22, blue: 0.02) : .secondary)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(
+                    FeatureGate.hasFullAccess
+                        ? AnyShapeStyle(LinearGradient(
+                            colors: [
+                                Color(red: 1.0, green: 0.85, blue: 0.45),
+                                Color(red: 0.96, green: 0.64, blue: 0.18)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                          ))
+                        : AnyShapeStyle(.fill.tertiary),
+                    in: Capsule()
+                )
+                .overlay(
+                    Capsule()
+                        .strokeBorder(
+                            FeatureGate.hasFullAccess
+                                ? Color.white.opacity(0.35)
+                                : .clear,
+                            lineWidth: 0.5
+                        )
+                )
+                .shadow(color: FeatureGate.hasFullAccess ? Color(red: 0.95, green: 0.6, blue: 0.1).opacity(0.35) : .clear, radius: 6, y: 2)
             }
         }
         .padding(DS.cardPadding)

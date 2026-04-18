@@ -402,9 +402,7 @@ extension RemoteConfigManager {
         case simulation = "feature_access_simulation"
         case clinicalIntelligence = "feature_access_clinicalIntelligence"
         case ecgIntelligence = "feature_access_ecgIntelligence"
-        case nutritionCorrelations = "feature_access_nutritionCorrelations"
         case circadianAnalysis = "feature_access_circadianAnalysis"
-        case adherenceTracking = "feature_access_adherenceTracking"
     }
 }
 
@@ -432,9 +430,7 @@ extension RemoteConfigManager {
         "feature_access_simulation": "pro" as NSString,
         "feature_access_clinicalIntelligence": "pro" as NSString,
         "feature_access_ecgIntelligence": "pro" as NSString,
-        "feature_access_nutritionCorrelations": "pro" as NSString,
         "feature_access_circadianAnalysis": "pro" as NSString,
-        "feature_access_adherenceTracking": "pro" as NSString,
 
         // Limits
         "free_metric_detail_limit": 3 as NSNumber,

@@ -28,7 +28,7 @@ extension Copy {
 
             /// Urgent health signal detected.
             static func urgentHeadline(riskPercent: String, signalName: String) -> String {
-                "Your \(signalName.lowercased()) risk is at \(riskPercent). This needs your attention."
+                "Your body might be getting tired. Extra sleep tonight would help."
             }
 
             static func urgentDetail(explanation: String) -> String {
@@ -37,14 +37,14 @@ extension Copy {
 
             /// Tomorrow risk prediction with top factor.
             static func tomorrowHeadline(probability: String) -> String {
-                "There is a \(probability) chance tomorrow will be a tough day for your body."
+                "Tomorrow might feel heavy on your body. Going to bed early could help."
             }
 
             static func tomorrowDetailWithFactor(metricName: String) -> String {
-                "This is mainly because your \(metricName.lowercased()) has been off. Based on how your body has responded before, getting extra sleep tonight could help."
+                "Your \(metricName.lowercased()) has been a little off lately. A good night of sleep tonight should help you bounce back."
             }
 
-            static let tomorrowDetailGeneric = "Based on several of your numbers shifting together. The last time this pattern showed up, a rest day helped."
+            static let tomorrowDetailGeneric = "A few of your numbers are shifting together. Taking it easy tomorrow should help."
         }
 
         // MARK: - Regime Shift Card (Something Changed)
@@ -52,20 +52,20 @@ extension Copy {
         enum SomethingChanged {
 
             static func headline(metricName: String, direction: String, delta: String, dateStr: String) -> String {
-                "Your \(metricName.lowercased()) has been \(direction) since \(dateStr), shifting by \(delta)."
+                "Your \(metricName.lowercased()) has been \(direction) since \(dateStr). That is a real shift worth noticing."
             }
 
             static func detailWithCoChanges(before: String, after: String, coChanges: [String]) -> String {
-                let base = "It went from \(before) to \(after)."
+                let base = "It moved from \(before) to \(after)."
                 if coChanges.isEmpty {
                     return base
                 }
                 let names = coChanges.joined(separator: " and ")
-                return "\(base) Your \(names.lowercased()) changed around the same time, which is probably connected."
+                return "\(base) Your \(names.lowercased()) shifted around the same time, so they are likely connected."
             }
 
             static func detailSimple(before: String, after: String) -> String {
-                "It went from \(before) to \(after)."
+                "It moved from \(before) to \(after)."
             }
         }
 
@@ -75,7 +75,7 @@ extension Copy {
 
             /// Triggered precursor pattern.
             static func precursorHeadline(signalDescription: String, predictedEvent: String, accuracy: String) -> String {
-                "The last time your \(signalDescription.lowercased()) looked like this, \(predictedEvent.lowercased()) followed. This pattern has appeared in your data before."
+                "Your \(signalDescription.lowercased()) looks the way it did before \(predictedEvent.lowercased()) last time. A calmer day could really help."
             }
 
             static func precursorDetail(description: String) -> String {
@@ -84,7 +84,7 @@ extension Copy {
 
             /// Active temporal sequence.
             static func sequenceHeadline(outcome: String, confidence: String) -> String {
-                "Based on a pattern in your data, \(outcome.lowercased()) is likely coming (\(confidence) confidence). This usually plays out over a few days."
+                "It looks like \(outcome.lowercased()) might be on the way over the next few days. Some extra rest now would go a long way."
             }
 
             static func sequenceDetail(description: String) -> String {
@@ -98,16 +98,16 @@ extension Copy {
 
             static func headline(causeMetric: String, effectMetric: String, lagDays: Int, direction: String) -> String {
                 let lagStr = lagDays == 1 ? "about a day later" : "about \(lagDays) days later"
-                let verb = direction == "drives" ? "pushes" : "pulls down"
-                return "Your \(causeMetric.lowercased()) \(verb) your \(effectMetric.lowercased()) \(lagStr). This connection has been consistent in your data."
+                let verb = direction == "drives" ? "lifts" : "pulls down"
+                return "Your \(causeMetric.lowercased()) \(verb) your \(effectMetric.lowercased()) \(lagStr). This pattern keeps showing up for you."
             }
 
             static func detailWithPartial(partialR: String, stability: String, sampleCount: Int) -> String {
-                "Even after accounting for other factors, this link holds up (strength: \(partialR)). Based on \(sampleCount) days of data."
+                "Even after other things are considered, this link still holds. Based on the past few weeks of your data."
             }
 
             static func detailSimple(sampleCount: Int, stability: String) -> String {
-                "Based on \(sampleCount) days of your data. This pattern has been \(stability) stable over time."
+                "This pattern has been steady over the past few weeks of your data."
             }
         }
 
@@ -116,23 +116,23 @@ extension Copy {
         enum YourBodyClock {
 
             static func workoutTimingHeadline(startTime: String, endTime: String) -> String {
-                "Your body is at its best for exercise between \(startTime) and \(endTime)."
+                "Your body feels strongest for exercise between \(startTime) and \(endTime)."
             }
 
             static func generalHeadline(peakTime: String) -> String {
-                "Your energy peaks around \(peakTime) each day."
+                "Your energy feels best around \(peakTime) each day."
             }
 
             static func detail(bedtime: String?, hrvPeak: String?) -> String {
                 var parts: [String] = []
                 if let bedtime {
-                    parts.append("Your ideal bedtime based on your patterns is around \(bedtime)")
+                    parts.append("A good bedtime for you looks like around \(bedtime)")
                 }
                 if let hrvPeak {
-                    parts.append("Your body tends to be most recovered around \(hrvPeak)")
+                    parts.append("Your body tends to feel most rested around \(hrvPeak)")
                 }
                 if parts.isEmpty {
-                    return "This is based on your natural rhythm over the past few weeks."
+                    return "Based on your natural rhythm over the past few weeks."
                 }
                 return parts.joined(separator: ". ") + "."
             }
@@ -143,23 +143,23 @@ extension Copy {
         enum StressAndRecovery {
 
             static func highStressHeadline(score: String, worstSystem: String) -> String {
-                "Your body is carrying more stress than usual (\(score) out of 100). Your \(worstSystem.lowercased()) numbers are the most affected."
+                "Your body is carrying more than usual right now. Your \(worstSystem.lowercased()) feels the most tired, so a slower day would help."
             }
 
             static func lowStressHeadline(score: String) -> String {
-                "Your stress levels are low right now (\(score) out of 100). Your body is well recovered."
+                "Your body feels well rested today. A great day to make the most of."
             }
 
             static func normalStressHeadline(score: String) -> String {
-                "Your stress levels are in your normal range (\(score) out of 100)."
+                "Your body feels about normal today. Nothing unusual going on."
             }
 
             static func detailWithPercentile(percentileStr: String, systemSummary: String) -> String {
-                "\(percentileStr). Here is the breakdown: \(systemSummary)."
+                "\(percentileStr). Here is what is going on: \(systemSummary)."
             }
 
             static func detailSimple(systemSummary: String) -> String {
-                "Here is the breakdown: \(systemSummary)."
+                "Here is what is going on: \(systemSummary)."
             }
         }
 
@@ -168,16 +168,16 @@ extension Copy {
         enum NervousSystem {
 
             static func recoveryModeHeadline(hrvStr: String) -> String {
-                "Your nervous system is in recovery mode right now. Your HRV is \(hrvStr), which is above your baseline. This is a good sign."
+                "Your body feels well recovered today. A great day to move and feel good."
             }
 
             static func stressModeHeadline(hrvStr: String, rhrStr: String) -> String {
-                "Your nervous system has not fully recovered. Your HRV is \(hrvStr) and resting heart rate is \(rhrStr), which suggests your body is still under stress. Consider going easy today."
+                "Your body still feels stressed. Try a calm, slow day to help it catch up."
             }
 
             static func mildShiftHeadline(direction: String) -> String {
-                let plain = direction == "toward recovery" ? "leaning toward recovery" : "showing mild stress"
-                return "Your nervous system is \(plain) today. A small shift, but worth noting."
+                let plain = direction == "toward recovery" ? "leaning toward feeling better" : "feeling a little tired"
+                return "Your body is \(plain) today. A small shift, but worth noticing."
             }
 
             static func detail(hrvStr: String, rhrStr: String) -> String {
@@ -191,27 +191,27 @@ extension Copy {
 
             static func headlineWithRecovery(debtHours: String, recoveryDays: Int) -> String {
                 let dayWord = recoveryDays == 1 ? "night" : "nights"
-                return "You have built up \(debtHours) of sleep debt. Based on your history, it usually takes about \(recoveryDays) good \(dayWord) to get back on track."
+                return "You are short on sleep by \(debtHours). A few good \(dayWord) of rest should get you back on track."
             }
 
             static func headlineHRVSuppressed(dayCount: String, windowDays: Int) -> String {
-                "Your HRV has been lower than usual for \(dayCount) of the last \(windowDays) days, which usually means your body needs more rest."
+                "Your body has been running low over the past couple of weeks. A few good nights of sleep will help."
             }
 
             static func detailSleepDeficit(debtHours: String, windowDays: Int) -> String {
-                "Sleep deficit: \(debtHours) over the past \(windowDays) days."
+                "You have missed about \(debtHours) of sleep over the past couple of weeks."
             }
 
             static func detailHRVBelow(dayCount: String, windowDays: Int) -> String {
-                "HRV below your normal range for \(dayCount) of the last \(windowDays) days."
+                "Your body has felt tired on \(dayCount) of the past \(windowDays) days."
             }
 
             static func detailExerciseBelow(missedDays: Int, windowDays: Int) -> String {
-                "Exercise was below your goal for \(missedDays) of the past \(windowDays) days."
+                "You moved less than your usual on \(missedDays) of the past \(windowDays) days."
             }
 
             static let trendImproving = "Getting better compared to last week."
-            static let trendWorsening = "Getting worse compared to last week."
+            static let trendWorsening = "Not quite as good as last week. A little more rest will help."
         }
 
         // MARK: - System Coherence Card (Everything Looks Good / or Warning)
@@ -219,23 +219,23 @@ extension Copy {
         enum BodySystems {
 
             static func decoupledHeadline(dropPercent: String) -> String {
-                "Your body's systems are \(dropPercent) less in sync than usual. This sometimes happens when something is off, like poor sleep or extra stress."
+                "Your body's systems are a bit out of sync today. A calm day with good sleep should help bring things back together."
             }
 
             static func alignedHeadline(connectionCount: Int, metricCount: Int) -> String {
-                "Your body's systems are working well together. \(connectionCount) strong connections across \(metricCount) health measures."
+                "Your body's systems are working together really well right now. Nice and steady."
             }
 
             static func normalHeadline(connectionCount: Int) -> String {
-                "Your body's systems are mostly in sync, with \(connectionCount) healthy connections between your health measures."
+                "Your body is mostly in sync today. Things are ticking along nicely."
             }
 
             static func detailWithWeakLink(connectionCount: Int, metricCount: Int, metricA: String, metricB: String) -> String {
-                "\(connectionCount) connections across \(metricCount) measures. The link between your \(metricA.lowercased()) and \(metricB.lowercased()) is weaker than usual."
+                "Your \(metricA.lowercased()) and \(metricB.lowercased()) are a little out of step today. Some extra rest should help them line back up."
             }
 
             static func detailSimple(connectionCount: Int, metricCount: Int) -> String {
-                "\(connectionCount) connections across \(metricCount) tracked measures."
+                "Your key health measures are moving together nicely."
             }
         }
 
@@ -244,16 +244,16 @@ extension Copy {
         enum UnusualDay {
 
             static func headline(dayName: String) -> String {
-                "Today is pretty different from your typical \(dayName)."
+                "Today is shaping up pretty different from your usual \(dayName)."
             }
 
             static func deviatorDescription(metricName: String, currentValue: String, direction: String, weekdayAvg: String, dayName: String) -> String {
-                "Your \(metricName.lowercased()) is \(currentValue), which is \(direction) your usual \(dayName) average of \(weekdayAvg)."
+                "Your \(metricName.lowercased()) is \(currentValue) today, \(direction) what you normally see on a \(dayName)."
             }
 
             static func detail(descriptions: [String]) -> String {
-                let prefix = "The biggest differences: "
-                return prefix + descriptions.joined(separator: " Also, ")
+                let prefix = "Here is what stood out: "
+                return prefix + descriptions.joined(separator: " And ")
             }
         }
 

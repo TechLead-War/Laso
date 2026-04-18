@@ -87,14 +87,9 @@ extension LiveViewModel {
         var respiratoryRateTimestamp: Date?
         var respiratoryRateUnavailable = false
 
-        // Wrist temperature
-        var currentWristTemperature: Double?
-        var wristTemperatureTimestamp: Date?
-
         // Blood pressure
         var latestSystolic: Double?
         var latestDiastolic: Double?
-        var bloodPressureTimestamp: Date?
 
         // Body temperature
         var latestBodyTemp: Double?
@@ -231,7 +226,6 @@ extension LiveViewModel {
         var latestRestingHeartRateTimestamp: Date?
         var latestHRV: Double?
         var latestHRVTimestamp: Date?
-        var latestHeartRateRecovery: Double?
         var readinessScore: Int?
         var readinessConfidence: Int?
 

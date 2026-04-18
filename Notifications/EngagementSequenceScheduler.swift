@@ -2,27 +2,79 @@ import Foundation
 import HealthKit
 import UserNotifications
 
-/// Schedules the post-onboarding engagement notification sequence (Days 1-7).
+/// Schedules the post-onboarding engagement notification sequence (Days 1 to 7).
 ///
-/// Each notification is grounded in behavioral science:
-/// - Day 1: Implementation Intention trigger (fires at wake-up time)
-/// - Day 2: Variable Reward (recovery score reveal. they don't know what they'll see)
-/// - Day 3: Zeigarnik Effect (incomplete info about sleep patterns pulls them back)
-/// - Day 5: Goal Gradient (personalization progress. acceleration toward completion)
-/// - Day 7: Loss Aversion (discovered patterns. losing them hurts 2.25x more than the cost)
+/// ──────────────────────────────────────────────────────────────────────
+///  Model: ACTIVATION GATED  (Headspace pattern, not calendar drip)
+/// ──────────────────────────────────────────────────────────────────────
 ///
-/// All notifications use REAL data from the ML pipeline when available,
-/// with meaningful fallbacks when data isn't ready.
+/// Each day is grounded in behavioral science AND in whether the user has
+/// hit the required activation moment. A day only fires once its gate is
+/// satisfied. If the gate is not satisfied, the day is delayed until a
+/// bounded fallback window (to avoid silently dropping users).
+///
+/// - Day 1: Implementation Intention (calendar, wake up anchor). No gate.
+/// - Day 2: Variable Reward (recovery score reveal).
+///          Gate: `firstRecoveryScoreSeen`. Fallback: Day 4 hard send.
+/// - Day 3: Zeigarnik Effect (sleep pattern tease).
+///          Gate: at least one app open in the past 48h.
+/// - Day 5: Goal Gradient (personalization progress).
+///          Gate: `secondRecoveryScoreSeen`. Fallback: soft copy variant
+///          that does not claim personalization has advanced.
+/// - Day 7: Loss Aversion (discovered patterns). Always fires, this is
+///          the lapsing user nudge.
+///
+/// When a user goes dark for 48+h, the sequence is paused and the
+/// `ReengagementScheduler` track takes over. Paused sequences resume on
+/// the next app launch.
+///
+/// Gate decisions are logged via `AppAnalytics.trackNotificationSuppressed`
+/// with reason `"gated_waiting_for_activation"` so they are visible in
+/// downstream funnels.
 enum EngagementSequenceScheduler {
 
     private static let defaults = UserDefaults.standard
 
-    /// Days on which engagement notifications fire.
+    /// Days on which engagement notifications fire. Preserved for backward compat.
     static let activeDays: Set<Int> = [1, 2, 3, 5, 7]
+
+    /// Hard fallback: if Day 2's activation gate never fires, send Day 2 by
+    /// this many days after install regardless.
+    private static let day2FallbackDay: Int = 4
+
+    /// Inactivity threshold for the Day 3+ gate. Users darker than this
+    /// are routed to the re engagement track.
+    private static let inactivityPauseSeconds: TimeInterval = 48 * 3600
+
+    // MARK: - Activation moments
+
+    /// Activation signals that the view layer emits into the scheduler.
+    enum Activation {
+        case firstRecoveryScore
+        case secondRecoveryScore
+    }
+
+    /// Call from the view / view model when the user hits an activation moment.
+    /// Idempotent. Safe to call on every appearance, only the first transition is recorded.
+    static func markActivation(_ moment: Activation) {
+        switch moment {
+        case .firstRecoveryScore:
+            guard !defaults.bool(forKey: AppKeys.Engagement.firstRecoveryScoreSeen) else { return }
+            defaults.set(true, forKey: AppKeys.Engagement.firstRecoveryScoreSeen)
+        case .secondRecoveryScore:
+            guard !defaults.bool(forKey: AppKeys.Engagement.secondRecoveryScoreSeen) else { return }
+            // Require the first one to be set before the second, keeps the order clean.
+            guard defaults.bool(forKey: AppKeys.Engagement.firstRecoveryScoreSeen) else {
+                defaults.set(true, forKey: AppKeys.Engagement.firstRecoveryScoreSeen)
+                return
+            }
+            defaults.set(true, forKey: AppKeys.Engagement.secondRecoveryScoreSeen)
+        }
+    }
 
     // MARK: - Public API
 
-    /// Schedule the next pending engagement notification.
+    /// Schedule the next pending engagement notification, honoring activation gates.
     /// Call on every app launch and after onboarding completes.
     static func scheduleNext(
         healthStore: HKHealthStore,
@@ -34,45 +86,83 @@ enum EngagementSequenceScheduler {
         let daysSinceInstall = self.daysSinceInstall
         guard daysSinceInstall >= 0 else { return }
 
-        let lastScheduledDay = defaults.integer(forKey: AppKeys.Engagement.lastScheduledDay)
+        // Inactivity check. If the user has gone dark, mark the sequence paused
+        // and let the re engagement track take over. Resume on next launch
+        // (this method is called on each app open, so "return" naturally resumes).
+        if isUserInactive48h {
+            if !isSequencePaused {
+                defaults.set(true, forKey: AppKeys.Engagement.sequencePaused)
+                logGate(day: lastScheduledDay + 1, reason: "sequence_paused_user_inactive_48h")
+            }
+            return
+        } else if isSequencePaused {
+            // User is back. Clear the pause flag and continue.
+            defaults.set(false, forKey: AppKeys.Engagement.sequencePaused)
+        }
 
-        // Find the next day in the sequence that hasn't been scheduled yet
+        let lastScheduledDay = self.lastScheduledDay
+
+        // Find the next day in the sequence that hasn't been scheduled yet.
         guard let nextDay = activeDays.sorted().first(where: { $0 > lastScheduledDay && $0 <= daysSinceInstall + 1 }) else {
-            // No more days to schedule, or we're caught up
             if daysSinceInstall >= 7 {
                 defaults.set(true, forKey: AppKeys.Engagement.sequenceCompleted)
             }
             return
         }
 
-        // Detect wake-up time (from sleep data or fallback 7 AM)
-        let wakeTime = await WakeUpTimeDetector.detectAndPersist(healthStore: healthStore)
+        // Evaluate the activation gate for this day.
+        let decision = gateDecision(forDay: nextDay, daysSinceInstall: daysSinceInstall)
 
-        // Generate content for this day
-        let content = await generateContent(
-            day: nextDay,
-            dataStore: dataStore,
-            userName: userName
-        )
+        switch decision {
+        case .schedule(let softCopy):
+            // Detect wake up time (from sleep data or fallback 7 AM)
+            let wakeTime = await WakeUpTimeDetector.detectAndPersist(healthStore: healthStore)
 
-        // Schedule the notification
-        scheduleNotification(
-            day: nextDay,
-            title: content.title,
-            body: content.body,
-            wakeHour: wakeTime.hour,
-            wakeMinute: wakeTime.minute
-        )
+            let content: (title: String, body: String)
+            if softCopy, nextDay == 5 {
+                content = softDay5Content()
+            } else {
+                content = await generateContent(
+                    day: nextDay,
+                    dataStore: dataStore,
+                    userName: userName
+                )
+            }
 
-        defaults.set(nextDay, forKey: AppKeys.Engagement.lastScheduledDay)
+            scheduleNotification(
+                day: nextDay,
+                title: content.title,
+                body: content.body,
+                wakeHour: wakeTime.hour,
+                wakeMinute: wakeTime.minute
+            )
 
-        if nextDay >= 7 {
-            defaults.set(true, forKey: AppKeys.Engagement.sequenceCompleted)
+            defaults.set(nextDay, forKey: AppKeys.Engagement.lastScheduledDay)
+
+            if nextDay >= 7 {
+                defaults.set(true, forKey: AppKeys.Engagement.sequenceCompleted)
+            }
+
+        case .delay(let reason):
+            // Do not advance lastScheduledDay. We will re evaluate on the next
+            // app launch. The gate itself is the resume signal.
+            logGate(day: nextDay, reason: reason)
+            return
+
+        case .skip(let reason):
+            // Advance past this day without sending. Used when a day's window
+            // has fully passed and we do not want to send it late.
+            logGate(day: nextDay, reason: reason)
+            defaults.set(nextDay, forKey: AppKeys.Engagement.lastScheduledDay)
+            if nextDay >= 7 {
+                defaults.set(true, forKey: AppKeys.Engagement.sequenceCompleted)
+            }
         }
     }
 
-    /// Schedule all remaining engagement notifications at once.
-    /// Useful after onboarding or app update.
+    /// Schedule all remaining engagement notifications at once, respecting gates
+    /// for days whose activation is already satisfied. Days that are gated are
+    /// left to `scheduleNext(...)` on subsequent launches.
     static func scheduleAllRemaining(
         healthStore: HKHealthStore,
         dataStore: HealthDataStore?,
@@ -82,32 +172,53 @@ enum EngagementSequenceScheduler {
 
         let wakeTime = await WakeUpTimeDetector.detectAndPersist(healthStore: healthStore)
         let currentDay = daysSinceInstall
-        let lastScheduledDay = defaults.integer(forKey: AppKeys.Engagement.lastScheduledDay)
+        let lastScheduledDay = self.lastScheduledDay
 
-        for day in activeDays.sorted() where day > lastScheduledDay {
-            let content: (title: String, body: String)
+        var highestScheduled = lastScheduledDay
 
-            if day <= currentDay {
-                // Day is today or past. generate with real data
-                content = await generateContent(day: day, dataStore: dataStore, userName: userName)
-            } else {
-                // Future day. use preview content (will be rescheduled with real data on that day)
-                content = previewContent(day: day, userName: userName)
+        batchLoop: for day in activeDays.sorted() where day > lastScheduledDay {
+            let decision = gateDecision(forDay: day, daysSinceInstall: currentDay)
+
+            switch decision {
+            case .schedule(let softCopy):
+                let content: (title: String, body: String)
+                if day <= currentDay {
+                    if softCopy, day == 5 {
+                        content = softDay5Content()
+                    } else {
+                        content = await generateContent(day: day, dataStore: dataStore, userName: userName)
+                    }
+                } else {
+                    content = previewContent(day: day, userName: userName, softDay5: softCopy)
+                }
+
+                let daysFromNow = max(0, day - currentDay)
+                scheduleFutureNotification(
+                    day: day,
+                    title: content.title,
+                    body: content.body,
+                    wakeHour: wakeTime.hour,
+                    wakeMinute: wakeTime.minute,
+                    daysFromNow: daysFromNow
+                )
+                highestScheduled = max(highestScheduled, day)
+
+            case .delay(let reason):
+                // Leave for the next launch. Do not advance lastScheduledDay
+                // past this day, otherwise gated days could be silently skipped.
+                // Stop the batch here so later days do not fire out of order
+                // while an earlier day is still waiting on its gate.
+                logGate(day: day, reason: reason)
+                break batchLoop
+
+            case .skip(let reason):
+                logGate(day: day, reason: reason)
+                highestScheduled = max(highestScheduled, day)
             }
-
-            let daysFromNow = max(0, day - currentDay)
-            scheduleFutureNotification(
-                day: day,
-                title: content.title,
-                body: content.body,
-                wakeHour: wakeTime.hour,
-                wakeMinute: wakeTime.minute,
-                daysFromNow: daysFromNow
-            )
         }
 
-        if let maxDay = activeDays.max() {
-            defaults.set(maxDay, forKey: AppKeys.Engagement.lastScheduledDay)
+        if highestScheduled > lastScheduledDay {
+            defaults.set(highestScheduled, forKey: AppKeys.Engagement.lastScheduledDay)
         }
     }
 
@@ -118,11 +229,14 @@ enum EngagementSequenceScheduler {
             .removePendingNotificationRequests(withIdentifiers: identifiers)
     }
 
-    /// Reset the engagement sequence (for testing or re-onboarding).
+    /// Reset the engagement sequence (for testing or re onboarding).
     static func reset() {
         cancelAll()
         defaults.removeObject(forKey: AppKeys.Engagement.lastScheduledDay)
         defaults.removeObject(forKey: AppKeys.Engagement.sequenceCompleted)
+        defaults.removeObject(forKey: AppKeys.Engagement.firstRecoveryScoreSeen)
+        defaults.removeObject(forKey: AppKeys.Engagement.secondRecoveryScoreSeen)
+        defaults.removeObject(forKey: AppKeys.Engagement.sequencePaused)
     }
 
     // MARK: - State
@@ -131,12 +245,95 @@ enum EngagementSequenceScheduler {
         defaults.bool(forKey: AppKeys.Engagement.sequenceCompleted)
     }
 
+    static var isSequencePaused: Bool {
+        defaults.bool(forKey: AppKeys.Engagement.sequencePaused)
+    }
+
     static var daysSinceInstall: Int {
         // SessionTracker stores installDate as a Date object via UserDefaults.set(Date(), forKey:)
         guard let installDate = defaults.object(forKey: AppKeys.Lifecycle.installDate) as? Date else {
             return -1
         }
         return Calendar.current.dateComponents([.day], from: installDate, to: Date()).day ?? 0
+    }
+
+    private static var lastScheduledDay: Int {
+        defaults.integer(forKey: AppKeys.Engagement.lastScheduledDay)
+    }
+
+    /// True when the user has not opened the app in the last 48 hours.
+    /// Uses `SessionTracker`'s last active date, which is the single source of
+    /// truth for app presence. Treats "no record yet" as active (post onboarding).
+    private static var isUserInactive48h: Bool {
+        guard let last = defaults.object(forKey: AppKeys.Session.lastActiveDate) as? Date else {
+            return false
+        }
+        return Date().timeIntervalSince(last) > inactivityPauseSeconds
+    }
+
+    // MARK: - Gate Decision
+
+    private enum GateDecision {
+        case schedule(softCopy: Bool)
+        case delay(reason: String)
+        case skip(reason: String)
+    }
+
+    /// Evaluate whether a given day can be scheduled right now.
+    /// Returns `.schedule(softCopy:)` when green lit, `.delay` when the gate
+    /// is waiting on activation, and `.skip` when the day is past its window.
+    private static func gateDecision(forDay day: Int, daysSinceInstall: Int) -> GateDecision {
+        switch day {
+        case 1:
+            // Pure calendar anchor. No gate.
+            return .schedule(softCopy: false)
+
+        case 2:
+            // Gate: user has seen their first recovery score.
+            if defaults.bool(forKey: AppKeys.Engagement.firstRecoveryScoreSeen) {
+                return .schedule(softCopy: false)
+            }
+            // Hard fallback: send anyway after Day 4 so we do not silently drop users.
+            if daysSinceInstall >= day2FallbackDay {
+                return .schedule(softCopy: false)
+            }
+            return .delay(reason: "gated_waiting_for_activation")
+
+        case 3:
+            // Gate: at least one app open in the past 48h. The pause path in
+            // `scheduleNext` already short circuits when inactive, so by the
+            // time we get here the user is active. Extra belt and suspenders
+            // in case call sites evolve.
+            if isUserInactive48h {
+                return .delay(reason: "gated_waiting_for_activation")
+            }
+            return .schedule(softCopy: false)
+
+        case 5:
+            // Gate: second recovery score seen. Otherwise use a softer copy.
+            if defaults.bool(forKey: AppKeys.Engagement.secondRecoveryScoreSeen) {
+                return .schedule(softCopy: false)
+            }
+            return .schedule(softCopy: true)
+
+        case 7:
+            // Always fires. This is the lapsing user nudge.
+            return .schedule(softCopy: false)
+
+        default:
+            return .skip(reason: "unknown_day")
+        }
+    }
+
+    private static func logGate(day: Int, reason: String) {
+        let identifier = AppConstants.NotificationID.engagementPrefix + "day\(day)"
+        Task { @MainActor in
+            AppAnalytics.shared.trackNotificationSuppressed(
+                type: "engagement_day_\(day)",
+                identifier: identifier,
+                reason: reason
+            )
+        }
     }
 
     // MARK: - Content Generation
@@ -262,6 +459,15 @@ enum EngagementSequenceScheduler {
         )
     }
 
+    /// Soft Day 5 variant. Used when the second recovery score has not been seen yet,
+    /// so we do not claim personalization is X% complete when it really is not.
+    private static func softDay5Content() -> (title: String, body: String) {
+        return (
+            title: Copy.Notifications.engagementDay5SoftTitle,
+            body: Copy.Notifications.engagementDay5SoftBody
+        )
+    }
+
     /// Day 7: Loss Aversion. personalized discovery count
     private static func generateDay7(dataStore: HealthDataStore?) async -> (title: String, body: String) {
         var patternCount = 0
@@ -316,8 +522,8 @@ enum EngagementSequenceScheduler {
         }
     }
 
-    /// Preview content for future-day scheduling (before real data is available).
-    private static func previewContent(day: Int, userName: String?) -> (title: String, body: String) {
+    /// Preview content for future day scheduling (before real data is available).
+    private static func previewContent(day: Int, userName: String?, softDay5: Bool = false) -> (title: String, body: String) {
         switch day {
         case 1:
             return generateDay1(userName: userName)
@@ -326,7 +532,7 @@ enum EngagementSequenceScheduler {
         case 3:
             return (Copy.Notifications.engagementDay3Title, Copy.Notifications.engagementDay3Fallback)
         case 5:
-            return generateDay5()
+            return softDay5 ? softDay5Content() : generateDay5()
         case 7:
             return (Copy.Notifications.engagementDay7Title(patternCount: 12), Copy.Notifications.engagementDay7BodyGeneric(count: 12))
         default:

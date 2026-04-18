@@ -6,5 +6,6 @@ struct LasoWidgetsBundle: WidgetBundle {
     var body: some Widget {
         AnalysisSummaryWidget()
         BreathworkLiveActivityWidget()
+        TodayScoreLiveActivityWidget()
     }
 }

@@ -120,6 +120,14 @@ struct ContentView: View {
             await refreshDeviceSourcesIfNeeded()
             // HomeView.onAppear handles its own initial fetch. no duplicate needed here
 
+            // Belt-and-suspenders: wire up HKObserverQueries for core dashboard
+            // metrics so when Apple Watch delivers new HealthKit data in the
+            // background, the dashboard auto-refreshes without pull-to-refresh.
+            // `refreshOnForegroundIfNeeded` is already throttled + idempotent.
+            healthKitManager.setupDashboardObservers { [weak dashboardViewModel] in
+                await dashboardViewModel?.refreshOnForegroundIfNeeded()
+            }
+
             // After initial load, check if HealthKit data is empty despite authorization
             let shouldShowHKReprompt = HealthKitRepromptManager.checkEmptyData(
                 isAuthorized: healthKitManager.isAuthorized,
@@ -159,6 +167,10 @@ struct ContentView: View {
                     // Retry sync only when Home is visible and potentially stuck.
                     Task { await dashboardViewModel.retrySyncIfNeeded() }
                 }
+                // Foreground return: refresh dashboard so users see today's latest data
+                // without pull-to-refresh. Fires on any active-return (background, inactive,
+                // notification banner dismiss, Control Center close). Throttled internally.
+                Task { await dashboardViewModel.refreshOnForegroundIfNeeded() }
             } else if newPhase == .background {
                 AppAnalytics.shared.trackSessionEnd()
                 container.backgroundRefreshCoordinator.schedule()

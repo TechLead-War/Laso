@@ -8,7 +8,7 @@ enum AppSecrets {
     // MARK: - Bundle & App Identifiers
 
     enum App {
-        static let bundleID = "com.lasohealth.app"
+        static let bundleID = "com.lasohealth.fit"
     }
 
     // MARK: - Firebase

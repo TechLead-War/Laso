@@ -19,7 +19,7 @@ struct FocusAreasSection: View {
 
                         Spacer()
 
-                        Text("\(elevatedCount) need attention")
+                        Text("\(elevatedCount) worth noticing")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }

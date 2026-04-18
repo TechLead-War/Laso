@@ -7,28 +7,34 @@ struct BrainHealthDetailView: View {
     let trend: String // "improving", "stable", "declining"
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: DS.sectionSpacing) {
-                heroSection
-                readinessSection
-                memorySection
-                stressLoadSection
-                fitnessSection
-                weeklyChartSection
-                insightsSection
+        GeometryReader { proxy in
+            // iOS 26 + PostHog masking can inflate SwiftUI ideal widths inside ScrollView rows.
+            let sectionWidth = max(proxy.size.width - 32, 0)
 
-                Text(Copy.Analysis.RiskDetail.disclaimer)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.leading)
-                    .padding(.horizontal)
-                    .padding(.top, 24)
-                    .padding(.bottom, 16)
+            ScrollView {
+                VStack(spacing: DS.sectionSpacing) {
+                    heroSection
+                        .frame(width: sectionWidth)
+                    readinessSection
+                        .frame(width: sectionWidth)
+                    memorySection
+                        .frame(width: sectionWidth)
+                    stressLoadSection
+                        .frame(width: sectionWidth)
+                    fitnessSection
+                        .frame(width: sectionWidth)
+                    weeklyChartSection
+                        .frame(width: sectionWidth)
+                    insightsSection
+                        .frame(width: sectionWidth)
+                    disclaimerSection
+                        .frame(width: sectionWidth, alignment: .leading)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.bottom, 32)
             }
-            .padding(.horizontal)
-            .padding(.bottom, 32)
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
         }
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle(Copy.BrainHealth.title)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { AppAnalytics.shared.trackFeatureOpen(.brainHealth) }
@@ -124,8 +130,8 @@ struct BrainHealthDetailView: View {
                 isEstimate: durationValue == nil
             )
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DS.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .cardStyle()
     }
 
@@ -137,26 +143,31 @@ struct BrainHealthDetailView: View {
                 .frame(width: 28)
 
             VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text(label)
-                        .font(.subheadline.weight(.medium))
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text(label)
+                            .font(.subheadline.weight(.medium))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.9)
 
-                    if isEstimate {
-                        Text(Copy.BrainHealth.estimated)
-                            .font(.caption2.weight(.medium))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 1)
-                            .background(Color(.systemGray5), in: Capsule())
+                        if isEstimate {
+                            Text(Copy.BrainHealth.estimated)
+                                .font(.caption2.weight(.medium))
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 1)
+                                .background(Color(.systemGray5), in: Capsule())
+                        }
                     }
-
-                    Spacer()
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
                     Text("\(Int(min(max(value, 0), 1.0) * 100))%")
                         .font(.subheadline.weight(.bold).monospacedDigit())
                         .foregroundStyle(color)
+                        .frame(minWidth: 40, alignment: .trailing)
                         .postHogMask()
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
@@ -171,7 +182,9 @@ struct BrainHealthDetailView: View {
                 }
                 .frame(height: 6)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func readinessColor(_ value: Double) -> Color {
@@ -215,6 +228,7 @@ struct BrainHealthDetailView: View {
 
                 trendIndicator
             }
+            .frame(maxWidth: .infinity)
 
             if !hasSleepStages {
                 Text(Copy.BrainHealth.noSleepStageData)
@@ -226,8 +240,8 @@ struct BrainHealthDetailView: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DS.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .cardStyle()
     }
 
@@ -236,6 +250,7 @@ struct BrainHealthDetailView: View {
             Text(label)
                 .font(.caption2.weight(.medium))
                 .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
 
             Text(value)
                 .font(.title3.weight(.bold).monospacedDigit())
@@ -299,8 +314,8 @@ struct BrainHealthDetailView: View {
             }
             .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DS.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .cardStyle()
     }
 
@@ -335,13 +350,14 @@ struct BrainHealthDetailView: View {
                     color: readinessColor(brainScore.circadianAlignment / 100)
                 )
             }
+            .frame(maxWidth: .infinity)
 
             Text(Copy.BrainHealth.longTermExplanation)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DS.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .cardStyle()
     }
 
@@ -359,12 +375,15 @@ struct BrainHealthDetailView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 20)
             } else {
+                let visibleHistory = Array(weeklyHistory.suffix(7))
                 HStack(alignment: .bottom, spacing: 6) {
-                    ForEach(Array(weeklyHistory.enumerated()), id: \.offset) { _, entry in
+                    ForEach(Array(visibleHistory.enumerated()), id: \.offset) { _, entry in
                         VStack(spacing: 4) {
                             Text("\(entry.score)")
                                 .font(.caption2.weight(.bold).monospacedDigit())
                                 .foregroundStyle(chartBarColor(for: entry.score))
+                                .minimumScaleFactor(0.7)
+                                .lineLimit(1)
                                 .postHogMask()
 
                             RoundedRectangle(cornerRadius: 4)
@@ -374,11 +393,14 @@ struct BrainHealthDetailView: View {
                             Text(abbreviatedDay(entry.date))
                                 .font(.caption2.weight(.medium))
                                 .foregroundStyle(.secondary)
-                                .frame(width: 32, alignment: .center)
+                                .minimumScaleFactor(0.7)
+                                .lineLimit(1)
+                                .frame(maxWidth: .infinity, alignment: .center)
                         }
                         .frame(maxWidth: .infinity)
                     }
                 }
+                .frame(maxWidth: .infinity)
                 .frame(height: 120)
 
                 HStack {
@@ -416,11 +438,12 @@ struct BrainHealthDetailView: View {
                         .padding(.vertical, DS.badgeV)
                         .background(trendColor.opacity(DS.badgeBg), in: Capsule())
                     }
+                    .frame(maxWidth: .infinity)
                 }
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DS.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .cardStyle()
     }
 
@@ -480,14 +503,25 @@ struct BrainHealthDetailView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
                     Spacer()
                 }
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DS.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .cardStyle()
+    }
+
+    private var disclaimerSection: some View {
+        Text(Copy.Analysis.RiskDetail.disclaimer)
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.leading)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.top, 24)
+            .padding(.bottom, 16)
     }
 }
 

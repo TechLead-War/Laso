@@ -40,7 +40,9 @@ final class DashboardViewModel {
     private static let analysisMinInterval: TimeInterval = 300  // 5 minutes
     private static let syncRetryMinInterval: TimeInterval = 600  // 10 minutes
     private static let connectivityRecoveryMinInterval: TimeInterval = 900  // 15 minutes
+    private static let foregroundRefreshMinInterval: TimeInterval = 30  // 30 seconds
     private var lastConnectivityRecoverySync: Date?
+    private var lastForegroundRefresh: Date?
     @MainActor private var refreshRunToken = UUID()
     /// Handles for detached Phase 2A/2B tasks so we can cancel stale work on new refresh
     private var deferredEssentialsTask: Task<Void, Never>?
@@ -652,6 +654,22 @@ final class DashboardViewModel {
         await refresh()
     }
 
+    /// Refresh on foreground return so users see today's latest data without pull-to-refresh.
+    /// Throttled to 30s to avoid thrashing during quick app switches.
+    func refreshOnForegroundIfNeeded() async {
+        guard ui.hasCompletedInitialLoad else { return }
+        guard healthKitManager.isAuthorized else { return }
+        guard !ui.isLoading, !isSyncRetryInProgress else { return }
+
+        if let lastForeground = lastForegroundRefresh,
+           Date().timeIntervalSince(lastForeground) < Self.foregroundRefreshMinInterval {
+            return
+        }
+
+        lastForegroundRefresh = Date()
+        await refresh()
+    }
+
     /// Re-sync after connectivity is restored, throttled to avoid repeated heavy work.
     /// Returns true when a refresh was actually triggered.
     func refreshAfterConnectivityRestoreIfNeeded() async -> Bool {
@@ -809,6 +827,7 @@ final class DashboardViewModel {
                 checkActivationMilestones()
             }
             writeWidgetSnapshots()
+            pushTodayScoreLiveActivity()
         }
 
         // Store current trends for next refresh comparison
@@ -874,10 +893,10 @@ final class DashboardViewModel {
             await menstrualCycleTracker.compute(from: healthKitManager)
         }
 
-        deferredEssentialsTask = Task.detached(priority: .utility) { [weak self] in
+        deferredEssentialsTask = Task.detached(priority: .utility) { [weak self, analysisEngine] in
             guard let self else { return }
             try? Task.checkCancellation()
-            self.analysisEngine.runDeferredEssentials(
+            analysisEngine.runDeferredEssentials(
                 timeSeries: ts,
                 cycleFlowSamples: cycleFlowSamples
             )
@@ -886,9 +905,8 @@ final class DashboardViewModel {
         }
 
         // Phase 2B: Heavy analysis + housekeeping. delayed for thermal relief
-        deferredHeavyTask = Task.detached(priority: .background) { [weak self, prevTrends] in
+        deferredHeavyTask = Task.detached(priority: .background) { [weak self, prevTrends, analysisEngine] in
             guard let self else { return }
-            let analysisEngine = self.analysisEngine
             let logger = Logger(subsystem: "com.healthpulse", category: "Dashboard")
 
             // Thermal break. let CPU cool after core + essentials
@@ -1001,6 +1019,10 @@ final class DashboardViewModel {
 
         let periodSummary7d = await MainActor.run { self.periodSummary(for: .sevenDays) }
         let currentIntelligence = await MainActor.run { self.intelligenceBriefing }
+        // SleepNeedCalculator.currentNeed is populated by runHeavyAnalysis earlier in the
+        // refresh cycle. Pull the real target bedtime here; nil is a valid "skip wind-down"
+        // signal so WindDownScheduler never fakes a number.
+        let recommendedBedtime = await MainActor.run { sleepNeedCalculator.currentNeed?.recommendedBedtime }
         await housekeepingService.perform(
             store: store,
             payload: DashboardHousekeepingService.Payload(
@@ -1019,7 +1041,8 @@ final class DashboardViewModel {
                 scoreChangeFromYesterday: scores.cachedScoreChangeFromYesterday,
                 improvingDays: computeImprovingDays(),
                 periodSummary: periodSummary7d,
-                intelligenceBriefing: currentIntelligence
+                intelligenceBriefing: currentIntelligence,
+                recommendedBedtime: recommendedBedtime
             )
         )
     }
@@ -1736,6 +1759,48 @@ final class DashboardViewModel {
             hasAction: action != nil,
             hasIntelligence: intelligence != nil,
             hasRecoveryDebt: true
+        )
+    }
+
+    /// Push the latest Today's Score state to the Live Activity after a successful refresh.
+    /// Skips when we have no meaningful data yet (empty time series or score 0) so the
+    /// activity doesn't start with a blank slate during the first sync.
+    @MainActor
+    private func pushTodayScoreLiveActivity() {
+        guard !healthKitManager.timeSeries.isEmpty else { return }
+        let score = overallScore.score
+        guard score > 0 else { return }
+
+        // Weakest pillar: same source used by HomeView via cachedWeakestCategoryName
+        // (HomeView.swift:160-162 → viewModel.cachedWeakestCategoryName). Fall back to
+        // "Recovery" when no categories have been scored yet.
+        let weakestEntry = scores.categoryScores
+            .compactMap { s -> (name: String, score: Int)? in
+                guard let cat = s.category else { return nil }
+                return (cat.displayName, s.score)
+            }
+            .min(by: { $0.score < $1.score })
+        let weakestName = weakestEntry?.name ?? cachedWeakestCategoryName ?? "Recovery"
+        let weakestScore = weakestEntry?.score
+
+        // Steps: latest daily sample from HealthKit time series.
+        let stepsValue = Int(healthKitManager.timeSeries[.steps]?.latestValue ?? 0)
+
+        // HRV & RHR: read latest daily value from HealthKitManager.timeSeries, same
+        // source of truth as AlertEvaluator.swift:156/221 and RecoveryAnalyzer.swift:36.
+        let hrvValue: Int? = healthKitManager.timeSeries[.heartRateVariability]?.latestValue
+            .map { Int($0.rounded()) }
+        let rhrValue: Int? = healthKitManager.timeSeries[.restingHeartRate]?.latestValue
+            .map { Int($0.rounded()) }
+
+        TodayScoreLiveActivityManager.shared.updateOrStart(
+            overallScore: score,
+            weakestPillar: weakestName,
+            weakestPillarScore: weakestScore,
+            steps: stepsValue,
+            stepsGoal: 10000,
+            hrvMs: hrvValue,
+            restingHR: rhrValue
         )
     }
 

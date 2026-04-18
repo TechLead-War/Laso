@@ -21,6 +21,10 @@ struct NotificationPreferences: Codable, Equatable {
         return c
     }()
 
+    /// Evening wind-down push (~60 min before predicted bedtime). Default on because
+    /// it only fires when we have enough sleep data to compute a real bedtime target.
+    var windDownEnabled: Bool = true
+
     var weeklySummaryEnabled: Bool = false
     var weeklySummaryDay: Int = 2 // Monday = 2
 
@@ -70,6 +74,7 @@ extension NotificationPreferences {
     /// Coding keys must handle the Set<HealthMetric> properly
     enum CodingKeys: String, CodingKey {
         case dailySummaryEnabled, dailySummaryTime, eveningSummaryEnabled, eveningSummaryTime
+        case windDownEnabled
         case weeklySummaryEnabled, weeklySummaryDay
         case criticalAlertsEnabled, warningAlertsEnabled, maxNotificationsPerDay
         case warningAlertMetrics

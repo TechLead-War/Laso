@@ -20,7 +20,7 @@ final class CloudBackupManager {
     private(set) var backupStatus: BackupStatus = .idle
     private(set) var lastBackupDate: Date?
 
-    private let container = CKContainer(identifier: AppSecrets.CloudKit.containerID)
+    private let container: CKContainer? = nil
     private let recordID = CKRecord.ID(recordName: AppSecrets.CloudKit.recordID)
     private static let recordType = AppSecrets.CloudKit.recordType
 
@@ -36,6 +36,7 @@ final class CloudBackupManager {
     /// Check if CloudKit is available (user signed into iCloud)
     var isAvailable: Bool {
         get async {
+            guard let container else { return false }
             do {
                 let status = try await container.accountStatus()
                 return status == .available
@@ -76,7 +77,7 @@ final class CloudBackupManager {
     }
 
     private func performBackup(store: HealthDataStore, persistence: PersistenceManager) async {
-        guard await isAvailable else {
+        guard await isAvailable, let container else {
             backupStatus = .disabled
             return
         }
@@ -151,7 +152,7 @@ final class CloudBackupManager {
 
     /// Attempt to restore from CloudKit backup. Returns true if data was restored.
     func restore(store: HealthDataStore, persistence: PersistenceManager) async -> Bool {
-        guard await isAvailable else { return false }
+        guard await isAvailable, let container else { return false }
 
         backupStatus = .restoring
 

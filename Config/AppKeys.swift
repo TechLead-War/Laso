@@ -155,6 +155,37 @@ enum AppKeys {
         static let repromptLastShownDate   = "healthpulse.notifications.repromptLastShown"
         /// Last psychological category used for daily summary (avoids repeats)
         static let lastDailyHookCategory   = "healthpulse.notifications.lastHookCategory"
+
+        // MARK: Fatigue suppression layer
+
+        /// Timestamp of the most recently fired NON-critical notification
+        /// (used to approximate "dismissed without open" when an open does
+        /// not arrive within the open-window).
+        static let lastNonCriticalFiredAt   = "healthpulse.notifications.lastNonCriticalFiredAt"
+        /// Identifier of the most recently fired non-critical notification
+        /// (used to avoid double-counting the same fire in the dismiss streak).
+        static let lastNonCriticalFiredId   = "healthpulse.notifications.lastNonCriticalFiredId"
+        /// Timestamp of the user's last app open (reset signal for the streak).
+        static let lastAppOpenedAt          = "healthpulse.notifications.lastAppOpenedAt"
+        /// Consecutive dismiss-without-open count on non-critical notifications.
+        static let dismissWithoutOpenStreak = "healthpulse.notifications.dismissStreak"
+        /// Absolute date until which all non-critical notifications are suppressed.
+        static let fatigueSuppressionUntil  = "healthpulse.notifications.fatigueSuppressionUntil"
+        /// Best (priority, identifier) scheduled today for same-day priority resolution.
+        /// Stored as `"<yyyy-MM-dd>|<priority>|<identifier>"`.
+        static let sameDayBestCandidate     = "healthpulse.notifications.sameDayBest"
+
+        // MARK: Wind-down rotation
+        /// Index of the last wind-down title variant (to rotate across nights)
+        static let windDownVariantIndex    = "healthpulse.notifications.windDownVariantIndex"
+
+        // MARK: Re-engagement snapshot (plain-text, non-sensitive)
+        /// Last known HRV value in ms (Int, rounded)
+        static let lastHRVValue            = "healthpulse.notifications.lastHRV"
+        /// Last known HRV trend direction (raw value of TrendDirection)
+        static let lastHRVTrend            = "healthpulse.notifications.lastHRVTrend"
+        /// Last known recovery score used by re-engagement push
+        static let lastRecoveryScore       = "healthpulse.notifications.lastRecoveryScore"
     }
 
     // MARK: - Engagement Sequence
@@ -165,6 +196,14 @@ enum AppKeys {
         static let detectedWakeHour  = "laso.engagement.detected_wake_hour"
         static let detectedWakeMinute = "laso.engagement.detected_wake_minute"
         static let wakeTimeSource    = "laso.engagement.wake_time_source"
+
+        // Activation gates (Headspace pattern: 0 to 1 activation moment, not calendar).
+        // Day 2 gate: user has opened the app and seen their first real Recovery score.
+        static let firstRecoveryScoreSeen  = "laso.engagement.first_recovery_score_seen"
+        // Day 5 gate: user has seen a second Recovery score (baseline in progress).
+        static let secondRecoveryScoreSeen = "laso.engagement.second_recovery_score_seen"
+        // Sequence paused when user goes dark for 48+ hours. Re engagement track takes over.
+        static let sequencePaused          = "laso.engagement.sequence_paused"
     }
 
     // MARK: - User Profile

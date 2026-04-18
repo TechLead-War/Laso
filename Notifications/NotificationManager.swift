@@ -7,16 +7,32 @@ final class NotificationManager {
 
     private let center = UNUserNotificationCenter.current()
     private let frequencyCap = FrequencyCapManager()
+    private let fatigueTracker = NotificationFatigueTracker()
 
     /// Data store for notification event tracking (set at app launch)
     var store: HealthDataStore?
 
     private init() {}
 
+    /// `true` while non-critical notifications are suppressed because the
+    /// user has dismissed-without-opening recent ones. Critical and daily
+    /// summary notifications continue to schedule.
+    var isInFatigueSuppressionWindow: Bool {
+        fatigueTracker.isInFatigueSuppressionWindow
+    }
+
+    /// Hook for AppDelegate / scene lifecycle to signal an app open.
+    /// Resets the dismiss-without-open streak if the open falls inside
+    /// the response window after a non-critical notification fire.
+    func recordAppOpen() {
+        fatigueTracker.recordAppOpen()
+    }
+
     /// Derive a notification type string from its identifier
     static func notificationType(_ identifier: String) -> String {
         if identifier == "healthpulse.dailySummary" { return "daily_summary" }
         if identifier == "healthpulse.eveningSummary" { return "evening_summary" }
+        if identifier == "healthpulse.windDown" { return "wind_down" }
         if identifier.hasPrefix("healthpulse.alert.") { return "alert" }
         if identifier.hasPrefix("healthpulse.trend.") { return "trend_reversal" }
         if identifier.hasPrefix("healthpulse.improvement.") { return "improvement" }
@@ -105,13 +121,42 @@ final class NotificationManager {
                 return
             }
 
+            // Fatigue suppression. after N consecutive dismiss-without-open
+            // events on non-critical notifications, suppress non-critical
+            // notifications for a cool-down window. Critical severity and
+            // daily summaries bypass this layer (explicit opt-ins).
+            fatigueTracker.evaluateDismissStreakLazy()
+            if severity != .critical && fatigueTracker.isInFatigueSuppressionWindow {
+                Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "fatigue_suppression") }
+                return
+            }
+
+            // Same-day priority resolution. Between two eligible non-critical
+            // notifications on the same calendar day, only the higher-priority
+            // one fires. Critical severity does not participate (always allowed).
+            if severity != .critical {
+                let decision = fatigueTracker.resolveSameDayPriority(identifier: identifier, priority: priority)
+                switch decision {
+                case .reject:
+                    Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: notifType, identifier: identifier, reason: "priority_pushed_down") }
+                    return
+                case .accept(let previousIdentifier):
+                    if let previous = previousIdentifier {
+                        center.removePendingNotificationRequests(withIdentifiers: [previous])
+                        let previousType = Self.notificationType(previous)
+                        Task { @MainActor in AppAnalytics.shared.trackNotificationSuppressed(type: previousType, identifier: previous, reason: "priority_pushed_down") }
+                    }
+                }
+            }
+
             // Dynamic budget based on fatigue detection.
             // HealthDataStore is @MainActor. use assumeIsolated when on main thread,
             // otherwise fall back to the static maxPerDay budget.
             let dynamicBudget: Int
             if let store, Thread.isMainThread {
-                let events = MainActor.assumeIsolated { store.loadNotificationEvents(days: 7) }
-                dynamicBudget = NotificationOptimizer.dailyBudget(events: events)
+                dynamicBudget = MainActor.assumeIsolated {
+                    NotificationOptimizer.dailyBudget(events: store.loadNotificationEvents(days: 7))
+                }
             } else {
                 dynamicBudget = maxPerDay
             }
@@ -139,6 +184,9 @@ final class NotificationManager {
             } else {
                 if !isDailySummary {
                     self?.frequencyCap.recordNotification()
+                    // Record for the dismiss-without-open streak (critical is ignored
+                    // inside the tracker). Daily summaries bypass both cap and streak.
+                    self?.fatigueTracker.recordFired(identifier: identifier, severity: severity)
                 }
 
                 // Record the send event for optimizer tracking.

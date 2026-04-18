@@ -232,7 +232,7 @@ extension Copy {
             // Factor descriptions (negative)
             static let hrvLow = "HRV has not recovered yet"
             static let hrvBelow = "HRV is below your usual"
-            static let rhrElevated = "resting heart rate is elevated"
+            static let rhrElevated = "resting heart rate is higher than your usual"
             static let rhrHigh = "resting heart rate is still high"
             static let sleepShort = "sleep was short"
             static let sleepPoor = "sleep quality was low"
