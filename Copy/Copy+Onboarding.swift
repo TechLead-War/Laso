@@ -3,122 +3,120 @@ import Foundation
 extension Copy {
     enum Onboarding {
 
-        // MARK: - Welcome
+        // MARK: - Pulse (Screen 1)
 
-        static let tagline = "Your health, understood."
+        static let pulseHeadline = "See what your body has been telling you."
+        static let pulseBegin = "Begin"
 
-        // MARK: - Value Proposition
+        // MARK: - About You (Screen 2)
 
-        static let whatYouGet = "What You Get"
-        static let bulletPersonalized = "Personalized to your body"
-        static let bulletPrivate = "Private and on-device"
-        static let bulletActionable = "Actionable daily guidance"
+        static let aboutTitle = "Start with you"
+        static let aboutSubtitle = "Heart, sleep, and recovery patterns change across life stages. Yours are yours alone."
+        static let aboutAgeLabel = "Age"
+        static let aboutAgePlaceholder = "e.g. 28"
+        static let aboutGenderPrompt = "Select gender"
+        static let aboutAgeError = "Enter a valid age between 13 and 120."
+        static let aboutGenderError = "Select a gender to continue."
+        static let aboutContinue = "Continue"
 
-        // MARK: - Connect Health
+        // MARK: - Connect Apple Health (Screen 3)
 
-        static let connectAppleHealth = "Connect Apple Health"
-        static let connectHealthDescription = "Laso reads your health data to build\npersonalized insights and track your progress."
-        static let connectHealthData = "Connect Health Data"
-        static let healthKitUnavailable = "HealthKit is not available on this device."
-        static let continueAnyway = "Continue Anyway"
+        static let connectTitle = "Your numbers, translated."
+        static let connectSubtitle = "Laso turns your Apple Health history into the story of your body."
+        static let connectPrivacyNote = "Stays on your iPhone."
+        static let connectAllow = "Connect Apple Health"
+        static let connectUnavailable = "Apple Health is not available on this device."
+        static let connectContinueAnyway = "Continue without Apple Health"
 
-        // Permission labels
-        static let permissionHeartRate = "Heart Rate"
-        static let permissionSteps = "Steps"
-        static let permissionSleepAnalysis = "Sleep Analysis"
-        static let permissionHRV = "Heart Rate Variability"
-        static let permissionBloodOxygen = "Blood Oxygen"
-        static let permissionWorkouts = "Workouts"
-        static let permissionBodyMeasurements = "Body Measurements"
-
-        // MARK: - Cycle Opt-In
-
-        static let enableCycleTracking = "Enable Cycle Tracking?"
-        static let cycleOptInDescription = "Use menstrual flow data from Apple Health for cycle-aware insights and recommendations."
-
-        // MARK: - Focus Selection
-
-        static let whatMatters = "What matters most to you?"
-        static let focusSubtitle = "Pick your areas. Those insights get prioritized first."
-
-        // MARK: - Connect Health (personalized)
-
-        static func personalizedConnectSubtitle(age: Int?) -> String {
-            guard let age else { return connectHealthDescription }
+        static func personalizedConnectNote(age: Int?) -> String? {
+            guard let age else { return nil }
             switch age {
             case ..<25:
                 return "Starting early means a lifetime of knowing what is normal for your body."
             case 25..<35:
-                return "At your age, heart and recovery patterns can tell you a lot about how you are doing."
+                return "At your age, heart and recovery patterns tell you a lot about how you are doing."
             case 35..<45:
-                return "At your age, keeping an eye on heart health and recovery trends is really valuable."
+                return "At your age, watching heart health and recovery is valuable."
             case 45..<55:
-                return "At your age, tracking heart, sleep, and mobility data shows you important changes."
+                return "At your age, tracking heart, sleep, and mobility shows you important changes."
             default:
-                return "Your health data will be compared to what is typical for your age."
+                return "Your data will be compared to what is typical for your age."
             }
         }
 
-        // MARK: - Focus Confirmation
+        // MARK: - Priority (Screen 4)
 
-        static let focusConfirmationTitle = "Here is what we will focus on"
+        static let priorityTitle = "What should Laso decode first?"
+        static let prioritySubtitle = "Your pick shapes the insights you see."
+        static let priorityContinue = "Continue"
 
-        static func focusConfirmationItems(for focuses: Set<HealthFocus>) -> [(icon: String, text: String)] {
-            let effective = focuses.isEmpty ? Set(HealthFocus.allCases) : focuses
-            var items: [(String, String)] = []
-            if effective.contains(.sleep) {
-                items.append(("moon.fill", "Sleep stages, timing, and overnight recovery tracked nightly"))
+        static func priorityCardSubtitle(for focus: HealthFocus) -> String {
+            switch focus {
+            case .sleep: "Overnight recovery and patterns"
+            case .fitness: "Movement, workouts, exertion"
+            case .heartHealth: "Resting rate, HRV, cardio fitness"
+            case .weightBody: "Trends in body composition and vitals"
+            case .recovery: "How ready your body is each day"
             }
-            if effective.contains(.fitness) {
-                items.append(("figure.run", "Steps, exercise, calories, and workout effectiveness analyzed daily"))
-            }
-            if effective.contains(.heartHealth) {
-                items.append(("heart.fill", "Resting heart rate, HRV, and cardio fitness monitored continuously"))
-            }
-            if effective.contains(.weightBody) {
-                items.append(("scalemass.fill", "Weight trends, body composition, and vitals tracked over time"))
-            }
-            if effective.contains(.recovery) {
-                items.append(("bolt.heart.fill", "Recovery scoring built from your heart rate and sleep patterns"))
-            }
-            return items
         }
 
-        // MARK: - Calibration
+        // MARK: - Mirror Moment (Screen 5)
 
-        static let calibratingTitle = "Calibrating Your Baseline"
-        static let calibrationComplete = "Calibration Complete"
-        static let calibrationIncomplete = "Calibration Incomplete"
-        static let calibratingMessage = "We are building your personal baseline from your Apple Health data. This only happens once."
-        static let calibrationSuccessMessage = "Your baseline is ready. From now on, your insights are personalized to you."
-        static let enterLaso = "Start Your Journey"
-        static let retryCalibration = "Retry Calibration"
-
-        // Calibration stats
-        static let liveCalibrationStats = "Live Calibration Stats"
-        static let stageLabel = "Stage"
-        static let metricsScanned = "Metrics Scanned"
-        static let dataPointsFound = "Data Points Found"
-        static let oldestData = "Oldest Data"
-        static let currentlyProcessing = "Currently Processing"
-        static let elapsed = "Elapsed"
-        static let analyzingPatterns = "Analyzing Patterns"
-
-        // MARK: - Personalized Completion
-
-        static let yourHealthDecoded = "Your Health, Decoded"
-        static func dataSpanSubtitle(_ span: String) -> String {
-            "\(span) of health history analyzed"
+        static let mirrorCalibratingTitle = "Reading your signal"
+        static let mirrorCalibratingMessage = "Laso is building your personal baseline from Apple Health. This only happens once."
+        static let mirrorCompleteTitle = "Here is what I found"
+        static func mirrorCompleteSubtitle(_ span: String) -> String {
+            "\(span) of your health, understood."
         }
-        static let noDataYetMessage = "No health data available yet. Laso will start building your baseline as data arrives."
+        static let mirrorNoDataMessage = "No data yet. Laso will build your baseline as data arrives."
+        static let mirrorContinue = "Show me more"
+        static let mirrorRetry = "Try again"
+        static let mirrorSkip = "Skip for now"
+        static let mirrorIncomplete = "Still syncing"
 
-        // MARK: - Notifications
+        /// Priority aware, soft pattern observation. Never predicts outcomes.
+        static func mirrorObservation(for focuses: Set<HealthFocus>, metricsWithData: Int) -> String? {
+            guard metricsWithData > 0 else { return nil }
+            if focuses.contains(.heartHealth) || focuses.contains(.recovery) {
+                return "Heart and recovery signals are in. Laso can start finding your rhythms."
+            }
+            if focuses.contains(.sleep) {
+                return "Your sleep history gives Laso a strong signal to work with."
+            }
+            if focuses.contains(.fitness) {
+                return "Activity patterns are in. Laso can see how your body responds to load."
+            }
+            if focuses.contains(.weightBody) {
+                return "Body measurements will anchor the trends you see over time."
+            }
+            return "Your baseline is in. Laso can start finding patterns."
+        }
 
-        static let enableNotifications = "Stay in the Loop"
-        static let notificationDescription = "Laso can send you a morning health briefing, alert you when something unusual happens with your body, and share weekly progress updates."
-        static let enableNotificationsButton = "Turn On Notifications"
+        static let calibrationReassurance: [String] = [
+            "Reading your Apple Watch history",
+            "Finding patterns in your heart rate",
+            "Analyzing sleep cycles",
+            "Building your personal baseline",
+            "Large histories take a moment",
+            "Almost there"
+        ]
 
-        // MARK: - Siri
+        // MARK: - Promise (Screen 6)
+
+        static let promiseTitle = "Your first 7 days"
+        static func promiseBody(patternCount: Int, span: String?) -> String {
+            let countPart = "Laso will surface \(patternCount) pattern\(patternCount == 1 ? "" : "s") from your"
+            if let span {
+                return "\(countPart) \(span) of history."
+            }
+            return "\(countPart) health data."
+        }
+        static let promiseFallback = "Laso will start building your baseline as data arrives."
+        static let promiseOpen = "Open Laso"
+        static let promiseDisclaimerFooter = "Not a medical device. Laso is for information, not diagnosis."
+        static let promiseDisclaimerLearnMore = "Full disclaimer"
+
+        // MARK: - Siri tip
 
         static let worksWithSiri = "Works with Siri"
         static let siriTip = "Try saying \"Hey Siri, what's my health score in Laso\""

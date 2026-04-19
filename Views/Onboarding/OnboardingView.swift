@@ -1,138 +1,85 @@
 import SwiftUI
 import HealthKit
 
-// MARK: - OnboardingView
-
+/// Root onboarding coordinator. Six screen flow: pulse, profile, connect, priority, mirror, promise.
+/// Notifications, cycle opt in, and the standalone medical disclaimer are deferred to contextual
+/// surfaces. Disclaimer is acknowledged via the footer on the Promise screen when the user taps
+/// Open Laso.
 struct OnboardingView: View {
     enum OnboardingStep: String, Hashable {
-        case welcome
-        case valueProposition = "value_proposition"
-        case profileCapture = "profile_capture"
-        case connectHealth = "connect_health"
-        case cycleOptIn = "cycle_opt_in"
-        case notifications
-        case focusCalibration = "focus_calibration"
+        case pulse
+        case profile
+        case connect
+        case priority
+        case mirror
+        case promise
     }
 
-    @State private var currentStep: OnboardingStep = .welcome
+    @State private var currentStep: OnboardingStep = .pulse
     @State private var selectedFocuses: Set<HealthFocus> = []
     @State private var onboardingStartDate = Date()
     @State private var stepStartDate = Date()
 
-    // Profile capture state
-    @State private var profileName: String?
-    @State private var profileEmail: String?
     @State private var profileGender: Gender?
     @State private var profileAge: Int?
+    @State private var discovery: CalibrationDiscovery = CalibrationDiscovery()
 
     let healthKitManager: HealthKitManager
     let appStateStore: AppStateStore
     let runCalibration: () async -> String?
     let onComplete: () -> Void
 
-    private var includesCycleStep: Bool {
-        profileGender == .female
-    }
-
     private var flowSteps: [OnboardingStep] {
-        var steps: [OnboardingStep] = [
-            .welcome,
-            .valueProposition,
-            .profileCapture,
-            .connectHealth
-        ]
-        if includesCycleStep {
-            steps.append(.cycleOptIn)
-        }
-        steps.append(.notifications)
-        steps.append(.focusCalibration)
-        return steps
-    }
-
-    private var progressSteps: [OnboardingStep] {
-        flowSteps
+        [.pulse, .profile, .connect, .priority, .mirror, .promise]
     }
 
     var body: some View {
         ZStack(alignment: .bottom) {
             TabView(selection: $currentStep) {
-                // Page 0: Welcome
-                OnboardingWelcomeStep {
-                    AppAnalytics.shared.trackBlockTap(
-                        title: "Get Started",
-                        type: .onboardingGetStarted,
-                        screen: .onboarding,
-                        metadata: ["step_name": "welcome"]
-                    )
-                    withAnimation(.smooth(duration: 0.4)) { currentStep = .valueProposition }
+                OnboardingPulseStep {
+                    advance(to: .profile)
                 }
-                .tag(OnboardingStep.welcome)
+                .tag(OnboardingStep.pulse)
 
-                // Page 1: Value proposition
-                OnboardingValuePropositionStep {
-                    withAnimation(.smooth(duration: 0.4)) { currentStep = .profileCapture }
-                }
-                .tag(OnboardingStep.valueProposition)
-
-                // Page 2: Profile capture
-                ProfileCaptureView { name, email, gender, age in
-                    profileName = name
-                    profileEmail = email
+                ProfileCaptureView { _, _, gender, age in
                     profileGender = gender
                     profileAge = age
-                    if gender != .female {
-                        persistCyclePreference(false, trackAnalytics: false)
-                    }
-                    withAnimation(.smooth(duration: 0.4)) { currentStep = .connectHealth }
+                    advance(to: .connect)
                 }
-                .tag(OnboardingStep.profileCapture)
+                .tag(OnboardingStep.profile)
 
-                // Page 3: Connect Apple Health
                 OnboardingConnectHealthStep(healthKitManager: healthKitManager, age: profileAge) {
-                    withAnimation(.smooth(duration: 0.4)) {
-                        currentStep = includesCycleStep ? .cycleOptIn : .notifications
-                    }
+                    advance(to: .priority)
                 }
-                .tag(OnboardingStep.connectHealth)
+                .tag(OnboardingStep.connect)
 
-                if includesCycleStep {
-                    // Page 4: Female-only cycle tracking opt-in
-                    OnboardingCycleOptInStep(
-                        onEnable: {
-                            persistCyclePreference(true, trackAnalytics: true)
-                            withAnimation(.smooth(duration: 0.4)) { currentStep = .notifications }
-                        },
-                        onSkip: {
-                            persistCyclePreference(false, trackAnalytics: true)
-                            withAnimation(.smooth(duration: 0.4)) { currentStep = .notifications }
-                        }
-                    )
-                    .tag(OnboardingStep.cycleOptIn)
+                OnboardingFocusSelectionStep(selectedFocuses: $selectedFocuses) {
+                    advance(to: .mirror)
                 }
+                .tag(OnboardingStep.priority)
 
-                // Page 5 (or 4): Notification permission
-                OnboardingNotificationStep {
-                    withAnimation(.smooth(duration: 0.4)) { currentStep = .focusCalibration }
-                }
-                .tag(OnboardingStep.notifications)
-
-                // Page 6 (or 5): Focus + Calibration
-                OnboardingFocusCalibrationStep(
-                    isActive: currentStep == .focusCalibration,
-                    selectedFocuses: $selectedFocuses,
+                OnboardingMirrorMomentStep(
+                    isActive: currentStep == .mirror,
+                    selectedFocuses: selectedFocuses,
                     healthKitManager: healthKitManager,
-                    runCalibration: runCalibration,
-                    onComplete: finishOnboarding
-                )
-                .tag(OnboardingStep.focusCalibration)
+                    runCalibration: runCalibration
+                ) { result in
+                    discovery = result
+                    advance(to: .promise)
+                }
+                .tag(OnboardingStep.mirror)
+
+                OnboardingPromiseStep(discovery: discovery) {
+                    finishOnboarding()
+                }
+                .tag(OnboardingStep.promise)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
             .scrollDisabled(true)
 
-            // Progress dots (visible on non-welcome steps)
-            if let currentProgressIndex = progressSteps.firstIndex(of: currentStep) {
+            if currentStep != .pulse, let currentProgressIndex = flowSteps.firstIndex(of: currentStep) {
                 HStack(spacing: 6) {
-                    ForEach(0..<progressSteps.count, id: \.self) { index in
+                    ForEach(0..<flowSteps.count, id: \.self) { index in
                         Circle()
                             .fill(index <= currentProgressIndex ? Color.accentColor : Color.secondary.opacity(0.2))
                             .frame(
@@ -156,7 +103,6 @@ struct OnboardingView: View {
         }
         .onChange(of: currentStep) { oldStep, newStep in
             guard oldStep != newStep else { return }
-            // Track step completion for the step we just left
             let stepDuration = Int(Date().timeIntervalSince(stepStartDate))
             AppAnalytics.shared.trackOnboardingStepCompleted(
                 step: stepIndex(for: oldStep),
@@ -166,7 +112,6 @@ struct OnboardingView: View {
             stepStartDate = Date()
         }
         .onDisappear {
-            // If onboarding disappears without completion, track drop-off
             if !appStateStore.onboardingCompleted {
                 let totalDuration = Int(Date().timeIntervalSince(onboardingStartDate))
                 AppAnalytics.shared.trackOnboardingDropOff(
@@ -178,15 +123,16 @@ struct OnboardingView: View {
         }
     }
 
+    private func advance(to step: OnboardingStep) {
+        withAnimation(.smooth(duration: 0.4)) { currentStep = step }
+    }
+
     private func finishOnboarding() {
         let focuses = selectedFocuses.isEmpty ? Set(HealthFocus.allCases) : selectedFocuses
         PersistenceManager().saveHealthFocuses(focuses)
-
-        // Save user profile to local + Firestore
         saveUserProfile(focuses: focuses)
 
-        // Notification permission is requested during the dedicated onboarding
-        // notification step. No need to request it again here.
+        appStateStore.markDisclaimerAcknowledged()
 
         let totalDuration = Int(Date().timeIntervalSince(onboardingStartDate))
         AppAnalytics.shared.trackOnboardingCompleted(
@@ -202,7 +148,6 @@ struct OnboardingView: View {
     private func saveUserProfile(focuses: Set<HealthFocus>) {
         let finalGender = profileGender ?? .preferNotToSay
 
-        // Convert age to approximate date of birth
         let dateOfBirth: Date
         if let age = profileAge {
             dateOfBirth = Calendar.current.date(byAdding: .year, value: -age, to: Date()) ?? Date()
@@ -211,8 +156,8 @@ struct OnboardingView: View {
         }
 
         let profile = UserProfileStore.shared.makeProfile(
-            name: profileName ?? "",
-            email: profileEmail ?? "",
+            name: "",
+            email: "",
             gender: finalGender,
             dateOfBirth: dateOfBirth,
             healthFocuses: focuses.map(\.rawValue)
@@ -222,12 +167,5 @@ struct OnboardingView: View {
 
     private func stepIndex(for step: OnboardingStep) -> Int {
         flowSteps.firstIndex(of: step) ?? 0
-    }
-
-    private func persistCyclePreference(_ enabled: Bool, trackAnalytics: Bool) {
-        appStateStore.setCycleTrackingEnabled(enabled)
-        if trackAnalytics {
-            AppAnalytics.shared.trackSettingChanged(name: "cycle_tracking_enabled", value: enabled)
-        }
     }
 }

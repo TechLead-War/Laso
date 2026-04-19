@@ -1,8 +1,8 @@
 import SwiftUI
 import UIKit
 
-// MARK: - ProfileCaptureView
-
+/// Screen 2: About You.
+/// Warm conversational capture of age and gender. One field visible at a time, Clinical calm tone.
 struct ProfileCaptureView: View {
     let onComplete: (_ name: String?, _ email: String?, _ gender: Gender, _ age: Int?) -> Void
 
@@ -29,44 +29,34 @@ struct ProfileCaptureView: View {
         VStack(spacing: 0) {
             Spacer()
 
-            // Branding
-            Text("Laso")
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
-                .foregroundStyle(.secondary)
-                .padding(.bottom, 32)
+            Image(systemName: "person.crop.circle")
+                .font(.system(size: 42, weight: .regular))
+                .foregroundStyle(.primary)
+                .frame(width: 80, height: 80)
+                .background(Color.primary.opacity(0.06), in: Circle())
+                .padding(.bottom, 24)
 
-            // Icon
-            Image(systemName: "person.crop.circle.fill")
-                .font(.system(size: 44, weight: .medium))
-                .foregroundStyle(.teal)
-                .frame(width: 88, height: 88)
-                .background(Color.teal.opacity(0.12), in: Circle())
-                .padding(.bottom, 28)
-
-            // Title + Subtitle
             VStack(spacing: 10) {
-                Text("About You")
+                Text(Copy.Onboarding.aboutTitle)
                     .font(.title2.weight(.bold))
 
-                Text("Heart rate, sleep, and recovery norms vary by age and gender. This helps compare your data to what\u{2019}s normal for you.")
+                Text(Copy.Onboarding.aboutSubtitle)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.bottom, 24)
+            .padding(.bottom, 28)
 
-            // Form fields
             VStack(spacing: 0) {
-                // Age
                 fieldRow {
                     HStack {
-                        Text("Age *")
+                        Text(Copy.Onboarding.aboutAgeLabel)
                             .font(.subheadline)
                             .foregroundStyle(.primary)
                         Spacer()
-                        TextField("e.g. 28", text: $ageText)
+                        TextField(Copy.Onboarding.aboutAgePlaceholder, text: $ageText)
                             .font(.subheadline)
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.numberPad)
@@ -78,10 +68,9 @@ struct ProfileCaptureView: View {
 
                 Divider().padding(.leading, 16)
 
-                // Gender
                 fieldRow {
-                    Picker("Gender *", selection: $gender) {
-                        Text("Select gender").tag(Optional<Gender>.none)
+                    Picker(Copy.Onboarding.aboutGenderPrompt, selection: $gender) {
+                        Text(Copy.Onboarding.aboutGenderPrompt).tag(Optional<Gender>.none)
                         ForEach(Gender.allCases) { option in
                             Text(option.displayName)
                                 .tag(Optional(option))
@@ -99,10 +88,10 @@ struct ProfileCaptureView: View {
             if shouldShowAgeError || shouldShowGenderError {
                 VStack(alignment: .leading, spacing: 4) {
                     if shouldShowAgeError {
-                        Text("Enter a valid age between 13 and 120.")
+                        Text(Copy.Onboarding.aboutAgeError)
                     }
                     if shouldShowGenderError {
-                        Text("Select a gender to continue.")
+                        Text(Copy.Onboarding.aboutGenderError)
                     }
                 }
                 .font(.caption)
@@ -114,7 +103,6 @@ struct ProfileCaptureView: View {
 
             Spacer()
 
-            // Continue button
             Button {
                 buttonTapCount += 1
                 showValidationErrors = true
@@ -126,7 +114,7 @@ struct ProfileCaptureView: View {
                     type: .onboardingProfileContinue,
                     screen: .onboarding,
                     metadata: [
-                        "step_name": "profile_capture",
+                        "step_name": "profile",
                         "gender": requiredGender?.rawValue ?? "missing",
                         "has_age": requiredAge != nil ? 1 : 0
                     ]
@@ -136,14 +124,9 @@ struct ProfileCaptureView: View {
 
                 isAgeFieldFocused = false
                 saveDeviceIdSilently()
-                onComplete(
-                    nil,
-                    nil,
-                    requiredGender,
-                    requiredAge
-                )
+                onComplete(nil, nil, requiredGender, requiredAge)
             } label: {
-                Text("Continue")
+                Text(Copy.Onboarding.aboutContinue)
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
@@ -163,7 +146,6 @@ struct ProfileCaptureView: View {
             .padding(.vertical, 12)
     }
 
-    /// Silently persist device ID without any user-facing prompt
     private func saveDeviceIdSilently() {
         let deviceId = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
         UserProfileStore.shared.persistDeviceId(deviceId)

@@ -1,45 +1,38 @@
 import SwiftUI
 import HealthKit
 
+/// Screen 3: Connect Apple Health.
+/// Single primer, no checkbox theatre. Same underlying 20 HealthKit types requested, clean surface.
 struct OnboardingConnectHealthStep: View {
     let healthKitManager: HealthKitManager
     let age: Int?
     let onContinue: () -> Void
 
-    private let permissions = [
-        Copy.Onboarding.permissionHeartRate,
-        Copy.Onboarding.permissionSteps,
-        Copy.Onboarding.permissionSleepAnalysis,
-        Copy.Onboarding.permissionHRV,
-        Copy.Onboarding.permissionBloodOxygen,
-        Copy.Onboarding.permissionWorkouts,
-        Copy.Onboarding.permissionBodyMeasurements
-    ]
-
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
 
-            // Apple Health icon
-            Image(systemName: "heart.text.clipboard")
+            Image(systemName: "heart.text.square")
                 .font(.system(size: 44, weight: .medium))
                 .foregroundStyle(.red)
-                .frame(width: 70, height: 70)
-                .background(Color.red.opacity(0.12), in: RoundedRectangle(cornerRadius: 16))
-                .padding(.bottom, 20)
+                .frame(width: 88, height: 88)
+                .background(Color.red.opacity(0.12), in: RoundedRectangle(cornerRadius: 20))
+                .padding(.bottom, 28)
 
             VStack(spacing: 10) {
-                Text(Copy.Onboarding.connectAppleHealth)
+                Text(Copy.Onboarding.connectTitle)
                     .font(.title2.weight(.bold))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
 
-                Text(Copy.Onboarding.connectHealthDescription)
+                Text(Copy.Onboarding.connectSubtitle)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
 
-                if age != nil {
-                    Text(Copy.Onboarding.personalizedConnectSubtitle(age: age))
+                if let note = Copy.Onboarding.personalizedConnectNote(age: age) {
+                    Text(note)
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                         .multilineTextAlignment(.center)
@@ -47,34 +40,23 @@ struct OnboardingConnectHealthStep: View {
                         .padding(.top, 4)
                 }
             }
-            .padding(.bottom, 20)
 
-            // Permission checklist
-            VStack(spacing: 0) {
-                ForEach(permissions, id: \.self) { permission in
-                    HStack(spacing: 12) {
-                        Image(systemName: "circle")
-                            .font(.system(size: 20))
-                            .foregroundStyle(.secondary)
-
-                        Text(permission)
-                            .font(.body.weight(.medium))
-
-                        Spacer()
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 10)
-                }
+            HStack(spacing: 6) {
+                Image(systemName: "lock.shield")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Text(Copy.Onboarding.connectPrivacyNote)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
             }
-            .padding(.vertical, 8)
+            .padding(.top, 24)
 
-            Spacer()
             Spacer()
 
             if healthKitManager.isHealthKitAvailable {
                 Button {
                     AppAnalytics.shared.trackBlockTap(
-                        title: "Connect Apple Health",
+                        title: "Allow Laso to read",
                         type: .onboardingConnectHealth,
                         screen: .onboarding,
                         metadata: [
@@ -86,48 +68,30 @@ struct OnboardingConnectHealthStep: View {
                         if !UITestMode.isEnabled {
                             await healthKitManager.requestAuthorization()
                             PostHogManager.shared.capture(event: "onboarding_connect_health_authorized", properties: [
-                                "healthkit_available": true,
+                                "healthkit_available": true
                             ])
                         }
                         onContinue()
                     }
                 } label: {
-                    Text(Copy.Onboarding.connectHealthData)
+                    Text(Copy.Onboarding.connectAllow)
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
                 .font(.headline)
                 .padding(.horizontal, 24)
-                .accessibilityIdentifier("onboarding.connectHealthButton")
-
-                Button(Copy.Buttons.skipForNow) {
-                    AppAnalytics.shared.trackBlockTap(
-                        title: "Skip for now",
-                        type: .onboardingContinueAnyway,
-                        screen: .onboarding,
-                        metadata: [
-                            "step_name": "connect_health",
-                            "healthkit_available": 1,
-                            "skipped": 1
-                        ]
-                    )
-                    onContinue()
-                }
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .padding(.top, 12)
                 .padding(.bottom, 48)
-                .accessibilityIdentifier("onboarding.connectHealthSkip")
+                .accessibilityIdentifier("onboarding.connectHealthButton")
             } else {
                 VStack(spacing: 12) {
-                    Text(Copy.Onboarding.healthKitUnavailable)
+                    Text(Copy.Onboarding.connectUnavailable)
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
                     Button {
                         AppAnalytics.shared.trackBlockTap(
-                            title: "Continue Anyway",
+                            title: "Continue Without Apple Health",
                             type: .onboardingContinueAnyway,
                             screen: .onboarding,
                             metadata: [
@@ -137,7 +101,7 @@ struct OnboardingConnectHealthStep: View {
                         )
                         onContinue()
                     } label: {
-                        Text(Copy.Onboarding.continueAnyway)
+                        Text(Copy.Onboarding.connectContinueAnyway)
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)

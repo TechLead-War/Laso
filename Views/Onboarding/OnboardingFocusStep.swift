@@ -1,127 +1,9 @@
 import SwiftUI
 
-struct OnboardingFocusCalibrationStep: View {
-    enum Phase {
-        case selection
-        case confirmation
-        case calibration
-    }
-
-    let isActive: Bool
-    @Binding var selectedFocuses: Set<HealthFocus>
-    let healthKitManager: HealthKitManager
-    let runCalibration: () async -> String?
-    let onComplete: () -> Void
-
-    @State private var phase: Phase = .selection
-    @State private var autoAdvanceTask: Task<Void, Never>?
-
-    var body: some View {
-        Group {
-            switch phase {
-            case .selection:
-                OnboardingFocusSelectionStep(selectedFocuses: $selectedFocuses) {
-                    withAnimation(.smooth(duration: 0.35)) {
-                        phase = .confirmation
-                    }
-                }
-            case .confirmation:
-                OnboardingFocusConfirmationStep(
-                    focuses: selectedFocuses.isEmpty ? Set(HealthFocus.allCases) : selectedFocuses
-                ) {
-                    autoAdvanceTask?.cancel()
-                    withAnimation(.smooth(duration: 0.35)) {
-                        phase = .calibration
-                    }
-                }
-                .onAppear {
-                    autoAdvanceTask = Task {
-                        try? await Task.sleep(for: .seconds(3))
-                        guard !Task.isCancelled else { return }
-                        withAnimation(.smooth(duration: 0.35)) {
-                            phase = .calibration
-                        }
-                    }
-                }
-                .onDisappear {
-                    autoAdvanceTask?.cancel()
-                }
-            case .calibration:
-                OnboardingCalibrationStep(
-                    isActive: isActive,
-                    healthKitManager: healthKitManager,
-                    runCalibration: runCalibration,
-                    onComplete: onComplete
-                )
-            }
-        }
-    }
-}
-
-// MARK: - Focus Confirmation
-
-struct OnboardingFocusConfirmationStep: View {
-    let focuses: Set<HealthFocus>
-    let onContinue: () -> Void
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
-
-            Image(systemName: "sparkles")
-                .font(.system(size: 40, weight: .medium))
-                .foregroundStyle(.blue)
-                .frame(width: 80, height: 80)
-                .background(Color.blue.opacity(0.12), in: Circle())
-                .padding(.bottom, 24)
-
-            Text(Copy.Onboarding.focusConfirmationTitle)
-                .font(.title2.weight(.bold))
-                .padding(.bottom, 20)
-
-            let items = Copy.Onboarding.focusConfirmationItems(for: focuses)
-            VStack(spacing: 0) {
-                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
-                    HStack(spacing: 12) {
-                        Image(systemName: item.icon)
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.blue)
-                            .frame(width: 30, height: 30)
-                            .background(Color.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 7))
-
-                        Text(item.text)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-
-                        Spacer(minLength: 0)
-                    }
-                    .padding(.vertical, 8)
-                }
-            }
-            .padding(.horizontal, 28)
-
-            Spacer()
-            Spacer()
-
-            Button {
-                onContinue()
-            } label: {
-                Text("Start Calibration")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .font(.headline)
-            .padding(.horizontal, 24)
-            .padding(.bottom, 48)
-            .accessibilityIdentifier("onboarding.focusStartCalibration")
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-}
-
-// MARK: - Focus Selection
-
+/// Screen 4: Priority.
+/// Large tap cards mapped one to one to HealthFocus cases. Multi select, drives downstream
+/// insight filtering in DashboardViewModel. No confirmation sub screen, no calibration here.
+/// Mirror Moment lives in OnboardingMirrorMomentStep.
 struct OnboardingFocusSelectionStep: View {
     @Binding var selectedFocuses: Set<HealthFocus>
     let onContinue: () -> Void
@@ -130,17 +12,13 @@ struct OnboardingFocusSelectionStep: View {
         VStack(spacing: 0) {
             Spacer()
 
-            Image("LaunchIcon")
-                .resizable()
-                .frame(width: 64, height: 64)
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .padding(.bottom, 20)
-
             VStack(spacing: 10) {
-                Text(Copy.Onboarding.whatMatters)
+                Text(Copy.Onboarding.priorityTitle)
                     .font(.title2.weight(.bold))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
 
-                Text(Copy.Onboarding.focusSubtitle)
+                Text(Copy.Onboarding.prioritySubtitle)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -148,7 +26,7 @@ struct OnboardingFocusSelectionStep: View {
             }
             .padding(.bottom, 24)
 
-            FlowLayout(spacing: 10) {
+            VStack(spacing: 10) {
                 ForEach(HealthFocus.allCases) { focus in
                     let isSelected = selectedFocuses.contains(focus)
                     Button {
@@ -162,7 +40,7 @@ struct OnboardingFocusSelectionStep: View {
                             type: .onboardingFocusChip,
                             screen: .onboarding,
                             metadata: [
-                                "step_name": "focus_calibration",
+                                "step_name": "priority",
                                 "focus_id": focus.rawValue,
                                 "is_selected": selectedFocuses.contains(focus) ? 1 : 0,
                                 "selected_count": selectedFocuses.count
@@ -173,41 +51,29 @@ struct OnboardingFocusSelectionStep: View {
                             value: !isSelected
                         )
                     } label: {
-                        Label(focus.displayName, systemImage: focus.systemImageName)
-                            .font(.subheadline.weight(.medium))
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .background(
-                                isSelected ? focus.color.opacity(0.2) : Color.secondary.opacity(0.06),
-                                in: Capsule()
-                            )
-                            .foregroundStyle(isSelected ? focus.color : .secondary)
-                            .overlay(
-                                Capsule()
-                                    .strokeBorder(isSelected ? focus.color : .clear, lineWidth: 2)
-                            )
+                        priorityCard(focus: focus, isSelected: isSelected)
                     }
+                    .buttonStyle(.plain)
                     .sensoryFeedback(.selection, trigger: isSelected)
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 20)
 
-            Spacer()
             Spacer()
 
             Button {
                 AppAnalytics.shared.trackBlockTap(
-                    title: "Continue",
+                    title: "Priority Continue",
                     type: .onboardingGetStarted,
                     screen: .onboarding,
                     metadata: [
-                        "step_name": "focus_calibration",
+                        "step_name": "priority",
                         "selected_focuses_count": selectedFocuses.count
                     ]
                 )
                 onContinue()
             } label: {
-                Text(Copy.Buttons.continueButton)
+                Text(Copy.Onboarding.priorityContinue)
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
@@ -215,8 +81,47 @@ struct OnboardingFocusSelectionStep: View {
             .font(.headline)
             .padding(.horizontal, 24)
             .padding(.bottom, 48)
-            .accessibilityIdentifier("onboarding.focusSelectionContinue")
+            .disabled(selectedFocuses.isEmpty)
+            .opacity(selectedFocuses.isEmpty ? 0.55 : 1.0)
+            .accessibilityIdentifier("onboarding.prioritySelectionContinue")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func priorityCard(focus: HealthFocus, isSelected: Bool) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: focus.systemImageName)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(isSelected ? focus.color : .secondary)
+                .frame(width: 40, height: 40)
+                .background(
+                    (isSelected ? focus.color.opacity(0.18) : Color.secondary.opacity(0.08)),
+                    in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                )
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(focus.displayName)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
+                Text(Copy.Onboarding.priorityCardSubtitle(for: focus))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 0)
+
+            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                .font(.system(size: 20, weight: .regular))
+                .foregroundStyle(isSelected ? focus.color : Color.secondary.opacity(0.35))
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(isSelected ? focus.color.opacity(0.08) : Color.secondary.opacity(0.05))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(isSelected ? focus.color.opacity(0.6) : Color.clear, lineWidth: 1.5)
+        )
     }
 }

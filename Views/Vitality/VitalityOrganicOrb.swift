@@ -43,7 +43,13 @@ struct OrganicParticleOrbView: View {
                 blobShape
                     .stroke(tint.opacity(0.78), lineWidth: 1.4)
             )
-            .shadow(color: tint.opacity(0.14), radius: 8, y: 4)
+            .overlay(
+                blobShape
+                    .stroke(tint.opacity(0.45), lineWidth: 14)
+                    .blur(radius: 12)
+                    .blendMode(BlendMode.screen)
+            )
+            .shadow(color: tint.opacity(0.38), radius: 18, y: 4)
     }
 
     @ViewBuilder
@@ -61,11 +67,11 @@ struct OrganicParticleOrbView: View {
         )
         .overlay(
             blobShape
-                .stroke(tint.opacity(glowPulse ? 0.5 : 0.15), lineWidth: 14)
-                .blur(radius: 12)
+                .stroke(tint.opacity(glowPulse ? 0.65 : 0.38), lineWidth: 16)
+                .blur(radius: 14)
                 .blendMode(BlendMode.screen)
         )
-        .shadow(color: tint.opacity(glowPulse ? 0.38 : 0.14), radius: glowPulse ? 20 : 8, y: 4)
+        .shadow(color: tint.opacity(glowPulse ? 0.5 : 0.3), radius: glowPulse ? 24 : 16, y: 4)
         .onAppear {
             withAnimation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true)) {
                 glowPulse = true
