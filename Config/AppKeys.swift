@@ -39,6 +39,14 @@ enum AppKeys {
         static let weeklyActiveDaysData  = "laso.session.weekly_active_days_data"
         static let organicSessions       = "laso.session.organic_sessions"
         static let notifSessions         = "laso.session.notif_sessions"
+
+        // Rest-day streak credits (Gentler Streak / Duolingo pattern).
+        // One credit forgives a single missed day; refilled monthly.
+        static let restCreditsRemaining  = "laso.session.rest_credits_remaining"
+        static let lastRestCreditGrantDate = "laso.session.last_rest_credit_grant_date"
+
+        // Activation → paywall trigger (hard paywall after aha moment, shown once).
+        static let ahaPaywallShown       = "laso.session.aha_paywall_shown"
     }
 
     // MARK: - Install

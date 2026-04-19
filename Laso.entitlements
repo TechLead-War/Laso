@@ -11,6 +11,8 @@
 	<key>com.apple.developer.siri</key>
 	<true/>
 	<key>com.apple.security.application-groups</key>
-	<array/>
+	<array>
+		<string>group.com.lasohealth.fit</string>
+	</array>
 </dict>
 </plist>

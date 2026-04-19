@@ -20,15 +20,22 @@ final class WindDownLiveActivityManager {
     private static let openMinutesBeforeBedtime = 60
     /// How long past bedtime we keep the activity alive before auto-ending.
     private static let graceMinutesAfterBedtime = 30
-    /// How long after dismissal the Lock Screen card lingers.
-    private static let dismissalLingerSeconds: TimeInterval = 45 * 60
 
     private static let dismissedBedtimeKey = "windDownLiveActivity.dismissedBedtime"
 
     private var activity: Activity<WindDownActivityAttributes>?
+    /// Task observing `activity.activityStateUpdates`. Cancelled and replaced whenever
+    /// we start or reattach. A `nil` task means nothing is being observed.
+    private var stateObservationTask: Task<Void, Never>?
+    /// Set when we end the activity programmatically so the state-update observer
+    /// does not double-emit a `user_swiped` event for our own teardown.
+    private var programmaticEndInFlight: Bool = false
 
     private init() {
         activity = Activity<WindDownActivityAttributes>.activities.first
+        if let activity {
+            observeStateUpdates(activity)
+        }
     }
 
     /// Main entry point — call on each dashboard refresh. Idempotent.
@@ -89,14 +96,19 @@ final class WindDownLiveActivityManager {
         }
 
         do {
-            activity = try Activity.request(
+            let newActivity = try Activity.request(
                 attributes: WindDownActivityAttributes(userName: nil),
                 content: content,
                 pushType: nil
             )
+            activity = newActivity
+            observeStateUpdates(newActivity)
             // Hand the notch over: end the rotating daily TodayScore so the
             // wind-down activity owns the Dynamic Island for the evening window.
             TodayScoreLiveActivityManager.shared.end()
+            // Persist the shown bedtime so we can correlate with sleep onset
+            // tomorrow morning and emit the PMF sleep outcome event.
+            WindDownOutcomeTracker.recordShown(bedtime: bedtime)
 
             AppAnalytics.shared.trackLiveActivityStateChanged(
                 kind: "wind_down",
@@ -115,37 +127,13 @@ final class WindDownLiveActivityManager {
         }
     }
 
-    /// End the current activity (user-dismissed). Lingers on Lock Screen briefly
-    /// so the user sees "Sleep well" before it disappears.
-    func userDismiss() {
-        guard let existing = activity ?? Activity<WindDownActivityAttributes>.activities.first else {
-            return
-        }
-        if let bedtime = existing.content.state.targetBedtime as Date? {
-            markDismissed(for: bedtime)
-        }
-        Task {
-            await existing.end(
-                nil,
-                dismissalPolicy: .after(Date().addingTimeInterval(Self.dismissalLingerSeconds))
-            )
-        }
-        AppAnalytics.shared.trackLiveActivityStateChanged(
-            kind: "wind_down",
-            state: "ended",
-            metadata: [
-                "reason": "user_dismiss"
-            ]
-        )
-        self.activity = nil
-    }
-
     // MARK: - Private helpers
 
     private func endIfRunning(reason: String) {
         guard let existing = activity ?? Activity<WindDownActivityAttributes>.activities.first else {
             return
         }
+        programmaticEndInFlight = true
         Task {
             await existing.end(nil, dismissalPolicy: .immediate)
         }
@@ -156,7 +144,41 @@ final class WindDownLiveActivityManager {
                 "reason": reason
             ]
         )
+        stateObservationTask?.cancel()
+        stateObservationTask = nil
         self.activity = nil
+    }
+
+    /// Observe ActivityKit state transitions so we can detect a user swipe-dismiss
+    /// (iOS emits `.dismissed`/`.ended` without our explicit end call) and record it
+    /// as a distinct funnel outcome vs. the auto-expire path.
+    private func observeStateUpdates(_ activity: Activity<WindDownActivityAttributes>) {
+        stateObservationTask?.cancel()
+        stateObservationTask = Task { @MainActor [weak self] in
+            for await state in activity.activityStateUpdates {
+                guard let self else { return }
+                if state == .dismissed || state == .ended {
+                    if !self.programmaticEndInFlight {
+                        AppAnalytics.shared.trackLiveActivityStateChanged(
+                            kind: "wind_down",
+                            state: "ended",
+                            metadata: [
+                                "reason": state == .dismissed ? "user_swiped" : "system_ended"
+                            ]
+                        )
+                        // Remember this bedtime as user-dismissed so we don't
+                        // re-spawn the activity later tonight on the same schedule.
+                        self.markDismissed(for: activity.content.state.targetBedtime)
+                    }
+                    self.programmaticEndInFlight = false
+                    self.activity = nil
+                    self.stateObservationTask = nil
+                    return
+                }
+                // .active / .stale and any future states — keep observing.
+                continue
+            }
+        }
     }
 
     private func metadata(for state: WindDownActivityAttributes.ContentState) -> [String: Any] {
@@ -192,7 +214,6 @@ final class WindDownLiveActivityManager {
     private init() {}
 
     func syncWithDashboard(recommendedBedtime: Date?, hrvMs: Int?, hrvIsLow: Bool) {}
-    func userDismiss() {}
 }
 
 #endif

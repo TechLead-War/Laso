@@ -567,6 +567,22 @@ final class AppAnalytics {
 
         setUserProperty("activation_milestones", value: "\(session.completedMilestones.count)")
 
+        // Aha moment (canonical North Star single-action event). Laso's chosen
+        // aha is "user viewed their first personalised daily insight" because
+        // it's the first moment the app has delivered tailored value. Emitting
+        // a dedicated event makes activation dashboards 1-click in PostHog
+        // rather than requiring a filter on the activation_milestone stream.
+        if milestone == .firstInsightViewed {
+            logEvent("aha_moment_reached", parameters: [
+                "milestone": milestone.rawValue,
+                "session_number": session.totalSessions,
+                "time_since_install_sec": timeSinceInstall,
+                "days_since_install": session.daysSinceInstall
+            ])
+            setUserProperty("aha_reached", value: "yes")
+            setUserProperty("aha_time_since_install_sec", value: "\(timeSinceInstall)")
+        }
+
         // Check if user just became activated (3+ milestones)
         if session.completedMilestones.count == 3 {
             logEvent("activation_completed", parameters: [
@@ -656,6 +672,25 @@ final class AppAnalytics {
     func trackSessionStart() {
         session.startSession()
 
+        // Rest-day credit telemetry (Gentler Streak / Duolingo pattern). Emits
+        // once per session when SessionTracker has flipped the flag during
+        // this startSession call.
+        if session.didGrantCreditThisSession {
+            logEvent("streak_rest_credit_granted", parameters: [
+                "credits_remaining": session.restCreditsRemaining,
+                "streak_days": session.streakDays,
+                "days_since_install": session.daysSinceInstall
+            ])
+        }
+        if session.didSpendCreditThisSession {
+            logEvent("streak_rest_credit_spent", parameters: [
+                "credits_remaining": session.restCreditsRemaining,
+                "streak_days_saved": session.streakDays,
+                "days_since_install": session.daysSinceInstall
+            ])
+        }
+        setUserProperty("rest_credits_remaining", value: "\(session.restCreditsRemaining)")
+
         let calendar = Calendar.current
         let now = Date()
         let hour = calendar.component(.hour, from: now)
@@ -666,6 +701,10 @@ final class AppAnalytics {
             ? (ConnectivityMonitor.shared.isExpensive ? "cellular" : "wifi")
             : "offline"
 
+        let engagement = computeEngagementLevel()
+        let subAgeDays = subscriptionAgeDays
+        let monthsSub = monthsSubscribed
+
         logEvent("session_start", parameters: [
             "session_id": session.sessionId,
             "hour_of_day": hour,
@@ -675,7 +714,13 @@ final class AppAnalytics {
             "app_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown",
             "days_since_install": session.daysSinceInstall,
             "weekly_active_days": session.weeklyActiveDays,
-            "network_type": networkType
+            "network_type": networkType,
+            // Engagement + paid-retention signals emitted on every session so
+            // PostHog cohort dashboards (L28 power-user curve, month-2 paid
+            // retention) can be built without event joins.
+            "engagement_level": engagement.rawValue,
+            "subscription_age_days": subAgeDays,
+            "months_subscribed": monthsSub
         ])
 
         setUserProperty("streak_days", value: "\(session.streakDays)")
@@ -686,6 +731,8 @@ final class AppAnalytics {
         setUserProperty("weekly_active_days", value: "\(session.weeklyActiveDays)")
         setUserProperty("organic_session_pct", value: "\(session.organicSessionPercent)")
         setUserProperty("activation_status", value: session.isActivated ? "activated" : "not_activated")
+        setUserProperty("engagement_level", value: engagement.rawValue)
+        setUserProperty("subscription_age_days", value: "\(subAgeDays)")
 
         // Refresh demographic & device properties every session
         setDemographicProperties()
@@ -1200,8 +1247,79 @@ final class AppAnalytics {
         return Calendar.current.dateComponents([.month], from: startDate, to: Date()).month ?? 0
     }
 
+    /// Days since the user first started a subscription (0 for non-subscribers).
+    /// Emitted on every session_start so analysts can build month-2, month-3 paid
+    /// retention cohorts directly in PostHog without post-hoc event joins.
+    private var subscriptionAgeDays: Int {
+        guard let startDate = defaults.object(forKey: Key.subscriptionStartDate) as? Date else { return 0 }
+        return Calendar.current.dateComponents([.day], from: startDate, to: Date()).day ?? 0
+    }
+
     private func updateMonthsSubscribed() {
         setUserProperty("months_subscribed", value: "\(monthsSubscribed)")
+    }
+
+    // MARK: - Engagement Level (L28 / Power-User Curve)
+
+    /// PostHog's recommended engagement buckets for consumer apps. Computed on every
+    /// session_start so analysts can segment cohorts by power user vs disengaging
+    /// without having to derive it from raw streak + lifetime action joins.
+    private enum EngagementLevel: String {
+        case powerUser = "power_user"
+        case casual = "casual"
+        case atRisk = "at_risk"
+        case disengaging = "disengaging"
+    }
+
+    /// Deterministic bucketing. Ranked by most-concerning first so a recently-lapsed
+    /// power user gets classified as `at_risk` / `disengaging`, not `power_user`.
+    private func computeEngagementLevel() -> EngagementLevel {
+        let daysSinceLast = session.daysSinceLastSession ?? 0
+        if daysSinceLast >= 7 { return .disengaging }
+        if daysSinceLast >= 4 { return .atRisk }
+        let streak = session.streakDays
+        let lifetime = session.lifetimeCoreActions
+        if streak >= 14 && lifetime >= 50 { return .powerUser }
+        return .casual
+    }
+
+    // MARK: - Churn Health Score (0-100)
+
+    /// Composite churn-risk score. 100 = healthy, 0 = critical churn risk.
+    /// Weighted per Supportbench / Cerebral Ops "customer health score" research:
+    /// recency (35), streak break (20), weekly activity (25), notifications off (20).
+    /// 4-dimension composites show ~34% better churn-prediction accuracy than single metrics.
+    private func computeChurnHealthScore(pushAuthorized: Bool) -> Int {
+        var score = 100
+
+        // Recency — the biggest single predictor.
+        let daysSinceLast = session.daysSinceLastSession ?? 0
+        if daysSinceLast >= 7 { score -= 35 }
+        else if daysSinceLast >= 4 { score -= 20 }
+        else if daysSinceLast >= 2 { score -= 10 }
+
+        // Recent streak break (recorded by SessionTracker when the streak resets).
+        if let broken = session.previousStreakBeforeBreak, broken >= 3 {
+            score -= 20
+        }
+
+        // Weekly frequency floor.
+        if session.weeklyActiveDays <= 1 { score -= 25 }
+        else if session.weeklyActiveDays <= 2 { score -= 10 }
+
+        // Notifications off — user has cut the re-engagement channel.
+        if !pushAuthorized { score -= 20 }
+
+        return max(0, min(100, score))
+    }
+
+    private func churnBucket(_ score: Int) -> String {
+        switch score {
+        case 80...100: return "healthy"
+        case 60...79:  return "watching"
+        case 40...59:  return "at_risk"
+        default:       return "critical"
+        }
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -1976,6 +2094,49 @@ final class AppAnalytics {
         ])
     }
 
+    /// Wellness-specific PMF snapshot. Emitted on every session_start with the signals
+    /// research calls out as the biggest levers for health-app retention: Apple Watch
+    /// pairing, daily-data completeness, permission state, and a composite churn score.
+    /// Analysts can now cut every cohort by these dimensions without event joins.
+    func trackUserHealthSnapshot(
+        watchPaired: Bool,
+        dailyCompleteness7d: Int, // 0...7 days covered
+        pushAuthorized: Bool,
+        notifCategoriesEnabled: Int,
+        hkHeartHasData: Bool,
+        hkSleepHasData: Bool,
+        hkStepsHasData: Bool
+    ) {
+        let churnScore = computeChurnHealthScore(pushAuthorized: pushAuthorized)
+        let bucket = churnBucket(churnScore)
+        let completenessPct = Int((Double(dailyCompleteness7d) / 7.0 * 100).rounded())
+
+        logEvent("user_health_snapshot", parameters: [
+            "watch_paired": watchPaired ? 1 : 0,
+            "daily_completeness_7d_days": dailyCompleteness7d,
+            "daily_completeness_7d_pct": completenessPct,
+            "push_authorized": pushAuthorized ? 1 : 0,
+            "notif_categories_enabled": notifCategoriesEnabled,
+            "hk_heart_has_data": hkHeartHasData ? 1 : 0,
+            "hk_sleep_has_data": hkSleepHasData ? 1 : 0,
+            "hk_steps_has_data": hkStepsHasData ? 1 : 0,
+            "churn_health_score": churnScore,
+            "churn_bucket": bucket,
+            "days_since_install": session.daysSinceInstall,
+            "streak_days": session.streakDays
+        ])
+
+        setUserProperty("watch_paired", value: watchPaired ? "yes" : "no")
+        setUserProperty("daily_completeness_7d_pct", value: "\(completenessPct)")
+        setUserProperty("push_authorized", value: pushAuthorized ? "yes" : "no")
+        setUserProperty("notif_categories_enabled", value: "\(notifCategoriesEnabled)")
+        setUserProperty("hk_heart_has_data", value: hkHeartHasData ? "yes" : "no")
+        setUserProperty("hk_sleep_has_data", value: hkSleepHasData ? "yes" : "no")
+        setUserProperty("hk_steps_has_data", value: hkStepsHasData ? "yes" : "no")
+        setUserProperty("churn_health_score", value: "\(churnScore)")
+        setUserProperty("churn_bucket", value: bucket)
+    }
+
     func trackLiveActivityStateChanged(kind: String, state: String, metadata: [String: Any] = [:]) {
         var params: [String: Any] = [
             "activity_kind": kind,
@@ -1985,6 +2146,40 @@ final class AppAnalytics {
             params[key] = value
         }
         logEvent("live_activity_state_changed", parameters: params)
+    }
+
+    /// Emitted when a user taps an App Intent button on a Live Activity (Dynamic Island
+    /// or Lock Screen) and the app consumes the pending action on next activation.
+    /// Drives the tap-through funnel for PMF.
+    func trackLiveActivityAction(kind: String, actionKind: String) {
+        logEvent("live_activity_action_performed", parameters: [
+            "activity_kind": kind,
+            "action_kind": actionKind
+        ])
+    }
+
+    /// Emitted the morning after a Wind-Down Live Activity was shown, once HealthKit
+    /// has recorded sleep onset. `deltaMinutes` is (sleep onset - target bedtime) in
+    /// minutes; negative means the user fell asleep before the target.
+    func trackLiveActivitySleepOutcome(
+        kind: String,
+        bedtimeEpoch: Int,
+        sleepOnsetEpoch: Int?,
+        deltaMinutes: Int?,
+        sleepDetected: Bool
+    ) {
+        var params: [String: Any] = [
+            "activity_kind": kind,
+            "bedtime_epoch": bedtimeEpoch,
+            "sleep_detected": sleepDetected ? 1 : 0
+        ]
+        if let sleepOnsetEpoch {
+            params["sleep_onset_epoch"] = sleepOnsetEpoch
+        }
+        if let deltaMinutes {
+            params["delta_minutes"] = deltaMinutes
+        }
+        logEvent("live_activity_sleep_outcome", parameters: params)
     }
 
     func trackWidgetSnapshotUpdated(
@@ -2624,6 +2819,10 @@ final class AppAnalytics {
             return composedEventName([screen, "workout", "plan", "opened"], fallback: "workout_plan_opened")
         case "live_activity_state_changed":
             return composedEventName([activityKind, "live", "activity", "state", "changed"], fallback: "live_activity_state_changed")
+        case "live_activity_action_performed":
+            return composedEventName([activityKind, "live", "activity", "action", "performed"], fallback: "live_activity_action_performed")
+        case "live_activity_sleep_outcome":
+            return composedEventName([activityKind, "live", "activity", "sleep", "outcome"], fallback: "live_activity_sleep_outcome")
         case "widget_snapshot_updated":
             return composedEventName([trigger, "widget", "snapshot", "updated"], fallback: "widget_snapshot_updated")
         case "empty_state_shown":

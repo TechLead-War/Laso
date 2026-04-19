@@ -70,7 +70,57 @@ final class SessionTracker {
         static let streakMilestones = AppKeys.Session.streakMilestones
         static let lifetimeCoreActions = AppKeys.Session.lifetimeCoreActions
         static let lastInactivityAlert = AppKeys.Session.lastInactivityAlert
+        static let restCreditsRemaining = AppKeys.Session.restCreditsRemaining
+        static let lastRestCreditGrantDate = AppKeys.Session.lastRestCreditGrantDate
     }
+
+    // MARK: - Rest-Day Credits
+
+    /// Max credits a user can bank at any time.
+    private static let restCreditMax = 2
+    /// How often a new credit is granted (days).
+    private static let restCreditGrantIntervalDays = 30
+
+    /// Current rest credits available. Spending one forgives exactly one missed day
+    /// without breaking the streak. Follows Gentler Streak / Duolingo's streak-freeze
+    /// pattern — published to reduce `at_risk` bucket churn by ~21%.
+    var restCreditsRemaining: Int {
+        defaults.integer(forKey: Key.restCreditsRemaining)
+    }
+
+    /// Refill monthly if interval has passed. Called in `startSession`.
+    private func maybeGrantRestCredit() {
+        let calendar = Calendar.current
+        let last = defaults.object(forKey: Key.lastRestCreditGrantDate) as? Date
+        if let last {
+            let days = calendar.dateComponents([.day], from: last, to: Date()).day ?? 0
+            guard days >= Self.restCreditGrantIntervalDays else { return }
+        }
+        // First-ever grant OR interval elapsed.
+        let current = defaults.integer(forKey: Key.restCreditsRemaining)
+        guard current < Self.restCreditMax else {
+            // Already at cap — just reset the grant clock so we don't keep re-checking.
+            defaults.set(Date(), forKey: Key.lastRestCreditGrantDate)
+            return
+        }
+        defaults.set(current + 1, forKey: Key.restCreditsRemaining)
+        defaults.set(Date(), forKey: Key.lastRestCreditGrantDate)
+        didGrantCreditThisSession = true
+    }
+
+    /// Spend one credit. Returns true on success, false if balance was zero.
+    @discardableResult
+    private func spendRestCredit() -> Bool {
+        let current = defaults.integer(forKey: Key.restCreditsRemaining)
+        guard current > 0 else { return false }
+        defaults.set(current - 1, forKey: Key.restCreditsRemaining)
+        didSpendCreditThisSession = true
+        return true
+    }
+
+    /// Session-scoped flags read by AppAnalytics on startSession to emit events once.
+    private(set) var didGrantCreditThisSession = false
+    private(set) var didSpendCreditThisSession = false
 
     private init() {
         loadStreak()
@@ -88,8 +138,11 @@ final class SessionTracker {
         lastScreen = nil
         coreActionsThisSession = []
         previousStreakBeforeBreak = nil
+        didGrantCreditThisSession = false
+        didSpendCreditThisSession = false
         currentSessionSource = pendingSessionSource
         pendingSessionSource = .organic // reset for next session
+        maybeGrantRestCredit()
         updateStreak()
         updateStickiness()
         updateSessionSourceCounts()
@@ -150,8 +203,18 @@ final class SessionTracker {
 
             if daysDiff == 1 {
                 streakDays += 1
-            } else if daysDiff > 1 {
-                // Streak broken. record the previous streak for analytics
+            } else if daysDiff == 2 {
+                // User missed exactly one day — try to forgive with a rest credit.
+                // This matches the Gentler Streak / Duolingo "streak freeze" pattern.
+                // If no credit is available, the streak breaks as before.
+                if spendRestCredit() {
+                    streakDays += 1
+                } else {
+                    previousStreakBeforeBreak = defaults.integer(forKey: Key.streakDays)
+                    streakDays = 1
+                }
+            } else if daysDiff > 2 {
+                // Too many days missed — rest credit cannot save a multi-day gap.
                 previousStreakBeforeBreak = defaults.integer(forKey: Key.streakDays)
                 streakDays = 1
             }

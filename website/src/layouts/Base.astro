@@ -23,6 +23,16 @@ const canonicalURL = new URL(Astro.url.pathname, 'https://lasohealth.fit')
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="sitemap" href="/sitemap-index.xml" />
+
+  <!-- hreflang: one canonical English page serving all English-speaking markets.
+       x-default is the fallback for any unmatched locale/region. -->
+  <link rel="alternate" hreflang="en" href={canonicalURL.href} />
+  <link rel="alternate" hreflang="en-US" href={canonicalURL.href} />
+  <link rel="alternate" hreflang="en-GB" href={canonicalURL.href} />
+  <link rel="alternate" hreflang="en-IN" href={canonicalURL.href} />
+  <link rel="alternate" hreflang="en-CA" href={canonicalURL.href} />
+  <link rel="alternate" hreflang="en-AU" href={canonicalURL.href} />
+  <link rel="alternate" hreflang="x-default" href={canonicalURL.href} />
   <link rel="preconnect" href="https://www.googletagmanager.com" />
   <link rel="preconnect" href="https://us-central1-laso-health-v1.cloudfunctions.net" crossorigin />
   <noscript><style>.section-reveal{opacity:1!important;transform:none!important}</style></noscript>
@@ -52,7 +62,6 @@ const canonicalURL = new URL(Astro.url.pathname, 'https://lasohealth.fit')
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Laso" />
-  <!-- <meta name="apple-itunes-app" content="app-id=YOUR_APP_ID" /> -->
 
   <!-- JSON-LD Structured Data -->
   {jsonLd && (

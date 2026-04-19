@@ -186,7 +186,7 @@ private struct WindDownActionRow: View {
 
 private struct WindDownBreatheButton: View {
     var body: some View {
-        Button(intent: CoachBreatheIntent()) {
+        Button(intent: WindDownBreatheIntent()) {
             HStack(spacing: 6) {
                 Image(systemName: "wind")
                     .font(.footnote.weight(.semibold))

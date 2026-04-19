@@ -1802,6 +1802,16 @@ final class DashboardViewModel {
             hrvMs: hrvValue,
             restingHR: rhrValue
         )
+
+        // Evaluate wind-down sleep outcome after each refresh. The tracker no-ops
+        // unless a pending bedtime is stored AND at least 6 hours have elapsed —
+        // so in practice this fires on the morning refresh following a wind-down,
+        // correlating the activity with actual sleep onset from HealthKit.
+        Task { @MainActor [healthKitManager] in
+            await WindDownOutcomeTracker.evaluatePendingOutcome(
+                healthKitManager: healthKitManager
+            )
+        }
     }
 
     // MARK: - Action Rotation (avoid repeating same action 3+ days)

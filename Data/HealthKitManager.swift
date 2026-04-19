@@ -804,6 +804,74 @@ final class HealthKitManager {
         }
     }
 
+    /// Days (0...`days`) in the trailing window with at least one sample for any of the
+    /// core daily metrics (steps, heart rate, sleep duration). Used by analytics to emit
+    /// a `daily_data_completeness_7d` signal so analysts can segment retention by how
+    /// complete a user's data pipeline is — the wellness-app industry's standard proxy
+    /// for "active user".
+    func daysWithAnyDataInLast(days: Int = 7) -> Int {
+        let calendar = Calendar.current
+        let endDay = calendar.startOfDay(for: Date())
+        guard let startDay = calendar.date(byAdding: .day, value: -(days - 1), to: endDay) else {
+            return 0
+        }
+
+        let coreMetrics: [HealthMetric] = [.steps, .heartRate, .sleepDuration]
+        var coveredDays = Set<Date>()
+
+        for metric in coreMetrics {
+            guard let series = timeSeries[metric] else { continue }
+            for sample in series.samples {
+                let day = calendar.startOfDay(for: sample.date)
+                if day >= startDay && day <= endDay {
+                    coveredDays.insert(day)
+                }
+            }
+        }
+
+        return coveredDays.count
+    }
+
+    /// Returns the start date of the earliest "asleep*" category sample within the window,
+    /// or `nil` if none exist. Used by `WindDownOutcomeTracker` to validate whether the user
+    /// actually fell asleep after a Wind-Down Live Activity was shown, and how far that sleep
+    /// onset deviated from the target bedtime.
+    func fetchFirstSleepOnset(windowStart: Date, windowEnd: Date) async -> Date? {
+        return await withCheckedContinuation { continuation in
+            let predicate = HealthKitQueryBuilder.datePredicate(from: windowStart, to: windowEnd)
+            let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
+            let asleepStageValues: Set<Int> = [
+                HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue,
+                HKCategoryValueSleepAnalysis.asleepCore.rawValue,
+                HKCategoryValueSleepAnalysis.asleepDeep.rawValue,
+                HKCategoryValueSleepAnalysis.asleepREM.rawValue
+            ]
+
+            let query = HKSampleQuery(
+                sampleType: HKCategoryType(.sleepAnalysis),
+                predicate: predicate,
+                limit: HKObjectQueryNoLimit,
+                sortDescriptors: [sort]
+            ) { _, results, error in
+                if let error {
+                    PostHogManager.shared.captureError(
+                        error,
+                        context: "healthkit_fetch_sleep_onset",
+                        metadata: [:]
+                    )
+                }
+                guard let samples = results as? [HKCategorySample], error == nil else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let firstAsleep = samples.first { asleepStageValues.contains($0.value) }
+                continuation.resume(returning: firstAsleep?.startDate)
+            }
+
+            healthStore.execute(query)
+        }
+    }
+
     private func fetchWorkouts(metric: HealthMetric, from startDate: Date, to endDate: Date) async -> MetricTimeSeries? {
         return await withCheckedContinuation { continuation in
             let predicate = HealthKitQueryBuilder.datePredicate(from: startDate, to: endDate)

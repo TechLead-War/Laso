@@ -1,0 +1,352 @@
+---
+import Base from '../layouts/Base.astro'
+import SiteNav from '../components/SiteNav.astro'
+import SiteFooter from '../components/SiteFooter.astro'
+import CtaSection from '../components/CtaSection.astro'
+
+const metrics = [
+  {
+    n: "01",
+    name: "Heart Rate Variability",
+    tag: "The pulse between your pulses.",
+    what: "HRV is the tiny variation in time between one heartbeat and the next, measured in milliseconds. A metronome heart sounds steady — but it is actually a stressed one. A flexible heart is a resilient one.",
+    why: "It is the clearest real-time window into your nervous system. Rising HRV means you are recovered and ready. Falling HRV means your body is still under load, whether you feel it or not.",
+    good: "Rises or holds steady week over week.",
+    bad: "A sudden drop that persists for several days — travel, illness, overtraining, poor sleep, grief.",
+    move: [
+      "Sleep by the same time each night",
+      "Train easy on easy days, hard on hard",
+      "Breathe out longer than you breathe in",
+      "Reduce alcohol in the evening",
+    ],
+  },
+  {
+    n: "02",
+    name: "Resting Heart Rate",
+    tag: "Your body at rest. And what it says about everything else.",
+    what: "The number of times your heart beats per minute while your body is completely still — usually first thing in the morning.",
+    why: "A lower resting heart rate means a stronger heart doing less work. It is one of the oldest and most honest markers of cardiovascular fitness.",
+    good: "Between fifty and seventy for most adults. Athletes often sit between forty and fifty five.",
+    bad: "A slow upward drift over weeks — often a sign of poor sleep, illness on the way, or chronic stress.",
+    move: [
+      "Thirty minutes of easy cardio, most days",
+      "Quality sleep before anything else",
+      "Less caffeine after noon",
+      "Breathwork, even five minutes a day",
+    ],
+  },
+  {
+    n: "03",
+    name: "VO2 Max",
+    tag: "The single best number for how long you'll live.",
+    what: "The maximum volume of oxygen your body can pull in and use during hard exercise, per kilogram of body weight.",
+    why: "Study after study has found VO2 Max to be the strongest predictor of how long you live — stronger than blood pressure, stronger than smoking, stronger than diabetes.",
+    good: "Moving in the right direction year over year. Above average for your age.",
+    bad: "A steady decline that isn't explained by aging or injury.",
+    move: [
+      "One or two hard interval sessions per week",
+      "Keep most of your training easy",
+      "Stay consistent for months, not weeks",
+      "Strength train twice a week",
+    ],
+  },
+  {
+    n: "04",
+    name: "Sleep Stages",
+    tag: "You aren't asleep. You are working.",
+    what: "Your night breaks into four stages — awake, core, deep, and REM. Each one does a different job for a different part of you.",
+    why: "Deep sleep rebuilds your body. REM consolidates memory, emotion, and learning. Without enough of each, everything else you do in the day works a little less well.",
+    good: "Around fifteen to twenty percent deep. Twenty to twenty five percent REM. Minimal time awake.",
+    bad: "Fragmented sleep, waking often, sleep that leaves you groggy no matter how long you slept.",
+    move: [
+      "A cool, dark bedroom",
+      "No screens the last hour",
+      "Same wake time, even on weekends",
+      "No alcohol within three hours of bed",
+    ],
+  },
+  {
+    n: "05",
+    name: "Sleep Debt",
+    tag: "Your body keeps a tab. It always collects.",
+    what: "The running gap between the sleep you needed and the sleep you got. It is measured in hours and it accumulates across days.",
+    why: "Short term debt shows up as slower reactions, worse mood, and higher injury risk. Long term debt raises the risk of almost every chronic disease we know of.",
+    good: "Under two hours of rolling debt.",
+    bad: "Seven nights of shortage — even when you tell yourself you feel fine.",
+    move: [
+      "Go to bed an hour earlier, not an hour later",
+      "Two consecutive longer nights beat one weekend binge",
+      "Short afternoon naps, never close to bedtime",
+      "Treat sleep like training — plan for it",
+    ],
+  },
+  {
+    n: "06",
+    name: "Respiratory Rate",
+    tag: "Breath is a vital sign before anything goes wrong.",
+    what: "The number of breaths you take per minute while you sleep.",
+    why: "Your breathing rate at night is remarkably stable. When it shifts, something in your body is shifting too — often days before you feel the first symptom.",
+    good: "Twelve to twenty breaths per minute. Steady from night to night.",
+    bad: "A sudden rise of two or more breaths per minute, sustained over several nights.",
+    move: [
+      "Treat a rise as a soft warning",
+      "Eat well, sleep more, train less",
+      "Hydrate",
+      "Nasal breathing during the day",
+    ],
+  },
+  {
+    n: "07",
+    name: "Blood Oxygen",
+    tag: "How well your lungs hand oxygen to your blood.",
+    what: "The percentage of your blood that is carrying oxygen, measured through your skin at the wrist.",
+    why: "When it drops, your body has to work harder for the same output. Consistent overnight dips can point to sleep apnea or other issues that are worth asking a doctor about.",
+    good: "Ninety five to one hundred percent at rest.",
+    bad: "Regular nightly readings below ninety percent.",
+    move: [
+      "If it is low overnight, talk to a clinician",
+      "Quit smoking",
+      "Stay physically active",
+      "Sleep on your side, not your back",
+    ],
+  },
+  {
+    n: "08",
+    name: "Wrist Temperature",
+    tag: "Your body's thermostat runs on a cycle. It tells a story.",
+    what: "Your skin temperature at the wrist while you sleep, tracked relative to your own personal baseline rather than a universal number.",
+    why: "Small rises often appear before illness symptoms, during the second half of a menstrual cycle, or after a hard block of training.",
+    good: "Stable within your personal band.",
+    bad: "A half degree or more above baseline for two or more nights in a row.",
+    move: [
+      "When it rises, your body is doing work. Rest.",
+      "Don't chase a training session through it",
+      "Hydrate more",
+      "Pay attention to what else is happening",
+    ],
+  },
+  {
+    n: "09",
+    name: "Recovery",
+    tag: "You don't get stronger when you train. You get stronger when you recover.",
+    what: "A composite reading — HRV, resting heart rate, sleep, respiratory rate — that estimates how ready your body is to take on load today.",
+    why: "Training on top of poor recovery makes you slower, not faster. Knowing where you stand lets you choose: push or protect.",
+    good: "Green on most days, yellow on harder days, red only occasionally.",
+    bad: "Three or more low days in a row — your body is quietly accumulating debt.",
+    move: [
+      "Sleep first",
+      "Easy cardio on low days",
+      "A deload week every four to six weeks",
+      "Learn to call a rest day a win",
+    ],
+  },
+  {
+    n: "10",
+    name: "Strain",
+    tag: "How much your body actually worked today.",
+    what: "The total cardiovascular load from everything you did — training, walking, heat, stress, a long flight.",
+    why: "Not every hard day is a training day. Stress counts. Heat counts. Travel counts. Strain shows you the full bucket, not just the workout.",
+    good: "Aligned with your recovery — higher strain on higher recovery days, easy days when you need them.",
+    bad: "Seven days of rising strain with no rest.",
+    move: [
+      "Use strain to plan, not to judge",
+      "Match hard days to green recovery",
+      "Count the stressful days as training too",
+      "A rest day is an earned result",
+    ],
+  },
+  {
+    n: "11",
+    name: "Heart Rate Zones",
+    tag: "Five gears. Five different bodies.",
+    what: "Five training zones, each targeting a different system — endurance, fat burning, threshold, VO2 Max, neuromuscular power.",
+    why: "Most people train too hard on easy days and too easy on hard days. Mixing the zones correctly is the quiet secret behind every elite training program.",
+    good: "About eighty percent of your training is easy. Ten to twenty percent is genuinely hard. Very little in the grey zone in between.",
+    bad: "Everything feels medium. Nothing feels truly easy or truly hard.",
+    move: [
+      "Walk, jog or bike slow enough to hold a conversation. That is Zone Two.",
+      "One short hard session per week",
+      "Keep the easy easy. That is the whole game.",
+      "Use a heart rate monitor, not feel",
+    ],
+  },
+  {
+    n: "12",
+    name: "Vitality Age",
+    tag: "How old your body actually is.",
+    what: "An estimate of your physiological age, built from HRV, VO2 Max, resting heart rate, sleep quality and daily activity.",
+    why: "Chronological age is the calendar. Vitality age is the body. One of them you cannot change. The other one you can.",
+    good: "Trending down, or flat, against your actual age.",
+    bad: "Trending up by more than a year per year.",
+    move: [
+      "Sleep",
+      "Zone Two cardio",
+      "Lift twice a week",
+      "Whole food. Breath. Repeat.",
+    ],
+  },
+]
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Your Body, Decoded",
+  "description": "A plain-English field guide to the health metrics your wearable already tracks. HRV, VO2 Max, sleep stages, recovery, strain, vitality age — what each one means, what healthy looks like, and the small habits that move the needle.",
+  "url": "https://lasohealth.fit/decoded",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Laso Health",
+    "url": "https://lasohealth.fit"
+  }
+}
+---
+
+<Base title="Your Body, Decoded. | Laso" description="A plain-English field guide to the health metrics your wearable already tracks. HRV, VO2 Max, sleep stages, recovery, strain, vitality age — what each one means, what healthy looks like, and the small habits that move the needle." jsonLd={jsonLd}>
+  <SiteNav current="decoded" />
+
+  <!-- Hero -->
+  <section class="px-5 pt-24 pb-16 md:pt-40 md:pb-28 text-center">
+    <div class="max-w-4xl mx-auto">
+      <p class="text-[13px] font-medium uppercase tracking-[0.2em] text-[#6e6e73] mb-6">A field guide to your body</p>
+      <h1 class="text-5xl md:text-7xl font-semibold tracking-tight text-[#1d1d1f] leading-[1.05] text-balance">
+        Your body, decoded.
+      </h1>
+      <p class="mt-8 text-[19px] md:text-[22px] text-[#1d1d1f] leading-relaxed max-w-2xl mx-auto text-balance">
+        You don't need more data. You need to understand what you already have.
+      </p>
+      <p class="mt-6 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed max-w-xl mx-auto">
+        Twelve numbers your wearable captures every day. What they actually mean, in plain English — and the small habits that move them.
+      </p>
+    </div>
+  </section>
+
+  <!-- Manifesto -->
+  <section class="px-5 py-16 md:py-24 bg-[#f5f5f7]">
+    <div class="max-w-3xl mx-auto text-center">
+      <p class="text-[22px] md:text-[28px] text-[#1d1d1f] leading-snug font-medium tracking-tight text-balance">
+        The most valuable thing in healthcare isn't a prescription. It is a pattern.
+      </p>
+      <p class="mt-6 text-[15px] md:text-[17px] text-[#6e6e73] leading-relaxed max-w-xl mx-auto">
+        Every person is different. The same number is high for one body and low for another. So we wrote this as a guide, not a verdict — a plain reading of what each metric is, what healthy looks like, and what you can do about it.
+      </p>
+    </div>
+  </section>
+
+  <!-- Metrics -->
+  <div>
+    {metrics.map((m, i) => (
+      <section class={`px-5 py-20 md:py-28 ${i % 2 === 0 ? 'bg-white' : 'bg-[#f5f5f7]'}`}>
+        <div class="max-w-5xl mx-auto">
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-12">
+            <!-- Left: headline -->
+            <div class="md:col-span-5">
+              <p class="text-[13px] font-semibold tracking-[0.2em] text-[#0071e3] mb-4">{m.n}</p>
+              <h2 class="text-4xl md:text-5xl font-semibold tracking-tight text-[#1d1d1f] leading-[1.08] text-balance">
+                {m.name}.
+              </h2>
+              <p class="mt-5 text-[17px] md:text-[19px] text-[#1d1d1f] italic leading-snug text-balance">
+                {m.tag}
+              </p>
+            </div>
+
+            <!-- Right: body -->
+            <div class="md:col-span-7 md:pt-2">
+              <div class="mb-6">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6e6e73] mb-2">What it is</p>
+                <p class="text-[15px] md:text-[16px] text-[#1d1d1f] leading-relaxed">{m.what}</p>
+              </div>
+              <div class="mb-8">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6e6e73] mb-2">Why it matters</p>
+                <p class="text-[15px] md:text-[16px] text-[#1d1d1f] leading-relaxed">{m.why}</p>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                <div class="rounded-2xl border border-green-100 bg-green-50 p-5">
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-green-700 mb-2">A healthy signal</p>
+                  <p class="text-[14px] text-[#1d1d1f] leading-relaxed">{m.good}</p>
+                </div>
+                <div class="rounded-2xl border border-red-100 bg-red-50 p-5">
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-red-700 mb-2">A warning signal</p>
+                  <p class="text-[14px] text-[#1d1d1f] leading-relaxed">{m.bad}</p>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-[#e5e5e7] bg-white p-5">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6e6e73] mb-3">Move the needle</p>
+                <ul class="space-y-2">
+                  {m.move.map((item) => (
+                    <li class="flex gap-3 text-[14px] text-[#1d1d1f] leading-relaxed">
+                      <span class="mt-[9px] shrink-0 w-1.5 h-1.5 rounded-full bg-[#1d1d1f]"></span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    ))}
+  </div>
+
+  <!-- Closing -->
+  <section class="px-5 py-24 md:py-36 bg-[#1d1d1f] text-white">
+    <div class="max-w-3xl mx-auto text-center">
+      <h2 class="text-4xl md:text-6xl font-semibold tracking-tight leading-[1.05] text-balance">
+        You already have the data.
+      </h2>
+      <p class="mt-6 text-[19px] md:text-[22px] text-white/70 leading-relaxed max-w-2xl mx-auto text-balance">
+        Now you know what to do with it.
+      </p>
+      <p class="mt-10 text-[14px] md:text-[15px] text-white/50 leading-relaxed max-w-xl mx-auto">
+        Your Apple Watch, Oura, Whoop or Garmin captures all of this already. The numbers are only as useful as the habits you build around them.
+      </p>
+    </div>
+  </section>
+
+  <!-- Further reading -->
+  <section class="px-5 py-16 md:py-24 bg-white">
+    <div class="max-w-4xl mx-auto">
+      <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-[#1d1d1f] mb-3">Want to go deeper?</h2>
+      <p class="text-[15px] text-[#6e6e73] leading-relaxed max-w-2xl mb-8">Long reads on the science behind each of the metrics above — written in plain English, with references to the research.</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <a href="/learn/heart-rate-variability" class="group flex items-center justify-between gap-4 rounded-2xl border border-[#e5e5e7] bg-white p-5 hover:shadow-md hover:border-[#d2d2d7] transition-all">
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6e6e73] mb-1">Heart Health</p>
+            <p class="text-[15px] font-semibold text-[#1d1d1f] group-hover:text-[#0071e3] transition-colors">HRV, explained properly</p>
+          </div>
+          <span class="text-[#0071e3] text-lg">→</span>
+        </a>
+        <a href="/learn/vo2-max" class="group flex items-center justify-between gap-4 rounded-2xl border border-[#e5e5e7] bg-white p-5 hover:shadow-md hover:border-[#d2d2d7] transition-all">
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6e6e73] mb-1">Fitness</p>
+            <p class="text-[15px] font-semibold text-[#1d1d1f] group-hover:text-[#0071e3] transition-colors">VO2 Max and longevity</p>
+          </div>
+          <span class="text-[#0071e3] text-lg">→</span>
+        </a>
+        <a href="/learn/how-much-sleep-do-i-need" class="group flex items-center justify-between gap-4 rounded-2xl border border-[#e5e5e7] bg-white p-5 hover:shadow-md hover:border-[#d2d2d7] transition-all">
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6e6e73] mb-1">Sleep</p>
+            <p class="text-[15px] font-semibold text-[#1d1d1f] group-hover:text-[#0071e3] transition-colors">How much sleep do you actually need?</p>
+          </div>
+          <span class="text-[#0071e3] text-lg">→</span>
+        </a>
+        <a href="/learn/recovery-science" class="group flex items-center justify-between gap-4 rounded-2xl border border-[#e5e5e7] bg-white p-5 hover:shadow-md hover:border-[#d2d2d7] transition-all">
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6e6e73] mb-1">Recovery</p>
+            <p class="text-[15px] font-semibold text-[#1d1d1f] group-hover:text-[#0071e3] transition-colors">The science of recovery</p>
+          </div>
+          <span class="text-[#0071e3] text-lg">→</span>
+        </a>
+      </div>
+      <div class="mt-6">
+        <a href="/learn" class="inline-flex items-center gap-2 text-[14px] font-medium text-[#0071e3] hover:underline">
+          Browse every article <span>→</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <CtaSection heading="Understand your body. Act on it." subheading="Laso turns the numbers above into a simple daily read — what to do today, what to rest from, and why." />
+  <SiteFooter />
+</Base>

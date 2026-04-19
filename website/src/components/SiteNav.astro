@@ -29,6 +29,8 @@ const { current } = Astro.props
           </div>
         </div>
       </div>
+      <a href="/decoded" class:list={["text-[13px] font-medium transition-colors", current === 'decoded' ? 'text-[#0071e3]' : 'text-[#6e6e73] hover:text-[#1d1d1f]']}>Decoded</a>
+      <a href="/learn" class:list={["text-[13px] font-medium transition-colors", current === 'learn' ? 'text-[#0071e3]' : 'text-[#6e6e73] hover:text-[#1d1d1f]']}>Learn</a>
       <a href="/devices" class:list={["text-[13px] font-medium transition-colors", current === 'devices' ? 'text-[#0071e3]' : 'text-[#6e6e73] hover:text-[#1d1d1f]']}>Devices</a>
       <a href="/faq" class:list={["text-[13px] font-medium transition-colors", current === 'faq' ? 'text-[#0071e3]' : 'text-[#6e6e73] hover:text-[#1d1d1f]']}>FAQ</a>
       <a href="/about" class:list={["text-[13px] font-medium transition-colors", current === 'about' ? 'text-[#0071e3]' : 'text-[#6e6e73] hover:text-[#1d1d1f]']}>About</a>

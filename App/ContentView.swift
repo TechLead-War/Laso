@@ -145,6 +145,15 @@ struct ContentView: View {
                 startSessionAnalytics()
                 WatchMonitor.shared.evaluateWatchStatus()
                 Task { await refreshDeviceSourcesIfNeeded() }
+                // Consume any pending Live Activity action so we can attribute the
+                // tap-through funnel (PMF) and eventually route the user to the
+                // relevant surface (breathwork, intention, etc).
+                if let pending = CoachActionBridge.consumePending() {
+                    AppAnalytics.shared.trackLiveActivityAction(
+                        kind: pending.source ?? "unknown",
+                        actionKind: pending.kind.rawValue
+                    )
+                }
                 Task {
                     if await NotificationRepromptManager.checkAndRecordDenial() {
                         showNotificationReprompt = true
@@ -511,6 +520,10 @@ struct ContentView: View {
         analytics.trackRetentionMilestones()
         analytics.trackInactivityIfNeeded()
 
+        // Wellness PMF snapshot — Watch-pair status, data completeness, permissions,
+        // composite churn score. Needs async push-auth query so run in a Task.
+        Task { await trackHealthSnapshot() }
+
         // Push re-engagement notification 3 days into the future on every session.
         // If the user keeps opening the app, this never fires.
         ReengagementScheduler.reschedule()
@@ -519,6 +532,45 @@ struct ContentView: View {
         if PMFSurveyManager.shared.shouldShowSurvey() {
             showPMFSurvey = true
         }
+    }
+
+    /// Gathers wellness-specific signals (Watch pair, data completeness, permissions)
+    /// and emits a `user_health_snapshot` event + user properties so analysts can
+    /// segment retention cohorts on the dimensions research calls out as the biggest
+    /// levers for consumer health apps.
+    private func trackHealthSnapshot() async {
+        let watchPaired = deviceSourceManager.isAppleWatchPaired
+        let coveredDays = healthKitManager.daysWithAnyDataInLast(days: 7)
+        let heartHasData = (healthKitManager.timeSeries[.heartRate]?.samples.isEmpty == false)
+        let sleepHasData = (healthKitManager.timeSeries[.sleepDuration]?.samples.isEmpty == false)
+        let stepsHasData = (healthKitManager.timeSeries[.steps]?.samples.isEmpty == false)
+
+        let pushAuthorized = await NotificationManager.shared.isCurrentlyAuthorized()
+
+        let prefs = container.persistenceManager.loadPreferences()
+        let enabledCount = [
+            prefs.dailySummaryEnabled,
+            prefs.eveningSummaryEnabled,
+            prefs.windDownEnabled,
+            prefs.weeklySummaryEnabled,
+            prefs.criticalAlertsEnabled,
+            prefs.warningAlertsEnabled,
+            prefs.heartRateSpikeAlertsEnabled,
+            prefs.trendReversalAlertsEnabled,
+            prefs.improvementAlertsEnabled,
+            prefs.watchNotWornReminderEnabled,
+            prefs.lowBatteryReminderEnabled
+        ].filter { $0 }.count
+
+        AppAnalytics.shared.trackUserHealthSnapshot(
+            watchPaired: watchPaired,
+            dailyCompleteness7d: coveredDays,
+            pushAuthorized: pushAuthorized,
+            notifCategoriesEnabled: enabledCount,
+            hkHeartHasData: heartHasData,
+            hkSleepHasData: sleepHasData,
+            hkStepsHasData: stepsHasData
+        )
     }
 
     // MARK: - Billing Grace Banner (subtle, non-blocking, only after 16 days)

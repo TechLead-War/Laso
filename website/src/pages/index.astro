@@ -14,7 +14,7 @@ const jsonLd = [
       "@type": "Offer",
       "price": "0",
       "priceCurrency": "USD",
-      "description": "Free 7-day trial, then $29.99/year"
+      "description": "Free 7-day trial, then an annual subscription priced by your local App Store"
     },
     "description": "Health intelligence app that turns Apple Watch, Oura, Garmin, and WHOOP data into daily recovery scores, strain targets, sleep debt tracking, stress monitoring, early wellness pattern detection, and fitness age estimates. All processed on-device.",
     "featureList": [
@@ -43,10 +43,32 @@ const jsonLd = [
     "sameAs": [
       "https://twitter.com/lasohealth"
     ],
+    "areaServed": [
+      { "@type": "Country", "name": "United States" },
+      { "@type": "Country", "name": "United Kingdom" },
+      { "@type": "Country", "name": "India" },
+      { "@type": "Country", "name": "Canada" },
+      { "@type": "Country", "name": "Australia" },
+      { "@type": "Country", "name": "Germany" },
+      { "@type": "Country", "name": "Singapore" },
+      { "@type": "Country", "name": "United Arab Emirates" }
+    ],
     "contactPoint": {
       "@type": "ContactPoint",
       "email": "support@lasohealth.fit",
-      "contactType": "customer support"
+      "contactType": "customer support",
+      "availableLanguage": ["English", "Hindi"]
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Laso Health",
+    "url": "https://lasohealth.fit",
+    "inLanguage": "en",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Laso Health"
     }
   },
   {
@@ -115,8 +137,8 @@ const jsonLd = [
 ---
 
 <Base
-  title="Laso — Recovery Score, Strain & Sleep Tracking | Apple Watch & Oura"
-  description="Laso turns Apple Watch, Oura, and Garmin data into recovery scores, strain targets, sleep coaching, wellness pattern detection, and fitness age estimates. Private, on-device."
+  title="Laso — Finally, understand your body."
+  description="Every morning, one clear answer about what your body needs today. Built from your data, not an age-group average. Works with the wearable you already own."
   jsonLd={jsonLd}
 >
   <div class="min-h-screen bg-white">
@@ -126,8 +148,8 @@ const jsonLd = [
       <div class="max-w-6xl mx-auto px-4 sm:px-5 h-12 flex items-center justify-between gap-2">
         <a href="#" class="text-[22px] font-bold tracking-tight text-apple-dark hover:opacity-80 transition-opacity shrink-0">Laso</a>
         <div class="hidden xs:flex items-center gap-4 sm:gap-7">
-          <a href="#features" class="text-[13px] font-medium text-apple-secondary hover:text-apple-dark transition-colors whitespace-nowrap">Features</a>
           <a href="/devices" class="text-[13px] font-medium text-apple-secondary hover:text-apple-dark transition-colors whitespace-nowrap">Devices</a>
+          <a href="/learn" class="text-[13px] font-medium text-apple-secondary hover:text-apple-dark transition-colors whitespace-nowrap">Learn</a>
           <a href="/faq" class="text-[13px] font-medium text-apple-secondary hover:text-apple-dark transition-colors whitespace-nowrap">FAQ</a>
           <a href="/about" class="text-[13px] font-medium text-apple-secondary hover:text-apple-dark transition-colors whitespace-nowrap">About</a>
         </div>
@@ -146,11 +168,11 @@ const jsonLd = [
         iOS Early Access Open
       </div>
       <h1 class="text-[2rem] leading-[1.12] sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-apple-dark text-balance max-w-4xl mx-auto sm:leading-[1.08]">
-        Health scores that are
-        <span class="gradient-text">actually about you.</span>
+        Finally,
+        <span class="gradient-text">understand your body.</span>
       </h1>
       <p class="mt-5 text-base sm:text-lg md:text-xl text-apple-secondary max-w-2xl mx-auto text-balance leading-relaxed">
-        Laso learns what's normal for your body and tells you what to do about it. Recovery, strain, sleep, stress, illness risk. All from the wearable you already own.
+        Every morning, one clear answer about what your body needs today. Built from your data. Not an age group average.
       </p>
       <div class="mt-8 max-w-md mx-auto w-full px-1 sm:px-0">
         <form id="hero-form" class="flex flex-col sm:flex-row gap-3">
@@ -168,7 +190,7 @@ const jsonLd = [
           </button>
         </form>
         <p class="hero-success mt-3 text-sm text-emerald-600 font-medium hidden">You're in! We'll be in touch soon.</p>
-        <p class="mt-3 text-[13px] text-apple-secondary/60">Free 7-day trial. <strong class="text-apple-dark"><span class="signup-counter">550</span> have joined</strong>.</p>
+        <p class="mt-3 text-[13px] text-apple-secondary/60">Free 7-day trial. Joined by <strong class="text-apple-dark"><span class="signup-counter">550</span> early testers</strong>.</p>
       </div>
       <!-- Hero trust strip -->
       <div class="mt-8 flex flex-wrap justify-center gap-3 sm:gap-5 text-[13px] text-apple-secondary/70">
@@ -418,6 +440,9 @@ const jsonLd = [
             <p class="mt-2 text-[15px] text-apple-secondary leading-relaxed">
               Most apps dump dozens of Apple Health signals on you and leave you to figure them out. Laso runs causal analysis across them and tells you which ones are actually affecting your recovery and sleep.
             </p>
+            <p class="mt-4 pl-3 border-l-2 border-emerald-400/60 text-[13px] italic text-apple-secondary leading-relaxed">
+              "Your sleep debt rose four nights in a row because late workouts pushed HRV down."
+            </p>
           </div>
 
           <div class="section-reveal rounded-2xl border border-gray-100 p-7" style="transition-delay:200ms">
@@ -435,195 +460,16 @@ const jsonLd = [
       </div>
     </section>
 
-    <!-- ════════ VITALITY AGE ════════ -->
-    <section data-section="vitality" class="bg-apple-gray py-20 md:py-28 px-5">
-      <div class="max-w-4xl mx-auto">
-        <div class="section-reveal md:grid md:grid-cols-2 md:gap-14 items-center">
-          <div class="text-center md:text-left">
-            <p class="text-apple-blue text-sm font-semibold mb-3">Vitality Age</p>
-            <h2 class="text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark leading-snug">
-              Your fitness age estimate,<br/>updated daily.
-            </h2>
-            <p class="mt-4 text-[15px] text-apple-secondary leading-relaxed">
-              Laso looks at 9 things — VO2 Max, HRV, resting heart rate, sleep quality, walking speed, and more — and estimates your overall fitness age. No blood test. No lab visit. Just open the app.
-            </p>
-            <div class="mt-5 space-y-2 inline-block text-left">
-              <div class="flex items-center gap-3">
-                <span class="w-1.5 h-1.5 bg-apple-blue rounded-full shrink-0"></span>
-                <p class="text-sm text-apple-dark">Updates every day so you can see if what you're doing is working</p>
-              </div>
-              <div class="flex items-center gap-3">
-                <span class="w-1.5 h-1.5 bg-apple-blue rounded-full shrink-0"></span>
-                <p class="text-sm text-apple-dark">Shows you the 2-3 things that would move it the most</p>
-              </div>
-              <div class="flex items-center gap-3">
-                <span class="w-1.5 h-1.5 bg-apple-blue rounded-full shrink-0"></span>
-                <p class="text-sm text-apple-dark">90-day trend so you're looking at the big picture, not daily noise</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Vitality Age Orb -->
-          <div class="mt-10 md:mt-0 flex justify-center">
-            <div class="vitality-orb-stage">
-              <canvas id="vitality-orb" class="vitality-orb-canvas" width="700" height="700" aria-hidden="true"></canvas>
-              <div class="vitality-orb-label pointer-events-none">
-                <span class="vitality-orb-age">27</span>
-                <span class="vitality-orb-title">vitality age</span>
-                <span class="vitality-orb-delta">3 years younger</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ════════ FEATURES.3 CORE OUTCOMES ════════ -->
-    <section id="features" data-section="features" class="py-20 md:py-28 px-5">
-      <div class="max-w-5xl mx-auto">
-        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
-          Recovery, strain, sleep, and early wellness insights. One app.
+    <!-- ════════ NO NEW HARDWARE ════════ -->
+    <section data-section="hardware" class="bg-apple-gray py-16 md:py-20 px-5">
+      <div class="max-w-3xl mx-auto text-center">
+        <h2 class="section-reveal text-2xl md:text-3xl font-semibold tracking-tight text-apple-dark text-balance">
+          The wearable stays.
         </h2>
-
-        <div class="mt-14 grid md:grid-cols-3 gap-6">
-          <!-- Train with precision -->
-          <div class="section-reveal bg-apple-gray rounded-2xl p-7">
-            <div class="flex items-center gap-3 mb-5">
-              <div class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z"/></svg>
-              </div>
-              <h3 class="text-lg font-semibold text-apple-dark">Train with precision</h3>
-            </div>
-            <ul class="space-y-2.5 text-sm text-apple-secondary">
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-orange-400 rounded-full mt-2 shrink-0"></span>Strain score (0-21) with a daily target based on how recovered you are</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-orange-400 rounded-full mt-2 shrink-0"></span>What-if simulation: see what a 10K run would do to tomorrow's recovery</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-orange-400 rounded-full mt-2 shrink-0"></span>Catches overtraining before you feel it</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-orange-400 rounded-full mt-2 shrink-0"></span>Tracks which workouts actually help vs. which ones just wreck you</li>
-            </ul>
-          </div>
-
-          <!-- Sleep with purpose -->
-          <div class="section-reveal bg-apple-gray rounded-2xl p-7" style="transition-delay:100ms">
-            <div class="flex items-center gap-3 mb-5">
-              <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/></svg>
-              </div>
-              <h3 class="text-lg font-semibold text-apple-dark">Sleep with purpose</h3>
-            </div>
-            <ul class="space-y-2.5 text-sm text-apple-secondary">
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-indigo-400 rounded-full mt-2 shrink-0"></span>Figures out how much sleep you actually need (it's probably not 8 hours)</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-indigo-400 rounded-full mt-2 shrink-0"></span>Tracks sleep debt and tells you how to pay it off</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-indigo-400 rounded-full mt-2 shrink-0"></span>Suggests bedtime based on your patterns</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-indigo-400 rounded-full mt-2 shrink-0"></span>Shows how your sleep actually affects your next-day performance</li>
-            </ul>
-          </div>
-
-          <!-- Catch problems before they start -->
-          <div class="section-reveal bg-apple-gray rounded-2xl p-7" style="transition-delay:200ms">
-            <div class="flex items-center gap-3 mb-5">
-              <div class="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
-              </div>
-              <h3 class="text-lg font-semibold text-apple-dark">Catch problems early</h3>
-            </div>
-            <ul class="space-y-2.5 text-sm text-apple-secondary">
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>Early wellness pattern detection from body stress signals</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>Watches for fatigue, burnout, overtraining, insomnia, and recovery dips</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>Picks up slow changes you wouldn't notice yourself</li>
-              <li class="flex items-start gap-2"><span class="w-1 h-1 bg-red-400 rounded-full mt-2 shrink-0"></span>HRV-based stress score with guided breathwork when it's high</li>
-            </ul>
-          </div>
-        </div>
-
-        <!-- Secondary capabilities strip -->
-        <div class="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto text-center">
-          <div class="section-reveal text-center py-4">
-            <p class="text-sm font-semibold text-apple-dark">Cycle Tracking</p>
-            <p class="text-xs text-apple-secondary mt-1">4-phase model with phase-specific training guidance</p>
-          </div>
-          <div class="section-reveal text-center py-4" style="transition-delay:60ms">
-            <p class="text-sm font-semibold text-apple-dark">Journal</p>
-            <p class="text-xs text-apple-secondary mt-1">Log behaviors, discover which ones drive your metrics</p>
-          </div>
-          <div class="section-reveal text-center py-4" style="transition-delay:120ms">
-            <p class="text-sm font-semibold text-apple-dark">Weekly Reviews</p>
-            <p class="text-xs text-apple-secondary mt-1">Trends, PRs, streaks, and year-over-year comparisons</p>
-          </div>
-          <div class="section-reveal text-center py-4" style="transition-delay:180ms">
-            <p class="text-sm font-semibold text-apple-dark">Apple Health Signals</p>
-            <p class="text-xs text-apple-secondary mt-1">Heart, sleep, activity, body, respiratory, mindfulness, mobility</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ════════ DEVICES ════════ -->
-    <section id="devices" data-section="devices" class="bg-apple-gray py-20 md:py-28 px-5 overflow-hidden">
-      <div class="max-w-5xl mx-auto text-center">
-        <h2 class="section-reveal text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight text-apple-dark text-balance">
-          Works through Apple Health, with mapped support for Apple Watch, Oura, Garmin, WHOOP, and other known sources.
-        </h2>
-        <p class="section-reveal mt-3 text-[15px] text-apple-secondary max-w-lg mx-auto">
-          Most third-party devices still need their companion app and Apple Health sharing enabled. Laso confirms the exact metrics after the first sync.
+        <p class="section-reveal mt-4 text-[15px] text-apple-secondary max-w-xl mx-auto leading-relaxed">
+          Apple Watch, Oura, Garmin, WHOOP, or any device that syncs to Apple Health. No new ring. No extra strap. No monthly hardware fee.
         </p>
-
-        <!-- Smartwatches & Sports Watches -->
-        <div class="mt-10">
-          <p class="section-reveal text-xs font-medium text-apple-secondary/70 uppercase tracking-wider mb-3">Smartwatches &amp; Sports Watches</p>
-          <div class="flex flex-wrap justify-center gap-2.5">
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark"><span class="w-2 h-2 bg-blue-500 rounded-full"></span> Apple Watch</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:20ms"><span class="w-2 h-2 bg-cyan-500 rounded-full"></span> Garmin</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:40ms"><span class="w-2 h-2 bg-red-500 rounded-full"></span> Polar</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:60ms"><span class="w-2 h-2 bg-blue-500 rounded-full"></span> COROS</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:80ms"><span class="w-2 h-2 bg-indigo-500 rounded-full"></span> Suunto</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:100ms"><span class="w-2 h-2 bg-red-400 rounded-full"></span> Huawei Watch</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:120ms"><span class="w-2 h-2 bg-red-500 rounded-full"></span> Amazfit</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:140ms"><span class="w-2 h-2 bg-green-400 rounded-full"></span> Xiaomi Smart Band</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:160ms"><span class="w-2 h-2 bg-purple-500 rounded-full"></span> TicWatch</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:180ms"><span class="w-2 h-2 bg-yellow-500 rounded-full"></span> Casio G-Shock</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:200ms"><span class="w-2 h-2 bg-gray-700 rounded-full"></span> TAG Heuer</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:220ms"><span class="w-2 h-2 bg-red-400 rounded-full"></span> Noise</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:240ms"><span class="w-2 h-2 bg-red-400 rounded-full"></span> boAt</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:260ms"><span class="w-2 h-2 bg-orange-400 rounded-full"></span> Fire-Boltt</span>
-          </div>
-        </div>
-
-        <!-- Performance & Fitness -->
-        <div class="mt-7">
-          <p class="section-reveal text-xs font-medium text-apple-secondary/70 uppercase tracking-wider mb-3">Performance &amp; Fitness</p>
-          <div class="flex flex-wrap justify-center gap-2.5">
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark"><span class="w-2 h-2 bg-orange-500 rounded-full"></span> WHOOP</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:30ms"><span class="w-2 h-2 bg-orange-500 rounded-full"></span> Wahoo</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:60ms"><span class="w-2 h-2 bg-purple-500 rounded-full"></span> Biostrap</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:90ms"><span class="w-2 h-2 bg-red-500 rounded-full"></span> Myzone</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:120ms"><span class="w-2 h-2 bg-red-500 rounded-full"></span> Peloton</span>
-          </div>
-        </div>
-
-        <!-- Smart Rings -->
-        <div class="mt-7">
-          <p class="section-reveal text-xs font-medium text-apple-secondary/70 uppercase tracking-wider mb-3">Smart Rings</p>
-          <div class="flex flex-wrap justify-center gap-2.5">
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark"><span class="w-2 h-2 bg-emerald-500 rounded-full"></span> Oura Ring</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:30ms"><span class="w-2 h-2 bg-emerald-500 rounded-full"></span> Ultrahuman Ring Air</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:60ms"><span class="w-2 h-2 bg-pink-500 rounded-full"></span> RingConn</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:90ms"><span class="w-2 h-2 bg-emerald-500 rounded-full"></span> Circular Ring</span>
-          </div>
-        </div>
-
-        <!-- Health & Fitness Devices -->
-        <div class="mt-7">
-          <p class="section-reveal text-xs font-medium text-apple-secondary/70 uppercase tracking-wider mb-3">Health &amp; Fitness Devices</p>
-          <div class="flex flex-wrap justify-center gap-2.5">
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark"><span class="w-2 h-2 bg-green-500 rounded-full"></span> Withings</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:30ms"><span class="w-2 h-2 bg-teal-500 rounded-full"></span> Omron</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:60ms"><span class="w-2 h-2 bg-teal-500 rounded-full"></span> Renpho</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:90ms"><span class="w-2 h-2 bg-green-500 rounded-full"></span> Dexcom</span>
-            <span class="section-reveal inline-flex items-center gap-2 bg-white rounded-full px-4 py-2 text-sm font-medium text-apple-dark" style="transition-delay:120ms"><span class="w-2 h-2 bg-cyan-500 rounded-full"></span> Eight Sleep</span>
-          </div>
-        </div>
-
-        <p class="section-reveal mt-8 text-[13px] text-apple-secondary/60">iPhone built-in sensors also work for steps, distance, and activity. Other Apple Health sources can still appear automatically after their first sync.</p>
+        <a href="/devices" class="section-reveal inline-block mt-5 text-[14px] font-medium text-apple-blue hover:underline">See compatible devices →</a>
       </div>
     </section>
 
@@ -674,6 +520,36 @@ const jsonLd = [
             Follow Updates
           </a>
         </div>
+      </div>
+    </section>
+
+    <!-- ════════ LEARN ════════ -->
+    <section data-section="learn" class="py-20 md:py-28 px-5">
+      <div class="max-w-2xl mx-auto">
+        <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
+          The science, in plain English.
+        </h2>
+        <div class="section-reveal mt-14 border-t border-b border-gray-100 divide-y divide-gray-100">
+          <a href="/learn/heart-rate-variability" class="flex items-center justify-between py-5 text-apple-dark hover:text-apple-blue transition-colors">
+            <span class="text-[17px]">Heart Rate Variability</span>
+            <span class="text-apple-secondary/40">→</span>
+          </a>
+          <a href="/learn/vo2-max" class="flex items-center justify-between py-5 text-apple-dark hover:text-apple-blue transition-colors">
+            <span class="text-[17px]">VO2 Max</span>
+            <span class="text-apple-secondary/40">→</span>
+          </a>
+          <a href="/learn/sleep-debt" class="flex items-center justify-between py-5 text-apple-dark hover:text-apple-blue transition-colors">
+            <span class="text-[17px]">Sleep Debt</span>
+            <span class="text-apple-secondary/40">→</span>
+          </a>
+          <a href="/learn/biological-age" class="flex items-center justify-between py-5 text-apple-dark hover:text-apple-blue transition-colors">
+            <span class="text-[17px]">Biological Age</span>
+            <span class="text-apple-secondary/40">→</span>
+          </a>
+        </div>
+        <p class="section-reveal mt-8 text-center">
+          <a href="/learn" class="text-[14px] text-apple-secondary hover:text-apple-dark transition-colors">All articles</a>
+        </p>
       </div>
     </section>
 
@@ -787,6 +663,7 @@ const jsonLd = [
           <div>
             <p class="text-[12px] font-semibold text-apple-dark uppercase tracking-wider mb-3">Resources</p>
             <ul class="space-y-2">
+              <li><a href="/learn" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">Learn</a></li>
               <li><a href="/faq" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">FAQ</a></li>
               <li><a href="/about" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">About</a></li>
               <li><a href="mailto:support@lasohealth.fit" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">Contact</a></li>
@@ -1082,515 +959,5 @@ const jsonLd = [
       }
     })
 
-
-    // ── Vitality Orb - neon plasma ring replica ──
-    ;(function initVitalityOrb() {
-      const canvas = document.getElementById('vitality-orb') as HTMLCanvasElement | null
-      if (!canvas) return
-      const ctx = canvas.getContext('2d')!
-      const TAU = Math.PI * 2
-      const DPR = Math.min(window.devicePixelRatio || 1, 2)
-      let W = canvas.width
-      let H = canvas.height
-      let cx = W / 2
-      let cy = H / 2
-      let R = Math.min(W, H) * 0.314
-      let time = 0
-      let animId = 0
-
-      // ── Geometry cache (pre-computed paths for seamless ping-pong loop) ──
-      const CACHE_FRAMES = 180
-      const CACHE_T_STEP = 0.0066
-      const CACHE_LOOP_T = CACHE_FRAMES * CACHE_T_STEP
-      let frameCache: {
-        breathe: number; glowPulse: number; pulse: number
-        atmosphereClip: Float64Array
-        mainRing: Float64Array; mainRingAlt: Float64Array; secondRing: Float64Array
-        hotAx: number; hotAy: number; hotBx: number; hotBy: number
-        driftX: number; driftY: number
-        outerBlob: Float64Array; cavityBlob: Float64Array; pocketBlob: Float64Array
-        innerRing1: Float64Array; innerRing2: Float64Array
-        energyCx: number; energyCy: number
-        particles: Float32Array
-      }[] = []
-      const SHELL1_COUNT = 26 * 260   // blue particles
-      const TOTAL_PARTICLES = SHELL1_COUNT + 18 * 230  // + cyan particles
-      let cacheSizeW = 0
-      let cacheSizeH = 0
-      let cacheProgress = 0
-
-      function resizeCanvas() {
-        const bounds = canvas.getBoundingClientRect()
-        const nextW = Math.max(420, Math.round(bounds.width * DPR))
-        const nextH = Math.max(420, Math.round(bounds.height * DPR))
-        if (canvas.width !== nextW || canvas.height !== nextH) {
-          canvas.width = nextW
-          canvas.height = nextH
-        }
-        W = canvas.width
-        H = canvas.height
-        cx = W / 2
-        cy = H / 2
-        R = Math.min(W, H) * 0.314
-      }
-
-      // ── Cache compute helpers ──
-
-      function computeLoop(radius: number, t: number, wobble: number, drift: number, detail: number, rippleScale = 0.2): Float64Array {
-        const pts = new Float64Array((detail + 1) * 2)
-        for (let i = 0; i <= detail; i++) {
-          const p = i / detail
-          const a = p * TAU
-          const d = loopDisplacement(a, t, wobble, drift, rippleScale)
-          const rr = radius + d
-          pts[i * 2] = cx + Math.cos(a) * rr
-          pts[i * 2 + 1] = cy + Math.sin(a) * rr
-        }
-        return pts
-      }
-
-      function computeBlob(
-        baseR: number, wobble: number, drift: number, ripple: number,
-        squashX: number, squashY: number, offsetX: number, offsetY: number,
-        t: number, detail = 360,
-      ): Float64Array {
-        const pts = new Float64Array((detail + 1) * 2)
-        for (let i = 0; i <= detail; i++) {
-          const p = i / detail
-          const a = p * TAU
-          const disp = loopDisplacement(a, t * 0.88, wobble, drift, ripple)
-          const rr = baseR + disp
-          const sx = 1 + squashX * Math.sin(a * 1.35 - t * 0.37 + drift)
-          const sy = 1 + squashY * Math.cos(a * 1.72 + t * 0.42 - drift * 0.5)
-          pts[i * 2] = cx + offsetX + Math.cos(a) * rr * sx
-          pts[i * 2 + 1] = cy + offsetY + Math.sin(a) * rr * sy
-        }
-        return pts
-      }
-
-      function traceCachedPath(pts: Float64Array) {
-        ctx.beginPath()
-        ctx.moveTo(pts[0], pts[1])
-        for (let i = 2; i < pts.length; i += 2) {
-          ctx.lineTo(pts[i], pts[i + 1])
-        }
-        ctx.closePath()
-      }
-
-      function computeShellParticles(t: number): Float32Array {
-        const shells = [
-          { base: R * 1.35, spread: R * 0.08, ribs: 26, points: 260, offset: 0, alpha: 0.74, size: 2.2, speed: 1.35, spin: 0.42 },
-          { base: R * 1.3, spread: R * 0.064, ribs: 18, points: 230, offset: 1.34, alpha: 0.56, size: 1.7, speed: 0.95, spin: -0.24 },
-        ]
-
-        function outerRadius(a: number, phase: number, base: number, spread: number) {
-          const slow = Math.sin(a * 2.04 + phase) * spread
-          const mid = Math.sin(a * 3.66 - phase * 1.24) * spread * 0.56
-          const carrier = Math.sin(a * 9.4 + phase * 2.3 + slow / Math.max(spread, 0.0001) * 0.6)
-          const nested = Math.sin(a * 18.4 - phase * 3.1 + carrier * 2.7) * spread * 0.18
-          const envelope = 0.5 + 0.5 * Math.pow(Math.abs(Math.sin(a * 1.08 - phase * 0.46)), 0.84)
-          return base + slow + mid + (carrier * spread * 0.3 + nested) * envelope
-        }
-
-        const buf = new Float32Array(TOTAL_PARTICLES * 4)
-        let idx = 0
-
-        for (const shell of shells) {
-          for (let rib = 0; rib < shell.ribs; rib++) {
-            const ribNorm = shell.ribs <= 1 ? 0.5 : rib / (shell.ribs - 1)
-            const ribCenter = 1 - Math.pow(Math.abs(ribNorm - 0.5) * 2, 1.45)
-            const ribPhase = t * shell.speed + rib * 0.165 + shell.offset
-            const ribRadiusShift = (ribNorm - 0.5) * R * 0.02
-
-            for (let i = 0; i < shell.points; i++) {
-              const p = i / shell.points
-              const a = p * TAU + t * shell.spin + rib * 0.006
-              const rr = outerRadius(a, ribPhase, shell.base + ribRadiusShift, shell.spread)
-              const lobe = Math.pow(Math.abs(Math.sin(a * 1.14 - t * 0.76 + shell.offset * 0.5)), 1.48)
-              const shimmer = 0.72 + 0.28 * Math.sin(a * 7.2 + t * 3.35 + rib * 0.11)
-              const travel = 0.7 + 0.3 * Math.sin(a * 2.1 - t * 2.4 + shell.offset)
-              const off = idx * 4
-              buf[off]     = cx + Math.cos(a) * rr
-              buf[off + 1] = cy + Math.sin(a) * rr
-              buf[off + 2] = (0.18 + shell.alpha * ribCenter * (0.54 + 0.46 * lobe)) * shimmer * travel
-              buf[off + 3] = shell.size * (0.74 + ribCenter * 0.66)
-              idx++
-            }
-          }
-        }
-        return buf
-      }
-
-      /** Build cache incrementally — processes a batch per animation frame to avoid blocking. */
-      function buildCacheStep(): boolean {
-        const BATCH = 8
-        const end = Math.min(cacheProgress + BATCH, CACHE_FRAMES)
-        for (let f = cacheProgress; f < end; f++) {
-          const t = f * CACHE_T_STEP
-          const driftX = Math.sin(t * 0.63) * R * 0.032
-          const driftY = Math.cos(t * 0.47) * R * 0.026
-          frameCache.push({
-            breathe: 1 + 0.018 * Math.sin(t * 0.9),
-            glowPulse: 0.7 + 0.3 * Math.sin(t * 1.1),
-            pulse: 0.92 + 0.08 * Math.sin(t * 1.25),
-            atmosphereClip: computeLoop(R * 0.968, t * 0.31, R * 0.02, 1.3, 360, 0.1),
-            mainRing: computeLoop(R * 0.982, t * 0.52, R * 0.008, 0.2, 440, 0.08),
-            mainRingAlt: computeLoop(R * 0.982, t * 0.52, R * 0.0065, 0.2, 440, 0.08),
-            secondRing: computeLoop(R * 1.016, -t * 0.64, R * 0.049, 2.1, 500, 0.38),
-            hotAx: cx + Math.cos(t * 0.42 + 2.24) * R * 0.985,
-            hotAy: cy + Math.sin(t * 0.42 + 2.24) * R * 0.985,
-            hotBx: cx + Math.cos(t * 0.42 + 5.14) * R * 0.985,
-            hotBy: cy + Math.sin(t * 0.42 + 5.14) * R * 0.985,
-            driftX, driftY,
-            outerBlob: computeBlob(R * 0.79, R * 0.078, 0.9, 0.72, 0.14, -0.12, driftX, driftY, t, 420),
-            cavityBlob: computeBlob(R * 0.56, R * 0.062, 2.4, 0.78, -0.16, 0.12, -driftX * 0.8, -driftY * 0.6, t, 380),
-            pocketBlob: computeBlob(R * 0.37, R * 0.048, 4.1, 0.82, 0.2, -0.18, R * 0.06, -R * 0.03, t, 320),
-            innerRing1: computeBlob(R * 0.62, R * 0.022, 1.2, 0.5, 0.08, -0.05, driftX * 0.3, driftY * 0.3, t, 360),
-            innerRing2: computeBlob(R * 0.46, R * 0.02, 3.1, 0.55, -0.09, 0.07, -R * 0.05, R * 0.03, t, 340),
-            energyCx: cx - R * 0.15 + driftX * 0.5,
-            energyCy: cy - R * 0.11 + driftY * 0.4,
-            particles: computeShellParticles(t),
-          })
-        }
-        cacheProgress = end
-        if (cacheProgress >= CACHE_FRAMES) {
-          cacheSizeW = W
-          cacheSizeH = H
-          return true
-        }
-        return false
-      }
-
-      function resetCache() {
-        frameCache = []
-        cacheProgress = 0
-        cacheSizeW = 0
-        cacheSizeH = 0
-      }
-
-      function getCacheIndex(): number {
-        const totalCycle = CACHE_FRAMES * 2
-        const pos = Math.floor((time / CACHE_T_STEP) % totalCycle)
-        const safe = pos < 0 ? pos + totalCycle : pos
-        return safe < CACHE_FRAMES ? safe : totalCycle - safe - 1
-      }
-
-      function loopDisplacement(a: number, t: number, wobble: number, drift: number, rippleScale: number) {
-        const safeWobble = Math.max(wobble, 0.0001)
-        const macro =
-          Math.sin(a * 2.08 + t * 0.86 + drift) * wobble +
-          Math.sin(a * 3.46 - t * 0.64 - drift * 0.48) * wobble * 0.52 +
-          Math.cos(a * 5.52 + t * 0.36 - drift * 0.25) * wobble * 0.24
-        const macroNorm = macro / safeWobble
-        const carrier = Math.sin(a * 8.7 - t * 1.2 + drift * 1.3 + macroNorm * 0.95)
-        const nested = Math.sin(a * 17.8 + t * 1.92 + carrier * 2.4 - drift * 0.7)
-        const envelope = 0.54 + 0.46 * Math.pow(Math.abs(Math.sin(a * 1.12 - t * 0.34 + drift * 0.45)), 0.82)
-        return macro + (carrier * wobble * rippleScale + nested * wobble * rippleScale * 0.46) * envelope
-      }
-
-      function traceLoop(radius: number, t: number, wobble: number, drift: number, detail: number, rippleScale = 0.2) {
-        ctx.beginPath()
-        for (let i = 0; i <= detail; i++) {
-          const p = i / detail
-          const a = p * TAU
-          const distortion = loopDisplacement(a, t, wobble, drift, rippleScale)
-          const rr = radius + distortion
-          const x = cx + Math.cos(a) * rr
-          const y = cy + Math.sin(a) * rr
-          if (i === 0) ctx.moveTo(x, y)
-          else ctx.lineTo(x, y)
-        }
-        ctx.closePath()
-      }
-
-      function drawAtmosphere(cf: typeof frameCache[0]) {
-        ctx.save()
-        const halo = ctx.createRadialGradient(cx, cy, R * 0.2, cx, cy, R * 1.58)
-        halo.addColorStop(0, 'rgba(6, 182, 212, 0.2)')
-        halo.addColorStop(0.55, 'rgba(0, 113, 227, 0.18)')
-        halo.addColorStop(1, 'rgba(3, 14, 44, 0)')
-        ctx.fillStyle = halo
-        ctx.beginPath()
-        ctx.arc(cx, cy, R * 1.6, 0, TAU)
-        ctx.fill()
-        ctx.restore()
-
-        ctx.save()
-        traceCachedPath(cf.atmosphereClip)
-        ctx.clip()
-
-        const body = ctx.createRadialGradient(cx - R * 0.2, cy - R * 0.21, R * 0.05, cx, cy, R * 1.05)
-        body.addColorStop(0, 'rgba(7, 31, 74, 0.08)')
-        body.addColorStop(0.4, 'rgba(5, 26, 74, 0.24)')
-        body.addColorStop(1, 'rgba(2, 18, 58, 0.86)')
-        ctx.fillStyle = body
-        ctx.fillRect(cx - R * 1.26, cy - R * 1.26, R * 2.52, R * 2.52)
-
-        ctx.globalCompositeOperation = 'lighter'
-        ctx.filter = 'blur(22px)'
-        const hotspot = ctx.createRadialGradient(cx - R * 0.28, cy - R * 0.17, 0, cx - R * 0.28, cy - R * 0.17, R * 0.66)
-        hotspot.addColorStop(0, 'rgba(140, 240, 255, 0.18)')
-        hotspot.addColorStop(0.32, 'rgba(6, 182, 212, 0.09)')
-        hotspot.addColorStop(1, 'rgba(6, 182, 212, 0)')
-        ctx.fillStyle = hotspot
-        ctx.beginPath()
-        ctx.arc(cx - R * 0.28, cy - R * 0.17, R * 0.66, 0, TAU)
-        ctx.fill()
-
-        const rimMist = ctx.createRadialGradient(cx + R * 0.16, cy + R * 0.32, 0, cx + R * 0.16, cy + R * 0.32, R * 0.76)
-        rimMist.addColorStop(0, 'rgba(34, 197, 255, 0.1)')
-        rimMist.addColorStop(1, 'rgba(34, 197, 255, 0)')
-        ctx.fillStyle = rimMist
-        ctx.beginPath()
-        ctx.arc(cx + R * 0.16, cy + R * 0.32, R * 0.76, 0, TAU)
-        ctx.fill()
-
-        const softCore = ctx.createRadialGradient(cx - R * 0.03, cy + R * 0.02, 0, cx - R * 0.03, cy + R * 0.02, R * 0.55)
-        softCore.addColorStop(0, 'rgba(0, 113, 227, 0.07)')
-        softCore.addColorStop(1, 'rgba(0, 113, 227, 0)')
-        ctx.fillStyle = softCore
-        ctx.beginPath()
-        ctx.arc(cx - R * 0.03, cy + R * 0.02, R * 0.55, 0, TAU)
-        ctx.fill()
-
-        ctx.globalCompositeOperation = 'source-over'
-        ctx.filter = 'blur(0px)'
-        const centerVoid = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 0.72)
-        centerVoid.addColorStop(0, 'rgba(2, 16, 50, 0.78)')
-        centerVoid.addColorStop(0.58, 'rgba(2, 16, 50, 0.38)')
-        centerVoid.addColorStop(1, 'rgba(2, 16, 50, 0)')
-        ctx.fillStyle = centerVoid
-        ctx.beginPath()
-        ctx.arc(cx, cy, R * 0.72, 0, TAU)
-        ctx.fill()
-
-        ctx.filter = 'none'
-        ctx.globalCompositeOperation = 'source-over'
-        ctx.restore()
-      }
-
-      function drawOuterShellCached(cf: typeof frameCache[0]) {
-        ctx.save()
-        ctx.globalCompositeOperation = 'lighter'
-
-        const BINS = 10
-        const p = cf.particles
-
-        // Bin blue particles by alpha → 10 batched Path2D fills instead of 6,760 individual fillRects
-        const bluePaths: Path2D[] = []
-        for (let b = 0; b < BINS; b++) bluePaths.push(new Path2D())
-        for (let i = 0; i < SHELL1_COUNT; i++) {
-          const off = i * 4
-          const bin = Math.min(Math.floor(p[off + 2] * BINS), BINS - 1)
-          const s = p[off + 3]
-          bluePaths[bin].rect(p[off] - s / 2, p[off + 1] - s / 2, s, s)
-        }
-        for (let b = 0; b < BINS; b++) {
-          ctx.fillStyle = `rgba(0, 113, 227, ${(b + 0.5) / BINS})`
-          ctx.fill(bluePaths[b])
-        }
-
-        // Bin cyan particles → 10 batched fills instead of 4,140 individual fillRects
-        const cyanPaths: Path2D[] = []
-        for (let b = 0; b < BINS; b++) cyanPaths.push(new Path2D())
-        for (let i = SHELL1_COUNT; i < TOTAL_PARTICLES; i++) {
-          const off = i * 4
-          const bin = Math.min(Math.floor(p[off + 2] * BINS), BINS - 1)
-          const s = p[off + 3]
-          cyanPaths[bin].rect(p[off] - s / 2, p[off + 1] - s / 2, s, s)
-        }
-        for (let b = 0; b < BINS; b++) {
-          ctx.fillStyle = `rgba(6, 182, 212, ${(b + 0.5) / BINS})`
-          ctx.fill(cyanPaths[b])
-        }
-
-        ctx.globalCompositeOperation = 'source-over'
-        ctx.restore()
-      }
-
-      function drawRings(cf: typeof frameCache[0]) {
-        const pulse = cf.pulse
-        ctx.lineCap = 'round'
-        ctx.lineJoin = 'round'
-
-        // Main ring — cached path reused for blur + cyan layers
-        ctx.save()
-        ctx.filter = 'blur(30px)'
-        traceCachedPath(cf.mainRing)
-        ctx.strokeStyle = `rgba(0, 113, 227, ${0.18 * pulse})`
-        ctx.lineWidth = R * 0.22
-        ctx.stroke()
-        ctx.restore()
-
-        ctx.save()
-        ctx.filter = 'blur(11px)'
-        traceCachedPath(cf.mainRing)
-        ctx.strokeStyle = `rgba(6, 182, 212, ${0.22 * pulse})`
-        ctx.lineWidth = R * 0.07
-        ctx.stroke()
-        ctx.restore()
-
-        const mainGrad = ctx.createLinearGradient(cx - R, cy - R * 0.85, cx + R, cy + R)
-        mainGrad.addColorStop(0, `rgba(255, 255, 255, ${0.97 * pulse})`)
-        mainGrad.addColorStop(0.3, `rgba(254, 254, 255, ${0.96 * pulse})`)
-        mainGrad.addColorStop(0.66, `rgba(251, 253, 255, ${0.94 * pulse})`)
-        mainGrad.addColorStop(1, `rgba(247, 251, 255, ${0.93 * pulse})`)
-        traceCachedPath(cf.mainRingAlt)
-        ctx.save()
-        ctx.globalAlpha = 0.9
-        ctx.strokeStyle = mainGrad
-        ctx.lineWidth = R * 0.0155
-        ctx.stroke()
-        ctx.restore()
-
-        // Second ring — cached path reused for blur + core layers
-        const secondBlurGrad = ctx.createLinearGradient(cx - R * 1.15, cy + R * 0.6, cx + R * 1.15, cy - R * 0.7)
-        secondBlurGrad.addColorStop(0, `rgba(0, 113, 227, ${0.42 * pulse})`)
-        secondBlurGrad.addColorStop(0.45, `rgba(6, 182, 212, ${0.38 * pulse})`)
-        secondBlurGrad.addColorStop(1, `rgba(52, 211, 153, ${0.28 * pulse})`)
-        ctx.save()
-        ctx.filter = 'blur(7px)'
-        traceCachedPath(cf.secondRing)
-        ctx.strokeStyle = secondBlurGrad
-        ctx.lineWidth = R * 0.04
-        ctx.stroke()
-        ctx.restore()
-
-        const secondCoreGrad = ctx.createLinearGradient(cx - R * 1.15, cy + R * 0.6, cx + R * 1.15, cy - R * 0.7)
-        secondCoreGrad.addColorStop(0, `rgba(255, 255, 255, ${0.52 * pulse})`)
-        secondCoreGrad.addColorStop(0.45, `rgba(6, 182, 212, ${0.52 * pulse})`)
-        secondCoreGrad.addColorStop(1, `rgba(52, 211, 153, ${0.44 * pulse})`)
-        traceCachedPath(cf.secondRing)
-        ctx.strokeStyle = secondCoreGrad
-        ctx.lineWidth = R * 0.0105
-        ctx.stroke()
-
-        // Traveling hotspots — cached positions
-        const hx1 = cf.hotAx, hy1 = cf.hotAy
-        const hx2 = cf.hotBx, hy2 = cf.hotBy
-
-        ctx.save()
-        ctx.filter = 'blur(15px)'
-        const glow1 = ctx.createRadialGradient(hx1, hy1, 0, hx1, hy1, R * 0.26)
-        glow1.addColorStop(0, 'rgba(255, 255, 255, 0.48)')
-        glow1.addColorStop(0.35, 'rgba(6, 182, 212, 0.2)')
-        glow1.addColorStop(1, 'transparent')
-        ctx.fillStyle = glow1
-        ctx.beginPath()
-        ctx.arc(hx1, hy1, R * 0.26, 0, TAU)
-        ctx.fill()
-
-        const glow2 = ctx.createRadialGradient(hx2, hy2, 0, hx2, hy2, R * 0.2)
-        glow2.addColorStop(0, 'rgba(52, 211, 153, 0.36)')
-        glow2.addColorStop(1, 'transparent')
-        ctx.fillStyle = glow2
-        ctx.beginPath()
-        ctx.arc(hx2, hy2, R * 0.2, 0, TAU)
-        ctx.fill()
-        ctx.restore()
-      }
-
-      function drawInnerVoid(cf: typeof frameCache[0]) {
-        ctx.save()
-        const driftX = cf.driftX, driftY = cf.driftY
-
-        traceCachedPath(cf.outerBlob)
-        const darkOuter = ctx.createRadialGradient(cx - R * 0.12 + driftX, cy + R * 0.06 + driftY, R * 0.08, cx + driftX, cy + driftY, R * 0.92)
-        darkOuter.addColorStop(0, 'rgba(2, 16, 50, 0.68)')
-        darkOuter.addColorStop(0.58, 'rgba(2, 16, 50, 0.34)')
-        darkOuter.addColorStop(1, 'rgba(2, 16, 50, 0)')
-        ctx.fillStyle = darkOuter
-        ctx.fill()
-
-        traceCachedPath(cf.cavityBlob)
-        const cavity = ctx.createRadialGradient(cx + R * 0.03 - driftX * 0.6, cy - R * 0.05 - driftY * 0.3, 0, cx - driftX * 0.2, cy - driftY * 0.15, R * 0.66)
-        cavity.addColorStop(0, 'rgba(2, 16, 50, 0.56)')
-        cavity.addColorStop(1, 'rgba(2, 16, 50, 0)')
-        ctx.fillStyle = cavity
-        ctx.fill()
-
-        traceCachedPath(cf.pocketBlob)
-        const pocket = ctx.createRadialGradient(cx + R * 0.08, cy - R * 0.08, 0, cx + R * 0.08, cy - R * 0.08, R * 0.45)
-        pocket.addColorStop(0, 'rgba(2, 16, 50, 0.44)')
-        pocket.addColorStop(1, 'rgba(2, 16, 50, 0)')
-        ctx.fillStyle = pocket
-        ctx.fill()
-
-        ctx.globalCompositeOperation = 'lighter'
-        ctx.filter = 'blur(10px)'
-        traceCachedPath(cf.innerRing1)
-        ctx.strokeStyle = 'rgba(6, 182, 212, 0.1)'
-        ctx.lineWidth = R * 0.038
-        ctx.stroke()
-
-        traceCachedPath(cf.innerRing2)
-        ctx.strokeStyle = 'rgba(0, 113, 227, 0.08)'
-        ctx.lineWidth = R * 0.03
-        ctx.stroke()
-
-        ctx.filter = 'blur(16px)'
-        const eCx = cf.energyCx, eCy = cf.energyCy
-        const energy = ctx.createRadialGradient(eCx, eCy, 0, eCx, eCy, R * 0.3)
-        energy.addColorStop(0, 'rgba(6, 182, 212, 0.08)')
-        energy.addColorStop(1, 'rgba(6, 182, 212, 0)')
-        ctx.fillStyle = energy
-        ctx.beginPath()
-        ctx.arc(eCx, eCy, R * 0.3, 0, TAU)
-        ctx.fill()
-        ctx.restore()
-      }
-
-      function frame() {
-        time += 0.0066
-        resizeCanvas()
-
-        // Reset cache if canvas resized
-        if (W !== cacheSizeW || H !== cacheSizeH) {
-          resetCache()
-        }
-
-        // Build cache incrementally (15 frames per animation frame)
-        const cacheReady = cacheProgress >= CACHE_FRAMES
-        if (!cacheReady) {
-          buildCacheStep()
-        }
-
-        // Render as soon as any frames exist (frame 0 shows instantly while rest builds)
-        if (frameCache.length > 0) {
-          const idx = cacheReady ? getCacheIndex() : 0
-          const cf = frameCache[idx]
-          const effectiveT = idx * CACHE_T_STEP
-
-          ctx.clearRect(0, 0, W, H)
-          ctx.save()
-          ctx.translate(cx, cy)
-          ctx.scale(cf.breathe, cf.breathe)
-          ctx.translate(-cx, -cy)
-
-          ctx.globalAlpha = cf.glowPulse
-          drawAtmosphere(cf)
-          ctx.globalAlpha = 1
-          drawOuterShellCached(cf)
-          drawRings(cf)
-          drawInnerVoid(cf)
-          ctx.restore()
-        }
-
-        animId = requestAnimationFrame(frame)
-      }
-
-      resizeCanvas()
-      window.addEventListener('resize', resizeCanvas)
-
-      const observer = new IntersectionObserver(([entry]) => {
-        if (entry.isIntersecting) {
-          if (!animId) frame()
-        } else if (animId) {
-          cancelAnimationFrame(animId)
-          animId = 0
-        }
-      }, { threshold: 0.1 })
-      observer.observe(canvas)
-    })()
   </script>
 </Base>

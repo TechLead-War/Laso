@@ -8,6 +8,7 @@ struct InsightsDetailView: View {
     var headlineSummary: String?
 
     @State private var selectedFilter: FocusFilter = .all
+    @State private var showAhaPaywall = false
 
     // Section trackers
     @State private var sectionTracker = SectionTracker(section: .insightsAllInsights, tab: .insightsDetail)
@@ -160,6 +161,10 @@ struct InsightsDetailView: View {
             AppAnalytics.shared.trackActivationMilestone(.firstInsightViewed)
             AppAnalytics.shared.trackCoreAction(.viewedInsight, screen: .insightsDetail)
             sectionTracker.appeared()
+            maybeShowAhaPaywall()
+        }
+        .fullScreenCover(isPresented: $showAhaPaywall) {
+            PaywallView(subscriptionManager: SubscriptionManager.shared)
         }
         .onDisappear {
             AppAnalytics.shared.trackFeatureClose(.insightsDetail)
@@ -175,6 +180,30 @@ struct InsightsDetailView: View {
                 )
             }
         }
+    }
+
+    // MARK: - Aha Paywall Trigger
+
+    /// Hard paywall after the aha moment (`first_insight_viewed`). Published PMF
+    /// research: health & fitness top-decile trial→paid is 68%, and 80–90% of
+    /// trials start Day 0 — so the highest-ROI paywall surface is immediately
+    /// after the user experiences personal value for the first time.
+    /// Only fires once per user (UserDefault-gated) and only for users without
+    /// active access (i.e. not currently in trial / subscribed / billing grace).
+    private func maybeShowAhaPaywall() {
+        let defaults = UserDefaults.standard
+        if defaults.bool(forKey: AppKeys.Session.ahaPaywallShown) {
+            return
+        }
+        guard !SubscriptionManager.shared.hasAccess else {
+            // Already a paying / trialing user — don't show. Mark seen so we
+            // never re-evaluate when their status changes later.
+            defaults.set(true, forKey: AppKeys.Session.ahaPaywallShown)
+            return
+        }
+        defaults.set(true, forKey: AppKeys.Session.ahaPaywallShown)
+        AppAnalytics.shared.trackPaywallViewed(source: "aha_moment")
+        showAhaPaywall = true
     }
 
     // MARK: - Filter Chip

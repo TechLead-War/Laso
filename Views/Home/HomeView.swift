@@ -161,6 +161,24 @@ struct HomeView: View {
         viewModel.cachedWeakestCategoryName
     }
 
+    /// Build the payload for the on-device daily narrative card. Pulls live
+    /// readiness, weakest pillar, latest HRV, and last night's sleep duration
+    /// from the existing dashboard / live view models — no additional HealthKit queries.
+    private func buildDailyNarrativeSignals() -> DailyNarrativeSignals {
+        let hrv: Int? = liveViewModel.recovery.latestHRV.map { Int($0.rounded()) }
+        let sleepHours: Double? = liveViewModel.sleep.lastNightSleepDuration > 0
+            ? liveViewModel.sleep.lastNightSleepDuration
+            : nil
+        return DailyNarrativeSignals(
+            userFirstName: nil,
+            readinessScore: hasLiveReadiness ? liveReadinessScore : nil,
+            weakestPillar: weakestCategoryName,
+            hrvMs: hrv,
+            sleepHours: sleepHours,
+            streakDays: SessionTracker.shared.streakDays
+        )
+    }
+
     private func startReadinessRefresh() {
         readinessRefreshTimer.stop()
         guard let interval = thermalManager.liveReadinessRefreshInterval else { return }
@@ -269,6 +287,11 @@ struct HomeView: View {
 
                     // 2. Today's Action. single source of truth for what to do
                     primaryActionCard
+                        .padding(.top, 8)
+
+                    // 2a-ii. On-device daily narrative (iOS 26+ Foundation Models).
+                    // Proactive one-paragraph story of today, grounded in real signals.
+                    DailyNarrativeCard(signals: buildDailyNarrativeSignals())
                         .padding(.top, 8)
 
                     // 2b. Body Intelligence. non-obvious ML findings

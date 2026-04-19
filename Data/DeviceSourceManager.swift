@@ -356,6 +356,13 @@ final class DeviceSourceManager {
         connectedDevices.filter(\.isActive)
     }
 
+    /// True when an Apple Watch has delivered HealthKit data within the last 7 days.
+    /// Used by analytics to segment retention cohorts by Watch-pair status — the
+    /// single most predictive dimension for health-app engagement per Oura/WHOOP.
+    var isAppleWatchPaired: Bool {
+        connectedDevices.contains { $0.device == .appleWatch && $0.isActive }
+    }
+
     /// Inactive devices (detected but stale data)
     var inactiveDevices: [ConnectedDeviceInfo] {
         connectedDevices.filter { !$0.isActive }
