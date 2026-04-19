@@ -5,7 +5,16 @@ extension Copy {
 
         // MARK: - Hero
 
-        static let ofScale = "of 3.0"
+        static let contextLow = "Your body is calm and relaxed."
+        static let contextMild = "Some tension, but manageable."
+        static let contextModerate = "Your body is signaling strain."
+        static let contextHigh = "Your body needs rest."
+        static let contextDefault = "Tracking your stress signals."
+
+        // MARK: - Scale
+
+        static let scaleLow = "Low"
+        static let scaleHigh = "High"
 
         // MARK: - Drivers
 

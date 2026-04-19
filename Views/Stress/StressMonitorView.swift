@@ -1,29 +1,24 @@
 import SwiftUI
 
-/// Simplified Stress Monitor. Hero gauge + 7-day chart + one-line week summary + two
-/// compact drivers + one primary tip + breathing CTA. Extra tips sit behind a single
-/// Learn More disclosure.
+/// Full Stress Monitor detail view showing gauge, drivers, 7-day history, and tips.
 struct StressMonitorView: View {
     let stressScore: Double
     let stressLevel: String
     let levelColor: Color
-    let hrvDeviation: Double
-    let hrElevation: Double
+    let hrvDeviation: Double // 0.0–1.0 fraction showing HRV departure from baseline
+    let hrElevation: Double  // 0.0–1.0 fraction showing HR elevation above baseline
     let weeklyScores: [DailyStressPoint]
     let weeklyAverage: Double
     let previousWeekAverage: Double
-
-    @State private var showMoreTips = false
 
     var body: some View {
         ScrollView {
             VStack(spacing: DS.sectionSpacing) {
                 heroGauge
-                weeklyChartSection
-                weekSummaryCard
                 driverSection
-                primaryTipCard
-                moreTipsDisclosure
+                weeklyChartSection
+                weeklyComparison
+                tipsSection
                 breathingCTA
             }
             .padding(.horizontal)
@@ -45,30 +40,38 @@ struct StressMonitorView: View {
     private var heroGauge: some View {
         VStack(spacing: 12) {
             ZStack {
+                // Background arc
                 arcSegment(from: 0, to: 1, color: Color(.systemGray5))
+
+                // Colored arc segments
                 arcSegment(from: 0, to: 0.25, color: .green)
                 arcSegment(from: 0.25, to: 0.50, color: .yellow)
                 arcSegment(from: 0.50, to: 0.75, color: .orange)
                 arcSegment(from: 0.75, to: 1.0, color: .red)
+
+                // Needle indicator
                 needleIndicator
 
-                VStack(spacing: 2) {
-                    Text(String(format: "%.1f", stressScore))
-                        .font(.system(size: 42, weight: .bold, design: .rounded).monospacedDigit())
-                    Text(Copy.StressMonitor.ofScale)
+                // Center level + context
+                VStack(spacing: 4) {
+                    Text(displayLevel)
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .foregroundStyle(levelColor)
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(1)
+
+                    Text(contextSubtitle)
                         .font(.caption2.weight(.medium))
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 28)
                 }
-                .offset(y: 10)
+                .frame(maxWidth: 130)
+                .offset(y: 14)
             }
             .frame(height: 180)
-
-            Text(stressLevel)
-                .font(.subheadline.weight(.bold))
-                .foregroundStyle(levelColor)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(levelColor.opacity(DS.badgeBg), in: Capsule())
         }
         .padding(DS.cardPadding)
         .cardStyle(tint: levelColor)
@@ -99,113 +102,27 @@ struct StressMonitorView: View {
         min(max(stressScore / 3.0, 0), 1.0)
     }
 
-    // MARK: - 7-Day Chart
-
-    private var weeklyChartSection: some View {
-        VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text(Copy.StressMonitor.sevenDayStress)
-                .font(.headline)
-
-            if weeklyScores.isEmpty {
-                Text(Copy.StressMonitor.notEnoughData)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 20)
-            } else {
-                HStack(alignment: .bottom, spacing: 6) {
-                    ForEach(weeklyScores) { point in
-                        VStack(spacing: 4) {
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(barColor(for: point.score))
-                                .frame(height: max(barHeight(for: point.score), 4))
-                            Text(point.dayLabel)
-                                .font(.caption2.weight(.medium))
-                                .foregroundStyle(.secondary)
-                                .frame(width: 32, alignment: .center)
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                }
-                .frame(height: 100)
-
-                HStack {
-                    Text("0").font(.caption2.weight(.medium)).foregroundStyle(.tertiary)
-                    Spacer()
-                    Text("3.0").font(.caption2.weight(.medium)).foregroundStyle(.tertiary)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(DS.cardPadding)
-        .cardStyle()
+    private var normalizedLevel: String {
+        stressLevel.lowercased()
     }
 
-    private func barHeight(for score: Double) -> CGFloat {
-        CGFloat(min(max(score / 3.0, 0), 1.0)) * 80
+    private var displayLevel: String {
+        if normalizedLevel.contains("high") { return "High" }
+        if normalizedLevel.contains("moderate") { return "Elevated" }
+        if normalizedLevel.contains("mild") { return "Mild" }
+        if normalizedLevel.contains("low") { return "Calm" }
+        return stressLevel
     }
 
-    private func barColor(for score: Double) -> Color {
-        if score < 0.75 { return .green }
-        if score < 1.5 { return .yellow }
-        if score < 2.25 { return .orange }
-        return .red
+    private var contextSubtitle: String {
+        if normalizedLevel.contains("high") { return Copy.StressMonitor.contextHigh }
+        if normalizedLevel.contains("moderate") { return Copy.StressMonitor.contextModerate }
+        if normalizedLevel.contains("mild") { return Copy.StressMonitor.contextMild }
+        if normalizedLevel.contains("low") { return Copy.StressMonitor.contextLow }
+        return Copy.StressMonitor.contextDefault
     }
 
-    // MARK: - Week Summary (one-line delta)
-
-    private var weekSummaryCard: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: deltaIcon)
-                .font(.body.weight(.semibold))
-                .foregroundStyle(.white)
-                .frame(width: DS.iconSize, height: DS.iconSize)
-                .background(deltaColor.gradient, in: RoundedRectangle(cornerRadius: DS.iconRadius, style: .continuous))
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(Copy.StressMonitor.weekSummaryTitle)
-                    .font(.subheadline.weight(.semibold))
-                Text(weekSummaryText)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            Spacer()
-        }
-        .padding(DS.cardPadding)
-        .cardStyle()
-    }
-
-    private var weekSummaryText: String {
-        let thisWeek = String(format: "%.1f", weeklyAverage)
-        let lastWeek = String(format: "%.1f", previousWeekAverage)
-        let diff = weeklyAverage - previousWeekAverage
-        let prevBase = max(previousWeekAverage, 0.1)
-        let percent = Int((abs(diff) / prevBase) * 100)
-
-        if abs(diff) < 0.1 || percent < 3 {
-            return Copy.StressMonitor.weekDeltaSteady(thisWeek)
-        }
-        if diff < 0 {
-            return Copy.StressMonitor.weekDeltaImproved(thisWeek, lastWeek, percent)
-        }
-        return Copy.StressMonitor.weekDeltaIncreased(thisWeek, lastWeek, percent)
-    }
-
-    private var deltaIcon: String {
-        let diff = weeklyAverage - previousWeekAverage
-        if abs(diff) < 0.1 { return "equal.circle.fill" }
-        return diff < 0 ? "arrow.down.right.circle.fill" : "arrow.up.right.circle.fill"
-    }
-
-    private var deltaColor: Color {
-        let diff = weeklyAverage - previousWeekAverage
-        if abs(diff) < 0.1 { return .gray }
-        return diff < 0 ? .green : .orange
-    }
-
-    // MARK: - Drivers
+    // MARK: - Stress Drivers
 
     private var driverSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
@@ -242,7 +159,9 @@ struct StressMonitorView: View {
                 HStack {
                     Text(label)
                         .font(.subheadline.weight(.medium))
+
                     Spacer()
+
                     Text("\(Int(value * 100))%")
                         .font(.subheadline.weight(.bold).monospacedDigit())
                         .foregroundStyle(color)
@@ -253,6 +172,7 @@ struct StressMonitorView: View {
                         RoundedRectangle(cornerRadius: 3)
                             .fill(Color(.systemGray5))
                             .frame(height: 6)
+
                         RoundedRectangle(cornerRadius: 3)
                             .fill(color)
                             .frame(width: geo.size.width * min(max(value, 0), 1.0), height: 6)
@@ -270,121 +190,197 @@ struct StressMonitorView: View {
         return .red
     }
 
-    // MARK: - Primary Tip
+    // MARK: - 7-Day Chart
 
-    private var primaryTipCard: some View {
-        let tip = tipsForLevel.first ?? ""
-        return HStack(alignment: .top, spacing: 12) {
-            Image(systemName: tipIcon)
-                .font(.body.weight(.semibold))
-                .foregroundStyle(.white)
-                .frame(width: DS.iconSize, height: DS.iconSize)
-                .background(levelColor.gradient, in: RoundedRectangle(cornerRadius: DS.iconRadius, style: .continuous))
+    private var weeklyChartSection: some View {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
+            Text(Copy.StressMonitor.sevenDayStress)
+                .font(.headline)
 
-            VStack(alignment: .leading, spacing: 3) {
-                Text(Copy.StressMonitor.primaryTip)
-                    .font(.subheadline.weight(.semibold))
-                Text(tip)
+            if weeklyScores.isEmpty {
+                Text(Copy.StressMonitor.notEnoughData)
                     .font(.subheadline)
-                    .foregroundStyle(.primary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 20)
+            } else {
+                HStack(alignment: .bottom, spacing: 6) {
+                    ForEach(weeklyScores) { point in
+                        VStack(spacing: 4) {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(barColor(for: point.score))
+                                .frame(height: max(barHeight(for: point.score), 4))
 
-            Spacer()
+                            Text(point.dayLabel)
+                                .font(.caption2.weight(.medium))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 32, alignment: .center)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+                .frame(height: 100)
+
+                // Scale labels
+                HStack {
+                    Text(Copy.StressMonitor.scaleLow)
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(.tertiary)
+                    Spacer()
+                    Text(Copy.StressMonitor.scaleHigh)
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(.tertiary)
+                }
+            }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DS.cardPadding)
-        .cardStyle(tint: levelColor)
+        .cardStyle()
     }
 
-    // MARK: - More Tips Disclosure
+    private func barHeight(for score: Double) -> CGFloat {
+        CGFloat(min(max(score / 3.0, 0), 1.0)) * 80
+    }
 
-    @ViewBuilder
-    private var moreTipsDisclosure: some View {
-        if tipsForLevel.count > 1 {
-            DisclosureGroup(isExpanded: $showMoreTips) {
-                VStack(alignment: .leading, spacing: 12) {
-                    ForEach(Array(tipsForLevel.dropFirst()), id: \.self) { tip in
-                        HStack(alignment: .top, spacing: 10) {
-                            Image(systemName: "circle.fill")
-                                .font(.system(size: 4))
-                                .foregroundStyle(levelColor)
-                                .padding(.top, 7)
-                            Text(tip)
-                                .font(.subheadline)
-                                .foregroundStyle(.primary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                }
-                .padding(.top, 10)
-            } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: "lightbulb.fill")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: DS.iconSize, height: DS.iconSize)
-                        .background(.gray.gradient, in: RoundedRectangle(cornerRadius: DS.iconRadius, style: .continuous))
+    private func barColor(for score: Double) -> Color {
+        if score < 0.75 { return .green }
+        if score < 1.5 { return .yellow }
+        if score < 2.25 { return .orange }
+        return .red
+    }
 
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(Copy.StressMonitor.moreTips)
-                            .font(.subheadline.weight(.semibold))
-                        Text(Copy.StressMonitor.moreTipsHint)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+    // MARK: - Weekly Comparison
 
-                    Spacer(minLength: 0)
+    private var weeklyComparison: some View {
+        HStack(spacing: 16) {
+            comparisonStat(
+                label: "This Week",
+                value: weeklyAverage,
+                isPrimary: true
+            )
+
+            RoundedRectangle(cornerRadius: 1)
+                .fill(Color(.separator))
+                .frame(width: 1, height: DS.dividerHeight)
+
+            comparisonStat(
+                label: "Last Week",
+                value: previousWeekAverage,
+                isPrimary: false
+            )
+
+            RoundedRectangle(cornerRadius: 1)
+                .fill(Color(.separator))
+                .frame(width: 1, height: DS.dividerHeight)
+
+            weeklyDelta
+        }
+        .padding(DS.cardPadding)
+        .cardStyle()
+    }
+
+    private func comparisonStat(label: String, value: Double, isPrimary: Bool) -> some View {
+        VStack(spacing: 4) {
+            Text(label)
+                .font(.caption2.weight(.medium))
+                .foregroundStyle(.secondary)
+
+            Text(String(format: "%.1f", value))
+                .font(.title3.weight(.bold).monospacedDigit())
+                .foregroundStyle(isPrimary ? .primary : .secondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var weeklyDelta: some View {
+        let diff = weeklyAverage - previousWeekAverage
+        let improved = diff <= 0
+        let arrow = improved ? "arrow.down.right" : "arrow.up.right"
+        let color: Color = improved ? .green : .red
+        let label = improved ? "Improved" : "Increased"
+
+        return VStack(spacing: 4) {
+            Image(systemName: arrow)
+                .font(.body.weight(.bold))
+                .foregroundStyle(color)
+
+            Text(label)
+                .font(.caption2.weight(.medium))
+                .foregroundStyle(color)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Tips Section
+
+    private var tipsSection: some View {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
+            Text(Copy.StressMonitor.reduceStress)
+                .font(.headline)
+
+            ForEach(tipsForLevel, id: \.self) { tip in
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: tipIcon)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(levelColor)
+                        .frame(width: 20, height: 20)
+                        .background(levelColor.opacity(DS.badgeBg), in: Circle())
+
+                    Text(tip)
+                        .font(.subheadline)
+                        .foregroundStyle(.primary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .padding(DS.cardPadding)
-            .cardStyle()
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(DS.cardPadding)
+        .cardStyle()
     }
 
     private var tipsForLevel: [String] {
-        switch stressLevel.lowercased() {
-        case "low":
+        if normalizedLevel.contains("high") {
             return [
-                "Your body is calm. Great time for challenging work.",
-                "Maintain this state with regular sleep and hydration.",
-                "Consider a creative or deep focus task right now."
+                "Your body is signaling for rest. Lighter activity may serve you better right now.",
+                "Box breathing can help: inhale 4s, hold 4s, exhale 4s, hold 4s.",
+                "A quieter, screen-free environment may help your nervous system settle.",
+                "Many people find that 8+ hours of sleep tonight helps them feel more resilient tomorrow."
             ]
-        case "mild":
+        }
+        if normalizedLevel.contains("moderate") {
             return [
-                "Try a 5 minute breathing exercise.",
+                "Consider a walk or gentle stretching.",
+                "Limiting caffeine and stimulants for the next few hours may help.",
+                "Try progressive muscle relaxation.",
+                "Shorten your to-do list and focus on essentials."
+            ]
+        }
+        if normalizedLevel.contains("mild") {
+            return [
+                "Try a 5-minute breathing exercise.",
                 "Step outside for fresh air if possible.",
                 "A short walk can help reset your nervous system."
             ]
-        case "moderate":
+        }
+        if normalizedLevel.contains("low") {
             return [
-                "Consider a walk or gentle stretching.",
-                "Limiting caffeine for the next few hours may help.",
-                "Try progressive muscle relaxation.",
-                "Shorten your to do list and focus on essentials."
-            ]
-        case "high":
-            return [
-                "Your body is signaling for rest. Lighter activity may serve you better right now.",
-                "Box breathing can help. Inhale 4s, hold 4s, exhale 4s, hold 4s.",
-                "A quieter, screen free environment may help your nervous system settle.",
-                "Many people find that 8 plus hours of sleep tonight helps them feel more resilient tomorrow."
-            ]
-        default:
-            return [
-                "Monitor your stress throughout the day.",
-                "Regular breaks can help manage stress levels."
+                "Your body is calm. Great time for challenging work.",
+                "Maintain this state with regular sleep and hydration.",
+                "Consider a creative or deep-focus task right now."
             ]
         }
+        return [
+            "Monitor your stress throughout the day.",
+            "Regular breaks can help manage stress levels."
+        ]
     }
 
     private var tipIcon: String {
-        switch stressLevel.lowercased() {
-        case "low": return "checkmark"
-        case "mild": return "wind"
-        case "moderate": return "figure.walk"
-        case "high": return "exclamationmark.triangle"
-        default: return "lightbulb"
-        }
+        if normalizedLevel.contains("high") { return "exclamationmark.triangle" }
+        if normalizedLevel.contains("moderate") { return "figure.walk" }
+        if normalizedLevel.contains("mild") { return "wind" }
+        if normalizedLevel.contains("low") { return "checkmark" }
+        return "lightbulb"
     }
 
     // MARK: - Breathing CTA
@@ -396,6 +392,7 @@ struct StressMonitorView: View {
             HStack(spacing: 8) {
                 Image(systemName: "lungs.fill")
                     .font(.body.weight(.semibold))
+
                 Text(Copy.StressMonitor.startBreathingExercise)
                     .font(.subheadline.weight(.bold))
             }

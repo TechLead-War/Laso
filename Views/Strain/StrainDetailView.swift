@@ -68,6 +68,17 @@ struct StrainDetailView: View {
         min(strainValue / maxStrain, 1.0)
     }
 
+    private var strainContext: String {
+        switch strainLevel {
+        case .low:          return Copy.Strain.contextLow
+        case .light:        return Copy.Strain.contextLight
+        case .moderate:     return Copy.Strain.contextModerate
+        case .high:         return Copy.Strain.contextHigh
+        case .overreaching: return Copy.Strain.contextPeak
+        case .allOut:       return Copy.Strain.contextAllOut
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: DS.sectionSpacing) {
@@ -108,23 +119,25 @@ struct StrainDetailView: View {
                     .rotationEffect(.degrees(-90))
                     .animation(.easeInOut(duration: 1.0), value: animatedProgress)
 
-                VStack(spacing: 2) {
-                    Text(String(format: "%.1f", strainValue))
-                        .font(.system(size: 44, weight: .bold, design: .rounded))
-                    Text(Copy.Strain.of21)
-                        .font(.caption)
+                VStack(spacing: 4) {
+                    Text(strainLevel.displayName)
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .foregroundStyle(strainLevel.color)
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(1)
+
+                    Text(strainContext)
+                        .font(.caption2.weight(.medium))
                         .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 16)
                 }
+                .frame(maxWidth: 120)
             }
             .onAppear { animatedProgress = progress }
             .onChange(of: strainValue) { animatedProgress = progress }
-
-            Text(strainLevel.displayName)
-                .font(.subheadline.weight(.bold))
-                .foregroundStyle(.white)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 6)
-                .background(strainLevel.color, in: Capsule())
         }
         .padding(22)
         .frame(maxWidth: .infinity)
