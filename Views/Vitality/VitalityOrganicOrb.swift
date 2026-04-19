@@ -8,8 +8,8 @@ struct OrganicParticleOrbView: View {
     @State private var glowPulse = false
     @State private var thermalManager = ThermalManager.shared
 
-    private static let fullParticles: [ParticleSeed] = makeParticles(count: 50)
-    private static let reducedParticles: [ParticleSeed] = makeParticles(count: 25)
+    private static let fullParticles: [ParticleSeed] = makeParticles(count: 160)
+    private static let reducedParticles: [ParticleSeed] = makeParticles(count: 80)
 
     private var effectiveParticles: [ParticleSeed] {
         if reduceMotion { return [] }
@@ -60,10 +60,9 @@ struct OrganicParticleOrbView: View {
             paused: animationPaused,
             frameRate: thermalManager.maxFrameRate
         )
-        .clipShape(OrganicBlobShape(phase: phase))
         .overlay(
             blobShape
-                .stroke(tint.opacity(0.78), lineWidth: 1.4)
+                .stroke(tint.opacity(0.22), lineWidth: 1.0)
         )
         .overlay(
             blobShape
@@ -89,15 +88,18 @@ struct OrganicParticleOrbView: View {
             let h5 = vfract(sin(index * 853.7 + 57.2) * 43758.5453)
 
             let angle = h1 * .pi * 2
-            let radius = pow(h2, 0.62) * 0.47
+            // Ring distribution: density peaks near the outer edge, thins toward center.
+            // abs(sin(h2 * .pi)) peaks at h2 = 0.5, giving a soft gaussian-like ring.
+            let ringness = abs(sin(h2 * .pi))
+            let radius = 0.22 + ringness * 0.28
             let x = 0.5 + cos(angle) * radius
             let y = 0.5 + sin(angle) * radius
 
-            let size: CGFloat = h3 < 0.08 ? CGFloat(3.6 + h4 * 2.2) : CGFloat(0.9 + h4 * 1.6)
-            let speed = 0.06 + h5 * 0.09
+            let size: CGFloat = h3 < 0.10 ? CGFloat(3.2 + h4 * 2.6) : CGFloat(0.7 + h4 * 1.5)
+            let speed = 0.06 + h5 * 0.10
             let phase = h4 * .pi * 2
-            let drift = 3.5 + h3 * 6.0
-            let alpha = 0.34 + h2 * 0.62
+            let drift = 3.0 + h3 * 5.5
+            let alpha = 0.38 + ringness * 0.52
 
             return ParticleSeed(
                 x: CGFloat(x),
@@ -122,27 +124,33 @@ private struct OrbParticleCanvas: View {
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / frameRate, paused: paused)) { timeline in
             Canvas { context, size in
-                drawBackground(context: context, size: size)
+                drawDarkCore(context: context, size: size)
                 drawParticles(context: context, size: size, time: timeline.date.timeIntervalSinceReferenceDate)
             }
         }
     }
 
-    private func drawBackground(context: GraphicsContext, size: CGSize) {
-        let rect = CGRect(origin: .zero, size: size)
-        let gradient = Gradient(colors: [
-            Color(red: 0.02, green: 0.07, blue: 0.09),
-            Color(red: 0.02, green: 0.11, blue: 0.13),
-            tint.opacity(0.22)
+    /// Subtle dark orb body behind the particles. Keeps the center near black like the Whoop reference
+    /// while letting the parent card tint bleed through at the edges.
+    private func drawDarkCore(context: GraphicsContext, size: CGSize) {
+        let radius = min(size.width, size.height) * 0.5
+        let center = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
+        let path = Path(ellipseIn: CGRect(
+            x: center.x - radius, y: center.y - radius,
+            width: radius * 2, height: radius * 2
+        ))
+        let gradient = Gradient(stops: [
+            .init(color: Color.black.opacity(0.62), location: 0),
+            .init(color: Color.black.opacity(0.42), location: 0.72),
+            .init(color: Color.black.opacity(0.0), location: 1.0),
         ])
-
         context.fill(
-            Path(rect),
+            path,
             with: .radialGradient(
                 gradient,
-                center: CGPoint(x: size.width * 0.5, y: size.height * 0.48),
-                startRadius: 10,
-                endRadius: max(size.width, size.height) * 0.66
+                center: center,
+                startRadius: 0,
+                endRadius: radius
             )
         )
     }
