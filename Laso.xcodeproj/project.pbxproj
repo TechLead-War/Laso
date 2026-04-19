@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -184,6 +184,7 @@
 		73768F86CCAA5DBA5F92BFC9 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F426A4AB40311B6E5C6A3CE /* OnboardingView.swift */; };
 		742AFD3C9409BE4DC0C811E4 /* InsightsDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8DC719D1A3501CD27378EF /* InsightsDetailView.swift */; };
 		7434B727B66693C87A066F95 /* ConformalCalibrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C485ECAC0075C89F3A2F97D0 /* ConformalCalibrator.swift */; };
+		744A95257B656B7CAA27776B /* WindDownLiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7F502393E0B19FFB298346 /* WindDownLiveActivityManager.swift */; };
 		74E33F22C6A1A9395890D6AD /* WeeklyReviewViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324946E490707B84DD4E1D1F /* WeeklyReviewViewModel.swift */; };
 		753BD448B3A7ED12F0D4366A /* RHRTrajectoryAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA69A49183592929DD611F8 /* RHRTrajectoryAnalyzer.swift */; };
 		75B3A049D3DEA46F1C90BD21 /* FocusAreasSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A7BFCDCADA9D35A5645650B /* FocusAreasSection.swift */; };
@@ -216,6 +217,7 @@
 		8D05B790D6A4DC2B69405F83 /* AppStateStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91B1749FB7A1F18CD22BDBFF /* AppStateStore.swift */; };
 		8D5733B5AEEBB403D6168B82 /* AccelerateHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC181F9F410EE06EF2F68AFE /* AccelerateHelpers.swift */; };
 		8DC55990797EDFF0D4E35599 /* ConnectedDevicesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6D3E5E909483FA7C863C295 /* ConnectedDevicesViewModel.swift */; };
+		8F26AA23CC5A53B23766F767 /* WindDownActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B501EB7BABE62289E55639E7 /* WindDownActivityAttributes.swift */; };
 		8F7177888FC480DDE98A98E9 /* WellbeingTrendAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B08BA6F0A92ED6ABB6F5D0E /* WellbeingTrendAnalyzer.swift */; };
 		8FA3C26291F4C6AABC8F82A4 /* LiveVitalsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ACF635DF7F1605A2357175F /* LiveVitalsSection.swift */; };
 		90D1A46A580D3F4B11AD9128 /* HealthScoreRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFD68149649372E67C1D0D0D /* HealthScoreRing.swift */; };
@@ -312,6 +314,7 @@
 		C8253A2281F8B858564CB0BF /* HealthScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 670DF6F2B9F16744B1F8F38B /* HealthScore.swift */; };
 		C86B114CE104F16C65CA5604 /* PersonalHealthForecastCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C77166F8ECAFD3AE92E2000 /* PersonalHealthForecastCard.swift */; };
 		C87ABF2F45B508364BC8CF90 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 4024E1BFAFFCCDFB7436F99A /* PrivacyInfo.xcprivacy */; };
+		C8CA6E38054858675455E643 /* WindDownLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFCBAAA6D9AC18AE4C15F65A /* WindDownLiveActivityWidget.swift */; };
 		C8D97C2BA7FB227E7E3ECCC1 /* InsightGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6AA95BCF0971B533299AD2 /* InsightGenerator.swift */; };
 		C95C16A72DBBE0239EA0AADE /* GrangerCausalityEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A62E85D81DDC95EE46DD1B5B /* GrangerCausalityEngine.swift */; };
 		C9959206157B55B58FF56E2E /* FeatureEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 815EE53103EFAF5ABCBB2E7C /* FeatureEngine.swift */; };
@@ -359,6 +362,7 @@
 		E1F5253183D6C2FE82CF15AD /* DataConfidenceBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94EE59198D75A9274863A2DE /* DataConfidenceBadge.swift */; };
 		E20C8AE4FB268B1EB1C6A916 /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF58BC6175F01D99EC835A0D /* LoadingView.swift */; };
 		E2380ABE3B3C70A3255633DD /* DashboardDerivedStateBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2F8A7AF769CFE92102CC270 /* DashboardDerivedStateBuilder.swift */; };
+		E282EB84611AB2EA50D0016E /* WindDownActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B501EB7BABE62289E55639E7 /* WindDownActivityAttributes.swift */; };
 		E3D2EE55593B7B387FE1B8A1 /* LasoWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DC1489C7446344221C0AA886 /* LasoWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		E68261DBFE5179B2D6514524 /* HealthStateTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A04C83D6C2231CABFAD767CB /* HealthStateTimelineView.swift */; };
 		E7DD19104C2DFDB33C6841F1 /* InsightFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BC5CDDD38C43A8F15D43EE1 /* InsightFactory.swift */; };
@@ -505,7 +509,7 @@
 		2B2740E0E138C706625255B7 /* SleepCoachCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepCoachCard.swift; sourceTree = "<group>"; };
 		2BC5CDDD38C43A8F15D43EE1 /* InsightFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightFactory.swift; sourceTree = "<group>"; };
 		2DD5178763361F8F5C9FA730 /* MLResultAggregator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLResultAggregator.swift; sourceTree = "<group>"; };
-		2E6A79C6A57A85AF78D95A7B /* Laso.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Laso.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2E6A79C6A57A85AF78D95A7B /* Laso.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Laso.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F53CAFAB757C16B36D07B94 /* VitalityDetailHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VitalityDetailHelpers.swift; sourceTree = "<group>"; };
 		2FB550DF613A646C3C15C54C /* BreathworkLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathworkLiveActivityWidget.swift; sourceTree = "<group>"; };
 		306963534B0324C02B4DC48A /* ReadinessIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadinessIntent.swift; sourceTree = "<group>"; };
@@ -536,7 +540,7 @@
 		3D65C758F03B6751F506F628 /* SeverityBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeverityBadge.swift; sourceTree = "<group>"; };
 		3E241B836DBC39E604C764CF /* LiveHeartRateSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveHeartRateSection.swift; sourceTree = "<group>"; };
 		3E8777F7E756E6EB52002D6E /* AnalysisWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisWidgetView.swift; sourceTree = "<group>"; };
-		4024E1BFAFFCCDFB7436F99A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		4024E1BFAFFCCDFB7436F99A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		414EDA41967C0C9E1E405FED /* UserBaseline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserBaseline.swift; sourceTree = "<group>"; };
 		42507233E471636899246378 /* BreathworkActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathworkActivityAttributes.swift; sourceTree = "<group>"; };
 		42D638D228E17F85750AAEC2 /* AppStartupCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStartupCoordinator.swift; sourceTree = "<group>"; };
@@ -590,6 +594,7 @@
 		6CC1285A146F7413444E60E0 /* ROIRanker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ROIRanker.swift; sourceTree = "<group>"; };
 		6CD4C44F2DBA18DB04B23520 /* ModalSheetsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalSheetsUITests.swift; sourceTree = "<group>"; };
 		6D17B54A22B9579BC11DFF59 /* JournalInsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalInsightsView.swift; sourceTree = "<group>"; };
+		6E7F502393E0B19FFB298346 /* WindDownLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindDownLiveActivityManager.swift; sourceTree = "<group>"; };
 		6F7E32BD9347DEB587015015 /* DataRetentionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataRetentionManager.swift; sourceTree = "<group>"; };
 		6FB5504157ADC79757B717BF /* AdaptiveAnomalyDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveAnomalyDetector.swift; sourceTree = "<group>"; };
 		6FC19C6D1F8A268CA6DF683E /* StoredECGFeatures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredECGFeatures.swift; sourceTree = "<group>"; };
@@ -689,10 +694,12 @@
 		AB2D1C1A4A25CFAFEE8F113F /* PredictiveScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictiveScorer.swift; sourceTree = "<group>"; };
 		AB62CCC8AF7F3D1CFBA21D49 /* TodaysActionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodaysActionDetailView.swift; sourceTree = "<group>"; };
 		AC2D03261CA6BC1F90D987E1 /* Copy+Devices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+Devices.swift"; sourceTree = "<group>"; };
+		AFCBAAA6D9AC18AE4C15F65A /* WindDownLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindDownLiveActivityWidget.swift; sourceTree = "<group>"; };
 		AFD68149649372E67C1D0D0D /* HealthScoreRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthScoreRing.swift; sourceTree = "<group>"; };
 		B027E818D3613B1A44D2DB7E /* JournalStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalStore.swift; sourceTree = "<group>"; };
 		B0D194A00ED05FEBC2A38651 /* OnboardingFocusStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFocusStep.swift; sourceTree = "<group>"; };
 		B0FD1BAA023354507CB1F59D /* LiveWorkoutSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWorkoutSection.swift; sourceTree = "<group>"; };
+		B501EB7BABE62289E55639E7 /* WindDownActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindDownActivityAttributes.swift; sourceTree = "<group>"; };
 		B50EA338243AEB22FD0996BD /* ReferralCodeStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferralCodeStep.swift; sourceTree = "<group>"; };
 		B5806EC1E2604CC05E1C8658 /* CompromisedEnvironmentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompromisedEnvironmentView.swift; sourceTree = "<group>"; };
 		B776F380F64FD36358B287AE /* LiveBloodPressureTempSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveBloodPressureTempSection.swift; sourceTree = "<group>"; };
@@ -747,7 +754,7 @@
 		DB5737EEB9C2C63A4808E158 /* LasoUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LasoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DB6194E7222F766DA593120A /* RemoteConfigManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteConfigManager.swift; sourceTree = "<group>"; };
 		DB64CE551229B9165432537B /* AnalysisWidgetProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisWidgetProvider.swift; sourceTree = "<group>"; };
-		DC1489C7446344221C0AA886 /* LasoWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LasoWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		DC1489C7446344221C0AA886 /* LasoWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = LasoWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		DD281CA396957983B12D0A3C /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
 		DD49838EC97E56CFD6466B44 /* ShowTrendsIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowTrendsIntent.swift; sourceTree = "<group>"; };
 		DD947BF688F7B5F398D7E9FD /* WorkoutEffectivenessAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutEffectivenessAnalyzer.swift; sourceTree = "<group>"; };
@@ -869,6 +876,7 @@
 				EDB108A1ADD5CA7F2A023528 /* LasoWidgetsBundle.swift */,
 				8AC848012439448B750C74C9 /* TodayScoreLiveActivityWidget.swift */,
 				9B1126FDF9B9F9CB1B17EA3B /* WidgetStyle.swift */,
+				AFCBAAA6D9AC18AE4C15F65A /* WindDownLiveActivityWidget.swift */,
 			);
 			path = LasoWidgets;
 			sourceTree = "<group>";
@@ -1054,6 +1062,7 @@
 				F02C8CB51FC2BB2AD3A604A0 /* ReadinessStore.swift */,
 				BB5A12D3E221CB88B3AFB3CF /* TodayScoreLiveActivityManager.swift */,
 				0CFF25C948BA03E6AB0505B9 /* UITestMode.swift */,
+				6E7F502393E0B19FFB298346 /* WindDownLiveActivityManager.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -1316,6 +1325,7 @@
 				42507233E471636899246378 /* BreathworkActivityAttributes.swift */,
 				E5CCB07634A6E96AA9A9D467 /* CoachActionIntents.swift */,
 				7FB1A666E09691C20AB1B964 /* TodayScoreActivityAttributes.swift */,
+				B501EB7BABE62289E55639E7 /* WindDownActivityAttributes.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -1665,6 +1675,7 @@
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					08AD24A007F4503B8999A065 = {
+						DevelopmentTeam = S2MAH8X8JM;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.BackgroundModes = {
@@ -1681,6 +1692,7 @@
 						TestTargetID = 08AD24A007F4503B8999A065;
 					};
 					2131E0565430F53E4EC2F615 = {
+						DevelopmentTeam = S2MAH8X8JM;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
@@ -1704,6 +1716,7 @@
 				525DEF767B88AE8AA4386F79 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				5CC06B5893DD0C0D5077ECE7 /* XCRemoteSwiftPackageReference "posthog-ios" */,
 			);
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -2108,6 +2121,8 @@
 				CB9800D32DAE821729BFF3BF /* WeeklySummaryScheduler.swift in Sources */,
 				8F7177888FC480DDE98A98E9 /* WellbeingTrendAnalyzer.swift in Sources */,
 				C43DC2F7D1EFE8F6D4C1D484 /* WidgetDataStore.swift in Sources */,
+				8F26AA23CC5A53B23766F767 /* WindDownActivityAttributes.swift in Sources */,
+				744A95257B656B7CAA27776B /* WindDownLiveActivityManager.swift in Sources */,
 				4DDAD0315757C00E122D3704 /* WindDownScheduler.swift in Sources */,
 				41002C6AF57477B65B0D2D72 /* WorkoutEffectivenessAnalyzer.swift in Sources */,
 				B100FDCD751894A93BBDE822 /* WorkoutProgrammer.swift in Sources */,
@@ -2132,6 +2147,8 @@
 				700A0D89CE0021F628DC7EAF /* TodayScoreLiveActivityWidget.swift in Sources */,
 				4C952A993A8010F7CEC83760 /* WidgetDataStore.swift in Sources */,
 				FD102DD60C684E03972A056F /* WidgetStyle.swift in Sources */,
+				E282EB84611AB2EA50D0016E /* WindDownActivityAttributes.swift in Sources */,
+				C8CA6E38054858675455E643 /* WindDownLiveActivityWidget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2237,7 +2254,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 4;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = SGX8SC86TT;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2315,7 +2332,7 @@
 				CODE_SIGN_ENTITLEMENTS = LasoWidgets/LasoWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 4;
-				DEVELOPMENT_TEAM = SGX8SC86TT;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2342,7 +2359,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 4;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = SGX8SC86TT;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2364,7 +2381,7 @@
 				CODE_SIGN_ENTITLEMENTS = LasoWidgets/LasoWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 4;
-				DEVELOPMENT_TEAM = SGX8SC86TT;
+				DEVELOPMENT_TEAM = S2MAH8X8JM;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

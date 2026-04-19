@@ -1016,7 +1016,7 @@ final class AppAnalytics {
         let converted = defaults.string(forKey: Key.trialConverted) ?? "no"
         guard converted != "yes" else { return }
 
-        logEvent("trial_expired", parameters: [
+        logEvent("subscription_expired", parameters: [
             "converted": 0,
             "milestones_completed": session.completedMilestones.count,
             "total_sessions": session.totalSessions,

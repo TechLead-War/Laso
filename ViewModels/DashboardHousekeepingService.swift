@@ -198,6 +198,14 @@ final class DashboardHousekeepingService {
                 preferences: preferences
             )
 
+            // Wind-Down Live Activity: windowed countdown from (bedtime - 60 min)
+            // through a short grace period past bedtime. Idempotent per refresh.
+            WindDownLiveActivityManager.shared.syncWithDashboard(
+                recommendedBedtime: payload.recommendedBedtime,
+                hrvMs: hrvSnapshot?.valueMs,
+                hrvIsLow: hrvSnapshot?.isLow ?? false
+            )
+
             let topTrends: [(metric: String, direction: String, change: Double)] = payload.currentTrends
                 .sorted { abs($0.value.weekOverWeekChange) > abs($1.value.weekOverWeekChange) }
                 .prefix(5)
