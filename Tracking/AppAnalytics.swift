@@ -109,6 +109,11 @@ enum BlockType: String {
     case feedbackSkip = "feedback_skip"
     case feedbackDoneAfterSubmit = "feedback_done_after_submit"
 
+    // Help & Support. user taps from Settings
+    case rateAppStore = "rate_app_store"
+    case reportBug = "report_bug"
+    case contactSupport = "contact_support"
+
     // Onboarding. user taps
     case onboardingConnectHealth = "onboarding_connect_health"
     case onboardingContinueAnyway = "onboarding_continue_anyway"

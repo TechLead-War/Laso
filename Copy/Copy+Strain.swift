@@ -44,6 +44,17 @@ extension Copy {
         static let sevenDayHistory = "7-Day History"
         static let sevenDayAverage = "7-Day Average:"
 
+        // MARK: - Simplified Drivers
+
+        static let todaySnapshot = "Today's Snapshot"
+        static let inTarget = "In Target"
+        static let belowTarget = "Below Target"
+        static let aboveTarget = "Above Target"
+        static func targetRange(_ low: String, _ high: String) -> String { "Aim for \(low) to \(high)" }
+        static func currentStrainVsTarget(_ current: String) -> String { "You are at \(current) right now" }
+        static let learnMore = "Learn More"
+        static let learnMoreHint = "See your heart rate zones and detailed coaching."
+
         // MARK: - Disclaimer
 
         static let strainDisclaimer = "Strain is based on your heart rate during activity. It is not a medical measurement. Consider consulting a qualified professional before significantly changing your exercise routine."

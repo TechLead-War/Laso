@@ -48,5 +48,10 @@ extension Copy {
         // MARK: - Key Factors
 
         static let whatHelpedAndHurt = "What Helped and Hurt"
+
+        // MARK: - Simplified
+
+        static let learnMore = "Learn More"
+        static let learnMoreHint = "Dream sleep, mental energy, and long term trends."
     }
 }

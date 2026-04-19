@@ -1,34 +1,28 @@
 import SwiftUI
 
+/// Simplified Cognitive Wellness detail. Hero score + 7-day chart + top 3 drivers +
+/// key factors tell the story. Dream/deep sleep stats, mental energy, and long term
+/// brain fitness live behind one Learn More disclosure so the main page stays calm.
 struct BrainHealthDetailView: View {
     let brainScore: BrainHealthScore
     let weeklyHistory: [(date: Date, score: Int)]
     let weeklyAverage: Int?
-    let trend: String // "improving", "stable", "declining"
+    let trend: String
+
+    @State private var showLearnMore = false
 
     var body: some View {
         GeometryReader { proxy in
-            // iOS 26 + PostHog masking can inflate SwiftUI ideal widths inside ScrollView rows.
             let sectionWidth = max(proxy.size.width - 32, 0)
 
             ScrollView {
                 VStack(spacing: DS.sectionSpacing) {
-                    heroSection
-                        .frame(width: sectionWidth)
-                    readinessSection
-                        .frame(width: sectionWidth)
-                    memorySection
-                        .frame(width: sectionWidth)
-                    stressLoadSection
-                        .frame(width: sectionWidth)
-                    fitnessSection
-                        .frame(width: sectionWidth)
-                    weeklyChartSection
-                        .frame(width: sectionWidth)
-                    insightsSection
-                        .frame(width: sectionWidth)
-                    disclaimerSection
-                        .frame(width: sectionWidth, alignment: .leading)
+                    heroSection.frame(width: sectionWidth)
+                    weeklyChartSection.frame(width: sectionWidth)
+                    readinessSection.frame(width: sectionWidth)
+                    insightsSection.frame(width: sectionWidth)
+                    learnMoreSection.frame(width: sectionWidth)
+                    disclaimerSection.frame(width: sectionWidth, alignment: .leading)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.bottom, 32)
@@ -87,12 +81,93 @@ struct BrainHealthDetailView: View {
         .shadow(color: brainScore.state.color.opacity(0.22), radius: 16, y: 8)
     }
 
-    // MARK: - Cognitive Readiness
+    // MARK: - 7-Day Chart
+
+    private var weeklyChartSection: some View {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
+            Text(Copy.BrainHealth.lastSevenDays)
+                .font(.headline)
+
+            if weeklyHistory.isEmpty {
+                Text("Not enough data yet")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 20)
+            } else {
+                let visibleHistory = Array(weeklyHistory.suffix(7))
+                HStack(alignment: .bottom, spacing: 6) {
+                    ForEach(Array(visibleHistory.enumerated()), id: \.offset) { _, entry in
+                        VStack(spacing: 4) {
+                            Text("\(entry.score)")
+                                .font(.caption2.weight(.bold).monospacedDigit())
+                                .foregroundStyle(chartBarColor(for: entry.score))
+                                .minimumScaleFactor(0.7)
+                                .lineLimit(1)
+                                .postHogMask()
+
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(chartBarColor(for: entry.score))
+                                .frame(height: max(chartBarHeight(for: entry.score), 4))
+
+                            Text(abbreviatedDay(entry.date))
+                                .font(.caption2.weight(.medium))
+                                .foregroundStyle(.secondary)
+                                .minimumScaleFactor(0.7)
+                                .lineLimit(1)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 120)
+
+                HStack {
+                    Text("0").font(.caption2.weight(.medium)).foregroundStyle(.tertiary)
+                    Spacer()
+                    Text("100").font(.caption2.weight(.medium)).foregroundStyle(.tertiary)
+                }
+
+                if let avg = weeklyAverage {
+                    HStack(spacing: 16) {
+                        HStack(spacing: 4) {
+                            Text("Avg")
+                                .font(.caption2.weight(.medium))
+                                .foregroundStyle(.secondary)
+                            Text("\(avg)")
+                                .font(.caption.weight(.bold).monospacedDigit())
+                                .postHogMask()
+                        }
+
+                        Spacer()
+
+                        HStack(spacing: 4) {
+                            Image(systemName: trendIcon)
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(trendColor)
+                            Text(trend.capitalized)
+                                .font(.caption2.weight(.medium))
+                                .foregroundStyle(trendColor)
+                        }
+                        .padding(.horizontal, DS.badgeH)
+                        .padding(.vertical, DS.badgeV)
+                        .background(trendColor.opacity(DS.badgeBg), in: Capsule())
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+        }
+        .padding(DS.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .cardStyle()
+    }
+
+    // MARK: - Readiness Drivers (Top 3)
 
     private var readinessSection: some View {
         let deepValue = brainScore.deepSleepScore.map { $0 / 100 }
         let remValue = brainScore.remSleepScore.map { $0 / 100 }
-        let durationValue = brainScore.sleepDurationScore.map { $0 / 100 }
 
         return VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text(Copy.BrainHealth.sleepRecovery)
@@ -107,7 +182,7 @@ struct BrainHealthDetailView: View {
             )
 
             driverRow(
-                label: "Deep Sleep",
+                label: Copy.BrainHealth.deepSleep,
                 icon: "moon.zzz.fill",
                 value: deepValue ?? brainScore.cognitiveReadiness / 100 * 0.9,
                 color: readinessColor(deepValue ?? brainScore.cognitiveReadiness / 100 * 0.9),
@@ -115,19 +190,11 @@ struct BrainHealthDetailView: View {
             )
 
             driverRow(
-                label: "REM Sleep",
+                label: Copy.BrainHealth.remSleep,
                 icon: "brain.fill",
                 value: remValue ?? brainScore.memoryRecovery / 100,
                 color: readinessColor(remValue ?? brainScore.memoryRecovery / 100),
                 isEstimate: remValue == nil
-            )
-
-            driverRow(
-                label: "Sleep Duration",
-                icon: "bed.double.fill",
-                value: durationValue ?? brainScore.circadianAlignment / 100,
-                color: readinessColor(durationValue ?? brainScore.circadianAlignment / 100),
-                isEstimate: durationValue == nil
             )
         }
         .padding(DS.cardPadding)
@@ -194,20 +261,83 @@ struct BrainHealthDetailView: View {
         return .red
     }
 
-    // MARK: - Memory & Recovery
+    // MARK: - Key Factors
 
-    private var memorySection: some View {
+    private var insightsSection: some View {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
+            Text(Copy.BrainHealth.whatHelpedAndHurt)
+                .font(.headline)
+
+            ForEach(Array(brainScore.topFactors.prefix(3)), id: \.label) { factor in
+                HStack(spacing: 10) {
+                    Image(systemName: factor.isPositive ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
+                        .foregroundStyle(factor.isPositive ? .green : .orange)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(factor.label)
+                            .font(.subheadline.weight(.medium))
+                        Text(factor.impact)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Spacer()
+                }
+            }
+        }
+        .padding(DS.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .cardStyle()
+    }
+
+    // MARK: - Learn More (collapses memory + mental energy + fitness)
+
+    private var learnMoreSection: some View {
+        DisclosureGroup(isExpanded: $showLearnMore) {
+            VStack(alignment: .leading, spacing: 18) {
+                memoryBlock
+                stressLoadBlock
+                fitnessBlock
+            }
+            .padding(.top, 12)
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "book.closed.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: DS.iconSize, height: DS.iconSize)
+                    .background(.gray.gradient, in: RoundedRectangle(cornerRadius: DS.iconRadius, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(Copy.BrainHealth.learnMore)
+                        .font(.subheadline.weight(.semibold))
+                    Text(Copy.BrainHealth.learnMoreHint)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer(minLength: 0)
+            }
+        }
+        .padding(DS.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .cardStyle()
+    }
+
+    private var memoryBlock: some View {
         let remDisplay = brainScore.remSleepScore ?? brainScore.memoryRecovery
         let deepDisplay = brainScore.deepSleepScore ?? brainScore.cognitiveReadiness * 0.9
         let hasSleepStages = brainScore.remSleepScore != nil || brainScore.deepSleepScore != nil
 
-        return VStack(alignment: .leading, spacing: DS.itemSpacing) {
+        return VStack(alignment: .leading, spacing: 10) {
             Text(Copy.BrainHealth.sleepAndMemory)
-                .font(.headline)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
 
             HStack(spacing: 16) {
                 statBox(
-                    label: brainScore.remSleepScore != nil ? "Dream Sleep" : "Dream Sleep (Est.)",
+                    label: brainScore.remSleepScore != nil ? Copy.BrainHealth.dreamSleep : "\(Copy.BrainHealth.dreamSleep) (Est.)",
                     value: "\(Int(remDisplay))%",
                     color: readinessColor(remDisplay / 100)
                 )
@@ -217,78 +347,28 @@ struct BrainHealthDetailView: View {
                     .frame(width: 1, height: DS.dividerHeight)
 
                 statBox(
-                    label: brainScore.deepSleepScore != nil ? "Deep Sleep" : "Deep Sleep (Est.)",
+                    label: brainScore.deepSleepScore != nil ? Copy.BrainHealth.deepSleep : "\(Copy.BrainHealth.deepSleep) (Est.)",
                     value: "\(Int(deepDisplay))%",
                     color: readinessColor(deepDisplay / 100)
                 )
-
-                RoundedRectangle(cornerRadius: 1)
-                    .fill(Color(.separator))
-                    .frame(width: 1, height: DS.dividerHeight)
-
-                trendIndicator
             }
             .frame(maxWidth: .infinity)
 
-            if !hasSleepStages {
-                Text(Copy.BrainHealth.noSleepStageData)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                Text(Copy.BrainHealth.sleepBrainExplanation)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .padding(DS.cardPadding)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .cardStyle()
-    }
-
-    private func statBox(label: String, value: String, color: Color) -> some View {
-        VStack(spacing: 4) {
-            Text(label)
-                .font(.caption2.weight(.medium))
+            Text(hasSleepStages ? Copy.BrainHealth.sleepBrainExplanation : Copy.BrainHealth.noSleepStageData)
+                .font(.caption)
                 .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-
-            Text(value)
-                .font(.title3.weight(.bold).monospacedDigit())
-                .foregroundStyle(color)
-                .postHogMask()
         }
-        .frame(maxWidth: .infinity)
     }
 
-    private var trendIndicator: some View {
-        let isImproving = trend == "improving"
-        let isDeclining = trend == "declining"
-        let arrow = isImproving ? "arrow.up.right" : (isDeclining ? "arrow.down.right" : "minus")
-        let color: Color = isImproving ? .green : (isDeclining ? .orange : .secondary)
-        let label = trend.capitalized
-
-        return VStack(spacing: 4) {
-            Image(systemName: arrow)
-                .font(.body.weight(.bold))
-                .foregroundStyle(color)
-
-            Text(label)
-                .font(.caption2.weight(.medium))
-                .foregroundStyle(color)
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    // MARK: - Stress-Cognition Load
-
-    private var stressLoadSection: some View {
-        VStack(alignment: .leading, spacing: DS.itemSpacing) {
+    private var stressLoadBlock: some View {
+        VStack(alignment: .leading, spacing: 10) {
             Text(Copy.BrainHealth.mentalEnergy)
-                .font(.headline)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
 
-            VStack(spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text("\(Int(brainScore.stressCognitionLoad))%")
-                    .font(.system(size: 36, weight: .bold, design: .rounded).monospacedDigit())
+                    .font(.title.weight(.bold).monospacedDigit())
                     .foregroundStyle(capacityColor)
                     .postHogMask()
 
@@ -296,27 +376,23 @@ struct BrainHealthDetailView: View {
                     ZStack(alignment: .leading) {
                         RoundedRectangle(cornerRadius: 4)
                             .fill(Color(.systemGray5))
-                            .frame(height: 10)
+                            .frame(height: 8)
 
                         RoundedRectangle(cornerRadius: 4)
                             .fill(capacityColor)
                             .frame(
                                 width: geo.size.width * min(max(brainScore.stressCognitionLoad / 100, 0), 1.0),
-                                height: 10
+                                height: 8
                             )
                     }
                 }
-                .frame(height: 10)
-
-                Text(Copy.BrainHealth.mentalEnergyExplanation)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                .frame(height: 8)
             }
-            .frame(maxWidth: .infinity)
+
+            Text(Copy.BrainHealth.mentalEnergyExplanation)
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
-        .padding(DS.cardPadding)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .cardStyle()
     }
 
     private var capacityColor: Color {
@@ -326,12 +402,11 @@ struct BrainHealthDetailView: View {
         return .red
     }
 
-    // MARK: - Long-Term Brain Fitness
-
-    private var fitnessSection: some View {
-        VStack(alignment: .leading, spacing: DS.itemSpacing) {
+    private var fitnessBlock: some View {
+        VStack(alignment: .leading, spacing: 10) {
             Text(Copy.BrainHealth.brainHealthOverTime)
-                .font(.headline)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
 
             HStack(spacing: 16) {
                 statBox(
@@ -356,96 +431,24 @@ struct BrainHealthDetailView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
-        .padding(DS.cardPadding)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .cardStyle()
     }
 
-    // MARK: - 7-Day Chart
+    private func statBox(label: String, value: String, color: Color) -> some View {
+        VStack(spacing: 4) {
+            Text(label)
+                .font(.caption2.weight(.medium))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
 
-    private var weeklyChartSection: some View {
-        VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text(Copy.BrainHealth.lastSevenDays)
-                .font(.headline)
-
-            if weeklyHistory.isEmpty {
-                Text("Not enough data yet")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 20)
-            } else {
-                let visibleHistory = Array(weeklyHistory.suffix(7))
-                HStack(alignment: .bottom, spacing: 6) {
-                    ForEach(Array(visibleHistory.enumerated()), id: \.offset) { _, entry in
-                        VStack(spacing: 4) {
-                            Text("\(entry.score)")
-                                .font(.caption2.weight(.bold).monospacedDigit())
-                                .foregroundStyle(chartBarColor(for: entry.score))
-                                .minimumScaleFactor(0.7)
-                                .lineLimit(1)
-                                .postHogMask()
-
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(chartBarColor(for: entry.score))
-                                .frame(height: max(chartBarHeight(for: entry.score), 4))
-
-                            Text(abbreviatedDay(entry.date))
-                                .font(.caption2.weight(.medium))
-                                .foregroundStyle(.secondary)
-                                .minimumScaleFactor(0.7)
-                                .lineLimit(1)
-                                .frame(maxWidth: .infinity, alignment: .center)
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 120)
-
-                HStack {
-                    Text("0")
-                        .font(.caption2.weight(.medium))
-                        .foregroundStyle(.tertiary)
-                    Spacer()
-                    Text("100")
-                        .font(.caption2.weight(.medium))
-                        .foregroundStyle(.tertiary)
-                }
-
-                if let avg = weeklyAverage {
-                    HStack(spacing: 16) {
-                        HStack(spacing: 4) {
-                            Text("Avg")
-                                .font(.caption2.weight(.medium))
-                                .foregroundStyle(.secondary)
-                            Text("\(avg)")
-                                .font(.caption.weight(.bold).monospacedDigit())
-                                .postHogMask()
-                        }
-
-                        Spacer()
-
-                        HStack(spacing: 4) {
-                            Image(systemName: trendIcon)
-                                .font(.caption2.weight(.bold))
-                                .foregroundStyle(trendColor)
-                            Text(trend.capitalized)
-                                .font(.caption2.weight(.medium))
-                                .foregroundStyle(trendColor)
-                        }
-                        .padding(.horizontal, DS.badgeH)
-                        .padding(.vertical, DS.badgeV)
-                        .background(trendColor.opacity(DS.badgeBg), in: Capsule())
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-            }
+            Text(value)
+                .font(.title3.weight(.bold).monospacedDigit())
+                .foregroundStyle(color)
+                .postHogMask()
         }
-        .padding(DS.cardPadding)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .cardStyle()
+        .frame(maxWidth: .infinity)
     }
+
+    // MARK: - Chart Helpers
 
     private func chartBarHeight(for score: Int) -> CGFloat {
         CGFloat(min(max(Double(score) / 100.0, 0), 1.0)) * 80
@@ -484,35 +487,7 @@ struct BrainHealthDetailView: View {
         }
     }
 
-    // MARK: - Key Factors
-
-    private var insightsSection: some View {
-        VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text(Copy.BrainHealth.whatHelpedAndHurt)
-                .font(.headline)
-
-            ForEach(brainScore.topFactors, id: \.label) { factor in
-                HStack(spacing: 10) {
-                    Image(systemName: factor.isPositive ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
-                        .foregroundStyle(factor.isPositive ? .green : .orange)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(factor.label)
-                            .font(.subheadline.weight(.medium))
-                        Text(factor.impact)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                    Spacer()
-                }
-            }
-        }
-        .padding(DS.cardPadding)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .cardStyle()
-    }
+    // MARK: - Disclaimer
 
     private var disclaimerSection: some View {
         Text(Copy.Analysis.RiskDetail.disclaimer)

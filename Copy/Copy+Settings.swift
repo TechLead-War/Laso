@@ -23,6 +23,24 @@ extension Copy {
         static let alertMetrics = "Alert Metrics"
         static let notifications = "Notifications"
 
+        // MARK: - Simplified Section Headers
+
+        static let yourData = "Your Data"
+        static let support = "Support"
+        static let summaries = "Summaries"
+        static let healthAlerts = "Health Alerts"
+        static let customizeThresholds = "Customize Thresholds"
+        static let whichMetrics = "Choose Metrics"
+        static let notificationsHint = "All alerts are optional. You choose what reaches you."
+        static let dailySummaryDescription = "A short morning briefing with your score and key numbers."
+        static let weeklySummaryDescription = "A once a week recap delivered every Monday morning."
+        static let connectDataSource = "Connect a Data Source"
+        static let connectDataSourceHint = "Laso reads from Apple Health. Connect a watch or other app to start."
+        static let waitingForData = "Waiting for Health Data"
+        static let waitingForDataHint = "Make sure your watch or health app is sharing with Apple Health."
+        static let syncingData = "Syncing Your Data"
+        static let refreshNow = "Refresh Now"
+
         // MARK: - Profile Header
 
         static let proMember = "Pro Member"
@@ -105,6 +123,16 @@ extension Copy {
         // MARK: - About
 
         static let dataPrivacy = "Data Privacy"
+
+        // MARK: - Help & Support
+
+        static let helpAndSupport = "Help & Support"
+        static let rateOnAppStore = "Rate on App Store"
+        static let rateOnAppStoreSubtitle = "Enjoying Laso? A rating helps us a lot."
+        static let reportABug = "Report a Bug"
+        static let reportABugSubtitle = "Something not working? Tell us and we will fix it."
+        static let contactUs = "Contact Us"
+        static let contactUsSubtitle = "Questions, requests, or anything else."
 
         // MARK: - Loading
 

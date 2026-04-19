@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 #if canImport(FirebaseFirestore)
 import FirebaseFirestore
@@ -101,20 +102,39 @@ final class FeedbackPromptManager {
         return Calendar.current.dateComponents([.day], from: installDate, to: Date()).day ?? 0
     }
 
-    /// Save feedback locally and send to Firestore
-    func submitFeedback(category: String, text: String, completion: @escaping () -> Void) {
+    /// Save feedback locally and send to Firestore.
+    /// `contactEmail` is optional and only populated for categories like bug reports or support
+    /// requests where the user may want a reply.
+    func submitFeedback(
+        category: String,
+        text: String,
+        contactEmail: String? = nil,
+        completion: @escaping () -> Void
+    ) {
         var allFeedback = defaults.stringArray(forKey: AppKeys.Feedback.entries) ?? []
         let entry = "[\(category)] \(text). \(Date().formatted(.dateTime.month().day().year()))"
         allFeedback.append(entry)
         defaults.set(allFeedback, forKey: AppKeys.Feedback.entries)
 
-        let feedbackData: [String: Any] = [
+        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
+        let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "unknown"
+
+        var feedbackData: [String: Any] = [
             "category": category,
             "text": text,
             "timestamp": Date().timeIntervalSince1970,
             "days_since_install": daysSinceInstall,
-            "app_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
+            "app_version": appVersion,
+            "build_number": buildNumber,
+            "ios_version": UIDevice.current.systemVersion,
+            "device_model": UIDevice.current.model,
+            "locale": Locale.current.identifier,
+            "bundle_id": Bundle.main.bundleIdentifier ?? AppSecrets.App.bundleID
         ]
+
+        if let email = contactEmail?.trimmingCharacters(in: .whitespacesAndNewlines), !email.isEmpty {
+            feedbackData["contact_email"] = email
+        }
 
 #if canImport(FirebaseFirestore)
         Firestore.firestore().collection(AppSecrets.Firestore.feedbackCollection).addDocument(data: feedbackData) { _ in

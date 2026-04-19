@@ -22,6 +22,29 @@ extension Copy {
         static let manageDevices = "Manage Devices"
         static let refresh = "Refresh"
 
+        // MARK: - Connection Status (Home empty state)
+
+        enum ConnectionStatus {
+            // Titles
+            static let titleWaiting = "Waiting for your first watch data"
+            static func titleReceiving(_ deviceName: String) -> String { "\(deviceName) is sending data" }
+            static let titleStale = "Your watch has not synced recently"
+
+            // Descriptions
+            static let descriptionWaiting = "Apple Health is authorized. No wearable has written data yet. If you use a watch, open its companion app and make sure Apple Health sharing is on."
+            static func descriptionReceiving(deviceName: String, sourceName: String) -> String {
+                "\(deviceName) is syncing through \(sourceName). Your dashboard will update as new samples arrive."
+            }
+            static func descriptionStale(deviceName: String, lastSync: String, sourceName: String) -> String {
+                "\(deviceName) last wrote data \(lastSync). Open \(sourceName) and trigger a sync so Laso can catch up."
+            }
+
+            // Badge labels
+            static let badgeWaiting = "Waiting"
+            static let badgeConnected = "Connected"
+            static let badgeStale = "Stale"
+        }
+
         // MARK: - Error
 
         static let unableToLoadData = "Unable to Load Data"

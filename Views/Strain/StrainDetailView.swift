@@ -44,8 +44,9 @@ struct DailyStrainPoint: Identifiable {
 
 // MARK: - Strain Detail View
 
-/// Full detail view for strain analysis, showing today's strain ring, HR zone breakdown,
-/// strain coach guidance, 7-day history, and strain balance indicator.
+/// Simplified Strain detail. Hero ring and 7-day chart tell the story; today's snapshot
+/// compresses target, balance, and coach tip into three scannable lines. Full HR zone
+/// breakdown and coach detail live behind one Learn More disclosure.
 struct StrainDetailView: View {
     let strainValue: Double
     let strainLevel: StrainLevel
@@ -58,10 +59,10 @@ struct StrainDetailView: View {
     let workoutRecoveryBand: WorkoutRecoveryBand
     let cyclePhase: CyclePhaseModifier?
 
-    /// Max strain on the 0-21 scale
     private let maxStrain: Double = 21.0
 
     @State private var animatedProgress: Double = 0
+    @State private var showLearnMore = false
 
     private var progress: Double {
         min(strainValue / maxStrain, 1.0)
@@ -70,24 +71,12 @@ struct StrainDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: DS.sectionSpacing) {
-                // 1. Hero section
                 heroSection
-
-                // 2. Strain balance indicator
-                balanceSection
-
-                // 3. Strain Coach
-                coachSection
-
-                // 4. HR Zone breakdown
-                zoneBreakdownSection
-
-                // 5. 7-day history
                 if !weekHistory.isEmpty {
                     historySection
                 }
-
-                // 6. Disclaimer
+                snapshotSection
+                learnMoreSection
                 disclaimerNote
             }
             .padding(.bottom, 24)
@@ -103,27 +92,25 @@ struct StrainDetailView: View {
         }
     }
 
-    // MARK: - 1. Hero Section
+    // MARK: - Hero
 
     private var heroSection: some View {
-        VStack(spacing: 16) {
-            // Large strain ring
+        VStack(spacing: 14) {
             ZStack {
                 Circle()
-                    .stroke(strainLevel.color.opacity(0.2), lineWidth: 8)
-                    .frame(width: 120, height: 120)
+                    .stroke(strainLevel.color.opacity(0.2), lineWidth: 10)
+                    .frame(width: 140, height: 140)
 
                 Circle()
                     .trim(from: 0, to: animatedProgress)
-                    .stroke(strainLevel.color, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                    .frame(width: 120, height: 120)
+                    .stroke(strainLevel.color, style: StrokeStyle(lineWidth: 10, lineCap: .round))
+                    .frame(width: 140, height: 140)
                     .rotationEffect(.degrees(-90))
                     .animation(.easeInOut(duration: 1.0), value: animatedProgress)
 
                 VStack(spacing: 2) {
                     Text(String(format: "%.1f", strainValue))
-                        .font(.system(size: 40, weight: .bold, design: .rounded))
-
+                        .font(.system(size: 44, weight: .bold, design: .rounded))
                     Text(Copy.Strain.of21)
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -132,34 +119,14 @@ struct StrainDetailView: View {
             .onAppear { animatedProgress = progress }
             .onChange(of: strainValue) { animatedProgress = progress }
 
-            // Strain level badge
             Text(strainLevel.displayName)
                 .font(.subheadline.weight(.bold))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 6)
                 .background(strainLevel.color, in: Capsule())
-
-            // Scale reference
-            HStack(spacing: 0) {
-                ForEach(StrainLevel.allCases, id: \.rawValue) { level in
-                    VStack(spacing: 4) {
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(level.color)
-                            .frame(height: 4)
-
-                        Text(level.displayName)
-                            .font(.caption2.weight(.medium))
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-            }
-            .padding(.horizontal, 8)
         }
-        .padding(20)
+        .padding(22)
         .frame(maxWidth: .infinity)
         .background(strainGradient, in: RoundedRectangle(cornerRadius: 20))
         .overlay(
@@ -178,197 +145,7 @@ struct StrainDetailView: View {
         )
     }
 
-    // MARK: - 2. Strain Balance
-
-    private var balanceSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            sectionHeader(icon: "scale.3d", title: Copy.Strain.strainBalance)
-
-            HStack(spacing: 12) {
-                Image(systemName: strainBalance.icon)
-                    .font(.title2)
-                    .foregroundStyle(strainBalance.color)
-                    .frame(width: 44, height: 44)
-                    .background(strainBalance.color.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: 10))
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(strainBalance.rawValue)
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(strainBalance.color)
-
-                    Text(strainBalance.description)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            .padding(DS.cardPadding)
-            .cardStyle(tint: strainBalance.color)
-            .padding(.horizontal)
-        }
-    }
-
-    // MARK: - 3. Strain Coach
-
-    private var coachSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            sectionHeader(icon: "figure.run", title: Copy.Strain.strainCoach)
-
-            VStack(spacing: 12) {
-                // Target strain range
-                HStack(spacing: 12) {
-                    Image(systemName: "target")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: DS.iconSize, height: DS.iconSize)
-                        .background(.tint, in: Circle())
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(Copy.Strain.targetStrain)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                            .textCase(.uppercase)
-
-                        HStack(spacing: 4) {
-                            Text(String(format: "%.1f", targetStrainRange.lowerBound))
-                                .font(.title3.weight(.bold).monospacedDigit())
-                            Text("-")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                            Text(String(format: "%.1f", targetStrainRange.upperBound))
-                                .font(.title3.weight(.bold).monospacedDigit())
-                        }
-                    }
-
-                    Spacer()
-
-                    // Whether current is within target
-                    if targetStrainRange.contains(strainValue) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.title3)
-                            .foregroundStyle(.green)
-                    } else {
-                        Image(systemName: strainValue < targetStrainRange.lowerBound ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
-                            .font(.title3)
-                            .foregroundStyle(.orange)
-                    }
-                }
-
-                Divider()
-
-                // Training zone
-                HStack(spacing: 12) {
-                    Image(systemName: "heart.circle.fill")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: DS.iconSize, height: DS.iconSize)
-                        .background(.pink, in: Circle())
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(Copy.Strain.recommendedZone)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                            .textCase(.uppercase)
-
-                        Text(trainingZone)
-                            .font(.subheadline.weight(.semibold))
-                    }
-
-                    Spacer()
-                }
-
-                Divider()
-
-                // Guidance text
-                HStack(alignment: .top, spacing: 12) {
-                    Image(systemName: "text.bubble.fill")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: DS.iconSize, height: DS.iconSize)
-                        .background(.indigo, in: Circle())
-
-                    Text(guidanceText)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            .padding(DS.cardPadding)
-            .cardStyle()
-            .padding(.horizontal)
-        }
-    }
-
-    // MARK: - 4. HR Zone Breakdown
-
-    private var zoneBreakdownSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            sectionHeader(icon: "heart.text.square.fill", title: Copy.Strain.heartRateZones)
-
-            VStack(spacing: 0) {
-                ForEach(1...5, id: \.self) { zone in
-                    zoneRow(zone: zone)
-
-                    if zone < 5 {
-                        Divider()
-                            .padding(.leading, DS.cardPadding + 40 + 10)
-                    }
-                }
-            }
-            .cardStyle()
-            .padding(.horizontal)
-        }
-    }
-
-    private func zoneRow(zone: Int) -> some View {
-        let minutes = zoneMinutes[zone] ?? 0
-        let totalMinutes = max((1...5).compactMap({ zoneMinutes[$0] }).reduce(0, +), 1)
-        let fraction = minutes / totalMinutes
-
-        return HStack(spacing: 10) {
-            // Zone label circle
-            Text("Z\(zone)")
-                .font(.caption.weight(.bold))
-                .foregroundStyle(.white)
-                .frame(width: 30, height: 30)
-                .background(zoneColor(zone), in: Circle())
-
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text(zoneName(zone))
-                        .font(.subheadline.weight(.semibold))
-
-                    Spacer()
-
-                    Text(formatMinutes(minutes))
-                        .font(.subheadline.weight(.bold).monospacedDigit())
-                        .foregroundStyle(zoneColor(zone))
-                }
-
-                // Bar visualization
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(zoneColor(zone).opacity(0.15))
-                            .frame(height: 6)
-
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(zoneColor(zone))
-                            .frame(width: max(geo.size.width * CGFloat(fraction), 4), height: 6)
-                    }
-                }
-                .frame(height: 6)
-
-                Text(Copy.Strain.percentOfTotal(Int(fraction * 100)))
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-            }
-        }
-        .padding(.horizontal, DS.cardPadding)
-        .padding(.vertical, 11)
-    }
-
-    // MARK: - 5. 7-Day History
+    // MARK: - History Chart
 
     private var historySection: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -385,7 +162,6 @@ struct StrainDetailView: View {
                         .cornerRadius(4)
                     }
 
-                    // Target range band
                     RuleMark(y: .value("Target Low", targetStrainRange.lowerBound))
                         .foregroundStyle(.secondary.opacity(0.4))
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
@@ -399,8 +175,7 @@ struct StrainDetailView: View {
                     AxisMarks(values: [0, 7, 14, 21]) { value in
                         AxisValueLabel {
                             if let v = value.as(Double.self) {
-                                Text("\(Int(v))")
-                                    .font(.caption2)
+                                Text("\(Int(v))").font(.caption2)
                             }
                         }
                         AxisGridLine()
@@ -412,23 +187,8 @@ struct StrainDetailView: View {
                         AxisGridLine()
                     }
                 }
-                .frame(height: 180)
+                .frame(height: 170)
 
-                // Chart legend
-                HStack(spacing: 16) {
-                    ForEach(StrainLevel.allCases, id: \.rawValue) { level in
-                        HStack(spacing: 4) {
-                            Circle().fill(level.color).frame(width: 6, height: 6)
-                            Text(level.displayName)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.7)
-                        }
-                    }
-                }
-
-                // Average
                 let avgStrain = weekHistory.map(\.strain).reduce(0, +) / max(Double(weekHistory.count), 1)
                 HStack(spacing: 6) {
                     Text(Copy.Strain.sevenDayAverage)
@@ -450,7 +210,206 @@ struct StrainDetailView: View {
         }
     }
 
-    // MARK: - 6. Disclaimer
+    // MARK: - Today's Snapshot (3 compact lines)
+
+    private var snapshotSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionHeader(icon: "sparkles", title: Copy.Strain.todaySnapshot)
+
+            VStack(spacing: 0) {
+                snapshotRow(
+                    icon: targetIcon,
+                    iconColor: targetColor,
+                    title: targetStatusTitle,
+                    subtitle: Copy.Strain.targetRange(
+                        String(format: "%.1f", targetStrainRange.lowerBound),
+                        String(format: "%.1f", targetStrainRange.upperBound)
+                    )
+                )
+
+                Divider().padding(.leading, 58)
+
+                snapshotRow(
+                    icon: strainBalance.icon,
+                    iconColor: strainBalance.color,
+                    title: strainBalance.rawValue,
+                    subtitle: strainBalance.description
+                )
+
+                Divider().padding(.leading, 58)
+
+                snapshotRow(
+                    icon: "text.bubble.fill",
+                    iconColor: .indigo,
+                    title: trainingZone,
+                    subtitle: guidanceText,
+                    subtitleLines: 3
+                )
+            }
+            .cardStyle()
+            .padding(.horizontal)
+        }
+    }
+
+    private var targetStatusTitle: String {
+        if targetStrainRange.contains(strainValue) {
+            return Copy.Strain.inTarget
+        }
+        return strainValue < targetStrainRange.lowerBound ? Copy.Strain.belowTarget : Copy.Strain.aboveTarget
+    }
+
+    private var targetIcon: String {
+        if targetStrainRange.contains(strainValue) { return "checkmark.circle.fill" }
+        return strainValue < targetStrainRange.lowerBound ? "arrow.up.circle.fill" : "arrow.down.circle.fill"
+    }
+
+    private var targetColor: Color {
+        targetStrainRange.contains(strainValue) ? .green : .orange
+    }
+
+    private func snapshotRow(
+        icon: String,
+        iconColor: Color,
+        title: String,
+        subtitle: String,
+        subtitleLines: Int = 2
+    ) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(.white)
+                .frame(width: DS.iconSize, height: DS.iconSize)
+                .background(iconColor.gradient, in: RoundedRectangle(cornerRadius: DS.iconRadius, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(subtitleLines)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer()
+        }
+        .padding(.horizontal, DS.cardPadding)
+        .padding(.vertical, 12)
+    }
+
+    // MARK: - Learn More (HR Zones + Detail)
+
+    private var learnMoreSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            DisclosureGroup(isExpanded: $showLearnMore) {
+                VStack(alignment: .leading, spacing: 18) {
+                    zoneBreakdown
+                    scaleLegend
+                }
+                .padding(.top, 10)
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "book.closed.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: DS.iconSize, height: DS.iconSize)
+                        .background(.gray.gradient, in: RoundedRectangle(cornerRadius: DS.iconRadius, style: .continuous))
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(Copy.Strain.learnMore)
+                            .font(.subheadline.weight(.semibold))
+                        Text(Copy.Strain.learnMoreHint)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer(minLength: 0)
+                }
+            }
+            .padding(DS.cardPadding)
+            .cardStyle()
+            .padding(.horizontal)
+        }
+    }
+
+    private var zoneBreakdown: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(Copy.Strain.heartRateZones)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            VStack(spacing: 10) {
+                ForEach(1...5, id: \.self) { zone in
+                    zoneRow(zone: zone)
+                }
+            }
+        }
+    }
+
+    private func zoneRow(zone: Int) -> some View {
+        let minutes = zoneMinutes[zone] ?? 0
+        let totalMinutes = max((1...5).compactMap({ zoneMinutes[$0] }).reduce(0, +), 1)
+        let fraction = minutes / totalMinutes
+
+        return HStack(spacing: 10) {
+            Text("Z\(zone)")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.white)
+                .frame(width: 28, height: 28)
+                .background(zoneColor(zone), in: Circle())
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(zoneName(zone))
+                        .font(.subheadline.weight(.medium))
+                    Spacer()
+                    Text(formatMinutes(minutes))
+                        .font(.subheadline.weight(.bold).monospacedDigit())
+                        .foregroundStyle(zoneColor(zone))
+                }
+
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(zoneColor(zone).opacity(0.15))
+                            .frame(height: 6)
+
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(zoneColor(zone))
+                            .frame(width: max(geo.size.width * CGFloat(fraction), 4), height: 6)
+                    }
+                }
+                .frame(height: 6)
+            }
+        }
+    }
+
+    private var scaleLegend: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Strain Scale")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 0) {
+                ForEach(StrainLevel.allCases, id: \.rawValue) { level in
+                    VStack(spacing: 4) {
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(level.color)
+                            .frame(height: 4)
+                        Text(level.displayName)
+                            .font(.caption2.weight(.medium))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+        }
+    }
+
+    // MARK: - Disclaimer
 
     private var disclaimerNote: some View {
         HStack(alignment: .top, spacing: 8) {
@@ -519,8 +478,8 @@ struct StrainDetailView: View {
             strainLevel: .high,
             zoneMinutes: [1: 45, 2: 30, 3: 22, 4: 15, 5: 8],
             targetStrainRange: 10.0...16.0,
-            trainingZone: "Zone 2-3 (Aerobic Base)",
-            guidanceText: "Your recovery supports moderate-to-high strain today. Focus on sustained aerobic work in Zone 2-3 for optimal cardiovascular benefit without overreaching.",
+            trainingZone: "Zone 2 to 3 (Aerobic Base)",
+            guidanceText: "Your recovery supports moderate to high strain today. Focus on sustained aerobic work for cardiovascular benefit without overreaching.",
             weekHistory: [
                 DailyStrainPoint(date: Calendar.current.date(byAdding: .day, value: -6, to: .now)!, strain: 8.5, level: .moderate),
                 DailyStrainPoint(date: Calendar.current.date(byAdding: .day, value: -5, to: .now)!, strain: 12.3, level: .moderate),

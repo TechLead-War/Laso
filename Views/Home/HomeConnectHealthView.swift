@@ -1,236 +1,145 @@
 import SwiftUI
 
+/// Calm empty state for when no health data has reached Laso yet. Deliberately
+/// shows one icon, one message, one primary action. Secondary device management
+/// lives in Settings, not here.
 struct HomeConnectHealthView: View {
     let deviceSourceManager: DeviceSourceManager
     let healthKitManager: HealthKitManager
     let onRefresh: () async -> Void
 
     var body: some View {
-        VStack(spacing: 24) {
-            Spacer().frame(height: 20)
+        VStack(spacing: 28) {
+            Spacer(minLength: 40)
 
             Image(systemName: heroIconName)
-                .font(.system(size: 56))
+                .font(.system(size: 64, weight: .light))
                 .foregroundStyle(heroIconColor)
+                .symbolRenderingMode(.hierarchical)
 
-            VStack(spacing: 8) {
+            VStack(spacing: 10) {
                 Text(titleText)
-                    .font(.title3.weight(.semibold))
+                    .font(.title2.weight(.semibold))
+                    .multilineTextAlignment(.center)
 
-                Text(statusDescription)
+                Text(messageText)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, 32)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
-            statusCard
-
-            progressCard
+            if let progress = healthKitManager.syncProgress {
+                syncProgressView(progress)
+                    .padding(.horizontal, 32)
+                    .padding(.top, 4)
+            }
 
             Button {
                 AppAnalytics.shared.trackBlockTap(
                     title: "Refresh",
                     type: .emptyStateRefresh,
                     screen: .home,
-                    metadata: [
-                        "source": "empty_state"
-                    ]
+                    metadata: ["source": "empty_state"]
                 )
                 Task { await onRefresh() }
             } label: {
-                Label(Copy.Home.refresh, systemImage: "arrow.clockwise")
+                Label(Copy.Settings.refreshNow, systemImage: "arrow.clockwise")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
-            .padding(.horizontal, 24)
-
-            NavigationLink {
-                ConnectedDevicesView(
-                    viewModel: ConnectedDevicesViewModel(
-                        deviceSourceManager: deviceSourceManager,
-                        healthKitManager: healthKitManager
-                    )
-                )
-            } label: {
-                Label(Copy.Home.manageDevices, systemImage: "gear")
-                    .font(.subheadline.weight(.medium))
-            }
-            .buttonStyle(.bordered)
+            .padding(.horizontal, 32)
+            .padding(.top, 4)
 
             Spacer()
         }
     }
 
-    private var primarySource: ConnectedDeviceInfo? {
-        deviceSourceManager.connectedDevices.first
+    // MARK: - Connection State
+
+    private enum ConnectionState {
+        case waiting
+        case receiving(ConnectedDeviceInfo)
+        case stale(ConnectedDeviceInfo)
+    }
+
+    private var connectionState: ConnectionState {
+        if let active = deviceSourceManager.activeDevices.first {
+            return .receiving(active)
+        }
+        if let inactive = deviceSourceManager.inactiveDevices.first {
+            return .stale(inactive)
+        }
+        return .waiting
     }
 
     private var primaryDevice: SupportedDevice? {
-        primarySource?.device
+        switch connectionState {
+        case .waiting: return nil
+        case .receiving(let info), .stale(let info): return info.device
+        }
     }
 
     private var heroIconName: String {
-        primaryDevice?.systemImageName ?? "heart.text.square.fill"
+        if healthKitManager.syncProgress != nil {
+            return "arrow.triangle.2.circlepath"
+        }
+        return primaryDevice?.systemImageName ?? "heart.text.square.fill"
     }
 
     private var heroIconColor: Color {
-        primaryDevice?.iconColor ?? .blue
+        switch connectionState {
+        case .waiting: return .orange
+        case .receiving: return primaryDevice?.iconColor ?? .green
+        case .stale: return .orange
+        }
     }
 
     private var titleText: String {
-        primarySource == nil ? "Apple Health is connected" : "Your health source is connected"
-    }
-
-    private var primarySourceName: String {
-        primarySource?.sourceName ?? "Apple Health"
-    }
-
-    private var statusDescription: String {
-        if let progress = healthKitManager.syncProgress {
-            if let primaryDevice {
-                return "\(primaryDevice.displayName) is connected. Laso is currently \(progress.phase.title.lowercased()) for your first dashboard."
-            }
-            return "Apple Health is connected. Laso is currently \(progress.phase.title.lowercased()) for your first dashboard."
+        if healthKitManager.syncProgress != nil {
+            return Copy.Settings.syncingData
         }
-
-        if let firstSource = primarySource {
-            return "\(firstSource.device.displayName) is already syncing through \(firstSource.sourceName). Laso is waiting for the first imported samples to finish your Home dashboard."
+        switch connectionState {
+        case .waiting:
+            return Copy.Settings.waitingForData
+        case .receiving(let info):
+            return Copy.Home.ConnectionStatus.titleReceiving(info.presentationName)
+        case .stale:
+            return Copy.Home.ConnectionStatus.titleStale
         }
-
-        return "Apple Health is authorized. As soon as the next batch of samples arrives, Laso will build your dashboard automatically."
     }
 
-    private var statusCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Connected Source")
-                .font(.subheadline.weight(.semibold))
-
-            HStack(spacing: 12) {
-                Image(systemName: heroIconName)
-                    .font(.title3)
-                    .foregroundStyle(heroIconColor)
-                    .frame(width: 36, height: 36)
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(primaryDevice?.displayName ?? "Apple Health")
-                        .font(.subheadline.weight(.semibold))
-                    Text(dataFlowText)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-
-                Text(deviceSourceManager.connectedDevices.isEmpty ? "Authorized" : "Connected")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.green)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.green.opacity(0.12), in: Capsule())
-            }
-
-            HStack(spacing: 12) {
-                statCard(
-                    title: deviceSourceManager.connectedDevices.isEmpty ? "Pending first sync" : "\(deviceSourceManager.connectedDevices.count)",
-                    subtitle: deviceSourceManager.connectedDevices.isEmpty ? "Source detection" : "Connected sources"
-                )
-                statCard(
-                    title: "\(deviceSourceManager.totalTrackedMetrics)",
-                    subtitle: "Tracked metrics"
-                )
-                statCard(
-                    title: deviceSourceManager.connectedDevices.first?.lastSyncText ?? "Soon",
-                    subtitle: "Latest sync"
-                )
-            }
+    private var messageText: String {
+        if healthKitManager.syncProgress != nil {
+            return "This only takes a moment. Your dashboard will appear as soon as the first numbers arrive."
         }
-        .padding()
-        .background(.background, in: RoundedRectangle(cornerRadius: 16))
-        .padding(.horizontal)
+        switch connectionState {
+        case .waiting:
+            return Copy.Settings.waitingForDataHint
+        case .receiving(let info):
+            return "Your \(info.presentationName) is syncing through \(info.sourceDisplayName). Your dashboard updates as new data arrives."
+        case .stale(let info):
+            return "Your \(info.presentationName) last synced \(info.lastSyncText.lowercased()). Open \(info.sourceDisplayName) so Laso can catch up."
+        }
     }
+
+    // MARK: - Sync Progress
 
     @ViewBuilder
-    private var progressCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text(healthKitManager.syncProgress == nil ? "What Happens Next" : "Import Status")
-                .font(.subheadline.weight(.semibold))
+    private func syncProgressView(_ progress: HealthKitManager.SyncProgress) -> some View {
+        VStack(spacing: 8) {
+            ProgressView(
+                value: Double(progress.metricsCompleted),
+                total: Double(max(progress.totalMetrics, 1))
+            )
+            .tint(.blue)
 
-            if let progress = healthKitManager.syncProgress {
-                ProgressView(
-                    value: Double(progress.metricsCompleted),
-                    total: Double(max(progress.totalMetrics, 1))
-                )
-
-                Text(progress.phase.title)
-                    .font(.subheadline.weight(.medium))
-
-                Text("\(progress.metricsCompleted) of \(progress.totalMetrics) metrics checked")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                expectationRow(
-                    title: primarySource == nil ? "Keep Apple Health up to date" : "Keep the source syncing",
-                    detail: nextStepDetail
-                )
-                expectationRow(
-                    title: "Refresh after the next sync",
-                    detail: "Pull to refresh here any time you want Laso to re-check for new samples."
-                )
-                expectationRow(
-                    title: "Your dashboard fills in automatically",
-                    detail: "Recovery, trends, and device coverage appear as soon as the first imported data lands."
-                )
-            }
-        }
-        .padding()
-        .background(.background, in: RoundedRectangle(cornerRadius: 16))
-        .padding(.horizontal)
-    }
-
-    private func statCard(title: String, subtitle: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.subheadline.weight(.semibold))
-            Text(subtitle)
+            Text("\(progress.metricsCompleted) of \(progress.totalMetrics) metrics")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
-    }
-
-    private var dataFlowText: String {
-        if primarySource == nil {
-            return "Apple Health \u{2192} Laso"
-        }
-        return "\(primarySourceName) \u{2192} Apple Health \u{2192} Laso"
-    }
-
-    private var nextStepDetail: String {
-        if let primaryDevice {
-            return "Wear \(primaryDevice.displayName) or open \(primarySourceName) so the latest samples reach Apple Health."
-        }
-        return "New steps, sleep, workouts, and other samples will appear here after the next Apple Health sync."
-    }
-
-    private func expectationRow(title: String, detail: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.caption)
-                .foregroundStyle(heroIconColor)
-                .padding(.top, 2)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.subheadline.weight(.medium))
-                Text(detail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
         }
     }
 }

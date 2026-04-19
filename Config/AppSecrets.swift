@@ -9,6 +9,8 @@ enum AppSecrets {
 
     enum App {
         static let bundleID = "com.lasohealth.fit"
+        // TODO: Fill in once Laso is published on the App Store.
+        static let appStoreID = ""
     }
 
     // MARK: - Firebase
@@ -52,6 +54,13 @@ enum AppSecrets {
         static let termsOfUse = "https://lasohealth.fit/terms"
         static let privacyPolicy = "https://lasohealth.fit/privacy"
         static let manageSubscriptions = "https://apps.apple.com/account/subscriptions"
+        static let supportEmail = "support@lasohealth.fit"
+
+        /// Direct App Store review write link. Empty string if App Store ID is not set yet.
+        static var appStoreReview: String {
+            guard !App.appStoreID.isEmpty else { return "" }
+            return "itms-apps://itunes.apple.com/app/id\(App.appStoreID)?action=write-review"
+        }
     }
 
     // MARK: - PostHog
