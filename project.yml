@@ -39,24 +39,11 @@ targets:
       - target: LasoWidgets
         embed: true
     sources:
-      - path: Analysis
       - path: App
-      - path: Config
-      - path: Copy
-      - path: Data
-      - path: Extensions
-      - path: Intents
-      - path: Models
-      - path: Notifications
-      - path: Referral
-      - path: Security
-      - path: Subscriptions
-      - path: Tracking
-      - path: ViewModels
-      - path: Views
-      - path: WebExport
+      - path: Modules
+      - path: Core
+      - path: Common
       - path: Shared
-      - path: Themes
       - path: Assets.xcassets
       - path: GoogleService-Info.plist
       - path: PrivacyInfo.xcprivacy
@@ -163,8 +150,9 @@ targets:
     sources:
       - path: LasoWidgets
       - path: Shared
-      - path: Config/AppKeys.swift
-      - path: Data/WidgetDataStore.swift
+      - path: Core/Config/AppKeys.swift
+      - path: Core/Data/WidgetDataStore.swift
+      - path: Common/Theme/AppColour.swift
     info:
       path: LasoWidgets/Info.plist
       properties:

@@ -104,19 +104,19 @@ private struct WindDownIconTile: View {
     let size: CGFloat
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 60)) { timeline in
-            let stage = currentStage(now: timeline.date, bedtime: state.targetBedtime)
-            ZStack {
-                RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
-                    .fill(windDownTint.opacity(0.18))
-                RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
-                    .stroke(windDownTint.opacity(0.55), lineWidth: 1)
-                Image(systemName: stage.symbolName)
-                    .font(.system(size: size * 0.45, weight: .semibold))
-                    .foregroundStyle(windDownTint)
-            }
-            .frame(width: size, height: size)
-        }
+//        TimelineView(.periodic(from: .now, by: 60)) { timeline in
+//            let stage = currentStage(now: timeline.date, bedtime: state.targetBedtime)
+//            ZStack {
+//                RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
+//                    .fill(windDownTint.opacity(0.18))
+//                RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
+//                    .stroke(windDownTint.opacity(0.55), lineWidth: 1)
+//                Image(systemName: stage.symbolName)
+//                    .font(.system(size: size * 0.45, weight: .semibold))
+//                    .foregroundStyle(windDownTint)
+//            }
+//            .frame(width: size, height: size)
+//        }
     }
 }
 
@@ -205,7 +205,7 @@ private struct WindDownBreatheButton: View {
 
 // MARK: - Shared helpers
 
-private let windDownTint = Color(red: 0.52, green: 0.49, blue: 0.86) // calm violet
+private let windDownTint = AppColour.windDownTint
 
 private func currentStage(now: Date, bedtime: Date) -> WindDownStage {
     let minutes = Int((bedtime.timeIntervalSince(now) / 60).rounded(.down))

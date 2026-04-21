@@ -8,7 +8,6 @@ struct ContentView: View {
 
     @Environment(\.scenePhase) private var scenePhase
     @State private var selectedTab: AppTab = .home
-    @State private var showSettings = false
     @State private var showNotificationReprompt = false
     @State private var showHealthKitReprompt = false
     @State private var showPMFSurvey = false
@@ -56,14 +55,6 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showPMFSurvey) {
             PMFSurveySheet()
-        }
-        .sheet(isPresented: $showSettings) {
-            SettingsView(
-                webExportViewModel: webExportViewModel,
-                deviceSourceManager: deviceSourceManager,
-                healthKitManager: healthKitManager,
-                healthDataStore: healthDataStore
-            )
         }
         .task(id: appStateStore.onboardingCompleted) {
             guard appStateStore.onboardingCompleted else { return }
@@ -184,6 +175,7 @@ struct ContentView: View {
             case .home: .tabHome
             case .live: .tabLive
             case .explore: .tabExplore
+            case .settings: .tabSettings
             }
             AppAnalytics.shared.trackBlockTap(
                 title: newTab.rawValue.capitalized,
@@ -235,6 +227,11 @@ struct ContentView: View {
             Tab(AppTab.explore.label, systemImage: AppTab.explore.systemImageName, value: AppTab.explore) {
                 NavigationStack(path: $explorePath) {
                     withNavigationDestinations(exploreTabView(path: $explorePath), path: $explorePath)
+                }
+            }
+            Tab(AppTab.settings.label, systemImage: AppTab.settings.systemImageName, value: AppTab.settings) {
+                NavigationStack {
+                    settingsTabView
                 }
             }
         }
@@ -304,8 +301,17 @@ struct ContentView: View {
             liveViewModel: liveViewModel,
             deviceSourceManager: deviceSourceManager,
             appStateStore: appStateStore,
-            navigationPath: path,
-            showSettings: $showSettings
+            navigationPath: path
+        )
+    }
+
+    @ViewBuilder
+    private var settingsTabView: some View {
+        SettingsView(
+            webExportViewModel: webExportViewModel,
+            deviceSourceManager: deviceSourceManager,
+            healthKitManager: healthKitManager,
+            healthDataStore: healthDataStore
         )
     }
 
@@ -359,6 +365,8 @@ struct ContentView: View {
             liveTabView
         case .explore:
             exploreTabView(path: $navigationPath)
+        case .settings:
+            settingsTabView
         }
     }
 
