@@ -39,7 +39,7 @@ struct ExploreEmptyStateSection: View {
                 .controlSize(.regular)
             }
         }
-        .padding(16)
+        .padding(DS.space4)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
     }
 

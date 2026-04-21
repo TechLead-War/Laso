@@ -58,9 +58,9 @@ struct PaywallView: View {
                         .onAppear { pricingTracker.appeared() }
                         .onDisappear { pricingTracker.disappeared() }
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 48)
-                .padding(.bottom, 24)
+                .padding(.horizontal, DS.space6)
+                .padding(.top, DS.space8)
+                .padding(.bottom, DS.space6)
             }
 
             footer
@@ -125,7 +125,7 @@ struct PaywallView: View {
             featureRow(icon: "bell.badge.fill", text: Copy.Paywall.featureAlerts)
             featureRow(icon: "lock.shield.fill", text: Copy.Paywall.featurePrivacy)
         }
-        .padding(20)
+        .padding(DS.space5)
         .background(.background, in: RoundedRectangle(cornerRadius: 16))
     }
 
@@ -217,7 +217,7 @@ struct PaywallView: View {
                             Text(badge)
                                 .font(.caption.weight(.bold))
                                 .foregroundStyle(.white)
-                                .padding(.horizontal, 8)
+                                .padding(.horizontal, DS.space2)
                                 .padding(.vertical, 3)
                                 .background(.green, in: Capsule())
                         }
@@ -234,7 +234,7 @@ struct PaywallView: View {
                     .font(.title2)
                     .foregroundStyle(isSelected ? Color.accentColor : .secondary)
             }
-            .padding(16)
+            .padding(DS.space4)
             .background(
                 RoundedRectangle(cornerRadius: 14)
                     .fill(.background)
@@ -367,7 +367,7 @@ struct PaywallView: View {
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
+                .padding(.horizontal, DS.space6)
 
             HStack(spacing: 16) {
                 if let termsURL = URL(string: AppSecrets.URLs.termsOfUse) {
@@ -382,9 +382,9 @@ struct PaywallView: View {
             .font(.caption2)
             .foregroundStyle(.tertiary)
         }
-        .padding(.horizontal, 24)
-        .padding(.top, 12)
-        .padding(.bottom, 8)
+        .padding(.horizontal, DS.space6)
+        .padding(.top, DS.space3)
+        .padding(.bottom, DS.space2)
         .background(.ultraThinMaterial)
     }
 }

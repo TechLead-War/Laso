@@ -16,7 +16,7 @@ struct HealthRiskDetailView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, DS.space7)
 
                 // Focus Areas (what to do)
                 if !risk.focusAreas.isEmpty {
@@ -75,7 +75,7 @@ struct HealthRiskDetailView: View {
                         .foregroundStyle(risk.riskType.color)
 
                     Text("\(risk.level)")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .font(DS.Typography.displayM)
                         .foregroundStyle(risk.riskGrade.color)
 
                     RiskGradeBadge(grade: risk.riskGrade)

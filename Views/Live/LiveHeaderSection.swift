@@ -42,7 +42,7 @@ struct LiveHeaderSection: View {
             }
         }
         .padding(.horizontal)
-        .padding(.top, 16)
+        .padding(.top, DS.space4)
         .onAppear { headerTracker.appeared() }
         .onDisappear { headerTracker.disappeared() }
     }

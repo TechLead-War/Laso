@@ -90,7 +90,7 @@ struct StrainDetailView: View {
                 learnMoreSection
                 disclaimerNote
             }
-            .padding(.bottom, 24)
+            .padding(.bottom, DS.space6)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle(Copy.Strain.title)
@@ -107,6 +107,13 @@ struct StrainDetailView: View {
 
     private var heroSection: some View {
         VStack(spacing: 14) {
+            // Static explainer. teaches the user what this screen is about
+            Text(Copy.Strain.heroExplainer)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+
             ZStack {
                 Circle()
                     .stroke(strainLevel.color.opacity(0.2), lineWidth: 10)
@@ -119,25 +126,23 @@ struct StrainDetailView: View {
                     .rotationEffect(.degrees(-90))
                     .animation(.easeInOut(duration: 1.0), value: animatedProgress)
 
-                VStack(spacing: 4) {
-                    Text(strainLevel.displayName)
-                        .font(.system(size: 26, weight: .bold, design: .rounded))
-                        .foregroundStyle(strainLevel.color)
-                        .minimumScaleFactor(0.6)
-                        .lineLimit(1)
-
-                    Text(strainContext)
-                        .font(.caption2.weight(.medium))
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.horizontal, 16)
-                }
-                .frame(maxWidth: 120)
+                Text(strainLevel.displayName)
+                    .font(DS.Typography.displayS)
+                    .foregroundStyle(strainLevel.color)
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
             }
             .onAppear { animatedProgress = progress }
             .onChange(of: strainValue) { animatedProgress = progress }
+
+            // Context line. what today means + what to do. Full width, no truncation.
+            Text(strainContext)
+                .font(.subheadline)
+                .foregroundStyle(.primary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, DS.space2)
         }
         .padding(22)
         .frame(maxWidth: .infinity)
@@ -308,7 +313,7 @@ struct StrainDetailView: View {
             Spacer()
         }
         .padding(.horizontal, DS.cardPadding)
-        .padding(.vertical, 12)
+        .padding(.vertical, DS.space3)
     }
 
     // MARK: - Learn More (HR Zones + Detail)

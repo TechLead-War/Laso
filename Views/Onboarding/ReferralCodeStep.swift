@@ -22,7 +22,7 @@ struct ReferralCodeStep: View {
             Text("Laso")
                 .font(.system(size: 15, weight: .semibold, design: .rounded))
                 .foregroundStyle(.secondary)
-                .padding(.bottom, 32)
+                .padding(.bottom, DS.space7)
 
             // Icon
             Image(systemName: "gift.fill")
@@ -41,10 +41,10 @@ struct ReferralCodeStep: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, DS.space7)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.bottom, 24)
+            .padding(.bottom, DS.space6)
 
             // Code field
             VStack(spacing: 0) {
@@ -60,8 +60,8 @@ struct ReferralCodeStep: View {
                         .autocorrectionDisabled()
                         .frame(width: 180)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.horizontal, DS.space4)
+                .padding(.vertical, DS.space3)
             }
             .background(.background, in: RoundedRectangle(cornerRadius: 16))
             .padding(.horizontal)
@@ -79,13 +79,13 @@ struct ReferralCodeStep: View {
                     }
                 }
                 .font(.caption)
-                .padding(.top, 8)
-                .padding(.horizontal, 24)
+                .padding(.top, DS.space2)
+                .padding(.horizontal, DS.space6)
             }
 
             if isRedeeming {
                 ProgressView()
-                    .padding(.top, 12)
+                    .padding(.top, DS.space3)
             }
 
             Spacer()
@@ -130,8 +130,8 @@ struct ReferralCodeStep: View {
                 }
                 .disabled(isRedeeming)
             }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 48)
+            .padding(.horizontal, DS.space6)
+            .padding(.bottom, DS.space8)
             .sensoryFeedback(.selection, trigger: buttonTapCount)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

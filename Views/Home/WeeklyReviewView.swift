@@ -134,11 +134,11 @@ struct WeeklyReviewView: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
-                            .padding(.horizontal, 32)
+                            .padding(.horizontal, DS.space7)
                     }
                 }
             }
-            .padding(.vertical, 16)
+            .padding(.vertical, DS.space4)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("Weekly Review")
@@ -199,13 +199,13 @@ struct WeeklyReviewView: View {
             }
 
             Divider()
-                .padding(.horizontal, 20)
+                .padding(.horizontal, DS.space5)
 
             // Category score breakdown in a grid
             weeklyScoreGrid(review)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 20)
+        .padding(.vertical, DS.space5)
         .padding(.horizontal)
         .background(DS.recoveryGradient(review.currentScore))
         .clipShape(RoundedRectangle(cornerRadius: DS.cardRadius))
@@ -320,6 +320,7 @@ struct WeeklyReviewView: View {
             Text(metric)
                 .font(.subheadline.weight(.semibold))
                 .lineLimit(1)
+                .minimumScaleFactor(0.75)
 
             HStack(spacing: 3) {
                 Image(systemName: change >= 0 ? "arrow.up.right" : "arrow.down.right")
@@ -352,7 +353,7 @@ struct WeeklyReviewView: View {
                     }
                     .padding(.horizontal)
                 }
-                .padding(.vertical, 16)
+                .padding(.vertical, DS.space4)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
                 .padding(.horizontal)
@@ -382,7 +383,7 @@ struct WeeklyReviewView: View {
             .padding(.vertical, DS.badgeV)
             .background(.green.opacity(DS.badgeBg), in: Capsule())
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, DS.space1)
     }
 
     // MARK: - Top Insight of the Week
@@ -445,7 +446,7 @@ struct WeeklyReviewView: View {
                     }
                     .padding(.horizontal)
                 }
-                .padding(.vertical, 16)
+                .padding(.vertical, DS.space4)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
                 .padding(.horizontal)
@@ -484,7 +485,7 @@ struct WeeklyReviewView: View {
                     .padding(.leading, 30)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, DS.space1)
     }
 
     // MARK: - Progressive Coach
@@ -531,7 +532,7 @@ struct WeeklyReviewView: View {
                 Divider()
 
                 HStack {
-                    Text("Next week target")
+                    Text(Copy.Home.nextWeekTarget)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     Spacer()
@@ -553,7 +554,7 @@ struct WeeklyReviewView: View {
             .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
             .padding(.horizontal)
         }
-        .padding(.vertical, 16)
+        .padding(.vertical, DS.space4)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
         .padding(.horizontal)

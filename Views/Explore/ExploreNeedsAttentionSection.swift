@@ -54,7 +54,7 @@ struct ExploreNeedsAttentionSection: View {
                                     .font(.subheadline.weight(.bold).monospacedDigit())
                                     .foregroundStyle(.red)
                             }
-                            .padding(.vertical, 4)
+                            .padding(.vertical, DS.space1)
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
@@ -62,7 +62,7 @@ struct ExploreNeedsAttentionSection: View {
 
                     if !weakCategories.isEmpty {
                         Divider()
-                            .padding(.vertical, 4)
+                            .padding(.vertical, DS.space1)
 
                         HStack(spacing: 0) {
                             ForEach(weakCategories.prefix(4), id: \.category) { contrib in
@@ -96,7 +96,7 @@ struct ExploreNeedsAttentionSection: View {
                         }
                     }
                 }
-                .padding(16)
+                .padding(DS.space4)
                 .background(.background, in: RoundedRectangle(cornerRadius: 16))
             }
         }

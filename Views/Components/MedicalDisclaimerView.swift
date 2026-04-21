@@ -13,7 +13,7 @@ struct MedicalDisclaimerView: View {
                 Spacer()
 
                 Image(systemName: "cross.case")
-                    .font(.system(size: 56))
+                    .font(DS.Typography.heroIcon)
                     .foregroundStyle(.blue)
 
                 Text(Copy.Disclaimer.title)
@@ -32,7 +32,7 @@ struct MedicalDisclaimerView: View {
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
-                .padding(.horizontal, 32)
+                .padding(.horizontal, DS.space7)
 
                 Spacer()
 
@@ -43,10 +43,10 @@ struct MedicalDisclaimerView: View {
                         .font(.headline)
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
+                        .padding(.vertical, DS.space4)
                         .background(.blue, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
-                .padding(.horizontal, 24)
+                .padding(.horizontal, DS.space6)
                 .padding(.bottom, 40)
             }
         }

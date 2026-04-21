@@ -57,6 +57,7 @@ struct BodyInsightsSection: View {
                         .font(.caption2)
                         .foregroundStyle(.white.opacity(0.7))
                         .lineLimit(1)
+                        .minimumScaleFactor(0.75)
                 }
             }
 
@@ -104,6 +105,7 @@ struct BodyInsightsSection: View {
                         .font(.caption2)
                         .foregroundStyle(.white.opacity(0.7))
                         .lineLimit(1)
+                        .minimumScaleFactor(0.75)
                 }
             }
 

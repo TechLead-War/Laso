@@ -14,7 +14,7 @@ struct ProFeatureOverlay: View {
             Spacer()
 
             Image(systemName: icon)
-                .font(.system(size: 56))
+                .font(DS.Typography.heroIcon)
                 .foregroundStyle(.tint)
                 .symbolEffect(.pulse, options: .repeating)
 
@@ -34,7 +34,7 @@ struct ProFeatureOverlay: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, DS.space7)
             }
 
             Button {

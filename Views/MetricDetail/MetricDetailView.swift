@@ -130,8 +130,8 @@ struct MetricDetailView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.leading)
                     .padding(.horizontal)
-                    .padding(.top, 24)
-                    .padding(.bottom, 16)
+                    .padding(.top, DS.space6)
+                    .padding(.bottom, DS.space4)
             }
             .padding(.bottom)
         }
@@ -178,7 +178,7 @@ struct MetricDetailView: View {
             Spacer().frame(height: 40)
 
             Image(systemName: viewModel.metric.systemImageName)
-                .font(.system(size: 44))
+                .font(DS.Typography.largeIcon)
                 .foregroundStyle(viewModel.metric.category.color.opacity(0.6))
 
             Text(Copy.Insights.MetricDetail.noDataYet)
@@ -188,7 +188,7 @@ struct MetricDetailView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, DS.space7)
 
             // Still show insights if they exist (they come from analysis, not chart data)
             if !viewModel.insights.isEmpty {
@@ -202,7 +202,7 @@ struct MetricDetailView: View {
                             .padding(.horizontal)
                     }
                 }
-                .padding(.top, 8)
+                .padding(.top, DS.space2)
             }
         }
         .frame(maxWidth: .infinity)
@@ -212,7 +212,7 @@ struct MetricDetailView: View {
         VStack(spacing: 8) {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(viewModel.currentValue)
-                    .font(.system(size: 44, weight: .bold, design: .rounded))
+                    .font(DS.Typography.displayL)
 
                 Text(viewModel.metric.unit)
                     .font(.title3)
@@ -248,7 +248,7 @@ struct MetricDetailView: View {
                 DataSourceBadge(device: sourceDevice.device, sourceName: sourceDevice.sourceName)
             }
         }
-        .padding(.vertical, 16)
+        .padding(.vertical, DS.space4)
         .frame(maxWidth: .infinity)
         .cardStyle()
         .padding(.horizontal)
@@ -292,7 +292,7 @@ struct MetricDetailView: View {
                     }
                     Spacer()
                 }
-                .padding(.horizontal, 4)
+                .padding(.horizontal, DS.space1)
             }
         }
         .padding(DS.cardPadding)
@@ -348,7 +348,7 @@ struct MetricDetailView: View {
             }
             .frame(maxWidth: .infinity)
         }
-        .padding(.vertical, 16)
+        .padding(.vertical, DS.space4)
         .cardStyle()
         .padding(.horizontal)
     }
@@ -395,7 +395,7 @@ struct MetricDetailView: View {
                     }
                     .frame(maxWidth: .infinity)
                 }
-                .padding(.vertical, 16)
+                .padding(.vertical, DS.space4)
                 .cardStyle()
                 .padding(.horizontal)
             }

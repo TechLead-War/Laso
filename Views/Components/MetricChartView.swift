@@ -315,7 +315,7 @@ struct MetricChartView: View {
             .padding(.vertical, 6)
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
             .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
-            .padding(4)
+            .padding(DS.space1)
         }
     }
 

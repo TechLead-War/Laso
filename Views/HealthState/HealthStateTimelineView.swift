@@ -138,7 +138,7 @@ struct HealthStateTimelineView: View {
                 }
             }
         }
-        .padding(16)
+        .padding(DS.space4)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
     }
 
@@ -230,7 +230,7 @@ struct HealthStateTimelineView: View {
                 }
                 Spacer()
             }
-            .padding(.top, 4)
+            .padding(.top, DS.space1)
         }
         .padding(DS.cardPadding)
         .cardStyle()
@@ -335,7 +335,7 @@ struct HealthStateTimelineView: View {
                         }
                     }
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, DS.space1)
             }
         }
         .padding(DS.cardPadding)
@@ -367,7 +367,7 @@ struct HealthStateTimelineView: View {
                             }
                         }
                     }
-                    .padding(.top, 4)
+                    .padding(.top, DS.space1)
                 } label: {
                     HStack(spacing: 8) {
                         Circle()

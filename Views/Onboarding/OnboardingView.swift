@@ -89,7 +89,7 @@ struct OnboardingView: View {
                             .animation(.spring(response: 0.4), value: currentStep)
                     }
                 }
-                .padding(.bottom, 16)
+                .padding(.bottom, DS.space4)
             }
         }
         .accessibilityIdentifier("screen.onboarding")

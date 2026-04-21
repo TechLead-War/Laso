@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -27,7 +27,6 @@
 		0CFA791CF6A286E1DC103255 /* HealthKitRepromptManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78753FEE4F26F6FDC430E5A2 /* HealthKitRepromptManager.swift */; };
 		0D1C8A696AE300DD58F916ED /* PersonalRecordAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4CE7C2FDBCFFE781B01B4B9 /* PersonalRecordAnalyzer.swift */; };
 		0F104286F8BF1382BC6EAEF0 /* WeeklyReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F1B82AC2599B0303444D381 /* WeeklyReviewView.swift */; };
-		112A7530DCC6AF73A3C9FFB9 /* LevelBadgeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24BFF272759A76CC1A5AA370 /* LevelBadgeCard.swift */; };
 		13BBFB12EFF158D1B763D4CE /* CoachActionIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5CCB07634A6E96AA9A9D467 /* CoachActionIntents.swift */; };
 		13E98A9E1FD7ED16BD1F118C /* ExploreScoreHeroSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC00F962A334AD63D7450EF9 /* ExploreScoreHeroSection.swift */; };
 		13EF6342F72CD9629C09AB3A /* CrossMetricAnomalyDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6EB02E1F89DAC3F173A9E2 /* CrossMetricAnomalyDetector.swift */; };
@@ -491,7 +490,6 @@
 		23F269B8F1BFCBAE94DBCB34 /* VitalityScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VitalityScorer.swift; sourceTree = "<group>"; };
 		244BAE562EA2A618168FF6A8 /* ReferralManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferralManager.swift; sourceTree = "<group>"; };
 		24A8F0F0FE7C288021E46BEB /* ExploreYourTrendsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreYourTrendsSection.swift; sourceTree = "<group>"; };
-		24BFF272759A76CC1A5AA370 /* LevelBadgeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelBadgeCard.swift; sourceTree = "<group>"; };
 		2503A9A5A541ED5603016F08 /* MetricDrillDownUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricDrillDownUITests.swift; sourceTree = "<group>"; };
 		253DCE97A8955675B69DEA7A /* PatternCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatternCard.swift; sourceTree = "<group>"; };
 		256BAE6BFDD5F193DE1033E7 /* ReportsAndExploreUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportsAndExploreUITests.swift; sourceTree = "<group>"; };
@@ -512,7 +510,7 @@
 		2B2740E0E138C706625255B7 /* SleepCoachCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepCoachCard.swift; sourceTree = "<group>"; };
 		2BC5CDDD38C43A8F15D43EE1 /* InsightFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightFactory.swift; sourceTree = "<group>"; };
 		2DD5178763361F8F5C9FA730 /* MLResultAggregator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLResultAggregator.swift; sourceTree = "<group>"; };
-		2E6A79C6A57A85AF78D95A7B /* Laso.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Laso.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2E6A79C6A57A85AF78D95A7B /* Laso.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Laso.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F53CAFAB757C16B36D07B94 /* VitalityDetailHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VitalityDetailHelpers.swift; sourceTree = "<group>"; };
 		2FB550DF613A646C3C15C54C /* BreathworkLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathworkLiveActivityWidget.swift; sourceTree = "<group>"; };
 		306963534B0324C02B4DC48A /* ReadinessIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadinessIntent.swift; sourceTree = "<group>"; };
@@ -543,7 +541,7 @@
 		3D65C758F03B6751F506F628 /* SeverityBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeverityBadge.swift; sourceTree = "<group>"; };
 		3E241B836DBC39E604C764CF /* LiveHeartRateSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveHeartRateSection.swift; sourceTree = "<group>"; };
 		3E8777F7E756E6EB52002D6E /* AnalysisWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisWidgetView.swift; sourceTree = "<group>"; };
-		4024E1BFAFFCCDFB7436F99A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		4024E1BFAFFCCDFB7436F99A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		414EDA41967C0C9E1E405FED /* UserBaseline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserBaseline.swift; sourceTree = "<group>"; };
 		42507233E471636899246378 /* BreathworkActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathworkActivityAttributes.swift; sourceTree = "<group>"; };
 		42D638D228E17F85750AAEC2 /* AppStartupCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStartupCoordinator.swift; sourceTree = "<group>"; };
@@ -759,7 +757,7 @@
 		DB5737EEB9C2C63A4808E158 /* LasoUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LasoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DB6194E7222F766DA593120A /* RemoteConfigManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteConfigManager.swift; sourceTree = "<group>"; };
 		DB64CE551229B9165432537B /* AnalysisWidgetProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisWidgetProvider.swift; sourceTree = "<group>"; };
-		DC1489C7446344221C0AA886 /* LasoWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = LasoWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		DC1489C7446344221C0AA886 /* LasoWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LasoWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		DD281CA396957983B12D0A3C /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
 		DD49838EC97E56CFD6466B44 /* ShowTrendsIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowTrendsIntent.swift; sourceTree = "<group>"; };
 		DD947BF688F7B5F398D7E9FD /* WorkoutEffectivenessAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutEffectivenessAnalyzer.swift; sourceTree = "<group>"; };
@@ -1489,7 +1487,6 @@
 				29C4F7E23A76618C9508A8A5 /* HomeJournalPromptCard.swift */,
 				97B33FA07679543DDE4568BA /* HomePrimaryActionCard.swift */,
 				4E39C48FAFF0EE6BB872CB33 /* HomeView.swift */,
-				24BFF272759A76CC1A5AA370 /* LevelBadgeCard.swift */,
 				57C7C392834EE694D06A3C80 /* MetricStripView.swift */,
 				3648742DDF752276A8F7C091 /* MorningCheckInView.swift */,
 				253DCE97A8955675B69DEA7A /* PatternCard.swift */,
@@ -1684,7 +1681,6 @@
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					08AD24A007F4503B8999A065 = {
-						DevelopmentTeam = S2MAH8X8JM;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.BackgroundModes = {
@@ -1701,7 +1697,6 @@
 						TestTargetID = 08AD24A007F4503B8999A065;
 					};
 					2131E0565430F53E4EC2F615 = {
-						DevelopmentTeam = S2MAH8X8JM;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
@@ -1725,7 +1720,6 @@
 				525DEF767B88AE8AA4386F79 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				5CC06B5893DD0C0D5077ECE7 /* XCRemoteSwiftPackageReference "posthog-ios" */,
 			);
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -1972,7 +1966,6 @@
 				240CAC7CE074C7793D3FDDA5 /* LLMInsightGenerator.swift in Sources */,
 				78DC5B1E1326E6311B4C0D4B /* LasoApp.swift in Sources */,
 				47D2EF7D25D3E105140510E3 /* LasoShortcutsProvider.swift in Sources */,
-				112A7530DCC6AF73A3C9FFB9 /* LevelBadgeCard.swift in Sources */,
 				178699D137C42586A1638EB3 /* LiveActivitySection.swift in Sources */,
 				A474F6C7E6B021D9C306CE44 /* LiveBloodPressureTempSection.swift in Sources */,
 				1683CB4558FF87B7CDDF9C86 /* LiveEmptyStateSection.swift in Sources */,
@@ -2266,7 +2259,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 4;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2344,7 +2337,7 @@
 				CODE_SIGN_ENTITLEMENTS = LasoWidgets/LasoWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 4;
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2371,7 +2364,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 4;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2393,7 +2386,7 @@
 				CODE_SIGN_ENTITLEMENTS = LasoWidgets/LasoWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 4;
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

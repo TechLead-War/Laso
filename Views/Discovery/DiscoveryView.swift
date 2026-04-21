@@ -114,13 +114,13 @@ struct DiscoveryView: View {
                     statRow(value: formatNumber(dataDepth.totalDataPoints), label: "data points")
                     statRow(value: "\(dataDepth.metricsTracked)", label: "health metrics")
                 }
-                .padding(.top, 8)
+                .padding(.top, DS.space2)
             }
 
             Text("Here is what we found")
                 .font(.headline)
                 .foregroundStyle(.blue)
-                .padding(.top, 8)
+                .padding(.top, DS.space2)
 
             // Swipe hint
             VStack(spacing: 4) {
@@ -131,11 +131,11 @@ struct DiscoveryView: View {
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             }
-            .padding(.top, 4)
+            .padding(.top, DS.space1)
 
             Spacer()
         }
-        .padding(.horizontal, 32)
+        .padding(.horizontal, DS.space7)
     }
 
     // MARK: - Discovery Page
@@ -177,14 +177,14 @@ struct DiscoveryView: View {
                 Text(discovery.evidence)
                     .font(.caption2.weight(.medium))
                     .foregroundStyle(.secondary)
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, DS.space3)
                     .padding(.vertical, 6)
                     .background(.quaternary.opacity(0.5), in: Capsule())
             }
 
             Spacer()
         }
-        .padding(.horizontal, 32)
+        .padding(.horizontal, DS.space7)
     }
 
     // MARK: - CTA Page
@@ -241,11 +241,11 @@ struct DiscoveryView: View {
                     .padding(.vertical, 14)
                     .background(.blue, in: RoundedRectangle(cornerRadius: 14))
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, DS.space6)
 
             Spacer()
         }
-        .padding(.horizontal, 32)
+        .padding(.horizontal, DS.space7)
     }
 
     // MARK: - Helpers

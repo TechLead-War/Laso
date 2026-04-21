@@ -18,7 +18,7 @@ struct OnboardingPromiseStep: View {
                 .foregroundStyle(.blue)
                 .frame(width: 72, height: 72)
                 .background(Color.blue.opacity(0.12), in: Circle())
-                .padding(.bottom, 20)
+                .padding(.bottom, DS.space5)
 
             Text(Copy.Onboarding.promiseTitle)
                 .font(.title2.weight(.bold))
@@ -28,16 +28,16 @@ struct OnboardingPromiseStep: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, DS.space7)
 
             siriTipCard
-                .padding(.top, 24)
+                .padding(.top, DS.space6)
 
             Spacer()
 
             disclaimerFooter
-                .padding(.horizontal, 24)
-                .padding(.bottom, 12)
+                .padding(.horizontal, DS.space6)
+                .padding(.bottom, DS.space3)
 
             Button {
                 AppAnalytics.shared.trackBlockTap(
@@ -58,8 +58,8 @@ struct OnboardingPromiseStep: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .font(.headline)
-            .padding(.horizontal, 24)
-            .padding(.bottom, 48)
+            .padding(.horizontal, DS.space6)
+            .padding(.bottom, DS.space8)
             .accessibilityIdentifier("onboarding.promiseOpen")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -97,9 +97,9 @@ struct OnboardingPromiseStep: View {
 
             Spacer(minLength: 0)
         }
-        .padding(12)
+        .padding(DS.space3)
         .background(Color.blue.opacity(0.06), in: RoundedRectangle(cornerRadius: 12))
-        .padding(.horizontal, 24)
+        .padding(.horizontal, DS.space6)
     }
 
     private var disclaimerFooter: some View {

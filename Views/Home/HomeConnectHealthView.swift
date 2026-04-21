@@ -26,14 +26,14 @@ struct HomeConnectHealthView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, DS.space7)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             if let progress = healthKitManager.syncProgress {
                 syncProgressView(progress)
-                    .padding(.horizontal, 32)
-                    .padding(.top, 4)
+                    .padding(.horizontal, DS.space7)
+                    .padding(.top, DS.space1)
             }
 
             Button {
@@ -51,8 +51,8 @@ struct HomeConnectHealthView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
-            .padding(.horizontal, 32)
-            .padding(.top, 4)
+            .padding(.horizontal, DS.space7)
+            .padding(.top, DS.space1)
 
             Spacer()
         }

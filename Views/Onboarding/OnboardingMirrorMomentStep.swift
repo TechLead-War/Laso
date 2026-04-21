@@ -68,19 +68,19 @@ struct OnboardingMirrorMomentStep: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, DS.space7)
             }
 
             if case .running = state {
                 runningProgress
-                    .padding(.top, 20)
+                    .padding(.top, DS.space5)
             }
 
             Spacer()
 
             if case .failed = state {
                 failedFooter
-                    .padding(.bottom, 48)
+                    .padding(.bottom, DS.space8)
             } else {
                 Spacer().frame(height: 48)
             }
@@ -96,7 +96,7 @@ struct OnboardingMirrorMomentStep: View {
 
                 ProgressView(value: Double(progress.metricsCompleted), total: Double(max(progress.totalMetrics, 1)))
                     .tint(.blue)
-                    .padding(.horizontal, 48)
+                    .padding(.horizontal, DS.space8)
 
                 HStack(spacing: 6) {
                     Text("\(percent)%")
@@ -130,15 +130,15 @@ struct OnboardingMirrorMomentStep: View {
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-                    .padding(.top, 4)
+                    .padding(.horizontal, DS.space7)
+                    .padding(.top, DS.space1)
                     .id(reassuranceIndex)
                     .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
         } else {
             ProgressView()
                 .progressViewStyle(.circular)
-                .padding(.top, 4)
+                .padding(.top, DS.space1)
         }
     }
 
@@ -159,7 +159,7 @@ struct OnboardingMirrorMomentStep: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .font(.headline)
-            .padding(.horizontal, 24)
+            .padding(.horizontal, DS.space6)
             .accessibilityIdentifier("onboarding.mirrorRetry")
 
             Button(Copy.Onboarding.mirrorSkip) {
@@ -188,30 +188,30 @@ struct OnboardingMirrorMomentStep: View {
                 .foregroundStyle(.blue)
                 .frame(width: 72, height: 72)
                 .background(Color.blue.opacity(0.12), in: Circle())
-                .padding(.bottom, 20)
+                .padding(.bottom, DS.space5)
 
             Text(Copy.Onboarding.mirrorCompleteTitle)
                 .font(.title2.weight(.bold))
-                .padding(.bottom, 4)
+                .padding(.bottom, DS.space1)
 
             if let span = discovery.dataSpanDescription {
                 Text(Copy.Onboarding.mirrorCompleteSubtitle(span))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, DS.space7)
             }
 
             if !discovery.highlights.isEmpty {
                 highlightCard(discovery: discovery)
-                    .padding(.top, 20)
+                    .padding(.top, DS.space5)
             } else {
                 Text(Copy.Onboarding.mirrorNoDataMessage)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-                    .padding(.top, 20)
+                    .padding(.horizontal, DS.space7)
+                    .padding(.top, DS.space5)
             }
 
             if let observation = Copy.Onboarding.mirrorObservation(
@@ -222,8 +222,8 @@ struct OnboardingMirrorMomentStep: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-                    .padding(.top, 16)
+                    .padding(.horizontal, DS.space7)
+                    .padding(.top, DS.space4)
             }
 
             Spacer()
@@ -248,8 +248,8 @@ struct OnboardingMirrorMomentStep: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .font(.headline)
-            .padding(.horizontal, 24)
-            .padding(.bottom, 48)
+            .padding(.horizontal, DS.space6)
+            .padding(.bottom, DS.space8)
             .accessibilityIdentifier("onboarding.mirrorContinue")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -275,13 +275,13 @@ struct OnboardingMirrorMomentStep: View {
 
                     Spacer(minLength: 0)
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, DS.space2)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.horizontal, DS.space4)
+        .padding(.vertical, DS.space2)
         .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
-        .padding(.horizontal, 24)
+        .padding(.horizontal, DS.space6)
     }
 
     // MARK: - Titles

@@ -59,7 +59,7 @@ struct JournalInsightsView: View {
             Spacer().frame(height: 60)
 
             Image(systemName: "book.and.wrench.fill")
-                .font(.system(size: 56))
+                .font(DS.Typography.heroIcon)
                 .foregroundStyle(.secondary)
 
             Text(Copy.Journal.Insights.insightsUnlocking)
@@ -69,7 +69,7 @@ struct JournalInsightsView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, DS.space7)
 
             // Progress indicator
             progressIndicator
@@ -92,7 +92,7 @@ struct JournalInsightsView: View {
                     }
                 }
             }
-            .padding(.top, 8)
+            .padding(.top, DS.space2)
 
             Text(Copy.Journal.Insights.startLogging)
                 .font(.caption)
@@ -142,6 +142,7 @@ private struct JournalCorrelationCard: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.75)
             }
 
             // Insight text

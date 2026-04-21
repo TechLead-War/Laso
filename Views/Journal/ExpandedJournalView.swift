@@ -28,7 +28,7 @@ struct ExpandedJournalView: View {
                 ScrollView {
                     VStack(spacing: 0) {
                         groupFilterBar
-                            .padding(.top, 8)
+                            .padding(.top, DS.space2)
                             .padding(.bottom, DS.itemSpacing)
 
                         behaviorList
@@ -108,8 +108,8 @@ struct ExpandedJournalView: View {
                 Text(label)
                     .font(.subheadline.weight(.medium))
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, DS.space3)
+            .padding(.vertical, DS.space2)
             .foregroundStyle(isSelected ? .white : color)
             .background(isSelected ? color : color.opacity(0.1), in: Capsule())
         }
@@ -134,7 +134,7 @@ struct ExpandedJournalView: View {
                             }
                         }
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, DS.space1)
                     .cardStyle()
                     .padding(.horizontal)
                 } header: {
@@ -171,7 +171,7 @@ struct ExpandedJournalView: View {
             }
         }
         .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.vertical, DS.space2)
         .background(.bar)
     }
 
@@ -196,6 +196,7 @@ struct ExpandedJournalView: View {
                 .font(.subheadline.weight(isLogged ? .semibold : .regular))
                 .foregroundStyle(isLogged ? .primary : .secondary)
                 .lineLimit(1)
+                .minimumScaleFactor(0.75)
 
             Spacer(minLength: 4)
 
@@ -281,6 +282,7 @@ struct ExpandedJournalView: View {
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
+                .minimumScaleFactor(0.75)
                 .frame(maxWidth: 48, alignment: .leading)
 
             // Plus button
@@ -346,12 +348,12 @@ struct ExpandedJournalView: View {
             }
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, DS.space4)
             .background(.blue, in: RoundedRectangle(cornerRadius: DS.cardRadius))
             .padding(.horizontal)
         }
         .buttonStyle(.plain)
-        .padding(.bottom, 8)
+        .padding(.bottom, DS.space2)
         .background(
             LinearGradient(
                 colors: [Color(.systemGroupedBackground).opacity(0), Color(.systemGroupedBackground)],
@@ -367,12 +369,12 @@ struct ExpandedJournalView: View {
     private var confirmationOverlay: some View {
         VStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 56))
+                .font(DS.Typography.heroIcon)
                 .foregroundStyle(.green)
             Text("Logged \(savedCount) behavior\(savedCount == 1 ? "" : "s")")
                 .font(.title3.weight(.semibold))
         }
-        .padding(32)
+        .padding(DS.space7)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
     }
 

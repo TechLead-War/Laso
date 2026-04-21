@@ -176,7 +176,7 @@ struct SettingsView: View {
                 .font(.footnote.weight(.bold))
         }
         .foregroundStyle(FeatureGate.hasFullAccess ? Color(red: 0.35, green: 0.22, blue: 0.02) : .secondary)
-        .padding(.horizontal, 12)
+        .padding(.horizontal, DS.space3)
         .padding(.vertical, 6)
         .background(
             FeatureGate.hasFullAccess

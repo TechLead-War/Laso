@@ -93,7 +93,7 @@ struct MorningCheckInView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .padding(16)
+        .padding(DS.space4)
         .background(.background, in: RoundedRectangle(cornerRadius: 16))
         .overlay(
             RoundedRectangle(cornerRadius: 16)

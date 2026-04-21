@@ -16,13 +16,13 @@ struct OnboardingPulseStep: View {
 
             pulse
                 .frame(width: 180, height: 180)
-                .padding(.bottom, 48)
+                .padding(.bottom, DS.space8)
 
             Text(Copy.Onboarding.pulseHeadline)
                 .font(.system(size: 26, weight: .semibold))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.primary)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, DS.space7)
                 .opacity(headlineOpacity)
 
             Spacer()
@@ -43,8 +43,8 @@ struct OnboardingPulseStep: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .font(.headline)
-            .padding(.horizontal, 24)
-            .padding(.bottom, 48)
+            .padding(.horizontal, DS.space6)
+            .padding(.bottom, DS.space8)
             .opacity(buttonOpacity)
             .accessibilityIdentifier("onboarding.pulseBegin")
         }

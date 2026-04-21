@@ -12,7 +12,7 @@ struct CorrelationsSection: View {
                 VStack(alignment: .leading, spacing: 12) {
                     // Header
                     HStack {
-                        Text("From Your Data")
+                        Text(Copy.Home.fromYourData)
                             .font(.headline)
 
                         Spacer()
@@ -81,6 +81,7 @@ struct CorrelationCard: View {
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.primary)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.75)
 
                     Spacer()
                 }
@@ -99,6 +100,7 @@ struct CorrelationCard: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.75)
 
                     Image(systemName: "chevron.right")
                         .font(.caption2.weight(.semibold))

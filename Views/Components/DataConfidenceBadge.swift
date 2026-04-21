@@ -102,11 +102,11 @@ struct DataConfidenceBadge: View {
                         .fill(daysOfData > t.maxDays ? t.color : Color(.systemGray5))
                         .frame(height: 2)
                         .frame(maxWidth: 24)
-                        .padding(.bottom, 24)
+                        .padding(.bottom, DS.space6)
                 }
             }
         }
-        .padding(.horizontal, 4)
+        .padding(.horizontal, DS.space1)
         .padding(.vertical, 6)
         .background(Color(.systemGray6).opacity(0.5), in: RoundedRectangle(cornerRadius: 12))
     }

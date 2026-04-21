@@ -114,9 +114,9 @@ struct ActivationProgressBanner: View {
             }
             .frame(height: 6)
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 12)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .padding(.vertical, DS.space2)
+        .padding(.horizontal, DS.space3)
+        .glassChrome(in: RoundedRectangle(cornerRadius: 12))
     }
 
     // MARK: - Celebration Card
@@ -154,7 +154,7 @@ struct ActivationProgressBanner: View {
                     .foregroundStyle(.tertiary)
             }
         }
-        .padding(12)
+        .padding(DS.space3)
         .background(
             RoundedRectangle(cornerRadius: 14)
                 .fill(.background)
@@ -164,7 +164,7 @@ struct ActivationProgressBanner: View {
             RoundedRectangle(cornerRadius: 14)
                 .strokeBorder(.tint.opacity(0.2), lineWidth: 1)
         )
-        .padding(.bottom, 8)
+        .padding(.bottom, DS.space2)
     }
 }
 
@@ -186,7 +186,7 @@ struct AskYourDataCard: View {
                     .frame(width: 36)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Ask your data")
+                    Text(Copy.Home.askYourData)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
                     Text("\"How is my HRV trending?\"")

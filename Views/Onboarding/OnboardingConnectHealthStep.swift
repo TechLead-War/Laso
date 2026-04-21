@@ -23,21 +23,21 @@ struct OnboardingConnectHealthStep: View {
                 Text(Copy.Onboarding.connectTitle)
                     .font(.title2.weight(.bold))
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, DS.space6)
 
                 Text(Copy.Onboarding.connectSubtitle)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, DS.space7)
 
                 if let note = Copy.Onboarding.personalizedConnectNote(age: age) {
                     Text(note)
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 32)
-                        .padding(.top, 4)
+                        .padding(.horizontal, DS.space7)
+                        .padding(.top, DS.space1)
                 }
             }
 
@@ -49,7 +49,7 @@ struct OnboardingConnectHealthStep: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
-            .padding(.top, 24)
+            .padding(.top, DS.space6)
 
             Spacer()
 
@@ -80,8 +80,8 @@ struct OnboardingConnectHealthStep: View {
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
                 .font(.headline)
-                .padding(.horizontal, 24)
-                .padding(.bottom, 48)
+                .padding(.horizontal, DS.space6)
+                .padding(.bottom, DS.space8)
                 .accessibilityIdentifier("onboarding.connectHealthButton")
             } else {
                 VStack(spacing: 12) {
@@ -107,10 +107,10 @@ struct OnboardingConnectHealthStep: View {
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
                     .font(.headline)
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, DS.space6)
                     .accessibilityIdentifier("onboarding.connectHealthContinueAnyway")
                 }
-                .padding(.bottom, 48)
+                .padding(.bottom, DS.space8)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

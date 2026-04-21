@@ -14,7 +14,7 @@ struct FocusAreasSection: View {
                             .font(.headline)
                             .foregroundStyle(.primary)
 
-                        Text("Your Focus Areas")
+                        Text(Copy.Home.focusAreasTitle)
                             .font(.headline)
 
                         Spacer()
@@ -92,6 +92,7 @@ struct FocusRiskCard: View {
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                                     .lineLimit(1)
+                                    .minimumScaleFactor(0.75)
                             }
                         }
 

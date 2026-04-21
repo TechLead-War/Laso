@@ -59,8 +59,8 @@ struct HealthKitRepromptBanner: View {
                 .tint(.pink)
             }
         }
-        .padding(16)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .padding(DS.space4)
+        .glassChrome(in: RoundedRectangle(cornerRadius: 16))
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .strokeBorder(.pink.opacity(0.3), lineWidth: 1)

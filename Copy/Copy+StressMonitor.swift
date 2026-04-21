@@ -5,11 +5,12 @@ extension Copy {
 
         // MARK: - Hero
 
-        static let contextLow = "Your body is calm and relaxed."
-        static let contextMild = "Some tension, but manageable."
-        static let contextModerate = "Your body is signaling strain."
-        static let contextHigh = "Your body needs rest."
-        static let contextDefault = "Tracking your stress signals."
+        static let heroExplainer = "How much pressure your nervous system is under right now"
+        static let contextLow = "Your nervous system is relaxed. Good time to focus on work or training."
+        static let contextMild = "Some tension is building. A few slow breaths can help reset it."
+        static let contextModerate = "Your body is signaling real strain. Slow down before adding more load."
+        static let contextHigh = "Stress is high. Step back, breathe, and protect your sleep tonight."
+        static let contextDefault = "Tracking your stress signals throughout the day."
 
         // MARK: - Scale
 

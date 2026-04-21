@@ -22,9 +22,9 @@ struct RecoveryInfoSheet: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
-                            .padding(.horizontal, 16)
+                            .padding(.horizontal, DS.space4)
                     }
-                    .padding(.top, 8)
+                    .padding(.top, DS.space2)
 
                     // MARK: - Score Levels
                     VStack(alignment: .leading, spacing: 10) {
@@ -138,15 +138,15 @@ struct RecoveryInfoSheet: View {
                     .padding()
                     .background(.background, in: RoundedRectangle(cornerRadius: 16))
                     .padding(.horizontal)
-                    .padding(.bottom, 16)
+                    .padding(.bottom, DS.space4)
 
                     Text(Copy.Analysis.RiskDetail.disclaimer)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.leading)
                         .padding(.horizontal)
-                        .padding(.top, 24)
-                        .padding(.bottom, 16)
+                        .padding(.top, DS.space6)
+                        .padding(.bottom, DS.space4)
                 }
             }
             .background(Color(.systemGroupedBackground))
@@ -204,8 +204,8 @@ struct RecoveryInfoSheet: View {
 
             Spacer()
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, DS.space4)
+        .padding(.vertical, DS.space3)
     }
 
     // MARK: - Factor Row
@@ -232,7 +232,7 @@ struct RecoveryInfoSheet: View {
 
             Spacer()
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, DS.space4)
+        .padding(.vertical, DS.space3)
     }
 }

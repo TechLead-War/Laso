@@ -84,6 +84,17 @@ extension Copy {
         static let howWasToday = "How was today?"
         static let journalSubtitle = "A quick check-in helps track patterns over time"
 
+        // MARK: - Section & Card Labels
+
+        static let focusAreasTitle = "Your Focus Areas"
+        static let fromYourData = "From Your Data"
+        static let whyThisToday = "Why this, today"
+        static let nextWeekTarget = "Next week target"
+        static let askYourData = "Ask your data"
+        static let seeSleepTips = "See sleep tips \u{2192}"
+        static let wearAppleWatchForRecovery = "Wear Apple Watch for recovery data"
+        static let tapToUnderstandScore = "Tap to understand your score"
+
         // MARK: - Recovery Labels
 
         static let fullyRecovered = "Fully Recovered"

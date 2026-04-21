@@ -189,7 +189,7 @@ struct CorrelationsView: View {
     private var emptyState: some View {
         VStack(spacing: 12) {
             Image(systemName: "brain.head.profile")
-                .font(.system(size: 36))
+                .font(DS.Typography.mediumIcon)
                 .foregroundStyle(.tertiary)
             Text(Copy.Insights.Correlations.buildingIntelligence)
                 .font(.subheadline.weight(.medium))
@@ -318,7 +318,7 @@ private struct CompoundInsightCard: View {
 // MARK: - Causal Chain Card
 
 /// Card showing a multi-link causal chain (A → B → C) with narrative
-private struct CausalChainCard: View {
+struct CausalChainCard: View {
     let chain: CausalChain
     let onTap: () -> Void
 
@@ -386,7 +386,7 @@ private struct CausalChainCard: View {
                     .foregroundStyle(deviation > 0 ? .green : .red)
             }
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, DS.space2)
         .padding(.vertical, 5)
         .background(metric.category.color.opacity(0.08), in: Capsule())
     }
@@ -450,6 +450,7 @@ private struct InteractionEffectCard: View {
                             .font(.caption2)
                             .foregroundStyle(.cyan)
                             .lineLimit(1)
+                            .minimumScaleFactor(0.75)
                     }
 
                     Spacer()
@@ -527,6 +528,7 @@ private struct CompactCorrelationRow: View {
                         .font(.caption)
                         .foregroundStyle(.primary)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.75)
 
                     Text("\(correlation.strengthLabel) · \(correlation.dayOffset == 0 ? "Same day" : "Next day") · \(Int(correlation.effectPercentDiff))% effect")
                         .font(.caption2)
@@ -539,8 +541,8 @@ private struct CompactCorrelationRow: View {
                     .font(.system(size: 9, weight: .semibold))
                     .foregroundStyle(.quaternary)
             }
-            .padding(.vertical, 8)
-            .padding(.horizontal, 12)
+            .padding(.vertical, DS.space2)
+            .padding(.horizontal, DS.space3)
             .background(.background, in: RoundedRectangle(cornerRadius: 10))
         }
         .buttonStyle(.plain)

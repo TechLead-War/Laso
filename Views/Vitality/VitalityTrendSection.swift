@@ -71,13 +71,13 @@ struct VitalityTrendSection: View {
 
                     Divider()
                         .frame(height: DS.dividerHeight)
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, DS.space3)
 
                     trendStat(title: Copy.Vitality.pace, value: scorer.paceLabel, color: paceTint)
 
                     Divider()
                         .frame(height: DS.dividerHeight)
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, DS.space3)
 
                     trendStat(title: Copy.Vitality.current, value: Copy.Vitality.ageLabel(scorer.vitalityAge), color: historyLineColor)
                 }

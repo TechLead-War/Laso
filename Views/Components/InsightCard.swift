@@ -46,6 +46,7 @@ struct InsightCard: View {
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.75)
                 }
             }
 

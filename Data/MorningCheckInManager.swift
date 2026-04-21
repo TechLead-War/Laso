@@ -5,6 +5,7 @@ final class MorningCheckInManager {
 
     private static let storageKey = "laso.morning_checkin.history"
     private static let lastCheckInKey = "laso.morning_checkin.last_date"
+    private static let dismissedDateKey = "laso.morning_checkin.dismissed_date"
     private static let maxHistoryDays = 90
 
     /// Whether to show the morning check-in today
@@ -23,7 +24,21 @@ final class MorningCheckInManager {
             }
         }
 
+        // Check if user explicitly dismissed today
+        if let dismissedStr = UserDefaults.standard.string(forKey: dismissedDateKey),
+           let dismissedDate = ISO8601DateFormatter().date(from: dismissedStr) {
+            if calendar.isDateInToday(dismissedDate) {
+                return false
+            }
+        }
+
         return true
+    }
+
+    /// Persist today's dismissal so the prompt does not return later in the day
+    static func markDismissedToday() {
+        let dateStr = ISO8601DateFormatter().string(from: Date())
+        UserDefaults.standard.set(dateStr, forKey: dismissedDateKey)
     }
 
     /// Save a completed check-in

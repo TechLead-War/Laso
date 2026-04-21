@@ -10,12 +10,13 @@ extension Copy {
         // MARK: - Hero
 
         static let of21 = "of 21"
-        static let contextLow = "Very light day for your body."
-        static let contextLight = "Easy effort. Room to do more."
-        static let contextModerate = "Solid workload. Well-balanced."
-        static let contextHigh = "Hard day. Recovery matters tonight."
-        static let contextPeak = "Pushing your limits. Plan rest."
-        static let contextAllOut = "Maximum effort. Prioritize recovery."
+        static let heroExplainer = "How much physical effort your body handled today"
+        static let contextLow = "Light day for your body. Safe to add some activity if you feel up to it."
+        static let contextLight = "Easy effort so far. You have room to push a bit more today."
+        static let contextModerate = "Solid workload for your recovery. Keep this rhythm going."
+        static let contextHigh = "Hard day on the body. Prioritize food, water, and sleep tonight."
+        static let contextPeak = "You pushed near your limit. Plan an easier day tomorrow."
+        static let contextAllOut = "Maximum effort today. Real recovery is the priority now."
 
         // MARK: - Balance
 

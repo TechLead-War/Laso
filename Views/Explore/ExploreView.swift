@@ -23,6 +23,15 @@ struct ExploreView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
+                // In-content title. replaces large nav title to remove wasted top space
+                HStack {
+                    Text(Copy.Explore.title)
+                        .font(.largeTitle.weight(.bold))
+                    Spacer()
+                }
+                .padding(.horizontal)
+                .padding(.top, DS.space1)
+
                 if hasScoreData {
                     // 1. Score Hero with trend
                     ExploreScoreHeroSection(
@@ -267,13 +276,14 @@ struct ExploreView: View {
                     .padding(.horizontal)
                 }
             }
-            .padding(.bottom, 16)
+            .padding(.bottom, DS.space4)
         }
+        .contentMargins(.bottom, 72, for: .scrollContent)
         .accessibilityIdentifier("screen.explore")
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle(Copy.Explore.title)
-        .navigationBarTitleDisplayMode(.large)
-        .toolbar(.visible, for: .navigationBar)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear {
             maxScrollDepth = 0
             AppAnalytics.shared.trackFeatureOpen(.explore, metadata: [

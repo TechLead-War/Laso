@@ -144,8 +144,8 @@ struct InsightsDetailView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.leading)
                     .padding(.horizontal)
-                    .padding(.top, 24)
-                    .padding(.bottom, 16)
+                    .padding(.top, DS.space6)
+                    .padding(.bottom, DS.space4)
             }
             .padding(.vertical)
             .frame(maxWidth: .infinity)
@@ -235,7 +235,7 @@ struct InsightsDetailView: View {
             }
             .foregroundStyle(selectedFilter == filter ? .white : .primary)
             .padding(.horizontal, 14)
-            .padding(.vertical, 8)
+            .padding(.vertical, DS.space2)
             .background(selectedFilter == filter ? filter.chipColor : Color(.secondarySystemGroupedBackground), in: Capsule())
         }
         .buttonStyle(.plain)

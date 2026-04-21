@@ -25,7 +25,7 @@ struct BrainHealthDetailView: View {
                     disclaimerSection.frame(width: sectionWidth, alignment: .leading)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.bottom, 32)
+                .padding(.bottom, DS.space7)
             }
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
         }
@@ -40,7 +40,7 @@ struct BrainHealthDetailView: View {
     private var heroSection: some View {
         VStack(spacing: 14) {
             Text("\(brainScore.score)")
-                .font(.system(size: 56, weight: .bold, design: .rounded).monospacedDigit())
+                .font(DS.Typography.displayXL.monospacedDigit())
                 .foregroundStyle(.primary)
                 .postHogMask()
 
@@ -49,14 +49,23 @@ struct BrainHealthDetailView: View {
                 .tracking(2)
                 .foregroundStyle(.secondary)
 
+            // Static explainer. teaches the user what this screen is about
+            Text(Copy.BrainHealth.heroExplainer)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, DS.space2)
+
             Text(brainScore.state.displayName)
                 .font(.title3.weight(.bold))
                 .foregroundStyle(brainScore.state.color)
 
+            // What this state means + what to do today
             Text(brainScore.headline)
                 .font(.subheadline)
                 .foregroundStyle(.primary)
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
 
             if brainScore.confidence < 0.7 {
                 HStack(spacing: 4) {
@@ -93,7 +102,7 @@ struct BrainHealthDetailView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 20)
+                    .padding(.vertical, DS.space5)
             } else {
                 let visibleHistory = Array(weeklyHistory.suffix(7))
                 HStack(alignment: .bottom, spacing: 6) {
@@ -300,7 +309,7 @@ struct BrainHealthDetailView: View {
                 stressLoadBlock
                 fitnessBlock
             }
-            .padding(.top, 12)
+            .padding(.top, DS.space3)
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: "book.closed.fill")
@@ -495,8 +504,8 @@ struct BrainHealthDetailView: View {
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.leading)
             .fixedSize(horizontal: false, vertical: true)
-            .padding(.top, 24)
-            .padding(.bottom, 16)
+            .padding(.top, DS.space6)
+            .padding(.bottom, DS.space4)
     }
 }
 

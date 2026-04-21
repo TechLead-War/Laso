@@ -104,8 +104,19 @@ struct HistoricalAnalyzer {
                 let slope = values.linearRegression.slope
                 longTermSlope = slope
 
-                if let first = longSamples.first?.value, first > 0 {
-                    longTermChangePercent = ((currentValue - first) / first) * 100
+                // Median of the earliest samples as a robust baseline. A single
+                // first-day value is often a partial-sync artifact that blows up the ratio.
+                let earlySamples = Array(longSamples.prefix(14)).map(\.value)
+                if earlySamples.count >= 7 {
+                    let earlyBaseline = earlySamples.median
+                    if earlyBaseline > 0 {
+                        let change = ((currentValue - earlyBaseline) / earlyBaseline) * 100
+                        // Clamp absurd swings; beyond this is almost always a data artifact,
+                        // not real biological drift.
+                        if abs(change) <= 200 {
+                            longTermChangePercent = change
+                        }
+                    }
                 }
             }
         }
@@ -293,10 +304,13 @@ struct HistoricalAnalyzer {
         let improving = metric.higherIsBetter ? changePercent > 0 : changePercent < 0
         let absChange = String(format: "%.0f", abs(changePercent))
         let periodLabel = "the past year"
+        // Direction word stays literal so the title and summary agree. The
+        // improving flag drives severity, tone, and recommendation separately.
+        let directionWord = changePercent > 0 ? "Up" : "Down"
 
         return Insight(
             metric: metric,
-            title: Copy.Analysis.Historical.longTermTrajectory(metric: metric.displayName, direction: improving ? "Up" : "Down", change: absChange, period: periodLabel.capitalized),
+            title: Copy.Analysis.Historical.longTermTrajectory(metric: metric.displayName, direction: directionWord, change: absChange, period: periodLabel.capitalized),
             summary: "Looking at \(ctx.totalDataPoints) data points over \(periodLabel), your \(metric.displayName.lowercased()) has \(changePercent > 0 ? "increased" : "decreased") \(absChange)% overall.",
             recommendation: improving
                 ? Copy.Analysis.Historical.longTermImprovementReliable

@@ -194,7 +194,7 @@ struct CycleDetailView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            .padding(.top, 8)
+            .padding(.top, DS.space2)
 
             // Phase legend
             HStack(spacing: 16) {
@@ -421,7 +421,7 @@ struct CycleDetailView: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
-                    .padding(.vertical, 20)
+                    .padding(.vertical, DS.space5)
                     Spacer()
                 }
                 .cardStyle()
@@ -483,7 +483,7 @@ struct CycleDetailView: View {
             // Length deviation from average
             deviationLabel(for: entry.length)
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, DS.space2)
         .padding(.horizontal, DS.cardPadding)
     }
 
@@ -572,7 +572,7 @@ struct CycleDetailView: View {
             .cardStyle(tint: .red)
             .padding(.horizontal)
         }
-        .padding(.bottom, 8)
+        .padding(.bottom, DS.space2)
     }
 
     private var countdownProgress: Double {

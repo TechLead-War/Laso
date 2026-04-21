@@ -71,7 +71,7 @@ struct AskYourDataView: View {
                 }
             }
         }
-        .padding(12)
+        .padding(DS.space3)
         .background(.background, in: RoundedRectangle(cornerRadius: 12))
         .overlay(
             RoundedRectangle(cornerRadius: 12)
@@ -198,7 +198,7 @@ struct AskYourDataView: View {
                 }
             }
         }
-        .padding(16)
+        .padding(DS.space4)
         .background(.background, in: RoundedRectangle(cornerRadius: 14))
         .overlay(
             RoundedRectangle(cornerRadius: 14)

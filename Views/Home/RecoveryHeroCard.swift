@@ -127,7 +127,7 @@ struct RecoveryHeroCard: View {
 
                     // Staleness indicator or fallback hint
                     if !hasLiveReadiness {
-                        Text("Wear Apple Watch for recovery data")
+                        Text(Copy.Home.wearAppleWatchForRecovery)
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                     } else if let refresh = lastRefresh, isStale(refresh) {
@@ -138,7 +138,7 @@ struct RecoveryHeroCard: View {
                                 .font(.caption2)
                         }
                         .foregroundStyle(.orange)
-                        .padding(.horizontal, 8)
+                        .padding(.horizontal, DS.space2)
                         .padding(.vertical, 3)
                         .background(Color.orange.opacity(0.1), in: Capsule())
                     } else if let daily = dailyScore, daily != score {
@@ -156,7 +156,7 @@ struct RecoveryHeroCard: View {
             HStack(spacing: 4) {
                 Image(systemName: "hand.tap")
                     .font(.caption2)
-                Text("Tap to understand your score")
+                Text(Copy.Home.tapToUnderstandScore)
                     .font(.caption2)
             }
             .foregroundStyle(.tertiary)

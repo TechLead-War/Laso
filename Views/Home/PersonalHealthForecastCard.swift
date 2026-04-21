@@ -38,7 +38,7 @@ struct PersonalHealthForecastCard: View {
                     }
                 }
             }
-            .padding(16)
+            .padding(DS.space4)
             .background(.background, in: RoundedRectangle(cornerRadius: 16))
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
@@ -88,7 +88,7 @@ struct PersonalHealthForecastCard: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, DS.space1)
     }
 }
 

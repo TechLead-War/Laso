@@ -24,9 +24,9 @@ struct ScoreGuideSheet: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
-                            .padding(.horizontal, 24)
+                            .padding(.horizontal, DS.space6)
                     }
-                    .padding(.top, 8)
+                    .padding(.top, DS.space2)
 
                     // MARK: - What does it mean?
                     VStack(alignment: .leading, spacing: 10) {
@@ -159,15 +159,15 @@ struct ScoreGuideSheet: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .font(.subheadline.weight(.medium))
-                    .padding(.bottom, 24)
+                    .padding(.bottom, DS.space6)
 
                     Text(Copy.Analysis.RiskDetail.disclaimer)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.leading)
                         .padding(.horizontal)
-                        .padding(.top, 24)
-                        .padding(.bottom, 16)
+                        .padding(.top, DS.space6)
+                        .padding(.bottom, DS.space4)
                 }
             }
             .background(Color(.systemGroupedBackground))
@@ -226,8 +226,8 @@ struct ScoreGuideSheet: View {
 
             Spacer()
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, DS.space4)
+        .padding(.vertical, DS.space3)
     }
 
     // MARK: - Category Row
@@ -249,7 +249,7 @@ struct ScoreGuideSheet: View {
 
             Spacer()
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, DS.space4)
+        .padding(.vertical, DS.space3)
     }
 }

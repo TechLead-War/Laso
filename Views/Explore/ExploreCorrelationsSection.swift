@@ -75,6 +75,7 @@ struct ExploreCorrelationsSection: View {
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
+                .minimumScaleFactor(0.75)
 
             Text(insight.narrative)
                 .font(.caption)

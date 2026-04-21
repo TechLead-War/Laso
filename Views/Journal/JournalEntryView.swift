@@ -112,6 +112,7 @@ struct JournalEntryView: View {
                     .font(.caption.weight(.medium))
                     .foregroundStyle(selectedCategory == category ? .white : .primary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.75)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
@@ -195,7 +196,7 @@ struct JournalEntryView: View {
             }
             .disabled(value >= category.valueRange.upperBound)
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, DS.space2)
         .sensoryFeedback(.increase, trigger: value)
     }
 
@@ -269,7 +270,7 @@ struct JournalEntryView: View {
             }
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, DS.space4)
             .background(categoryColor(category), in: RoundedRectangle(cornerRadius: DS.cardRadius))
         }
         .buttonStyle(.plain)
@@ -281,12 +282,12 @@ struct JournalEntryView: View {
     private var confirmationOverlay: some View {
         VStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 56))
+                .font(DS.Typography.heroIcon)
                 .foregroundStyle(.green)
             Text("Logged")
                 .font(.title3.weight(.semibold))
         }
-        .padding(32)
+        .padding(DS.space7)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
     }
 

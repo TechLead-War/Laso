@@ -51,7 +51,7 @@ struct PMFSurveySheet: View {
                     EmptyView()
                 }
             }
-            .padding(24)
+            .padding(DS.space6)
         }
         .navigationTitle("Quick question")
         .navigationBarTitleDisplayMode(.inline)
@@ -125,7 +125,7 @@ struct PMFSurveySheet: View {
             TextField("e.g., fitness enthusiast, someone with a chronic condition...", text: $segmentAnswer, axis: .vertical)
                 .textFieldStyle(.plain)
                 .lineLimit(2...4)
-                .padding(12)
+                .padding(DS.space3)
                 .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
 
             Button {
@@ -134,7 +134,7 @@ struct PMFSurveySheet: View {
             } label: {
                 Text("Continue")
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, DS.space3)
             }
             .buttonStyle(.borderedProminent)
             .disabled(segmentAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -151,7 +151,7 @@ struct PMFSurveySheet: View {
             TextField("e.g., understanding my recovery, sleep insights...", text: $benefitAnswer, axis: .vertical)
                 .textFieldStyle(.plain)
                 .lineLimit(2...4)
-                .padding(12)
+                .padding(DS.space3)
                 .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
 
             Button {
@@ -160,7 +160,7 @@ struct PMFSurveySheet: View {
             } label: {
                 Text("Continue")
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, DS.space3)
             }
             .buttonStyle(.borderedProminent)
             .disabled(benefitAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -177,7 +177,7 @@ struct PMFSurveySheet: View {
             TextField("Optional — anything you'd change or add", text: $improvementText, axis: .vertical)
                 .textFieldStyle(.plain)
                 .lineLimit(2...6)
-                .padding(12)
+                .padding(DS.space3)
                 .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
 
             Button {
@@ -188,7 +188,7 @@ struct PMFSurveySheet: View {
             } label: {
                 Text(improvementText.isEmpty ? "Done" : "Submit")
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, DS.space3)
             }
             .buttonStyle(.borderedProminent)
         }
@@ -211,7 +211,7 @@ struct PMFSurveySheet: View {
             Spacer()
             Button("Done") { dismiss() }
                 .buttonStyle(.borderedProminent)
-                .padding(.bottom, 24)
+                .padding(.bottom, DS.space6)
         }
         .padding()
     }

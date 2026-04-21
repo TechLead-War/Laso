@@ -125,7 +125,7 @@ struct LiveWaitingForDataView: View {
             Spacer().frame(height: 40)
 
             Image(systemName: primaryDevice?.systemImageName ?? "waveform.path.ecg")
-                .font(.system(size: 56))
+                .font(DS.Typography.heroIcon)
                 .foregroundStyle(.secondary)
                 .symbolEffect(.pulse, isActive: isStreaming)
 
@@ -137,7 +137,7 @@ struct LiveWaitingForDataView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, DS.space7)
 
                 Text(footnoteText)
                     .font(.caption)

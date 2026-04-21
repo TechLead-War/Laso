@@ -113,7 +113,7 @@ struct WorkoutPlanSheet: View {
                 blockCard(title: "Cooldown", block: plan.cooldown, tint: .blue)
             }
             .padding(.horizontal)
-            .padding(.vertical, 20)
+            .padding(.vertical, DS.space5)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("Today's Workout")
@@ -239,8 +239,8 @@ struct WorkoutPlanSheet: View {
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, DS.space3)
+        .padding(.vertical, DS.space2)
         .background(tint.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: 12))
     }
 }

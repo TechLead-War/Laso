@@ -231,7 +231,7 @@ struct HomeView: View {
                     recoveryState: hasData && hasLiveReadiness ? DashboardViewModel.RecoveryState(score: liveReadinessScore) : nil,
                     onTapScoreInfo: { showScoreGuide = true }
                 )
-                .padding(.top, 12)
+                .padding(.top, DS.space1)
 
                 if shouldShowEmptyState {
                     connectHealthView
@@ -268,7 +268,7 @@ struct HomeView: View {
                         latestMilestone: viewModel.latestMilestoneEvent,
                         onDismissCelebration: { viewModel.latestMilestoneEvent = nil }
                     )
-                    .padding(.top, 4)
+                    .padding(.top, DS.space1)
 
                     // 1c. Morning Check-In (Paper 10: Subjective + Objective)
                     if showMorningCheckIn {
@@ -278,25 +278,26 @@ struct HomeView: View {
                                 withAnimation { showMorningCheckIn = false }
                             },
                             onDismiss: {
+                                MorningCheckInManager.markDismissedToday()
                                 withAnimation { showMorningCheckIn = false }
                             }
                         )
-                        .padding(.top, 8)
+                        .padding(.top, DS.space2)
                         .transition(.move(edge: .top).combined(with: .opacity))
                     }
 
                     // 2. Today's Action. single source of truth for what to do
                     primaryActionCard
-                        .padding(.top, 8)
+                        .padding(.top, DS.space2)
 
                     // 2a-ii. On-device daily narrative (iOS 26+ Foundation Models).
                     // Proactive one-paragraph story of today, grounded in real signals.
                     DailyNarrativeCard(signals: buildDailyNarrativeSignals())
-                        .padding(.top, 8)
+                        .padding(.top, DS.space2)
 
                     // 2b. Body Intelligence. non-obvious ML findings
                     TodayBriefingView(cards: viewModel.intelligenceBriefing)
-                        .padding(.top, 8)
+                        .padding(.top, DS.space2)
 
                     // 2c. Personal Health Forecast (Paper 3: Conformal Prediction)
                     PersonalHealthForecastCard(
@@ -311,7 +312,7 @@ struct HomeView: View {
                             navigationPath.append(metric)
                         }
                     )
-                    .padding(.top, 8)
+                    .padding(.top, DS.space2)
 
                     // 2d. Ask Your Data (Papers 1 & 2: PHIA)
                     AskYourDataCard {
@@ -323,11 +324,11 @@ struct HomeView: View {
                         )
                         navigationPath.append(Route.askYourData)
                     }
-                    .padding(.top, 8)
+                    .padding(.top, DS.space2)
 
                     // 3. Compact alert banner (illness + health risks)
                     compactAlertBanner
-                        .padding(.top, 8)
+                        .padding(.top, DS.space2)
                         .onAppear { illnessTracker.appeared(); risksTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 20) }
                         .onDisappear { illnessTracker.disappeared(); risksTracker.disappeared() }
 
@@ -341,25 +342,7 @@ struct HomeView: View {
                         )
                         navigationPath.append(tile.route)
                     }
-                    .padding(.top, 12)
-
-                    // 5. Level & Streaks. gamification (Endowed Progress)
-                    LevelBadgeCard(
-                        level: viewModel.gamificationEngine.currentLevel,
-                        totalDaysTracked: viewModel.gamificationEngine.totalDaysTracked,
-                        progressToNext: viewModel.gamificationEngine.progressToNextLevel,
-                        streaks: viewModel.gamificationEngine.streaks,
-                        onTap: {
-                            AppAnalytics.shared.trackBlockTap(
-                                title: "Level Badge",
-                                type: .recoveryCard,
-                                screen: .home,
-                                metadata: ["destination": "achievements"]
-                            )
-                            navigationPath.append(Route.achievements)
-                        }
-                    )
-                    .padding(.top, 8)
+                    .padding(.top, DS.space3)
 
                     // ── Below the fold ──
 
@@ -378,7 +361,7 @@ struct HomeView: View {
                         )
                         navigationPath.append(Route.weeklyReview)
                     }
-                    .padding(.top, 8)
+                    .padding(.top, DS.space2)
                     .onAppear { weeklyReviewTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 90) }
                     .onDisappear { weeklyReviewTracker.disappeared() }
 
@@ -387,8 +370,8 @@ struct HomeView: View {
                         Text("Updated \(lastRefresh, style: .relative) ago")
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
-                            .padding(.top, 8)
-                            .padding(.bottom, 16)
+                            .padding(.top, DS.space2)
+                            .padding(.bottom, DS.space4)
                             .accessibilityLabel("Last updated \(lastRefresh, style: .relative) ago")
                     }
                 }
@@ -397,6 +380,7 @@ struct HomeView: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .scrollIndicators(.hidden)
+        .contentMargins(.bottom, 72, for: .scrollContent)
     }
 
     // MARK: - Empty State. Waiting For First Sync
@@ -473,6 +457,7 @@ struct HomeView: View {
                                     .font(.caption2)
                                     .foregroundStyle(.secondary)
                                     .lineLimit(1)
+                                    .minimumScaleFactor(0.75)
                             }
 
                             Spacer()
@@ -641,6 +626,7 @@ struct HomeView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
+                            .minimumScaleFactor(0.75)
                     }
 
                     Spacer()

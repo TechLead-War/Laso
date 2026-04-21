@@ -13,7 +13,7 @@ struct LiveStatusFooter: View {
                         .font(.caption2)
                 }
                 .foregroundStyle(.tertiary)
-                .padding(.bottom, 8)
+                .padding(.bottom, DS.space2)
             }
         }
     }

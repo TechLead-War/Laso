@@ -59,6 +59,7 @@ struct BrainHealthCard: View {
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
+                            .minimumScaleFactor(0.75)
                     }
 
                     Spacer()

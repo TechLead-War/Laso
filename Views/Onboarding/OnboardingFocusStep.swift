@@ -16,15 +16,15 @@ struct OnboardingFocusSelectionStep: View {
                 Text(Copy.Onboarding.priorityTitle)
                     .font(.title2.weight(.bold))
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, DS.space6)
 
                 Text(Copy.Onboarding.prioritySubtitle)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, DS.space7)
             }
-            .padding(.bottom, 24)
+            .padding(.bottom, DS.space6)
 
             VStack(spacing: 10) {
                 ForEach(HealthFocus.allCases) { focus in
@@ -57,7 +57,7 @@ struct OnboardingFocusSelectionStep: View {
                     .sensoryFeedback(.selection, trigger: isSelected)
                 }
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, DS.space5)
 
             Spacer()
 
@@ -79,8 +79,8 @@ struct OnboardingFocusSelectionStep: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .font(.headline)
-            .padding(.horizontal, 24)
-            .padding(.bottom, 48)
+            .padding(.horizontal, DS.space6)
+            .padding(.bottom, DS.space8)
             .disabled(selectedFocuses.isEmpty)
             .opacity(selectedFocuses.isEmpty ? 0.55 : 1.0)
             .accessibilityIdentifier("onboarding.prioritySelectionContinue")

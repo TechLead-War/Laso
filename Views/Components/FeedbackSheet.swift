@@ -247,7 +247,7 @@ struct FeedbackSheet: View {
             Spacer()
 
             Image(systemName: "heart.circle.fill")
-                .font(.system(size: 56))
+                .font(DS.Typography.heroIcon)
                 .foregroundStyle(.green)
 
             Text(thankYouTitle)
@@ -257,7 +257,7 @@ struct FeedbackSheet: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, DS.space7)
 
             Spacer()
 
@@ -273,7 +273,7 @@ struct FeedbackSheet: View {
                 dismiss()
             }
                 .buttonStyle(.borderedProminent)
-                .padding(.bottom, 32)
+                .padding(.bottom, DS.space7)
         }
         .onAppear {}
     }

@@ -674,29 +674,29 @@ final class BrainHealthScorer {
         switch state {
         case .sharp:
             if hrvAbove && remAbove {
-                return "Strong REM + high HRV this morning"
+                return Copy.BrainHealth.headlineSharpStrong
             } else if hrvAbove {
-                return "High HRV signals sharp cognitive readiness"
+                return Copy.BrainHealth.headlineSharpHRV
             } else if remAbove && deepAbove {
-                return "Excellent sleep recovery driving peak sharpness"
+                return Copy.BrainHealth.headlineSharpSleep
             } else {
-                return "All brain health signals trending above baseline"
+                return Copy.BrainHealth.headlineSharpDefault
             }
 
         case .focused:
             if hrvAbove {
-                return "Good HRV supporting focused state today"
+                return Copy.BrainHealth.headlineFocusedHRV
             } else if remAbove || deepAbove {
-                return "Solid sleep recovery supporting focus"
+                return Copy.BrainHealth.headlineFocusedSleep
             } else {
-                return "Brain health signals in a good range overall"
+                return Copy.BrainHealth.headlineFocusedDefault
             }
 
         case .baseline:
             if !hrvAbove && !remAbove {
-                return "Signals near your personal baseline today"
+                return Copy.BrainHealth.headlineBaselineSteady
             } else {
-                return "Mixed signals. Some metrics above, some below baseline"
+                return Copy.BrainHealth.headlineBaselineMixed
             }
 
         case .foggy:
@@ -706,11 +706,11 @@ final class BrainHealthScorer {
                 return rem < base.mean * 0.85
             }()
             if hrvBelow && remBelow {
-                return "Low HRV + reduced REM. Expect brain fog today"
+                return Copy.BrainHealth.headlineFoggyBoth
             } else if hrvBelow {
-                return "HRV well below baseline. Cognitive load may feel heavier"
+                return Copy.BrainHealth.headlineFoggyHRV
             } else {
-                return "Sleep quality below baseline. Recovery is lagging"
+                return Copy.BrainHealth.headlineFoggySleep
             }
         }
     }

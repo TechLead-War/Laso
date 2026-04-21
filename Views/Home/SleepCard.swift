@@ -75,7 +75,7 @@ struct SleepCard: View {
 
                         // B=MAP prompt. visible when sleep quality is poor (high motivation moment)
                         if liveVM.sleep.sleepQualityLabel == "Fair" || liveVM.sleep.sleepQualityLabel == "Poor" {
-                            Text("See sleep tips \u{2192}")
+                            Text(Copy.Home.seeSleepTips)
                                 .font(.caption2.weight(.medium))
                                 .foregroundStyle(.blue)
                         }

@@ -156,8 +156,8 @@ struct CategoryDetailView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.leading)
                     .padding(.horizontal)
-                    .padding(.top, 24)
-                    .padding(.bottom, 16)
+                    .padding(.top, DS.space6)
+                    .padding(.bottom, DS.space4)
             }
             .padding(.bottom)
         }
@@ -216,7 +216,7 @@ struct CategoryDetailView: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding(.horizontal, 14)
-                .padding(.vertical, 8)
+                .padding(.vertical, DS.space2)
                 .background(.orange.opacity(DS.badgeBg), in: Capsule())
                 .padding(.horizontal)
             }

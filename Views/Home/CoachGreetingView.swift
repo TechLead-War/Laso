@@ -11,7 +11,7 @@ struct CoachGreetingView: View {
     var onTapScoreInfo: (() -> Void)? = nil
 
     var body: some View {
-        HStack {
+        HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
                 // Context-aware greeting
                 Text(contextGreeting)
@@ -40,7 +40,7 @@ struct CoachGreetingView: View {
                                 .font(.caption.weight(.bold).monospacedDigit())
                         }
                         .foregroundStyle(.orange)
-                        .padding(.horizontal, 8)
+                        .padding(.horizontal, DS.space2)
                         .padding(.vertical, 3)
                         .background(Color.orange.opacity(0.12), in: Capsule())
                     }
@@ -62,16 +62,17 @@ struct CoachGreetingView: View {
                 showSettings.wrappedValue = true
             } label: {
                 Image(systemName: "gearshape.fill")
-                    .font(.subheadline.weight(.medium))
+                    .font(.title3.weight(.medium))
                     .foregroundStyle(.secondary)
-                    .frame(width: 36, height: 36)
-                    .background(.ultraThinMaterial, in: Circle())
+                    .frame(width: 44, height: 44)
+                    .glassChrome(in: Circle())
                     .overlay(Circle().strokeBorder(.primary.opacity(0.06), lineWidth: 0.5))
             }
             .accessibilityLabel("Settings")
             .accessibilityIdentifier("home.settingsButton")
         }
         .padding(.horizontal)
+        .padding(.top, 2)
         .overlay(alignment: .top) {
             streakMilestoneOverlay
         }
@@ -85,7 +86,7 @@ struct CoachGreetingView: View {
             Text(Copy.Home.Greeting.streakMilestone(milestone))
                 .font(.caption.weight(.bold))
                 .foregroundStyle(.white)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, DS.space3)
                 .padding(.vertical, 6)
                 .background(.orange.gradient, in: Capsule())
                 .transition(.move(edge: .top).combined(with: .opacity))

@@ -13,6 +13,8 @@ struct ContentView: View {
     @State private var showHealthKitReprompt = false
     @State private var showPMFSurvey = false
     @State private var navigationPath = NavigationPath()
+    @State private var homePath = NavigationPath()
+    @State private var explorePath = NavigationPath()
     @State private var connectivityMonitor = ConnectivityMonitor.shared
 
     @State private var dashboardViewModel: DashboardViewModel
@@ -38,52 +40,7 @@ struct ContentView: View {
     private var subscriptionManager: SubscriptionManager { container.subscriptionManager }
 
     private var mainApp: some View {
-        NavigationStack(path: $navigationPath) {
-            tabContent
-                .safeAreaInset(edge: .top, spacing: 0) {
-                    billingGraceBanner
-                }
-                .safeAreaInset(edge: .bottom, spacing: 0) {
-                    CustomTabBar(selectedTab: $selectedTab)
-                }
-                .navigationDestination(for: HealthCategory.self) { category in
-                    CategoryDetailView(
-                        viewModel: CategoryDetailViewModel(
-                            category: category,
-                            healthKitManager: healthKitManager,
-                            analysisEngine: analysisEngine
-                        )
-                    )
-                }
-                .navigationDestination(for: HealthMetric.self) { metric in
-                    MetricDetailView(
-                        viewModel: MetricDetailViewModel(
-                            metric: metric,
-                            healthKitManager: healthKitManager,
-                            analysisEngine: analysisEngine
-                        ),
-                        deviceSourceManager: deviceSourceManager,
-                        healthKitManager: healthKitManager,
-                        healthDataStore: healthDataStore
-                    )
-                }
-                .navigationDestination(for: HealthRiskType.self) { riskType in
-                    if let risk = dashboardViewModel.analysis.healthRisks.first(where: { $0.riskType == riskType }) {
-                        HealthRiskDetailView(risk: risk) { metric in
-                            navigationPath.append(metric)
-                        }
-                    } else {
-                        ContentUnavailableView(
-                            "Risk Data Unavailable",
-                            systemImage: "heart.text.clipboard",
-                            description: Text("This health risk assessment is no longer available. Pull to refresh your data.")
-                        )
-                    }
-                }
-                .navigationDestination(for: Route.self) { route in
-                    routeDestination(for: route)
-                }
-        }
+        tabsRoot
         .overlay(alignment: .top) {
             // Show at most one reprompt banner at a time.
             // Notification reprompt takes priority since the user explicitly denied it.
@@ -242,8 +199,147 @@ struct ContentView: View {
         .onChange(of: navigationPath.count) { _, newCount in
             AppAnalytics.shared.updateNavigationDepth(newCount)
         }
+        .onChange(of: homePath.count) { _, newCount in
+            AppAnalytics.shared.updateNavigationDepth(newCount)
+        }
+        .onChange(of: explorePath.count) { _, newCount in
+            AppAnalytics.shared.updateNavigationDepth(newCount)
+        }
         .onReceive(NotificationCenter.default.publisher(for: .healthPulseNavigateToExplore)) { _ in
             selectedTab = .explore
+        }
+    }
+
+    @ViewBuilder
+    private var tabsRoot: some View {
+        if #available(iOS 26.0, *) {
+            liquidGlassTabs
+        } else {
+            legacyNavStack
+        }
+    }
+
+    @available(iOS 26.0, *)
+    private var liquidGlassTabs: some View {
+        TabView(selection: $selectedTab) {
+            Tab(AppTab.home.label, systemImage: AppTab.home.systemImageName, value: AppTab.home) {
+                NavigationStack(path: $homePath) {
+                    withNavigationDestinations(homeTabView(path: $homePath), path: $homePath)
+                }
+            }
+            Tab(AppTab.live.label, systemImage: AppTab.live.systemImageName, value: AppTab.live) {
+                NavigationStack {
+                    liveTabView
+                }
+            }
+            Tab(AppTab.explore.label, systemImage: AppTab.explore.systemImageName, value: AppTab.explore) {
+                NavigationStack(path: $explorePath) {
+                    withNavigationDestinations(exploreTabView(path: $explorePath), path: $explorePath)
+                }
+            }
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            billingGraceBanner
+        }
+    }
+
+    private var legacyNavStack: some View {
+        NavigationStack(path: $navigationPath) {
+            withNavigationDestinations(tabContent, path: $navigationPath)
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    billingGraceBanner
+                }
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    CustomTabBar(selectedTab: $selectedTab)
+                }
+        }
+    }
+
+    @ViewBuilder
+    private func withNavigationDestinations<V: View>(_ content: V, path: Binding<NavigationPath>) -> some View {
+        content
+            .navigationDestination(for: HealthCategory.self) { category in
+                CategoryDetailView(
+                    viewModel: CategoryDetailViewModel(
+                        category: category,
+                        healthKitManager: healthKitManager,
+                        analysisEngine: analysisEngine
+                    )
+                )
+            }
+            .navigationDestination(for: HealthMetric.self) { metric in
+                MetricDetailView(
+                    viewModel: MetricDetailViewModel(
+                        metric: metric,
+                        healthKitManager: healthKitManager,
+                        analysisEngine: analysisEngine
+                    ),
+                    deviceSourceManager: deviceSourceManager,
+                    healthKitManager: healthKitManager,
+                    healthDataStore: healthDataStore
+                )
+            }
+            .navigationDestination(for: HealthRiskType.self) { riskType in
+                if let risk = dashboardViewModel.analysis.healthRisks.first(where: { $0.riskType == riskType }) {
+                    HealthRiskDetailView(risk: risk) { metric in
+                        path.wrappedValue.append(metric)
+                    }
+                } else {
+                    ContentUnavailableView(
+                        "Risk Data Unavailable",
+                        systemImage: "heart.text.clipboard",
+                        description: Text("This health risk assessment is no longer available. Pull to refresh your data.")
+                    )
+                }
+            }
+            .navigationDestination(for: Route.self) { route in
+                routeDestination(for: route)
+            }
+    }
+
+    @ViewBuilder
+    private func homeTabView(path: Binding<NavigationPath>) -> some View {
+        HomeView(
+            viewModel: dashboardViewModel,
+            liveViewModel: liveViewModel,
+            deviceSourceManager: deviceSourceManager,
+            appStateStore: appStateStore,
+            navigationPath: path,
+            showSettings: $showSettings
+        )
+    }
+
+    @ViewBuilder
+    private func exploreTabView(path: Binding<NavigationPath>) -> some View {
+        ExploreView(
+            viewModel: dashboardViewModel,
+            appStateStore: appStateStore,
+            navigationPath: path
+        )
+    }
+
+    @ViewBuilder
+    private var liveTabView: some View {
+        if !UITestMode.isEnabled && RemoteConfigManager.shared.killLiveTab {
+            MaintenanceView(message: "Live monitoring is temporarily unavailable. We're working on a fix.")
+        } else if UITestMode.isEnabled && UITestMode.forceProLock {
+            ProFeatureOverlay(
+                feature: "Live Vitals",
+                icon: "waveform.path.ecg",
+                description: "Monitor your heart rate, SpO2, activity rings, and readiness in real time."
+            )
+        } else if FeatureGate.canAccess(.liveTab) {
+            LiveView(
+                viewModel: liveViewModel,
+                mlOrchestrator: dashboardViewModel.analysisEngine.mlOrchestrator,
+                deviceSourceManager: deviceSourceManager
+            )
+        } else {
+            ProFeatureOverlay(
+                feature: "Live Vitals",
+                icon: "waveform.path.ecg",
+                description: "Monitor your heart rate, SpO2, activity rings, and readiness in real time."
+            )
         }
     }
 
@@ -258,44 +354,11 @@ struct ContentView: View {
     private var tabContent: some View {
         switch selectedTab {
         case .home:
-            HomeView(
-                viewModel: dashboardViewModel,
-                liveViewModel: liveViewModel,
-                deviceSourceManager: deviceSourceManager,
-                appStateStore: appStateStore,
-                navigationPath: $navigationPath,
-                showSettings: $showSettings
-            )
+            homeTabView(path: $navigationPath)
         case .live:
-            if !UITestMode.isEnabled && RemoteConfigManager.shared.killLiveTab {
-                MaintenanceView(message: "Live monitoring is temporarily unavailable. We're working on a fix.")
-            } else if UITestMode.isEnabled && UITestMode.forceProLock {
-                // Test override: render the pro overlay even though UI test users
-                // normally bypass gates. Lets us capture ProFeatureOverlay reliably.
-                ProFeatureOverlay(
-                    feature: "Live Vitals",
-                    icon: "waveform.path.ecg",
-                    description: "Monitor your heart rate, SpO2, activity rings, and readiness in real time."
-                )
-            } else if FeatureGate.canAccess(.liveTab) {
-                LiveView(
-                    viewModel: liveViewModel,
-                    mlOrchestrator: dashboardViewModel.analysisEngine.mlOrchestrator,
-                    deviceSourceManager: deviceSourceManager
-                )
-            } else {
-                ProFeatureOverlay(
-                    feature: "Live Vitals",
-                    icon: "waveform.path.ecg",
-                    description: "Monitor your heart rate, SpO2, activity rings, and readiness in real time."
-                )
-            }
+            liveTabView
         case .explore:
-            ExploreView(
-                viewModel: dashboardViewModel,
-                appStateStore: appStateStore,
-                navigationPath: $navigationPath
-            )
+            exploreTabView(path: $navigationPath)
         }
     }
 
@@ -349,6 +412,8 @@ struct ContentView: View {
                 readinessScore: readinessScore,
                 workoutRecoveryBand: WorkoutRecoveryBand(score: readinessScore),
                 cyclePhase: dashboardViewModel.menstrualCycleTracker.currentCycle?.currentPhase.workoutModifier,
+                topCausalChain: dashboardViewModel.analysis.topCausalChain,
+                recoverySignals: dashboardViewModel.todayRecoverySignals(liveVM: liveViewModel),
                 onTapMetric: { metric in navigationPath.append(metric) }
             )
         case .askYourData:
@@ -597,7 +662,7 @@ struct ContentView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .background(.orange.opacity(0.08))
+            .glassChrome(tinted: .orange, in: Rectangle())
         }
     }
 }

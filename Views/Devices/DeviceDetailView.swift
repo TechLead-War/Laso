@@ -40,7 +40,7 @@ struct DeviceDetailView: View {
     private var deviceHeader: some View {
         VStack(spacing: 12) {
             Image(systemName: device.systemImageName)
-                .font(.system(size: 44))
+                .font(DS.Typography.largeIcon)
                 .foregroundStyle(device.iconColor)
 
             Text(displayTitle)
@@ -62,14 +62,14 @@ struct DeviceDetailView: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
+                    .padding(.vertical, DS.space1)
                     .background(info.isActive ? .green : .orange, in: Capsule())
             } else {
                 Text("Setup Guide")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
+                    .padding(.vertical, DS.space1)
                     .background(.blue, in: Capsule())
             }
         }
@@ -109,7 +109,7 @@ struct DeviceDetailView: View {
                 }
                 .frame(maxWidth: .infinity)
             }
-            .padding(.vertical, 12)
+            .padding(.vertical, DS.space3)
             .background(.background, in: RoundedRectangle(cornerRadius: 14))
             .padding(.horizontal)
 
@@ -148,8 +148,8 @@ struct DeviceDetailView: View {
                                 ForEach(metricsInCategory, id: \.self) { metric in
                                     Text(metric.displayName)
                                         .font(.caption2)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
+                                        .padding(.horizontal, DS.space2)
+                                        .padding(.vertical, DS.space1)
                                         .background(category.color.opacity(0.1), in: Capsule())
                                 }
                             }
@@ -158,7 +158,7 @@ struct DeviceDetailView: View {
                     }
                 }
             }
-            .padding(.vertical, 12)
+            .padding(.vertical, DS.space3)
             .background(.background, in: RoundedRectangle(cornerRadius: 14))
             .padding(.horizontal)
 
@@ -197,7 +197,7 @@ struct DeviceDetailView: View {
                     .padding(.horizontal)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.vertical, 12)
+            .padding(.vertical, DS.space3)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(.background, in: RoundedRectangle(cornerRadius: 14))
             .padding(.horizontal)

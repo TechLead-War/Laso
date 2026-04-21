@@ -7,6 +7,8 @@ struct TodaysActionDetailView: View {
     let readinessScore: Int
     let workoutRecoveryBand: WorkoutRecoveryBand
     let cyclePhase: CyclePhaseModifier?
+    let topCausalChain: CausalChain?
+    let recoverySignals: DashboardViewModel.RecoverySignalsSnapshot
     let onTapMetric: (HealthMetric) -> Void
 
     @State private var isShowingWorkoutPlan = false
@@ -29,18 +31,22 @@ struct TodaysActionDetailView: View {
                     // Why section
                     whySection
 
-                    // Guidance tiles (from policy engine)
-                    if let decision = policyDecision, decision.decisionConfidence >= 0.3 {
-                        if decision.targetSleepTime != nil || decision.strainBudget != nil {
-                            guidanceSection(decision: decision)
-                        }
-                    }
+                    // What's off today — live signals vs personal baseline
+                    whatsOffSection
+
+                    // What's leading to what (top causal chain, high confidence only)
+                    causalChainSection
+
+                    // Do Today — concrete band-driven plan, enriched with policy values when present
+                    doTodaySection
 
                     // Today's Workout
                     todayWorkoutSection
 
-                    // What happened before (historical proof)
-                    proofSection
+                    // What happened before — only when real proof exists
+                    if let summary = action.proofSummary, summary.hasProof {
+                        proofSection
+                    }
 
                     // Supporting insights
                     if !action.supportingInsights.isEmpty {
@@ -52,11 +58,11 @@ struct TodaysActionDetailView: View {
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.leading)
                         .padding(.horizontal)
-                        .padding(.top, 24)
-                        .padding(.bottom, 16)
+                        .padding(.top, DS.space6)
+                        .padding(.bottom, DS.space4)
                 }
-                .padding(.top, 24)
-                .padding(.bottom, 32)
+                .padding(.top, DS.space6)
+                .padding(.bottom, DS.space7)
             }
         }
         .scrollBounceBehavior(.basedOnSize)
@@ -95,32 +101,55 @@ struct TodaysActionDetailView: View {
 
     private var heroSection: some View {
         let tint = DS.scoreColor(readinessScore)
-        return VStack(spacing: 20) {
+        return HStack(alignment: .top, spacing: 16) {
             Image(systemName: action.icon)
-                .font(.system(size: 40, weight: .semibold))
+                .font(.system(size: 32, weight: .semibold))
                 .foregroundStyle(.white)
-                .frame(width: 80, height: 80)
-                .background(tint.gradient, in: RoundedRectangle(cornerRadius: 22))
-                .shadow(color: tint.opacity(0.4), radius: 12, y: 6)
+                .frame(width: 72, height: 72)
+                .background(tint.gradient, in: RoundedRectangle(cornerRadius: 18))
+                .shadow(color: tint.opacity(0.35), radius: 10, y: 4)
 
-            VStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text(action.title)
-                    .font(.title2.weight(.bold))
+                    .font(.title3.weight(.bold))
                     .foregroundStyle(.primary)
-                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text(action.subtitle)
-                    .font(.body)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                    .lineLimit(3)
                     .fixedSize(horizontal: false, vertical: true)
+
+                Text(recoveryBandChipLabel)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(tint)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(tint.opacity(DS.badgeBg), in: Capsule())
+                    .padding(.top, 2)
             }
-            .padding(.horizontal, 8)
+
+            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.horizontal, 24)
-        .padding(.top, 20)
-        .padding(.bottom, 4)
+        .padding(DS.cardPadding + 4)
+        .background(DS.recoveryGradient(readinessScore))
+        .clipShape(RoundedRectangle(cornerRadius: DS.cardRadius))
+        .overlay(
+            RoundedRectangle(cornerRadius: DS.cardRadius)
+                .strokeBorder(tint.opacity(DS.strokeAlpha * 2), lineWidth: 1)
+        )
+        .shadow(color: tint.opacity(0.15), radius: 12, y: 4)
+        .padding(.horizontal)
+        .padding(.top, DS.space4)
+    }
+
+    private var recoveryBandChipLabel: String {
+        switch workoutRecoveryBand {
+        case .red: return "Red Day. Recover."
+        case .yellow: return "Yellow Day. Maintain."
+        case .green: return "Green Day. Push."
+        }
     }
 
     // MARK: - Why Section
@@ -134,7 +163,7 @@ struct TodaysActionDetailView: View {
                         Image(systemName: "lightbulb.fill")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.orange)
-                        Text("Why this, today")
+                        Text(Copy.Home.whyThisToday)
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.primary)
                     }
@@ -171,19 +200,19 @@ struct TodaysActionDetailView: View {
 
     @ViewBuilder
     private var proofSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
-                Image(systemName: "clock.arrow.circlepath")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.green)
-                Text(Copy.Home.ActionProof.whatHappenedBefore)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.primary)
-            }
-            .padding(.horizontal)
+        if let summary = action.proofSummary, summary.hasProof {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    Image(systemName: "clock.arrow.circlepath")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.green)
+                    Text(Copy.Home.ActionProof.whatHappenedBefore)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                }
+                .padding(.horizontal)
 
-            VStack(alignment: .leading, spacing: 12) {
-                if let summary = action.proofSummary, summary.hasProof {
+                VStack(alignment: .leading, spacing: 12) {
                     if let detailLine = summary.detailProofLine {
                         Text(detailLine)
                             .font(.subheadline)
@@ -194,17 +223,223 @@ struct TodaysActionDetailView: View {
                     Text(summary.timeframeLine)
                         .font(.caption)
                         .foregroundStyle(.tertiary)
-                } else {
-                    Text(Copy.Home.ActionProof.notEnoughHistory)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(DS.cardPadding + 2)
+                .cardStyle()
+                .padding(.horizontal)
+            }
+        }
+    }
+
+    // MARK: - Do Today
+
+    private var doTodaySection: some View {
+        let items = doTodayItems()
+        let benefit = policyDecision?.primaryAction.expectedBenefit ?? ""
+
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "target")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.blue)
+                Text("Do Today")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
+            }
+            .padding(.horizontal)
+
+            VStack(alignment: .leading, spacing: 12) {
+                ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+                    doTodayRow(index: index + 1, icon: item.icon, text: item.text)
+                }
+
+                if !benefit.isEmpty {
+                    Divider()
+                    HStack(alignment: .top, spacing: 6) {
+                        Image(systemName: "arrow.up.right")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.green)
+                        Text(benefit)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(DS.cardPadding + 2)
             .cardStyle()
             .padding(.horizontal)
+        }
+    }
+
+    private struct DoTodayItem {
+        let icon: String
+        let text: String
+    }
+
+    private func doTodayItems() -> [DoTodayItem] {
+        let bedtime = policyDecision?.targetSleepTime
+        let strain = policyDecision?.strainBudget
+
+        switch workoutRecoveryBand {
+        case .red:
+            return [
+                DoTodayItem(icon: "figure.mind.and.body", text: strain ?? "Light movement only — stretching, yoga, or a gentle walk."),
+                DoTodayItem(icon: "moon.fill", text: bedtime.map { "Lights off by \($0) tonight." } ?? "Lights off by 10:30 PM tonight."),
+                DoTodayItem(icon: "drop.fill", text: "Skip alcohol today — it blocks HRV recovery overnight.")
+            ]
+        case .yellow:
+            return [
+                DoTodayItem(icon: "figure.walk", text: strain ?? "Moderate effort only — avoid anything maximal."),
+                DoTodayItem(icon: "moon.fill", text: bedtime.map { "Lights off by \($0) tonight." } ?? "Lights off by 11:00 PM tonight."),
+                DoTodayItem(icon: "drop.fill", text: "Steady hydration through the day — 2 L minimum.")
+            ]
+        case .green:
+            return [
+                DoTodayItem(icon: "flame.fill", text: strain ?? "Green light — push one workout hard today."),
+                DoTodayItem(icon: "moon.fill", text: bedtime.map { "Keep bedtime consistent — aim for \($0)." } ?? "Keep bedtime consistent tonight."),
+                DoTodayItem(icon: "drop.fill", text: "Hydrate ahead of the strain — 2 to 3 L.")
+            ]
+        }
+    }
+
+    private func doTodayRow(index: Int, icon: String, text: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.white)
+                .frame(width: 24, height: 24)
+                .background(Color.blue, in: Circle())
+
+            Text(text)
+                .font(.subheadline)
+                .foregroundStyle(.primary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    // MARK: - What's Off Today
+
+    @ViewBuilder
+    private var whatsOffSection: some View {
+        if recoverySignals.hasAny {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    Image(systemName: "waveform.path.ecg")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.red)
+                    Text("What's off today")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                }
+                .padding(.horizontal)
+
+                VStack(spacing: 0) {
+                    if let current = recoverySignals.hrvCurrent {
+                        whatsOffRow(
+                            metric: .heartRateVariability,
+                            current: current,
+                            baseline: recoverySignals.hrvBaseline,
+                            baselineLabel: "baseline"
+                        )
+                    }
+                    if let current = recoverySignals.rhrCurrent {
+                        if recoverySignals.hrvCurrent != nil { Divider().padding(.leading, 44) }
+                        whatsOffRow(
+                            metric: .restingHeartRate,
+                            current: current,
+                            baseline: recoverySignals.rhrBaseline,
+                            baselineLabel: "baseline"
+                        )
+                    }
+                    if let current = recoverySignals.sleepHoursLast {
+                        if recoverySignals.hrvCurrent != nil || recoverySignals.rhrCurrent != nil {
+                            Divider().padding(.leading, 44)
+                        }
+                        whatsOffRow(
+                            metric: .sleepDuration,
+                            current: current,
+                            baseline: recoverySignals.sleepHoursGoal,
+                            baselineLabel: "goal"
+                        )
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .cardStyle()
+                .padding(.horizontal)
+            }
+        }
+    }
+
+    private func whatsOffRow(metric: HealthMetric, current: Double, baseline: Double?, baselineLabel: String) -> some View {
+        let deviation: Int? = {
+            guard let base = baseline, base != 0 else { return nil }
+            return Int(((current - base) / base) * 100)
+        }()
+        let isOff: Bool = {
+            guard let d = deviation else { return false }
+            return metric.higherIsBetter ? d < -10 : d > 10
+        }()
+        let deviationColor: Color = isOff ? .red : .secondary
+
+        return HStack(spacing: 12) {
+            Image(systemName: metric.systemImageName)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.white)
+                .frame(width: 32, height: 32)
+                .background(metric.category.color, in: RoundedRectangle(cornerRadius: 8))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(metric.displayName)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.primary)
+                if let base = baseline {
+                    Text("\(baselineLabel) \(metric.formatValue(base)) \(metric.unit)")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("\(metric.formatValue(current)) \(metric.unit)")
+                    .font(.subheadline.weight(.semibold).monospacedDigit())
+                    .foregroundStyle(.primary)
+                if let d = deviation {
+                    Text(d > 0 ? "+\(d)%" : "\(d)%")
+                        .font(.caption2.weight(.bold).monospacedDigit())
+                        .foregroundStyle(deviationColor)
+                }
+            }
+        }
+        .padding(.horizontal, DS.cardPadding)
+        .padding(.vertical, 10)
+    }
+
+    // MARK: - Causal Chain
+
+    @ViewBuilder
+    private var causalChainSection: some View {
+        if let chain = topCausalChain, chain.confidence >= 0.5 {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.triangle.branch")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.purple)
+                    Text("What's leading to what")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                }
+                .padding(.horizontal)
+
+                CausalChainCard(chain: chain) {
+                    onTapMetric(chain.affectedMetric)
+                }
+                .padding(.horizontal)
+            }
         }
     }
 
@@ -222,39 +457,6 @@ struct TodaysActionDetailView: View {
             return "contextual"
         }
         return confidence >= 0.7 ? "high_confidence" : "medium_confidence"
-    }
-
-    // MARK: - Guidance Tiles
-
-    private func guidanceSection(decision: PolicyDecision) -> some View {
-        HStack(spacing: DS.itemSpacing) {
-            if let bedtime = decision.targetSleepTime {
-                guidanceTile(icon: "moon.fill", label: "Target bedtime", value: bedtime, color: .indigo)
-            }
-            if let strain = decision.strainBudget {
-                guidanceTile(icon: "flame.fill", label: "Strain budget", value: strain, color: .orange)
-            }
-        }
-        .padding(.horizontal)
-    }
-
-    private func guidanceTile(icon: String, label: String, value: String, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Image(systemName: icon)
-                .font(.body.weight(.semibold))
-                .foregroundStyle(color)
-
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            Text(value)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.primary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(DS.cardPadding)
-        .cardStyle(tint: color)
     }
 
     // MARK: - Supporting Insights
@@ -302,6 +504,7 @@ struct TodaysActionDetailView: View {
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.75)
 
                 Text(insight.actionSummary)
                     .font(.caption)

@@ -132,8 +132,9 @@ struct LiveView: View {
                     LiveStatusFooter(lastUpdate: viewModel.lastUpdate)
                 }
             }
-            .padding(.bottom, 20)
+            .padding(.bottom, DS.space5)
         }
+        .contentMargins(.bottom, 72, for: .scrollContent)
         .accessibilityIdentifier("screen.live")
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)

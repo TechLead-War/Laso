@@ -48,7 +48,7 @@ struct DailyNarrativeCard: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .postHogMask()
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, DS.space4)
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -66,7 +66,7 @@ struct DailyNarrativeCard: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, DS.space4)
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))

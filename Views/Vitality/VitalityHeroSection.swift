@@ -21,7 +21,7 @@ struct VitalityHeroSection: View {
 
                     VStack(spacing: 6) {
                         Text("\(scorer.vitalityAge)")
-                            .font(.system(size: 56, weight: .bold, design: .rounded))
+                            .font(DS.Typography.displayXL)
                             .monospacedDigit()
                             .foregroundStyle(.white)
                             .postHogMask()
@@ -109,7 +109,7 @@ struct VitalityHeroSection: View {
                 .foregroundStyle(.white.opacity(0.72))
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 8)
+                .padding(.horizontal, DS.space2)
         }
         .padding(18)
         .frame(maxWidth: .infinity)
@@ -204,12 +204,14 @@ struct OrbMetricChip: View {
                 .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(.white.opacity(0.82))
                 .lineLimit(1)
+                .minimumScaleFactor(0.75)
 
             HStack(spacing: 6) {
                 Text(valueText)
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.9))
                     .lineLimit(1)
+                    .minimumScaleFactor(0.75)
                     .postHogMask()
 
                 Spacer(minLength: 4)

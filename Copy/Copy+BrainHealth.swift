@@ -10,7 +10,26 @@ extension Copy {
         // MARK: - Hero
 
         static let brainHealthLabel = "COGNITIVE WELLNESS"
+        static let heroExplainer = "How sharp and focused your brain is likely to feel today"
         static let learningPatterns = "Learning your patterns"
+
+        // MARK: - Headlines (state-driven, with action guidance)
+
+        static let headlineSharpStrong = "Strong REM and high HRV. Great day for demanding work."
+        static let headlineSharpHRV = "High HRV signals sharp readiness. Take on complex tasks."
+        static let headlineSharpSleep = "Excellent sleep recovery. You can handle deep focus today."
+        static let headlineSharpDefault = "Signals above baseline. A good day to take on hard problems."
+
+        static let headlineFocusedHRV = "Good HRV is supporting focus. A solid day for steady work."
+        static let headlineFocusedSleep = "Solid sleep recovery. Deep work should feel easier today."
+        static let headlineFocusedDefault = "Signals in a good range. Keep your usual work rhythm."
+
+        static let headlineBaselineSteady = "Signals near your typical baseline. Stick to routine tasks today."
+        static let headlineBaselineMixed = "Mixed signals today. Match effort to how you feel as the day goes on."
+
+        static let headlineFoggyBoth = "Low HRV and reduced REM. Expect brain fog. Keep work simple today."
+        static let headlineFoggyHRV = "HRV well below baseline. Heavy thinking will feel harder today."
+        static let headlineFoggySleep = "Sleep quality is low. Go easy on demanding decisions today."
 
         // MARK: - Sleep Recovery
 

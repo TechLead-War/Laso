@@ -40,7 +40,7 @@ struct ExploreScoreHeroSection: View {
                     }
 
                     Text(grade)
-                        .font(.system(size: 44, weight: .bold, design: .rounded).monospacedDigit())
+                        .font(DS.Typography.displayL.monospacedDigit())
                         .foregroundStyle(gradeColor)
                         .postHogMask()
 
@@ -77,7 +77,7 @@ struct ExploreScoreHeroSection: View {
                 .background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
             }
         }
-        .padding(16)
+        .padding(DS.space4)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
     }
 

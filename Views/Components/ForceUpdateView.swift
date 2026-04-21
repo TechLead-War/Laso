@@ -18,7 +18,7 @@ struct ForceUpdateView: View {
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, DS.space7)
 
             if let url = URL(string: AppSecrets.URLs.manageSubscriptions) {
                 // App Store link. in production, replace with your app's direct App Store URL
@@ -31,7 +31,7 @@ struct ForceUpdateView: View {
                         .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
-                .padding(.horizontal, 32)
+                .padding(.horizontal, DS.space7)
             }
 
             Spacer()

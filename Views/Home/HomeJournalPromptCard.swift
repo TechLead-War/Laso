@@ -21,6 +21,7 @@ struct HomeJournalPromptCard: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
+                            .minimumScaleFactor(0.75)
                     }
 
                     Spacer()

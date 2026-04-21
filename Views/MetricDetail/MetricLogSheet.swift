@@ -103,12 +103,12 @@ struct MetricLogSheet: View {
         Section {
             VStack(spacing: 12) {
                 Text("\(String(format: "%.1f", weightKg)) kg")
-                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .font(DS.Typography.displayM)
                     .monospacedDigit()
 
                 Slider(value: $weightKg, in: 30...250, step: 0.1)
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, DS.space2)
         } header: {
             Text("Body Weight")
         }
@@ -120,7 +120,7 @@ struct MetricLogSheet: View {
         Section {
             VStack(spacing: 16) {
                 Text("\(Int(waterMl)) mL")
-                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .font(DS.Typography.displayM)
                     .monospacedDigit()
 
                 HStack(spacing: 12) {
@@ -149,7 +149,7 @@ struct MetricLogSheet: View {
 
                 Slider(value: $waterMl, in: 50...2000, step: 50)
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, DS.space2)
         } header: {
             Text("Water Intake")
         }
@@ -161,12 +161,12 @@ struct MetricLogSheet: View {
         Section {
             VStack(spacing: 12) {
                 Text("\(Int(mindfulMinutes)) min")
-                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .font(DS.Typography.displayM)
                     .monospacedDigit()
 
                 Slider(value: $mindfulMinutes, in: 1...120, step: 1)
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, DS.space2)
         } header: {
             Text("Session Duration")
         }

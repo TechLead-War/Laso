@@ -60,6 +60,7 @@ private struct MetricTileView: View {
                     .font(.caption2.weight(.medium))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.75)
 
                 if let badge = tile.badge {
                     Text(badge)

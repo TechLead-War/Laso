@@ -99,8 +99,8 @@ struct ExploreCategoryRow: View {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.tertiary)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, DS.space4)
+        .padding(.vertical, DS.space3)
     }
 
     private var scoreStatus: String {

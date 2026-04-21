@@ -22,7 +22,7 @@ struct StressMonitorView: View {
                 breathingCTA
             }
             .padding(.horizontal)
-            .padding(.bottom, 32)
+            .padding(.bottom, DS.space7)
         }
         .background(Color(.systemGroupedBackground))
         .navigationTitle("Stress Monitor")
@@ -39,6 +39,13 @@ struct StressMonitorView: View {
 
     private var heroGauge: some View {
         VStack(spacing: 12) {
+            // Static explainer. teaches the user what this screen is about
+            Text(Copy.StressMonitor.heroExplainer)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+
             ZStack {
                 // Background arc
                 arcSegment(from: 0, to: 1, color: Color(.systemGray5))
@@ -52,26 +59,24 @@ struct StressMonitorView: View {
                 // Needle indicator
                 needleIndicator
 
-                // Center level + context
-                VStack(spacing: 4) {
-                    Text(displayLevel)
-                        .font(.system(size: 26, weight: .bold, design: .rounded))
-                        .foregroundStyle(levelColor)
-                        .minimumScaleFactor(0.6)
-                        .lineLimit(1)
-
-                    Text(contextSubtitle)
-                        .font(.caption2.weight(.medium))
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.horizontal, 28)
-                }
-                .frame(maxWidth: 130)
-                .offset(y: 14)
+                // Center level only. Context pulled out below for full width.
+                Text(displayLevel)
+                    .font(DS.Typography.displayS)
+                    .foregroundStyle(levelColor)
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
+                    .offset(y: 14)
             }
             .frame(height: 180)
+
+            // Context line. what this state means + what to do. Full width, no truncation.
+            Text(contextSubtitle)
+                .font(.subheadline)
+                .foregroundStyle(.primary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, DS.space2)
         }
         .padding(DS.cardPadding)
         .cardStyle(tint: levelColor)
@@ -202,7 +207,7 @@ struct StressMonitorView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 20)
+                    .padding(.vertical, DS.space5)
             } else {
                 HStack(alignment: .bottom, spacing: 6) {
                     ForEach(weeklyScores) { point in

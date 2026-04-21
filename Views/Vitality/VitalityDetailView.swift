@@ -34,11 +34,11 @@ struct VitalityDetailView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.leading)
                     .padding(.horizontal)
-                    .padding(.top, 24)
-                    .padding(.bottom, 16)
+                    .padding(.top, DS.space6)
+                    .padding(.bottom, DS.space4)
             }
-            .padding(.top, 12)
-            .padding(.bottom, 24)
+            .padding(.top, DS.space3)
+            .padding(.bottom, DS.space6)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle(Copy.Vitality.title)

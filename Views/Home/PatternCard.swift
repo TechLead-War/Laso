@@ -36,6 +36,7 @@ struct PatternCard: View {
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.primary)
                             .lineLimit(1)
+                            .minimumScaleFactor(0.75)
 
                         Text(insight.summary)
                             .font(.caption)

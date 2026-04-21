@@ -134,14 +134,14 @@ struct LiveHeartRateSection: View {
                         .postHogMask()
                 }
                 .foregroundStyle(.tertiary)
-                .padding(.bottom, 8)
+                .padding(.bottom, DS.space2)
             }
 
             // Mini chart. last 30 minutes
             if vitals.recentHeartRates.count > 1 {
                 heartRateMiniChart
                     .padding(.horizontal)
-                    .padding(.bottom, 12)
+                    .padding(.bottom, DS.space3)
             }
         }
         .cardStyle(tint: .red)
@@ -290,6 +290,6 @@ struct LiveHeartRateSection: View {
             }
         }
         .frame(height: 90)
-        .padding(.top, 4)
+        .padding(.top, DS.space1)
     }
 }

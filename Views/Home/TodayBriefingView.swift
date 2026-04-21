@@ -82,6 +82,7 @@ private struct BriefingCardView: View {
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(accent)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.75)
 
                 // Headline
                 Text(card.headline)

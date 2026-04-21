@@ -68,7 +68,7 @@ struct SleepCoachView: View {
                 consistencySection
                 tipsSection
             }
-            .padding(.bottom, 24)
+            .padding(.bottom, DS.space6)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle(Copy.SleepCoach.title)
@@ -101,7 +101,7 @@ struct SleepCoachView: View {
                         .font(.title2)
                         .foregroundStyle(.indigo)
                     Text(formatDuration(adjustedNeed))
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(DS.Typography.displayS)
                     Text(Copy.SleepCoach.tonight)
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -113,7 +113,7 @@ struct SleepCoachView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
-        .padding(20)
+        .padding(DS.space5)
         .frame(maxWidth: .infinity)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
         .padding(.horizontal)
@@ -171,7 +171,7 @@ struct SleepCoachView: View {
                 .font(.title3.weight(.bold))
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
+        .padding(.vertical, DS.space4)
         .cardStyle()
     }
 
@@ -247,7 +247,7 @@ struct SleepCoachView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 20)
+                    .padding(.vertical, DS.space5)
                     .cardStyle()
                     .padding(.horizontal)
             } else {
@@ -362,12 +362,12 @@ struct SleepCoachView: View {
                             .font(.subheadline.weight(.medium))
                             .foregroundStyle(.blue)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
+                            .padding(.vertical, DS.space3)
                     }
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, DS.space2)
             .cardStyle()
             .padding(.horizontal)
         }

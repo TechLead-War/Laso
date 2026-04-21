@@ -52,7 +52,7 @@ struct ShareableScoreCard: View {
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.white.opacity(0.5))
                 }
-                .padding(.horizontal, 24)
+                .padding(.horizontal, DS.space6)
                 .padding(.top, 28)
 
                 Spacer()
@@ -82,7 +82,7 @@ struct ShareableScoreCard: View {
                     // Score number
                     VStack(spacing: 2) {
                         Text("\(score)")
-                            .font(.system(size: 56, weight: .bold, design: .rounded))
+                            .font(DS.Typography.displayXL)
                             .foregroundStyle(.white)
                         Text("Health Score")
                             .font(.system(size: 13, weight: .medium, design: .rounded))
@@ -102,7 +102,7 @@ struct ShareableScoreCard: View {
                                 .font(.system(size: 13, weight: .semibold))
                         }
                         .foregroundStyle(change > 0 ? .green : .red)
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, DS.space3)
                         .padding(.vertical, 6)
                         .background((change > 0 ? Color.green : Color.red).opacity(0.15), in: Capsule())
                     }
@@ -115,7 +115,7 @@ struct ShareableScoreCard: View {
                                 .font(.system(size: 13, weight: .semibold))
                         }
                         .foregroundStyle(.orange)
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, DS.space3)
                         .padding(.vertical, 6)
                         .background(Color.orange.opacity(0.15), in: Capsule())
                     }
@@ -202,7 +202,7 @@ struct ShareableInsightCard: View {
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.white.opacity(0.5))
                 }
-                .padding(.horizontal, 24)
+                .padding(.horizontal, DS.space6)
                 .padding(.top, 28)
 
                 Spacer()
@@ -238,7 +238,7 @@ struct ShareableInsightCard: View {
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                     .lineLimit(3)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, DS.space7)
 
                 Spacer().frame(height: 12)
 

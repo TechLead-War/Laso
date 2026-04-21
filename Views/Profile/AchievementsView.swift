@@ -178,7 +178,7 @@ struct AchievementsView: View {
                 // Achievements grid
                 achievementsSection
             }
-            .padding(.bottom, 32)
+            .padding(.bottom, DS.space7)
         }
         .scrollIndicators(.hidden)
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
@@ -269,7 +269,7 @@ struct AchievementsView: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 24)
+        .padding(.vertical, DS.space6)
         .padding(.horizontal, DS.cardPadding)
         .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
         .overlay(
@@ -278,7 +278,7 @@ struct AchievementsView: View {
         )
         .shadow(color: levelInfo.level.color.opacity(0.1), radius: 12, y: 4)
         .padding(.horizontal)
-        .padding(.top, 8)
+        .padding(.top, DS.space2)
     }
 
     // MARK: - Streaks Section
@@ -457,7 +457,7 @@ struct AchievementsView: View {
             Text(label)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(isSelected ? .white : .secondary)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, DS.space3)
                 .padding(.vertical, 6)
                 .background(isSelected ? Color.accentColor : Color(.systemGray5), in: Capsule())
         }
@@ -522,7 +522,7 @@ struct AchievementsView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 14)
-        .padding(.horizontal, 8)
+        .padding(.horizontal, DS.space2)
         .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
         .overlay(
             RoundedRectangle(cornerRadius: DS.cardRadius)

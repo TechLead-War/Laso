@@ -179,7 +179,7 @@ struct LiveActivitySection: View {
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
+        .padding(.vertical, DS.space3)
         .background(color.opacity(DS.tintBg), in: RoundedRectangle(cornerRadius: DS.cardRadius))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(label): \(value)")

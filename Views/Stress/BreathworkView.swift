@@ -227,9 +227,9 @@ struct BreathworkView: View {
                 // Header
                 VStack(spacing: 8) {
                     Image(systemName: "lungs.fill")
-                        .font(.system(size: 44))
+                        .font(DS.Typography.largeIcon)
                         .foregroundStyle(accent)
-                        .padding(.top, 24)
+                        .padding(.top, DS.space6)
 
                     Text(Copy.Breathwork.chooseYourPractice)
                         .font(.title2.weight(.bold))
@@ -238,7 +238,7 @@ struct BreathworkView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
-                .padding(.bottom, 8)
+                .padding(.bottom, DS.space2)
 
                 // Protocol cards
                 ForEach(BreathingProtocol.allCases) { proto in
@@ -257,20 +257,20 @@ struct BreathworkView: View {
                             .font(.body.weight(.bold))
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
+                    .padding(.vertical, DS.space4)
                     .foregroundStyle(.white)
                     .background(accent, in: RoundedRectangle(cornerRadius: DS.cardRadius))
                     .shadow(color: accent.opacity(0.3), radius: 8, y: 4)
                 }
                 .buttonStyle(.plain)
-                .padding(.top, 4)
+                .padding(.top, DS.space1)
 
                 // Session info
                 HStack(spacing: 16) {
                     infoChip(icon: "clock", text: formattedDuration(selectedProtocol.sessionDuration))
                     infoChip(icon: "repeat", text: cycleDescription)
                 }
-                .padding(.bottom, 32)
+                .padding(.bottom, DS.space7)
             }
             .padding(.horizontal)
         }
@@ -342,8 +342,8 @@ struct BreathworkView: View {
                 .font(.caption.weight(.medium))
                 .foregroundStyle(.secondary)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, DS.space3)
+        .padding(.vertical, DS.space2)
         .background(.ultraThinMaterial, in: Capsule())
     }
 
@@ -531,14 +531,14 @@ struct BreathworkView: View {
                 Text("Done")
                     .font(.body.weight(.bold))
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
+                    .padding(.vertical, DS.space4)
                     .foregroundStyle(.white)
                     .background(accent, in: RoundedRectangle(cornerRadius: DS.cardRadius))
                     .shadow(color: accent.opacity(0.3), radius: 8, y: 4)
             }
             .buttonStyle(.plain)
             .padding(.horizontal)
-            .padding(.bottom, 32)
+            .padding(.bottom, DS.space7)
         }
     }
 
@@ -560,7 +560,7 @@ struct BreathworkView: View {
                     .foregroundStyle(isSelected ? accent : .secondary)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
+            .padding(.vertical, DS.space3)
             .background(
                 isSelected ? accent.opacity(DS.badgeBg) : Color.clear,
                 in: RoundedRectangle(cornerRadius: 12)

@@ -34,7 +34,7 @@ struct ProfileCaptureView: View {
                 .foregroundStyle(.primary)
                 .frame(width: 80, height: 80)
                 .background(Color.primary.opacity(0.06), in: Circle())
-                .padding(.bottom, 24)
+                .padding(.bottom, DS.space6)
 
             VStack(spacing: 10) {
                 Text(Copy.Onboarding.aboutTitle)
@@ -44,7 +44,7 @@ struct ProfileCaptureView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, DS.space7)
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.bottom, 28)
@@ -66,7 +66,7 @@ struct ProfileCaptureView: View {
                     }
                 }
 
-                Divider().padding(.leading, 16)
+                Divider().padding(.leading, DS.space4)
 
                 fieldRow {
                     Picker(Copy.Onboarding.aboutGenderPrompt, selection: $gender) {
@@ -96,8 +96,8 @@ struct ProfileCaptureView: View {
                 }
                 .font(.caption)
                 .foregroundStyle(.red)
-                .padding(.top, 8)
-                .padding(.horizontal, 24)
+                .padding(.top, DS.space2)
+                .padding(.horizontal, DS.space6)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
@@ -132,8 +132,8 @@ struct ProfileCaptureView: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .font(.headline)
-            .padding(.horizontal, 24)
-            .padding(.bottom, 48)
+            .padding(.horizontal, DS.space6)
+            .padding(.bottom, DS.space8)
             .sensoryFeedback(.selection, trigger: buttonTapCount)
             .accessibilityIdentifier("onboarding.profileContinue")
         }
@@ -142,8 +142,8 @@ struct ProfileCaptureView: View {
 
     private func fieldRow<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         content()
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, DS.space4)
+            .padding(.vertical, DS.space3)
     }
 
     private func saveDeviceIdSilently() {

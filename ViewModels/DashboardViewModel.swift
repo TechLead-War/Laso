@@ -1868,6 +1868,35 @@ final class DashboardViewModel {
         var proofSummary: RecommendationEvaluator.ActionProofSummary?
     }
 
+    /// Snapshot of the three core recovery signals for the Today's Action detail view.
+    /// Each field is optional so the view can render whatever the user's data supports.
+    struct RecoverySignalsSnapshot {
+        let hrvCurrent: Double?
+        let hrvBaseline: Double?
+        let rhrCurrent: Double?
+        let rhrBaseline: Double?
+        let sleepHoursLast: Double?
+        let sleepHoursGoal: Double
+
+        var hasAny: Bool {
+            hrvCurrent != nil || rhrCurrent != nil || sleepHoursLast != nil
+        }
+    }
+
+    /// Build the recovery signals snapshot from current live values and personal baselines.
+    @MainActor
+    func todayRecoverySignals(liveVM: LiveViewModel) -> RecoverySignalsSnapshot {
+        let sleepHours: Double? = liveVM.sleep.hasSleepData ? liveVM.sleep.lastNightSleepDuration / 3600 : nil
+        return RecoverySignalsSnapshot(
+            hrvCurrent: liveVM.recovery.latestHRV,
+            hrvBaseline: analysisEngine.baselines[.heartRateVariability]?.mean,
+            rhrCurrent: liveVM.recovery.latestRestingHeartRate,
+            rhrBaseline: analysisEngine.baselines[.restingHeartRate]?.mean,
+            sleepHoursLast: sleepHours,
+            sleepHoursGoal: 7.5
+        )
+    }
+
     private var recentActivityTrendDirection: TrendDirection? {
         let metrics: [HealthMetric] = [
             .exerciseMinutes, .activeCalories, .steps, .workoutDuration, .workoutCount, .distanceWalkingRunning

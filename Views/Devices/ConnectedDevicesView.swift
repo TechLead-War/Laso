@@ -181,14 +181,14 @@ struct ConnectedDevicesView: View {
                         Text("Detected")
                             .font(.caption2.weight(.semibold))
                             .foregroundStyle(.blue)
-                            .padding(.horizontal, 8)
+                            .padding(.horizontal, DS.space2)
                             .padding(.vertical, 3)
                             .background(Color.blue.opacity(0.12), in: Capsule())
                     } else {
                         Text(info.isActive ? "Active" : "Idle")
                             .font(.caption2.weight(.semibold))
                             .foregroundStyle(info.isActive ? .green : .orange)
-                            .padding(.horizontal, 8)
+                            .padding(.horizontal, DS.space2)
                             .padding(.vertical, 3)
                             .background((info.isActive ? Color.green : Color.orange).opacity(0.12), in: Capsule())
                     }
@@ -216,7 +216,7 @@ struct ConnectedDevicesView: View {
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
+        .padding(DS.space3)
         .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
     }
 }

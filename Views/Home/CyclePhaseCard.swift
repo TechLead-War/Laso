@@ -44,6 +44,7 @@ struct CyclePhaseCard: View {
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(.primary)
                                 .lineLimit(1)
+                                .minimumScaleFactor(0.75)
 
                             HStack(spacing: 8) {
                                 Text("Day \(dayInCycle) of \(cycleLength)")
