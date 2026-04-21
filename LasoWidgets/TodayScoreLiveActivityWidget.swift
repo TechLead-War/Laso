@@ -93,7 +93,10 @@ private struct CoachOrbRing: View {
 
     var body: some View {
         let tint = tintColor(for: state.scoreTint)
-        let progress = max(0, min(1, Double(state.heroValue) / 100.0))
+        // Ring always represents the overall score (0-100). heroValue may be a
+        // raw metric (HRV ms, RHR bpm, steps) that does not map 0-100, so using
+        // it directly makes the ring over or under fill for non-score modes.
+        let progress = max(0, min(1, Double(state.overallScore) / 100.0))
 
         ZStack {
             Circle()
