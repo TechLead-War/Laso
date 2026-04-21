@@ -69,6 +69,12 @@ struct JournalEntryView: View {
             .onDisappear {
                 AppAnalytics.shared.trackFeatureClose(.journalEntry)
             }
+            .task(id: showConfirmation) {
+                guard showConfirmation else { return }
+                try? await Task.sleep(for: .seconds(1.2))
+                guard !Task.isCancelled else { return }
+                dismiss()
+            }
         }
     }
 
@@ -258,9 +264,6 @@ struct JournalEntryView: View {
             )
             withAnimation(.spring(duration: 0.4)) {
                 showConfirmation = true
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-                dismiss()
             }
         } label: {
             HStack(spacing: 8) {

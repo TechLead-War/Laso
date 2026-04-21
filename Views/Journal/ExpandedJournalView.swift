@@ -64,6 +64,12 @@ struct ExpandedJournalView: View {
             .onDisappear {
                 AppAnalytics.shared.trackFeatureClose(.expandedJournal)
             }
+            .task(id: showConfirmation) {
+                guard showConfirmation else { return }
+                try? await Task.sleep(for: .seconds(1.2))
+                guard !Task.isCancelled else { return }
+                dismiss()
+            }
         }
     }
 
@@ -406,9 +412,6 @@ struct ExpandedJournalView: View {
         savedCount = count
         withAnimation(.spring(duration: 0.4)) {
             showConfirmation = true
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-            dismiss()
         }
     }
 

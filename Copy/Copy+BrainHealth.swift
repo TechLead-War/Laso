@@ -12,6 +12,8 @@ extension Copy {
         static let brainHealthLabel = "COGNITIVE WELLNESS"
         static let heroExplainer = "How sharp and focused your brain is likely to feel today"
         static let learningPatterns = "Learning your patterns"
+        static let scaleAndDirection = "out of 100  ·  Higher is sharper"
+        static let scaleSuffix = "/ 100"
 
         // MARK: - Headlines (state-driven, with action guidance)
 

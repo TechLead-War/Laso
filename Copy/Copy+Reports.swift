@@ -108,7 +108,6 @@ extension Copy {
             static let title = "Your Weekly Review"
             static func score(_ score: Int) -> String { "Score \(score)" }
             static func coachTarget(_ steps: String) -> String { "Coach target: \(steps)/day" }
-            static let notEnoughData = "Not enough data yet"
             static let keepSyncing = "Keep syncing health data for a few days and check back."
             static let firstWeekNoComparison = "First week. No comparison yet."
             static func consistencyPayingOff(_ category: String) -> String {

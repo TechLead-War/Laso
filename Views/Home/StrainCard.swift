@@ -120,7 +120,7 @@ struct StrainCard: View {
 
                     VStack(spacing: 2) {
                         RoundedRectangle(cornerRadius: 2)
-                            .fill(zoneColor(zone))
+                            .fill(TrainingZoneColor.color(for: zone))
                             .frame(height: max(CGFloat(fraction) * 24, 2))
 
                         Text("\(Int(minutes))")
@@ -144,16 +144,6 @@ struct StrainCard: View {
         }
     }
 
-    private func zoneColor(_ zone: Int) -> Color {
-        switch zone {
-        case 1: return .blue
-        case 2: return .green
-        case 3: return .yellow
-        case 4: return .orange
-        case 5: return .red
-        default: return .gray
-        }
-    }
 }
 
 // MARK: - Preview

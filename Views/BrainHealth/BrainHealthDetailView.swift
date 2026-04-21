@@ -44,6 +44,10 @@ struct BrainHealthDetailView: View {
                 .foregroundStyle(.primary)
                 .postHogMask()
 
+            Text(Copy.BrainHealth.scaleAndDirection)
+                .font(.caption2.weight(.medium))
+                .foregroundStyle(.tertiary)
+
             Text(Copy.BrainHealth.brainHealthLabel)
                 .font(.system(size: 13, weight: .semibold))
                 .tracking(2)
@@ -98,39 +102,20 @@ struct BrainHealthDetailView: View {
                 .font(.headline)
 
             if weeklyHistory.isEmpty {
-                Text("Not enough data yet")
+                Text(Copy.Common.notEnoughData)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, DS.space5)
             } else {
-                let visibleHistory = Array(weeklyHistory.suffix(7))
-                HStack(alignment: .bottom, spacing: 6) {
-                    ForEach(Array(visibleHistory.enumerated()), id: \.offset) { _, entry in
-                        VStack(spacing: 4) {
-                            Text("\(entry.score)")
-                                .font(.caption2.weight(.bold).monospacedDigit())
-                                .foregroundStyle(chartBarColor(for: entry.score))
-                                .minimumScaleFactor(0.7)
-                                .lineLimit(1)
-                                .postHogMask()
-
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(chartBarColor(for: entry.score))
-                                .frame(height: max(chartBarHeight(for: entry.score), 4))
-
-                            Text(abbreviatedDay(entry.date))
-                                .font(.caption2.weight(.medium))
-                                .foregroundStyle(.secondary)
-                                .minimumScaleFactor(0.7)
-                                .lineLimit(1)
-                                .frame(maxWidth: .infinity, alignment: .center)
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 120)
+                let visibleHistory = Array(weeklyHistory.suffix(7)).map { BrainWeeklyPoint(date: $0.date, score: $0.score) }
+                WeeklyBarChart(
+                    points: visibleHistory,
+                    value: { Double($0.score) / 100.0 },
+                    color: { chartBarColor(for: $0.score) },
+                    label: { abbreviatedDay($0.date) },
+                    topLabel: { "\($0.score)" }
+                )
 
                 HStack {
                     Text("0").font(.caption2.weight(.medium)).foregroundStyle(.tertiary)
@@ -141,12 +126,17 @@ struct BrainHealthDetailView: View {
                 if let avg = weeklyAverage {
                     HStack(spacing: 16) {
                         HStack(spacing: 4) {
-                            Text("Avg")
+                            Text(Copy.Common.avg)
                                 .font(.caption2.weight(.medium))
                                 .foregroundStyle(.secondary)
-                            Text("\(avg)")
-                                .font(.caption.weight(.bold).monospacedDigit())
-                                .postHogMask()
+                            HStack(spacing: 2) {
+                                Text("\(avg)")
+                                    .font(.caption.weight(.bold).monospacedDigit())
+                                    .postHogMask()
+                                Text(Copy.BrainHealth.scaleSuffix)
+                                    .font(.caption2.weight(.medium).monospacedDigit())
+                                    .foregroundStyle(.secondary)
+                            }
                         }
 
                         Spacer()
@@ -182,7 +172,7 @@ struct BrainHealthDetailView: View {
             Text(Copy.BrainHealth.sleepRecovery)
                 .font(.headline)
 
-            driverRow(
+            DriverRowView(
                 label: Copy.BrainHealth.heartRecovery,
                 icon: "waveform.path.ecg",
                 value: brainScore.cognitiveReadiness / 100,
@@ -190,7 +180,7 @@ struct BrainHealthDetailView: View {
                 isEstimate: false
             )
 
-            driverRow(
+            DriverRowView(
                 label: Copy.BrainHealth.deepSleep,
                 icon: "moon.zzz.fill",
                 value: deepValue ?? brainScore.cognitiveReadiness / 100 * 0.9,
@@ -198,7 +188,7 @@ struct BrainHealthDetailView: View {
                 isEstimate: deepValue == nil
             )
 
-            driverRow(
+            DriverRowView(
                 label: Copy.BrainHealth.remSleep,
                 icon: "brain.fill",
                 value: remValue ?? brainScore.memoryRecovery / 100,
@@ -209,58 +199,6 @@ struct BrainHealthDetailView: View {
         .padding(DS.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .cardStyle()
-    }
-
-    private func driverRow(label: String, icon: String, value: Double, color: Color, isEstimate: Bool = false) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.body.weight(.semibold))
-                .foregroundStyle(color)
-                .frame(width: 28)
-
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text(label)
-                            .font(.subheadline.weight(.medium))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.9)
-
-                        if isEstimate {
-                            Text(Copy.BrainHealth.estimated)
-                                .font(.caption2.weight(.medium))
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal, 5)
-                                .padding(.vertical, 1)
-                                .background(Color(.systemGray5), in: Capsule())
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                    Text("\(Int(min(max(value, 0), 1.0) * 100))%")
-                        .font(.subheadline.weight(.bold).monospacedDigit())
-                        .foregroundStyle(color)
-                        .frame(minWidth: 40, alignment: .trailing)
-                        .postHogMask()
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(Color(.systemGray5))
-                            .frame(height: 6)
-
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(isEstimate ? color.opacity(0.5) : color)
-                            .frame(width: geo.size.width * min(max(value, 0), 1.0), height: 6)
-                    }
-                }
-                .frame(height: 6)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func readinessColor(_ value: Double) -> Color {
@@ -345,7 +283,7 @@ struct BrainHealthDetailView: View {
                 .foregroundStyle(.secondary)
 
             HStack(spacing: 16) {
-                statBox(
+                StatBoxView(
                     label: brainScore.remSleepScore != nil ? Copy.BrainHealth.dreamSleep : "\(Copy.BrainHealth.dreamSleep) (Est.)",
                     value: "\(Int(remDisplay))%",
                     color: readinessColor(remDisplay / 100)
@@ -355,7 +293,7 @@ struct BrainHealthDetailView: View {
                     .fill(Color(.separator))
                     .frame(width: 1, height: DS.dividerHeight)
 
-                statBox(
+                StatBoxView(
                     label: brainScore.deepSleepScore != nil ? Copy.BrainHealth.deepSleep : "\(Copy.BrainHealth.deepSleep) (Est.)",
                     value: "\(Int(deepDisplay))%",
                     color: readinessColor(deepDisplay / 100)
@@ -381,21 +319,11 @@ struct BrainHealthDetailView: View {
                     .foregroundStyle(capacityColor)
                     .postHogMask()
 
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color(.systemGray5))
-                            .frame(height: 8)
-
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(capacityColor)
-                            .frame(
-                                width: geo.size.width * min(max(brainScore.stressCognitionLoad / 100, 0), 1.0),
-                                height: 8
-                            )
-                    }
-                }
-                .frame(height: 8)
+                ProgressBarView(
+                    fraction: brainScore.stressCognitionLoad / 100,
+                    color: capacityColor,
+                    height: 8
+                )
             }
 
             Text(Copy.BrainHealth.mentalEnergyExplanation)
@@ -418,7 +346,7 @@ struct BrainHealthDetailView: View {
                 .foregroundStyle(.secondary)
 
             HStack(spacing: 16) {
-                statBox(
+                StatBoxView(
                     label: Copy.BrainHealth.heartAndBrain,
                     value: "\(Int(brainScore.neurovascularFitness))%",
                     color: readinessColor(brainScore.neurovascularFitness / 100)
@@ -428,7 +356,7 @@ struct BrainHealthDetailView: View {
                     .fill(Color(.separator))
                     .frame(width: 1, height: DS.dividerHeight)
 
-                statBox(
+                StatBoxView(
                     label: Copy.BrainHealth.sleepRhythm,
                     value: "\(Int(brainScore.circadianAlignment))%",
                     color: readinessColor(brainScore.circadianAlignment / 100)
@@ -442,26 +370,7 @@ struct BrainHealthDetailView: View {
         }
     }
 
-    private func statBox(label: String, value: String, color: Color) -> some View {
-        VStack(spacing: 4) {
-            Text(label)
-                .font(.caption2.weight(.medium))
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-
-            Text(value)
-                .font(.title3.weight(.bold).monospacedDigit())
-                .foregroundStyle(color)
-                .postHogMask()
-        }
-        .frame(maxWidth: .infinity)
-    }
-
     // MARK: - Chart Helpers
-
-    private func chartBarHeight(for score: Int) -> CGFloat {
-        CGFloat(min(max(Double(score) / 100.0, 0), 1.0)) * 80
-    }
 
     private func chartBarColor(for score: Int) -> Color {
         if score >= 80 { return .green }
@@ -507,6 +416,12 @@ struct BrainHealthDetailView: View {
             .padding(.top, DS.space6)
             .padding(.bottom, DS.space4)
     }
+}
+
+private struct BrainWeeklyPoint: Identifiable {
+    let id = UUID()
+    let date: Date
+    let score: Int
 }
 
 // MARK: - Preview

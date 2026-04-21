@@ -3,10 +3,18 @@ import Charts
 
 // MARK: - Strain Balance
 
-enum StrainBalance: String {
-    case under = "Under-Training"
-    case optimal = "Optimal"
-    case overreaching = "Overreaching"
+enum StrainBalance {
+    case under
+    case optimal
+    case overreaching
+
+    var displayName: String {
+        switch self {
+        case .under: return Copy.Strain.underTraining
+        case .optimal: return Copy.Strain.optimal
+        case .overreaching: return Copy.Strain.overreaching
+        }
+    }
 
     var color: Color {
         switch self {
@@ -117,23 +125,49 @@ struct StrainDetailView: View {
             ZStack {
                 Circle()
                     .stroke(strainLevel.color.opacity(0.2), lineWidth: 10)
-                    .frame(width: 140, height: 140)
+                    .frame(width: 160, height: 160)
+
+                Circle()
+                    .trim(from: targetStrainRange.lowerBound / maxStrain,
+                          to: targetStrainRange.upperBound / maxStrain)
+                    .stroke(Color.green.opacity(0.5), style: StrokeStyle(lineWidth: 10, lineCap: .round))
+                    .frame(width: 160, height: 160)
+                    .rotationEffect(.degrees(-90))
 
                 Circle()
                     .trim(from: 0, to: animatedProgress)
                     .stroke(strainLevel.color, style: StrokeStyle(lineWidth: 10, lineCap: .round))
-                    .frame(width: 140, height: 140)
+                    .frame(width: 160, height: 160)
                     .rotationEffect(.degrees(-90))
                     .animation(.easeInOut(duration: 1.0), value: animatedProgress)
 
-                Text(strainLevel.displayName)
-                    .font(DS.Typography.displayS)
-                    .foregroundStyle(strainLevel.color)
-                    .minimumScaleFactor(0.6)
-                    .lineLimit(1)
+                VStack(spacing: 2) {
+                    Text(String(format: "%.1f", strainValue))
+                        .font(DS.Typography.displayM)
+                        .foregroundStyle(strainLevel.color)
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(1)
+                        .postHogMask()
+
+                    Text(strainLevel.displayName)
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(strainLevel.color)
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
+                }
+                .frame(width: 130)
             }
             .onAppear { animatedProgress = progress }
             .onChange(of: strainValue) { animatedProgress = progress }
+
+            Text(Copy.Strain.targetZoneLabel(
+                String(format: "%.1f", targetStrainRange.lowerBound),
+                String(format: "%.1f", targetStrainRange.upperBound)
+            ))
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+            .multilineTextAlignment(.center)
 
             // Context line. what today means + what to do. Full width, no truncation.
             Text(strainContext)
@@ -167,7 +201,7 @@ struct StrainDetailView: View {
 
     private var historySection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionHeader(icon: "calendar", title: Copy.Strain.sevenDayHistory)
+            SectionHeaderView(icon: "calendar", title: Copy.Strain.sevenDayHistory)
 
             VStack(alignment: .leading, spacing: 8) {
                 Chart {
@@ -212,8 +246,13 @@ struct StrainDetailView: View {
                     Text(Copy.Strain.sevenDayAverage)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text(String(format: "%.1f", avgStrain))
-                        .font(.caption.weight(.bold).monospacedDigit())
+                    HStack(spacing: 2) {
+                        Text(String(format: "%.1f", avgStrain))
+                            .font(.caption.weight(.bold).monospacedDigit())
+                        Text(Copy.Strain.scaleSuffix)
+                            .font(.caption2.weight(.medium).monospacedDigit())
+                            .foregroundStyle(.secondary)
+                    }
                     Text(StrainLevel(strain: avgStrain).displayName)
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(StrainLevel(strain: avgStrain).color)
@@ -232,7 +271,7 @@ struct StrainDetailView: View {
 
     private var snapshotSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionHeader(icon: "sparkles", title: Copy.Strain.todaySnapshot)
+            SectionHeaderView(icon: "sparkles", title: Copy.Strain.todaySnapshot)
 
             VStack(spacing: 0) {
                 snapshotRow(
@@ -250,7 +289,7 @@ struct StrainDetailView: View {
                 snapshotRow(
                     icon: strainBalance.icon,
                     iconColor: strainBalance.color,
-                    title: strainBalance.rawValue,
+                    title: strainBalance.displayName,
                     subtitle: strainBalance.description
                 )
 
@@ -375,7 +414,7 @@ struct StrainDetailView: View {
                 .font(.caption.weight(.bold))
                 .foregroundStyle(.white)
                 .frame(width: 28, height: 28)
-                .background(zoneColor(zone), in: Circle())
+                .background(TrainingZoneColor.color(for: zone), in: Circle())
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
@@ -384,17 +423,17 @@ struct StrainDetailView: View {
                     Spacer()
                     Text(formatMinutes(minutes))
                         .font(.subheadline.weight(.bold).monospacedDigit())
-                        .foregroundStyle(zoneColor(zone))
+                        .foregroundStyle(TrainingZoneColor.color(for: zone))
                 }
 
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         RoundedRectangle(cornerRadius: 3)
-                            .fill(zoneColor(zone).opacity(0.15))
+                            .fill(TrainingZoneColor.color(for: zone).opacity(0.15))
                             .frame(height: 6)
 
                         RoundedRectangle(cornerRadius: 3)
-                            .fill(zoneColor(zone))
+                            .fill(TrainingZoneColor.color(for: zone))
                             .frame(width: max(geo.size.width * CGFloat(fraction), 4), height: 6)
                     }
                 }
@@ -405,7 +444,7 @@ struct StrainDetailView: View {
 
     private var scaleLegend: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Strain Scale")
+            Text(Copy.Strain.strainScaleLegend)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.secondary)
 
@@ -443,28 +482,6 @@ struct StrainDetailView: View {
     }
 
     // MARK: - Helpers
-
-    private func sectionHeader(icon: String, title: String) -> some View {
-        HStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.subheadline)
-                .foregroundStyle(.tint)
-            Text(title)
-                .font(.headline)
-        }
-        .padding(.horizontal)
-    }
-
-    private func zoneColor(_ zone: Int) -> Color {
-        switch zone {
-        case 1: return .blue
-        case 2: return .green
-        case 3: return .yellow
-        case 4: return .orange
-        case 5: return .red
-        default: return .gray
-        }
-    }
 
     private func zoneName(_ zone: Int) -> String {
         switch zone {

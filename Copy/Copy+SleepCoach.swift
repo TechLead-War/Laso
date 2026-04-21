@@ -45,7 +45,6 @@ extension Copy {
         // MARK: - History
 
         static let fourteenDayHistory = "14-Day History"
-        static let notEnoughDataYet = "Not enough data yet"
 
         // MARK: - Consistency
 

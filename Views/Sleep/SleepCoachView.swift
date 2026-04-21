@@ -243,7 +243,7 @@ struct SleepCoachView: View {
             sectionHeader(icon: "chart.bar.fill", title: Copy.SleepCoach.fourteenDayHistory)
 
             if dailyHistory.isEmpty {
-                Text(Copy.SleepCoach.notEnoughDataYet)
+                Text(Copy.Common.notEnoughData)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)

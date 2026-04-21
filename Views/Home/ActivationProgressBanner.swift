@@ -33,13 +33,15 @@ struct ActivationProgressBanner: View {
                     withAnimation(.spring(duration: 0.4)) {
                         showCelebration = true
                     }
-                    // Auto-dismiss after 4 seconds
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
-                        withAnimation(.easeOut(duration: 0.3)) {
-                            showCelebration = false
-                            onDismissCelebration()
-                        }
-                    }
+                }
+            }
+            .task(id: showCelebration) {
+                guard showCelebration else { return }
+                try? await Task.sleep(for: .seconds(4))
+                guard !Task.isCancelled else { return }
+                withAnimation(.easeOut(duration: 0.3)) {
+                    showCelebration = false
+                    onDismissCelebration()
                 }
             }
         }

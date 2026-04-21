@@ -134,10 +134,14 @@ struct ShareableScoreCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 24))
     }
 
-    private var formattedDate: String {
+    private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d, yyyy"
-        return formatter.string(from: Date())
+        return formatter
+    }()
+
+    private var formattedDate: String {
+        Self.dateFormatter.string(from: Date())
     }
 }
 
@@ -260,10 +264,14 @@ struct ShareableInsightCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 24))
     }
 
-    private var formattedDate: String {
+    private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d, yyyy"
-        return formatter.string(from: Date())
+        return formatter
+    }()
+
+    private var formattedDate: String {
+        Self.dateFormatter.string(from: Date())
     }
 }
 

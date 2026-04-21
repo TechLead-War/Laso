@@ -18,6 +18,7 @@ import UserNotifications
 ///
 /// 4. Battery: checked from HealthKit sample metadata on each background delivery.
 ///    If available and below threshold, a notification is sent immediately.
+@MainActor
 final class WatchMonitor {
     static let shared = WatchMonitor()
 

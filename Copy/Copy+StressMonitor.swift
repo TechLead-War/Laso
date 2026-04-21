@@ -3,6 +3,17 @@ import Foundation
 extension Copy {
     enum StressMonitor {
 
+        // MARK: - Navigation
+
+        static let title = "Stress Monitor"
+
+        // MARK: - Level Display Names
+
+        static let levelHigh = "High"
+        static let levelElevated = "Elevated"
+        static let levelMild = "Mild"
+        static let levelCalm = "Calm"
+
         // MARK: - Hero
 
         static let heroExplainer = "How much pressure your nervous system is under right now"
@@ -16,6 +27,8 @@ extension Copy {
 
         static let scaleLow = "Low"
         static let scaleHigh = "High"
+        static let scaleAndDirection = "out of 3  ·  Lower is better"
+        static let scaleSuffix = "/ 3"
 
         // MARK: - Drivers
 
@@ -26,7 +39,6 @@ extension Copy {
         // MARK: - History
 
         static let sevenDayStress = "7 Day Stress"
-        static let notEnoughData = "Not enough data yet"
 
         // MARK: - Tips
 
@@ -48,6 +60,39 @@ extension Copy {
             "Your stress is steady at \(thisWeek) this week, close to last week."
         }
         static let weekSummaryTitle = "This Week"
+
+        // MARK: - Tips
+
+        static let tipsHigh = [
+            "Your body is signaling for rest. Lighter activity may serve you better right now.",
+            "Box breathing can help: inhale 4s, hold 4s, exhale 4s, hold 4s.",
+            "A quieter, screen-free environment may help your nervous system settle.",
+            "Many people find that 8+ hours of sleep tonight helps them feel more resilient tomorrow."
+        ]
+        static let tipsModerate = [
+            "Consider a walk or gentle stretching.",
+            "Limiting caffeine and stimulants for the next few hours may help.",
+            "Try progressive muscle relaxation.",
+            "Shorten your to-do list and focus on essentials."
+        ]
+        static let tipsMild = [
+            "Try a 5-minute breathing exercise.",
+            "Step outside for fresh air if possible.",
+            "A short walk can help reset your nervous system."
+        ]
+        static let tipsLow = [
+            "Your body is calm. Great time for challenging work.",
+            "Maintain this state with regular sleep and hydration.",
+            "Consider a creative or deep-focus task right now."
+        ]
+        static let tipsDefault = [
+            "Monitor your stress throughout the day.",
+            "Regular breaks can help manage stress levels."
+        ]
+
+        // MARK: - Accessibility
+
+        static let startBreathingA11y = "Start breathing exercise"
     }
 
     enum Breathwork {

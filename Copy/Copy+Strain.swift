@@ -46,6 +46,14 @@ extension Copy {
         static func zoneDefault(_ zone: Int) -> String { "Zone \(zone)" }
         static func percentOfTotal(_ pct: Int) -> String { "\(pct)% of total time" }
 
+        // MARK: - Scale
+
+        static let scaleSuffix = "/ 21"
+        static let strainScaleLegend = "Strain Scale"
+        static func targetZoneLabel(_ low: String, _ high: String) -> String {
+            "Target zone: \(low) to \(high)"
+        }
+
         // MARK: - History
 
         static let sevenDayHistory = "7-Day History"

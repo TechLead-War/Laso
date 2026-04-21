@@ -128,7 +128,7 @@ struct WeeklyReviewView: View {
                         Image(systemName: "calendar.badge.exclamationmark")
                             .font(.system(size: 48))
                             .foregroundStyle(.secondary)
-                        Text(Copy.Reports.WeeklyReviewView.notEnoughData)
+                        Text(Copy.Common.notEnoughData)
                             .font(.title3.weight(.semibold))
                         Text(Copy.Reports.WeeklyReviewView.keepSyncing)
                             .font(.subheadline)
