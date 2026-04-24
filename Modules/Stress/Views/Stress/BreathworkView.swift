@@ -235,7 +235,7 @@ struct BreathworkView: View {
                         .font(.title2.weight(.bold))
 
                     Text(Copy.Breathwork.selectTechnique)
-                        .font(.subheadline)
+                        .font(DS.Typography.subheadline)
                         .foregroundStyle(.secondary)
                 }
                 .padding(.bottom, DS.space2)
@@ -251,7 +251,7 @@ struct BreathworkView: View {
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "play.fill")
-                            .font(.body.weight(.semibold))
+                            .font(DS.Typography.bodySemibold)
 
                         Text(Copy.Breathwork.beginSession)
                             .font(.body.weight(.bold))
@@ -288,7 +288,7 @@ struct BreathworkView: View {
         } label: {
             HStack(spacing: 14) {
                 Image(systemName: proto.icon)
-                    .font(.title3.weight(.semibold))
+                    .font(DS.Typography.title3)
                     .foregroundStyle(proto.accentColor)
                     .frame(width: DS.iconSize, height: DS.iconSize)
                     .background(proto.accentColor.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.iconRadius))
@@ -296,11 +296,11 @@ struct BreathworkView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
                         Text(proto.title)
-                            .font(.headline)
+                            .font(DS.Typography.headline)
                             .foregroundStyle(.primary)
 
                         Text(proto.subtitle)
-                            .font(.caption.weight(.medium))
+                            .font(DS.Typography.captionMedium)
                             .foregroundStyle(proto.accentColor)
                             .padding(.horizontal, DS.badgeH)
                             .padding(.vertical, DS.badgeV)
@@ -308,7 +308,7 @@ struct BreathworkView: View {
                     }
 
                     Text(proto.description)
-                        .font(.caption)
+                        .font(DS.Typography.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
                 }
@@ -335,11 +335,11 @@ struct BreathworkView: View {
     private func infoChip(icon: String, text: String) -> some View {
         HStack(spacing: 6) {
             Image(systemName: icon)
-                .font(.caption.weight(.semibold))
+                .font(DS.Typography.captionSemibold)
                 .foregroundStyle(accent)
 
             Text(text)
-                .font(.caption.weight(.medium))
+                .font(DS.Typography.captionMedium)
                 .foregroundStyle(.secondary)
         }
         .padding(.horizontal, DS.space3)
@@ -362,7 +362,7 @@ struct BreathworkView: View {
 
             // Phase label
             Text(currentPhase.label)
-                .font(.title2.weight(.semibold))
+                .font(DS.Typography.title2)
                 .foregroundStyle(accent)
                 .contentTransition(.opacity)
                 .animation(.easeInOut(duration: 0.3), value: currentPhase)
@@ -457,7 +457,7 @@ struct BreathworkView: View {
                 showStopConfirmation = true
             } label: {
                 Image(systemName: "stop.fill")
-                    .font(.title3.weight(.semibold))
+                    .font(DS.Typography.title3)
                     .foregroundStyle(.primary.opacity(0.7))
                     .frame(width: 56, height: 56)
                     .background(.ultraThinMaterial, in: Circle())
@@ -469,7 +469,7 @@ struct BreathworkView: View {
                 togglePause()
             } label: {
                 Image(systemName: sessionState == .paused ? "play.fill" : "pause.fill")
-                    .font(.title2.weight(.semibold))
+                    .font(DS.Typography.title2)
                     .foregroundStyle(.white)
                     .frame(width: 72, height: 72)
                     .background(accent, in: Circle())
@@ -496,10 +496,10 @@ struct BreathworkView: View {
 
             VStack(spacing: 6) {
                 Text(Copy.Breathwork.sessionComplete)
-                    .font(.title.weight(.bold))
+                    .font(DS.Typography.title)
 
                 Text("\(formattedDuration(selectedProtocol.sessionDuration)) of \(selectedProtocol.subtitle.lowercased())")
-                    .font(.subheadline)
+                    .font(DS.Typography.subheadline)
                     .foregroundStyle(.secondary)
             }
 
@@ -509,7 +509,7 @@ struct BreathworkView: View {
             // Mood selector
             VStack(spacing: DS.itemSpacing) {
                 Text(Copy.Breathwork.howDoYouFeel)
-                    .font(.headline)
+                    .font(DS.Typography.headline)
 
                 HStack(spacing: 16) {
                     ForEach(PostSessionMood.allCases, id: \.rawValue) { mood in
@@ -556,7 +556,7 @@ struct BreathworkView: View {
                     .foregroundStyle(isSelected ? accent : .secondary)
 
                 Text(mood.rawValue)
-                    .font(.caption.weight(.medium))
+                    .font(DS.Typography.captionMedium)
                     .foregroundStyle(isSelected ? accent : .secondary)
             }
             .frame(maxWidth: .infinity)

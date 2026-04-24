@@ -501,8 +501,16 @@ struct ContentView: View {
         if let need = dashboardViewModel.sleepNeedCalculator.currentNeed {
             let debt = dashboardViewModel.sleepDebtTracker.currentDebt
             let baseline = debt?.personalBaseline ?? need.totalHoursNeeded
+            let boundaries = healthKitManager.sleepSessionBoundaries
             let dailyHistory = (debt?.dailyDeficits ?? []).suffix(14).map { entry in
-                SleepCoachView.DayEntry(date: entry.date, actual: max(0, baseline - entry.deficit), needed: baseline)
+                let boundary = boundaries[entry.date]
+                return SleepCoachView.DayEntry(
+                    date: entry.date,
+                    actual: max(0, baseline - entry.deficit),
+                    needed: baseline,
+                    bedtime: boundary?.bedtime,
+                    wakeTime: boundary?.wakeTime
+                )
             }
             SleepCoachView(
                 baseHoursNeeded: need.totalHoursNeeded,
@@ -512,6 +520,9 @@ struct ContentView: View {
                 dailyHistory: dailyHistory,
                 consistencyScore: Int(dashboardViewModel.sleepNeedCalculator.sleepConsistencyScore)
             )
+            .task {
+                await healthKitManager.refreshSleepBoundaries(days: 14)
+            }
         }
     }
 

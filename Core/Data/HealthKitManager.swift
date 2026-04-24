@@ -42,6 +42,17 @@ final class HealthKitManager {
     var error: String?
     var syncProgress: SyncProgress?
 
+    /// Per-day overnight sleep session boundaries derived from
+    /// `HKCategoryType(.sleepAnalysis)` asleep* samples. Keyed by the wake-day
+    /// `startOfDay` (Apple's convention: a sleep "belongs" to the day you wake up).
+    /// Populated as a side-effect of fetching `.sleepDuration` so we don't pay
+    /// the cost of a second category query.
+    struct SleepSessionBoundary: Sendable {
+        let bedtime: Date
+        let wakeTime: Date
+    }
+    var sleepSessionBoundaries: [Date: SleepSessionBoundary] = [:]
+
     // MARK: - Dashboard Observer State
 
     /// Persistent observer queries that wake the app when core dashboard metrics
@@ -718,6 +729,90 @@ final class HealthKitManager {
 
                 let series = MetricTimeSeries(metric: metric, samples: samples)
                 continuation.resume(returning: series)
+            }
+
+            healthStore.execute(query)
+        }
+    }
+
+    /// One-shot refresh of `sleepSessionBoundaries` for the trailing `days` window.
+    /// Called when Sleep Coach opens so the 14-day history shows correct bedtime/wake
+    /// times even after a cold start (when the routine sync only fetches the last 1–2 days).
+    @MainActor
+    func refreshSleepBoundaries(days: Int = 14) async {
+        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Date())) ?? Date()
+        let startDate = Calendar.current.date(byAdding: .day, value: -days, to: endDate) ?? endDate
+        let boundaries = await queryOvernightBoundaries(from: startDate, to: endDate)
+        sleepSessionBoundaries.merge(boundaries) { _, new in new }
+    }
+
+    private func queryOvernightBoundaries(from startDate: Date, to endDate: Date) async -> [Date: SleepSessionBoundary] {
+        return await withCheckedContinuation { continuation in
+            let predicate = HealthKitQueryBuilder.datePredicate(from: startDate, to: endDate)
+            let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
+            let asleepStageValues: Set<Int> = [
+                HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue,
+                HKCategoryValueSleepAnalysis.asleepCore.rawValue,
+                HKCategoryValueSleepAnalysis.asleepDeep.rawValue,
+                HKCategoryValueSleepAnalysis.asleepREM.rawValue
+            ]
+
+            let query = HKSampleQuery(
+                sampleType: HKCategoryType(.sleepAnalysis),
+                predicate: predicate,
+                limit: HKObjectQueryNoLimit,
+                sortDescriptors: [sort]
+            ) { _, results, _ in
+                guard let results = results as? [HKCategorySample] else {
+                    continuation.resume(returning: [:])
+                    return
+                }
+
+                // Keep only asleep segments and sort by start.
+                let asleep = results
+                    .filter { asleepStageValues.contains($0.value) }
+                    .sorted { $0.startDate < $1.startDate }
+
+                // Group contiguous asleep segments into sessions. A gap > 60 min
+                // means a new session — brief overnight wakeups (a few mins to
+                // ~30 min) stay inside the same session, preserving true bedtime.
+                struct SleepSession {
+                    var start: Date
+                    var end: Date
+                }
+                var sessions: [SleepSession] = []
+                let gapThreshold: TimeInterval = 60 * 60
+                for sample in asleep {
+                    if var last = sessions.last,
+                       sample.startDate.timeIntervalSince(last.end) <= gapThreshold {
+                        if sample.endDate > last.end { last.end = sample.endDate }
+                        sessions[sessions.count - 1] = last
+                    } else {
+                        sessions.append(SleepSession(start: sample.startDate, end: sample.endDate))
+                    }
+                }
+
+                // Keep only "overnight" sessions: end in 4 AM–noon and last ≥ 2 h.
+                // Index by wake-day startOfDay, keeping the longest session if a
+                // day has multiple overnight candidates (rare).
+                var dict: [Date: SleepSessionBoundary] = [:]
+                for session in sessions {
+                    let endHour = Calendar.current.component(.hour, from: session.end)
+                    guard endHour >= 4 && endHour < 12 else { continue }
+                    let durationHours = session.end.timeIntervalSince(session.start) / 3600.0
+                    guard durationHours >= 2 else { continue }
+                    let day = session.end.startOfDay
+                    if let existing = dict[day] {
+                        let existingDur = existing.wakeTime.timeIntervalSince(existing.bedtime)
+                        let newDur = session.end.timeIntervalSince(session.start)
+                        if newDur > existingDur {
+                            dict[day] = SleepSessionBoundary(bedtime: session.start, wakeTime: session.end)
+                        }
+                    } else {
+                        dict[day] = SleepSessionBoundary(bedtime: session.start, wakeTime: session.end)
+                    }
+                }
+                continuation.resume(returning: dict)
             }
 
             healthStore.execute(query)

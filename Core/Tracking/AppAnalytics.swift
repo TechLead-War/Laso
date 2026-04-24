@@ -112,6 +112,7 @@ enum BlockType: String {
     case rateAppStore = "rate_app_store"
     case reportBug = "report_bug"
     case contactSupport = "contact_support"
+    case updateApp = "update_app"
 
     // Onboarding. user taps
     case onboardingConnectHealth = "onboarding_connect_health"

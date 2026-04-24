@@ -11,23 +11,23 @@ struct TodayWorkoutCard: View {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(alignment: .top, spacing: 12) {
                     Image(systemName: plan.zone.icon)
-                        .font(.title3.weight(.semibold))
+                        .font(DS.Typography.title3)
                         .foregroundStyle(plan.zone.tint)
                         .frame(width: DS.iconSize, height: DS.iconSize)
                         .background(plan.zone.tint.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.iconRadius))
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Today's Workout")
-                            .font(.caption.weight(.semibold))
+                            .font(DS.Typography.captionSemibold)
                             .foregroundStyle(.secondary)
                             .textCase(.uppercase)
 
                         Text(plan.title)
-                            .font(.headline)
+                            .font(DS.Typography.headline)
                             .foregroundStyle(.primary)
 
                         Text(plan.summary)
-                            .font(.caption)
+                            .font(DS.Typography.caption)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -49,10 +49,10 @@ struct TodayWorkoutCard: View {
 
                 HStack(spacing: 10) {
                     Text(recoveryBand.label)
-                        .font(.caption.weight(.semibold))
+                        .font(DS.Typography.captionSemibold)
                         .foregroundStyle(recoveryBand.tint)
                     Text("Tap to view warm-up, blocks, and cooldown")
-                        .font(.caption)
+                        .font(DS.Typography.caption)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -65,9 +65,9 @@ struct TodayWorkoutCard: View {
     private func workoutChip(icon: String, text: String, tint: Color) -> some View {
         HStack(spacing: 5) {
             Image(systemName: icon)
-                .font(.caption2.weight(.semibold))
+                .font(DS.Typography.caption2Semibold)
             Text(text)
-                .font(.caption.weight(.medium))
+                .font(DS.Typography.captionMedium)
         }
         .foregroundStyle(tint)
         .padding(.horizontal, 10)
@@ -131,7 +131,7 @@ struct WorkoutPlanSheet: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: plan.zone.icon)
-                    .font(.title2.weight(.semibold))
+                    .font(DS.Typography.title2)
                     .foregroundStyle(plan.zone.tint)
                     .frame(width: 48, height: 48)
                     .background(plan.zone.tint.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: 14))
@@ -140,7 +140,7 @@ struct WorkoutPlanSheet: View {
                     Text(plan.title)
                         .font(.title3.weight(.bold))
                     Text(plan.summary)
-                        .font(.subheadline)
+                        .font(DS.Typography.subheadline)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -165,9 +165,9 @@ struct WorkoutPlanSheet: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.subheadline.weight(.semibold))
+                    .font(DS.Typography.subheadlineSemibold)
                 Text(detail)
-                    .font(.caption)
+                    .font(DS.Typography.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -183,17 +183,17 @@ struct WorkoutPlanSheet: View {
             HStack {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title)
-                        .font(.caption.weight(.semibold))
+                        .font(DS.Typography.captionSemibold)
                         .foregroundStyle(.secondary)
                         .textCase(.uppercase)
                     Text(block.name)
-                        .font(.headline)
+                        .font(DS.Typography.headline)
                 }
 
                 Spacer()
 
                 Text("\(block.duration) min")
-                    .font(.caption.weight(.semibold))
+                    .font(DS.Typography.captionSemibold)
                     .foregroundStyle(tint)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
@@ -202,7 +202,7 @@ struct WorkoutPlanSheet: View {
 
             if let heartRateTarget = block.heartRateTarget {
                 Text("Target: \(heartRateTarget.label) • \(heartRateTarget.minBPM)-\(heartRateTarget.maxBPM) bpm")
-                    .font(.caption)
+                    .font(DS.Typography.caption)
                     .foregroundStyle(.secondary)
             }
 
@@ -210,15 +210,15 @@ struct WorkoutPlanSheet: View {
                 ForEach(block.exercises) { exercise in
                     HStack(alignment: .top, spacing: 10) {
                         Image(systemName: exercise.icon)
-                            .font(.body)
+                            .font(DS.Typography.body)
                             .foregroundStyle(tint)
                             .frame(width: 26)
 
                         VStack(alignment: .leading, spacing: 3) {
                             Text(exercise.name)
-                                .font(.subheadline.weight(.semibold))
+                                .font(DS.Typography.subheadlineSemibold)
                             Text(exercise.instruction)
-                                .font(.caption)
+                                .font(DS.Typography.caption)
                                 .foregroundStyle(.secondary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
@@ -236,7 +236,7 @@ struct WorkoutPlanSheet: View {
                 .font(.subheadline.weight(.bold))
                 .foregroundStyle(tint)
             Text(label)
-                .font(.caption2)
+                .font(DS.Typography.caption2)
                 .foregroundStyle(.secondary)
         }
         .padding(.horizontal, DS.space3)

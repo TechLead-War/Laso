@@ -45,7 +45,7 @@ struct BrainHealthDetailView: View {
                 .postHogMask()
 
             Text(Copy.BrainHealth.scaleAndDirection)
-                .font(.caption2.weight(.medium))
+                .font(DS.Typography.caption2Medium)
                 .foregroundStyle(.tertiary)
 
             Text(Copy.BrainHealth.brainHealthLabel)
@@ -55,7 +55,7 @@ struct BrainHealthDetailView: View {
 
             // Static explainer. teaches the user what this screen is about
             Text(Copy.BrainHealth.heroExplainer)
-                .font(.caption.weight(.medium))
+                .font(DS.Typography.captionMedium)
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, DS.space2)
@@ -66,7 +66,7 @@ struct BrainHealthDetailView: View {
 
             // What this state means + what to do today
             Text(brainScore.headline)
-                .font(.subheadline)
+                .font(DS.Typography.subheadline)
                 .foregroundStyle(.primary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -76,7 +76,7 @@ struct BrainHealthDetailView: View {
                     Image(systemName: "clock.arrow.circlepath")
                         .font(.caption2.weight(.bold))
                     Text(Copy.BrainHealth.learningPatterns)
-                        .font(.caption.weight(.semibold))
+                        .font(DS.Typography.captionSemibold)
                 }
                 .foregroundStyle(.tertiary)
                 .padding(.horizontal, 10)
@@ -99,11 +99,11 @@ struct BrainHealthDetailView: View {
     private var weeklyChartSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text(Copy.BrainHealth.lastSevenDays)
-                .font(.headline)
+                .font(DS.Typography.headline)
 
             if weeklyHistory.isEmpty {
                 Text(Copy.Common.notEnoughData)
-                    .font(.subheadline)
+                    .font(DS.Typography.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, DS.space5)
@@ -118,16 +118,16 @@ struct BrainHealthDetailView: View {
                 )
 
                 HStack {
-                    Text("0").font(.caption2.weight(.medium)).foregroundStyle(.tertiary)
+                    Text("0").font(DS.Typography.caption2Medium).foregroundStyle(.tertiary)
                     Spacer()
-                    Text("100").font(.caption2.weight(.medium)).foregroundStyle(.tertiary)
+                    Text("100").font(DS.Typography.caption2Medium).foregroundStyle(.tertiary)
                 }
 
                 if let avg = weeklyAverage {
                     HStack(spacing: 16) {
                         HStack(spacing: 4) {
                             Text(Copy.Common.avg)
-                                .font(.caption2.weight(.medium))
+                                .font(DS.Typography.caption2Medium)
                                 .foregroundStyle(.secondary)
                             HStack(spacing: 2) {
                                 Text("\(avg)")
@@ -146,7 +146,7 @@ struct BrainHealthDetailView: View {
                                 .font(.caption2.weight(.bold))
                                 .foregroundStyle(trendColor)
                             Text(trend.capitalized)
-                                .font(.caption2.weight(.medium))
+                                .font(DS.Typography.caption2Medium)
                                 .foregroundStyle(trendColor)
                         }
                         .padding(.horizontal, DS.badgeH)
@@ -170,7 +170,7 @@ struct BrainHealthDetailView: View {
 
         return VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text(Copy.BrainHealth.sleepRecovery)
-                .font(.headline)
+                .font(DS.Typography.headline)
 
             DriverRowView(
                 label: Copy.BrainHealth.heartRecovery,
@@ -213,7 +213,7 @@ struct BrainHealthDetailView: View {
     private var insightsSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text(Copy.BrainHealth.whatHelpedAndHurt)
-                .font(.headline)
+                .font(DS.Typography.headline)
 
             ForEach(Array(brainScore.topFactors.prefix(3)), id: \.label) { factor in
                 HStack(spacing: 10) {
@@ -222,9 +222,9 @@ struct BrainHealthDetailView: View {
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(factor.label)
-                            .font(.subheadline.weight(.medium))
+                            .font(DS.Typography.subheadlineMedium)
                         Text(factor.impact)
-                            .font(.caption)
+                            .font(DS.Typography.caption)
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -251,16 +251,16 @@ struct BrainHealthDetailView: View {
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: "book.closed.fill")
-                    .font(.subheadline.weight(.semibold))
+                    .font(DS.Typography.subheadlineSemibold)
                     .foregroundStyle(.white)
                     .frame(width: DS.iconSize, height: DS.iconSize)
                     .background(.gray.gradient, in: RoundedRectangle(cornerRadius: DS.iconRadius, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(Copy.BrainHealth.learnMore)
-                        .font(.subheadline.weight(.semibold))
+                        .font(DS.Typography.subheadlineSemibold)
                     Text(Copy.BrainHealth.learnMoreHint)
-                        .font(.caption)
+                        .font(DS.Typography.caption)
                         .foregroundStyle(.secondary)
                 }
 
@@ -279,7 +279,7 @@ struct BrainHealthDetailView: View {
 
         return VStack(alignment: .leading, spacing: 10) {
             Text(Copy.BrainHealth.sleepAndMemory)
-                .font(.subheadline.weight(.semibold))
+                .font(DS.Typography.subheadlineSemibold)
                 .foregroundStyle(.secondary)
 
             HStack(spacing: 16) {
@@ -302,7 +302,7 @@ struct BrainHealthDetailView: View {
             .frame(maxWidth: .infinity)
 
             Text(hasSleepStages ? Copy.BrainHealth.sleepBrainExplanation : Copy.BrainHealth.noSleepStageData)
-                .font(.caption)
+                .font(DS.Typography.caption)
                 .foregroundStyle(.secondary)
         }
     }
@@ -310,7 +310,7 @@ struct BrainHealthDetailView: View {
     private var stressLoadBlock: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(Copy.BrainHealth.mentalEnergy)
-                .font(.subheadline.weight(.semibold))
+                .font(DS.Typography.subheadlineSemibold)
                 .foregroundStyle(.secondary)
 
             HStack(alignment: .firstTextBaseline, spacing: 10) {
@@ -327,7 +327,7 @@ struct BrainHealthDetailView: View {
             }
 
             Text(Copy.BrainHealth.mentalEnergyExplanation)
-                .font(.caption)
+                .font(DS.Typography.caption)
                 .foregroundStyle(.secondary)
         }
     }
@@ -342,7 +342,7 @@ struct BrainHealthDetailView: View {
     private var fitnessBlock: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(Copy.BrainHealth.brainHealthOverTime)
-                .font(.subheadline.weight(.semibold))
+                .font(DS.Typography.subheadlineSemibold)
                 .foregroundStyle(.secondary)
 
             HStack(spacing: 16) {
@@ -365,7 +365,7 @@ struct BrainHealthDetailView: View {
             .frame(maxWidth: .infinity)
 
             Text(Copy.BrainHealth.longTermExplanation)
-                .font(.caption)
+                .font(DS.Typography.caption)
                 .foregroundStyle(.secondary)
         }
     }
@@ -409,7 +409,7 @@ struct BrainHealthDetailView: View {
 
     private var disclaimerSection: some View {
         Text(Copy.Analysis.RiskDetail.disclaimer)
-            .font(.caption2)
+            .font(DS.Typography.caption2)
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.leading)
             .fixedSize(horizontal: false, vertical: true)

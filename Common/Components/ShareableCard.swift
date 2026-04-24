@@ -15,12 +15,7 @@ struct ShareableScoreCard: View {
     let streakDays: Int
 
     private var scoreColor: Color {
-        switch score {
-        case 80...100: return .green
-        case 60..<80: return .yellow
-        case 40..<60: return .orange
-        default: return .red
-        }
+        DS.scoreColor(score)
     }
 
     private var gradientColors: [Color] {

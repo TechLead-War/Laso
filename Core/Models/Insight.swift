@@ -108,7 +108,7 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .personalRecord: return .yellow
         case .scoreTrajectory: return .mint
         case .baselineDrift: return .cyan
-        case .multiMetricCluster: return Color.red.opacity(0.8)
+        case .multiMetricCluster: return AppColour.danger.opacity(0.8)
         case .watchSignal: return .red
         case .causalChain: return .indigo
         case .crossMetricAnomaly: return .purple

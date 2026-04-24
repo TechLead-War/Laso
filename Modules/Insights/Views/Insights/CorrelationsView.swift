@@ -20,6 +20,27 @@ struct CorrelationsView: View {
         !causalChains.isEmpty || !compoundInsights.isEmpty || !interactionEffects.isEmpty
     }
 
+    /// Evidence correlations grouped by causal chain id. Each chain's links pull
+    /// matching correlations out of the flat list so they appear as evidence
+    /// inside the Why card instead of duplicating in All Connections.
+    private var evidenceByChainID: [UUID: [HealthCorrelation]] {
+        var grouped: [UUID: [HealthCorrelation]] = [:]
+        for chain in causalChains {
+            let metricsInChain: Set<HealthMetric> = Set(chain.links.flatMap { [$0.causeMetric, $0.effectMetric] })
+            grouped[chain.id] = correlations.filter { c in
+                metricsInChain.contains(c.metricA) && metricsInChain.contains(c.metricB)
+            }
+        }
+        return grouped
+    }
+
+    /// Correlations not consumed as evidence by any causal chain — surfaced in
+    /// the All Connections section to avoid showing the same rule twice.
+    private var unmatchedCorrelations: [HealthCorrelation] {
+        let consumedIDs: Set<UUID> = Set(evidenceByChainID.values.flatMap { $0 }.map(\.id))
+        return correlations.filter { !consumedIDs.contains($0.id) }
+    }
+
     var body: some View {
         if isGated {
             ProFeatureOverlay(
@@ -46,8 +67,9 @@ struct CorrelationsView: View {
                     interactionEffectsSection
                 }
 
-                // MARK: - Tier 4: All Connections (collapsible)
-                if !correlations.isEmpty {
+                // MARK: - Tier 4: All Connections (collapsible) — only correlations
+                // not already shown as evidence inside a Why card.
+                if !unmatchedCorrelations.isEmpty {
                     connectionsSection
                 }
 
@@ -97,7 +119,10 @@ struct CorrelationsView: View {
                 .padding(.horizontal)
 
             ForEach(causalChains.prefix(4)) { chain in
-                CausalChainCard(chain: chain) {
+                CausalChainCard(
+                    chain: chain,
+                    evidence: evidenceByChainID[chain.id] ?? []
+                ) {
                     onTapMetric(chain.affectedMetric)
                 }
                 .padding(.horizontal)
@@ -140,11 +165,11 @@ struct CorrelationsView: View {
                     Spacer()
 
                     HStack(spacing: 4) {
-                        Text("\(correlations.count)")
+                        Text("\(unmatchedCorrelations.count)")
                             .font(.subheadline.weight(.medium).monospacedDigit())
                             .foregroundStyle(.secondary)
                         Image(systemName: showAllConnections ? "chevron.up" : "chevron.down")
-                            .font(.caption2.weight(.semibold))
+                            .font(DS.Typography.caption2Semibold)
                             .foregroundStyle(.tertiary)
                     }
                 }
@@ -154,7 +179,7 @@ struct CorrelationsView: View {
 
             if showAllConnections {
                 LazyVStack(spacing: 8) {
-                    ForEach(correlations) { correlation in
+                    ForEach(unmatchedCorrelations) { correlation in
                         CompactCorrelationRow(correlation: correlation) {
                             AppAnalytics.shared.trackCorrelationTapped(
                                 metricA: correlation.metricA.rawValue,
@@ -179,10 +204,10 @@ struct CorrelationsView: View {
     private func sectionHeader(title: String, icon: String, color: Color) -> some View {
         HStack(spacing: 8) {
             Image(systemName: icon)
-                .font(.subheadline.weight(.semibold))
+                .font(DS.Typography.subheadlineSemibold)
                 .foregroundStyle(color)
             Text(title)
-                .font(.headline)
+                .font(DS.Typography.headline)
         }
     }
 
@@ -192,10 +217,10 @@ struct CorrelationsView: View {
                 .font(DS.Typography.mediumIcon)
                 .foregroundStyle(.tertiary)
             Text(Copy.Insights.Correlations.buildingIntelligence)
-                .font(.subheadline.weight(.medium))
+                .font(DS.Typography.subheadlineMedium)
                 .foregroundStyle(.secondary)
             Text(Copy.Insights.Correlations.keepWearingDevice)
-                .font(.caption)
+                .font(DS.Typography.caption)
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
         }
@@ -216,7 +241,7 @@ private struct CompoundInsightCard: View {
                 // Category + severity header
                 HStack(spacing: 6) {
                     Image(systemName: categoryIcon)
-                        .font(.caption.weight(.semibold))
+                        .font(DS.Typography.captionSemibold)
                         .foregroundStyle(.white)
                         .frame(width: 22, height: 22)
                         .background(categoryColor, in: Circle())
@@ -235,13 +260,13 @@ private struct CompoundInsightCard: View {
 
                 // Title
                 Text(insight.title)
-                    .font(.subheadline.weight(.semibold))
+                    .font(DS.Typography.subheadlineSemibold)
                     .foregroundStyle(.primary)
                     .fixedSize(horizontal: false, vertical: true)
 
                 // Narrative
                 Text(insight.narrative)
-                    .font(.caption)
+                    .font(DS.Typography.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .lineLimit(3)
@@ -250,7 +275,7 @@ private struct CompoundInsightCard: View {
                 HStack(spacing: 6) {
                     ForEach(insight.involvedMetrics.prefix(4), id: \.rawValue) { metric in
                         Image(systemName: metric.systemImageName)
-                            .font(.caption2)
+                            .font(DS.Typography.caption2)
                             .foregroundStyle(metric.category.color)
                             .frame(width: 18, height: 18)
                             .background(metric.category.color.opacity(0.12), in: Circle())
@@ -258,7 +283,7 @@ private struct CompoundInsightCard: View {
 
                     if insight.involvedMetrics.count > 4 {
                         Text("+\(insight.involvedMetrics.count - 4)")
-                            .font(.caption2.weight(.medium))
+                            .font(DS.Typography.caption2Medium)
                             .foregroundStyle(.secondary)
                     }
 
@@ -266,7 +291,7 @@ private struct CompoundInsightCard: View {
 
                     if insight.isActionable {
                         Text("Actionable")
-                            .font(.caption2.weight(.semibold))
+                            .font(DS.Typography.caption2Semibold)
                             .foregroundStyle(.green)
                             .padding(.horizontal, DS.badgeH)
                             .padding(.vertical, DS.badgeV)
@@ -274,7 +299,7 @@ private struct CompoundInsightCard: View {
                     }
 
                     Image(systemName: "chevron.right")
-                        .font(.caption2.weight(.semibold))
+                        .font(DS.Typography.caption2Semibold)
                         .foregroundStyle(.tertiary)
                 }
             }
@@ -320,64 +345,103 @@ private struct CompoundInsightCard: View {
 /// Card showing a multi-link causal chain (A → B → C) with narrative
 struct CausalChainCard: View {
     let chain: CausalChain
+    var evidence: [HealthCorrelation] = []
     let onTap: () -> Void
 
+    @State private var showEvidence = false
+
     var body: some View {
-        Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 10) {
-                // Chain visualization: metric icons connected by arrows
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 6) {
-                        ForEach(Array(chain.links.enumerated()), id: \.offset) { index, link in
-                            if index == 0 {
-                                metricPill(link.causeMetric, deviation: link.causeDeviation)
+        VStack(alignment: .leading, spacing: 10) {
+            Button(action: onTap) {
+                VStack(alignment: .leading, spacing: 10) {
+                    // Chain visualization: metric icons connected by arrows
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            ForEach(Array(chain.links.enumerated()), id: \.offset) { index, link in
+                                if index == 0 {
+                                    metricPill(link.causeMetric, deviation: link.causeDeviation)
+                                }
+
+                                Image(systemName: "arrow.right")
+                                    .font(.caption2.weight(.bold))
+                                    .foregroundStyle(.purple.opacity(0.6))
+
+                                metricPill(link.effectMetric, deviation: link.effectDeviation)
                             }
+                        }
+                    }
 
-                            Image(systemName: "arrow.right")
-                                .font(.caption2.weight(.bold))
-                                .foregroundStyle(.purple.opacity(0.6))
+                    // Narrative explanation
+                    Text(chain.narrative)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(3)
 
-                            metricPill(link.effectMetric, deviation: link.effectDeviation)
+                    // Confidence footer
+                    HStack(spacing: 8) {
+                        ConfidenceBadge(confidence: chain.confidence)
+
+                        Text("\(chain.links.count)-step chain")
+                            .font(DS.Typography.caption2)
+                            .foregroundStyle(.secondary)
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(DS.Typography.caption2Semibold)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+
+            if !evidence.isEmpty {
+                Divider().opacity(0.5)
+
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) { showEvidence.toggle() }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "list.bullet.rectangle")
+                            .font(DS.Typography.captionSemibold)
+                            .foregroundStyle(.purple)
+                        Text("Evidence")
+                            .font(DS.Typography.subheadlineSemibold)
+                            .foregroundStyle(.primary)
+                        Text("\(evidence.count)")
+                            .font(.caption.weight(.medium).monospacedDigit())
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Image(systemName: showEvidence ? "chevron.up" : "chevron.down")
+                            .font(DS.Typography.caption2Semibold)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                if showEvidence {
+                    VStack(spacing: 6) {
+                        ForEach(evidence) { c in
+                            CompactCorrelationRow(correlation: c) {
+                                onTap()
+                            }
                         }
                     }
                 }
-
-                // Narrative explanation
-                Text(chain.narrative)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .lineLimit(3)
-
-                // Confidence footer
-                HStack(spacing: 8) {
-                    ConfidenceBadge(confidence: chain.confidence)
-
-                    Text("\(chain.links.count)-step chain")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-
-                    Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(.tertiary)
-                }
             }
-            .padding(DS.cardPadding)
-            .cardStyle(tint: .purple)
         }
-        .buttonStyle(.plain)
+        .padding(DS.cardPadding)
+        .cardStyle(tint: .purple)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Causal chain affecting \(chain.affectedMetric.displayName)")
         .accessibilityValue(chain.narrative)
-        .accessibilityAddTraits(.isButton)
     }
 
     private func metricPill(_ metric: HealthMetric, deviation: Double) -> some View {
         HStack(spacing: 4) {
             Image(systemName: metric.systemImageName)
-                .font(.caption2.weight(.semibold))
+                .font(DS.Typography.caption2Semibold)
                 .foregroundStyle(metric.category.color)
 
             if abs(deviation) >= 5 {
@@ -405,7 +469,7 @@ private struct InteractionEffectCard: View {
                 // Effect type badge + metrics
                 HStack(spacing: 8) {
                     Image(systemName: effectTypeIcon)
-                        .font(.caption.weight(.semibold))
+                        .font(DS.Typography.captionSemibold)
                         .foregroundStyle(.white)
                         .frame(width: 22, height: 22)
                         .background(.cyan, in: Circle())
@@ -419,20 +483,20 @@ private struct InteractionEffectCard: View {
 
                     HStack(spacing: 4) {
                         Image(systemName: effect.cause.systemImageName)
-                            .font(.caption2)
+                            .font(DS.Typography.caption2)
                             .foregroundStyle(effect.cause.category.color)
                         Image(systemName: "arrow.right")
                             .font(.system(size: 8, weight: .bold))
                             .foregroundStyle(.tertiary)
                         Image(systemName: effect.effect.systemImageName)
-                            .font(.caption2)
+                            .font(DS.Typography.caption2)
                             .foregroundStyle(effect.effect.category.color)
                     }
                 }
 
                 // Description
                 Text(effect.description)
-                    .font(.caption)
+                    .font(DS.Typography.caption)
                     .foregroundStyle(.primary)
                     .fixedSize(horizontal: false, vertical: true)
                     .lineLimit(3)
@@ -442,12 +506,12 @@ private struct InteractionEffectCard: View {
                     StrengthDots(strength: effect.strength)
 
                     Text("\(effect.sampleCount) days")
-                        .font(.caption2)
+                        .font(DS.Typography.caption2)
                         .foregroundStyle(.secondary)
 
                     if let condition = effect.condition {
                         Text(condition)
-                            .font(.caption2)
+                            .font(DS.Typography.caption2)
                             .foregroundStyle(.cyan)
                             .lineLimit(1)
                             .minimumScaleFactor(0.75)
@@ -456,7 +520,7 @@ private struct InteractionEffectCard: View {
                     Spacer()
 
                     Image(systemName: "chevron.right")
-                        .font(.caption2.weight(.semibold))
+                        .font(DS.Typography.caption2Semibold)
                         .foregroundStyle(.tertiary)
                 }
             }
@@ -506,40 +570,41 @@ private struct CompactCorrelationRow: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 10) {
+            HStack(spacing: 12) {
                 Image(systemName: correlation.metricA.systemImageName)
-                    .font(.caption2)
+                    .font(DS.Typography.captionSemibold)
                     .foregroundStyle(correlation.metricA.category.color)
-                    .frame(width: 20, height: 20)
+                    .frame(width: 28, height: 28)
                     .background(correlation.metricA.category.color.opacity(0.12), in: Circle())
 
                 Image(systemName: "arrow.right")
-                    .font(.system(size: 8, weight: .bold))
+                    .font(.caption2.weight(.bold))
                     .foregroundStyle(.tertiary)
 
                 Image(systemName: correlation.metricB.systemImageName)
-                    .font(.caption2)
+                    .font(DS.Typography.captionSemibold)
                     .foregroundStyle(correlation.metricB.category.color)
-                    .frame(width: 20, height: 20)
+                    .frame(width: 28, height: 28)
                     .background(correlation.metricB.category.color.opacity(0.12), in: Circle())
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text("\(correlation.causeLabel) → \(correlation.effectLabel)")
-                        .font(.caption)
+                        .font(DS.Typography.subheadlineMedium)
                         .foregroundStyle(.primary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.75)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.85)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Text("\(correlation.strengthLabel) · \(correlation.dayOffset == 0 ? "Same day" : "Next day") · \(Int(correlation.effectPercentDiff))% effect")
-                        .font(.caption2)
+                        .font(DS.Typography.caption)
                         .foregroundStyle(.secondary)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(.quaternary)
+                    .font(DS.Typography.caption2Semibold)
+                    .foregroundStyle(.tertiary)
             }
             .padding(.vertical, DS.space2)
             .padding(.horizontal, DS.space3)
@@ -581,7 +646,7 @@ private struct StrengthDots: View {
         HStack(spacing: 3) {
             ForEach(0..<3, id: \.self) { index in
                 Circle()
-                    .fill(index < filledCount ? Color.cyan : Color.cyan.opacity(0.2))
+                    .fill(index < filledCount ? AppColour.accent : AppColour.accent.opacity(0.2))
                     .frame(width: 5, height: 5)
             }
         }

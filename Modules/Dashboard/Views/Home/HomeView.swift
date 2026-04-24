@@ -553,16 +553,6 @@ struct HomeView: View {
             navigationPath.append(actionRoute)
         } label: {
             VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 4) {
-                    Image(systemName: "sparkle")
-                        .font(.system(size: 13.2).weight(.bold))
-                        .foregroundStyle(.secondary)
-                    Text(Copy.Home.todaysAction)
-                        .font(.system(size: 14.4).weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .textCase(.uppercase)
-                }
-
                 HStack(spacing: 12) {
                     Image(systemName: action.icon)
                         .font(.system(size: 24).weight(.semibold))

@@ -133,6 +133,11 @@ extension Copy {
         static let reportABugSubtitle = "Something not working? Tell us and we will fix it."
         static let contactUs = "Contact Us"
         static let contactUsSubtitle = "Questions, requests, or anything else."
+        static let updateApp = "Update App"
+        static let updateAvailableBadge = "New"
+        static func updateAvailableSubtitle(_ version: String) -> String {
+            "Version \(version) is available. Tap to update."
+        }
 
         // MARK: - Loading
 

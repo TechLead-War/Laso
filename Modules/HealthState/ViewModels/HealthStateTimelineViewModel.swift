@@ -49,7 +49,45 @@ final class HealthStateTimelineViewModel {
         case "Active": return AppColour.stateActive
         case "Fatigued": return AppColour.stateFatigued
         case "Resting": return AppColour.stateResting
+        case "Recovering": return AppColour.stateRecovery
+        case "Strained": return AppColour.stateStressed
+        case "Low Energy": return AppColour.stateFatigued
+        case "Restful": return AppColour.stateResting
+        case "Balanced": return AppColour.stateDefault
         default: return AppColour.stateDefault
+        }
+    }
+
+    /// One-line plain-English explainer for a state label. Shown in the
+    /// hero card and State Guide so users learn what each state means.
+    func description(for label: String) -> String {
+        switch label {
+        case "Recovery":
+            return "Body is rebuilding well — strong heart variability and deep sleep."
+        case "Peak Performance":
+            return "Energy is high and recovery is strong — a good day to push."
+        case "Stressed":
+            return "Body is under load — low recovery and elevated heart rate."
+        case "Under-Slept":
+            return "Sleep is short — focus on rest tonight."
+        case "Active":
+            return "Daily activity is high — keep watching recovery."
+        case "Fatigued":
+            return "Recovery is low — your body is asking for lighter days."
+        case "Resting":
+            return "Body is taking it easy — low activity, longer sleep."
+        case "Recovering":
+            return "Heart variability is improving — body is bouncing back."
+        case "Strained":
+            return "Resting heart rate is elevated — ease the load today."
+        case "Low Energy":
+            return "Movement and steps are below your baseline."
+        case "Restful":
+            return "Sleep is longer than usual — body is winding down."
+        case "Balanced":
+            return "All signals near your baseline — no notable changes."
+        default:
+            return "A pattern in your recent days that does not match the common states."
         }
     }
 

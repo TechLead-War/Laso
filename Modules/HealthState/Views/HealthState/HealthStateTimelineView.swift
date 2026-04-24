@@ -95,11 +95,19 @@ struct HealthStateTimelineView: View {
                         .font(.title3.weight(.bold))
 
                     Text("\(state.daysInState) day\(state.daysInState == 1 ? "" : "s") in this state")
-                        .font(.subheadline)
+                        .font(DS.Typography.subheadline)
                         .foregroundStyle(.secondary)
                 }
 
                 Spacer()
+            }
+
+            HStack(spacing: 0) {
+                Text(viewModel.description(for: state.label))
+                    .font(DS.Typography.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
             }
 
             // Transition prediction
@@ -108,10 +116,10 @@ struct HealthStateTimelineView: View {
                let avgDays = viewModel.averageTransitionTime(from: state.label, to: nextState.key) {
                 HStack(spacing: 6) {
                     Image(systemName: "arrow.right.circle.fill")
-                        .font(.caption)
+                        .font(DS.Typography.caption)
                         .foregroundStyle(color)
                     Text("You typically move to \(nextState.key) in ~\(String(format: "%.0f", avgDays)) days")
-                        .font(.caption)
+                        .font(DS.Typography.caption)
                         .foregroundStyle(.secondary)
                     Spacer()
                 }
@@ -129,7 +137,7 @@ struct HealthStateTimelineView: View {
                                 .font(.caption2.weight(.bold))
                                 .foregroundStyle(char.level == .high ? .green : .red)
                             Text(char.metric.displayName)
-                                .font(.caption2)
+                                .font(DS.Typography.caption2)
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -161,13 +169,13 @@ struct HealthStateTimelineView: View {
                     calendarTracker.tapped(target: "previous_month")
                 } label: {
                     Image(systemName: "chevron.left")
-                        .font(.caption.weight(.semibold))
+                        .font(DS.Typography.captionSemibold)
                 }
 
                 Spacer()
 
                 Text(monthYearString(selectedMonth))
-                    .font(.subheadline.weight(.semibold))
+                    .font(DS.Typography.subheadlineSemibold)
 
                 Spacer()
 
@@ -188,7 +196,7 @@ struct HealthStateTimelineView: View {
                     }
                 } label: {
                     Image(systemName: "chevron.right")
-                        .font(.caption.weight(.semibold))
+                        .font(DS.Typography.captionSemibold)
                 }
                 .disabled(Calendar.current.isDate(selectedMonth, equalTo: Date(), toGranularity: .month))
             }
@@ -198,7 +206,7 @@ struct HealthStateTimelineView: View {
             HStack(spacing: 0) {
                 ForEach(weekdays, id: \.self) { day in
                     Text(day)
-                        .font(.caption2.weight(.medium))
+                        .font(DS.Typography.caption2Medium)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity)
                 }
@@ -222,7 +230,7 @@ struct HealthStateTimelineView: View {
                             .fill(viewModel.color(for: label))
                             .frame(width: 8, height: 8)
                         Text(label)
-                            .font(.caption2)
+                            .font(DS.Typography.caption2)
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -262,7 +270,7 @@ struct HealthStateTimelineView: View {
 
         return VStack(alignment: .leading, spacing: 8) {
             Text("Distribution")
-                .font(.subheadline.weight(.semibold))
+                .font(DS.Typography.subheadlineSemibold)
 
             GeometryReader { geo in
                 HStack(spacing: 1) {
@@ -281,7 +289,7 @@ struct HealthStateTimelineView: View {
                 ForEach(distribution.sorted(by: { $0.value > $1.value }), id: \.key) { label, count in
                     let pct = Int(Double(count) / Double(total) * 100)
                     Text("\(label): \(pct)%")
-                        .font(.caption2)
+                        .font(DS.Typography.caption2)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -296,7 +304,7 @@ struct HealthStateTimelineView: View {
     private var transitionSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Common Transitions")
-                .font(.subheadline.weight(.semibold))
+                .font(DS.Typography.subheadlineSemibold)
 
             ForEach(Array(viewModel.commonTransitions.prefix(5).enumerated()), id: \.offset) { _, transition in
                 HStack(spacing: 8) {
@@ -304,17 +312,17 @@ struct HealthStateTimelineView: View {
                         .fill(viewModel.color(for: transition.from))
                         .frame(width: 10, height: 10)
                     Text(transition.from)
-                        .font(.caption.weight(.medium))
+                        .font(DS.Typography.captionMedium)
 
                     Image(systemName: "arrow.right")
-                        .font(.caption2)
+                        .font(DS.Typography.caption2)
                         .foregroundStyle(.tertiary)
 
                     Circle()
                         .fill(viewModel.color(for: transition.to))
                         .frame(width: 10, height: 10)
                     Text(transition.to)
-                        .font(.caption.weight(.medium))
+                        .font(DS.Typography.captionMedium)
 
                     Spacer()
 
@@ -323,7 +331,7 @@ struct HealthStateTimelineView: View {
                             .font(.caption.weight(.bold).monospacedDigit())
                         if let avg = transition.avgDays {
                             Text("~\(String(format: "%.1f", avg))d")
-                                .font(.caption2)
+                                .font(DS.Typography.caption2)
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -340,7 +348,7 @@ struct HealthStateTimelineView: View {
     private var stateDescriptions: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("State Guide")
-                .font(.subheadline.weight(.semibold))
+                .font(DS.Typography.subheadlineSemibold)
 
             ForEach(viewModel.states, id: \.label) { state in
                 let color = viewModel.color(for: state.label)
@@ -350,10 +358,10 @@ struct HealthStateTimelineView: View {
                         ForEach(Array(state.characteristics.prefix(5).enumerated()), id: \.offset) { _, char in
                             HStack(spacing: 6) {
                                 Image(systemName: char.metric.systemImageName)
-                                    .font(.caption2)
+                                    .font(DS.Typography.caption2)
                                     .foregroundStyle(char.metric.category.color)
                                 Text("\(char.metric.displayName): \(char.level.rawValue)")
-                                    .font(.caption)
+                                    .font(DS.Typography.caption)
                                     .foregroundStyle(.secondary)
                                 Spacer()
                             }
@@ -361,12 +369,18 @@ struct HealthStateTimelineView: View {
                     }
                     .padding(.top, DS.space1)
                 } label: {
-                    HStack(spacing: 8) {
-                        Circle()
-                            .fill(color)
-                            .frame(width: 12, height: 12)
-                        Text(state.label)
-                            .font(.subheadline.weight(.medium))
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(color)
+                                .frame(width: 12, height: 12)
+                            Text(state.label)
+                                .font(DS.Typography.subheadlineMedium)
+                        }
+                        Text(viewModel.description(for: state.label))
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }
@@ -386,6 +400,11 @@ struct HealthStateTimelineView: View {
         case "Active": return "figure.run"
         case "Fatigued": return "battery.25percent"
         case "Resting": return "leaf.fill"
+        case "Recovering": return "arrow.up.heart.fill"
+        case "Strained": return "exclamationmark.triangle.fill"
+        case "Low Energy": return "battery.0percent"
+        case "Restful": return "moon.zzz.fill"
+        case "Balanced": return "circle.dashed"
         default: return "circle.fill"
         }
     }

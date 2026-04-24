@@ -29,7 +29,7 @@ struct ReferralCodeStep: View {
                 .font(.system(size: 44, weight: .medium))
                 .foregroundStyle(.purple)
                 .frame(width: 88, height: 88)
-                .background(Color.purple.opacity(0.12), in: Circle())
+                .background(AppColour.categoryStress.opacity(0.12), in: Circle())
                 .padding(.bottom, 28)
 
             // Title + Subtitle

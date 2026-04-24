@@ -552,7 +552,29 @@ final class HealthStateClassifier {
             return "Resting"
         }
 
-        return "State \(clusterIndex + 1)"
+        // Deterministic fallback: derive a semantic name from the strongest
+        // non-normal characteristic so users never see "State N" in the UI.
+        let notable = characteristics.filter { $0.level != .normal }
+        guard let dominant = notable.max(by: { abs($0.zScore) < abs($1.zScore) }) else {
+            return "Balanced"
+        }
+
+        switch (dominant.metric, dominant.level) {
+        case (.heartRateVariability, .high), (.restingHeartRate, .low), (.vo2Max, .high):
+            return "Recovering"
+        case (.heartRateVariability, .low), (.restingHeartRate, .high), (.sleepDeep, .low):
+            return "Strained"
+        case (.activeCalories, .low), (.steps, .low), (.vo2Max, .low):
+            return "Low Energy"
+        case (.sleepDuration, .high), (.sleepDeep, .high):
+            return "Restful"
+        case (.activeCalories, .high), (.steps, .high):
+            return "Active"
+        case (.sleepDuration, .low):
+            return "Under-Slept"
+        default:
+            return "Balanced"
+        }
     }
 
     // MARK: - State History & Transitions

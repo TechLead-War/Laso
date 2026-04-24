@@ -60,7 +60,7 @@ enum DS {
     static let space8: CGFloat = 57.6
 
     /// Standard screen horizontal padding
-    static let screenPadding: CGFloat = 19.2
+    static let screenPadding: CGFloat = 12
 
     // MARK: - Typography
 

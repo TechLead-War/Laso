@@ -53,9 +53,11 @@ extension Copy {
         static let needsWork = "Opportunity"
         static func insightCount(_ count: Int) -> String { "\(count) insight\(count == 1 ? "" : "s")" }
 
-        // MARK: - Declining Trends
+        // MARK: - Why this week (declining metrics + their causal explanation)
 
-        static let decliningTrends = "Declining Trends"
+        static let decliningTrends = "Why this week"
+        static let whyExplainerSubtitle = "What changed and why, in plain English."
+        static let whyTapToExplain = "Tap to see why"
 
         // MARK: - Your Trends
 

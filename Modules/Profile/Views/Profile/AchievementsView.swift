@@ -238,17 +238,17 @@ struct AchievementsView: View {
 
             // Days tracked subtitle
             Text("\(levelInfo.totalDaysTracked) days tracked")
-                .font(.subheadline)
+                .font(DS.Typography.subheadline)
                 .foregroundStyle(.secondary)
 
             // Next level info
             if let daysRemaining = levelInfo.daysToNextLevel, let next = levelInfo.level.next {
                 HStack(spacing: 6) {
                     Image(systemName: next.icon)
-                        .font(.caption.weight(.semibold))
+                        .font(DS.Typography.captionSemibold)
                         .foregroundStyle(next.color)
                     Text("\(daysRemaining) days to \(next.name)")
-                        .font(.caption.weight(.semibold))
+                        .font(DS.Typography.captionSemibold)
                         .foregroundStyle(.secondary)
                 }
                 .padding(.horizontal, 14)
@@ -257,10 +257,10 @@ struct AchievementsView: View {
             } else {
                 HStack(spacing: 6) {
                     Image(systemName: "sparkles")
-                        .font(.caption.weight(.semibold))
+                        .font(DS.Typography.captionSemibold)
                         .foregroundStyle(levelInfo.level.color)
                     Text("Highest level achieved")
-                        .font(.caption.weight(.semibold))
+                        .font(DS.Typography.captionSemibold)
                         .foregroundStyle(levelInfo.level.color)
                 }
                 .padding(.horizontal, 14)
@@ -286,7 +286,7 @@ struct AchievementsView: View {
     private var streaksSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text("Active Streaks")
-                .font(.headline)
+                .font(DS.Typography.headline)
                 .padding(.horizontal)
 
             ScrollView(.horizontal, showsIndicators: false) {
@@ -308,7 +308,7 @@ struct AchievementsView: View {
                     .frame(width: 48, height: 48)
 
                 Image(systemName: streak.icon)
-                    .font(.title3.weight(.semibold))
+                    .font(DS.Typography.title3)
                     .foregroundStyle(streak.isHot ? .orange : .secondary)
 
                 // Animated indicator for hot streaks
@@ -323,7 +323,7 @@ struct AchievementsView: View {
 
             VStack(spacing: 2) {
                 Text(streak.name)
-                    .font(.caption2.weight(.semibold))
+                    .font(DS.Typography.caption2Semibold)
                     .foregroundStyle(.secondary)
                     .textCase(.uppercase)
 
@@ -333,14 +333,14 @@ struct AchievementsView: View {
                     .contentTransition(.numericText())
 
                 Text("days")
-                    .font(.caption2.weight(.medium))
+                    .font(DS.Typography.caption2Medium)
                     .foregroundStyle(.tertiary)
             }
 
             // All-time best
             HStack(spacing: 2) {
                 Image(systemName: "trophy.fill")
-                    .font(.caption2)
+                    .font(DS.Typography.caption2)
                     .foregroundStyle(.yellow)
                 Text("\(streak.best)")
                     .font(.caption2.weight(.semibold).monospacedDigit())
@@ -389,7 +389,7 @@ struct AchievementsView: View {
     private func statItem(value: String, label: String, icon: String) -> some View {
         VStack(spacing: 4) {
             Image(systemName: icon)
-                .font(.caption2)
+                .font(DS.Typography.caption2)
                 .foregroundStyle(.secondary)
 
             Text(value)
@@ -397,7 +397,7 @@ struct AchievementsView: View {
                 .foregroundStyle(.primary)
 
             Text(label)
-                .font(.caption2.weight(.medium))
+                .font(DS.Typography.caption2Medium)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
@@ -409,12 +409,12 @@ struct AchievementsView: View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
             HStack {
                 Text("Achievements")
-                    .font(.headline)
+                    .font(DS.Typography.headline)
 
                 Spacer()
 
                 Text("\(sortedAchievements.filter(\.isUnlocked).count) of \(sortedAchievements.count)")
-                    .font(.caption.weight(.medium))
+                    .font(DS.Typography.captionMedium)
                     .foregroundStyle(.secondary)
             }
             .padding(.horizontal)
@@ -455,7 +455,7 @@ struct AchievementsView: View {
             )
         } label: {
             Text(label)
-                .font(.caption.weight(.semibold))
+                .font(DS.Typography.captionSemibold)
                 .foregroundStyle(isSelected ? .white : .secondary)
                 .padding(.horizontal, DS.space3)
                 .padding(.vertical, 6)
@@ -490,18 +490,18 @@ struct AchievementsView: View {
 
                 if achievement.isUnlocked {
                     Image(systemName: achievement.icon)
-                        .font(.title3.weight(.semibold))
+                        .font(DS.Typography.title3)
                         .foregroundStyle(achievement.category.color)
                 } else {
                     Image(systemName: "lock.fill")
-                        .font(.body.weight(.medium))
+                        .font(DS.Typography.bodyMedium)
                         .foregroundStyle(Color(.systemGray3))
                 }
             }
 
             VStack(spacing: 3) {
                 Text(achievement.title)
-                    .font(.caption.weight(.semibold))
+                    .font(DS.Typography.captionSemibold)
                     .foregroundStyle(achievement.isUnlocked ? .primary : .secondary)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
@@ -509,11 +509,11 @@ struct AchievementsView: View {
 
                 if achievement.isUnlocked, let date = achievement.unlockDate {
                     Text(date, format: .dateTime.month(.abbreviated).day())
-                        .font(.caption2.weight(.medium))
+                        .font(DS.Typography.caption2Medium)
                         .foregroundStyle(.tertiary)
                 } else {
                     Text(achievement.requirement)
-                        .font(.caption2.weight(.medium))
+                        .font(DS.Typography.caption2Medium)
                         .foregroundStyle(.tertiary)
                         .multilineTextAlignment(.center)
                         .lineLimit(2)

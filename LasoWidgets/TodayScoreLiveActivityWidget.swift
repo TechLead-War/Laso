@@ -7,7 +7,7 @@ struct TodayScoreLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: TodayScoreActivityAttributes.self) { context in
             CoachLockScreenView(state: context.state)
-                .activityBackgroundTint(Color.black.opacity(0.78))
+                .activityBackgroundTint(Color(.secondarySystemBackground))
                 .activitySystemActionForegroundColor(.primary)
         } dynamicIsland: { context in
             DynamicIsland {
@@ -53,35 +53,77 @@ private struct CoachLockScreenView: View {
     var body: some View {
         let tint = tintColor(for: state.scoreTint)
 
-        HStack(alignment: .center, spacing: 14) {
-            CoachOrbRing(state: state, size: 64)
+        VStack(spacing: 8) {
+            HStack(alignment: .center, spacing: 14) {
+                CoachOrbRing(state: state, size: 64)
 
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    Image(systemName: state.mode.symbolName)
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(tint)
-                    Text(state.mode.headline.uppercased())
-                        .font(.caption2.weight(.semibold))
-                        .tracking(0.8)
-                        .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Image(systemName: state.mode.symbolName)
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(tint)
+                        Text(state.mode.headline.uppercased())
+                            .font(.caption2.weight(.semibold))
+                            .tracking(0.8)
+                            .foregroundStyle(.secondary)
+                    }
+                    Text(state.insight)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                Text(state.insight)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.primary)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
+
+                Spacer(minLength: 4)
+
+                if state.actionKind != .noop {
+                    CoachActionBar(kind: state.actionKind, tint: tint)
+                        .layoutPriority(0)
+                }
             }
 
-            Spacer(minLength: 4)
-
-            if state.actionKind != .noop {
-                CoachActionBar(kind: state.actionKind, tint: tint)
-                    .layoutPriority(0)
-            }
+            DayProgressStrip(mode: state.mode)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
+        .background(
+            LinearGradient(
+                colors: modeGradientColors(for: state.mode),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+    }
+}
+
+// MARK: - Time-of-Day Progress Strip
+
+/// Thin progress bar that auto-fills from sunrise (5:00) to bedtime (23:00)
+/// using `ProgressView(timerInterval:)` so it advances without needing a
+/// state push. Gives the Live Activity a visible "moving through the day"
+/// signal independent of score updates.
+private struct DayProgressStrip: View {
+    let mode: CoachMode
+
+    var body: some View {
+        let (start, end) = Self.dayWindow()
+        ProgressView(timerInterval: start...end, countsDown: false) {
+            EmptyView()
+        } currentValueLabel: {
+            EmptyView()
+        }
+        .progressViewStyle(.linear)
+        .tint(modeAccentColor(for: mode))
+        .frame(height: 2)
+    }
+
+    private static func dayWindow() -> (Date, Date) {
+        let calendar = Calendar.current
+        let now = Date()
+        let startOfDay = calendar.startOfDay(for: now)
+        let start = calendar.date(byAdding: .hour, value: 5, to: startOfDay) ?? startOfDay
+        let end = calendar.date(byAdding: .hour, value: 23, to: startOfDay) ?? startOfDay
+        return (start, end)
     }
 }
 
@@ -266,5 +308,46 @@ private func tintColor(for tint: TodayScoreTint) -> Color {
     case .good:      return .mint
     case .fair:      return .orange
     case .poor:      return .red
+    }
+}
+
+// MARK: - Mode Background
+
+/// Subtle two-stop gradient tinted by time-of-day. Lets the Live Activity
+/// card feel alive across morning peach, day blue, evening gold and night
+/// navy without overpowering the hero content.
+private func modeGradientColors(for mode: CoachMode) -> [Color] {
+    switch mode {
+    case .morning:
+        return [
+            Color(red: 1.00, green: 0.69, blue: 0.53).opacity(0.28),
+            Color(red: 0.17, green: 0.17, blue: 0.18)
+        ]
+    case .day:
+        return [
+            Color(red: 0.42, green: 0.65, blue: 1.00).opacity(0.22),
+            Color(red: 0.11, green: 0.11, blue: 0.12)
+        ]
+    case .evening:
+        return [
+            Color(red: 1.00, green: 0.63, blue: 0.38).opacity(0.28),
+            Color(red: 0.17, green: 0.17, blue: 0.18)
+        ]
+    case .night:
+        return [
+            Color(red: 0.16, green: 0.21, blue: 0.33).opacity(0.75),
+            Color(red: 0.04, green: 0.06, blue: 0.12)
+        ]
+    }
+}
+
+/// Accent for the day-progress strip. Picks a hue that blends with the
+/// mode gradient so the moving fill reads as part of the background.
+private func modeAccentColor(for mode: CoachMode) -> Color {
+    switch mode {
+    case .morning: return Color(red: 1.00, green: 0.60, blue: 0.45)
+    case .day:     return Color(red: 0.42, green: 0.65, blue: 1.00)
+    case .evening: return Color(red: 1.00, green: 0.55, blue: 0.30)
+    case .night:   return Color(red: 0.55, green: 0.62, blue: 0.90)
     }
 }

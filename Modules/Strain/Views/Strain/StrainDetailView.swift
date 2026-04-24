@@ -117,7 +117,7 @@ struct StrainDetailView: View {
         VStack(spacing: 14) {
             // Static explainer. teaches the user what this screen is about
             Text(Copy.Strain.heroExplainer)
-                .font(.caption.weight(.medium))
+                .font(DS.Typography.captionMedium)
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
@@ -130,7 +130,7 @@ struct StrainDetailView: View {
                 Circle()
                     .trim(from: targetStrainRange.lowerBound / maxStrain,
                           to: targetStrainRange.upperBound / maxStrain)
-                    .stroke(Color.green.opacity(0.5), style: StrokeStyle(lineWidth: 10, lineCap: .round))
+                    .stroke(AppColour.scoreGood.opacity(0.5), style: StrokeStyle(lineWidth: 10, lineCap: .round))
                     .frame(width: 160, height: 160)
                     .rotationEffect(.degrees(-90))
 
@@ -150,7 +150,7 @@ struct StrainDetailView: View {
                         .postHogMask()
 
                     Text(Copy.Strain.scaleSuffix)
-                        .font(.subheadline.weight(.semibold))
+                        .font(DS.Typography.subheadlineSemibold)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
 
@@ -169,14 +169,14 @@ struct StrainDetailView: View {
                 String(format: "%.1f", targetStrainRange.lowerBound),
                 String(format: "%.1f", targetStrainRange.upperBound)
             ))
-            .font(.caption.weight(.semibold))
+            .font(DS.Typography.captionSemibold)
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)
             .multilineTextAlignment(.center)
 
             // Context line. what today means + what to do. Full width, no truncation.
             Text(strainContext)
-                .font(.subheadline)
+                .font(DS.Typography.subheadline)
                 .foregroundStyle(.primary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -232,7 +232,7 @@ struct StrainDetailView: View {
                     AxisMarks(values: [0, 7, 14, 21]) { value in
                         AxisValueLabel {
                             if let v = value.as(Double.self) {
-                                Text("\(Int(v))").font(.caption2)
+                                Text("\(Int(v))").font(DS.Typography.caption2)
                             }
                         }
                         AxisGridLine()
@@ -249,7 +249,7 @@ struct StrainDetailView: View {
                 let avgStrain = weekHistory.map(\.strain).reduce(0, +) / max(Double(weekHistory.count), 1)
                 HStack(spacing: 6) {
                     Text(Copy.Strain.sevenDayAverage)
-                        .font(.caption)
+                        .font(DS.Typography.caption)
                         .foregroundStyle(.secondary)
                     HStack(spacing: 2) {
                         Text(String(format: "%.1f", avgStrain))
@@ -338,17 +338,17 @@ struct StrainDetailView: View {
     ) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
-                .font(.body.weight(.semibold))
+                .font(DS.Typography.bodySemibold)
                 .foregroundStyle(.white)
                 .frame(width: DS.iconSize, height: DS.iconSize)
                 .background(iconColor.gradient, in: RoundedRectangle(cornerRadius: DS.iconRadius, style: .continuous))
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.subheadline.weight(.semibold))
+                    .font(DS.Typography.subheadlineSemibold)
                     .foregroundStyle(.primary)
                 Text(subtitle)
-                    .font(.caption)
+                    .font(DS.Typography.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(subtitleLines)
                     .fixedSize(horizontal: false, vertical: true)
@@ -373,16 +373,16 @@ struct StrainDetailView: View {
             } label: {
                 HStack(spacing: 10) {
                     Image(systemName: "book.closed.fill")
-                        .font(.subheadline.weight(.semibold))
+                        .font(DS.Typography.subheadlineSemibold)
                         .foregroundStyle(.white)
                         .frame(width: DS.iconSize, height: DS.iconSize)
                         .background(.gray.gradient, in: RoundedRectangle(cornerRadius: DS.iconRadius, style: .continuous))
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(Copy.Strain.learnMore)
-                            .font(.subheadline.weight(.semibold))
+                            .font(DS.Typography.subheadlineSemibold)
                         Text(Copy.Strain.learnMoreHint)
-                            .font(.caption)
+                            .font(DS.Typography.caption)
                             .foregroundStyle(.secondary)
                     }
 
@@ -398,7 +398,7 @@ struct StrainDetailView: View {
     private var zoneBreakdown: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(Copy.Strain.heartRateZones)
-                .font(.subheadline.weight(.semibold))
+                .font(DS.Typography.subheadlineSemibold)
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 10) {
@@ -424,7 +424,7 @@ struct StrainDetailView: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(zoneName(zone))
-                        .font(.subheadline.weight(.medium))
+                        .font(DS.Typography.subheadlineMedium)
                     Spacer()
                     Text(formatMinutes(minutes))
                         .font(.subheadline.weight(.bold).monospacedDigit())
@@ -450,7 +450,7 @@ struct StrainDetailView: View {
     private var scaleLegend: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(Copy.Strain.strainScaleLegend)
-                .font(.subheadline.weight(.semibold))
+                .font(DS.Typography.subheadlineSemibold)
                 .foregroundStyle(.secondary)
 
             HStack(spacing: 0) {
@@ -460,7 +460,7 @@ struct StrainDetailView: View {
                             .fill(level.color)
                             .frame(height: 4)
                         Text(level.displayName)
-                            .font(.caption2.weight(.medium))
+                            .font(DS.Typography.caption2Medium)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
@@ -476,11 +476,11 @@ struct StrainDetailView: View {
     private var disclaimerNote: some View {
         HStack(alignment: .top, spacing: 8) {
             Image(systemName: "info.circle")
-                .font(.caption)
+                .font(DS.Typography.caption)
                 .foregroundStyle(.tertiary)
 
             Text(Copy.Strain.strainDisclaimer)
-                .font(.caption2)
+                .font(DS.Typography.caption2)
                 .foregroundStyle(.tertiary)
         }
         .padding(.horizontal)

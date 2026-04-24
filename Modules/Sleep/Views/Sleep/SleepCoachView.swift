@@ -18,6 +18,16 @@ struct SleepCoachView: View {
         let date: Date
         let actual: Double   // hours slept
         let needed: Double   // hours needed
+        let bedtime: Date?
+        let wakeTime: Date?
+
+        init(date: Date, actual: Double, needed: Double, bedtime: Date? = nil, wakeTime: Date? = nil) {
+            self.date = date
+            self.actual = actual
+            self.needed = needed
+            self.bedtime = bedtime
+            self.wakeTime = wakeTime
+        }
     }
 
     @State private var performanceLevel: PerformanceLevel = .peak
@@ -103,13 +113,13 @@ struct SleepCoachView: View {
                     Text(formatDuration(adjustedNeed))
                         .font(DS.Typography.displayS)
                     Text(Copy.SleepCoach.tonight)
-                        .font(.caption)
+                        .font(DS.Typography.caption)
                         .foregroundStyle(.secondary)
                 }
             }
 
             Text(Copy.SleepCoach.recommendedSleep(level: performanceLevel.rawValue.lowercased()))
-                .font(.subheadline)
+                .font(DS.Typography.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
@@ -163,7 +173,7 @@ struct SleepCoachView: View {
                 .foregroundStyle(color)
 
             Text(label)
-                .font(.caption.weight(.semibold))
+                .font(DS.Typography.captionSemibold)
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
 
@@ -185,7 +195,7 @@ struct SleepCoachView: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(Copy.SleepCoach.currentDebt)
-                            .font(.caption.weight(.semibold))
+                            .font(DS.Typography.captionSemibold)
                             .foregroundStyle(.secondary)
                             .textCase(.uppercase)
 
@@ -201,7 +211,7 @@ struct SleepCoachView: View {
 
                         if debtHours > 0 {
                             Text(Copy.SleepCoach.daysToPayOff(daysToPayOff))
-                                .font(.caption)
+                                .font(DS.Typography.caption)
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -226,7 +236,7 @@ struct SleepCoachView: View {
                     Image(systemName: debtTrendIcon)
                         .font(.caption2.weight(.bold))
                     Text(debtTrendLabel)
-                        .font(.caption)
+                        .font(DS.Typography.caption)
                 }
                 .foregroundStyle(debtTrendColor)
             }
@@ -244,7 +254,7 @@ struct SleepCoachView: View {
 
             if dailyHistory.isEmpty {
                 Text(Copy.Common.notEnoughData)
-                    .font(.subheadline)
+                    .font(DS.Typography.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, DS.space5)
@@ -264,11 +274,16 @@ struct SleepCoachView: View {
     }
 
     private func historyBar(_ day: DayEntry) -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             Text(dayLabel(day.date))
                 .font(.caption2.weight(.medium).monospacedDigit())
                 .foregroundStyle(.secondary)
-                .frame(width: 30, alignment: .leading)
+                .frame(width: 28, alignment: .leading)
+
+            Text(day.bedtime.map(Self.timeFormatter.string(from:)) ?? "—")
+                .font(.system(size: 10, weight: .regular).monospacedDigit())
+                .foregroundStyle(day.bedtime == nil ? .tertiary : .secondary)
+                .frame(width: 42, alignment: .trailing)
 
             GeometryReader { geo in
                 let maxHours: Double = 12
@@ -276,25 +291,36 @@ struct SleepCoachView: View {
                 let actualWidth = geo.size.width * min(day.actual / maxHours, 1)
 
                 ZStack(alignment: .leading) {
-                    // Needed baseline
                     RoundedRectangle(cornerRadius: 3)
                         .fill(Color(.systemGray5))
                         .frame(width: neededWidth, height: 14)
 
-                    // Actual sleep
                     RoundedRectangle(cornerRadius: 3)
-                        .fill(day.actual >= day.needed ? Color.indigo : Color.orange)
+                        .fill(day.actual >= day.needed ? AppColour.categorySleep : AppColour.warning)
                         .frame(width: actualWidth, height: 14)
                 }
             }
             .frame(height: 14)
 
+            Text(day.wakeTime.map(Self.timeFormatter.string(from:)) ?? "—")
+                .font(.system(size: 10, weight: .regular).monospacedDigit())
+                .foregroundStyle(day.wakeTime == nil ? .tertiary : .secondary)
+                .frame(width: 42, alignment: .leading)
+
             Text(formatDuration(day.actual))
                 .font(.caption2.monospacedDigit())
                 .foregroundStyle(day.actual >= day.needed ? AnyShapeStyle(.primary) : AnyShapeStyle(.orange))
-                .frame(width: 44, alignment: .trailing)
+                .frame(width: 46, alignment: .trailing)
         }
     }
+
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mma"
+        formatter.amSymbol = "a"
+        formatter.pmSymbol = "p"
+        return formatter
+    }()
 
     // MARK: - 6. Consistency Score
 
@@ -321,10 +347,10 @@ struct SleepCoachView: View {
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(consistencyLabel)
-                        .font(.subheadline.weight(.semibold))
+                        .font(DS.Typography.subheadlineSemibold)
 
                     Text(consistencyDescription)
-                        .font(.caption)
+                        .font(DS.Typography.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -359,7 +385,7 @@ struct SleepCoachView: View {
                         withAnimation(.easeInOut(duration: 0.25)) { showAllTips = true }
                     } label: {
                         Text("Show \(currentTips.count - 2) more tips")
-                            .font(.subheadline.weight(.medium))
+                            .font(DS.Typography.subheadlineMedium)
                             .foregroundStyle(.blue)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, DS.space3)
@@ -376,16 +402,16 @@ struct SleepCoachView: View {
     private func tipRow(_ tip: SleepTip) -> some View {
         HStack(spacing: 12) {
             Image(systemName: tip.icon)
-                .font(.subheadline)
+                .font(DS.Typography.subheadline)
                 .foregroundStyle(tip.color)
                 .frame(width: 32, height: 32)
                 .background(tip.color.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.iconRadius))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(tip.title)
-                    .font(.subheadline.weight(.medium))
+                    .font(DS.Typography.subheadlineMedium)
                 Text(tip.detail)
-                    .font(.caption)
+                    .font(DS.Typography.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -401,10 +427,10 @@ struct SleepCoachView: View {
     private func sectionHeader(icon: String, title: String) -> some View {
         HStack(spacing: 6) {
             Image(systemName: icon)
-                .font(.subheadline.weight(.semibold))
+                .font(DS.Typography.subheadlineSemibold)
                 .foregroundStyle(.indigo)
             Text(title)
-                .font(.headline)
+                .font(DS.Typography.headline)
         }
         .padding(.horizontal)
     }

@@ -123,32 +123,10 @@ final class RemoteConfigManager {
         return value > 0 ? value : SubscriptionConfig.fallbackTrialDays
     }
 
-    var proMonthlyDisplayPrice: String {
-        let value = stringValue(forKey: "pricing_pro_monthly_display_price")
-        return value.isEmpty ? "$5.99" : value
-    }
-
-    var proYearlyDisplayPrice: String {
-        let value = stringValue(forKey: "pricing_pro_yearly_display_price")
-        return value.isEmpty ? "$29.99" : value
-    }
-
     // MARK: - System
-
-    var feedbackPromptAfterSessions: Int {
-        intValue(forKey: "feedback_prompt_after_sessions")
-    }
 
     var feedbackCooldownDays: Int {
         intValue(forKey: "feedback_cooldown_days")
-    }
-
-    var maxLocalAnalyticsEvents: Int {
-        intValue(forKey: "max_local_analytics_events")
-    }
-
-    var sessionTimeoutSeconds: Int {
-        intValue(forKey: "session_timeout_seconds")
     }
 
     // MARK: - Alert Thresholds
@@ -189,11 +167,6 @@ final class RemoteConfigManager {
     }
 
     // MARK: - Watch Monitor
-
-    /// Interval in seconds between periodic watch status checks
-    var watchMonitorCheckInterval: Int {
-        intValue(forKey: "watch_monitor_check_seconds")
-    }
 
     /// Hours of data lookback for checking if watch is being worn
     var watchDataFreshnessHours: Double {
@@ -353,10 +326,20 @@ final class RemoteConfigManager {
         return value.isEmpty ? "0.0" : value
     }
 
-    /// Whether the current app version is below the required minimum
+    /// Whether the current app version is below the required minimum.
+    /// Component-wise numeric compare so "2.10" correctly beats "2.9".
     var requiresForceUpdate: Bool {
         let current = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0"
-        return current.compare(minimumAppVersion, options: .numeric) == .orderedAscending
+        let lhsParts = current.split(separator: ".").map { Int($0) ?? 0 }
+        let rhsParts = minimumAppVersion.split(separator: ".").map { Int($0) ?? 0 }
+        let count = max(lhsParts.count, rhsParts.count)
+        for i in 0..<count {
+            let l = i < lhsParts.count ? lhsParts[i] : 0
+            let r = i < rhsParts.count ? rhsParts[i] : 0
+            if l < r { return true }
+            if l > r { return false }
+        }
+        return false
     }
 
     // MARK: - Generic Access
@@ -439,17 +422,12 @@ extension RemoteConfigManager {
         "free_periods":             "7d,30d" as NSString,
 
         // Pricing
-        "pricing_pro_monthly_display_price": "₹499" as NSString,
-        "pricing_pro_yearly_display_price":  "₹2,499" as NSString,
         "pricing_pro_monthly_product_id":    "com.lasohealth.monthly" as NSString,
         "pricing_pro_yearly_product_id":     "com.lasohealth.yearly" as NSString,
         "pricing_pro_trial_days":            7 as NSNumber,
 
         // System
-        "feedback_prompt_after_sessions": 5 as NSNumber,
         "feedback_cooldown_days":         30 as NSNumber,
-        "max_local_analytics_events":     500 as NSNumber,
-        "session_timeout_seconds":        1800 as NSNumber,
 
         // Alert thresholds
         "alert_cooldown_hours":        4 as NSNumber,
@@ -461,7 +439,6 @@ extension RemoteConfigManager {
         "alert_heart_cap_per_day":     3 as NSNumber,
 
         // Watch monitor
-        "watch_monitor_check_seconds":     900 as NSNumber,
         "watch_data_freshness_hours":      2 as NSNumber,
         "watch_not_worn_cooldown_hours":   4 as NSNumber,
         "watch_not_worn_threshold_hours":  1 as NSNumber,

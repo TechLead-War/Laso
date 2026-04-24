@@ -51,8 +51,6 @@ const LIMITS = [
 ];
 
 const PRICING = [
-  { key: "pricing_pro_monthly_display_price", label: "Pro Monthly Display Price", type: "text" },
-  { key: "pricing_pro_yearly_display_price",  label: "Pro Yearly Display Price",  type: "text" },
   { key: "pricing_pro_monthly_product_id",    label: "Pro Monthly Product ID",    type: "text" },
   { key: "pricing_pro_yearly_product_id",     label: "Pro Yearly Product ID",     type: "text" },
   { key: "pricing_pro_trial_days",            label: "Pro Trial Days",            type: "number" },
@@ -69,7 +67,6 @@ const ALERTS = [
 ];
 
 const WATCH = [
-  { key: "watch_monitor_check_seconds",       label: "Monitor Check Interval (s)",      type: "number" },
   { key: "watch_data_freshness_hours",         label: "Data Freshness Lookback (hrs)",   type: "number" },
   { key: "watch_not_worn_cooldown_hours",      label: "Not-Worn Cooldown (hrs)",         type: "number" },
   { key: "watch_not_worn_threshold_hours",     label: "Not-Worn Threshold (hrs)",        type: "number" },
@@ -89,11 +86,8 @@ const ANALYSIS = [
 ];
 
 const SYSTEM = [
-  { key: "feedback_prompt_after_sessions",     label: "Feedback Prompt After Sessions",  type: "number" },
   { key: "feedback_cooldown_days",             label: "Feedback Cooldown (Days)",        type: "number" },
   { key: "feedback_days_before_first_prompt",  label: "Days Before First Prompt",        type: "number" },
-  { key: "max_local_analytics_events",         label: "Max Local Analytics Events",      type: "number" },
-  { key: "session_timeout_seconds",            label: "Session Timeout (Seconds)",       type: "number" },
   { key: "home_refresh_interval_seconds",      label: "Home Refresh Interval (s)",       type: "number" },
 ];
 
@@ -154,8 +148,6 @@ const DEFAULTS = {
   "free_metrics":               "heartRate,steps,sleepAnalysis",
   "free_insight_limit":         "2",
   "free_periods":               "7d,30d",
-  "pricing_pro_monthly_display_price": "₹499",
-  "pricing_pro_yearly_display_price":  "₹2,499",
   "pricing_pro_monthly_product_id":    "com.lasohealth.monthly",
   "pricing_pro_yearly_product_id":     "com.lasohealth.yearly",
   "pricing_pro_trial_days":            "7",
@@ -166,7 +158,6 @@ const DEFAULTS = {
   "alert_spo2_warning":         "95",
   "alert_rr_spike_multiplier":  "1.25",
   "alert_heart_cap_per_day":    "3",
-  "watch_monitor_check_seconds":   "900",
   "watch_data_freshness_hours":    "2",
   "watch_not_worn_cooldown_hours": "4",
   "watch_not_worn_threshold_hours":"1",
@@ -177,11 +168,8 @@ const DEFAULTS = {
   "analysis_warning_deviation":      "0.10",
   "analysis_critical_deviation":     "0.20",
   "analysis_trend_slope_threshold":  "0.02",
-  "feedback_prompt_after_sessions":    "5",
   "feedback_cooldown_days":            "30",
   "feedback_days_before_first_prompt": "5",
-  "max_local_analytics_events":        "500",
-  "session_timeout_seconds":           "1800",
   "home_refresh_interval_seconds":     "60",
   "retention_daily_sample_days":       "0",
   "retention_analysis_snapshot_days":  "365",
@@ -640,8 +628,6 @@ const DashboardPage = (() => {
       { label: "Free Year", key: "free_year_active", format: (v) => v === "true" ? "Active" : "Off" },
       { label: "Min App Version", key: "minimum_app_version" },
       { label: "Trial Days", key: "pricing_pro_trial_days", suffix: "d" },
-      { label: "Monthly Price", key: "pricing_pro_monthly_display_price" },
-      { label: "Yearly Price", key: "pricing_pro_yearly_display_price" },
       { label: "Free Insight Limit", key: "free_insight_limit" },
       { label: "Free Metric Limit", key: "free_metric_detail_limit" },
       { label: "Daily Notif Budget", key: "notification_daily_budget" },

@@ -190,7 +190,7 @@ struct CycleDetailView: View {
                         .font(.title2.weight(.bold).monospacedDigit())
 
                     Text(Copy.CycleTracking.ofTotal(cycleLength))
-                        .font(.caption.weight(.medium))
+                        .font(DS.Typography.captionMedium)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -204,7 +204,7 @@ struct CycleDetailView: View {
                             .fill(phase.color)
                             .frame(width: 8, height: 8)
                         Text(phase.rawValue.prefix(1).uppercased() + phase.rawValue.dropFirst())
-                            .font(.caption2.weight(.medium))
+                            .font(DS.Typography.caption2Medium)
                             .foregroundStyle(phase == currentPhase ? .primary : .secondary)
                     }
                 }
@@ -244,7 +244,7 @@ struct CycleDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
                 Image(systemName: currentPhase.icon)
-                    .font(.title3.weight(.semibold))
+                    .font(DS.Typography.title3)
                     .foregroundStyle(.white)
                     .frame(width: 44, height: 44)
                     .background(currentPhase.color, in: Circle())
@@ -266,7 +266,7 @@ struct CycleDetailView: View {
                             .font(.title3.weight(.bold).monospacedDigit())
                             .foregroundStyle(currentPhase.color)
                         Text(Copy.CycleTracking.daysToPeriod)
-                            .font(.caption2.weight(.medium))
+                            .font(DS.Typography.caption2Medium)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.trailing)
                     }
@@ -274,7 +274,7 @@ struct CycleDetailView: View {
             }
 
             Text(currentPhase.description)
-                .font(.subheadline)
+                .font(DS.Typography.subheadline)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -324,17 +324,17 @@ struct CycleDetailView: View {
     private func impactCard(icon: String, title: String, description: String, color: Color) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
-                .font(.body.weight(.semibold))
+                .font(DS.Typography.bodySemibold)
                 .foregroundStyle(.white)
                 .frame(width: DS.iconSize, height: DS.iconSize)
                 .background(color, in: RoundedRectangle(cornerRadius: DS.iconRadius))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.subheadline.weight(.semibold))
+                    .font(DS.Typography.subheadlineSemibold)
 
                 Text(description)
-                    .font(.caption)
+                    .font(DS.Typography.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -356,24 +356,24 @@ struct CycleDetailView: View {
 
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: "figure.run")
-                    .font(.title3.weight(.semibold))
+                    .font(DS.Typography.title3)
                     .foregroundStyle(.white)
                     .frame(width: 44, height: 44)
                     .background(currentPhase.color.gradient, in: RoundedRectangle(cornerRadius: DS.iconRadius))
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(Copy.CycleTracking.recommendedFor(phase: currentPhase.displayName))
-                        .font(.subheadline.weight(.semibold))
+                        .font(DS.Typography.subheadlineSemibold)
 
                     Text(currentPhase.exerciseRecommendation)
-                        .font(.caption)
+                        .font(DS.Typography.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
 
                     // Intensity indicator
                     HStack(spacing: 4) {
                         Text(Copy.CycleTracking.intensity)
-                            .font(.caption2.weight(.medium))
+                            .font(DS.Typography.caption2Medium)
                             .foregroundStyle(.tertiary)
 
                         ForEach(0..<4, id: \.self) { level in
@@ -415,10 +415,10 @@ struct CycleDetailView: View {
                     Spacer()
                     VStack(spacing: 8) {
                         Image(systemName: "calendar.badge.clock")
-                            .font(.title2)
+                            .font(DS.Typography.title2)
                             .foregroundStyle(.tertiary)
                         Text(Copy.CycleTracking.notEnoughCycleData)
-                            .font(.subheadline)
+                            .font(DS.Typography.subheadline)
                             .foregroundStyle(.secondary)
                     }
                     .padding(.vertical, DS.space5)
@@ -439,10 +439,10 @@ struct CycleDetailView: View {
                 if let avg = averageCycleLength {
                     HStack(spacing: 8) {
                         Image(systemName: "chart.bar.fill")
-                            .font(.caption)
+                            .font(DS.Typography.caption)
                             .foregroundStyle(.secondary)
                         Text(Copy.CycleTracking.averageCycleLength(avg))
-                            .font(.caption.weight(.medium))
+                            .font(DS.Typography.captionMedium)
                             .foregroundStyle(.secondary)
                     }
                     .padding(.horizontal)
@@ -471,10 +471,10 @@ struct CycleDetailView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.startDate, format: .dateTime.month(.wide).day().year())
-                    .font(.subheadline.weight(.medium))
+                    .font(DS.Typography.subheadlineMedium)
 
                 Text(Copy.CycleTracking.daysCount(entry.length))
-                    .font(.caption)
+                    .font(DS.Typography.caption)
                     .foregroundStyle(.secondary)
             }
 
@@ -537,7 +537,7 @@ struct CycleDetailView: View {
                         Text("\(daysUntilPeriod)")
                             .font(.title3.weight(.bold).monospacedDigit())
                         Text(Copy.CycleTracking.days)
-                            .font(.caption2.weight(.medium))
+                            .font(DS.Typography.caption2Medium)
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -545,7 +545,7 @@ struct CycleDetailView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     if let date = nextPeriodDate {
                         Text(Copy.CycleTracking.estimatedStart)
-                            .font(.caption.weight(.semibold))
+                            .font(DS.Typography.captionSemibold)
                             .foregroundStyle(.secondary)
                             .textCase(.uppercase)
 
@@ -553,11 +553,11 @@ struct CycleDetailView: View {
                             .font(.subheadline.weight(.bold))
 
                         Text(Copy.CycleTracking.basedOnCycleLength(cycleLength))
-                            .font(.caption2)
+                            .font(DS.Typography.caption2)
                             .foregroundStyle(.tertiary)
                     } else {
                         Text(Copy.CycleTracking.estimatedStart)
-                            .font(.caption.weight(.semibold))
+                            .font(DS.Typography.captionSemibold)
                             .foregroundStyle(.secondary)
                             .textCase(.uppercase)
 

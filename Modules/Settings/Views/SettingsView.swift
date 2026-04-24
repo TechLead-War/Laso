@@ -7,6 +7,7 @@ import AppIntents
 /// NotificationsSettingsView.
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     @State private var preferences: NotificationPreferences
     @State private var showExportSheet = false
     @State private var showDeleteDataAlert = false
@@ -94,6 +95,9 @@ struct SettingsView: View {
                       !deviceSourceManager.isScanning else { return }
                 await deviceSourceManager.scanSources()
             }
+            .task {
+                await AppStoreVersionChecker.shared.check()
+            }
             .onDisappear { AppAnalytics.shared.trackFeatureClose(.settings) }
 
             .onChange(of: preferences) { _, _ in
@@ -139,7 +143,7 @@ struct SettingsView: View {
                     Text(Copy.Labels.appName)
                         .font(.title3.weight(.bold))
                     Text("\(Copy.Labels.version) \(appVersion)")
-                        .font(.caption)
+                        .font(DS.Typography.caption)
                         .foregroundStyle(.secondary)
                 }
 
@@ -231,9 +235,9 @@ struct SettingsView: View {
             iconBadge(icon: "internaldrive.fill", color: .green)
             VStack(alignment: .leading, spacing: 2) {
                 Text(Copy.Settings.onDeviceData)
-                    .font(.subheadline.weight(.medium))
+                    .font(DS.Typography.subheadlineMedium)
                 Text(storageSummary)
-                    .font(.caption)
+                    .font(DS.Typography.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer()
@@ -267,11 +271,11 @@ struct SettingsView: View {
                     iconBadge(icon: "square.and.arrow.up.fill", color: .indigo)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(Copy.Settings.generateWebReport)
-                            .font(.subheadline.weight(.medium))
+                            .font(DS.Typography.subheadlineMedium)
                             .foregroundStyle(.primary)
                         if let error = webExportViewModel.error {
                             Text(error)
-                                .font(.caption)
+                                .font(DS.Typography.caption)
                                 .foregroundStyle(.red)
                         }
                     }
@@ -280,7 +284,7 @@ struct SettingsView: View {
                         ProgressView().controlSize(.small)
                     } else {
                         Image(systemName: "arrow.up.right")
-                            .font(.caption.weight(.semibold))
+                            .font(DS.Typography.captionSemibold)
                             .foregroundStyle(.tertiary)
                     }
                 }
@@ -291,7 +295,7 @@ struct SettingsView: View {
             HStack(spacing: 12) {
                 iconBadge(icon: "square.and.arrow.up.fill", color: .gray)
                 Text(Copy.Settings.generateWebReport)
-                    .font(.subheadline.weight(.medium))
+                    .font(DS.Typography.subheadlineMedium)
                     .foregroundStyle(.secondary)
                 Spacer()
                 proBadge
@@ -422,8 +426,56 @@ struct SettingsView: View {
 
     // MARK: - Support Section
 
+    @ViewBuilder
+    private var updateAppRow: some View {
+        let checker = AppStoreVersionChecker.shared
+        if checker.isUpdateAvailable, let latest = checker.latestVersion {
+            Button {
+                AppAnalytics.shared.trackBlockTap(
+                    title: Copy.Settings.updateApp,
+                    type: .updateApp,
+                    screen: .settings,
+                    metadata: [
+                        "destination": "app_store_product_page",
+                        "latest_version": latest
+                    ]
+                )
+                _ = checker.openAppStoreForUpdate(using: { openURL($0) })
+            } label: {
+                HStack(spacing: 12) {
+                    iconBadge(icon: "arrow.down.circle.fill", color: .green)
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: 6) {
+                            Text(Copy.Settings.updateApp)
+                                .font(DS.Typography.subheadlineMedium)
+                                .foregroundStyle(.primary)
+                            Text(Copy.Settings.updateAvailableBadge)
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, DS.badgeH)
+                                .padding(.vertical, DS.badgeV)
+                                .background(Color.green, in: Capsule())
+                        }
+                        Text(Copy.Settings.updateAvailableSubtitle(latest))
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+                    Spacer()
+                    Image(systemName: "arrow.up.right")
+                        .font(DS.Typography.captionSemibold)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("settings.row.updateApp")
+        }
+    }
+
     private var supportSection: some View {
         Section {
+            updateAppRow
+
             Button {
                 AppAnalytics.shared.trackBlockTap(
                     title: Copy.Settings.rateOnAppStore,
@@ -489,10 +541,10 @@ struct SettingsView: View {
                     iconBadge(icon: "trash.fill", color: .red)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(Copy.Settings.deleteAllMyData)
-                            .font(.subheadline.weight(.medium))
+                            .font(DS.Typography.subheadlineMedium)
                             .foregroundStyle(.red)
                         Text(Copy.Settings.deleteDataFooter)
-                            .font(.caption)
+                            .font(DS.Typography.caption)
                             .foregroundStyle(.secondary)
                             .lineLimit(2)
                     }
@@ -514,7 +566,7 @@ struct SettingsView: View {
             EmptyView()
         } footer: {
             Text(Copy.medicalDisclaimer)
-                .font(.caption2)
+                .font(DS.Typography.caption2)
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
@@ -534,11 +586,11 @@ struct SettingsView: View {
             iconBadge(icon: icon, color: iconColor)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.subheadline.weight(.medium))
+                    .font(DS.Typography.subheadlineMedium)
                     .foregroundStyle(.primary)
                 if let subtitle {
                     Text(subtitle)
-                        .font(.caption)
+                        .font(DS.Typography.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
                 }
@@ -546,7 +598,7 @@ struct SettingsView: View {
             Spacer()
             if let trailing {
                 Image(systemName: trailing)
-                    .font(.caption.weight(.semibold))
+                    .font(DS.Typography.captionSemibold)
                     .foregroundStyle(.tertiary)
             }
         }
@@ -554,7 +606,7 @@ struct SettingsView: View {
 
     private func iconBadge(icon: String, color: Color) -> some View {
         Image(systemName: icon)
-            .font(.subheadline)
+            .font(DS.Typography.subheadline)
             .foregroundStyle(.white)
             .frame(width: 30, height: 30)
             .background(color.gradient, in: RoundedRectangle(cornerRadius: DS.iconRadius, style: .continuous))
@@ -620,11 +672,11 @@ struct MetricAlertPickerView: View {
                         )) {
                             HStack(spacing: 10) {
                                 Image(systemName: metric.systemImageName)
-                                    .font(.body)
+                                    .font(DS.Typography.body)
                                     .foregroundStyle(category.color)
                                     .frame(width: 24)
                                 Text(metric.displayName)
-                                    .font(.subheadline)
+                                    .font(DS.Typography.subheadline)
                             }
                         }
                     }

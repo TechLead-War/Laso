@@ -195,10 +195,12 @@ struct ExploreView: View {
                     .onAppear { needsAttentionTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 65) }
                     .onDisappear { needsAttentionTracker.disappeared() }
 
-                    // 8. Declining metrics from history (requires 30+ days)
+                    // 8. Why this week — declining metrics merged with their causal explanation
                     if viewModel.analysis.dataDepth.daysOfData >= 30, !decliningHighlights.isEmpty {
                         ExploreDecliningTrendsSection(
                             decliningHighlights: decliningHighlights,
+                            causalChains: FeatureGate.canAccess(.advancedAnalytics) ? viewModel.analysis.causalChains : [],
+                            correlations: FeatureGate.canAccess(.advancedAnalytics) ? viewModel.analysis.topCorrelations : [],
                             onHighlightTapped: { highlight in
                                 AppAnalytics.shared.trackBlockTap(
                                     title: highlight.metric.displayName,
@@ -217,19 +219,8 @@ struct ExploreView: View {
                                 )
                                 decliningTrendsTracker.tapped(target: highlight.metric.rawValue)
                                 navigationPath.append(highlight.metric)
-                            }
-                        )
-                        .onAppear { decliningTrendsTracker.appeared() }
-                        .onDisappear { decliningTrendsTracker.disappeared() }
-                    }
-
-                    // 9. Correlations preview
-                    if FeatureGate.canAccess(.advancedAnalytics), !viewModel.analysis.topCorrelations.isEmpty {
-                        ExploreCorrelationsSection(
-                            correlations: viewModel.analysis.topCorrelations,
-                            topCompoundInsight: viewModel.analysis.compoundInsights.first,
-                            topCausalChain: viewModel.analysis.topCausalChain,
-                            onSeeAllTapped: {
+                            },
+                            onSeeAllIntelligenceTapped: FeatureGate.canAccess(.advancedAnalytics) ? {
                                 AppAnalytics.shared.trackBlockTap(
                                     title: "See all",
                                     type: .exploreSeeAllCorrelations,
@@ -241,11 +232,15 @@ struct ExploreView: View {
                                 )
                                 correlationsTracker.tapped(target: "see_all")
                                 navigationPath.append(Route.correlationsDetail)
-                            }
+                            } : nil
                         )
-                        .onAppear { correlationsTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 90) }
-                        .onDisappear { correlationsTracker.disappeared() }
-                    } else if !FeatureGate.canAccess(.advancedAnalytics) {
+                        .onAppear { decliningTrendsTracker.appeared() }
+                        .onDisappear { decliningTrendsTracker.disappeared() }
+                    }
+
+                    // 9. Free tier upsell for advanced analytics. Pro users see the
+                    // explanation inline inside section 8 above.
+                    if !FeatureGate.canAccess(.advancedAnalytics) {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
                                 Text(Copy.Explore.connections)

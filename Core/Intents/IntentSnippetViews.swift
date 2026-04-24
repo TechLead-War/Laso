@@ -53,9 +53,9 @@ enum IntentSnippetViews {
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Health Score")
-                            .font(.headline)
+                            .font(DS.Typography.headline)
                         Text(summary)
-                            .font(.subheadline)
+                            .font(DS.Typography.subheadline)
                             .foregroundStyle(.secondary)
                             .lineLimit(3)
                     }
@@ -79,7 +79,7 @@ enum IntentSnippetViews {
                 }
                 .frame(width: 60, height: 60)
                 Text(caption)
-                    .font(.caption2)
+                    .font(DS.Typography.caption2)
                     .foregroundStyle(.secondary)
             }
         }
@@ -108,12 +108,12 @@ enum IntentSnippetViews {
                     // Sleep duration bar
                     VStack(spacing: 4) {
                         Image(systemName: "bed.double.fill")
-                            .font(.title2)
+                            .font(DS.Typography.title2)
                             .foregroundStyle(.indigo)
                         Text(formatHours(totalHours))
                             .font(.system(size: 24, weight: .bold, design: .rounded))
                         Text(qualityLabel)
-                            .font(.caption)
+                            .font(DS.Typography.caption)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 2)
                             .background(qualityColor.opacity(0.2))
@@ -124,7 +124,7 @@ enum IntentSnippetViews {
 
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Last Night's Sleep")
-                            .font(.headline)
+                            .font(DS.Typography.headline)
 
                         if deepHours > 0 || remHours > 0 {
                             HStack(spacing: 12) {
@@ -158,7 +158,7 @@ enum IntentSnippetViews {
         private func sleepStageItem(label: String, hours: Double, color: Color) -> some View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(label)
-                    .font(.caption2)
+                    .font(DS.Typography.caption2)
                     .foregroundStyle(.secondary)
                 Text(formatHours(hours))
                     .font(.subheadline.bold())
@@ -219,7 +219,7 @@ enum IntentSnippetViews {
                         }
                         .frame(width: 64, height: 64)
                         Text("Readiness")
-                            .font(.caption2)
+                            .font(DS.Typography.caption2)
                             .foregroundStyle(.secondary)
                     }
 
@@ -238,15 +238,15 @@ enum IntentSnippetViews {
                         }
                         .frame(width: 64, height: 64)
                         Text(stressLabel)
-                            .font(.caption2)
+                            .font(DS.Typography.caption2)
                             .foregroundStyle(.secondary)
                     }
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Recovery Status")
-                            .font(.headline)
+                            .font(DS.Typography.headline)
                         Text(readinessAdvice(readinessScore))
-                            .font(.subheadline)
+                            .font(DS.Typography.subheadline)
                             .foregroundStyle(.secondary)
                             .lineLimit(3)
                     }
@@ -277,18 +277,18 @@ enum IntentSnippetViews {
                         .fill(Color.blue.opacity(0.15))
                         .frame(width: 56, height: 56)
                     Image(systemName: "drop.fill")
-                        .font(.title2)
+                        .font(DS.Typography.title2)
                         .foregroundStyle(.blue)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Water Logged")
-                        .font(.headline)
+                        .font(DS.Typography.headline)
                     Text("\(Int(liters * 1000)) mL (\(String(format: "%.1f", liters)) L)")
-                        .font(.subheadline)
+                        .font(DS.Typography.subheadline)
                         .foregroundStyle(.secondary)
                     Text("Saved to Apple Health")
-                        .font(.caption)
+                        .font(DS.Typography.caption)
                         .foregroundStyle(.green)
                 }
             }
@@ -309,18 +309,18 @@ enum IntentSnippetViews {
                         .fill(Color.green.opacity(0.15))
                         .frame(width: 56, height: 56)
                     Image(systemName: workoutType.systemImageName)
-                        .font(.title2)
+                        .font(DS.Typography.title2)
                         .foregroundStyle(.green)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("\(workoutType.rawValue.capitalized) Logged")
-                        .font(.headline)
+                        .font(DS.Typography.headline)
                     Text(formatDuration(durationMinutes))
-                        .font(.subheadline)
+                        .font(DS.Typography.subheadline)
                         .foregroundStyle(.secondary)
                     Text("Saved to Apple Health")
-                        .font(.caption)
+                        .font(DS.Typography.caption)
                         .foregroundStyle(.green)
                 }
             }
@@ -348,10 +348,10 @@ enum IntentSnippetViews {
         var body: some View {
             HStack(spacing: 12) {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.title3)
+                    .font(DS.Typography.title3)
                     .foregroundStyle(.orange)
                 Text(message)
-                    .font(.subheadline)
+                    .font(DS.Typography.subheadline)
                     .foregroundStyle(.secondary)
             }
             .padding()

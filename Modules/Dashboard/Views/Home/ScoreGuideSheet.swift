@@ -37,13 +37,15 @@ struct ScoreGuideSheet: View {
                             .font(.system(size: 18))
                             .foregroundStyle(.secondary)
                     }
-                    .padding(.horizontal, DS.screenPadding)
+                    .padding(.leading, DS.screenPadding + DS.space5)
+                    .padding(.trailing, DS.screenPadding)
 
                     // MARK: - Score Levels
                     VStack(alignment: .leading, spacing: 10) {
                         Text(Copy.Home.ScoreGuide.scoreLevels)
                             .font(.system(size: 20.4, weight: .semibold))
-                            .padding(.horizontal, DS.screenPadding)
+                            .padding(.leading, DS.screenPadding + DS.space5)
+                            .padding(.trailing, DS.screenPadding)
 
                         VStack(spacing: 0) {
                             scoreLevelRow(
@@ -82,12 +84,14 @@ struct ScoreGuideSheet: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Text(Copy.Home.ScoreGuide.howItsCalculated)
                             .font(.system(size: 20.4, weight: .semibold))
-                            .padding(.horizontal, DS.screenPadding)
+                            .padding(.leading, DS.screenPadding + DS.space5)
+                            .padding(.trailing, DS.screenPadding)
 
                         Text(Copy.Home.ScoreGuide.howItsCalculatedBody)
                             .font(.system(size: 18))
                             .foregroundStyle(.secondary)
-                            .padding(.horizontal, DS.screenPadding)
+                            .padding(.leading, DS.screenPadding + DS.space5)
+                            .padding(.trailing, DS.screenPadding)
 
                         VStack(spacing: 0) {
                             categoryRow(icon: "heart.fill", color: .red, name: Copy.Home.ScoreGuide.heartCardioName, detail: Copy.Home.ScoreGuide.heartCardioDetail)
@@ -106,7 +110,8 @@ struct ScoreGuideSheet: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Text(Copy.Home.ScoreGuide.whenItUpdatesTitle)
                             .font(.system(size: 20.4, weight: .semibold))
-                            .padding(.horizontal, DS.screenPadding)
+                            .padding(.leading, DS.screenPadding + DS.space5)
+                            .padding(.trailing, DS.screenPadding)
 
                         VStack(alignment: .leading, spacing: 8) {
                             HStack(alignment: .top, spacing: 12) {

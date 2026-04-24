@@ -1,37 +1,110 @@
 import SwiftUI
 
+/// Merged "Why this week" section: each declining metric expands inline to
+/// show its causal explanation (chain narrative + evidence) so users see
+/// what dropped and why in one place. When no causal chain exists for a
+/// metric, the row stays collapsed-only with the basic recommendation.
 struct ExploreDecliningTrendsSection: View {
     let decliningHighlights: [DashboardViewModel.HistoricalHighlight]
+    let causalChains: [CausalChain]
+    let correlations: [HealthCorrelation]
     let onHighlightTapped: (DashboardViewModel.HistoricalHighlight) -> Void
+    let onSeeAllIntelligenceTapped: (() -> Void)?
+
+    @State private var expandedMetricIDs: Set<String> = []
+
+    init(
+        decliningHighlights: [DashboardViewModel.HistoricalHighlight],
+        causalChains: [CausalChain] = [],
+        correlations: [HealthCorrelation] = [],
+        onHighlightTapped: @escaping (DashboardViewModel.HistoricalHighlight) -> Void,
+        onSeeAllIntelligenceTapped: (() -> Void)? = nil
+    ) {
+        self.decliningHighlights = decliningHighlights
+        self.causalChains = causalChains
+        self.correlations = correlations
+        self.onHighlightTapped = onHighlightTapped
+        self.onSeeAllIntelligenceTapped = onSeeAllIntelligenceTapped
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(Copy.Explore.decliningTrends)
-                .font(.headline)
-                .padding(.horizontal)
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(Copy.Explore.decliningTrends)
+                        .font(.headline)
+                    Text(Copy.Explore.whyExplainerSubtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                if let onSeeAll = onSeeAllIntelligenceTapped, !causalChains.isEmpty {
+                    Button(action: onSeeAll) {
+                        HStack(spacing: 4) {
+                            Text(Copy.Explore.seeAll)
+                                .font(.subheadline.weight(.medium))
+                            Image(systemName: "chevron.right")
+                                .font(.caption2.weight(.semibold))
+                        }
+                        .foregroundStyle(.tint)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal)
 
             ForEach(decliningHighlights) { highlight in
-                Button {
-                    AppAnalytics.shared.trackBlockTap(
-                        title: highlight.metric.displayName,
-                        type: .exploreDecliningMetric,
-                        screen: .explore,
-                        metadata: [
-                            "metric_id": highlight.metric.rawValue,
-                            "highlight_type": highlight.typeLabel
-                        ]
-                    )
-                    onHighlightTapped(highlight)
-                } label: {
-                    historicalCard(highlight)
-                }
-                .buttonStyle(.plain)
-                .padding(.horizontal)
+                let chain = matchingChain(for: highlight)
+                whyCard(highlight: highlight, chain: chain)
+                    .padding(.horizontal)
             }
         }
     }
 
-    private func historicalCard(_ highlight: DashboardViewModel.HistoricalHighlight) -> some View {
+    // MARK: - Card
+
+    private func whyCard(highlight: DashboardViewModel.HistoricalHighlight, chain: CausalChain?) -> some View {
+        let isExpanded = expandedMetricIDs.contains(highlight.metric.rawValue)
+        let canExpand = chain != nil
+
+        return VStack(alignment: .leading, spacing: 0) {
+            Button {
+                AppAnalytics.shared.trackBlockTap(
+                    title: highlight.metric.displayName,
+                    type: .exploreDecliningMetric,
+                    screen: .explore,
+                    metadata: [
+                        "metric_id": highlight.metric.rawValue,
+                        "highlight_type": highlight.typeLabel,
+                        "has_causal_chain": canExpand
+                    ]
+                )
+                if canExpand {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        if isExpanded {
+                            expandedMetricIDs.remove(highlight.metric.rawValue)
+                        } else {
+                            expandedMetricIDs.insert(highlight.metric.rawValue)
+                        }
+                    }
+                } else {
+                    onHighlightTapped(highlight)
+                }
+            } label: {
+                summaryRow(highlight: highlight, canExpand: canExpand, isExpanded: isExpanded)
+            }
+            .buttonStyle(.plain)
+
+            if isExpanded, let chain = chain {
+                Divider().opacity(0.5).padding(.vertical, DS.space2)
+                explanationView(chain: chain, highlight: highlight)
+            }
+        }
+        .padding(DS.cardPadding)
+        .cardStyle()
+    }
+
+    private func summaryRow(highlight: DashboardViewModel.HistoricalHighlight, canExpand: Bool, isExpanded: Bool) -> some View {
         HStack(spacing: 12) {
             Image(systemName: highlight.icon)
                 .font(.body)
@@ -56,19 +129,72 @@ struct ExploreDecliningTrendsSection: View {
                     .font(.caption.weight(.medium))
                     .foregroundStyle(.primary)
 
-                Text(highlight.recommendation)
+                Text(canExpand ? Copy.Explore.whyTapToExplain : highlight.recommendation)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(canExpand ? .purple : .secondary)
                     .lineLimit(2)
             }
 
             Spacer()
 
-            Image(systemName: "chevron.right")
-                .font(.caption2)
+            Image(systemName: canExpand ? (isExpanded ? "chevron.up" : "chevron.down") : "chevron.right")
+                .font(.caption2.weight(.semibold))
                 .foregroundStyle(.tertiary)
         }
-        .padding(DS.cardPadding)
-        .cardStyle()
+    }
+
+    private func explanationView(chain: CausalChain, highlight: DashboardViewModel.HistoricalHighlight) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // Chain narrative
+            Text(chain.narrative)
+                .font(.footnote)
+                .foregroundStyle(.primary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            // Inline mini chain (cause → effect icons) + confidence
+            HStack(spacing: 6) {
+                ForEach(Array(chain.links.enumerated()), id: \.offset) { index, link in
+                    if index == 0 {
+                        Image(systemName: link.causeMetric.systemImageName)
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(link.causeMetric.category.color)
+                            .frame(width: 22, height: 22)
+                            .background(link.causeMetric.category.color.opacity(0.12), in: Circle())
+                    }
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(.purple.opacity(0.5))
+                    Image(systemName: link.effectMetric.systemImageName)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(link.effectMetric.category.color)
+                        .frame(width: 22, height: 22)
+                        .background(link.effectMetric.category.color.opacity(0.12), in: Circle())
+                }
+                Spacer()
+                Text("\(Int(chain.confidence * 100))% confidence")
+                    .font(.caption2.weight(.medium).monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+
+            // Open full metric detail
+            Button {
+                onHighlightTapped(highlight)
+            } label: {
+                HStack(spacing: 4) {
+                    Text("Open \(highlight.metric.displayName)")
+                        .font(.caption.weight(.semibold))
+                    Image(systemName: "chevron.right")
+                        .font(.caption2.weight(.semibold))
+                }
+                .foregroundStyle(.tint)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - Matching
+
+    private func matchingChain(for highlight: DashboardViewModel.HistoricalHighlight) -> CausalChain? {
+        causalChains.first { $0.affectedMetric == highlight.metric }
     }
 }

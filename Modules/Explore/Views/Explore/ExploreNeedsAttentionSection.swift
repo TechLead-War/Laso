@@ -60,7 +60,7 @@ struct ExploreNeedsAttentionSection: View {
                         .buttonStyle(.plain)
                     }
 
-                    if !weakCategories.isEmpty {
+                    if weakCategories.count >= 2 {
                         Divider()
                             .padding(.vertical, DS.space1)
 

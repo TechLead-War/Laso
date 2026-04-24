@@ -75,7 +75,7 @@ struct VitalityMetricContributionSection: View {
                 Capsule()
                     .fill(
                         LinearGradient(
-                            colors: [Color.red.opacity(0.28), Color.orange.opacity(0.28), vitalityWhoopGreen.opacity(0.28)],
+                            colors: [AppColour.danger.opacity(0.28), AppColour.warning.opacity(0.28), vitalityWhoopGreen.opacity(0.28)],
                             startPoint: .leading,
                             endPoint: .trailing
                         )

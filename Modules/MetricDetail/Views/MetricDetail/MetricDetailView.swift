@@ -29,9 +29,9 @@ struct MetricDetailView: View {
                     if let expandedTo = autoExpandedRange {
                         HStack(spacing: 6) {
                             Image(systemName: "info.circle")
-                                .font(.caption)
+                                .font(DS.Typography.caption)
                             Text(Copy.Insights.MetricDetail.expandedRangeNotice(expandedTo))
-                                .font(.caption)
+                                .font(DS.Typography.caption)
                         }
                         .foregroundStyle(.secondary)
                         .padding(.horizontal)
@@ -126,7 +126,7 @@ struct MetricDetailView: View {
                 }
 
                 Text(Copy.Analysis.RiskDetail.disclaimer)
-                    .font(.caption2)
+                    .font(DS.Typography.caption2)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.leading)
                     .padding(.horizontal)
@@ -182,10 +182,10 @@ struct MetricDetailView: View {
                 .foregroundStyle(viewModel.metric.category.color.opacity(0.6))
 
             Text(Copy.Insights.MetricDetail.noDataYet)
-                .font(.title3.weight(.semibold))
+                .font(DS.Typography.title3)
 
             Text(Copy.Insights.MetricDetail.noDataDescription(viewModel.metric.displayName.lowercased()))
-                .font(.subheadline)
+                .font(DS.Typography.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, DS.space7)
@@ -194,7 +194,7 @@ struct MetricDetailView: View {
             if !viewModel.insights.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
                     Text(Copy.Insights.MetricDetail.insights)
-                        .font(.headline)
+                        .font(DS.Typography.headline)
                         .padding(.horizontal)
 
                     ForEach(viewModel.insights) { insight in
@@ -215,7 +215,7 @@ struct MetricDetailView: View {
                     .font(DS.Typography.displayL)
 
                 Text(viewModel.metric.unit)
-                    .font(.title3)
+                    .font(DS.Typography.title3)
                     .foregroundStyle(.secondary)
             }
 
@@ -238,7 +238,7 @@ struct MetricDetailView: View {
             // Deviation from baseline
             if viewModel.baseline != nil {
                 Text(Copy.Insights.MetricDetail.baselineDeviation(viewModel.deviationFromBaseline))
-                    .font(.caption)
+                    .font(DS.Typography.caption)
                     .foregroundStyle(.secondary)
             }
 
@@ -276,7 +276,7 @@ struct MetricDetailView: View {
                                 .fill(.orange.opacity(0.7))
                                 .frame(width: 16, height: 2)
                             Text(Copy.Insights.MetricDetail.trend)
-                                .font(.caption2)
+                                .font(DS.Typography.caption2)
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -286,7 +286,7 @@ struct MetricDetailView: View {
                                 .fill(viewModel.metric.category.color.opacity(0.5))
                                 .frame(width: 16, height: 2)
                             Text(Copy.Insights.MetricDetail.forecast)
-                                .font(.caption2)
+                                .font(DS.Typography.caption2)
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -303,11 +303,11 @@ struct MetricDetailView: View {
     private func actionBanner(_ recommendation: String) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: "lightbulb.fill")
-                .font(.body)
+                .font(DS.Typography.body)
                 .foregroundStyle(.yellow)
 
             Text(recommendation)
-                .font(.subheadline)
+                .font(DS.Typography.subheadline)
                 .foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -324,10 +324,10 @@ struct MetricDetailView: View {
                 Text(viewModel.averageValue)
                     .font(.title3.weight(.bold).monospacedDigit())
                 Text(Copy.Insights.MetricDetail.periodAvg)
-                    .font(.caption2)
+                    .font(DS.Typography.caption2)
                     .foregroundStyle(.secondary)
                 Text(viewModel.isOutsideNormalRange ? Copy.Insights.MetricDetail.outsideRange : Copy.Insights.MetricDetail.withinRange)
-                    .font(.caption2.weight(.semibold))
+                    .font(DS.Typography.caption2Semibold)
                     .foregroundStyle(viewModel.isOutsideNormalRange ? .red : .green)
             }
             .frame(maxWidth: .infinity)
@@ -339,7 +339,7 @@ struct MetricDetailView: View {
                 Text(viewModel.weekOverWeekChange)
                     .font(.title3.weight(.bold).monospacedDigit())
                 Text(viewModel.periodChangeLabel)
-                    .font(.caption2)
+                    .font(DS.Typography.caption2)
                     .foregroundStyle(.secondary)
                 TrendBadge(
                     direction: viewModel.trendDirection,
@@ -367,7 +367,7 @@ struct MetricDetailView: View {
                         Text(viewModel.metric.formatValue(comp.thisMonthAvg))
                             .font(.title3.weight(.bold).monospacedDigit())
                         Text(comp.thisMonthLabel)
-                            .font(.caption2)
+                            .font(DS.Typography.caption2)
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity)
@@ -375,7 +375,7 @@ struct MetricDetailView: View {
                     // Arrow + change
                     VStack(spacing: 4) {
                         Image(systemName: comp.improving ? "arrow.up.right" : abs(comp.changePercent) < 2 ? "arrow.right" : "arrow.down.right")
-                            .font(.body.weight(.semibold))
+                            .font(DS.Typography.bodySemibold)
                             .foregroundStyle(comp.improving ? .green : abs(comp.changePercent) < 2 ? .secondary : .red)
 
                         Text(TrendAnalyzer.formattedPercentChange(comp.changePercent))
@@ -390,7 +390,7 @@ struct MetricDetailView: View {
                             .font(.title3.weight(.bold).monospacedDigit())
                             .foregroundStyle(.secondary)
                         Text(comp.lastMonthLabel)
-                            .font(.caption2)
+                            .font(DS.Typography.caption2)
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity)
@@ -424,12 +424,12 @@ struct MetricDetailView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(text)
-                    .font(.subheadline)
+                    .font(DS.Typography.subheadline)
                     .foregroundStyle(.primary)
 
                 if let detail {
                     Text(detail)
-                        .font(.caption)
+                        .font(DS.Typography.caption)
                         .foregroundStyle(detailColor)
                 }
             }
@@ -451,10 +451,10 @@ struct MetricDetailView: View {
     private func sectionHeader(icon: String, title: String) -> some View {
         HStack(spacing: 6) {
             Image(systemName: icon)
-                .font(.subheadline)
+                .font(DS.Typography.subheadline)
                 .foregroundStyle(.tint)
             Text(title)
-                .font(.headline)
+                .font(DS.Typography.headline)
         }
         .padding(.horizontal)
     }
@@ -509,7 +509,7 @@ struct MetricDetailView: View {
 
             if let ctx = viewModel.historicalContext {
                 Text(Copy.Insights.MetricDetail.dataPointsSummary(ctx.totalDataPoints))
-                    .font(.caption2)
+                    .font(DS.Typography.caption2)
                     .foregroundStyle(.tertiary)
                     .padding(.horizontal)
             }
