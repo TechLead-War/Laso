@@ -29,10 +29,10 @@ struct VitalityMetricContributionSection: View {
         return VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 10) {
                 Image(systemName: component.healthMetric?.systemImageName ?? "heart.fill")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(DS.Typography.caption.weight(.semibold))
                     .foregroundStyle(tint)
                     .frame(width: 34, height: 34)
-                    .background(tint.opacity(0.14), in: RoundedRectangle(cornerRadius: 10))
+                    .background(tint.opacity(0.14), in: RoundedRectangle(cornerRadius: DS.Radius.md))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(component.metric)
@@ -63,7 +63,7 @@ struct VitalityMetricContributionSection: View {
             metricValueBar(component: component, tint: tint)
         }
         .padding(.horizontal, DS.cardPadding)
-        .padding(.vertical, 10)
+        .padding(.vertical, DS.space2)
     }
 
     private func metricValueBar(component: VitalityComponent, tint: Color) -> some View {

@@ -6,24 +6,24 @@ struct ExploreEmptyStateSection: View {
     var onConnectHealth: (() -> Void)? = nil
 
     var body: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 16) {
+        VStack(spacing: DS.space4) {
+            HStack(spacing: DS.space4) {
                 Image(systemName: hasAnyHealthData ? "chart.line.text.clipboard" : "heart.text.clipboard")
-                    .font(.system(size: 40))
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.largeIcon)
+                    .foregroundStyle(AppColour.textSecondary)
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: DS.space1) {
                     Text(Copy.Explore.yourHealthScore)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.subheadline)
+                        .foregroundStyle(AppColour.textSecondary)
 
                     Text(titleText)
-                        .font(.title3.weight(.medium))
-                        .foregroundStyle(.primary)
+                        .font(DS.Typography.title3)
+                        .foregroundStyle(AppColour.textPrimary)
 
                     Text(bodyText)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
 
                 Spacer()
@@ -32,15 +32,14 @@ struct ExploreEmptyStateSection: View {
             if !isAuthorized, let onConnectHealth {
                 Button(action: onConnectHealth) {
                     Label("Connect Apple Health", systemImage: "heart.fill")
-                        .font(.subheadline.weight(.semibold))
+                        .font(DS.Typography.subheadlineSemibold)
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.regular)
+                .buttonStyle(.dsPrimary)
             }
         }
         .padding(DS.space4)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
     }
 
     private var titleText: String {

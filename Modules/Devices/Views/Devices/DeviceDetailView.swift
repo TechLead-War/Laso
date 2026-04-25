@@ -7,7 +7,7 @@ struct DeviceDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: DS.space5) {
                 // Device Header
                 deviceHeader
 
@@ -21,7 +21,7 @@ struct DeviceDetailView: View {
             }
             .padding(.bottom)
         }
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppColour.surfaceBase.ignoresSafeArea())
         .navigationTitle(displayTitle)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
@@ -38,19 +38,19 @@ struct DeviceDetailView: View {
     }
 
     private var deviceHeader: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: DS.itemSpacing) {
             Image(systemName: device.systemImageName)
                 .font(DS.Typography.largeIcon)
                 .foregroundStyle(device.iconColor)
 
             Text(displayTitle)
-                .font(.title2.weight(.bold))
+                .font(DS.Typography.title2)
 
             statusBadge
 
             Text(sourceSubtitle)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.subheadline)
+                .foregroundStyle(AppColour.textSecondary)
         }
         .padding(.top)
     }
@@ -59,98 +59,98 @@ struct DeviceDetailView: View {
         Group {
             if let info = deviceInfo {
                 Text(info.isActive ? "Active" : "Inactive")
-                    .font(.caption.weight(.semibold))
+                    .font(DS.Typography.captionSemibold)
                     .foregroundStyle(.white)
-                    .padding(.horizontal, 10)
+                    .padding(.horizontal, DS.space3)
                     .padding(.vertical, DS.space1)
-                    .background(info.isActive ? .green : .orange, in: Capsule())
+                    .background(info.isActive ? AppColour.success : AppColour.warning, in: Capsule())
             } else {
                 Text("Setup Guide")
-                    .font(.caption.weight(.semibold))
+                    .font(DS.Typography.captionSemibold)
                     .foregroundStyle(.white)
-                    .padding(.horizontal, 10)
+                    .padding(.horizontal, DS.space3)
                     .padding(.vertical, DS.space1)
-                    .background(.blue, in: Capsule())
+                    .background(AppColour.info, in: Capsule())
             }
         }
     }
 
     private func connectedContent(_ info: ConnectedDeviceInfo) -> some View {
-        VStack(spacing: 16) {
+        VStack(spacing: DS.space4) {
             HStack(spacing: 0) {
-                VStack(spacing: 4) {
+                VStack(spacing: DS.space1) {
                     Text("\(info.metricCount)")
-                        .font(.title2.weight(.bold).monospacedDigit())
+                        .font(DS.Typography.title2.monospacedDigit())
                     Text("Metrics")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
                 .frame(maxWidth: .infinity)
 
-                Divider().frame(height: 40)
+                Divider().frame(height: DS.dividerHeight)
 
-                VStack(spacing: 4) {
+                VStack(spacing: DS.space1) {
                     Text(info.sourceDisplayName)
-                        .font(.title3.weight(.semibold))
+                        .font(DS.Typography.title3)
                     Text("Source App")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
                 .frame(maxWidth: .infinity)
 
-                Divider().frame(height: 40)
+                Divider().frame(height: DS.dividerHeight)
 
-                VStack(spacing: 4) {
+                VStack(spacing: DS.space1) {
                     Text(info.lastSyncText)
-                        .font(.title3.weight(.semibold))
+                        .font(DS.Typography.title3)
                     Text("Last Sync")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
                 .frame(maxWidth: .infinity)
             }
             .padding(.vertical, DS.space3)
-            .background(.background, in: RoundedRectangle(cornerRadius: 14))
+            .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
             .padding(.horizontal)
 
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: DS.space3) {
                 Text("Sync Path")
-                    .font(.subheadline.weight(.semibold))
+                    .font(DS.Typography.subheadlineSemibold)
                 Text(syncPathDescription(for: info))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.subheadline)
+                    .foregroundStyle(AppColour.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding()
-            .background(.background, in: RoundedRectangle(cornerRadius: 14))
+            .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
             .padding(.horizontal)
 
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: DS.itemSpacing) {
                 Text("Imported Metrics")
-                    .font(.subheadline.weight(.semibold))
+                    .font(DS.Typography.subheadlineSemibold)
                     .padding(.horizontal)
 
                 ForEach(HealthCategory.allCases) { category in
                     let metricsInCategory = info.metricsProvided.filter { $0.category == category }.sorted { $0.displayName < $1.displayName }
                     if !metricsInCategory.isEmpty {
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack(spacing: 6) {
+                        VStack(alignment: .leading, spacing: DS.space2) {
+                            HStack(spacing: DS.space2) {
                                 Image(systemName: category.systemImageName)
-                                    .font(.caption)
+                                    .font(DS.Typography.caption)
                                     .foregroundStyle(category.color)
                                 Text(category.displayName)
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.secondary)
+                                    .font(DS.Typography.captionSemibold)
+                                    .foregroundStyle(AppColour.textSecondary)
                             }
                             .padding(.horizontal)
 
-                            FlowLayout(spacing: 6) {
+                            FlowLayout(spacing: DS.space2) {
                                 ForEach(metricsInCategory, id: \.self) { metric in
                                     Text(metric.displayName)
-                                        .font(.caption2)
+                                        .font(DS.Typography.caption2)
                                         .padding(.horizontal, DS.space2)
                                         .padding(.vertical, DS.space1)
-                                        .background(category.color.opacity(0.1), in: Capsule())
+                                        .background(category.color.opacity(DS.badgeBg), in: Capsule())
                                 }
                             }
                             .padding(.horizontal)
@@ -159,59 +159,59 @@ struct DeviceDetailView: View {
                 }
             }
             .padding(.vertical, DS.space3)
-            .background(.background, in: RoundedRectangle(cornerRadius: 14))
+            .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
             .padding(.horizontal)
 
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: DS.space2) {
                 Text("Data Source")
-                    .font(.subheadline.weight(.semibold))
+                    .font(DS.Typography.subheadlineSemibold)
                 HStack {
                     Text("App: \(info.sourceDisplayName)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textSecondary)
                     Spacer()
                 }
                 HStack {
                     Text("Bundle: \(info.sourceBundleId)")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(AppColour.textTertiary)
                     Spacer()
                 }
             }
             .padding()
-            .background(.background, in: RoundedRectangle(cornerRadius: 14))
+            .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
             .padding(.horizontal)
         }
     }
 
     private var notConnectedContent: some View {
-        VStack(spacing: 16) {
-            VStack(alignment: .leading, spacing: 8) {
+        VStack(spacing: DS.space4) {
+            VStack(alignment: .leading, spacing: DS.space2) {
                 Text("How This Source Connects")
-                    .font(.subheadline.weight(.semibold))
+                    .font(DS.Typography.subheadlineSemibold)
                     .padding(.horizontal)
 
                 Text(notConnectedDescription)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
                     .padding(.horizontal)
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.vertical, DS.space3)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.background, in: RoundedRectangle(cornerRadius: 14))
+            .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
             .padding(.horizontal)
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: DS.space2) {
                 Text("What Laso Confirms After Sync")
-                    .font(.subheadline.weight(.semibold))
+                    .font(DS.Typography.subheadlineSemibold)
                 Text(setupFitDescription)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding()
-            .background(.background, in: RoundedRectangle(cornerRadius: 14))
+            .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
             .padding(.horizontal)
 
             DeviceSetupGuideView(device: device)

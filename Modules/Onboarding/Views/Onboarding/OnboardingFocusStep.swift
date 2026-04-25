@@ -12,21 +12,21 @@ struct OnboardingFocusSelectionStep: View {
         VStack(spacing: 0) {
             Spacer()
 
-            VStack(spacing: 10) {
+            VStack(spacing: DS.itemSpacing) {
                 Text(Copy.Onboarding.priorityTitle)
-                    .font(.title2.weight(.bold))
+                    .font(DS.Typography.title2)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, DS.space6)
 
                 Text(Copy.Onboarding.prioritySubtitle)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.subheadline)
+                    .foregroundStyle(AppColour.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, DS.space7)
             }
             .padding(.bottom, DS.space6)
 
-            VStack(spacing: 10) {
+            VStack(spacing: DS.itemSpacing) {
                 ForEach(HealthFocus.allCases) { focus in
                     let isSelected = selectedFocuses.contains(focus)
                     Button {
@@ -53,7 +53,7 @@ struct OnboardingFocusSelectionStep: View {
                     } label: {
                         priorityCard(focus: focus, isSelected: isSelected)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsPress)
                     .sensoryFeedback(.selection, trigger: isSelected)
                 }
             }
@@ -74,11 +74,8 @@ struct OnboardingFocusSelectionStep: View {
                 onContinue()
             } label: {
                 Text(Copy.Onboarding.priorityContinue)
-                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .font(.headline)
+            .buttonStyle(.dsPrimary)
             .padding(.horizontal, DS.space6)
             .padding(.bottom, DS.space8)
             .disabled(selectedFocuses.isEmpty)
@@ -89,39 +86,39 @@ struct OnboardingFocusSelectionStep: View {
     }
 
     private func priorityCard(focus: HealthFocus, isSelected: Bool) -> some View {
-        HStack(spacing: 14) {
+        HStack(spacing: DS.space4) {
             Image(systemName: focus.systemImageName)
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(isSelected ? focus.color : .secondary)
+                .font(DS.Typography.subheadlineSemibold)
+                .foregroundStyle(isSelected ? focus.color : AppColour.textSecondary)
                 .frame(width: 40, height: 40)
                 .background(
-                    (isSelected ? focus.color.opacity(0.18) : Color.secondary.opacity(0.08)),
-                    in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    (isSelected ? focus.color.opacity(DS.badgeBg) : AppColour.borderLow.opacity(0.5)),
+                    in: RoundedRectangle(cornerRadius: DS.Radius.sm, style: .continuous)
                 )
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DS.space1) {
                 Text(focus.displayName)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.primary)
+                    .font(DS.Typography.subheadlineSemibold)
+                    .foregroundStyle(AppColour.textPrimary)
                 Text(Copy.Onboarding.priorityCardSubtitle(for: focus))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
             }
 
             Spacer(minLength: 0)
 
             Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                .font(.system(size: 20, weight: .regular))
-                .foregroundStyle(isSelected ? focus.color : Color.secondary.opacity(0.35))
+                .font(DS.Typography.title3)
+                .foregroundStyle(isSelected ? focus.color : AppColour.borderMedium)
         }
-        .padding(14)
+        .padding(DS.cardPadding)
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(isSelected ? focus.color.opacity(0.08) : Color.secondary.opacity(0.05))
+            RoundedRectangle(cornerRadius: DS.Radius.lg, style: .continuous)
+                .fill(isSelected ? focus.color.opacity(DS.tintBg * 2) : AppColour.surfaceRaised)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(isSelected ? focus.color.opacity(0.6) : Color.clear, lineWidth: 1.5)
+            RoundedRectangle(cornerRadius: DS.Radius.lg, style: .continuous)
+                .strokeBorder(isSelected ? focus.color.opacity(0.6) : AppColour.borderLow, lineWidth: 1.5)
         )
     }
 }

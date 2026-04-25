@@ -19,10 +19,10 @@ struct SleepCoachCard: View {
                     .background(.indigo, in: Circle())
 
                 // Center content
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: DS.space1) {
                     Text("Tonight's Goal")
-                        .font(.system(size: 14.4).weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.calloutSemibold)
+                        .foregroundStyle(AppColour.textSecondary)
                         .textCase(.uppercase)
 
                     HStack(spacing: 8) {
@@ -38,23 +38,23 @@ struct SleepCoachCard: View {
 
                     if let bedtime {
                         Text("Bed by \(bedtime)")
-                            .font(.system(size: 14.4))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.callout)
+                            .foregroundStyle(AppColour.textSecondary)
                             .postHogMask()
                     }
                 }
 
-                Spacer(minLength: 4)
+                Spacer(minLength: DS.space1)
 
                 // Right chevron
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 13.2).weight(.semibold))
-                    .foregroundStyle(.tertiary)
+                    .font(DS.Typography.footnoteMedium)
+                    .foregroundStyle(AppColour.textTertiary)
             }
             .padding(DS.cardPadding)
             .cardStyle()
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
         .padding(.horizontal, DS.screenPadding)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityDescription)
@@ -67,11 +67,11 @@ struct SleepCoachCard: View {
 
     private func debtPill(_ debt: Double) -> some View {
         Text("\(formatDuration(debt)) debt")
-            .font(.system(size: 13.2).weight(.bold))
-            .foregroundStyle(.orange)
+            .font(DS.Typography.captionSemibold)
+            .foregroundStyle(AppColour.warning)
             .padding(.horizontal, DS.badgeH)
             .padding(.vertical, DS.badgeV)
-            .background(Color.orange.opacity(DS.badgeBg), in: Capsule())
+            .background(AppColour.warning.opacity(DS.badgeBg), in: Capsule())
             .postHogMask()
     }
 

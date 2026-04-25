@@ -156,7 +156,7 @@ struct CycleDetailView: View {
             }
             .padding(.vertical)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppColour.surfaceBase)
         .navigationTitle(Copy.CycleTracking.title)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
@@ -170,7 +170,7 @@ struct CycleDetailView: View {
     // MARK: - Cycle Wheel
 
     private var cycleWheelSection: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: DS.itemSpacing) {
             ZStack {
                 // Cycle wheel segments
                 CycleWheelShape(cycleLength: cycleLength)
@@ -181,31 +181,31 @@ struct CycleDetailView: View {
                     .frame(width: 220, height: 220)
 
                 // Center content
-                VStack(spacing: 4) {
+                VStack(spacing: DS.space1) {
                     Image(systemName: currentPhase.icon)
-                        .font(.title.weight(.semibold))
+                        .font(DS.Typography.title)
                         .foregroundStyle(currentPhase.color)
 
                     Text(Copy.CycleTracking.dayOfCycle(dayInCycle))
-                        .font(.title2.weight(.bold).monospacedDigit())
+                        .font(DS.Typography.title2)
 
                     Text(Copy.CycleTracking.ofTotal(cycleLength))
                         .font(DS.Typography.captionMedium)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
             }
             .padding(.top, DS.space2)
 
             // Phase legend
-            HStack(spacing: 16) {
+            HStack(spacing: DS.space4) {
                 ForEach(CyclePhase.allCases) { phase in
-                    HStack(spacing: 4) {
+                    HStack(spacing: DS.space1) {
                         Circle()
                             .fill(phase.color)
                             .frame(width: 8, height: 8)
                         Text(phase.rawValue.prefix(1).uppercased() + phase.rawValue.dropFirst())
                             .font(DS.Typography.caption2Medium)
-                            .foregroundStyle(phase == currentPhase ? .primary : .secondary)
+                            .foregroundStyle(phase == currentPhase ? AppColour.textPrimary : AppColour.textSecondary)
                     }
                 }
             }
@@ -241,33 +241,33 @@ struct CycleDetailView: View {
     // MARK: - Current Phase Card
 
     private var currentPhaseCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 12) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
+            HStack(spacing: DS.itemSpacing) {
                 Image(systemName: currentPhase.icon)
                     .font(DS.Typography.title3)
                     .foregroundStyle(.white)
-                    .frame(width: 44, height: 44)
+                    .frame(width: DS.iconSize, height: DS.iconSize)
                     .background(currentPhase.color, in: Circle())
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: DS.space1) {
                     Text(currentPhase.displayName)
-                        .font(.headline.weight(.bold))
+                        .font(DS.Typography.headline)
 
                     Text(Copy.CycleTracking.dayOfPhase(dayInPhase, duration: phaseDuration))
-                        .font(.subheadline.weight(.medium).monospacedDigit())
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.subheadlineMedium)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
 
                 Spacer()
 
                 if daysUntilPeriod > 0 {
-                    VStack(alignment: .trailing, spacing: 2) {
+                    VStack(alignment: .trailing, spacing: DS.space1) {
                         Text("\(daysUntilPeriod)")
-                            .font(.title3.weight(.bold).monospacedDigit())
+                            .font(DS.Typography.displayS)
                             .foregroundStyle(currentPhase.color)
                         Text(Copy.CycleTracking.daysToPeriod)
                             .font(DS.Typography.caption2Medium)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppColour.textSecondary)
                             .multilineTextAlignment(.trailing)
                     }
                 }
@@ -275,7 +275,7 @@ struct CycleDetailView: View {
 
             Text(currentPhase.description)
                 .font(DS.Typography.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(DS.cardPadding)
@@ -288,7 +288,7 @@ struct CycleDetailView: View {
     private var phaseImpactSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text(Copy.CycleTracking.howThisPhaseAffectsYou)
-                .font(.headline.weight(.bold))
+                .font(DS.Typography.headline)
                 .padding(.horizontal)
 
             impactCard(
@@ -351,7 +351,7 @@ struct CycleDetailView: View {
     private var exerciseSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text(Copy.CycleTracking.exerciseRecommendation)
-                .font(.headline.weight(.bold))
+                .font(DS.Typography.headline)
                 .padding(.horizontal)
 
             HStack(alignment: .top, spacing: 12) {
@@ -407,7 +407,7 @@ struct CycleDetailView: View {
     private var cycleHistorySection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text(Copy.CycleTracking.cycleHistory)
-                .font(.headline.weight(.bold))
+                .font(DS.Typography.headline)
                 .padding(.horizontal)
 
             if cycleHistory.isEmpty {
@@ -464,7 +464,7 @@ struct CycleDetailView: View {
         HStack(spacing: 12) {
             // Cycle number indicator
             Text("\(cycleHistory.count - entryIndex)")
-                .font(.caption.weight(.bold).monospacedDigit())
+                .font(DS.Typography.captionSemibold)
                 .foregroundStyle(.white)
                 .frame(width: 28, height: 28)
                 .background(cycleLengthColor(entry.length), in: Circle())
@@ -493,8 +493,8 @@ struct CycleDetailView: View {
             let diff = length - avgLength
             if diff != 0 {
                 Text(diff > 0 ? "+\(diff)d" : "\(diff)d")
-                    .font(.caption.weight(.bold).monospacedDigit())
-                    .foregroundStyle(abs(diff) <= 2 ? Color.secondary : Color.orange)
+                    .font(DS.Typography.captionSemibold)
+                    .foregroundStyle(abs(diff) <= 2 ? AppColour.textSecondary : AppColour.warning)
             }
         }
     }
@@ -507,9 +507,9 @@ struct CycleDetailView: View {
 
     private func cycleLengthColor(_ length: Int) -> Color {
         if let avg = averageCycleLength {
-            return abs(length - avg) <= 2 ? .blue : .orange
+            return abs(length - avg) <= 2 ? AppColour.info : AppColour.warning
         }
-        return .blue
+        return AppColour.info
     }
 
     // MARK: - Next Period Section
@@ -517,7 +517,7 @@ struct CycleDetailView: View {
     private var nextPeriodSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text(Copy.CycleTracking.nextPeriodEstimate)
-                .font(.headline.weight(.bold))
+                .font(DS.Typography.headline)
                 .padding(.horizontal)
 
             HStack(spacing: 16) {
@@ -535,10 +535,10 @@ struct CycleDetailView: View {
 
                     VStack(spacing: 0) {
                         Text("\(daysUntilPeriod)")
-                            .font(.title3.weight(.bold).monospacedDigit())
+                            .font(DS.Typography.displayS)
                         Text(Copy.CycleTracking.days)
                             .font(DS.Typography.caption2Medium)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppColour.textSecondary)
                     }
                 }
 
@@ -550,19 +550,19 @@ struct CycleDetailView: View {
                             .textCase(.uppercase)
 
                         Text(date, format: .dateTime.weekday(.wide).month(.abbreviated).day())
-                            .font(.subheadline.weight(.bold))
+                            .font(DS.Typography.subheadlineSemibold)
 
                         Text(Copy.CycleTracking.basedOnCycleLength(cycleLength))
                             .font(DS.Typography.caption2)
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(AppColour.textTertiary)
                     } else {
                         Text(Copy.CycleTracking.estimatedStart)
                             .font(DS.Typography.captionSemibold)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppColour.textSecondary)
                             .textCase(.uppercase)
 
                         Text(Copy.CycleTracking.inAboutDays(daysUntilPeriod))
-                            .font(.subheadline.weight(.bold))
+                            .font(DS.Typography.subheadlineSemibold)
                     }
                 }
 

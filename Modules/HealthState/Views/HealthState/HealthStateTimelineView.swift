@@ -52,7 +52,7 @@ struct HealthStateTimelineView: View {
             }
             .padding(.vertical)
         }
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppColour.surfaceBase.ignoresSafeArea())
         .accessibilityIdentifier("screen.healthStateTimeline")
         .navigationTitle("Health States")
         .navigationBarTitleDisplayMode(.large)
@@ -79,24 +79,24 @@ struct HealthStateTimelineView: View {
     private func currentStateHero(_ state: HealthState) -> some View {
         let color = viewModel.color(for: state.label)
 
-        return VStack(spacing: 10) {
-            HStack(spacing: 16) {
+        return VStack(spacing: DS.itemSpacing) {
+            HStack(spacing: DS.space4) {
                 Circle()
                     .fill(color)
                     .frame(width: 48, height: 48)
                     .overlay {
                         Image(systemName: iconFor(state.label))
-                            .font(.title3.weight(.bold))
+                            .font(DS.Typography.title3.weight(.bold))
                             .foregroundStyle(.white)
                     }
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: DS.space1) {
                     Text(state.label)
-                        .font(.title3.weight(.bold))
+                        .font(DS.Typography.title3.weight(.bold))
 
                     Text("\(state.daysInState) day\(state.daysInState == 1 ? "" : "s") in this state")
                         .font(DS.Typography.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
 
                 Spacer()
@@ -105,7 +105,7 @@ struct HealthStateTimelineView: View {
             HStack(spacing: 0) {
                 Text(viewModel.description(for: state.label))
                     .font(DS.Typography.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColour.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
             }
@@ -120,25 +120,25 @@ struct HealthStateTimelineView: View {
                         .foregroundStyle(color)
                     Text("You typically move to \(nextState.key) in ~\(String(format: "%.0f", avgDays)) days")
                         .font(DS.Typography.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                     Spacer()
                 }
                 .padding(DS.cardPadding)
-                .background(color.opacity(0.1), in: RoundedRectangle(cornerRadius: DS.iconRadius))
+                .background(color.opacity(0.1), in: RoundedRectangle(cornerRadius: DS.Radius.sm))
             }
 
             // Characteristics
             let notable = state.characteristics.filter { $0.level != .normal }
             if !notable.isEmpty {
-                HStack(spacing: 8) {
+                HStack(spacing: DS.space2) {
                     ForEach(Array(notable.prefix(4).enumerated()), id: \.offset) { _, char in
-                        HStack(spacing: 3) {
+                        HStack(spacing: DS.space1) {
                             Image(systemName: char.level == .high ? "arrow.up" : "arrow.down")
-                                .font(.caption2.weight(.bold))
-                                .foregroundStyle(char.level == .high ? .green : .red)
+                                .font(DS.Typography.caption2.weight(.bold))
+                                .foregroundStyle(char.level == .high ? AppColour.success : AppColour.danger)
                             Text(char.metric.displayName)
                                 .font(DS.Typography.caption2)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(AppColour.textSecondary)
                         }
                     }
                     Spacer()
@@ -146,13 +146,13 @@ struct HealthStateTimelineView: View {
             }
         }
         .padding(DS.space4)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
     }
 
     // MARK: - 2. Calendar Grid
 
     private var calendarSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             // Month navigation
             HStack {
                 Button {
@@ -207,7 +207,7 @@ struct HealthStateTimelineView: View {
                 ForEach(weekdays, id: \.self) { day in
                     Text(day)
                         .font(DS.Typography.caption2Medium)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                         .frame(maxWidth: .infinity)
                 }
             }
@@ -223,15 +223,15 @@ struct HealthStateTimelineView: View {
             }
 
             // Legend
-            HStack(spacing: 12) {
+            HStack(spacing: DS.itemSpacing) {
                 ForEach(viewModel.uniqueStateLabels.prefix(5), id: \.self) { label in
-                    HStack(spacing: 4) {
+                    HStack(spacing: DS.space1) {
                         Circle()
                             .fill(viewModel.color(for: label))
                             .frame(width: 8, height: 8)
                         Text(label)
                             .font(DS.Typography.caption2)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppColour.textSecondary)
                     }
                 }
                 Spacer()
@@ -246,15 +246,15 @@ struct HealthStateTimelineView: View {
         Group {
             if let label = day.stateLabel {
                 Text("\(day.dayNumber)")
-                    .font(.caption2.weight(.medium).monospacedDigit())
+                    .font(DS.Typography.caption2.weight(.medium).monospacedDigit())
                     .frame(maxWidth: .infinity, minHeight: 28)
-                    .background(viewModel.color(for: label).opacity(0.7), in: RoundedRectangle(cornerRadius: 4))
+                    .background(viewModel.color(for: label).opacity(0.7), in: RoundedRectangle(cornerRadius: DS.Radius.xs))
                     .foregroundStyle(.white)
             } else if day.dayNumber > 0 {
                 Text("\(day.dayNumber)")
-                    .font(.caption2.monospacedDigit())
+                    .font(DS.Typography.caption2.monospacedDigit())
                     .frame(maxWidth: .infinity, minHeight: 28)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(AppColour.textTertiary)
             } else {
                 Color.clear
                     .frame(maxWidth: .infinity, minHeight: 28)
@@ -268,7 +268,7 @@ struct HealthStateTimelineView: View {
         let distribution = viewModel.stateDistribution(for: selectedMonth)
         let total = max(1, distribution.values.reduce(0, +))
 
-        return VStack(alignment: .leading, spacing: 8) {
+        return VStack(alignment: .leading, spacing: DS.space2) {
             Text("Distribution")
                 .font(DS.Typography.subheadlineSemibold)
 
@@ -276,21 +276,21 @@ struct HealthStateTimelineView: View {
                 HStack(spacing: 1) {
                     ForEach(distribution.sorted(by: { $0.value > $1.value }), id: \.key) { label, count in
                         let fraction = CGFloat(count) / CGFloat(total)
-                        RoundedRectangle(cornerRadius: 4)
+                        RoundedRectangle(cornerRadius: DS.Radius.xs)
                             .fill(viewModel.color(for: label))
                             .frame(width: max(4, geo.size.width * fraction))
                     }
                 }
             }
             .frame(height: 16)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
 
-            HStack(spacing: 12) {
+            HStack(spacing: DS.itemSpacing) {
                 ForEach(distribution.sorted(by: { $0.value > $1.value }), id: \.key) { label, count in
                     let pct = Int(Double(count) / Double(total) * 100)
                     Text("\(label): \(pct)%")
                         .font(DS.Typography.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
                 Spacer()
             }
@@ -302,12 +302,12 @@ struct HealthStateTimelineView: View {
     // MARK: - 4. Transitions
 
     private var transitionSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text("Common Transitions")
                 .font(DS.Typography.subheadlineSemibold)
 
             ForEach(Array(viewModel.commonTransitions.prefix(5).enumerated()), id: \.offset) { _, transition in
-                HStack(spacing: 8) {
+                HStack(spacing: DS.space2) {
                     Circle()
                         .fill(viewModel.color(for: transition.from))
                         .frame(width: 10, height: 10)
@@ -316,7 +316,7 @@ struct HealthStateTimelineView: View {
 
                     Image(systemName: "arrow.right")
                         .font(DS.Typography.caption2)
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(AppColour.textTertiary)
 
                     Circle()
                         .fill(viewModel.color(for: transition.to))
@@ -328,11 +328,11 @@ struct HealthStateTimelineView: View {
 
                     VStack(alignment: .trailing, spacing: 1) {
                         Text("\(Int(transition.probability * 100))%")
-                            .font(.caption.weight(.bold).monospacedDigit())
+                            .font(DS.Typography.caption.weight(.bold).monospacedDigit())
                         if let avg = transition.avgDays {
                             Text("~\(String(format: "%.1f", avg))d")
                                 .font(DS.Typography.caption2)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(AppColour.textSecondary)
                         }
                     }
                 }
@@ -346,7 +346,7 @@ struct HealthStateTimelineView: View {
     // MARK: - 5. State Descriptions
 
     private var stateDescriptions: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text("State Guide")
                 .font(DS.Typography.subheadlineSemibold)
 
@@ -354,23 +354,23 @@ struct HealthStateTimelineView: View {
                 let color = viewModel.color(for: state.label)
 
                 DisclosureGroup {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: DS.space1) {
                         ForEach(Array(state.characteristics.prefix(5).enumerated()), id: \.offset) { _, char in
-                            HStack(spacing: 6) {
+                            HStack(spacing: DS.space2) {
                                 Image(systemName: char.metric.systemImageName)
                                     .font(DS.Typography.caption2)
                                     .foregroundStyle(char.metric.category.color)
                                 Text("\(char.metric.displayName): \(char.level.rawValue)")
                                     .font(DS.Typography.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(AppColour.textSecondary)
                                 Spacer()
                             }
                         }
                     }
                     .padding(.top, DS.space1)
                 } label: {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(spacing: 8) {
+                    VStack(alignment: .leading, spacing: DS.space1) {
+                        HStack(spacing: DS.space2) {
                             Circle()
                                 .fill(color)
                                 .frame(width: 12, height: 12)
@@ -379,7 +379,7 @@ struct HealthStateTimelineView: View {
                         }
                         Text(viewModel.description(for: state.label))
                             .font(DS.Typography.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppColour.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }

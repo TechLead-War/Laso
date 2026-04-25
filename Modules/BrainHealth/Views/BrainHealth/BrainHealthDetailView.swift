@@ -27,7 +27,7 @@ struct BrainHealthDetailView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.bottom, DS.space7)
             }
-            .background(Color(.systemGroupedBackground).ignoresSafeArea())
+            .background(AppColour.surfaceBase.ignoresSafeArea())
         }
         .navigationTitle(Copy.BrainHealth.title)
         .navigationBarTitleDisplayMode(.inline)
@@ -38,57 +38,57 @@ struct BrainHealthDetailView: View {
     // MARK: - Hero
 
     private var heroSection: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: DS.itemSpacing) {
             Text("\(brainScore.score)")
                 .font(DS.Typography.displayXL.monospacedDigit())
-                .foregroundStyle(.primary)
+                .foregroundStyle(AppColour.textPrimary)
                 .postHogMask()
 
             Text(Copy.BrainHealth.scaleAndDirection)
                 .font(DS.Typography.caption2Medium)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(AppColour.textTertiary)
 
             Text(Copy.BrainHealth.brainHealthLabel)
-                .font(.system(size: 13, weight: .semibold))
+                .font(DS.Typography.captionSemibold)
                 .tracking(2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
 
             // Static explainer. teaches the user what this screen is about
             Text(Copy.BrainHealth.heroExplainer)
                 .font(DS.Typography.captionMedium)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(AppColour.textTertiary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, DS.space2)
 
             Text(brainScore.state.displayName)
-                .font(.title3.weight(.bold))
+                .font(DS.Typography.title3.weight(.bold))
                 .foregroundStyle(brainScore.state.color)
 
             // What this state means + what to do today
             Text(brainScore.headline)
                 .font(DS.Typography.subheadline)
-                .foregroundStyle(.primary)
+                .foregroundStyle(AppColour.textPrimary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
 
             if brainScore.confidence < 0.7 {
-                HStack(spacing: 4) {
+                HStack(spacing: DS.space1) {
                     Image(systemName: "clock.arrow.circlepath")
-                        .font(.caption2.weight(.bold))
+                        .font(DS.Typography.caption2.weight(.bold))
                     Text(Copy.BrainHealth.learningPatterns)
                         .font(DS.Typography.captionSemibold)
                 }
-                .foregroundStyle(.tertiary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(.secondary.opacity(0.1), in: Capsule())
+                .foregroundStyle(AppColour.textTertiary)
+                .padding(.horizontal, DS.itemSpacing)
+                .padding(.vertical, DS.space2)
+                .background(AppColour.textSecondary.opacity(0.1), in: Capsule())
             }
         }
-        .padding(18)
+        .padding(DS.cardPadding)
         .frame(maxWidth: .infinity)
-        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 26, style: .continuous))
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.cardRadius, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 26, style: .continuous)
+            RoundedRectangle(cornerRadius: DS.cardRadius, style: .continuous)
                 .strokeBorder(brainScore.state.color.opacity(0.42), lineWidth: 1)
         )
         .shadow(color: brainScore.state.color.opacity(0.22), radius: 16, y: 8)
@@ -104,7 +104,7 @@ struct BrainHealthDetailView: View {
             if weeklyHistory.isEmpty {
                 Text(Copy.Common.notEnoughData)
                     .font(DS.Typography.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColour.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, DS.space5)
             } else {
@@ -118,32 +118,32 @@ struct BrainHealthDetailView: View {
                 )
 
                 HStack {
-                    Text("0").font(DS.Typography.caption2Medium).foregroundStyle(.tertiary)
+                    Text("0").font(DS.Typography.caption2Medium).foregroundStyle(AppColour.textTertiary)
                     Spacer()
-                    Text("100").font(DS.Typography.caption2Medium).foregroundStyle(.tertiary)
+                    Text("100").font(DS.Typography.caption2Medium).foregroundStyle(AppColour.textTertiary)
                 }
 
                 if let avg = weeklyAverage {
-                    HStack(spacing: 16) {
-                        HStack(spacing: 4) {
+                    HStack(spacing: DS.space4) {
+                        HStack(spacing: DS.space1) {
                             Text(Copy.Common.avg)
                                 .font(DS.Typography.caption2Medium)
-                                .foregroundStyle(.secondary)
-                            HStack(spacing: 2) {
+                                .foregroundStyle(AppColour.textSecondary)
+                            HStack(spacing: DS.space1) {
                                 Text("\(avg)")
-                                    .font(.caption.weight(.bold).monospacedDigit())
+                                    .font(DS.Typography.caption.weight(.bold).monospacedDigit())
                                     .postHogMask()
                                 Text(Copy.BrainHealth.scaleSuffix)
-                                    .font(.caption2.weight(.medium).monospacedDigit())
-                                    .foregroundStyle(.secondary)
+                                    .font(DS.Typography.caption2Medium.monospacedDigit())
+                                    .foregroundStyle(AppColour.textSecondary)
                             }
                         }
 
                         Spacer()
 
-                        HStack(spacing: 4) {
+                        HStack(spacing: DS.space1) {
                             Image(systemName: trendIcon)
-                                .font(.caption2.weight(.bold))
+                                .font(DS.Typography.caption2.weight(.bold))
                                 .foregroundStyle(trendColor)
                             Text(trend.capitalized)
                                 .font(DS.Typography.caption2Medium)
@@ -202,10 +202,10 @@ struct BrainHealthDetailView: View {
     }
 
     private func readinessColor(_ value: Double) -> Color {
-        if value >= 0.7 { return .green }
-        if value >= 0.5 { return .yellow }
-        if value >= 0.3 { return .orange }
-        return .red
+        if value >= 0.7 { return AppColour.success }
+        if value >= 0.5 { return AppColour.warning }
+        if value >= 0.3 { return AppColour.warning }
+        return AppColour.danger
     }
 
     // MARK: - Key Factors
@@ -216,16 +216,16 @@ struct BrainHealthDetailView: View {
                 .font(DS.Typography.headline)
 
             ForEach(Array(brainScore.topFactors.prefix(3)), id: \.label) { factor in
-                HStack(spacing: 10) {
+                HStack(spacing: DS.itemSpacing) {
                     Image(systemName: factor.isPositive ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
-                        .foregroundStyle(factor.isPositive ? .green : .orange)
+                        .foregroundStyle(factor.isPositive ? AppColour.success : AppColour.warning)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(factor.label)
                             .font(DS.Typography.subheadlineMedium)
                         Text(factor.impact)
                             .font(DS.Typography.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppColour.textSecondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -242,14 +242,14 @@ struct BrainHealthDetailView: View {
 
     private var learnMoreSection: some View {
         DisclosureGroup(isExpanded: $showLearnMore) {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: DS.space5) {
                 memoryBlock
                 stressLoadBlock
                 fitnessBlock
             }
             .padding(.top, DS.space3)
         } label: {
-            HStack(spacing: 10) {
+            HStack(spacing: DS.itemSpacing) {
                 Image(systemName: "book.closed.fill")
                     .font(DS.Typography.subheadlineSemibold)
                     .foregroundStyle(.white)
@@ -261,7 +261,7 @@ struct BrainHealthDetailView: View {
                         .font(DS.Typography.subheadlineSemibold)
                     Text(Copy.BrainHealth.learnMoreHint)
                         .font(DS.Typography.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
 
                 Spacer(minLength: 0)
@@ -277,12 +277,12 @@ struct BrainHealthDetailView: View {
         let deepDisplay = brainScore.deepSleepScore ?? brainScore.cognitiveReadiness * 0.9
         let hasSleepStages = brainScore.remSleepScore != nil || brainScore.deepSleepScore != nil
 
-        return VStack(alignment: .leading, spacing: 10) {
+        return VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text(Copy.BrainHealth.sleepAndMemory)
                 .font(DS.Typography.subheadlineSemibold)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
 
-            HStack(spacing: 16) {
+            HStack(spacing: DS.space4) {
                 StatBoxView(
                     label: brainScore.remSleepScore != nil ? Copy.BrainHealth.dreamSleep : "\(Copy.BrainHealth.dreamSleep) (Est.)",
                     value: "\(Int(remDisplay))%",
@@ -303,19 +303,19 @@ struct BrainHealthDetailView: View {
 
             Text(hasSleepStages ? Copy.BrainHealth.sleepBrainExplanation : Copy.BrainHealth.noSleepStageData)
                 .font(DS.Typography.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
         }
     }
 
     private var stressLoadBlock: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text(Copy.BrainHealth.mentalEnergy)
                 .font(DS.Typography.subheadlineSemibold)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
 
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
+            HStack(alignment: .firstTextBaseline, spacing: DS.itemSpacing) {
                 Text("\(Int(brainScore.stressCognitionLoad))%")
-                    .font(.title.weight(.bold).monospacedDigit())
+                    .font(DS.Typography.title.weight(.bold).monospacedDigit())
                     .foregroundStyle(capacityColor)
                     .postHogMask()
 
@@ -328,24 +328,24 @@ struct BrainHealthDetailView: View {
 
             Text(Copy.BrainHealth.mentalEnergyExplanation)
                 .font(DS.Typography.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
         }
     }
 
     private var capacityColor: Color {
-        if brainScore.stressCognitionLoad >= 70 { return .green }
-        if brainScore.stressCognitionLoad >= 50 { return .yellow }
-        if brainScore.stressCognitionLoad >= 30 { return .orange }
-        return .red
+        if brainScore.stressCognitionLoad >= 70 { return AppColour.success }
+        if brainScore.stressCognitionLoad >= 50 { return AppColour.warning }
+        if brainScore.stressCognitionLoad >= 30 { return AppColour.warning }
+        return AppColour.danger
     }
 
     private var fitnessBlock: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text(Copy.BrainHealth.brainHealthOverTime)
                 .font(DS.Typography.subheadlineSemibold)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
 
-            HStack(spacing: 16) {
+            HStack(spacing: DS.space4) {
                 StatBoxView(
                     label: Copy.BrainHealth.heartAndBrain,
                     value: "\(Int(brainScore.neurovascularFitness))%",
@@ -366,17 +366,17 @@ struct BrainHealthDetailView: View {
 
             Text(Copy.BrainHealth.longTermExplanation)
                 .font(DS.Typography.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
         }
     }
 
     // MARK: - Chart Helpers
 
     private func chartBarColor(for score: Int) -> Color {
-        if score >= 80 { return .green }
-        if score >= 65 { return .blue }
-        if score >= 45 { return .gray }
-        return .orange
+        if score >= 80 { return AppColour.success }
+        if score >= 65 { return AppColour.info }
+        if score >= 45 { return AppColour.textTertiary }
+        return AppColour.warning
     }
 
     private static let dayFormatter: DateFormatter = {
@@ -399,9 +399,9 @@ struct BrainHealthDetailView: View {
 
     private var trendColor: Color {
         switch trend {
-        case "improving": return .green
-        case "declining": return .orange
-        default: return .secondary
+        case "improving": return AppColour.success
+        case "declining": return AppColour.warning
+        default: return AppColour.textSecondary
         }
     }
 
@@ -410,7 +410,7 @@ struct BrainHealthDetailView: View {
     private var disclaimerSection: some View {
         Text(Copy.Analysis.RiskDetail.disclaimer)
             .font(DS.Typography.caption2)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(AppColour.textSecondary)
             .multilineTextAlignment(.leading)
             .fixedSize(horizontal: false, vertical: true)
             .padding(.top, DS.space6)

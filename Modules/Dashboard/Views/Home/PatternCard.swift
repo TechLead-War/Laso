@@ -25,28 +25,28 @@ struct PatternCard: View {
                 HStack(spacing: 12) {
                     // Category icon
                     Image(systemName: insight.category.systemImageName)
-                        .font(.system(size: 20.4).weight(.semibold))
+                        .font(DS.Typography.calloutSemibold)
                         .foregroundStyle(.white)
                         .frame(width: DS.iconSize, height: DS.iconSize)
                         .background(insight.category.color, in: Circle())
 
                     // Content
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: DS.space1) {
                         Text(insight.title)
-                            .font(.system(size: 18).weight(.semibold))
-                            .foregroundStyle(.primary)
+                            .font(DS.Typography.bodySemibold)
+                            .foregroundStyle(AppColour.textPrimary)
                             .lineLimit(2)
                             .minimumScaleFactor(0.75)
 
                         Text(insight.summary)
-                            .font(.system(size: 14.4))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(AppColour.textSecondary)
                             .lineLimit(2)
 
                         // Category badge
-                        HStack(spacing: 6) {
+                        HStack(spacing: DS.space1) {
                             Text(insight.category.displayName)
-                                .font(.system(size: 13.2).weight(.medium))
+                                .font(DS.Typography.captionMedium)
                                 .foregroundStyle(insight.category.color)
                                 .padding(.horizontal, DS.badgeH)
                                 .padding(.vertical, DS.badgeV)
@@ -55,8 +55,8 @@ struct PatternCard: View {
                             Spacer()
 
                             Image(systemName: "chevron.right")
-                                .font(.system(size: 13.2).weight(.semibold))
-                                .foregroundStyle(.tertiary)
+                                .font(DS.Typography.captionSemibold)
+                                .foregroundStyle(AppColour.textTertiary)
                         }
                     }
                 }
@@ -66,7 +66,7 @@ struct PatternCard: View {
             }
             .cardStyle(tint: insight.category.color)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(insight.category.displayName) insight: \(insight.title)")
         .accessibilityHint("View metric details")

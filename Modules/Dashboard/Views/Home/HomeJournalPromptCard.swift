@@ -6,20 +6,20 @@ struct HomeJournalPromptCard: View {
         // Show journal prompt in the evening (after 6pm)
         if hour >= 18 {
             NavigationLink(value: Route.journalEntry) {
-                HStack(spacing: 12) {
+                HStack(spacing: DS.space3) {
                     Image(systemName: "square.and.pencil")
-                        .font(.system(size: 24))
-                        .foregroundStyle(.purple)
+                        .font(DS.Typography.bodySemibold)
+                        .foregroundStyle(AppColour.categoryStress)
                         .frame(width: 36)
 
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: DS.space1) {
                         Text(Copy.Home.howWasToday)
-                            .font(.system(size: 18).weight(.semibold))
-                            .foregroundStyle(.primary)
+                            .font(DS.Typography.bodySemibold)
+                            .foregroundStyle(AppColour.textPrimary)
 
                         Text(Copy.Home.journalSubtitle)
-                            .font(.system(size: 14.4))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.callout)
+                            .foregroundStyle(AppColour.textSecondary)
                             .lineLimit(2)
                             .minimumScaleFactor(0.75)
                     }
@@ -27,13 +27,13 @@ struct HomeJournalPromptCard: View {
                     Spacer()
 
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 13.2))
-                        .foregroundStyle(.tertiary)
+                        .font(DS.Typography.footnote)
+                        .foregroundStyle(AppColour.textTertiary)
                 }
                 .padding(DS.cardPadding)
-                .cardStyle(tint: .purple)
+                .cardStyle(tint: AppColour.categoryStress)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsPress)
             .padding(.horizontal, DS.screenPadding)
         }
     }

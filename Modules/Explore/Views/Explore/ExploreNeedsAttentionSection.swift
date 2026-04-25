@@ -78,16 +78,16 @@ struct ExploreNeedsAttentionSection: View {
                                     )
                                     onWeakCategoryTapped(contrib)
                                 } label: {
-                                    VStack(spacing: 2) {
+                                    VStack(spacing: DS.space1) {
                                         Image(systemName: contrib.category.systemImageName)
                                             .font(.caption2)
                                             .foregroundStyle(contrib.category.color)
                                         Text("\(contrib.score)")
                                             .font(.caption.weight(.bold).monospacedDigit())
-                                            .foregroundStyle(contrib.score < 60 ? .red : .orange)
+                                            .foregroundStyle(contrib.score < 60 ? AppColour.danger : AppColour.warning)
                                         Text(contrib.category.shortName)
                                             .font(.caption2)
-                                            .foregroundStyle(.secondary)
+                                            .foregroundStyle(AppColour.textSecondary)
                                     }
                                     .frame(maxWidth: .infinity)
                                 }
@@ -97,7 +97,7 @@ struct ExploreNeedsAttentionSection: View {
                     }
                 }
                 .padding(DS.space4)
-                .background(.background, in: RoundedRectangle(cornerRadius: 16))
+                .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
             }
         }
     }

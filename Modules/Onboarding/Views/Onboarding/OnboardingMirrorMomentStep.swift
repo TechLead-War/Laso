@@ -53,20 +53,20 @@ struct OnboardingMirrorMomentStep: View {
             Spacer()
 
             Image(systemName: "waveform.path.ecg")
-                .font(.system(size: 44, weight: .medium))
-                .foregroundStyle(.blue)
+                .font(DS.Typography.largeIcon)
+                .foregroundStyle(AppColour.info)
                 .frame(width: 88, height: 88)
-                .background(Color.blue.opacity(0.12), in: Circle())
-                .padding(.bottom, 28)
+                .background(AppColour.info.opacity(DS.badgeBg), in: Circle())
+                .padding(.bottom, DS.space7)
 
-            VStack(spacing: 10) {
+            VStack(spacing: DS.itemSpacing) {
                 Text(runningTitle)
-                    .font(.title2.weight(.bold))
+                    .font(DS.Typography.title2)
                     .multilineTextAlignment(.center)
 
                 Text(runningMessage)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.subheadline)
+                    .foregroundStyle(AppColour.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, DS.space7)
             }
@@ -91,44 +91,44 @@ struct OnboardingMirrorMomentStep: View {
     @ViewBuilder
     private var runningProgress: some View {
         if let progress = healthKitManager.syncProgress {
-            VStack(spacing: 12) {
+            VStack(spacing: DS.itemSpacing) {
                 let percent = Int((Double(progress.metricsCompleted) / Double(max(progress.totalMetrics, 1))) * 100)
 
                 ProgressView(value: Double(progress.metricsCompleted), total: Double(max(progress.totalMetrics, 1)))
-                    .tint(.blue)
+                    .tint(AppColour.info)
                     .padding(.horizontal, DS.space8)
 
-                HStack(spacing: 6) {
+                HStack(spacing: DS.space2) {
                     Text("\(percent)%")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.primary)
+                        .font(DS.Typography.captionSemibold)
+                        .foregroundStyle(AppColour.textPrimary)
                         .contentTransition(.numericText())
                     Text("•")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textSecondary)
                     Text(progress.phase.title)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
                 .animation(.smooth, value: percent)
 
-                VStack(spacing: 4) {
+                VStack(spacing: DS.space1) {
                     Text("\(progress.metricsCompleted) of \(max(progress.totalMetrics, 1)) metrics synced")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textSecondary)
                         .contentTransition(.numericText())
 
                     if progress.samplesDiscovered > 0 {
                         Text("\(Self.formatCount(progress.samplesDiscovered)) data points found")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(AppColour.textSecondary)
                             .contentTransition(.numericText())
                     }
                 }
 
                 Text(Copy.Onboarding.calibrationReassurance[reassuranceIndex % Copy.Onboarding.calibrationReassurance.count])
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                    .font(DS.Typography.caption2)
+                    .foregroundStyle(AppColour.textTertiary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, DS.space7)
                     .padding(.top, DS.space1)
@@ -143,7 +143,7 @@ struct OnboardingMirrorMomentStep: View {
     }
 
     private var failedFooter: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: DS.itemSpacing) {
             Button {
                 AppAnalytics.shared.trackBlockTap(
                     title: "Retry",
@@ -154,11 +154,8 @@ struct OnboardingMirrorMomentStep: View {
                 startCalibration()
             } label: {
                 Text(Copy.Onboarding.mirrorRetry)
-                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .font(.headline)
+            .buttonStyle(.dsPrimary)
             .padding(.horizontal, DS.space6)
             .accessibilityIdentifier("onboarding.mirrorRetry")
 
@@ -171,8 +168,7 @@ struct OnboardingMirrorMomentStep: View {
                 )
                 onContinue(discovery ?? CalibrationDiscovery())
             }
-            .buttonStyle(.bordered)
-            .font(.subheadline.weight(.medium))
+            .buttonStyle(.dsTertiary)
             .accessibilityIdentifier("onboarding.mirrorSkip")
         }
     }
@@ -184,20 +180,20 @@ struct OnboardingMirrorMomentStep: View {
             Spacer()
 
             Image(systemName: "sparkles")
-                .font(.system(size: 36, weight: .medium))
-                .foregroundStyle(.blue)
+                .font(DS.Typography.mediumIcon)
+                .foregroundStyle(AppColour.info)
                 .frame(width: 72, height: 72)
-                .background(Color.blue.opacity(0.12), in: Circle())
+                .background(AppColour.info.opacity(DS.badgeBg), in: Circle())
                 .padding(.bottom, DS.space5)
 
             Text(Copy.Onboarding.mirrorCompleteTitle)
-                .font(.title2.weight(.bold))
+                .font(DS.Typography.title2)
                 .padding(.bottom, DS.space1)
 
             if let span = discovery.dataSpanDescription {
                 Text(Copy.Onboarding.mirrorCompleteSubtitle(span))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.subheadline)
+                    .foregroundStyle(AppColour.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, DS.space7)
             }
@@ -207,8 +203,8 @@ struct OnboardingMirrorMomentStep: View {
                     .padding(.top, DS.space5)
             } else {
                 Text(Copy.Onboarding.mirrorNoDataMessage)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.subheadline)
+                    .foregroundStyle(AppColour.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, DS.space7)
                     .padding(.top, DS.space5)
@@ -219,8 +215,8 @@ struct OnboardingMirrorMomentStep: View {
                 metricsWithData: discovery.metricsWithData
             ) {
                 Text(observation)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.footnote)
+                    .foregroundStyle(AppColour.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, DS.space7)
                     .padding(.top, DS.space4)
@@ -243,11 +239,8 @@ struct OnboardingMirrorMomentStep: View {
                 onContinue(discovery)
             } label: {
                 Text(Copy.Onboarding.mirrorContinue)
-                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .font(.headline)
+            .buttonStyle(.dsPrimary)
             .padding(.horizontal, DS.space6)
             .padding(.bottom, DS.space8)
             .accessibilityIdentifier("onboarding.mirrorContinue")
@@ -258,19 +251,19 @@ struct OnboardingMirrorMomentStep: View {
     private func highlightCard(discovery: CalibrationDiscovery) -> some View {
         VStack(spacing: 0) {
             ForEach(discovery.highlights) { highlight in
-                HStack(spacing: 12) {
+                HStack(spacing: DS.itemSpacing) {
                     Image(systemName: highlight.icon)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(DS.Typography.footnoteMedium)
                         .foregroundStyle(highlight.color)
                         .frame(width: 32, height: 32)
-                        .background(highlight.color.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+                        .background(highlight.color.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.Radius.sm))
 
-                    VStack(alignment: .leading, spacing: 1) {
+                    VStack(alignment: .leading, spacing: DS.space1) {
                         Text("\(highlight.metricName): **\(highlight.stat)**")
-                            .font(.subheadline)
+                            .font(DS.Typography.subheadline)
                         Text(highlight.detail)
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(AppColour.textTertiary)
                     }
 
                     Spacer(minLength: 0)
@@ -280,7 +273,7 @@ struct OnboardingMirrorMomentStep: View {
         }
         .padding(.horizontal, DS.space4)
         .padding(.vertical, DS.space2)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
         .padding(.horizontal, DS.space6)
     }
 

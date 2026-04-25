@@ -118,10 +118,10 @@ struct AchievementItem: Identifiable {
 
         var color: Color {
             switch self {
-            case .streak: return .orange
-            case .milestone: return .blue
-            case .consistency: return .green
-            case .exploration: return .purple
+            case .streak: return AppColour.warning
+            case .milestone: return AppColour.info
+            case .consistency: return AppColour.success
+            case .exploration: return AppColour.categoryStress
             }
         }
 
@@ -181,7 +181,7 @@ struct AchievementsView: View {
             .padding(.bottom, DS.space7)
         }
         .scrollIndicators(.hidden)
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppColour.surfaceBase.ignoresSafeArea())
         .navigationTitle("Your Progress")
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
@@ -198,7 +198,7 @@ struct AchievementsView: View {
     // MARK: - Hero Section
 
     private var heroSection: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: DS.space4) {
             // Level progress ring
             ZStack {
                 // Track
@@ -217,15 +217,15 @@ struct AchievementsView: View {
                     .rotationEffect(.degrees(-90))
 
                 // Center icon
-                VStack(spacing: 2) {
+                VStack(spacing: DS.space1) {
                     Image(systemName: levelInfo.level.icon)
-                        .font(.system(size: 28, weight: .bold))
+                        .font(DS.Typography.displayS)
                         .foregroundStyle(levelInfo.level.color)
 
                     if levelInfo.level != .diamond {
                         Text("\(Int(levelInfo.progressToNext * 100))%")
-                            .font(.caption2.weight(.bold).monospacedDigit())
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.caption2Semibold)
+                            .foregroundStyle(AppColour.textSecondary)
                     }
                 }
             }
@@ -233,13 +233,13 @@ struct AchievementsView: View {
 
             // Level name
             Text(levelInfo.level.name)
-                .font(.title2.weight(.bold))
-                .foregroundStyle(.primary)
+                .font(DS.Typography.title2)
+                .foregroundStyle(AppColour.textPrimary)
 
             // Days tracked subtitle
             Text("\(levelInfo.totalDaysTracked) days tracked")
                 .font(DS.Typography.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
 
             // Next level info
             if let daysRemaining = levelInfo.daysToNextLevel, let next = levelInfo.level.next {
@@ -301,21 +301,21 @@ struct AchievementsView: View {
     }
 
     private func streakCard(_ streak: StreakInfo) -> some View {
-        VStack(spacing: 10) {
+        VStack(spacing: DS.space2) {
             ZStack {
                 Circle()
-                    .fill(streak.isHot ? Color.orange.opacity(0.12) : Color(.systemGray5))
+                    .fill(streak.isHot ? AppColour.warning.opacity(0.12) : AppColour.surfaceElevated)
                     .frame(width: 48, height: 48)
 
                 Image(systemName: streak.icon)
                     .font(DS.Typography.title3)
-                    .foregroundStyle(streak.isHot ? .orange : .secondary)
+                    .foregroundStyle(streak.isHot ? AppColour.warning : AppColour.textSecondary)
 
                 // Animated indicator for hot streaks
                 if streak.isHot {
                     Image(systemName: "flame.fill")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.orange)
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(AppColour.warning)
                         .offset(x: 16, y: -16)
                         .symbolEffect(.pulse, options: .repeating)
                 }
@@ -328,8 +328,8 @@ struct AchievementsView: View {
                     .textCase(.uppercase)
 
                 Text("\(streak.current)")
-                    .font(.title3.weight(.bold).monospacedDigit())
-                    .foregroundStyle(.primary)
+                    .font(DS.Typography.displayS)
+                    .foregroundStyle(AppColour.textPrimary)
                     .contentTransition(.numericText())
 
                 Text("days")
@@ -338,13 +338,13 @@ struct AchievementsView: View {
             }
 
             // All-time best
-            HStack(spacing: 2) {
+            HStack(spacing: DS.space1) {
                 Image(systemName: "trophy.fill")
                     .font(DS.Typography.caption2)
-                    .foregroundStyle(.yellow)
+                    .foregroundStyle(AppColour.warning)
                 Text("\(streak.best)")
-                    .font(.caption2.weight(.semibold).monospacedDigit())
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption2Semibold)
+                    .foregroundStyle(AppColour.textSecondary)
             }
         }
         .frame(width: 100)
@@ -353,7 +353,7 @@ struct AchievementsView: View {
         .overlay(
             RoundedRectangle(cornerRadius: DS.cardRadius)
                 .strokeBorder(
-                    streak.isHot ? Color.orange.opacity(DS.strokeAlpha * 3) : Color.primary.opacity(0.06),
+                    streak.isHot ? AppColour.warning.opacity(DS.strokeAlpha * 3) : AppColour.borderLow,
                     lineWidth: 0.5
                 )
         )
@@ -380,7 +380,7 @@ struct AchievementsView: View {
         .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
         .overlay(
             RoundedRectangle(cornerRadius: DS.cardRadius)
-                .strokeBorder(.primary.opacity(0.06), lineWidth: 0.5)
+                .strokeBorder(AppColour.borderLow, lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
         .padding(.horizontal)
@@ -393,8 +393,8 @@ struct AchievementsView: View {
                 .foregroundStyle(.secondary)
 
             Text(value)
-                .font(.subheadline.weight(.bold).monospacedDigit())
-                .foregroundStyle(.primary)
+                .font(DS.Typography.subheadlineSemibold)
+                .foregroundStyle(AppColour.textPrimary)
 
             Text(label)
                 .font(DS.Typography.caption2Medium)
@@ -459,9 +459,9 @@ struct AchievementsView: View {
                 .foregroundStyle(isSelected ? .white : .secondary)
                 .padding(.horizontal, DS.space3)
                 .padding(.vertical, 6)
-                .background(isSelected ? Color.accentColor : Color(.systemGray5), in: Capsule())
+                .background(isSelected ? Color.accentColor : AppColour.surfaceElevated, in: Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
         .sensoryFeedback(.selection, trigger: isSelected)
     }
 
@@ -484,7 +484,7 @@ struct AchievementsView: View {
                     .fill(
                         achievement.isUnlocked
                             ? achievement.category.color.opacity(DS.badgeBg)
-                            : Color(.systemGray5)
+                            : AppColour.surfaceElevated
                     )
                     .frame(width: 48, height: 48)
 
@@ -495,7 +495,7 @@ struct AchievementsView: View {
                 } else {
                     Image(systemName: "lock.fill")
                         .font(DS.Typography.bodyMedium)
-                        .foregroundStyle(Color(.systemGray3))
+                        .foregroundStyle(AppColour.textTertiary)
                 }
             }
 
@@ -529,7 +529,7 @@ struct AchievementsView: View {
                 .strokeBorder(
                     achievement.isUnlocked
                         ? achievement.category.color.opacity(DS.strokeAlpha * 2)
-                        : Color.primary.opacity(0.06),
+                        : AppColour.borderLow,
                     lineWidth: 0.5
                 )
         )

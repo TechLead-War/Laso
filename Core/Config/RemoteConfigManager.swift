@@ -367,25 +367,11 @@ final class RemoteConfigManager {
 
 extension RemoteConfigManager {
 
-    /// Matches the 13 feature access keys defined in the admin panel.
+    /// Feature flags that actually gate UI in the app.
     enum FeatureKey: String, CaseIterable {
-        case healthScore       = "feature_access_healthScore"
-        case categoryScores    = "feature_access_categoryScores"
-        case basicMetrics      = "feature_access_basicMetrics"
-        case allMetrics        = "feature_access_allMetrics"
-        case sevenDayTrends    = "feature_access_sevenDayTrends"
-        case extendedHistory   = "feature_access_extendedHistory"
-        case riskPredictions   = "feature_access_riskPredictions"
-        case focusAreas        = "feature_access_focusAreas"
-        case basicInsights     = "feature_access_basicInsights"
-        case allInsights       = "feature_access_allInsights"
+        case advancedAnalytics = "feature_access_advancedAnalytics"
         case liveTab           = "feature_access_liveTab"
         case exportReport      = "feature_access_exportReport"
-        case advancedAnalytics = "feature_access_advancedAnalytics"
-        case simulation = "feature_access_simulation"
-        case clinicalIntelligence = "feature_access_clinicalIntelligence"
-        case ecgIntelligence = "feature_access_ecgIntelligence"
-        case circadianAnalysis = "feature_access_circadianAnalysis"
     }
 }
 
@@ -396,24 +382,10 @@ extension RemoteConfigManager {
     /// In-app defaults used when Remote Config hasn't been fetched yet.
     /// These mirror the initial values set in the admin panel.
     private static let defaults: [String: NSObject] = [
-        // Feature access. all features enabled for pro, selected for free
-        "feature_access_healthScore":       "free,pro" as NSString,
-        "feature_access_categoryScores":    "free,pro" as NSString,
-        "feature_access_basicMetrics":      "free,pro" as NSString,
-        "feature_access_allMetrics":        "pro" as NSString,
-        "feature_access_sevenDayTrends":    "free,pro" as NSString,
-        "feature_access_extendedHistory":   "pro" as NSString,
-        "feature_access_riskPredictions":   "pro" as NSString,
-        "feature_access_focusAreas":        "pro" as NSString,
-        "feature_access_basicInsights":     "free,pro" as NSString,
-        "feature_access_allInsights":       "pro" as NSString,
+        // Feature access. Only flags that actually gate UI in the app.
+        "feature_access_advancedAnalytics": "pro" as NSString,
         "feature_access_liveTab":           "pro" as NSString,
         "feature_access_exportReport":      "pro" as NSString,
-        "feature_access_advancedAnalytics": "pro" as NSString,
-        "feature_access_simulation": "pro" as NSString,
-        "feature_access_clinicalIntelligence": "pro" as NSString,
-        "feature_access_ecgIntelligence": "pro" as NSString,
-        "feature_access_circadianAnalysis": "pro" as NSString,
 
         // Limits
         "free_metric_detail_limit": 3 as NSNumber,

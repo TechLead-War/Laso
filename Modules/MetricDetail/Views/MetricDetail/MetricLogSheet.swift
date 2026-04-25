@@ -40,8 +40,8 @@ struct MetricLogSheet: View {
                 if let errorMessage {
                     Section {
                         Text(errorMessage)
-                            .foregroundStyle(.red)
-                            .font(.subheadline)
+                            .foregroundStyle(AppColour.danger)
+                            .font(DS.Typography.subheadline)
                     }
                 }
             }
@@ -139,11 +139,11 @@ struct MetricLogSheet: View {
                             formTracker.tapped(target: "water_\(amount)")
                         } label: {
                             Text("\(amount)")
-                                .font(.subheadline.weight(.medium))
+                                .font(DS.Typography.subheadlineMedium)
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.bordered)
-                        .tint(Int(waterMl) == amount ? .blue : .secondary)
+                        .tint(Int(waterMl) == amount ? AppColour.primary : AppColour.textSecondary)
                     }
                 }
 

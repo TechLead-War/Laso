@@ -30,7 +30,7 @@ struct ExploreCategoriesSection: View {
                             insightCount: insightCountProvider(item.category)
                         )
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsPress)
                     .contentShape(Rectangle())
                     .accessibilityIdentifier("explore.category.\(item.category.rawValue)")
 
@@ -40,7 +40,7 @@ struct ExploreCategoriesSection: View {
                     }
                 }
             }
-            .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
+            .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.cardRadius))
         }
     }
 }
@@ -62,7 +62,7 @@ struct ExploreCategoryRow: View {
                 .foregroundStyle(category.color)
                 .frame(width: 32)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DS.space1) {
                 Text(category.displayName)
                     .font(needsAttention ? .body.weight(.bold) : .body.weight(.medium))
 

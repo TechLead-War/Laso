@@ -30,34 +30,34 @@ struct ProfileCaptureView: View {
             Spacer()
 
             Image(systemName: "person.crop.circle")
-                .font(.system(size: 42, weight: .regular))
-                .foregroundStyle(.primary)
+                .font(DS.Typography.mediumIcon)
+                .foregroundStyle(AppColour.textPrimary)
                 .frame(width: 80, height: 80)
-                .background(Color.primary.opacity(0.06), in: Circle())
+                .background(AppColour.surfaceRaised, in: Circle())
                 .padding(.bottom, DS.space6)
 
-            VStack(spacing: 10) {
+            VStack(spacing: DS.itemSpacing) {
                 Text(Copy.Onboarding.aboutTitle)
-                    .font(.title2.weight(.bold))
+                    .font(DS.Typography.title2)
 
                 Text(Copy.Onboarding.aboutSubtitle)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.subheadline)
+                    .foregroundStyle(AppColour.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, DS.space7)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.bottom, 28)
+            .padding(.bottom, DS.space7)
 
             VStack(spacing: 0) {
                 fieldRow {
                     HStack {
                         Text(Copy.Onboarding.aboutAgeLabel)
-                            .font(.subheadline)
-                            .foregroundStyle(.primary)
+                            .font(DS.Typography.subheadline)
+                            .foregroundStyle(AppColour.textPrimary)
                         Spacer()
                         TextField(Copy.Onboarding.aboutAgePlaceholder, text: $ageText)
-                            .font(.subheadline)
+                            .font(DS.Typography.subheadline)
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.numberPad)
                             .focused($isAgeFieldFocused)
@@ -77,12 +77,12 @@ struct ProfileCaptureView: View {
                                 .accessibilityIdentifier("onboarding.profileGender.\(option.rawValue)")
                         }
                     }
-                    .font(.subheadline)
+                    .font(DS.Typography.subheadline)
                     .pickerStyle(.menu)
                     .accessibilityIdentifier("onboarding.profileGender")
                 }
             }
-            .background(.background, in: RoundedRectangle(cornerRadius: 16))
+            .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
             .padding(.horizontal)
 
             if shouldShowAgeError || shouldShowGenderError {
@@ -94,8 +94,8 @@ struct ProfileCaptureView: View {
                         Text(Copy.Onboarding.aboutGenderError)
                     }
                 }
-                .font(.caption)
-                .foregroundStyle(.red)
+                .font(DS.Typography.caption)
+                .foregroundStyle(AppColour.danger)
                 .padding(.top, DS.space2)
                 .padding(.horizontal, DS.space6)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -127,11 +127,8 @@ struct ProfileCaptureView: View {
                 onComplete(nil, nil, requiredGender, requiredAge)
             } label: {
                 Text(Copy.Onboarding.aboutContinue)
-                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .font(.headline)
+            .buttonStyle(.dsPrimary)
             .padding(.horizontal, DS.space6)
             .padding(.bottom, DS.space8)
             .sensoryFeedback(.selection, trigger: buttonTapCount)

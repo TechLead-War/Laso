@@ -18,7 +18,7 @@ struct JournalInsightsView: View {
             .frame(maxWidth: .infinity)
         }
         .scrollBounceBehavior(.basedOnSize)
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppColour.surfaceBase.ignoresSafeArea())
         .navigationTitle(Copy.Journal.Insights.title)
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
@@ -36,12 +36,12 @@ struct JournalInsightsView: View {
             // Header
             VStack(alignment: .leading, spacing: 4) {
                 Text(Copy.Journal.Insights.topDiscoveries)
-                    .font(.headline)
+                    .font(DS.Typography.headline)
                     .padding(.horizontal)
 
                 Text(Copy.Journal.Insights.topDiscoveriesSubtitle)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.subheadline)
+                    .foregroundStyle(AppColour.textSecondary)
                     .padding(.horizontal)
             }
 
@@ -55,19 +55,19 @@ struct JournalInsightsView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: DS.space4) {
             Spacer().frame(height: 60)
 
             Image(systemName: "book.and.wrench.fill")
                 .font(DS.Typography.heroIcon)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
 
             Text(Copy.Journal.Insights.insightsUnlocking)
-                .font(.title3.weight(.semibold))
+                .font(DS.Typography.title3)
 
             Text(Copy.Journal.Insights.emptyStateDescription)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.subheadline)
+                .foregroundStyle(AppColour.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, DS.space7)
 
@@ -78,16 +78,16 @@ struct JournalInsightsView: View {
     }
 
     private var progressIndicator: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: DS.space2) {
             // Show a simple visual of logged categories
-            HStack(spacing: 12) {
+            HStack(spacing: DS.itemSpacing) {
                 ForEach(JournalCategory.allCases.prefix(5)) { category in
-                    VStack(spacing: 4) {
+                    VStack(spacing: DS.space1) {
                         Image(systemName: category.icon)
-                            .font(.body)
-                            .foregroundStyle(.tertiary)
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(.tertiary)
+                            .font(DS.Typography.body)
+                            .foregroundStyle(AppColour.textTertiary)
+                        RoundedRectangle(cornerRadius: DS.Radius.xs)
+                            .fill(AppColour.textTertiary)
                             .frame(width: 24, height: 3)
                     }
                 }
@@ -95,8 +95,8 @@ struct JournalInsightsView: View {
             .padding(.top, DS.space2)
 
             Text(Copy.Journal.Insights.startLogging)
-                .font(.caption)
-                .foregroundStyle(.tertiary)
+                .font(DS.Typography.caption)
+                .foregroundStyle(AppColour.textTertiary)
         }
     }
 }
@@ -108,20 +108,20 @@ private struct JournalCorrelationCard: View {
     let correlation: JournalCorrelationAnalyzer.JournalCorrelation
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             // Top row: behavior icon → health metric icon
-            HStack(spacing: 8) {
+            HStack(spacing: DS.space2) {
                 // Journal category icon
                 Image(systemName: correlation.category.icon)
-                    .font(.body.weight(.semibold))
+                    .font(DS.Typography.bodySemibold)
                     .foregroundStyle(.white)
                     .frame(width: DS.iconSize, height: DS.iconSize)
                     .background(categoryColor, in: Circle())
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: DS.space1) {
                     Text(correlation.category.displayName)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textSecondary)
 
                     confidenceBadge
                 }
@@ -130,34 +130,34 @@ private struct JournalCorrelationCard: View {
 
                 // Arrow → Health metric
                 Image(systemName: "arrow.right")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.tertiary)
+                    .font(DS.Typography.captionSemibold)
+                    .foregroundStyle(AppColour.textTertiary)
 
                 Image(systemName: correlation.healthMetric.systemImageName)
-                    .font(.body.weight(.semibold))
+                    .font(DS.Typography.bodySemibold)
                     .foregroundStyle(correlation.healthMetric.category.color)
                     .frame(width: 28)
 
                 Text(correlation.healthMetric.displayName)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
             }
 
             // Insight text
             Text(correlation.insight)
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(.primary)
+                .font(DS.Typography.subheadlineMedium)
+                .foregroundStyle(AppColour.textPrimary)
                 .lineLimit(3)
 
             // Bottom row: strength + sample size + effect
-            HStack(spacing: 8) {
+            HStack(spacing: DS.space2) {
                 StrengthBadge(label: correlation.strengthLabel)
 
                 Text("\(correlation.sampleCount) days")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption2)
+                    .foregroundStyle(AppColour.textSecondary)
 
                 Spacer()
 
@@ -190,9 +190,9 @@ private struct JournalCorrelationCard: View {
 
     private var confidenceColor: Color {
         switch correlation.confidenceLevel {
-        case .high: return .green
-        case .medium: return .blue
-        case .emerging: return .orange
+        case .high: return AppColour.success
+        case .medium: return AppColour.info
+        case .emerging: return AppColour.warning
         }
     }
 
@@ -220,25 +220,25 @@ private struct JournalCorrelationCard: View {
 
         if isHRV || isSleep {
             // Higher is better for HRV and sleep metrics
-            return correlation.effectPercent > 0 ? .green : .red
+            return correlation.effectPercent > 0 ? AppColour.success : AppColour.danger
         } else if isRHR {
             // Lower is better for resting HR
-            return correlation.effectPercent < 0 ? .green : .red
+            return correlation.effectPercent < 0 ? AppColour.success : AppColour.danger
         }
-        return .blue
+        return AppColour.info
     }
 
     private var categoryColor: Color {
         switch correlation.category {
         case .caffeine: return .brown
-        case .alcohol: return .purple
-        case .stress: return .red
-        case .supplements: return .green
-        case .meditation: return .indigo
-        case .screenTime: return .blue
-        case .mealTiming: return .orange
-        case .water: return .cyan
-        case .mood: return .yellow
+        case .alcohol: return AppColour.categoryStress
+        case .stress: return AppColour.danger
+        case .supplements: return AppColour.success
+        case .meditation: return AppColour.categorySleep
+        case .screenTime: return AppColour.info
+        case .mealTiming: return AppColour.warning
+        case .water: return AppColour.accent
+        case .mood: return AppColour.categoryActivity
         }
     }
 }

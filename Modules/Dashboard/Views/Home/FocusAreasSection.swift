@@ -8,20 +8,20 @@ struct FocusAreasSection: View {
     var body: some View {
         Group {
             if !risks.isEmpty {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: DS.itemSpacing) {
                     HStack {
                         Image(systemName: "target")
-                            .font(.system(size: 20.4, weight: .semibold))
-                            .foregroundStyle(.primary)
+                            .font(DS.Typography.title3)
+                            .foregroundStyle(AppColour.textPrimary)
 
                         Text(Copy.Home.focusAreasTitle)
-                            .font(.system(size: 20.4, weight: .semibold))
+                            .font(DS.Typography.title3)
 
                         Spacer()
 
                         Text("\(elevatedCount) worth noticing")
-                            .font(.system(size: 14.4))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.callout)
+                            .foregroundStyle(AppColour.textSecondary)
                     }
                     .padding(.horizontal, DS.screenPadding)
 
@@ -69,11 +69,11 @@ struct FocusRiskCard: View {
                         .background(risk.riskType.color, in: Circle())
 
                     // Content
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: DS.space1) {
                         HStack {
                             Text(risk.riskType.displayName)
-                                .font(.system(size: 18).weight(.semibold))
-                                .foregroundStyle(.primary)
+                                .font(DS.Typography.bodySemibold)
+                                .foregroundStyle(AppColour.textPrimary)
 
                             Spacer()
 
@@ -83,38 +83,38 @@ struct FocusRiskCard: View {
 
                         // Primary focus action
                         if let topFocus = risk.focusAreas.first {
-                            HStack(spacing: 4) {
+                            HStack(spacing: DS.space1) {
                                 Image(systemName: topFocus.impact.icon)
-                                    .font(.system(size: 13.2))
+                                    .font(DS.Typography.footnote)
                                     .foregroundStyle(topFocus.impact.color)
 
                                 Text(topFocus.title)
-                                    .font(.system(size: 14.4))
-                                    .foregroundStyle(.secondary)
+                                    .font(DS.Typography.callout)
+                                    .foregroundStyle(AppColour.textSecondary)
                                     .lineLimit(2)
                                     .minimumScaleFactor(0.75)
                             }
                         }
 
                         // Contributing factors summary
-                        HStack(spacing: 6) {
+                        HStack(spacing: DS.space1) {
                             let concerning = risk.concerningFactors.prefix(3)
                             ForEach(Array(concerning)) { factor in
-                                HStack(spacing: 2) {
+                                HStack(spacing: DS.space1) {
                                     Image(systemName: factor.status.icon)
-                                        .font(.system(size: 13.2))
+                                        .font(DS.Typography.footnote)
                                         .foregroundStyle(factor.status.color)
                                     Text(factor.metric.displayName)
-                                        .font(.system(size: 13.2))
-                                        .foregroundStyle(.secondary)
+                                        .font(DS.Typography.footnote)
+                                        .foregroundStyle(AppColour.textSecondary)
                                 }
                             }
 
                             Spacer()
 
                             Image(systemName: "chevron.right")
-                                .font(.system(size: 13.2).weight(.semibold))
-                                .foregroundStyle(.tertiary)
+                                .font(DS.Typography.footnoteMedium)
+                                .foregroundStyle(AppColour.textTertiary)
                         }
                     }
                 }
@@ -124,7 +124,7 @@ struct FocusRiskCard: View {
             }
             .cardStyle(tint: risk.riskType.color)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(risk.riskType.displayName), \(risk.riskGrade.displayName) risk")
         .accessibilityValue(risk.focusAreas.first.map { "Focus: \($0.title)" } ?? "")
@@ -138,11 +138,11 @@ struct RiskGradeBadge: View {
     let grade: RiskGrade
 
     var body: some View {
-        HStack(spacing: 3) {
+        HStack(spacing: DS.space1) {
             Image(systemName: grade.icon)
-                .font(.system(size: 13.2))
+                .font(DS.Typography.footnote)
             Text(grade.displayName)
-                .font(.system(size: 13.2).weight(.bold))
+                .font(DS.Typography.captionSemibold)
         }
         .foregroundStyle(grade.color)
         .padding(.horizontal, DS.badgeH)

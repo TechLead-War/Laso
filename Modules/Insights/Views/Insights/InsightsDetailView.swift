@@ -38,11 +38,11 @@ struct InsightsDetailView: View {
 
         var chipColor: Color {
             switch self {
-            case .all: return .blue
-            case .sleep: return .indigo
-            case .activity: return .green
-            case .heart: return .red
-            case .body: return .orange
+            case .all: return AppColour.info
+            case .sleep: return AppColour.categorySleep
+            case .activity: return AppColour.categoryActivity
+            case .heart: return AppColour.categoryHeart
+            case .body: return AppColour.warning
             }
         }
     }
@@ -74,18 +74,18 @@ struct InsightsDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: DS.space4) {
                 // Headline summary from the Home card (shown in full here)
                 if let headline = headlineSummary {
                     Text(headline)
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.subheadlineMedium)
+                        .foregroundStyle(AppColour.textSecondary)
                         .padding(.horizontal)
                 }
 
                 // Filter chips
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: DS.space2) {
                         ForEach(FocusFilter.allCases) { filter in
                             let itemCount = count(for: filter)
                             if filter == .all || itemCount > 0 {
@@ -117,31 +117,24 @@ struct InsightsDetailView: View {
                             EnrichedInsightCard(insight: insight, showCategory: true)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.dsPress)
                         .padding(.horizontal)
                     }
                 } else {
-                    VStack(spacing: 12) {
-                        Spacer().frame(height: 40)
-                        Image(systemName: "magnifyingglass")
-                            .font(.system(size: 48))
-                            .foregroundStyle(.secondary)
-                        Text("No insights yet")
-                            .font(.title3.weight(.semibold))
-                        Text(selectedFilter == .all
-                             ? "More data will unlock deeper insights over time."
-                             : "No \(selectedFilter.rawValue.lowercased()) insights right now.")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                    }
+                    DSEmptyState(
+                        icon: "magnifyingglass",
+                        title: "No insights yet",
+                        message: selectedFilter == .all
+                            ? "More data will unlock deeper insights over time."
+                            : "No \(selectedFilter.rawValue.lowercased()) insights right now."
+                    )
                     .frame(maxWidth: .infinity)
+                    .padding(.top, DS.space7)
                 }
 
                 Text(Copy.Analysis.RiskDetail.disclaimer)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption2)
+                    .foregroundStyle(AppColour.textSecondary)
                     .multilineTextAlignment(.leading)
                     .padding(.horizontal)
                     .padding(.top, DS.space6)
@@ -151,7 +144,7 @@ struct InsightsDetailView: View {
             .frame(maxWidth: .infinity)
         }
         .scrollBounceBehavior(.basedOnSize)
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppColour.surfaceBase.ignoresSafeArea())
         .navigationTitle("Insights")
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
@@ -224,21 +217,21 @@ struct InsightsDetailView: View {
             )
             sectionTracker.tapped(target: "filter_\(filter.rawValue.lowercased())")
         } label: {
-            HStack(spacing: 4) {
+            HStack(spacing: DS.space1) {
                 Text(filter.rawValue)
-                    .font(.subheadline.weight(selectedFilter == filter ? .semibold : .regular))
+                    .font(selectedFilter == filter ? DS.Typography.subheadlineSemibold : DS.Typography.subheadline)
 
                 if count > 0 && selectedFilter == filter {
                     Text("\(count)")
-                        .font(.caption2.weight(.bold).monospacedDigit())
+                        .font(DS.Typography.caption2Semibold.monospacedDigit())
                 }
             }
-            .foregroundStyle(selectedFilter == filter ? .white : .primary)
+            .foregroundStyle(selectedFilter == filter ? .white : AppColour.textPrimary)
             .padding(.horizontal, 14)
             .padding(.vertical, DS.space2)
-            .background(selectedFilter == filter ? filter.chipColor : Color(.secondarySystemGroupedBackground), in: Capsule())
+            .background(selectedFilter == filter ? filter.chipColor : AppColour.surfaceRaised, in: Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
     }
 
 }
@@ -249,24 +242,24 @@ private struct EnrichedInsightCard: View {
     let showCategory: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: DS.space2) {
             // Top: metric icon + category + severity
-            HStack(spacing: 12) {
+            HStack(spacing: DS.space3) {
                 Image(systemName: insight.metric.systemImageName)
-                    .font(.body.weight(.semibold))
+                    .font(DS.Typography.bodySemibold)
                     .foregroundStyle(.white)
                     .frame(width: DS.iconSize, height: DS.iconSize)
                     .background(insight.metric.category.color, in: Circle())
 
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 6) {
+                VStack(alignment: .leading, spacing: DS.space1) {
+                    HStack(spacing: DS.space2) {
                         Text(insight.metric.displayName)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(AppColour.textSecondary)
 
                         if showCategory {
                             Text(insight.category.displayName)
-                                .font(.caption2.weight(.semibold))
+                                .font(DS.Typography.caption2Semibold)
                                 .foregroundStyle(insight.category.color)
                                 .padding(.horizontal, DS.badgeH)
                                 .padding(.vertical, DS.badgeV)
@@ -275,28 +268,28 @@ private struct EnrichedInsightCard: View {
                     }
 
                     Text(impactText)
-                        .font(.caption2)
+                        .font(DS.Typography.caption2)
                         .foregroundStyle(severityColor)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.caption2.weight(.semibold))
+                    .font(DS.Typography.caption2Semibold)
                     .foregroundStyle(.tertiary)
             }
 
             // Title
             Text(insight.title)
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(.primary)
+                .font(DS.Typography.subheadlineMedium)
+                .foregroundStyle(AppColour.textPrimary)
                 .lineLimit(2)
 
             // Action text
             if !actionText.isEmpty {
                 Text(actionText)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
                     .lineLimit(2)
             }
         }
@@ -306,9 +299,9 @@ private struct EnrichedInsightCard: View {
 
     private var severityColor: Color {
         switch insight.severity {
-        case .critical: return .red
-        case .warning: return .orange
-        case .info: return .blue
+        case .critical: return AppColour.danger
+        case .warning: return AppColour.warning
+        case .info: return AppColour.info
         }
     }
 

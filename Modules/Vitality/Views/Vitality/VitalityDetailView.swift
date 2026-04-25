@@ -30,8 +30,8 @@ struct VitalityDetailView: View {
                 VitalityMethodologySection()
 
                 Text(Copy.Analysis.RiskDetail.disclaimer)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption2)
+                    .foregroundStyle(AppColour.textTertiary)
                     .multilineTextAlignment(.leading)
                     .padding(.horizontal)
                     .padding(.top, DS.space6)
@@ -40,7 +40,7 @@ struct VitalityDetailView: View {
             .padding(.top, DS.space3)
             .padding(.bottom, DS.space6)
         }
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppColour.surfaceBase.ignoresSafeArea())
         .navigationTitle(Copy.Vitality.title)
         .navigationBarTitleDisplayMode(.large)
         .onAppear {

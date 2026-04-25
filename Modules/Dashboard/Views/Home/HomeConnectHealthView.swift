@@ -9,22 +9,22 @@ struct HomeConnectHealthView: View {
     let onRefresh: () async -> Void
 
     var body: some View {
-        VStack(spacing: 28) {
+        VStack(spacing: DS.sectionSpacing) {
             Spacer(minLength: 40)
 
             Image(systemName: heroIconName)
-                .font(.system(size: 76.8, weight: .light))
+                .font(DS.Typography.heroIcon)
                 .foregroundStyle(heroIconColor)
                 .symbolRenderingMode(.hierarchical)
 
-            VStack(spacing: 10) {
+            VStack(spacing: DS.space2) {
                 Text(titleText)
-                    .font(.system(size: 26.4).weight(.semibold))
+                    .font(DS.Typography.title2)
                     .multilineTextAlignment(.center)
 
                 Text(messageText)
-                    .font(.system(size: 18))
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.body)
+                    .foregroundStyle(AppColour.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, DS.space7)
                     .fixedSize(horizontal: false, vertical: true)
@@ -46,7 +46,7 @@ struct HomeConnectHealthView: View {
                 Task { await onRefresh() }
             } label: {
                 Label(Copy.Settings.refreshNow, systemImage: "arrow.clockwise")
-                    .font(.system(size: 20.4, weight: .semibold))
+                    .font(DS.Typography.title3)
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
@@ -92,9 +92,9 @@ struct HomeConnectHealthView: View {
 
     private var heroIconColor: Color {
         switch connectionState {
-        case .waiting: return .orange
-        case .receiving: return primaryDevice?.iconColor ?? .green
-        case .stale: return .orange
+        case .waiting: return AppColour.warning
+        case .receiving: return primaryDevice?.iconColor ?? AppColour.success
+        case .stale: return AppColour.warning
         }
     }
 
@@ -130,16 +130,16 @@ struct HomeConnectHealthView: View {
 
     @ViewBuilder
     private func syncProgressView(_ progress: HealthKitManager.SyncProgress) -> some View {
-        VStack(spacing: 8) {
+        VStack(spacing: DS.space2) {
             ProgressView(
                 value: Double(progress.metricsCompleted),
                 total: Double(max(progress.totalMetrics, 1))
             )
-            .tint(.blue)
+            .tint(AppColour.info)
 
             Text("\(progress.metricsCompleted) of \(progress.totalMetrics) metrics")
-                .font(.system(size: 14.4))
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.callout)
+                .foregroundStyle(AppColour.textSecondary)
         }
     }
 }

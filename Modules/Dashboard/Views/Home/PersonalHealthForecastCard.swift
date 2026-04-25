@@ -15,34 +15,36 @@ struct PersonalHealthForecastCard: View {
                 // Header
                 HStack(spacing: 6) {
                     Image(systemName: "chart.line.uptrend.xyaxis")
-                        .font(.system(size: 13.2).weight(.bold))
-                        .foregroundStyle(.blue)
+                        .font(DS.Typography.captionSemibold)
+                        .foregroundStyle(AppColour.info)
                     Text("YOUR FORECAST")
-                        .font(.system(size: 14.4).weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.footnoteMedium)
+                        .foregroundStyle(AppColour.textSecondary)
                         .textCase(.uppercase)
                     Spacer()
                     Text("Next 7 days")
-                        .font(.system(size: 13.2))
-                        .foregroundStyle(.tertiary)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textTertiary)
                 }
 
                 // Forecast rows
                 VStack(spacing: 8) {
                     ForEach(Array(forecasts.prefix(3))) { forecast in
-                        forecastRow(forecast)
-                            .onTapGesture {
-                                AppAnalytics.shared.trackBlockTap(title: "Forecast Metric", type: .metricRow, screen: .home, metadata: ["source": "health_forecast", "metric": forecast.metric.rawValue])
-                                onTapMetric(forecast.metric)
-                            }
+                        Button {
+                            AppAnalytics.shared.trackBlockTap(title: "Forecast Metric", type: .metricRow, screen: .home, metadata: ["source": "health_forecast", "metric": forecast.metric.rawValue])
+                            onTapMetric(forecast.metric)
+                        } label: {
+                            forecastRow(forecast)
+                        }
+                        .buttonStyle(.dsPress)
                     }
                 }
             }
             .padding(DS.space4)
-            .background(.background, in: RoundedRectangle(cornerRadius: 16))
+            .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .strokeBorder(.quaternary, lineWidth: 0.5)
+                RoundedRectangle(cornerRadius: DS.Radius.lg)
+                    .strokeBorder(AppColour.borderLow, lineWidth: 0.5)
             )
             .padding(.horizontal, DS.screenPadding)
         }
@@ -54,7 +56,7 @@ struct PersonalHealthForecastCard: View {
         HStack(spacing: 12) {
             // Metric icon
             Image(systemName: forecast.metric.systemImageName)
-                .font(.system(size: 14.4))
+                .font(DS.Typography.footnote)
                 .foregroundStyle(forecast.directionColor)
                 .frame(width: 28, height: 28)
                 .background(forecast.directionColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 7))
@@ -62,12 +64,12 @@ struct PersonalHealthForecastCard: View {
             // Info
             VStack(alignment: .leading, spacing: 2) {
                 Text(forecast.metric.displayName)
-                    .font(.system(size: 14.4).weight(.medium))
-                    .foregroundStyle(.primary)
+                    .font(DS.Typography.footnoteMedium)
+                    .foregroundStyle(AppColour.textPrimary)
 
                 Text(forecast.rangeDescription)
-                    .font(.system(size: 13.2))
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
             }
 
             Spacer()
@@ -76,16 +78,16 @@ struct PersonalHealthForecastCard: View {
             VStack(alignment: .trailing, spacing: 2) {
                 HStack(spacing: 3) {
                     Image(systemName: forecast.directionIcon)
-                        .font(.system(size: 13.2))
+                        .font(DS.Typography.caption)
                     Text(forecast.predictedValueFormatted)
-                        .font(.system(size: 14.4).weight(.semibold))
+                        .font(DS.Typography.footnoteMedium)
                 }
                 .foregroundStyle(forecast.directionColor)
 
                 // Confidence badge
                 Text("\(forecast.confidencePercent)% conf")
-                    .font(.system(size: 10.8, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption2Medium)
+                    .foregroundStyle(AppColour.textSecondary)
             }
         }
         .padding(.vertical, DS.space1)

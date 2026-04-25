@@ -10,7 +10,7 @@ struct VitalityCard: View {
         Button(action: onTap) {
             readyContent
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityDescription)
         .accessibilityHint("View vitality age details")
@@ -33,10 +33,10 @@ struct VitalityCard: View {
                 vitalityRing
 
                 // Text content
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: DS.space1) {
                     Text("Vitality Age")
-                        .font(.system(size: 14.4).weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.calloutSemibold)
+                        .foregroundStyle(AppColour.textSecondary)
                         .textCase(.uppercase)
 
                     HStack(spacing: 8) {
@@ -70,21 +70,21 @@ struct VitalityCard: View {
     // MARK: - Data Maturity Indicator
 
     private var personalizationIndicator: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: DS.space1) {
             Image(systemName: personalizationIcon)
-                .font(.system(size: 13.2).weight(.bold))
+                .font(DS.Typography.captionSemibold)
             Text(scorer.personalizationStatus.rawValue)
-                .font(.system(size: 13.2).weight(.medium))
+                .font(DS.Typography.captionMedium)
         }
         .foregroundStyle(personalizationColor)
     }
 
     private var paceIndicator: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: DS.space1) {
             Image(systemName: paceIcon)
-                .font(.system(size: 13.2).weight(.bold))
+                .font(DS.Typography.captionSemibold)
             Text(scorer.paceLabel)
-                .font(.system(size: 13.2).weight(.medium))
+                .font(DS.Typography.captionMedium)
         }
         .foregroundStyle(paceColor)
     }
@@ -135,11 +135,11 @@ struct VitalityCard: View {
 
     private var accentColor: Color {
         let delta = scorer.delta
-        if delta <= -5 { return .green }
-        if delta < 0 { return .green }
-        if delta == 0 { return .blue }
-        if delta <= 3 { return .orange }
-        return .red
+        if delta <= -5 { return AppColour.scoreOptimal }
+        if delta < 0 { return AppColour.scoreGood }
+        if delta == 0 { return AppColour.categoryVitality }
+        if delta <= 3 { return AppColour.warning }
+        return AppColour.danger
     }
 
     /// Ring fill: 1.0 when vitality age is 10+ years younger, 0.0 when 10+ years older
@@ -155,9 +155,9 @@ struct VitalityCard: View {
     }
 
     private var paceColor: Color {
-        if scorer.paceOfAging < 0.85 { return .green }
-        if scorer.paceOfAging <= 1.15 { return .gray }
-        return .red
+        if scorer.paceOfAging < 0.85 { return AppColour.success }
+        if scorer.paceOfAging <= 1.15 { return AppColour.textSecondary }
+        return AppColour.danger
     }
 
     private var personalizationIcon: String {
@@ -170,9 +170,9 @@ struct VitalityCard: View {
 
     private var personalizationColor: Color {
         switch scorer.personalizationStatus {
-        case .buildingProfile: return .secondary
-        case .earlyEstimate: return .blue
-        case .personalized: return .green
+        case .buildingProfile: return AppColour.textSecondary
+        case .earlyEstimate: return AppColour.info
+        case .personalized: return AppColour.success
         }
     }
 

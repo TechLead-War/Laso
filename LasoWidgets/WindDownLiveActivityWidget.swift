@@ -13,8 +13,8 @@ struct WindDownLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: WindDownActivityAttributes.self) { context in
             WindDownLockScreenView(state: context.state)
-                .activityBackgroundTint(Color.black.opacity(0.82))
-                .activitySystemActionForegroundColor(.primary)
+                .activityBackgroundTint(AppColour.surfaceOverlay.opacity(0.82))
+                .activitySystemActionForegroundColor(AppColour.textPrimary)
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
@@ -67,13 +67,13 @@ private struct WindDownLockScreenView: View {
                     Text("WIND DOWN")
                         .font(.caption2.weight(.semibold))
                         .tracking(0.8)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
                 WindDownPhraseLine(state: state)
                 if let hint = hrvHint(state: state) {
                     Text(hint)
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                         .lineLimit(1)
                 }
             }
@@ -87,7 +87,7 @@ private struct WindDownLockScreenView: View {
 
             WindDownBreatheButton()
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, 16)
         .padding(.vertical, 12)
     }
 
@@ -131,10 +131,10 @@ private struct WindDownCountdownStack: View {
             Text("TO BED")
                 .font(.system(size: 9, weight: .semibold))
                 .tracking(0.8)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
             Text(timerInterval: Date()...state.targetBedtime, countsDown: true)
                 .font(font.monospacedDigit())
-                .foregroundStyle(.primary)
+                .foregroundStyle(AppColour.textPrimary)
                 .multilineTextAlignment(.trailing)
                 .frame(minWidth: 80, alignment: .trailing)
         }
@@ -163,7 +163,7 @@ private struct WindDownPhraseLine: View {
         TimelineView(.periodic(from: .now, by: 60)) { timeline in
             Text(currentStage(now: timeline.date, bedtime: state.targetBedtime).phrase)
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(.primary)
+                .foregroundStyle(AppColour.textPrimary)
                 .lineLimit(1)
                 .contentTransition(.opacity)
         }

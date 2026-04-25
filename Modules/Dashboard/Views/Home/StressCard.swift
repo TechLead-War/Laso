@@ -27,10 +27,10 @@ struct StressCard: View {
                         .background(levelColor, in: Capsule())
 
                     // Center text
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: DS.space1) {
                         Text("Stress Level")
-                            .font(.system(size: 14.4).weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.calloutSemibold)
+                            .foregroundStyle(AppColour.textSecondary)
                             .textCase(.uppercase)
 
                         HStack(spacing: 8) {
@@ -52,8 +52,8 @@ struct StressCard: View {
                     Spacer()
 
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 13.2).weight(.semibold))
-                        .foregroundStyle(.tertiary)
+                        .font(DS.Typography.footnoteMedium)
+                        .foregroundStyle(AppColour.textTertiary)
                 }
                 .padding(.leading, DS.accentLeading)
                 .padding(.trailing, DS.accentTrailing)
@@ -61,7 +61,7 @@ struct StressCard: View {
             }
             .cardStyle(tint: levelColor)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Stress level \(String(format: "%.1f", stressScore)), \(stressLevel), trending \(trend)")
         .accessibilityHint("View stress monitor details")
@@ -78,17 +78,17 @@ struct StressCard: View {
         switch trend.lowercased() {
         case "up", "rising":
             icon = "arrow.up.right"
-            color = .red
+            color = AppColour.danger
         case "down", "falling":
             icon = "arrow.down.right"
-            color = .green
+            color = AppColour.success
         default:
             icon = "arrow.right"
-            color = .gray
+            color = AppColour.textSecondary
         }
 
         return Image(systemName: icon)
-            .font(.system(size: 13.2).weight(.bold))
+            .font(DS.Typography.captionSemibold)
             .foregroundStyle(color)
     }
 }

@@ -11,23 +11,23 @@ struct LiveActivitySection: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text("Activity Rings")
-                .font(.headline)
+                .font(DS.Typography.headline)
                 .padding(.horizontal)
 
             if isActivityAllZeros && Calendar.current.component(.hour, from: Date()) < 10 {
-                HStack(spacing: 12) {
+                HStack(spacing: DS.itemSpacing) {
                     Image(systemName: "figure.stand")
-                        .font(.title2)
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.title2)
+                        .foregroundStyle(AppColour.textSecondary)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("No activity yet")
-                            .font(.subheadline.weight(.medium))
+                            .font(DS.Typography.subheadlineMedium)
                         Text("Your rings will fill as you move throughout the day.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(AppColour.textSecondary)
                     }
 
                     Spacer()
@@ -37,48 +37,7 @@ struct LiveActivitySection: View {
                 .padding(.horizontal)
             } else {
 
-            HStack(spacing: 16) {
-                // Triple ring
-                ZStack {
-                    // Stand (outer). cyan
-                    ringArc(progress: activity.standProgress, color: .cyan, size: 90, lineWidth: 8)
-                    // Exercise (middle). green
-                    ringArc(progress: activity.exerciseProgress, color: .green, size: 70, lineWidth: 8)
-                    // Move (inner). pink
-                    ringArc(progress: activity.moveProgress, color: .pink, size: 50, lineWidth: 8)
-                }
-                .frame(width: 100, height: 100)
-
-                // Labels
-                VStack(alignment: .leading, spacing: 10) {
-                    ringLabel(
-                        color: .pink,
-                        label: "Move",
-                        value: "\(Int(activity.todayActiveCalories))/\(Int(activity.moveGoal)) kcal",
-                        progress: activity.moveProgress
-                    )
-                    ringLabel(
-                        color: .green,
-                        label: "Exercise",
-                        value: "\(Int(activity.todayExerciseMinutes))/\(Int(activity.exerciseGoal)) min",
-                        progress: activity.exerciseProgress
-                    )
-                    ringLabel(
-                        color: .cyan,
-                        label: "Stand",
-                        value: "\(Int(activity.todayStandHours))/\(Int(activity.standGoal)) hrs",
-                        progress: activity.standProgress
-                    )
-                }
-
-                Spacer()
-            }
-            .padding(DS.cardPadding)
-            .cardStyle()
-            .padding(.horizontal)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Activity rings. Move: \(Int(activity.todayActiveCalories)) of \(Int(activity.moveGoal)) calories, \(Int(activity.moveProgress * 100)) percent. Exercise: \(Int(activity.todayExerciseMinutes)) of \(Int(activity.exerciseGoal)) minutes, \(Int(activity.exerciseProgress * 100)) percent. Stand: \(Int(activity.todayStandHours)) of \(Int(activity.standGoal)) hours, \(Int(activity.standProgress * 100)) percent.")
-            .onTapGesture {
+            Button {
                 AppAnalytics.shared.trackBlockTap(
                     title: "Activity Rings",
                     type: .activityRingsSection,
@@ -91,7 +50,50 @@ struct LiveActivitySection: View {
                     ]
                 )
                 activityTracker.tapped(target: "activity_rings")
+            } label: {
+                HStack(spacing: 16) {
+                    // Triple ring
+                    ZStack {
+                        // Stand (outer). cyan
+                        ringArc(progress: activity.standProgress, color: .cyan, size: 90, lineWidth: 8)
+                        // Exercise (middle). green
+                        ringArc(progress: activity.exerciseProgress, color: .green, size: 70, lineWidth: 8)
+                        // Move (inner). pink
+                        ringArc(progress: activity.moveProgress, color: .pink, size: 50, lineWidth: 8)
+                    }
+                    .frame(width: 100, height: 100)
+
+                    // Labels
+                    VStack(alignment: .leading, spacing: DS.space2) {
+                        ringLabel(
+                            color: .pink,
+                            label: "Move",
+                            value: "\(Int(activity.todayActiveCalories))/\(Int(activity.moveGoal)) kcal",
+                            progress: activity.moveProgress
+                        )
+                        ringLabel(
+                            color: .green,
+                            label: "Exercise",
+                            value: "\(Int(activity.todayExerciseMinutes))/\(Int(activity.exerciseGoal)) min",
+                            progress: activity.exerciseProgress
+                        )
+                        ringLabel(
+                            color: .cyan,
+                            label: "Stand",
+                            value: "\(Int(activity.todayStandHours))/\(Int(activity.standGoal)) hrs",
+                            progress: activity.standProgress
+                        )
+                    }
+
+                    Spacer()
+                }
+                .padding(DS.cardPadding)
+                .cardStyle()
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Activity rings. Move: \(Int(activity.todayActiveCalories)) of \(Int(activity.moveGoal)) calories, \(Int(activity.moveProgress * 100)) percent. Exercise: \(Int(activity.todayExerciseMinutes)) of \(Int(activity.exerciseGoal)) minutes, \(Int(activity.exerciseProgress * 100)) percent. Stand: \(Int(activity.todayStandHours)) of \(Int(activity.standGoal)) hours, \(Int(activity.standProgress * 100)) percent.")
             }
+            .buttonStyle(.dsPress)
+            .padding(.horizontal)
 
             // Quick stats row
             HStack(spacing: 12) {
@@ -147,43 +149,24 @@ struct LiveActivitySection: View {
                 .frame(width: 8, height: 8)
 
             Text(label)
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.captionMedium)
+                .foregroundStyle(AppColour.textSecondary)
                 .frame(width: 52, alignment: .leading)
 
             Text(value)
-                .font(.caption.weight(.semibold).monospacedDigit())
-                .foregroundStyle(.primary)
+                .font(DS.Typography.captionSemibold.monospacedDigit())
+                .foregroundStyle(AppColour.textPrimary)
 
             Spacer()
 
             Text("\(Int(progress * 100))%")
-                .font(.caption2.weight(.bold).monospacedDigit())
+                .font(DS.Typography.caption2Semibold.monospacedDigit())
                 .foregroundStyle(color)
         }
     }
 
     private func quickStatPill(icon: String, value: String, label: String, color: Color, blockType: BlockType) -> some View {
-        VStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(color)
-
-            Text(value)
-                .font(.caption.weight(.bold).monospacedDigit())
-                .foregroundStyle(.primary)
-                .contentTransition(.numericText())
-
-            Text(label)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, DS.space3)
-        .background(color.opacity(DS.tintBg), in: RoundedRectangle(cornerRadius: DS.cardRadius))
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(label): \(value)")
-        .onTapGesture {
+        Button {
             let metricId: String = switch blockType {
             case .quickStatSteps: HealthMetric.steps.rawValue
             case .quickStatDistance: HealthMetric.distanceWalkingRunning.rawValue
@@ -200,7 +183,28 @@ struct LiveActivitySection: View {
                 ]
             )
             quickStatsTracker.tapped(target: label.lowercased())
+        } label: {
+            VStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(DS.Typography.captionSemibold)
+                    .foregroundStyle(color)
+
+                Text(value)
+                    .font(DS.Typography.captionSemibold.monospacedDigit())
+                    .foregroundStyle(AppColour.textPrimary)
+                    .contentTransition(.numericText())
+
+                Text(label)
+                    .font(DS.Typography.caption2)
+                    .foregroundStyle(AppColour.textSecondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, DS.space3)
+            .background(color.opacity(DS.tintBg), in: RoundedRectangle(cornerRadius: DS.cardRadius))
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(label): \(value)")
         }
+        .buttonStyle(.dsPress)
     }
 
     private func formatLargeNumber(_ value: Double) -> String {

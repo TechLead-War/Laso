@@ -20,26 +20,26 @@ struct ReferralCodeStep: View {
 
             // Branding
             Text("Laso")
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.subheadlineMedium)
+                .foregroundStyle(AppColour.textSecondary)
                 .padding(.bottom, DS.space7)
 
             // Icon
             Image(systemName: "gift.fill")
-                .font(.system(size: 44, weight: .medium))
-                .foregroundStyle(.purple)
+                .font(DS.Typography.largeIcon)
+                .foregroundStyle(AppColour.accent)
                 .frame(width: 88, height: 88)
-                .background(AppColour.categoryStress.opacity(0.12), in: Circle())
-                .padding(.bottom, 28)
+                .background(AppColour.accent.opacity(DS.badgeBg), in: Circle())
+                .padding(.bottom, DS.space7)
 
             // Title + Subtitle
-            VStack(spacing: 10) {
+            VStack(spacing: DS.itemSpacing) {
                 Text("Have a Referral Code?")
-                    .font(.title2.weight(.bold))
+                    .font(DS.Typography.title2)
 
                 Text("If a friend shared their code with you, enter it below. You\u{2019}ll both get 1 month of Pro free when you subscribe.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.subheadline)
+                    .foregroundStyle(AppColour.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, DS.space7)
                     .fixedSize(horizontal: false, vertical: true)
@@ -50,11 +50,11 @@ struct ReferralCodeStep: View {
             VStack(spacing: 0) {
                 HStack {
                     Text("Referral Code")
-                        .font(.subheadline)
-                        .foregroundStyle(.primary)
+                        .font(DS.Typography.subheadline)
+                        .foregroundStyle(AppColour.textPrimary)
                     Spacer()
                     TextField("e.g. HEALTH-A7X3K2", text: $codeText)
-                        .font(.subheadline)
+                        .font(DS.Typography.subheadline)
                         .multilineTextAlignment(.trailing)
                         .textInputAutocapitalization(.characters)
                         .autocorrectionDisabled()
@@ -63,7 +63,7 @@ struct ReferralCodeStep: View {
                 .padding(.horizontal, DS.space4)
                 .padding(.vertical, DS.space3)
             }
-            .background(.background, in: RoundedRectangle(cornerRadius: 16))
+            .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
             .padding(.horizontal)
 
             // Result feedback
@@ -72,13 +72,13 @@ struct ReferralCodeStep: View {
                     switch result {
                     case .success:
                         Label("Code applied! Subscribe to unlock your free month.", systemImage: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
+                            .foregroundStyle(AppColour.success)
                     case .error(let message):
                         Label(message, systemImage: "xmark.circle.fill")
-                            .foregroundStyle(.red)
+                            .foregroundStyle(AppColour.danger)
                     }
                 }
-                .font(.caption)
+                .font(DS.Typography.caption)
                 .padding(.top, DS.space2)
                 .padding(.horizontal, DS.space6)
             }
@@ -91,7 +91,7 @@ struct ReferralCodeStep: View {
             Spacer()
 
             // Buttons
-            VStack(spacing: 12) {
+            VStack(spacing: DS.itemSpacing) {
                 // Apply button
                 Button {
                     buttonTapCount += 1
@@ -113,11 +113,8 @@ struct ReferralCodeStep: View {
                     }
                 } label: {
                     Text("Apply Code")
-                        .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .font(.headline)
+                .buttonStyle(.dsPrimary)
                 .disabled(isRedeeming)
 
                 // Skip
@@ -125,9 +122,8 @@ struct ReferralCodeStep: View {
                     onContinue()
                 } label: {
                     Text("Skip")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
                 }
+                .buttonStyle(.dsTertiary)
                 .disabled(isRedeeming)
             }
             .padding(.horizontal, DS.space6)

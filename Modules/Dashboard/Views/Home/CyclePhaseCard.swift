@@ -105,19 +105,19 @@ struct CyclePhaseCard: View {
             ZStack(alignment: .leading) {
                 // Background track with phase segments
                 HStack(spacing: 1) {
-                    phaseSegment(fraction: 5.0 / Double(cycleLength), color: .red, width: width)       // Menstrual
-                    phaseSegment(fraction: follicularFraction, color: .pink, width: width)              // Follicular
-                    phaseSegment(fraction: 3.0 / Double(cycleLength), color: .orange, width: width)     // Ovulation
-                    phaseSegment(fraction: lutealFraction, color: .purple, width: width)                // Luteal
+                    phaseSegment(fraction: 5.0 / Double(cycleLength), color: AppColour.danger, width: width)       // Menstrual
+                    phaseSegment(fraction: follicularFraction, color: AppColour.categoryHeart, width: width)       // Follicular
+                    phaseSegment(fraction: 3.0 / Double(cycleLength), color: AppColour.warning, width: width)     // Ovulation
+                    phaseSegment(fraction: lutealFraction, color: AppColour.categoryStress, width: width)         // Luteal
                 }
                 .opacity(0.3)
 
                 // Filled progress
                 HStack(spacing: 1) {
-                    phaseSegment(fraction: 5.0 / Double(cycleLength), color: .red, width: width)
-                    phaseSegment(fraction: follicularFraction, color: .pink, width: width)
-                    phaseSegment(fraction: 3.0 / Double(cycleLength), color: .orange, width: width)
-                    phaseSegment(fraction: lutealFraction, color: .purple, width: width)
+                    phaseSegment(fraction: 5.0 / Double(cycleLength), color: AppColour.danger, width: width)
+                    phaseSegment(fraction: follicularFraction, color: AppColour.categoryHeart, width: width)
+                    phaseSegment(fraction: 3.0 / Double(cycleLength), color: AppColour.warning, width: width)
+                    phaseSegment(fraction: lutealFraction, color: AppColour.categoryStress, width: width)
                 }
                 .mask(alignment: .leading) {
                     Rectangle()

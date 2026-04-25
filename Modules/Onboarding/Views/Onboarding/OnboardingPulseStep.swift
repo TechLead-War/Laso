@@ -19,9 +19,9 @@ struct OnboardingPulseStep: View {
                 .padding(.bottom, DS.space8)
 
             Text(Copy.Onboarding.pulseHeadline)
-                .font(.system(size: 26, weight: .semibold))
+                .font(DS.Typography.title3)
                 .multilineTextAlignment(.center)
-                .foregroundStyle(.primary)
+                .foregroundStyle(AppColour.textPrimary)
                 .padding(.horizontal, DS.space7)
                 .opacity(headlineOpacity)
 
@@ -38,11 +38,8 @@ struct OnboardingPulseStep: View {
                 onContinue()
             } label: {
                 Text(Copy.Onboarding.pulseBegin)
-                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .font(.headline)
+            .buttonStyle(.dsPrimary)
             .padding(.horizontal, DS.space6)
             .padding(.bottom, DS.space8)
             .opacity(buttonOpacity)
@@ -57,22 +54,22 @@ struct OnboardingPulseStep: View {
     private var pulse: some View {
         ZStack {
             Circle()
-                .stroke(Color.accentColor.opacity(0.18), lineWidth: 1)
+                .stroke(AppColour.primary.opacity(0.18), lineWidth: 1)
                 .scaleEffect(pulseScale)
                 .opacity(haloOpacity)
 
             Circle()
-                .stroke(Color.accentColor.opacity(0.28), lineWidth: 1)
+                .stroke(AppColour.primary.opacity(0.28), lineWidth: 1)
                 .scaleEffect(pulseScale * 0.78)
                 .opacity(haloOpacity * 0.8)
 
             Circle()
-                .fill(Color.accentColor.opacity(0.10))
+                .fill(AppColour.primary.opacity(0.10))
                 .frame(width: 80, height: 80)
                 .overlay(
                     Image(systemName: "heart.fill")
-                        .font(.system(size: 34, weight: .medium))
-                        .foregroundStyle(Color.accentColor)
+                        .font(DS.Typography.mediumIcon)
+                        .foregroundStyle(AppColour.primary)
                 )
                 .scaleEffect(1.0 + (pulseScale - 1.0) * 0.25)
         }

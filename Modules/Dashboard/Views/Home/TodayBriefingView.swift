@@ -38,13 +38,13 @@ struct TodayBriefingView: View {
     // MARK: - Section Header
 
     private var sectionHeader: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: DS.space1) {
             Image(systemName: "brain.head.profile.fill")
-                .font(.system(size: 14.4).weight(.semibold))
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.calloutSemibold)
+                .foregroundStyle(AppColour.textSecondary)
             Text(Copy.Home.bodyIntelligence)
-                .font(.system(size: 14.4).weight(.semibold))
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.calloutSemibold)
+                .foregroundStyle(AppColour.textSecondary)
         }
     }
 }
@@ -62,10 +62,10 @@ private struct BriefingCardView: View {
 
     private var severityDotColor: Color {
         switch card.severity {
-        case .critical: .red
-        case .warning: .orange
-        case .notable: .yellow
-        case .info: .green
+        case .critical: AppColour.danger
+        case .warning: AppColour.warning
+        case .notable: AppColour.scoreFair
+        case .info: AppColour.success
         }
     }
 
@@ -76,33 +76,33 @@ private struct BriefingCardView: View {
                 .fill(accent)
                 .frame(height: 3)
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: DS.space2) {
                 // Label
                 Text(card.label)
-                    .font(.system(size: 13.2).weight(.semibold))
+                    .font(DS.Typography.captionSemibold)
                     .foregroundStyle(accent)
                     .lineLimit(2)
                     .minimumScaleFactor(0.75)
 
                 // Headline
                 Text(card.headline)
-                    .font(.system(size: 18).weight(.semibold))
-                    .foregroundStyle(.primary)
+                    .font(DS.Typography.bodySemibold)
+                    .foregroundStyle(AppColour.textPrimary)
                     .lineLimit(3)
                     .fixedSize(horizontal: false, vertical: true)
 
                 // Detail
                 Text(card.detail)
-                    .font(.system(size: 14.4))
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.callout)
+                    .foregroundStyle(AppColour.textSecondary)
                     .lineLimit(2)
 
                 Spacer(minLength: 0)
 
                 // Bottom row: confidence pill + severity dot
-                HStack(spacing: 6) {
+                HStack(spacing: DS.space1) {
                     Text(Copy.Briefing.confidenceBadge(percent: Int(card.confidence * 100)))
-                        .font(.system(size: 13.2, design: .monospaced))
+                        .font(DS.Typography.footnote.monospaced())
                         .foregroundStyle(accent)
                         .padding(.horizontal, DS.badgeH)
                         .padding(.vertical, DS.badgeV)
@@ -127,9 +127,8 @@ private struct BriefingCardView: View {
         .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
         .clipShape(RoundedRectangle(cornerRadius: DS.cardRadius))
         .sensoryFeedback(.impact(flexibility: .soft), trigger: tapped)
-        .onTapGesture {
-            tapped.toggle()
-        }
+        .contentShape(Rectangle())
+        .onTapGesture { tapped.toggle() }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(card.label): \(card.headline)")
         .accessibilityHint(card.detail)
@@ -141,12 +140,12 @@ private struct BriefingCardView: View {
 extension IntelligenceCard.AccentColor {
     var resolved: Color {
         switch self {
-        case .red: .red
-        case .orange: .orange
-        case .yellow: .yellow
-        case .green: .green
-        case .blue: .blue
-        case .purple: .purple
+        case .red: AppColour.danger
+        case .orange: AppColour.warning
+        case .yellow: AppColour.scoreFair
+        case .green: AppColour.success
+        case .blue: AppColour.info
+        case .purple: AppColour.categoryStress
         }
     }
 }

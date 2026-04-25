@@ -48,13 +48,13 @@ struct AskYourDataView: View {
     // MARK: - Search Bar
 
     private var searchBar: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: DS.space2) {
             Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
 
             TextField(Copy.Home.AskYourData.placeholder, text: $query)
                 .textFieldStyle(.plain)
-                .font(.system(size: 18))
+                .font(DS.Typography.body)
                 .submitLabel(.search)
                 .onSubmit { runQuery() }
 
@@ -67,27 +67,27 @@ struct AskYourDataView: View {
                     result = nil
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(AppColour.textTertiary)
                 }
             }
         }
         .padding(DS.space3)
-        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.md))
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(.quaternary, lineWidth: 1)
+            RoundedRectangle(cornerRadius: DS.Radius.md)
+                .strokeBorder(AppColour.borderMedium, lineWidth: 1)
         )
     }
 
     // MARK: - Suggestions
 
     private var suggestionsGrid: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DS.space3) {
             Text(Copy.Home.AskYourData.tryAsking)
-                .font(.system(size: 18).weight(.semibold))
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.bodySemibold)
+                .foregroundStyle(AppColour.textSecondary)
 
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: DS.space2) {
                 ForEach(suggestedQuestions, id: \.self) { question in
                     Button {
                         query = question
@@ -95,14 +95,14 @@ struct AskYourDataView: View {
                         runQuery()
                     } label: {
                         Text(question)
-                            .font(.system(size: 14.4))
-                            .foregroundStyle(.primary)
+                            .font(DS.Typography.callout)
+                            .foregroundStyle(AppColour.textPrimary)
                             .multilineTextAlignment(.leading)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(10)
-                            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 10))
+                            .padding(DS.space2)
+                            .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.sm))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsPress)
                 }
             }
         }
@@ -111,39 +111,39 @@ struct AskYourDataView: View {
     // MARK: - Result Card
 
     private func resultCard(_ result: HealthDataQueryEngine.QueryResult) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: DS.space3) {
             // Answer
             Text(result.answer)
-                .font(.system(size: 18))
-                .foregroundStyle(.primary)
+                .font(DS.Typography.body)
+                .foregroundStyle(AppColour.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
 
             // Data points
             if !result.dataPoints.isEmpty {
-                VStack(spacing: 6) {
+                VStack(spacing: DS.space1) {
                     ForEach(result.dataPoints.indices, id: \.self) { i in
                         let dp = result.dataPoints[i]
                         HStack {
                             Text(dp.label)
-                                .font(.system(size: 14.4))
-                                .foregroundStyle(.secondary)
+                                .font(DS.Typography.callout)
+                                .foregroundStyle(AppColour.textSecondary)
                             Spacer()
                             Text("\(dp.value, specifier: dp.value >= 100 ? "%.0f" : "%.1f") \(dp.unit)")
-                                .font(.system(size: 14.4).weight(.semibold))
-                                .foregroundStyle(.primary)
+                                .font(DS.Typography.calloutSemibold)
+                                .foregroundStyle(AppColour.textPrimary)
                         }
                     }
                 }
-                .padding(10)
-                .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 10))
+                .padding(DS.space2)
+                .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.sm))
             }
 
             // Confidence + feedback
-            HStack(spacing: 4) {
+            HStack(spacing: DS.space1) {
                 Image(systemName: "checkmark.seal")
-                    .font(.system(size: 13.2))
+                    .font(DS.Typography.footnote)
                 Text(Copy.Home.AskYourData.confidence(Int(result.confidence * 100)))
-                    .font(.system(size: 13.2))
+                    .font(DS.Typography.footnote)
 
                 Spacer()
 
@@ -155,7 +155,7 @@ struct AskYourDataView: View {
                     )
                 } label: {
                     Image(systemName: "hand.thumbsup")
-                        .font(.system(size: 14.4))
+                        .font(DS.Typography.callout)
                 }
                 .buttonStyle(.plain)
 
@@ -167,18 +167,18 @@ struct AskYourDataView: View {
                     )
                 } label: {
                     Image(systemName: "hand.thumbsdown")
-                        .font(.system(size: 14.4))
+                        .font(DS.Typography.callout)
                 }
                 .buttonStyle(.plain)
             }
-            .foregroundStyle(.secondary)
+            .foregroundStyle(AppColour.textSecondary)
 
             // Related questions
             if !result.relatedQuestions.isEmpty {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: DS.space1) {
                     Text(Copy.Home.AskYourData.related)
-                        .font(.system(size: 14.4).weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.calloutSemibold)
+                        .foregroundStyle(AppColour.textSecondary)
 
                     ForEach(result.relatedQuestions, id: \.self) { q in
                         Button {
@@ -186,11 +186,11 @@ struct AskYourDataView: View {
                             AppAnalytics.shared.trackBlockTap(title: "Related Question", type: .smartAction, screen: .home, metadata: ["source": "ask_your_data_related", "query_length": q.count])
                             runQuery()
                         } label: {
-                            HStack(spacing: 6) {
+                            HStack(spacing: DS.space1) {
                                 Image(systemName: "arrow.turn.down.right")
-                                    .font(.system(size: 13.2))
+                                    .font(DS.Typography.footnote)
                                 Text(q)
-                                    .font(.system(size: 14.4))
+                                    .font(DS.Typography.callout)
                             }
                             .foregroundStyle(.tint)
                         }
@@ -199,10 +199,10 @@ struct AskYourDataView: View {
             }
         }
         .padding(DS.space4)
-        .background(.background, in: RoundedRectangle(cornerRadius: 14))
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
         .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .strokeBorder(.quaternary, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: DS.Radius.lg)
+                .strokeBorder(AppColour.borderLow, lineWidth: 0.5)
         )
     }
 

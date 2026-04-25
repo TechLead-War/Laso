@@ -101,33 +101,33 @@ struct TodaysActionDetailView: View {
 
     private var heroSection: some View {
         let tint = DS.scoreColor(readinessScore)
-        return HStack(alignment: .top, spacing: 16) {
+        return HStack(alignment: .top, spacing: DS.space4) {
             Image(systemName: action.icon)
-                .font(.system(size: 38.4, weight: .semibold))
+                .font(DS.Typography.mediumIcon)
                 .foregroundStyle(.white)
                 .frame(width: 72, height: 72)
-                .background(tint.gradient, in: RoundedRectangle(cornerRadius: 18))
+                .background(tint.gradient, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
                 .shadow(color: tint.opacity(0.35), radius: 10, y: 4)
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: DS.space2) {
                 Text(action.title)
-                    .font(.system(size: 24).weight(.bold))
-                    .foregroundStyle(.primary)
+                    .font(DS.Typography.title2)
+                    .foregroundStyle(AppColour.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text(action.subtitle)
-                    .font(.system(size: 15.6))
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.subheadline)
+                    .foregroundStyle(AppColour.textSecondary)
                     .lineLimit(3)
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text(recoveryBandChipLabel)
-                    .font(.system(size: 14.4).weight(.bold))
+                    .font(DS.Typography.calloutSemibold)
                     .foregroundStyle(tint)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
+                    .padding(.horizontal, DS.badgeH)
+                    .padding(.vertical, DS.badgeV)
                     .background(tint.opacity(DS.badgeBg), in: Capsule())
-                    .padding(.top, 2)
+                    .padding(.top, DS.space1)
             }
 
             Spacer(minLength: 0)
@@ -159,31 +159,31 @@ struct TodaysActionDetailView: View {
         return Group {
             if !rationale.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: DS.space2) {
                         Image(systemName: "lightbulb.fill")
-                            .font(.system(size: 18).weight(.semibold))
-                            .foregroundStyle(.orange)
+                            .font(DS.Typography.bodySemibold)
+                            .foregroundStyle(AppColour.warning)
                         Text(Copy.Home.whyThisToday)
-                            .font(.system(size: 18).weight(.semibold))
-                            .foregroundStyle(.primary)
+                            .font(DS.Typography.bodySemibold)
+                            .foregroundStyle(AppColour.textPrimary)
                     }
                     .padding(.horizontal, DS.screenPadding)
 
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: DS.space3) {
                         Text(rationale)
-                            .font(.system(size: 18))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.body)
+                            .foregroundStyle(AppColour.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
 
                         // Confidence indicator
                         if let decision = policyDecision, decision.decisionConfidence >= 0.3 {
-                            HStack(spacing: 6) {
+                            HStack(spacing: DS.space1) {
                                 Circle()
                                     .fill(confidenceColor(decision.decisionConfidence))
                                     .frame(width: 8, height: 8)
                                 Text("\(confidenceLabel(decision.decisionConfidence)) confidence")
-                                    .font(.system(size: 14.4))
-                                    .foregroundStyle(.tertiary)
+                                    .font(DS.Typography.callout)
+                                    .foregroundStyle(AppColour.textTertiary)
                             }
                         }
                     }
@@ -201,28 +201,28 @@ struct TodaysActionDetailView: View {
     @ViewBuilder
     private var proofSection: some View {
         if let summary = action.proofSummary, summary.hasProof {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: DS.space2) {
+                HStack(spacing: DS.space2) {
                     Image(systemName: "clock.arrow.circlepath")
-                        .font(.system(size: 18).weight(.semibold))
-                        .foregroundStyle(.green)
+                        .font(DS.Typography.bodySemibold)
+                        .foregroundStyle(AppColour.success)
                     Text(Copy.Home.ActionProof.whatHappenedBefore)
-                        .font(.system(size: 18).weight(.semibold))
-                        .foregroundStyle(.primary)
+                        .font(DS.Typography.bodySemibold)
+                        .foregroundStyle(AppColour.textPrimary)
                 }
                 .padding(.horizontal, DS.screenPadding)
 
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: DS.space3) {
                     if let detailLine = summary.detailProofLine {
                         Text(detailLine)
-                            .font(.system(size: 18))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.body)
+                            .foregroundStyle(AppColour.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
 
                     Text(summary.timeframeLine)
-                        .font(.system(size: 14.4))
-                        .foregroundStyle(.tertiary)
+                        .font(DS.Typography.callout)
+                        .foregroundStyle(AppColour.textTertiary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(DS.cardPadding + 2)
@@ -238,31 +238,31 @@ struct TodaysActionDetailView: View {
         let items = doTodayItems()
         let benefit = policyDecision?.primaryAction.expectedBenefit ?? ""
 
-        return VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
+        return VStack(alignment: .leading, spacing: DS.space2) {
+            HStack(spacing: DS.space2) {
                 Image(systemName: "target")
-                    .font(.system(size: 18).weight(.semibold))
+                    .font(DS.Typography.bodySemibold)
                     .foregroundStyle(DS.scoreColor(readinessScore))
                 Text("Do Today")
-                    .font(.system(size: 18).weight(.semibold))
-                    .foregroundStyle(.primary)
+                    .font(DS.Typography.bodySemibold)
+                    .foregroundStyle(AppColour.textPrimary)
             }
             .padding(.horizontal, DS.screenPadding)
 
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: DS.space3) {
                 ForEach(Array(items.enumerated()), id: \.offset) { index, item in
                     doTodayRow(index: index + 1, icon: item.icon, text: item.text)
                 }
 
                 if !benefit.isEmpty {
                     Divider()
-                    HStack(alignment: .top, spacing: 6) {
+                    HStack(alignment: .top, spacing: DS.space1) {
                         Image(systemName: "arrow.up.right")
-                            .font(.system(size: 14.4).weight(.semibold))
-                            .foregroundStyle(.green)
+                            .font(DS.Typography.calloutSemibold)
+                            .foregroundStyle(AppColour.success)
                         Text(benefit)
-                            .font(.system(size: 14.4))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.callout)
+                            .foregroundStyle(AppColour.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -306,16 +306,16 @@ struct TodaysActionDetailView: View {
     }
 
     private func doTodayRow(index: Int, icon: String, text: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: DS.space3) {
             Image(systemName: icon)
-                .font(.system(size: 14.4).weight(.bold))
+                .font(DS.Typography.calloutSemibold)
                 .foregroundStyle(.white)
                 .frame(width: 24, height: 24)
                 .background(DS.scoreColor(readinessScore), in: Circle())
 
             Text(text)
-                .font(.system(size: 18))
-                .foregroundStyle(.primary)
+                .font(DS.Typography.body)
+                .foregroundStyle(AppColour.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -325,14 +325,14 @@ struct TodaysActionDetailView: View {
     @ViewBuilder
     private var whatsOffSection: some View {
         if recoverySignals.hasAny {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: DS.space2) {
+                HStack(spacing: DS.space2) {
                     Image(systemName: "waveform.path.ecg")
-                        .font(.system(size: 18).weight(.semibold))
-                        .foregroundStyle(.red)
+                        .font(DS.Typography.bodySemibold)
+                        .foregroundStyle(AppColour.danger)
                     Text("What's off today")
-                        .font(.system(size: 18).weight(.semibold))
-                        .foregroundStyle(.primary)
+                        .font(DS.Typography.bodySemibold)
+                        .foregroundStyle(AppColour.textPrimary)
                 }
                 .padding(.horizontal, DS.screenPadding)
 
@@ -382,41 +382,41 @@ struct TodaysActionDetailView: View {
             guard let d = deviation else { return false }
             return metric.higherIsBetter ? d < -10 : d > 10
         }()
-        let deviationColor: Color = isOff ? .red : .secondary
+        let deviationColor: Color = isOff ? AppColour.danger : AppColour.textSecondary
 
-        return HStack(spacing: 12) {
+        return HStack(spacing: DS.space3) {
             Image(systemName: metric.systemImageName)
-                .font(.system(size: 14.4).weight(.semibold))
+                .font(DS.Typography.calloutSemibold)
                 .foregroundStyle(.white)
                 .frame(width: 32, height: 32)
-                .background(metric.category.color, in: RoundedRectangle(cornerRadius: 8))
+                .background(metric.category.color, in: RoundedRectangle(cornerRadius: DS.Radius.sm))
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DS.space1) {
                 Text(metric.displayName)
-                    .font(.system(size: 18).weight(.medium))
-                    .foregroundStyle(.primary)
+                    .font(DS.Typography.bodyMedium)
+                    .foregroundStyle(AppColour.textPrimary)
                 if let base = baseline {
                     Text("\(baselineLabel) \(metric.formatValue(base)) \(metric.unit)")
-                        .font(.system(size: 13.2))
-                        .foregroundStyle(.tertiary)
+                        .font(DS.Typography.footnote)
+                        .foregroundStyle(AppColour.textTertiary)
                 }
             }
 
             Spacer()
 
-            VStack(alignment: .trailing, spacing: 2) {
+            VStack(alignment: .trailing, spacing: DS.space1) {
                 Text("\(metric.formatValue(current)) \(metric.unit)")
-                    .font(.system(size: 18).weight(.semibold).monospacedDigit())
-                    .foregroundStyle(.primary)
+                    .font(DS.Typography.bodySemibold.monospacedDigit())
+                    .foregroundStyle(AppColour.textPrimary)
                 if let d = deviation {
                     Text(d > 0 ? "+\(d)%" : "\(d)%")
-                        .font(.system(size: 13.2).weight(.bold).monospacedDigit())
+                        .font(DS.Typography.captionSemibold.monospacedDigit())
                         .foregroundStyle(deviationColor)
                 }
             }
         }
         .padding(.horizontal, DS.cardPadding)
-        .padding(.vertical, 10)
+        .padding(.vertical, DS.space2)
     }
 
     // MARK: - Causal Chain
@@ -424,14 +424,14 @@ struct TodaysActionDetailView: View {
     @ViewBuilder
     private var causalChainSection: some View {
         if let chain = topCausalChain, chain.confidence >= 0.5 {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: DS.space2) {
+                HStack(spacing: DS.space2) {
                     Image(systemName: "arrow.triangle.branch")
-                        .font(.system(size: 18).weight(.semibold))
-                        .foregroundStyle(.purple)
+                        .font(DS.Typography.bodySemibold)
+                        .foregroundStyle(AppColour.categoryStress)
                     Text("What's leading to what")
-                        .font(.system(size: 18).weight(.semibold))
-                        .foregroundStyle(.primary)
+                        .font(DS.Typography.bodySemibold)
+                        .foregroundStyle(AppColour.textPrimary)
                 }
                 .padding(.horizontal, DS.screenPadding)
 
@@ -463,13 +463,13 @@ struct TodaysActionDetailView: View {
 
     private var insightsSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            HStack(spacing: 8) {
+            HStack(spacing: DS.space2) {
                 Image(systemName: "stethoscope")
-                    .font(.system(size: 18).weight(.semibold))
-                    .foregroundStyle(.blue)
+                    .font(DS.Typography.bodySemibold)
+                    .foregroundStyle(AppColour.info)
                 Text("Your coach's notes")
-                    .font(.system(size: 18).weight(.semibold))
-                    .foregroundStyle(.primary)
+                    .font(DS.Typography.bodySemibold)
+                    .foregroundStyle(AppColour.textPrimary)
             }
             .padding(.horizontal, DS.screenPadding)
 
@@ -492,31 +492,31 @@ struct TodaysActionDetailView: View {
     }
 
     private func insightRow(_ insight: Insight) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DS.space3) {
             Image(systemName: insight.metric.systemImageName)
-                .font(.system(size: 14.4).weight(.semibold))
+                .font(DS.Typography.calloutSemibold)
                 .foregroundStyle(.white)
                 .frame(width: 32, height: 32)
-                .background(insight.metric.category.color, in: RoundedRectangle(cornerRadius: 8))
+                .background(insight.metric.category.color, in: RoundedRectangle(cornerRadius: DS.Radius.sm))
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: DS.space1) {
                 Text(insight.title)
-                    .font(.system(size: 18).weight(.medium))
-                    .foregroundStyle(.primary)
+                    .font(DS.Typography.bodyMedium)
+                    .foregroundStyle(AppColour.textPrimary)
                     .lineLimit(2)
                     .minimumScaleFactor(0.75)
 
                 Text(insight.actionSummary)
-                    .font(.system(size: 14.4))
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.callout)
+                    .foregroundStyle(AppColour.textSecondary)
                     .lineLimit(2)
             }
 
             Spacer()
 
             Image(systemName: "chevron.right")
-                .font(.system(size: 13.2).weight(.semibold))
-                .foregroundStyle(.tertiary)
+                .font(DS.Typography.footnoteMedium)
+                .foregroundStyle(AppColour.textTertiary)
         }
         .padding(DS.cardPadding)
         .cardStyle()
@@ -525,14 +525,14 @@ struct TodaysActionDetailView: View {
     // MARK: - Today's Workout
 
     private var todayWorkoutSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: DS.space2) {
+            HStack(spacing: DS.space2) {
                 Image(systemName: "figure.run.circle.fill")
-                    .font(.system(size: 18).weight(.semibold))
-                    .foregroundStyle(.orange)
+                    .font(DS.Typography.bodySemibold)
+                    .foregroundStyle(AppColour.warning)
                 Text("Today's Workout")
-                    .font(.system(size: 18).weight(.semibold))
-                    .foregroundStyle(.primary)
+                    .font(DS.Typography.bodySemibold)
+                    .foregroundStyle(AppColour.textPrimary)
             }
             .padding(.horizontal, DS.screenPadding)
 
@@ -570,9 +570,9 @@ struct TodaysActionDetailView: View {
 
     private func confidenceColor(_ value: Double) -> Color {
         switch value {
-        case 0.7...: return .green
-        case 0.5..<0.7: return .yellow
-        default: return .orange
+        case 0.7...: return AppColour.success
+        case 0.5..<0.7: return AppColour.warning
+        default: return AppColour.scoreFair
         }
     }
 }

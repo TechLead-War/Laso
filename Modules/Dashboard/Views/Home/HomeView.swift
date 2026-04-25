@@ -221,9 +221,9 @@ struct HomeView: View {
     /// Uppercase tracked label that visually separates HomeView's sections.
     private func sectionHeader(_ title: String) -> some View {
         Text(title)
-            .font(.system(size: 13.2, weight: .semibold))
+            .font(DS.Typography.captionSemibold)
             .tracking(1.2)
-            .foregroundStyle(.tertiary)
+            .foregroundStyle(AppColour.textTertiary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, DS.screenPadding)
     }
@@ -246,11 +246,13 @@ struct HomeView: View {
                 } else if hasData {
                     // ── Above the fold ──
 
-                    // 1. Recovery Hero. live readiness score (updates every 30 min)
+                    // 1. Recovery Hero. live readiness score (updates every 30 min).
+                    // Title, pill, and ring all derive from RecoveryState so the
+                    // three-band threshold table agrees with itself.
                     RecoveryHeroCard(
                         score: liveReadinessScore,
                         recoveryLabel: hasLiveReadiness
-                            ? HomeView.recoveryLabel(liveReadinessScore)
+                            ? DashboardViewModel.RecoveryState(score: liveReadinessScore).label
                             : "Daily Health Score",
                         dayType: DashboardViewModel.RecoveryState(score: liveReadinessScore).dayType,
                         scoreChangeFromLastWeek: viewModel.scores.scoreChangeFromLastWeek,
@@ -371,8 +373,8 @@ struct HomeView: View {
                     // Last updated footer
                     if let lastRefresh = viewModel.lastRefresh {
                         Copy.Home.updatedAgo(lastRefresh)
-                            .font(.system(size: 13.2))
-                            .foregroundStyle(.tertiary)
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(AppColour.textTertiary)
                             .accessibilityLabel(Copy.Home.lastUpdatedAgo(lastRefresh))
                     }
                 }
@@ -401,28 +403,28 @@ struct HomeView: View {
     private func proTeaser(title: String, subtitle: String, icon: String) -> some View {
         HStack(spacing: 14) {
             Image(systemName: icon)
-                .font(.system(size: 26.4))
+                .font(DS.Typography.title)
                 .foregroundStyle(.tint)
                 .frame(width: 36)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
                     Text(title)
-                        .font(.system(size: 18).weight(.semibold))
+                        .font(DS.Typography.bodySemibold)
                     Text("PRO")
-                        .font(.system(size: 13.2).weight(.bold))
+                        .font(DS.Typography.captionSemibold)
                         .padding(.horizontal, DS.badgeH)
                         .padding(.vertical, DS.badgeV)
                         .background(.tint, in: Capsule())
                         .foregroundStyle(.white)
                 }
                 Text(subtitle)
-                    .font(.system(size: 14.4))
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.footnote)
+                    .foregroundStyle(AppColour.textSecondary)
             }
             Spacer()
             Image(systemName: "lock.fill")
-                .font(.system(size: 14.4))
-                .foregroundStyle(.tertiary)
+                .font(DS.Typography.footnote)
+                .foregroundStyle(AppColour.textTertiary)
         }
         .padding(DS.cardPadding)
         .cardStyle()
@@ -447,16 +449,16 @@ struct HomeView: View {
                     } label: {
                         HStack(spacing: 10) {
                             Image(systemName: "shield.lefthalf.filled.badge.checkmark")
-                                .font(.system(size: 18).weight(.semibold))
-                                .foregroundStyle(.red)
+                                .font(DS.Typography.bodySemibold)
+                                .foregroundStyle(AppColour.danger)
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(Copy.Home.earlyWarning)
-                                    .font(.system(size: 14.4).weight(.bold))
-                                    .foregroundStyle(.red)
+                                    .font(DS.Typography.footnoteMedium)
+                                    .foregroundStyle(AppColour.danger)
                                 Text(warning.narrative)
-                                    .font(.system(size: 13.2))
-                                    .foregroundStyle(.secondary)
+                                    .font(DS.Typography.caption)
+                                    .foregroundStyle(AppColour.textSecondary)
                                     .lineLimit(2)
                                     .minimumScaleFactor(0.75)
                             }
@@ -464,21 +466,21 @@ struct HomeView: View {
                             Spacer()
 
                             Text(warning.severity == .critical ? Copy.Home.severityHigh : warning.severity == .warning ? Copy.Home.severityModerate : Copy.Home.severityLow)
-                                .font(.system(size: 13.2).weight(.bold))
+                                .font(DS.Typography.captionSemibold)
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, DS.badgeH)
                                 .padding(.vertical, DS.badgeV)
-                                .background(warning.severity == .critical ? .red : warning.severity == .warning ? .orange : .yellow, in: Capsule())
+                                .background(warning.severity == .critical ? AppColour.danger : warning.severity == .warning ? AppColour.warning : AppColour.scoreFair, in: Capsule())
 
                             Image(systemName: "chevron.right")
-                                .font(.system(size: 13.2))
-                                .foregroundStyle(.tertiary)
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(AppColour.textTertiary)
                         }
-                        .padding(10)
-                        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+                        .padding(DS.space2 + 2)
+                        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.md))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .strokeBorder(.red.opacity(0.2), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: DS.Radius.md)
+                                .strokeBorder(AppColour.danger.opacity(0.2), lineWidth: 1)
                         )
                     }
                     .buttonStyle(.plain)
@@ -500,35 +502,37 @@ struct HomeView: View {
                     } label: {
                         HStack(spacing: 10) {
                             Image(systemName: risk.riskType.systemImageName)
-                                .font(.system(size: 18))
+                                .font(DS.Typography.body)
                                 .foregroundStyle(risk.riskGrade.color)
                                 .frame(width: 28, height: 28)
                                 .background(risk.riskGrade.color.opacity(0.12), in: RoundedRectangle(cornerRadius: 7))
 
                             Text(risk.riskType.displayName)
-                                .font(.system(size: 14.4).weight(.medium))
-                                .foregroundStyle(.primary)
+                                .font(DS.Typography.footnoteMedium)
+                                .foregroundStyle(AppColour.textPrimary)
 
                             Spacer()
 
                             Text(risk.riskGrade.displayName)
-                                .font(.system(size: 13.2).weight(.bold))
+                                .font(DS.Typography.captionSemibold)
                                 .foregroundStyle(risk.riskGrade.color)
 
                             Image(systemName: "chevron.right")
-                                .font(.system(size: 13.2))
-                                .foregroundStyle(.tertiary)
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(AppColour.textTertiary)
                         }
-                        .padding(10)
-                        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+                        .padding(DS.space2 + 2)
+                        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.md))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 12)
+                            RoundedRectangle(cornerRadius: DS.Radius.md)
                                 .strokeBorder(risk.riskGrade.color.opacity(DS.strokeAlpha), lineWidth: 1)
                         )
                     }
                     .buttonStyle(.plain)
                 }
             }
+            .padding(DS.cardPadding)
+            .cardStyle(tint: AppColour.danger)
             .padding(.horizontal, DS.screenPadding)
         }
     }
@@ -555,26 +559,26 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 12) {
                     Image(systemName: action.icon)
-                        .font(.system(size: 24).weight(.semibold))
+                        .font(DS.Typography.title3)
                         .foregroundStyle(.white)
                         .frame(width: 40, height: 40)
                         .background(DS.scoreColor(liveReadinessScore), in: RoundedRectangle(cornerRadius: 10))
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text(action.title)
-                            .font(.system(size: 18).weight(.semibold))
-                            .foregroundStyle(.primary)
+                            .font(DS.Typography.bodySemibold)
+                            .foregroundStyle(AppColour.textPrimary)
                             .lineLimit(2)
 
                         Text(action.subtitle)
-                            .font(.system(size: 14.4))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.footnote)
+                            .foregroundStyle(AppColour.textSecondary)
                             .lineLimit(2)
 
                         if let proof = action.proofLine {
                             Text(proof)
-                                .font(.system(size: 13.2))
-                                .foregroundStyle(.tertiary)
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(AppColour.textTertiary)
                                 .lineLimit(2)
                         }
                     }
@@ -582,8 +586,8 @@ struct HomeView: View {
                     Spacer()
 
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 13.2).weight(.semibold))
-                        .foregroundStyle(.tertiary)
+                        .font(DS.Typography.captionSemibold)
+                        .foregroundStyle(AppColour.textTertiary)
                 }
             }
             .padding(DS.cardPadding)
@@ -604,18 +608,18 @@ struct HomeView: View {
             NavigationLink(value: Route.journalEntry) {
                 HStack(spacing: 12) {
                     Image(systemName: "square.and.pencil")
-                        .font(.system(size: 24))
+                        .font(DS.Typography.title3)
                         .foregroundStyle(.purple)
                         .frame(width: 36)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(Copy.Home.howWasToday)
-                            .font(.system(size: 18).weight(.semibold))
-                            .foregroundStyle(.primary)
+                            .font(DS.Typography.bodySemibold)
+                            .foregroundStyle(AppColour.textPrimary)
 
                         Text(Copy.Home.journalSubtitle)
-                            .font(.system(size: 14.4))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.footnote)
+                            .foregroundStyle(AppColour.textSecondary)
                             .lineLimit(2)
                             .minimumScaleFactor(0.75)
                     }
@@ -623,8 +627,8 @@ struct HomeView: View {
                     Spacer()
 
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 13.2))
-                        .foregroundStyle(.tertiary)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textTertiary)
                 }
                 .padding(DS.cardPadding)
                 .cardStyle(tint: .purple)
@@ -725,26 +729,6 @@ struct HomeView: View {
         }
     }
 
-    static func recoveryLabel(_ score: Int) -> String {
-        switch score {
-        case 80...100: return Copy.Home.fullyRecovered
-        case 60..<80: return Copy.Home.wellRecovered
-        case 40..<60: return Copy.Home.moderate
-        case 20..<40: return Copy.Home.fatigued
-        default: return Copy.Home.strained
-        }
-    }
-
-    static func recoveryColor(_ score: Int) -> Color {
-        switch score {
-        case 80...100: return .green
-        case 60..<80: return .green.opacity(0.8)
-        case 40..<60: return .yellow
-        case 20..<40: return .orange
-        default: return .red
-        }
-    }
-
     // MARK: - First Launch Loading
 
     @State private var firstLaunchIconScale: CGFloat = 0.8
@@ -786,7 +770,7 @@ struct HomeView: View {
                     .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: firstLaunchIconScale)
 
                 Image(systemName: phase.icon)
-                    .font(.system(size: 48, weight: .medium))
+                    .font(DS.Typography.displayL)
                     .foregroundStyle(phase.color)
                     .frame(width: 80, height: 80)
                     .background(phase.color.opacity(0.12), in: Circle())
@@ -796,14 +780,14 @@ struct HomeView: View {
 
             VStack(spacing: 8) {
                 Text(phase.text + String(repeating: ".", count: firstLaunchDotCount))
-                    .font(.system(size: 18).weight(.medium))
-                    .foregroundStyle(.primary)
+                    .font(DS.Typography.bodyMedium)
+                    .foregroundStyle(AppColour.textPrimary)
                     .contentTransition(.numericText())
                     .animation(.easeInOut(duration: 0.3), value: viewModel.ui.syncPhase)
 
                 Text(Copy.Home.thisOnlyHappensOnce)
-                    .font(.system(size: 14.4))
-                    .foregroundStyle(.tertiary)
+                    .font(DS.Typography.footnote)
+                    .foregroundStyle(AppColour.textTertiary)
             }
 
             Spacer()
@@ -856,16 +840,16 @@ struct HomeView: View {
     private func errorView(_ message: String) -> some View {
         VStack(spacing: 16) {
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 57.6))
-                .foregroundStyle(.orange)
+                .font(DS.Typography.displayL)
+                .foregroundStyle(AppColour.warning)
                 .accessibilityHidden(true)
 
             Text(Copy.Home.unableToLoadData)
-                .font(.system(size: 20.4, weight: .semibold))
+                .font(DS.Typography.title3)
 
             Text(message)
-                .font(.system(size: 18))
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.body)
+                .foregroundStyle(AppColour.textSecondary)
                 .multilineTextAlignment(.center)
 
             Button(Copy.Home.tryAgain) {

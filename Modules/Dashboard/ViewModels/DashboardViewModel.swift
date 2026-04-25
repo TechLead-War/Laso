@@ -225,6 +225,17 @@ final class DashboardViewModel {
             }
         }
 
+        /// Single source of truth for the recovery state colour. Mirrors the
+        /// 3-band model (green/yellow/red), so the home recovery card's title,
+        /// pill, and ring all paint from the same threshold table.
+        var color: Color {
+            switch self {
+            case .green: AppColour.scoreOptimal
+            case .yellow: AppColour.scoreFair
+            case .red: AppColour.scorePoor
+            }
+        }
+
         var strainGuidance: String {
             switch self {
             case .green: Copy.Home.greenStrainGuidance

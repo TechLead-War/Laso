@@ -22,25 +22,25 @@ struct ExploreScoreHeroSection: View {
                         HStack(spacing: 6) {
                             Text(Copy.Explore.healthScore)
                                 .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(AppColour.textSecondary)
 
                             Button {
                                 onScoreInfoTapped()
                             } label: {
                                 Image(systemName: "info.circle")
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(AppColour.textSecondary)
                             }
                             .buttonStyle(.plain)
                         }
 
                         Text(Copy.Explore.healthScoreSubtitle)
                             .font(.caption2)
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(AppColour.textTertiary)
                     }
 
                     Text(grade)
-                        .font(DS.Typography.displayL.monospacedDigit())
+                        .font(DS.Typography.displayL)
                         .foregroundStyle(gradeColor)
                         .postHogMask()
 
@@ -56,7 +56,7 @@ struct ExploreScoreHeroSection: View {
                     } else {
                         Text(scoreLabel)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppColour.textSecondary)
                     }
                 }
 
@@ -70,15 +70,15 @@ struct ExploreScoreHeroSection: View {
                         .foregroundStyle(weakest.category.color)
                     Text(Copy.Explore.focusToImprove(weakest.category.displayName))
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                     Spacer()
                 }
-                .padding(10)
-                .background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+                .padding(DS.space3)
+                .background(AppColour.textSecondary.opacity(0.08), in: RoundedRectangle(cornerRadius: DS.Radius.sm))
             }
         }
         .padding(DS.space4)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
     }
 
     private var grade: String {

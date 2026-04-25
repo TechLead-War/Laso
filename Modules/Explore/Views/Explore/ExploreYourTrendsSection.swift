@@ -6,13 +6,13 @@ struct ExploreYourTrendsSection: View {
     let onMetricTapped: (TrendMetricItem) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             HStack {
                 Text(Copy.Explore.yourTrends)
-                    .font(.headline)
+                    .font(DS.Typography.headline)
                 Spacer()
             }
-            .padding(.horizontal)
+            .padding(.horizontal, DS.screenPadding)
 
             Picker(Copy.Explore.trendPeriod, selection: $trendTimeframe) {
                 Text("7D").tag(7)
@@ -20,7 +20,7 @@ struct ExploreYourTrendsSection: View {
                 Text("90D").tag(90)
             }
             .pickerStyle(.segmented)
-            .padding(.horizontal)
+            .padding(.horizontal, DS.screenPadding)
             .onChange(of: trendTimeframe) { oldValue, newValue in
                 AppAnalytics.shared.trackBlockTap(
                     title: "\(newValue)D",
@@ -46,28 +46,28 @@ struct ExploreYourTrendsSection: View {
                 } label: {
                     trendMetricRow(item)
                 }
-                .buttonStyle(.plain)
-                .padding(.horizontal)
+                .buttonStyle(.dsPress)
+                .padding(.horizontal, DS.screenPadding)
             }
         }
     }
 
     private func trendMetricRow(_ item: TrendMetricItem) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DS.itemSpacing) {
             Image(systemName: item.metric.systemImageName)
-                .font(.caption)
+                .font(DS.Typography.caption)
                 .foregroundStyle(item.metric.category.color)
                 .frame(width: DS.iconSize, height: DS.iconSize)
                 .background(item.metric.category.color.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.iconRadius))
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DS.space1) {
                 Text(item.metric.displayName)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.primary)
+                    .font(DS.Typography.subheadlineSemibold)
+                    .foregroundStyle(AppColour.textPrimary)
 
                 Text(item.rateLabel)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
             }
 
             Spacer()
@@ -78,19 +78,19 @@ struct ExploreYourTrendsSection: View {
             )
             .frame(width: 52, height: 24)
 
-            HStack(spacing: 3) {
+            HStack(spacing: DS.space1) {
                 Image(systemName: item.trend.direction.systemImageName)
-                    .font(.caption2.weight(.bold))
+                    .font(DS.Typography.caption2Semibold)
                 Text(TrendAnalyzer.formattedPercentChange(item.trend.weekOverWeekChange))
-                    .font(.caption.weight(.semibold).monospacedDigit())
+                    .font(DS.Typography.captionSemibold.monospacedDigit())
                     .postHogMask()
             }
             .foregroundStyle(item.trendColor)
             .frame(minWidth: 64, alignment: .trailing)
 
             Image(systemName: "chevron.right")
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(.tertiary)
+                .font(DS.Typography.caption2Semibold)
+                .foregroundStyle(AppColour.textTertiary)
         }
         .padding(DS.cardPadding)
         .cardStyle()
@@ -119,9 +119,9 @@ struct TrendMetricItem: Identifiable {
 
     var trendColor: Color {
         switch trend.direction {
-        case .improving: return .green
-        case .declining: return .red
-        case .stable: return .secondary
+        case .improving: return AppColour.success
+        case .declining: return AppColour.danger
+        case .stable: return AppColour.textSecondary
         }
     }
 

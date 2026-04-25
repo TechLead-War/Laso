@@ -13,41 +13,41 @@ struct OnboardingConnectHealthStep: View {
             Spacer()
 
             Image(systemName: "heart.text.square")
-                .font(.system(size: 44, weight: .medium))
-                .foregroundStyle(.red)
+                .font(DS.Typography.largeIcon)
+                .foregroundStyle(AppColour.danger)
                 .frame(width: 88, height: 88)
-                .background(Color.red.opacity(0.12), in: RoundedRectangle(cornerRadius: 20))
-                .padding(.bottom, 28)
+                .background(AppColour.danger.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.Radius.xl))
+                .padding(.bottom, DS.space7)
 
-            VStack(spacing: 10) {
+            VStack(spacing: DS.itemSpacing) {
                 Text(Copy.Onboarding.connectTitle)
-                    .font(.title2.weight(.bold))
+                    .font(DS.Typography.title2)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, DS.space6)
 
                 Text(Copy.Onboarding.connectSubtitle)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.subheadline)
+                    .foregroundStyle(AppColour.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, DS.space7)
 
                 if let note = Copy.Onboarding.personalizedConnectNote(age: age) {
                     Text(note)
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textTertiary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, DS.space7)
                         .padding(.top, DS.space1)
                 }
             }
 
-            HStack(spacing: 6) {
+            HStack(spacing: DS.space2) {
                 Image(systemName: "lock.shield")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption2)
+                    .foregroundStyle(AppColour.textSecondary)
                 Text(Copy.Onboarding.connectPrivacyNote)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption2)
+                    .foregroundStyle(AppColour.textSecondary)
             }
             .padding(.top, DS.space6)
 
@@ -75,19 +75,16 @@ struct OnboardingConnectHealthStep: View {
                     }
                 } label: {
                     Text(Copy.Onboarding.connectAllow)
-                        .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .font(.headline)
+                .buttonStyle(.dsPrimary)
                 .padding(.horizontal, DS.space6)
                 .padding(.bottom, DS.space8)
                 .accessibilityIdentifier("onboarding.connectHealthButton")
             } else {
-                VStack(spacing: 12) {
+                VStack(spacing: DS.itemSpacing) {
                     Text(Copy.Onboarding.connectUnavailable)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textSecondary)
 
                     Button {
                         AppAnalytics.shared.trackBlockTap(
@@ -102,11 +99,8 @@ struct OnboardingConnectHealthStep: View {
                         onContinue()
                     } label: {
                         Text(Copy.Onboarding.connectContinueAnyway)
-                            .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .font(.headline)
+                    .buttonStyle(.dsPrimary)
                     .padding(.horizontal, DS.space6)
                     .accessibilityIdentifier("onboarding.connectHealthContinueAnyway")
                 }

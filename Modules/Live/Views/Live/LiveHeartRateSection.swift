@@ -15,6 +15,19 @@ struct LiveHeartRateSection: View {
     }
 
     var body: some View {
+        Button {
+            AppAnalytics.shared.trackBlockTap(
+                title: "Heart Rate Hero",
+                type: .heartRateHeroCard,
+                screen: .live,
+                metadata: [
+                    "metric_id": HealthMetric.heartRate.rawValue,
+                    "heart_rate": Int(vitals.currentHeartRate ?? 0),
+                    "zone": currentHeartRateZone.rawValue
+                ]
+            )
+            heartRateTracker.tapped(target: "heart_rate_hero")
+        } label: {
         VStack(spacing: 0) {
             // Top: pulsing heart + big number + zone
             HStack(alignment: .top, spacing: 16) {
@@ -47,19 +60,19 @@ struct LiveHeartRateSection: View {
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         if let hr = vitals.currentHeartRate {
                             Text(String(format: "%.0f", hr))
-                                .font(.system(size: 52, weight: .bold, design: .rounded))
-                                .foregroundStyle(.primary.opacity(isHeartRateStale ? 0.4 : 1.0))
+                                .font(DS.Typography.displayXL)
+                                .foregroundStyle(AppColour.textPrimary.opacity(isHeartRateStale ? 0.4 : 1.0))
                                 .contentTransition(.numericText())
                                 .animation(.easeInOut(duration: 0.3), value: hr)
                                 .postHogMask()
 
                             Text("bpm")
-                                .font(.title3)
-                                .foregroundStyle(.secondary.opacity(isHeartRateStale ? 0.5 : 1.0))
+                                .font(DS.Typography.title3)
+                                .foregroundStyle(AppColour.textSecondary.opacity(isHeartRateStale ? 0.5 : 1.0))
                         } else {
                             Text("Syncing")
-                                .font(.title2.weight(.medium))
-                                .foregroundStyle(.tertiary)
+                                .font(DS.Typography.title2)
+                                .foregroundStyle(AppColour.textTertiary)
                         }
                     }
 
@@ -67,7 +80,7 @@ struct LiveHeartRateSection: View {
                     if isHeartRateStale {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Last Reading")
-                                .font(.caption.weight(.bold))
+                                .font(DS.Typography.captionSemibold)
                                 .foregroundStyle(.white.opacity(0.8))
                                 .padding(.horizontal, DS.badgeH)
                                 .padding(.vertical, DS.badgeV)
@@ -76,20 +89,20 @@ struct LiveHeartRateSection: View {
                             if let ts = vitals.heartRateTimestamp {
                                 HStack(spacing: 4) {
                                     Image(systemName: "clock")
-                                        .font(.caption2)
+                                        .font(DS.Typography.caption2)
                                     Text(ts, style: .relative)
-                                        .font(.caption.weight(.medium))
+                                        .font(DS.Typography.captionMedium)
                                     Text("ago")
-                                        .font(.caption.weight(.medium))
+                                        .font(DS.Typography.captionMedium)
                                 }
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(AppColour.textSecondary)
                             }
                         }
                     } else {
                         // Zone badge. only shown when data is fresh
                         HStack(spacing: 6) {
                             Text(currentHeartRateZone.rawValue)
-                                .font(.caption.weight(.bold))
+                                .font(DS.Typography.captionSemibold)
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, DS.badgeH)
                                 .padding(.vertical, DS.badgeV)
@@ -97,8 +110,8 @@ struct LiveHeartRateSection: View {
 
                             if let ts = vitals.heartRateTimestamp {
                                 Text(ts, style: .relative)
-                                    .font(.caption2)
-                                    .foregroundStyle(.tertiary)
+                                    .font(DS.Typography.caption2)
+                                    .foregroundStyle(AppColour.textTertiary)
                             }
                         }
                     }
@@ -115,25 +128,25 @@ struct LiveHeartRateSection: View {
             // Session stats: Min / Avg / Max (30 min)
             if vitals.heartRateMin30 != nil {
                 HStack(spacing: 0) {
-                    sessionStatCell(label: "Min", value: vitals.heartRateMin30, unit: "bpm", color: .blue)
+                    sessionStatCell(label: "Min", value: vitals.heartRateMin30, unit: "bpm", color: AppColour.info)
                     Divider().frame(height: DS.dividerHeight)
-                    sessionStatCell(label: "Avg", value: vitals.heartRateAvg30, unit: "bpm", color: .primary)
+                    sessionStatCell(label: "Avg", value: vitals.heartRateAvg30, unit: "bpm", color: AppColour.textPrimary)
                     Divider().frame(height: DS.dividerHeight)
-                    sessionStatCell(label: "Max", value: vitals.heartRateMax30, unit: "bpm", color: .red)
+                    sessionStatCell(label: "Max", value: vitals.heartRateMax30, unit: "bpm", color: AppColour.danger)
                 }
-                .padding(.vertical, 10)
+                .padding(.vertical, DS.space2)
             }
 
             // Today's range
             if let minHR = vitals.todayHeartRateMin, let maxHR = vitals.todayHeartRateMax {
                 HStack(spacing: 4) {
                     Image(systemName: "calendar")
-                        .font(.caption2)
+                        .font(DS.Typography.caption2)
                     Text("Today: \(Int(minHR))–\(Int(maxHR)) bpm")
-                        .font(.caption2)
+                        .font(DS.Typography.caption2)
                         .postHogMask()
                 }
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(AppColour.textTertiary)
                 .padding(.bottom, DS.space2)
             }
 
@@ -145,25 +158,14 @@ struct LiveHeartRateSection: View {
             }
         }
         .cardStyle(tint: .red)
-        .padding(.horizontal)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(heartRateAccessibilityLabel)
         .sensoryFeedback(.warning, trigger: vitals.heartRateStatus == .elevated)
         .onAppear { heartRateTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 20) }
         .onDisappear { heartRateTracker.disappeared() }
-        .onTapGesture {
-            AppAnalytics.shared.trackBlockTap(
-                title: "Heart Rate Hero",
-                type: .heartRateHeroCard,
-                screen: .live,
-                metadata: [
-                    "metric_id": HealthMetric.heartRate.rawValue,
-                    "heart_rate": Int(vitals.currentHeartRate ?? 0),
-                    "zone": currentHeartRateZone.rawValue
-                ]
-            )
-            heartRateTracker.tapped(target: "heart_rate_hero")
-        }
+        } // end label
+        .buttonStyle(.dsPress)
+        .padding(.horizontal)
     }
 
     private var heartRateAccessibilityLabel: String {
@@ -218,21 +220,21 @@ struct LiveHeartRateSection: View {
             if let value {
                 HStack(alignment: .firstTextBaseline, spacing: 1) {
                     Text(String(format: "%.0f", value))
-                        .font(.subheadline.weight(.bold).monospacedDigit())
+                        .font(DS.Typography.subheadlineSemibold.monospacedDigit())
                         .foregroundStyle(color)
                         .postHogMask()
                     Text(unit)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(AppColour.textTertiary)
                 }
             } else {
                 Text("···")
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(.quaternary)
+                    .font(DS.Typography.subheadlineSemibold)
+                    .foregroundStyle(AppColour.textQuaternary)
             }
             Text(label)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.caption2)
+                .foregroundStyle(AppColour.textSecondary)
         }
         .frame(maxWidth: .infinity)
     }
@@ -268,8 +270,8 @@ struct LiveHeartRateSection: View {
                 AxisValueLabel {
                     if let date = value.as(Date.self) {
                         Text(date, format: .dateTime.hour(.defaultDigits(amPM: .abbreviated)).minute())
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
+                            .font(DS.Typography.caption2)
+                            .foregroundStyle(AppColour.textTertiary)
                     }
                 }
                 AxisGridLine()
@@ -281,8 +283,8 @@ struct LiveHeartRateSection: View {
                 AxisValueLabel {
                     if let v = value.as(Double.self) {
                         Text("\(Int(v))")
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
+                            .font(DS.Typography.caption2)
+                            .foregroundStyle(AppColour.textTertiary)
                     }
                 }
                 AxisGridLine()

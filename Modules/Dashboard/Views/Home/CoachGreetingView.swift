@@ -15,14 +15,14 @@ struct CoachGreetingView: View {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(compactGreetingLine)
-                        .font(.system(size: 13).weight(.semibold))
-                        .tracking(1.8)
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.captionSemibold)
+                        .tracking(0.8)
+                        .foregroundStyle(AppColour.textTertiary)
 
                     Text(compactDateLine)
-                        .font(.system(size: 13).weight(.regular))
-                        .tracking(1.8)
-                        .foregroundStyle(.tertiary)
+                        .font(DS.Typography.caption)
+                        .tracking(0.8)
+                        .foregroundStyle(AppColour.textTertiary)
                 }
 
                 Spacer()
@@ -32,7 +32,7 @@ struct CoachGreetingView: View {
                         onTapScoreInfo?()
                     } label: {
                         Image(systemName: "ellipsis")
-                            .font(.system(size: 16).weight(.semibold))
+                            .font(DS.Typography.callout)
                             .foregroundStyle(.secondary)
                             .frame(width: 36, height: 36)
                             .overlay(
@@ -46,28 +46,13 @@ struct CoachGreetingView: View {
                 }
             }
 
-            // Hero line. recovery-aware body observation (the real headline)
-            if let prescription = recoveryPrescription {
-                Text(prescription)
-                    .font(.system(size: 26, weight: .semibold))
-                    .foregroundStyle(.primary)
-                    .lineLimit(3)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            } else {
-                Text(contextGreeting)
-                    .font(.system(size: 26, weight: .semibold))
-                    .foregroundStyle(.primary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-
             // Streak badge (only when relevant)
             if streakDays > 1 {
                 HStack(spacing: 3) {
                     Image(systemName: "flame.fill")
-                        .font(.system(size: 13.2))
+                        .font(DS.Typography.caption)
                     Text(Copy.Home.Greeting.streakBadge(streakDays))
-                        .font(.system(size: 13.2).weight(.bold).monospacedDigit())
+                        .font(DS.Typography.captionSemibold.monospacedDigit())
                 }
                 .foregroundStyle(.orange)
                 .padding(.horizontal, DS.space2)
@@ -120,7 +105,7 @@ struct CoachGreetingView: View {
     private var streakMilestoneOverlay: some View {
         if let milestone = SessionTracker.shared.checkStreakMilestone() {
             Text(Copy.Home.Greeting.streakMilestone(milestone))
-                .font(.system(size: 14.4).weight(.bold))
+                .font(DS.Typography.footnoteMedium)
                 .foregroundStyle(.white)
                 .padding(.horizontal, DS.space3)
                 .padding(.vertical, 6)
@@ -152,27 +137,6 @@ struct CoachGreetingView: View {
         case .afternoon: return Copy.Home.Greeting.goodAfternoon
         case .evening: return Copy.Home.Greeting.goodEvening
         case .night: return Copy.Home.Greeting.goodNight
-        }
-    }
-
-    /// Data-driven subtitle based on recovery state and time of day.
-    /// Returns nil when no recovery data is available (falls back to date-only).
-    private var recoveryPrescription: String? {
-        guard let state = recoveryState else { return nil }
-
-        switch (timeOfDay, state) {
-        case (.morning, .green):  return Copy.Home.Greeting.morningGreen
-        case (.morning, .yellow): return Copy.Home.Greeting.morningYellow
-        case (.morning, .red):    return Copy.Home.Greeting.morningRed
-        case (.afternoon, .green):  return Copy.Home.Greeting.afternoonGreen
-        case (.afternoon, .yellow): return Copy.Home.Greeting.afternoonYellow
-        case (.afternoon, .red):    return Copy.Home.Greeting.afternoonRed
-        case (.evening, .green):  return Copy.Home.Greeting.eveningGreen
-        case (.evening, .yellow): return Copy.Home.Greeting.eveningYellow
-        case (.evening, .red):    return Copy.Home.Greeting.eveningRed
-        case (.night, .green):  return Copy.Home.Greeting.nightGreen
-        case (.night, .yellow): return Copy.Home.Greeting.nightYellow
-        case (.night, .red):    return Copy.Home.Greeting.nightRed
         }
     }
 

@@ -27,12 +27,12 @@ struct VitalityHeroSection: View {
                             .postHogMask()
 
                         Text(Copy.Vitality.vitalityAgeLabel)
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(DS.Typography.caption.weight(.semibold))
                             .tracking(2)
                             .foregroundStyle(.white.opacity(0.8))
 
                         Text(deltaBadgeText)
-                            .font(.title3.weight(.bold))
+                            .font(DS.Typography.title3.weight(.bold))
                             .foregroundStyle(vitalityDeltaColor(for: scorer.delta))
                             .monospacedDigit()
                             .postHogMask()
@@ -111,11 +111,11 @@ struct VitalityHeroSection: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, DS.space2)
         }
-        .padding(18)
+        .padding(DS.cardPadding)
         .frame(maxWidth: .infinity)
-        .background(Color.black.opacity(0.95), in: RoundedRectangle(cornerRadius: 26, style: .continuous))
+        .background(AppColour.surfaceOverlay.opacity(0.95), in: RoundedRectangle(cornerRadius: DS.cardRadius, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 26, style: .continuous)
+            RoundedRectangle(cornerRadius: DS.cardRadius, style: .continuous)
                 .strokeBorder(paceTint.opacity(0.42), lineWidth: 1)
         )
         .shadow(color: paceTint.opacity(0.22), radius: 16, y: 8)
@@ -201,14 +201,14 @@ struct OrbMetricChip: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(component.metric.uppercased())
-                .font(.system(size: 11, weight: .bold))
+                .font(DS.Typography.caption2.weight(.bold))
                 .foregroundStyle(.white.opacity(0.82))
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
 
             HStack(spacing: 6) {
                 Text(valueText)
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .font(DS.Typography.caption2.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.9))
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
@@ -217,7 +217,7 @@ struct OrbMetricChip: View {
                 Spacer(minLength: 4)
 
                 Text(deltaText)
-                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .font(DS.Typography.caption2.weight(.bold))
                     .foregroundStyle(deltaTint)
                     .monospacedDigit()
                     .postHogMask()
@@ -225,16 +225,16 @@ struct OrbMetricChip: View {
 
             chipGauge
         }
-        .padding(.horizontal, 11)
-        .padding(.vertical, 10)
+        .padding(.horizontal, DS.space3)
+        .padding(.vertical, DS.space2)
         .frame(width: chipWidth)
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.black.opacity(0.72))
+            RoundedRectangle(cornerRadius: DS.Radius.md, style: .continuous)
+                .fill(AppColour.surfaceOverlay.opacity(0.72))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.1), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: DS.Radius.md, style: .continuous)
+                .strokeBorder(AppColour.borderMedium, lineWidth: 0.5)
         )
     }
 

@@ -24,7 +24,7 @@ struct StressMonitorView: View {
             .padding(.horizontal)
             .padding(.bottom, DS.space7)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppColour.surfaceBase)
         .navigationTitle(Copy.StressMonitor.title)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
@@ -41,7 +41,7 @@ struct StressMonitorView: View {
         VStack(spacing: 12) {
             // Static explainer. teaches the user what this screen is about
             Text(Copy.StressMonitor.heroExplainer)
-                .font(.caption.weight(.medium))
+                .font(DS.Typography.captionMedium)
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
@@ -51,10 +51,10 @@ struct StressMonitorView: View {
                 arcSegment(from: 0, to: 1, color: Color(.systemGray5))
 
                 // Colored arc segments
-                arcSegment(from: 0, to: 0.25, color: .green)
-                arcSegment(from: 0.25, to: 0.50, color: .yellow)
-                arcSegment(from: 0.50, to: 0.75, color: .orange)
-                arcSegment(from: 0.75, to: 1.0, color: .red)
+                arcSegment(from: 0, to: 0.25, color: AppColour.success)
+                arcSegment(from: 0.25, to: 0.50, color: AppColour.warning)
+                arcSegment(from: 0.50, to: 0.75, color: AppColour.scoreFair)
+                arcSegment(from: 0.75, to: 1.0, color: AppColour.danger)
 
                 // Needle indicator
                 needleIndicator
@@ -69,7 +69,7 @@ struct StressMonitorView: View {
                         .postHogMask()
 
                     Text(displayLevel)
-                        .font(.footnote.weight(.semibold))
+                        .font(DS.Typography.footnoteMedium)
                         .foregroundStyle(levelColor)
                         .minimumScaleFactor(0.7)
                         .lineLimit(1)
@@ -80,12 +80,12 @@ struct StressMonitorView: View {
             .frame(height: 180)
 
             Text(Copy.StressMonitor.scaleAndDirection)
-                .font(.caption2.weight(.medium))
+                .font(DS.Typography.caption2Medium)
                 .foregroundStyle(.tertiary)
 
             // Context line. what this state means + what to do. Full width, no truncation.
             Text(contextSubtitle)
-                .font(.subheadline)
+                .font(DS.Typography.subheadline)
                 .foregroundStyle(.primary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -146,7 +146,7 @@ struct StressMonitorView: View {
     private var driverSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text(Copy.StressMonitor.whatsDrivingStress)
-                .font(.headline)
+                .font(DS.Typography.headline)
 
             DriverRowView(
                 label: Copy.StressMonitor.hrvDeviation,
@@ -168,10 +168,10 @@ struct StressMonitorView: View {
     }
 
     private func driverColor(_ value: Double) -> Color {
-        if value < 0.3 { return .green }
-        if value < 0.6 { return .yellow }
-        if value < 0.8 { return .orange }
-        return .red
+        if value < 0.3 { return AppColour.success }
+        if value < 0.6 { return AppColour.warning }
+        if value < 0.8 { return AppColour.scoreFair }
+        return AppColour.danger
     }
 
     // MARK: - 7-Day Chart
@@ -179,11 +179,11 @@ struct StressMonitorView: View {
     private var weeklyChartSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text(Copy.StressMonitor.sevenDayStress)
-                .font(.headline)
+                .font(DS.Typography.headline)
 
             if weeklyScores.isEmpty {
                 Text(Copy.Common.notEnoughData)
-                    .font(.subheadline)
+                    .font(DS.Typography.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, DS.space5)
@@ -198,11 +198,11 @@ struct StressMonitorView: View {
                 // Scale labels
                 HStack {
                     Text(Copy.StressMonitor.scaleLow)
-                        .font(.caption2.weight(.medium))
+                        .font(DS.Typography.caption2Medium)
                         .foregroundStyle(.tertiary)
                     Spacer()
                     Text(Copy.StressMonitor.scaleHigh)
-                        .font(.caption2.weight(.medium))
+                        .font(DS.Typography.caption2Medium)
                         .foregroundStyle(.tertiary)
                 }
             }
@@ -213,10 +213,10 @@ struct StressMonitorView: View {
     }
 
     private func barColor(for score: Double) -> Color {
-        if score < 0.75 { return .green }
-        if score < 1.5 { return .yellow }
-        if score < 2.25 { return .orange }
-        return .red
+        if score < 0.75 { return AppColour.success }
+        if score < 1.5 { return AppColour.warning }
+        if score < 2.25 { return AppColour.scoreFair }
+        return AppColour.danger
     }
 
     // MARK: - Weekly Comparison
@@ -255,16 +255,16 @@ struct StressMonitorView: View {
         let diff = weeklyAverage - previousWeekAverage
         let improved = diff <= 0
         let arrow = improved ? "arrow.down.right" : "arrow.up.right"
-        let color: Color = improved ? .green : .red
+        let color: Color = improved ? AppColour.success : AppColour.danger
         let label = improved ? Copy.Common.improved : Copy.Common.increased
 
         return VStack(spacing: 4) {
             Image(systemName: arrow)
-                .font(.body.weight(.bold))
+                .font(DS.Typography.bodySemibold)
                 .foregroundStyle(color)
 
             Text(label)
-                .font(.caption2.weight(.medium))
+                .font(DS.Typography.caption2Medium)
                 .foregroundStyle(color)
         }
         .frame(maxWidth: .infinity)
@@ -275,18 +275,18 @@ struct StressMonitorView: View {
     private var tipsSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text(Copy.StressMonitor.reduceStress)
-                .font(.headline)
+                .font(DS.Typography.headline)
 
             ForEach(tipsForLevel, id: \.self) { tip in
                 HStack(alignment: .top, spacing: 10) {
                     Image(systemName: tipIcon)
-                        .font(.caption.weight(.semibold))
+                        .font(DS.Typography.captionSemibold)
                         .foregroundStyle(levelColor)
                         .frame(width: 20, height: 20)
                         .background(levelColor.opacity(DS.badgeBg), in: Circle())
 
                     Text(tip)
-                        .font(.subheadline)
+                        .font(DS.Typography.subheadline)
                         .foregroundStyle(.primary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -321,18 +321,18 @@ struct StressMonitorView: View {
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "lungs.fill")
-                    .font(.body.weight(.semibold))
+                    .font(DS.Typography.bodySemibold)
 
                 Text(Copy.StressMonitor.startBreathingExercise)
-                    .font(.subheadline.weight(.bold))
+                    .font(DS.Typography.subheadlineSemibold)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
+            .padding(.vertical, DS.space4)
             .foregroundStyle(.white)
-            .background(.teal, in: RoundedRectangle(cornerRadius: DS.cardRadius))
-            .shadow(color: .teal.opacity(0.3), radius: 8, y: 4)
+            .background(AppColour.accent, in: RoundedRectangle(cornerRadius: DS.cardRadius))
+            .shadow(color: AppColour.accent.opacity(0.3), radius: 8, y: 4)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
         .accessibilityLabel(Copy.StressMonitor.startBreathingA11y)
     }
 }

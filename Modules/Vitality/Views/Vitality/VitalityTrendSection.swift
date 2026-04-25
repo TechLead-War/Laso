@@ -13,7 +13,7 @@ struct VitalityTrendSection: View {
             VStack(alignment: .leading, spacing: 12) {
                 Chart {
                     RuleMark(y: .value("Chronological Age", Double(scorer.chronologicalAge)))
-                        .foregroundStyle(.red.opacity(0.45))
+                        .foregroundStyle(AppColour.danger.opacity(0.45))
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 4]))
 
                     ForEach(Array(scorer.history.enumerated()), id: \.offset) { _, point in

@@ -35,8 +35,8 @@ enum BreathingProtocol: String, CaseIterable, Identifiable {
 
     var accentColor: Color {
         switch self {
-        case .cyclicSighing: return .teal
-        case .boxBreathing: return .indigo
+        case .cyclicSighing: return AppColour.accent
+        case .boxBreathing: return AppColour.categorySleep
         }
     }
 
@@ -212,7 +212,7 @@ struct BreathworkView: View {
         LinearGradient(
             colors: [
                 accent.opacity(0.06),
-                Color(.systemGroupedBackground)
+                AppColour.surfaceBase
             ],
             startPoint: .top,
             endPoint: .bottom
@@ -232,7 +232,7 @@ struct BreathworkView: View {
                         .padding(.top, DS.space6)
 
                     Text(Copy.Breathwork.chooseYourPractice)
-                        .font(.title2.weight(.bold))
+                        .font(DS.Typography.title2)
 
                     Text(Copy.Breathwork.selectTechnique)
                         .font(DS.Typography.subheadline)
@@ -254,7 +254,7 @@ struct BreathworkView: View {
                             .font(DS.Typography.bodySemibold)
 
                         Text(Copy.Breathwork.beginSession)
-                            .font(.body.weight(.bold))
+                            .font(DS.Typography.bodySemibold)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, DS.space4)
@@ -262,7 +262,7 @@ struct BreathworkView: View {
                     .background(accent, in: RoundedRectangle(cornerRadius: DS.cardRadius))
                     .shadow(color: accent.opacity(0.3), radius: 8, y: 4)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsPress)
                 .padding(.top, DS.space1)
 
                 // Session info
@@ -316,7 +316,7 @@ struct BreathworkView: View {
                 Spacer()
 
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.title3)
+                    .font(DS.Typography.title3)
                     .foregroundStyle(isSelected ? proto.accentColor : Color(.tertiaryLabel))
             }
             .padding(DS.cardPadding)
@@ -329,7 +329,7 @@ struct BreathworkView: View {
                     )
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
     }
 
     private func infoChip(icon: String, text: String) -> some View {
@@ -378,7 +378,7 @@ struct BreathworkView: View {
 
             // Phase countdown
             Text(phaseCountdownText)
-                .font(.system(size: 48, weight: .light, design: .rounded).monospacedDigit())
+                .font(DS.Typography.displayM)
                 .foregroundStyle(.primary.opacity(0.8))
                 .contentTransition(.numericText())
 
@@ -387,7 +387,7 @@ struct BreathworkView: View {
 
             // Session timer
             Text("\(formattedDuration(selectedProtocol.sessionDuration - sessionTimeRemaining)) / \(formattedDuration(selectedProtocol.sessionDuration))")
-                .font(.subheadline.weight(.medium).monospacedDigit())
+                .font(DS.Typography.subheadlineMedium.monospacedDigit())
                 .foregroundStyle(.secondary)
 
             Spacer()
@@ -462,7 +462,7 @@ struct BreathworkView: View {
                     .frame(width: 56, height: 56)
                     .background(.ultraThinMaterial, in: Circle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsPress)
 
             // Play / Pause button
             Button {
@@ -475,7 +475,7 @@ struct BreathworkView: View {
                     .background(accent, in: Circle())
                     .shadow(color: accent.opacity(0.3), radius: 8, y: 4)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsPress)
 
             // Spacer for symmetry
             Color.clear
@@ -491,7 +491,7 @@ struct BreathworkView: View {
 
             // Checkmark
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 64))
+                .font(DS.Typography.largeIcon)
                 .foregroundStyle(accent)
 
             VStack(spacing: 6) {
@@ -529,14 +529,14 @@ struct BreathworkView: View {
                 dismiss()
             } label: {
                 Text("Done")
-                    .font(.body.weight(.bold))
+                    .font(DS.Typography.bodySemibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, DS.space4)
                     .foregroundStyle(.white)
                     .background(accent, in: RoundedRectangle(cornerRadius: DS.cardRadius))
                     .shadow(color: accent.opacity(0.3), radius: 8, y: 4)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsPress)
             .padding(.horizontal)
             .padding(.bottom, DS.space7)
         }
@@ -552,7 +552,7 @@ struct BreathworkView: View {
         } label: {
             VStack(spacing: 6) {
                 Image(systemName: mood.icon)
-                    .font(.title2)
+                    .font(DS.Typography.title2)
                     .foregroundStyle(isSelected ? accent : .secondary)
 
                 Text(mood.rawValue)
@@ -563,14 +563,14 @@ struct BreathworkView: View {
             .padding(.vertical, DS.space3)
             .background(
                 isSelected ? accent.opacity(DS.badgeBg) : Color.clear,
-                in: RoundedRectangle(cornerRadius: 12)
+                in: RoundedRectangle(cornerRadius: DS.Radius.md)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: DS.Radius.md)
                     .strokeBorder(isSelected ? accent.opacity(0.4) : Color(.tertiarySystemFill), lineWidth: 1)
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
     }
 
     // MARK: - Timer Logic

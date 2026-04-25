@@ -5,38 +5,38 @@ struct LiveStaleVitalsPrompt: View {
     let primaryDevice: SupportedDevice?
 
     var body: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 14) {
+        VStack(spacing: DS.cardPadding) {
+            HStack(spacing: DS.itemSpacing) {
                 Image(systemName: primaryDevice?.systemImageName ?? "waveform.path.ecg")
-                    .font(.title2)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.title2)
+                    .foregroundStyle(AppColour.textSecondary)
                     .frame(width: 40)
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: DS.space1) {
                     Text(promptTitle)
-                        .font(.subheadline.weight(.semibold))
+                        .font(DS.Typography.subheadlineSemibold)
 
                     Text(promptBody)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textSecondary)
                         .lineLimit(2)
                 }
             }
-            .padding(14)
+            .padding(DS.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
+            .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.md))
             .padding(.horizontal)
 
             // Last known readings. compact muted row
             if vitals.hasAnyData {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: DS.space2) {
                     HStack(spacing: 6) {
                         Image(systemName: "clock.arrow.circlepath")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.captionSemibold)
+                            .foregroundStyle(AppColour.textSecondary)
                         Text("Last Known Readings")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.captionSemibold)
+                            .foregroundStyle(AppColour.textSecondary)
                     }
 
                     HStack(spacing: 16) {
@@ -77,24 +77,24 @@ struct LiveStaleVitalsPrompt: View {
     }
 
     private func staleReadingPill(icon: String, color: Color, value: String, unit: String, timestamp: Date?) -> some View {
-        VStack(spacing: 4) {
+        VStack(spacing: DS.space1) {
             HStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.caption2)
+                    .font(DS.Typography.caption2)
                     .foregroundStyle(color.opacity(0.6))
                 HStack(alignment: .firstTextBaseline, spacing: 1) {
                     Text(value)
-                        .font(.subheadline.weight(.semibold).monospacedDigit())
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.subheadlineSemibold.monospacedDigit())
+                        .foregroundStyle(AppColour.textSecondary)
                     Text(unit)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(AppColour.textTertiary)
                 }
             }
             if let ts = timestamp {
                 Text(ts, style: .relative)
-                    .font(.caption2)
-                    .foregroundStyle(.quaternary)
+                    .font(DS.Typography.caption2)
+                    .foregroundStyle(AppColour.textQuaternary)
             }
         }
         .frame(maxWidth: .infinity)
@@ -121,31 +121,31 @@ struct LiveWaitingForDataView: View {
     let hasLiveSource: Bool
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: DS.sectionSpacing) {
             Spacer().frame(height: 40)
 
             Image(systemName: primaryDevice?.systemImageName ?? "waveform.path.ecg")
                 .font(DS.Typography.heroIcon)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
                 .symbolEffect(.pulse, isActive: isStreaming)
 
-            VStack(spacing: 8) {
+            VStack(spacing: DS.space2) {
                 Text(titleText)
-                    .font(.title3.weight(.semibold))
+                    .font(DS.Typography.title3)
 
                 Text(bodyText)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.subheadline)
+                    .foregroundStyle(AppColour.textSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, DS.space7)
 
                 Text(footnoteText)
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-                    .padding(.top, 2)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textTertiary)
+                    .padding(.top, DS.space1)
             }
 
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: DS.itemSpacing) {
                 ForEach(tips, id: \.text) { tip in
                     tipRow(icon: tip.icon, text: tip.text)
                 }
@@ -161,14 +161,14 @@ struct LiveWaitingForDataView: View {
     }
 
     private func tipRow(icon: String, text: String) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DS.itemSpacing) {
             Image(systemName: icon)
-                .font(.body)
-                .foregroundStyle(.blue)
+                .font(DS.Typography.body)
+                .foregroundStyle(AppColour.info)
                 .frame(width: 28)
             Text(text)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.subheadline)
+                .foregroundStyle(AppColour.textSecondary)
         }
     }
 

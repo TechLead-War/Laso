@@ -14,19 +14,19 @@ struct OnboardingPromiseStep: View {
             Spacer()
 
             Image(systemName: "calendar.badge.clock")
-                .font(.system(size: 36, weight: .medium))
-                .foregroundStyle(.blue)
+                .font(DS.Typography.mediumIcon)
+                .foregroundStyle(AppColour.info)
                 .frame(width: 72, height: 72)
-                .background(Color.blue.opacity(0.12), in: Circle())
+                .background(AppColour.info.opacity(DS.badgeBg), in: Circle())
                 .padding(.bottom, DS.space5)
 
             Text(Copy.Onboarding.promiseTitle)
-                .font(.title2.weight(.bold))
-                .padding(.bottom, 10)
+                .font(DS.Typography.title2)
+                .padding(.bottom, DS.itemSpacing)
 
             Text(promiseCopy)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.subheadline)
+                .foregroundStyle(AppColour.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, DS.space7)
 
@@ -53,11 +53,8 @@ struct OnboardingPromiseStep: View {
                 onOpen()
             } label: {
                 Text(Copy.Onboarding.promiseOpen)
-                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .font(.headline)
+            .buttonStyle(.dsPrimary)
             .padding(.horizontal, DS.space6)
             .padding(.bottom, DS.space8)
             .accessibilityIdentifier("onboarding.promiseOpen")
@@ -80,33 +77,33 @@ struct OnboardingPromiseStep: View {
     }
 
     private var siriTipCard: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: DS.itemSpacing) {
             Image(systemName: "mic.fill")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(.blue)
+                .font(DS.Typography.calloutSemibold)
+                .foregroundStyle(AppColour.info)
                 .frame(width: 32, height: 32)
-                .background(Color.blue.opacity(0.12), in: Circle())
+                .background(AppColour.info.opacity(DS.badgeBg), in: Circle())
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DS.space1) {
                 Text(Copy.Onboarding.worksWithSiri)
-                    .font(.subheadline.weight(.semibold))
+                    .font(DS.Typography.subheadlineSemibold)
                 Text(Copy.Onboarding.siriTip)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
             }
 
             Spacer(minLength: 0)
         }
         .padding(DS.space3)
-        .background(Color.blue.opacity(0.06), in: RoundedRectangle(cornerRadius: 12))
+        .background(AppColour.info.opacity(0.06), in: RoundedRectangle(cornerRadius: DS.Radius.md))
         .padding(.horizontal, DS.space6)
     }
 
     private var disclaimerFooter: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: DS.space1) {
             Text(Copy.Onboarding.promiseDisclaimerFooter)
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+                .font(DS.Typography.caption2)
+                .foregroundStyle(AppColour.textTertiary)
                 .multilineTextAlignment(.center)
 
             Button {
@@ -119,8 +116,8 @@ struct OnboardingPromiseStep: View {
                 showFullDisclaimer = true
             } label: {
                 Text(Copy.Onboarding.promiseDisclaimerLearnMore)
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.blue)
+                    .font(DS.Typography.caption2Semibold)
+                    .foregroundStyle(AppColour.info)
             }
             .accessibilityIdentifier("onboarding.promiseDisclaimerLearnMore")
         }

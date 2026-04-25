@@ -80,7 +80,7 @@ struct CorrelationsView: View {
             }
             .padding(.vertical)
         }
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppColour.surfaceBase.ignoresSafeArea())
         .accessibilityIdentifier("screen.correlations")
         .navigationTitle("Health Intelligence")
         .navigationBarTitleDisplayMode(.large)
@@ -97,7 +97,7 @@ struct CorrelationsView: View {
 
     private var discoverySection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            sectionHeader(title: Copy.Insights.Correlations.keyDiscoveries, icon: "lightbulb.max.fill", color: .orange)
+            sectionHeader(title: Copy.Insights.Correlations.keyDiscoveries, icon: "lightbulb.max.fill", color: AppColour.warning)
                 .padding(.horizontal)
 
             ForEach(Array(compoundInsights.prefix(5).enumerated()), id: \.offset) { _, insight in
@@ -151,7 +151,7 @@ struct CorrelationsView: View {
     private var connectionsSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Button {
-                withAnimation(.easeInOut(duration: 0.25)) {
+                withAnimation(DS.Motion.toast) {
                     showAllConnections.toggle()
                 }
             } label: {
@@ -166,7 +166,7 @@ struct CorrelationsView: View {
 
                     HStack(spacing: 4) {
                         Text("\(unmatchedCorrelations.count)")
-                            .font(.subheadline.weight(.medium).monospacedDigit())
+                            .font(DS.Typography.subheadlineMedium.monospacedDigit())
                             .foregroundStyle(.secondary)
                         Image(systemName: showAllConnections ? "chevron.up" : "chevron.down")
                             .font(DS.Typography.caption2Semibold)
@@ -174,11 +174,11 @@ struct CorrelationsView: View {
                     }
                 }
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsPress)
             .padding(.horizontal)
 
             if showAllConnections {
-                LazyVStack(spacing: 8) {
+                LazyVStack(spacing: DS.space2) {
                     ForEach(unmatchedCorrelations) { correlation in
                         CompactCorrelationRow(correlation: correlation) {
                             AppAnalytics.shared.trackCorrelationTapped(
@@ -237,9 +237,9 @@ private struct CompoundInsightCard: View {
 
     var body: some View {
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: DS.space2) {
                 // Category + severity header
-                HStack(spacing: 6) {
+                HStack(spacing: DS.space2) {
                     Image(systemName: categoryIcon)
                         .font(DS.Typography.captionSemibold)
                         .foregroundStyle(.white)
@@ -247,7 +247,7 @@ private struct CompoundInsightCard: View {
                         .background(categoryColor, in: Circle())
 
                     Text(insight.category.rawValue.camelCaseToWords.capitalized)
-                        .font(.caption2.weight(.bold))
+                        .font(DS.Typography.caption2Semibold)
                         .foregroundStyle(categoryColor)
                         .textCase(.uppercase)
 
@@ -272,7 +272,7 @@ private struct CompoundInsightCard: View {
                     .lineLimit(3)
 
                 // Metrics involved + action hint
-                HStack(spacing: 6) {
+                HStack(spacing: DS.space2) {
                     ForEach(insight.involvedMetrics.prefix(4), id: \.rawValue) { metric in
                         Image(systemName: metric.systemImageName)
                             .font(DS.Typography.caption2)
@@ -292,10 +292,10 @@ private struct CompoundInsightCard: View {
                     if insight.isActionable {
                         Text("Actionable")
                             .font(DS.Typography.caption2Semibold)
-                            .foregroundStyle(.green)
+                            .foregroundStyle(AppColour.success)
                             .padding(.horizontal, DS.badgeH)
                             .padding(.vertical, DS.badgeV)
-                            .background(.green.opacity(DS.badgeBg), in: Capsule())
+                            .background(AppColour.success.opacity(DS.badgeBg), in: Capsule())
                     }
 
                     Image(systemName: "chevron.right")
@@ -306,7 +306,7 @@ private struct CompoundInsightCard: View {
             .padding(DS.cardPadding)
             .cardStyle(tint: categoryColor)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(insight.title)
         .accessibilityValue(insight.narrative)
@@ -328,14 +328,14 @@ private struct CompoundInsightCard: View {
 
     private var categoryColor: Color {
         switch insight.category {
-        case .trajectory: return .blue
-        case .hiddenPattern: return .indigo
-        case .causeAndEffect: return .purple
-        case .personalRecord: return .yellow
-        case .riskWarning: return .red
-        case .optimization: return .cyan
-        case .recovery: return .green
-        case .breakthrough: return .orange
+        case .trajectory: return AppColour.info
+        case .hiddenPattern: return AppColour.categorySleep
+        case .causeAndEffect: return AppColour.categoryStress
+        case .personalRecord: return AppColour.warning
+        case .riskWarning: return AppColour.danger
+        case .optimization: return AppColour.accent
+        case .recovery: return AppColour.success
+        case .breakthrough: return AppColour.warning
         }
     }
 }
@@ -351,20 +351,20 @@ struct CausalChainCard: View {
     @State private var showEvidence = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: DS.space2) {
             Button(action: onTap) {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: DS.space2) {
                     // Chain visualization: metric icons connected by arrows
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 6) {
+                        HStack(spacing: DS.space2) {
                             ForEach(Array(chain.links.enumerated()), id: \.offset) { index, link in
                                 if index == 0 {
                                     metricPill(link.causeMetric, deviation: link.causeDeviation)
                                 }
 
                                 Image(systemName: "arrow.right")
-                                    .font(.caption2.weight(.bold))
-                                    .foregroundStyle(.purple.opacity(0.6))
+                                    .font(DS.Typography.caption2Semibold)
+                                    .foregroundStyle(AppColour.categoryStress.opacity(0.6))
 
                                 metricPill(link.effectMetric, deviation: link.effectDeviation)
                             }
@@ -394,15 +394,15 @@ struct CausalChainCard: View {
                     }
                 }
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsPress)
 
             if !evidence.isEmpty {
                 Divider().opacity(0.5)
 
                 Button {
-                    withAnimation(.easeInOut(duration: 0.2)) { showEvidence.toggle() }
+                    withAnimation(DS.Motion.toast) { showEvidence.toggle() }
                 } label: {
-                    HStack(spacing: 6) {
+                    HStack(spacing: DS.space2) {
                         Image(systemName: "list.bullet.rectangle")
                             .font(DS.Typography.captionSemibold)
                             .foregroundStyle(.purple)
@@ -410,7 +410,7 @@ struct CausalChainCard: View {
                             .font(DS.Typography.subheadlineSemibold)
                             .foregroundStyle(.primary)
                         Text("\(evidence.count)")
-                            .font(.caption.weight(.medium).monospacedDigit())
+                            .font(DS.Typography.captionMedium.monospacedDigit())
                             .foregroundStyle(.secondary)
                         Spacer()
                         Image(systemName: showEvidence ? "chevron.up" : "chevron.down")
@@ -418,10 +418,10 @@ struct CausalChainCard: View {
                             .foregroundStyle(.tertiary)
                     }
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsPress)
 
                 if showEvidence {
-                    VStack(spacing: 6) {
+                    VStack(spacing: DS.space2) {
                         ForEach(evidence) { c in
                             CompactCorrelationRow(correlation: c) {
                                 onTap()
@@ -446,12 +446,12 @@ struct CausalChainCard: View {
 
             if abs(deviation) >= 5 {
                 Text("\(deviation > 0 ? "+" : "")\(Int(deviation))%")
-                    .font(.system(size: 10, weight: .bold).monospacedDigit())
-                    .foregroundStyle(deviation > 0 ? .green : .red)
+                    .font(DS.Typography.caption2Semibold.monospacedDigit())
+                    .foregroundStyle(deviation > 0 ? AppColour.success : AppColour.danger)
             }
         }
         .padding(.horizontal, DS.space2)
-        .padding(.vertical, 5)
+        .padding(.vertical, DS.space1)
         .background(metric.category.color.opacity(0.08), in: Capsule())
     }
 }
@@ -465,7 +465,7 @@ private struct InteractionEffectCard: View {
 
     var body: some View {
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: DS.space2) {
                 // Effect type badge + metrics
                 HStack(spacing: 8) {
                     Image(systemName: effectTypeIcon)
@@ -475,7 +475,7 @@ private struct InteractionEffectCard: View {
                         .background(.cyan, in: Circle())
 
                     Text(effectTypeLabel)
-                        .font(.caption2.weight(.bold))
+                        .font(DS.Typography.caption2Semibold)
                         .foregroundStyle(.cyan)
                         .textCase(.uppercase)
 
@@ -486,7 +486,7 @@ private struct InteractionEffectCard: View {
                             .font(DS.Typography.caption2)
                             .foregroundStyle(effect.cause.category.color)
                         Image(systemName: "arrow.right")
-                            .font(.system(size: 8, weight: .bold))
+                            .font(DS.Typography.caption2)
                             .foregroundStyle(.tertiary)
                         Image(systemName: effect.effect.systemImageName)
                             .font(DS.Typography.caption2)
@@ -527,7 +527,7 @@ private struct InteractionEffectCard: View {
             .padding(DS.cardPadding)
             .cardStyle(tint: .cyan)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(effectTypeLabel): \(effect.cause.displayName) affects \(effect.effect.displayName)")
         .accessibilityValue(effect.description)
@@ -578,7 +578,7 @@ private struct CompactCorrelationRow: View {
                     .background(correlation.metricA.category.color.opacity(0.12), in: Circle())
 
                 Image(systemName: "arrow.right")
-                    .font(.caption2.weight(.bold))
+                    .font(DS.Typography.caption2Semibold)
                     .foregroundStyle(.tertiary)
 
                 Image(systemName: correlation.metricB.systemImageName)
@@ -587,7 +587,7 @@ private struct CompactCorrelationRow: View {
                     .frame(width: 28, height: 28)
                     .background(correlation.metricB.category.color.opacity(0.12), in: Circle())
 
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: DS.space1) {
                     Text("\(correlation.causeLabel) → \(correlation.effectLabel)")
                         .font(DS.Typography.subheadlineMedium)
                         .foregroundStyle(.primary)
@@ -608,9 +608,9 @@ private struct CompactCorrelationRow: View {
             }
             .padding(.vertical, DS.space2)
             .padding(.horizontal, DS.space3)
-            .background(.background, in: RoundedRectangle(cornerRadius: 10))
+            .background(.background, in: RoundedRectangle(cornerRadius: DS.Radius.sm))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
     }
 }
 
@@ -620,11 +620,11 @@ private struct ConfidenceBadge: View {
     let confidence: Double
 
     var body: some View {
-        HStack(spacing: 3) {
+        HStack(spacing: DS.space1) {
             Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 9))
+                .font(DS.Typography.caption2)
             Text("\(Int(confidence * 100))%")
-                .font(.caption2.weight(.bold).monospacedDigit())
+                .font(DS.Typography.caption2Semibold.monospacedDigit())
         }
         .foregroundStyle(badgeColor)
         .padding(.horizontal, DS.badgeH)
@@ -633,9 +633,9 @@ private struct ConfidenceBadge: View {
     }
 
     private var badgeColor: Color {
-        if confidence >= 0.8 { return .green }
-        if confidence >= 0.6 { return .yellow }
-        return .orange
+        if confidence >= 0.8 { return AppColour.success }
+        if confidence >= 0.6 { return AppColour.warning }
+        return AppColour.warning
     }
 }
 
@@ -643,7 +643,7 @@ private struct StrengthDots: View {
     let strength: Double
 
     var body: some View {
-        HStack(spacing: 3) {
+        HStack(spacing: DS.space1) {
             ForEach(0..<3, id: \.self) { index in
                 Circle()
                     .fill(index < filledCount ? AppColour.accent : AppColour.accent.opacity(0.2))

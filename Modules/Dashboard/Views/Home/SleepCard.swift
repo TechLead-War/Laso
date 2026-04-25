@@ -28,10 +28,10 @@ struct SleepCard: View {
                                 .frame(width: DS.iconSize, height: DS.iconSize)
                                 .background(.indigo, in: Circle())
 
-                            VStack(alignment: .leading, spacing: 2) {
+                            VStack(alignment: .leading, spacing: DS.space1) {
                                 Text("Last Night's Sleep")
-                                    .font(.system(size: 14.4).weight(.semibold))
-                                    .foregroundStyle(.secondary)
+                                    .font(DS.Typography.calloutSemibold)
+                                    .foregroundStyle(AppColour.textSecondary)
                                     .textCase(.uppercase)
 
                                 HStack(spacing: 6) {
@@ -48,16 +48,16 @@ struct SleepCard: View {
                             Spacer()
 
                             Text(liveVM.sleep.sleepQualityLabel)
-                                .font(.system(size: 14.4).weight(.bold))
+                                .font(DS.Typography.calloutSemibold)
                                 .foregroundStyle(qualityColor)
                                 .padding(.horizontal, DS.badgeH)
                                 .padding(.vertical, DS.badgeV)
                                 .background(qualityColor.opacity(DS.badgeBg), in: Capsule())
 
                             Image(systemName: "chevron.right")
-                                .font(.system(size: 13.2).weight(.semibold))
-                                .foregroundStyle(.tertiary)
-                                .padding(.leading, 6)
+                                .font(DS.Typography.footnoteMedium)
+                                .foregroundStyle(AppColour.textTertiary)
+                                .padding(.leading, DS.space1)
                         }
 
                         // Stage breakdown bar
@@ -76,8 +76,8 @@ struct SleepCard: View {
                         // B=MAP prompt. visible when sleep quality is poor (high motivation moment)
                         if liveVM.sleep.sleepQualityLabel == "Fair" || liveVM.sleep.sleepQualityLabel == "Poor" {
                             Text(Copy.Home.seeSleepTips)
-                                .font(.system(size: 13.2).weight(.medium))
-                                .foregroundStyle(.blue)
+                                .font(DS.Typography.footnoteMedium)
+                                .foregroundStyle(AppColour.info)
                         }
                     }
                     .padding(.leading, DS.accentLeading)
@@ -86,7 +86,7 @@ struct SleepCard: View {
                 }
                 .cardStyle(tint: .indigo)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsPress)
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Last night's sleep \(formatDuration(hours)), \(liveVM.sleep.sleepQualityLabel)")
             .accessibilityHint("View sleep details")
@@ -103,10 +103,10 @@ struct SleepCard: View {
                 let total = liveVM.sleep.lastNightDeepSleep + liveVM.sleep.lastNightREMSleep + liveVM.sleep.lastNightCoreSleep + liveVM.sleep.lastNightAwakeTime
                 if total > 0 {
                     HStack(spacing: 1.5) {
-                        stageSegment(duration: liveVM.sleep.lastNightDeepSleep, total: total, color: .purple, width: geo.size.width)
-                        stageSegment(duration: liveVM.sleep.lastNightREMSleep, total: total, color: .blue, width: geo.size.width)
-                        stageSegment(duration: liveVM.sleep.lastNightCoreSleep, total: total, color: .cyan, width: geo.size.width)
-                        stageSegment(duration: liveVM.sleep.lastNightAwakeTime, total: total, color: Color(.systemGray4), width: geo.size.width)
+                        stageSegment(duration: liveVM.sleep.lastNightDeepSleep, total: total, color: AppColour.categoryStress, width: geo.size.width)
+                        stageSegment(duration: liveVM.sleep.lastNightREMSleep, total: total, color: AppColour.info, width: geo.size.width)
+                        stageSegment(duration: liveVM.sleep.lastNightCoreSleep, total: total, color: AppColour.categorySleep, width: geo.size.width)
+                        stageSegment(duration: liveVM.sleep.lastNightAwakeTime, total: total, color: AppColour.textTertiary, width: geo.size.width)
                     }
                 }
             }
@@ -114,11 +114,11 @@ struct SleepCard: View {
             .clipShape(Capsule())
 
             // Legend
-            HStack(spacing: 12) {
-                stageLegend(label: "Deep", duration: liveVM.sleep.lastNightDeepSleep, color: .purple)
-                stageLegend(label: "REM", duration: liveVM.sleep.lastNightREMSleep, color: .blue)
-                stageLegend(label: "Core", duration: liveVM.sleep.lastNightCoreSleep, color: .cyan)
-                stageLegend(label: "Awake", duration: liveVM.sleep.lastNightAwakeTime, color: Color(.systemGray4))
+            HStack(spacing: DS.space3) {
+                stageLegend(label: "Deep", duration: liveVM.sleep.lastNightDeepSleep, color: AppColour.categoryStress)
+                stageLegend(label: "REM", duration: liveVM.sleep.lastNightREMSleep, color: AppColour.info)
+                stageLegend(label: "Core", duration: liveVM.sleep.lastNightCoreSleep, color: AppColour.categorySleep)
+                stageLegend(label: "Awake", duration: liveVM.sleep.lastNightAwakeTime, color: AppColour.textTertiary)
             }
         }
     }
@@ -131,13 +131,13 @@ struct SleepCard: View {
     }
 
     private func stageLegend(label: String, duration: TimeInterval, color: Color) -> some View {
-        HStack(spacing: 3) {
+        HStack(spacing: DS.space1) {
             Circle()
                 .fill(color)
                 .frame(width: 6, height: 6)
             Text("\(label) \(formatDuration(duration / 3600))")
-                .font(.system(size: 13.2).weight(.medium))
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.footnoteMedium)
+                .foregroundStyle(AppColour.textSecondary)
                 .postHogMask()
         }
     }
@@ -148,21 +148,22 @@ struct SleepCard: View {
         let diff = current - baseline
         let percent = baseline > 0 ? (diff / baseline) * 100 : 0
         let arrow = diff >= 0 ? "+" : ""
+        let labelColor: Color = diff >= 0 ? AppColour.success : AppColour.warning
         return Text("\(arrow)\(Int(percent))% vs avg")
-            .font(.system(size: 13.2).weight(.medium))
-            .foregroundStyle(diff >= 0 ? .green : .orange)
+            .font(DS.Typography.footnoteMedium)
+            .foregroundStyle(labelColor)
             .padding(.horizontal, DS.badgeH)
             .padding(.vertical, DS.badgeV)
-            .background((diff >= 0 ? Color.green : Color.orange).opacity(0.1), in: Capsule())
+            .background(labelColor.opacity(DS.badgeBg), in: Capsule())
             .postHogMask()
     }
 
     private var qualityColor: Color {
         switch liveVM.sleep.sleepQualityLabel {
-        case "Great": return .green
-        case "Good": return .blue
-        case "Fair": return .orange
-        default: return .red
+        case "Great": return AppColour.scoreOptimal
+        case "Good": return AppColour.scoreGood
+        case "Fair": return AppColour.warning
+        default: return AppColour.danger
         }
     }
 

@@ -16,11 +16,11 @@ struct RecoveryInfoSheet: View {
                         HealthScoreRing(score: score, label: "Recovery", size: 120, lineWidth: 12)
 
                         Text(Copy.Home.RecoveryInfo.title)
-                            .font(.system(size: 24).weight(.semibold))
+                            .font(DS.Typography.title2)
 
                         Text(Copy.Home.RecoveryInfo.description)
-                            .font(.system(size: 18))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.body)
+                            .foregroundStyle(AppColour.textSecondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, DS.space5)
                     }
@@ -29,50 +29,50 @@ struct RecoveryInfoSheet: View {
                     // MARK: - Score Levels
                     VStack(alignment: .leading, spacing: 10) {
                         Text(Copy.Home.RecoveryInfo.scoreLevels)
-                            .font(.system(size: 20.4, weight: .semibold))
+                            .font(DS.Typography.title3)
                             .padding(.horizontal, DS.screenPadding)
 
                         VStack(spacing: 0) {
                             scoreLevelRow(
                                 range: Copy.Home.RecoveryInfo.fullyRecoveredRange,
                                 label: Copy.Home.RecoveryInfo.fullyRecoveredLabel,
-                                color: .green,
+                                color: AppColour.success,
                                 description: Copy.Home.RecoveryInfo.fullyRecoveredDescription
                             )
                             Divider().padding(.leading, 52)
                             scoreLevelRow(
                                 range: Copy.Home.RecoveryInfo.moderateRange,
                                 label: Copy.Home.RecoveryInfo.moderateLabel,
-                                color: .yellow,
+                                color: AppColour.warning,
                                 description: Copy.Home.RecoveryInfo.moderateDescription
                             )
                             Divider().padding(.leading, 52)
                             scoreLevelRow(
                                 range: Copy.Home.RecoveryInfo.lowRange,
                                 label: Copy.Home.RecoveryInfo.lowLabel,
-                                color: .red,
+                                color: AppColour.danger,
                                 description: Copy.Home.RecoveryInfo.lowDescription
                             )
                         }
-                        .background(.background, in: RoundedRectangle(cornerRadius: 16))
+                        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
                         .padding(.horizontal, DS.screenPadding)
                     }
 
                     // MARK: - How it's calculated
                     VStack(alignment: .leading, spacing: 10) {
                         Text(Copy.Home.RecoveryInfo.howItsCalculated)
-                            .font(.system(size: 20.4, weight: .semibold))
+                            .font(DS.Typography.title3)
                             .padding(.horizontal, DS.screenPadding)
 
                         Text(Copy.Home.RecoveryInfo.howItsCalculatedBody)
-                            .font(.system(size: 18))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.body)
+                            .foregroundStyle(AppColour.textSecondary)
                             .padding(.horizontal, DS.screenPadding)
 
                         VStack(spacing: 0) {
                             factorRow(
                                 icon: "waveform.path.ecg",
-                                color: .purple,
+                                color: AppColour.categoryStress,
                                 name: Copy.Home.RecoveryInfo.hrvName,
                                 weight: Copy.Home.RecoveryInfo.hrvWeight,
                                 detail: Copy.Home.RecoveryInfo.hrvDetail
@@ -80,7 +80,7 @@ struct RecoveryInfoSheet: View {
                             Divider().padding(.leading, 52)
                             factorRow(
                                 icon: "heart.fill",
-                                color: .red,
+                                color: AppColour.categoryHeart,
                                 name: Copy.Home.RecoveryInfo.restingHRName,
                                 weight: Copy.Home.RecoveryInfo.restingHRWeight,
                                 detail: Copy.Home.RecoveryInfo.restingHRDetail
@@ -88,7 +88,7 @@ struct RecoveryInfoSheet: View {
                             Divider().padding(.leading, 52)
                             factorRow(
                                 icon: "bed.double.fill",
-                                color: .indigo,
+                                color: AppColour.categorySleep,
                                 name: Copy.Home.RecoveryInfo.sleepDurationName,
                                 weight: Copy.Home.RecoveryInfo.sleepDurationWeight,
                                 detail: Copy.Home.RecoveryInfo.sleepDurationDetail
@@ -96,7 +96,7 @@ struct RecoveryInfoSheet: View {
                             Divider().padding(.leading, 52)
                             factorRow(
                                 icon: "moon.stars.fill",
-                                color: .blue,
+                                color: AppColour.info,
                                 name: Copy.Home.RecoveryInfo.sleepQualityName,
                                 weight: Copy.Home.RecoveryInfo.sleepQualityWeight,
                                 detail: Copy.Home.RecoveryInfo.sleepQualityDetail
@@ -104,13 +104,13 @@ struct RecoveryInfoSheet: View {
                             Divider().padding(.leading, 52)
                             factorRow(
                                 icon: "figure.run",
-                                color: .green,
+                                color: AppColour.success,
                                 name: Copy.Home.RecoveryInfo.workoutRecoveryName,
                                 weight: Copy.Home.RecoveryInfo.workoutRecoveryWeight,
                                 detail: Copy.Home.RecoveryInfo.workoutRecoveryDetail
                             )
                         }
-                        .background(.background, in: RoundedRectangle(cornerRadius: 16))
+                        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
                         .padding(.horizontal, DS.screenPadding)
                     }
 
@@ -122,27 +122,27 @@ struct RecoveryInfoSheet: View {
                         .padding(.horizontal, DS.screenPadding)
 
                     // MARK: - When does it update?
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(spacing: 8) {
+                    VStack(alignment: .leading, spacing: DS.space2) {
+                        HStack(spacing: DS.space2) {
                             Image(systemName: "clock.arrow.circlepath")
-                                .font(.system(size: 19.2))
-                                .foregroundStyle(.blue)
+                                .font(DS.Typography.bodySemibold)
+                                .foregroundStyle(AppColour.info)
                             Text(Copy.Home.RecoveryInfo.whenItUpdatesTitle)
-                                .font(.system(size: 18).weight(.medium))
+                                .font(DS.Typography.bodyMedium)
                         }
 
                         Text(Copy.Home.RecoveryInfo.whenItUpdatesBody)
-                            .font(.system(size: 14.4))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.callout)
+                            .foregroundStyle(AppColour.textSecondary)
                     }
                     .padding()
-                    .background(.background, in: RoundedRectangle(cornerRadius: 16))
+                    .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
                     .padding(.horizontal, DS.screenPadding)
                     .padding(.bottom, DS.space4)
 
                     Text(Copy.Analysis.RiskDetail.disclaimer)
-                        .font(.system(size: 13.2))
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.footnote)
+                        .foregroundStyle(AppColour.textSecondary)
                         .multilineTextAlignment(.leading)
                         .padding(.horizontal, DS.screenPadding)
                         .padding(.top, DS.space6)
@@ -166,7 +166,7 @@ struct RecoveryInfoSheet: View {
                         contentTracker.tapped(target: "done")
                         dismiss()
                     }
-                        .font(.system(size: 18).weight(.medium))
+                        .font(DS.Typography.bodyMedium)
                 }
             }
         }
@@ -183,23 +183,23 @@ struct RecoveryInfoSheet: View {
     // MARK: - Score Level Row
 
     private func scoreLevelRow(range: String, label: String, color: Color, description: String) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DS.space3) {
             Circle()
                 .fill(color)
                 .frame(width: 10, height: 10)
                 .frame(width: 24)
 
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: DS.space1) {
+                HStack(spacing: DS.space1) {
                     Text(range)
-                        .font(.system(size: 18).weight(.semibold))
+                        .font(DS.Typography.bodySemibold)
                     Text(label)
-                        .font(.system(size: 14.4).weight(.medium))
+                        .font(DS.Typography.calloutSemibold)
                         .foregroundStyle(color)
                 }
                 Text(description)
-                    .font(.system(size: 14.4))
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.callout)
+                    .foregroundStyle(AppColour.textSecondary)
             }
 
             Spacer()
@@ -211,23 +211,23 @@ struct RecoveryInfoSheet: View {
     // MARK: - Factor Row
 
     private func factorRow(icon: String, color: Color, name: String, weight: String, detail: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: DS.space3) {
             Image(systemName: icon)
-                .font(.system(size: 19.2))
+                .font(DS.Typography.bodySemibold)
                 .foregroundStyle(color)
                 .frame(width: 24)
 
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: DS.space1) {
+                HStack(spacing: DS.space1) {
                     Text(name)
-                        .font(.system(size: 18).weight(.medium))
+                        .font(DS.Typography.bodyMedium)
                     Text(weight)
-                        .font(.system(size: 13.2))
-                        .foregroundStyle(.tertiary)
+                        .font(DS.Typography.footnote)
+                        .foregroundStyle(AppColour.textTertiary)
                 }
                 Text(detail)
-                    .font(.system(size: 14.4))
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.callout)
+                    .foregroundStyle(AppColour.textSecondary)
             }
 
             Spacer()

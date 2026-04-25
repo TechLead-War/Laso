@@ -11,54 +11,54 @@ struct WeeklyReviewEntryCard: View {
         Group {
             if let review = viewModel.review {
                 Button(action: onTap) {
-                    HStack(spacing: 12) {
+                    HStack(spacing: DS.space3) {
                         Image(systemName: "calendar.badge.clock")
-                            .font(.system(size: 24).weight(.semibold))
-                            .foregroundStyle(.blue)
+                            .font(DS.Typography.mediumIcon)
+                            .foregroundStyle(AppColour.info)
 
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: DS.space1) {
                             Text(Copy.Reports.WeeklyReviewView.title)
-                                .font(.system(size: 18).weight(.semibold))
-                                .foregroundStyle(.primary)
+                                .font(DS.Typography.bodySemibold)
+                                .foregroundStyle(AppColour.textPrimary)
 
-                            HStack(spacing: 6) {
+                            HStack(spacing: DS.space1) {
                                 Text(Copy.Reports.WeeklyReviewView.score(review.currentScore))
-                                    .font(.system(size: 14.4).weight(.medium).monospacedDigit())
-                                    .foregroundStyle(.secondary)
+                                    .font(DS.Typography.footnote.monospacedDigit())
+                                    .foregroundStyle(AppColour.textSecondary)
 
                                 if let delta = viewModel.scoreDelta {
                                     Text(delta >= 0 ? "(+\(delta))" : "(\(delta))")
-                                        .font(.system(size: 14.4).weight(.semibold).monospacedDigit())
-                                        .foregroundStyle(delta >= 0 ? .green : .red)
+                                        .font(DS.Typography.footnoteMedium.monospacedDigit())
+                                        .foregroundStyle(delta >= 0 ? AppColour.success : AppColour.danger)
                                 }
 
                                 if viewModel.winsCount > 0 {
                                     Text("·")
-                                        .foregroundStyle(.tertiary)
+                                        .foregroundStyle(AppColour.textTertiary)
 
                                     Text("\(viewModel.winsCount) win\(viewModel.winsCount == 1 ? "" : "s")")
-                                        .font(.system(size: 14.4))
-                                        .foregroundStyle(.secondary)
+                                        .font(DS.Typography.footnote)
+                                        .foregroundStyle(AppColour.textSecondary)
                                 }
                             }
 
                             if let coachPlan = review.coachPlan {
                                 Text("Coach target: \(formatSteps(coachPlan.currentDailyStepTarget))/day")
-                                    .font(.system(size: 13.2))
-                                    .foregroundStyle(.secondary)
+                                    .font(DS.Typography.caption)
+                                    .foregroundStyle(AppColour.textSecondary)
                             }
                         }
 
                         Spacer()
 
                         Image(systemName: "chevron.right")
-                            .font(.system(size: 14.4).weight(.semibold))
-                            .foregroundStyle(.tertiary)
+                            .font(DS.Typography.footnoteMedium)
+                            .foregroundStyle(AppColour.textTertiary)
                     }
                     .padding()
-                    .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
+                    .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.cardRadius))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsPress)
                 .padding(.horizontal, DS.screenPadding)
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("Weekly Review. Score \(review.currentScore). \(viewModel.winsCount) wins.")
@@ -123,16 +123,16 @@ struct WeeklyReviewView: View {
                     ProgressView()
                         .padding(.top, 40)
                 } else {
-                    VStack(spacing: 16) {
+                    VStack(spacing: DS.space4) {
                         Spacer().frame(height: 40)
                         Image(systemName: "calendar.badge.exclamationmark")
-                            .font(.system(size: 57.6))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.largeIcon)
+                            .foregroundStyle(AppColour.textSecondary)
                         Text(Copy.Common.notEnoughData)
-                            .font(.system(size: 24).weight(.semibold))
+                            .font(DS.Typography.title3)
                         Text(Copy.Reports.WeeklyReviewView.keepSyncing)
-                            .font(.system(size: 18))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.body)
+                            .foregroundStyle(AppColour.textSecondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, DS.space7)
                     }
@@ -185,17 +185,17 @@ struct WeeklyReviewView: View {
             )
 
             if let delta = viewModel.scoreDelta {
-                HStack(spacing: 4) {
+                HStack(spacing: DS.space1) {
                     Image(systemName: delta >= 0 ? "arrow.up.right" : "arrow.down.right")
-                        .font(.system(size: 14.4).weight(.bold))
+                        .font(DS.Typography.calloutSemibold)
                     Text(delta >= 0 ? "+\(delta) from last week" : "\(delta) from last week")
-                        .font(.system(size: 18).weight(.medium))
+                        .font(DS.Typography.bodyMedium)
                 }
-                .foregroundStyle(delta >= 0 ? .green : .red)
+                .foregroundStyle(delta >= 0 ? AppColour.success : AppColour.danger)
             } else {
                 Text(Copy.Reports.WeeklyReviewView.firstWeekNoComparison)
-                    .font(.system(size: 14.4))
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.callout)
+                    .foregroundStyle(AppColour.textSecondary)
             }
 
             Divider()
@@ -230,7 +230,7 @@ struct WeeklyReviewView: View {
             weeklyStatColumn(
                 label: "Trend",
                 value: trend == .improving ? "Up" : trend == .declining ? "Down" : "Stable",
-                color: trend == .improving ? .green : trend == .declining ? .red : .gray
+                color: trend == .improving ? AppColour.success : trend == .declining ? AppColour.danger : AppColour.textSecondary
             )
 
             weeklyStatDivider
@@ -238,7 +238,7 @@ struct WeeklyReviewView: View {
             weeklyStatColumn(
                 label: "Wins",
                 value: "\(review.wins.count)",
-                color: .green
+                color: AppColour.success
             )
 
             weeklyStatDivider
@@ -246,19 +246,19 @@ struct WeeklyReviewView: View {
             weeklyStatColumn(
                 label: "Alerts",
                 value: "\(review.watchOuts.count)",
-                color: review.watchOuts.isEmpty ? .gray : .orange
+                color: review.watchOuts.isEmpty ? AppColour.textSecondary : AppColour.warning
             )
         }
     }
 
     private func weeklyStatColumn(label: String, value: String, color: Color) -> some View {
-        VStack(spacing: 4) {
+        VStack(spacing: DS.space1) {
             Text(value)
-                .font(.system(size: 24).weight(.bold).monospacedDigit())
+                .font(DS.Typography.displayS)
                 .foregroundStyle(color)
             Text(label)
-                .font(.system(size: 13.2).weight(.medium))
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.footnoteMedium)
+                .foregroundStyle(AppColour.textSecondary)
                 .textCase(.uppercase)
         }
         .frame(maxWidth: .infinity)
@@ -273,9 +273,9 @@ struct WeeklyReviewView: View {
     // MARK: - Best & Worst Days
 
     private func bestWorstDaysSection(_ review: WeeklyReview) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Label("Highlights", systemImage: "calendar.day.timeline.left")
-                .font(.system(size: 20.4, weight: .semibold))
+                .font(DS.Typography.title3)
                 .padding(.horizontal, DS.screenPadding)
 
             HStack(spacing: 12) {
@@ -286,7 +286,7 @@ struct WeeklyReviewView: View {
                         metric: topWin.metric.displayName,
                         change: topWin.changePercent,
                         icon: "arrow.up.right.circle.fill",
-                        color: .green
+                        color: AppColour.success
                     )
                 }
 
@@ -297,7 +297,7 @@ struct WeeklyReviewView: View {
                         metric: topDecline.metric.displayName,
                         change: topDecline.changePercent,
                         icon: "arrow.down.right.circle.fill",
-                        color: .orange
+                        color: AppColour.warning
                     )
                 }
             }
@@ -306,27 +306,27 @@ struct WeeklyReviewView: View {
     }
 
     private func dayHighlightCard(label: String, metric: String, change: Double, icon: String, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: DS.space2) {
+            HStack(spacing: DS.space1) {
                 Image(systemName: icon)
-                    .font(.system(size: 20.4))
+                    .font(DS.Typography.title3)
                     .foregroundStyle(color)
                 Text(label)
-                    .font(.system(size: 14.4).weight(.bold))
+                    .font(DS.Typography.calloutSemibold)
                     .foregroundStyle(color)
                     .textCase(.uppercase)
             }
 
             Text(metric)
-                .font(.system(size: 18).weight(.semibold))
+                .font(DS.Typography.bodySemibold)
                 .lineLimit(2)
                 .minimumScaleFactor(0.75)
 
-            HStack(spacing: 3) {
+            HStack(spacing: DS.space1) {
                 Image(systemName: change >= 0 ? "arrow.up.right" : "arrow.down.right")
-                    .font(.system(size: 13.2).weight(.bold))
+                    .font(DS.Typography.captionSemibold)
                 Text(String(format: "%.1f%%", abs(change)))
-                    .font(.system(size: 14.4).weight(.semibold).monospacedDigit())
+                    .font(DS.Typography.calloutSemibold.monospacedDigit())
             }
             .foregroundStyle(color)
         }
@@ -340,10 +340,10 @@ struct WeeklyReviewView: View {
     private func personalRecordsSection(_ review: WeeklyReview) -> some View {
         Group {
             if !review.wins.isEmpty {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: DS.itemSpacing) {
                     Label("This Week's Wins", systemImage: "trophy.fill")
-                        .font(.system(size: 20.4, weight: .semibold))
-                        .foregroundStyle(.green)
+                        .font(DS.Typography.title3)
+                        .foregroundStyle(AppColour.success)
                         .padding(.horizontal, DS.screenPadding)
 
                     VStack(spacing: 6) {
@@ -355,33 +355,33 @@ struct WeeklyReviewView: View {
                 }
                 .padding(.vertical, DS.space4)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
+                .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.cardRadius))
                 .padding(.horizontal, DS.screenPadding)
             }
         }
     }
 
     private func winRow(_ change: DashboardViewModel.MetricChange) -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: DS.space2) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 20.4))
-                .foregroundStyle(.green)
+                .font(DS.Typography.title3)
+                .foregroundStyle(AppColour.success)
 
             Text(change.metric.displayName)
-                .font(.system(size: 18).weight(.medium))
+                .font(DS.Typography.bodyMedium)
 
             Spacer()
 
-            HStack(spacing: 3) {
+            HStack(spacing: DS.space1) {
                 Image(systemName: "arrow.up.right")
-                    .font(.system(size: 13.2).weight(.bold))
+                    .font(DS.Typography.captionSemibold)
                 Text(String(format: "%.1f%%", abs(change.changePercent)))
-                    .font(.system(size: 14.4).weight(.semibold).monospacedDigit())
+                    .font(DS.Typography.calloutSemibold.monospacedDigit())
             }
-            .foregroundStyle(.green)
+            .foregroundStyle(AppColour.success)
             .padding(.horizontal, DS.badgeH)
             .padding(.vertical, DS.badgeV)
-            .background(.green.opacity(DS.badgeBg), in: Capsule())
+            .background(AppColour.success.opacity(DS.badgeBg), in: Capsule())
         }
         .padding(.vertical, DS.space1)
     }
@@ -389,41 +389,41 @@ struct WeeklyReviewView: View {
     // MARK: - Top Insight of the Week
 
     private func topInsightSection(_ review: WeeklyReview) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Label("Key Discovery", systemImage: "lightbulb.fill")
-                .font(.system(size: 20.4, weight: .semibold))
-                .foregroundStyle(.yellow)
+                .font(DS.Typography.title3)
+                .foregroundStyle(AppColour.scoreFair)
                 .padding(.horizontal, DS.screenPadding)
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: DS.space2) {
                 if let topWin = review.wins.first {
                     Text("\(topWin.metric.displayName) improved by \(String(format: "%.1f%%", abs(topWin.changePercent))) this week.")
-                        .font(.system(size: 18).weight(.medium))
+                        .font(DS.Typography.bodyMedium)
 
                     Text("Consistency in \(topWin.metric.category.displayName) is paying off. Keep the momentum going into next week.")
-                        .font(.system(size: 14.4))
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.callout)
+                        .foregroundStyle(AppColour.textSecondary)
                 } else if let topDecline = review.watchOuts.first {
                     Text("\(topDecline.metric.displayName) dropped \(String(format: "%.1f%%", abs(topDecline.changePercent))) this week.")
-                        .font(.system(size: 18).weight(.medium))
+                        .font(DS.Typography.bodyMedium)
 
                     if let nudge = MetricChangeRow.nudgeFor(topDecline.metric) {
                         Text(nudge)
-                            .font(.system(size: 14.4))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.callout)
+                            .foregroundStyle(AppColour.textSecondary)
                     }
                 } else {
                     Text(Copy.Reports.WeeklyReviewView.stableWeek)
-                        .font(.system(size: 18).weight(.medium))
+                        .font(DS.Typography.bodyMedium)
 
                     Text(Copy.Reports.WeeklyReviewView.noMajorChanges)
-                        .font(.system(size: 14.4))
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.callout)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
             }
             .padding(DS.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .cardStyle(tint: .yellow)
+            .cardStyle(tint: AppColour.scoreFair)
             .padding(.horizontal, DS.screenPadding)
         }
     }
@@ -433,13 +433,13 @@ struct WeeklyReviewView: View {
     private func watchOutSection(_ review: WeeklyReview) -> some View {
         Group {
             if !review.watchOuts.isEmpty {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: DS.itemSpacing) {
                     Label("Watch Out", systemImage: "exclamationmark.triangle.fill")
-                        .font(.system(size: 20.4, weight: .semibold))
-                        .foregroundStyle(.orange)
+                        .font(DS.Typography.title3)
+                        .foregroundStyle(AppColour.warning)
                         .padding(.horizontal, DS.screenPadding)
 
-                    VStack(spacing: 6) {
+                    VStack(spacing: DS.space1) {
                         ForEach(review.watchOuts) { change in
                             watchOutRow(change)
                         }
@@ -448,40 +448,40 @@ struct WeeklyReviewView: View {
                 }
                 .padding(.vertical, DS.space4)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
+                .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.cardRadius))
                 .padding(.horizontal, DS.screenPadding)
             }
         }
     }
 
     private func watchOutRow(_ change: DashboardViewModel.MetricChange) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: DS.space1) {
+            HStack(spacing: DS.space2) {
                 Image(systemName: "exclamationmark.circle.fill")
-                    .font(.system(size: 20.4))
-                    .foregroundStyle(.orange)
+                    .font(DS.Typography.title3)
+                    .foregroundStyle(AppColour.warning)
 
                 Text(change.metric.displayName)
-                    .font(.system(size: 18).weight(.medium))
+                    .font(DS.Typography.bodyMedium)
 
                 Spacer()
 
-                HStack(spacing: 3) {
+                HStack(spacing: DS.space1) {
                     Image(systemName: "arrow.down.right")
-                        .font(.system(size: 13.2).weight(.bold))
+                        .font(DS.Typography.captionSemibold)
                     Text(String(format: "%.1f%%", abs(change.changePercent)))
-                        .font(.system(size: 14.4).weight(.semibold).monospacedDigit())
+                        .font(DS.Typography.footnoteMedium.monospacedDigit())
                 }
-                .foregroundStyle(.red)
+                .foregroundStyle(AppColour.danger)
                 .padding(.horizontal, DS.badgeH)
                 .padding(.vertical, DS.badgeV)
-                .background(.red.opacity(DS.badgeBg), in: Capsule())
+                .background(AppColour.danger.opacity(DS.badgeBg), in: Capsule())
             }
 
             if let nudge = MetricChangeRow.nudgeFor(change.metric) {
                 Text(nudge)
-                    .font(.system(size: 14.4))
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
                     .padding(.leading, 30)
             }
         }
@@ -491,38 +491,38 @@ struct WeeklyReviewView: View {
     // MARK: - Progressive Coach
 
     private func progressiveCoachSection(_ plan: ProgressiveCoachPlan) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Label("Progressive Coach", systemImage: "figure.walk.motion")
-                .font(.system(size: 20.4, weight: .semibold))
-                .foregroundStyle(.blue)
+                .font(DS.Typography.title3)
+                .foregroundStyle(AppColour.info)
                 .padding(.horizontal, DS.screenPadding)
 
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: DS.space2) {
                 HStack {
                     Text("Current target")
-                        .font(.system(size: 18))
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.body)
+                        .foregroundStyle(AppColour.textSecondary)
                     Spacer()
                     Text("\(formatSteps(plan.currentDailyStepTarget))/day")
-                        .font(.system(size: 18).weight(.semibold).monospacedDigit())
+                        .font(DS.Typography.bodySemibold.monospacedDigit())
                 }
 
                 HStack {
                     Text("Current average")
-                        .font(.system(size: 18))
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.body)
+                        .foregroundStyle(AppColour.textSecondary)
                     Spacer()
                     Text("\(formatSteps(plan.currentAverageDailySteps))/day")
-                        .font(.system(size: 18).weight(.semibold).monospacedDigit())
+                        .font(DS.Typography.bodySemibold.monospacedDigit())
                 }
 
                 HStack {
                     Text("Status")
-                        .font(.system(size: 18))
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.body)
+                        .foregroundStyle(AppColour.textSecondary)
                     Spacer()
                     Text(plan.adherence.displayName)
-                        .font(.system(size: 14.4).weight(.bold))
+                        .font(DS.Typography.footnoteMedium)
                         .foregroundStyle(adherenceColor(for: plan.adherence))
                         .padding(.horizontal, DS.badgeH)
                         .padding(.vertical, DS.badgeV)
@@ -533,69 +533,69 @@ struct WeeklyReviewView: View {
 
                 HStack {
                     Text(Copy.Home.nextWeekTarget)
-                        .font(.system(size: 18))
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.body)
+                        .foregroundStyle(AppColour.textSecondary)
                     Spacer()
                     Text("\(formatSteps(plan.nextDailyStepTarget))/day")
-                        .font(.system(size: 18).weight(.semibold).monospacedDigit())
+                        .font(DS.Typography.bodySemibold.monospacedDigit())
                     let deltaText = deltaLabel(plan.weeklyDelta)
                     if !deltaText.isEmpty {
                         Text(deltaText)
-                            .font(.system(size: 14.4).weight(.semibold))
-                            .foregroundStyle(plan.weeklyDelta >= 0 ? .green : .orange)
+                            .font(DS.Typography.footnoteMedium)
+                            .foregroundStyle(plan.weeklyDelta >= 0 ? AppColour.success : AppColour.warning)
                     }
                 }
 
                 Text(plan.coachingMessage)
-                    .font(.system(size: 14.4))
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
             }
             .padding()
-            .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
+            .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.cardRadius))
             .padding(.horizontal, DS.screenPadding)
         }
         .padding(.vertical, DS.space4)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.cardRadius))
         .padding(.horizontal, DS.screenPadding)
     }
 
     // MARK: - Next Week Outlook
 
     private func nextWeekOutlookSection(_ review: WeeklyReview) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Label("Next Week", systemImage: "arrow.right.circle.fill")
-                .font(.system(size: 20.4, weight: .semibold))
-                .foregroundStyle(.blue)
+                .font(DS.Typography.title3)
+                .foregroundStyle(AppColour.info)
                 .padding(.horizontal, DS.screenPadding)
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: DS.space2) {
                 Text(nextWeekOutlookMessage(review))
-                    .font(.system(size: 18))
-                    .foregroundStyle(.primary)
+                    .font(DS.Typography.body)
+                    .foregroundStyle(AppColour.textPrimary)
 
                 if let coachPlan = review.coachPlan {
-                    HStack(spacing: 6) {
+                    HStack(spacing: DS.space1) {
                         Image(systemName: "figure.walk")
-                            .font(.system(size: 14.4))
-                            .foregroundStyle(.blue)
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(AppColour.info)
                         Text("Step target: \(formatSteps(coachPlan.nextDailyStepTarget))/day")
-                            .font(.system(size: 14.4).weight(.medium))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.footnoteMedium)
+                            .foregroundStyle(AppColour.textSecondary)
                     }
                 }
 
-                HStack(spacing: 4) {
+                HStack(spacing: DS.space1) {
                     Image(systemName: "sparkles")
-                        .font(.system(size: 13.2))
+                        .font(DS.Typography.caption)
                     Text(Copy.Reports.WeeklyReviewView.poweredByModel)
-                        .font(.system(size: 13.2))
+                        .font(DS.Typography.caption)
                 }
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(AppColour.textTertiary)
             }
             .padding(DS.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .cardStyle(tint: .blue)
+            .cardStyle(tint: AppColour.info)
             .padding(.horizontal, DS.screenPadding)
         }
     }
@@ -623,9 +623,9 @@ struct WeeklyReviewView: View {
 
     private func adherenceColor(for status: CoachAdherenceStatus) -> Color {
         switch status {
-        case .keepingUp: return .green
-        case .plateauing: return .orange
-        case .struggling: return .red
+        case .keepingUp: return AppColour.success
+        case .plateauing: return AppColour.warning
+        case .struggling: return AppColour.danger
         }
     }
 

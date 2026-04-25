@@ -21,27 +21,28 @@ const db = firebase.firestore();
 // ─── Config Schema ───────────────────────────────────────────────────────────
 // All keys match RemoteConfigManager.swift defaults.
 
-const FEATURES = [
-  { key: "feature_access_healthScore",            label: "Health Score" },
-  { key: "feature_access_categoryScores",         label: "Category Scores" },
-  { key: "feature_access_basicMetrics",           label: "Basic Metrics" },
-  { key: "feature_access_allMetrics",             label: "All Metrics" },
-  { key: "feature_access_sevenDayTrends",         label: "7-Day Trends" },
-  { key: "feature_access_extendedHistory",        label: "Extended History" },
-  { key: "feature_access_riskPredictions",        label: "Risk Predictions" },
-  { key: "feature_access_focusAreas",             label: "Focus Areas" },
-  { key: "feature_access_basicInsights",          label: "Basic Insights" },
-  { key: "feature_access_allInsights",            label: "All Insights" },
-  { key: "feature_access_liveTab",                label: "Live Vitals" },
-  { key: "feature_access_exportReport",           label: "Export Reports" },
-  { key: "feature_access_advancedAnalytics",      label: "Advanced Analytics" },
-  { key: "feature_access_simulation",             label: "Simulation" },
-  { key: "feature_access_clinicalIntelligence",   label: "Clinical Intelligence" },
-  { key: "feature_access_ecgIntelligence",        label: "ECG Intelligence" },
-  { key: "feature_access_nutritionCorrelations",  label: "Nutrition Correlations" },
-  { key: "feature_access_circadianAnalysis",      label: "Circadian Analysis" },
-  { key: "feature_access_adherenceTracking",      label: "Adherence Tracking" },
+const FEATURE_GROUPS = [
+  {
+    title: "Intelligence & Analytics",
+    items: [
+      { key: "feature_access_advancedAnalytics", label: "Advanced Analytics" },
+    ],
+  },
+  {
+    title: "Live Monitoring",
+    items: [
+      { key: "feature_access_liveTab", label: "Live Vitals" },
+    ],
+  },
+  {
+    title: "Export & Sharing",
+    items: [
+      { key: "feature_access_exportReport", label: "Export Reports" },
+    ],
+  },
 ];
+
+const FEATURES = FEATURE_GROUPS.flatMap((g) => g.items);
 
 const LIMITS = [
   { key: "free_metric_detail_limit", label: "Free Metric Detail Limit", type: "number" },
@@ -125,25 +126,9 @@ const TIERS = ["free", "pro"];
 // ─── Defaults (mirrors RemoteConfigManager.swift) ────────────────────────────
 
 const DEFAULTS = {
-  "feature_access_healthScore":       "free,pro",
-  "feature_access_categoryScores":    "free,pro",
-  "feature_access_basicMetrics":      "free,pro",
-  "feature_access_allMetrics":        "pro",
-  "feature_access_sevenDayTrends":    "free,pro",
-  "feature_access_extendedHistory":   "pro",
-  "feature_access_riskPredictions":   "pro",
-  "feature_access_focusAreas":        "pro",
-  "feature_access_basicInsights":     "free,pro",
-  "feature_access_allInsights":       "pro",
+  "feature_access_advancedAnalytics": "pro",
   "feature_access_liveTab":           "pro",
   "feature_access_exportReport":      "pro",
-  "feature_access_advancedAnalytics": "pro",
-  "feature_access_simulation":        "pro",
-  "feature_access_clinicalIntelligence": "pro",
-  "feature_access_ecgIntelligence":   "pro",
-  "feature_access_nutritionCorrelations": "pro",
-  "feature_access_circadianAnalysis": "pro",
-  "feature_access_adherenceTracking": "pro",
   "free_metric_detail_limit":   "3",
   "free_metrics":               "heartRate,steps,sleepAnalysis",
   "free_insight_limit":         "2",
@@ -454,6 +439,16 @@ function buildFeatureRows(container, features) {
   });
 }
 
+function buildFeatureGroups(container, groups) {
+  groups.forEach(({ title, items }) => {
+    const header = document.createElement("div");
+    header.className = "feature-group-title";
+    header.textContent = title;
+    container.appendChild(header);
+    buildFeatureRows(container, items);
+  });
+}
+
 function buildInputRows(container, fields) {
   fields.forEach(({ key, label, type }) => {
     const row = document.createElement("div");
@@ -490,7 +485,7 @@ function buildMixedRows(container, fields) {
 }
 
 // Build all config sections
-buildFeatureRows(document.getElementById("section-features"), FEATURES);
+buildFeatureGroups(document.getElementById("section-features"), FEATURE_GROUPS);
 buildMixedRows(document.getElementById("section-monetization"), MONETIZATION);
 buildInputRows(document.getElementById("section-limits"), LIMITS);
 buildInputRows(document.getElementById("section-pricing"), PRICING);

@@ -36,7 +36,7 @@ struct ExpandedJournalView: View {
                     }
                 }
                 .scrollBounceBehavior(.basedOnSize)
-                .background(Color(.systemGroupedBackground).ignoresSafeArea())
+                .background(AppColour.surfaceBase.ignoresSafeArea())
 
                 if hasModifications {
                     saveBar
@@ -108,18 +108,18 @@ struct ExpandedJournalView: View {
 
     private func filterPill(label: String, icon: String, color: Color, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack(spacing: 5) {
+            HStack(spacing: DS.space1) {
                 Image(systemName: icon)
-                    .font(.caption2.weight(.semibold))
+                    .font(DS.Typography.caption2Semibold)
                 Text(label)
-                    .font(.subheadline.weight(.medium))
+                    .font(DS.Typography.subheadlineMedium)
             }
             .padding(.horizontal, DS.space3)
             .padding(.vertical, DS.space2)
             .foregroundStyle(isSelected ? .white : color)
             .background(isSelected ? color : color.opacity(0.1), in: Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
@@ -153,16 +153,16 @@ struct ExpandedJournalView: View {
     // MARK: - Section Header
 
     private func sectionHeader(_ group: JournalBehaviorGroup) -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: DS.space2) {
             Image(systemName: group.icon)
-                .font(.caption.weight(.semibold))
+                .font(DS.Typography.captionSemibold)
                 .foregroundStyle(group.color)
                 .frame(width: 24, height: 24)
-                .background(group.color.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: 6))
+                .background(group.color.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.Radius.xs))
 
             Text(group.displayName)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.primary)
+                .font(DS.Typography.subheadlineSemibold)
+                .foregroundStyle(AppColour.textPrimary)
 
             Spacer()
 
@@ -190,17 +190,17 @@ struct ExpandedJournalView: View {
     private func behaviorRow(_ behavior: JournalBehavior, group: JournalBehaviorGroup) -> some View {
         let isLogged = loggedBehaviors[behavior] != nil
 
-        return HStack(spacing: 10) {
+        return HStack(spacing: DS.space3) {
             // Icon
             Image(systemName: behavior.icon)
-                .font(.body.weight(.medium))
-                .foregroundStyle(isLogged ? group.color : .secondary)
+                .font(DS.Typography.bodyMedium)
+                .foregroundStyle(isLogged ? group.color : AppColour.textSecondary)
                 .frame(width: 28)
 
             // Label
             Text(behavior.displayName)
-                .font(.subheadline.weight(isLogged ? .semibold : .regular))
-                .foregroundStyle(isLogged ? .primary : .secondary)
+                .font(isLogged ? DS.Typography.subheadlineSemibold : DS.Typography.subheadline)
+                .foregroundStyle(isLogged ? AppColour.textPrimary : AppColour.textSecondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
 
@@ -270,23 +270,23 @@ struct ExpandedJournalView: View {
                 toggleTrigger.toggle()
             } label: {
                 Image(systemName: "minus.circle.fill")
-                    .font(.body)
-                    .foregroundStyle(currentValue != nil ? color : Color(.tertiaryLabel))
+                    .font(DS.Typography.body)
+                    .foregroundStyle(currentValue != nil ? color : AppColour.textTertiary)
             }
             .disabled(currentValue == nil)
             .buttonStyle(.plain)
 
             // Value display
             Text(formattedQuantity(displayValue, step: step))
-                .font(.subheadline.weight(.semibold).monospacedDigit())
-                .foregroundStyle(currentValue != nil ? .primary : .tertiary)
+                .font(DS.Typography.subheadlineSemibold.monospacedDigit())
+                .foregroundStyle(currentValue != nil ? AppColour.textPrimary : AppColour.textTertiary)
                 .frame(minWidth: 24, alignment: .center)
                 .contentTransition(.numericText())
 
             // Unit label
             Text(unit)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.caption2)
+                .foregroundStyle(AppColour.textSecondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
                 .frame(maxWidth: 48, alignment: .leading)
@@ -298,7 +298,7 @@ struct ExpandedJournalView: View {
                 toggleTrigger.toggle()
             } label: {
                 Image(systemName: "plus.circle.fill")
-                    .font(.body)
+                    .font(DS.Typography.body)
                     .foregroundStyle(color)
             }
             .buttonStyle(.plain)
@@ -326,15 +326,15 @@ struct ExpandedJournalView: View {
                     toggleTrigger.toggle()
                 } label: {
                     Image(systemName: isFilled ? "circle.fill" : "circle")
-                        .font(.caption)
-                        .foregroundStyle(isFilled ? color : Color(.tertiaryLabel))
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(isFilled ? color : AppColour.textTertiary)
                 }
                 .buttonStyle(.plain)
             }
 
             if let value = currentValue {
                 Text(formattedRating(value, maxValue: maxValue))
-                    .font(.caption2.weight(.semibold).monospacedDigit())
+                    .font(DS.Typography.caption2Semibold.monospacedDigit())
                     .foregroundStyle(color)
                     .contentTransition(.numericText())
             }
@@ -347,22 +347,22 @@ struct ExpandedJournalView: View {
         Button {
             saveBehaviors()
         } label: {
-            HStack(spacing: 8) {
+            HStack(spacing: DS.space2) {
                 Image(systemName: "checkmark.circle.fill")
                 Text("Log \(loggedBehaviors.count) Behavior\(loggedBehaviors.count == 1 ? "" : "s")")
-                    .font(.headline)
+                    .font(DS.Typography.headline)
             }
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, DS.space4)
-            .background(.blue, in: RoundedRectangle(cornerRadius: DS.cardRadius))
+            .background(AppColour.primary, in: RoundedRectangle(cornerRadius: DS.cardRadius))
             .padding(.horizontal)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
         .padding(.bottom, DS.space2)
         .background(
             LinearGradient(
-                colors: [Color(.systemGroupedBackground).opacity(0), Color(.systemGroupedBackground)],
+                colors: [AppColour.surfaceBase.opacity(0), AppColour.surfaceBase],
                 startPoint: .top,
                 endPoint: .center
             )
@@ -373,15 +373,15 @@ struct ExpandedJournalView: View {
     // MARK: - Confirmation Overlay
 
     private var confirmationOverlay: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: DS.itemSpacing) {
             Image(systemName: "checkmark.circle.fill")
                 .font(DS.Typography.heroIcon)
-                .foregroundStyle(.green)
+                .foregroundStyle(AppColour.success)
             Text("Logged \(savedCount) behavior\(savedCount == 1 ? "" : "s")")
-                .font(.title3.weight(.semibold))
+                .font(DS.Typography.title3)
         }
         .padding(DS.space7)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
     }
 
     // MARK: - Save Logic

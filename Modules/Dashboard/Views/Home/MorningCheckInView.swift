@@ -23,16 +23,16 @@ struct MorningCheckInView: View {
     }
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: DS.space4) {
             // Header
             HStack {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: DS.space1) {
                     Text(Copy.Home.MorningCheckIn.greeting)
-                        .font(.system(size: 18).weight(.semibold))
-                        .foregroundStyle(.primary)
+                        .font(DS.Typography.bodySemibold)
+                        .foregroundStyle(AppColour.textPrimary)
                     Text(Copy.Home.MorningCheckIn.subtitle)
-                        .font(.system(size: 13.2))
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.footnote)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
                 Spacer()
                 Button {
@@ -40,14 +40,14 @@ struct MorningCheckInView: View {
                     onDismiss()
                 } label: {
                     Image(systemName: "xmark")
-                        .font(.system(size: 14.4).weight(.semibold))
-                        .foregroundStyle(.tertiary)
+                        .font(DS.Typography.calloutSemibold)
+                        .foregroundStyle(AppColour.textTertiary)
                         .frame(width: 24, height: 24)
                 }
             }
 
             // Questions
-            VStack(spacing: 12) {
+            VStack(spacing: DS.space3) {
                 checkInRow(
                     icon: "moon.fill",
                     label: "Sleep quality",
@@ -75,18 +75,18 @@ struct MorningCheckInView: View {
                 Button {
                     submit()
                 } label: {
-                    HStack(spacing: 6) {
+                    HStack(spacing: DS.space1) {
                         if isSubmitting {
                             ProgressView()
                                 .tint(.white)
                                 .controlSize(.small)
                         }
                         Text("Done")
-                            .font(.system(size: 18).weight(.semibold))
+                            .font(DS.Typography.bodySemibold)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(.tint, in: RoundedRectangle(cornerRadius: 10))
+                    .padding(.vertical, DS.space2)
+                    .background(.tint, in: RoundedRectangle(cornerRadius: DS.Radius.sm))
                     .foregroundStyle(.white)
                 }
                 .disabled(isSubmitting)
@@ -94,10 +94,10 @@ struct MorningCheckInView: View {
             }
         }
         .padding(DS.space4)
-        .background(.background, in: RoundedRectangle(cornerRadius: 16))
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .strokeBorder(.quaternary, lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: DS.Radius.lg)
+                .strokeBorder(AppColour.borderLow, lineWidth: 0.5)
         )
         .padding(.horizontal, DS.screenPadding)
         .animation(.snappy(duration: 0.25), value: isComplete)
@@ -115,14 +115,14 @@ struct MorningCheckInView: View {
         emojis: [String],
         selection: Binding<Int>
     ) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: DS.space1) {
+            HStack(spacing: DS.space1) {
                 Image(systemName: icon)
-                    .font(.system(size: 13.2))
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.footnote)
+                    .foregroundStyle(AppColour.textSecondary)
                 Text(label)
-                    .font(.system(size: 14.4).weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.calloutSemibold)
+                    .foregroundStyle(AppColour.textSecondary)
             }
 
             HStack(spacing: 0) {
@@ -133,17 +133,17 @@ struct MorningCheckInView: View {
                         }
                     } label: {
                         Text(emojis[value - 1])
-                            .font(.system(size: 24))
+                            .font(DS.Typography.bodySemibold)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 6)
+                            .padding(.vertical, DS.space1)
                             .background(
                                 selection.wrappedValue == value
-                                    ? Color.accentColor.opacity(0.15)
+                                    ? Color.accentColor.opacity(DS.badgeBg)
                                     : Color.clear,
-                                in: RoundedRectangle(cornerRadius: 8)
+                                in: RoundedRectangle(cornerRadius: DS.Radius.sm)
                             )
                             .overlay(
-                                RoundedRectangle(cornerRadius: 8)
+                                RoundedRectangle(cornerRadius: DS.Radius.sm)
                                     .strokeBorder(
                                         selection.wrappedValue == value
                                             ? Color.accentColor.opacity(0.3)

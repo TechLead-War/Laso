@@ -27,7 +27,7 @@ struct AnalysisWidgetView: View {
             LinearGradient(
                 colors: [
                     WidgetStyle.readinessColor(score: entry.readiness.score).opacity(0.18),
-                    Color(.systemBackground)
+                    AppColour.surfaceBase
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -41,7 +41,7 @@ struct AnalysisWidgetView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Readiness")
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                     Text("\(entry.readiness.score)")
                         .font(.system(size: 32, weight: .bold, design: .rounded))
                         .foregroundStyle(WidgetStyle.readinessColor(score: entry.readiness.score))
@@ -62,14 +62,14 @@ struct AnalysisWidgetView: View {
 
             Text(entry.action.headline)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
                 .lineLimit(3)
 
             Spacer(minLength: 0)
 
             Text("Updated \(WidgetStyle.timeString(from: entry.lastUpdate))")
                 .font(.caption2)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(AppColour.textTertiary)
         }
         .padding()
     }
@@ -98,7 +98,7 @@ struct AnalysisWidgetView: View {
                             .lineLimit(2)
                         Text(entry.action.headline)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppColour.textSecondary)
                             .lineLimit(2)
                     }
                 }
@@ -108,7 +108,7 @@ struct AnalysisWidgetView: View {
                     Label(entry.recoveryDebt.detail, systemImage: "moon.zzz.fill")
                 }
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
             }
 
             Divider()
@@ -116,7 +116,7 @@ struct AnalysisWidgetView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Latest analysis")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColour.textSecondary)
                     .textCase(.uppercase)
 
                 Text(entry.intelligence.headline)
@@ -129,14 +129,14 @@ struct AnalysisWidgetView: View {
                         .frame(width: 8, height: 8)
                     Text(entry.intelligence.cardType.capitalized)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
 
                 Spacer(minLength: 0)
 
                 Text("Updated \(WidgetStyle.timeString(from: entry.lastUpdate))")
                     .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(AppColour.textTertiary)
             }
         }
         .padding()
@@ -154,7 +154,7 @@ struct AnalysisWidgetView: View {
             }
             Text(entry.readiness.dayType)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
             Text(entry.action.headline)
                 .font(.caption2)
                 .lineLimit(2)

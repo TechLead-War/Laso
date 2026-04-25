@@ -1,71 +1,91 @@
 import SwiftUI
 
 /// Centralized design tokens for visual consistency across Laso.
+///
+/// - Spacing: clean 4pt grid (4, 8, 12, 16, 20, 24, 32, 48).
+/// - Typography: SF Pro — semantic Dynamic Type for text, monospacedDigit rounded for numerics.
+/// - Color: use `AppColour.*` tokens; the app is force-locked to dark mode.
+/// - Elevation: surface lightening + low-alpha borders beat drop shadows in dark UI.
+/// - Motion: spring for user-triggered interactions, duration-based for data reveals.
 enum DS {
-    /// Card corner radius. unified across all cards
-    static let cardRadius: CGFloat = 24
-    /// Icon background corner radius
-    static let iconRadius: CGFloat = 12
-    /// Accent bar corner radius
+
+    // MARK: - Radius Scale
+
+    enum Radius {
+        static let none: CGFloat = 0
+        static let xs: CGFloat = 4     // chips, small badges
+        static let sm: CGFloat = 8     // inputs, small buttons
+        static let md: CGFloat = 12    // cards (metric tiles, nav rows)
+        static let lg: CGFloat = 16    // large cards, section containers
+        static let xl: CGFloat = 20    // sheets, modals (matches iPhone hardware corner)
+        static let xxl: CGFloat = 24   // hero cards, feature panels
+        static let full: CGFloat = 9999 // pills, circular avatars
+    }
+
+    /// Card corner radius — unified across content cards.
+    static let cardRadius: CGFloat = Radius.xxl    // 24
+    /// Icon background corner radius.
+    static let iconRadius: CGFloat = Radius.md     // 12
+    /// Accent bar corner radius (narrow strip inside accent-bar cards).
     static let accentRadius: CGFloat = 3
 
-    /// Standard card interior padding
-    static let cardPadding: CGFloat = 16.8
-    /// Accent bar card: leading content padding
-    static let accentLeading: CGFloat = 12
-    /// Accent bar card: trailing content padding
-    static let accentTrailing: CGFloat = 16.8
-    /// Accent bar card: vertical content padding
-    static let accentVertical: CGFloat = 14.4
+    // MARK: - Spacing Scale (4pt grid)
 
-    /// Standard metric icon size (width & height)
-    static let iconSize: CGFloat = 43.2
+    /// 4pt — hairline (icon-label gap, divider inset, tight chip padding).
+    static let space1: CGFloat = 4
+    /// 8pt — small (list row internal padding, small card inset).
+    static let space2: CGFloat = 8
+    /// 12pt — default-small (card internal vertical rhythm).
+    static let space3: CGFloat = 12
+    /// 16pt — default content padding.
+    static let space4: CGFloat = 16
+    /// 20pt — medium (section header top gap).
+    static let space5: CGFloat = 20
+    /// 24pt — large (card-to-card vertical gap, sheet top inset).
+    static let space6: CGFloat = 24
+    /// 32pt — xl (section separation, hero metric top padding).
+    static let space7: CGFloat = 32
+    /// 48pt — xxl (full-screen inset for modal/sheet content).
+    static let space8: CGFloat = 48
 
-    /// Between sections on scrollable pages
-    static let sectionSpacing: CGFloat = 24
-    /// Between cards/items within a section
-    static let itemSpacing: CGFloat = 14.4
+    /// Standard screen horizontal padding.
+    static let screenPadding: CGFloat = space3    // 12
 
-    /// Card tinted background opacity
+    /// Standard card interior padding.
+    static let cardPadding: CGFloat = space4      // 16 (was 16.8)
+    /// Accent bar card: leading content padding.
+    static let accentLeading: CGFloat = space3    // 12
+    /// Accent bar card: trailing content padding.
+    static let accentTrailing: CGFloat = space4   // 16 (was 16.8)
+    /// Accent bar card: vertical content padding.
+    static let accentVertical: CGFloat = space3   // 12 (was 14.4)
+
+    /// Between sections on scrollable pages.
+    static let sectionSpacing: CGFloat = space6   // 24
+    /// Between cards/items within a section.
+    static let itemSpacing: CGFloat = space3      // 12 (was 14.4)
+
+    /// Standard metric icon size (width & height). 44pt = Apple HIG minimum tap target.
+    static let iconSize: CGFloat = 44             // (was 43.2)
+
+    /// Card tinted background opacity.
     static let tintBg: Double = 0.04
-    /// Icon circle / badge background opacity
+    /// Icon circle / badge background opacity.
     static let badgeBg: Double = 0.12
-    /// Card border stroke opacity
+    /// Card border stroke opacity (tint-relative).
     static let strokeAlpha: Double = 0.18
 
-    /// Standard vertical divider height in stat rows
-    static let dividerHeight: CGFloat = 38.4
+    /// Standard vertical divider height in stat rows.
+    static let dividerHeight: CGFloat = 40        // (was 38.4)
 
-    /// Standard badge padding
-    static let badgeH: CGFloat = 7.2
-    static let badgeV: CGFloat = 3.6
-
-    // MARK: - Spacing Scale (8pt grid × 1.2)
-
-    /// Hairline spacing — between tightly related elements
-    static let space1: CGFloat = 4.8
-    /// Micro spacing — compact stacks, small gaps
-    static let space2: CGFloat = 9.6
-    /// Small spacing — between items inside a section
-    static let space3: CGFloat = 14.4
-    /// Medium spacing — default screen edge padding
-    static let space4: CGFloat = 19.2
-    /// Large spacing — between sections
-    static let space5: CGFloat = 24
-    /// XL spacing — hero card padding, generous separators
-    static let space6: CGFloat = 28.8
-    /// Section spacing — major section breaks
-    static let space7: CGFloat = 38.4
-    /// Screen-level vertical rhythm — top/bottom screen padding
-    static let space8: CGFloat = 57.6
-
-    /// Standard screen horizontal padding
-    static let screenPadding: CGFloat = 12
+    /// Standard badge padding.
+    static let badgeH: CGFloat = space2           // 8 (was 7.2)
+    static let badgeV: CGFloat = space1           // 4 (was 3.6)
 
     // MARK: - Typography
 
     enum Typography {
-        // Semantic fonts (preferred default)
+        // Semantic fonts (preferred default — Dynamic Type adapts to user preference).
         static let largeTitle: Font = .largeTitle.weight(.bold)
         static let title: Font = .title.weight(.bold)
         static let title2: Font = .title2.weight(.semibold)
@@ -88,29 +108,66 @@ enum DS {
         static let caption2Medium: Font = .caption2.weight(.medium)
         static let caption2Semibold: Font = .caption2.weight(.semibold)
 
-        // Numeric readouts (rounded + monospacedDigit so digits don't shift)
+        // Numeric readouts — rounded + monospacedDigit so digits don't jitter on update.
         static let displayXL: Font = .system(size: 56, weight: .bold, design: .rounded).monospacedDigit()
         static let displayL: Font = .system(size: 44, weight: .bold, design: .rounded).monospacedDigit()
         static let displayM: Font = .system(size: 36, weight: .bold, design: .rounded).monospacedDigit()
         static let displayS: Font = .system(size: 28, weight: .bold, design: .rounded).monospacedDigit()
 
-        // Icon fonts (large SF symbols in empty states and hero slots)
+        // Icon fonts (large SF symbols in empty states and hero slots).
         static let heroIcon: Font = .system(size: 56, weight: .medium)
         static let largeIcon: Font = .system(size: 44, weight: .medium)
         static let mediumIcon: Font = .system(size: 36, weight: .medium)
     }
 
-    /// Score-based recovery color for consistent state visualization.
+    // MARK: - Elevation
+    //
+    // In forced-dark UI, drop shadows against black are near-invisible. Elevation is
+    // expressed primarily through surface lightening (use AppColour.surfaceBase /
+    // surfaceRaised / surfaceElevated / surfaceOverlay) + low-alpha borders
+    // (AppColour.borderLow / borderMedium / borderHigh). Shadows below are reserved
+    // for floating overlays (sheets, alerts, toasts) where ambient glow is meaningful.
+
+    enum Elevation {
+        struct Shadow {
+            let color: Color
+            let radius: CGFloat
+            let y: CGFloat
+            let opacity: Double
+        }
+        static let shadowLow    = Shadow(color: .black, radius: 2,  y: 1, opacity: 0.12)
+        static let shadowMedium = Shadow(color: .black, radius: 8,  y: 4, opacity: 0.16)
+        static let shadowHigh   = Shadow(color: .black, radius: 16, y: 8, opacity: 0.20)
+    }
+
+    // MARK: - Motion
+
+    enum Motion {
+        // Interaction — user taps, drags.
+        static let pressIn:  Animation = .easeIn(duration: 0.08)
+        static let pressOut: Animation = .spring(response: 0.3, dampingFraction: 0.7)
+
+        // UI — navigation, transitions, sheets.
+        static let transition: Animation = .spring(response: 0.5, dampingFraction: 0.85)
+        static let sheet:      Animation = .spring(response: 0.55, dampingFraction: 0.825)
+
+        // Reveal — big data moments (score ring fill, hero card appear).
+        static let reveal:  Animation = .spring(response: 0.9, dampingFraction: 0.75)
+        static let counter: Animation = .easeOut(duration: 0.7)
+
+        // Ambient — toasts, chips, subtle state changes.
+        static let toast: Animation = .easeInOut(duration: 0.25)
+    }
+
+    // MARK: - Score Mapping
+
+    /// Score-based recovery color. Uses AppColour tokens for dark-mode safe tints.
     static func scoreColor(_ score: Int) -> Color {
         switch recoveryTier(for: score) {
-        case .optimal:
-            return .green
-        case .good:
-            return .yellow
-        case .fair:
-            return .orange
-        case .poor:
-            return .red
+        case .optimal: return AppColour.scoreOptimal
+        case .good:    return AppColour.scoreGood
+        case .fair:    return AppColour.scoreFair
+        case .poor:    return AppColour.scorePoor
         }
     }
 
@@ -127,37 +184,21 @@ enum DS {
     /// Human-readable recovery label from score bands.
     static func scoreLabel(_ score: Int) -> String {
         switch recoveryTier(for: score) {
-        case .optimal:
-            return "Optimal"
-        case .good:
-            return "Good"
-        case .fair:
-            return "Fair"
-        case .poor:
-            return "Poor"
+        case .optimal: return "Optimal"
+        case .good:    return "Good"
+        case .fair:    return "Fair"
+        case .poor:    return "Poor"
         }
     }
 
     private enum RecoveryTier {
-        case optimal
-        case good
-        case fair
-        case poor
+        case optimal, good, fair, poor
     }
 
     private static func recoveryTier(for score: Int) -> RecoveryTier {
-        if score > 75 {
-            return .optimal
-        }
-
-        if score >= 50 {
-            return .good
-        }
-
-        if score >= 30 {
-            return .fair
-        }
-
+        if score > 75 { return .optimal }
+        if score >= 50 { return .good }
+        if score >= 30 { return .fair }
         return .poor
     }
 }
@@ -166,8 +207,7 @@ enum DS {
 
 extension View {
     /// Text that shrinks to fit its container before showing an ellipsis.
-    /// Default lineLimit = 1, scale floor = 0.75. Use on labels/numbers where
-    /// truncation would destroy meaning.
+    /// Default lineLimit = 1, scale floor = 0.75.
     func dsFit(_ lineLimit: Int = 1, minScale: CGFloat = 0.75) -> some View {
         self
             .lineLimit(lineLimit)
@@ -179,20 +219,20 @@ extension View {
 // MARK: - Unified Card Background
 
 extension View {
-    /// Tinted card. colored background, matching stroke, and shadow
+    /// Tinted card — colored background, matching stroke, and subtle shadow.
     func cardStyle(tint: Color) -> some View {
         self
             .background(tint.opacity(DS.tintBg), in: RoundedRectangle(cornerRadius: DS.cardRadius))
             .overlay(RoundedRectangle(cornerRadius: DS.cardRadius).strokeBorder(tint.opacity(DS.strokeAlpha), lineWidth: 1.0))
-            .shadow(color: .black.opacity(0.10), radius: 14, y: 5)
+            .shadow(color: .black.opacity(DS.Elevation.shadowLow.opacity), radius: DS.Elevation.shadowLow.radius, y: DS.Elevation.shadowLow.y)
     }
 
-    /// Neutral card. system background, subtle stroke, and shadow
+    /// Neutral card — system background, subtle stroke, and shadow.
     func cardStyle() -> some View {
         self
             .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
             .overlay(RoundedRectangle(cornerRadius: DS.cardRadius).strokeBorder(.primary.opacity(0.10), lineWidth: 1.0))
-            .shadow(color: .black.opacity(0.10), radius: 14, y: 5)
+            .shadow(color: .black.opacity(DS.Elevation.shadowLow.opacity), radius: DS.Elevation.shadowLow.radius, y: DS.Elevation.shadowLow.y)
     }
 }
 

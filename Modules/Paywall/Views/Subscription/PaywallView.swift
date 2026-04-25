@@ -47,7 +47,7 @@ struct PaywallView: View {
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
-                VStack(spacing: 28) {
+                VStack(spacing: DS.sectionSpacing) {
                     header
                         .onAppear { headerTracker.appeared() }
                         .onDisappear { headerTracker.disappeared() }
@@ -67,7 +67,7 @@ struct PaywallView: View {
                 .onAppear { footerTracker.appeared() }
                 .onDisappear { footerTracker.disappeared() }
         }
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppColour.surfaceBase.ignoresSafeArea())
         .accessibilityIdentifier("screen.paywall")
         .onAppear {
             selectedProduct = yearly ?? monthly
@@ -98,19 +98,19 @@ struct PaywallView: View {
     // MARK: - Header
 
     private var header: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: DS.space3) {
             Image("LaunchIcon")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 80, height: 80)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.xxl, style: .continuous))
 
             Text(Copy.Paywall.unlockTitle)
-                .font(.largeTitle.weight(.bold))
+                .font(DS.Typography.largeTitle)
 
             Text(Copy.Paywall.unlockSubtitle)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.subheadline)
+                .foregroundStyle(AppColour.textSecondary)
                 .multilineTextAlignment(.center)
         }
     }
@@ -118,7 +118,7 @@ struct PaywallView: View {
     // MARK: - Features
 
     private var features: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             featureRow(icon: "waveform.path.ecg", text: Copy.Paywall.featureLiveVitals)
             featureRow(icon: "brain.head.profile", text: Copy.Paywall.featureInsights)
             featureRow(icon: "chart.line.uptrend.xyaxis", text: Copy.Paywall.featureTrends)
@@ -126,26 +126,26 @@ struct PaywallView: View {
             featureRow(icon: "lock.shield.fill", text: Copy.Paywall.featurePrivacy)
         }
         .padding(DS.space5)
-        .background(.background, in: RoundedRectangle(cornerRadius: 16))
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
     }
 
     private func featureRow(icon: String, text: String) -> some View {
-        HStack(spacing: 14) {
+        HStack(spacing: DS.itemSpacing) {
             Image(systemName: icon)
-                .font(.body.weight(.medium))
+                .font(DS.Typography.bodyMedium)
                 .foregroundStyle(.tint)
                 .frame(width: 28)
 
             Text(text)
-                .font(.subheadline)
-                .foregroundStyle(.primary)
+                .font(DS.Typography.subheadline)
+                .foregroundStyle(AppColour.textPrimary)
         }
     }
 
     // MARK: - Pricing
 
     private var pricing: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: DS.itemSpacing) {
             if let yearly {
                 pricingOption(
                     product: yearly,
@@ -208,38 +208,38 @@ struct PaywallView: View {
             pricingTracker.tapped(target: label.lowercased())
         } label: {
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: DS.space1) {
+                    HStack(spacing: DS.space2) {
                         Text(label)
-                            .font(.headline)
+                            .font(DS.Typography.headline)
 
                         if let badge {
                             Text(badge)
-                                .font(.caption.weight(.bold))
+                                .font(DS.Typography.captionSemibold)
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, DS.space2)
-                                .padding(.vertical, 3)
-                                .background(.green, in: Capsule())
+                                .padding(.vertical, DS.space1)
+                                .background(AppColour.success, in: Capsule())
                         }
                     }
 
                     Text(detail)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.subheadline)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
 
                 Spacer()
 
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.title2)
-                    .foregroundStyle(isSelected ? Color.accentColor : .secondary)
+                    .font(DS.Typography.title2)
+                    .foregroundStyle(isSelected ? Color.accentColor : AppColour.textSecondary)
             }
             .padding(DS.space4)
             .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(.background)
+                RoundedRectangle(cornerRadius: DS.Radius.lg)
+                    .fill(AppColour.surfaceRaised)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 14)
+                        RoundedRectangle(cornerRadius: DS.Radius.lg)
                             .strokeBorder(
                                 isSelected ? Color.accentColor : Color.clear,
                                 lineWidth: 2
@@ -247,17 +247,17 @@ struct PaywallView: View {
                     )
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
     }
 
     // MARK: - Footer
 
     private var footer: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: DS.itemSpacing) {
             if let error = subscriptionManager.errorMessage {
                 Text(error)
-                    .font(.caption)
-                    .foregroundStyle(.red)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.danger)
             }
 
             Button {
@@ -279,33 +279,27 @@ struct PaywallView: View {
                 )
                 Task { await subscriptionManager.purchase(product) }
             } label: {
-                Group {
-                    if subscriptionManager.isPurchasing {
-                        ProgressView()
-                            .tint(.white)
-                    } else {
-                        Text(callToActionTitle)
-                            .font(.headline)
-                    }
+                if subscriptionManager.isPurchasing {
+                    ProgressView()
+                        .tint(.white)
+                } else {
+                    Text(callToActionTitle)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
+            .buttonStyle(.dsPrimary)
             .disabled(selectedProduct == nil || subscriptionManager.isPurchasing)
             .accessibilityIdentifier("paywall.startTrialButton")
 
             // Trial duration and auto-renewal disclosure
             if selectedProductHasTrial {
                 Text(Copy.Paywall.trialDuration(SubscriptionConfig.trialDays))
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.primary)
+                    .font(DS.Typography.subheadlineMedium)
+                    .foregroundStyle(AppColour.textPrimary)
 
                 if let price = afterTrialPriceText {
                     Text(Copy.Paywall.afterTrial(price))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textSecondary)
                         .multilineTextAlignment(.center)
                 }
             }
@@ -337,11 +331,11 @@ struct PaywallView: View {
                     ProgressView()
                 } else {
                     Text(Copy.Buttons.restorePurchases)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.subheadline)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsTertiary)
             .accessibilityIdentifier("paywall.restoreButton")
 
             if subscriptionManager.products.isEmpty {
@@ -358,29 +352,29 @@ struct PaywallView: View {
                     Task { await subscriptionManager.loadProducts() }
                 } label: {
                     Text(Copy.Settings.retryLoadingPlans)
-                        .font(.subheadline.weight(.medium))
+                        .font(DS.Typography.subheadlineMedium)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsTertiary)
             }
 
             Text("Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless it is canceled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. You can manage and cancel your subscriptions by going to your App Store account settings after purchase.")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.caption2)
+                .foregroundStyle(AppColour.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, DS.space6)
 
-            HStack(spacing: 16) {
+            HStack(spacing: DS.space4) {
                 if let termsURL = URL(string: AppSecrets.URLs.termsOfUse) {
                     Link(Copy.Privacy.termsOfUse, destination: termsURL)
                 }
                 Text("\u{00B7}")
-                    .foregroundStyle(.quaternary)
+                    .foregroundStyle(AppColour.textQuaternary)
                 if let privacyURL = URL(string: AppSecrets.URLs.privacyPolicy) {
                     Link(Copy.Privacy.privacyPolicy, destination: privacyURL)
                 }
             }
-            .font(.caption2)
-            .foregroundStyle(.tertiary)
+            .font(DS.Typography.caption2)
+            .foregroundStyle(AppColour.textTertiary)
         }
         .padding(.horizontal, DS.space6)
         .padding(.top, DS.space3)

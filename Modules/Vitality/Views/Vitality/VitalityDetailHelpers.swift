@@ -39,8 +39,8 @@ func vitalityPaceTint(for scorer: VitalityScorer) -> Color {
 func vitalityDeltaColor(for delta: Int) -> Color {
     if delta <= -3 { return vitalityWhoopGreen }
     if delta < 0 { return AppColour.vitalityDeltaNegative }
-    if delta == 0 { return .blue }
-    if delta <= 3 { return .orange }
+    if delta == 0 { return AppColour.info }
+    if delta <= 3 { return AppColour.warning }
     return vitalityPaceRed
 }
 
@@ -108,10 +108,10 @@ func vitalityMetricGaugePosition(_ component: VitalityComponent) -> Double {
 func vitalitySectionHeader(icon: String, title: String) -> some View {
     HStack(spacing: 6) {
         Image(systemName: icon)
-            .font(.subheadline)
+            .font(DS.Typography.subheadline)
             .foregroundStyle(.tint)
         Text(title)
-            .font(.headline)
+            .font(DS.Typography.headline)
     }
     .padding(.horizontal)
 }

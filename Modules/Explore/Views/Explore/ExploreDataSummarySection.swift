@@ -18,17 +18,17 @@ struct ExploreDataSummarySection: View {
             Divider().frame(height: DS.dividerHeight)
             dataStat(value: "\(insightCount)", label: Copy.Explore.insights)
         }
-        .padding(.vertical, 10)
-        .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: DS.cardRadius))
+        .padding(.vertical, DS.itemSpacing)
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.cardRadius))
     }
 
     private func dataStat(value: String, label: String) -> some View {
-        VStack(spacing: 2) {
+        VStack(spacing: DS.space1) {
             Text(value)
-                .font(.subheadline.weight(.bold).monospacedDigit())
+                .font(DS.Typography.subheadlineSemibold.monospacedDigit())
             Text(label)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.caption2)
+                .foregroundStyle(AppColour.textSecondary)
         }
         .frame(maxWidth: .infinity)
     }

@@ -78,22 +78,22 @@ struct OnboardingView: View {
             .scrollDisabled(true)
 
             if currentStep != .pulse, let currentProgressIndex = flowSteps.firstIndex(of: currentStep) {
-                HStack(spacing: 6) {
+                HStack(spacing: DS.space2) {
                     ForEach(0..<flowSteps.count, id: \.self) { index in
                         Circle()
-                            .fill(index <= currentProgressIndex ? Color.accentColor : Color.secondary.opacity(0.2))
+                            .fill(index <= currentProgressIndex ? AppColour.primary : AppColour.borderLow)
                             .frame(
-                                width: index == currentProgressIndex ? 8 : 6,
-                                height: index == currentProgressIndex ? 8 : 6
+                                width: index == currentProgressIndex ? DS.space2 : 6,
+                                height: index == currentProgressIndex ? DS.space2 : 6
                             )
-                            .animation(.spring(response: 0.4), value: currentStep)
+                            .animation(DS.Motion.transition, value: currentStep)
                     }
                 }
                 .padding(.bottom, DS.space4)
             }
         }
         .accessibilityIdentifier("screen.onboarding")
-        .background(Color(.systemGroupedBackground))
+        .background(AppColour.surfaceBase)
         .interactiveDismissDisabled()
         .sensoryFeedback(.selection, trigger: currentStep)
         .onAppear {

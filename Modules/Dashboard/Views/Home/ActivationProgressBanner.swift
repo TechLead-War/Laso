@@ -50,14 +50,14 @@ struct ActivationProgressBanner: View {
     // MARK: - Progress Bar
 
     private var progressBar: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: DS.space2) {
             HStack {
                 Text(ActivationSequenceManager.progressDescription(state: state))
-                    .font(.system(size: 13.2).weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.footnoteMedium)
+                    .foregroundStyle(AppColour.textSecondary)
                 Spacer()
                 Text("\(Int(state.progressFraction * 100))%")
-                    .font(.system(size: 13.2).weight(.bold))
+                    .font(DS.Typography.captionSemibold)
                     .foregroundStyle(.tint)
             }
 
@@ -74,8 +74,8 @@ struct ActivationProgressBanner: View {
                     ForEach(0..<7, id: \.self) { i in
                         let lineX = dotSize * CGFloat(i + 1) + gapWidth * CGFloat(i)
                         let filled = i < state.currentDay
-                        RoundedRectangle(cornerRadius: 1)
-                            .fill(filled ? Color.accentColor : Color(.systemFill))
+                        RoundedRectangle(cornerRadius: DS.Radius.xs)
+                            .fill(filled ? Color.accentColor : AppColour.borderLow)
                             .frame(width: gapWidth, height: 2)
                             .offset(x: lineX)
                     }
@@ -84,7 +84,7 @@ struct ActivationProgressBanner: View {
                     ForEach(1...8, id: \.self) { day in
                         let dotX = dotSize * CGFloat(day - 1) + gapWidth * CGFloat(day - 1)
                         Circle()
-                            .fill(day <= state.currentDay ? Color.accentColor : Color(.systemFill))
+                            .fill(day <= state.currentDay ? Color.accentColor : AppColour.borderLow)
                             .frame(width: dotSize, height: dotSize)
                             .offset(x: dotX)
                     }
@@ -95,27 +95,27 @@ struct ActivationProgressBanner: View {
         }
         .padding(.vertical, DS.space2)
         .padding(.horizontal, DS.space3)
-        .glassChrome(in: RoundedRectangle(cornerRadius: 12))
+        .glassChrome(in: RoundedRectangle(cornerRadius: DS.Radius.md))
     }
 
     // MARK: - Celebration Card
 
     private func celebrationCard(_ event: ActivationSequenceManager.MilestoneEvent) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DS.space3) {
             Image(systemName: event.milestone.icon)
-                .font(.system(size: 24).weight(.semibold))
+                .font(DS.Typography.bodySemibold)
                 .foregroundStyle(.white)
                 .frame(width: 40, height: 40)
-                .background(.tint, in: RoundedRectangle(cornerRadius: 10))
+                .background(.tint, in: RoundedRectangle(cornerRadius: DS.Radius.sm))
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DS.space1) {
                 Text(event.milestone.title)
-                    .font(.system(size: 18).weight(.semibold))
-                    .foregroundStyle(.primary)
+                    .font(DS.Typography.bodySemibold)
+                    .foregroundStyle(AppColour.textPrimary)
 
                 Text(event.milestone.detail)
-                    .font(.system(size: 13.2))
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.footnote)
+                    .foregroundStyle(AppColour.textSecondary)
                     .lineLimit(2)
             }
 
@@ -129,18 +129,18 @@ struct ActivationProgressBanner: View {
                 }
             } label: {
                 Image(systemName: "xmark")
-                    .font(.system(size: 13.2).weight(.bold))
-                    .foregroundStyle(.tertiary)
+                    .font(DS.Typography.captionSemibold)
+                    .foregroundStyle(AppColour.textTertiary)
             }
         }
         .padding(DS.space3)
         .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(.background)
+            RoundedRectangle(cornerRadius: DS.Radius.lg)
+                .fill(AppColour.surfaceRaised)
                 .shadow(color: .accentColor.opacity(0.15), radius: 8, y: 2)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 14)
+            RoundedRectangle(cornerRadius: DS.Radius.lg)
                 .strokeBorder(.tint.opacity(0.2), lineWidth: 1)
         )
         .padding(.bottom, DS.space2)
@@ -168,33 +168,33 @@ struct AskYourDataCard: View {
             AppAnalytics.shared.trackBlockTap(title: "Ask Your Data Card", type: .smartAction, screen: .home, metadata: ["source": "ask_your_data_card"])
             onTap()
         }) {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: DS.space2) {
                 Text(Copy.Home.AskYourData.caption)
-                    .font(.system(size: 12).weight(.semibold))
+                    .font(DS.Typography.caption2Semibold)
                     .tracking(1.8)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(AppColour.textTertiary)
 
-                HStack(spacing: 12) {
+                HStack(spacing: DS.space3) {
                     Text(samplePrompt)
-                        .font(.system(size: 17, weight: .regular))
+                        .font(DS.Typography.body)
                         .italic()
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                         .lineLimit(2)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     Image(systemName: "arrow.right")
-                        .font(.system(size: 15).weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.subheadlineSemibold)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
-                .padding(.vertical, 16)
-                .padding(.horizontal, 18)
+                .padding(.vertical, DS.space4)
+                .padding(.horizontal, DS.space5)
                 .overlay(
                     Capsule()
-                        .strokeBorder(.primary.opacity(0.14), lineWidth: 1)
+                        .strokeBorder(AppColour.borderHigh, lineWidth: 1)
                 )
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
         .padding(.horizontal, DS.screenPadding)
         .accessibilityIdentifier("home.askYourDataCard")
         .accessibilityLabel("\(Copy.Home.AskYourData.caption). \(samplePrompt)")

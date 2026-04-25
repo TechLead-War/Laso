@@ -12,7 +12,7 @@ struct CategoryDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: DS.sectionSpacing) {
                 // Category Score
                 if let score = viewModel.categoryScore {
                     HealthScoreRing(
@@ -52,44 +52,44 @@ struct CategoryDetailView: View {
 
                 // Historical highlights for this category
                 if !viewModel.historicalHighlights.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(spacing: 6) {
+                    VStack(alignment: .leading, spacing: DS.space2) {
+                        HStack(spacing: DS.space2) {
                             Image(systemName: "clock.arrow.circlepath")
-                                .font(.subheadline)
+                                .font(DS.Typography.subheadline)
                                 .foregroundStyle(.tint)
                             Text("From Your History")
-                                .font(.headline)
+                                .font(DS.Typography.headline)
                         }
                         .padding(.horizontal)
 
                         VStack(spacing: 0) {
                             ForEach(viewModel.historicalHighlights, id: \.metric) { item in
                                 NavigationLink(value: item.metric) {
-                                    HStack(spacing: 10) {
+                                    HStack(spacing: DS.itemSpacing) {
                                         Image(systemName: item.icon)
-                                            .font(.caption)
+                                            .font(DS.Typography.caption)
                                             .foregroundStyle(.tint)
                                             .frame(width: 20)
 
-                                        VStack(alignment: .leading, spacing: 2) {
+                                        VStack(alignment: .leading, spacing: DS.space1 / 2) {
                                             Text(item.metric.displayName)
-                                                .font(.caption)
-                                                .foregroundStyle(.secondary)
+                                                .font(DS.Typography.caption)
+                                                .foregroundStyle(AppColour.textSecondary)
                                             Text(item.text)
-                                                .font(.subheadline.weight(.medium))
-                                                .foregroundStyle(.primary)
+                                                .font(DS.Typography.subheadlineMedium)
+                                                .foregroundStyle(AppColour.textPrimary)
                                         }
 
                                         Spacer()
 
                                         Image(systemName: "chevron.right")
-                                            .font(.caption2)
-                                            .foregroundStyle(.tertiary)
+                                            .font(DS.Typography.caption2)
+                                            .foregroundStyle(AppColour.textTertiary)
                                     }
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 9)
+                                    .padding(.horizontal, DS.cardPadding)
+                                    .padding(.vertical, DS.space3 - DS.space1 / 2)
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(.dsPress)
                                 .contentShape(Rectangle())
                             }
                         }
@@ -102,23 +102,25 @@ struct CategoryDetailView: View {
 
                 // Insights for this category
                 if !viewModel.insights.isEmpty {
-                    VStack(alignment: .leading, spacing: 10) {
+                    VStack(alignment: .leading, spacing: DS.itemSpacing) {
                         Text("Insights")
-                            .font(.headline)
+                            .font(DS.Typography.headline)
                             .padding(.horizontal)
 
                         ForEach(viewModel.insights) { insight in
-                            InsightCard(insight: insight)
-                                .padding(.horizontal)
-                                .onTapGesture {
-                                    AppAnalytics.shared.trackInsightTapped(
-                                        category: insight.category.rawValue,
-                                        severity: insight.severity.rawValue,
-                                        metric: insight.metric.rawValue,
-                                        screen: .categoryDetail
-                                    )
-                                    insightsTracker.tapped(target: insight.metric.rawValue)
-                                }
+                            Button {
+                                AppAnalytics.shared.trackInsightTapped(
+                                    category: insight.category.rawValue,
+                                    severity: insight.severity.rawValue,
+                                    metric: insight.metric.rawValue,
+                                    screen: .categoryDetail
+                                )
+                                insightsTracker.tapped(target: insight.metric.rawValue)
+                            } label: {
+                                InsightCard(insight: insight)
+                            }
+                            .buttonStyle(.dsPress)
+                            .padding(.horizontal)
                         }
                     }
                     .onAppear { insightsTracker.appeared() }
@@ -126,16 +128,16 @@ struct CategoryDetailView: View {
                 }
 
                 // Metric List. sorted by severity
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: DS.itemSpacing) {
                     HStack {
                         Text("Metrics")
-                            .font(.headline)
+                            .font(DS.Typography.headline)
 
                         Spacer()
 
                         Text("\(viewModel.activeMetricCount) active")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(AppColour.textSecondary)
                     }
                     .padding(.horizontal)
 
@@ -144,7 +146,7 @@ struct CategoryDetailView: View {
                             metricRow(metric)
                                 .contentShape(Rectangle())
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.dsPress)
                         .accessibilityIdentifier("category.metric.\(metric.rawValue)")
                     }
                 }
@@ -152,8 +154,8 @@ struct CategoryDetailView: View {
                 .onDisappear { metricsTracker.disappeared() }
 
                 Text(Copy.Analysis.RiskDetail.disclaimer)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption2)
+                    .foregroundStyle(AppColour.textSecondary)
                     .multilineTextAlignment(.leading)
                     .padding(.horizontal)
                     .padding(.top, DS.space6)
@@ -161,7 +163,7 @@ struct CategoryDetailView: View {
             }
             .padding(.bottom)
         }
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppColour.surfaceBase.ignoresSafeArea())
         .navigationTitle(viewModel.category.displayName)
         .accessibilityIdentifier("screen.categoryDetail")
         .onAppear {
@@ -176,7 +178,7 @@ struct CategoryDetailView: View {
     // MARK: - Category Analytics
 
     private var categoryAnalyticsSection: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: DS.itemSpacing) {
             // Trend summary counters
             let trends = viewModel.trendSummary
             HStack(spacing: 0) {
@@ -184,57 +186,57 @@ struct CategoryDetailView: View {
                     count: trends.improving,
                     label: "Improving",
                     icon: "arrow.up.right",
-                    color: .green
+                    color: AppColour.success
                 )
                 Divider().frame(height: DS.dividerHeight)
                 analyticsPill(
                     count: trends.stable,
                     label: "Stable",
                     icon: "arrow.right",
-                    color: .secondary
+                    color: AppColour.textSecondary
                 )
                 Divider().frame(height: DS.dividerHeight)
                 analyticsPill(
                     count: trends.declining,
                     label: "Declining",
                     icon: "arrow.down.right",
-                    color: .red
+                    color: AppColour.danger
                 )
             }
-            .padding(.vertical, 10)
-            .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: DS.cardRadius))
+            .padding(.vertical, DS.space3 - DS.space1 / 2)
+            .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.cardRadius))
             .padding(.horizontal)
 
             // Anomaly count badge
             if viewModel.anomalousMetricCount > 0 {
-                HStack(spacing: 6) {
+                HStack(spacing: DS.space2) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.warning)
                     Text("\(viewModel.anomalousMetricCount) metric\(viewModel.anomalousMetricCount == 1 ? "" : "s") need\(viewModel.anomalousMetricCount == 1 ? "s" : "") attention")
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.captionMedium)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
-                .padding(.horizontal, 14)
+                .padding(.horizontal, DS.cardPadding)
                 .padding(.vertical, DS.space2)
-                .background(.orange.opacity(DS.badgeBg), in: Capsule())
+                .background(AppColour.warning.opacity(DS.badgeBg), in: Capsule())
                 .padding(.horizontal)
             }
         }
     }
 
     private func analyticsPill(count: Int, label: String, icon: String, color: Color) -> some View {
-        VStack(spacing: 3) {
-            HStack(spacing: 3) {
+        VStack(spacing: DS.space1) {
+            HStack(spacing: DS.space1) {
                 Image(systemName: icon)
-                    .font(.caption2.weight(.bold))
+                    .font(DS.Typography.caption2Semibold)
                     .foregroundStyle(color)
                 Text("\(count)")
-                    .font(.title3.weight(.bold).monospacedDigit())
+                    .font(DS.Typography.title3)
             }
             Text(label)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.caption2)
+                .foregroundStyle(AppColour.textSecondary)
         }
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)
@@ -246,13 +248,13 @@ struct CategoryDetailView: View {
     private func metricRow(_ metric: HealthMetric) -> some View {
         HStack {
             Image(systemName: metric.systemImageName)
-                .font(.body)
+                .font(DS.Typography.body)
                 .foregroundStyle(viewModel.category.color)
                 .frame(width: 28)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DS.space1 / 2) {
                 Text(metric.displayName)
-                    .font(.subheadline.weight(.medium))
+                    .font(DS.Typography.subheadlineMedium)
 
                 if let severity = viewModel.severity(for: metric) {
                     SeverityBadge(severity: severity)
@@ -261,11 +263,11 @@ struct CategoryDetailView: View {
 
             Spacer()
 
-            VStack(alignment: .trailing, spacing: 2) {
+            VStack(alignment: .trailing, spacing: DS.space1 / 2) {
                 Text("\(viewModel.latestValue(for: metric)) \(metric.unit)")
-                    .font(.subheadline.weight(.semibold).monospacedDigit())
+                    .font(DS.Typography.subheadlineSemibold)
 
-                HStack(spacing: 4) {
+                HStack(spacing: DS.space1) {
                     if let trend = viewModel.trend(for: metric) {
                         TrendBadge(direction: trend)
                     }
@@ -273,15 +275,15 @@ struct CategoryDetailView: View {
                     let wow = viewModel.weekOverWeekChange(for: metric)
                     if wow != "--" {
                         Text(wow)
-                            .font(.caption2.weight(.medium).monospacedDigit())
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.caption2Medium)
+                            .foregroundStyle(AppColour.textSecondary)
                     }
                 }
             }
 
             Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
+                .font(DS.Typography.caption)
+                .foregroundStyle(AppColour.textTertiary)
         }
         .padding(DS.cardPadding)
         .cardStyle()

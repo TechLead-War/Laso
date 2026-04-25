@@ -32,26 +32,26 @@ struct DailyNarrativeCard: View {
     // MARK: - Loaded Body
 
     private func narrativeBody(_ text: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: DS.space2) {
+            HStack(spacing: DS.space1) {
                 Image(systemName: "sparkles")
-                    .font(.system(size: 13.2).weight(.semibold))
+                    .font(DS.Typography.captionSemibold)
                     .foregroundStyle(.tint)
                 Text("FOR YOU TODAY")
-                    .font(.system(size: 13.2).weight(.semibold))
+                    .font(DS.Typography.captionSemibold)
                     .tracking(0.8)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColour.textSecondary)
             }
             Text(text)
-                .font(.system(size: 18).weight(.medium))
-                .foregroundStyle(.primary)
+                .font(DS.Typography.bodyMedium)
+                .foregroundStyle(AppColour.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
                 .postHogMask()
         }
         .padding(.horizontal, DS.space5)
-        .padding(.vertical, 14)
+        .padding(.vertical, DS.space3)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg, style: .continuous))
         .padding(.horizontal, DS.screenPadding)
         .transition(.opacity.combined(with: .move(edge: .top)))
     }
@@ -59,17 +59,17 @@ struct DailyNarrativeCard: View {
     // MARK: - Loading Body
 
     private var loadingBody: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: DS.space2) {
             ProgressView()
                 .controlSize(.small)
             Text("Reading today's signals…")
-                .font(.system(size: 14.4))
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.callout)
+                .foregroundStyle(AppColour.textSecondary)
         }
         .padding(.horizontal, DS.space5)
-        .padding(.vertical, 14)
+        .padding(.vertical, DS.space3)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg, style: .continuous))
         .padding(.horizontal, DS.screenPadding)
     }
 

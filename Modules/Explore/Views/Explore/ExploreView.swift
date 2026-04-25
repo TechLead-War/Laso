@@ -23,15 +23,6 @@ struct ExploreView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-                // In-content title. replaces large nav title to remove wasted top space
-                HStack {
-                    Text(Copy.Explore.title)
-                        .font(.largeTitle.weight(.bold))
-                    Spacer()
-                }
-                .padding(.horizontal)
-                .padding(.top, DS.space1)
-
                 if hasScoreData {
                     // 1. Score Hero with trend
                     ExploreScoreHeroSection(
@@ -147,10 +138,10 @@ struct ExploreView: View {
                         HStack(spacing: 6) {
                             Image(systemName: strongest.category.systemImageName)
                                 .font(.caption)
-                                .foregroundStyle(.green)
+                                .foregroundStyle(AppColour.success)
                             Text("Strongest: \(strongest.category.displayName)")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(AppColour.textSecondary)
                             Spacer()
                         }
                         .padding(.horizontal)
@@ -241,25 +232,29 @@ struct ExploreView: View {
                     // 9. Free tier upsell for advanced analytics. Pro users see the
                     // explanation inline inside section 8 above.
                     if !FeatureGate.canAccess(.advancedAnalytics) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text(Copy.Explore.connections)
-                                    .font(.headline)
-                                Spacer()
-                                Text("PRO")
-                                    .font(.caption2.weight(.bold))
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(.blue, in: Capsule())
+                        VStack(alignment: .leading, spacing: DS.itemSpacing) {
+                            SectionHeaderView(icon: "link", title: Copy.Explore.connections)
+
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Text(Copy.Explore.connections)
+                                        .font(.headline)
+                                    Spacer()
+                                    Text("PRO")
+                                        .font(.caption2.weight(.bold))
+                                        .foregroundStyle(AppColour.textPrimary)
+                                        .padding(.horizontal, DS.space2)
+                                        .padding(.vertical, DS.space1)
+                                        .background(AppColour.primary, in: Capsule())
+                                }
+                                Text("Discover hidden connections between your metrics")
+                                    .font(.subheadline)
+                                    .foregroundStyle(AppColour.textSecondary)
                             }
-                            Text("Discover hidden connections between your metrics")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                            .padding(DS.cardPadding)
+                            .cardStyle()
+                            .padding(.horizontal)
                         }
-                        .padding(DS.cardPadding)
-                        .cardStyle()
-                        .padding(.horizontal)
                         .onAppear { correlationsTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 90) }
                         .onDisappear { correlationsTracker.disappeared() }
                     }
@@ -275,10 +270,9 @@ struct ExploreView: View {
         }
         .contentMargins(.bottom, 72, for: .scrollContent)
         .accessibilityIdentifier("screen.explore")
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppColour.surfaceBase.ignoresSafeArea())
         .navigationTitle(Copy.Explore.title)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.hidden, for: .navigationBar)
+        .navigationBarTitleDisplayMode(.large)
         .onAppear {
             maxScrollDepth = 0
             AppAnalytics.shared.trackFeatureOpen(.explore, metadata: [

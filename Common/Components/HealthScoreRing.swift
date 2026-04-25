@@ -7,6 +7,7 @@ struct HealthScoreRing: View {
     let size: CGFloat
     let lineWidth: CGFloat
     let showScore: Bool
+    let tint: Color?
 
     @State private var animatedProgress: Double = 0
 
@@ -15,15 +16,16 @@ struct HealthScoreRing: View {
     }
 
     private var ringColor: Color {
-        DS.scoreColor(score)
+        tint ?? DS.scoreColor(score)
     }
 
-    init(score: Int, label: String = "Overall", size: CGFloat = 160, lineWidth: CGFloat = 14, showScore: Bool = true) {
+    init(score: Int, label: String = "Overall", size: CGFloat = 160, lineWidth: CGFloat = 14, showScore: Bool = true, tint: Color? = nil) {
         self.score = score
         self.label = label
         self.size = size
         self.lineWidth = lineWidth
         self.showScore = showScore
+        self.tint = tint
     }
 
     var body: some View {

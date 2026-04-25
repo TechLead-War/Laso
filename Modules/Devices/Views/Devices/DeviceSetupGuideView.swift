@@ -5,25 +5,25 @@ struct DeviceSetupGuideView: View {
     let device: SupportedDevice
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: DS.space4) {
             Text(headerTitle)
-                .font(.subheadline.weight(.semibold))
+                .font(DS.Typography.subheadlineSemibold)
 
             Text(headerBody)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.caption)
+                .foregroundStyle(AppColour.textSecondary)
 
             ForEach(Array(device.setupSteps.enumerated()), id: \.element.id) { index, step in
-                HStack(alignment: .top, spacing: 12) {
+                HStack(alignment: .top, spacing: DS.itemSpacing) {
                     Text("\(index + 1)")
-                        .font(.caption.weight(.bold))
+                        .font(DS.Typography.captionSemibold)
                         .foregroundStyle(.white)
                         .frame(width: 24, height: 24)
                         .background(device.iconColor, in: Circle())
 
                     Text(step.instruction)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.subheadline)
+                        .foregroundStyle(AppColour.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -32,14 +32,14 @@ struct DeviceSetupGuideView: View {
                 if let appStoreURL = device.appStoreURL {
                     Link(destination: appStoreURL) {
                         Label("Open App Store", systemImage: "arrow.down.app.fill")
-                            .font(.subheadline.weight(.medium))
+                            .font(DS.Typography.subheadlineMedium)
                     }
                     .buttonStyle(.borderedProminent)
                 }
             }
         }
         .padding()
-        .background(.background, in: RoundedRectangle(cornerRadius: 14))
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.deviceSetupGuide, metadata: [
                 "device": device.rawValue
@@ -78,5 +78,5 @@ struct DeviceSetupGuideView: View {
 #Preview {
     DeviceSetupGuideView(device: .garmin)
         .padding()
-        .background(Color(.systemGroupedBackground))
+        .background(AppColour.surfaceBase)
 }

@@ -16,37 +16,37 @@ struct ExploreHealthStateLinkSection: View {
             )
             onTapped()
         } label: {
-            HStack(spacing: 12) {
+            HStack(spacing: DS.itemSpacing) {
                 Image(systemName: "gauge.with.dots.needle.67percent")
-                    .font(.title3)
-                    .foregroundStyle(.mint)
+                    .font(DS.Typography.title3)
+                    .foregroundStyle(AppColour.accent)
                     .frame(width: DS.iconSize, height: DS.iconSize)
-                    .background(Color.mint.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.iconRadius))
+                    .background(AppColour.accent.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.iconRadius))
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: DS.space1) {
                     Text(Copy.Explore.healthStates)
-                        .font(.subheadline.weight(.semibold))
+                        .font(DS.Typography.subheadlineSemibold)
                     if let state = currentHealthState {
                         Text(Copy.Explore.healthStateDuration(label: state.label, days: state.daysInState))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(AppColour.textSecondary)
                     } else {
                         Text(Copy.Explore.seeHealthStatePatterns)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(AppColour.textSecondary)
                     }
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary)
+                    .font(DS.Typography.captionSemibold)
+                    .foregroundStyle(AppColour.textTertiary)
             }
             .padding(DS.cardPadding)
             .cardStyle()
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
         .accessibilityIdentifier("explore.healthStateLink")
     }
 }

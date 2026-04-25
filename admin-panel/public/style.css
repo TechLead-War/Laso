@@ -668,6 +668,19 @@ body {
 
 /* ═══ Feature Rows ═══════════════════════════════════════════════════════ */
 
+.feature-group-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary, #6b7280);
+  margin: 16px 0 6px;
+}
+
+.feature-group-title:first-child {
+  margin-top: 0;
+}
+
 .feature-row {
   display: flex;
   align-items: center;

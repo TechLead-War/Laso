@@ -18,9 +18,9 @@ enum StrainBalance {
 
     var color: Color {
         switch self {
-        case .under: return .blue
-        case .optimal: return .green
-        case .overreaching: return .red
+        case .under: return AppColour.info
+        case .optimal: return AppColour.success
+        case .overreaching: return AppColour.danger
         }
     }
 
@@ -100,7 +100,7 @@ struct StrainDetailView: View {
             }
             .padding(.bottom, DS.space6)
         }
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppColour.surfaceBase.ignoresSafeArea())
         .navigationTitle(Copy.Strain.title)
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
@@ -155,7 +155,7 @@ struct StrainDetailView: View {
                         .lineLimit(1)
 
                     Text(strainLevel.displayName)
-                        .font(.footnote.weight(.semibold))
+                        .font(DS.Typography.footnoteMedium)
                         .foregroundStyle(strainLevel.color)
                         .minimumScaleFactor(0.7)
                         .lineLimit(1)
@@ -183,11 +183,11 @@ struct StrainDetailView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, DS.space2)
         }
-        .padding(22)
+        .padding(DS.space6)
         .frame(maxWidth: .infinity)
-        .background(strainGradient, in: RoundedRectangle(cornerRadius: 20))
+        .background(strainGradient, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
         .overlay(
-            RoundedRectangle(cornerRadius: 20)
+            RoundedRectangle(cornerRadius: DS.Radius.xl)
                 .strokeBorder(strainLevel.color.opacity(DS.strokeAlpha * 2), lineWidth: 1)
         )
         .shadow(color: strainLevel.color.opacity(0.15), radius: 12, y: 4)
@@ -253,13 +253,13 @@ struct StrainDetailView: View {
                         .foregroundStyle(.secondary)
                     HStack(spacing: 2) {
                         Text(String(format: "%.1f", avgStrain))
-                            .font(.caption.weight(.bold).monospacedDigit())
+                            .font(DS.Typography.captionSemibold.monospacedDigit())
                         Text(Copy.Strain.scaleSuffix)
-                            .font(.caption2.weight(.medium).monospacedDigit())
+                            .font(DS.Typography.caption2Medium.monospacedDigit())
                             .foregroundStyle(.secondary)
                     }
                     Text(StrainLevel(strain: avgStrain).displayName)
-                        .font(.caption2.weight(.bold))
+                        .font(DS.Typography.caption2Semibold)
                         .foregroundStyle(StrainLevel(strain: avgStrain).color)
                         .padding(.horizontal, DS.badgeH)
                         .padding(.vertical, DS.badgeV)
@@ -302,7 +302,7 @@ struct StrainDetailView: View {
 
                 snapshotRow(
                     icon: "text.bubble.fill",
-                    iconColor: .indigo,
+                    iconColor: AppColour.categorySleep,
                     title: trainingZone,
                     subtitle: guidanceText,
                     subtitleLines: 3
@@ -326,7 +326,7 @@ struct StrainDetailView: View {
     }
 
     private var targetColor: Color {
-        targetStrainRange.contains(strainValue) ? .green : .orange
+        targetStrainRange.contains(strainValue) ? AppColour.success : AppColour.warning
     }
 
     private func snapshotRow(
@@ -416,7 +416,7 @@ struct StrainDetailView: View {
 
         return HStack(spacing: 10) {
             Text("Z\(zone)")
-                .font(.caption.weight(.bold))
+                .font(DS.Typography.captionSemibold)
                 .foregroundStyle(.white)
                 .frame(width: 28, height: 28)
                 .background(TrainingZoneColor.color(for: zone), in: Circle())
@@ -427,7 +427,7 @@ struct StrainDetailView: View {
                         .font(DS.Typography.subheadlineMedium)
                     Spacer()
                     Text(formatMinutes(minutes))
-                        .font(.subheadline.weight(.bold).monospacedDigit())
+                        .font(DS.Typography.subheadlineSemibold.monospacedDigit())
                         .foregroundStyle(TrainingZoneColor.color(for: zone))
                 }
 

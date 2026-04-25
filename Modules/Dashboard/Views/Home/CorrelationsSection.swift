@@ -9,20 +9,20 @@ struct CorrelationsSection: View {
     var body: some View {
         Group {
             if !correlations.isEmpty {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: DS.itemSpacing) {
                     // Header
                     HStack {
                         Text(Copy.Home.fromYourData)
-                            .font(.system(size: 20.4, weight: .semibold))
+                            .font(DS.Typography.title3)
 
                         Spacer()
 
                         Button(action: onTapSeeAll) {
-                            HStack(spacing: 4) {
+                            HStack(spacing: DS.space1) {
                                 Text("See all")
-                                    .font(.system(size: 18).weight(.medium))
+                                    .font(DS.Typography.bodyMedium)
                                 Image(systemName: "chevron.right")
-                                    .font(.system(size: 13.2).weight(.semibold))
+                                    .font(DS.Typography.footnoteMedium)
                             }
                             .foregroundStyle(.tint)
                         }
@@ -54,32 +54,32 @@ struct CorrelationCard: View {
 
     var body: some View {
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: DS.space2) {
                 // Cause → Effect row
-                HStack(spacing: 8) {
+                HStack(spacing: DS.space2) {
                     // Cause metric icon
                     Image(systemName: correlation.metricA.systemImageName)
-                        .font(.system(size: 20.4).weight(.semibold))
+                        .font(DS.Typography.title3)
                         .foregroundStyle(correlation.metricA.category.color)
                         .frame(width: 24)
 
                     Text(correlation.causeLabel)
-                        .font(.system(size: 18).weight(.medium))
-                        .foregroundStyle(.primary)
+                        .font(DS.Typography.bodyMedium)
+                        .foregroundStyle(AppColour.textPrimary)
 
                     Image(systemName: "arrow.right")
-                        .font(.system(size: 14.4).weight(.bold))
-                        .foregroundStyle(.tertiary)
+                        .font(DS.Typography.calloutSemibold)
+                        .foregroundStyle(AppColour.textTertiary)
 
                     // Effect metric icon
                     Image(systemName: correlation.metricB.systemImageName)
-                        .font(.system(size: 20.4).weight(.semibold))
+                        .font(DS.Typography.title3)
                         .foregroundStyle(correlation.metricB.category.color)
                         .frame(width: 24)
 
                     Text(correlation.effectLabel)
-                        .font(.system(size: 18).weight(.medium))
-                        .foregroundStyle(.primary)
+                        .font(DS.Typography.bodyMedium)
+                        .foregroundStyle(AppColour.textPrimary)
                         .lineLimit(2)
                         .minimumScaleFactor(0.75)
 
@@ -87,30 +87,30 @@ struct CorrelationCard: View {
                 }
 
                 // Bottom row: strength badge + day offset + chevron
-                HStack(spacing: 8) {
+                HStack(spacing: DS.space2) {
                     StrengthBadge(label: correlation.strengthLabel)
 
                     Text(correlation.dayOffset == 0 ? "Same day" : "Next day effect")
-                        .font(.system(size: 13.2))
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.footnote)
+                        .foregroundStyle(AppColour.textSecondary)
 
                     Spacer()
 
                     Text(correlation.effectSummary)
-                        .font(.system(size: 14.4))
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.callout)
+                        .foregroundStyle(AppColour.textSecondary)
                         .lineLimit(2)
                         .minimumScaleFactor(0.75)
 
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 13.2).weight(.semibold))
-                        .foregroundStyle(.tertiary)
+                        .font(DS.Typography.footnoteMedium)
+                        .foregroundStyle(AppColour.textTertiary)
                 }
             }
             .padding(DS.cardPadding)
-            .cardStyle(tint: .purple)
+            .cardStyle(tint: AppColour.categoryStress)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(correlation.causeLabel) leads to \(correlation.effectLabel)")
         .accessibilityValue("\(correlation.strengthLabel) correlation")
@@ -125,7 +125,7 @@ struct StrengthBadge: View {
 
     var body: some View {
         Text(label)
-            .font(.system(size: 13.2).weight(.bold))
+            .font(DS.Typography.captionSemibold)
             .foregroundStyle(badgeColor)
             .padding(.horizontal, DS.badgeH)
             .padding(.vertical, DS.badgeV)
@@ -134,9 +134,9 @@ struct StrengthBadge: View {
 
     private var badgeColor: Color {
         switch label {
-        case "Strong": return .green
-        case "Moderate": return .yellow
-        default: return .gray
+        case "Strong": return AppColour.success
+        case "Moderate": return AppColour.warning
+        default: return AppColour.textSecondary
         }
     }
 }

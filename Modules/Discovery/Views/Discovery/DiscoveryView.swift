@@ -24,7 +24,7 @@ struct DiscoveryView: View {
 
     var body: some View {
         ZStack {
-            Color(.systemBackground).ignoresSafeArea()
+            AppColour.surfaceBase.ignoresSafeArea()
 
             TabView(selection: $currentPage) {
                 openingPage.tag(0)
@@ -74,13 +74,13 @@ struct DiscoveryView: View {
     // MARK: - Opening Stats Page
 
     private var openingPage: some View {
-        VStack(spacing: 32) {
+        VStack(spacing: DS.sectionSpacing) {
             Spacer()
 
             // Animated icon
             ZStack {
                 Circle()
-                    .fill(.blue.opacity(0.08))
+                    .fill(AppColour.primary.opacity(0.08))
                     .frame(width: 140, height: 140)
                     .scaleEffect(appeared ? 1.2 : 0.8)
                     .animation(
@@ -91,25 +91,25 @@ struct DiscoveryView: View {
                     )
 
                 Circle()
-                    .fill(.blue.opacity(0.04))
+                    .fill(AppColour.primary.opacity(0.04))
                     .frame(width: 180, height: 180)
                     .scaleEffect(appeared ? 1.4 : 0.9)
                     .animation(.easeInOut(duration: 1.0), value: appeared)
 
                 Image(systemName: "waveform.path.ecg")
-                    .font(.system(size: 44, weight: .medium))
-                    .foregroundStyle(.blue)
+                    .font(DS.Typography.largeIcon)
+                    .foregroundStyle(AppColour.primary)
                     .frame(width: 90, height: 90)
-                    .background(.blue.opacity(0.12), in: Circle())
+                    .background(AppColour.primary.opacity(0.12), in: Circle())
             }
 
-            VStack(spacing: 12) {
+            VStack(spacing: DS.itemSpacing) {
                 Text("We analyzed your health history")
-                    .font(.title3.weight(.semibold))
+                    .font(DS.Typography.title3)
                     .multilineTextAlignment(.center)
 
                 // Stats
-                VStack(spacing: 8) {
+                VStack(spacing: DS.space2) {
                     statRow(value: formatMonths(dataDepth.daysOfData), label: "of health data")
                     statRow(value: formatNumber(dataDepth.totalDataPoints), label: "data points")
                     statRow(value: "\(dataDepth.metricsTracked)", label: "health metrics")
@@ -118,18 +118,18 @@ struct DiscoveryView: View {
             }
 
             Text("Here is what we found")
-                .font(.headline)
-                .foregroundStyle(.blue)
+                .font(DS.Typography.headline)
+                .foregroundStyle(AppColour.primary)
                 .padding(.top, DS.space2)
 
             // Swipe hint
-            VStack(spacing: 4) {
+            VStack(spacing: DS.space1) {
                 Image(systemName: "chevron.right")
-                    .font(.caption2.weight(.bold))
-                    .foregroundStyle(.tertiary)
+                    .font(DS.Typography.caption2Semibold)
+                    .foregroundStyle(AppColour.textTertiary)
                 Text("Swipe to explore")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textTertiary)
             }
             .padding(.top, DS.space1)
 
@@ -141,7 +141,7 @@ struct DiscoveryView: View {
     // MARK: - Discovery Page
 
     private func discoveryPage(_ discovery: Discovery, index: Int) -> some View {
-        VStack(spacing: 28) {
+        VStack(spacing: DS.space7) {
             Spacer()
 
             // Icon with glow
@@ -153,33 +153,33 @@ struct DiscoveryView: View {
                     .animation(.easeInOut(duration: 0.8), value: appeared)
 
                 Image(systemName: discovery.icon)
-                    .font(.system(size: 36, weight: .medium))
+                    .font(DS.Typography.mediumIcon)
                     .foregroundStyle(discovery.accentColor)
                     .frame(width: 80, height: 80)
                     .background(discovery.accentColor.opacity(0.12), in: Circle())
             }
 
-            VStack(spacing: 14) {
+            VStack(spacing: DS.space4) {
                 // Headline
                 Text(discovery.headline)
-                    .font(.title3.weight(.semibold))
+                    .font(DS.Typography.title3)
                     .multilineTextAlignment(.center)
                     .lineLimit(4)
 
                 // Detail
                 Text(discovery.detail)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.subheadline)
+                    .foregroundStyle(AppColour.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineLimit(3)
 
                 // Evidence badge
                 Text(discovery.evidence)
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption2Medium)
+                    .foregroundStyle(AppColour.textSecondary)
                     .padding(.horizontal, DS.space3)
                     .padding(.vertical, 6)
-                    .background(.quaternary.opacity(0.5), in: Capsule())
+                    .background(AppColour.surfaceElevated, in: Capsule())
             }
 
             Spacer()
@@ -190,30 +190,30 @@ struct DiscoveryView: View {
     // MARK: - CTA Page
 
     private var ctaPage: some View {
-        VStack(spacing: 32) {
+        VStack(spacing: DS.sectionSpacing) {
             Spacer()
 
             ZStack {
                 Circle()
-                    .fill(.green.opacity(0.08))
+                    .fill(AppColour.success.opacity(0.08))
                     .frame(width: 130, height: 130)
                     .scaleEffect(appeared ? 1.15 : 0.9)
                     .animation(.easeInOut(duration: 0.8), value: appeared)
 
                 Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: 44, weight: .medium))
-                    .foregroundStyle(.green)
+                    .font(DS.Typography.largeIcon)
+                    .foregroundStyle(AppColour.success)
                     .frame(width: 80, height: 80)
-                    .background(.green.opacity(0.12), in: Circle())
+                    .background(AppColour.success.opacity(0.12), in: Circle())
             }
 
-            VStack(spacing: 10) {
+            VStack(spacing: DS.space2) {
                 Text("Your Dashboard is Ready")
-                    .font(.title3.weight(.semibold))
+                    .font(DS.Typography.title3)
 
                 Text("Track these patterns and more. Updated every time you open the app.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.subheadline)
+                    .foregroundStyle(AppColour.textSecondary)
                     .multilineTextAlignment(.center)
             }
 
@@ -235,12 +235,8 @@ struct DiscoveryView: View {
                 onDismiss()
             } label: {
                 Text("Continue")
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(.blue, in: RoundedRectangle(cornerRadius: 14))
             }
+            .buttonStyle(.dsPrimary)
             .padding(.horizontal, DS.space6)
 
             Spacer()
@@ -251,13 +247,13 @@ struct DiscoveryView: View {
     // MARK: - Helpers
 
     private func statRow(value: String, label: String) -> some View {
-        HStack(spacing: 6) {
+        HStack(spacing: DS.space2) {
             Text(value)
-                .font(.headline.monospacedDigit())
-                .foregroundStyle(.primary)
+                .font(DS.Typography.headline)
+                .foregroundStyle(AppColour.textPrimary)
             Text(label)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.subheadline)
+                .foregroundStyle(AppColour.textSecondary)
         }
     }
 

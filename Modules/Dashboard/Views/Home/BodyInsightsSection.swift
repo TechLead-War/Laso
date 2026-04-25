@@ -41,20 +41,20 @@ struct BodyInsightsSection: View {
     // MARK: - Compact Insight Card
 
     private func compactInsightCard(_ insight: Insight) -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: DS.space2) {
             Image(systemName: "lightbulb.fill")
-                .font(.system(size: 18))
+                .font(DS.Typography.bodySemibold)
                 .foregroundStyle(.white.opacity(0.8))
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: DS.space1) {
                 Text(insight.recommendation)
-                    .font(.system(size: 14.4).weight(.medium))
+                    .font(DS.Typography.calloutSemibold)
                     .foregroundStyle(.white)
                     .lineLimit(2)
 
                 if let causeLine = compactCausationLine(for: insight) {
                     Text(causeLine)
-                        .font(.system(size: 13.2))
+                        .font(DS.Typography.footnote)
                         .foregroundStyle(.white.opacity(0.7))
                         .lineLimit(2)
                         .minimumScaleFactor(0.75)
@@ -64,11 +64,11 @@ struct BodyInsightsSection: View {
             Spacer(minLength: 0)
 
             Image(systemName: "chevron.right")
-                .font(.system(size: 13.2))
+                .font(DS.Typography.footnote)
                 .foregroundStyle(.white.opacity(0.5))
         }
         .padding(DS.cardPadding)
-        .background(.blue.gradient, in: RoundedRectangle(cornerRadius: DS.cardRadius))
+        .background(AppColour.info.gradient, in: RoundedRectangle(cornerRadius: DS.cardRadius))
         .padding(.horizontal, DS.screenPadding)
     }
 
@@ -89,20 +89,20 @@ struct BodyInsightsSection: View {
     // MARK: - Compact Causal Chain Card
 
     private func compactCausalCard(_ chain: CausalChain) -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: DS.space2) {
             Image(systemName: "link")
-                .font(.system(size: 18))
+                .font(DS.Typography.bodySemibold)
                 .foregroundStyle(.white.opacity(0.8))
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: DS.space1) {
                 Text(chain.narrative)
-                    .font(.system(size: 14.4).weight(.medium))
+                    .font(DS.Typography.calloutSemibold)
                     .foregroundStyle(.white)
                     .lineLimit(2)
 
                 if let confidenceLine = causalChainConfidenceLine(chain) {
                     Text(confidenceLine)
-                        .font(.system(size: 13.2))
+                        .font(DS.Typography.footnote)
                         .foregroundStyle(.white.opacity(0.7))
                         .lineLimit(2)
                         .minimumScaleFactor(0.75)
@@ -112,11 +112,11 @@ struct BodyInsightsSection: View {
             Spacer(minLength: 0)
 
             Image(systemName: "chevron.right")
-                .font(.system(size: 13.2))
+                .font(DS.Typography.footnote)
                 .foregroundStyle(.white.opacity(0.5))
         }
         .padding(DS.cardPadding)
-        .background(.indigo.gradient, in: RoundedRectangle(cornerRadius: DS.cardRadius))
+        .background(AppColour.categoryStress.gradient, in: RoundedRectangle(cornerRadius: DS.cardRadius))
         .padding(.horizontal, DS.screenPadding)
     }
 

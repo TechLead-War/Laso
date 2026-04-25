@@ -21,6 +21,7 @@ struct SettingsView: View {
     @State private var aboutTracker = SectionTracker(section: .settingsAbout, tab: .settings)
 
     @State private var activeFeedbackEntry: FeedbackSheet.EntryPoint?
+    @State private var rateHapticTrigger = false
 
     private let persistence = PersistenceManager()
     let webExportViewModel: WebExportViewModel
@@ -79,9 +80,10 @@ struct SettingsView: View {
                 notificationsSection
                 aboutSection
                 supportSection
+                dangerZoneSection
                 disclaimerSection
             }
-            .background(Color(.systemGroupedBackground).ignoresSafeArea())
+            .background(AppColour.surfaceBase.ignoresSafeArea())
             .accessibilityIdentifier("screen.settings")
             .navigationTitle(Copy.Settings.settings)
             .navigationBarTitleDisplayMode(.large)
@@ -132,16 +134,9 @@ struct SettingsView: View {
     private var profileSection: some View {
         Section {
             HStack(spacing: 14) {
-                Image("LaunchIcon")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 56, height: 56)
-                    .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
-                    .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
-
                 VStack(alignment: .leading, spacing: 4) {
                     Text(Copy.Labels.appName)
-                        .font(.title3.weight(.bold))
+                        .font(DS.Typography.title3)
                     Text("\(Copy.Labels.version) \(appVersion)")
                         .font(DS.Typography.caption)
                         .foregroundStyle(.secondary)
@@ -152,7 +147,7 @@ struct SettingsView: View {
                 subscriptionBadge
             }
             .padding(.vertical, 6)
-            .listRowBackground(Color(.secondarySystemGroupedBackground))
+            .listRowBackground(AppColour.surfaceRaised)
         }
     }
 
@@ -306,7 +301,7 @@ struct SettingsView: View {
     private var proBadge: some View {
         Text(Copy.Labels.pro)
             .font(.caption2.weight(.bold))
-            .foregroundStyle(.white)
+            .foregroundStyle(AppColour.textPrimary)
             .padding(.horizontal, DS.badgeH)
             .padding(.vertical, DS.badgeV)
             .background(
@@ -414,6 +409,12 @@ struct SettingsView: View {
     private var siriDetailView: some View {
         Form {
             Section {
+                Text("Add Laso shortcuts to Siri so you can check your health score, view your sleep summary, or open today's dashboard hands free.")
+                    .font(DS.Typography.footnote)
+                    .foregroundStyle(AppColour.textSecondary)
+                    .listRowBackground(Color.clear)
+            }
+            Section {
                 ShortcutsLink()
                 SiriTipView(intent: HealthScoreIntent())
             } footer: {
@@ -451,10 +452,10 @@ struct SettingsView: View {
                                 .foregroundStyle(.primary)
                             Text(Copy.Settings.updateAvailableBadge)
                                 .font(.caption2.weight(.bold))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(AppColour.textPrimary)
                                 .padding(.horizontal, DS.badgeH)
                                 .padding(.vertical, DS.badgeV)
-                                .background(Color.green, in: Capsule())
+                                .background(AppColour.success, in: Capsule())
                         }
                         Text(Copy.Settings.updateAvailableSubtitle(latest))
                             .font(DS.Typography.caption)
@@ -483,6 +484,7 @@ struct SettingsView: View {
                     screen: .settings,
                     metadata: ["destination": "app_store_review"]
                 )
+                rateHapticTrigger.toggle()
                 AppStoreReviewManager.shared.requestReviewFromUser(trigger: "settings_help")
             } label: {
                 settingsRow(
@@ -494,6 +496,7 @@ struct SettingsView: View {
                 )
             }
             .buttonStyle(.plain)
+            .sensoryFeedback(.selection, trigger: rateHapticTrigger)
             .accessibilityIdentifier("settings.row.rateOnAppStore")
 
             Button {
@@ -533,19 +536,25 @@ struct SettingsView: View {
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("settings.row.contactUs")
+        } header: {
+            Text(Copy.Settings.support)
+        }
+    }
 
+    private var dangerZoneSection: some View {
+        Section {
             Button(role: .destructive) {
                 showDeleteDataAlert = true
             } label: {
                 HStack(spacing: 12) {
-                    iconBadge(icon: "trash.fill", color: .red)
+                    iconBadge(icon: "trash.fill", color: AppColour.danger)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(Copy.Settings.deleteAllMyData)
                             .font(DS.Typography.subheadlineMedium)
-                            .foregroundStyle(.red)
+                            .foregroundStyle(AppColour.danger)
                         Text(Copy.Settings.deleteDataFooter)
                             .font(DS.Typography.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppColour.textSecondary)
                             .lineLimit(2)
                     }
                     Spacer()
@@ -555,7 +564,9 @@ struct SettingsView: View {
             .disabled(isDeleting)
             .accessibilityIdentifier("settings.deleteAllDataButton")
         } header: {
-            Text(Copy.Settings.support)
+            Text("Danger Zone")
+                .font(DS.Typography.captionSemibold)
+                .foregroundStyle(AppColour.danger)
         }
     }
 
@@ -607,9 +618,9 @@ struct SettingsView: View {
     private func iconBadge(icon: String, color: Color) -> some View {
         Image(systemName: icon)
             .font(DS.Typography.subheadline)
-            .foregroundStyle(.white)
-            .frame(width: 30, height: 30)
-            .background(color.gradient, in: RoundedRectangle(cornerRadius: DS.iconRadius, style: .continuous))
+            .foregroundStyle(AppColour.textPrimary)
+            .frame(width: 34, height: 34)
+            .background(color.gradient, in: RoundedRectangle(cornerRadius: DS.Radius.sm, style: .continuous))
     }
 
     // MARK: - Actions

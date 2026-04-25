@@ -6,8 +6,8 @@ struct BreathworkLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: BreathworkActivityAttributes.self) { context in
             BreathworkLiveActivityView(context: context)
-                .activityBackgroundTint(Color(.systemBackground))
-                .activitySystemActionForegroundColor(.primary)
+                .activityBackgroundTint(AppColour.surfaceBase)
+                .activitySystemActionForegroundColor(AppColour.textPrimary)
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
@@ -21,13 +21,13 @@ struct BreathworkLiveActivityWidget: Widget {
                     TimelineView(.periodic(from: .now, by: 1)) { timeline in
                         HStack(spacing: 10) {
                             Image(systemName: phase(at: timeline.date, context: context).symbolName)
-                                .foregroundStyle(.teal)
+                                .foregroundStyle(AppColour.accent)
                             Text(phase(at: timeline.date, context: context).label)
                                 .font(.headline)
                             Spacer()
                             Text(context.state.protocolType.subtitle)
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(AppColour.textSecondary)
                         }
                     }
                 }
@@ -62,20 +62,20 @@ private struct BreathworkLiveActivityView: View {
             HStack(spacing: 12) {
                 Image(systemName: phase(at: timeline.date).symbolName)
                     .font(.title2)
-                    .foregroundStyle(.teal)
+                    .foregroundStyle(AppColour.accent)
                     .frame(width: 40, height: 40)
-                    .background(Color.teal.opacity(0.14), in: RoundedRectangle(cornerRadius: 12))
+                    .background(AppColour.accent.opacity(0.14), in: RoundedRectangle(cornerRadius: 12))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(context.state.protocolType.subtitle)
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                         .textCase(.uppercase)
                     Text(phase(at: timeline.date).label)
                         .font(.headline)
                     Text(statusText)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
 
                 Spacer()
@@ -84,7 +84,7 @@ private struct BreathworkLiveActivityView: View {
                     timerLabel(at: timeline.date)
                     Text(context.state.status == .paused ? "Paused" : "Remaining")
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
             }
             .padding(.horizontal, 16)

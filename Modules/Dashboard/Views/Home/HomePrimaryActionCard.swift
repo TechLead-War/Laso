@@ -34,39 +34,39 @@ struct HomePrimaryActionCard: View {
             )
             onTap()
         } label: {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 4) {
+            VStack(alignment: .leading, spacing: DS.space2) {
+                HStack(spacing: DS.space1) {
                     Image(systemName: "sparkle")
-                        .font(.system(size: 13.2).weight(.bold))
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.captionSemibold)
+                        .foregroundStyle(AppColour.textSecondary)
                     Text(Copy.Home.todaysAction)
-                        .font(.system(size: 14.4).weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.captionSemibold)
+                        .foregroundStyle(AppColour.textSecondary)
                         .textCase(.uppercase)
                 }
 
-                HStack(spacing: 12) {
+                HStack(spacing: DS.space3) {
                     Image(systemName: action.icon)
-                        .font(.system(size: 24).weight(.semibold))
+                        .font(DS.Typography.bodySemibold)
                         .foregroundStyle(.white)
                         .frame(width: 40, height: 40)
-                        .background(DS.scoreColor(overallScore), in: RoundedRectangle(cornerRadius: 10))
+                        .background(DS.scoreColor(overallScore), in: RoundedRectangle(cornerRadius: DS.Radius.sm))
 
-                    VStack(alignment: .leading, spacing: 3) {
+                    VStack(alignment: .leading, spacing: DS.space1) {
                         Text(action.title)
-                            .font(.system(size: 18).weight(.semibold))
-                            .foregroundStyle(.primary)
+                            .font(DS.Typography.bodySemibold)
+                            .foregroundStyle(AppColour.textPrimary)
                             .lineLimit(2)
 
                         Text(action.subtitle)
-                            .font(.system(size: 14.4))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.callout)
+                            .foregroundStyle(AppColour.textSecondary)
                             .lineLimit(2)
 
                         if let proof = proofLine {
                             Text(proof)
-                                .font(.system(size: 13.2))
-                                .foregroundStyle(.tertiary)
+                                .font(DS.Typography.footnote)
+                                .foregroundStyle(AppColour.textTertiary)
                                 .lineLimit(2)
                         }
                     }
@@ -74,13 +74,13 @@ struct HomePrimaryActionCard: View {
                     Spacer()
 
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 13.2).weight(.semibold))
-                        .foregroundStyle(.tertiary)
+                        .font(DS.Typography.footnoteMedium)
+                        .foregroundStyle(AppColour.textTertiary)
                 }
             }
             .padding(DS.cardPadding)
             .cardStyle()
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
     }
 }

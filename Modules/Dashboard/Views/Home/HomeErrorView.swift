@@ -5,18 +5,18 @@ struct HomeErrorView: View {
     let onRetry: () async -> Void
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: DS.space4) {
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 57.6))
-                .foregroundStyle(.orange)
+                .font(DS.Typography.largeIcon)
+                .foregroundStyle(AppColour.warning)
                 .accessibilityHidden(true)
 
             Text(Copy.Home.unableToLoadData)
-                .font(.system(size: 20.4, weight: .semibold))
+                .font(DS.Typography.title3)
 
             Text(message)
-                .font(.system(size: 18))
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.body)
+                .foregroundStyle(AppColour.textSecondary)
                 .multilineTextAlignment(.center)
 
             Button(Copy.Home.tryAgain) {

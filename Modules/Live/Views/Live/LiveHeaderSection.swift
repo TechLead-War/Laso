@@ -12,19 +12,19 @@ struct LiveHeaderSection: View {
 
     var body: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: DS.space1) {
                 Text("Live")
-                    .font(.largeTitle.bold())
+                    .font(DS.Typography.largeTitle)
 
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(hasFreshData ? .green : (isAging ? .yellow : (isStale ? .orange : .gray)))
+                        .fill(hasFreshData ? AppColour.success : (isAging ? AppColour.warning : (isStale ? AppColour.danger : Color.gray)))
                         .frame(width: 8, height: 8)
-                        .shadow(color: hasFreshData ? .green.opacity(0.6) : .clear, radius: 4)
+                        .shadow(color: hasFreshData ? AppColour.success.opacity(0.6) : .clear, radius: 4)
 
                     Text(liveStatusLabel)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
             }
 
@@ -33,11 +33,11 @@ struct LiveHeaderSection: View {
             if isStreaming && !hasFreshData {
                 ProgressView()
                     .controlSize(.small)
-                    .tint(.secondary)
+                    .tint(AppColour.textSecondary)
             } else {
                 Image(systemName: primaryDevice?.systemImageName ?? "waveform.path.ecg")
-                    .font(.title2)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.title2)
+                    .foregroundStyle(AppColour.textSecondary)
                     .symbolEffect(.pulse, isActive: hasFreshData)
             }
         }

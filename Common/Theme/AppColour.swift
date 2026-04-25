@@ -3,6 +3,7 @@ import SwiftUI
 /// App-wide colour palette.
 ///
 /// Layers (top → bottom):
+///   0. Surface & text     base / raised / elevated / overlay + text & border tokens
 ///   1. Brand              primary hero colour (calm Apple/Oura-adjacent blue)
 ///   2. Accent             call-to-action pop (teal cyan)
 ///   3. Semantic state     success / warning / danger / info
@@ -14,13 +15,14 @@ import SwiftUI
 /// Swatch-pickable: every entry uses `#colorLiteral(...)` so Xcode shows an
 /// inline colour well you can edit visually.
 ///
-/// Dark-mode: brand tokens adapt via `dynamic(light:dark:)`. Semantic/score/
-/// category tokens stay static because they're state indicators (same hue in
-/// both modes per Apple HIG). Surface/text tokens are NOT defined here —
-/// always use `Color.primary`, `.secondary`, `.systemGroupedBackground`, etc.
+/// Dark-mode: the app is force-locked to dark in `LasoApp.swift`. All tokens
+/// are tuned for dark backgrounds. Brand tokens keep light variants for
+/// future-proofing. Semantic/score/category values stay static because they
+/// are state indicators (same hue across modes per Apple HIG).
 ///
-/// Not yet wired to most call-sites. Reference `AppColour.primary` etc. when
-/// migrating.
+/// Prefer these tokens over raw `.systemBackground`, `Color.white`, or
+/// `.opacity(…)` literals — consistency of surface and text pairs is what
+/// makes a design system feel coherent.
 enum AppColour {
 
     // MARK: - Dynamic Colour Helper
@@ -29,6 +31,40 @@ enum AppColour {
     private static func dynamic(light: UIColor, dark: UIColor) -> Color {
         Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? dark : light })
     }
+
+    // MARK: - 0. Surface & Text (dark-mode safe stack)
+    //
+    // Apple semantic surface stack. In dark mode these resolve to
+    // `#000 → #1C1C1E → #2C2C2E → ~#3A3A3C`. Use these instead of raw
+    // `Color.black` / `Color(.systemBackground)` calls throughout the app.
+
+    /// Page / screen background.
+    static let surfaceBase     = Color(uiColor: .systemBackground)
+    /// Card / raised container.
+    static let surfaceRaised   = Color(uiColor: .secondarySystemBackground)
+    /// Sheet / elevated surface.
+    static let surfaceElevated = Color(uiColor: .tertiarySystemBackground)
+    /// Floating overlay (toasts, popovers). Manually specified #3A3A3C for dark.
+    static let surfaceOverlay  = Color(uiColor: #colorLiteral(red: 0.227, green: 0.227, blue: 0.235, alpha: 1.00))
+
+    /// Primary text — full label (auto-adapts; white on dark).
+    static let textPrimary     = Color(uiColor: .label)
+    /// Secondary text — ~60% white on dark.
+    static let textSecondary   = Color(uiColor: .secondaryLabel)
+    /// Tertiary text — ~30% white on dark.
+    static let textTertiary    = Color(uiColor: .tertiaryLabel)
+    /// Disabled / placeholder text — ~18% white on dark.
+    static let textQuaternary  = Color(uiColor: .quaternaryLabel)
+
+    /// Hairline separator — platform-native opaque separator.
+    static let separator       = Color(uiColor: .separator)
+
+    /// Low-alpha border (Linear / Vercel pattern — 6% white on dark). For flat cards.
+    static let borderLow       = Color.white.opacity(0.06)
+    /// Medium-alpha border (10%). For raised cards that need definition without noise.
+    static let borderMedium    = Color.white.opacity(0.10)
+    /// High-alpha border (14%). For overlays and floating surfaces.
+    static let borderHigh      = Color.white.opacity(0.14)
 
     // MARK: - 1. Brand
     // Calm blue (Apple-adjacent). Light #0071E3 → softer #4DA3FF in dark.
@@ -97,7 +133,10 @@ enum AppColour {
 
     // MARK: - 6d. Premium / Subscription Badge
     // Source: Modules/Settings/Views/SettingsView.swift:178, 185-186
-    static let premiumBadgeText      = Color(uiColor: #colorLiteral(red: 0.35, green: 0.22, blue: 0.02, alpha: 1.00))
+    static let premiumBadgeText      = dynamic(
+        light: #colorLiteral(red: 0.35, green: 0.22, blue: 0.02, alpha: 1.00),
+        dark:  #colorLiteral(red: 0.12, green: 0.08, blue: 0.02, alpha: 1.00)
+    )
     static let premiumGradientTop    = Color(uiColor: #colorLiteral(red: 1.00, green: 0.85, blue: 0.45, alpha: 1.00))
     static let premiumGradientBottom = Color(uiColor: #colorLiteral(red: 0.96, green: 0.64, blue: 0.18, alpha: 1.00))
 

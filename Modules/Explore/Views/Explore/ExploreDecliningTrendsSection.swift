@@ -162,7 +162,7 @@ struct ExploreDecliningTrendsSection: View {
                             .background(link.causeMetric.category.color.opacity(0.12), in: Circle())
                     }
                     Image(systemName: "arrow.right")
-                        .font(.system(size: 8, weight: .bold))
+                        .font(DS.Typography.caption2.weight(.bold))
                         .foregroundStyle(.purple.opacity(0.5))
                     Image(systemName: link.effectMetric.systemImageName)
                         .font(.caption2.weight(.semibold))

@@ -21,7 +21,7 @@ struct BrainHealthCard: View {
                 HStack(spacing: 14) {
                     // Icon in rounded rectangle. distinct from Vitality (ring) and Strain (square)
                     Image(systemName: "brain")
-                        .font(.system(size: 24).weight(.semibold))
+                        .font(DS.Typography.bodySemibold)
                         .foregroundStyle(.white)
                         .frame(width: DS.iconSize + 12, height: DS.iconSize + 12)
                         .background(
@@ -30,24 +30,24 @@ struct BrainHealthCard: View {
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),
-                            in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            in: RoundedRectangle(cornerRadius: DS.Radius.md, style: .continuous)
                         )
 
                     // Center text
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: DS.space1) {
                         Text(Copy.BrainHealth.title)
-                            .font(.system(size: 14.4).weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.calloutSemibold)
+                            .foregroundStyle(AppColour.textSecondary)
                             .textCase(.uppercase)
 
-                        HStack(spacing: 8) {
+                        HStack(spacing: DS.space2) {
                             Text("\(score)")
-                                .font(.system(size: 26.4).weight(.bold).monospacedDigit())
+                                .font(DS.Typography.displayS)
                                 .postHogMask()
 
                             // State badge
                             Text(stateLabel)
-                                .font(.system(size: 14.4).weight(.bold))
+                                .font(DS.Typography.calloutSemibold)
                                 .foregroundStyle(accentColor)
                                 .padding(.horizontal, DS.badgeH)
                                 .padding(.vertical, DS.badgeV)
@@ -56,8 +56,8 @@ struct BrainHealthCard: View {
 
                         // Headline text
                         Text(headline)
-                            .font(.system(size: 13.2))
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.footnote)
+                            .foregroundStyle(AppColour.textSecondary)
                             .lineLimit(2)
                             .minimumScaleFactor(0.75)
                     }
@@ -65,8 +65,8 @@ struct BrainHealthCard: View {
                     Spacer()
 
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 13.2).weight(.semibold))
-                        .foregroundStyle(.tertiary)
+                        .font(DS.Typography.footnoteMedium)
+                        .foregroundStyle(AppColour.textTertiary)
                 }
                 .padding(.leading, DS.accentLeading)
                 .padding(.trailing, DS.accentTrailing)
@@ -74,7 +74,7 @@ struct BrainHealthCard: View {
             }
             .cardStyle(tint: accentColor)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Brain Health score \(score) out of 100, \(stateLabel)")
         .accessibilityHint("View brain health details")
@@ -85,10 +85,10 @@ struct BrainHealthCard: View {
     // MARK: - Computed Properties
 
     private var accentColor: Color {
-        if score >= 80 { return .green }
-        if score >= 65 { return .blue }
-        if score >= 45 { return .gray }
-        return .orange
+        if score >= 80 { return AppColour.scoreOptimal }
+        if score >= 65 { return AppColour.categoryBrain }
+        if score >= 45 { return AppColour.textTertiary }
+        return AppColour.warning
     }
 }
 

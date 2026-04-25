@@ -39,7 +39,7 @@ struct JournalEntryView: View {
                 .animation(.easeInOut(duration: 0.25), value: selectedCategory)
             }
             .scrollBounceBehavior(.basedOnSize)
-            .background(Color(.systemGroupedBackground).ignoresSafeArea())
+            .background(AppColour.surfaceBase.ignoresSafeArea())
             .navigationTitle("Log Entry")
             .navigationBarTitleDisplayMode(.inline)
             .accessibilityIdentifier("screen.journalEntry")
@@ -81,9 +81,9 @@ struct JournalEntryView: View {
     // MARK: - Category Grid
 
     private var categoryGrid: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             Text("What would you like to log?")
-                .font(.headline)
+                .font(DS.Typography.headline)
 
             LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(JournalCategory.allCases) { category in
@@ -108,15 +108,15 @@ struct JournalEntryView: View {
                 )
             }
         } label: {
-            VStack(spacing: 8) {
+            VStack(spacing: DS.space2) {
                 Image(systemName: category.icon)
-                    .font(.title2.weight(.semibold))
+                    .font(DS.Typography.mediumIcon)
                     .foregroundStyle(selectedCategory == category ? .white : categoryColor(category))
                     .frame(width: DS.iconSize, height: DS.iconSize)
 
                 Text(category.displayName)
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(selectedCategory == category ? .white : .primary)
+                    .font(DS.Typography.captionMedium)
+                    .foregroundStyle(selectedCategory == category ? .white : AppColour.textPrimary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
             }
@@ -125,7 +125,7 @@ struct JournalEntryView: View {
             .background(
                 selectedCategory == category
                     ? AnyShapeStyle(categoryColor(category))
-                    : AnyShapeStyle(Color(.secondarySystemGroupedBackground)),
+                    : AnyShapeStyle(AppColour.surfaceRaised),
                 in: RoundedRectangle(cornerRadius: DS.cardRadius)
             )
             .overlay(
@@ -138,7 +138,7 @@ struct JournalEntryView: View {
                     )
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
         .accessibilityLabel(category.displayName)
         .accessibilityAddTraits(selectedCategory == category ? .isSelected : [])
     }
@@ -146,13 +146,13 @@ struct JournalEntryView: View {
     // MARK: - Value Input
 
     private func valueInput(for category: JournalCategory) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             HStack {
                 Text("Amount")
-                    .font(.headline)
+                    .font(DS.Typography.headline)
                 Spacer()
                 Text("\(formattedValue(value, for: category)) \(category.unit)")
-                    .font(.title3.weight(.semibold).monospacedDigit())
+                    .font(DS.Typography.title3.monospacedDigit())
                     .foregroundStyle(categoryColor(category))
                     .contentTransition(.numericText())
             }
@@ -168,7 +168,7 @@ struct JournalEntryView: View {
     }
 
     private func stepperInput(for category: JournalCategory) -> some View {
-        HStack(spacing: 16) {
+        HStack(spacing: DS.space4) {
             Button {
                 let newValue = value - category.step
                 if newValue >= category.valueRange.lowerBound {
@@ -176,16 +176,16 @@ struct JournalEntryView: View {
                 }
             } label: {
                 Image(systemName: "minus.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(value > category.valueRange.lowerBound ? categoryColor(category) : .gray)
+                    .font(DS.Typography.title2)
+                    .foregroundStyle(value > category.valueRange.lowerBound ? categoryColor(category) : AppColour.textTertiary)
             }
             .disabled(value <= category.valueRange.lowerBound)
 
             Spacer()
 
             Text(formattedValue(value, for: category))
-                .font(.system(size: 48, weight: .bold, design: .rounded).monospacedDigit())
-                .foregroundStyle(.primary)
+                .font(DS.Typography.displayL)
+                .foregroundStyle(AppColour.textPrimary)
                 .contentTransition(.numericText())
 
             Spacer()
@@ -197,8 +197,8 @@ struct JournalEntryView: View {
                 }
             } label: {
                 Image(systemName: "plus.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(value < category.valueRange.upperBound ? categoryColor(category) : .gray)
+                    .font(DS.Typography.title2)
+                    .foregroundStyle(value < category.valueRange.upperBound ? categoryColor(category) : AppColour.textTertiary)
             }
             .disabled(value >= category.valueRange.upperBound)
         }
@@ -207,7 +207,7 @@ struct JournalEntryView: View {
     }
 
     private func sliderInput(for category: JournalCategory) -> some View {
-        VStack(spacing: 4) {
+        VStack(spacing: DS.space1) {
             Slider(
                 value: $value,
                 in: category.valueRange,
@@ -217,12 +217,12 @@ struct JournalEntryView: View {
 
             HStack {
                 Text(formattedValue(category.valueRange.lowerBound, for: category))
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption2)
+                    .foregroundStyle(AppColour.textSecondary)
                 Spacer()
                 Text(formattedValue(category.valueRange.upperBound, for: category))
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption2)
+                    .foregroundStyle(AppColour.textSecondary)
             }
         }
     }
@@ -230,9 +230,9 @@ struct JournalEntryView: View {
     // MARK: - Notes Field
 
     private var notesField: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: DS.space2) {
             Text("Notes")
-                .font(.headline)
+                .font(DS.Typography.headline)
 
             TextField("Optional notes...", text: $notes, axis: .vertical)
                 .lineLimit(2...4)
@@ -266,32 +266,32 @@ struct JournalEntryView: View {
                 showConfirmation = true
             }
         } label: {
-            HStack(spacing: 8) {
+            HStack(spacing: DS.space2) {
                 Image(systemName: category.icon)
                 Text("Log \(category.displayName)")
-                    .font(.headline)
+                    .font(DS.Typography.headline)
             }
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, DS.space4)
             .background(categoryColor(category), in: RoundedRectangle(cornerRadius: DS.cardRadius))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
         .disabled(value == 0 && category != .stress && category != .mood)
     }
 
     // MARK: - Confirmation Overlay
 
     private var confirmationOverlay: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: DS.itemSpacing) {
             Image(systemName: "checkmark.circle.fill")
                 .font(DS.Typography.heroIcon)
-                .foregroundStyle(.green)
+                .foregroundStyle(AppColour.success)
             Text("Logged")
-                .font(.title3.weight(.semibold))
+                .font(DS.Typography.title3)
         }
         .padding(DS.space7)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
     }
 
     // MARK: - Helpers
@@ -306,14 +306,14 @@ struct JournalEntryView: View {
     private func categoryColor(_ category: JournalCategory) -> Color {
         switch category {
         case .caffeine: return .brown
-        case .alcohol: return .purple
-        case .stress: return .red
-        case .supplements: return .green
-        case .meditation: return .indigo
-        case .screenTime: return .blue
-        case .mealTiming: return .orange
-        case .water: return .cyan
-        case .mood: return .yellow
+        case .alcohol: return AppColour.categoryStress   // soft purple
+        case .stress: return AppColour.danger
+        case .supplements: return AppColour.success
+        case .meditation: return AppColour.categorySleep // soft indigo
+        case .screenTime: return AppColour.info
+        case .mealTiming: return AppColour.warning
+        case .water: return AppColour.accent
+        case .mood: return AppColour.categoryActivity    // soft amber
         }
     }
 }

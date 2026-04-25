@@ -16,8 +16,13 @@ struct RecoveryHeroCard: View {
     @State private var appeared = false
     @State private var pulse = false
 
+    /// Derived from RecoveryState so title, pill, and ring all share one threshold table.
+    private var recoveryState: DashboardViewModel.RecoveryState {
+        DashboardViewModel.RecoveryState(score: score)
+    }
+
     private var scoreColor: Color {
-        DS.scoreColor(score)
+        recoveryState.color
     }
 
     private var isFresh: Bool {
@@ -32,7 +37,7 @@ struct RecoveryHeroCard: View {
         } label: {
             cardContent
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
         .padding(.horizontal, DS.screenPadding)
         .onAppear {
             appeared = true
@@ -58,41 +63,42 @@ struct RecoveryHeroCard: View {
             if isFresh {
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(Color.green)
+                        .fill(AppColour.scoreOptimal)
                         .frame(width: 7, height: 7)
                         .opacity(pulse ? 0.35 : 1.0)
                         .animation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true), value: pulse)
                     Text("Right now")
-                        .font(.system(size: 14.4).weight(.semibold))
-                        .foregroundStyle(.primary)
+                        .font(DS.Typography.footnoteMedium)
+                        .foregroundStyle(AppColour.textPrimary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .onAppear { pulse = true }
             }
 
             HStack(spacing: 20) {
-                // Score ring. hero size
+                // Score ring. hero size. tinted by RecoveryState so the colour
+                // agrees with the title and the day-type pill.
                 HealthScoreRing(
                     score: score,
                     label: hasLiveReadiness ? "Recovery" : "Health",
                     size: 120,
-                    lineWidth: 12
+                    lineWidth: 12,
+                    tint: hasLiveReadiness ? recoveryState.color : nil
                 )
 
                 // Recovery details
                 VStack(alignment: .leading, spacing: 8) {
                     // Recovery state label
                     Text(recoveryLabel)
-                        .font(.system(size: 24).weight(.bold))
-                        .foregroundStyle(.primary)
+                        .font(DS.Typography.title2)
+                        .foregroundStyle(AppColour.textPrimary)
                         .contentTransition(.numericText())
 
-                    // Why line: one-line explanation of the score
+                    // Why line: full explanation of the score, no truncation.
                     if let whyLine = recoveryWhyLine {
                         Text(whyLine)
-                            .font(.system(size: 14.4))
-                            .foregroundStyle(.secondary)
-                            .lineLimit(2)
+                            .font(DS.Typography.footnote)
+                            .foregroundStyle(AppColour.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
 
@@ -100,25 +106,25 @@ struct RecoveryHeroCard: View {
                     if let weekDelta = scoreChangeFromLastWeek, weekDelta != 0 {
                         HStack(spacing: 4) {
                             Image(systemName: weekDelta > 0 ? "arrow.up.right" : "arrow.down.right")
-                                .font(.system(size: 14.4).weight(.bold))
+                                .font(DS.Typography.footnoteMedium)
                             Text(weekDelta > 0 ? "+\(weekDelta)" : "\(weekDelta)")
-                                .font(.system(size: 18).weight(.semibold).monospacedDigit())
+                                .font(DS.Typography.bodySemibold.monospacedDigit())
                                 .postHogMask()
                             Text("vs last week")
-                                .font(.system(size: 14.4))
+                                .font(DS.Typography.footnote)
                         }
-                        .foregroundStyle(weekDelta > 0 ? .green : .red)
+                        .foregroundStyle(weekDelta > 0 ? AppColour.scoreOptimal : AppColour.scorePoor)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
                         .background(
-                            (weekDelta > 0 ? Color.green : Color.red).opacity(DS.badgeBg),
+                            (weekDelta > 0 ? AppColour.scoreOptimal : AppColour.scorePoor).opacity(DS.badgeBg),
                             in: Capsule()
                         )
                     }
 
                     // Day classification badge
                     Text(dayType)
-                        .font(.system(size: 14.4).weight(.bold))
+                        .font(DS.Typography.footnoteMedium)
                         .foregroundStyle(scoreColor)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
@@ -127,19 +133,19 @@ struct RecoveryHeroCard: View {
                     // Staleness indicator or fallback hint
                     if !hasLiveReadiness {
                         Text(Copy.Home.wearAppleWatchForRecovery)
-                            .font(.system(size: 13.2))
-                            .foregroundStyle(.tertiary)
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(AppColour.textTertiary)
                     } else if let refresh = lastRefresh, isStale(refresh) {
                         HStack(spacing: 4) {
                             Image(systemName: "clock.arrow.circlepath")
-                                .font(.system(size: 13.2))
+                                .font(DS.Typography.caption)
                             Text("Updated \(refresh, style: .relative) ago")
-                                .font(.system(size: 13.2))
+                                .font(DS.Typography.caption)
                         }
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(AppColour.warning)
                         .padding(.horizontal, DS.space2)
                         .padding(.vertical, 3)
-                        .background(Color.orange.opacity(0.1), in: Capsule())
+                        .background(AppColour.warning.opacity(0.1), in: Capsule())
                     }
                 }
 
@@ -149,20 +155,22 @@ struct RecoveryHeroCard: View {
             // Subtle tap hint
             HStack(spacing: 4) {
                 Image(systemName: "hand.tap")
-                    .font(.system(size: 13.2))
+                    .font(DS.Typography.caption)
                 Text(Copy.Home.tapToUnderstandScore)
-                    .font(.system(size: 13.2))
+                    .font(DS.Typography.caption)
             }
-            .foregroundStyle(.tertiary)
+            .foregroundStyle(AppColour.textTertiary)
         }
         .padding(DS.cardPadding + 4)
-        .background(DS.recoveryGradient(score))
-        .clipShape(RoundedRectangle(cornerRadius: DS.cardRadius))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.cardRadius)
-                .strokeBorder(scoreColor.opacity(DS.strokeAlpha * 2), lineWidth: 1)
+        .background(
+            LinearGradient(
+                colors: [scoreColor.opacity(0.28), scoreColor.opacity(0.1)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
         )
-        .shadow(color: scoreColor.opacity(0.15), radius: 12, y: 4)
+        .clipShape(RoundedRectangle(cornerRadius: DS.cardRadius))
+        .overlay(RoundedRectangle(cornerRadius: DS.cardRadius).strokeBorder(scoreColor.opacity(0.25), lineWidth: 1))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(hasLiveReadiness ? "Recovery" : "Health") score \(score). \(recoveryLabel). \(recoveryWhyLine ?? ""). \(dayType).")
         .accessibilityHint("Opens score breakdown")

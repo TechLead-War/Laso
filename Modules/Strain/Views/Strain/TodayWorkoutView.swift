@@ -35,7 +35,7 @@ struct TodayWorkoutCard: View {
                     Spacer()
 
                     Image(systemName: "chevron.right")
-                        .font(.caption.weight(.bold))
+                        .font(DS.Typography.captionSemibold)
                         .foregroundStyle(.tertiary)
                 }
 
@@ -59,7 +59,7 @@ struct TodayWorkoutCard: View {
             .padding(DS.cardPadding)
             .cardStyle(tint: plan.zone.tint)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
     }
 
     private func workoutChip(icon: String, text: String, tint: Color) -> some View {
@@ -104,18 +104,18 @@ struct WorkoutPlanSheet: View {
                     )
                 }
 
-                blockCard(title: "Warm-Up", block: plan.warmup, tint: .orange)
+                blockCard(title: "Warm-Up", block: plan.warmup, tint: AppColour.warning)
 
                 ForEach(Array(plan.mainBlocks.enumerated()), id: \.offset) { index, block in
                     blockCard(title: "Main Block \(index + 1)", block: block, tint: plan.zone.tint)
                 }
 
-                blockCard(title: "Cooldown", block: plan.cooldown, tint: .blue)
+                blockCard(title: "Cooldown", block: plan.cooldown, tint: AppColour.info)
             }
             .padding(.horizontal)
             .padding(.vertical, DS.space5)
         }
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppColour.surfaceBase.ignoresSafeArea())
         .navigationTitle("Today's Workout")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -134,11 +134,11 @@ struct WorkoutPlanSheet: View {
                     .font(DS.Typography.title2)
                     .foregroundStyle(plan.zone.tint)
                     .frame(width: 48, height: 48)
-                    .background(plan.zone.tint.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: 14))
+                    .background(plan.zone.tint.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.Radius.lg))
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(plan.title)
-                        .font(.title3.weight(.bold))
+                        .font(DS.Typography.title3)
                     Text(plan.summary)
                         .font(DS.Typography.subheadline)
                         .foregroundStyle(.secondary)
@@ -148,7 +148,7 @@ struct WorkoutPlanSheet: View {
             HStack(spacing: 10) {
                 metricPill(value: recoveryBand.label, label: "Recovery", tint: recoveryBand.tint)
                 metricPill(value: "\(plan.targetDuration)m", label: "Duration", tint: plan.zone.tint)
-                metricPill(value: "\(plan.estimatedCalories)", label: "Cal", tint: .orange)
+                metricPill(value: "\(plan.estimatedCalories)", label: "Cal", tint: AppColour.warning)
             }
         }
         .padding(DS.cardPadding)
@@ -158,10 +158,10 @@ struct WorkoutPlanSheet: View {
     private func infoCard(title: String, detail: String, icon: String, tint: Color) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
-                .font(.title3)
+                .font(DS.Typography.title3)
                 .foregroundStyle(tint)
                 .frame(width: 40, height: 40)
-                .background(tint.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: 12))
+                .background(tint.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.Radius.md))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
@@ -233,7 +233,7 @@ struct WorkoutPlanSheet: View {
     private func metricPill(value: String, label: String, tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(value)
-                .font(.subheadline.weight(.bold))
+                .font(DS.Typography.subheadlineSemibold)
                 .foregroundStyle(tint)
             Text(label)
                 .font(DS.Typography.caption2)
@@ -241,7 +241,7 @@ struct WorkoutPlanSheet: View {
         }
         .padding(.horizontal, DS.space3)
         .padding(.vertical, DS.space2)
-        .background(tint.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: 12))
+        .background(tint.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.Radius.md))
     }
 }
 
@@ -249,13 +249,13 @@ private extension TrainingZone {
     var tint: Color {
         switch self {
         case .restoring:
-            return .red
+            return AppColour.danger
         case .maintaining:
-            return .yellow
+            return AppColour.warning
         case .building:
-            return .green
+            return AppColour.success
         case .overreaching:
-            return .blue
+            return AppColour.info
         }
     }
 }
@@ -275,11 +275,11 @@ private extension WorkoutRecoveryBand {
     var tint: Color {
         switch self {
         case .red:
-            return .red
+            return AppColour.danger
         case .yellow:
-            return .yellow
+            return AppColour.warning
         case .green:
-            return .green
+            return AppColour.success
         }
     }
 }
@@ -292,5 +292,5 @@ private extension WorkoutRecoveryBand {
         action: {}
     )
     .padding()
-    .background(Color(.systemGroupedBackground))
+    .background(AppColour.surfaceBase)
 }

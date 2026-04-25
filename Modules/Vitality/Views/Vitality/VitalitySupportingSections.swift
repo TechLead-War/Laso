@@ -25,10 +25,10 @@ struct VitalityImprovementSection: View {
         return VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 10) {
                 Image(systemName: icon)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.orange)
+                    .font(DS.Typography.caption.weight(.semibold))
+                    .foregroundStyle(AppColour.warning)
                     .frame(width: 30, height: 30)
-                    .background(Color.orange.opacity(0.14), in: RoundedRectangle(cornerRadius: 9))
+                    .background(AppColour.warning.opacity(0.14), in: RoundedRectangle(cornerRadius: DS.Radius.sm))
 
                 Text(component.metric)
                     .font(.subheadline.weight(.semibold))
@@ -40,7 +40,7 @@ struct VitalityImprovementSection: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, DS.badgeH + 2)
                     .padding(.vertical, DS.badgeV + 1)
-                    .background(.orange, in: Capsule())
+                    .background(AppColour.warning, in: Capsule())
             }
 
             Text(component.improvementSuggestion)
@@ -49,7 +49,7 @@ struct VitalityImprovementSection: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(DS.cardPadding)
-        .cardStyle(tint: .orange)
+        .cardStyle(tint: AppColour.warning)
     }
 }
 
@@ -62,7 +62,7 @@ struct VitalityDataMaturityBanner: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 10) {
                 Image(systemName: vitalityPersonalizationIcon(for: scorer))
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(DS.Typography.body.weight(.semibold))
                     .foregroundStyle(vitalityPersonalizationTint(for: scorer))
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -83,10 +83,10 @@ struct VitalityDataMaturityBanner: View {
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(Color(.systemFill))
+                    RoundedRectangle(cornerRadius: DS.Radius.xs)
+                        .fill(AppColour.borderMedium)
                         .frame(height: 6)
-                    RoundedRectangle(cornerRadius: 3)
+                    RoundedRectangle(cornerRadius: DS.Radius.xs)
                         .fill(vitalityWhoopGreen)
                         .frame(width: geo.size.width * progress, height: 6)
                 }
@@ -103,10 +103,10 @@ struct VitalityDataMaturityBanner: View {
                     .foregroundStyle(vitalityWhoopGreen)
             }
         }
-        .padding(14)
-        .background(vitalityWhoopGreen.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
+        .padding(DS.cardPadding)
+        .background(vitalityWhoopGreen.opacity(0.08), in: RoundedRectangle(cornerRadius: DS.Radius.md))
         .overlay(
-            RoundedRectangle(cornerRadius: 14)
+            RoundedRectangle(cornerRadius: DS.Radius.md)
                 .strokeBorder(vitalityWhoopGreen.opacity(0.2), lineWidth: 1)
         )
         .padding(.horizontal)

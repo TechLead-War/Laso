@@ -21,7 +21,7 @@ struct MetricDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: DS.space5) {
                 if viewModel.chartSamples.isEmpty {
                     noDataView
                 } else {
@@ -135,7 +135,7 @@ struct MetricDetailView: View {
             }
             .padding(.bottom)
         }
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppColour.surfaceBase.ignoresSafeArea())
         .navigationTitle(viewModel.metric.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .accessibilityIdentifier("screen.metricDetail")
@@ -227,11 +227,11 @@ struct MetricDetailView: View {
 
                 if viewModel.isOutsideNormalRange {
                     Text(Copy.Insights.MetricDetail.outsideNormalRange)
-                        .font(.caption2.weight(.bold))
+                        .font(DS.Typography.caption2Semibold)
                         .foregroundStyle(.white)
                         .padding(.horizontal, DS.badgeH)
                         .padding(.vertical, DS.badgeV)
-                        .background(.red, in: Capsule())
+                        .background(AppColour.danger, in: Capsule())
                 }
             }
 
@@ -272,8 +272,8 @@ struct MetricDetailView: View {
                 HStack(spacing: 16) {
                     if !viewModel.trendLineSamples.isEmpty {
                         HStack(spacing: 4) {
-                            RoundedRectangle(cornerRadius: 1)
-                                .fill(.orange.opacity(0.7))
+                            RoundedRectangle(cornerRadius: DS.Radius.xs)
+                                .fill(AppColour.warning.opacity(0.7))
                                 .frame(width: 16, height: 2)
                             Text(Copy.Insights.MetricDetail.trend)
                                 .font(DS.Typography.caption2)
@@ -282,7 +282,7 @@ struct MetricDetailView: View {
                     }
                     if !viewModel.forecastSamples.isEmpty {
                         HStack(spacing: 4) {
-                            RoundedRectangle(cornerRadius: 1)
+                            RoundedRectangle(cornerRadius: DS.Radius.xs)
                                 .fill(viewModel.metric.category.color.opacity(0.5))
                                 .frame(width: 16, height: 2)
                             Text(Copy.Insights.MetricDetail.forecast)
@@ -304,7 +304,7 @@ struct MetricDetailView: View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: "lightbulb.fill")
                 .font(DS.Typography.body)
-                .foregroundStyle(.yellow)
+                .foregroundStyle(AppColour.warning)
 
             Text(recommendation)
                 .font(DS.Typography.subheadline)
@@ -313,7 +313,7 @@ struct MetricDetailView: View {
         }
         .padding(DS.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .cardStyle(tint: .yellow)
+        .cardStyle(tint: AppColour.warning)
         .padding(.horizontal)
     }
 
@@ -322,13 +322,13 @@ struct MetricDetailView: View {
             // Period Average + Range Status
             VStack(spacing: 6) {
                 Text(viewModel.averageValue)
-                    .font(.title3.weight(.bold).monospacedDigit())
+                    .font(DS.Typography.title3.weight(.bold).monospacedDigit())
                 Text(Copy.Insights.MetricDetail.periodAvg)
                     .font(DS.Typography.caption2)
                     .foregroundStyle(.secondary)
                 Text(viewModel.isOutsideNormalRange ? Copy.Insights.MetricDetail.outsideRange : Copy.Insights.MetricDetail.withinRange)
                     .font(DS.Typography.caption2Semibold)
-                    .foregroundStyle(viewModel.isOutsideNormalRange ? .red : .green)
+                    .foregroundStyle(viewModel.isOutsideNormalRange ? AppColour.danger : AppColour.success)
             }
             .frame(maxWidth: .infinity)
 
@@ -337,7 +337,7 @@ struct MetricDetailView: View {
             // Period Change + Trend
             VStack(spacing: 6) {
                 Text(viewModel.weekOverWeekChange)
-                    .font(.title3.weight(.bold).monospacedDigit())
+                    .font(DS.Typography.title3.weight(.bold).monospacedDigit())
                 Text(viewModel.periodChangeLabel)
                     .font(DS.Typography.caption2)
                     .foregroundStyle(.secondary)
@@ -365,7 +365,7 @@ struct MetricDetailView: View {
                     // This month
                     VStack(spacing: 6) {
                         Text(viewModel.metric.formatValue(comp.thisMonthAvg))
-                            .font(.title3.weight(.bold).monospacedDigit())
+                            .font(DS.Typography.title3.weight(.bold).monospacedDigit())
                         Text(comp.thisMonthLabel)
                             .font(DS.Typography.caption2)
                             .foregroundStyle(.secondary)
@@ -376,18 +376,18 @@ struct MetricDetailView: View {
                     VStack(spacing: 4) {
                         Image(systemName: comp.improving ? "arrow.up.right" : abs(comp.changePercent) < 2 ? "arrow.right" : "arrow.down.right")
                             .font(DS.Typography.bodySemibold)
-                            .foregroundStyle(comp.improving ? .green : abs(comp.changePercent) < 2 ? .secondary : .red)
+                            .foregroundStyle(comp.improving ? AppColour.success : abs(comp.changePercent) < 2 ? AppColour.textSecondary : AppColour.danger)
 
                         Text(TrendAnalyzer.formattedPercentChange(comp.changePercent))
-                            .font(.caption.weight(.bold).monospacedDigit())
-                            .foregroundStyle(comp.improving ? .green : abs(comp.changePercent) < 2 ? .secondary : .red)
+                            .font(DS.Typography.captionSemibold.monospacedDigit())
+                            .foregroundStyle(comp.improving ? AppColour.success : abs(comp.changePercent) < 2 ? AppColour.textSecondary : AppColour.danger)
                     }
                     .frame(maxWidth: .infinity)
 
                     // Last month
                     VStack(spacing: 6) {
                         Text(viewModel.metric.formatValue(comp.lastMonthAvg))
-                            .font(.title3.weight(.bold).monospacedDigit())
+                            .font(DS.Typography.title3.weight(.bold).monospacedDigit())
                             .foregroundStyle(.secondary)
                         Text(comp.lastMonthLabel)
                             .font(DS.Typography.caption2)
@@ -417,10 +417,10 @@ struct MetricDetailView: View {
     ) -> some View {
         HStack(alignment: .center, spacing: 10) {
             Image(systemName: icon)
-                .font(.system(size: 14))
+                .font(DS.Typography.footnote)
                 .foregroundStyle(iconColor)
                 .frame(width: 30, height: 30)
-                .background(iconColor.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: 7))
+                .background(iconColor.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.Radius.sm))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(text)
@@ -438,12 +438,12 @@ struct MetricDetailView: View {
 
             if let trailing {
                 Text(trailing)
-                    .font(.subheadline.weight(.semibold).monospacedDigit())
+                    .font(DS.Typography.subheadlineSemibold.monospacedDigit())
                     .foregroundStyle(trailingColor)
             }
         }
         .padding(.horizontal, DS.cardPadding)
-        .padding(.vertical, 11)
+        .padding(.vertical, DS.itemSpacing)
     }
 
     private static let rowDividerLeading: CGFloat = DS.cardPadding + 30 + 10
@@ -469,10 +469,10 @@ struct MetricDetailView: View {
                 ForEach(Array(viewModel.scoreBreakdown.enumerated()), id: \.element.id) { index, component in
                     sectionRow(
                         icon: component.points >= 0 ? "plus.circle.fill" : "minus.circle.fill",
-                        iconColor: component.points >= 0 ? .green : .red,
+                        iconColor: component.points >= 0 ? AppColour.success : AppColour.danger,
                         text: component.reason,
                         trailing: "\(component.points > 0 ? "+" : "")\(component.points) pts",
-                        trailingColor: component.points >= 0 ? .green : .red
+                        trailingColor: component.points >= 0 ? AppColour.success : AppColour.danger
                     )
 
                     if index < viewModel.scoreBreakdown.count - 1 {
@@ -495,7 +495,7 @@ struct MetricDetailView: View {
                 ForEach(Array(viewModel.historicalFacts.enumerated()), id: \.element.id) { index, fact in
                     sectionRow(
                         icon: fact.icon,
-                        iconColor: .blue,
+                        iconColor: AppColour.info,
                         text: fact.text
                     )
 

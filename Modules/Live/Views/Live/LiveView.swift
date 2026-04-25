@@ -46,7 +46,7 @@ struct LiveView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: DS.sectionSpacing) {
                 LiveHeaderSection(
                     isStreaming: viewModel.isStreaming,
                     hasFreshData: viewModel.vitals.hasFreshData,
@@ -136,7 +136,7 @@ struct LiveView: View {
         }
         .contentMargins(.bottom, 72, for: .scrollContent)
         .accessibilityIdentifier("screen.live")
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppColour.surfaceBase.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
             viewModel.startStreaming()

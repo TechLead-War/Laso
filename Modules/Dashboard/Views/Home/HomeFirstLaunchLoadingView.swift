@@ -12,14 +12,14 @@ struct HomeFirstLaunchLoadingView: View {
     private var phase: (icon: String, text: String, color: Color) {
         switch syncPhase {
         case .idle, .importing:
-            return ("brain.head.profile", Copy.Home.syncingHealthData, .purple)
+            return ("brain.head.profile", Copy.Home.syncingHealthData, AppColour.categoryStress)
         case .analyzing:
             let label = totalDataPoints > 0 ? Copy.Home.analyzingDataPoints(totalDataPoints) : Copy.Home.analyzingYourData
-            return ("brain.head.profile", label, .purple)
+            return ("brain.head.profile", label, AppColour.categoryStress)
         case .discovering:
-            return ("sparkles", Copy.Home.discoveringPatterns, .orange)
+            return ("sparkles", Copy.Home.discoveringPatterns, AppColour.warning)
         case .complete:
-            return ("checkmark.circle.fill", Copy.Home.ready, .green)
+            return ("checkmark.circle.fill", Copy.Home.ready, AppColour.success)
         }
     }
 
@@ -42,24 +42,24 @@ struct HomeFirstLaunchLoadingView: View {
                     .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: iconScale)
 
                 Image(systemName: p.icon)
-                    .font(.system(size: 48, weight: .medium))
+                    .font(DS.Typography.largeIcon)
                     .foregroundStyle(p.color)
                     .frame(width: 80, height: 80)
-                    .background(p.color.opacity(0.12), in: Circle())
+                    .background(p.color.opacity(DS.badgeBg), in: Circle())
                     .scaleEffect(iconScale)
                     .contentTransition(.symbolEffect(.replace))
             }
 
-            VStack(spacing: 8) {
+            VStack(spacing: DS.space2) {
                 Text(p.text + String(repeating: ".", count: dotCount))
-                    .font(.system(size: 18).weight(.medium))
-                    .foregroundStyle(.primary)
+                    .font(DS.Typography.bodyMedium)
+                    .foregroundStyle(AppColour.textPrimary)
                     .contentTransition(.numericText())
                     .animation(.easeInOut(duration: 0.3), value: syncPhase)
 
                 Text(Copy.Home.thisOnlyHappensOnce)
-                    .font(.system(size: 14.4))
-                    .foregroundStyle(.tertiary)
+                    .font(DS.Typography.callout)
+                    .foregroundStyle(AppColour.textTertiary)
             }
 
             Spacer()

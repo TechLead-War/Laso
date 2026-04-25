@@ -10,16 +10,16 @@ struct ConnectedDevicesView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack(alignment: .top, spacing: 12) {
                         Image(systemName: viewModel.statusSymbolName)
-                            .font(.title2)
-                            .foregroundStyle(viewModel.primaryDevice?.iconColor ?? .blue)
+                            .font(DS.Typography.title2)
+                            .foregroundStyle(viewModel.primaryDevice?.iconColor ?? AppColour.info)
                             .frame(width: 36, height: 36)
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text(viewModel.statusHeadline)
-                                .font(.headline)
+                                .font(DS.Typography.headline)
                             Text(viewModel.statusDetail)
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .font(DS.Typography.subheadline)
+                                .foregroundStyle(AppColour.textSecondary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
 
@@ -123,16 +123,16 @@ struct ConnectedDevicesView: View {
                         } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: device.systemImageName)
-                                    .font(.body)
+                                    .font(DS.Typography.body)
                                     .foregroundStyle(device.iconColor)
                                     .frame(width: 28)
 
-                                VStack(alignment: .leading, spacing: 2) {
+                                VStack(alignment: .leading, spacing: DS.space1) {
                                     Text(device.displayName)
-                                        .font(.subheadline.weight(.medium))
+                                        .font(DS.Typography.subheadlineMedium)
                                     Text(device.syncSummary)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                        .font(DS.Typography.caption)
+                                        .foregroundStyle(AppColour.textSecondary)
                                 }
                             }
                             .contentShape(Rectangle())
@@ -169,38 +169,38 @@ struct ConnectedDevicesView: View {
     private func deviceRow(info: ConnectedDeviceInfo) -> some View {
         HStack(spacing: 12) {
             Image(systemName: info.device.systemImageName)
-                .font(.body)
+                .font(DS.Typography.body)
                 .foregroundStyle(info.device.iconColor)
                 .frame(width: 28)
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
                     Text(info.presentationName)
-                        .font(.subheadline.weight(.medium))
+                        .font(DS.Typography.subheadlineMedium)
                     if info.device == .generic {
                         Text("Detected")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(.blue)
+                            .font(DS.Typography.caption2Semibold)
+                            .foregroundStyle(AppColour.info)
                             .padding(.horizontal, DS.space2)
-                            .padding(.vertical, 3)
-                            .background(Color.blue.opacity(0.12), in: Capsule())
+                            .padding(.vertical, DS.badgeV)
+                            .background(AppColour.info.opacity(DS.badgeBg), in: Capsule())
                     } else {
                         Text(info.isActive ? "Active" : "Idle")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(info.isActive ? .green : .orange)
+                            .font(DS.Typography.caption2Semibold)
+                            .foregroundStyle(info.isActive ? AppColour.success : AppColour.warning)
                             .padding(.horizontal, DS.space2)
-                            .padding(.vertical, 3)
-                            .background((info.isActive ? Color.green : Color.orange).opacity(0.12), in: Capsule())
+                            .padding(.vertical, DS.badgeV)
+                            .background((info.isActive ? AppColour.success : AppColour.warning).opacity(DS.badgeBg), in: Capsule())
                     }
                 }
 
                 Text(info.sourceDisplayName)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
 
                 Text("\(info.metricCount) metrics \u{00B7} Last sync \(info.lastSyncText)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
             }
 
             Spacer()
@@ -208,16 +208,16 @@ struct ConnectedDevicesView: View {
     }
 
     private func summaryPill(title: String, detail: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: DS.space1) {
             Text(title)
-                .font(.subheadline.weight(.semibold))
+                .font(DS.Typography.subheadlineSemibold)
             Text(detail)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.caption)
+                .foregroundStyle(AppColour.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DS.space3)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
+        .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.lg))
     }
 }
 

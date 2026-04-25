@@ -57,88 +57,7 @@ struct LiveVitalsSection: View {
             }
         }()
 
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: icon)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(iconColor.opacity(isStale ? 0.5 : 1.0))
-
-                Text(label)
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(.secondary)
-
-                Spacer()
-            }
-
-            if isUnavailable && value == nil {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("No data")
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.tertiary)
-                    if let hint = unavailableHint {
-                        Text(hint)
-                            .font(.caption2)
-                            .foregroundStyle(.quaternary)
-                    }
-                }
-            } else if let value {
-                HStack(alignment: .firstTextBaseline, spacing: 2) {
-                    Text(value)
-                        .font(.title2.weight(.bold).monospacedDigit())
-                        .foregroundStyle(.primary.opacity(isStale ? 0.4 : 1.0))
-                        .contentTransition(.numericText())
-                        .postHogMask()
-
-                    Text(unit)
-                        .font(.caption2.weight(.medium))
-                        .foregroundStyle(.secondary.opacity(isStale ? 0.5 : 1.0))
-                }
-            } else {
-                Text("Syncing")
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.tertiary)
-            }
-
-            if isStale {
-                // Prominent stale timestamp
-                if let ts = timestamp {
-                    HStack(spacing: 4) {
-                        Image(systemName: "clock")
-                            .font(.caption2)
-                        Text(ts, style: .relative)
-                            .font(.caption2.weight(.medium))
-                        Text("ago")
-                            .font(.caption2.weight(.medium))
-                    }
-                    .foregroundStyle(.secondary)
-                }
-            } else {
-                HStack(spacing: 4) {
-                    if status != .unknown {
-                        Circle()
-                            .fill(status.color)
-                            .frame(width: 6, height: 6)
-                        Text(status.label)
-                            .font(.caption2.weight(.medium))
-                            .foregroundStyle(status.color)
-                    }
-
-                    Spacer()
-
-                    if let ts = timestamp {
-                        Text(ts, style: .relative)
-                            .font(.caption2)
-                            .foregroundStyle(.quaternary)
-                    }
-                }
-            }
-        }
-        .padding(DS.cardPadding)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .cardStyle()
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(label), \(value ?? "no data") \(unit), \(status.label)")
-        .onTapGesture {
+        return Button {
             guard let blockType else { return }
             let metricId: String = label == "SpO2" ? HealthMetric.bloodOxygen.rawValue : HealthMetric.respiratoryRate.rawValue
             AppAnalytics.shared.trackBlockTap(
@@ -152,6 +71,89 @@ struct LiveVitalsSection: View {
                 ]
             )
             vitalsTracker.tapped(target: label.lowercased().replacingOccurrences(of: " ", with: "_"))
+        } label: {
+            VStack(alignment: .leading, spacing: DS.space2) {
+                HStack {
+                    Image(systemName: icon)
+                        .font(DS.Typography.captionSemibold)
+                        .foregroundStyle(iconColor.opacity(isStale ? 0.5 : 1.0))
+
+                    Text(label)
+                        .font(DS.Typography.caption2Medium)
+                        .foregroundStyle(AppColour.textSecondary)
+
+                    Spacer()
+                }
+
+                if isUnavailable && value == nil {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("No data")
+                            .font(DS.Typography.subheadlineMedium)
+                            .foregroundStyle(AppColour.textTertiary)
+                        if let hint = unavailableHint {
+                            Text(hint)
+                                .font(DS.Typography.caption2)
+                                .foregroundStyle(AppColour.textQuaternary)
+                        }
+                    }
+                } else if let value {
+                    HStack(alignment: .firstTextBaseline, spacing: 2) {
+                        Text(value)
+                            .font(DS.Typography.title2.monospacedDigit())
+                            .foregroundStyle(AppColour.textPrimary.opacity(isStale ? 0.4 : 1.0))
+                            .contentTransition(.numericText())
+                            .postHogMask()
+
+                        Text(unit)
+                            .font(DS.Typography.caption2Medium)
+                            .foregroundStyle(AppColour.textSecondary.opacity(isStale ? 0.5 : 1.0))
+                    }
+                } else {
+                    Text("Syncing")
+                        .font(DS.Typography.subheadlineMedium)
+                        .foregroundStyle(AppColour.textTertiary)
+                }
+
+                if isStale {
+                    // Prominent stale timestamp
+                    if let ts = timestamp {
+                        HStack(spacing: 4) {
+                            Image(systemName: "clock")
+                                .font(DS.Typography.caption2)
+                            Text(ts, style: .relative)
+                                .font(DS.Typography.caption2Medium)
+                            Text("ago")
+                                .font(DS.Typography.caption2Medium)
+                        }
+                        .foregroundStyle(AppColour.textSecondary)
+                    }
+                } else {
+                    HStack(spacing: 4) {
+                        if status != .unknown {
+                            Circle()
+                                .fill(status.color)
+                                .frame(width: 6, height: 6)
+                            Text(status.label)
+                                .font(DS.Typography.caption2Medium)
+                                .foregroundStyle(status.color)
+                        }
+
+                        Spacer()
+
+                        if let ts = timestamp {
+                            Text(ts, style: .relative)
+                                .font(DS.Typography.caption2)
+                                .foregroundStyle(AppColour.textQuaternary)
+                        }
+                    }
+                }
+            }
+            .padding(DS.cardPadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .cardStyle()
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(label), \(value ?? "no data") \(unit), \(status.label)")
         }
+        .buttonStyle(.dsPress)
     }
 }

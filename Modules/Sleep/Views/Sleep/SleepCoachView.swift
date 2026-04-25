@@ -80,7 +80,7 @@ struct SleepCoachView: View {
             }
             .padding(.bottom, DS.space6)
         }
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .background(AppColour.surfaceBase.ignoresSafeArea())
         .navigationTitle(Copy.SleepCoach.title)
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
@@ -94,45 +94,45 @@ struct SleepCoachView: View {
     // MARK: - 1. Hero Section
 
     private var heroSection: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: DS.space4) {
             ZStack {
                 Circle()
-                    .stroke(.indigo.opacity(0.2), lineWidth: 8)
+                    .stroke(AppColour.categorySleep.opacity(0.2), lineWidth: 8)
                     .frame(width: 120, height: 120)
 
                 Circle()
                     .trim(from: 0, to: min(1, adjustedNeed / 12))
-                    .stroke(.indigo, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                    .stroke(AppColour.categorySleep, style: StrokeStyle(lineWidth: 8, lineCap: .round))
                     .frame(width: 120, height: 120)
                     .rotationEffect(.degrees(-90))
 
                 VStack(spacing: 2) {
                     Image(systemName: "moon.fill")
-                        .font(.title2)
-                        .foregroundStyle(.indigo)
+                        .font(DS.Typography.title2)
+                        .foregroundStyle(AppColour.categorySleep)
                     Text(formatDuration(adjustedNeed))
                         .font(DS.Typography.displayS)
                     Text(Copy.SleepCoach.tonight)
                         .font(DS.Typography.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
             }
 
             Text(Copy.SleepCoach.recommendedSleep(level: performanceLevel.rawValue.lowercased()))
                 .font(DS.Typography.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
                 .multilineTextAlignment(.center)
         }
         .padding(DS.space5)
         .frame(maxWidth: .infinity)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
         .padding(.horizontal)
     }
 
     // MARK: - 2. Performance Level Picker
 
     private var performancePicker: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             sectionHeader(icon: "slider.horizontal.3", title: Copy.SleepCoach.performanceLevel)
 
             Picker(Copy.SleepCoach.performanceLabel, selection: $performanceLevel) {
@@ -148,12 +148,12 @@ struct SleepCoachView: View {
     // MARK: - 3. Schedule Section
 
     private var scheduleSection: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DS.itemSpacing) {
             scheduleItem(
                 icon: "moon.zzz.fill",
                 label: Copy.SleepCoach.bedtime,
                 value: formattedBedtime,
-                color: .indigo
+                color: AppColour.categorySleep
             )
 
             scheduleItem(
@@ -167,18 +167,18 @@ struct SleepCoachView: View {
     }
 
     private func scheduleItem(icon: String, label: String, value: String, color: Color) -> some View {
-        VStack(spacing: 8) {
+        VStack(spacing: DS.space2) {
             Image(systemName: icon)
-                .font(.title2)
+                .font(DS.Typography.title2)
                 .foregroundStyle(color)
 
             Text(label)
                 .font(DS.Typography.captionSemibold)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
                 .textCase(.uppercase)
 
             Text(value)
-                .font(.title3.weight(.bold))
+                .font(DS.Typography.title3.weight(.bold))
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, DS.space4)
@@ -188,31 +188,31 @@ struct SleepCoachView: View {
     // MARK: - 4. Sleep Debt Section
 
     private var debtSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             sectionHeader(icon: "exclamationmark.triangle.fill", title: Copy.SleepCoach.sleepDebt)
 
-            VStack(spacing: 12) {
+            VStack(spacing: DS.itemSpacing) {
                 HStack {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: DS.space1) {
                         Text(Copy.SleepCoach.currentDebt)
                             .font(DS.Typography.captionSemibold)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppColour.textSecondary)
                             .textCase(.uppercase)
 
                         Text(formatDuration(debtHours))
-                            .font(.title2.weight(.bold).monospacedDigit())
-                            .foregroundStyle(debtHours > 0 ? AnyShapeStyle(.primary) : AnyShapeStyle(.green))
+                            .font(DS.Typography.title2.weight(.bold).monospacedDigit())
+                            .foregroundStyle(debtHours > 0 ? AnyShapeStyle(AppColour.textPrimary) : AnyShapeStyle(AppColour.success))
                     }
 
                     Spacer()
 
-                    VStack(alignment: .trailing, spacing: 4) {
+                    VStack(alignment: .trailing, spacing: DS.space1) {
                         debtLevelBadge
 
                         if debtHours > 0 {
                             Text(Copy.SleepCoach.daysToPayOff(daysToPayOff))
                                 .font(DS.Typography.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(AppColour.textSecondary)
                         }
                     }
                 }
@@ -221,7 +221,7 @@ struct SleepCoachView: View {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         Capsule()
-                            .fill(Color(.systemGray5))
+                            .fill(AppColour.borderLow)
                             .frame(height: 6)
 
                         Capsule()
@@ -232,9 +232,9 @@ struct SleepCoachView: View {
                 .frame(height: 6)
 
                 // Trend indicator
-                HStack(spacing: 4) {
+                HStack(spacing: DS.space1) {
                     Image(systemName: debtTrendIcon)
-                        .font(.caption2.weight(.bold))
+                        .font(DS.Typography.caption2.weight(.bold))
                     Text(debtTrendLabel)
                         .font(DS.Typography.caption)
                 }
@@ -249,13 +249,13 @@ struct SleepCoachView: View {
     // MARK: - 5. 14-Day Sleep History
 
     private var historySection: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             sectionHeader(icon: "chart.bar.fill", title: Copy.SleepCoach.fourteenDayHistory)
 
             if dailyHistory.isEmpty {
                 Text(Copy.Common.notEnoughData)
                     .font(DS.Typography.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColour.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, DS.space5)
                     .cardStyle()
@@ -274,15 +274,15 @@ struct SleepCoachView: View {
     }
 
     private func historyBar(_ day: DayEntry) -> some View {
-        HStack(spacing: 6) {
+        HStack(spacing: DS.space2) {
             Text(dayLabel(day.date))
-                .font(.caption2.weight(.medium).monospacedDigit())
-                .foregroundStyle(.secondary)
+                .font(DS.Typography.caption2.weight(.medium).monospacedDigit())
+                .foregroundStyle(AppColour.textSecondary)
                 .frame(width: 28, alignment: .leading)
 
             Text(day.bedtime.map(Self.timeFormatter.string(from:)) ?? "—")
-                .font(.system(size: 10, weight: .regular).monospacedDigit())
-                .foregroundStyle(day.bedtime == nil ? .tertiary : .secondary)
+                .font(DS.Typography.caption2.monospacedDigit())
+                .foregroundStyle(day.bedtime == nil ? AppColour.textTertiary : AppColour.textSecondary)
                 .frame(width: 42, alignment: .trailing)
 
             GeometryReader { geo in
@@ -291,11 +291,11 @@ struct SleepCoachView: View {
                 let actualWidth = geo.size.width * min(day.actual / maxHours, 1)
 
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(Color(.systemGray5))
+                    RoundedRectangle(cornerRadius: DS.Radius.xs)
+                        .fill(AppColour.borderLow)
                         .frame(width: neededWidth, height: 14)
 
-                    RoundedRectangle(cornerRadius: 3)
+                    RoundedRectangle(cornerRadius: DS.Radius.xs)
                         .fill(day.actual >= day.needed ? AppColour.categorySleep : AppColour.warning)
                         .frame(width: actualWidth, height: 14)
                 }
@@ -303,13 +303,13 @@ struct SleepCoachView: View {
             .frame(height: 14)
 
             Text(day.wakeTime.map(Self.timeFormatter.string(from:)) ?? "—")
-                .font(.system(size: 10, weight: .regular).monospacedDigit())
-                .foregroundStyle(day.wakeTime == nil ? .tertiary : .secondary)
+                .font(DS.Typography.caption2.monospacedDigit())
+                .foregroundStyle(day.wakeTime == nil ? AppColour.textTertiary : AppColour.textSecondary)
                 .frame(width: 42, alignment: .leading)
 
             Text(formatDuration(day.actual))
-                .font(.caption2.monospacedDigit())
-                .foregroundStyle(day.actual >= day.needed ? AnyShapeStyle(.primary) : AnyShapeStyle(.orange))
+                .font(DS.Typography.caption2.monospacedDigit())
+                .foregroundStyle(day.actual >= day.needed ? AnyShapeStyle(AppColour.textPrimary) : AnyShapeStyle(AppColour.warning))
                 .frame(width: 46, alignment: .trailing)
         }
     }
@@ -325,14 +325,14 @@ struct SleepCoachView: View {
     // MARK: - 6. Consistency Score
 
     private var consistencySection: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             sectionHeader(icon: "target", title: Copy.SleepCoach.consistency)
 
-            HStack(spacing: 20) {
+            HStack(spacing: DS.space5) {
                 // Ring
                 ZStack {
                     Circle()
-                        .stroke(Color(.systemGray5), lineWidth: 6)
+                        .stroke(AppColour.borderLow, lineWidth: 6)
                         .frame(width: 72, height: 72)
 
                     Circle()
@@ -342,16 +342,16 @@ struct SleepCoachView: View {
                         .rotationEffect(.degrees(-90))
 
                     Text("\(consistencyScore)")
-                        .font(.title3.weight(.bold).monospacedDigit())
+                        .font(DS.Typography.title3.weight(.bold).monospacedDigit())
                 }
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: DS.space1) {
                     Text(consistencyLabel)
                         .font(DS.Typography.subheadlineSemibold)
 
                     Text(consistencyDescription)
                         .font(DS.Typography.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -366,7 +366,7 @@ struct SleepCoachView: View {
     // MARK: - 7. Tips Section
 
     private var tipsSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
             sectionHeader(icon: "lightbulb.fill", title: debtHours > 2 ? Copy.SleepCoach.payingOffDebtTitle : Copy.SleepCoach.sleepTips)
 
             let visibleTips = showAllTips ? currentTips : Array(currentTips.prefix(2))
@@ -386,11 +386,11 @@ struct SleepCoachView: View {
                     } label: {
                         Text("Show \(currentTips.count - 2) more tips")
                             .font(DS.Typography.subheadlineMedium)
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(AppColour.info)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, DS.space3)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.dsPress)
                 }
             }
             .padding(.vertical, DS.space2)
@@ -400,7 +400,7 @@ struct SleepCoachView: View {
     }
 
     private func tipRow(_ tip: SleepTip) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DS.itemSpacing) {
             Image(systemName: tip.icon)
                 .font(DS.Typography.subheadline)
                 .foregroundStyle(tip.color)
@@ -412,23 +412,23 @@ struct SleepCoachView: View {
                     .font(DS.Typography.subheadlineMedium)
                 Text(tip.detail)
                     .font(DS.Typography.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColour.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             Spacer()
         }
         .padding(.horizontal, DS.cardPadding)
-        .padding(.vertical, 6)
+        .padding(.vertical, DS.space2)
     }
 
     // MARK: - Section Header
 
     private func sectionHeader(icon: String, title: String) -> some View {
-        HStack(spacing: 6) {
+        HStack(spacing: DS.space2) {
             Image(systemName: icon)
                 .font(DS.Typography.subheadlineSemibold)
-                .foregroundStyle(.indigo)
+                .foregroundStyle(AppColour.categorySleep)
             Text(title)
                 .font(DS.Typography.headline)
         }
@@ -448,7 +448,7 @@ struct SleepCoachView: View {
     private var currentTips: [SleepTip] {
         if debtHours > 2 {
             return [
-                SleepTip(icon: "plus.circle.fill", color: .indigo,
+                SleepTip(icon: "plus.circle.fill", color: AppColour.categorySleep,
                          title: Copy.SleepCoach.tipAddSleepTitle,
                          detail: Copy.SleepCoach.tipAddSleepDetail),
                 SleepTip(icon: "calendar.badge.clock", color: .orange,
@@ -463,7 +463,7 @@ struct SleepCoachView: View {
             ]
         } else {
             return [
-                SleepTip(icon: "clock.fill", color: .indigo,
+                SleepTip(icon: "clock.fill", color: AppColour.categorySleep,
                          title: Copy.SleepCoach.tipConsistentScheduleTitle,
                          detail: Copy.SleepCoach.tipConsistentScheduleDetail),
                 SleepTip(icon: "thermometer.snowflake", color: .cyan,
@@ -482,9 +482,9 @@ struct SleepCoachView: View {
     // MARK: - Computed Properties
 
     private var debtColor: Color {
-        if debtHours <= 1 { return .green }
-        if debtHours <= 4 { return .orange }
-        return .red
+        if debtHours <= 1 { return AppColour.success }
+        if debtHours <= 4 { return AppColour.warning }
+        return AppColour.danger
     }
 
     private var debtFraction: Double {
@@ -494,7 +494,7 @@ struct SleepCoachView: View {
     private var debtLevelBadge: some View {
         let (text, color) = debtLevelInfo
         return Text(text)
-            .font(.caption2.weight(.bold))
+            .font(DS.Typography.caption2.weight(.bold))
             .foregroundStyle(color)
             .padding(.horizontal, DS.badgeH)
             .padding(.vertical, DS.badgeV)
@@ -502,10 +502,10 @@ struct SleepCoachView: View {
     }
 
     private var debtLevelInfo: (String, Color) {
-        if debtHours <= 0.5 { return (Copy.SleepCoach.debtClear, .green) }
-        if debtHours <= 2 { return (Copy.SleepCoach.debtLow, .blue) }
-        if debtHours <= 5 { return (Copy.SleepCoach.debtModerate, .orange) }
-        return (Copy.SleepCoach.debtHigh, .red)
+        if debtHours <= 0.5 { return (Copy.SleepCoach.debtClear, AppColour.success) }
+        if debtHours <= 2 { return (Copy.SleepCoach.debtLow, AppColour.info) }
+        if debtHours <= 5 { return (Copy.SleepCoach.debtModerate, AppColour.warning) }
+        return (Copy.SleepCoach.debtHigh, AppColour.danger)
     }
 
     private var daysToPayOff: Int {
@@ -534,18 +534,18 @@ struct SleepCoachView: View {
 
     private var debtTrendColor: Color {
         let recent = dailyHistory.suffix(3)
-        guard recent.count >= 2 else { return .secondary }
+        guard recent.count >= 2 else { return AppColour.textSecondary }
         let avgDelta = recent.map { $0.actual - $0.needed }.reduce(0, +) / Double(recent.count)
-        if avgDelta > 0.25 { return .green }
-        if avgDelta < -0.25 { return .orange }
-        return .secondary
+        if avgDelta > 0.25 { return AppColour.success }
+        if avgDelta < -0.25 { return AppColour.warning }
+        return AppColour.textSecondary
     }
 
     private var consistencyColor: Color {
-        if consistencyScore >= 80 { return .green }
-        if consistencyScore >= 60 { return .blue }
-        if consistencyScore >= 40 { return .orange }
-        return .red
+        if consistencyScore >= 80 { return AppColour.success }
+        if consistencyScore >= 60 { return AppColour.info }
+        if consistencyScore >= 40 { return AppColour.warning }
+        return AppColour.danger
     }
 
     private var consistencyLabel: String {

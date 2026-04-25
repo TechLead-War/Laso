@@ -35,10 +35,10 @@ struct StrainCard: View {
                         strainRing
 
                         // Center text
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: DS.space1) {
                             Text("Today's Strain")
-                                .font(.system(size: 14.4).weight(.semibold))
-                                .foregroundStyle(.secondary)
+                                .font(DS.Typography.calloutSemibold)
+                                .foregroundStyle(AppColour.textSecondary)
                                 .textCase(.uppercase)
 
                             HStack(spacing: 8) {
@@ -58,8 +58,8 @@ struct StrainCard: View {
                         Spacer()
 
                         Image(systemName: "chevron.right")
-                            .font(.system(size: 13.2).weight(.semibold))
-                            .foregroundStyle(.tertiary)
+                            .font(DS.Typography.footnoteMedium)
+                            .foregroundStyle(AppColour.textTertiary)
                     }
 
                     // HR zone mini bar chart
@@ -71,7 +71,7 @@ struct StrainCard: View {
             }
             .cardStyle(tint: strainLevel.color)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Today's strain \(String(format: "%.1f", strainValue)), \(strainLevel.displayName)")
         .accessibilityHint("View strain details")
@@ -124,8 +124,8 @@ struct StrainCard: View {
                             .frame(height: max(CGFloat(fraction) * 24, 2))
 
                         Text("\(Int(minutes))")
-                            .font(.system(size: 13.2).weight(.medium).monospacedDigit())
-                            .foregroundStyle(.secondary)
+                            .font(DS.Typography.footnoteMedium.monospacedDigit())
+                            .foregroundStyle(AppColour.textSecondary)
                             .postHogMask()
                     }
                 }
@@ -133,11 +133,11 @@ struct StrainCard: View {
             .frame(height: 36)
 
             // Zone labels
-            HStack(spacing: 4) {
+            HStack(spacing: DS.space1) {
                 ForEach(1...5, id: \.self) { zone in
                     Text("Z\(zone)")
-                        .font(.system(size: 13.2).weight(.medium))
-                        .foregroundStyle(.tertiary)
+                        .font(DS.Typography.footnoteMedium)
+                        .foregroundStyle(AppColour.textTertiary)
                         .frame(maxWidth: .infinity)
                 }
             }

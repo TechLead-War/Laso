@@ -7,9 +7,9 @@ struct PeriodSummarySection: View {
     let onTapMetric: (HealthMetric) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: DS.space3) {
             Text(Copy.Home.trends)
-                .font(.system(size: 20.4, weight: .semibold))
+                .font(DS.Typography.title3)
                 .padding(.horizontal, DS.screenPadding)
 
             // Period picker
@@ -84,18 +84,18 @@ struct PeriodCounter: View {
         Button {
             onTap?()
         } label: {
-            VStack(spacing: 4) {
-                HStack(spacing: 4) {
+            VStack(spacing: DS.space1) {
+                HStack(spacing: DS.space1) {
                     Image(systemName: icon)
-                        .font(.system(size: 13.2).weight(.bold))
+                        .font(DS.Typography.captionSemibold)
                         .foregroundStyle(color)
                     Text("\(count)")
-                        .font(.system(size: 24).weight(.bold).monospacedDigit())
-                        .foregroundStyle(.primary)
+                        .font(DS.Typography.displayS)
+                        .foregroundStyle(AppColour.textPrimary)
                 }
                 Text(label)
-                    .font(.system(size: 13.2))
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.footnote)
+                    .foregroundStyle(AppColour.textSecondary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, DS.space1)
@@ -136,8 +136,8 @@ struct MetricChangeRow: View {
     }
 
     private var changeColor: Color {
-        if isStable { return .secondary }
-        return change.improved ? .green : .red
+        if isStable { return AppColour.textSecondary }
+        return change.improved ? AppColour.success : AppColour.danger
     }
 
     private var formattedAvg: String {
@@ -162,19 +162,19 @@ struct MetricChangeRow: View {
                     .frame(width: 20)
 
                 // Metric name + current value + nudge
-                VStack(alignment: .leading, spacing: 1) {
+                VStack(alignment: .leading, spacing: DS.space1) {
                     Text(change.metric.displayName)
-                        .font(.system(size: 18).weight(.medium))
-                        .foregroundStyle(.primary)
+                        .font(DS.Typography.bodyMedium)
+                        .foregroundStyle(AppColour.textPrimary)
 
                     Text("\(formattedAvg) \(change.metric.unit)")
-                        .font(.system(size: 13.2).monospacedDigit())
-                        .foregroundStyle(.secondary)
+                        .font(DS.Typography.footnote.monospacedDigit())
+                        .foregroundStyle(AppColour.textSecondary)
 
                     if let nudge = actionNudge {
                         Text(nudge)
-                            .font(.system(size: 13.2))
-                            .foregroundStyle(.orange)
+                            .font(DS.Typography.footnote)
+                            .foregroundStyle(AppColour.warning)
                             .lineLimit(2)
                             .minimumScaleFactor(0.75)
                     }
@@ -183,12 +183,12 @@ struct MetricChangeRow: View {
                 Spacer()
 
                 // Change percentage
-                HStack(spacing: 3) {
+                HStack(spacing: DS.space1) {
                     Image(systemName: changeIcon)
-                        .font(.system(size: 13.2).weight(.bold))
+                        .font(DS.Typography.captionSemibold)
 
                     Text(String(format: "%.1f%%", abs(change.changePercent)))
-                        .font(.system(size: 14.4).weight(.semibold).monospacedDigit())
+                        .font(DS.Typography.calloutSemibold.monospacedDigit())
                 }
                 .foregroundStyle(changeColor)
                 .padding(.horizontal, DS.badgeH)
@@ -199,14 +199,14 @@ struct MetricChangeRow: View {
                 )
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 13.2))
-                    .foregroundStyle(.tertiary)
+                    .font(DS.Typography.footnote)
+                    .foregroundStyle(AppColour.textTertiary)
             }
             .padding(.vertical, DS.space2)
             .padding(.horizontal, DS.space3)
-            .background(.background, in: RoundedRectangle(cornerRadius: DS.iconRadius))
+            .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.iconRadius))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(change.metric.displayName), \(formattedAvg) \(change.metric.unit), \(isStable ? "stable" : change.improved ? "improved" : "declined") \(String(format: "%.1f", abs(change.changePercent))) percent")
         .accessibilityHint("View \(change.metric.displayName) details")

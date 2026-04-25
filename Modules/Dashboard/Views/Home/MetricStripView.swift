@@ -45,26 +45,26 @@ private struct MetricTileView: View {
         Button(action: onTap) {
             VStack(spacing: 6) {
                 Image(systemName: tile.icon)
-                    .font(.system(size: 19.2).weight(.semibold))
+                    .font(DS.Typography.body)
                     .foregroundStyle(.white)
                     .frame(width: 30, height: 30)
                     .background(tile.color, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
 
                 Text(tile.value)
-                    .font(.system(size: 20.4, weight: .semibold).weight(.bold).monospacedDigit())
+                    .font(DS.Typography.title3.monospacedDigit())
                     .lineLimit(2)
                     .minimumScaleFactor(0.8)
                     .postHogMask()
 
                 Text(tile.label)
-                    .font(.system(size: 13.2).weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .font(DS.Typography.captionMedium)
+                    .foregroundStyle(AppColour.textSecondary)
                     .lineLimit(2)
                     .minimumScaleFactor(0.75)
 
                 if let badge = tile.badge {
                     Text(badge)
-                        .font(.system(size: 13.2).weight(.bold))
+                        .font(DS.Typography.captionSemibold)
                         .foregroundStyle(tile.color)
                         .lineLimit(2)
                         .minimumScaleFactor(0.8)
@@ -72,12 +72,12 @@ private struct MetricTileView: View {
                 } else {
                     // Placeholder to keep consistent height
                     Text(" ")
-                        .font(.system(size: 13.2))
+                        .font(DS.Typography.caption)
                 }
             }
             .frame(width: 96)
             .padding(.vertical, 10)
-            .background(.background, in: RoundedRectangle(cornerRadius: DS.cardRadius))
+            .background(AppColour.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.cardRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: DS.cardRadius)
                     .strokeBorder(tile.color.opacity(DS.strokeAlpha), lineWidth: 1)

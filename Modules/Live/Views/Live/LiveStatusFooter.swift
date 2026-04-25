@@ -8,11 +8,11 @@ struct LiveStatusFooter: View {
             if let lastUpdate {
                 HStack(spacing: 6) {
                     Image(systemName: "antenna.radiowaves.left.and.right")
-                        .font(.caption2)
+                        .font(DS.Typography.caption2)
                     Text("Last signal \(lastUpdate, style: .relative) ago")
-                        .font(.caption2)
+                        .font(DS.Typography.caption2)
                 }
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(AppColour.textTertiary)
                 .padding(.bottom, DS.space2)
             }
         }

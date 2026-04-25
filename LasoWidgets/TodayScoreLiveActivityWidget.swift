@@ -7,8 +7,8 @@ struct TodayScoreLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: TodayScoreActivityAttributes.self) { context in
             CoachLockScreenView(state: context.state)
-                .activityBackgroundTint(Color(.secondarySystemBackground))
-                .activitySystemActionForegroundColor(.primary)
+                .activityBackgroundTint(AppColour.surfaceRaised)
+                .activitySystemActionForegroundColor(AppColour.textPrimary)
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
@@ -20,7 +20,7 @@ struct TodayScoreLiveActivityWidget: Widget {
                 DynamicIslandExpandedRegion(.center) {
                     Text(context.state.insight)
                         .font(.footnote.weight(.medium))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(AppColour.textPrimary)
                         .lineLimit(2)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 10)
@@ -65,11 +65,11 @@ private struct CoachLockScreenView: View {
                         Text(state.mode.headline.uppercased())
                             .font(.caption2.weight(.semibold))
                             .tracking(0.8)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppColour.textSecondary)
                     }
                     Text(state.insight)
                         .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(AppColour.textPrimary)
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -84,7 +84,7 @@ private struct CoachLockScreenView: View {
 
             DayProgressStrip(mode: state.mode)
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .background(
             LinearGradient(
@@ -142,7 +142,7 @@ private struct CoachOrbRing: View {
 
         ZStack {
             Circle()
-                .fill(Color.black.opacity(0.55))
+                .fill(AppColour.surfaceOverlay.opacity(0.55))
             Circle()
                 .stroke(Color.white.opacity(0.08), lineWidth: 3)
             Circle()
@@ -157,7 +157,7 @@ private struct CoachOrbRing: View {
                 Text(state.heroLabel.uppercased())
                     .font(.system(size: max(7, size * 0.11), weight: .semibold))
                     .tracking(0.6)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColour.textSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
@@ -175,21 +175,21 @@ private struct CoachTrailingStack: View {
     var body: some View {
         let tint = tintColor(for: state.scoreTint)
 
-        VStack(alignment: .trailing, spacing: 3) {
+        VStack(alignment: .trailing, spacing: 4) {
             Text(secondaryLabel.uppercased())
                 .font(.system(size: 9, weight: .semibold))
                 .tracking(0.8)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColour.textSecondary)
 
-            HStack(alignment: .lastTextBaseline, spacing: 3) {
+            HStack(alignment: .lastTextBaseline, spacing: 4) {
                 Text(secondaryValue)
                     .font(.system(size: 22, weight: .bold, design: .rounded).monospacedDigit())
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(AppColour.textPrimary)
                     .contentTransition(.numericText())
                 if let unit = secondaryUnit {
                     Text(unit)
                         .font(.caption2.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColour.textSecondary)
                 }
             }
 
@@ -304,10 +304,10 @@ private struct CoachActionBar: View {
 
 private func tintColor(for tint: TodayScoreTint) -> Color {
     switch tint {
-    case .excellent: return .green
-    case .good:      return .mint
-    case .fair:      return .orange
-    case .poor:      return .red
+    case .excellent: return AppColour.scoreOptimal
+    case .good:      return AppColour.scoreGood
+    case .fair:      return AppColour.scoreFair
+    case .poor:      return AppColour.scorePoor
     }
 }
 
