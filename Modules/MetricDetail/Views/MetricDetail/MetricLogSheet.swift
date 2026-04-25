@@ -34,7 +34,7 @@ struct MetricLogSheet: View {
                 case .mindfulMinutes:
                     mindfulSection
                 default:
-                    Text("Logging not supported for this metric.")
+                    Text(Copy.MetricDetail.loggingNotSupported)
                 }
 
                 if let errorMessage {
@@ -45,12 +45,12 @@ struct MetricLogSheet: View {
                     }
                 }
             }
-            .navigationTitle("Log \(metric.displayName)")
+            .navigationTitle(Copy.MetricDetail.logTitle(metric.displayName))
             .navigationBarTitleDisplayMode(.inline)
             .accessibilityIdentifier("screen.metricLog")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(Copy.MetricDetail.cancel) {
                         AppAnalytics.shared.trackBlockTap(
                             title: "Cancel",
                             type: .metricLogCancel,
@@ -64,7 +64,7 @@ struct MetricLogSheet: View {
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(Copy.MetricDetail.save) {
                         AppAnalytics.shared.trackBlockTap(
                             title: "Save",
                             type: .metricLogSave,
@@ -110,7 +110,7 @@ struct MetricLogSheet: View {
             }
             .padding(.vertical, DS.space2)
         } header: {
-            Text("Body Weight")
+            Text(Copy.MetricDetail.bodyWeightHeader)
         }
     }
 
@@ -151,7 +151,7 @@ struct MetricLogSheet: View {
             }
             .padding(.vertical, DS.space2)
         } header: {
-            Text("Water Intake")
+            Text(Copy.MetricDetail.waterIntakeHeader)
         }
     }
 
@@ -168,7 +168,7 @@ struct MetricLogSheet: View {
             }
             .padding(.vertical, DS.space2)
         } header: {
-            Text("Session Duration")
+            Text(Copy.MetricDetail.sessionDurationHeader)
         }
     }
 
@@ -194,7 +194,7 @@ struct MetricLogSheet: View {
             didSave = true
             dismiss()
         } catch {
-            errorMessage = "Failed to save: \(error.localizedDescription)"
+            errorMessage = Copy.MetricDetail.saveFailed(error.localizedDescription)
             isSaving = false
         }
     }

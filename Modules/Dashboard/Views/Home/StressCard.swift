@@ -28,7 +28,7 @@ struct StressCard: View {
 
                     // Center text
                     VStack(alignment: .leading, spacing: DS.space1) {
-                        Text("Stress Level")
+                        Text(Copy.Home.Cards.stressLevel)
                             .font(DS.Typography.calloutSemibold)
                             .foregroundStyle(AppColour.textSecondary)
                             .textCase(.uppercase)

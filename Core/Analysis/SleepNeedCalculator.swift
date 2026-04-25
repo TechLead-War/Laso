@@ -61,14 +61,11 @@ final class SleepNeedCalculator {
     private static let minimumDaysRequired = 7
     private static let baselineWindowDays = 30
 
-    // Performance Pass 2: cache the bedtime formatter so the computed property
-    // does not allocate a fresh DateFormatter on every Sleep tile render.
-    private static let bedtimeFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.dateFormat = "h:mm a"
-        return f
-    }()
+    // Pass 8 Y: bedtime is rendered on the Sleep tile, so it must follow the
+    // user's clock preference (12h vs 24h, AM/PM symbols). The Date.FormatStyle
+    // path below uses `Locale.current` automatically and Foundation caches
+    // the underlying formatter, so the per-call cost is negligible — no
+    // explicit DateFormatter cache needed.
     private static let wakeTimeWindowDays = 14
 
     // Hard bounds (science-backed: NSF, AASM, Cappuccio 2010)
@@ -177,7 +174,8 @@ final class SleepNeedCalculator {
 
     var formattedBedtime: String? {
         guard let bedtime = currentNeed?.recommendedBedtime else { return nil }
-        return Self.bedtimeFormatter.string(from: bedtime)
+        // Pass 8 Y: locale-aware. Picks 24h vs 12h from `Locale.current`.
+        return bedtime.formatted(.dateTime.hour().minute())
     }
 
     var formattedNeed: String {

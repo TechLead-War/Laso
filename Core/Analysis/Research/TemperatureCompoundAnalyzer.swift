@@ -156,11 +156,11 @@ struct TemperatureCompoundAnalyzer {
 
     /// Detect if temperature data shows a ~28-day cyclical pattern
     private static func detectCyclicalPattern(sorted: [MetricSample], baselineMean: Double) -> Bool {
-        guard sorted.count >= 28 else { return false }
+        guard sorted.count >= 28, let firstSample = sorted.first, let lastSample = sorted.last else { return false }
 
         // Simple: count sign changes relative to baseline over the data
         var signChanges = 0
-        var lastAboveBaseline = sorted.first!.value > baselineMean
+        var lastAboveBaseline = firstSample.value > baselineMean
 
         for sample in sorted.dropFirst() {
             let aboveBaseline = sample.value > baselineMean
@@ -171,7 +171,7 @@ struct TemperatureCompoundAnalyzer {
         }
 
         let daysSpanned = Calendar.current.dateComponents(
-            [.day], from: sorted.first!.date, to: sorted.last!.date
+            [.day], from: firstSample.date, to: lastSample.date
         ).day ?? 1
 
         // Expect ~2 sign changes per 28-day cycle (up→down, down→up)

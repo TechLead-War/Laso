@@ -112,6 +112,7 @@ private extension InsightCard {
     }
 }
 
+#if DEBUG
 #Preview {
     let insights = SampleDataProvider.generateSampleInsights()
     ScrollView {
@@ -124,3 +125,4 @@ private extension InsightCard {
     }
     .background(Color(.systemGroupedBackground))
 }
+#endif

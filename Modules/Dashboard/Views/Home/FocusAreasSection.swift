@@ -151,6 +151,7 @@ struct RiskGradeBadge: View {
     }
 }
 
+#if DEBUG
 #Preview {
     ScrollView {
         FocusAreasSection(
@@ -160,3 +161,4 @@ struct RiskGradeBadge: View {
         .padding(.vertical)
     }
 }
+#endif

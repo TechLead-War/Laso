@@ -21,6 +21,39 @@ struct HealthKitMetricRegistry {
 
     static func config(for metric: HealthMetric) -> MetricConfig {
         switch metric {
+        case .heartRate, .restingHeartRate, .heartRateVariability, .walkingHeartRateAverage,
+             .heartRateRecovery, .atrialFibrillationBurden, .peripheralPerfusionIndex, .bloodOxygen:
+            return cardioConfig(for: metric)
+        case .sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .sleepAwake, .sleepBreathingDisturbances:
+            return sleepConfig(for: metric)
+        case .steps, .activeCalories, .basalCalories, .exerciseMinutes, .standHours,
+             .distanceWalkingRunning, .flightsClimbed, .distanceCycling, .distanceSwimming,
+             .swimmingStrokeCount, .appleMoveTime, .walkingSpeed, .walkingStepLength,
+             .walkingAsymmetry, .walkingDoubleSupportPercentage, .stairAscentSpeed,
+             .stairDescentSpeed, .sixMinuteWalkTestDistance, .walkingSteadiness,
+             .numberOfTimesFallen, .runningPower, .runningGroundContactTime,
+             .runningVerticalOscillation, .runningStrideLength:
+            return activityConfig(for: metric)
+        case .weight, .bmi, .bodyFatPercentage, .bloodPressureSystolic, .bloodPressureDiastolic,
+             .respiratoryRate, .bodyTemperature, .appleSleepingWristTemperature, .leanBodyMass,
+             .waistCircumference, .vo2Max, .peakExpiratoryFlowRate, .forcedVitalCapacity,
+             .forcedExpiratoryVolume1:
+            return bodyAndVitalsConfig(for: metric)
+        case .mindfulMinutes, .timeInDaylight, .electrodermalActivity, .waterIntake,
+             .caffeineIntake, .proteinIntake, .fiberIntake, .sugarIntake, .sodiumIntake,
+             .totalCaloriesIntake, .carbohydrateIntake, .fatIntake, .bloodGlucose,
+             .insulinDelivery:
+            return mindfulnessAndNutritionConfig(for: metric)
+        case .workoutCount, .workoutDuration, .headphoneAudioExposure,
+             .environmentalAudioExposure, .underwaterDepth, .waterTemperature:
+            return miscConfig(for: metric)
+        }
+    }
+
+    // MARK: - Cardio
+
+    private static func cardioConfig(for metric: HealthMetric) -> MetricConfig {
+        switch metric {
         case .heartRate:
             return MetricConfig(
                 sampleType: HKQuantityType(.heartRate),
@@ -85,6 +118,15 @@ struct HealthKitMetricRegistry {
                 strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
+        default:
+            preconditionFailure("cardioConfig called with non-cardio metric: \(metric)")
+        }
+    }
+
+    // MARK: - Sleep
+
+    private static func sleepConfig(for metric: HealthMetric) -> MetricConfig {
+        switch metric {
         case .sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .sleepAwake:
             return MetricConfig(
                 sampleType: HKCategoryType(.sleepAnalysis),
@@ -93,6 +135,33 @@ struct HealthKitMetricRegistry {
                 strategy: .categorySample,
                 statisticsOption: .cumulativeSum
             )
+        case .sleepBreathingDisturbances:
+            if #available(iOS 18.0, *) {
+                return MetricConfig(
+                    sampleType: HKQuantityType(.appleSleepingBreathingDisturbances),
+                    quantityType: HKQuantityType(.appleSleepingBreathingDisturbances),
+                    unit: HKUnit.count().unitDivided(by: .hour()),
+                    strategy: .quantitySample,
+                    statisticsOption: .discreteAverage
+                )
+            } else {
+                return MetricConfig(
+                    sampleType: nil,
+                    quantityType: nil,
+                    unit: HKUnit.count().unitDivided(by: .hour()),
+                    strategy: .quantitySample,
+                    statisticsOption: .discreteAverage
+                )
+            }
+        default:
+            preconditionFailure("sleepConfig called with non-sleep metric: \(metric)")
+        }
+    }
+
+    // MARK: - Activity / Mobility / Running
+
+    private static func activityConfig(for metric: HealthMetric) -> MetricConfig {
+        switch metric {
         case .steps:
             return MetricConfig(
                 sampleType: HKQuantityType(.stepCount),
@@ -237,6 +306,63 @@ struct HealthKitMetricRegistry {
                 strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
+        case .walkingSteadiness:
+            return MetricConfig(
+                sampleType: HKQuantityType(.appleWalkingSteadiness),
+                quantityType: HKQuantityType(.appleWalkingSteadiness),
+                unit: .percent(),
+                strategy: .quantitySample,
+                statisticsOption: .discreteAverage
+            )
+        case .numberOfTimesFallen:
+            return MetricConfig(
+                sampleType: HKQuantityType(.numberOfTimesFallen),
+                quantityType: HKQuantityType(.numberOfTimesFallen),
+                unit: .count(),
+                strategy: .statisticsDaily,
+                statisticsOption: .cumulativeSum
+            )
+        case .runningPower:
+            return MetricConfig(
+                sampleType: HKQuantityType(.runningPower),
+                quantityType: HKQuantityType(.runningPower),
+                unit: .watt(),
+                strategy: .statisticsDaily,
+                statisticsOption: .discreteAverage
+            )
+        case .runningGroundContactTime:
+            return MetricConfig(
+                sampleType: HKQuantityType(.runningGroundContactTime),
+                quantityType: HKQuantityType(.runningGroundContactTime),
+                unit: .secondUnit(with: .milli),
+                strategy: .statisticsDaily,
+                statisticsOption: .discreteAverage
+            )
+        case .runningVerticalOscillation:
+            return MetricConfig(
+                sampleType: HKQuantityType(.runningVerticalOscillation),
+                quantityType: HKQuantityType(.runningVerticalOscillation),
+                unit: .meterUnit(with: .centi),
+                strategy: .statisticsDaily,
+                statisticsOption: .discreteAverage
+            )
+        case .runningStrideLength:
+            return MetricConfig(
+                sampleType: HKQuantityType(.runningStrideLength),
+                quantityType: HKQuantityType(.runningStrideLength),
+                unit: .meter(),
+                strategy: .statisticsDaily,
+                statisticsOption: .discreteAverage
+            )
+        default:
+            preconditionFailure("activityConfig called with non-activity metric: \(metric)")
+        }
+    }
+
+    // MARK: - Body / Vitals / Respiratory
+
+    private static func bodyAndVitalsConfig(for metric: HealthMetric) -> MetricConfig {
+        switch metric {
         case .weight:
             return MetricConfig(
                 sampleType: HKQuantityType(.bodyMass),
@@ -341,6 +467,23 @@ struct HealthKitMetricRegistry {
                 strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
+        case .forcedExpiratoryVolume1:
+            return MetricConfig(
+                sampleType: HKQuantityType(.forcedExpiratoryVolume1),
+                quantityType: HKQuantityType(.forcedExpiratoryVolume1),
+                unit: .liter(),
+                strategy: .statisticsDaily,
+                statisticsOption: .discreteAverage
+            )
+        default:
+            preconditionFailure("bodyAndVitalsConfig called with non-body metric: \(metric)")
+        }
+    }
+
+    // MARK: - Mindfulness / Nutrition / Metabolic
+
+    private static func mindfulnessAndNutritionConfig(for metric: HealthMetric) -> MetricConfig {
+        switch metric {
         case .mindfulMinutes:
             return MetricConfig(
                 sampleType: HKCategoryType(.mindfulSession),
@@ -445,6 +588,23 @@ struct HealthKitMetricRegistry {
                 strategy: .statisticsDaily,
                 statisticsOption: .discreteAverage
             )
+        case .insulinDelivery:
+            return MetricConfig(
+                sampleType: HKQuantityType(.insulinDelivery),
+                quantityType: HKQuantityType(.insulinDelivery),
+                unit: .internationalUnit(),
+                strategy: .statisticsDaily,
+                statisticsOption: .cumulativeSum
+            )
+        default:
+            preconditionFailure("mindfulnessAndNutritionConfig called with non-nutrition metric: \(metric)")
+        }
+    }
+
+    // MARK: - Misc (workouts, hearing, water sports)
+
+    private static func miscConfig(for metric: HealthMetric) -> MetricConfig {
+        switch metric {
         case .workoutCount, .workoutDuration:
             return MetricConfig(
                 sampleType: HKWorkoutType.workoutType(),
@@ -472,98 +632,6 @@ struct HealthKitMetricRegistry {
                 statisticsOption: .discreteAverage
             )
 
-        // MARK: - Running Dynamics
-        case .runningPower:
-            return MetricConfig(
-                sampleType: HKQuantityType(.runningPower),
-                quantityType: HKQuantityType(.runningPower),
-                unit: .watt(),
-                strategy: .statisticsDaily,
-                statisticsOption: .discreteAverage
-            )
-        case .runningGroundContactTime:
-            return MetricConfig(
-                sampleType: HKQuantityType(.runningGroundContactTime),
-                quantityType: HKQuantityType(.runningGroundContactTime),
-                unit: .secondUnit(with: .milli),
-                strategy: .statisticsDaily,
-                statisticsOption: .discreteAverage
-            )
-        case .runningVerticalOscillation:
-            return MetricConfig(
-                sampleType: HKQuantityType(.runningVerticalOscillation),
-                quantityType: HKQuantityType(.runningVerticalOscillation),
-                unit: .meterUnit(with: .centi),
-                strategy: .statisticsDaily,
-                statisticsOption: .discreteAverage
-            )
-        case .runningStrideLength:
-            return MetricConfig(
-                sampleType: HKQuantityType(.runningStrideLength),
-                quantityType: HKQuantityType(.runningStrideLength),
-                unit: .meter(),
-                strategy: .statisticsDaily,
-                statisticsOption: .discreteAverage
-            )
-
-        // MARK: - Respiratory (additional)
-        case .forcedExpiratoryVolume1:
-            return MetricConfig(
-                sampleType: HKQuantityType(.forcedExpiratoryVolume1),
-                quantityType: HKQuantityType(.forcedExpiratoryVolume1),
-                unit: .liter(),
-                strategy: .statisticsDaily,
-                statisticsOption: .discreteAverage
-            )
-
-        // MARK: - Sleep (additional)
-        case .sleepBreathingDisturbances:
-            if #available(iOS 18.0, *) {
-                return MetricConfig(
-                    sampleType: HKQuantityType(.appleSleepingBreathingDisturbances),
-                    quantityType: HKQuantityType(.appleSleepingBreathingDisturbances),
-                    unit: HKUnit.count().unitDivided(by: .hour()),
-                    strategy: .quantitySample,
-                    statisticsOption: .discreteAverage
-                )
-            } else {
-                return MetricConfig(
-                    sampleType: nil,
-                    quantityType: nil,
-                    unit: HKUnit.count().unitDivided(by: .hour()),
-                    strategy: .quantitySample,
-                    statisticsOption: .discreteAverage
-                )
-            }
-
-        // MARK: - Mobility (additional)
-        case .walkingSteadiness:
-            return MetricConfig(
-                sampleType: HKQuantityType(.appleWalkingSteadiness),
-                quantityType: HKQuantityType(.appleWalkingSteadiness),
-                unit: .percent(),
-                strategy: .quantitySample,
-                statisticsOption: .discreteAverage
-            )
-        case .numberOfTimesFallen:
-            return MetricConfig(
-                sampleType: HKQuantityType(.numberOfTimesFallen),
-                quantityType: HKQuantityType(.numberOfTimesFallen),
-                unit: .count(),
-                strategy: .statisticsDaily,
-                statisticsOption: .cumulativeSum
-            )
-
-        // MARK: - Metabolic (additional)
-        case .insulinDelivery:
-            return MetricConfig(
-                sampleType: HKQuantityType(.insulinDelivery),
-                quantityType: HKQuantityType(.insulinDelivery),
-                unit: .internationalUnit(),
-                strategy: .statisticsDaily,
-                statisticsOption: .cumulativeSum
-            )
-
         // MARK: - Water Sports
         case .underwaterDepth:
             return MetricConfig(
@@ -581,6 +649,8 @@ struct HealthKitMetricRegistry {
                 strategy: .quantitySample,
                 statisticsOption: .discreteAverage
             )
+        default:
+            preconditionFailure("miscConfig called with non-misc metric: \(metric)")
         }
     }
 

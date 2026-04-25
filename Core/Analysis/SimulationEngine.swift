@@ -118,77 +118,115 @@ struct SimulationEngine {
         // Build modified anomalies and trends by adjusting existing ones
         var modifiedAnomalies = state.anomalies
         var modifiedTrends = state.trends
-        var perMetricImpact: [MetricImpact] = []
 
         for delta in deltas {
-            guard let baseline = state.baselines[delta.metric] else { continue }
-            let sd = baseline.standardDeviation
-            guard sd > 0 else { continue }
-
-            // Compute new z-score for the modified value
-            let newZScore = (delta.newValue - baseline.mean) / sd
-            let newDeviationPercent = baseline.mean != 0
-                ? ((delta.newValue - baseline.mean) / baseline.mean) * 100
-                : 0
-
-            // Determine new severity based on z-score
-            let newSeverity: Severity
-            let absZ = abs(newZScore)
-            if absZ >= 2.5 {
-                newSeverity = .critical
-            } else if absZ >= 1.5 {
-                newSeverity = .warning
-            } else {
-                newSeverity = .info
-            }
-
-            let normalRange = RulesConfiguration.normalRange(for: delta.metric)
-            let isOutsideNormal = !normalRange.contains(delta.newValue)
-            let isAboveBaseline = delta.newValue > baseline.mean
-
-            // Replace or add the anomaly for this metric
-            modifiedAnomalies.removeAll { $0.metric == delta.metric }
-            if newSeverity != .info || isOutsideNormal {
-                modifiedAnomalies.append(AnomalyDetector.AnomalyResult(
-                    metric: delta.metric,
-                    severity: newSeverity,
-                    deviationPercent: newDeviationPercent,
-                    zScore: newZScore,
-                    currentValue: delta.newValue,
-                    baselineValue: baseline.mean,
-                    isAboveBaseline: isAboveBaseline,
-                    outsideNormalRange: isOutsideNormal,
-                    allTimePercentile: 50
-                ))
-            }
-
-            // Adjust trend proportionally
-            if let existingTrend = state.trends[delta.metric] {
-                let changeRatio = baseline.mean != 0 ? delta.absoluteChange / baseline.mean : 0
-                let adjustedWoW = existingTrend.weekOverWeekChange + changeRatio * 100
-                let newDirection: TrendDirection
-                if adjustedWoW > 2 {
-                    newDirection = delta.metric.higherIsBetter ? .improving : .declining
-                } else if adjustedWoW < -2 {
-                    newDirection = delta.metric.higherIsBetter ? .declining : .improving
-                } else {
-                    newDirection = .stable
-                }
-
-                modifiedTrends[delta.metric] = TrendAnalyzer.TrendResult(
-                    direction: newDirection,
-                    slope: existingTrend.slope,
-                    weekOverWeekChange: adjustedWoW,
-                    movingAverage7d: existingTrend.movingAverage7d,
-                    movingAverage30d: existingTrend.movingAverage30d,
-                    movingAverage90d: existingTrend.movingAverage90d,
-                    movingAverage180d: existingTrend.movingAverage180d,
-                    movingAverage365d: existingTrend.movingAverage365d,
-                    inflection: existingTrend.inflection
-                )
-            }
+            applyDeltaToAnomalies(delta: delta, state: state, modifiedAnomalies: &modifiedAnomalies)
+            applyDeltaToTrends(delta: delta, state: state, modifiedTrends: &modifiedTrends)
         }
 
+        let scoreDelta = computeOverallScoreDelta(
+            modifiedAnomalies: modifiedAnomalies,
+            modifiedTrends: modifiedTrends,
+            state: state
+        )
+
+        let perMetricImpact = buildPerMetricImpact(
+            deltas: deltas,
+            modifiedAnomalies: modifiedAnomalies,
+            modifiedTrends: modifiedTrends,
+            state: state
+        )
+
+        return RuleBasedResult(scoreDelta: scoreDelta, perMetricImpact: perMetricImpact)
+    }
+
+    /// Replace or add the anomaly for `delta.metric` based on its new z-score and severity.
+    private static func applyDeltaToAnomalies(
+        delta: MetricDelta,
+        state: SimulationState,
+        modifiedAnomalies: inout [AnomalyDetector.AnomalyResult]
+    ) {
+        guard let baseline = state.baselines[delta.metric] else { return }
+        let sd = baseline.standardDeviation
+        guard sd > 0 else { return }
+
+        // Compute new z-score for the modified value
+        let newZScore = (delta.newValue - baseline.mean) / sd
+        let newDeviationPercent = baseline.mean != 0
+            ? ((delta.newValue - baseline.mean) / baseline.mean) * 100
+            : 0
+
+        // Determine new severity based on z-score
+        let newSeverity: Severity
+        let absZ = abs(newZScore)
+        if absZ >= 2.5 {
+            newSeverity = .critical
+        } else if absZ >= 1.5 {
+            newSeverity = .warning
+        } else {
+            newSeverity = .info
+        }
+
+        let normalRange = RulesConfiguration.normalRange(for: delta.metric)
+        let isOutsideNormal = !normalRange.contains(delta.newValue)
+        let isAboveBaseline = delta.newValue > baseline.mean
+
+        // Replace or add the anomaly for this metric
+        modifiedAnomalies.removeAll { $0.metric == delta.metric }
+        if newSeverity != .info || isOutsideNormal {
+            modifiedAnomalies.append(AnomalyDetector.AnomalyResult(
+                metric: delta.metric,
+                severity: newSeverity,
+                deviationPercent: newDeviationPercent,
+                zScore: newZScore,
+                currentValue: delta.newValue,
+                baselineValue: baseline.mean,
+                isAboveBaseline: isAboveBaseline,
+                outsideNormalRange: isOutsideNormal,
+                allTimePercentile: 50
+            ))
+        }
+    }
+
+    /// Adjust the trend for `delta.metric` proportionally to the absolute change.
+    private static func applyDeltaToTrends(
+        delta: MetricDelta,
+        state: SimulationState,
+        modifiedTrends: inout [HealthMetric: TrendAnalyzer.TrendResult]
+    ) {
+        guard let baseline = state.baselines[delta.metric] else { return }
+        guard let existingTrend = state.trends[delta.metric] else { return }
+
+        let changeRatio = baseline.mean != 0 ? delta.absoluteChange / baseline.mean : 0
+        let adjustedWoW = existingTrend.weekOverWeekChange + changeRatio * 100
+        let newDirection: TrendDirection
+        if adjustedWoW > 2 {
+            newDirection = delta.metric.higherIsBetter ? .improving : .declining
+        } else if adjustedWoW < -2 {
+            newDirection = delta.metric.higherIsBetter ? .declining : .improving
+        } else {
+            newDirection = .stable
+        }
+
+        modifiedTrends[delta.metric] = TrendAnalyzer.TrendResult(
+            direction: newDirection,
+            slope: existingTrend.slope,
+            weekOverWeekChange: adjustedWoW,
+            movingAverage7d: existingTrend.movingAverage7d,
+            movingAverage30d: existingTrend.movingAverage30d,
+            movingAverage90d: existingTrend.movingAverage90d,
+            movingAverage180d: existingTrend.movingAverage180d,
+            movingAverage365d: existingTrend.movingAverage365d,
+            inflection: existingTrend.inflection
+        )
+    }
+
+    /// Re-score every metric/category from the modified anomalies + trends and return the overall score delta.
+    private static func computeOverallScoreDelta(
+        modifiedAnomalies: [AnomalyDetector.AnomalyResult],
+        modifiedTrends: [HealthMetric: TrendAnalyzer.TrendResult],
+        state: SimulationState
+    ) -> Int {
         // Re-score each category with modified data
         var newMetricScoresByCategory: [HealthCategory: [(metric: HealthMetric, score: Int, components: [ScoreComponent])]] = [:]
         for category in HealthCategory.allCases {
@@ -218,9 +256,17 @@ struct SimulationEngine {
             breakdown: rawNewOverall.breakdown,
             generatedAt: rawNewOverall.generatedAt
         )
-        let scoreDelta = newOverall.score - state.overallScore
+        return newOverall.score - state.overallScore
+    }
 
-        // Compute per-metric impact
+    /// Compute the per-metric impact list by comparing original vs. modified score for each delta.
+    private static func buildPerMetricImpact(
+        deltas: [MetricDelta],
+        modifiedAnomalies: [AnomalyDetector.AnomalyResult],
+        modifiedTrends: [HealthMetric: TrendAnalyzer.TrendResult],
+        state: SimulationState
+    ) -> [MetricImpact] {
+        var perMetricImpact: [MetricImpact] = []
         for delta in deltas {
             let originalAnomaly = state.anomalies.first { $0.metric == delta.metric }
             let originalTrend = state.trends[delta.metric]
@@ -240,8 +286,7 @@ struct SimulationEngine {
                 explanation: "\(changeDirection.capitalized) \(delta.metric.displayName) by \(formattedChange) \(delta.metric.unit)"
             ))
         }
-
-        return RuleBasedResult(scoreDelta: scoreDelta, perMetricImpact: perMetricImpact)
+        return perMetricImpact
     }
 
     // MARK: - ML-Based Path

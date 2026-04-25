@@ -27,6 +27,7 @@ struct ConnectedDevicesView: View {
 
                         if viewModel.isScanning {
                             ProgressView()
+                                .accessibilityLabel("Scanning for devices")
                         }
                     }
 

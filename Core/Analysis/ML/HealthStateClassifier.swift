@@ -392,7 +392,9 @@ final class HealthStateClassifier {
                     transitionProbabilities: [:]
                 )
             } catch {
+                #if DEBUG
                 print("[HealthStateClassifier] CoreML inference failed. Falling back to GMM. Error: \(error)")
+                #endif
             }
         }
         

@@ -15,6 +15,10 @@ final class FeedbackPromptManager {
 
     private let defaults = UserDefaults.standard
 
+    /// Pass 12 BE perf: cached current calendar. `shouldShowFeedbackPrompt`
+    /// runs on every app open and uses up to three `dateComponents` calls.
+    private static let cal: Calendar = Calendar.current
+
     private enum Key {
         static let installDate        = AppKeys.Lifecycle.installDate
         static let lastPromptDate     = AppKeys.Feedback.lastPromptDate
@@ -48,7 +52,7 @@ final class FeedbackPromptManager {
             return false
         }
 
-        let daysSinceInstall = Calendar.current.dateComponents([.day], from: installDate, to: Date()).day ?? 0
+        let daysSinceInstall = Self.cal.dateComponents([.day], from: installDate, to: Date()).day ?? 0
 
         // Too early. wait at least daysBeforeFirstPrompt
         if daysSinceInstall < daysBeforeFirstPrompt {
@@ -64,7 +68,7 @@ final class FeedbackPromptManager {
                 defaults.set(false, forKey: Key.feedbackSubmitted)
                 return true
             }
-            let daysSinceSubmission = Calendar.current.dateComponents([.day], from: lastSubmitted, to: Date()).day ?? 0
+            let daysSinceSubmission = Self.cal.dateComponents([.day], from: lastSubmitted, to: Date()).day ?? 0
             return daysSinceSubmission >= postSubmitCooldownDays
         } else {
             // User has never submitted → nag every nagIntervalDays (5) from last prompt shown
@@ -72,7 +76,7 @@ final class FeedbackPromptManager {
                 // Never shown before. show now
                 return true
             }
-            let daysSinceLastPrompt = Calendar.current.dateComponents([.day], from: lastPrompt, to: Date()).day ?? 0
+            let daysSinceLastPrompt = Self.cal.dateComponents([.day], from: lastPrompt, to: Date()).day ?? 0
             return daysSinceLastPrompt >= nagIntervalDays
         }
     }
@@ -83,7 +87,7 @@ final class FeedbackPromptManager {
 
         let daysSinceInstall: Int = {
             guard let installDate = defaults.object(forKey: Key.installDate) as? Date else { return 0 }
-            return Calendar.current.dateComponents([.day], from: installDate, to: Date()).day ?? 0
+            return Self.cal.dateComponents([.day], from: installDate, to: Date()).day ?? 0
         }()
         Task { @MainActor in
             AppAnalytics.shared.trackFeedbackPromptShown(daysSinceInstall: daysSinceInstall)
@@ -99,7 +103,7 @@ final class FeedbackPromptManager {
     /// Days since install (for metadata).
     var daysSinceInstall: Int {
         guard let installDate = defaults.object(forKey: Key.installDate) as? Date else { return 0 }
-        return Calendar.current.dateComponents([.day], from: installDate, to: Date()).day ?? 0
+        return Self.cal.dateComponents([.day], from: installDate, to: Date()).day ?? 0
     }
 
     /// Save feedback locally and send to Firestore.

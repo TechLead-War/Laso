@@ -91,7 +91,7 @@ struct MobilityDeclineAnalyzer {
         guard totalEvaluated >= 3 else { return [] }
 
         // Critical: 3+ metrics declining simultaneously
-        if decliningMetrics.count >= 3 {
+        if decliningMetrics.count >= 3, let leadDecline = decliningMetrics.first {
             let worstMetrics = decliningMetrics
                 .sorted { $0.changePercent > $1.changePercent }
                 .prefix(4)
@@ -100,7 +100,7 @@ struct MobilityDeclineAnalyzer {
                 .joined(separator: ", ")
 
             insights.append(InsightFactory.make(
-                metric: decliningMetrics.first!.indicator.metric,
+                metric: leadDecline.indicator.metric,
                 title: "Multi-Metric Mobility Decline",
                 summary: "\(decliningMetrics.count) of \(totalEvaluated) mobility metrics are declining over the past 6 months: \(metricList). Concurrent deterioration across multiple gait parameters warrants attention.",
                 recommendation: "Research shows simultaneous decline in walking speed, step length, and gait symmetry can be an early indicator of shifts in overall wellness. Changes in mobility patterns are often detectable well before they become noticeable in daily life.",

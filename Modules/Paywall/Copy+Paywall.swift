@@ -11,7 +11,7 @@ extension Copy {
         // MARK: - Features
 
         static var featureLiveVitals: String { "Live vitals & \(HealthMetric.allCases.count)+ health metrics" }
-        static let featureInsights = "Personalized insights that explain why things change"
+        static let featureInsights = "Personal insights that explain why things change"
         static let featureTrends = "Trends, connections, and weekly reports"
         static let featureAlerts = "Smart alerts you can customize"
         static let featurePrivacy = "Your health data stays on your phone"
@@ -29,6 +29,6 @@ extension Copy {
         // MARK: - Trial Disclosure
 
         static func trialDuration(_ days: Int) -> String { "\(days)-day free trial" }
-        static func afterTrial(_ price: String) -> String { "After your free trial, \(price) will be charged automatically" }
+        static func afterTrial(_ price: String) -> String { "After your free trial, you will be charged \(price) automatically" }
     }
 }

@@ -1,0 +1,61 @@
+{
+  "timestamp": "2026-04-25_13-15-00_test-rest3",
+  "device": "iPhone 17 Pro Max",
+  "device_resolution": "1320x2868",
+  "theme": "dark",
+  "mock_profile": "PremiumShowcase",
+  "values": {
+    "name": "Alex Taylor",
+    "overall_score": 92,
+    "sleep_score": 92,
+    "activity_score": 94,
+    "recovery_green_score": 87,
+    "hrv_ms": 62,
+    "rhr_bpm": 54,
+    "vo2_max": 50,
+    "sleep_hours": 7.6,
+    "sleep_streak_days": 12,
+    "steps_average": 11800,
+    "active_calories_kcal": 600,
+    "exercise_minutes_daily": 52,
+    "workout_streak_weeks": 8,
+    "mindful_minutes_daily": 18,
+    "subscribed": true
+  },
+  "angles": [
+    {
+      "id": "04_lifestyle",
+      "title": "Lifestyle & engagement",
+      "description": "Breadth focus. The places users live in long-term \u2014 Explore tab, Settings tab + sub-pages, achievements.",
+      "shots": [
+        {
+          "file": "04_lifestyle/06_settings_siri.png",
+          "screen": "Siri & Shortcuts",
+          "caption": "Voice shortcut setup hints"
+        }
+      ]
+    },
+    {
+      "id": "05_states",
+      "title": "First launch & state moments",
+      "description": "The moments outside steady-state usage \u2014 full 6-step onboarding, the medical disclaimer, the paywall, the Pro lock overlay, and the empty Connect-Apple-Health state.",
+      "shots": [
+        {
+          "file": "05_states/08_onboarding_priority.png",
+          "screen": "Onboarding \u00b7 Priorities",
+          "caption": "Health focus area selection"
+        },
+        {
+          "file": "05_states/09_onboarding_mirror.png",
+          "screen": "Onboarding \u00b7 Mirror Moment",
+          "caption": "Calibration discovery reveal"
+        },
+        {
+          "file": "05_states/10_onboarding_promise.png",
+          "screen": "Onboarding \u00b7 7-Day Promise",
+          "caption": "Final hand-off to the main app"
+        }
+      ]
+    }
+  ]
+}

@@ -34,7 +34,7 @@ struct VitalityCard: View {
 
                 // Text content
                 VStack(alignment: .leading, spacing: DS.space1) {
-                    Text("Vitality Age")
+                    Text(Copy.Vitality.title)
                         .font(DS.Typography.calloutSemibold)
                         .foregroundStyle(AppColour.textSecondary)
                         .textCase(.uppercase)

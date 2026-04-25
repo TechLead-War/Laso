@@ -135,7 +135,7 @@ struct CorrelationAnalyzer {
                 let t = abs(r) * sqrt((n - 2) / (1 - rSquared))
                 guard t >= 2.0 else { continue }
 
-                if bestResult == nil || abs(r) > abs(bestResult!.r) {
+                if bestResult.map({ abs(r) > abs($0.r) }) ?? true {
                     bestResult = (r: r, t: t, lag: lag, aligned: aligned)
                 }
             }

@@ -1,9 +1,10 @@
 import Foundation
 
-/// Premium showcase mock data — a thriving, post-purchase user profile used to
+#if DEBUG
+/// Premium showcase mock data, a thriving post-purchase user profile used to
 /// render the App Store screenshots. Only consumed when both
 /// `--ui-test-mode` and `--ui-test-premium-showcase` launch flags are passed.
-/// Production paths never call into this type.
+/// DEBUG-only: never compiled into Release builds (App Store distribution).
 struct PremiumShowcaseDataProvider {
 
     static func generateAllTimeSeries(days: Int = 90) -> [HealthMetric: MetricTimeSeries] {
@@ -378,3 +379,4 @@ struct PremiumShowcaseDataProvider {
         return (overall, categories)
     }
 }
+#endif

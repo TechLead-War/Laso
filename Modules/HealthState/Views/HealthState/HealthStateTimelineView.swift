@@ -6,6 +6,11 @@ struct HealthStateTimelineView: View {
     let viewModel: HealthStateTimelineViewModel
     @State private var selectedMonth = Date()
 
+    /// Pass 12 BE perf: cached current calendar. Calendar grid renders re-evaluate
+    /// the prev/next/disabled buttons on every state mutation; per-render
+    /// `Calendar.current` allocation is wasteful.
+    private static let cal: Calendar = Calendar.current
+
     // Section trackers
     @State private var currentStateTracker = SectionTracker(section: .healthStateCurrent, tab: .healthStateTimeline)
     @State private var calendarTracker = SectionTracker(section: .healthStateCalendar, tab: .healthStateTimeline)
@@ -16,39 +21,47 @@ struct HealthStateTimelineView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: DS.sectionSpacing) {
-                // 1. Current state hero
-                if let current = viewModel.currentState {
-                    currentStateHero(current)
+                if viewModel.states.isEmpty {
+                    // Day-1 cold start: classifier has not yet produced any
+                    // states. Render a single explanatory card instead of four
+                    // individually-empty sections.
+                    emptyState
                         .padding(.horizontal)
-                        .onAppear { currentStateTracker.appeared() }
-                        .onDisappear { currentStateTracker.disappeared() }
-                }
+                } else {
+                    // 1. Current state hero
+                    if let current = viewModel.currentState {
+                        currentStateHero(current)
+                            .padding(.horizontal)
+                            .onAppear { currentStateTracker.appeared() }
+                            .onDisappear { currentStateTracker.disappeared() }
+                    }
 
-                // 2. Calendar grid
-                calendarSection
-                    .padding(.horizontal)
-                    .onAppear { calendarTracker.appeared() }
-                    .onDisappear { calendarTracker.disappeared() }
-
-                // 3. State distribution
-                distributionBar
-                    .padding(.horizontal)
-                    .onAppear { distributionTracker.appeared() }
-                    .onDisappear { distributionTracker.disappeared() }
-
-                // 4. Transition patterns
-                if !viewModel.commonTransitions.isEmpty {
-                    transitionSection
+                    // 2. Calendar grid
+                    calendarSection
                         .padding(.horizontal)
-                        .onAppear { transitionsTracker.appeared() }
-                        .onDisappear { transitionsTracker.disappeared() }
-                }
+                        .onAppear { calendarTracker.appeared() }
+                        .onDisappear { calendarTracker.disappeared() }
 
-                // 5. State descriptions
-                stateDescriptions
-                    .padding(.horizontal)
-                    .onAppear { guideTracker.appeared() }
-                    .onDisappear { guideTracker.disappeared() }
+                    // 3. State distribution
+                    distributionBar
+                        .padding(.horizontal)
+                        .onAppear { distributionTracker.appeared() }
+                        .onDisappear { distributionTracker.disappeared() }
+
+                    // 4. Transition patterns
+                    if !viewModel.commonTransitions.isEmpty {
+                        transitionSection
+                            .padding(.horizontal)
+                            .onAppear { transitionsTracker.appeared() }
+                            .onDisappear { transitionsTracker.disappeared() }
+                    }
+
+                    // 5. State descriptions
+                    stateDescriptions
+                        .padding(.horizontal)
+                        .onAppear { guideTracker.appeared() }
+                        .onDisappear { guideTracker.disappeared() }
+                }
             }
             .padding(.vertical)
         }
@@ -156,7 +169,7 @@ struct HealthStateTimelineView: View {
             // Month navigation
             HStack {
                 Button {
-                    selectedMonth = Calendar.current.date(byAdding: .month, value: -1, to: selectedMonth) ?? selectedMonth
+                    selectedMonth = Self.cal.date(byAdding: .month, value: -1, to: selectedMonth) ?? selectedMonth
                     AppAnalytics.shared.trackBlockTap(
                         title: "Previous Month",
                         type: .healthStatePrevMonth,
@@ -180,7 +193,7 @@ struct HealthStateTimelineView: View {
                 Spacer()
 
                 Button {
-                    let next = Calendar.current.date(byAdding: .month, value: 1, to: selectedMonth) ?? selectedMonth
+                    let next = Self.cal.date(byAdding: .month, value: 1, to: selectedMonth) ?? selectedMonth
                     if next <= Date() {
                         selectedMonth = next
                         AppAnalytics.shared.trackBlockTap(
@@ -198,7 +211,7 @@ struct HealthStateTimelineView: View {
                     Image(systemName: "chevron.right")
                         .font(DS.Typography.captionSemibold)
                 }
-                .disabled(Calendar.current.isDate(selectedMonth, equalTo: Date(), toGranularity: .month))
+                .disabled(Self.cal.isDate(selectedMonth, equalTo: Date(), toGranularity: .month))
             }
 
             // Day-of-week header
@@ -387,6 +400,31 @@ struct HealthStateTimelineView: View {
         }
         .padding(DS.cardPadding)
         .cardStyle()
+    }
+
+    // MARK: - Empty State
+
+    /// Day-1 cold-start placeholder shown until the classifier produces its
+    /// first health state. Single centered card so the screen has weight while
+    /// data is still being learned.
+    private var emptyState: some View {
+        VStack(spacing: DS.itemSpacing) {
+            Image(systemName: "chart.line.uptrend.xyaxis")
+                .font(DS.Typography.heroIcon)
+                .foregroundStyle(.secondary)
+
+            Text(Copy.HealthStateTimeline.emptyTitle)
+                .font(DS.Typography.headline)
+                .multilineTextAlignment(.center)
+
+            Text(Copy.HealthStateTimeline.emptyBody)
+                .font(DS.Typography.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(DS.space7)
+        .padding(.top, DS.space5)
     }
 
     // MARK: - Helpers

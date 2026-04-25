@@ -8,6 +8,9 @@ struct BrainHealthDetailView: View {
     let weeklyHistory: [(date: Date, score: Int)]
     let weeklyAverage: Int?
     let trend: String
+    /// Pass 8 V (F45): freshness timestamp from the parent dashboard refresh.
+    /// Drives a small "Updated …" caption at the top of the screen.
+    var lastUpdated: Date? = nil
 
     @State private var showLearnMore = false
 
@@ -17,6 +20,12 @@ struct BrainHealthDetailView: View {
 
             ScrollView {
                 VStack(spacing: DS.sectionSpacing) {
+                    if let lastUpdated, let caption = Copy.Common.relativeUpdated(lastUpdated) {
+                        Text(caption)
+                            .font(DS.Typography.caption2)
+                            .foregroundStyle(.tertiary)
+                            .frame(width: sectionWidth)
+                    }
                     heroSection.frame(width: sectionWidth)
                     weeklyChartSection.frame(width: sectionWidth)
                     readinessSection.frame(width: sectionWidth)
@@ -114,7 +123,14 @@ struct BrainHealthDetailView: View {
                     value: { Double($0.score) / 100.0 },
                     color: { chartBarColor(for: $0.score) },
                     label: { abbreviatedDay($0.date) },
-                    topLabel: { "\($0.score)" }
+                    topLabel: { "\($0.score)" },
+                    tooltipLines: { point in
+                        [
+                            point.date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()),
+                            "\(point.score) \(Copy.BrainHealth.scaleSuffix)"
+                        ]
+                    },
+                    tooltipColor: { chartBarColor(for: $0.score) }
                 )
 
                 HStack {

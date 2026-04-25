@@ -54,9 +54,9 @@ extension Copy {
         static let needsWork = "Building"
         static let irregular = "Irregular"
 
-        static let consistencyExcellent = "Your sleep schedule is very steady. This is great for your body clock."
+        static let consistencyExcellent = "Your sleep schedule is very steady. Great for your body clock."
         static let consistencyGood = "Pretty steady schedule. Try to keep weekends closer to your weekday timing."
-        static let consistencyNeedsWork = "Your sleep timing jumps around. Even small improvements here can help you sleep better."
+        static let consistencyNeedsWork = "Your sleep timing jumps around. Even small steps here can help you sleep better."
         static let consistencyIrregular = "Your sleep timing changes a lot. Waking up at the same time every day is the best place to start."
 
         // MARK: - Tips
@@ -74,7 +74,7 @@ extension Copy {
         static let tipCutCaffeineTitle = "Caffeine timing"
         static let tipCutCaffeineDetail = "Caffeine stays in your body for hours. Stopping after 2 PM can help you sleep deeper."
         static let tipScreenCurfewTitle = "Screen wind down"
-        static let tipScreenCurfewDetail = "Put screens away 45 minutes before bed. The bright light makes it harder for your brain to wind down."
+        static let tipScreenCurfewDetail = "Put screens away 45 minutes before bed. Bright light makes it harder for your brain to wind down."
 
         // General tips
         static let tipConsistentScheduleTitle = "Consistent schedule"
@@ -85,5 +85,17 @@ extension Copy {
         static let tipMorningSunlightDetail = "10 to 15 minutes of bright light within an hour of waking up helps set your body clock."
         static let tipExerciseTimingTitle = "Exercise timing"
         static let tipExerciseTimingDetail = "Regular exercise helps you sleep better. Try to finish hard workouts at least 3 hours before bed."
+
+        // MARK: - Stages (Pass 8 Q)
+
+        static let stageDeep = "Deep"
+        static let stageRem = "REM"
+        static let stageCore = "Core"
+        static let stageAwake = "Awake"
+        static let stageDataUnavailable = "Stage data not available for this night"
+
+        // MARK: - Tips Disclosure (Pass 8 Q)
+
+        static func showMoreTips(_ count: Int) -> String { "Show \(count) more tips" }
     }
 }

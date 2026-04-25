@@ -29,7 +29,7 @@ extension Copy {
         // MARK: - Empty State
 
         static let connectHealthData = "Connect Your Health Data"
-        static let connectHealthDescription = "Laso reads from Apple Health. Most third-party wearables need their companion app with Apple Health sharing enabled."
+        static let connectHealthDescription = "Laso reads from Apple Health. Most other wearables need their app to share data with Apple Health."
         static let worksWith = "Works with"
         static let syncsAutomatically = "Syncs automatically"
         static func viaApp(_ name: String) -> String { "Via \(name) app" }
@@ -50,12 +50,12 @@ extension Copy {
             static let titleStale = "Your watch has not synced recently"
 
             // Descriptions
-            static let descriptionWaiting = "Apple Health is authorized. No wearable has written data yet. If you use a watch, open its companion app and make sure Apple Health sharing is on."
+            static let descriptionWaiting = "Apple Health is connected. No wearable has shared data yet. If you use a watch, open its app and turn on Apple Health sharing."
             static func descriptionReceiving(deviceName: String, sourceName: String) -> String {
-                "\(deviceName) is syncing through \(sourceName). Your dashboard will update as new samples arrive."
+                "\(deviceName) is syncing through \(sourceName). Your dashboard will update as new data comes in."
             }
             static func descriptionStale(deviceName: String, lastSync: String, sourceName: String) -> String {
-                "\(deviceName) last wrote data \(lastSync). Open \(sourceName) and trigger a sync so Laso can catch up."
+                "\(deviceName) last shared data \(lastSync). Open \(sourceName) and run a sync so Laso can catch up."
             }
 
             // Badge labels
@@ -133,30 +133,30 @@ extension Copy {
         static let redDayRecover = "Red Day. Recover."
 
         // Simple strain guidance
-        static let greenStrainGuidance = "High-intensity training recommended. Your body is ready for a challenge."
-        static let yellowStrainGuidance = "Moderate activity is ideal. Focus on technique over intensity."
-        static let redStrainGuidance = "Prioritize rest and gentle movement. Your body needs recovery time."
+        static let greenStrainGuidance = "High effort training is a great pick. Your body is ready for a challenge."
+        static let yellowStrainGuidance = "Moderate activity is best. Focus on form over intensity."
+        static let redStrainGuidance = "Focus on rest and gentle movement. Your body needs recovery time."
 
         // Contextual strain guidance (recovery state × activity trend)
-        static let greenImproving = "Recovery is high and activity is already trending up. Push hard, but avoid a major jump in strain."
+        static let greenImproving = "Recovery is high and activity is already trending up. Push hard, but avoid a big jump in strain."
         static let greenDeclining = "Recovery is high while recent activity has trended down. Add a hard session to rebuild strain."
         static let greenStable = "Recovery is high. Push hard today with a challenging workout."
         static let greenNone = "Recovery is high. Push hard today."
-        static let yellowImproving = "Recovery is moderate and activity is trending up. Maintain strain and keep intensity controlled."
-        static let yellowDeclining = "Recovery is moderate with activity easing off. Maintain with a steady, moderate session."
-        static let yellowStable = "Recovery is moderate. Maintain your usual training load today."
-        static let yellowNone = "Recovery is moderate. Maintain a moderate strain today."
+        static let yellowImproving = "Recovery is moderate and activity is trending up. Keep strain steady and intensity in check."
+        static let yellowDeclining = "Recovery is moderate with activity easing off. Stick with a steady, moderate session."
+        static let yellowStable = "Recovery is moderate. Keep your usual training load today."
+        static let yellowNone = "Recovery is moderate. Aim for a moderate strain today."
         static let redImproving = "Recovery is low after rising activity. Take a recovery day with light movement only."
-        static let redDeclining = "Recovery is low. Keep strain very low and prioritize sleep, hydration, and mobility."
+        static let redDeclining = "Recovery is low. Keep strain very low and focus on sleep, water, and easy movement."
         static let redStable = "Recovery is low. Recover today with easy walking or stretching only."
-        static let redNone = "Recovery is low. Prioritize recovery and avoid hard training."
+        static let redNone = "Recovery is low. Focus on recovery and avoid hard training."
 
         // MARK: - Score Guide
 
         enum ScoreGuide {
             static let healthScore = "Health Score"
             static let title = "This is your Health Score"
-            static let description = "A single number from 0 to 100 that reflects how your body is doing right now, based on your own data."
+            static let description = "A single number from 0 to 100 that shows how your body is doing right now, based on your own data."
 
             // Personalized "What does it mean?" based on score level
             static let whatDoesItMean = "What does it mean?"
@@ -165,13 +165,13 @@ extension Copy {
                 let levelExplanation: String
                 switch score {
                 case 80...100:
-                    levelExplanation = "Your metrics are steady or improving across the board compared to your personal baseline. Everything looks well-balanced."
+                    levelExplanation = "Your numbers are steady or getting better compared to your usual. Everything looks well balanced."
                 case 60..<80:
-                    levelExplanation = "Most of your metrics are on track, but a few areas have shifted slightly from your baseline."
+                    levelExplanation = "Most of your numbers are on track, but a few areas have shifted a bit from your usual."
                 case 40..<60:
-                    levelExplanation = "Several metrics have shifted from your personal baseline. This is worth paying attention to."
+                    levelExplanation = "Several numbers have shifted from your usual. This is worth paying attention to."
                 default:
-                    levelExplanation = "Multiple metrics are off from your personal baseline. Check your insights for specific areas to focus on."
+                    levelExplanation = "Several numbers are off from your usual. Check your insights for areas to focus on."
                 }
                 let categoryHint: String
                 if let weakest = weakestCategory {
@@ -179,28 +179,28 @@ extension Copy {
                 } else {
                     categoryHint = ""
                 }
-                return "\(levelExplanation)\(categoryHint) This is for informational purposes only. Think of it as a daily check in with your body."
+                return "\(levelExplanation)\(categoryHint) This is for information only. Think of it as a daily check in with your body."
             }
 
             static let scoreLevels = "Score levels"
 
             // Score level ranges
-            static let excellentRange = "80\u{2013}100"
+            static let excellentRange = "80 to 100"
             static let excellentLabel = "Excellent"
             static let excellentDescription = "Everything looks great. Keep doing what you are doing."
-            static let goodRange = "60\u{2013}79"
+            static let goodRange = "60 to 79"
             static let goodLabel = "Good"
-            static let goodDescription = "Most things are on track with minor areas to watch."
-            static let fairRange = "40\u{2013}59"
+            static let goodDescription = "Most things are on track with small areas to watch."
+            static let fairRange = "40 to 59"
             static let fairLabel = "Fair"
-            static let fairDescription = "A few metrics have shifted. Worth paying attention to."
+            static let fairDescription = "A few numbers have shifted. Worth paying attention to."
             static let needsAttentionRange = "Below 40"
             static let needsAttentionLabel = "Room to Grow"
-            static let needsAttentionDescription = "Several things are off from your norm. Check your insights."
+            static let needsAttentionDescription = "Several things are off from your usual. Check your insights."
 
             // Categories
             static let howItsCalculated = "How it\u{2019}s calculated"
-            static let howItsCalculatedBody = "Your Health Score is a weighted average across four categories. Categories with more data and more variability carry greater weight. Each metric is scored against your personal baseline, and deviations and trends move the score up or down."
+            static let howItsCalculatedBody = "Your Health Score is a weighted average across four areas. Areas with more data and more change carry more weight. Each number is scored against your usual, and changes and trends move the score up or down."
             static let heartCardioName = "Heart & Cardio"
             static let heartCardioDetail = "Resting heart rate, HRV, and cardio fitness"
             static let sleepName = "Sleep"
@@ -212,10 +212,10 @@ extension Copy {
 
             // Refresh timing
             static let whenItUpdatesTitle = "When does it update?"
-            static let whenItUpdatesBody = "Your Health Score refreshes each time you open the app or pull to refresh. It uses the latest data from Apple Health, so changes in your metrics show up within minutes. Trends and baseline shifts typically take 1\u{2013}3 days to reflect in the score."
+            static let whenItUpdatesBody = "Your Health Score refreshes each time you open the app or pull to refresh. It uses the latest data from Apple Health, so changes in your numbers show up within minutes. Trends and shifts in your usual take about 1 to 3 days to show up in the score."
 
             // Baseline callout
-            static let baselineCallout = "This score compares you to yourself, not world averages. As we learn your patterns, it becomes more accurate."
+            static let baselineCallout = "This score compares you to yourself, not other people. As we learn your patterns, it gets more accurate."
 
             static let gotIt = "Got It"
         }
@@ -225,7 +225,7 @@ extension Copy {
         enum ActionProof {
             /// Card proof line shown on the home card below the subtitle
             static func followedAdviceImproved(count: Int, metric: String) -> String {
-                "The last \(count) times you followed this advice, your \(metric) improved"
+                "The last \(count) times you followed this advice, your \(metric) got better"
             }
 
             /// Proof line for recovery staying green after pushing hard
@@ -247,11 +247,11 @@ extension Copy {
             static let whatHappenedBefore = "What happened before"
 
             /// Detail: no history yet
-            static let notEnoughHistory = "We are still learning your patterns. After a few more days of data, this section will show how past recommendations worked out for you."
+            static let notEnoughHistory = "We are still learning your patterns. After a few more days of data, this section will show how past tips worked out for you."
 
             /// Detail: summary of positive outcomes
             static func pastOutcomeSummary(improved: Int, total: Int, metric: String) -> String {
-                "Out of \(total) similar recommendations, \(improved) led to measurable improvement in your \(metric)"
+                "Out of \(total) similar tips, \(improved) led to a real improvement in your \(metric)"
             }
 
             /// Detail: timeframe context
@@ -285,7 +285,7 @@ extension Copy {
             // Factor descriptions (negative)
             static let hrvLow = "HRV has not recovered yet"
             static let hrvBelow = "HRV is below your usual"
-            static let rhrElevated = "resting heart rate is higher than your usual"
+            static let rhrElevated = "resting heart rate is higher than usual"
             static let rhrHigh = "resting heart rate is still high"
             static let sleepShort = "sleep was short"
             static let sleepPoor = "sleep quality was low"
@@ -311,7 +311,7 @@ extension Copy {
             // Afternoon
             static let afternoonGreen = "Still looking strong. Good time for a workout if you have not done one yet."
             static let afternoonYellow = "Holding steady. Keep the pace moderate this afternoon."
-            static let afternoonRed = "Recovery is still low. Light movement and hydration are your best bet."
+            static let afternoonRed = "Recovery is still low. Light movement and water are your best bet."
 
             // Evening
             static let eveningGreen = "Solid day. Wind down and protect your sleep tonight."
@@ -329,6 +329,7 @@ extension Copy {
         enum MorningCheckIn {
             static let greeting = "Good Morning"
             static let subtitle = "How are you feeling today?"
+            static let done = "Done"
         }
 
         // MARK: - Ask Your Data
@@ -369,38 +370,38 @@ extension Copy {
 
         enum RecoveryInfo {
             static let title = "How Recovery Works"
-            static let description = "Your Recovery score (0\u{2013}100) tells you how recovered your body is, based on overnight data measured while you sleep."
+            static let description = "Your Recovery score (0 to 100) shows how rested your body is, based on overnight data while you sleep."
 
             // Score levels
             static let scoreLevels = "Score levels"
-            static let fullyRecoveredRange = "80\u{2013}100"
+            static let fullyRecoveredRange = "80 to 100"
             static let fullyRecoveredLabel = "Fully Recovered"
-            static let fullyRecoveredDescription = "Your body is well-rested. Great day for a hard workout."
-            static let moderateRange = "50\u{2013}79"
+            static let fullyRecoveredDescription = "Your body is well rested. Great day for a hard workout."
+            static let moderateRange = "50 to 79"
             static let moderateLabel = "Moderate"
-            static let moderateDescription = "Decent recovery. Moderate intensity is ideal."
+            static let moderateDescription = "Decent recovery. Moderate effort is best today."
             static let lowRange = "Below 50"
             static let lowLabel = "Low Recovery"
-            static let lowDescription = "Your body needs rest. Prioritize easy movement and sleep."
+            static let lowDescription = "Your body needs rest. Focus on easy movement and sleep."
 
             // How it's calculated
             static let howItsCalculated = "How it\u{2019}s calculated"
-            static let howItsCalculatedBody = "Recovery is a weighted score from signals measured while you sleep. Each signal is compared to your personal baseline. The further you deviate, the more it affects the score."
+            static let howItsCalculatedBody = "Recovery is a weighted score from signals measured while you sleep. Each signal is compared to your usual. The further off it is, the more it affects the score."
             static let hrvName = "Heart Rate Variability"
             static let hrvWeight = "40% weight"
-            static let hrvDetail = "Higher HRV means better recovery and lower stress. Compared to your personal baseline."
+            static let hrvDetail = "Higher HRV means better recovery and lower stress. Compared to your usual."
             static let restingHRName = "Resting Heart Rate"
             static let restingHRWeight = "35% weight"
-            static let restingHRDetail = "Lower resting HR means your heart is recovering well. Compared to your baseline."
+            static let restingHRDetail = "Lower resting HR means your heart is recovering well. Compared to your usual."
             static let sleepDurationName = "Sleep Duration"
             static let sleepDurationWeight = "15% weight"
-            static let sleepDurationDetail = "7.5 hours is optimal. Too little or too much reduces the score."
+            static let sleepDurationDetail = "7.5 hours is best. Too little or too much lowers the score."
             static let sleepQualityName = "Sleep Quality"
             static let sleepQualityWeight = "6% weight"
-            static let sleepQualityDetail = "Deep and REM sleep stages contribute to recovery quality."
+            static let sleepQualityDetail = "Deep and REM sleep stages help your recovery quality."
             static let workoutRecoveryName = "Recent Workout"
             static let workoutRecoveryWeight = "4% weight"
-            static let workoutRecoveryDetail = "Hard workouts lower recovery temporarily. The effect fades over 18\u{2013}36 hours."
+            static let workoutRecoveryDetail = "Hard workouts lower recovery for a short time. The effect fades over 18 to 36 hours."
 
             // Device requirement
             static func wearRequirement(deviceName: String?) -> String {
@@ -412,14 +413,174 @@ extension Copy {
 
             // Refresh timing
             static let whenItUpdatesTitle = "When does it update?"
-            static let whenItUpdatesBody = "Your Recovery score recalculates each morning using overnight data. It typically takes 1\u{2013}3 days of consistent overnight wear before changes in your routine show up in the score."
+            static let whenItUpdatesBody = "Your Recovery score updates each morning using overnight data. It usually takes 1 to 3 days of overnight wear before changes in your routine show up in the score."
+        }
+
+        // MARK: - Cycle Phase Card
+
+        enum CyclePhase {
+            static func dayOfCycle(day: Int, total: Int) -> String { "Day \(day) of \(total)" }
+        }
+
+        // MARK: - Strain Card
+
+        enum StrainCard {
+            static func zoneLabel(_ zone: Int) -> String { "Z\(zone)" }
+        }
+
+        // MARK: - Cards
+
+        enum Cards {
+            // Daily narrative
+            static let forYouToday = "FOR YOU TODAY"
+            static let readingTodaysSignals = "Reading today's signals…"
+
+            // Personal health forecast
+            static let yourForecast = "YOUR FORECAST"
+            static let nextSevenDays = "Next 7 days"
+
+            // Sleep coach card
+            static let tonightsGoal = "Tonight's Goal"
+            static func bedBy(_ time: String) -> String { "Bed by \(time)" }
+
+            // Strain card
+            static let todaysStrain = "Today's Strain"
+
+            // Sleep card
+            static let lastNightsSleep = "Last Night's Sleep"
+
+            // Stress card
+            static let stressLevel = "Stress Level"
+
+            // Recovery hero
+            static let rightNow = "Right now"
+            static let vsLastWeek = "vs last week"
+
+            // Today briefing
+            static let generatedByLasoIntelligence = "Generated by Laso intelligence"
+
+            // Correlations section
+            static let seeAll = "See all"
+        }
+
+        // MARK: - Smart Action Recommendations
+
+        enum SmartAction {
+            // Default fallback
+            static let defaultTitle = "Get moving for 15 minutes"
+            static let defaultSubtitle = "A short walk boosts mood, energy, and sleep quality tonight"
+            static let defaultRationale = "No specific signals today. A walk is the simplest, highest payoff activity for overall health."
+
+            // Live data: high stress
+            static let highStressTitle = "Your stress is higher than usual right now"
+            static let highStressSubtitle = "Box breathing (4-4-4-4) for 5 min can bring it down. Your body is asking for a reset"
+            static func highStressRationale(_ stress: Int) -> String {
+                "Your live stress reading is \(stress)%, which is above your comfortable range."
+            }
+
+            // Live data: low sleep
+            static let lowSleepTitle = "Go easy today"
+            static func lowSleepSubtitle(_ formattedSleep: String) -> String {
+                "Only \(formattedSleep) of sleep. Skip intense workouts, your body needs to save energy"
+            }
+            static let lowSleepRationale = "You got much less sleep than your body needs. Hard effort today would add to the shortfall."
+
+            // Live data: low readiness
+            static let lowReadinessTitle = "Recovery day. Your body needs it"
+            static func lowReadinessSubtitle(_ readiness: Int) -> String {
+                "Readiness is \(readiness)%. Stretching or yoga only"
+            }
+            static let lowReadinessRationale = "A few signals (HRV, resting HR, sleep) suggest your body has not recovered from recent strain."
+
+            // Activity progress: goal reached
+            static let exerciseGoalTitle = "Exercise goal reached!"
+            static func exerciseGoalSubtitle(_ minutes: Int) -> String {
+                "\(minutes) min today. Stay active and drink water"
+            }
+            static let exerciseGoalRationale = "You have already hit your daily exercise goal."
+
+            // Activity progress: minutes to go (good readiness)
+            static func minutesToGoTitle(_ remaining: Int) -> String {
+                "You have \(remaining) min to go"
+            }
+            static let minutesToGoSubtitle = "Recovery is strong. A run or workout would be great"
+            static let minutesToGoRationale = "Your body is well recovered and ready for effort. Closing the exercise gap today would build momentum."
+
+            // Late hour wind-down
+            static let windDownTitle = "Wind down for sleep"
+            static let windDownSubtitle = "Dim screens and skip caffeine for better rest tonight"
+            static let windDownRationale = "It is late evening. Less blue light and caffeine now directly improves your sleep quality tonight."
+
+            // Focus: deep sleep
+            static let deepSleepTitle = "Boost your deep sleep"
+            static func deepSleepSubtitle(_ minutes: Int) -> String {
+                "Only \(minutes) min of deep sleep. Try cutting caffeine after 2 PM"
+            }
+            static let deepSleepRationale = "Deep sleep is when your body repairs muscle, locks in memory, and balances hormones. You are getting less than the 45 minute mark."
+
+            // Focus: bedtime
+            static let earlyBedTitle = "Get to bed 30 min earlier"
+            static func earlyBedSubtitle(_ formattedSleep: String) -> String {
+                "\(formattedSleep) last night. Aim for 7+ hours"
+            }
+            static let earlyBedRationale = "Sleep is your top focus area and you are falling short. Even 30 more minutes makes a real difference."
+
+            // Focus: fitness gap
+            static func fitnessGapTitle(_ remaining: Int) -> String {
+                "You're \(remaining) min from your goal"
+            }
+            static let fitnessGapSubtitle = "A brisk walk or quick workout would close the gap"
+            static func fitnessGapRationale(_ remaining: Int) -> String {
+                "Fitness is your focus area and you have \(remaining) minutes left to hit today's goal."
+            }
+
+            // Focus: resting HR up
+            static let restingHRUpTitle = "Your resting HR is trending up"
+            static let restingHRUpSubtitle = "Try 10 min of meditation or deep breathing to bring it down"
+            static func restingHRUpRationale(currentRHR: Int, baselineRHR: Int) -> String {
+                "Your resting heart rate is \(currentRHR) bpm, above your usual of \(baselineRHR) bpm. This could hint at incomplete recovery or higher stress."
+            }
+
+            // Focus: recovery
+            static let focusRecoveryTitle = "Focus on recovery today"
+            static func focusRecoverySubtitle(_ readiness: Int) -> String {
+                "Readiness is \(readiness)%. Light stretching and water will help"
+            }
+            static let focusRecoveryRationale = "Recovery is your focus area and your readiness score suggests your body has not fully bounced back yet."
+
+            // Insight-driven titles
+            static func insightEaseOff(_ metric: String) -> String { "Ease off. \(metric) needs attention" }
+            static func insightPushHarder(_ metric: String) -> String { "Push harder. \(metric) is ready" }
+            static let insightSleepBetter = "Improve your sleep tonight"
+            static func insightWorthChecking(_ metric: String) -> String { "\(metric). Worth checking" }
+            static func insightKeepItUp(_ metric: String) -> String { "Keep it up. \(metric) is solid" }
+        }
+
+        // MARK: - Today's Action Detail
+
+        enum TodaysActionDetail {
+            static let doToday = "Do Today"
+            static let whatsOffToday = "What's off today"
+            static let whatsLeadingToWhat = "What's leading to what"
+            static let yourCoachsNotes = "Your coach's notes"
+            static let todaysWorkout = "Today's Workout"
+            static let baseline = "baseline"
+        }
+
+        // MARK: - Weekly Review Section Headers
+
+        enum WeeklyReviewSections {
+            static let navigationTitle = "Weekly Review"
+            static let progressiveCoach = "Progressive Coach"
+            static let nextWeek = "Next Week"
+            static let keyDiscovery = "Key Discovery"
         }
 
         // MARK: - HealthKit Reprompt
 
         enum HealthKitReprompt {
             static let title = "Laso needs access to your health data"
-            static let body = "It looks like health data sharing is turned off. Open Settings and enable the categories you want Laso to track, like heart rate, sleep, and activity."
+            static let body = "It looks like health data sharing is turned off. Open Settings and turn on the categories you want Laso to track, like heart rate, sleep, and activity."
             static let action = "Open Settings"
             static let dismiss = "Not Now"
         }

@@ -22,11 +22,11 @@ extension Copy {
         // MARK: - Milestone Achievements
 
         static let firstGreenDayTitle = "First Green Day"
-        static let firstGreenDayDescription = "Achieve your first health score above 75"
+        static let firstGreenDayDescription = "Hit your first health score above 75"
         static let firstWeekTitle = "First Week"
         static let firstWeekDescription = "Track your health for 7 consecutive days"
         static let dataScholarTitle = "Data Scholar"
-        static let dataScholarDescription = "Accumulate 60+ days of health data"
+        static let dataScholarDescription = "Reach 60 or more days of health data"
         static let centurionTitle = "Centurion"
         static let centurionDescription = "100 days of health tracking"
         static let halfYearHeroTitle = "Half Year Hero"
@@ -37,7 +37,7 @@ extension Copy {
         // MARK: - Streak Achievements
 
         static let weekWarriorTitle = "Week Warrior"
-        static let weekWarriorDescription = "7-day activity streak (10K steps or 30min exercise daily)"
+        static let weekWarriorDescription = "7 day activity streak (10K steps or 30 min exercise daily)"
         static let ironWillTitle = "Iron Will"
         static let ironWillDescription = "30 day activity streak. Unstoppable."
         static let hundredDayHammerTitle = "Hundred Day Hammer"
@@ -62,7 +62,7 @@ extension Copy {
         static let marathonMonthTitle = "Marathon Month"
         static let marathonMonthDescription = "Total monthly steps exceed 300,000"
         static let peakPerformerTitle = "Peak Performer"
-        static let peakPerformerDescription = "Achieve a health score of 95 or higher"
+        static let peakPerformerDescription = "Reach a health score of 95 or higher"
         static let stepKingTitle = "Step Legend"
         static let stepKingDescription = "Hit 20,000 steps in a single day"
 

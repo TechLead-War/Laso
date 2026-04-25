@@ -83,6 +83,15 @@ func vitalityMetricDeltaLabel(_ delta: Int) -> String {
 }
 
 func vitalityFormatMetricValue(_ value: Double, unit: String, metric: HealthMetric?) -> String {
+    // Pass 8 Y: walking speed is the only Vitality component whose canonical
+    // unit (km/h) does not match the US imperial unit (mph). Convert
+    // value + unit label in lock-step when locale is US/imperial.
+    if metric == .walkingSpeed, Locale.current.measurementSystem == .us {
+        let m = Measurement(value: value, unit: UnitSpeed.kilometersPerHour)
+            .converted(to: .milesPerHour)
+        return String(format: "%.1f mph", m.value)
+    }
+
     let raw: String
     if let metric {
         raw = metric.formatValue(value)

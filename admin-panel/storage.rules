@@ -1,0 +1,13 @@
+rules_version = '2';
+
+// Default-deny baseline. The admin panel does not currently use Firebase
+// Storage; if user-uploaded content (avatars, journal photos, etc.) is added
+// later, replace the rule below with an explicit allow scoped to the path
+// and verified via request.auth + request.resource size/content-type checks.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

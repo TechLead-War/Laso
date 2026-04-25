@@ -12,6 +12,10 @@ struct WindDownScheduler {
     /// How many minutes before the predicted bedtime we fire.
     private static let leadMinutes = 60
 
+    /// Pass 12 BE perf: cached current calendar. `schedule(...)` runs on every
+    /// HealthKit refresh and uses two `Calendar.current` calls per invocation.
+    private static let cal: Calendar = Calendar.current
+
     /// Schedule the wind-down push.
     /// - Parameters:
     ///   - recommendedBedtime: A real target bedtime (from `SleepNeedCalculator.currentNeed?.recommendedBedtime`).
@@ -38,7 +42,7 @@ struct WindDownScheduler {
 
         // Fire at bedtime - 60 min. If that timestamp has already passed for today,
         // skip silently so we don't queue a notification that fires immediately.
-        guard let fireDate = Calendar.current.date(byAdding: .minute, value: -leadMinutes, to: bedtime) else {
+        guard let fireDate = Self.cal.date(byAdding: .minute, value: -leadMinutes, to: bedtime) else {
             NotificationManager.shared.cancelNotification(identifier: identifier)
             return
         }
@@ -58,11 +62,11 @@ struct WindDownScheduler {
 
         // One-shot trigger for tonight. The housekeeping pipeline reschedules on each refresh,
         // so the next day's bedtime gets its own fresh firing.
-        var components = Calendar.current.dateComponents(
+        var components = Self.cal.dateComponents(
             [.year, .month, .day, .hour, .minute],
             from: fireDate
         )
-        components.calendar = Calendar.current
+        components.calendar = Self.cal
 
         let trigger = UNCalendarNotificationTrigger(
             dateMatching: components,
@@ -88,16 +92,13 @@ struct WindDownScheduler {
         NotificationManager.shared.cancelNotification(identifier: identifier)
     }
 
-    /// Cached "h:mm a" formatter. Performance Pass 2: scheduling runs every
-    /// time HealthKit data refreshes, so avoid per-call DateFormatter alloc.
-    private static let bedtimeFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.dateFormat = "h:mm a"
-        return f
-    }()
-
+    // Pass 8 Y: bedtime is shown inside a user-visible notification body, so
+    // it must follow the user's clock preference (12h vs 24h, AM/PM symbols
+    // localized). `.formatted(.dateTime.hour().minute())` resolves both from
+    // `Locale.current`. The previous `en_US_POSIX` "h:mm a" formatter forced
+    // "9:30 PM" on every locale (a French user expects "21:30"). Foundation
+    // caches the underlying FormatStyle so the per-call cost is negligible.
     private static func formatBedtime(_ date: Date) -> String {
-        bedtimeFormatter.string(from: date)
+        date.formatted(.dateTime.hour().minute())
     }
 }

@@ -226,7 +226,7 @@ struct DiscoveryEngine {
                 let diff = abs(aboveMean - belowMean)
 
                 if diff >= ladder.minEffect {
-                    if bestBoundary == nil || diff > abs(bestBoundary!.diff) {
+                    if bestBoundary.map({ diff > abs($0.diff) }) ?? true {
                         bestBoundary = (upper, aboveMean - belowMean, aboveCount, belowCount)
                     }
                 }

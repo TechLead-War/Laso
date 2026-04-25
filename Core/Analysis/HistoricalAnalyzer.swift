@@ -6,6 +6,11 @@ import Foundation
 /// 90-day-capped baseline/trend pipeline.
 struct HistoricalAnalyzer {
 
+    /// Pass 12 BE perf: cached current calendar. Insight builders below call
+    /// `Calendar.current.monthSymbols[...component(.month)...]` per metric in
+    /// `analyzeAll(...)`, which fans out across every tracked metric.
+    private static let cal: Calendar = Calendar.current
+
     /// Rich historical context for a single metric
     struct HistoricalContext {
         let metric: HealthMetric
@@ -221,7 +226,7 @@ struct HistoricalAnalyzer {
         let absChange = String(format: "%.0f", abs(yoyChange))
         let lastYearFormatted = metric.formatValue(lastYearValue)
 
-        let monthName = Calendar.current.monthSymbols[Calendar.current.component(.month, from: Date()) - 1]
+        let monthName = Self.cal.monthSymbols[Self.cal.component(.month, from: Date()) - 1]
 
         return Insight(
             metric: metric,
@@ -276,7 +281,7 @@ struct HistoricalAnalyzer {
               let seasonalAvg = ctx.seasonalAverage,
               ctx.yearsOfData >= 1 else { return nil }
 
-        let monthName = Calendar.current.monthSymbols[Calendar.current.component(.month, from: Date()) - 1]
+        let monthName = Self.cal.monthSymbols[Self.cal.component(.month, from: Date()) - 1]
         let absDev = String(format: "%.0f", abs(seasonalDev))
         let isAbove = seasonalDev > 0
         let improving = metric.higherIsBetter ? isAbove : !isAbove

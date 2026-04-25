@@ -34,6 +34,8 @@ struct NotificationRepromptBanner: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
+                .accessibilityLabel(Copy.Notifications.repromptDismiss)
+                .accessibilityHint("Hides this banner without changing notification settings")
 
                 Button {
                     AppAnalytics.shared.trackBlockTap(title: "Notification Reprompt Settings", type: .smartAction, screen: .home, metadata: ["source": "notification_reprompt", "action": "open_settings"])
@@ -45,6 +47,8 @@ struct NotificationRepromptBanner: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
+                .accessibilityLabel(Copy.Notifications.repromptAction)
+                .accessibilityHint("Opens the system Settings app to enable notifications")
             }
         }
         .padding(DS.space4)

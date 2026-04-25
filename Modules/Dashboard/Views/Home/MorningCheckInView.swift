@@ -44,6 +44,8 @@ struct MorningCheckInView: View {
                         .foregroundStyle(AppColour.textTertiary)
                         .frame(width: 24, height: 24)
                 }
+                .accessibilityLabel("Dismiss morning check-in")
+                .accessibilityHint("Closes the check-in card without submitting")
             }
 
             // Questions
@@ -81,7 +83,7 @@ struct MorningCheckInView: View {
                                 .tint(.white)
                                 .controlSize(.small)
                         }
-                        Text("Done")
+                        Text(Copy.Home.MorningCheckIn.done)
                             .font(DS.Typography.bodySemibold)
                     }
                     .frame(maxWidth: .infinity)
@@ -90,6 +92,8 @@ struct MorningCheckInView: View {
                     .foregroundStyle(.white)
                 }
                 .disabled(isSubmitting)
+                .accessibilityLabel("Submit morning check-in")
+                .accessibilityHint("Saves your sleep, energy, and soreness ratings")
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
@@ -154,6 +158,9 @@ struct MorningCheckInView: View {
                     }
                     .buttonStyle(.plain)
                     .sensoryFeedback(.selection, trigger: selection.wrappedValue)
+                    .accessibilityLabel("\(label) rating \(value) of 5")
+                    .accessibilityHint("Selects \(value) out of 5")
+                    .accessibilityAddTraits(selection.wrappedValue == value ? .isSelected : [])
                 }
             }
         }
@@ -206,16 +213,16 @@ struct MorningCheckIn: Codable {
     }
 }
 
+#if DEBUG
 #Preview {
     VStack {
         Spacer()
         MorningCheckInView(
-            onComplete: { checkIn in
-                print("Check-in: sleep=\(checkIn.sleepQuality) energy=\(checkIn.energyLevel) soreness=\(checkIn.soreness)")
-            },
-            onDismiss: { print("Dismissed") }
+            onComplete: { _ in },
+            onDismiss: { }
         )
         Spacer()
     }
     .background(Color(uiColor: .systemGroupedBackground))
 }
+#endif

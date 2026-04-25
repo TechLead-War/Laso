@@ -1,10 +1,24 @@
 import SwiftUI
 import StoreKit
 
-/// Full-screen paywall shown after the 7-day trial expires.
-/// Displays localized pricing from StoreKit (currency adapts per country).
+/// Full-screen paywall. Used both for trial-expired enforcement and as a
+/// mandatory step inside onboarding (autopay setup with Apple introductory
+/// free trial). When `onSubscribed` is non-nil, it fires the moment the
+/// StoreKit entitlement flips to `.subscribed` so the parent can advance.
 struct PaywallView: View {
     let subscriptionManager: SubscriptionManager
+    let source: String
+    let onSubscribed: (() -> Void)?
+
+    init(
+        subscriptionManager: SubscriptionManager,
+        source: String = "trial_expired",
+        onSubscribed: (() -> Void)? = nil
+    ) {
+        self.subscriptionManager = subscriptionManager
+        self.source = source
+        self.onSubscribed = onSubscribed
+    }
 
     @State private var selectedProduct: Product?
     @State private var isRestoring = false
@@ -73,10 +87,16 @@ struct PaywallView: View {
             selectedProduct = yearly ?? monthly
             paywallOpenDate = Date()
             AppAnalytics.shared.trackFeatureOpen(.paywall, metadata: [
-                "source": "trial_expired",
+                "source": source,
                 "products_available": subscriptionManager.products.count
             ])
-            AppAnalytics.shared.trackPaywallViewed(source: "trial_expired")
+            AppAnalytics.shared.trackPaywallViewed(source: source)
+            // Onboarding-trial safety: if the user already has full access
+            // (existing entitlement, billing grace, or remote-config free-year
+            // bypass), advance immediately so we never force them to repurchase.
+            if FeatureGate.hasFullAccess {
+                onSubscribed?()
+            }
         }
         .onDisappear {
             AppAnalytics.shared.trackFeatureClose(.paywall)
@@ -84,13 +104,18 @@ struct PaywallView: View {
             if !subscriptionManager.hasAccess {
                 AppAnalytics.shared.trackPaywallDismissed(
                     timeOnPaywallSec: duration,
-                    source: "trial_expired"
+                    source: source
                 )
             }
         }
         .onChange(of: subscriptionManager.products) { _, _ in
             if selectedProduct == nil {
                 selectedProduct = yearly ?? monthly
+            }
+        }
+        .onChange(of: subscriptionManager.status) { _, _ in
+            if FeatureGate.hasFullAccess {
+                onSubscribed?()
             }
         }
     }
@@ -248,6 +273,10 @@ struct PaywallView: View {
             )
         }
         .buttonStyle(.dsPress)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label) plan, \(detail)")
+        .accessibilityHint("Selects the \(label.lowercased()) subscription plan")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     // MARK: - Footer
@@ -288,6 +317,8 @@ struct PaywallView: View {
             }
             .buttonStyle(.dsPrimary)
             .disabled(selectedProduct == nil || subscriptionManager.isPurchasing)
+            .accessibilityLabel(callToActionTitle)
+            .accessibilityHint(selectedProductHasTrial ? "Starts your free trial and subscribes after" : "Subscribes you to the selected plan")
             .accessibilityIdentifier("paywall.startTrialButton")
 
             // Trial duration and auto-renewal disclosure
@@ -336,6 +367,8 @@ struct PaywallView: View {
                 }
             }
             .buttonStyle(.dsTertiary)
+            .accessibilityLabel(Copy.Buttons.restorePurchases)
+            .accessibilityHint("Restores any prior subscription tied to your Apple ID")
             .accessibilityIdentifier("paywall.restoreButton")
 
             if subscriptionManager.products.isEmpty {

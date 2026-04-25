@@ -7,16 +7,16 @@ extension Copy {
 
         enum Clinical {
             static let bloodPressureTrendingUp = "Blood Pressure Trending Up"
-            static let elevatedPulsePressure = "Pulse Pressure is High"
+            static let elevatedPulsePressure = "Pulse Pressure is Higher Than Usual"
             static let bloodGlucoseTrendingUp = "Blood Glucose Trending Up"
             static let abnormalRespiratoryRate = "Unusual Breathing Rate"
-            static let medicalDisclaimer = "This is for informational purposes only and is not medical advice. This is for informational purposes only."
+            static let medicalDisclaimer = "This is for your information only and is not medical advice."
 
             // BP recommendations
             static let bpRecommendation = "Try eating less salt, moving more, and keeping stress in check."
-            static let pulsePressureRecommendation = "A wider gap between your blood pressure numbers can sometimes mean your heart is working harder than usual. Try some gentle movement and easy breathing today."
+            static let pulsePressureRecommendation = "A wider gap between your blood pressure numbers can mean your heart is working harder than usual. Try some gentle movement and easy breathing today."
             static let glucoseRecommendation = "Cut back on sugar and white bread. Eat more fiber. Stay active."
-            static let respiratoryRecommendation = "If your breathing rate stays unusual for a few days, consider checking in on this."
+            static let respiratoryRecommendation = "If your breathing rate stays unusual for a few days, it is worth checking in on this."
 
             // Projection templates
             static func projectedToReach(label: String, days: Int) -> String {
@@ -31,7 +31,7 @@ extension Copy {
                 "Your systolic BP has been rising \(slopePerMonth) mmHg/month over the past \(dayCount) days. Current stage: \(stage). \(nextStageInfo)"
             }
             static func pulsePressureSummary(pulsePressure: Int) -> String {
-                "Your pulse pressure (\(pulsePressure) mmHg) is above the typical range of 40 to 60 mmHg. Based on your patterns, this is worth noticing."
+                "Your pulse pressure (\(pulsePressure) mmHg) is above the typical range of 40 to 60 mmHg. Based on your patterns, this is worth a look."
             }
             static func glucoseTrendingSummary(slopePerMonth: String, latest: String, stage: String, nextInfo: String) -> String {
                 "Your fasting glucose has been rising \(slopePerMonth) mg/dL per month. Current: \(latest) mg/dL (\(stage)). \(nextInfo)"
@@ -182,8 +182,8 @@ extension Copy {
             static let multiMetricPattern = "Several health numbers shifted at the same time. Your body may be under extra stress."
             static let multipleMetricsShifted = "Several numbers moved away from your usual at the same time."
             static let consistentWithPhysiologicalStrain = "The pattern across your numbers suggests your body is under extra stress."
-            static let cardiacMetricsStrain = "Your heart numbers show your body is stressed."
-            static let activityNotReturned = "Your activity numbers have not gone back to normal yet."
+            static let cardiacMetricsStrain = "Your heart numbers suggest your body is stressed."
+            static let activityNotReturned = "Your activity numbers have not gone back to your usual yet."
         }
 
         // MARK: - Health Risk Detail
@@ -192,12 +192,12 @@ extension Copy {
             static let whatToFocusOn = "What to Focus On"
             static let contributingFactors = "Contributing Factors"
             static func optimalRange(_ range: String) -> String {
-                "Optimal: \(range)"
+                "Best: \(range)"
             }
             static func metricsMeasured(measured: Int, total: Int) -> String {
                 "\(measured) of \(total) metrics measured"
             }
-            static let disclaimer = "These scores are based on patterns in your health data and published wellness ranges. They are not medical diagnoses and should not replace professional medical advice. These scores are for informational purposes only and should not replace professional guidance."
+            static let disclaimer = "These scores are based on patterns in your health data and published wellness ranges. They are not medical advice and should not replace guidance from a qualified professional."
         }
 
         // MARK: - Correlation
@@ -215,7 +215,7 @@ extension Copy {
                 "\(nutrition) Affects \(outcome)"
             }
             static func monitorToOptimize(nutrition: String, outcome: String) -> String {
-                "Monitor your \(nutrition) intake to optimize \(outcome)."
+                "Watch your \(nutrition) intake to improve \(outcome)."
             }
         }
 
@@ -227,7 +227,7 @@ extension Copy {
             }
             static let unusualMultiMetricPattern = "Unusual Pattern Across Multiple Numbers"
             static let rareMetricCombination = "Unusual Combination"
-            static let unusualCombinationDetected = "An unusual combination of health numbers was found."
+            static let unusualCombinationDetected = "An unusual mix of health numbers was found."
         }
 
         // MARK: - Causal Chain
@@ -263,11 +263,11 @@ extension Copy {
             // Recommendations
             static let betterShapeLongTerm = "You are in better shape this year. Things are heading in the right direction."
             static let exceptionalPersonalBest = "This is your best ever. Whatever you are doing, keep it up."
-            static let rareLevelMayWarrantAttention = "This is rare for you. If it stays like this for more than a few days, it is worth looking into."
-            static let outperformingSeasonalNorm = "You are doing better than usual for this time of year. That is real progress."
+            static let rareLevelMayWarrantAttention = "This is rare for you. If it stays this way for more than a few days, it is worth a closer look."
+            static let outperformingSeasonalNorm = "You are doing better than usual for this time of year. That is solid progress."
             static let longTermImprovementReliable = "Your long term trend is positive. A few bad days do not erase months of good progress."
-            static let sustainedDeclineStructural = "This has been going down for a while. If it keeps up, it is worth paying closer attention to."
-            static let unusualValuesMonitor = "One bad day does not mean much. If this lasts a few days, pay closer attention."
+            static let sustainedDeclineStructural = "This has been going down for a while. If it keeps up, it is worth a closer look."
+            static let unusualValuesMonitor = "One bad day does not mean much. If this lasts a few days, take a closer look."
         }
     }
 }

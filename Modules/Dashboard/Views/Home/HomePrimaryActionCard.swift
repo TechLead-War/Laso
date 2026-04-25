@@ -82,5 +82,9 @@ struct HomePrimaryActionCard: View {
             .cardStyle()
         }
         .buttonStyle(.dsPress)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Today's action: \(action.title)")
+        .accessibilityValue(action.subtitle)
+        .accessibilityHint("Opens guidance for today's recommended action")
     }
 }

@@ -130,12 +130,21 @@ struct CycleDetailView: View {
     let phaseDuration: Int
     let cycleHistory: [CycleHistoryEntry]
     let nextPeriodDate: Date?
+    /// Pass 11 AK (F45): freshness timestamp from the parent dashboard refresh.
+    var lastUpdated: Date? = nil
+    /// Pass 11 AK (F31): pull-to-refresh hook wired by the route destination.
+    var onRefresh: (() async -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ScrollView {
             VStack(spacing: DS.sectionSpacing) {
+                if let lastUpdated, let caption = Copy.Common.relativeUpdated(lastUpdated) {
+                    Text(caption)
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(.tertiary)
+                }
                 // Hero: Circular cycle wheel
                 cycleWheelSection
 
@@ -157,6 +166,9 @@ struct CycleDetailView: View {
             .padding(.vertical)
         }
         .background(AppColour.surfaceBase)
+        .refreshable {
+            await onRefresh?()
+        }
         .navigationTitle(Copy.CycleTracking.title)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {

@@ -35,6 +35,11 @@ enum EngagementSequenceScheduler {
 
     private static let defaults = UserDefaults.standard
 
+    /// Pass 11 AF: cached calendar — `daysSinceInstall` and `scheduleNotification`
+    /// (called multiple times when planning the engagement sequence) both read
+    /// the calendar; one static avoids repeated allocations.
+    private static let cal: Calendar = Calendar.current
+
     /// Days on which engagement notifications fire. Preserved for backward compat.
     static let activeDays: Set<Int> = [1, 2, 3, 5, 7]
 
@@ -254,7 +259,7 @@ enum EngagementSequenceScheduler {
         guard let installDate = defaults.object(forKey: AppKeys.Lifecycle.installDate) as? Date else {
             return -1
         }
-        return Calendar.current.dateComponents([.day], from: installDate, to: Date()).day ?? 0
+        return Self.cal.dateComponents([.day], from: installDate, to: Date()).day ?? 0
     }
 
     private static var lastScheduledDay: Int {
@@ -554,7 +559,7 @@ enum EngagementSequenceScheduler {
         var dateComponents = DateComponents()
         dateComponents.hour = wakeHour
         dateComponents.minute = wakeMinute
-        dateComponents.calendar = Calendar.current
+        dateComponents.calendar = Self.cal
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
 
@@ -592,12 +597,12 @@ enum EngagementSequenceScheduler {
         }
 
         // Schedule for a future date at wake time
-        guard let targetDate = Calendar.current.date(byAdding: .day, value: daysFromNow, to: Date()) else { return }
+        guard let targetDate = Self.cal.date(byAdding: .day, value: daysFromNow, to: Date()) else { return }
 
-        var dateComponents = Calendar.current.dateComponents([.year, .month, .day], from: targetDate)
+        var dateComponents = Self.cal.dateComponents([.year, .month, .day], from: targetDate)
         dateComponents.hour = wakeHour
         dateComponents.minute = wakeMinute
-        dateComponents.calendar = Calendar.current
+        dateComponents.calendar = Self.cal
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
 
@@ -609,9 +614,11 @@ enum EngagementSequenceScheduler {
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
 
         UNUserNotificationCenter.current().add(request) { error in
+            #if DEBUG
             if let error {
                 print("[EngagementSequence] Failed to schedule day \(day): \(error.localizedDescription)")
             }
+            #endif
         }
     }
 

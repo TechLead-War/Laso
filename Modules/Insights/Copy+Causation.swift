@@ -22,7 +22,7 @@ extension Copy {
             let rootDirection = rootCauseDeviation < 0 ? "low" : "high"
             let timing = timingPhrase(dayOffset: dayOffset)
 
-            return "Your \(metricName.lowercased()) \(verb) \(absDeviation)% because your \(rootCauseName.lowercased()) was \(rootDirection) (\(rootCauseAbs)% off your baseline)\(timing)."
+            return "Your \(metricName.lowercased()) \(verb) \(absDeviation)% because your \(rootCauseName.lowercased()) was \(rootDirection) (\(rootCauseAbs)% off your usual)\(timing)."
         }
 
         /// Builds the "the last N times that happened, X followed" evidence sentence.
@@ -56,7 +56,7 @@ extension Copy {
                 ? "the same day"
                 : dayOffset == 1 ? "within 1 day" : "within \(dayOffset) days"
             let impact = String(format: "%.0f", abs(effectPercent))
-            return "Your \(factorName.lowercased()) and \(metricName.lowercased()) are connected. The last \(sampleCount) times \(factorName.lowercased()) shifted, \(metricName.lowercased()) moved about \(impact)% \(timing)."
+            return "Your \(factorName.lowercased()) and \(metricName.lowercased()) are linked. The last \(sampleCount) times \(factorName.lowercased()) shifted, \(metricName.lowercased()) moved about \(impact)% \(timing)."
         }
 
         // MARK: - Confidence and Percentile Sentences
@@ -73,7 +73,7 @@ extension Copy {
         }
 
         /// "Your data confidence is still building. Keep syncing daily."
-        static let lowConfidenceNote = "Your data confidence is still building. Keep syncing daily so your insights get more personal."
+        static let lowConfidenceNote = "Your data is still building. Keep syncing daily so your insights get more personal."
 
         // MARK: - Positive Causation (Improving)
 
@@ -86,7 +86,7 @@ extension Copy {
         ) -> String {
             let absDeviation = String(format: "%.0f", abs(deviationPercent))
             let rootAbs = String(format: "%.0f", abs(rootCauseDeviation))
-            return "Your \(metricName.lowercased()) improved \(absDeviation)% and your \(rootCauseName.lowercased()) was \(rootAbs)% above your baseline recently."
+            return "Your \(metricName.lowercased()) improved \(absDeviation)% and your \(rootCauseName.lowercased()) was \(rootAbs)% above your usual recently."
         }
 
         // MARK: - Projection with Causation

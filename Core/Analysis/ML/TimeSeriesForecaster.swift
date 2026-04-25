@@ -255,7 +255,9 @@ final class TimeSeriesForecaster {
         // Pick the model with the lowest uncertainty/variance on the targeted horizon.
         if let hwV = hwValue, let hwC = hwCI, let arima = arimaForecast {
             if arima.ci < hwC {
+                #if DEBUG
                 print("[TimeSeriesForecaster] ARIMA Selected for \(metric.rawValue) (CI: \(arima.ci) vs HW: \(hwC))")
+                #endif
                 return arima
             } else {
                 return (hwV, hwC)

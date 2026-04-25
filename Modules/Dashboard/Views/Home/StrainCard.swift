@@ -36,7 +36,7 @@ struct StrainCard: View {
 
                         // Center text
                         VStack(alignment: .leading, spacing: DS.space1) {
-                            Text("Today's Strain")
+                            Text(Copy.Home.Cards.todaysStrain)
                                 .font(DS.Typography.calloutSemibold)
                                 .foregroundStyle(AppColour.textSecondary)
                                 .textCase(.uppercase)
@@ -135,7 +135,7 @@ struct StrainCard: View {
             // Zone labels
             HStack(spacing: DS.space1) {
                 ForEach(1...5, id: \.self) { zone in
-                    Text("Z\(zone)")
+                    Text(Copy.Home.StrainCard.zoneLabel(zone))
                         .font(DS.Typography.footnoteMedium)
                         .foregroundStyle(AppColour.textTertiary)
                         .frame(maxWidth: .infinity)

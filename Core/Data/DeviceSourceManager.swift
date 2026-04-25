@@ -98,6 +98,24 @@ final class DeviceSourceManager {
         // Snapshot previously active devices for disconnect detection
         let previouslyActive = Set(connectedDevices.filter(\.isActive).map(Self.activityKey(for:)))
 
+        let sourceMap = await collectSourceMap()
+        let deviceMap = buildDeviceMap(from: sourceMap)
+
+        connectedDevices = Array(deviceMap.values).sorted { a, b in
+            if a.isActive != b.isActive { return a.isActive }
+            return a.metricCount > b.metricCount
+        }
+
+        // Mark scan as complete and cache results
+        hasScanned = true
+        lastScanDate = Date()
+        cacheDevicesToDefaults()
+
+        await emitDeviceAnalytics(previouslyActive: previouslyActive)
+    }
+
+    /// Run the per-target source queries in parallel and merge into a `bundleId → entry` map.
+    private func collectSourceMap() async -> [String: (source: HKSource, metrics: Set<HealthMetric>, lastDate: Date?, deviceName: String?)] {
         var sourceMap: [String: (source: HKSource, metrics: Set<HealthMetric>, lastDate: Date?, deviceName: String?)] = [:]
 
         await withTaskGroup(of: [(HKSource, Set<HealthMetric>, Date?, String?)].self) { group in
@@ -123,8 +141,14 @@ final class DeviceSourceManager {
             }
         }
 
-        // Convert to ConnectedDeviceInfo, keeping known brands grouped while
-        // allowing unknown Apple Health sources to appear independently.
+        return sourceMap
+    }
+
+    /// Convert the source map into a `groupingKey → ConnectedDeviceInfo` map,
+    /// keeping known brands grouped while letting unknown Apple Health sources stay independent.
+    private func buildDeviceMap(
+        from sourceMap: [String: (source: HKSource, metrics: Set<HealthMetric>, lastDate: Date?, deviceName: String?)]
+    ) -> [String: ConnectedDeviceInfo] {
         var deviceMap: [String: ConnectedDeviceInfo] = [:]
 
         for (bundleId, entry) in sourceMap {
@@ -152,17 +176,12 @@ final class DeviceSourceManager {
             }
         }
 
-        connectedDevices = Array(deviceMap.values).sorted { a, b in
-            if a.isActive != b.isActive { return a.isActive }
-            return a.metricCount > b.metricCount
-        }
+        return deviceMap
+    }
 
-        // Mark scan as complete and cache results
-        hasScanned = true
-        lastScanDate = Date()
-        cacheDevicesToDefaults()
-
-        // Track detected devices
+    /// Track detected/connected devices, update aggregate analytics properties, and emit
+    /// disconnect events for previously-active devices that are no longer reporting data.
+    private func emitDeviceAnalytics(previouslyActive: Set<String>) async {
         let activeCount = connectedDevices.filter(\.isActive).count
         let primary = connectedDevices.first?.device.rawValue ?? "none"
         let hasWatch = connectedDevices.contains { $0.device == .appleWatch && $0.isActive }

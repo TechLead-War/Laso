@@ -36,11 +36,18 @@ enum StressLevel: String, CaseIterable, Codable {
         }
     }
 
+    /// Upper-exclusive score bound for the `low` stress level (0-3 scale).
+    static let mildLowerBound: Double = 0.75
+    /// Upper-exclusive score bound for the `mild` stress level (0-3 scale).
+    static let moderateLowerBound: Double = 1.5
+    /// Upper-exclusive score bound for the `moderate` stress level; at/above is `high`.
+    static let highLowerBound: Double = 2.25
+
     init(score: Double) {
         switch score {
-        case ..<0.75: self = .low
-        case 0.75..<1.5: self = .mild
-        case 1.5..<2.25: self = .moderate
+        case ..<StressLevel.mildLowerBound: self = .low
+        case StressLevel.mildLowerBound..<StressLevel.moderateLowerBound: self = .mild
+        case StressLevel.moderateLowerBound..<StressLevel.highLowerBound: self = .moderate
         default: self = .high
         }
     }
@@ -106,6 +113,41 @@ final class StressScorer {
     private static let hrvWeight = 0.6
     private static let hrWeight = 0.4
 
+    /// Number of days included in the weekly-average rolling window.
+    private static let weeklyAverageWindowDays = 7
+    /// Minimum samples required before `weeklyAverage` is reported.
+    private static let weeklyAverageMinSamples = 3
+    /// Minimum daily stress samples required before `stressTrend` is computed.
+    private static let trendMinSamples = 7
+    /// Half-window score delta (0-3 scale) above which `stressTrend` reports "increasing".
+    private static let trendIncreasingDelta: Double = 0.2
+    /// Half-window score delta (0-3 scale) below which `stressTrend` reports "decreasing".
+    private static let trendDecreasingDelta: Double = -0.2
+    /// Stress-score scaling factor that maps a 0-100% deviation onto the 0-3 stress scale.
+    private static let stressScoreScale: Double = 3.0
+    /// Maximum value the final stress score is clamped to.
+    private static let stressScoreCeiling: Double = 3.0
+    /// Minimum samples required to compute a per-window baseline (mean, sd).
+    private static let minSamplesForBaseline = 5
+    /// Look-back window (days) used when picking the most recent daily mean.
+    private static let mostRecentLookbackDays = 2
+    /// HRV deviation fraction above which the `mild` description mentions HRV explicitly.
+    private static let mildHRVMentionThreshold: Double = 0.1
+    /// HRV deviation fraction above which the `moderate` description mentions HRV explicitly.
+    private static let moderateHRVMentionThreshold: Double = 0.15
+    /// HR elevation fraction above which the `moderate` description mentions HR explicitly.
+    private static let moderateHRMentionThreshold: Double = 0.1
+    /// Confidence contribution from having HRV data.
+    private static let confidenceHRVContribution: Double = 0.6
+    /// Confidence contribution from having HR data.
+    private static let confidenceHRContribution: Double = 0.25
+    /// Maximum confidence bonus from HRV baseline stability.
+    private static let confidenceStabilityBonus: Double = 0.15
+    /// Coefficient of variation at which the stability bonus reaches full strength.
+    private static let stabilityFullStrengthCV: Double = 0.1
+    /// Coefficient of variation span over which the stability bonus decays to zero.
+    private static let stabilityCVRange: Double = 0.3
+
     // MARK: - Outputs
 
     /// The most recently computed stress score, or nil if insufficient data
@@ -119,14 +161,14 @@ final class StressScorer {
 
     /// Average stress score over the last 7 days, or nil if insufficient history
     var weeklyAverage: Double? {
-        let last7 = dailyStressHistory.suffix(7)
-        guard last7.count >= 3 else { return nil }
+        let last7 = dailyStressHistory.suffix(Self.weeklyAverageWindowDays)
+        guard last7.count >= Self.weeklyAverageMinSamples else { return nil }
         return last7.map(\.score).reduce(0, +) / Double(last7.count)
     }
 
     /// Trend direction of stress over the recent history
     var stressTrend: StressTrend {
-        guard dailyStressHistory.count >= 7 else { return .stable }
+        guard dailyStressHistory.count >= Self.trendMinSamples else { return .stable }
 
         let count = dailyStressHistory.count
         let halfPoint = count / 2
@@ -139,8 +181,8 @@ final class StressScorer {
         let secondAvg = secondHalf.map(\.score).reduce(0, +) / Double(secondHalf.count)
 
         let delta = secondAvg - firstAvg
-        if delta > 0.2 { return .increasing }
-        if delta < -0.2 { return .decreasing }
+        if delta > Self.trendIncreasingDelta { return .increasing }
+        if delta < Self.trendDecreasingDelta { return .decreasing }
         return .stable
     }
 
@@ -158,17 +200,17 @@ final class StressScorer {
 
         case .mild:
             return "Your stress level is mildly elevated (\(scoreText)/3.0). "
-                + (stress.hrvDeviation > 0.1
+                + (stress.hrvDeviation > Self.mildHRVMentionThreshold
                     ? "Your HRV is \(Int(stress.hrvDeviation * 100))% below your baseline. "
                     : "")
                 + "Consider lighter exercise today and prioritize sleep tonight."
 
         case .moderate:
             return "Your stress level is moderate (\(scoreText)/3.0). "
-                + (stress.hrvDeviation > 0.15
+                + (stress.hrvDeviation > Self.moderateHRVMentionThreshold
                     ? "Your HRV is \(Int(stress.hrvDeviation * 100))% below your baseline. "
                     : "")
-                + (stress.hrElevation > 0.1
+                + (stress.hrElevation > Self.moderateHRMentionThreshold
                     ? "Your heart rate is \(Int(stress.hrElevation * 100))% above your resting average. "
                     : "")
                 + "Focus on recovery: deep breathing, gentle movement, and adequate hydration."
@@ -246,7 +288,7 @@ final class StressScorer {
     /// Compute mean and standard deviation for a baseline window
     private func computeBaseline(_ series: MetricTimeSeries, days: Int) -> (mean: Double, sd: Double)? {
         let samples = series.samples(lastDays: days)
-        guard samples.count >= 5 else { return nil }
+        guard samples.count >= Self.minSamplesForBaseline else { return nil }
 
         let mean = samples.mean(of: \.value)
         guard mean > 0 else { return nil }
@@ -263,19 +305,19 @@ final class StressScorer {
 
     /// Get the most recent daily average value from a time series
     private func mostRecentDailyValue(_ series: MetricTimeSeries) -> Double? {
-        mostRecentDailyMean(series.samples(lastDays: 2))
+        mostRecentDailyMean(series.samples(lastDays: Self.mostRecentLookbackDays))
     }
 
     /// Get the current heart rate, preferring resting HR, falling back to general HR
     private func currentHeartRateValue(_ allSeries: [HealthMetric: MetricTimeSeries]) -> Double? {
         // Prefer resting heart rate as it is less noisy
         if let rhrSeries = allSeries[.restingHeartRate],
-           let mean = mostRecentDailyMean(rhrSeries.samples(lastDays: 2)) {
+           let mean = mostRecentDailyMean(rhrSeries.samples(lastDays: Self.mostRecentLookbackDays)) {
             return mean
         }
         // Fall back to general heart rate
         if let hrSeries = allSeries[.heartRate],
-           let mean = mostRecentDailyMean(hrSeries.samples(lastDays: 2)) {
+           let mean = mostRecentDailyMean(hrSeries.samples(lastDays: Self.mostRecentLookbackDays)) {
             return mean
         }
         return nil
@@ -317,14 +359,14 @@ final class StressScorer {
         } else {
             hrvDeviation = 0
         }
-        let hrvComponent = hrvDeviation * 3.0
+        let hrvComponent = hrvDeviation * Self.stressScoreScale
 
         // HR component: how far above resting baseline (higher HR = higher stress)
         let hrElevation: Double
         let hrComponent: Double
         if let hr = currentHR, let rhr = rhrBaseline, rhr.mean > 0 {
             hrElevation = max(0, (hr - rhr.mean) / rhr.mean)
-            hrComponent = hrElevation * 3.0
+            hrComponent = hrElevation * Self.stressScoreScale
         } else {
             hrElevation = 0
             hrComponent = 0
@@ -340,7 +382,7 @@ final class StressScorer {
             rawScore = hrvComponent
         }
 
-        let clampedScore = min(3.0, max(0.0, rawScore))
+        let clampedScore = min(Self.stressScoreCeiling, max(0.0, rawScore))
 
         // Confidence based on data availability and freshness
         let confidence = computeConfidence(
@@ -366,22 +408,24 @@ final class StressScorer {
     ) -> Double {
         var confidence = 0.0
 
-        // HRV data presence is the foundation (up to 0.6)
+        // HRV data presence is the foundation
         if hasHRV {
-            confidence += 0.6
+            confidence += Self.confidenceHRVContribution
         }
 
-        // HR data adds confidence (up to 0.25)
+        // HR data adds confidence
         if hasHR {
-            confidence += 0.25
+            confidence += Self.confidenceHRContribution
         }
 
         // Baseline stability: lower coefficient of variation = more stable baseline = higher confidence
-        // (up to 0.15)
         if hrvBaseline.mean > 0 {
             let cv = hrvBaseline.sd / hrvBaseline.mean
-            // CV < 0.1 = very stable (full bonus), CV > 0.4 = highly variable (no bonus)
-            let stabilityBonus = max(0, min(0.15, 0.15 * (1.0 - (cv - 0.1) / 0.3)))
+            // Full bonus at low CV; decays linearly to zero across stabilityCVRange
+            let stabilityBonus = max(0, min(
+                Self.confidenceStabilityBonus,
+                Self.confidenceStabilityBonus * (1.0 - (cv - Self.stabilityFullStrengthCV) / Self.stabilityCVRange)
+            ))
             confidence += stabilityBonus
         }
 
@@ -422,18 +466,18 @@ final class StressScorer {
             guard let hrvBase = baselineHRV, hrvBase.mean > 0 else { continue }
 
             let hrvDeviation = max(0, (hrvBase.mean - currentHRV) / hrvBase.mean)
-            var score = hrvDeviation * 3.0
+            var score = hrvDeviation * Self.stressScoreScale
 
             // Add HR component if available
             if let currentRHR = rhrByDay[dayStart] {
                 let rhrBase = trailingBaseline(from: rhrByDay, before: dayStart, days: Self.baselineWindowDays, calendar: calendar)
                 if let rBase = rhrBase, rBase.mean > 0 {
                     let hrElevation = max(0, (currentRHR - rBase.mean) / rBase.mean)
-                    score = score * Self.hrvWeight + (hrElevation * 3.0) * Self.hrWeight
+                    score = score * Self.hrvWeight + (hrElevation * Self.stressScoreScale) * Self.hrWeight
                 }
             }
 
-            history.append((date: dayStart, score: min(3.0, max(0.0, score))))
+            history.append((date: dayStart, score: min(Self.stressScoreCeiling, max(0.0, score))))
         }
 
         dailyStressHistory = history
@@ -480,7 +524,7 @@ final class StressScorer {
             }
         }
 
-        guard values.count >= 5 else { return nil }
+        guard values.count >= Self.minSamplesForBaseline else { return nil }
 
         let mean = values.reduce(0, +) / Double(values.count)
         guard mean > 0 else { return nil }

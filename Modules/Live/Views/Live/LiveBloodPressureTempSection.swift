@@ -84,11 +84,15 @@ struct LiveBloodPressureTempSection: View {
                                     .foregroundStyle(AppColour.textSecondary)
                             }
 
+                            // Pass 8 Y: body temperature is stored canonically
+                            // in °C by HealthKit but US/UK users expect °F.
+                            // Convert via Measurement<UnitTemperature> so the
+                            // value + unit label respect Locale.current.
                             HStack(alignment: .firstTextBaseline, spacing: 2) {
-                                Text(String(format: "%.1f", temp))
+                                Text(Self.localizedTemperatureValue(temp))
                                     .font(DS.Typography.title2.monospacedDigit())
                                     .postHogMask()
-                                Text("°C")
+                                Text(Self.localizedTemperatureUnit())
                                     .font(DS.Typography.caption2Medium)
                                     .foregroundStyle(AppColour.textSecondary)
                             }
@@ -110,5 +114,24 @@ struct LiveBloodPressureTempSection: View {
             .onAppear { bpTempTracker.appeared() }
             .onDisappear { bpTempTracker.disappeared() }
         }
+    }
+
+    // Pass 8 Y: convert the canonical Celsius value into the user's
+    // measurement system. Using `Measurement<UnitTemperature>` keeps this
+    // self-contained and avoids depending on shared helpers that other
+    // agents may revert. `Locale.current.measurementSystem == .metric`
+    // covers metric vs imperial; UK reports metric for temperature too.
+    private static func localizedTemperatureValue(_ celsius: Double) -> String {
+        let isMetric = Locale.current.measurementSystem == .metric
+        if isMetric {
+            return String(format: "%.1f", celsius)
+        }
+        let m = Measurement(value: celsius, unit: UnitTemperature.celsius)
+            .converted(to: .fahrenheit)
+        return String(format: "%.1f", m.value)
+    }
+
+    private static func localizedTemperatureUnit() -> String {
+        Locale.current.measurementSystem == .metric ? "°C" : "°F"
     }
 }

@@ -66,9 +66,9 @@ struct DashboardSmartActionAdvisor {
         // 8. Default fallback
         return Recommendation(
             icon: "figure.walk",
-            title: "Get moving for 15 minutes",
-            subtitle: "A short walk boosts mood, energy, and sleep quality tonight",
-            rationale: "No specific signals today. A walk is the single highest-ROI activity for overall health."
+            title: Copy.Home.SmartAction.defaultTitle,
+            subtitle: Copy.Home.SmartAction.defaultSubtitle,
+            rationale: Copy.Home.SmartAction.defaultRationale
         )
     }
 
@@ -96,27 +96,27 @@ struct DashboardSmartActionAdvisor {
         if let stress = live.stressLevel, stress >= 60 {
             return Recommendation(
                 icon: "wind",
-                title: "Your stress is elevated right now",
-                subtitle: "Box breathing (4-4-4-4) for 5 min can bring it down. Your body is asking for a reset",
-                rationale: "Real-time stress reading is \(stress)%, which is above your comfortable range."
+                title: Copy.Home.SmartAction.highStressTitle,
+                subtitle: Copy.Home.SmartAction.highStressSubtitle,
+                rationale: Copy.Home.SmartAction.highStressRationale(stress)
             )
         }
 
         if live.hasSleepData, live.sleepHours < 5.5 {
             return Recommendation(
                 icon: "moon.zzz.fill",
-                title: "Go easy today",
-                subtitle: "Only \(Self.formatHoursMinutes(live.sleepHours)) of sleep. skip intense workouts, your body needs to conserve",
-                rationale: "You got significantly less sleep than your body needs. High-intensity effort today would compound the deficit."
+                title: Copy.Home.SmartAction.lowSleepTitle,
+                subtitle: Copy.Home.SmartAction.lowSleepSubtitle(Self.formatHoursMinutes(live.sleepHours)),
+                rationale: Copy.Home.SmartAction.lowSleepRationale
             )
         }
 
         if let readiness = live.readinessScore, readiness < 40 {
             return Recommendation(
                 icon: "figure.mind.and.body",
-                title: "Recovery day. Your body needs it",
-                subtitle: "Readiness is \(readiness)%. stretching or yoga only",
-                rationale: "Multiple signals (HRV, resting HR, sleep) indicate your body has not recovered from recent strain."
+                title: Copy.Home.SmartAction.lowReadinessTitle,
+                subtitle: Copy.Home.SmartAction.lowReadinessSubtitle(readiness),
+                rationale: Copy.Home.SmartAction.lowReadinessRationale
             )
         }
 
@@ -127,9 +127,9 @@ struct DashboardSmartActionAdvisor {
         if live.exerciseMinutes >= live.exerciseGoal {
             return Recommendation(
                 icon: "checkmark.seal.fill",
-                title: "Exercise goal reached!",
-                subtitle: "\(Int(live.exerciseMinutes)) min today. stay active and hydrate",
-                rationale: "You have already hit your daily exercise target."
+                title: Copy.Home.SmartAction.exerciseGoalTitle,
+                subtitle: Copy.Home.SmartAction.exerciseGoalSubtitle(Int(live.exerciseMinutes)),
+                rationale: Copy.Home.SmartAction.exerciseGoalRationale
             )
         }
 
@@ -137,9 +137,9 @@ struct DashboardSmartActionAdvisor {
             let remaining = Int(live.exerciseGoal - live.exerciseMinutes)
             return Recommendation(
                 icon: "bolt.heart.fill",
-                title: "You have \(remaining) min to go",
-                subtitle: "Recovery is strong. A run or workout would be great",
-                rationale: "Your body is well-recovered and ready for effort. Closing the exercise gap today would build momentum."
+                title: Copy.Home.SmartAction.minutesToGoTitle(remaining),
+                subtitle: Copy.Home.SmartAction.minutesToGoSubtitle,
+                rationale: Copy.Home.SmartAction.minutesToGoRationale
             )
         }
 
@@ -150,9 +150,9 @@ struct DashboardSmartActionAdvisor {
         guard live.hour >= 20 else { return nil }
         return Recommendation(
             icon: "moon.fill",
-            title: "Wind down for sleep",
-            subtitle: "Dim screens and skip caffeine for better rest tonight",
-            rationale: "It is late evening. Limiting blue light and stimulants now directly improves tonight's sleep quality."
+            title: Copy.Home.SmartAction.windDownTitle,
+            subtitle: Copy.Home.SmartAction.windDownSubtitle,
+            rationale: Copy.Home.SmartAction.windDownRationale
         )
     }
 
@@ -169,15 +169,15 @@ struct DashboardSmartActionAdvisor {
         let title: String
         switch insight.directive {
         case .rest, .reduceIntensity:
-            title = "Ease off. \(insight.metric.displayName) needs attention"
+            title = Copy.Home.SmartAction.insightEaseOff(insight.metric.displayName)
         case .increaseActivity, .pushHarder:
-            title = "Push harder. \(insight.metric.displayName) is ready"
+            title = Copy.Home.SmartAction.insightPushHarder(insight.metric.displayName)
         case .sleepMore, .sleepBetter:
-            title = "Improve your sleep tonight"
+            title = Copy.Home.SmartAction.insightSleepBetter
         case .seekMedical:
-            title = "\(insight.metric.displayName). worth checking"
+            title = Copy.Home.SmartAction.insightWorthChecking(insight.metric.displayName)
         case .maintain:
-            title = "Keep it up. \(insight.metric.displayName) is solid"
+            title = Copy.Home.SmartAction.insightKeepItUp(insight.metric.displayName)
         case .informational:
             title = insight.title
         }
@@ -201,17 +201,17 @@ struct DashboardSmartActionAdvisor {
             if live.deepSleepMinutes < 45 {
                 return Recommendation(
                     icon: "moon.zzz.fill",
-                    title: "Boost your deep sleep",
-                    subtitle: "Only \(Int(live.deepSleepMinutes)) min of deep sleep. try cutting caffeine after 2 PM",
-                    rationale: "Deep sleep is when your body repairs muscle, consolidates memory, and regulates hormones. You're getting less than the 45-minute threshold."
+                    title: Copy.Home.SmartAction.deepSleepTitle,
+                    subtitle: Copy.Home.SmartAction.deepSleepSubtitle(Int(live.deepSleepMinutes)),
+                    rationale: Copy.Home.SmartAction.deepSleepRationale
                 )
             }
             if live.sleepHours < 7 {
                 return Recommendation(
                     icon: "bed.double.fill",
-                    title: "Get to bed 30 min earlier",
-                    subtitle: "\(Self.formatHoursMinutes(live.sleepHours)) last night. aim for 7+ hours",
-                    rationale: "Sleep is your top focus area and you are falling short. Even 30 minutes more makes a measurable difference."
+                    title: Copy.Home.SmartAction.earlyBedTitle,
+                    subtitle: Copy.Home.SmartAction.earlyBedSubtitle(Self.formatHoursMinutes(live.sleepHours)),
+                    rationale: Copy.Home.SmartAction.earlyBedRationale
                 )
             }
         }
@@ -220,9 +220,9 @@ struct DashboardSmartActionAdvisor {
             let remaining = Int(live.exerciseGoal - live.exerciseMinutes)
             return Recommendation(
                 icon: "figure.run",
-                title: "You're \(remaining) min from your goal",
-                subtitle: "A brisk walk or quick workout would close the gap",
-                rationale: "Fitness is your focus area and you have \(remaining) minutes left to hit today's target."
+                title: Copy.Home.SmartAction.fitnessGapTitle(remaining),
+                subtitle: Copy.Home.SmartAction.fitnessGapSubtitle,
+                rationale: Copy.Home.SmartAction.fitnessGapRationale(remaining)
             )
         }
 
@@ -232,9 +232,9 @@ struct DashboardSmartActionAdvisor {
            restingHeartRate > baselineMean * 1.05 {
             return Recommendation(
                 icon: "heart.fill",
-                title: "Your resting HR is trending up",
-                subtitle: "Try 10 min of meditation or deep breathing to bring it down",
-                rationale: "Your resting heart rate is \(Int(restingHeartRate)) bpm. above your baseline of \(Int(baselineMean)) bpm. This could signal incomplete recovery or elevated stress."
+                title: Copy.Home.SmartAction.restingHRUpTitle,
+                subtitle: Copy.Home.SmartAction.restingHRUpSubtitle,
+                rationale: Copy.Home.SmartAction.restingHRUpRationale(currentRHR: Int(restingHeartRate), baselineRHR: Int(baselineMean))
             )
         }
 
@@ -243,9 +243,9 @@ struct DashboardSmartActionAdvisor {
            readiness < 60 {
             return Recommendation(
                 icon: "figure.mind.and.body",
-                title: "Focus on recovery today",
-                subtitle: "Readiness is \(readiness)%. light stretching and hydration will help",
-                rationale: "Recovery is your focus area and your readiness score indicates your body has not fully bounced back yet."
+                title: Copy.Home.SmartAction.focusRecoveryTitle,
+                subtitle: Copy.Home.SmartAction.focusRecoverySubtitle(readiness),
+                rationale: Copy.Home.SmartAction.focusRecoveryRationale
             )
         }
 

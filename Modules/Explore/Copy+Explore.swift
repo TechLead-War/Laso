@@ -33,8 +33,8 @@ extension Copy {
         static let yourHealthScore = "Your Health Score"
         static let almostThere = "Almost there..."
         static let noDataYet = "No data yet"
-        static let almostThereBody = "A few more days of tracking and your score will be ready"
-        static let noDataYetBody = "Open the Health app and allow access to see your analysis"
+        static let almostThereBody = "A few more days of tracking and your score will be ready."
+        static let noDataYetBody = "Open the Health app and allow access to see your analysis."
 
         // MARK: - Areas to Focus
 
@@ -71,5 +71,19 @@ extension Copy {
         static func healthStateDuration(label: String, days: Int) -> String {
             "\(label) for \(days) day\(days == 1 ? "" : "s")"
         }
+
+        // MARK: - Strongest Category Pill
+
+        static func strongest(_ category: String) -> String { "Strongest: \(category)" }
+
+        // MARK: - Pro Upsell
+
+        static let pro = "PRO"
+        static let discoverHiddenConnections = "Find hidden links between your health metrics"
+
+        // MARK: - Declining Trends Section
+
+        static func openMetric(_ name: String) -> String { "Open \(name)" }
+        static func confidencePercent(_ percent: Int) -> String { "\(percent)% confidence" }
     }
 }

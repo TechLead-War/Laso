@@ -47,7 +47,7 @@ struct CyclePhaseCard: View {
                                 .minimumScaleFactor(0.75)
 
                             HStack(spacing: 8) {
-                                Text("Day \(dayInCycle) of \(cycleLength)")
+                                Text(Copy.Home.CyclePhase.dayOfCycle(day: dayInCycle, total: cycleLength))
                                     .font(.system(size: 14.4).weight(.medium).monospacedDigit())
                                     .foregroundStyle(.secondary)
                                     .postHogMask()

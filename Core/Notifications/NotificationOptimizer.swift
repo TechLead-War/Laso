@@ -3,6 +3,10 @@ import Foundation
 /// Optimizes notification timing, priority, and frequency based on user engagement data
 enum NotificationOptimizer {
 
+    /// Pass 12 BE perf: cached current calendar. `isFatigued` and `openRate`
+    /// are evaluated whenever a new notification is scheduled.
+    private static let cal: Calendar = Calendar.current
+
     /// Find the hour with the best open rate (min 3 samples per hour, min 14 total events)
     static func optimalHour(events: [StoredNotificationEvent], defaultHour: Int = 8) -> Int {
         guard events.count >= 14 else { return defaultHour }
@@ -60,7 +64,7 @@ enum NotificationOptimizer {
     /// Check if the user is experiencing notification fatigue (low open rate over 7 days)
     static func isFatigued(events: [StoredNotificationEvent], threshold: Double? = nil) -> Bool {
         let fatigueThreshold = threshold ?? RemoteConfigManager.shared.notificationFatigueThreshold
-        let sevenDaysAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+        let sevenDaysAgo = Self.cal.date(byAdding: .day, value: -7, to: Date()) ?? Date()
         let recentEvents = events.filter { $0.sentDate >= sevenDaysAgo }
         guard recentEvents.count >= 5 else { return false }
         let opened = recentEvents.filter { $0.openedDate != nil }.count
@@ -79,7 +83,7 @@ enum NotificationOptimizer {
 
     /// Aggregate open rate for analytics
     static func openRate(events: [StoredNotificationEvent], days: Int) -> Double? {
-        let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let cutoff = Self.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
         let recent = events.filter { $0.sentDate >= cutoff }
         guard !recent.isEmpty else { return nil }
         let opened = recent.filter { $0.openedDate != nil }.count

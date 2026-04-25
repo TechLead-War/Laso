@@ -95,10 +95,18 @@ struct CalibrationDiscovery {
         return discovery
     }
 
-    private static func formatSteps(_ value: Int) -> String {
+    /// Pass 11 AF: cached step formatter — `formatSteps` runs once per priority
+    /// metric (up to 4 calls per discovery build) and `discovery.build(from:)`
+    /// is invoked on the Mirror Moment onboarding step. One static avoids the
+    /// per-call NumberFormatter allocation.
+    private static let stepsFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.groupingSeparator = ","
-        return (formatter.string(from: NSNumber(value: value)) ?? "\(value)") + " steps"
+        return formatter
+    }()
+
+    private static func formatSteps(_ value: Int) -> String {
+        return (stepsFormatter.string(from: NSNumber(value: value)) ?? "\(value)") + " steps"
     }
 }

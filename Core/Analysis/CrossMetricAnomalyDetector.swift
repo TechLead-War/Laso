@@ -49,6 +49,42 @@ struct CrossMetricAnomalyDetector {
     /// Maximum similar days in history before we stop considering it anomalous
     private static let maxSimilarDaysThreshold = 5
 
+    /// Pass 12 BE perf: cached current calendar. `detect(...)` calls
+    /// `dateComponents([.day]…)` once per daily-vector across the 90-day
+    /// history window for both the history and recent filters.
+    private static let cal: Calendar = Calendar.current
+
+    // MARK: - Severity thresholds (composite anomaly score 0-100)
+    private static let criticalScoreThreshold: Double = 90
+    private static let warningScoreThreshold: Double = 75
+    private static let infoScoreThreshold: Double = 60
+
+    // MARK: - Day-similarity / broken-correlation z-score gates
+    /// Minimum |z-score| on at least one side to count a correlation as broken.
+    private static let brokenCorrelationMinAbsZ: Double = 0.8
+    /// Z-score magnitude above which a metric counts as elevated/reduced for correlation-pair direction logic.
+    private static let directionZThreshold: Double = 0.5
+    /// Two days are "matching" on a metric when their z-scores differ by less than this.
+    private static let perMetricMatchTolerance: Double = 1.0
+    /// Match-ratio threshold across compared metrics for a day to count as "similar" historically.
+    private static let dayMatchRatioThreshold: Double = 0.8
+
+    // MARK: - Anomaly score component weights
+    private static let zComponentCapZ: Double = 3.0
+    private static let zComponentMaxPoints: Double = 40.0
+    private static let correlationComponentSaturationCount: Double = 3.0
+    private static let correlationComponentMaxPoints: Double = 30.0
+    private static let breadthComponentSaturationCount: Double = 5.0
+    private static let breadthComponentMaxPoints: Double = 10.0
+    /// Rarity points awarded to days with zero similar historical occurrences.
+    private static let rarityScoreNoMatch: Double = 20.0
+    /// Rarity points awarded to days with exactly one similar historical occurrence.
+    private static let rarityScoreSingleMatch: Double = 15.0
+    /// Rarity points awarded to days with 2-3 similar historical occurrences.
+    private static let rarityScoreFewMatches: Double = 10.0
+    /// Decay slope (points lost per similar day) once more than three similar days exist.
+    private static let rarityScoreDecayPerDay: Double = 4.0
+
     // MARK: - Public API
 
     /// Detect cross-metric anomalies by analyzing combinations of metric z-scores
@@ -65,7 +101,7 @@ struct CrossMetricAnomalyDetector {
 
         // Need enough history to establish what "normal" looks like
         let historyVectors = dailyVectors.filter { vector in
-            let daysAgo = Calendar.current.dateComponents([.day], from: vector.date, to: Date()).day ?? 0
+            let daysAgo = Self.cal.dateComponents([.day], from: vector.date, to: Date()).day ?? 0
             return daysAgo >= recentWindowDays
         }
         guard historyVectors.count >= minHistoryDays else { return [] }
@@ -78,7 +114,7 @@ struct CrossMetricAnomalyDetector {
 
         // Step 4: Score recent days and generate anomalies
         let recentVectors = dailyVectors.filter { vector in
-            let daysAgo = Calendar.current.dateComponents([.day], from: vector.date, to: Date()).day ?? 0
+            let daysAgo = Self.cal.dateComponents([.day], from: vector.date, to: Date()).day ?? 0
             return daysAgo < recentWindowDays
         }
 
@@ -329,11 +365,11 @@ struct CrossMetricAnomalyDetector {
 
         // Apply severity thresholds
         let severity: Severity
-        if anomalyScore >= 90 {
+        if anomalyScore >= Self.criticalScoreThreshold {
             severity = .critical
-        } else if anomalyScore >= 75 {
+        } else if anomalyScore >= Self.warningScoreThreshold {
             severity = .warning
-        } else if anomalyScore >= 60 {
+        } else if anomalyScore >= Self.infoScoreThreshold {
             severity = .info
         } else {
             return nil  // Not anomalous enough
@@ -403,11 +439,11 @@ struct CrossMetricAnomalyDetector {
             // If normally positively correlated (r > 0), one going up while the other goes down is anomalous
             // If normally inversely correlated (r < 0), both going the same direction is anomalous
 
-            let bothElevated = zA > 0.5 && zB > 0.5
-            let bothReduced = zA < -0.5 && zB < -0.5
+            let bothElevated = zA > Self.directionZThreshold && zB > Self.directionZThreshold
+            let bothReduced = zA < -Self.directionZThreshold && zB < -Self.directionZThreshold
             let sameDirection = bothElevated || bothReduced
 
-            let diverging = (zA > 0.5 && zB < -0.5) || (zA < -0.5 && zB > 0.5)
+            let diverging = (zA > Self.directionZThreshold && zB < -Self.directionZThreshold) || (zA < -Self.directionZThreshold && zB > Self.directionZThreshold)
 
             let isBroken: Bool
             let expectedRelationship: String
@@ -435,7 +471,7 @@ struct CrossMetricAnomalyDetector {
             guard isBroken else { continue }
 
             // Require at least moderate z-scores to count as a broken correlation
-            guard abs(zA) >= 0.8 || abs(zB) >= 0.8 else { continue }
+            guard abs(zA) >= Self.brokenCorrelationMinAbsZ || abs(zB) >= Self.brokenCorrelationMinAbsZ else { continue }
 
             broken.append(BrokenCorrelation(
                 metricA: correlation.metricA,
@@ -463,8 +499,8 @@ struct CrossMetricAnomalyDetector {
                 guard let histZ = histDay.zScores[metric] else { continue }
                 comparedMetrics += 1
 
-                // "Similar" = within 1 stddev on each metric
-                if abs(z - histZ) <= 1.0 {
+                // "Similar" = within `perMetricMatchTolerance` stddev on each metric
+                if abs(z - histZ) <= Self.perMetricMatchTolerance {
                     matchingMetrics += 1
                 }
             }
@@ -472,7 +508,7 @@ struct CrossMetricAnomalyDetector {
             // Day is "similar" if the vast majority of metrics match
             guard comparedMetrics >= minMetricsPerDay else { continue }
             let matchRatio = Double(matchingMetrics) / Double(comparedMetrics)
-            if matchRatio >= 0.8 {
+            if matchRatio >= Self.dayMatchRatioThreshold {
                 count += 1
                 // Early-exit: once we know it's not rare, skip remaining history
                 if count >= maxSimilarDaysThreshold { return count }
@@ -490,26 +526,26 @@ struct CrossMetricAnomalyDetector {
         deviationCount: Int
     ) -> Double {
         // Component weights
-        // Combined z-score: 0-40 points (capped at z=3.0)
-        let zComponent = min(combinedZScore / 3.0, 1.0) * 40.0
+        // Combined z-score: capped at zComponentCapZ
+        let zComponent = min(combinedZScore / Self.zComponentCapZ, 1.0) * Self.zComponentMaxPoints
 
-        // Broken correlations: 0-30 points (each broken correlation adds signal)
-        let correlationComponent = min(Double(brokenCorrelationCount) / 3.0, 1.0) * 30.0
+        // Broken correlations: each broken correlation adds signal
+        let correlationComponent = min(Double(brokenCorrelationCount) / Self.correlationComponentSaturationCount, 1.0) * Self.correlationComponentMaxPoints
 
-        // Historical rarity: 0-20 points (fewer similar days = more anomalous)
+        // Historical rarity: fewer similar days = more anomalous
         let rarityComponent: Double
         if similarDays == 0 {
-            rarityComponent = 20.0
+            rarityComponent = Self.rarityScoreNoMatch
         } else if similarDays == 1 {
-            rarityComponent = 15.0
+            rarityComponent = Self.rarityScoreSingleMatch
         } else if similarDays <= 3 {
-            rarityComponent = 10.0
+            rarityComponent = Self.rarityScoreFewMatches
         } else {
-            rarityComponent = max(0, 20.0 - Double(similarDays) * 4.0)
+            rarityComponent = max(0, Self.rarityScoreNoMatch - Double(similarDays) * Self.rarityScoreDecayPerDay)
         }
 
-        // Multi-metric involvement: 0-10 points
-        let breadthComponent = min(Double(deviationCount) / 5.0, 1.0) * 10.0
+        // Multi-metric involvement
+        let breadthComponent = min(Double(deviationCount) / Self.breadthComponentSaturationCount, 1.0) * Self.breadthComponentMaxPoints
 
         return min(zComponent + correlationComponent + rarityComponent + breadthComponent, 100.0)
     }
@@ -578,7 +614,8 @@ struct CrossMetricAnomalyDetector {
         case 2: return "\(items[0]) and \(items[1])"
         default:
             let allButLast = items.dropLast().joined(separator: ", ")
-            return "\(allButLast), and \(items.last!)"
+            let last = items.last ?? ""
+            return "\(allButLast), and \(last)"
         }
     }
 

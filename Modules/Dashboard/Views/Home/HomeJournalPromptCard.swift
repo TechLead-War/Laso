@@ -1,8 +1,12 @@
 import SwiftUI
 
 struct HomeJournalPromptCard: View {
+    /// Pass 12 BE perf: cached current calendar. `body` evaluates the hour
+    /// predicate on every Home re-render.
+    private static let cal: Calendar = Calendar.current
+
     var body: some View {
-        let hour = Calendar.current.component(.hour, from: Date())
+        let hour = Self.cal.component(.hour, from: Date())
         // Show journal prompt in the evening (after 6pm)
         if hour >= 18 {
             NavigationLink(value: Route.journalEntry) {

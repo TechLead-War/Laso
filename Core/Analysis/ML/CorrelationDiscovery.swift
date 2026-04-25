@@ -42,18 +42,9 @@ final class CorrelationDiscovery {
         let metrics = activeMetrics
         guard metrics.count >= 2 else { return }
 
-        // Build date-aligned values for each metric
-        var dateValues: [HealthMetric: [Date: Double]] = [:]
-        for (metric, series) in timeSeries {
-            var dv: [Date: Double] = [:]
-            for sample in series.sortedSamples {
-                dv[calendar.startOfDay(for: sample.date)] = sample.value
-            }
-            dateValues[metric] = dv
-        }
+        let dateValues = Self.buildDateAlignedValues(timeSeries: timeSeries, calendar: calendar)
 
         // Test all N*(N-1)/2 pairs, bailing out if the device gets hot
-        var pairCount = 0
         for i in 0..<metrics.count {
             // Check thermal state between outer loop iterations to avoid
             // burning CPU for minutes on O(N²) pair testing
@@ -64,98 +55,12 @@ final class CorrelationDiscovery {
                 }
             }
             for j in (i + 1)..<metrics.count {
-                pairCount += 1
-                let metricA = metrics[i]
-                let metricB = metrics[j]
-
-                guard let datesA = dateValues[metricA],
-                      let datesB = dateValues[metricB] else { continue }
-
-                // Find overlapping dates
-                let commonDates = Set(datesA.keys).intersection(Set(datesB.keys))
-                    .sorted()
-
-                guard commonDates.count >= Self.minimumDays else { continue }
-
-                let valuesA = commonDates.compactMap { datesA[$0] }
-                let valuesB = commonDates.compactMap { datesB[$0] }
-
-                guard valuesA.count == valuesB.count,
-                      valuesA.count >= Self.minimumDays else { continue }
-
-                // 1. Pearson correlation
-                let pearsonR = [Double].pearsonCorrelation(valuesA, valuesB) ?? 0
-
-                // 2. Mutual information (always compute. catches non-linear relationships
-                // that Pearson misses, e.g., U-shaped dose-response curves)
-                let mi = mutualInformation(valuesA, valuesB)
-
-                // Adaptive MI significance: MI > log(n)/n is a rough threshold for
-                // independent variables (higher MI than expected by chance)
-                let n = valuesA.count
-                let miSignificanceThreshold = log(Double(n)) / Double(n)
-
-                // Skip only if BOTH linear and non-linear associations are negligible
-                guard abs(pearsonR) >= 0.10 || mi > miSignificanceThreshold else { continue }
-
-                // Tiered pruning: skip expensive tests for weak correlations
-                let grangerCausal: Bool
-                let grangerP: Double
-                var partialCorr: Double?
-                var confounder: HealthMetric?
-                let stability: Double
-
-                var effectSize: Double = 0
-                var optimalLagDays: Int = 0
-
-                if abs(pearsonR) >= 0.30 || mi > miSignificanceThreshold * 3 {
-                    // 3. Granger causality (A → B) using proper OLS + F-distribution
-                    let grangerResult = GrangerCausalityEngine.test(
-                        cause: valuesA, effect: valuesB,
-                        causeMetric: metricA, effectMetric: metricB,
-                        maxLag: Self.maxGrangerLag
-                    )
-                    grangerCausal = grangerResult?.isCausal ?? false
-                    grangerP = grangerResult?.pValue ?? 1.0
-                    effectSize = grangerResult?.effectSize ?? 0
-                    optimalLagDays = grangerResult?.optimalLagDays ?? 0
-
-                    // 4. Partial correlation (controlling for strongest confounder)
-                    if metrics.count > 2 {
-                        (partialCorr, confounder) = partialCorrelation(
-                            a: valuesA, b: valuesB,
-                            metricA: metricA, metricB: metricB,
-                            allDateValues: dateValues,
-                            commonDates: commonDates
-                        )
-                    }
-
-                    // 5. Stability over sliding windows
-                    stability = correlationStability(valuesA, valuesB)
-                } else {
-                    // Weak-moderate (0.15-0.25): only Pearson + MI
-                    grangerCausal = false
-                    grangerP = 1.0
-                    stability = 1.0
-                }
-
-                let correlation = MLCorrelation(
-                    metricA: metricA,
-                    metricB: metricB,
-                    pearsonR: pearsonR,
-                    mutualInformation: mi,
-                    grangerCausal: grangerCausal,
-                    grangerPValue: grangerP,
-                    partialCorrelation: partialCorr,
-                    confounderMetric: confounder,
-                    stability: stability,
-                    sampleCount: valuesA.count,
-                    grangerEffectSize: effectSize,
-                    grangerOptimalLag: optimalLagDays,
-                    survivedFDR: true // Will be updated by applyBenjaminiHochberg
-                )
-
-                if correlation.isSignificant {
+                if let correlation = analyzePair(
+                    metricA: metrics[i],
+                    metricB: metrics[j],
+                    metricCount: metrics.count,
+                    dateValues: dateValues
+                ), correlation.isSignificant {
                     correlations.append(correlation)
                 }
             }
@@ -168,6 +73,117 @@ final class CorrelationDiscovery {
         applyBenjaminiHochberg(alpha: 0.05)
 
         lastAnalysisDate = Date()
+    }
+
+    // MARK: - Discovery helpers
+
+    private static func buildDateAlignedValues(
+        timeSeries: [HealthMetric: MetricTimeSeries],
+        calendar: Calendar
+    ) -> [HealthMetric: [Date: Double]] {
+        var dateValues: [HealthMetric: [Date: Double]] = [:]
+        for (metric, series) in timeSeries {
+            var dv: [Date: Double] = [:]
+            for sample in series.sortedSamples {
+                dv[calendar.startOfDay(for: sample.date)] = sample.value
+            }
+            dateValues[metric] = dv
+        }
+        return dateValues
+    }
+
+    private func analyzePair(
+        metricA: HealthMetric,
+        metricB: HealthMetric,
+        metricCount: Int,
+        dateValues: [HealthMetric: [Date: Double]]
+    ) -> MLCorrelation? {
+        guard let datesA = dateValues[metricA],
+              let datesB = dateValues[metricB] else { return nil }
+
+        // Find overlapping dates
+        let commonDates = Set(datesA.keys).intersection(Set(datesB.keys))
+            .sorted()
+
+        guard commonDates.count >= Self.minimumDays else { return nil }
+
+        let valuesA = commonDates.compactMap { datesA[$0] }
+        let valuesB = commonDates.compactMap { datesB[$0] }
+
+        guard valuesA.count == valuesB.count,
+              valuesA.count >= Self.minimumDays else { return nil }
+
+        // 1. Pearson correlation
+        let pearsonR = [Double].pearsonCorrelation(valuesA, valuesB) ?? 0
+
+        // 2. Mutual information (always compute. catches non-linear relationships
+        // that Pearson misses, e.g., U-shaped dose-response curves)
+        let mi = mutualInformation(valuesA, valuesB)
+
+        // Adaptive MI significance: MI > log(n)/n is a rough threshold for
+        // independent variables (higher MI than expected by chance)
+        let n = valuesA.count
+        let miSignificanceThreshold = log(Double(n)) / Double(n)
+
+        // Skip only if BOTH linear and non-linear associations are negligible
+        guard abs(pearsonR) >= 0.10 || mi > miSignificanceThreshold else { return nil }
+
+        // Tiered pruning: skip expensive tests for weak correlations
+        let grangerCausal: Bool
+        let grangerP: Double
+        var partialCorr: Double?
+        var confounder: HealthMetric?
+        let stability: Double
+
+        var effectSize: Double = 0
+        var optimalLagDays: Int = 0
+
+        if abs(pearsonR) >= 0.30 || mi > miSignificanceThreshold * 3 {
+            // 3. Granger causality (A → B) using proper OLS + F-distribution
+            let grangerResult = GrangerCausalityEngine.test(
+                cause: valuesA, effect: valuesB,
+                causeMetric: metricA, effectMetric: metricB,
+                maxLag: Self.maxGrangerLag
+            )
+            grangerCausal = grangerResult?.isCausal ?? false
+            grangerP = grangerResult?.pValue ?? 1.0
+            effectSize = grangerResult?.effectSize ?? 0
+            optimalLagDays = grangerResult?.optimalLagDays ?? 0
+
+            // 4. Partial correlation (controlling for strongest confounder)
+            if metricCount > 2 {
+                (partialCorr, confounder) = partialCorrelation(
+                    a: valuesA, b: valuesB,
+                    metricA: metricA, metricB: metricB,
+                    allDateValues: dateValues,
+                    commonDates: commonDates
+                )
+            }
+
+            // 5. Stability over sliding windows
+            stability = correlationStability(valuesA, valuesB)
+        } else {
+            // Weak-moderate (0.15-0.25): only Pearson + MI
+            grangerCausal = false
+            grangerP = 1.0
+            stability = 1.0
+        }
+
+        return MLCorrelation(
+            metricA: metricA,
+            metricB: metricB,
+            pearsonR: pearsonR,
+            mutualInformation: mi,
+            grangerCausal: grangerCausal,
+            grangerPValue: grangerP,
+            partialCorrelation: partialCorr,
+            confounderMetric: confounder,
+            stability: stability,
+            sampleCount: valuesA.count,
+            grangerEffectSize: effectSize,
+            grangerOptimalLag: optimalLagDays,
+            survivedFDR: true // Will be updated by applyBenjaminiHochberg
+        )
     }
 
     // MARK: - Mutual Information

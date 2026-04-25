@@ -23,9 +23,13 @@ final class CoreMLEngine {
             // Note: In a real app, HealthStateModel.mlmodelc would be compiled into the app bundle.
             // For this R&D environment, we try to load it if available from the bundle.
             self.model = try HealthStateModel(configuration: config)
+            #if DEBUG
             print("[CoreMLEngine] Successfully loaded neural network inference model!")
+            #endif
         } catch {
+            #if DEBUG
             print("[CoreMLEngine] Warning: CoreML model not found or failed to load. Falling back to GMM clustering. Error: \(error)")
+            #endif
         }
     }
     
@@ -66,7 +70,6 @@ final class CoreMLEngine {
         // 3. Inference
         do {
             let prediction = try model.prediction(input: input)
-            print("[CoreMLEngine] Inference Success: Risk = \(prediction.riskScore)")
             return prediction.riskScore
         } catch {
             throw error

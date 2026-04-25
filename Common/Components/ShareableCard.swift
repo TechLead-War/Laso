@@ -129,14 +129,11 @@ struct ShareableScoreCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 24))
     }
 
-    private static let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d, yyyy"
-        return formatter
-    }()
-
+    // Pass 8 Y: locale-aware. `.dateTime.day().month().year()` resolves the
+    // ordering / separators / month-name length per `Locale.current` (e.g.
+    // "Apr 25, 2026" en-US, "25 Apr 2026" en-GB, "25 avr. 2026" fr-FR).
     private var formattedDate: String {
-        Self.dateFormatter.string(from: Date())
+        Date().formatted(.dateTime.day().month().year())
     }
 }
 
@@ -259,14 +256,9 @@ struct ShareableInsightCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 24))
     }
 
-    private static let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d, yyyy"
-        return formatter
-    }()
-
+    // Pass 8 Y: locale-aware (see notes on the score-card formatter above).
     private var formattedDate: String {
-        Self.dateFormatter.string(from: Date())
+        Date().formatted(.dateTime.day().month().year())
     }
 }
 

@@ -1,6 +1,7 @@
 import UIKit
 import SwiftUI
 
+#if DEBUG
 enum UITestMode {
     private static let launchFlag = "--ui-test-mode"
     private static let resetDefaultsFlag = "--ui-test-reset-defaults"
@@ -184,3 +185,33 @@ enum UITestMode {
         defaults.set(true, forKey: AppKeys.Dismissals.siriTip)
     }
 }
+#else
+/// Release-safe stub. All values are static-false / nil so feature gates compile
+/// at every call site but no test-only behaviour can ever activate in App Store
+/// builds. The launch-flag strings and configuration logic are stripped from
+/// the Release binary entirely.
+enum UITestMode {
+    static var isEnabled: Bool { false }
+    static var shouldShowOnboarding: Bool { false }
+    static var requestedAppearance: UIUserInterfaceStyle { .dark }
+    static var preferredColorScheme: ColorScheme { .dark }
+    static var simulateNoWatch: Bool { false }
+    static var simulateFemaleProfile: Bool { false }
+    static var showDisclaimer: Bool { false }
+    static var forceShowPaywall: Bool { false }
+    static var forceProLock: Bool { false }
+    static var forceMorningCheckIn: Bool { false }
+    static var premiumShowcase: Bool { false }
+    static var forceSubscribed: Bool { false }
+    static var initialTab: String? { nil }
+    static var initialRoute: String? { nil }
+    static var onboardingStartStep: String? { nil }
+    static var settingsInitialRoute: String? { nil }
+    static var overrideName: String? { nil }
+    static var overrideOverallScore: Int? { nil }
+    static var overrideSleepScore: Int? { nil }
+    static var overrideActivityScore: Int? { nil }
+
+    static func configureDefaults() { /* no-op in Release */ }
+}
+#endif

@@ -333,7 +333,7 @@ final class ChangePointDetector {
                 let lag = calendar.dateComponents([.day], from: c.date, to: primaryDate).day ?? 0
                 guard lag >= 1, lag <= Self.coOccurrenceWindowDays, c.pValue < Self.coOccurrenceAlpha else { continue }
                 let dir: ChangePoint.ChangeDirection = c.afterMean > c.beforeMean ? .increase : .decrease
-                if best == nil || c.cohenD > best!.mag {
+                if best.map({ c.cohenD > $0.mag }) ?? true {
                     best = (metric, lag, dir, c.cohenD)
                 }
             }
@@ -376,10 +376,10 @@ final class ChangePointDetector {
                 guard cpSampleIdx > start else { continue }
                 let seg = Array(samples[start..<cpSampleIdx])
                 let vals = seg.map(\.value)
-                guard !vals.isEmpty else { continue }
+                guard !vals.isEmpty, let segStart = seg.first?.date else { continue }
 
                 regimes.append(RegimeComparison.Regime(
-                    startDate: seg.first!.date, endDate: seg.last?.date,
+                    startDate: segStart, endDate: seg.last?.date,
                     mean: vals.mean, std: vals.standardDeviation,
                     dayCount: vals.count,
                     label: cpIdx == 0 && start == 0 ? "Initial regime" : "Regime \(cpIdx + 1)"
@@ -390,9 +390,9 @@ final class ChangePointDetector {
             if start < samples.count {
                 let seg = Array(samples[start...])
                 let vals = seg.map(\.value)
-                guard !vals.isEmpty else { continue }
+                guard !vals.isEmpty, let segStart = seg.first?.date else { continue }
                 regimes.append(RegimeComparison.Regime(
-                    startDate: seg.first!.date, endDate: nil,
+                    startDate: segStart, endDate: nil,
                     mean: vals.mean, std: vals.standardDeviation,
                     dayCount: vals.count, label: "Current regime"
                 ))
@@ -468,8 +468,8 @@ final class ChangePointDetector {
     }
 
     private func regimeDescription(metric: HealthMetric, regimes: [RegimeComparison.Regime]) -> String {
-        guard regimes.count >= 2 else { return "" }
-        let cur = regimes.last!, prev = regimes[regimes.count - 2]
+        guard regimes.count >= 2, let cur = regimes.last else { return "" }
+        let prev = regimes[regimes.count - 2]
         let u = metric.unit.isEmpty ? "" : " \(metric.unit)"
         var desc = "Your \(metric.displayName) current regime: " +
             "\(metric.formatValue(cur.mean)) \u{00B1} \(metric.formatValue(cur.std))\(u) " +

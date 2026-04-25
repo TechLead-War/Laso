@@ -66,9 +66,12 @@ struct CardioRespiratoryAgeAnalyzer {
             let lastValues = Array(sorted.suffix(max(3, sorted.count / 4))).map(\.value).mean
             changeOverPeriod = lastValues - firstValues
 
-            let daysSpanned = Calendar.current.dateComponents(
-                [.day], from: sorted.first!.date, to: sorted.last!.date
-            ).day ?? 0
+            let daysSpanned: Int
+            if let firstDate = sorted.first?.date, let lastDate = sorted.last?.date {
+                daysSpanned = Calendar.current.dateComponents([.day], from: firstDate, to: lastDate).day ?? 0
+            } else {
+                daysSpanned = 0
+            }
             monthsTracked = max(1, daysSpanned / 30)
 
             trajectory = changeOverPeriod > 0.5 ? .improving
@@ -166,7 +169,7 @@ struct CardioRespiratoryAgeAnalyzer {
         }
 
         // Below the lowest bracket
-        return min(90, ageMidpoints.last! + 5)
+        return min(90, (ageMidpoints.last ?? 85) + 5)
     }
 
     /// Approximate percentile within a bracket
@@ -181,8 +184,9 @@ struct CardioRespiratoryAgeAnalyzer {
             (95, bracket.p95),
         ]
 
-        if vo2max <= thresholds.first!.value { return 5 }
-        if vo2max >= thresholds.last!.value { return 97 }
+        guard let firstThreshold = thresholds.first, let lastThreshold = thresholds.last else { return 50 }
+        if vo2max <= firstThreshold.value { return 5 }
+        if vo2max >= lastThreshold.value { return 97 }
 
         for i in 0..<(thresholds.count - 1) {
             if vo2max >= thresholds[i].value && vo2max < thresholds[i+1].value {

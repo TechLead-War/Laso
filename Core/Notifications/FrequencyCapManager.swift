@@ -5,18 +5,23 @@ final class FrequencyCapManager {
     private let defaults = UserDefaults.standard
     private let key = AppKeys.Notifications.notificationLog
 
+    /// Pass 11 AF: cached calendar — `recordNotification`/`canSendNotification`/
+    /// `notificationsSentToday` each loop the daily log calling `isDateInToday`,
+    /// so a single static avoids per-element `Calendar.current` allocation.
+    private static let cal: Calendar = Calendar.current
+
     /// Record that a notification was sent
     func recordNotification() {
         var log = loadLog()
         log.append(Date())
         // Keep only today's entries
-        log = log.filter { Calendar.current.isDateInToday($0) }
+        log = log.filter { Self.cal.isDateInToday($0) }
         saveLog(log)
     }
 
     /// Check if we can send another notification today, respecting both daily cap and minimum spacing.
     func canSendNotification(maxPerDay: Int = 2, minimumSpacingHours: Double = 4) -> Bool {
-        let todayLog = loadLog().filter { Calendar.current.isDateInToday($0) }
+        let todayLog = loadLog().filter { Self.cal.isDateInToday($0) }
         guard todayLog.count < maxPerDay else { return false }
         // Enforce minimum spacing between consecutive notifications
         if let lastSent = todayLog.max() {
@@ -28,7 +33,7 @@ final class FrequencyCapManager {
 
     /// Number of notifications sent today
     func notificationsSentToday() -> Int {
-        loadLog().filter { Calendar.current.isDateInToday($0) }.count
+        loadLog().filter { Self.cal.isDateInToday($0) }.count
     }
 
     /// Reset the daily counter (called at midnight)

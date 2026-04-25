@@ -29,7 +29,7 @@ struct SleepCard: View {
                                 .background(.indigo, in: Circle())
 
                             VStack(alignment: .leading, spacing: DS.space1) {
-                                Text("Last Night's Sleep")
+                                Text(Copy.Home.Cards.lastNightsSleep)
                                     .font(DS.Typography.calloutSemibold)
                                     .foregroundStyle(AppColour.textSecondary)
                                     .textCase(.uppercase)

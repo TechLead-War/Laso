@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-04-25_13-02-53_test-states",
+  "device": "iPhone 17 Pro Max",
+  "device_resolution": "1320x2868",
+  "theme": "dark",
+  "mock_profile": "PremiumShowcase",
+  "values": {
+    "name": "Alex Taylor",
+    "overall_score": 92,
+    "sleep_score": 92,
+    "activity_score": 94,
+    "recovery_green_score": 87,
+    "hrv_ms": 62,
+    "rhr_bpm": 54,
+    "vo2_max": 50,
+    "sleep_hours": 7.6,
+    "sleep_streak_days": 12,
+    "steps_average": 11800,
+    "active_calories_kcal": 600,
+    "exercise_minutes_daily": 52,
+    "workout_streak_weeks": 8,
+    "mindful_minutes_daily": 18,
+    "subscribed": true
+  },
+  "angles": [
+    {
+      "id": "05_states",
+      "title": "First launch & state moments",
+      "description": "The moments outside steady-state usage \u2014 onboarding, the medical disclaimer, the paywall, the Pro lock overlay, and the empty Connect-Apple-Health state.",
+      "shots": [
+        {
+          "file": "05_states/01_onboarding.png",
+          "screen": "Onboarding (Pulse)",
+          "caption": "First-launch welcome with calibration story"
+        },
+        {
+          "file": "05_states/03_paywall.png",
+          "screen": "Paywall",
+          "caption": "Pro upgrade with trial messaging"
+        }
+      ]
+    }
+  ]
+}

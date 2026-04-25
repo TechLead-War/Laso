@@ -5,6 +5,27 @@ struct TrendAnalyzer {
     /// Canonical period used by Home "Your Trends" and default metric detail.
     static let homeTrendDays = 30
 
+    // MARK: - Rate-of-change WoW % thresholds (named so reviewers can audit them)
+    /// Above this WoW % change, the trend is classified as `.rapid`.
+    static let rapidWoWPercent: Double = 15
+    /// Above this WoW % change (and below `rapidWoWPercent`), the trend is `.moderate`.
+    static let moderateWoWPercent: Double = 8
+    /// Above this WoW % change (and below `moderateWoWPercent`), the trend is `.gradual`.
+    static let gradualWoWPercent: Double = 2
+    /// % difference between 30d and 365d moving averages above which the long-term trend tips improving/declining.
+    static let longTermTrendPercent: Double = 3
+
+    // MARK: - Inflection slope thresholds (named so reviewers can audit them)
+
+    /// Absolute slope (units per day) below which the recent/older slope is treated as effectively flat.
+    static let inflectionSlopeEpsilon: Double = 0.01
+    /// Multiplier on the older slope above which the recent slope counts as "accelerating".
+    static let acceleratingSlopeRatio: Double = 1.5
+    /// Multiplier on the older slope below which the recent slope counts as "decelerating".
+    static let deceleratingSlopeRatio: Double = 0.5
+    /// % WoW agreement threshold required (alongside slope) before classifying a clear improving/declining direction.
+    static let directionWoWConfirmPercent: Double = 2
+
     struct TrendResult {
         let direction: TrendDirection
         let slope: Double              // Rate of change per day
@@ -19,9 +40,9 @@ struct TrendAnalyzer {
         /// Rate-of-change classification: how fast is the metric changing?
         var rateOfChange: RateOfChange {
             let absWoW = abs(weekOverWeekChange)
-            if absWoW > 15 { return .rapid }
-            if absWoW > 8 { return .moderate }
-            if absWoW > 2 { return .gradual }
+            if absWoW > TrendAnalyzer.rapidWoWPercent { return .rapid }
+            if absWoW > TrendAnalyzer.moderateWoWPercent { return .moderate }
+            if absWoW > TrendAnalyzer.gradualWoWPercent { return .gradual }
             return .negligible
         }
 
@@ -29,8 +50,8 @@ struct TrendAnalyzer {
         var longTermTrend: TrendDirection {
             guard movingAverage365d > 0 else { return .stable }
             let diff = (movingAverage30d - movingAverage365d) / movingAverage365d * 100
-            if diff > 3 { return .improving }
-            if diff < -3 { return .declining }
+            if diff > TrendAnalyzer.longTermTrendPercent { return .improving }
+            if diff < -TrendAnalyzer.longTermTrendPercent { return .declining }
             return .stable
         }
     }
@@ -235,13 +256,14 @@ struct TrendAnalyzer {
             let effectiveRecent = higherIsBetter ? recentSlope : -recentSlope
             let effectiveOlder = higherIsBetter ? olderSlope : -olderSlope
 
-            if effectiveRecent > 0.01 && effectiveOlder < -0.01 {
+            let eps = TrendAnalyzer.inflectionSlopeEpsilon
+            if effectiveRecent > eps && effectiveOlder < -eps {
                 inflection = .reversing
-            } else if effectiveRecent < -0.01 && effectiveOlder > 0.01 {
+            } else if effectiveRecent < -eps && effectiveOlder > eps {
                 inflection = .reversing
-            } else if abs(effectiveRecent) > abs(effectiveOlder) * 1.5 && abs(effectiveRecent) > 0.01 {
+            } else if abs(effectiveRecent) > abs(effectiveOlder) * TrendAnalyzer.acceleratingSlopeRatio && abs(effectiveRecent) > eps {
                 inflection = .accelerating
-            } else if abs(effectiveRecent) < abs(effectiveOlder) * 0.5 && abs(effectiveOlder) > 0.01 {
+            } else if abs(effectiveRecent) < abs(effectiveOlder) * TrendAnalyzer.deceleratingSlopeRatio && abs(effectiveOlder) > eps {
                 inflection = .decelerating
             } else {
                 inflection = .steady
@@ -271,9 +293,9 @@ struct TrendAnalyzer {
         let effectiveWoW = higherIsBetter ? weekOverWeekChange : -weekOverWeekChange
 
         // Both slope and week-over-week should agree for a clear trend
-        if effectiveSlope > threshold && effectiveWoW > 2 {
+        if effectiveSlope > threshold && effectiveWoW > directionWoWConfirmPercent {
             return .improving
-        } else if effectiveSlope < -threshold && effectiveWoW < -2 {
+        } else if effectiveSlope < -threshold && effectiveWoW < -directionWoWConfirmPercent {
             return .declining
         } else {
             return .stable

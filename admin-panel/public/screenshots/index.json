@@ -1,0 +1,998 @@
+{
+  "runs": [
+    {
+      "timestamp": "2026-04-25_14-01-30",
+      "meta": {
+        "timestamp": "2026-04-25_14-01-30",
+        "device": "iPhone 17 Pro Max",
+        "device_resolution": "1320x2868",
+        "theme": "dark",
+        "mock_profile": "PremiumShowcase",
+        "values": {
+          "name": "Alex Taylor",
+          "overall_score": 92,
+          "sleep_score": 92,
+          "activity_score": 94,
+          "recovery_green_score": 87,
+          "hrv_ms": 62,
+          "rhr_bpm": 54,
+          "vo2_max": 50,
+          "sleep_hours": 7.6,
+          "sleep_streak_days": 12,
+          "steps_average": 11800,
+          "active_calories_kcal": 600,
+          "exercise_minutes_daily": 52,
+          "workout_streak_weeks": 8,
+          "mindful_minutes_daily": 18,
+          "subscribed": true
+        },
+        "angles": [
+          {
+            "id": "01_onboarding",
+            "title": "Onboarding",
+            "description": "Full 6-step first-launch flow \u2014 Pulse welcome, profile capture, Apple Health connect, priorities, mirror moment, 7-day promise.",
+            "shots": [
+              {
+                "file": "01_onboarding/01_pulse.png",
+                "screen": "Onboarding \u00b7 Pulse",
+                "caption": "First-launch welcome with calibration story"
+              },
+              {
+                "file": "01_onboarding/02_profile.png",
+                "screen": "Onboarding \u00b7 Profile",
+                "caption": "Age, gender capture step"
+              },
+              {
+                "file": "01_onboarding/03_connect.png",
+                "screen": "Onboarding \u00b7 Connect Health",
+                "caption": "Apple Health authorization step"
+              },
+              {
+                "file": "01_onboarding/04_priorities.png",
+                "screen": "Onboarding \u00b7 Priorities",
+                "caption": "Health focus area selection"
+              },
+              {
+                "file": "01_onboarding/05_mirror.png",
+                "screen": "Onboarding \u00b7 Mirror Moment",
+                "caption": "Calibration discovery reveal"
+              },
+              {
+                "file": "01_onboarding/06_promise.png",
+                "screen": "Onboarding \u00b7 7-Day Promise",
+                "caption": "Final hand-off to the main app"
+              }
+            ]
+          },
+          {
+            "id": "02_today",
+            "title": "Today",
+            "description": "The Home tab and its primary daily surfaces \u2014 recovery, morning check-in, today's action, weekly review, health state timeline.",
+            "shots": [
+              {
+                "file": "02_today/01_home.png",
+                "screen": "Home dashboard",
+                "caption": "Recovery + daily narrative"
+              },
+              {
+                "file": "02_today/02_home_morning.png",
+                "screen": "Home with morning check-in",
+                "caption": "Coach greeting + today's plan"
+              },
+              {
+                "file": "02_today/03_todays_action.png",
+                "screen": "Today's Action detail",
+                "caption": "Single contextual action with reasoning"
+              },
+              {
+                "file": "02_today/04_weekly_review.png",
+                "screen": "Weekly Review",
+                "caption": "Score delta + wins of the week"
+              },
+              {
+                "file": "02_today/05_health_state.png",
+                "screen": "Health State Timeline",
+                "caption": "Optimal days dominate the calendar"
+              }
+            ]
+          },
+          {
+            "id": "03_sleep",
+            "title": "Sleep",
+            "description": "Sleep Coach detail \u2014 debt, history, tips, bedtime anchor.",
+            "shots": [
+              {
+                "file": "03_sleep/01_sleep_coach.png",
+                "screen": "Sleep Coach",
+                "caption": "Debt cleared, 14-day chart healthy"
+              }
+            ]
+          },
+          {
+            "id": "04_activity",
+            "title": "Activity & Strain",
+            "description": "Real-time and training-load surfaces \u2014 Live tab, strain, stress.",
+            "shots": [
+              {
+                "file": "04_activity/01_live_tab.png",
+                "screen": "Live tab",
+                "caption": "HR, HRV, SpO2, zones streaming"
+              },
+              {
+                "file": "04_activity/02_strain.png",
+                "screen": "Strain detail",
+                "caption": "0 to 21 ring with HR zone breakdown"
+              },
+              {
+                "file": "04_activity/03_stress.png",
+                "screen": "Stress Monitor",
+                "caption": "Arc gauge + drivers + weekly comparison"
+              }
+            ]
+          },
+          {
+            "id": "05_recovery",
+            "title": "Recovery & Vitality",
+            "description": "Slow-moving vitals \u2014 biological age, brain readiness, cycle phase.",
+            "shots": [
+              {
+                "file": "05_recovery/01_vitality.png",
+                "screen": "Vitality",
+                "caption": "High score with trend climbing"
+              },
+              {
+                "file": "05_recovery/02_brain_health.png",
+                "screen": "Brain Health",
+                "caption": "Score, 7-day trend, readiness factors"
+              },
+              {
+                "file": "05_recovery/03_cycle.png",
+                "screen": "Cycle Detail",
+                "caption": "Phase tracking with hormonal context"
+              }
+            ]
+          },
+          {
+            "id": "06_insights",
+            "title": "Insights & Intelligence",
+            "description": "Generated insight surfaces \u2014 ranked insights, correlations, ask-your-data, journal.",
+            "shots": [
+              {
+                "file": "06_insights/01_insights.png",
+                "screen": "Insights",
+                "caption": "Ranked, actionable insight cards"
+              },
+              {
+                "file": "06_insights/02_correlations.png",
+                "screen": "Correlations",
+                "caption": "Causal chains and compound insights"
+              },
+              {
+                "file": "06_insights/03_ask_your_data.png",
+                "screen": "Ask Your Data",
+                "caption": "Natural-language query of your health"
+              },
+              {
+                "file": "06_insights/04_journal.png",
+                "screen": "Journal Entry",
+                "caption": "Reflective journaling prompt"
+              }
+            ]
+          },
+          {
+            "id": "07_settings",
+            "title": "Settings",
+            "description": "Settings tab and its deep-link sub-pages \u2014 Notifications, Devices, Siri & Shortcuts.",
+            "shots": [
+              {
+                "file": "07_settings/01_root.png",
+                "screen": "Settings (root)",
+                "caption": "Profile, preferences, and data controls"
+              },
+              {
+                "file": "07_settings/02_notifications.png",
+                "screen": "Notifications Settings",
+                "caption": "Daily summary, alerts, watch reminders"
+              },
+              {
+                "file": "07_settings/03_devices.png",
+                "screen": "Connected Devices",
+                "caption": "Active sources, scanning, device status"
+              },
+              {
+                "file": "07_settings/04_siri.png",
+                "screen": "Siri & Shortcuts",
+                "caption": "Voice shortcut setup hints"
+              }
+            ]
+          },
+          {
+            "id": "08_states",
+            "title": "Edge cases & states",
+            "description": "Transient overlays, paywalls, empty states, and breadth screens \u2014 disclaimer, paywall, Pro lock, connect-health empty, achievements, Explore tab.",
+            "shots": [
+              {
+                "file": "08_states/01_disclaimer.png",
+                "screen": "Medical Disclaimer",
+                "caption": "Pre-acknowledgement legal sheet"
+              },
+              {
+                "file": "08_states/02_paywall.png",
+                "screen": "Paywall",
+                "caption": "Pro upgrade with trial messaging"
+              },
+              {
+                "file": "08_states/03_pro_lock.png",
+                "screen": "Pro Feature Overlay (Live)",
+                "caption": "Free user hitting a Pro-only tab"
+              },
+              {
+                "file": "08_states/04_connect_health_empty.png",
+                "screen": "Connect Apple Health (empty)",
+                "caption": "Home empty state when no watch / no data"
+              },
+              {
+                "file": "08_states/05_achievements.png",
+                "screen": "Achievements",
+                "caption": "Streaks, milestones and unlocked tiers"
+              },
+              {
+                "file": "08_states/06_explore_tab.png",
+                "screen": "Explore tab",
+                "caption": "Trends, categories and historical depth"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-04-25_13-41-13_test-clean",
+      "meta": {
+        "timestamp": "2026-04-25_13-41-13_test-clean",
+        "device": "iPhone 17 Pro Max",
+        "device_resolution": "1320x2868",
+        "theme": "dark",
+        "mock_profile": "PremiumShowcase",
+        "values": {
+          "name": "Alex Taylor",
+          "overall_score": 92,
+          "sleep_score": 92,
+          "activity_score": 94,
+          "recovery_green_score": 87,
+          "hrv_ms": 62,
+          "rhr_bpm": 54,
+          "vo2_max": 50,
+          "sleep_hours": 7.6,
+          "sleep_streak_days": 12,
+          "steps_average": 11800,
+          "active_calories_kcal": 600,
+          "exercise_minutes_daily": 52,
+          "workout_streak_weeks": 8,
+          "mindful_minutes_daily": 18,
+          "subscribed": true
+        },
+        "angles": [
+          {
+            "id": "01_onboarding",
+            "title": "Onboarding",
+            "description": "Full 6-step first-launch flow \u2014 Pulse welcome, profile capture, Apple Health connect, priorities, mirror moment, 7-day promise.",
+            "shots": [
+              {
+                "file": "01_onboarding/01_pulse.png",
+                "screen": "Onboarding \u00b7 Pulse",
+                "caption": "First-launch welcome with calibration story"
+              }
+            ]
+          },
+          {
+            "id": "02_today",
+            "title": "Today",
+            "description": "The Home tab and its primary daily surfaces \u2014 recovery, morning check-in, today's action, weekly review, health state timeline.",
+            "shots": [
+              {
+                "file": "02_today/01_home.png",
+                "screen": "Home dashboard",
+                "caption": "Recovery + daily narrative"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-04-25_13-24-43_test-reorg",
+      "meta": {
+        "timestamp": "2026-04-25_13-24-43_test-reorg",
+        "device": "iPhone 17 Pro Max",
+        "device_resolution": "1320x2868",
+        "theme": "dark",
+        "mock_profile": "PremiumShowcase",
+        "values": {
+          "name": "Alex Taylor",
+          "overall_score": 92,
+          "sleep_score": 92,
+          "activity_score": 94,
+          "recovery_green_score": 87,
+          "hrv_ms": 62,
+          "rhr_bpm": 54,
+          "vo2_max": 50,
+          "sleep_hours": 7.6,
+          "sleep_streak_days": 12,
+          "steps_average": 11800,
+          "active_calories_kcal": 600,
+          "exercise_minutes_daily": 52,
+          "workout_streak_weeks": 8,
+          "mindful_minutes_daily": 18,
+          "subscribed": true
+        },
+        "angles": [
+          {
+            "id": "06_settings",
+            "title": "Settings",
+            "description": "Settings tab and its deep-link sub-pages \u2014 Notifications, Devices, Siri & Shortcuts.",
+            "shots": [
+              {
+                "file": "06_settings/02_notifications.png",
+                "screen": "Notifications Settings",
+                "caption": "Daily summary, alerts, watch reminders"
+              }
+            ]
+          },
+          {
+            "id": "07_onboarding",
+            "title": "Onboarding",
+            "description": "Full 6-step first-launch flow \u2014 Pulse welcome, profile capture, Apple Health connect, priorities, mirror moment, 7-day promise.",
+            "shots": [
+              {
+                "file": "07_onboarding/03_connect.png",
+                "screen": "Onboarding \u00b7 Connect Health",
+                "caption": "Apple Health authorization step"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-04-25_13-15-00_test-rest3",
+      "meta": {
+        "timestamp": "2026-04-25_13-15-00_test-rest3",
+        "device": "iPhone 17 Pro Max",
+        "device_resolution": "1320x2868",
+        "theme": "dark",
+        "mock_profile": "PremiumShowcase",
+        "values": {
+          "name": "Alex Taylor",
+          "overall_score": 92,
+          "sleep_score": 92,
+          "activity_score": 94,
+          "recovery_green_score": 87,
+          "hrv_ms": 62,
+          "rhr_bpm": 54,
+          "vo2_max": 50,
+          "sleep_hours": 7.6,
+          "sleep_streak_days": 12,
+          "steps_average": 11800,
+          "active_calories_kcal": 600,
+          "exercise_minutes_daily": 52,
+          "workout_streak_weeks": 8,
+          "mindful_minutes_daily": 18,
+          "subscribed": true
+        },
+        "angles": [
+          {
+            "id": "04_lifestyle",
+            "title": "Lifestyle & engagement",
+            "description": "Breadth focus. The places users live in long-term \u2014 Explore tab, Settings tab + sub-pages, achievements.",
+            "shots": [
+              {
+                "file": "04_lifestyle/06_settings_siri.png",
+                "screen": "Siri & Shortcuts",
+                "caption": "Voice shortcut setup hints"
+              }
+            ]
+          },
+          {
+            "id": "05_states",
+            "title": "First launch & state moments",
+            "description": "The moments outside steady-state usage \u2014 full 6-step onboarding, the medical disclaimer, the paywall, the Pro lock overlay, and the empty Connect-Apple-Health state.",
+            "shots": [
+              {
+                "file": "05_states/08_onboarding_priority.png",
+                "screen": "Onboarding \u00b7 Priorities",
+                "caption": "Health focus area selection"
+              },
+              {
+                "file": "05_states/09_onboarding_mirror.png",
+                "screen": "Onboarding \u00b7 Mirror Moment",
+                "caption": "Calibration discovery reveal"
+              },
+              {
+                "file": "05_states/10_onboarding_promise.png",
+                "screen": "Onboarding \u00b7 7-Day Promise",
+                "caption": "Final hand-off to the main app"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-04-25_13-13-58_test-rest2",
+      "meta": null
+    },
+    {
+      "timestamp": "2026-04-25_13-10-49_test-rest",
+      "meta": null
+    },
+    {
+      "timestamp": "2026-04-25_13-08-57_test-deep",
+      "meta": {
+        "timestamp": "2026-04-25_13-08-57_test-deep",
+        "device": "iPhone 17 Pro Max",
+        "device_resolution": "1320x2868",
+        "theme": "dark",
+        "mock_profile": "PremiumShowcase",
+        "values": {
+          "name": "Alex Taylor",
+          "overall_score": 92,
+          "sleep_score": 92,
+          "activity_score": 94,
+          "recovery_green_score": 87,
+          "hrv_ms": 62,
+          "rhr_bpm": 54,
+          "vo2_max": 50,
+          "sleep_hours": 7.6,
+          "sleep_streak_days": 12,
+          "steps_average": 11800,
+          "active_calories_kcal": 600,
+          "exercise_minutes_daily": 52,
+          "workout_streak_weeks": 8,
+          "mindful_minutes_daily": 18,
+          "subscribed": true
+        },
+        "angles": [
+          {
+            "id": "04_lifestyle",
+            "title": "Lifestyle & engagement",
+            "description": "Breadth focus. The places users live in long-term \u2014 Explore tab, Settings tab + sub-pages, achievements.",
+            "shots": [
+              {
+                "file": "04_lifestyle/04_settings_notifications.png",
+                "screen": "Notifications Settings",
+                "caption": "Daily summary, alerts, watch reminders"
+              },
+              {
+                "file": "04_lifestyle/05_settings_devices.png",
+                "screen": "Connected Devices",
+                "caption": "Active sources, scanning, device status"
+              }
+            ]
+          },
+          {
+            "id": "05_states",
+            "title": "First launch & state moments",
+            "description": "The moments outside steady-state usage \u2014 full 6-step onboarding, the medical disclaimer, the paywall, the Pro lock overlay, and the empty Connect-Apple-Health state.",
+            "shots": [
+              {
+                "file": "05_states/06_onboarding_profile.png",
+                "screen": "Onboarding \u00b7 Profile",
+                "caption": "Age, gender capture step"
+              },
+              {
+                "file": "05_states/07_onboarding_connect.png",
+                "screen": "Onboarding \u00b7 Connect Health",
+                "caption": "Apple Health authorization step"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-04-25_13-02-53_test-states",
+      "meta": {
+        "timestamp": "2026-04-25_13-02-53_test-states",
+        "device": "iPhone 17 Pro Max",
+        "device_resolution": "1320x2868",
+        "theme": "dark",
+        "mock_profile": "PremiumShowcase",
+        "values": {
+          "name": "Alex Taylor",
+          "overall_score": 92,
+          "sleep_score": 92,
+          "activity_score": 94,
+          "recovery_green_score": 87,
+          "hrv_ms": 62,
+          "rhr_bpm": 54,
+          "vo2_max": 50,
+          "sleep_hours": 7.6,
+          "sleep_streak_days": 12,
+          "steps_average": 11800,
+          "active_calories_kcal": 600,
+          "exercise_minutes_daily": 52,
+          "workout_streak_weeks": 8,
+          "mindful_minutes_daily": 18,
+          "subscribed": true
+        },
+        "angles": [
+          {
+            "id": "05_states",
+            "title": "First launch & state moments",
+            "description": "The moments outside steady-state usage \u2014 onboarding, the medical disclaimer, the paywall, the Pro lock overlay, and the empty Connect-Apple-Health state.",
+            "shots": [
+              {
+                "file": "05_states/01_onboarding.png",
+                "screen": "Onboarding (Pulse)",
+                "caption": "First-launch welcome with calibration story"
+              },
+              {
+                "file": "05_states/03_paywall.png",
+                "screen": "Paywall",
+                "caption": "Pro upgrade with trial messaging"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-04-25_12-56-01_e2e",
+      "meta": {
+        "timestamp": "2026-04-25_12-56-01_e2e",
+        "device": "iPhone 17 Pro Max",
+        "device_resolution": "1320x2868",
+        "theme": "dark",
+        "mock_profile": "PremiumShowcase",
+        "values": {
+          "name": "Alex Taylor",
+          "overall_score": 92,
+          "sleep_score": 92,
+          "activity_score": 94,
+          "recovery_green_score": 87,
+          "hrv_ms": 62,
+          "rhr_bpm": 54,
+          "vo2_max": 50,
+          "sleep_hours": 7.6,
+          "sleep_streak_days": 12,
+          "steps_average": 11800,
+          "active_calories_kcal": 600,
+          "exercise_minutes_daily": 52,
+          "workout_streak_weeks": 8,
+          "mindful_minutes_daily": 18,
+          "subscribed": true
+        },
+        "angles": [
+          {
+            "id": "04_lifestyle",
+            "title": "Lifestyle & engagement",
+            "description": "Breadth focus. The places users live in long-term \u2014 Explore tab, Settings tab, achievements, and the journal flow.",
+            "shots": [
+              {
+                "file": "04_lifestyle/01_explore.png",
+                "screen": "Explore tab",
+                "caption": "Trends, categories and historical depth"
+              },
+              {
+                "file": "04_lifestyle/02_settings.png",
+                "screen": "Settings tab",
+                "caption": "Profile, preferences, and data controls"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-04-25_12-53-32_test-parallel2",
+      "meta": {
+        "timestamp": "2026-04-25_12-53-32_test-parallel2",
+        "device": "iPhone 17 Pro Max",
+        "device_resolution": "1320x2868",
+        "theme": "dark",
+        "mock_profile": "PremiumShowcase",
+        "values": {
+          "name": "Alex Taylor",
+          "overall_score": 92,
+          "sleep_score": 92,
+          "activity_score": 94,
+          "recovery_green_score": 87,
+          "hrv_ms": 62,
+          "rhr_bpm": 54,
+          "vo2_max": 50,
+          "sleep_hours": 7.6,
+          "sleep_streak_days": 12,
+          "steps_average": 11800,
+          "active_calories_kcal": 600,
+          "exercise_minutes_daily": 52,
+          "workout_streak_weeks": 8,
+          "mindful_minutes_daily": 18,
+          "subscribed": true
+        },
+        "angles": [
+          {
+            "id": "01_thriving",
+            "title": "Wake up thriving",
+            "description": "Outcome / transformation focus. Sells the result: recovery climbing, sleep debt clearing, weekly wins stacking up.",
+            "shots": [
+              {
+                "file": "01_thriving/01_home.png",
+                "screen": "Home dashboard",
+                "caption": "Recovery 87 GREEN with daily narrative"
+              },
+              {
+                "file": "01_thriving/02_sleep.png",
+                "screen": "Sleep Coach",
+                "caption": "Debt cleared, 14-day chart healthy"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-04-25_12-52-57_test-parallel",
+      "meta": null
+    },
+    {
+      "timestamp": "2026-04-25_12-52-26_test-lifestyle",
+      "meta": {
+        "timestamp": "2026-04-25_12-52-26_test-lifestyle",
+        "device": "iPhone 17 Pro Max",
+        "device_resolution": "1320x2868",
+        "theme": "dark",
+        "mock_profile": "PremiumShowcase",
+        "values": {
+          "name": "Alex Taylor",
+          "overall_score": 92,
+          "sleep_score": 92,
+          "activity_score": 94,
+          "recovery_green_score": 87,
+          "hrv_ms": 62,
+          "rhr_bpm": 54,
+          "vo2_max": 50,
+          "sleep_hours": 7.6,
+          "sleep_streak_days": 12,
+          "steps_average": 11800,
+          "active_calories_kcal": 600,
+          "exercise_minutes_daily": 52,
+          "workout_streak_weeks": 8,
+          "mindful_minutes_daily": 18,
+          "subscribed": true
+        },
+        "angles": [
+          {
+            "id": "04_lifestyle",
+            "title": "Lifestyle & engagement",
+            "description": "Breadth focus. The places users live in long-term \u2014 Explore tab, Settings tab, achievements, and the journal flow.",
+            "shots": [
+              {
+                "file": "04_lifestyle/01_explore.png",
+                "screen": "Explore tab",
+                "caption": "Trends, categories and historical depth"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-04-25_12-38-50",
+      "meta": {
+        "timestamp": "2026-04-25_12-38-50",
+        "device": "iPhone 17 Pro Max",
+        "device_resolution": "1320x2868",
+        "theme": "dark",
+        "mock_profile": "PremiumShowcase",
+        "values": {
+          "name": "Alex Taylor",
+          "overall_score": 92,
+          "sleep_score": 92,
+          "activity_score": 94,
+          "recovery_green_score": 87,
+          "hrv_ms": 62,
+          "rhr_bpm": 54,
+          "vo2_max": 50,
+          "sleep_hours": 7.6,
+          "sleep_streak_days": 12,
+          "steps_average": 11800,
+          "active_calories_kcal": 600,
+          "exercise_minutes_daily": 52,
+          "workout_streak_weeks": 8,
+          "mindful_minutes_daily": 18,
+          "subscribed": true
+        },
+        "angles": [
+          {
+            "id": "01_thriving",
+            "title": "Wake up thriving",
+            "description": "Outcome / transformation focus. Sells the result: recovery climbing, sleep debt clearing, weekly wins stacking up.",
+            "shots": [
+              {
+                "file": "01_thriving/01_home.png",
+                "screen": "Home dashboard",
+                "caption": "Recovery 87 GREEN with daily narrative"
+              },
+              {
+                "file": "01_thriving/02_sleep.png",
+                "screen": "Sleep Coach",
+                "caption": "Debt cleared, 14-day chart healthy"
+              },
+              {
+                "file": "01_thriving/03_weekly.png",
+                "screen": "Weekly Review",
+                "caption": "Score delta + wins of the week"
+              },
+              {
+                "file": "01_thriving/04_state.png",
+                "screen": "Health State Timeline",
+                "caption": "Optimal days dominate the calendar"
+              },
+              {
+                "file": "01_thriving/05_vitality.png",
+                "screen": "Vitality",
+                "caption": "High score with trend climbing"
+              }
+            ]
+          },
+          {
+            "id": "02_coach",
+            "title": "Your sleep coach in your pocket",
+            "description": "Companion focus. Sells the personal AI: morning greeting, today's plan, ranked insights, ask anything.",
+            "shots": [
+              {
+                "file": "02_coach/01_home.png",
+                "screen": "Home with morning check-in",
+                "caption": "Coach greeting + today's plan"
+              },
+              {
+                "file": "02_coach/02_action.png",
+                "screen": "Today's Action detail",
+                "caption": "Single contextual action with reasoning"
+              },
+              {
+                "file": "02_coach/03_sleep.png",
+                "screen": "Sleep Coach",
+                "caption": "Personalized tips and bedtime anchor"
+              },
+              {
+                "file": "02_coach/04_insights.png",
+                "screen": "Insights",
+                "caption": "Ranked, actionable insight cards"
+              },
+              {
+                "file": "02_coach/05_ask.png",
+                "screen": "Ask Your Data",
+                "caption": "Natural-language query of your health"
+              }
+            ]
+          },
+          {
+            "id": "03_clinical",
+            "title": "Clinical clarity, beautifully simple",
+            "description": "Depth focus. Sells the intelligence: real-time vitals, training load, stress drivers, brain health, correlations.",
+            "shots": [
+              {
+                "file": "03_clinical/01_live.png",
+                "screen": "Live tab",
+                "caption": "HR, HRV, SpO2, zones streaming"
+              },
+              {
+                "file": "03_clinical/02_strain.png",
+                "screen": "Strain detail",
+                "caption": "0 to 21 ring with HR zone breakdown"
+              },
+              {
+                "file": "03_clinical/03_stress.png",
+                "screen": "Stress Monitor",
+                "caption": "Arc gauge + drivers + weekly comparison"
+              },
+              {
+                "file": "03_clinical/04_brain.png",
+                "screen": "Brain Health",
+                "caption": "Score, 7-day trend, readiness factors"
+              },
+              {
+                "file": "03_clinical/05_correlations.png",
+                "screen": "Correlations",
+                "caption": "Causal chains and compound insights"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-04-25_12-37-35",
+      "meta": null
+    },
+    {
+      "timestamp": "2026-04-25_12-37-18",
+      "meta": null
+    },
+    {
+      "timestamp": "2026-04-25_12-36-25",
+      "meta": null
+    },
+    {
+      "timestamp": "2026-04-25_11-51-07_smoketest2",
+      "meta": {
+        "timestamp": "2026-04-25_11-51-07_smoketest2",
+        "device": "iPhone 17 Pro Max",
+        "device_resolution": "1320x2868",
+        "theme": "dark",
+        "mock_profile": "PremiumShowcase",
+        "values": {
+          "name": "Sarah K",
+          "overall_score": 88,
+          "sleep_score": 92,
+          "activity_score": 94,
+          "recovery_green_score": 87,
+          "hrv_ms": 62,
+          "rhr_bpm": 54,
+          "vo2_max": 50,
+          "sleep_hours": 7.6,
+          "sleep_streak_days": 12,
+          "steps_average": 11800,
+          "active_calories_kcal": 600,
+          "exercise_minutes_daily": 52,
+          "workout_streak_weeks": 8,
+          "mindful_minutes_daily": 18,
+          "subscribed": true
+        },
+        "angles": [
+          {
+            "id": "01_thriving",
+            "title": "Wake up thriving",
+            "description": "Outcome / transformation focus. Sells the result: recovery climbing, sleep debt clearing, weekly wins stacking up.",
+            "shots": [
+              {
+                "file": "01_thriving/05_vitality.png",
+                "screen": "Vitality",
+                "caption": "High score with trend climbing"
+              }
+            ]
+          },
+          {
+            "id": "03_clinical",
+            "title": "Clinical clarity, beautifully simple",
+            "description": "Depth focus. Sells the intelligence: real-time vitals, training load, stress drivers, brain health, correlations.",
+            "shots": [
+              {
+                "file": "03_clinical/02_strain.png",
+                "screen": "Strain detail",
+                "caption": "0 to 21 ring with HR zone breakdown"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-04-25_11-30-05",
+      "meta": {
+        "timestamp": "2026-04-25_11-30-05",
+        "device": "iPhone 17 Pro Max",
+        "device_resolution": "1320x2868",
+        "theme": "dark",
+        "mock_profile": "PremiumShowcase",
+        "values": {
+          "name": "Alex Taylor",
+          "overall_score": 92,
+          "recovery_green_score": 87,
+          "hrv_ms": 62,
+          "rhr_bpm": 54,
+          "vo2_max": 50,
+          "sleep_hours": 7.6,
+          "sleep_streak_days": 12,
+          "steps_average": 11800,
+          "active_calories_kcal": 600,
+          "exercise_minutes_daily": 52,
+          "workout_streak_weeks": 8,
+          "mindful_minutes_daily": 18,
+          "subscribed": true
+        },
+        "angles": [
+          {
+            "id": "01_thriving",
+            "title": "Wake up thriving",
+            "description": "Outcome / transformation focus. Sells the result: recovery climbing, sleep debt clearing, weekly wins stacking up.",
+            "shots": [
+              {
+                "file": "01_thriving/01_home.png",
+                "screen": "Home dashboard",
+                "caption": "Recovery 87 GREEN with daily narrative"
+              },
+              {
+                "file": "01_thriving/02_sleep.png",
+                "screen": "Sleep Coach",
+                "caption": "Debt cleared, 14-day chart healthy"
+              },
+              {
+                "file": "01_thriving/03_weekly.png",
+                "screen": "Weekly Review",
+                "caption": "Score delta + wins of the week"
+              },
+              {
+                "file": "01_thriving/04_state.png",
+                "screen": "Health State Timeline",
+                "caption": "Optimal days dominate the calendar"
+              },
+              {
+                "file": "01_thriving/05_vitality.png",
+                "screen": "Vitality",
+                "caption": "High score with trend climbing"
+              }
+            ]
+          },
+          {
+            "id": "02_coach",
+            "title": "Your sleep coach in your pocket",
+            "description": "Companion focus. Sells the personal AI: morning greeting, today's plan, ranked insights, ask anything.",
+            "shots": [
+              {
+                "file": "02_coach/01_home.png",
+                "screen": "Home with morning check-in",
+                "caption": "Coach greeting + today's plan"
+              },
+              {
+                "file": "02_coach/02_action.png",
+                "screen": "Today's Action detail",
+                "caption": "Single contextual action with reasoning"
+              },
+              {
+                "file": "02_coach/03_sleep.png",
+                "screen": "Sleep Coach",
+                "caption": "Personalized tips and bedtime anchor"
+              },
+              {
+                "file": "02_coach/04_insights.png",
+                "screen": "Insights",
+                "caption": "Ranked, actionable insight cards"
+              },
+              {
+                "file": "02_coach/05_ask.png",
+                "screen": "Ask Your Data",
+                "caption": "Natural-language query of your health"
+              }
+            ]
+          },
+          {
+            "id": "03_clinical",
+            "title": "Clinical clarity, beautifully simple",
+            "description": "Depth focus. Sells the intelligence: real-time vitals, training load, stress drivers, brain health, correlations.",
+            "shots": [
+              {
+                "file": "03_clinical/01_live.png",
+                "screen": "Live tab",
+                "caption": "HR, HRV, SpO2, zones streaming"
+              },
+              {
+                "file": "03_clinical/02_strain.png",
+                "screen": "Strain detail",
+                "caption": "0\u201321 ring with HR zone breakdown"
+              },
+              {
+                "file": "03_clinical/03_stress.png",
+                "screen": "Stress Monitor",
+                "caption": "Arc gauge + drivers + weekly comparison"
+              },
+              {
+                "file": "03_clinical/04_brain.png",
+                "screen": "Brain Health",
+                "caption": "Score, 7-day trend, readiness factors"
+              },
+              {
+                "file": "03_clinical/05_correlations.png",
+                "screen": "Correlations",
+                "caption": "Causal chains and compound insights"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "generated_at": "2026-04-25T08:37:09.505484Z"
+}

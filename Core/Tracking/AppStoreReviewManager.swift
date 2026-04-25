@@ -11,6 +11,11 @@ final class AppStoreReviewManager {
 
     private let defaults = UserDefaults.standard
 
+    /// Pass 12 BE perf: cached current calendar. `requestReviewIfEligible(...)`
+    /// is invoked from positive-moment hooks (score-up, streak milestone) and
+    /// performs a `dateComponents([.day]…)` cooldown check on every call.
+    private static let cal: Calendar = Calendar.current
+
     private enum Key {
         static let lastPromptDate = "laso.review.last_prompt_date"
         static let promptCount = "laso.review.prompt_count"
@@ -31,7 +36,7 @@ final class AppStoreReviewManager {
         guard SessionTracker.shared.totalSessions >= minSessions else { return }
 
         if let lastDate = defaults.object(forKey: Key.lastPromptDate) as? Date {
-            let daysSinceLast = Calendar.current.dateComponents([.day], from: lastDate, to: Date()).day ?? 0
+            let daysSinceLast = Self.cal.dateComponents([.day], from: lastDate, to: Date()).day ?? 0
             guard daysSinceLast >= cooldownDays else { return }
         }
 

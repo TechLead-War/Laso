@@ -53,29 +53,58 @@ struct ClinicalIntelligence {
         case severe = "Well Above Range"
     }
 
+    // MARK: - Classification thresholds (AHA/ACC 2017, ADA, standard ranges)
+
+    /// Systolic mmHg above which BP is classified as hypertensive crisis.
+    private static let bpCrisisSystolic: Double = 180
+    /// Diastolic mmHg above which BP is classified as hypertensive crisis.
+    private static let bpCrisisDiastolic: Double = 120
+    /// Systolic mmHg at/above which BP enters Stage 2 hypertension.
+    private static let bpStage2Systolic: Double = 140
+    /// Diastolic mmHg at/above which BP enters Stage 2 hypertension.
+    private static let bpStage2Diastolic: Double = 90
+    /// Systolic mmHg at/above which BP enters Stage 1 hypertension.
+    private static let bpStage1Systolic: Double = 130
+    /// Diastolic mmHg at/above which BP enters Stage 1 hypertension.
+    private static let bpStage1Diastolic: Double = 80
+    /// Systolic mmHg at/above which BP is "elevated" (when diastolic is still normal).
+    private static let bpElevatedSystolic: Double = 120
+
+    /// Fasting glucose mg/dL at/above which the value is in the diabetic range (ADA).
+    private static let glucoseDiabetic: Double = 126
+    /// Fasting glucose mg/dL at/above which the value is in the prediabetic range (ADA).
+    private static let glucosePrediabetic: Double = 100
+
+    /// Respiratory rate (breaths/min) above which is severe tachypnea.
+    private static let respiratoryRateSevere: Double = 25
+    /// Respiratory rate (breaths/min) above which is tachypnea.
+    private static let respiratoryRateTachypnea: Double = 20
+    /// Respiratory rate (breaths/min) below which is bradypnea.
+    private static let respiratoryRateBradypnea: Double = 12
+
     // MARK: - Classification (AHA/ACC 2017)
 
     /// Classify blood pressure stage from systolic and diastolic readings
     static func classifyBP(systolic: Double, diastolic: Double) -> BPStage {
-        if systolic > 180 || diastolic > 120 { return .crisis }
-        if systolic >= 140 || diastolic >= 90 { return .hypertensionS2 }
-        if systolic >= 130 || diastolic >= 80 { return .hypertensionS1 }
-        if systolic >= 120 && diastolic < 80 { return .elevated }
+        if systolic > bpCrisisSystolic || diastolic > bpCrisisDiastolic { return .crisis }
+        if systolic >= bpStage2Systolic || diastolic >= bpStage2Diastolic { return .hypertensionS2 }
+        if systolic >= bpStage1Systolic || diastolic >= bpStage1Diastolic { return .hypertensionS1 }
+        if systolic >= bpElevatedSystolic && diastolic < bpStage1Diastolic { return .elevated }
         return .normal
     }
 
     /// Classify fasting glucose stage (ADA)
     static func classifyGlucose(_ value: Double) -> GlucoseStage {
-        if value >= 126 { return .diabetic }
-        if value >= 100 { return .prediabetic }
+        if value >= glucoseDiabetic { return .diabetic }
+        if value >= glucosePrediabetic { return .prediabetic }
         return .normal
     }
 
     /// Classify respiratory rate
     static func classifyRespiratoryRate(_ value: Double) -> RespiratoryStage {
-        if value > 25 { return .severe }
-        if value > 20 { return .tachypnea }
-        if value < 12 { return .bradypnea }
+        if value > respiratoryRateSevere { return .severe }
+        if value > respiratoryRateTachypnea { return .tachypnea }
+        if value < respiratoryRateBradypnea { return .bradypnea }
         return .normal
     }
 
@@ -93,6 +122,37 @@ struct ClinicalIntelligence {
     private static let glucoseThresholds: [(threshold: Double, label: String)] = [
         (100, "Above Range"), (126, "High")
     ]
+
+    // MARK: - Analysis thresholds
+
+    /// Minimum sample count required before a clinical insight is generated.
+    private static let minSamplesForInsight: Int = 14
+    /// Maximum recent days included in the trend regression window.
+    private static let regressionWindowDays: Int = 90
+    /// Systolic mmHg/month rise above which a BP insight is surfaced.
+    private static let bpUpwardSlopeThreshold: Double = 0.5
+    /// Systolic mmHg/month rise above which the BP insight is escalated to warning.
+    private static let bpWarningSlopeThreshold: Double = 2.0
+    /// Pulse pressure (systolic - diastolic) mmHg above which it is flagged as elevated.
+    private static let elevatedPulsePressureThreshold: Double = 60
+    /// Reference healthy pulse pressure used as the baseline in the deviation calculation.
+    private static let pulsePressureBaseline: Double = 40
+    /// Minimum sample count for the pulse-pressure cross-check on each BP series.
+    private static let minSamplesForPulsePressure: Int = 30
+    /// Glucose mg/dL/month rise above which a glucose insight is surfaced.
+    private static let glucoseUpwardSlopeThreshold: Double = 0.3
+    /// Glucose mg/dL/month rise above which the glucose insight is escalated to warning.
+    private static let glucoseWarningSlopeThreshold: Double = 1.5
+    /// Respiratory rate analysis trailing window in days.
+    private static let respiratoryWindowDays: Int = 30
+    /// Reference healthy respiratory rate (breaths/min) used as the baseline in deviation calculations.
+    private static let respiratoryRateBaseline: Double = 16
+    /// Days per month used to convert per-day slopes to per-month slopes.
+    private static let daysPerMonth: Double = 30
+    /// Maximum forward projection in days when estimating time-to-threshold.
+    private static let maxProjectionDays: Int = 365
+    /// Seconds in one day used to convert TimeInterval into day-based regression x-values.
+    private static let secondsPerDay: Double = 86_400
 
     // MARK: - Insight Generation
 
@@ -130,7 +190,7 @@ struct ClinicalIntelligence {
         var insights: [Insight] = []
 
         guard let sysSeries = timeSeries[.bloodPressureSystolic],
-              sysSeries.values.count >= 14 else { return [] }
+              sysSeries.values.count >= minSamplesForInsight else { return [] }
 
         let sysValues = sysSeries.sortedSamples
         let diaSeries = timeSeries[.bloodPressureDiastolic]
@@ -138,15 +198,15 @@ struct ClinicalIntelligence {
 
         // Current stage
         guard let latestSys = sysValues.last?.value else { return [] }
-        let latestDia = diaValues.last?.value ?? 80
+        let latestDia = diaValues.last?.value ?? bpStage1Diastolic
         let currentStage = classifyBP(systolic: latestSys, diastolic: latestDia)
 
         // 90-day linear regression for systolic
-        let recent90 = Array(sysValues.suffix(90))
-        guard recent90.count >= 14 else { return [] }
+        let recent90 = Array(sysValues.suffix(regressionWindowDays))
+        guard recent90.count >= minSamplesForInsight else { return [] }
 
         let sysSlope = linearRegressionSlope(samples: recent90)
-        let slopePerMonth = sysSlope * 30
+        let slopePerMonth = sysSlope * daysPerMonth
 
         // Project days to next stage
         let daysToNextStage = projectDaysToNextThreshold(
@@ -156,8 +216,8 @@ struct ClinicalIntelligence {
         )
 
         // Generate insight if trending upward significantly
-        if slopePerMonth > 0.5 {
-            let severity: Severity = slopePerMonth > 2.0 ? .warning : .info
+        if slopePerMonth > bpUpwardSlopeThreshold {
+            let severity: Severity = slopePerMonth > bpWarningSlopeThreshold ? .warning : .info
             let nextStageInfo = daysToNextStage.map { Copy.Analysis.Clinical.projectedToReach(label: $0.label, days: $0.days) } ?? ""
 
             insights.append(Insight(
@@ -175,15 +235,15 @@ struct ClinicalIntelligence {
                 context: InsightContext(
                     slope: slopePerMonth,
                     projectedDaysToThreshold: daysToNextStage?.days,
-                    confidenceLevel: min(1.0, Double(recent90.count) / 90.0)
+                    confidenceLevel: min(1.0, Double(recent90.count) / Double(regressionWindowDays))
                 )
             ))
         }
 
         // Pulse pressure trend (systolic - diastolic)
-        if sysValues.count >= 30 && diaValues.count >= 30 {
+        if sysValues.count >= minSamplesForPulsePressure && diaValues.count >= minSamplesForPulsePressure {
             let pulsePressure = latestSys - latestDia
-            if pulsePressure > 60 {
+            if pulsePressure > elevatedPulsePressureThreshold {
                 insights.append(Insight(
                     metric: .bloodPressureSystolic,
                     title: Copy.Analysis.Clinical.elevatedPulsePressure,
@@ -192,8 +252,8 @@ struct ClinicalIntelligence {
                     severity: .warning,
                     trend: .declining,
                     currentValue: pulsePressure,
-                    baselineValue: 40,
-                    deviationPercent: ((pulsePressure - 40) / 40) * 100,
+                    baselineValue: pulsePressureBaseline,
+                    deviationPercent: ((pulsePressure - pulsePressureBaseline) / pulsePressureBaseline) * 100,
                     category: .clinicalTrajectory,
                     relatedMetrics: [.bloodPressureSystolic, .bloodPressureDiastolic]
                 ))
@@ -211,19 +271,19 @@ struct ClinicalIntelligence {
         trends: [HealthMetric: TrendAnalyzer.TrendResult]
     ) -> Insight? {
         guard let glucoseSeries = timeSeries[.bloodGlucose],
-              glucoseSeries.values.count >= 14 else { return nil }
+              glucoseSeries.values.count >= minSamplesForInsight else { return nil }
 
         let samples = glucoseSeries.sortedSamples
         guard let latest = samples.last?.value else { return nil }
 
         let currentStage = classifyGlucose(latest)
-        let recent90 = Array(samples.suffix(90))
-        guard recent90.count >= 14 else { return nil }
+        let recent90 = Array(samples.suffix(regressionWindowDays))
+        guard recent90.count >= minSamplesForInsight else { return nil }
 
         let slope = linearRegressionSlope(samples: recent90)
-        let slopePerMonth = slope * 30
+        let slopePerMonth = slope * daysPerMonth
 
-        guard slopePerMonth > 0.3 else { return nil }
+        guard slopePerMonth > glucoseUpwardSlopeThreshold else { return nil }
 
         let daysToNext = projectDaysToNextThreshold(
             currentValue: latest,
@@ -231,7 +291,7 @@ struct ClinicalIntelligence {
             thresholds: glucoseThresholds
         )
 
-        let severity: Severity = currentStage >= .prediabetic || slopePerMonth > 1.5 ? .warning : .info
+        let severity: Severity = currentStage >= .prediabetic || slopePerMonth > glucoseWarningSlopeThreshold ? .warning : .info
         let nextInfo = daysToNext.map { Copy.Analysis.Clinical.projectedToReachRange(label: $0.label, days: $0.days) } ?? ""
 
         return Insight(
@@ -248,12 +308,15 @@ struct ClinicalIntelligence {
             context: InsightContext(
                 slope: slopePerMonth,
                 projectedDaysToThreshold: daysToNext?.days,
-                confidenceLevel: min(1.0, Double(recent90.count) / 90.0)
+                confidenceLevel: min(1.0, Double(recent90.count) / Double(regressionWindowDays))
             )
         )
     }
 
     // MARK: - Respiratory Rate Analysis
+
+    /// Minimum sample count for the respiratory regression trend.
+    private static let minSamplesForRespiratoryTrend: Int = 7
 
     private static func analyzeRespiratoryRate(
         timeSeries: [HealthMetric: MetricTimeSeries],
@@ -261,7 +324,7 @@ struct ClinicalIntelligence {
         trends: [HealthMetric: TrendAnalyzer.TrendResult]
     ) -> Insight? {
         guard let rrSeries = timeSeries[.respiratoryRate],
-              rrSeries.values.count >= 14 else { return nil }
+              rrSeries.values.count >= minSamplesForInsight else { return nil }
 
         let samples = rrSeries.sortedSamples
         guard let latest = samples.last?.value else { return nil }
@@ -269,9 +332,9 @@ struct ClinicalIntelligence {
 
         guard stage != .normal else { return nil }
 
-        let recent = Array(samples.suffix(30))
-        let slope = recent.count >= 7 ? linearRegressionSlope(samples: recent) : 0
-        let slopePerMonth = slope * 30
+        let recent = Array(samples.suffix(respiratoryWindowDays))
+        let slope = recent.count >= minSamplesForRespiratoryTrend ? linearRegressionSlope(samples: recent) : 0
+        let slopePerMonth = slope * daysPerMonth
 
         return Insight(
             metric: .respiratoryRate,
@@ -281,12 +344,12 @@ struct ClinicalIntelligence {
             severity: stage == .severe ? .critical : .warning,
             trend: slopePerMonth > 0 ? .declining : .stable,
             currentValue: latest,
-            baselineValue: baselines[.respiratoryRate]?.mean ?? 16,
-            deviationPercent: ((latest - 16) / 16) * 100,
+            baselineValue: baselines[.respiratoryRate]?.mean ?? respiratoryRateBaseline,
+            deviationPercent: ((latest - respiratoryRateBaseline) / respiratoryRateBaseline) * 100,
             category: .clinicalTrajectory,
             context: InsightContext(
                 slope: slopePerMonth,
-                confidenceLevel: min(1.0, Double(recent.count) / 30.0)
+                confidenceLevel: min(1.0, Double(recent.count) / Double(respiratoryWindowDays))
             )
         )
     }
@@ -295,11 +358,10 @@ struct ClinicalIntelligence {
 
     /// Simple linear regression slope (value per day)
     private static func linearRegressionSlope(samples: [MetricSample]) -> Double {
-        guard samples.count >= 2 else { return 0 }
+        guard samples.count >= 2, let firstDate = samples.first?.date else { return 0 }
 
         let n = Double(samples.count)
-        let firstDate = samples.first!.date
-        let xs = samples.map { $0.date.timeIntervalSince(firstDate) / 86400.0 }
+        let xs = samples.map { $0.date.timeIntervalSince(firstDate) / secondsPerDay }
         let ys = samples.map(\.value)
 
         let sumX = xs.reduce(0, +)
@@ -324,7 +386,7 @@ struct ClinicalIntelligence {
         for threshold in thresholds {
             if currentValue < threshold.threshold {
                 let daysToThreshold = Int((threshold.threshold - currentValue) / slopePerDay)
-                if daysToThreshold > 0 && daysToThreshold < 365 {
+                if daysToThreshold > 0 && daysToThreshold < maxProjectionDays {
                     return (days: daysToThreshold, label: threshold.label)
                 }
             }

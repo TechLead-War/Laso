@@ -1,0 +1,123 @@
+{
+  "timestamp": "2026-04-25_12-38-50",
+  "device": "iPhone 17 Pro Max",
+  "device_resolution": "1320x2868",
+  "theme": "dark",
+  "mock_profile": "PremiumShowcase",
+  "values": {
+    "name": "Alex Taylor",
+    "overall_score": 92,
+    "sleep_score": 92,
+    "activity_score": 94,
+    "recovery_green_score": 87,
+    "hrv_ms": 62,
+    "rhr_bpm": 54,
+    "vo2_max": 50,
+    "sleep_hours": 7.6,
+    "sleep_streak_days": 12,
+    "steps_average": 11800,
+    "active_calories_kcal": 600,
+    "exercise_minutes_daily": 52,
+    "workout_streak_weeks": 8,
+    "mindful_minutes_daily": 18,
+    "subscribed": true
+  },
+  "angles": [
+    {
+      "id": "01_thriving",
+      "title": "Wake up thriving",
+      "description": "Outcome / transformation focus. Sells the result: recovery climbing, sleep debt clearing, weekly wins stacking up.",
+      "shots": [
+        {
+          "file": "01_thriving/01_home.png",
+          "screen": "Home dashboard",
+          "caption": "Recovery 87 GREEN with daily narrative"
+        },
+        {
+          "file": "01_thriving/02_sleep.png",
+          "screen": "Sleep Coach",
+          "caption": "Debt cleared, 14-day chart healthy"
+        },
+        {
+          "file": "01_thriving/03_weekly.png",
+          "screen": "Weekly Review",
+          "caption": "Score delta + wins of the week"
+        },
+        {
+          "file": "01_thriving/04_state.png",
+          "screen": "Health State Timeline",
+          "caption": "Optimal days dominate the calendar"
+        },
+        {
+          "file": "01_thriving/05_vitality.png",
+          "screen": "Vitality",
+          "caption": "High score with trend climbing"
+        }
+      ]
+    },
+    {
+      "id": "02_coach",
+      "title": "Your sleep coach in your pocket",
+      "description": "Companion focus. Sells the personal AI: morning greeting, today's plan, ranked insights, ask anything.",
+      "shots": [
+        {
+          "file": "02_coach/01_home.png",
+          "screen": "Home with morning check-in",
+          "caption": "Coach greeting + today's plan"
+        },
+        {
+          "file": "02_coach/02_action.png",
+          "screen": "Today's Action detail",
+          "caption": "Single contextual action with reasoning"
+        },
+        {
+          "file": "02_coach/03_sleep.png",
+          "screen": "Sleep Coach",
+          "caption": "Personalized tips and bedtime anchor"
+        },
+        {
+          "file": "02_coach/04_insights.png",
+          "screen": "Insights",
+          "caption": "Ranked, actionable insight cards"
+        },
+        {
+          "file": "02_coach/05_ask.png",
+          "screen": "Ask Your Data",
+          "caption": "Natural-language query of your health"
+        }
+      ]
+    },
+    {
+      "id": "03_clinical",
+      "title": "Clinical clarity, beautifully simple",
+      "description": "Depth focus. Sells the intelligence: real-time vitals, training load, stress drivers, brain health, correlations.",
+      "shots": [
+        {
+          "file": "03_clinical/01_live.png",
+          "screen": "Live tab",
+          "caption": "HR, HRV, SpO2, zones streaming"
+        },
+        {
+          "file": "03_clinical/02_strain.png",
+          "screen": "Strain detail",
+          "caption": "0 to 21 ring with HR zone breakdown"
+        },
+        {
+          "file": "03_clinical/03_stress.png",
+          "screen": "Stress Monitor",
+          "caption": "Arc gauge + drivers + weekly comparison"
+        },
+        {
+          "file": "03_clinical/04_brain.png",
+          "screen": "Brain Health",
+          "caption": "Score, 7-day trend, readiness factors"
+        },
+        {
+          "file": "03_clinical/05_correlations.png",
+          "screen": "Correlations",
+          "caption": "Causal chains and compound insights"
+        }
+      ]
+    }
+  ]
+}

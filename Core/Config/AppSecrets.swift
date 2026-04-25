@@ -9,7 +9,7 @@ enum AppSecrets {
 
     enum App {
         static let bundleID = "com.lasohealth.fit"
-        // TODO: Fill in once Laso is published on the App Store.
+        // TODO(post-launch): Fill in once Laso is published on the App Store. URLs.appStoreReview already handles the empty-string fallback.
         static let appStoreID = ""
     }
 

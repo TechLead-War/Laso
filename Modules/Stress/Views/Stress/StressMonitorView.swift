@@ -10,10 +10,18 @@ struct StressMonitorView: View {
     let weeklyScores: [DailyStressPoint]
     let weeklyAverage: Double
     let previousWeekAverage: Double
+    /// Pass 8 V (F45): freshness timestamp from the parent dashboard refresh.
+    /// Drives a small "Updated …" caption at the top of the screen.
+    var lastUpdated: Date? = nil
 
     var body: some View {
         ScrollView {
             VStack(spacing: DS.sectionSpacing) {
+                if let lastUpdated, let caption = Copy.Common.relativeUpdated(lastUpdated) {
+                    Text(caption)
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(.tertiary)
+                }
                 heroGauge
                 driverSection
                 weeklyChartSection
@@ -192,7 +200,14 @@ struct StressMonitorView: View {
                     points: weeklyScores,
                     value: { min(max($0.score / 3.0, 0), 1.0) },
                     color: { barColor(for: $0.score) },
-                    label: { $0.dayLabel }
+                    label: { $0.dayLabel },
+                    tooltipLines: { point in
+                        [
+                            point.dayLabel,
+                            "\(String(format: "%.1f", point.score)) \(Copy.StressMonitor.scaleSuffix)"
+                        ]
+                    },
+                    tooltipColor: { barColor(for: $0.score) }
                 )
 
                 // Scale labels

@@ -43,7 +43,7 @@ struct WeeklyReviewEntryCard: View {
                             }
 
                             if let coachPlan = review.coachPlan {
-                                Text("Coach target: \(formatSteps(coachPlan.currentDailyStepTarget))/day")
+                                Text(Copy.Reports.WeeklyReviewView.coachTarget(formatSteps(coachPlan.currentDailyStepTarget)))
                                     .font(DS.Typography.caption)
                                     .foregroundStyle(AppColour.textSecondary)
                             }
@@ -89,6 +89,13 @@ struct WeeklyReviewView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
+                if let lastUpdated = viewModel.lastUpdated,
+                   let caption = Copy.Common.relativeUpdated(lastUpdated) {
+                    Text(caption)
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(.tertiary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
                 if let review = viewModel.review {
                     // Weekly averages hero
                     weeklyAveragesSection(review)
@@ -141,7 +148,7 @@ struct WeeklyReviewView: View {
             .padding(.vertical, DS.space4)
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
-        .navigationTitle("Weekly Review")
+        .navigationTitle(Copy.Home.WeeklyReviewSections.navigationTitle)
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -274,7 +281,7 @@ struct WeeklyReviewView: View {
 
     private func bestWorstDaysSection(_ review: WeeklyReview) -> some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Label("Highlights", systemImage: "calendar.day.timeline.left")
+            Label(Copy.Reports.WeeklyReviewView.highlightsLabel, systemImage: "calendar.day.timeline.left")
                 .font(DS.Typography.title3)
                 .padding(.horizontal, DS.screenPadding)
 
@@ -341,7 +348,7 @@ struct WeeklyReviewView: View {
         Group {
             if !review.wins.isEmpty {
                 VStack(alignment: .leading, spacing: DS.itemSpacing) {
-                    Label("This Week's Wins", systemImage: "trophy.fill")
+                    Label(Copy.Reports.WeeklyReviewView.weeksWinsLabel, systemImage: "trophy.fill")
                         .font(DS.Typography.title3)
                         .foregroundStyle(AppColour.success)
                         .padding(.horizontal, DS.screenPadding)
@@ -390,7 +397,7 @@ struct WeeklyReviewView: View {
 
     private func topInsightSection(_ review: WeeklyReview) -> some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Label("Key Discovery", systemImage: "lightbulb.fill")
+            Label(Copy.Reports.WeeklyReviewView.keyDiscoveryLabel, systemImage: "lightbulb.fill")
                 .font(DS.Typography.title3)
                 .foregroundStyle(AppColour.scoreFair)
                 .padding(.horizontal, DS.screenPadding)
@@ -400,7 +407,7 @@ struct WeeklyReviewView: View {
                     Text("\(topWin.metric.displayName) improved by \(String(format: "%.1f%%", abs(topWin.changePercent))) this week.")
                         .font(DS.Typography.bodyMedium)
 
-                    Text("Consistency in \(topWin.metric.category.displayName) is paying off. Keep the momentum going into next week.")
+                    Text(Copy.Reports.WeeklyReviewView.consistencyPayingOff(topWin.metric.category.displayName))
                         .font(DS.Typography.callout)
                         .foregroundStyle(AppColour.textSecondary)
                 } else if let topDecline = review.watchOuts.first {
@@ -434,7 +441,7 @@ struct WeeklyReviewView: View {
         Group {
             if !review.watchOuts.isEmpty {
                 VStack(alignment: .leading, spacing: DS.itemSpacing) {
-                    Label("Watch Out", systemImage: "exclamationmark.triangle.fill")
+                    Label(Copy.Reports.WeeklyReviewView.watchOutLabel, systemImage: "exclamationmark.triangle.fill")
                         .font(DS.Typography.title3)
                         .foregroundStyle(AppColour.warning)
                         .padding(.horizontal, DS.screenPadding)
@@ -492,14 +499,14 @@ struct WeeklyReviewView: View {
 
     private func progressiveCoachSection(_ plan: ProgressiveCoachPlan) -> some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Label("Progressive Coach", systemImage: "figure.walk.motion")
+            Label(Copy.Reports.WeeklyReviewView.progressiveCoachLabel, systemImage: "figure.walk.motion")
                 .font(DS.Typography.title3)
                 .foregroundStyle(AppColour.info)
                 .padding(.horizontal, DS.screenPadding)
 
             VStack(alignment: .leading, spacing: DS.space2) {
                 HStack {
-                    Text("Current target")
+                    Text(Copy.Reports.WeeklyReviewView.currentTarget)
                         .font(DS.Typography.body)
                         .foregroundStyle(AppColour.textSecondary)
                     Spacer()
@@ -508,7 +515,7 @@ struct WeeklyReviewView: View {
                 }
 
                 HStack {
-                    Text("Current average")
+                    Text(Copy.Reports.WeeklyReviewView.currentAverage)
                         .font(DS.Typography.body)
                         .foregroundStyle(AppColour.textSecondary)
                     Spacer()
@@ -517,7 +524,7 @@ struct WeeklyReviewView: View {
                 }
 
                 HStack {
-                    Text("Status")
+                    Text(Copy.Reports.WeeklyReviewView.status)
                         .font(DS.Typography.body)
                         .foregroundStyle(AppColour.textSecondary)
                     Spacer()
@@ -564,7 +571,7 @@ struct WeeklyReviewView: View {
 
     private func nextWeekOutlookSection(_ review: WeeklyReview) -> some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Label("Next Week", systemImage: "arrow.right.circle.fill")
+            Label(Copy.Reports.WeeklyReviewView.nextWeekLabel, systemImage: "arrow.right.circle.fill")
                 .font(DS.Typography.title3)
                 .foregroundStyle(AppColour.info)
                 .padding(.horizontal, DS.screenPadding)
@@ -579,7 +586,7 @@ struct WeeklyReviewView: View {
                         Image(systemName: "figure.walk")
                             .font(DS.Typography.caption)
                             .foregroundStyle(AppColour.info)
-                        Text("Step target: \(formatSteps(coachPlan.nextDailyStepTarget))/day")
+                        Text(Copy.Reports.WeeklyReviewView.stepTarget(formatSteps(coachPlan.nextDailyStepTarget)))
                             .font(DS.Typography.footnoteMedium)
                             .foregroundStyle(AppColour.textSecondary)
                     }

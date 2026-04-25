@@ -66,11 +66,22 @@ struct StrainDetailView: View {
     let strainBalance: StrainBalance
     let workoutRecoveryBand: WorkoutRecoveryBand
     let cyclePhase: CyclePhaseModifier?
+    /// Pass 8 V (F45): freshness timestamp from the parent dashboard refresh.
+    /// Drives a small "Updated …" caption at the top of the screen.
+    var lastUpdated: Date? = nil
 
     private let maxStrain: Double = 21.0
 
     @State private var animatedProgress: Double = 0
     @State private var showLearnMore = false
+    @State private var selectedHistoryDate: Date?
+
+    private var selectedHistoryPoint: DailyStrainPoint? {
+        guard let selectedHistoryDate, !weekHistory.isEmpty else { return nil }
+        return weekHistory.min(by: { lhs, rhs in
+            abs(lhs.date.timeIntervalSince(selectedHistoryDate)) < abs(rhs.date.timeIntervalSince(selectedHistoryDate))
+        })
+    }
 
     private var progress: Double {
         min(strainValue / maxStrain, 1.0)
@@ -90,6 +101,11 @@ struct StrainDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: DS.sectionSpacing) {
+                if let lastUpdated, let caption = Copy.Common.relativeUpdated(lastUpdated) {
+                    Text(caption)
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(.tertiary)
+                }
                 heroSection
                 if !weekHistory.isEmpty {
                     historySection
@@ -217,6 +233,9 @@ struct StrainDetailView: View {
                         )
                         .foregroundStyle(point.level.color.gradient)
                         .cornerRadius(4)
+                        // Pass 8 P2-F17: per-bar VoiceOver readout for the 7-day strain history.
+                        .accessibilityLabel(Text(point.date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())))
+                        .accessibilityValue(Text("Strain \(String(format: "%.1f", point.strain)), \(point.level.displayName)"))
                     }
 
                     RuleMark(y: .value("Target Low", targetStrainRange.lowerBound))
@@ -226,8 +245,33 @@ struct StrainDetailView: View {
                     RuleMark(y: .value("Target High", targetStrainRange.upperBound))
                         .foregroundStyle(.secondary.opacity(0.4))
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
+
+                    if let selected = selectedHistoryPoint {
+                        RuleMark(x: .value("Selected Day", selected.date, unit: .day))
+                            .foregroundStyle(selected.level.color.opacity(0.35))
+                            .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [3, 3]))
+
+                        PointMark(
+                            x: .value("Selected Day", selected.date, unit: .day),
+                            y: .value("Strain", selected.strain)
+                        )
+                        .foregroundStyle(.white)
+                        .symbolSize(60)
+
+                        PointMark(
+                            x: .value("Selected Day", selected.date, unit: .day),
+                            y: .value("Strain", selected.strain)
+                        )
+                        .foregroundStyle(selected.level.color)
+                        .symbolSize(24)
+                    }
                 }
+                .chartXSelection(value: $selectedHistoryDate)
                 .chartYScale(domain: 0...21)
+                // Pass 8 P2-F17: chart-level VoiceOver summary for the strain history.
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel(Text("Strain over the last \(weekHistory.count) days"))
+                .accessibilityValue(Text(strainChartAccessibilityValue))
                 .chartYAxis {
                     AxisMarks(values: [0, 7, 14, 21]) { value in
                         AxisValueLabel {
@@ -245,6 +289,63 @@ struct StrainDetailView: View {
                     }
                 }
                 .frame(height: 170)
+                .chartOverlay { proxy in
+                    GeometryReader { geometry in
+                        Rectangle()
+                            .fill(Color.clear)
+                            .contentShape(Rectangle())
+                            .gesture(
+                                DragGesture(minimumDistance: 0)
+                                    .onChanged { value in
+                                        guard let plotFrame = proxy.plotFrame else { return }
+                                        let origin = geometry[plotFrame].origin
+                                        let x = value.location.x - origin.x
+                                        if let date: Date = proxy.value(atX: x) {
+                                            selectedHistoryDate = date
+                                        }
+                                    }
+                            )
+                            .onTapGesture { location in
+                                guard let plotFrame = proxy.plotFrame else { return }
+                                let origin = geometry[plotFrame].origin
+                                let x = location.x - origin.x
+                                if let date: Date = proxy.value(atX: x) {
+                                    if let current = selectedHistoryDate,
+                                       Calendar.current.isDate(current, inSameDayAs: date) {
+                                        selectedHistoryDate = nil
+                                    } else {
+                                        selectedHistoryDate = date
+                                    }
+                                }
+                            }
+                    }
+                }
+                .overlay(alignment: .topLeading) {
+                    if let selected = selectedHistoryPoint {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(selected.date, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day())
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                                Text(String(format: "%.1f", selected.strain))
+                                    .font(.callout.weight(.bold).monospacedDigit())
+                                    .foregroundStyle(selected.level.color)
+                                Text(Copy.Strain.scaleSuffix)
+                                    .font(.caption.weight(.medium))
+                                    .foregroundStyle(.secondary)
+                            }
+                            Text(selected.level.displayName)
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(selected.level.color)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+                        .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+                        .padding(DS.space1)
+                    }
+                }
+                .sensoryFeedback(.selection, trigger: selectedHistoryPoint?.id)
 
                 let avgStrain = weekHistory.map(\.strain).reduce(0, +) / max(Double(weekHistory.count), 1)
                 HStack(spacing: 6) {
@@ -311,6 +412,13 @@ struct StrainDetailView: View {
             .cardStyle()
             .padding(.horizontal)
         }
+    }
+
+    private var strainChartAccessibilityValue: String {
+        guard !weekHistory.isEmpty else { return "No history available" }
+        let avg = weekHistory.map(\.strain).reduce(0, +) / Double(weekHistory.count)
+        let latest = weekHistory.last?.strain ?? 0
+        return "Latest strain \(String(format: "%.1f", latest)), 7-day average \(String(format: "%.1f", avg))"
     }
 
     private var targetStatusTitle: String {
@@ -415,7 +523,7 @@ struct StrainDetailView: View {
         let fraction = minutes / totalMinutes
 
         return HStack(spacing: 10) {
-            Text("Z\(zone)")
+            Text(Copy.Strain.zoneShort(zone))
                 .font(DS.Typography.captionSemibold)
                 .foregroundStyle(.white)
                 .frame(width: 28, height: 28)

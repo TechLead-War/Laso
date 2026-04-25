@@ -5,9 +5,9 @@ extension Copy {
 
         // MARK: - Inflection Notes
 
-        static let accelerating = " The rate of change is accelerating."
-        static let decelerating = " The decline is slowing. A recovery may be starting."
-        static let reversing = " The trend has recently reversed direction."
+        static let accelerating = " The rate of change is speeding up."
+        static let decelerating = " The drop is slowing down. A recovery may be starting."
+        static let reversing = " The trend has just turned around."
 
         // MARK: - Inflection Suffixes (for titles)
 
@@ -42,8 +42,8 @@ extension Copy {
 
         // MARK: - Follow-Up Sentences
 
-        static let recheckIn48Hours = "Follow-up: recheck in 48 hours to confirm this is stabilizing before it reaches warning range."
-        static let reviewIn3Days = "Follow-up: review this trend again in 3 days to verify the direction has improved."
+        static let recheckIn48Hours = "Follow up: check again in 48 hours to make sure this is steadying before it reaches warning range."
+        static let reviewIn3Days = "Follow up: review this trend again in 3 days to confirm the direction has gotten better."
 
         // MARK: - Lead Time Labels
 
@@ -60,7 +60,7 @@ extension Copy {
         // MARK: - Projection
 
         static func projectedWarning(days: Int) -> String {
-            " At the current rate, this could reach warning level in ~\(days) days."
+            " At this rate, this could reach warning level in about \(days) days."
         }
 
         // MARK: - Historical Context
@@ -72,57 +72,57 @@ extension Copy {
             "in the \(label) of your history"
         }
         static func seasonalDeviation(direction: String, month: String, percent: String) -> String {
-            "\(direction) your typical \(month) by \(percent)%"
+            "\(direction) your usual \(month) by \(percent)%"
         }
 
         // MARK: - Causal Hints
 
-        static let causalHintHRV = "Based on your history, this level typically follows nights with less than 6 hours of sleep."
-        static let causalHintRHR = "Based on your history, a higher resting heart rate often follows periods of reduced sleep or high stress. Try for an earlier bedtime tonight."
-        static let causalHintBloodOxygen = "Based on your history, lower blood oxygen typically correlates with disrupted sleep patterns."
-        static let causalHintSleepDuration = "Based on your history, shorter sleep often follows days with low physical activity or late exercise."
-        static let causalHintSleepDeep = "Based on your history, deep sleep decreases often correlate with higher stress or inconsistent bedtimes."
-        static let causalHintVO2Max = "Based on your history, VO2 Max changes tend to follow shifts in exercise consistency over 2-4 weeks."
-        static let causalHintActiveCalories = "Based on your history, lower calorie burn typically follows reduced step count and exercise minutes."
-        static let causalHintExercise = "Based on your history, exercise dips often cluster with disrupted sleep patterns."
-        static let causalHintBodyTemp = "Based on your history, temperature shifts often accompany changes in sleep duration and HRV."
-        static let causalHintRespiratoryRate = "Based on your history, respiratory rate changes often track with sleep quality and stress levels."
+        static let causalHintHRV = "Based on your history, this level usually follows nights with less than 6 hours of sleep."
+        static let causalHintRHR = "Based on your history, a higher resting heart rate often follows times of less sleep or high stress. Try for an earlier bedtime tonight."
+        static let causalHintBloodOxygen = "Based on your history, lower blood oxygen usually goes with broken sleep patterns."
+        static let causalHintSleepDuration = "Based on your history, shorter sleep often follows days with low activity or late workouts."
+        static let causalHintSleepDeep = "Based on your history, drops in deep sleep often go with higher stress or shifting bedtimes."
+        static let causalHintVO2Max = "Based on your history, VO2 Max changes tend to follow shifts in workout routine over 2 to 4 weeks."
+        static let causalHintActiveCalories = "Based on your history, lower calorie burn usually follows fewer steps and workout minutes."
+        static let causalHintExercise = "Based on your history, dips in exercise often line up with broken sleep patterns."
+        static let causalHintBodyTemp = "Based on your history, changes in temperature often go with shifts in sleep length and HRV."
+        static let causalHintRespiratoryRate = "Based on your history, breathing rate changes often track with sleep quality and stress levels."
 
         // MARK: - Action Protocol Strings
 
         static func sleepMetricsOff(dev: Int) -> String {
-            "your sleep metrics are \(dev)% off your baseline"
+            "your sleep numbers are \(dev)% off your usual"
         }
         static func activityDeviation(dev: Int, direction: String) -> String {
             "your activity is \(dev)% \(direction) your recent average"
         }
         static func hrvTrending(direction: String, dev: Int) -> String {
-            "your HRV is trending \(direction), \(dev)% from baseline"
+            "your HRV is trending \(direction), \(dev)% from your usual"
         }
         static func rhrShifted(dev: Int) -> String {
-            "your resting heart rate shifted \(dev)% from baseline"
+            "your resting heart rate shifted \(dev)% from your usual"
         }
         static func mindfulnessDeviation(dev: Int, direction: String) -> String {
             "your mindfulness time is \(dev)% \(direction) your average"
         }
         static func daylightDeviation(dev: Int, direction: String) -> String {
-            "your daylight exposure is \(dev)% \(direction) your average"
+            "your daylight time is \(dev)% \(direction) your average"
         }
-        static let bpOutsideRange = "your blood pressure reading is outside your typical range"
-        static let recheckSingleReading = "recheck to confirm, since single readings can vary"
-        static let readingOutsideRange = "this reading is outside your typical range. Monitor for changes."
-        static let recheckMetricTrend = "recheck this metric to confirm the trend"
+        static let bpOutsideRange = "your blood pressure reading is outside your usual range"
+        static let recheckSingleReading = "check again to confirm, since single readings can vary"
+        static let readingOutsideRange = "this reading is outside your usual range. Keep an eye on it."
+        static let recheckMetricTrend = "check this again to confirm the trend"
         static func bodyMetricsShifted(dev: Int) -> String {
-            "your body metrics shifted \(dev)% from baseline"
+            "your body numbers shifted \(dev)% from your usual"
         }
         static func vo2MaxTrending(direction: String, dev: Int) -> String {
-            "your VO2 max is trending \(direction), \(dev)% from baseline"
+            "your VO2 max is trending \(direction), \(dev)% from your usual"
         }
         static func mobilityMetricsOff(dev: Int) -> String {
-            "your mobility metrics are \(dev)% off baseline"
+            "your mobility numbers are \(dev)% off your usual"
         }
         static func genericMetricDeviation(metricName: String, dev: Int) -> String {
-            "your \(metricName) is \(dev)% from your baseline"
+            "your \(metricName) is \(dev)% from your usual"
         }
 
         // MARK: - Correlations
@@ -132,8 +132,30 @@ extension Copy {
             static let whyThingsChanged = "Why Things Changed"
             static let howMuchMatters = "How Much It Matters"
             static let allConnections = "All Connections"
-            static let buildingIntelligence = "Still building your intelligence profile."
+            static let buildingIntelligence = "Still building your insight profile."
             static let keepWearingDevice = "Keep wearing your device and syncing daily so we can find patterns in your data."
+
+            // MARK: - Detail / Cards
+
+            static let navigationTitle = "Health Intelligence"
+            static let actionableBadge = "Actionable"
+            static let evidenceLabel = "Evidence"
+            static let sameDay = "Same day"
+            static let nextDay = "Next day"
+            static func correlationSummary(strength: String, dayLabel: String, effectPercent: Int) -> String {
+                "\(strength) \u{00B7} \(dayLabel) \u{00B7} \(effectPercent)% effect"
+            }
+        }
+
+        // MARK: - Insights Detail
+
+        enum Detail {
+            static let navigationTitle = "Insights"
+            static let emptyTitle = "No insights yet"
+            static let emptyMessageAll = "More data will open up deeper insights over time."
+            static func emptyMessageFiltered(_ filter: String) -> String {
+                "No \(filter) insights right now."
+            }
         }
 
         // MARK: - Metric Detail
@@ -153,7 +175,7 @@ extension Copy {
             static let outsideNormalRange = "Outside Range"
 
             static func baselineDeviation(_ deviation: String) -> String {
-                "\(deviation) from your baseline"
+                "\(deviation) from your usual"
             }
 
             static let trend = "Trend"
@@ -175,12 +197,12 @@ extension Copy {
         enum InsightCard {
             /// "Because" line showing the root cause metric and its deviation
             static func linkedToMetric(_ metricName: String, deviationPercent: Int) -> String {
-                "Likely linked to your \(metricName) being \(deviationPercent)% off"
+                "May be linked to your \(metricName) being \(deviationPercent)% off"
             }
 
             /// Fallback when we have a root cause metric but no deviation value
             static func connectedToMetric(_ metricName: String) -> String {
-                "Likely connected to your \(metricName)"
+                "May be connected to your \(metricName)"
             }
 
             /// Data basis line showing how many days of data back the finding

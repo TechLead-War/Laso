@@ -1077,18 +1077,13 @@ final class TodayIntelligenceEngine {
         return String(format: "%d:%02d %@", h12, m, ampm)
     }
 
-    /// Cached short-date formatter. Performance Pass 2: today-intelligence runs
-    /// on every dashboard refresh, so avoid per-call DateFormatter allocation.
-    private static let shortDateFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.dateFormat = "MMM d"
-        return f
-    }()
-
-    /// Short date string: "Mar 3" format.
+    // Pass 8 Y: short date appears inside a user-visible IntelligenceCard
+    // narrative, so it must localize the month name + day order
+    // ("Mar 3" en-US, "3 mars" fr-FR, "3 Mar" en-GB). `.dateTime.day().month()`
+    // reads `Locale.current` automatically. Foundation caches the underlying
+    // formatter, so the previous explicit POSIX cache is no longer required.
     private func shortDateString(_ date: Date) -> String {
-        Self.shortDateFormatter.string(from: date)
+        date.formatted(.dateTime.day().month(.abbreviated))
     }
 
     /// Day name from weekday number (1=Sun, 7=Sat).

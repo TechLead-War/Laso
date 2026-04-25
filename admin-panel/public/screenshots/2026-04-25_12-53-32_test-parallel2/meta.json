@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-04-25_12-53-32_test-parallel2",
+  "device": "iPhone 17 Pro Max",
+  "device_resolution": "1320x2868",
+  "theme": "dark",
+  "mock_profile": "PremiumShowcase",
+  "values": {
+    "name": "Alex Taylor",
+    "overall_score": 92,
+    "sleep_score": 92,
+    "activity_score": 94,
+    "recovery_green_score": 87,
+    "hrv_ms": 62,
+    "rhr_bpm": 54,
+    "vo2_max": 50,
+    "sleep_hours": 7.6,
+    "sleep_streak_days": 12,
+    "steps_average": 11800,
+    "active_calories_kcal": 600,
+    "exercise_minutes_daily": 52,
+    "workout_streak_weeks": 8,
+    "mindful_minutes_daily": 18,
+    "subscribed": true
+  },
+  "angles": [
+    {
+      "id": "01_thriving",
+      "title": "Wake up thriving",
+      "description": "Outcome / transformation focus. Sells the result: recovery climbing, sleep debt clearing, weekly wins stacking up.",
+      "shots": [
+        {
+          "file": "01_thriving/01_home.png",
+          "screen": "Home dashboard",
+          "caption": "Recovery 87 GREEN with daily narrative"
+        },
+        {
+          "file": "01_thriving/02_sleep.png",
+          "screen": "Sleep Coach",
+          "caption": "Debt cleared, 14-day chart healthy"
+        }
+      ]
+    }
+  ]
+}

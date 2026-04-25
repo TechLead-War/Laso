@@ -51,6 +51,8 @@ struct HomeConnectHealthView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
+            .accessibilityLabel(Copy.Settings.refreshNow)
+            .accessibilityHint("Pulls the latest health data from connected sources")
             .padding(.horizontal, DS.space7)
             .padding(.top, DS.space1)
 

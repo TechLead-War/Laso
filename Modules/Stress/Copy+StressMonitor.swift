@@ -10,17 +10,17 @@ extension Copy {
         // MARK: - Level Display Names
 
         static let levelHigh = "High"
-        static let levelElevated = "Elevated"
+        static let levelElevated = "Raised"
         static let levelMild = "Mild"
         static let levelCalm = "Calm"
 
         // MARK: - Hero
 
-        static let heroExplainer = "How much pressure your nervous system is under right now"
-        static let contextLow = "Your nervous system is relaxed. Good time to focus on work or training."
+        static let heroExplainer = "How much pressure your body is under right now"
+        static let contextLow = "Your body feels relaxed. Good time to focus on work or training."
         static let contextMild = "Some tension is building. A few slow breaths can help reset it."
-        static let contextModerate = "Your body is signaling real strain. Slow down before adding more load."
-        static let contextHigh = "Stress is high. Step back, breathe, and protect your sleep tonight."
+        static let contextModerate = "Your body is showing real strain. Slow down before adding more load."
+        static let contextHigh = "Stress is high. Step back, breathe, and rest well tonight."
         static let contextDefault = "Tracking your stress signals throughout the day."
 
         // MARK: - Scale
@@ -46,7 +46,7 @@ extension Copy {
         static let startBreathingExercise = "Start Breathing Exercise"
         static let primaryTip = "Try This First"
         static let moreTips = "More Ideas"
-        static let moreTipsHint = "Other ways to settle your nervous system."
+        static let moreTipsHint = "Other ways to help your body settle."
 
         // MARK: - Week Delta
 
@@ -64,9 +64,9 @@ extension Copy {
         // MARK: - Tips
 
         static let tipsHigh = [
-            "Your body is signaling for rest. Lighter activity may serve you better right now.",
+            "Your body is asking for rest. Lighter activity may help you more right now.",
             "Box breathing can help: inhale 4s, hold 4s, exhale 4s, hold 4s.",
-            "A quieter, screen-free environment may help your nervous system settle.",
+            "A quieter, screen-free space may help your body settle.",
             "Many people find that 8+ hours of sleep tonight helps them feel more resilient tomorrow."
         ]
         static let tipsModerate = [
@@ -78,7 +78,7 @@ extension Copy {
         static let tipsMild = [
             "Try a 5-minute breathing exercise.",
             "Step outside for fresh air if possible.",
-            "A short walk can help reset your nervous system."
+            "A short walk can help your body reset."
         ]
         static let tipsLow = [
             "Your body is calm. Great time for challenging work.",
@@ -110,5 +110,12 @@ extension Copy {
         static let beginSession = "Begin Session"
         static let sessionComplete = "Session Complete"
         static let howDoYouFeel = "How do you feel?"
+
+        // MARK: - Stop Confirmation (Pass 8 Q)
+
+        static let endSessionTitle = "End Session?"
+        static let endSessionConfirm = "End"
+        static let continueSession = "Continue"
+        static let done = "Done"
     }
 }

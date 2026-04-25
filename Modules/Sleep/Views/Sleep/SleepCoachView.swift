@@ -9,6 +9,13 @@ struct SleepCoachView: View {
     let debtHours: Double
     let dailyHistory: [DayEntry]
     let consistencyScore: Int
+    /// Pass 11 AK (F45): freshness timestamp from the parent dashboard refresh.
+    /// Drives a small "Updated …" caption at the top of the screen.
+    var lastUpdated: Date? = nil
+    /// Pass 11 AK (F31): pull-to-refresh hook wired by the route destination
+    /// to `dashboardViewModel.refresh()`. Defaults to a no-op so existing
+    /// previews and unit consumers continue to compile unchanged.
+    var onRefresh: (() async -> Void)? = nil
 
     @State private var showAllTips = false
     @State private var expandedDayId: UUID? = nil
@@ -104,6 +111,11 @@ struct SleepCoachView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: DS.sectionSpacing) {
+                if let lastUpdated, let caption = Copy.Common.relativeUpdated(lastUpdated) {
+                    Text(caption)
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(.tertiary)
+                }
                 heroSection
                 performancePicker
                 scheduleSection
@@ -115,6 +127,9 @@ struct SleepCoachView: View {
             .padding(.bottom, DS.space6)
         }
         .background(AppColour.surfaceBase.ignoresSafeArea())
+        .refreshable {
+            await onRefresh?()
+        }
         .navigationTitle(Copy.SleepCoach.title)
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
@@ -373,15 +388,15 @@ struct SleepCoachView: View {
     private func stageBreakdown(_ day: DayEntry) -> some View {
         if day.hasStageBreakdown {
             VStack(spacing: 6) {
-                stageRow(label: "Deep",  hours: day.deepHours,  total: day.bedToWakeHours, color: AppColour.categorySleep)
-                stageRow(label: "REM",   hours: day.remHours,   total: day.bedToWakeHours, color: AppColour.categoryStress)
-                stageRow(label: "Core",  hours: day.coreHours,  total: day.bedToWakeHours, color: AppColour.scoreOptimal)
-                stageRow(label: "Awake", hours: day.awakeHours, total: day.bedToWakeHours, color: AppColour.warning)
+                stageRow(label: Copy.SleepCoach.stageDeep,  hours: day.deepHours,  total: day.bedToWakeHours, color: AppColour.categorySleep)
+                stageRow(label: Copy.SleepCoach.stageRem,   hours: day.remHours,   total: day.bedToWakeHours, color: AppColour.categoryStress)
+                stageRow(label: Copy.SleepCoach.stageCore,  hours: day.coreHours,  total: day.bedToWakeHours, color: AppColour.scoreOptimal)
+                stageRow(label: Copy.SleepCoach.stageAwake, hours: day.awakeHours, total: day.bedToWakeHours, color: AppColour.warning)
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 4)
         } else {
-            Text("Stage data not available for this night")
+            Text(Copy.SleepCoach.stageDataUnavailable)
                 .font(DS.Typography.caption2)
                 .foregroundStyle(AppColour.textTertiary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -525,7 +540,7 @@ struct SleepCoachView: View {
                     Button {
                         withAnimation(.easeInOut(duration: 0.25)) { showAllTips = true }
                     } label: {
-                        Text("Show \(currentTips.count - 2) more tips")
+                        Text(Copy.SleepCoach.showMoreTips(currentTips.count - 2))
                             .font(DS.Typography.subheadlineMedium)
                             .foregroundStyle(AppColour.info)
                             .frame(maxWidth: .infinity)

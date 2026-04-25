@@ -123,6 +123,10 @@ final class StoredJournalEntry {
 /// Query helpers for journal entries, following HealthDataStore patterns
 struct JournalStore {
 
+    /// Pass 11 AF: cached calendar — every journal write/read path normalises to
+    /// `startOfDay`. One static avoids per-call `Calendar.current` allocation.
+    private static let cal: Calendar = Calendar.current
+
     private let modelContext: ModelContext?
 
     init(modelContext: ModelContext?) {
@@ -134,7 +138,7 @@ struct JournalStore {
     /// Save a new journal entry
     func save(category: JournalCategory, value: Double, date: Date = Date(), notes: String? = nil) {
         let entry = StoredJournalEntry(
-            date: Calendar.current.startOfDay(for: date),
+            date: Self.cal.startOfDay(for: date),
             categoryRawValue: category.rawValue,
             value: value,
             notes: notes
@@ -156,7 +160,7 @@ struct JournalStore {
 
     /// Load all journal entries for a specific day
     func entries(for date: Date) -> [StoredJournalEntry] {
-        let calendar = Calendar.current
+        let calendar = Self.cal
         let start = calendar.startOfDay(for: date)
         guard let end = calendar.date(byAdding: .day, value: 1, to: start) else { return [] }
 
@@ -170,8 +174,8 @@ struct JournalStore {
     /// Load entries for a specific category within a date range
     func entries(for category: JournalCategory, from startDate: Date, to endDate: Date) -> [StoredJournalEntry] {
         let rawValue = category.rawValue
-        let start = Calendar.current.startOfDay(for: startDate)
-        let end = Calendar.current.startOfDay(for: endDate)
+        let start = Self.cal.startOfDay(for: startDate)
+        let end = Self.cal.startOfDay(for: endDate)
 
         let predicate = #Predicate<StoredJournalEntry> {
             $0.categoryRawValue == rawValue && $0.date >= start && $0.date <= end
@@ -184,8 +188,8 @@ struct JournalStore {
 
     /// Load all journal entries within a date range
     func allEntries(from startDate: Date, to endDate: Date) -> [StoredJournalEntry] {
-        let start = Calendar.current.startOfDay(for: startDate)
-        let end = Calendar.current.startOfDay(for: endDate)
+        let start = Self.cal.startOfDay(for: startDate)
+        let end = Self.cal.startOfDay(for: endDate)
 
         let predicate = #Predicate<StoredJournalEntry> { $0.date >= start && $0.date <= end }
         let descriptor = FetchDescriptor(predicate: predicate, sortBy: [SortDescriptor(\.date)])
@@ -209,7 +213,7 @@ struct JournalStore {
 
     /// Build a date-to-value lookup for a category (used by correlation analysis)
     func dateIndexedValues(for category: JournalCategory, days: Int) -> [Date: Double] {
-        let calendar = Calendar.current
+        let calendar = Self.cal
         let end = calendar.startOfDay(for: Date())
         guard let start = calendar.date(byAdding: .day, value: -days, to: end) else { return [:] }
 
@@ -235,7 +239,7 @@ struct JournalStore {
         let descriptor = FetchDescriptor(predicate: predicate)
         guard let entries = try? modelContext?.fetch(descriptor) else { return 0 }
 
-        let calendar = Calendar.current
+        let calendar = Self.cal
         let uniqueDays = Set(entries.map { calendar.startOfDay(for: $0.date) })
         return uniqueDays.count
     }

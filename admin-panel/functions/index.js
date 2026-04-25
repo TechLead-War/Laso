@@ -1,7 +1,37 @@
 const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
+const { setGlobalOptions } = require("firebase-functions/v2");
+const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
 
 admin.initializeApp();
+
+// ─── Global Function Options ─────────────────────────────────────────────────
+// Pass 7 L / Pass 11 AH: cap every function at 30s + 256MiB unless overridden.
+// Prevents a hung admin/public endpoint from eating quota or runaway bill.
+setGlobalOptions({
+  region: "us-central1",
+  memory: "256MiB",
+  timeoutSeconds: 30,
+  maxInstances: 10,
+});
+
+// ─── Log Redaction ───────────────────────────────────────────────────────────
+// Never log raw email or full uid in user-facing log lines. Use these helpers
+// when an identifier MUST be referenced (e.g. for support traceability).
+function redactEmail(email) {
+  if (typeof email !== "string" || email.length === 0) return "(none)";
+  const at = email.indexOf("@");
+  if (at <= 1) return "***";
+  const local = email.slice(0, at);
+  const domain = email.slice(at);
+  return `${local[0]}***${local[local.length - 1] || ""}${domain}`;
+}
+
+function redactUid(uid) {
+  if (typeof uid !== "string" || uid.length < 6) return "***";
+  return `${uid.slice(0, 4)}…${uid.slice(-2)}`;
+}
 
 // ─── Rate Limiting (in-memory, per-instance) ─────────────────────────────────
 
@@ -78,6 +108,42 @@ function isValidEmail(email) {
   return email.length >= 3 && email.length <= 256 && re.test(email);
 }
 
+// ─── Idempotency ─────────────────────────────────────────────────────────────
+// Optional dedupe for write callables. Caller supplies `idempotencyKey: String`
+// (e.g., a UUID generated client-side); first call records the key + result and
+// subsequent calls within the TTL replay the recorded result without re-running
+// the side effect.
+const IDEMPOTENCY_TTL_DAYS = 7;
+
+function isValidIdempotencyKey(key) {
+  return typeof key === "string" && /^[A-Za-z0-9_-]{8,128}$/.test(key);
+}
+
+/**
+ * tryClaimIdempotencyKey — atomic claim-or-replay.
+ *  - Returns `{ replay: true, result }` if the key was already used (within TTL).
+ *  - Returns `{ replay: false, commit }` if newly claimed; caller MUST invoke
+ *    `await commit(result)` once the operation succeeds, so a future replay
+ *    can return the same body.
+ */
+async function tryClaimIdempotencyKey(key, scope) {
+  const ref = admin.firestore().collection("idempotency").doc(`${scope}_${key}`);
+  const snap = await ref.get();
+  if (snap.exists) {
+    const data = snap.data() || {};
+    return { replay: true, result: data.result || null };
+  }
+  await ref.set({
+    scope,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    result: null,
+  });
+  const commit = async (result) => {
+    await ref.set({ result }, { merge: true });
+  };
+  return { replay: false, commit };
+}
+
 // ─── Admin Audit Logging ─────────────────────────────────────────────────────
 
 async function logAdminAction(uid, email, action, details = {}) {
@@ -91,19 +157,41 @@ async function logAdminAction(uid, email, action, details = {}) {
       ip: "redacted", // Don't store admin IPs
     });
   } catch (err) {
-    console.error("Audit log write failed:", err.message);
+    logger.error("Audit log write failed", { message: err.message });
   }
 }
 
 // ─── Admin Verification ─────────────────────────────────────────────────────
+
+// Hardcoded admin allowlist. Only these email addresses can access admin-only
+// functions. To add an admin: edit this list AND deploy. Email match is
+// case-insensitive.
+const ALLOWED_ADMIN_EMAILS = [
+  "ayushkapri.richard@gmail.com",
+];
 
 async function verifyAdmin(request) {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Must be signed in.");
   }
   const user = await admin.auth().getUser(request.auth.uid);
+  const email = (user.email || "").toLowerCase().trim();
+
+  // Email allowlist gate — only listed emails are admin.
+  if (!ALLOWED_ADMIN_EMAILS.includes(email)) {
+    logger.warn("Admin access denied", { uid: redactUid(request.auth.uid), email: redactEmail(email) });
+    throw new HttpsError("permission-denied", "Admin access denied.");
+  }
+
+  // Auto-set the `admin` custom claim so firestore.rules `request.auth.token.admin == true`
+  // checks pass on subsequent client requests. Client must refresh the ID token
+  // (e.g., user.getIdToken(true)) to pick up the new claim.
   if (!user.customClaims || user.customClaims.admin !== true) {
-    throw new HttpsError("permission-denied", "Requires admin privileges.");
+    await admin.auth().setCustomUserClaims(request.auth.uid, {
+      ...(user.customClaims || {}),
+      admin: true,
+    });
+    logger.info("Admin claim granted via allowlist", { uid: redactUid(request.auth.uid), email: redactEmail(email) });
   }
 
   // Rate limit admin requests
@@ -129,6 +217,7 @@ exports.getSignupCount = onRequest({ cors: false }, async (req, res) => {
   // Rate limit by IP
   const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.ip || "unknown";
   if (!checkRateLimit(`signup:${ip}`, RATE_LIMIT_PUBLIC)) {
+    res.set("Retry-After", "60");
     res.status(429).json({ error: "Too many requests" });
     return;
   }
@@ -139,7 +228,7 @@ exports.getSignupCount = onRequest({ cors: false }, async (req, res) => {
     res.set("Cache-Control", "public, max-age=60");
     res.json({ count });
   } catch (err) {
-    console.error("getSignupCount error:", err);
+    logger.error("getSignupCount error", { message: err.message });
     res.status(500).json({ count: 0 });
   }
 });
@@ -156,6 +245,7 @@ exports.earlyAccessSignup = onRequest({ cors: false }, async (req, res) => {
   // Rate limit by IP
   const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.ip || "unknown";
   if (!checkRateLimit(`signup:${ip}`, RATE_LIMIT_PUBLIC)) {
+    res.set("Retry-After", "60");
     res.status(429).json({ error: "Too many requests. Please try again later." });
     return;
   }
@@ -207,7 +297,7 @@ exports.earlyAccessSignup = onRequest({ cors: false }, async (req, res) => {
     const snapshot = await admin.firestore().collection("early_access").count().get();
     res.json({ success: true, count: snapshot.data().count });
   } catch (err) {
-    console.error("earlyAccessSignup error:", err);
+    logger.error("earlyAccessSignup error", { message: err.message });
     res.status(500).json({ error: "Failed to save signup" });
   }
 });
@@ -240,7 +330,7 @@ exports.getRemoteConfig = onCall(async (request) => {
 exports.updateRemoteConfig = onCall(async (request) => {
   const adminUser = await verifyAdmin(request);
 
-  const { parameters } = request.data;
+  const { parameters, idempotencyKey } = request.data;
   if (!parameters || typeof parameters !== "object") {
     throw new HttpsError("invalid-argument", "Missing parameters object.");
   }
@@ -254,6 +344,19 @@ exports.updateRemoteConfig = onCall(async (request) => {
     if (strVal.length > 1000) {
       throw new HttpsError("invalid-argument", `Value too long for key: ${key}`);
     }
+  }
+
+  // Optional idempotency: replay prior result if the same key was used recently.
+  let commitIdempotency = null;
+  if (idempotencyKey !== undefined && idempotencyKey !== null) {
+    if (!isValidIdempotencyKey(idempotencyKey)) {
+      throw new HttpsError("invalid-argument", "Invalid idempotencyKey format.");
+    }
+    const claim = await tryClaimIdempotencyKey(idempotencyKey, "updateRemoteConfig");
+    if (claim.replay && claim.result) {
+      return { ...claim.result, replayed: true };
+    }
+    commitIdempotency = claim.commit;
   }
 
   const template = await admin.remoteConfig().getTemplate();
@@ -289,7 +392,11 @@ exports.updateRemoteConfig = onCall(async (request) => {
     );
   }
 
-  return { success: true, updatedKeys: Object.keys(parameters), changedCount: Object.keys(changes).length };
+  const result = { success: true, updatedKeys: Object.keys(parameters), changedCount: Object.keys(changes).length };
+  if (commitIdempotency) {
+    await commitIdempotency(result);
+  }
+  return result;
 });
 
 /**
@@ -379,6 +486,59 @@ exports.getFeedbackStats = onCall({ invoker: "public" }, async (request) => {
   return { total, recentCount, categoryCounts, avgDaysSinceInstall };
 });
 
+// ═══ Authenticated User Endpoints ════════════════════════════════════════════
+
+// Default options for callable functions used by authenticated end users.
+// Region/memory/timeout come from setGlobalOptions(); only `invoker` is per-fn.
+const CALLABLE_DEFAULTS = {
+  invoker: "public",
+};
+
+/**
+ * lookupReferralCode — authenticated callable used by the iOS client to
+ * resolve a referral code to its owner's UID. Returns ONLY the data the client
+ * needs to credit the referrer. The `user_profiles` collection's list rule is
+ * admin-only (Pass 5 Agent 8), so the iOS direct query no longer works.
+ */
+exports.lookupReferralCode = onCall(CALLABLE_DEFAULTS, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Sign in required.");
+  }
+
+  const code = (request.data?.code || "").toString().trim().toUpperCase();
+  if (!code || !/^[A-Z0-9-]{4,20}$/.test(code)) {
+    throw new HttpsError("invalid-argument", "Invalid code format.");
+  }
+
+  // Per-caller rate limit: 10 lookups/minute (matches RATE_LIMIT_PUBLIC).
+  const key = `referral-lookup:${request.auth.uid}`;
+  if (!checkRateLimit(key, RATE_LIMIT_PUBLIC)) {
+    throw new HttpsError("resource-exhausted", "Too many lookups. Slow down.");
+  }
+
+  const snap = await admin.firestore()
+    .collection("user_profiles")
+    .where("referralCode", "==", code)
+    .limit(1)
+    .get();
+
+  if (snap.empty) {
+    return { found: false };
+  }
+
+  const doc = snap.docs[0];
+  const data = doc.data();
+
+  // Return ONLY the fields the iOS client needs to grant the referral —
+  // do NOT leak email, age, gender, region, healthFocuses, etc.
+  return {
+    found: true,
+    ownerUid: data.firebaseUid || doc.id,
+  };
+});
+
+// ═══ Admin Endpoints (continued) ═════════════════════════════════════════════
+
 /**
  * getAuditLog — returns recent admin audit log entries.
  */
@@ -405,3 +565,58 @@ exports.getAuditLog = onCall({ invoker: "public" }, async (request) => {
 
   return { entries };
 });
+
+// ═══ Scheduled Cleanup ═══════════════════════════════════════════════════════
+
+/**
+ * cleanupOldData — daily scheduled prune.
+ *  - admin_audit_log entries older than 365d are deleted (compliance retention).
+ *  - idempotency entries older than IDEMPOTENCY_TTL_DAYS are deleted.
+ *  - early_access is NEVER pruned by design (signups are intentionally retained
+ *    indefinitely until launch). Document this here so future agents don't add
+ *    a TTL by mistake.
+ *
+ * Deletes are issued in batches of 400 (under Firestore's 500-write batch cap).
+ */
+exports.cleanupOldData = onSchedule(
+  {
+    schedule: "every 24 hours",
+    timeZone: "UTC",
+    timeoutSeconds: 540,
+    memory: "256MiB",
+    region: "us-central1",
+  },
+  async () => {
+    const db = admin.firestore();
+    const now = Date.now();
+    const auditCutoff = new Date(now - 365 * 24 * 60 * 60 * 1000);
+    const idempotencyCutoff = new Date(now - IDEMPOTENCY_TTL_DAYS * 24 * 60 * 60 * 1000);
+
+    async function pruneCollection(coll, field, cutoff) {
+      let totalDeleted = 0;
+      // Loop until no more matching docs (cap iterations to avoid runaway).
+      for (let i = 0; i < 50; i++) {
+        const snap = await db.collection(coll)
+          .where(field, "<", cutoff)
+          .orderBy(field)
+          .limit(400)
+          .get();
+        if (snap.empty) break;
+        const batch = db.batch();
+        snap.docs.forEach((d) => batch.delete(d.ref));
+        await batch.commit();
+        totalDeleted += snap.size;
+        if (snap.size < 400) break;
+      }
+      return totalDeleted;
+    }
+
+    try {
+      const auditDeleted = await pruneCollection("admin_audit_log", "timestamp", auditCutoff);
+      const idempotencyDeleted = await pruneCollection("idempotency", "createdAt", idempotencyCutoff);
+      logger.info("cleanupOldData ran", { auditDeleted, idempotencyDeleted });
+    } catch (err) {
+      logger.error("cleanupOldData failed", { message: err.message });
+    }
+  }
+);

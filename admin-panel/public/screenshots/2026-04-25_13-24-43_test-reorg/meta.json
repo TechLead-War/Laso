@@ -1,0 +1,51 @@
+{
+  "timestamp": "2026-04-25_13-24-43_test-reorg",
+  "device": "iPhone 17 Pro Max",
+  "device_resolution": "1320x2868",
+  "theme": "dark",
+  "mock_profile": "PremiumShowcase",
+  "values": {
+    "name": "Alex Taylor",
+    "overall_score": 92,
+    "sleep_score": 92,
+    "activity_score": 94,
+    "recovery_green_score": 87,
+    "hrv_ms": 62,
+    "rhr_bpm": 54,
+    "vo2_max": 50,
+    "sleep_hours": 7.6,
+    "sleep_streak_days": 12,
+    "steps_average": 11800,
+    "active_calories_kcal": 600,
+    "exercise_minutes_daily": 52,
+    "workout_streak_weeks": 8,
+    "mindful_minutes_daily": 18,
+    "subscribed": true
+  },
+  "angles": [
+    {
+      "id": "06_settings",
+      "title": "Settings",
+      "description": "Settings tab and its deep-link sub-pages \u2014 Notifications, Devices, Siri & Shortcuts.",
+      "shots": [
+        {
+          "file": "06_settings/02_notifications.png",
+          "screen": "Notifications Settings",
+          "caption": "Daily summary, alerts, watch reminders"
+        }
+      ]
+    },
+    {
+      "id": "07_onboarding",
+      "title": "Onboarding",
+      "description": "Full 6-step first-launch flow \u2014 Pulse welcome, profile capture, Apple Health connect, priorities, mirror moment, 7-day promise.",
+      "shots": [
+        {
+          "file": "07_onboarding/03_connect.png",
+          "screen": "Onboarding \u00b7 Connect Health",
+          "caption": "Apple Health authorization step"
+        }
+      ]
+    }
+  ]
+}

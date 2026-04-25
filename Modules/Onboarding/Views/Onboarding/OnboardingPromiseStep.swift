@@ -1,13 +1,18 @@
+import AuthenticationServices
 import SwiftUI
 
 /// Screen 6: The 7 day promise landing.
-/// Dated numeric promise derived from the user's actual calibration data, a compact Siri affordance,
-/// and a footer disclaimer that replaces the standalone medical information screen.
+/// Apple Sign In is mandatory here. Successful sign-in advances the user to the
+/// trial setup step. There is no skip path -- onboarding cannot proceed without
+/// a Firebase identity attached, so the subscription entitlement is portable
+/// across devices.
 struct OnboardingPromiseStep: View {
     let discovery: CalibrationDiscovery
-    let onOpen: () -> Void
+    let onAuthenticated: () -> Void
 
     @State private var showFullDisclaimer = false
+    @State private var isSigningInWithApple = false
+    @State private var appleSignInError: String?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -39,30 +44,75 @@ struct OnboardingPromiseStep: View {
                 .padding(.horizontal, DS.space6)
                 .padding(.bottom, DS.space3)
 
-            Button {
-                AppAnalytics.shared.trackBlockTap(
-                    title: "Open Laso",
-                    type: .onboardingGetStarted,
-                    screen: .onboarding,
-                    metadata: [
-                        "step_name": "promise",
-                        "metrics_discovered": discovery.metricsWithData,
-                        "highlights_shown": discovery.highlights.count
-                    ]
-                )
-                onOpen()
-            } label: {
-                Text(Copy.Onboarding.promiseOpen)
+            VStack(spacing: DS.space2) {
+                if let appleSignInError {
+                    Text(appleSignInError)
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(AppColour.danger)
+                        .multilineTextAlignment(.center)
+                }
+
+                SignInWithAppleButton(.signIn) { request in
+                    request.requestedScopes = [.fullName, .email]
+                } onCompletion: { _ in
+                    handleAppleSignIn()
+                }
+                .signInWithAppleButtonStyle(.black)
+                .frame(height: 48)
+                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
+                .disabled(isSigningInWithApple)
+                .opacity(isSigningInWithApple ? 0.5 : 1)
+                .accessibilityIdentifier("onboarding.signInWithApple")
+
+                Text(Copy.Onboarding.promiseSignInHelper)
+                    .font(DS.Typography.caption2)
+                    .foregroundStyle(AppColour.textTertiary)
+                    .multilineTextAlignment(.center)
             }
-            .buttonStyle(.dsPrimary)
             .padding(.horizontal, DS.space6)
             .padding(.bottom, DS.space8)
-            .accessibilityIdentifier("onboarding.promiseOpen")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .sheet(isPresented: $showFullDisclaimer) {
             MedicalDisclaimerView {
                 showFullDisclaimer = false
+            }
+        }
+    }
+
+    private func handleAppleSignIn() {
+        guard !isSigningInWithApple else { return }
+        isSigningInWithApple = true
+        appleSignInError = nil
+
+        Task {
+            do {
+                let result = try await AppleAuthService.shared.signIn()
+                AppAnalytics.shared.trackBlockTap(
+                    title: "Sign in with Apple",
+                    type: .onboardingGetStarted,
+                    screen: .onboarding,
+                    metadata: [
+                        "step_name": "promise",
+                        "is_new_user": result.isNewUser,
+                        "has_email": result.email != nil
+                    ]
+                )
+                _ = await NotificationManager.shared.requestAuthorization(source: "onboarding")
+                await MainActor.run {
+                    isSigningInWithApple = false
+                    onAuthenticated()
+                }
+            } catch AppleAuthService.AppleAuthError.userCancelled {
+                await MainActor.run {
+                    isSigningInWithApple = false
+                    appleSignInError = nil
+                }
+            } catch {
+                await MainActor.run {
+                    isSigningInWithApple = false
+                    appleSignInError = "Couldn't sign in with Apple. Please try again."
+                }
             }
         }
     }

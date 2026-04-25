@@ -79,7 +79,9 @@ struct VitalityHeroSection: View {
             .aspectRatio(0.92, contentMode: .fit)
 
             HStack(spacing: 8) {
-                badge(text: Copy.Vitality.actualAge(scorer.chronologicalAge), tint: .white.opacity(0.36), foreground: .white)
+                if scorer.chronologicalAge > 0 {
+                    badge(text: Copy.Vitality.actualAge(scorer.chronologicalAge), tint: .white.opacity(0.36), foreground: .white)
+                }
 
                 if scorer.personalizationStatus == .personalized {
                     badge(

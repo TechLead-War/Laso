@@ -2463,10 +2463,16 @@ final class AppAnalytics {
     // Users screenshot things they trust and want to share.
     // Screenshot rate is a proxy for "would you show this to a friend?"
 
-    private var screenshotObserver: Any?
+    private var screenshotObserver: NSObjectProtocol?
 
     /// Call once at app launch to start observing screenshots.
+    /// Idempotent — safe to call multiple times; previous observer is removed first
+    /// so we never accumulate duplicate observers (which would emit duplicate events).
     func startScreenshotTracking() {
+        if let existing = screenshotObserver {
+            NotificationCenter.default.removeObserver(existing)
+            screenshotObserver = nil
+        }
         screenshotObserver = NotificationCenter.default.addObserver(
             forName: UIApplication.userDidTakeScreenshotNotification,
             object: nil,

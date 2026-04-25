@@ -3,6 +3,33 @@ import Foundation
 /// Analyzes how sleep duration and quality affect next-day activity performance
 struct SleepPerformanceAnalyzer {
 
+    /// Pass 12 BE perf: cached current calendar. Quality-vs-performance comparison
+    /// loops over high- and low-quality day arrays, calling `date(byAdding:)`
+    /// per day across up to 90 days of sleep history.
+    private static let cal: Calendar = Calendar.current
+
+    // MARK: - Thresholds (named so they are auditable in one place)
+    /// Sleep duration (hours) at/above which a night counts as "good sleep" for next-day comparisons.
+    private static let goodSleepHours: Double = 7.0
+    /// Sleep duration (hours) below which a night counts as "poor sleep".
+    private static let poorSleepHours: Double = 6.0
+    /// Minimum % difference between good- and poor-sleep performance to surface a duration insight.
+    private static let durationInsightMinPercent: Double = 10
+    /// At/above this % difference, the duration insight is escalated to `.warning`.
+    private static let durationWarningPercent: Double = 25
+    /// Sleep-quality ratio (deep + REM / total) above which a night counts as "high quality".
+    private static let highQualityRatio: Double = 0.30
+    /// Sleep-quality ratio below which a night counts as "low quality".
+    private static let lowQualityRatio: Double = 0.25
+    /// Minimum % difference in next-day calories to surface a quality insight.
+    private static let qualityInsightMinPercent: Double = 8
+    /// Coefficient of variation below which sleep is considered consistent.
+    private static let consistentCVThreshold: Double = 0.15
+    /// CV above which sleep is considered inconsistent enough to escalate to `.warning`.
+    private static let inconsistentCVThreshold: Double = 0.25
+    /// Hours weekday/weekend gap above which we add a "shorter than" copy line.
+    private static let weekdayWeekendGapThreshold: Double = 0.5
+
     /// Analyze sleep-performance links and generate insights
     static func generateInsights(timeSeries: [HealthMetric: MetricTimeSeries]) -> [Insight] {
         var insights: [Insight] = []
@@ -45,8 +72,8 @@ struct SleepPerformanceAnalyzer {
             let aligned = TimeSeriesAligner.alignWithOffset(sleepSeries, perfSeries, dayOffset: 1)
             guard aligned.count >= 14 else { continue }
 
-            let goodSleep = aligned.filter { $0.valueA >= 7.0 }
-            let poorSleep = aligned.filter { $0.valueA < 6.0 }
+            let goodSleep = aligned.filter { $0.valueA >= Self.goodSleepHours }
+            let poorSleep = aligned.filter { $0.valueA < Self.poorSleepHours }
 
             guard goodSleep.count >= 5, poorSleep.count >= 3 else { continue }
 
@@ -57,7 +84,7 @@ struct SleepPerformanceAnalyzer {
 
             let percentDiff = ((avgGood - avgPoor) / avgPoor) * 100
 
-            guard abs(percentDiff) >= 10 else { continue }
+            guard abs(percentDiff) >= Self.durationInsightMinPercent else { continue }
 
             if abs(percentDiff) > abs(bestDeviation) {
                 bestDeviation = percentDiff
@@ -66,7 +93,7 @@ struct SleepPerformanceAnalyzer {
                     title: Copy.Analysis.Sleep.sleepDrives(performanceMetric.displayName),
                     summary: "Good sleep (7+ hrs) boosts your next-day \(performanceMetric.displayName.lowercased()) by \(String(format: "%.0f", abs(percentDiff)))%. averaging \(String(format: "%.0f", avgGood)) \(performanceMetric.unit) vs \(String(format: "%.0f", avgPoor)) on shorter nights.",
                     recommendation: "Your data shows a \(String(format: "%.0f", abs(percentDiff)))% difference in next-day \(performanceMetric.displayName.lowercased()) between 7+ hr sleep nights (\(String(format: "%.0f", avgGood)) \(performanceMetric.unit)) and <6 hr nights (\(String(format: "%.0f", avgPoor)) \(performanceMetric.unit)) across \(goodSleep.count + poorSleep.count) measured nights.",
-                    severity: abs(percentDiff) >= 25 ? .warning : .info,
+                    severity: abs(percentDiff) >= Self.durationWarningPercent ? .warning : .info,
                     trend: .stable,
                     currentValue: avgGood,
                     baselineValue: avgPoor,
@@ -99,9 +126,9 @@ struct SleepPerformanceAnalyzer {
                   let deep = deepMap[date],
                   let rem = remMap[date] else { continue }
             let qualityRatio = (deep + rem) / total
-            if qualityRatio > 0.30 {
+            if qualityRatio > Self.highQualityRatio {
                 highQualityDays.append(date)
-            } else if qualityRatio < 0.25 {
+            } else if qualityRatio < Self.lowQualityRatio {
                 lowQualityDays.append(date)
             }
         }
@@ -113,11 +140,11 @@ struct SleepPerformanceAnalyzer {
         let calMap = TimeSeriesAligner.dailyValueMap(calSeries)
 
         let highQualityCals = highQualityDays.compactMap { day -> Double? in
-            let nextDay = Calendar.current.date(byAdding: .day, value: 1, to: day)?.startOfDay ?? day
+            let nextDay = Self.cal.date(byAdding: .day, value: 1, to: day)?.startOfDay ?? day
             return calMap[nextDay]
         }
         let lowQualityCals = lowQualityDays.compactMap { day -> Double? in
-            let nextDay = Calendar.current.date(byAdding: .day, value: 1, to: day)?.startOfDay ?? day
+            let nextDay = Self.cal.date(byAdding: .day, value: 1, to: day)?.startOfDay ?? day
             return calMap[nextDay]
         }
 
@@ -128,7 +155,7 @@ struct SleepPerformanceAnalyzer {
         guard avgLow > 0 else { return nil }
 
         let diff = ((avgHigh - avgLow) / avgLow) * 100
-        guard abs(diff) >= 8 else { return nil }
+        guard abs(diff) >= Self.qualityInsightMinPercent else { return nil }
 
         return Insight(
             metric: .sleepDeep,
@@ -185,8 +212,8 @@ struct SleepPerformanceAnalyzer {
             return calendar.shortWeekdaySymbols[weekday - 1]
         }
 
-        let isConsistent = cv < 0.15
-        let severity: Severity = cv > 0.25 ? .warning : .info
+        let isConsistent = cv < Self.consistentCVThreshold
+        let severity: Severity = cv > Self.inconsistentCVThreshold ? .warning : .info
 
         var summaryParts: [String] = []
         if isConsistent {
@@ -202,7 +229,7 @@ struct SleepPerformanceAnalyzer {
         }
 
         let gapNote: String
-        if hasWeekdayWeekendData && abs(weekdayAvg - weekendAvg) > 0.5 {
+        if hasWeekdayWeekendData && abs(weekdayAvg - weekendAvg) > Self.weekdayWeekendGapThreshold {
             let shorter = weekdayAvg < weekendAvg ? "weekday" : "weekend"
             gapNote = " Your \(shorter) sleep is \(String(format: "%.1f", abs(weekdayAvg - weekendAvg))) hrs shorter than your \(weekdayAvg < weekendAvg ? "weekend" : "weekday") average."
         } else {

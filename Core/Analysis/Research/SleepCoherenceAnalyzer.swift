@@ -35,8 +35,6 @@ struct SleepCoherenceAnalyzer {
     // MARK: - Analysis
 
     static func generateInsights(context: AnalysisContext) -> [Insight] {
-        var insights: [Insight] = []
-
         // Need: sleep stages, HR, HRV, respiratory rate
         guard let deepSeries = context.timeSeries[.sleepDeep],
               let remSeries = context.timeSeries[.sleepREM],
@@ -59,11 +57,79 @@ struct SleepCoherenceAnalyzer {
         let last30 = deepSeries.samples(lastDays: 30)
         guard last30.count >= 14 else { return [] }
 
+        let coherence = computeNightlyCoherence(
+            samples: last30,
+            deepMap: deepMap,
+            remMap: remMap,
+            hrMap: hrMap,
+            hrvMap: hrvMap,
+            rrMap: rrMap,
+            rhrBaseline: rhrBaseline,
+            hrvBaseline: hrvBaseline,
+            rrBaseline: rrBaseline,
+            context: context
+        )
+
+        guard coherence.scores.count >= 10 else { return [] }
+
+        let avgCoherence = coherence.scores.map(\.score).mean
+        let recentCoherence = Array(coherence.scores.suffix(7)).map(\.score).mean
+        let priorCoherence = coherence.scores.count >= 14
+            ? Array(coherence.scores.dropLast(7).suffix(7)).map(\.score).mean
+            : avgCoherence
+
+        let coherenceTrend: TrendDirection = recentCoherence > priorCoherence + 5 ? .improving
+            : recentCoherence < priorCoherence - 5 ? .declining : .stable
+
+        var insights: [Insight] = []
+        if let overall = buildOverallCoherenceInsight(
+            avgCoherence: avgCoherence,
+            recentCoherence: recentCoherence,
+            priorCoherence: priorCoherence,
+            coherenceTrend: coherenceTrend,
+            incoherentNights: coherence.incoherentNights,
+            totalNights: coherence.totalNights,
+            scoreCount: coherence.scores.count
+        ) {
+            insights.append(overall)
+        }
+
+        if let trendInsight = buildCoherenceTrendInsight(
+            recentCoherence: recentCoherence,
+            priorCoherence: priorCoherence,
+            coherenceTrend: coherenceTrend
+        ) {
+            insights.append(trendInsight)
+        }
+
+        return insights
+    }
+
+    // MARK: - Helpers
+
+    private struct NightlyCoherence {
+        let scores: [(date: Date, score: Double)]
+        let incoherentNights: Int
+        let totalNights: Int
+    }
+
+    private static func computeNightlyCoherence(
+        samples: [MetricSample],
+        deepMap: [Date: Double],
+        remMap: [Date: Double],
+        hrMap: [Date: Double],
+        hrvMap: [Date: Double],
+        rrMap: [Date: Double]?,
+        rhrBaseline: UserBaseline,
+        hrvBaseline: UserBaseline,
+        rrBaseline: UserBaseline?,
+        context: AnalysisContext
+    ) -> NightlyCoherence {
         var coherenceScores: [(date: Date, score: Double)] = []
         var incoherentNights = 0
         var totalNights = 0
 
-        for sample in last30 {
+        for sample in samples {
             let date = sample.date.startOfDay
             guard let deepHrs = deepMap[date], deepHrs > 0,
                   let remHrs = remMap[date], remHrs > 0,
@@ -106,23 +172,23 @@ struct SleepCoherenceAnalyzer {
             }
         }
 
-        guard coherenceScores.count >= 10 else { return [] }
+        return NightlyCoherence(scores: coherenceScores, incoherentNights: incoherentNights, totalNights: totalNights)
+    }
 
-        let avgCoherence = coherenceScores.map(\.score).mean
-        let recentCoherence = Array(coherenceScores.suffix(7)).map(\.score).mean
-        let priorCoherence = coherenceScores.count >= 14
-            ? Array(coherenceScores.dropLast(7).suffix(7)).map(\.score).mean
-            : avgCoherence
-
-        // Insight 1: Overall sleep coherence assessment
-        let coherenceTrend: TrendDirection = recentCoherence > priorCoherence + 5 ? .improving
-            : recentCoherence < priorCoherence - 5 ? .declining : .stable
-
+    private static func buildOverallCoherenceInsight(
+        avgCoherence: Double,
+        recentCoherence: Double,
+        priorCoherence: Double,
+        coherenceTrend: TrendDirection,
+        incoherentNights: Int,
+        totalNights: Int,
+        scoreCount: Int
+    ) -> Insight? {
         let severity: Severity = avgCoherence < 35 ? .warning : .info
         _ = Double(incoherentNights) / Double(totalNights) * 100
 
         if avgCoherence < 60 || incoherentNights >= 4 {
-            insights.append(InsightFactory.make(
+            return InsightFactory.make(
                 metric: .sleepDeep,
                 title: "Sleep Systems Out of Sync",
                 summary: "Your body's systems aren't fully aligning during sleep. On \(incoherentNights) of \(totalNights) recent nights, your heart rate and HRV didn't follow expected sleep-stage patterns. coherence score: \(String(format: "%.0f", avgCoherence))/100.",
@@ -137,12 +203,12 @@ struct SleepCoherenceAnalyzer {
                 relatedMetrics: [.sleepDeep, .sleepREM, .heartRate, .heartRateVariability],
                 context: InsightContext(
                     slope: (recentCoherence - priorCoherence) / 7,
-                    confidenceLevel: min(Double(coherenceScores.count) / 30.0, 1.0),
-                    dataPointCount: coherenceScores.count
+                    confidenceLevel: min(Double(scoreCount) / 30.0, 1.0),
+                    dataPointCount: scoreCount
                 )
-            ))
+            )
         } else if avgCoherence >= 75 {
-            insights.append(InsightFactory.observation(
+            return InsightFactory.observation(
                 metric: .sleepDeep,
                 title: "Strong Sleep Coherence",
                 summary: "Your body's systems sync well during sleep. heart rate drops appropriately, HRV rises, and sleep architecture looks healthy. Coherence score: \(String(format: "%.0f", avgCoherence))/100 across \(totalNights) nights.",
@@ -153,31 +219,34 @@ struct SleepCoherenceAnalyzer {
                 category: .sleepPerformance,
                 relatedMetrics: [.sleepDeep, .sleepREM, .heartRate, .heartRateVariability],
                 context: InsightContext(
-                    confidenceLevel: min(Double(coherenceScores.count) / 30.0, 1.0),
-                    dataPointCount: coherenceScores.count
+                    confidenceLevel: min(Double(scoreCount) / 30.0, 1.0),
+                    dataPointCount: scoreCount
                 )
-            ))
+            )
         }
+        return nil
+    }
 
-        // Insight 2: Declining coherence trend
-        if coherenceTrend == .declining && (priorCoherence - recentCoherence) >= 10 {
-            insights.append(InsightFactory.make(
-                metric: .heartRateVariability,
-                title: "Sleep Coherence Declining",
-                summary: "Your sleep coherence dropped from \(String(format: "%.0f", priorCoherence)) to \(String(format: "%.0f", recentCoherence)) over the past two weeks. Your heart and nervous system are less synchronized during sleep than before.",
-                recommendation: "A \(String(format: "%.0f", priorCoherence - recentCoherence))-point drop in sleep coherence over 2 weeks may reflect increased stress, an irregular schedule, or your body working harder to recover. This pattern often appears before you start feeling off.",
-                severity: .warning,
-                trend: .declining,
-                currentValue: recentCoherence,
-                baselineValue: priorCoherence,
-                deviationPercent: ((recentCoherence - priorCoherence) / max(priorCoherence, 1)) * 100,
-                category: .sleepPerformance,
-                directive: .sleepBetter,
-                relatedMetrics: [.heartRate, .heartRateVariability, .sleepDeep, .sleepREM]
-            ))
-        }
-
-        return insights
+    private static func buildCoherenceTrendInsight(
+        recentCoherence: Double,
+        priorCoherence: Double,
+        coherenceTrend: TrendDirection
+    ) -> Insight? {
+        guard coherenceTrend == .declining && (priorCoherence - recentCoherence) >= 10 else { return nil }
+        return InsightFactory.make(
+            metric: .heartRateVariability,
+            title: "Sleep Coherence Declining",
+            summary: "Your sleep coherence dropped from \(String(format: "%.0f", priorCoherence)) to \(String(format: "%.0f", recentCoherence)) over the past two weeks. Your heart and nervous system are less synchronized during sleep than before.",
+            recommendation: "A \(String(format: "%.0f", priorCoherence - recentCoherence))-point drop in sleep coherence over 2 weeks may reflect increased stress, an irregular schedule, or your body working harder to recover. This pattern often appears before you start feeling off.",
+            severity: .warning,
+            trend: .declining,
+            currentValue: recentCoherence,
+            baselineValue: priorCoherence,
+            deviationPercent: ((recentCoherence - priorCoherence) / max(priorCoherence, 1)) * 100,
+            category: .sleepPerformance,
+            directive: .sleepBetter,
+            relatedMetrics: [.heartRate, .heartRateVariability, .sleepDeep, .sleepREM]
+        )
     }
 }
 

@@ -100,6 +100,7 @@ struct LasoApp: App {
                         OnboardingView(
                             healthKitManager: container.healthKitManager,
                             appStateStore: appStateStore,
+                            subscriptionManager: subscriptionManager,
                             runCalibration: performInitialCalibration
                         ) {
                             appStateStore.markOnboardingCompleted()
@@ -144,6 +145,13 @@ struct LasoApp: App {
                     showSplash = false
                 }
 
+            }
+            // After "Delete All My Data" wipes local state + signs out, the
+            // SettingsView posts LasoDidWipeAccount. Reset onboardingCompleted
+            // so the user lands back on onboarding instead of an empty dashboard.
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("LasoDidWipeAccount"))) { _ in
+                appStateStore.setOnboardingCompleted(false)
+                killSwitchDismissed = false
             }
             .preferredColorScheme(isUITestMode ? UITestMode.preferredColorScheme : .dark)
         }

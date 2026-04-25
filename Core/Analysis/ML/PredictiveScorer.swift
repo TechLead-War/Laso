@@ -33,6 +33,33 @@ final class PredictiveScorer {
     private let l2Lambda: Double = 1.0
     private let numBins: Int = 64
 
+    // MARK: - Training & calibration thresholds (named so reviewers can audit them)
+
+    /// Number of context features appended to the per-feature vector during training.
+    private static let contextFeatureCount = 5
+    /// Train/validation temporal split fraction (0.8 = first 80% train, last 20% validate).
+    private static let trainValidationSplit: Double = 0.8
+    /// Bottom-percentile cutoff used to learn the per-user "low score" bad-day threshold.
+    private static let lowScorePercentile: Double = 0.20
+    /// Quantile of day-to-day score drops used to learn the per-user "score crash" threshold.
+    private static let scoreDropPercentile: Double = 0.75
+    /// Minimum size of the day-to-day drops sample before the learned drop threshold replaces the default.
+    private static let scoreDropMinSamples = 5
+    /// Loss-improvement threshold used by early stopping (epsilon below current best to count as progress).
+    private static let earlyStopLossEpsilon: Double = 1e-4
+    /// Boosting rounds without validation-loss improvement before training stops early.
+    private static let earlyStopPatience = 10
+    /// Minimum validation samples required before Platt scaling calibration is fitted.
+    private static let plattMinSamples = 10
+    /// Numerical floor used when taking log(p) / log(1-p) to avoid log(0) explosions.
+    private static let logProbFloor: Double = 1e-15
+    /// Exponent clamp limit applied to sigmoid input to avoid overflow on extreme z-scores.
+    private static let sigmoidClamp: Double = 500
+    /// Extra buffer of trees retained beyond `numTrees` during incremental updates before pruning.
+    private static let incrementalTreeBuffer = 50
+    /// Top-N risk factors surfaced in `MLPrediction.topFactors`.
+    private static let topFactorCount = 5
+
     // Model state
     private var trees: [DecisionTree] = []
     private var featureKeys: [FeatureKey] = []
@@ -91,7 +118,7 @@ final class PredictiveScorer {
         guard vectors.count >= Self.minimumDays else { return }
 
         featureKeys = orderedKeys
-        let contextSize = 5
+        let contextSize = Self.contextFeatureCount
         let totalFeatures = orderedKeys.count + contextSize + 1
 
         // Build training data
@@ -103,22 +130,22 @@ final class PredictiveScorer {
 
         // Learn personalized bad-day thresholds from score distribution
         let allScores = scoreHistory.map { Double($0.score) }
-        if allScores.count >= 14 {
+        if allScores.count >= Self.minimumDays {
             let sorted = allScores.sorted()
-            // Low score = bottom 20th percentile of this user's scores
-            let p20Index = max(0, Int(Double(sorted.count) * 0.20) - 1)
-            learnedLowScoreThreshold = sorted[p20Index]
+            // Low score = bottom Nth percentile of this user's scores
+            let pLowIndex = max(0, Int(Double(sorted.count) * Self.lowScorePercentile) - 1)
+            learnedLowScoreThreshold = sorted[pLowIndex]
 
-            // Score drop = 75th percentile of day-to-day negative deltas
+            // Score drop = configured percentile of day-to-day negative deltas
             var drops: [Double] = []
             for i in 1..<allScores.count {
                 let delta = allScores[i - 1] - allScores[i]
                 if delta > 0 { drops.append(delta) }
             }
-            if drops.count >= 5 {
+            if drops.count >= Self.scoreDropMinSamples {
                 drops.sort()
-                let p75Index = Int(Double(drops.count) * 0.75)
-                learnedScoreDropThreshold = drops[min(p75Index, drops.count - 1)]
+                let pDropIndex = Int(Double(drops.count) * Self.scoreDropPercentile)
+                learnedScoreDropThreshold = drops[min(pDropIndex, drops.count - 1)]
             }
         }
 
@@ -148,8 +175,8 @@ final class PredictiveScorer {
 
         guard X.count >= Self.minimumDays else { return }
 
-        // Time-ordered train/validation split (80/20). temporal split, not random
-        let splitIdx = Int(Double(X.count) * 0.8)
+        // Time-ordered train/validation split (80/20 by default). temporal split, not random
+        let splitIdx = Int(Double(X.count) * Self.trainValidationSplit)
         let trainX = Array(X[..<splitIdx])
         let trainY = Array(y[..<splitIdx])
         let valX = Array(X[splitIdx...])
@@ -174,7 +201,7 @@ final class PredictiveScorer {
         // Track validation loss for early stopping
         var bestValLoss = Double.infinity
         var roundsWithoutImprovement = 0
-        let earlyStopPatience = 10
+        let earlyStopPatience = Self.earlyStopPatience
 
         // Boosting rounds with early stopping on validation set
         for _ in 0..<numTrees {
@@ -218,11 +245,11 @@ final class PredictiveScorer {
                 for i in 0..<valX.count {
                     valF[i] += learningRate * tree.predict(valX[i])
                     let p = sigmoid(valF[i])
-                    valLoss -= valY[i] * log(max(p, 1e-15)) + (1 - valY[i]) * log(max(1 - p, 1e-15))
+                    valLoss -= valY[i] * log(max(p, Self.logProbFloor)) + (1 - valY[i]) * log(max(1 - p, Self.logProbFloor))
                 }
                 valLoss /= Double(valX.count)
 
-                if valLoss < bestValLoss - 1e-4 {
+                if valLoss < bestValLoss - Self.earlyStopLossEpsilon {
                     bestValLoss = valLoss
                     roundsWithoutImprovement = 0
                 } else {
@@ -249,7 +276,7 @@ final class PredictiveScorer {
     /// Fit Platt scaling on validation set to calibrate raw sigmoid outputs.
     /// Maps raw log-odds to well-calibrated probabilities via logistic regression.
     private func fitPlattCalibration(valX: [[Double]], valY: [Double]) {
-        guard valX.count >= 10 else {
+        guard valX.count >= Self.plattMinSamples else {
             plattA = nil
             plattB = nil
             return
@@ -430,7 +457,7 @@ final class PredictiveScorer {
     }
 
     private func sigmoid(_ x: Double) -> Double {
-        1.0 / (1.0 + exp(-max(-500, min(500, x))))
+        1.0 / (1.0 + exp(-max(-Self.sigmoidClamp, min(Self.sigmoidClamp, x))))
     }
 
     // MARK: - Prediction
@@ -464,7 +491,7 @@ final class PredictiveScorer {
         }
         let confidence = Swift.min(Double(trainingCount) / Double(Self.maxConfidenceSamples), 1.0)
 
-        let topFactors = extractTopFactors(features: features, topN: 5)
+        let topFactors = extractTopFactors(features: features, topN: Self.topFactorCount)
 
         let prediction = MLPrediction(
             target: "Challenging day tomorrow",
@@ -507,7 +534,7 @@ final class PredictiveScorer {
         trees.append(DecisionTree(root: .leaf(value: leafValue)))
 
         // Keep tree count bounded
-        if trees.count > numTrees + 50 {
+        if trees.count > numTrees + Self.incrementalTreeBuffer {
             trees = Array(trees.suffix(numTrees))
         }
     }

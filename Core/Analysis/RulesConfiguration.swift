@@ -200,19 +200,62 @@ struct RulesConfiguration {
 
     /// Full context-aware recommendation. uses context data when available, falls back to templates
     static func recommendation(for metric: HealthMetric, severity: Severity, trend: TrendDirection, currentValue: Double?, deviationPercent: Double?, context: InsightContext?) -> String {
-        let devStr = deviationPercent.map { String(format: "%.0f", abs($0)) + "% " } ?? ""
-        let valStr = currentValue.map { metric.formatValue($0) + " " + metric.unit + " \u{2014} " } ?? ""
+        let parts = RecommendationParts(
+            devStr: deviationPercent.map { String(format: "%.0f", abs($0)) + "% " } ?? "",
+            valStr: currentValue.map { metric.formatValue($0) + " " + metric.unit + " \u{2014} " } ?? "",
+            projection: projectionSentence(context: context, trend: trend),
+            rootCause: rootCauseSentence(context: context),
+            historical: historicalPositionSentence(context: context),
+            correlationAction: correlationActionSentence(context: context, metric: metric),
+            topLever: context?.correlatedFactors.first.map { factor in
+                "Your #1 lever: improve \(factor.metric.displayName.lowercased()) (\(String(format: "%.0f", factor.effectPercent))% impact on \(metric.displayName.lowercased()))."
+            }
+        )
 
-        // Build context suffix that applies to any metric
-        let projection = projectionSentence(context: context, trend: trend)
-        let rootCause = rootCauseSentence(context: context)
-        let historical = historicalPositionSentence(context: context)
-        let correlationAction = correlationActionSentence(context: context, metric: metric)
+        switch metric {
+        case .heartRate, .restingHeartRate, .heartRateVariability, .vo2Max,
+             .bloodOxygen, .atrialFibrillationBurden, .peripheralPerfusionIndex:
+            return cardioRecommendation(metric: metric, severity: severity, trend: trend, currentValue: currentValue, parts: parts)
 
-        // Use the strongest correlated factor for the recommendation action when available
-        let topLever: String? = context?.correlatedFactors.first.map { factor in
-            "Your #1 lever: improve \(factor.metric.displayName.lowercased()) (\(String(format: "%.0f", factor.effectPercent))% impact on \(metric.displayName.lowercased()))."
+        case .sleepDuration, .sleepREM, .sleepDeep, .sleepCore, .sleepAwake:
+            return sleepRecommendation(metric: metric, severity: severity, trend: trend, parts: parts)
+
+        case .steps, .activeCalories, .exerciseMinutes, .distanceCycling,
+             .distanceSwimming, .swimmingStrokeCount, .appleMoveTime,
+             .walkingSpeed, .walkingStepLength, .walkingAsymmetry,
+             .walkingDoubleSupportPercentage, .stairAscentSpeed, .stairDescentSpeed,
+             .sixMinuteWalkTestDistance:
+            return activityRecommendation(metric: metric, severity: severity, trend: trend, parts: parts)
+
+        case .weight, .bmi, .bodyFatPercentage, .leanBodyMass, .waistCircumference,
+             .appleSleepingWristTemperature, .bloodPressureSystolic, .bloodPressureDiastolic,
+             .respiratoryRate, .peakExpiratoryFlowRate, .forcedVitalCapacity,
+             .bodyTemperature, .mindfulMinutes, .timeInDaylight, .electrodermalActivity:
+            return bodyAndVitalsRecommendation(metric: metric, severity: severity, trend: trend, parts: parts)
+
+        default:
+            return defaultRecommendation(metric: metric, trend: trend, parts: parts)
         }
+    }
+
+    // MARK: - Recommendation helpers
+
+    /// Bundles precomputed copy fragments shared across recommendation helpers
+    private struct RecommendationParts {
+        let devStr: String
+        let valStr: String
+        let projection: String
+        let rootCause: String
+        let historical: String
+        let correlationAction: String
+        let topLever: String?
+    }
+
+    private static func cardioRecommendation(metric: HealthMetric, severity: Severity, trend: TrendDirection, currentValue: Double?, parts: RecommendationParts) -> String {
+        let valStr = parts.valStr, devStr = parts.devStr
+        let projection = parts.projection, rootCause = parts.rootCause
+        let historical = parts.historical, correlationAction = parts.correlationAction
+        let topLever = parts.topLever
 
         switch metric {
         case .heartRate, .restingHeartRate:
@@ -265,6 +308,18 @@ struct RulesConfiguration {
             }
             return "\(valStr)Peripheral perfusion is tracking at your typical level."
 
+        default:
+            preconditionFailure("cardioRecommendation called with non-cardio metric: \(metric)")
+        }
+    }
+
+    private static func sleepRecommendation(metric: HealthMetric, severity: Severity, trend: TrendDirection, parts: RecommendationParts) -> String {
+        let valStr = parts.valStr, devStr = parts.devStr
+        let projection = parts.projection, rootCause = parts.rootCause
+        let historical = parts.historical, correlationAction = parts.correlationAction
+        let topLever = parts.topLever
+
+        switch metric {
         case .sleepDuration:
             if severity >= .warning || trend == .declining {
                 let base = "\(valStr)Sleep duration is \(devStr)below your baseline."
@@ -292,6 +347,19 @@ struct RulesConfiguration {
             }
             return "\(valStr)Nighttime awake periods are tracking at your typical level." + historical
 
+        default:
+            preconditionFailure("sleepRecommendation called with non-sleep metric: \(metric)")
+        }
+    }
+
+    private static func activityRecommendation(metric: HealthMetric, severity: Severity, trend: TrendDirection, parts: RecommendationParts) -> String {
+        let valStr = parts.valStr, devStr = parts.devStr
+        let projection = parts.projection, rootCause = parts.rootCause
+        let historical = parts.historical, correlationAction = parts.correlationAction
+        let topLever = parts.topLever
+        _ = severity
+
+        switch metric {
         case .steps:
             if trend == .declining {
                 let base = "\(valStr)Step count is down \(devStr)from your baseline."
@@ -331,6 +399,49 @@ struct RulesConfiguration {
                 ? "\(valStr)Move time is down \(devStr)from your baseline." + projection
                 : "\(valStr)Move time is consistent with your baseline." + historical
 
+        case .walkingSpeed:
+            return trend == .declining
+                ? "\(valStr)Walking speed is down \(devStr)from your baseline." + projection + historical
+                : "\(valStr)Walking speed is consistent with your baseline." + historical
+
+        case .walkingStepLength:
+            return trend == .declining
+                ? "\(valStr)Step length has shortened \(devStr)from your baseline." + projection + historical
+                : "\(valStr)Step length is consistent with your baseline." + historical
+
+        case .walkingAsymmetry:
+            if severity >= .warning {
+                return "\(valStr)Walking asymmetry is elevated \(devStr)above your typical level." + projection
+            }
+            return "\(valStr)Walking symmetry is consistent with your baseline." + historical
+
+        case .walkingDoubleSupportPercentage:
+            if severity >= .warning {
+                return "\(valStr)Double support time is elevated \(devStr)above your typical level." + projection
+            }
+            return "\(valStr)Double support percentage is tracking at your typical level."
+
+        case .stairAscentSpeed, .stairDescentSpeed:
+            return trend == .declining
+                ? "\(valStr)Stair speed is down \(devStr)from your baseline." + projection + historical
+                : "\(valStr)Stair speed is consistent with your baseline." + historical
+
+        case .sixMinuteWalkTestDistance:
+            return trend == .declining
+                ? "\(valStr)Six-minute walk distance is down \(devStr)from your baseline." + projection + historical
+                : "\(valStr)Six-minute walk distance is consistent with your baseline." + historical
+
+        default:
+            preconditionFailure("activityRecommendation called with non-activity metric: \(metric)")
+        }
+    }
+
+    private static func bodyAndVitalsRecommendation(metric: HealthMetric, severity: Severity, trend: TrendDirection, parts: RecommendationParts) -> String {
+        let valStr = parts.valStr, devStr = parts.devStr
+        let projection = parts.projection, rootCause = parts.rootCause
+        let historical = parts.historical, correlationAction = parts.correlationAction
+
+        switch metric {
         case .weight, .bmi, .bodyFatPercentage:
             if trend == .declining && !metric.higherIsBetter {
                 return "\(valStr)Trending up \(devStr)from your baseline." + rootCause + projection + historical
@@ -402,43 +513,19 @@ struct RulesConfiguration {
             }
             return "\(valStr)Electrodermal activity is tracking at your typical level."
 
-        case .walkingSpeed:
-            return trend == .declining
-                ? "\(valStr)Walking speed is down \(devStr)from your baseline." + projection + historical
-                : "\(valStr)Walking speed is consistent with your baseline." + historical
-
-        case .walkingStepLength:
-            return trend == .declining
-                ? "\(valStr)Step length has shortened \(devStr)from your baseline." + projection + historical
-                : "\(valStr)Step length is consistent with your baseline." + historical
-
-        case .walkingAsymmetry:
-            if severity >= .warning {
-                return "\(valStr)Walking asymmetry is elevated \(devStr)above your typical level." + projection
-            }
-            return "\(valStr)Walking symmetry is consistent with your baseline." + historical
-
-        case .walkingDoubleSupportPercentage:
-            if severity >= .warning {
-                return "\(valStr)Double support time is elevated \(devStr)above your typical level." + projection
-            }
-            return "\(valStr)Double support percentage is tracking at your typical level."
-
-        case .stairAscentSpeed, .stairDescentSpeed:
-            return trend == .declining
-                ? "\(valStr)Stair speed is down \(devStr)from your baseline." + projection + historical
-                : "\(valStr)Stair speed is consistent with your baseline." + historical
-
-        case .sixMinuteWalkTestDistance:
-            return trend == .declining
-                ? "\(valStr)Six-minute walk distance is down \(devStr)from your baseline." + projection + historical
-                : "\(valStr)Six-minute walk distance is consistent with your baseline." + historical
-
         default:
-            if trend == .declining {
-                return "\(valStr)\(metric.displayName) is declining \(devStr)from your baseline." + rootCause + projection + historical
-            }
-            return "\(valStr)\(metric.displayName) is tracking at your typical level." + historical
+            preconditionFailure("bodyAndVitalsRecommendation called with non-body metric: \(metric)")
         }
+    }
+
+    private static func defaultRecommendation(metric: HealthMetric, trend: TrendDirection, parts: RecommendationParts) -> String {
+        let valStr = parts.valStr, devStr = parts.devStr
+        let projection = parts.projection, rootCause = parts.rootCause
+        let historical = parts.historical
+
+        if trend == .declining {
+            return "\(valStr)\(metric.displayName) is declining \(devStr)from your baseline." + rootCause + projection + historical
+        }
+        return "\(valStr)\(metric.displayName) is tracking at your typical level." + historical
     }
 }

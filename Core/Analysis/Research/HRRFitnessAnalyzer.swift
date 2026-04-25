@@ -30,10 +30,11 @@ struct HRRFitnessAnalyzer {
         guard let hrrSeries = context.timeSeries[.heartRateRecovery] else { return [] }
 
         let allSamples = hrrSeries.samples(lastDays: 365)
-        guard allSamples.count >= minSamplesRequired else { return [] }
+        guard allSamples.count >= minSamplesRequired,
+              let lastAll = allSamples.last else { return [] }
 
         let recent = hrrSeries.samples(lastDays: 30)
-        let currentHRR = recent.isEmpty ? allSamples.last!.value : recent.map(\.value).mean
+        let currentHRR = recent.isEmpty ? lastAll.value : recent.map(\.value).mean
 
         // Compute trajectory over available data
         let sorted = allSamples.sorted { $0.date < $1.date }
@@ -48,9 +49,12 @@ struct HRRFitnessAnalyzer {
             trajectory = totalChange > 2 ? .improving : totalChange < -2 ? .declining : .stable
         }
 
-        let daysSpanned = Calendar.current.dateComponents(
-            [.day], from: sorted.first!.date, to: sorted.last!.date
-        ).day ?? 0
+        let daysSpanned: Int
+        if let firstDate = sorted.first?.date, let lastDate = sorted.last?.date {
+            daysSpanned = Calendar.current.dateComponents([.day], from: firstDate, to: lastDate).day ?? 0
+        } else {
+            daysSpanned = 0
+        }
         let monthsSpanned = max(1, daysSpanned / 30)
 
         // Insight 1: Current HRR assessment

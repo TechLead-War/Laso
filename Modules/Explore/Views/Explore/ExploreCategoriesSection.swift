@@ -33,6 +33,10 @@ struct ExploreCategoriesSection: View {
                     .buttonStyle(.dsPress)
                     .contentShape(Rectangle())
                     .accessibilityIdentifier("explore.category.\(item.category.rawValue)")
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("\(item.category.displayName) category")
+                    .accessibilityValue(item.score.map { "Score \($0)" } ?? "No score yet")
+                    .accessibilityHint("Opens the \(item.category.displayName) category detail")
 
                     if index < categories.count - 1 {
                         Divider()

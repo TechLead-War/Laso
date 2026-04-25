@@ -17,7 +17,7 @@ struct TodayWorkoutCard: View {
                         .background(plan.zone.tint.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.iconRadius))
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Today's Workout")
+                        Text(Copy.Strain.todaysWorkout)
                             .font(DS.Typography.captionSemibold)
                             .foregroundStyle(.secondary)
                             .textCase(.uppercase)
@@ -41,7 +41,7 @@ struct TodayWorkoutCard: View {
 
                 HStack(spacing: 8) {
                     workoutChip(icon: "bolt.heart.fill", text: plan.zone.rawValue, tint: plan.zone.tint)
-                    workoutChip(icon: "clock", text: "\(plan.targetDuration) min", tint: .secondary)
+                    workoutChip(icon: "clock", text: Copy.Strain.minutesShort(plan.targetDuration), tint: .secondary)
                     if let cyclePhase {
                         workoutChip(icon: "drop.fill", text: cyclePhase.displayName, tint: .pink)
                     }
@@ -51,7 +51,7 @@ struct TodayWorkoutCard: View {
                     Text(recoveryBand.label)
                         .font(DS.Typography.captionSemibold)
                         .foregroundStyle(recoveryBand.tint)
-                    Text("Tap to view warm-up, blocks, and cooldown")
+                    Text(Copy.Strain.tapToViewWorkout)
                         .font(DS.Typography.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -90,37 +90,37 @@ struct WorkoutPlanSheet: View {
 
                 if let note = plan.cyclePhaseNote {
                     infoCard(
-                        title: "Cycle Adjustment",
+                        title: Copy.Strain.cycleAdjustmentTitle,
                         detail: note,
                         icon: "drop.circle.fill",
                         tint: .pink
                     )
                 } else if let cyclePhase {
                     infoCard(
-                        title: "Cycle Phase",
-                        detail: "Current phase: \(cyclePhase.displayName). Training stays aligned to your recovery capacity today.",
+                        title: Copy.Strain.cyclePhaseTitle,
+                        detail: Copy.Strain.cyclePhaseDetail(cyclePhase.displayName),
                         icon: "drop.circle.fill",
                         tint: .pink
                     )
                 }
 
-                blockCard(title: "Warm-Up", block: plan.warmup, tint: AppColour.warning)
+                blockCard(title: Copy.Strain.warmUpTitle, block: plan.warmup, tint: AppColour.warning)
 
                 ForEach(Array(plan.mainBlocks.enumerated()), id: \.offset) { index, block in
-                    blockCard(title: "Main Block \(index + 1)", block: block, tint: plan.zone.tint)
+                    blockCard(title: Copy.Strain.mainBlockTitle(index + 1), block: block, tint: plan.zone.tint)
                 }
 
-                blockCard(title: "Cooldown", block: plan.cooldown, tint: AppColour.info)
+                blockCard(title: Copy.Strain.cooldownTitle, block: plan.cooldown, tint: AppColour.info)
             }
             .padding(.horizontal)
             .padding(.vertical, DS.space5)
         }
         .background(AppColour.surfaceBase.ignoresSafeArea())
-        .navigationTitle("Today's Workout")
+        .navigationTitle(Copy.Strain.todaysWorkout)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Done") {
+                Button(Copy.Strain.done) {
                     dismiss()
                 }
             }
@@ -146,9 +146,9 @@ struct WorkoutPlanSheet: View {
             }
 
             HStack(spacing: 10) {
-                metricPill(value: recoveryBand.label, label: "Recovery", tint: recoveryBand.tint)
-                metricPill(value: "\(plan.targetDuration)m", label: "Duration", tint: plan.zone.tint)
-                metricPill(value: "\(plan.estimatedCalories)", label: "Cal", tint: AppColour.warning)
+                metricPill(value: recoveryBand.label, label: Copy.Strain.recoveryLabel, tint: recoveryBand.tint)
+                metricPill(value: "\(plan.targetDuration)m", label: Copy.Strain.durationLabel, tint: plan.zone.tint)
+                metricPill(value: "\(plan.estimatedCalories)", label: Copy.Strain.caloriesLabel, tint: AppColour.warning)
             }
         }
         .padding(DS.cardPadding)
@@ -201,7 +201,7 @@ struct WorkoutPlanSheet: View {
             }
 
             if let heartRateTarget = block.heartRateTarget {
-                Text("Target: \(heartRateTarget.label) • \(heartRateTarget.minBPM)-\(heartRateTarget.maxBPM) bpm")
+                Text(Copy.Strain.workoutHeartRateTarget(label: heartRateTarget.label, minBPM: heartRateTarget.minBPM, maxBPM: heartRateTarget.maxBPM))
                     .font(DS.Typography.caption)
                     .foregroundStyle(.secondary)
             }
@@ -264,11 +264,11 @@ private extension WorkoutRecoveryBand {
     var label: String {
         switch self {
         case .red:
-            return "Red recovery"
+            return Copy.Strain.redRecovery
         case .yellow:
-            return "Yellow recovery"
+            return Copy.Strain.yellowRecovery
         case .green:
-            return "Green recovery"
+            return Copy.Strain.greenRecovery
         }
     }
 

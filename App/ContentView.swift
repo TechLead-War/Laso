@@ -300,9 +300,12 @@ struct ContentView: View {
             }
             .navigationDestination(for: HealthRiskType.self) { riskType in
                 if let risk = dashboardViewModel.analysis.healthRisks.first(where: { $0.riskType == riskType }) {
-                    HealthRiskDetailView(risk: risk) { metric in
-                        path.wrappedValue.append(metric)
-                    }
+                    HealthRiskDetailView(
+                        risk: risk,
+                        onTapMetric: { metric in path.wrappedValue.append(metric) },
+                        lastUpdated: dashboardViewModel.lastRefresh,
+                        onRefresh: { await dashboardViewModel.refresh() }
+                    )
                 } else {
                     ContentUnavailableView(
                         "Risk Data Unavailable",
@@ -402,6 +405,7 @@ struct ContentView: View {
                 insightsByCategory: dashboardViewModel.insights.insightsByCategory,
                 onTapMetric: { metric in navigationPath.append(metric) },
                 headlineSummary: dashboardViewModel.analysis.topCausalChain?.narrative ?? dashboardViewModel.insights.headlineInsight?.recommendation,
+                lastUpdated: dashboardViewModel.lastRefresh,
                 store: healthDataStore
             )
         case .weeklyReview:
@@ -419,7 +423,7 @@ struct ContentView: View {
                 viewModel: HealthStateTimelineViewModel(mlOrchestrator: dashboardViewModel.analysisEngine.mlOrchestrator)
             )
         case .vitalityDetail:
-            VitalityDetailView(scorer: dashboardViewModel.vitalityScorer)
+            VitalityDetailView(scorer: dashboardViewModel.vitalityScorer, lastUpdated: dashboardViewModel.lastRefresh)
         case .strainDetail:
             strainDetailDestination
         case .stressMonitor:
@@ -478,7 +482,8 @@ struct ContentView: View {
             },
             strainBalance: balance,
             workoutRecoveryBand: workoutRecoveryBand,
-            cyclePhase: cyclePhase
+            cyclePhase: cyclePhase,
+            lastUpdated: dashboardViewModel.lastRefresh
         )
     }
 
@@ -501,7 +506,8 @@ struct ContentView: View {
                 hrElevation: stress.hrElevation,
                 weeklyScores: weekScores,
                 weeklyAverage: dashboardViewModel.stressScorer.weeklyAverage ?? 0,
-                previousWeekAverage: prevAvg
+                previousWeekAverage: prevAvg,
+                lastUpdated: dashboardViewModel.lastRefresh
             )
         }
     }
@@ -513,7 +519,8 @@ struct ContentView: View {
                 brainScore: brain,
                 weeklyHistory: dashboardViewModel.brainHealthScorer.weeklyHistory,
                 weeklyAverage: dashboardViewModel.brainHealthScorer.weeklyAverage,
-                trend: dashboardViewModel.brainHealthScorer.brainHealthTrend
+                trend: dashboardViewModel.brainHealthScorer.brainHealthTrend,
+                lastUpdated: dashboardViewModel.lastRefresh
             )
         }
     }
@@ -544,7 +551,9 @@ struct ContentView: View {
                 wakeTime: need.recommendedWakeTime,
                 debtHours: debt?.totalDebtHours ?? 0,
                 dailyHistory: dailyHistory,
-                consistencyScore: Int(dashboardViewModel.sleepNeedCalculator.sleepConsistencyScore)
+                consistencyScore: Int(dashboardViewModel.sleepNeedCalculator.sleepConsistencyScore),
+                lastUpdated: dashboardViewModel.lastRefresh,
+                onRefresh: { await dashboardViewModel.refresh() }
             )
             .task {
                 await healthKitManager.refreshSleepBoundaries(days: 14)
@@ -577,7 +586,9 @@ struct ContentView: View {
                 cycleHistory: dashboardViewModel.menstrualCycleTracker.cycleHistory.map {
                     CycleHistoryEntry(startDate: $0.startDate, length: $0.length)
                 },
-                nextPeriodDate: cycle.nextPeriodEstimate
+                nextPeriodDate: cycle.nextPeriodEstimate,
+                lastUpdated: dashboardViewModel.lastRefresh,
+                onRefresh: { await dashboardViewModel.refresh() }
             )
         }
     }

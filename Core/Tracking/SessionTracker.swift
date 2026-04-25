@@ -57,6 +57,10 @@ final class SessionTracker {
     private(set) var retentionMilestones: Set<String> = []
     private(set) var streakMilestonesReached: Set<String> = []
 
+    /// Pass 12 BE perf: cached current calendar. `daysSinceLastSession` is read
+    /// on every session start; the lifecycle update path also uses it.
+    private static let cal: Calendar = Calendar.current
+
     private enum Key {
         static let lastActiveDate = AppKeys.Session.lastActiveDate
         static let streakDays = AppKeys.Session.streakDays
@@ -314,7 +318,7 @@ final class SessionTracker {
         }
 
         let installDate = defaults.object(forKey: Key.installDate) as? Date ?? Date()
-        daysSinceInstall = Calendar.current.dateComponents([.day], from: installDate, to: Date()).day ?? 0
+        daysSinceInstall = Self.cal.dateComponents([.day], from: installDate, to: Date()).day ?? 0
     }
 
     private func updateLifecycleOnStart() {
@@ -326,7 +330,7 @@ final class SessionTracker {
     /// Days since last session (for return session tracking). Returns nil for first session.
     var daysSinceLastSession: Int? {
         guard let lastDate = defaults.object(forKey: Key.lastSessionDate) as? Date else { return nil }
-        return Calendar.current.dateComponents([.day], from: lastDate, to: Date()).day
+        return Self.cal.dateComponents([.day], from: lastDate, to: Date()).day
     }
 
     /// Record an activation milestone. Returns true if this is the FIRST time it's recorded.

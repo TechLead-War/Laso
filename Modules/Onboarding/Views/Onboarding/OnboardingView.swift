@@ -1,10 +1,10 @@
 import SwiftUI
 import HealthKit
 
-/// Root onboarding coordinator. Six screen flow: pulse, profile, connect, priority, mirror, promise.
-/// Notifications, cycle opt in, and the standalone medical disclaimer are deferred to contextual
-/// surfaces. Disclaimer is acknowledged via the footer on the Promise screen when the user taps
-/// Open Laso.
+/// Root onboarding coordinator. Seven screen flow: pulse, profile, connect, priority, mirror,
+/// promise (Apple Sign In gate), trial (StoreKit autopay setup with the 7-day introductory
+/// free trial). Notifications, cycle opt in, and the standalone medical disclaimer are deferred
+/// to contextual surfaces. Disclaimer is acknowledged when the trial purchase succeeds.
 struct OnboardingView: View {
     enum OnboardingStep: String, Hashable {
         case pulse
@@ -13,6 +13,7 @@ struct OnboardingView: View {
         case priority
         case mirror
         case promise
+        case trial
     }
 
     @State private var currentStep: OnboardingStep = .pulse
@@ -26,11 +27,12 @@ struct OnboardingView: View {
 
     let healthKitManager: HealthKitManager
     let appStateStore: AppStateStore
+    let subscriptionManager: SubscriptionManager
     let runCalibration: () async -> String?
     let onComplete: () -> Void
 
     private var flowSteps: [OnboardingStep] {
-        [.pulse, .profile, .connect, .priority, .mirror, .promise]
+        [.pulse, .profile, .connect, .priority, .mirror, .promise, .trial]
     }
 
     var body: some View {
@@ -70,9 +72,17 @@ struct OnboardingView: View {
                 .tag(OnboardingStep.mirror)
 
                 OnboardingPromiseStep(discovery: discovery) {
-                    finishOnboarding()
+                    advance(to: .trial)
                 }
                 .tag(OnboardingStep.promise)
+
+                PaywallView(
+                    subscriptionManager: subscriptionManager,
+                    source: "onboarding"
+                ) {
+                    finishOnboarding()
+                }
+                .tag(OnboardingStep.trial)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
             .scrollDisabled(true)
@@ -153,19 +163,20 @@ struct OnboardingView: View {
     }
 
     private func saveUserProfile(focuses: Set<HealthFocus>) {
-        let finalGender = profileGender ?? .preferNotToSay
-
-        let dateOfBirth: Date
-        if let age = profileAge {
-            dateOfBirth = Calendar.current.date(byAdding: .year, value: -age, to: Date()) ?? Date()
-        } else {
-            dateOfBirth = Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
+        // Profile screen validates 13..120 and gates onComplete behind a non-nil age,
+        // so a missing profileAge here means the profile step was bypassed (e.g.
+        // UI test deep-link). In that case we save no profile rather than fabricate
+        // a fake DOB -- a fake age would silently corrupt Vitality Age and any other
+        // age-norm calculation downstream.
+        guard let age = profileAge,
+              let dateOfBirth = Calendar.current.date(byAdding: .year, value: -age, to: Date()) else {
+            return
         }
 
         let profile = UserProfileStore.shared.makeProfile(
             name: "",
             email: "",
-            gender: finalGender,
+            gender: profileGender ?? .preferNotToSay,
             dateOfBirth: dateOfBirth,
             healthFocuses: focuses.map(\.rawValue)
         )

@@ -55,80 +55,92 @@ struct CognitiveEnergyAnalyzer {
         var totalWeight: Double = 0
 
         // HRV z-score (30%)
-        if let hrvSeries = timeSeries[.heartRateVariability] {
-            let recent = hrvSeries.samples(lastDays: 3)
-            if !recent.isEmpty {
-                let avg = recent.mean(of: \.value)
-                let z = (avg - hrvBaseline.mean) / max(hrvBaseline.standardDeviation, 1)
-                let normalizedScore = min(max((z + 2) / 4.0, 0), 1) * 100 // -2σ=0, +2σ=100
-                score += normalizedScore * 0.30
-                totalWeight += 0.30
-                if z < -0.5 {
-                    let pctBelow = String(format: "%.0f", abs(z * hrvBaseline.standardDeviation / hrvBaseline.mean * 100))
-                    components.append(("HRV", "down \(pctBelow)% from baseline"))
-                }
-            }
-        }
+        accumulateCognitiveReadinessFactor(
+            metric: .heartRateVariability,
+            timeSeries: timeSeries,
+            baseline: hrvBaseline,
+            sdFloor: 1,
+            weight: 0.30,
+            componentName: "HRV",
+            componentContribution: { z, _ in
+                let pctBelow = String(format: "%.0f", abs(z * hrvBaseline.standardDeviation / hrvBaseline.mean * 100))
+                return "down \(pctBelow)% from baseline"
+            },
+            score: &score,
+            totalWeight: &totalWeight,
+            components: &components
+        )
 
         // Deep sleep % (25%)
-        if let deepSeries = timeSeries[.sleepDeep], let deepBaseline = baselines[.sleepDeep] {
-            let recent = deepSeries.samples(lastDays: 3)
-            if !recent.isEmpty {
-                let avg = recent.mean(of: \.value)
-                let z = (avg - deepBaseline.mean) / max(deepBaseline.standardDeviation, 0.1)
-                let normalizedScore = min(max((z + 2) / 4.0, 0), 1) * 100
-                score += normalizedScore * 0.25
-                totalWeight += 0.25
-                if z < -0.5 {
+        if let deepBaseline = baselines[.sleepDeep] {
+            accumulateCognitiveReadinessFactor(
+                metric: .sleepDeep,
+                timeSeries: timeSeries,
+                baseline: deepBaseline,
+                sdFloor: 0.1,
+                weight: 0.25,
+                componentName: "deep sleep",
+                componentContribution: { _, avg in
                     let pctBelow = String(format: "%.0f", abs((avg - deepBaseline.mean) / deepBaseline.mean * 100))
-                    components.append(("deep sleep", "\(pctBelow)% below baseline"))
-                }
-            }
+                    return "\(pctBelow)% below baseline"
+                },
+                score: &score,
+                totalWeight: &totalWeight,
+                components: &components
+            )
         }
 
         // REM % (15%)
-        if let remSeries = timeSeries[.sleepREM], let remBaseline = baselines[.sleepREM] {
-            let recent = remSeries.samples(lastDays: 3)
-            if !recent.isEmpty {
-                let avg = recent.mean(of: \.value)
-                let z = (avg - remBaseline.mean) / max(remBaseline.standardDeviation, 0.1)
-                let normalizedScore = min(max((z + 2) / 4.0, 0), 1) * 100
-                score += normalizedScore * 0.15
-                totalWeight += 0.15
-                if z < -0.5 {
+        if let remBaseline = baselines[.sleepREM] {
+            accumulateCognitiveReadinessFactor(
+                metric: .sleepREM,
+                timeSeries: timeSeries,
+                baseline: remBaseline,
+                sdFloor: 0.1,
+                weight: 0.15,
+                componentName: "REM sleep",
+                componentContribution: { _, avg in
                     let pctBelow = String(format: "%.0f", abs((avg - remBaseline.mean) / remBaseline.mean * 100))
-                    components.append(("REM sleep", "\(pctBelow)% below baseline"))
-                }
-            }
+                    return "\(pctBelow)% below baseline"
+                },
+                score: &score,
+                totalWeight: &totalWeight,
+                components: &components
+            )
         }
 
         // Blood oxygen (15%)
-        if let o2Series = timeSeries[.bloodOxygen], let o2Baseline = baselines[.bloodOxygen] {
-            let recent = o2Series.samples(lastDays: 3)
-            if !recent.isEmpty {
-                let avg = recent.mean(of: \.value)
-                let z = (avg - o2Baseline.mean) / max(o2Baseline.standardDeviation, 0.1)
-                let normalizedScore = min(max((z + 2) / 4.0, 0), 1) * 100
-                score += normalizedScore * 0.15
-                totalWeight += 0.15
-            }
+        if let o2Baseline = baselines[.bloodOxygen] {
+            accumulateCognitiveReadinessFactor(
+                metric: .bloodOxygen,
+                timeSeries: timeSeries,
+                baseline: o2Baseline,
+                sdFloor: 0.1,
+                weight: 0.15,
+                componentName: nil,
+                componentContribution: nil,
+                score: &score,
+                totalWeight: &totalWeight,
+                components: &components
+            )
         }
 
         // Sleep duration vs target (15%)
-        if let sleepSeries = timeSeries[.sleepDuration] {
-            let recent = sleepSeries.samples(lastDays: 3)
-            if !recent.isEmpty {
-                let avg = recent.mean(of: \.value)
-                let z = (avg - sleepBaseline.mean) / max(sleepBaseline.standardDeviation, 0.1)
-                let normalizedScore = min(max((z + 2) / 4.0, 0), 1) * 100
-                score += normalizedScore * 0.15
-                totalWeight += 0.15
-                if z < -0.5 {
-                    let deficit = String(format: "%.1f", sleepBaseline.mean - avg)
-                    components.append(("sleep duration", "\(deficit) hrs below your baseline"))
-                }
-            }
-        }
+        accumulateCognitiveReadinessFactor(
+            metric: .sleepDuration,
+            timeSeries: timeSeries,
+            baseline: sleepBaseline,
+            sdFloor: 0.1,
+            weight: 0.15,
+            componentName: "sleep duration",
+            componentContribution: { _, avg in
+                let deficit = String(format: "%.1f", sleepBaseline.mean - avg)
+                return "\(deficit) hrs below your baseline"
+            },
+            score: &score,
+            totalWeight: &totalWeight,
+            components: &components
+        )
 
         guard totalWeight >= 0.45 else { return nil } // Need at least HRV + one sleep metric
 
@@ -138,6 +150,45 @@ struct CognitiveEnergyAnalyzer {
         // Only generate insight when score is noteworthy
         guard finalScore <= 65 || finalScore >= 85 else { return nil }
 
+        return buildCognitiveReadinessInsight(finalScore: finalScore, components: components)
+    }
+
+    /// Accumulate one weighted factor into the running cognitive-readiness score, optionally
+    /// recording a low-z component note when `componentName`/`componentContribution` are provided.
+    private static func accumulateCognitiveReadinessFactor(
+        metric: HealthMetric,
+        timeSeries: [HealthMetric: MetricTimeSeries],
+        baseline: UserBaseline,
+        sdFloor: Double,
+        weight: Double,
+        componentName: String?,
+        componentContribution: ((_ z: Double, _ avg: Double) -> String)?,
+        score: inout Double,
+        totalWeight: inout Double,
+        components: inout [(name: String, contribution: String)]
+    ) {
+        guard let series = timeSeries[metric] else { return }
+        let recent = series.samples(lastDays: 3)
+        guard !recent.isEmpty else { return }
+
+        let avg = recent.mean(of: \.value)
+        let z = (avg - baseline.mean) / max(baseline.standardDeviation, sdFloor)
+        let normalizedScore = min(max((z + 2) / 4.0, 0), 1) * 100 // -2σ=0, +2σ=100
+        score += normalizedScore * weight
+        totalWeight += weight
+
+        if z < -0.5,
+           let name = componentName,
+           let contributionFn = componentContribution {
+            components.append((name, contributionFn(z, avg)))
+        }
+    }
+
+    /// Build the final cognitive readiness Insight from the aggregated score and components.
+    private static func buildCognitiveReadinessInsight(
+        finalScore: Int,
+        components: [(name: String, contribution: String)]
+    ) -> Insight {
         let isLow = finalScore <= 65
         let componentText = components.isEmpty ? "" : " \u{2014} your \(components.map { "\($0.name) \($0.contribution)" }.joined(separator: ", "))"
 

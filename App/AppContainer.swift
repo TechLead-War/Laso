@@ -106,7 +106,10 @@ final class AppContainer {
     /// When `--ui-test-premium-showcase` is passed, swaps in
     /// `PremiumShowcaseDataProvider` so values reflect a thriving, post-purchase
     /// user (used to capture App Store screenshots).
+    /// DEBUG-only body: in Release builds this is a no-op since the providers
+    /// and UITestMode flags do not ship.
     func injectUITestMockData() {
+        #if DEBUG
         guard UITestMode.isEnabled else { return }
 
         // Seed a completed user profile (female if requested so cycle flows appear)
@@ -231,5 +234,6 @@ final class AppContainer {
             )
         }
         deviceSourceManager.connectedDevices = devices
+        #endif
     }
 }

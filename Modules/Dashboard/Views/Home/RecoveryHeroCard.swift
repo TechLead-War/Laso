@@ -67,7 +67,7 @@ struct RecoveryHeroCard: View {
                         .frame(width: 7, height: 7)
                         .opacity(pulse ? 0.35 : 1.0)
                         .animation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true), value: pulse)
-                    Text("Right now")
+                    Text(Copy.Home.Cards.rightNow)
                         .font(DS.Typography.footnoteMedium)
                         .foregroundStyle(AppColour.textPrimary)
                 }
@@ -110,7 +110,7 @@ struct RecoveryHeroCard: View {
                             Text(weekDelta > 0 ? "+\(weekDelta)" : "\(weekDelta)")
                                 .font(DS.Typography.bodySemibold.monospacedDigit())
                                 .postHogMask()
-                            Text("vs last week")
+                            Text(Copy.Home.Cards.vsLastWeek)
                                 .font(DS.Typography.footnote)
                         }
                         .foregroundStyle(weekDelta > 0 ? AppColour.scoreOptimal : AppColour.scorePoor)
@@ -139,7 +139,7 @@ struct RecoveryHeroCard: View {
                         HStack(spacing: 4) {
                             Image(systemName: "clock.arrow.circlepath")
                                 .font(DS.Typography.caption)
-                            Text("Updated \(refresh, style: .relative) ago")
+                            Copy.Home.updatedAgo(refresh)
                                 .font(DS.Typography.caption)
                         }
                         .foregroundStyle(AppColour.warning)

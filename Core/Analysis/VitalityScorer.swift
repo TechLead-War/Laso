@@ -116,12 +116,14 @@ private enum VitalityNorms {
             sortedTable = table
         }
 
+        guard let firstEntry = sortedTable.first, let lastEntry = sortedTable.last else { return 50 }
+
         // If value is below the minimum or above the maximum, clamp
-        if value <= sortedTable.first!.value {
-            return higherIsBetter ? sortedTable.first!.age : sortedTable.first!.age
+        if value <= firstEntry.value {
+            return firstEntry.age
         }
-        if value >= sortedTable.last!.value {
-            return higherIsBetter ? sortedTable.last!.age : sortedTable.last!.age
+        if value >= lastEntry.value {
+            return lastEntry.age
         }
 
         // Find the bracketing pair and interpolate
@@ -644,10 +646,10 @@ final class VitalityScorer {
 
     /// Interpolate the population median for a given age from a reference table
     private func interpolateMedian(age: Int, table: [(age: Int, value: Double)]) -> Double {
-        guard table.count >= 2 else { return 0 }
+        guard table.count >= 2, let firstEntry = table.first, let lastEntry = table.last else { return 0 }
 
-        if age <= table.first!.age { return table.first!.value }
-        if age >= table.last!.age { return table.last!.value }
+        if age <= firstEntry.age { return firstEntry.value }
+        if age >= lastEntry.age { return lastEntry.value }
 
         for i in 0..<(table.count - 1) {
             if age >= table[i].age && age <= table[i + 1].age {
@@ -699,16 +701,15 @@ final class VitalityScorer {
         let earlySlice = history.prefix(thirdCount)
         let lateSlice = history.suffix(thirdCount)
 
-        guard !earlySlice.isEmpty, !lateSlice.isEmpty else {
+        guard !earlySlice.isEmpty, !lateSlice.isEmpty,
+              let earlyDate = earlySlice.first?.date,
+              let lateDate = lateSlice.last?.date else {
             paceOfAging = 1.0
             return
         }
 
         let earlyAvgAge = Double(earlySlice.map(\.age).reduce(0, +)) / Double(earlySlice.count)
         let lateAvgAge = Double(lateSlice.map(\.age).reduce(0, +)) / Double(lateSlice.count)
-
-        let earlyDate = earlySlice.first!.date
-        let lateDate = lateSlice.last!.date
         let calendarDays = Self.cal.dateComponents([.day], from: earlyDate, to: lateDate).day ?? 1
         let calendarYears = Double(max(calendarDays, 1)) / 365.25
 

@@ -13,6 +13,9 @@ final class WeeklyReviewViewModel {
 
     var review: WeeklyReview?
     var isLoading = false
+    /// Pass 8 V (F45): timestamp of the most recent successful `load()`.
+    /// Drives a small "Updated …" caption at the top of the screen.
+    private(set) var lastUpdated: Date?
 
     init(dashboardViewModel: DashboardViewModel) {
         self.dashboardViewModel = dashboardViewModel
@@ -53,6 +56,7 @@ final class WeeklyReviewViewModel {
             watchOuts: watchOuts,
             coachPlan: coachPlan
         )
+        lastUpdated = Date()
     }
 
     // MARK: - Computed Helpers

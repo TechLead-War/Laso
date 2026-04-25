@@ -58,6 +58,8 @@ struct ProFeatureOverlay: View {
                     .padding(.vertical, 14)
             }
             .buttonStyle(.borderedProminent)
+            .accessibilityLabel("Upgrade to Pro")
+            .accessibilityHint("Opens the subscription paywall to unlock \(feature)")
             .padding(.horizontal, 40)
 
             Spacer()

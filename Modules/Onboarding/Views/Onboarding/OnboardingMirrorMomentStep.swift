@@ -136,9 +136,15 @@ struct OnboardingMirrorMomentStep: View {
                     .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
         } else {
-            ProgressView()
-                .progressViewStyle(.circular)
-                .padding(.top, DS.space1)
+            // Pass 11 AK: pre-progress fallback gets a label so the spinner has context.
+            VStack(spacing: DS.space2) {
+                ProgressView()
+                    .progressViewStyle(.circular)
+                Text(Copy.Onboarding.mirrorStartingCalibration)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
+            }
+            .padding(.top, DS.space1)
         }
     }
 

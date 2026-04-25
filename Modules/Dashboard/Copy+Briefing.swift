@@ -41,7 +41,7 @@ extension Copy {
             }
 
             static func tomorrowDetailWithFactor(metricName: String) -> String {
-                "Your \(metricName.lowercased()) has been a little off lately. A good night of sleep tonight should help you bounce back."
+                "Your \(metricName.lowercased()) has been a little off lately. A good night of sleep tonight should help you feel better."
             }
 
             static let tomorrowDetailGeneric = "A few of your numbers are shifting together. Taking it easy tomorrow should help."

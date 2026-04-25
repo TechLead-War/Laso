@@ -53,7 +53,7 @@ struct BaselineDriftDetector {
             let drift = ((current.mean - oldBaseline.baseline.mean) / abs(oldBaseline.baseline.mean)) * 100
             let threshold: Double = days <= 30 ? 8 : (days <= 90 ? 6 : 5)
             guard abs(drift) > threshold else { continue }
-            if bestDrift == nil || abs(drift) > abs(bestDrift!.percent) * 0.8 {
+            if bestDrift.map({ abs(drift) > abs($0.percent) * 0.8 }) ?? true {
                 bestDrift = (drift, label)
             }
         }
@@ -97,7 +97,7 @@ struct BaselineDriftDetector {
             guard abs(drift) > threshold else { continue }
 
             // Prefer longer-term drift (more meaningful) if significant
-            if bestDrift == nil || abs(drift) > abs(bestDrift!.percent) * 0.8 {
+            if bestDrift.map({ abs(drift) > abs($0.percent) * 0.8 }) ?? true {
                 bestDrift = (drift, label, oldBaseline.baseline.mean)
             }
         }

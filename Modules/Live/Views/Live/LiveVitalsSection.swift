@@ -153,6 +153,7 @@ struct LiveVitalsSection: View {
             .cardStyle()
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(label), \(value ?? "no data") \(unit), \(status.label)")
+            .accessibilityHint("Opens \(label) detail")
         }
         .buttonStyle(.dsPress)
     }

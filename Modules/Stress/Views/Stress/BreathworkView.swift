@@ -198,9 +198,9 @@ struct BreathworkView: View {
             }
             AppAnalytics.shared.trackFeatureClose(.breathwork)
         }
-        .alert("End Session?", isPresented: $showStopConfirmation) {
-            Button("End", role: .destructive) { endSession() }
-            Button("Continue", role: .cancel) { }
+        .alert(Copy.Breathwork.endSessionTitle, isPresented: $showStopConfirmation) {
+            Button(Copy.Breathwork.endSessionConfirm, role: .destructive) { endSession() }
+            Button(Copy.Breathwork.continueSession, role: .cancel) { }
         } message: {
             Text(Copy.Breathwork.sessionInProgress)
         }
@@ -528,7 +528,7 @@ struct BreathworkView: View {
                 trackCompletedSessionIfNeeded()
                 dismiss()
             } label: {
-                Text("Done")
+                Text(Copy.Breathwork.done)
                     .font(DS.Typography.bodySemibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, DS.space4)

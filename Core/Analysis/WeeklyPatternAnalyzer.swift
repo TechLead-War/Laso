@@ -228,6 +228,11 @@ struct WeeklyPatternAnalyzer {
 /// Maps daily health data against menstrual cycle phases and generates phase-aware guidance.
 struct CyclePhaseAnalyzer {
 
+    /// Pass 11 AF: cached calendar — `assignPhases` walks day-by-day across a
+    /// cycle window and `daysBetween` runs once per cycle boundary. One static
+    /// avoids per-iteration `Calendar.current` allocation.
+    private static let cal: Calendar = Calendar.current
+
     private enum Phase: String, CaseIterable {
         case menstrual
         case follicular
@@ -457,7 +462,7 @@ struct CyclePhaseAnalyzer {
 
         while day <= endDate {
             guard let startIndex = cycleStarts.lastIndex(where: { $0 <= day }) else {
-                day = Calendar.current.date(byAdding: .day, value: 1, to: day) ?? day
+                day = Self.cal.date(byAdding: .day, value: 1, to: day) ?? day
                 continue
             }
 
@@ -475,7 +480,7 @@ struct CyclePhaseAnalyzer {
                 menstrualLength: menstrualLength
             )
 
-            day = Calendar.current.date(byAdding: .day, value: 1, to: day) ?? day
+            day = Self.cal.date(byAdding: .day, value: 1, to: day) ?? day
         }
 
         return phaseByDay
@@ -605,7 +610,7 @@ struct CyclePhaseAnalyzer {
     }
 
     private static func daysBetween(_ start: Date, _ end: Date) -> Int {
-        Calendar.current.dateComponents([.day], from: start.startOfDay, to: end.startOfDay).day ?? 0
+        Self.cal.dateComponents([.day], from: start.startOfDay, to: end.startOfDay).day ?? 0
     }
 }
 

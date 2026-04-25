@@ -49,6 +49,8 @@ struct ExploreDecliningTrendsSection: View {
                         .foregroundStyle(.tint)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("See all causal explanations")
+                    .accessibilityHint("Opens the full health intelligence view")
                 }
             }
             .padding(.horizontal)
@@ -94,6 +96,10 @@ struct ExploreDecliningTrendsSection: View {
                 summaryRow(highlight: highlight, canExpand: canExpand, isExpanded: isExpanded)
             }
             .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(highlight.metric.displayName) declining trend, \(highlight.title)")
+            .accessibilityValue(isExpanded ? "Expanded" : (canExpand ? "Collapsed" : ""))
+            .accessibilityHint(canExpand ? "Toggles a causal explanation for why this metric declined" : "Opens detailed metric history")
 
             if isExpanded, let chain = chain {
                 Divider().opacity(0.5).padding(.vertical, DS.space2)
@@ -171,7 +177,7 @@ struct ExploreDecliningTrendsSection: View {
                         .background(link.effectMetric.category.color.opacity(0.12), in: Circle())
                 }
                 Spacer()
-                Text("\(Int(chain.confidence * 100))% confidence")
+                Text(Copy.Explore.confidencePercent(Int(chain.confidence * 100)))
                     .font(.caption2.weight(.medium).monospacedDigit())
                     .foregroundStyle(.secondary)
             }
@@ -181,7 +187,7 @@ struct ExploreDecliningTrendsSection: View {
                 onHighlightTapped(highlight)
             } label: {
                 HStack(spacing: 4) {
-                    Text("Open \(highlight.metric.displayName)")
+                    Text(Copy.Explore.openMetric(highlight.metric.displayName))
                         .font(.caption.weight(.semibold))
                     Image(systemName: "chevron.right")
                         .font(.caption2.weight(.semibold))
@@ -189,6 +195,8 @@ struct ExploreDecliningTrendsSection: View {
                 .foregroundStyle(.tint)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Copy.Explore.openMetric(highlight.metric.displayName))
+            .accessibilityHint("Opens \(highlight.metric.displayName) detail view")
         }
     }
 

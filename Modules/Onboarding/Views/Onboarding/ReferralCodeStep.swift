@@ -19,7 +19,7 @@ struct ReferralCodeStep: View {
             Spacer()
 
             // Branding
-            Text("Laso")
+            Text(Copy.Onboarding.ReferralCode.brand)
                 .font(DS.Typography.subheadlineMedium)
                 .foregroundStyle(AppColour.textSecondary)
                 .padding(.bottom, DS.space7)
@@ -34,10 +34,10 @@ struct ReferralCodeStep: View {
 
             // Title + Subtitle
             VStack(spacing: DS.itemSpacing) {
-                Text("Have a Referral Code?")
+                Text(Copy.Onboarding.ReferralCode.title)
                     .font(DS.Typography.title2)
 
-                Text("If a friend shared their code with you, enter it below. You\u{2019}ll both get 1 month of Pro free when you subscribe.")
+                Text(Copy.Onboarding.ReferralCode.subtitle)
                     .font(DS.Typography.subheadline)
                     .foregroundStyle(AppColour.textSecondary)
                     .multilineTextAlignment(.center)
@@ -49,11 +49,11 @@ struct ReferralCodeStep: View {
             // Code field
             VStack(spacing: 0) {
                 HStack {
-                    Text("Referral Code")
+                    Text(Copy.Onboarding.ReferralCode.fieldLabel)
                         .font(DS.Typography.subheadline)
                         .foregroundStyle(AppColour.textPrimary)
                     Spacer()
-                    TextField("e.g. HEALTH-A7X3K2", text: $codeText)
+                    TextField(Copy.Onboarding.ReferralCode.fieldPlaceholder, text: $codeText)
                         .font(DS.Typography.subheadline)
                         .multilineTextAlignment(.trailing)
                         .textInputAutocapitalization(.characters)
@@ -71,7 +71,7 @@ struct ReferralCodeStep: View {
                 Group {
                     switch result {
                     case .success:
-                        Label("Code applied! Subscribe to unlock your free month.", systemImage: "checkmark.circle.fill")
+                        Label(Copy.Onboarding.ReferralCode.codeApplied, systemImage: "checkmark.circle.fill")
                             .foregroundStyle(AppColour.success)
                     case .error(let message):
                         Label(message, systemImage: "xmark.circle.fill")
@@ -84,8 +84,15 @@ struct ReferralCodeStep: View {
             }
 
             if isRedeeming {
-                ProgressView()
-                    .padding(.top, DS.space3)
+                // Pass 11 AK: pair the spinner with a caption so the user knows
+                // a network call is in flight rather than seeing an unlabeled wheel.
+                HStack(spacing: DS.space2) {
+                    ProgressView()
+                    Text(Copy.Onboarding.ReferralCode.verifying)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(AppColour.textSecondary)
+                }
+                .padding(.top, DS.space3)
             }
 
             Spacer()
@@ -96,7 +103,7 @@ struct ReferralCodeStep: View {
                 Button {
                     buttonTapCount += 1
                     guard !codeText.trimmingCharacters(in: .whitespaces).isEmpty else {
-                        redeemResult = .error("Please enter a referral code.")
+                        redeemResult = .error(Copy.Onboarding.ReferralCode.emptyCodeError)
                         return
                     }
                     Task {
@@ -108,11 +115,11 @@ struct ReferralCodeStep: View {
                             try? await Task.sleep(for: .seconds(1.5))
                             onContinue()
                         } else {
-                            redeemResult = .error(ReferralManager.shared.redeemError ?? "Invalid code.")
+                            redeemResult = .error(ReferralManager.shared.redeemError ?? Copy.Onboarding.ReferralCode.invalidCodeFallback)
                         }
                     }
                 } label: {
-                    Text("Apply Code")
+                    Text(Copy.Onboarding.ReferralCode.apply)
                 }
                 .buttonStyle(.dsPrimary)
                 .disabled(isRedeeming)
@@ -121,7 +128,7 @@ struct ReferralCodeStep: View {
                 Button {
                     onContinue()
                 } label: {
-                    Text("Skip")
+                    Text(Copy.Onboarding.ReferralCode.skip)
                 }
                 .buttonStyle(.dsTertiary)
                 .disabled(isRedeeming)

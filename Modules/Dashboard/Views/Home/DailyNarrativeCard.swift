@@ -37,7 +37,7 @@ struct DailyNarrativeCard: View {
                 Image(systemName: "sparkles")
                     .font(DS.Typography.captionSemibold)
                     .foregroundStyle(.tint)
-                Text("FOR YOU TODAY")
+                Text(Copy.Home.Cards.forYouToday)
                     .font(DS.Typography.captionSemibold)
                     .tracking(0.8)
                     .foregroundStyle(AppColour.textSecondary)
@@ -62,7 +62,7 @@ struct DailyNarrativeCard: View {
         HStack(spacing: DS.space2) {
             ProgressView()
                 .controlSize(.small)
-            Text("Reading today's signals…")
+            Text(Copy.Home.Cards.readingTodaysSignals)
                 .font(DS.Typography.callout)
                 .foregroundStyle(AppColour.textSecondary)
         }

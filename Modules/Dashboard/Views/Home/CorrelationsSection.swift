@@ -19,13 +19,15 @@ struct CorrelationsSection: View {
 
                         Button(action: onTapSeeAll) {
                             HStack(spacing: DS.space1) {
-                                Text("See all")
+                                Text(Copy.Home.Cards.seeAll)
                                     .font(DS.Typography.bodyMedium)
                                 Image(systemName: "chevron.right")
                                     .font(DS.Typography.footnoteMedium)
                             }
                             .foregroundStyle(.tint)
                         }
+                        .accessibilityLabel("See all correlations")
+                        .accessibilityHint("Opens the full health intelligence view")
                     }
                     .padding(.horizontal, DS.screenPadding)
 

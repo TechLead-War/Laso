@@ -6,6 +6,9 @@ struct InsightsDetailView: View {
     let insightsByCategory: [(category: InsightCategory, insights: [Insight])]
     let onTapMetric: (HealthMetric) -> Void
     var headlineSummary: String?
+    /// Pass 8 V (F45): timestamp of the parent dashboard's most recent refresh.
+    /// Drives a small "Updated …" caption at the top of the screen.
+    var lastUpdated: Date? = nil
 
     @State private var selectedFilter: FocusFilter = .all
     @State private var showAhaPaywall = false
@@ -75,6 +78,12 @@ struct InsightsDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DS.space4) {
+                if let lastUpdated, let caption = Copy.Common.relativeUpdated(lastUpdated) {
+                    Text(caption)
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(.tertiary)
+                        .padding(.horizontal)
+                }
                 // Headline summary from the Home card (shown in full here)
                 if let headline = headlineSummary {
                     Text(headline)
@@ -123,10 +132,10 @@ struct InsightsDetailView: View {
                 } else {
                     DSEmptyState(
                         icon: "magnifyingglass",
-                        title: "No insights yet",
+                        title: Copy.Insights.Detail.emptyTitle,
                         message: selectedFilter == .all
-                            ? "More data will unlock deeper insights over time."
-                            : "No \(selectedFilter.rawValue.lowercased()) insights right now."
+                            ? Copy.Insights.Detail.emptyMessageAll
+                            : Copy.Insights.Detail.emptyMessageFiltered(selectedFilter.rawValue.lowercased())
                     )
                     .frame(maxWidth: .infinity)
                     .padding(.top, DS.space7)
@@ -145,7 +154,7 @@ struct InsightsDetailView: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .background(AppColour.surfaceBase.ignoresSafeArea())
-        .navigationTitle("Insights")
+        .navigationTitle(Copy.Insights.Detail.navigationTitle)
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.insightsDetail, metadata: [

@@ -72,6 +72,39 @@ struct IllnessEarlyWarning {
     /// Active calories multiplier above baseline that suggests exercise recovery, not body stress
     private static let exerciseRecoveryMultiplier: Double = 1.5
 
+    /// Minimum number of metrics that must signal simultaneously before any warning is surfaced.
+    private static let minSignalingMetrics: Int = 2
+    /// Minimum number of consecutive multi-metric days before a warning is surfaced.
+    private static let minDaysElevatedForWarning: Int = 2
+    /// Signal count at/above which severity escalates beyond `.info`.
+    private static let highSignalCount: Int = 3
+    /// Days elevated at/above which a high-signal warning escalates to `.critical`.
+    private static let criticalDaysElevated: Int = 3
+    /// Floor on baseline standard deviation below which z-scores are treated as undefined.
+    private static let baselineSDFloor: Double = 0.001
+    /// Confidence points awarded when exactly two metrics are signaling.
+    private static let confidenceTwoMetricPoints: Double = 20
+    /// Confidence points awarded when exactly three metrics are signaling.
+    private static let confidenceThreeMetricPoints: Double = 30
+    /// Confidence points awarded when exactly four metrics are signaling.
+    private static let confidenceFourMetricPoints: Double = 40
+    /// Per-metric coefficient applied beyond four signaling metrics, capped at the metric ceiling.
+    private static let confidencePerMetricBeyondFour: Double = 9
+    /// Maximum confidence points awarded from the metric-count component.
+    private static let confidenceMetricCeiling: Double = 45
+    /// Confidence points awarded when the streak is exactly two days.
+    private static let confidenceTwoDayPoints: Double = 15
+    /// Confidence points awarded when the streak is exactly three days.
+    private static let confidenceThreeDayPoints: Double = 25
+    /// Per-day coefficient applied beyond a 3-day streak, capped at the day ceiling.
+    private static let confidencePerDayBeyondThree: Double = 10
+    /// Maximum confidence points awarded from the days-elevated component.
+    private static let confidenceDaysCeiling: Double = 30
+    /// Confidence points awarded per sigma above the signal threshold.
+    private static let confidencePerSigmaAboveThreshold: Double = 12.5
+    /// Maximum confidence points awarded from the deviation-magnitude component.
+    private static let confidenceMagnitudeCeiling: Double = 25
+
     // MARK: - Public API
 
     /// Evaluate all signal metrics for body stress patterns.
@@ -99,7 +132,8 @@ struct IllnessEarlyWarning {
         // Step 2: For each day in the recent window, determine which metrics are signaling
         let consecutiveResult = computeConsecutiveMultiMetricDays(dailySignals: dailySignals)
 
-        guard consecutiveResult.daysElevated >= 2, consecutiveResult.signalingMetrics.count >= 2 else {
+        guard consecutiveResult.daysElevated >= minDaysElevatedForWarning,
+              consecutiveResult.signalingMetrics.count >= minSignalingMetrics else {
             return []
         }
 
@@ -114,7 +148,7 @@ struct IllnessEarlyWarning {
         // Step 4: Apply sleep-duration special rule. only count it if other signals are present
         let nonSleepSignals = activeSignals.filter { $0.metric != .sleepDuration }
         let finalSignals: [MetricSignal]
-        if nonSleepSignals.count >= 2 {
+        if nonSleepSignals.count >= minSignalingMetrics {
             // Other signals present, sleep duration can join
             finalSignals = activeSignals
         } else {
@@ -122,7 +156,7 @@ struct IllnessEarlyWarning {
             finalSignals = nonSleepSignals
         }
 
-        guard finalSignals.count >= 2 else { return [] }
+        guard finalSignals.count >= minSignalingMetrics else { return [] }
 
         // Step 5: Determine severity
         let severity = determineSeverity(
@@ -208,7 +242,7 @@ struct IllnessEarlyWarning {
             let baselineSD = baselineValues.standardDeviation
 
             // If stddev is effectively zero, we can't compute meaningful z-scores
-            guard baselineSD > 0.001 else { continue }
+            guard baselineSD > baselineSDFloor else { continue }
 
             var metricDailySignals: [Int: Double] = [:]
 
@@ -270,7 +304,7 @@ struct IllnessEarlyWarning {
                 }
             }
 
-            if metricsSignalingToday.count >= 2 {
+            if metricsSignalingToday.count >= minSignalingMetrics {
                 consecutiveDays += 1
                 allSignalingMetrics.formUnion(metricsSignalingToday)
             } else {
@@ -305,7 +339,7 @@ struct IllnessEarlyWarning {
 
             let baselineMean = baselineValues.mean
             let baselineSD = baselineValues.standardDeviation
-            guard baselineSD > 0.001 else { continue }
+            guard baselineSD > baselineSDFloor else { continue }
 
             // Current value: average of the recent window
             let recentSamples = series.samples(lastDays: recentWindowDays)
@@ -376,9 +410,9 @@ struct IllnessEarlyWarning {
     /// - 3+ metrics for 2 days = `.warning` (clear multi-system deviation)
     /// - 3+ metrics for 3+ days = `.critical` (sustained multi-system strain)
     private static func determineSeverity(signalCount: Int, daysElevated: Int) -> Severity {
-        if signalCount >= 3 && daysElevated >= 3 {
+        if signalCount >= highSignalCount && daysElevated >= criticalDaysElevated {
             return .critical
-        } else if signalCount >= 3 && daysElevated >= 2 {
+        } else if signalCount >= highSignalCount && daysElevated >= minDaysElevatedForWarning {
             return .warning
         } else {
             return .info
@@ -393,28 +427,25 @@ struct IllnessEarlyWarning {
     /// - Magnitude of deviation (bigger deviations = higher confidence)
     private static func computeConfidence(signals: [MetricSignal], daysElevated: Int) -> Int {
         // Component 1: Number of metrics (max 5 signal metrics)
-        // 2 metrics = 20 points, 3 = 30, 4 = 40, 5 = 45 (diminishing returns)
         let metricScore: Double
         switch signals.count {
-        case 2: metricScore = 20
-        case 3: metricScore = 30
-        case 4: metricScore = 40
-        default: metricScore = min(Double(signals.count) * 9, 45)
+        case 2: metricScore = confidenceTwoMetricPoints
+        case 3: metricScore = confidenceThreeMetricPoints
+        case 4: metricScore = confidenceFourMetricPoints
+        default: metricScore = min(Double(signals.count) * confidencePerMetricBeyondFour, confidenceMetricCeiling)
         }
 
         // Component 2: Consecutive days (max 3 in our window)
-        // 2 days = 15 points, 3 days = 25 points
         let daysScore: Double
         switch daysElevated {
-        case 2: daysScore = 15
-        case 3: daysScore = 25
-        default: daysScore = min(Double(daysElevated) * 10, 30)
+        case 2: daysScore = confidenceTwoDayPoints
+        case 3: daysScore = confidenceThreeDayPoints
+        default: daysScore = min(Double(daysElevated) * confidencePerDayBeyondThree, confidenceDaysCeiling)
         }
 
         // Component 3: Average magnitude of deviation (capped contribution)
-        // Each sigma above threshold adds points, capped at 25
         let avgSigma = signals.map(\.deviationSigma).mean
-        let magnitudeScore = min((avgSigma - signalThresholdSigma) * 12.5, 25.0)
+        let magnitudeScore = min((avgSigma - signalThresholdSigma) * confidencePerSigmaAboveThreshold, confidenceMagnitudeCeiling)
 
         let raw = metricScore + daysScore + max(magnitudeScore, 0)
         return min(Int(raw.rounded()), 100)
@@ -435,7 +466,7 @@ struct IllnessEarlyWarning {
             let unit = signal.metric.unit
 
             let deviationDescription: String
-            if signal.baselineValue > 0.001 {
+            if signal.baselineValue > baselineSDFloor {
                 let pctChange = abs((signal.currentValue - signal.baselineValue) / signal.baselineValue) * 100
                 deviationDescription = String(format: "%.0f%%", pctChange)
             } else {

@@ -279,190 +279,244 @@ struct HealthRiskEngine {
         status: RiskFactorStatus,
         currentValue: Double
     ) -> (title: String, description: String, target: String) {
-        switch (riskType, metric) {
-        // Cardiac
-        case (.cardiac, .restingHeartRate):
+        let mapped: (title: String, description: String, target: String)?
+        switch riskType {
+        case .cardiac:
+            mapped = cardiacFocusRecommendation(metric: metric)
+        case .sleepDeficit:
+            mapped = sleepDeficitFocusRecommendation(metric: metric)
+        case .overtraining:
+            mapped = overtrainingFocusRecommendation(metric: metric)
+        case .respiratory:
+            mapped = respiratoryFocusRecommendation(metric: metric)
+        case .metabolic:
+            mapped = metabolicFocusRecommendation(metric: metric)
+        case .stress:
+            mapped = stressFocusRecommendation(metric: metric)
+        case .mobilityDecline:
+            mapped = mobilityFocusRecommendation(metric: metric)
+        }
+        if let mapped { return mapped }
+        return defaultFocusRecommendation(metric: metric)
+    }
+
+    private static func cardiacFocusRecommendation(metric: HealthMetric) -> (title: String, description: String, target: String)? {
+        switch metric {
+        case .restingHeartRate:
             return (
                 "Lower Resting Heart Rate",
                 "Regular aerobic exercise (brisk walking, cycling) 30 min/day can reduce RHR by 5-10 bpm over weeks. Reduce caffeine and manage stress.",
                 "Target: 50–70 bpm"
             )
-        case (.cardiac, .heartRateVariability):
+        case .heartRateVariability:
             return (
                 "Improve Heart Rate Variability",
                 "HRV reflects autonomic nervous system health. Prioritize sleep quality, practice box breathing (4-4-4-4), and include recovery days between hard workouts.",
                 "Target: 40+ ms (SDNN)"
             )
-        case (.cardiac, .bloodPressureSystolic), (.cardiac, .bloodPressureDiastolic):
+        case .bloodPressureSystolic, .bloodPressureDiastolic:
             return (
                 "Manage Blood Pressure",
                 "Reduce sodium to <2,300mg/day, exercise 150 min/week, maintain healthy weight, limit alcohol. Monitor regularly.",
                 "Target: <120/80 mmHg"
             )
-        case (.cardiac, .heartRateRecovery):
+        case .heartRateRecovery:
             return (
                 "Improve Heart Rate Recovery",
                 "Better recovery indicates stronger cardiac fitness. Increase cardio frequency and include cool-down periods after exercise.",
                 "Target: >12 bpm drop in 1 min"
             )
-        case (.cardiac, .atrialFibrillationBurden):
+        case .atrialFibrillationBurden:
             return (
                 "Monitor AFib Patterns",
                 "Track when episodes occur. Reduce alcohol, caffeine, and stress. Worth monitoring closely if burden increases.",
                 "Target: <1% burden"
             )
+        default:
+            return nil
+        }
+    }
 
-        // Sleep
-        case (.sleepDeficit, .sleepDuration):
+    private static func sleepDeficitFocusRecommendation(metric: HealthMetric) -> (title: String, description: String, target: String)? {
+        switch metric {
+        case .sleepDuration:
             return (
                 "Increase Sleep Duration",
                 "Set a fixed bedtime 8 hours before your alarm. No screens 1 hour before bed. Keep your bedroom cool (65-68°F) and dark.",
                 "Target: 7–9 hours"
             )
-        case (.sleepDeficit, .sleepDeep):
+        case .sleepDeep:
             return (
                 "Boost Deep Sleep",
                 "Exercise earlier in the day (not within 3 hours of bedtime), avoid alcohol which fragments deep sleep, and maintain a cool bedroom.",
                 "Target: 1–2 hours per night"
             )
-        case (.sleepDeficit, .sleepREM):
+        case .sleepREM:
             return (
                 "Improve REM Sleep",
                 "REM sleep is essential for memory and emotional processing. Consistent sleep schedule and avoiding sleep aids can increase REM proportion.",
                 "Target: 1.5–2 hours per night"
             )
-        case (.sleepDeficit, .sleepAwake):
+        case .sleepAwake:
             return (
                 "Reduce Nighttime Waking",
                 "Limit fluids 2 hours before bed, avoid caffeine after noon, use white noise, and keep the room dark. Address any sleep apnea concerns.",
                 "Target: <30 min per night"
             )
+        default:
+            return nil
+        }
+    }
 
-        // Overtraining
-        case (.overtraining, .heartRateVariability):
+    private static func overtrainingFocusRecommendation(metric: HealthMetric) -> (title: String, description: String, target: String)? {
+        switch metric {
+        case .heartRateVariability:
             return (
                 "Allow Recovery Time",
                 "Low HRV with high training load signals insufficient recovery. Take 1-2 rest days, prioritize sleep, and reduce workout intensity by 20%.",
                 "Target: HRV returning to baseline"
             )
-        case (.overtraining, .restingHeartRate):
+        case .restingHeartRate:
             return (
                 "Watch for Elevated RHR",
                 "A rising RHR despite regular training is a classic overtraining sign. Reduce volume this week and monitor RHR each morning before getting up.",
                 "Target: Within 5 bpm of personal baseline"
             )
-        case (.overtraining, .exerciseMinutes):
+        case .exerciseMinutes:
             return (
                 "Balance Training Load",
                 "More isn't always better. Follow the 80/20 rule: 80% easy, 20% hard. Include at least 2 rest days per week.",
                 "Target: 150–300 min/week with rest days"
             )
+        default:
+            return nil
+        }
+    }
 
-        // Respiratory
-        case (.respiratory, .bloodOxygen):
+    private static func respiratoryFocusRecommendation(metric: HealthMetric) -> (title: String, description: String, target: String)? {
+        switch metric {
+        case .bloodOxygen:
             return (
                 "Monitor Blood Oxygen",
                 "SpO2 below 95% warrants attention. Below 90% is a medical emergency requiring urgent care. Practice deep breathing exercises and sleep with head slightly elevated if levels drop at night. If readings fall below 90%, retake the measurement and seek immediate medical attention if confirmed.",
                 "Target: 95–100% (below 90% = emergency)"
             )
-        case (.respiratory, .vo2Max):
+        case .vo2Max:
             return (
                 "Build Cardiovascular Fitness",
                 "VO2 Max is the single strongest predictor of longevity. Add 3-4 sessions of zone 2 cardio (conversational pace) per week for 30+ minutes.",
                 "Target: Improve by 5% in 8 weeks"
             )
-        case (.respiratory, .respiratoryRate):
+        case .respiratoryRate:
             return (
                 "Normalize Breathing Rate",
                 "Elevated respiratory rate may indicate stress or illness. Practice diaphragmatic breathing: 4 seconds in, 6 seconds out, 5 minutes daily.",
                 "Target: 12–20 breaths/min at rest"
             )
+        default:
+            return nil
+        }
+    }
 
-        // Metabolic
-        case (.metabolic, .bmi), (.metabolic, .weight):
+    private static func metabolicFocusRecommendation(metric: HealthMetric) -> (title: String, description: String, target: String)? {
+        switch metric {
+        case .bmi, .weight:
             return (
                 "Optimize Body Composition",
                 "Focus on sustainable changes: reduce processed foods, increase protein and vegetables, combine cardio with resistance training.",
                 "Target: BMI 18.5–25"
             )
-        case (.metabolic, .bodyFatPercentage):
+        case .bodyFatPercentage:
             return (
                 "Reduce Body Fat",
                 "Combine resistance training 3x/week with 150+ min cardio/week. Prioritize protein (0.8g/lb bodyweight) and sleep for fat loss.",
                 "Target: 10–20% (men) / 18–28% (women)"
             )
-        case (.metabolic, .waistCircumference):
+        case .waistCircumference:
             return (
                 "Reduce Waist Circumference",
                 "Abdominal fat is a key metabolic risk indicator. Daily walks, core exercises, and reduced sugar intake have the biggest impact.",
                 "Target: <94 cm (men) / <80 cm (women)"
             )
-        case (.metabolic, .steps):
+        case .steps:
             return (
                 "Increase Daily Movement",
                 "Low step count is strongly linked to metabolic risk. Start with 2,000 more steps than current average. Take walking meetings and post-meal walks.",
                 "Target: 8,000–10,000 steps/day"
             )
+        default:
+            return nil
+        }
+    }
 
-        // Stress
-        case (.stress, .heartRateVariability):
+    private static func stressFocusRecommendation(metric: HealthMetric) -> (title: String, description: String, target: String)? {
+        switch metric {
+        case .heartRateVariability:
             return (
                 "Reduce Chronic Stress",
                 "HRV is the most reliable stress biomarker. Try 10 minutes of meditation daily, box breathing before bed, and time in nature.",
                 "Target: HRV trending upward week over week"
             )
-        case (.stress, .sleepDuration):
+        case .sleepDuration:
             return (
                 "Prioritize Recovery Sleep",
                 "Sleep is the #1 stress recovery tool. Set a non-negotiable bedtime. Remove work apps from your phone after 9 PM.",
                 "Target: 7–8 hours consistently"
             )
-        case (.stress, .mindfulMinutes):
+        case .mindfulMinutes:
             return (
                 "Build Mindfulness Practice",
                 "Even 5 minutes of daily mindfulness reduces cortisol levels. Use a guided app to start. Morning sessions have the most impact.",
                 "Target: 10–20 min daily"
             )
-        case (.stress, .electrodermalActivity):
+        case .electrodermalActivity:
             return (
                 "Manage Sympathetic Activation",
                 "Elevated EDA reflects sympathetic nervous system arousal. Practice progressive muscle relaxation and reduce stimulant intake.",
                 "Target: Return to personal baseline"
             )
+        default:
+            return nil
+        }
+    }
 
-        // Mobility
-        case (.mobilityDecline, .walkingSpeed):
+    private static func mobilityFocusRecommendation(metric: HealthMetric) -> (title: String, description: String, target: String)? {
+        switch metric {
+        case .walkingSpeed:
             return (
                 "Maintain Walking Speed",
                 "Walking speed is a key vitality indicator. Include brisk walking intervals (2 min fast, 2 min normal) in daily walks.",
                 "Target: >1.0 m/s (3.6 km/h)"
             )
-        case (.mobilityDecline, .walkingAsymmetry):
+        case .walkingAsymmetry:
             return (
                 "Correct Gait Asymmetry",
                 "Asymmetry above 10% may indicate muscle imbalance or joint issues. Single-leg exercises and stretching can help. See a PT if persistent.",
                 "Target: <10% asymmetry"
             )
-        case (.mobilityDecline, .sixMinuteWalkTestDistance):
+        case .sixMinuteWalkTestDistance:
             return (
                 "Build Functional Endurance",
                 "The 6-minute walk distance reflects overall functional capacity. Daily walks of increasing duration will improve this steadily.",
                 "Target: >500 meters"
             )
-        case (.mobilityDecline, .walkingDoubleSupportPercentage):
+        case .walkingDoubleSupportPercentage:
             return (
                 "Improve Balance",
                 "High double support time indicates balance challenges. Practice single-leg stands, heel-to-toe walking, and tai chi or yoga.",
                 "Target: 20–30%"
             )
-
         default:
-            return (
-                "Improve \(metric.displayName)",
-                "Focus on bringing \(metric.displayName.lowercased()) into the optimal range through consistent healthy habits.",
-                "Target: \(optimalRangeString(for: metric))"
-            )
+            return nil
         }
+    }
+
+    private static func defaultFocusRecommendation(metric: HealthMetric) -> (title: String, description: String, target: String) {
+        return (
+            "Improve \(metric.displayName)",
+            "Focus on bringing \(metric.displayName.lowercased()) into the optimal range through consistent healthy habits.",
+            "Target: \(optimalRangeString(for: metric))"
+        )
     }
 
     private static func formatValue(_ value: Double, metric: HealthMetric) -> String {

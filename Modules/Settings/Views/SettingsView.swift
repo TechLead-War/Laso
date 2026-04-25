@@ -1,6 +1,12 @@
 import SwiftUI
 import SwiftData
 import AppIntents
+#if canImport(FirebaseAuth)
+import FirebaseAuth
+#endif
+#if canImport(PostHog)
+import PostHog
+#endif
 
 /// Main Settings screen. Uses a native grouped Form with 5 calm sections so the
 /// surface stays scannable. Advanced alert tuning lives one tap deeper inside
@@ -381,8 +387,29 @@ struct SettingsView: View {
 
     // MARK: - About Section
 
+    /// Signed-in user's display name or email (post Sign In with Apple).
+    /// Returns nil for anonymous Firebase Auth users.
+    private var signedInIdentity: String? {
+        #if canImport(FirebaseAuth)
+        guard let user = Auth.auth().currentUser, !user.isAnonymous else { return nil }
+        return user.displayName?.isEmpty == false ? user.displayName : user.email
+        #else
+        return nil
+        #endif
+    }
+
     private var aboutSection: some View {
         Section {
+            if let identity = signedInIdentity {
+                settingsRow(
+                    icon: "person.crop.circle.fill",
+                    iconColor: AppColour.primary,
+                    title: "Signed in as",
+                    subtitle: identity,
+                    trailing: nil
+                )
+                .accessibilityIdentifier("settings.row.signedInAs")
+            }
             siriRow
             if let privacyURL = URL(string: AppSecrets.URLs.privacyPolicy) {
                 Link(destination: privacyURL) {
@@ -421,6 +448,17 @@ struct SettingsView: View {
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("settings.row.subscription")
             }
+            NavigationLink {
+                AcknowledgementsView()
+            } label: {
+                settingsRow(
+                    icon: "doc.badge.gearshape.fill",
+                    iconColor: .gray,
+                    title: Copy.Settings.acknowledgements,
+                    subtitle: Copy.Settings.acknowledgementsSubtitle
+                )
+            }
+            .accessibilityIdentifier("settings.row.acknowledgements")
         } header: {
             Text(Copy.Settings.about)
         }
@@ -684,11 +722,23 @@ struct SettingsView: View {
         }
         UserDefaults.standard.synchronize()
 
-        NotificationCenter.default.post(name: .init("HealthPulseDidDeleteAllData"), object: nil)
+        // Sign out of Firebase + reset analytics identity. Server-side Firestore
+        // wipe (user_profiles/{uid}, subscriptions/{uid}) needs a Cloud Function
+        // (TODO follow-up: deleteAccountData callable). For now, the local
+        // wipe + sign-out sends the user back to onboarding cleanly.
+        #if canImport(FirebaseAuth)
+        try? Auth.auth().signOut()
+        #endif
+        #if canImport(PostHog)
+        PostHogSDK.shared.reset()
+        #endif
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            exit(0)
-        }
+        // App-root observer (LasoApp) listens for this notification and routes
+        // back to onboarding by clearing onboardingCompleted state.
+        NotificationCenter.default.post(name: Notification.Name("LasoDidWipeAccount"), object: nil)
+
+        isDeleting = false
+        dismiss()
     }
 
     private func debouncedSave() {

@@ -1,6 +1,8 @@
 import Foundation
 
-/// Provides realistic mock data for SwiftUI previews and simulator testing
+#if DEBUG
+/// Provides realistic mock data for SwiftUI previews and simulator testing.
+/// DEBUG-only: never compiled into Release builds (App Store distribution).
 struct SampleDataProvider {
 
     /// Generate sample time series data for all metrics
@@ -414,3 +416,4 @@ struct SampleDataProvider {
         return (overall, categories)
     }
 }
+#endif

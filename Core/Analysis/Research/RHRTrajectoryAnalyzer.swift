@@ -36,10 +36,11 @@ struct RHRTrajectoryAnalyzer {
 
         for window in windows {
             let samples = rhrSeries.samples(lastDays: window.days)
-            guard samples.count >= max(window.days / 5, 30) else { continue }
+            guard samples.count >= max(window.days / 5, 30),
+                  let firstSample = samples.first else { continue }
 
             // Linear regression on RHR over time
-            let startDate = samples.first!.date.timeIntervalSince1970
+            let startDate = firstSample.date.timeIntervalSince1970
             let xs = samples.map { $0.date.timeIntervalSince1970 - startDate }
             let ys = samples.map(\.value)
             let (slope, _) = linearRegression(x: xs, y: ys)

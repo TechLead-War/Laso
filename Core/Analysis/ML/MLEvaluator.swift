@@ -18,6 +18,10 @@ final class MLEvaluator {
     private static let calibrationBinCount = 10
     private static let driftAlpha = 0.05
 
+    /// Pass 12 BE perf: cached current calendar. `evaluateRecommendations(...)`
+    /// and the drift-detection cutoff both compute window cutoffs per call.
+    private static let cal: Calendar = Calendar.current
+
     // MARK: - Thread Safety
 
     private let lock = NSLock()
@@ -385,7 +389,7 @@ final class MLEvaluator {
         let feedbackSnapshot = recommendationFeedback
         lock.unlock()
 
-        let cutoff = Calendar.current.date(
+        let cutoff = Self.cal.date(
             byAdding: .day, value: -windowDays, to: Date()
         ) ?? Date()
 
@@ -611,7 +615,7 @@ final class MLEvaluator {
         let snapshot = resolvedEvents
         lock.unlock()
 
-        let cutoff = Calendar.current.date(
+        let cutoff = Self.cal.date(
             byAdding: .day, value: -windowDays, to: Date()
         ) ?? Date()
 

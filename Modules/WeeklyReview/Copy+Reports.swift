@@ -61,7 +61,7 @@ extension Copy {
         // Opportunity messages
         static let keepUpGreatWork = "keep up the great work"
         static let smallImprovements = "small improvements can make a big difference"
-        static let significantRoom = "significant room for growth"
+        static let significantRoom = "lots of room to grow"
         static let priorityArea = "a priority area for next year"
 
         // MARK: - Category Section
@@ -69,7 +69,7 @@ extension Copy {
         static let categorySummary = "Category Summary"
         static let mostImproved = "Most Improved"
         static func mostImprovedDetail(_ category: String) -> String {
-            "\(category) showed the most improvement this year"
+            "\(category) improved the most this year"
         }
 
         // MARK: - Monthly Review
@@ -111,7 +111,7 @@ extension Copy {
             static let keepSyncing = "Keep syncing health data for a few days and check back."
             static let firstWeekNoComparison = "First week. No comparison yet."
             static func consistencyPayingOff(_ category: String) -> String {
-                "Consistency in \(category) is paying off. Keep the momentum going into next week."
+                "Your steady work on \(category) is paying off. Keep it going next week."
             }
             static let stableWeek = "A stable week across the board."
             static let noMajorChanges = "No major changes. Consistency is a strength."
@@ -120,7 +120,15 @@ extension Copy {
             static let status = "Status"
             static let nextWeekTarget = "Next week target"
             static func stepTarget(_ steps: String) -> String { "Step target: \(steps)/day" }
-            static let poweredByModel = "Powered by your personal health data"
+            static let poweredByModel = "Built from your own health data"
+
+            // Section header labels
+            static let highlightsLabel = "Highlights"
+            static let weeksWinsLabel = "This Week's Wins"
+            static let keyDiscoveryLabel = "Key Discovery"
+            static let watchOutLabel = "Watch Out"
+            static let progressiveCoachLabel = "Progressive Coach"
+            static let nextWeekLabel = "Next Week"
         }
     }
 }

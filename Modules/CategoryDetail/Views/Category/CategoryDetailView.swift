@@ -57,7 +57,7 @@ struct CategoryDetailView: View {
                             Image(systemName: "clock.arrow.circlepath")
                                 .font(DS.Typography.subheadline)
                                 .foregroundStyle(.tint)
-                            Text("From Your History")
+                            Text(Copy.CategoryDetail.fromYourHistory)
                                 .font(DS.Typography.headline)
                         }
                         .padding(.horizontal)
@@ -103,7 +103,7 @@ struct CategoryDetailView: View {
                 // Insights for this category
                 if !viewModel.insights.isEmpty {
                     VStack(alignment: .leading, spacing: DS.itemSpacing) {
-                        Text("Insights")
+                        Text(Copy.CategoryDetail.insights)
                             .font(DS.Typography.headline)
                             .padding(.horizontal)
 
@@ -130,7 +130,7 @@ struct CategoryDetailView: View {
                 // Metric List. sorted by severity
                 VStack(alignment: .leading, spacing: DS.itemSpacing) {
                     HStack {
-                        Text("Metrics")
+                        Text(Copy.CategoryDetail.metrics)
                             .font(DS.Typography.headline)
 
                         Spacer()

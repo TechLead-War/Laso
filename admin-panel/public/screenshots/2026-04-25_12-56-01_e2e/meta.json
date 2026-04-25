@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-04-25_12-56-01_e2e",
+  "device": "iPhone 17 Pro Max",
+  "device_resolution": "1320x2868",
+  "theme": "dark",
+  "mock_profile": "PremiumShowcase",
+  "values": {
+    "name": "Alex Taylor",
+    "overall_score": 92,
+    "sleep_score": 92,
+    "activity_score": 94,
+    "recovery_green_score": 87,
+    "hrv_ms": 62,
+    "rhr_bpm": 54,
+    "vo2_max": 50,
+    "sleep_hours": 7.6,
+    "sleep_streak_days": 12,
+    "steps_average": 11800,
+    "active_calories_kcal": 600,
+    "exercise_minutes_daily": 52,
+    "workout_streak_weeks": 8,
+    "mindful_minutes_daily": 18,
+    "subscribed": true
+  },
+  "angles": [
+    {
+      "id": "04_lifestyle",
+      "title": "Lifestyle & engagement",
+      "description": "Breadth focus. The places users live in long-term \u2014 Explore tab, Settings tab, achievements, and the journal flow.",
+      "shots": [
+        {
+          "file": "04_lifestyle/01_explore.png",
+          "screen": "Explore tab",
+          "caption": "Trends, categories and historical depth"
+        },
+        {
+          "file": "04_lifestyle/02_settings.png",
+          "screen": "Settings tab",
+          "caption": "Profile, preferences, and data controls"
+        }
+      ]
+    }
+  ]
+}

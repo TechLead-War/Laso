@@ -39,6 +39,11 @@ final class LiveViewModel {
     private var activityObserverQueries: [HKObserverQuery] = []
     private var lastCumulativeFetch: Date = .distantPast
     private static let cumulativeThrottleInterval: TimeInterval = 15
+
+    /// Pass 12 BE perf: cached current calendar to avoid the per-call
+    /// `Calendar.current` allocation. `startOfDay(for:)` runs every Live tab
+    /// refresh (steps / activity / cumulative-throttle gating).
+    private static let cal: Calendar = Calendar.current
     private var respiratoryAvailabilityWorkItem: DispatchWorkItem?
 
     /// Persistent observer for background delivery. survives app backgrounding so HealthKit
@@ -93,6 +98,32 @@ final class LiveViewModel {
         recovery = RecoveryData(readinessStore: readinessStore)
     }
 
+    deinit {
+        // Tear down any HealthKit queries and pending Tasks that outlive `stopStreaming()`.
+        // `backgroundHRObserver` is registered once per app session by `registerBackgroundDelivery()`
+        // and is intentionally NOT stopped in `stopStreaming()` (so background delivery survives
+        // tab switches). If this view-model is ever deallocated (e.g. ContentView re-creation),
+        // the observer must be stopped to prevent it firing into a dead instance.
+        // Class is `@MainActor` so the `deinit` runs there — and the `MainActor.assumeIsolated`
+        // bridge tells the compiler the captured properties are accessed on their actor.
+        MainActor.assumeIsolated {
+            let store = healthKitManager.healthStore
+            if let bgObserver = backgroundHRObserver {
+                store.stop(bgObserver)
+            }
+            for query in [heartRateQuery, bloodOxygenQuery, respiratoryRateQuery].compactMap({ $0 }) {
+                store.stop(query)
+            }
+            for query in activityObserverQueries {
+                store.stop(query)
+            }
+            deferredRefreshTask?.cancel()
+            readinessBaselineRefreshTask?.cancel()
+            respiratoryAvailabilityWorkItem?.cancel()
+            pendingUIUpdateWorkItem?.cancel()
+        }
+    }
+
     // MARK: - Background Delivery
 
     /// Start a persistent observer query for heart rate so HealthKit keeps syncing
@@ -135,8 +166,8 @@ final class LiveViewModel {
         if let cached = _cachedMaxHR { return cached }
         let result: Double
         if let dob = try? healthStore.dateOfBirthComponents(),
-           let birthDate = Calendar.current.date(from: dob) {
-            let age = Calendar.current.dateComponents([.year], from: birthDate, to: Date()).year ?? 30
+           let birthDate = Self.cal.date(from: dob) {
+            let age = Self.cal.dateComponents([.year], from: birthDate, to: Date()).year ?? 30
             result = Double(220 - age)
         } else {
             result = 190
@@ -355,7 +386,7 @@ final class LiveViewModel {
     /// updates as soon as new samples arrive (e.g. Apple Watch syncs steps).
     /// Replaces 30-second timer polling with instant, event-driven updates.
     private func startActivityObservers() {
-        let startOfDay = Calendar.current.startOfDay(for: Date())
+        let startOfDay = Self.cal.startOfDay(for: Date())
         let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: nil, options: .strictStartDate)
 
         let identifiers: [HKQuantityTypeIdentifier] = [
@@ -551,7 +582,7 @@ final class LiveViewModel {
 
     func fetchTodayCumulativeStats() {
         guard beginCumulativeStatsFetch(expectedCallbacks: 6) else { return }
-        let startOfDay = Calendar.current.startOfDay(for: Date())
+        let startOfDay = Self.cal.startOfDay(for: Date())
         fetchTodayStat(.stepCount, unit: .count(), from: startOfDay) { [weak self] v in
             Task { @MainActor in
                 self?.activity.todaySteps = v
@@ -731,7 +762,7 @@ final class LiveViewModel {
     func fetchTodayHeartRateRange() {
         let type = HKQuantityType(.heartRate)
         let unit = HKUnit.count().unitDivided(by: .minute())
-        let startOfDay = Calendar.current.startOfDay(for: Date())
+        let startOfDay = Self.cal.startOfDay(for: Date())
         let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: Date(), options: .strictStartDate)
 
         let query = HKStatisticsQuery(
@@ -791,7 +822,7 @@ final class LiveViewModel {
         // giving users a stable, trustworthy number that only changes the next day.
         if let locked = dailyLockedScore,
            let lockDate = dailyLockDate,
-           Calendar.current.isDateInToday(lockDate) {
+           Self.cal.isDateInToday(lockDate) {
             recovery.readinessScore = locked
             return
         }
@@ -868,7 +899,7 @@ final class LiveViewModel {
 
     func fetchTodayMindfulMinutes() {
         let mindfulType = HKCategoryType(.mindfulSession)
-        let startOfDay = Calendar.current.startOfDay(for: Date())
+        let startOfDay = Self.cal.startOfDay(for: Date())
         let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: Date(), options: .strictStartDate)
 
         let query = HKSampleQuery(

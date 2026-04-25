@@ -20,6 +20,9 @@ struct ExploreYourTrendsSection: View {
                 Text("90D").tag(90)
             }
             .pickerStyle(.segmented)
+            .accessibilityLabel("Trend timeframe")
+            .accessibilityValue("\(trendTimeframe) days")
+            .accessibilityHint("Switches between 7-day, 30-day, and 90-day views")
             .padding(.horizontal, DS.screenPadding)
             .onChange(of: trendTimeframe) { oldValue, newValue in
                 AppAnalytics.shared.trackBlockTap(
@@ -47,6 +50,10 @@ struct ExploreYourTrendsSection: View {
                     trendMetricRow(item)
                 }
                 .buttonStyle(.dsPress)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(item.metric.displayName) trend")
+                .accessibilityValue(item.rateLabel)
+                .accessibilityHint("Opens detailed metric history")
                 .padding(.horizontal, DS.screenPadding)
             }
         }

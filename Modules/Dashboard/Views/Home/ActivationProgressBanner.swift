@@ -132,6 +132,8 @@ struct ActivationProgressBanner: View {
                     .font(DS.Typography.captionSemibold)
                     .foregroundStyle(AppColour.textTertiary)
             }
+            .accessibilityLabel("Dismiss milestone celebration")
+            .accessibilityHint("Hides the milestone unlock card")
         }
         .padding(DS.space3)
         .background(
@@ -155,11 +157,16 @@ struct ActivationProgressBanner: View {
 struct AskYourDataCard: View {
     let onTap: () -> Void
 
+    /// Pass 12 BE perf: cached current calendar. `samplePrompt` is read on
+    /// every render of the home Ask-Your-Data card; per-render
+    /// `Calendar.current` allocation is wasteful.
+    private static let cal: Calendar = Calendar.current
+
     /// Deterministic prompt rotation. picks a sample question based on the
     /// current day so it shifts daily without flickering within a session.
     private var samplePrompt: String {
         let prompts = Copy.Home.AskYourData.conciergePrompts
-        let day = Calendar.current.ordinality(of: .day, in: .year, for: Date()) ?? 1
+        let day = Self.cal.ordinality(of: .day, in: .year, for: Date()) ?? 1
         return prompts[day % prompts.count]
     }
 

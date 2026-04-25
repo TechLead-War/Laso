@@ -9,6 +9,10 @@ import FirebaseFirestore
 import FirebaseAuth
 #endif
 
+#if canImport(FirebaseFunctions)
+import FirebaseFunctions
+#endif
+
 /// Manages the referral system: code generation, redemption, reward tracking.
 /// Referral state is cached locally and synced with Firestore.
 @MainActor
@@ -141,23 +145,32 @@ final class ReferralManager {
         redeemError = nil
         defer { isRedeeming = false }
 
-        #if canImport(FirebaseFirestore)
+        #if canImport(FirebaseFirestore) && canImport(FirebaseFunctions)
         let db = Firestore.firestore()
 
         do {
-            // Find referrer by code
-            let snapshot = try await db.collection("user_profiles")
-                .whereField("referralCode", isEqualTo: trimmed)
-                .limit(to: 1)
-                .getDocuments()
+            // Find referrer by code via Cloud Function (user_profiles list is
+            // admin-only after Pass 5 Agent 8; direct whereField query is no
+            // longer permitted for non-admin users).
+            let result = try await Functions.functions()
+                .httpsCallable("lookupReferralCode")
+                .call(["code": trimmed])
 
-            guard let referrerDoc = snapshot.documents.first else {
+            guard let payload = result.data as? [String: Any],
+                  let found = payload["found"] as? Bool, found,
+                  let referrerOwnerUid = payload["ownerUid"] as? String,
+                  !referrerOwnerUid.isEmpty else {
                 redeemError = "Invalid referral code."
                 AppAnalytics.shared.trackReferralCodeRedeemed(code: trimmed, success: false, failureReason: "invalid_code")
                 return false
             }
 
-            let referrerDeviceId = referrerDoc.documentID
+            // ownerUid is `firebaseUid || doc.id` from the server. The rest of
+            // this flow expects the deviceId (which equals the user_profiles
+            // document ID). When firebaseUid is set on the referrer's profile,
+            // ownerUid returns firebaseUid — surfacing this as a data-model
+            // follow-up rather than altering the smallest-change scope.
+            let referrerDeviceId = referrerOwnerUid
 
             guard referrerDeviceId != deviceId else {
                 redeemError = "You can't use your own referral code."
@@ -265,7 +278,9 @@ final class ReferralManager {
             // referred user's device. The referrer's count is updated via syncWithFirestore(),
             // which queries Firestore for completed referrals where this device is the referrer.
         } catch {
+            #if DEBUG
             print("[ReferralManager] Failed to complete referral: \(error.localizedDescription)")
+            #endif
         }
         #endif
     }

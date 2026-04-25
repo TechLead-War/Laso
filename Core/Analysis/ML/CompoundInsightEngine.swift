@@ -81,12 +81,127 @@ final class CompoundInsightEngine {
 
     private(set) var insights: [CompoundInsight] = []
     var isReady: Bool { !insights.isEmpty }
-    var topInsights: [CompoundInsight] { Array(insights.prefix(5)) }
+    var topInsights: [CompoundInsight] { Array(insights.prefix(Self.topInsightsLimit)) }
 
     private let calendar = Calendar.current
-    
+
     // Natural Language Generator
     private let llmGenerator = LLMInsightGenerator()
+
+    // MARK: - Synthesis thresholds
+
+    /// Maximum number of compound insights returned to the UI after final ranking.
+    private static let maxRankedInsights = 10
+    /// Maximum count returned by `topInsights`.
+    private static let topInsightsLimit = 5
+    /// Minimum percent change for a metric trend to be considered notable in trajectory synthesis.
+    private static let notableTrendPercent: Double = 5
+    /// Minimum count of coordinated improving/declining trends needed to surface a coordinated-trend insight.
+    private static let coordinatedTrendMinCount = 3
+    /// Recent days within which an anomaly is still considered a fresh risk signal.
+    private static let recentAnomalyWindowDays = 3
+    /// Minimum percent decline over the recent window before a trend is added to the risk signal count.
+    private static let riskTrendPercent: Double = 3
+    /// Combined risk-signal count above which the converging-warning insight surfaces unconditionally.
+    private static let riskSignalsHighThreshold = 3
+    /// Combined risk-signal count required when the predictive risk crosses the auxiliary threshold.
+    private static let riskSignalsLowThreshold = 2
+    /// Predictive probability above which the converging-warning insight escalates to "urgent".
+    private static let predictionUrgentProbability: Double = 0.6
+    /// Predictive probability used as the auxiliary trigger alongside `riskSignalsLowThreshold`.
+    private static let predictionAuxProbability: Double = 0.5
+    /// Predictive probability above which a standalone prediction-breakdown insight is generated.
+    private static let predictionStandaloneProbability: Double = 0.55
+    /// Predictive probability above which the standalone prediction insight escalates to "urgent".
+    private static let predictionUrgentStandalone: Double = 0.7
+    /// Predictive probability above which a converging-signal narrative includes the tomorrow-risk hint.
+    private static let predictionMentionProbability: Double = 0.3
+    /// Score-history dip (points within a 7-day window) considered a "score crash".
+    private static let scoreCrashDelta = 10
+    /// Same-week score delta (points) required before the trajectory-shift insight surfaces.
+    private static let scoreShiftDelta: Double = 5
+    /// Same-week score delta (points) above which the trajectory-shift insight is escalated to "important".
+    private static let scoreShiftImportantDelta: Double = 10
+    /// Pearson |r| threshold above which a cross-category correlation is included.
+    private static let strongCrossCategoryR: Double = 0.5
+    /// Stability score above which a cross-category correlation is described as "reliable".
+    private static let stableCorrelationStability: Double = 0.7
+    /// Effect size above which a direct causal pair is surfaced on its own.
+    private static let causalDirectMinEffect: Double = 0.1
+    /// Effect size above which a direct causal pair is escalated to "important".
+    private static let causalImportantEffect: Double = 0.25
+    /// Effect size above which a direct causal effect is labelled "large".
+    private static let causalLargeEffect: Double = 0.35
+    /// Effect size above which a direct causal effect is labelled "medium".
+    private static let causalMediumEffect: Double = 0.15
+    /// Granger effect size above which a metric is treated as a meaningful score lever.
+    private static let scoreLeverEffect: Double = 0.05
+    /// Optimization gap (% deviation) above which a metric is flagged as a top opportunity.
+    private static let optimizationGapPercent: Double = 8
+    /// Optimization gap (% deviation) above which the top-opportunity insight is escalated to "important".
+    private static let optimizationImportantGapPercent: Double = 20
+    /// Score-impact multiplier (per absolute % gap) used to estimate optimization upside.
+    private static let optimizationScoreImpactPerPercent: Double = 0.15
+    /// Maximum estimated score-impact returned for an optimization gap.
+    private static let maxOptimizationScoreImpact: Int = 12
+    /// Percent change above which a recovery trend is considered notable.
+    private static let recoveryNotablePercent: Double = 3
+    /// Minimum number of improving recovery metrics required for the recovery insight to surface.
+    private static let recoveryMinMetrics = 2
+    /// Weekday peak-trough delta (%) above which a metric is considered "weekend-sensitive".
+    private static let weekendSensitiveDeltaPercent: Double = 15
+    /// Weekend deviation (%) above which a single week is counted as a weekend-pattern occurrence.
+    private static let weekendDeviationPercent: Double = 10
+    /// Weeks used when counting recurring weekend-pattern occurrences.
+    private static let weekendPatternHistoryWeeks = 12
+    /// Variability ratio above which the most-variable metric is highlighted vs the least-variable.
+    private static let variabilityContrastRatio: Double = 1.5
+    /// Best-day-formula percent diff threshold above which a metric is included.
+    private static let bestDayDiffPercent: Double = 5
+    /// Cross-metric trend percent diff above which a 7-day window counts as a historical match.
+    private static let historicalMatchPercent: Double = 5
+    /// Direction (per metric) score adjustment used to flag a trend as improving/declining.
+    private static let metricDirectionAdjustedPercent: Double = 3
+    /// Trailing window (days) used by the recent-trend computation per metric.
+    private static let trendWindowDays: Int = 7
+    /// Minimum samples within the trend window before a metric trend is computed.
+    private static let trendMinSamples: Int = 4
+    /// Minimum sample count before a weekday profile is computed for a metric.
+    private static let weekdayProfileMinSamples: Int = 28
+    /// Minimum number of distinct weekdays with data required to build a profile.
+    private static let weekdayProfileMinDays: Int = 5
+    /// Minimum samples per weekday before that weekday contributes to the profile.
+    private static let weekdayProfilePerDayMin: Int = 3
+    /// Minimum sample count required for the historical-trajectory match scan.
+    private static let historicalMatchMinSamples: Int = 60
+    /// Lookahead window (days) used when measuring trajectory continuation in the historical match.
+    private static let historicalMatchLookaheadDays: Int = 14
+    /// Strides (days) used when scanning history for trajectory matches.
+    private static let historicalMatchStride: Int = 7
+    /// Minimum baseline sample count required for a metric to enter the variability-contrast comparison.
+    private static let variabilityMinBaselineSamples: Int = 30
+    /// Minimum number of metrics with baselines required to surface the variability-contrast insight.
+    private static let variabilityMinMetrics: Int = 4
+    /// Score-history minimum length required before the score-trajectory shift insight surfaces.
+    private static let scoreShiftMinHistory: Int = 14
+    /// Score-history minimum length required before the best-day profile insight surfaces.
+    private static let bestDayMinHistory: Int = 30
+    /// Minimum number of metrics that distinguish best-scoring days before the insight surfaces.
+    private static let bestDayMinDistinguishingMetrics: Int = 2
+    /// Default top-day percentile divisor when picking distinguishing metrics for best-day profile.
+    private static let bestDayPercentileDivisor: Int = 10
+    /// Maximum days-in-state value for the state-transition insight to be considered fresh.
+    private static let stateTransitionFreshnessDays: Int = 3
+    /// Transition probability below which a state transition is flagged as surprising.
+    private static let surprisingTransitionProbability: Double = 0.2
+    /// Metric-overlap fraction above which two same-category insights are treated as duplicates.
+    private static let duplicateOverlapFraction: Double = 0.6
+    /// Surprise bonus added per qualifying surprise dimension during scoring.
+    private static let surpriseBonusStep: Double = 0.1
+    /// Number of involved metrics at/above which a compound insight is rewarded as cross-metric.
+    private static let crossMetricCount: Int = 3
+    /// Number of distinct categories at/above which a compound insight is rewarded as cross-category.
+    private static let crossCategoryCount: Int = 2
 
     // MARK: - Main Entry Point
 
@@ -148,10 +263,10 @@ final class CompoundInsightEngine {
         let scored = applySurpriseScoring(candidates)
         let deduplicated = deduplicateAndCohere(scored)
 
-        // Final ranking: severity * surprise * confidence, capped at 10
+        // Final ranking: severity * surprise * confidence, capped at maxRankedInsights
         insights = deduplicated
             .sorted { rankScore($0) > rankScore($1) }
-            .prefix(10)
+            .prefix(Self.maxRankedInsights)
             .map { $0 }
     }
 
@@ -167,11 +282,11 @@ final class CompoundInsightEngine {
         var results: [CompoundInsight] = []
 
         // Find coordinated trends: multiple metrics moving in the same direction
-        let improving = trends.filter { $0.direction == .improving && abs($0.percentChange) > 5 }
-        let declining = trends.filter { $0.direction == .declining && abs($0.percentChange) > 5 }
+        let improving = trends.filter { $0.direction == .improving && abs($0.percentChange) > Self.notableTrendPercent }
+        let declining = trends.filter { $0.direction == .declining && abs($0.percentChange) > Self.notableTrendPercent }
 
         // Coordinated improvement
-        if improving.count >= 3 {
+        if improving.count >= Self.coordinatedTrendMinCount {
             let metrics = improving.map(\.metric)
             let categories = Set(metrics.map(\.category))
             let avgChange = improving.map { abs($0.percentChange) }.reduce(0, +) / Double(improving.count)
@@ -208,7 +323,7 @@ final class CompoundInsightEngine {
         }
 
         // Coordinated decline
-        if declining.count >= 3 {
+        if declining.count >= Self.coordinatedTrendMinCount {
             let metrics = declining.map(\.metric)
             let categories = Set(metrics.map(\.category))
             let avgChange = declining.map { abs($0.percentChange) }.reduce(0, +) / Double(declining.count)
@@ -244,7 +359,7 @@ final class CompoundInsightEngine {
         }
 
         // State transition insight
-        if let state = currentState, state.daysInState <= 3,
+        if let state = currentState, state.daysInState <= Self.stateTransitionFreshnessDays,
            let prevState = findPreviousState(stateHistory: stateHistory) {
 
             let transitionProb = prevState.transitionProbabilities[state.label] ?? 0
@@ -260,7 +375,7 @@ final class CompoundInsightEngine {
                     involvedMetrics: state.characteristics.map(\.metric),
                     severity: .notable,
                     category: .trajectory,
-                    surpriseScore: transitionProb < 0.2 ? 0.8 : 0.4,
+                    surpriseScore: transitionProb < Self.surprisingTransitionProbability ? 0.8 : 0.4,
                     confidence: 0.7,
                     evidenceSources: ["HealthStateClassifier", "HMM"],
                     timeHorizon: .shortTerm,
@@ -270,7 +385,7 @@ final class CompoundInsightEngine {
         }
 
         // Score trajectory insight
-        if scoreHistory.count >= 14 {
+        if scoreHistory.count >= Self.scoreShiftMinHistory {
             let recent7 = scoreHistory.suffix(7).map { Double($0.score) }
             let prior7 = scoreHistory.dropLast(7).suffix(7).map { Double($0.score) }
 
@@ -279,7 +394,7 @@ final class CompoundInsightEngine {
                 let priorAvg = prior7.reduce(0, +) / Double(prior7.count)
                 let delta = recentAvg - priorAvg
 
-                if abs(delta) >= 5 {
+                if abs(delta) >= Self.scoreShiftDelta {
                     let direction = delta > 0 ? "up" : "down"
                     let narrative = "Your health score has moved \(direction) \(formatValue(abs(delta))) points this week vs last week (from \(formatValue(priorAvg)) to \(formatValue(recentAvg))). \(delta > 0 ? "This is one of your strongest weekly improvements." : "This is a meaningful dip worth investigating.")"
 
@@ -291,9 +406,9 @@ final class CompoundInsightEngine {
                             ? "Score moved from \(formatValue(priorAvg)) to \(formatValue(recentAvg)) week-over-week. a \(formatValue(abs(delta)))-point improvement."
                             : "Score dropped from \(formatValue(priorAvg)) to \(formatValue(recentAvg)) week-over-week. a \(formatValue(abs(delta)))-point decline.",
                         involvedMetrics: trends.prefix(3).map(\.metric),
-                        severity: abs(delta) >= 10 ? .important : .notable,
+                        severity: abs(delta) >= Self.scoreShiftImportantDelta ? .important : .notable,
                         category: .trajectory,
-                        surpriseScore: abs(delta) >= 10 ? 0.6 : 0.3,
+                        surpriseScore: abs(delta) >= Self.scoreShiftImportantDelta ? 0.6 : 0.3,
                         confidence: 0.8,
                         evidenceSources: ["ScoreHistory", "TrendAnalysis"],
                         timeHorizon: .mediumTerm,
@@ -318,7 +433,7 @@ final class CompoundInsightEngine {
         var results: [CompoundInsight] = []
 
         // Weekend vs weekday behavioral cascade
-        let weekendSensitiveMetrics = weekdayProfiles.filter { $0.peakTroughDeltaPercent > 15 }
+        let weekendSensitiveMetrics = weekdayProfiles.filter { $0.peakTroughDeltaPercent > Self.weekendSensitiveDeltaPercent }
         if weekendSensitiveMetrics.count >= 2 {
             // Find the metric with the biggest weekend shift
             let sorted = weekendSensitiveMetrics.sorted { $0.peakTroughDeltaPercent > $1.peakTroughDeltaPercent }
@@ -362,7 +477,7 @@ final class CompoundInsightEngine {
         // Cross-category correlation insight
         let crossCategoryCorrelations = correlations.filter { corr in
             corr.metricA.category != corr.metricB.category &&
-            abs(corr.pearsonR) >= 0.5 &&
+            abs(corr.pearsonR) >= Self.strongCrossCategoryR &&
             corr.survivedFDR
         }
 
@@ -381,7 +496,7 @@ final class CompoundInsightEngine {
                 narrative += "\(causalDirection) appears to drive this relationship with a \(strongest.grangerOptimalLag)-day lag."
             }
 
-            if strongest.stability > 0.7 {
+            if strongest.stability > Self.stableCorrelationStability {
                 narrative += " This is a stable, reliable connection in your data."
             }
 
@@ -402,8 +517,8 @@ final class CompoundInsightEngine {
         }
 
         // Variability comparison insight
-        let metricsWithBaseline = baselines.filter { $0.value.sampleCount >= 30 }
-        if metricsWithBaseline.count >= 4 {
+        let metricsWithBaseline = baselines.filter { $0.value.sampleCount >= Self.variabilityMinBaselineSamples }
+        if metricsWithBaseline.count >= Self.variabilityMinMetrics {
             let cvs: [(HealthMetric, Double)] = metricsWithBaseline.compactMap { (metric, baseline) in
                 guard baseline.mean != 0 else { return nil }
                 let cv = baseline.standardDeviation / abs(baseline.mean)
@@ -415,7 +530,7 @@ final class CompoundInsightEngine {
                 let leastVariable = cvs[cvs.count - 1]
                 let ratio = mostVariable.1 / max(leastVariable.1, 0.001)
 
-                if ratio > 1.5 {
+                if ratio > Self.variabilityContrastRatio {
                     let narrative = "Your \(mostVariable.0.displayName) is \(formatPercent(ratio * 100 - 100)) more variable day-to-day than your \(leastVariable.0.displayName). This means \(mostVariable.0.displayName) is more sensitive to your daily choices and habits, making it a better barometer of your lifestyle impact."
 
                     results.append(CompoundInsight(
@@ -508,7 +623,7 @@ final class CompoundInsightEngine {
 
         // Direct strong causal pair (even if no chain)
         if let strongestDirect = causalLinks.max(by: { $0.effectSize < $1.effectSize }),
-           strongestDirect.effectSize > 0.1 {
+           strongestDirect.effectSize > Self.causalDirectMinEffect {
 
             // Generate Semantic LLM Context
             let context = LLMInsightGenerator.InsightContext(
@@ -518,7 +633,7 @@ final class CompoundInsightEngine {
                 riskScore: 0.3,
                 relatedMetrics: [strongestDirect.effect],
                 causalLag: strongestDirect.lag,
-                severity: strongestDirect.effectSize > 0.25 ? .important : .notable
+                severity: strongestDirect.effectSize > Self.causalImportantEffect ? .important : .notable
             )
             
             let narrative = llmGenerator.synthesizeParagraph(context: context)
@@ -529,7 +644,7 @@ final class CompoundInsightEngine {
                 ($0.mid == strongestDirect.cause && $0.dest == strongestDirect.effect)
             }
 
-            let effectSizeLabel = strongestDirect.effectSize > 0.35 ? "large" : strongestDirect.effectSize > 0.15 ? "medium" : "small"
+            let effectSizeLabel = strongestDirect.effectSize > Self.causalLargeEffect ? "large" : strongestDirect.effectSize > Self.causalMediumEffect ? "medium" : "small"
             let lagStr = strongestDirect.lag > 0 ? "after \(strongestDirect.lag) day\(strongestDirect.lag == 1 ? "" : "s")" : "same day"
 
             if !chainAlreadyCovers {
@@ -539,7 +654,7 @@ final class CompoundInsightEngine {
                     narrative: narrative,
                     recommendation: "\(strongestDirect.cause.displayName) causally predicts \(strongestDirect.effect.displayName) with a \(effectSizeLabel) effect size (f\u{00B2}=\(formatValue(strongestDirect.effectSize, decimals: 2))), visible \(lagStr).",
                     involvedMetrics: [strongestDirect.cause, strongestDirect.effect],
-                    severity: strongestDirect.effectSize > 0.25 ? .important : .notable,
+                    severity: strongestDirect.effectSize > Self.causalImportantEffect ? .important : .notable,
                     category: .causeAndEffect,
                     surpriseScore: 0.7,
                     confidence: min(0.85, strongestDirect.strength + 0.2),
@@ -565,9 +680,9 @@ final class CompoundInsightEngine {
         var results: [CompoundInsight] = []
 
         // Converging negative signals
-        let decliningTrends = trends.filter { $0.direction == .declining && abs($0.percentChange) > 3 }
+        let decliningTrends = trends.filter { $0.direction == .declining && abs($0.percentChange) > Self.riskTrendPercent }
         let recentAnomalies = anomalies.filter {
-            calendar.dateComponents([.day], from: $0.date, to: Date()).day ?? 999 <= 3
+            calendar.dateComponents([.day], from: $0.date, to: Date()).day ?? 999 <= Self.recentAnomalyWindowDays
         }
 
         let riskSignals = decliningTrends.count + recentAnomalies.count
@@ -576,12 +691,12 @@ final class CompoundInsightEngine {
             guard scoreHistory.count >= 2 else { return 0 }
             var count = 0
             for i in 1..<scoreHistory.count {
-                if scoreHistory[i].score < scoreHistory[i - 1].score - 10 { count += 1 }
+                if scoreHistory[i].score < scoreHistory[i - 1].score - Self.scoreCrashDelta { count += 1 }
             }
             return count
         }()
 
-        if riskSignals >= 3 || (riskSignals >= 2 && predictionRisk > 0.5) {
+        if riskSignals >= Self.riskSignalsHighThreshold || (riskSignals >= Self.riskSignalsLowThreshold && predictionRisk > Self.predictionAuxProbability) {
             let allMetrics = (decliningTrends.map(\.metric) + recentAnomalies.map(\.metric))
             let uniqueMetrics = Array(Set(allMetrics))
             
@@ -593,7 +708,7 @@ final class CompoundInsightEngine {
                 riskScore: predictionRisk > 0 ? predictionRisk : 0.8,
                 relatedMetrics: Array(uniqueMetrics.prefix(2)),
                 causalLag: nil,
-                severity: predictionRisk > 0.6 ? .urgent : .important
+                severity: predictionRisk > Self.predictionUrgentProbability ? .urgent : .important
             )
             
             let narrative = llmGenerator.synthesizeParagraph(context: context)
@@ -602,9 +717,9 @@ final class CompoundInsightEngine {
                 id: "risk_converging_signals",
                 title: "Warning Signs Converging",
                 narrative: narrative,
-                recommendation: "\(riskSignals) risk signals converging.\(pastCrashes >= 2 ? " Similar patterns preceded your last \(pastCrashes) score dips." : "")\(predictionRisk > 0.3 ? " Tomorrow's risk estimate: \(Int(predictionRisk * 100))%." : "")",
+                recommendation: "\(riskSignals) risk signals converging.\(pastCrashes >= 2 ? " Similar patterns preceded your last \(pastCrashes) score dips." : "")\(predictionRisk > Self.predictionMentionProbability ? " Tomorrow's risk estimate: \(Int(predictionRisk * 100))%." : "")",
                 involvedMetrics: Array(uniqueMetrics.prefix(5)),
-                severity: predictionRisk > 0.6 ? .urgent : .important,
+                severity: predictionRisk > Self.predictionUrgentProbability ? .urgent : .important,
                 category: .riskWarning,
                 surpriseScore: 0.6,
                 confidence: min(0.85, 0.4 + Double(riskSignals) * 0.1 + predictionRisk * 0.2),
@@ -615,7 +730,7 @@ final class CompoundInsightEngine {
         }
 
         // High prediction risk with top factors
-        if let pred = prediction, pred.probability > 0.55, pred.topFactors.count >= 2 {
+        if let pred = prediction, pred.probability > Self.predictionStandaloneProbability, pred.topFactors.count >= 2 {
             let riskFactors = pred.topFactors.filter { $0.isRiskFactor }.prefix(3)
             let protective = pred.topFactors.filter { !$0.isRiskFactor }.prefix(2)
 
@@ -637,7 +752,7 @@ final class CompoundInsightEngine {
                     narrative: narrative,
                     recommendation: "Top risk factor: \(riskFactors.first?.metric.displayName ?? "recovery") (\(riskFactors.first?.featureType.rawValue ?? "current level")).\(protective.isEmpty ? "" : " Protective factors: \(protective.map(\.metric.displayName).joined(separator: ", ")).")",
                     involvedMetrics: (Array(riskFactors) + Array(protective)).map(\.metric),
-                    severity: pred.probability > 0.7 ? .urgent : .important,
+                    severity: pred.probability > Self.predictionUrgentStandalone ? .urgent : .important,
                     category: .riskWarning,
                     surpriseScore: 0.5,
                     confidence: pred.confidence,
@@ -671,9 +786,9 @@ final class CompoundInsightEngine {
             // Only include if notably below baseline (or above for "lower is better" metrics)
             let isBelowOptimal: Bool
             if trend.metric.higherIsBetter {
-                isBelowOptimal = gap < -8
+                isBelowOptimal = gap < -Self.optimizationGapPercent
             } else {
-                isBelowOptimal = gap > 8
+                isBelowOptimal = gap > Self.optimizationGapPercent
             }
             guard isBelowOptimal else { return nil }
             return (trend.metric, gap, currentMean, baseline.mean)
@@ -687,7 +802,7 @@ final class CompoundInsightEngine {
             // Check if this metric causally influences score
             let scoreLever = correlations.first { corr in
                 (corr.metricA == biggest.metric || corr.metricB == biggest.metric) &&
-                corr.grangerCausal && corr.grangerEffectSize > 0.05
+                corr.grangerCausal && corr.grangerEffectSize > Self.scoreLeverEffect
             }
 
             var narrative = "Your biggest lever right now is \(biggest.metric.displayName). you're at \(currentStr) \(biggest.metric.unit), which is \(gapStr) \(biggest.metric.higherIsBetter ? "below" : "above") your personal baseline of \(baselineStr) \(biggest.metric.unit)."
@@ -698,7 +813,7 @@ final class CompoundInsightEngine {
             }
 
             // Estimate score impact
-            let estimatedScoreImpact = min(12, Int(abs(biggest.gap) * 0.15))
+            let estimatedScoreImpact = min(Self.maxOptimizationScoreImpact, Int(abs(biggest.gap) * Self.optimizationScoreImpactPerPercent))
 
             results.append(CompoundInsight(
                 id: "optimization_biggest_gap",
@@ -706,7 +821,7 @@ final class CompoundInsightEngine {
                 narrative: narrative,
                 recommendation: "Your \(biggest.metric.displayName) is at \(currentStr) \(biggest.metric.unit). \(gapStr) \(biggest.metric.higherIsBetter ? "below" : "above") your \(baselineStr) \(biggest.metric.unit) baseline. Estimated score impact: ~\(estimatedScoreImpact) points.",
                 involvedMetrics: [biggest.metric] + (scoreLever.map { [$0.metricA == biggest.metric ? $0.metricB : $0.metricA] } ?? []),
-                severity: abs(biggest.gap) > 20 ? .important : .notable,
+                severity: abs(biggest.gap) > Self.optimizationImportantGapPercent ? .important : .notable,
                 category: .optimization,
                 surpriseScore: 0.5,
                 confidence: 0.75,
@@ -717,9 +832,9 @@ final class CompoundInsightEngine {
         }
 
         // Best-day profile: find what distinguished top-score days
-        if scoreHistory.count >= 30 {
+        if scoreHistory.count >= Self.bestDayMinHistory {
             let sortedScores = scoreHistory.sorted { $0.score > $1.score }
-            let topDays = sortedScores.prefix(max(3, scoreHistory.count / 10))
+            let topDays = sortedScores.prefix(max(Self.bestDayMinDistinguishingMetrics + 1, scoreHistory.count / Self.bestDayPercentileDivisor))
             let topDates = Set(topDays.map { calendar.startOfDay(for: $0.date) })
 
             // Find metrics where top-score days differ most from average
@@ -731,14 +846,14 @@ final class CompoundInsightEngine {
                 let overallMean = series.mean
                 guard overallMean != 0 else { continue }
                 let diff = ((topMean - overallMean) / abs(overallMean)) * 100
-                if abs(diff) > 5 {
+                if abs(diff) > Self.bestDayDiffPercent {
                     metricDiffs.append((metric, topMean, overallMean, diff))
                 }
             }
 
             metricDiffs.sort { abs($0.3) > abs($1.3) }
 
-            if metricDiffs.count >= 2 {
+            if metricDiffs.count >= Self.bestDayMinDistinguishingMetrics {
                 let top = metricDiffs[0]
                 let second = metricDiffs[1]
 
@@ -787,10 +902,10 @@ final class CompoundInsightEngine {
             } else {
                 isImproving = trend.direction == .improving
             }
-            return isImproving && abs(trend.percentChange) > 3
+            return isImproving && abs(trend.percentChange) > Self.recoveryNotablePercent
         }
 
-        if improvingRecovery.count >= 2 {
+        if improvingRecovery.count >= Self.recoveryMinMetrics {
             let metricDetails = improvingRecovery.map { trend -> String in
                 let dir = trend.metric.higherIsBetter ? "up" : "down"
                 return "\(trend.metric.displayName) \(dir) \(formatPercent(abs(trend.percentChange)))"
@@ -842,19 +957,19 @@ final class CompoundInsightEngine {
             var adjustedSurprise = insight.surpriseScore
 
             // Cross-metric insights are inherently more surprising
-            if insight.involvedMetrics.count >= 3 {
-                adjustedSurprise = min(1.0, adjustedSurprise + 0.1)
+            if insight.involvedMetrics.count >= Self.crossMetricCount {
+                adjustedSurprise = min(1.0, adjustedSurprise + Self.surpriseBonusStep)
             }
 
             // Cross-category insights get a boost
             let categories = Set(insight.involvedMetrics.map(\.category))
-            if categories.count >= 2 {
-                adjustedSurprise = min(1.0, adjustedSurprise + 0.1)
+            if categories.count >= Self.crossCategoryCount {
+                adjustedSurprise = min(1.0, adjustedSurprise + Self.surpriseBonusStep)
             }
 
             // Cause-effect with temporal lag is more surprising than same-day correlation
             if insight.category == .causeAndEffect && insight.timeHorizon != .immediate {
-                adjustedSurprise = min(1.0, adjustedSurprise + 0.1)
+                adjustedSurprise = min(1.0, adjustedSurprise + Self.surpriseBonusStep)
             }
 
             return CompoundInsight(
@@ -886,7 +1001,7 @@ final class CompoundInsightEngine {
                 if existing.category == insight.category {
                     let overlapCount = Set(existing.involvedMetrics).intersection(Set(insight.involvedMetrics)).count
                     let maxCount = max(existing.involvedMetrics.count, insight.involvedMetrics.count)
-                    return maxCount > 0 && Double(overlapCount) / Double(maxCount) > 0.6
+                    return maxCount > 0 && Double(overlapCount) / Double(maxCount) > Self.duplicateOverlapFraction
                 }
                 return false
             }
@@ -910,7 +1025,7 @@ final class CompoundInsightEngine {
                 if let existingIdx = kept.firstIndex(where: { existing in
                     existing.category == insight.category &&
                     Double(Set(existing.involvedMetrics).intersection(Set(insight.involvedMetrics)).count) /
-                    Double(max(existing.involvedMetrics.count, insight.involvedMetrics.count)) > 0.6
+                    Double(max(existing.involvedMetrics.count, insight.involvedMetrics.count)) > Self.duplicateOverlapFraction
                 }) {
                     if rankScore(insight) > rankScore(kept[existingIdx]) {
                         kept[existingIdx] = insight
@@ -977,11 +1092,11 @@ final class CompoundInsightEngine {
         timeSeries: [HealthMetric: MetricTimeSeries],
         baselines: [HealthMetric: UserBaseline]
     ) -> [MetricTrend] {
-        let windowDays = 7
+        let windowDays = Self.trendWindowDays
 
         return timeSeries.compactMap { (metric, series) -> MetricTrend? in
             let recentSamples = series.samples(lastDays: windowDays)
-            guard recentSamples.count >= 4 else { return nil }
+            guard recentSamples.count >= Self.trendMinSamples else { return nil }
 
             let values = recentSamples.map(\.value)
             let recentMean = values.reduce(0, +) / Double(values.count)
@@ -1009,9 +1124,9 @@ final class CompoundInsightEngine {
 
             let direction: TrendDirection
             let adjustedChange = metric.higherIsBetter ? percentChange : -percentChange
-            if adjustedChange > 3 {
+            if adjustedChange > Self.metricDirectionAdjustedPercent {
                 direction = .improving
-            } else if adjustedChange < -3 {
+            } else if adjustedChange < -Self.metricDirectionAdjustedPercent {
                 direction = .declining
             } else {
                 direction = .stable
@@ -1048,7 +1163,7 @@ final class CompoundInsightEngine {
         timeSeries: [HealthMetric: MetricTimeSeries]
     ) -> [WeekdayProfile] {
         return timeSeries.compactMap { (metric, series) -> WeekdayProfile? in
-            guard series.sortedSamples.count >= 28 else { return nil }
+            guard series.sortedSamples.count >= Self.weekdayProfileMinSamples else { return nil }
 
             var dayValues: [Int: [Double]] = [:]
             for sample in series.sortedSamples {
@@ -1056,15 +1171,15 @@ final class CompoundInsightEngine {
                 dayValues[weekday, default: []].append(sample.value)
             }
 
-            // Need data for at least 5 days of the week
-            guard dayValues.count >= 5 else { return nil }
+            // Need data for enough distinct weekdays
+            guard dayValues.count >= Self.weekdayProfileMinDays else { return nil }
 
             var dayMeans: [Int: Double] = [:]
-            for (day, values) in dayValues where values.count >= 3 {
+            for (day, values) in dayValues where values.count >= Self.weekdayProfilePerDayMin {
                 dayMeans[day] = values.reduce(0, +) / Double(values.count)
             }
 
-            guard dayMeans.count >= 5 else { return nil }
+            guard dayMeans.count >= Self.weekdayProfileMinDays else { return nil }
 
             let overallMean = series.mean
             guard overallMean != 0 else { return nil }
@@ -1098,13 +1213,13 @@ final class CompoundInsightEngine {
               let series = timeSeries[firstMetric] else { return nil }
 
         let samples = series.sortedSamples
-        guard samples.count >= 60 else { return nil }
+        guard samples.count >= Self.historicalMatchMinSamples else { return nil }
 
         // Simplified: look at 7-day windows in history, find ones with similar direction
-        let windowSize = 7
+        let windowSize = Self.trendWindowDays
         var matchDurations: [Int] = []
 
-        for i in stride(from: windowSize, to: samples.count - windowSize - 14, by: 7) {
+        for i in stride(from: windowSize, to: samples.count - windowSize - Self.historicalMatchLookaheadDays, by: Self.historicalMatchStride) {
             let windowValues = samples[i..<(i + windowSize)].map(\.value)
             let priorValues = samples[(i - windowSize)..<i].map(\.value)
 
@@ -1112,13 +1227,13 @@ final class CompoundInsightEngine {
             let priorMean = priorValues.reduce(0, +) / Double(priorValues.count)
             let change = ((windowMean - priorMean) / abs(priorMean)) * 100
 
-            let isMatch = (direction == .improving && change > 5) ||
-                          (direction == .declining && change < -5)
+            let isMatch = (direction == .improving && change > Self.historicalMatchPercent) ||
+                          (direction == .declining && change < -Self.historicalMatchPercent)
 
             if isMatch {
                 // Find how many more days the trend continued
                 var continuation = 0
-                for j in (i + windowSize)..<min(samples.count, i + windowSize + 14) {
+                for j in (i + windowSize)..<min(samples.count, i + windowSize + Self.historicalMatchLookaheadDays) {
                     let extendedMean = samples[i..<(j + 1)].map(\.value).reduce(0, +) / Double(j + 1 - i)
                     let extendedChange = ((extendedMean - priorMean) / abs(priorMean)) * 100
                     let stillMoving = (direction == .improving && extendedChange > change * 0.5) ||
@@ -1176,8 +1291,8 @@ final class CompoundInsightEngine {
         let samples = series.sortedSamples
         guard samples.count >= 28 else { return 0 }
 
-        // Check the last 12 weeks for weekend dips/spikes
-        let cutoff = calendar.date(byAdding: .day, value: -84, to: Date()) ?? Date()
+        // Check the last weekendPatternHistoryWeeks for weekend dips/spikes
+        let cutoff = calendar.date(byAdding: .day, value: -Self.weekendPatternHistoryWeeks * 7, to: Date()) ?? Date()
         let recentSamples = samples.filter { $0.date >= cutoff }
         guard recentSamples.count >= 14 else { return 0 }
 
@@ -1209,7 +1324,7 @@ final class CompoundInsightEngine {
             let wdMean = weekdayValues.reduce(0, +) / Double(weekdayValues.count)
             let diff = abs((weMean - wdMean) / abs(overallMean)) * 100
 
-            if diff > 10 {
+            if diff > Self.weekendDeviationPercent {
                 weekendDeviationCount += 1
             }
         }

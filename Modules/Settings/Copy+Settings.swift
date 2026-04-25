@@ -33,7 +33,7 @@ extension Copy {
         static let whichMetrics = "Choose Metrics"
         static let notificationsHint = "All alerts are optional. You choose what reaches you."
         static let dailySummaryDescription = "A short morning briefing with your score and key numbers."
-        static let weeklySummaryDescription = "A once a week recap delivered every Monday morning."
+        static let weeklySummaryDescription = "A weekly recap delivered every Monday morning."
         static let connectDataSource = "Connect a Data Source"
         static let connectDataSourceHint = "Laso reads from Apple Health. Connect a watch or other app to start."
         static let waitingForData = "Waiting for Health Data"
@@ -98,7 +98,7 @@ extension Copy {
 
         static let warningAlertMetrics = "Warning Alert Metrics"
         static func selectedCount(_ count: Int) -> String { "\(count) selected" }
-        static let metricAlertsFooter = "Choose which health numbers send you a warning when they move away from your usual."
+        static let metricAlertsFooter = "Choose which health numbers send you a warning when they change from your usual."
 
         // MARK: - Export
 
@@ -123,6 +123,10 @@ extension Copy {
         // MARK: - About
 
         static let dataPrivacy = "Data Privacy"
+        static let acknowledgements = "Acknowledgements"
+        static let acknowledgementsSubtitle = "Open source libraries used in Laso"
+        static let acknowledgementsFooter = "Laso is built with the help of these open source projects. Tap any item to view its source repository and license."
+        static let viewSource = "View Source"
 
         // MARK: - Help & Support
 
@@ -158,7 +162,7 @@ extension Copy {
         static let deleteAllMyData = "Delete All My Data"
         static let deleteAllDataQuestion = "Delete All Data?"
         static let deleteEverything = "Delete Everything"
-        static let deleteDataWarning = "This will permanently erase all of your data from this device, including your profile, preferences, and cached health data. This cannot be undone. The app will close so changes take full effect."
-        static let deleteDataFooter = "Permanently removes all local data including your profile, preferences, health cache, and encrypted storage. This cannot be undone."
+        static let deleteDataWarning = "This will permanently erase all your data from this device, including your profile, preferences, and saved health data. This cannot be undone. The app will close so changes take full effect."
+        static let deleteDataFooter = "Permanently removes all local data including your profile, preferences, saved health data, and encrypted storage. This cannot be undone."
     }
 }

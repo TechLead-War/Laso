@@ -33,6 +33,9 @@ struct DataConfidenceBadge: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Data confidence: \(tier.name) tier")
+        .accessibilityValue("\(daysOfData) days of data tracked")
+        .accessibilityHint(showDetail ? "Tap to collapse tier timeline" : "Tap to show tier progression details")
     }
 
     // MARK: - Compact Pill

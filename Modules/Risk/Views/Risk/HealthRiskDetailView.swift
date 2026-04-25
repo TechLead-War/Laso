@@ -4,10 +4,19 @@ import SwiftUI
 struct HealthRiskDetailView: View {
     let risk: HealthRisk
     let onTapMetric: (HealthMetric) -> Void
+    /// Pass 11 AK (F45): freshness timestamp from the parent dashboard refresh.
+    var lastUpdated: Date? = nil
+    /// Pass 11 AK (F31): pull-to-refresh hook wired by the route destination.
+    var onRefresh: (() async -> Void)? = nil
 
     var body: some View {
         ScrollView {
             VStack(spacing: DS.sectionSpacing) {
+                if let lastUpdated, let caption = Copy.Common.relativeUpdated(lastUpdated) {
+                    Text(caption)
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(.tertiary)
+                }
                 // Hero: risk level gauge
                 riskGaugeSection
 
@@ -32,6 +41,9 @@ struct HealthRiskDetailView: View {
             .padding(.bottom)
         }
         .background(AppColour.surfaceBase.ignoresSafeArea())
+        .refreshable {
+            await onRefresh?()
+        }
         .navigationTitle(risk.riskType.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
@@ -319,6 +331,7 @@ struct RiskContributionBar: View {
     }
 }
 
+#if DEBUG
 #Preview {
     NavigationStack {
         let risks = SampleDataProvider.generateSampleRisks()
@@ -327,3 +340,4 @@ struct RiskContributionBar: View {
         }
     }
 }
+#endif

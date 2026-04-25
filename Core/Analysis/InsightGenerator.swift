@@ -509,7 +509,7 @@ struct InsightGenerator {
 
             guard score >= 0.55 else { continue }
 
-            if best == nil || score > best!.score {
+            if best.map({ score > $0.score }) ?? true {
                 best = (candidateMetric, deviation, score)
             }
         }

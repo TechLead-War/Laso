@@ -1,0 +1,61 @@
+{
+  "timestamp": "2026-04-25_13-08-57_test-deep",
+  "device": "iPhone 17 Pro Max",
+  "device_resolution": "1320x2868",
+  "theme": "dark",
+  "mock_profile": "PremiumShowcase",
+  "values": {
+    "name": "Alex Taylor",
+    "overall_score": 92,
+    "sleep_score": 92,
+    "activity_score": 94,
+    "recovery_green_score": 87,
+    "hrv_ms": 62,
+    "rhr_bpm": 54,
+    "vo2_max": 50,
+    "sleep_hours": 7.6,
+    "sleep_streak_days": 12,
+    "steps_average": 11800,
+    "active_calories_kcal": 600,
+    "exercise_minutes_daily": 52,
+    "workout_streak_weeks": 8,
+    "mindful_minutes_daily": 18,
+    "subscribed": true
+  },
+  "angles": [
+    {
+      "id": "04_lifestyle",
+      "title": "Lifestyle & engagement",
+      "description": "Breadth focus. The places users live in long-term \u2014 Explore tab, Settings tab + sub-pages, achievements.",
+      "shots": [
+        {
+          "file": "04_lifestyle/04_settings_notifications.png",
+          "screen": "Notifications Settings",
+          "caption": "Daily summary, alerts, watch reminders"
+        },
+        {
+          "file": "04_lifestyle/05_settings_devices.png",
+          "screen": "Connected Devices",
+          "caption": "Active sources, scanning, device status"
+        }
+      ]
+    },
+    {
+      "id": "05_states",
+      "title": "First launch & state moments",
+      "description": "The moments outside steady-state usage \u2014 full 6-step onboarding, the medical disclaimer, the paywall, the Pro lock overlay, and the empty Connect-Apple-Health state.",
+      "shots": [
+        {
+          "file": "05_states/06_onboarding_profile.png",
+          "screen": "Onboarding \u00b7 Profile",
+          "caption": "Age, gender capture step"
+        },
+        {
+          "file": "05_states/07_onboarding_connect.png",
+          "screen": "Onboarding \u00b7 Connect Health",
+          "caption": "Apple Health authorization step"
+        }
+      ]
+    }
+  ]
+}

@@ -28,7 +28,7 @@ extension Copy {
         }
 
         static func staleVitals(wearToTrackMessage: String) -> String {
-            "Your vitals are out of date. \(wearToTrackMessage)"
+            "Your latest readings are old. \(wearToTrackMessage)"
         }
 
         static func wearPromptTitle(deviceName: String, deviceType: DeviceType) -> String {
@@ -45,15 +45,15 @@ extension Copy {
         // MARK: - Pairing
 
         static func ensurePairedAppleWatch() -> String {
-            "Make sure your Apple Watch is paired and worn. Heart rate and other vitals will appear here automatically."
+            "Make sure your Apple Watch is paired and worn. Heart rate and other readings will show up here on their own."
         }
 
         static func ensurePairedRing(deviceName: String, companionApp: String) -> String {
-            "Make sure your \(deviceName) is connected via \(companionApp). Vitals sync when your ring is nearby."
+            "Make sure your \(deviceName) is connected through \(companionApp). Readings sync when your ring is nearby."
         }
 
         static func ensurePairedGeneric(deviceName: String, companionApp: String) -> String {
-            "Make sure your \(deviceName) is syncing via \(companionApp). Vitals will appear here after the next sync."
+            "Make sure your \(deviceName) is syncing through \(companionApp). Readings will show up here after the next sync."
         }
 
         // MARK: - Notifications

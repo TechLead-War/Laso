@@ -98,6 +98,10 @@ struct MetricChartView: View {
                 .foregroundStyle(color.gradient)
                 .lineStyle(StrokeStyle(lineWidth: 2))
                 .interpolationMethod(.catmullRom)
+                // Pass 8 P2-F17: per-mark VoiceOver labels so users can navigate
+                // each data point in the chart by date and value.
+                .accessibilityLabel(Text(sample.date.formatted(date: .abbreviated, time: .omitted)))
+                .accessibilityValue(Text("\(formattedValue(sample.value)) \(metric.unit)"))
 
                 AreaMark(
                     x: .value("Date", sample.date),
@@ -111,6 +115,7 @@ struct MetricChartView: View {
                     )
                 )
                 .interpolationMethod(.catmullRom)
+                .accessibilityHidden(true)
             }
 
             // Baseline reference line
@@ -282,6 +287,31 @@ struct MetricChartView: View {
             selectedValueOverlay
         }
         .sensoryFeedback(.selection, trigger: selectedSample?.id)
+        // Pass 8 P2-F17: chart-level summary so VoiceOver announces what the chart
+        // shows on focus (metric name, time span, latest value, trend direction).
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(Text(chartAccessibilityLabel))
+        .accessibilityValue(Text(chartAccessibilityValue))
+    }
+
+    private var chartAccessibilityLabel: String {
+        "Chart of \(metric.displayName) over the last \(dataSpanDays) days"
+    }
+
+    private var chartAccessibilityValue: String {
+        guard let first = samples.first, let last = samples.last else {
+            return "No data available"
+        }
+        let latest = "\(formattedValue(last.value)) \(metric.unit)"
+        let direction: String
+        if last.value > first.value * 1.02 {
+            direction = "trending up"
+        } else if last.value < first.value * 0.98 {
+            direction = "trending down"
+        } else {
+            direction = "stable"
+        }
+        return "Latest \(latest), \(direction)"
     }
 
     @ViewBuilder
@@ -426,6 +456,7 @@ struct MetricChartView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     let samples = SampleDataProvider.generateTimeSeries(for: .restingHeartRate, days: 30).samples
     MetricChartView(
@@ -436,3 +467,4 @@ struct MetricChartView: View {
     )
     .padding()
 }
+#endif

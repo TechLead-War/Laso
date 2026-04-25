@@ -68,9 +68,11 @@ enum ReengagementScheduler {
         )
 
         center.add(request) { error in
+            #if DEBUG
             if let error {
                 print("[ReengagementScheduler] Failed to schedule: \(error.localizedDescription)")
             }
+            #endif
         }
     }
 

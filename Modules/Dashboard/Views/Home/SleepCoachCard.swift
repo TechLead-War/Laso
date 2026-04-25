@@ -20,7 +20,7 @@ struct SleepCoachCard: View {
 
                 // Center content
                 VStack(alignment: .leading, spacing: DS.space1) {
-                    Text("Tonight's Goal")
+                    Text(Copy.Home.Cards.tonightsGoal)
                         .font(DS.Typography.calloutSemibold)
                         .foregroundStyle(AppColour.textSecondary)
                         .textCase(.uppercase)
@@ -37,7 +37,7 @@ struct SleepCoachCard: View {
                     }
 
                     if let bedtime {
-                        Text("Bed by \(bedtime)")
+                        Text(Copy.Home.Cards.bedBy(bedtime))
                             .font(DS.Typography.callout)
                             .foregroundStyle(AppColour.textSecondary)
                             .postHogMask()

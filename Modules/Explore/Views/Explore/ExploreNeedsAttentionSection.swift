@@ -58,6 +58,10 @@ struct ExploreNeedsAttentionSection: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("\(factor.metric.displayName), needs attention")
+                        .accessibilityValue("Impact \(factor.impact). \(factor.reason)")
+                        .accessibilityHint("Opens metric details")
                     }
 
                     if weakCategories.count >= 2 {
@@ -92,6 +96,10 @@ struct ExploreNeedsAttentionSection: View {
                                     .frame(maxWidth: .infinity)
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityElement(children: .combine)
+                                .accessibilityLabel("\(contrib.category.displayName) category")
+                                .accessibilityValue("Score \(contrib.score)")
+                                .accessibilityHint("Opens the \(contrib.category.displayName) category detail")
                             }
                         }
                     }

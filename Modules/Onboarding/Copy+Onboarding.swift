@@ -11,7 +11,7 @@ extension Copy {
         // MARK: - About You (Screen 2)
 
         static let aboutTitle = "Start with you"
-        static let aboutSubtitle = "Heart, sleep, and recovery patterns change across life stages. Yours are yours alone."
+        static let aboutSubtitle = "Heart, sleep, and recovery change at every life stage. Yours are yours alone."
         static let aboutAgeLabel = "Age"
         static let aboutAgePlaceholder = "e.g. 28"
         static let aboutGenderPrompt = "Select gender"
@@ -21,7 +21,7 @@ extension Copy {
 
         // MARK: - Connect Apple Health (Screen 3)
 
-        static let connectTitle = "Your numbers, translated."
+        static let connectTitle = "Your numbers, made simple."
         static let connectSubtitle = "Laso turns your Apple Health history into the story of your body."
         static let connectPrivacyNote = "Stays on your iPhone."
         static let connectAllow = "Connect Apple Health"
@@ -34,9 +34,9 @@ extension Copy {
             case ..<25:
                 return "Starting early means a lifetime of knowing what is normal for your body."
             case 25..<35:
-                return "At your age, heart and recovery patterns tell you a lot about how you are doing."
+                return "At your age, heart and recovery patterns say a lot about how you are doing."
             case 35..<45:
-                return "At your age, watching heart health and recovery is valuable."
+                return "At your age, watching heart health and recovery really pays off."
             case 45..<55:
                 return "At your age, tracking heart, sleep, and mobility shows you important changes."
             default:
@@ -46,16 +46,16 @@ extension Copy {
 
         // MARK: - Priority (Screen 4)
 
-        static let priorityTitle = "What should Laso decode first?"
+        static let priorityTitle = "What should Laso look at first?"
         static let prioritySubtitle = "Your pick shapes the insights you see."
         static let priorityContinue = "Continue"
 
         static func priorityCardSubtitle(for focus: HealthFocus) -> String {
             switch focus {
             case .sleep: "Overnight recovery and patterns"
-            case .fitness: "Movement, workouts, exertion"
+            case .fitness: "Movement, workouts, and effort"
             case .heartHealth: "Resting rate, HRV, cardio fitness"
-            case .weightBody: "Trends in body composition and vitals"
+            case .weightBody: "Trends in body shape and vitals"
             case .recovery: "How ready your body is each day"
             }
         }
@@ -68,7 +68,7 @@ extension Copy {
         static func mirrorCompleteSubtitle(_ span: String) -> String {
             "\(span) of your health, understood."
         }
-        static let mirrorNoDataMessage = "No data yet. Laso will build your baseline as data arrives."
+        static let mirrorNoDataMessage = "No data yet. Laso will build your baseline as data comes in."
         static let mirrorContinue = "Show me more"
         static let mirrorRetry = "Try again"
         static let mirrorSkip = "Skip for now"
@@ -84,7 +84,7 @@ extension Copy {
                 return "Your sleep history gives Laso a strong signal to work with."
             }
             if focuses.contains(.fitness) {
-                return "Activity patterns are in. Laso can see how your body responds to load."
+                return "Activity patterns are in. Laso can see how your body handles effort."
             }
             if focuses.contains(.weightBody) {
                 return "Body measurements will anchor the trends you see over time."
@@ -95,7 +95,7 @@ extension Copy {
         static let calibrationReassurance: [String] = [
             "Reading your Apple Watch history",
             "Finding patterns in your heart rate",
-            "Analyzing sleep cycles",
+            "Looking at sleep cycles",
             "Building your personal baseline",
             "Large histories take a moment",
             "Almost there"
@@ -111,14 +111,41 @@ extension Copy {
             }
             return "\(countPart) health data."
         }
-        static let promiseFallback = "Laso will start building your baseline as data arrives."
-        static let promiseOpen = "Open Laso"
+        static let promiseFallback = "Laso will start building your baseline as data comes in."
+        static let promiseSignInHelper = "We use Apple Sign In so your subscription stays with you across devices."
         static let promiseDisclaimerFooter = "Not a medical device. Laso is for information, not diagnosis."
         static let promiseDisclaimerLearnMore = "Full disclaimer"
+
+        // MARK: - Trial (Screen 7)
+
+        static let trialTitle = "Start your 7-day free trial"
+        static let trialSubtitle = "Full access to insights, alerts, and trends. Cancel any time in Settings before day 7."
+        static let trialCTA = "Start 7-day Free Trial"
+        static let trialFooterNote = "No charge today. Apple will remind you before your trial ends."
 
         // MARK: - Siri tip
 
         static let worksWithSiri = "Works with Siri"
         static let siriTip = "Try saying \"Hey Siri, what's my health score in Laso\""
+
+        // MARK: - Mirror Moment Calibration
+
+        static let mirrorStartingCalibration = "Starting calibration\u{2026}"
+
+        // MARK: - Referral Code Step
+
+        enum ReferralCode {
+            static let brand = "Laso"
+            static let title = "Have a Referral Code?"
+            static let subtitle = "If a friend shared their code with you, enter it below. You\u{2019}ll both get 1 free month of Pro when you subscribe."
+            static let fieldLabel = "Referral Code"
+            static let fieldPlaceholder = "e.g. HEALTH-A7X3K2"
+            static let verifying = "Verifying code\u{2026}"
+            static let apply = "Apply Code"
+            static let skip = "Skip"
+            static let codeApplied = "Code applied! Subscribe to unlock your free month."
+            static let emptyCodeError = "Please enter a referral code."
+            static let invalidCodeFallback = "Invalid code."
+        }
     }
 }

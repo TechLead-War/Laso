@@ -18,6 +18,7 @@ struct ShareButton: View {
         }
         .disabled(isRendering)
         .accessibilityLabel("Share health card")
+        .accessibilityHint("Renders this card and opens the share sheet")
         .accessibilityIdentifier("share.button")
     }
 

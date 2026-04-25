@@ -30,11 +30,12 @@ service cloud.firestore {
     }
 
     // User Profiles
-    // Ownership is bound to Firebase Auth UID via the firebaseUid field on the doc.
-    // The doc ID is the deviceId (identifierForVendor).
-    // Referral flow requires writing referralFreeUntil on another user's doc,
-    // so that one field is permitted as a controlled cross-user loophole.
-    match /user_profiles/{deviceId} {
+    // Document ID is the Firebase Auth UID. After Sign In with Apple, the
+    // anonymous UID is linked to Apple — so the doc becomes Apple-ID-bound and
+    // portable across devices. `deviceId` lives in the body for analytics only.
+    // Referral redemption goes through a callable Cloud Function (admin SDK),
+    // so cross-user writes are no longer allowed from the client.
+    match /user_profiles/{uid} {
 
       // Allowed fields on create and full-access update.
       function allowedFields() {
@@ -42,47 +43,50 @@ service cloud.firestore {
           'gender', 'ageBracket', 'healthFocuses', 'deviceId',
           'createdAt', 'updatedAt', 'appVersion', 'region',
           'firebaseUid',
-          'referralCode', 'referralFreeUntil', 'redeemedReferralCode'
+          'referralCode', 'referralFreeUntil', 'redeemedReferralCode',
+          'email', 'displayName'
         ];
       }
 
-      // Create: caller must stamp their own firebaseUid and matching deviceId.
+      // Create: doc ID must equal caller's UID; firebaseUid field must match.
       allow create: if request.auth != null
+                    && request.auth.uid == uid
                     && request.resource.data.keys().hasOnly(allowedFields())
                     && request.resource.data.firebaseUid is string
-                    && request.resource.data.firebaseUid == request.auth.uid
-                    && request.resource.data.deviceId is string
-                    && request.resource.data.deviceId == deviceId;
+                    && request.resource.data.firebaseUid == request.auth.uid;
 
-      // Update own profile (full access): firebaseUid on the existing doc must
-      // match the caller, and the caller cannot rewrite firebaseUid to a different value.
+      // Update own profile: caller must own the doc (path UID == auth UID).
+      // firebaseUid and referralFreeUntil cannot be self-written (referralFreeUntil
+      // can ONLY be granted by a Cloud Function via admin SDK).
       allow update: if request.auth != null
-                    && resource.data.firebaseUid == request.auth.uid
+                    && request.auth.uid == uid
                     && request.resource.data.keys().hasOnly(allowedFields())
-                    && request.resource.data.firebaseUid == resource.data.firebaseUid;
-
-      // Cross-user update (controlled loophole for referral rewards):
-      // any authenticated user may update SOLELY the referralFreeUntil field
-      // on someone else's profile. This is required for granting the referrer
-      // their reward after the referred user subscribes.
-      allow update: if request.auth != null
-                    && request.resource.data.diff(resource.data).affectedKeys()
-                         .hasOnly(['referralFreeUntil'])
-                    && request.resource.data.referralFreeUntil is number;
+                    && request.resource.data.firebaseUid == resource.data.firebaseUid
+                    && (
+                         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['referralFreeUntil'])
+                         || request.auth.token.admin == true
+                       );
 
       // Read own profile.
-      allow get: if request.auth != null
-                 && resource.data.firebaseUid == request.auth.uid;
+      allow get: if request.auth != null && request.auth.uid == uid;
 
       // Admin read all.
       allow get, list: if request.auth != null && request.auth.token.admin == true;
 
-      // Lookup by referral code (list query). Firestore rules cannot perfectly
-      // enforce WHERE constraints, so we accept a small risk: any authenticated
-      // user can list profiles. Client code only ever queries by referralCode.
-      allow list: if request.auth != null;
+      // No client-side `list`. Referral lookup goes through `lookupReferralCode`
+      // callable Cloud Function (admin SDK bypasses rules).
+      // Any other listing requires admin claim (covered above).
 
       allow delete: if false;
+    }
+
+    // Subscriptions (Apple-ID-bound mirror of StoreKit entitlement)
+    // Doc ID is the Firebase Auth UID. iOS client writes its own subscription
+    // status via SubscriptionManager.syncSubscriptionToFirestore.
+    match /subscriptions/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow get, list:   if request.auth != null && request.auth.token.admin == true;
+      allow delete:      if request.auth != null && request.auth.token.admin == true;
     }
 
     // Referrals

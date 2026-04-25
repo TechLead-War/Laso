@@ -22,11 +22,11 @@ extension Copy {
 
         static let strainBalance = "Strain Balance"
         static let underTraining = "Under-Training"
-        static let optimal = "Optimal"
+        static let optimal = "Best"
         static let overreaching = "Peak"
 
         static let underTrainingDescription = "Your strain is below your target. Try adding more activity to stay on track."
-        static let optimalDescription = "You are training in your ideal range for your current recovery. Nice work."
+        static let optimalDescription = "You are training in your best range for your current recovery. Nice work."
         static let overreachingDescription = "You are pushing harder than your body can recover from. Rest and go lighter."
 
         // MARK: - Coach
@@ -72,6 +72,34 @@ extension Copy {
 
         // MARK: - Disclaimer
 
-        static let strainDisclaimer = "Strain is based on your heart rate during activity. It is not a medical measurement. Consider consulting a qualified professional before significantly changing your exercise routine."
+        static let strainDisclaimer = "Strain is based on your heart rate during activity. It is not a medical measurement. Talk to a qualified professional before making big changes to your exercise routine."
+
+        // MARK: - Today's Workout (Pass 8 Q)
+
+        static let todaysWorkout = "Today's Workout"
+        static let tapToViewWorkout = "Tap to view warm-up, blocks, and cooldown"
+        static let cycleAdjustmentTitle = "Cycle Adjustment"
+        static let cyclePhaseTitle = "Cycle Phase"
+        static func cyclePhaseDetail(_ phase: String) -> String {
+            "Current phase: \(phase). Training stays in line with your recovery for today."
+        }
+        static let warmUpTitle = "Warm-Up"
+        static let cooldownTitle = "Cooldown"
+        static func mainBlockTitle(_ index: Int) -> String { "Main Block \(index)" }
+        static let done = "Done"
+        static let recoveryLabel = "Recovery"
+        static let durationLabel = "Duration"
+        static let caloriesLabel = "Cal"
+        static let redRecovery = "Red recovery"
+        static let yellowRecovery = "Yellow recovery"
+        static let greenRecovery = "Green recovery"
+        static func workoutHeartRateTarget(label: String, minBPM: Int, maxBPM: Int) -> String {
+            "Target: \(label) \u{2022} \(minBPM)-\(maxBPM) bpm"
+        }
+        static func minutesShort(_ minutes: Int) -> String { "\(minutes) min" }
+
+        // MARK: - Strain Detail (Pass 8 Q)
+
+        static func zoneShort(_ zone: Int) -> String { "Z\(zone)" }
     }
 }

@@ -14,12 +14,18 @@ struct MetricTimeSeries: Identifiable {
     private let _min: Double?
     private let _max: Double?
 
+    /// Pass 11 AF: cached calendar — `init`'s distinct-day pass and the
+    /// `samples(lastDays:)` / `samples(forMonth:)` accessors all hit it.
+    /// MetricTimeSeries is constructed once per metric per refresh, then
+    /// queried multiple times during analysis.
+    private static let cal: Calendar = Calendar.current
+
     init(metric: HealthMetric, samples: [MetricSample]) {
         let sortedSamples = samples.sorted { $0.date < $1.date }
         self.metric = metric
         self.samples = sortedSamples
 
-        let calendar = Calendar.current
+        let calendar = Self.cal
         var distinctDayCount = 0
         var previousDay: Date?
 
@@ -93,7 +99,7 @@ struct MetricTimeSeries: Identifiable {
 
     /// Samples within the last N days
     func samples(lastDays days: Int) -> [MetricSample] {
-        let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let cutoff = Self.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
         guard !samples.isEmpty else { return [] }
 
         let startIndex = firstIndex(onOrAfter: cutoff)
@@ -110,13 +116,13 @@ struct MetricTimeSeries: Identifiable {
 
     /// Samples from a specific calendar month across all years (for seasonal analysis)
     func samples(forMonth month: Int) -> [MetricSample] {
-        let calendar = Calendar.current
+        let calendar = Self.cal
         return samples.filter { calendar.component(.month, from: $0.date) == month }
     }
 
     /// Samples from the same calendar month in a specific year
     func samples(forMonth month: Int, year: Int) -> [MetricSample] {
-        let calendar = Calendar.current
+        let calendar = Self.cal
         return samples.filter {
             return calendar.component(.month, from: $0.date) == month &&
                 calendar.component(.year, from: $0.date) == year
@@ -154,7 +160,7 @@ struct MetricTimeSeries: Identifiable {
     /// Number of years of data available
     var yearsOfData: Int {
         guard let first = samples.first, let last = samples.last else { return 0 }
-        let years = Calendar.current.dateComponents([.year], from: first.date, to: last.date).year ?? 0
+        let years = Self.cal.dateComponents([.year], from: first.date, to: last.date).year ?? 0
         return Swift.max(1, years + 1)
     }
 

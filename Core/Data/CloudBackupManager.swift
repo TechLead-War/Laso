@@ -193,34 +193,54 @@ final class CloudBackupManager {
         }
 
         // Store is @MainActor. batch all SwiftData writes on main actor
+        await applyStoreRestore(payload: payload, store: store)
+
+        // Restore everything that goes through PersistenceManager
+        applyPersistenceRestore(payload: payload, persistence: persistence)
+
+        backupStatus = .idle
         await MainActor.run {
-            for snapshot in payload.snapshots {
-                store.insertRestoredSnapshot(
-                    date: snapshot.date,
-                    overallScore: snapshot.overallScore,
-                    categoryScoresJSON: snapshot.categoryScoresJSON,
-                    baselinesJSON: snapshot.baselinesJSON
-                )
-            }
+            AppAnalytics.shared.trackCloudRestoreCompleted(
+                snapshotCount: payload.snapshots.count,
+                mlStateCount: payload.mlStates.count,
+                success: true
+            )
+        }
+        return true
+    }
 
-            for ml in payload.mlStates {
-                let state = MLModelState(
-                    componentName: ml.componentName,
-                    version: ml.version,
-                    parametersJSON: ml.parametersJSON,
-                    dataPointsUsed: ml.dataPointsUsed,
-                    lastTrainedDate: ml.lastTrainedDate
-                )
-                store.saveMLModelState(state)
-            }
+    // MARK: - Restore helpers
 
-            for (metricRaw, syncDate) in payload.syncDates {
-                if let metric = HealthMetric(rawValue: metricRaw) {
-                    store.markSyncCompleted(for: metric, at: syncDate)
-                }
-            }
+    @MainActor
+    private func applyStoreRestore(payload: BackupPayload, store: HealthDataStore) {
+        for snapshot in payload.snapshots {
+            store.insertRestoredSnapshot(
+                date: snapshot.date,
+                overallScore: snapshot.overallScore,
+                categoryScoresJSON: snapshot.categoryScoresJSON,
+                baselinesJSON: snapshot.baselinesJSON
+            )
         }
 
+        for ml in payload.mlStates {
+            let state = MLModelState(
+                componentName: ml.componentName,
+                version: ml.version,
+                parametersJSON: ml.parametersJSON,
+                dataPointsUsed: ml.dataPointsUsed,
+                lastTrainedDate: ml.lastTrainedDate
+            )
+            store.saveMLModelState(state)
+        }
+
+        for (metricRaw, syncDate) in payload.syncDates {
+            if let metric = HealthMetric(rawValue: metricRaw) {
+                store.markSyncCompleted(for: metric, at: syncDate)
+            }
+        }
+    }
+
+    private func applyPersistenceRestore(payload: BackupPayload, persistence: PersistenceManager) {
         // Restore baselines
         var baselines: [HealthMetric: UserBaseline] = [:]
         for (metricRaw, entry) in payload.baselines {
@@ -256,16 +276,6 @@ final class CloudBackupManager {
         if let coachState = payload.progressiveCoachState {
             persistence.saveProgressiveCoachState(coachState)
         }
-
-        backupStatus = .idle
-        await MainActor.run {
-            AppAnalytics.shared.trackCloudRestoreCompleted(
-                snapshotCount: payload.snapshots.count,
-                mlStateCount: payload.mlStates.count,
-                success: true
-            )
-        }
-        return true
     }
 
     // MARK: - Build Payload

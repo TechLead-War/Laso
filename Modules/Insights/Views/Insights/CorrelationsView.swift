@@ -82,7 +82,7 @@ struct CorrelationsView: View {
         }
         .background(AppColour.surfaceBase.ignoresSafeArea())
         .accessibilityIdentifier("screen.correlations")
-        .navigationTitle("Health Intelligence")
+        .navigationTitle(Copy.Insights.Correlations.navigationTitle)
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.correlations)
@@ -290,7 +290,7 @@ private struct CompoundInsightCard: View {
                     Spacer()
 
                     if insight.isActionable {
-                        Text("Actionable")
+                        Text(Copy.Insights.Correlations.actionableBadge)
                             .font(DS.Typography.caption2Semibold)
                             .foregroundStyle(AppColour.success)
                             .padding(.horizontal, DS.badgeH)
@@ -406,7 +406,7 @@ struct CausalChainCard: View {
                         Image(systemName: "list.bullet.rectangle")
                             .font(DS.Typography.captionSemibold)
                             .foregroundStyle(.purple)
-                        Text("Evidence")
+                        Text(Copy.Insights.Correlations.evidenceLabel)
                             .font(DS.Typography.subheadlineSemibold)
                             .foregroundStyle(.primary)
                         Text("\(evidence.count)")
@@ -595,7 +595,7 @@ private struct CompactCorrelationRow: View {
                         .minimumScaleFactor(0.85)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    Text("\(correlation.strengthLabel) · \(correlation.dayOffset == 0 ? "Same day" : "Next day") · \(Int(correlation.effectPercentDiff))% effect")
+                    Text(Copy.Insights.Correlations.correlationSummary(strength: correlation.strengthLabel, dayLabel: correlation.dayOffset == 0 ? Copy.Insights.Correlations.sameDay : Copy.Insights.Correlations.nextDay, effectPercent: Int(correlation.effectPercentDiff)))
                         .font(DS.Typography.caption)
                         .foregroundStyle(.secondary)
                 }

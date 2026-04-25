@@ -20,6 +20,10 @@ struct ExpandedJournalView: View {
     /// Haptic trigger for toggle changes
     @State private var toggleTrigger = false
 
+    /// Pass 12 BE perf: cached current calendar. `saveBehaviors()` runs on
+    /// every Save tap; `startOfDay(for:)` is on the hot save path.
+    private static let cal: Calendar = Calendar.current
+
     // MARK: - Body
 
     var body: some View {
@@ -250,6 +254,8 @@ struct ExpandedJournalView: View {
         .tint(color)
         .labelsHidden()
         .fixedSize()
+        .accessibilityLabel(behavior.displayName)
+        .accessibilityHint("Toggle to log or unlog \(behavior.displayName) today")
     }
 
     // MARK: Quantity Stepper
@@ -275,6 +281,8 @@ struct ExpandedJournalView: View {
             }
             .disabled(currentValue == nil)
             .buttonStyle(.plain)
+            .accessibilityLabel("Decrease \(behavior.displayName)")
+            .accessibilityHint("Decreases the logged amount by \(formattedQuantity(step, step: step)) \(unit)")
 
             // Value display
             Text(formattedQuantity(displayValue, step: step))
@@ -302,6 +310,8 @@ struct ExpandedJournalView: View {
                     .foregroundStyle(color)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Increase \(behavior.displayName)")
+            .accessibilityHint("Increases the logged amount by \(formattedQuantity(step, step: step)) \(unit)")
         }
     }
 
@@ -330,6 +340,9 @@ struct ExpandedJournalView: View {
                         .foregroundStyle(isFilled ? color : AppColour.textTertiary)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("\(behavior.displayName) rating \(index) of \(displayMax)")
+                .accessibilityHint("Selects rating \(index) out of \(displayMax)")
+                .accessibilityAddTraits(isFilled ? .isSelected : [])
             }
 
             if let value = currentValue {
@@ -359,6 +372,8 @@ struct ExpandedJournalView: View {
             .padding(.horizontal)
         }
         .buttonStyle(.dsPress)
+        .accessibilityLabel("Log \(loggedBehaviors.count) behavior\(loggedBehaviors.count == 1 ? "" : "s")")
+        .accessibilityHint("Saves the selected behaviors and dismisses this sheet")
         .padding(.bottom, DS.space2)
         .background(
             LinearGradient(
@@ -388,7 +403,7 @@ struct ExpandedJournalView: View {
 
     private func saveBehaviors() {
         let store = JournalStore(modelContext: modelContext)
-        let today = Calendar.current.startOfDay(for: Date())
+        let today = Self.cal.startOfDay(for: Date())
         var count = 0
 
         for (behavior, value) in loggedBehaviors {

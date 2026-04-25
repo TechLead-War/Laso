@@ -17,12 +17,12 @@ struct PersonalHealthForecastCard: View {
                     Image(systemName: "chart.line.uptrend.xyaxis")
                         .font(DS.Typography.captionSemibold)
                         .foregroundStyle(AppColour.info)
-                    Text("YOUR FORECAST")
+                    Text(Copy.Home.Cards.yourForecast)
                         .font(DS.Typography.footnoteMedium)
                         .foregroundStyle(AppColour.textSecondary)
                         .textCase(.uppercase)
                     Spacer()
-                    Text("Next 7 days")
+                    Text(Copy.Home.Cards.nextSevenDays)
                         .font(DS.Typography.caption)
                         .foregroundStyle(AppColour.textTertiary)
                 }
@@ -37,6 +37,10 @@ struct PersonalHealthForecastCard: View {
                             forecastRow(forecast)
                         }
                         .buttonStyle(.dsPress)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("\(forecast.metric.displayName) forecast")
+                        .accessibilityValue("\(forecast.rangeDescription), confidence \(forecast.confidencePercent) percent")
+                        .accessibilityHint("Opens detailed metric view")
                     }
                 }
             }

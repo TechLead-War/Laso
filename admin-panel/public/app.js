@@ -1227,11 +1227,29 @@ const Auth = (() => {
 
   logoutBtn.addEventListener("click", () => auth.signOut());
 
+  // Hardcoded admin email allowlist. Mirror of functions/index.js
+  // ALLOWED_ADMIN_EMAILS. UI-side gate so unauthorized users see a clear
+  // "denied" state instead of a silent permission error from Cloud Functions.
+  const ALLOWED_ADMIN_EMAILS = [
+    "ayushkapri.richard@gmail.com",
+  ];
+
   auth.onAuthStateChanged(async (user) => {
     if (user) {
+      const userEmail = (user.email || "").toLowerCase().trim();
+      if (!ALLOWED_ADMIN_EMAILS.includes(userEmail)) {
+        // Not an allowed admin — sign out immediately and show denied state.
+        await auth.signOut();
+        const errEl = document.getElementById("login-error");
+        if (errEl) errEl.textContent = "This account is not authorized for admin access.";
+        return;
+      }
       loginScreen.style.display = "none";
       appShell.style.display = "flex";
       sidebarEmail.textContent = user.email;
+      // Force ID token refresh so the auto-set `admin` custom claim from
+      // verifyAdmin() is picked up on the next request.
+      try { await user.getIdToken(true); } catch (_) {}
       resetInactivityTimer();
       await ConfigManager.load();
       Router.init();

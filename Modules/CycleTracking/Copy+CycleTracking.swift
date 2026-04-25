@@ -16,7 +16,7 @@ extension Copy {
 
         // MARK: - Phase Descriptions
 
-        static let menstrualDescription = "Your period is here. Hormone levels are at their lowest, which can affect your energy and mood."
+        static let menstrualDescription = "Your period is here. Hormone levels are at their lowest, so your energy and mood may dip."
         static let follicularDescription = "Your body is gearing up after your period. Energy and mood usually start to pick up."
         static let ovulatoryDescription = "This is your peak window. Energy, confidence, and strength are often at their highest."
         static let lutealDescription = "Your body is winding down toward the next cycle. You may notice changes in appetite, sleep, and mood."
@@ -31,7 +31,7 @@ extension Copy {
         // MARK: - Recovery Impact
 
         static let menstrualRecovery = "Recovery may be slower right now. Focus on sleep, water, and gentle movement like yoga or walking."
-        static let follicularRecovery = "Recovery is usually fast right now. Your body responds well to training and adapts quickly."
+        static let follicularRecovery = "Recovery is usually fast right now. Your body handles training well and bounces back quickly."
         static let ovulatoryRecovery = "Recovery is good, but watch your intensity. Your body may hide tiredness during this peak."
         static let lutealRecovery = "Recovery slows down in this phase. Give yourself extra rest between hard sessions and focus on sleep."
 
@@ -40,14 +40,14 @@ extension Copy {
         static let menstrualSleep = "Sleep can be disrupted by cramps or discomfort. Give yourself extra time to rest."
         static let follicularSleep = "Sleep quality usually gets better. Your body supports deeper, more restful sleep right now."
         static let ovulatorySleep = "Sleep is usually good, though your body temperature may rise a little, making it harder to fall asleep."
-        static let lutealSleep = "Your body temperature is higher, which can make sleep harder. Keep the room cool and give yourself extra wind down time."
+        static let lutealSleep = "Your body temperature runs higher, which can make sleep harder. Keep the room cool and give yourself extra wind down time."
 
         // MARK: - Nutrition Tips
 
         static let menstrualNutrition = "Eat iron-rich foods like leafy greens, red meat, and lentils. Drink plenty of water."
         static let follicularNutrition = "Fuel your rising energy with whole grains, lean protein, and foods that are good for your gut."
         static let ovulatoryNutrition = "Go lighter with plenty of fiber and colorful vegetables. Broccoli and cauliflower are great right now."
-        static let lutealNutrition = "Your body needs a bit more food. Add healthy fats and magnesium-rich foods. Dark chocolate and nuts can help with cravings."
+        static let lutealNutrition = "Your body needs a bit more fuel. Add healthy fats and magnesium-rich foods. Dark chocolate and nuts can help with cravings."
 
         // MARK: - Exercise Recommendations
 

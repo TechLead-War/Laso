@@ -10,28 +10,28 @@ extension Copy {
         // MARK: - Hero
 
         static let brainHealthLabel = "COGNITIVE WELLNESS"
-        static let heroExplainer = "How sharp and focused your brain is likely to feel today"
+        static let heroExplainer = "How sharp and focused your mind is likely to feel today"
         static let learningPatterns = "Learning your patterns"
         static let scaleAndDirection = "out of 100  ·  Higher is sharper"
         static let scaleSuffix = "/ 100"
 
         // MARK: - Headlines (state-driven, with action guidance)
 
-        static let headlineSharpStrong = "Strong REM and high HRV. Great day for demanding work."
-        static let headlineSharpHRV = "High HRV signals sharp readiness. Take on complex tasks."
+        static let headlineSharpStrong = "Strong REM and high HRV. Great day for tough work."
+        static let headlineSharpHRV = "High HRV shows sharp readiness. Take on hard tasks."
         static let headlineSharpSleep = "Excellent sleep recovery. You can handle deep focus today."
-        static let headlineSharpDefault = "Signals above baseline. A good day to take on hard problems."
+        static let headlineSharpDefault = "Signals above your usual. A good day to take on hard problems."
 
-        static let headlineFocusedHRV = "Good HRV is supporting focus. A solid day for steady work."
+        static let headlineFocusedHRV = "Good HRV is helping focus. A solid day for steady work."
         static let headlineFocusedSleep = "Solid sleep recovery. Deep work should feel easier today."
-        static let headlineFocusedDefault = "Signals in a good range. Keep your usual work rhythm."
+        static let headlineFocusedDefault = "Signals look good. Keep your usual work rhythm."
 
-        static let headlineBaselineSteady = "Signals near your typical baseline. Stick to routine tasks today."
-        static let headlineBaselineMixed = "Mixed signals today. Match effort to how you feel as the day goes on."
+        static let headlineBaselineSteady = "Signals near your usual range. Stick to routine tasks today."
+        static let headlineBaselineMixed = "Mixed signals today. Match your effort to how you feel as the day goes on."
 
-        static let headlineFoggyBoth = "Low HRV and reduced REM. Expect brain fog. Keep work simple today."
-        static let headlineFoggyHRV = "HRV well below baseline. Heavy thinking will feel harder today."
-        static let headlineFoggySleep = "Sleep quality is low. Go easy on demanding decisions today."
+        static let headlineFoggyBoth = "Low HRV and less REM. Expect brain fog. Keep work simple today."
+        static let headlineFoggyHRV = "HRV well below your usual. Heavy thinking will feel harder today."
+        static let headlineFoggySleep = "Sleep quality is low. Go easy on tough decisions today."
 
         // MARK: - Sleep Recovery
 
@@ -53,7 +53,7 @@ extension Copy {
         // MARK: - Mental Energy
 
         static let mentalEnergy = "Mental Energy"
-        static let mentalEnergyExplanation = "How much mental energy you have after stress"
+        static let mentalEnergyExplanation = "How much mental energy is left after stress"
 
         // MARK: - Cognitive Wellness Over Time
 

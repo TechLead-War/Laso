@@ -60,7 +60,9 @@ final class NotificationManager {
                 AppAnalytics.shared.updateNotificationProperties(enabled: false)
                 AppAnalytics.shared.trackNotificationPermissionResult(granted: false, source: source)
             }
+            #if DEBUG
             print("Notification authorization failed: \(error.localizedDescription)")
+            #endif
             return false
         }
     }
@@ -180,7 +182,11 @@ final class NotificationManager {
 
         center.add(request) { [weak self] error in
             if let error {
+                #if DEBUG
                 print("Failed to schedule notification: \(error.localizedDescription)")
+                #else
+                _ = error
+                #endif
             } else {
                 if !isDailySummary {
                     self?.frequencyCap.recordNotification()

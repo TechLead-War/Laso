@@ -26,7 +26,7 @@ extension Copy {
                 return "Rest and check again soon."
             }
             if key.contains("breath") || key.contains("respiratory") {
-                return isAbove ? "A few slow, deep breaths can help." : "Worth a look if it continues."
+                return isAbove ? "A few slow, deep breaths can help." : "Worth a look if this keeps up."
             }
             if key.contains("sleep") {
                 return "Aim for a calmer wind-down tonight."
@@ -49,20 +49,20 @@ extension Copy {
         static let highHRTitle = "Heart Rate Above Your Usual"
         static func highHRBody(current: Int, threshold: Int) -> String {
             let diff = max(0, current - threshold)
-            return "Your heart rate hit \(current) bpm, \(diff) bpm above your usual \(threshold) bpm ceiling. If you are not training, try a few slow breaths. \u{2764}\u{FE0F}"
+            return "Your heart rate hit \(current) bpm, \(diff) bpm above your usual \(threshold) bpm top. If you are not training, try a few slow breaths. \u{2764}\u{FE0F}"
         }
 
         static let lowHRTitle = "Heart Rate Below Your Usual"
         static func lowHRBody(current: Int, threshold: Int) -> String {
             let diff = max(0, threshold - current)
-            return "Your heart rate dropped to \(current) bpm, \(diff) bpm below your usual \(threshold) bpm floor. If you feel dizzy, sit down and sip water. \u{2764}\u{FE0F}"
+            return "Your heart rate dropped to \(current) bpm, \(diff) bpm below your usual \(threshold) bpm bottom. If you feel dizzy, sit down and sip water. \u{2764}\u{FE0F}"
         }
 
         // MARK: - HRV
 
         static let hrvLowTitle = "HRV Running Low"
         static func hrvLowBody(current: Int, dropPercent: Int) -> String {
-            "Because your HRV is \(current) ms, \(dropPercent)% below your recent average, you may feel stressed or worn down today. Take it easy and consider an early night. \u{1F634}"
+            "Your HRV is \(current) ms, \(dropPercent)% below your recent average. You may feel stressed or worn down today. Take it easy and try an early night. \u{1F634}"
         }
 
         // MARK: - Blood Oxygen
@@ -74,7 +74,7 @@ extension Copy {
 
         static let spo2WarningTitle = "Blood Oxygen Worth Monitoring"
         static func spo2WarningBody(value: String) -> String {
-            "Your blood oxygen reading is \(value)%, a touch lower than your typical range. Worth keeping an eye on. \u{1FAC1}"
+            "Your blood oxygen reading is \(value)%, a bit lower than your typical range. Worth keeping an eye on. \u{1FAC1}"
         }
 
         // MARK: - Respiratory Rate
@@ -89,12 +89,12 @@ extension Copy {
         static func anomalyBody(metric: String, deviation: String, direction: String, current: String, unit: String) -> String {
             let isAbove = direction.lowercased().contains("above")
             let action = anomalyAction(metric: metric, isAbove: isAbove)
-            return "Because your \(metric) is \(deviation)% \(direction) your baseline (now \(current) \(unit)), it is worth a closer look. \(action)"
+            return "Your \(metric) is \(deviation)% \(direction) your usual (now \(current) \(unit)). Worth a closer look. \(action)"
         }
         static func anomalyWarningBody(metric: String, deviation: String, direction: String) -> String {
             let isAbove = direction.lowercased().contains("above")
             let action = anomalyAction(metric: metric, isAbove: isAbove)
-            return "Your \(metric) is \(deviation)% \(direction) your baseline. \(action)"
+            return "Your \(metric) is \(deviation)% \(direction) your usual. \(action)"
         }
 
         // MARK: - Trend Reversal
@@ -106,7 +106,7 @@ extension Copy {
 
         static func trendDecliningTitle(metric: String) -> String { "\(metric) Worth a Look" }
         static func trendDecliningBody(metric: String) -> String {
-            "Your \(metric) was improving but has started slipping. Review your last few days of sleep, training, and stress. \u{1F4CA}"
+            "Your \(metric) was getting better but has started to slip. Check your last few days of sleep, training, and stress. \u{1F4CA}"
         }
 
         // MARK: - Improvement Celebration
@@ -115,7 +115,7 @@ extension Copy {
             "\(metric) Up \(percent)%!"
         }
         static func improvementBody(metric: String) -> String {
-            "Your \(metric) improved this week. Whatever you are doing, keep it going. \u{1F4AA}"
+            "Your \(metric) got better this week. Whatever you are doing, keep it going. \u{1F4AA}"
         }
 
         /// Optional richer body when the exact percent is available.
@@ -255,9 +255,9 @@ extension Copy {
                 let variants = [
                     "All metrics steady.",
                     "No red flags today.",
-                    "Numbers looking solid.",
+                    "Numbers looking strong.",
                     "Everything in range.",
-                    "Clean across the board.",
+                    "Looking good across the board.",
                     "Body data looks good.",
                     "Healthy readings overall.",
                 ]
@@ -286,18 +286,18 @@ extension Copy {
         }
         static func eveningSummaryBody(strainLevel: String, score: Int) -> String {
             let anchor = bedtimeAnchor(for: strainLevel)
-            return "A \(strainLevel.lowercased()) strain day closed at \(score)/100. \(anchor) \u{1F319}"
+            return "A \(strainLevel.lowercased()) effort day ended at \(score)/100. \(anchor) \u{1F319}"
         }
 
         /// Picks a gentle bedtime anchor based on strain. Keeps things numeric without needing per-user data.
         private static func bedtimeAnchor(for strainLevel: String) -> String {
             switch strainLevel.lowercased() {
             case "high", "very high", "hard":
-                return "Aim for lights-out by 10:30 PM to recover well."
+                return "Try for lights out by 10:30 PM to recover well."
             case "moderate", "medium":
-                return "Aim for lights-out by 10:45 PM tonight."
+                return "Try for lights out by 10:45 PM tonight."
             default:
-                return "Aim for lights-out by 11:00 PM to protect tomorrow's score."
+                return "Try for lights out by 11:00 PM to protect tomorrow's score."
             }
         }
 
@@ -307,8 +307,8 @@ extension Copy {
         static func windDownTitle() -> String {
             let variants = [
                 "Time to wind down",
-                "Your body is asking for rest",
-                "Sleep window opening",
+                "Your body is ready for rest",
+                "Sleep window is opening",
                 "Ease into the night"
             ]
             let defaults = UserDefaults.standard
@@ -322,13 +322,13 @@ extension Copy {
         /// `hrvHint` is an optional lead-in like "Your HRV suggests an early night" when data supports it.
         static func windDownBody(bedtimeDisplay: String, hrvHint: String?) -> String {
             if let hrvHint, !hrvHint.isEmpty {
-                return "\(hrvHint) Aim for lights-out by \(bedtimeDisplay)."
+                return "\(hrvHint) Try for lights out by \(bedtimeDisplay)."
             }
             let variants = [
-                "Start dimming the lights. Aim for lights-out by \(bedtimeDisplay).",
-                "Your predicted bedtime is \(bedtimeDisplay). Step away from screens and breathe.",
-                "Wind down now to hit lights-out by \(bedtimeDisplay).",
-                "Tonight's target bedtime is \(bedtimeDisplay). Give yourself the runway."
+                "Start dimming the lights. Try for lights out by \(bedtimeDisplay).",
+                "Your suggested bedtime is \(bedtimeDisplay). Step away from screens and breathe.",
+                "Wind down now to hit lights out by \(bedtimeDisplay).",
+                "Tonight's target bedtime is \(bedtimeDisplay). Give yourself time to ease in."
             ]
             // Reuse the rotation index (set by windDownTitle this same firing) so body stays in sync.
             let index = UserDefaults.standard.integer(forKey: AppKeys.Notifications.windDownVariantIndex)
@@ -352,11 +352,11 @@ extension Copy {
         ) -> String? {
             switch (improver, decliner) {
             case let (imp?, dec?):
-                return "\(imp.metric) leads at \(imp.changeText), while \(dec.metric) slipped \(dec.changeText). \u{1F4CA}"
+                return "\(imp.metric) leads at \(imp.changeText), while \(dec.metric) slipped to \(dec.changeText). \u{1F4CA}"
             case let (imp?, nil):
                 return "\(imp.metric) is your top climber at \(imp.changeText). \u{1F4AA}"
             case let (nil, dec?):
-                return "\(dec.metric) slipped the most, down \(dec.changeText). Worth a closer look."
+                return "\(dec.metric) slipped the most, down by \(dec.changeText). Worth a closer look."
             default:
                 return nil
             }
@@ -366,14 +366,14 @@ extension Copy {
 
         static let healthSnapshot = "Your Health Snapshot Is Waiting"
         static func lastScoreBody(score: Int) -> String {
-            "Your last score was \(score)/100. It has been 3 days, and your trends are shifting without you. \u{1F4CA}"
+            "Your last score was \(score)/100. It has been 3 days, and your trends are changing without you. \u{1F4CA}"
         }
         /// Richer reengagement body when a trend direction is known.
         static func lastScoreBody(score: Int, trendingMetric: String, direction: String) -> String {
-            "Your last score was \(score)/100. It has been 3 days, and your \(trendingMetric.lowercased()) was \(direction.lowercased()). Catch the change before it slips. \u{1F4CA}"
+            "Your last score was \(score)/100. It has been 3 days, and your \(trendingMetric.lowercased()) was \(direction.lowercased()). Catch the change before it slips by. \u{1F4CA}"
         }
         static let insightsReady = "Your Health Insights Are Ready"
-        static let insightsReadyBody = "It has been a few days since you checked in. Open Laso to see what your body did while you were away. \u{1F4CA}"
+        static let insightsReadyBody = "It has been a few days since you checked in. Open Laso to see what your body did while you were gone. \u{1F4CA}"
 
         /// Loss-framed, data-grounded body referencing the user's actual last HRV + trend direction.
         /// Rotated by days-inactive so a repeat lapser sees a fresh framing each time.
@@ -386,8 +386,8 @@ extension Copy {
             }
             let variants = [
                 "Your sleep trend was \(trendWord) before you left. Your last HRV was \(hrvMs) ms. Open Laso to see what changed.",
-                "Last score: \(score). HRV was \(hrvMs) ms and \(trendWord). Come back and see if the trend held.",
-                "Before you stepped away, your HRV trend was \(trendWord) (\(hrvMs) ms). Check where it is today."
+                "Last score: \(score). HRV was \(hrvMs) ms and \(trendWord). Come back and see if the trend held up.",
+                "Before you stepped away, your HRV trend was \(trendWord) (\(hrvMs) ms). Check where it stands today."
             ]
             let index = max(0, daysInactive) % variants.count
             return variants[index]
@@ -396,9 +396,9 @@ extension Copy {
         /// Lighter loss-frame when only a score is available (no HRV snapshot yet).
         static func lapsedScoreOnlyBody(score: Int, daysInactive: Int) -> String {
             let variants = [
-                "Your last health score was \(score)/100. Come back to see what shifted while you were away.",
+                "Your last health score was \(score)/100. Come back to see what changed while you were gone.",
                 "You were at \(score)/100 when you last checked in. Open Laso to see where you stand today.",
-                "Score \(score) was your last read. A lot can move in a few days. Take a look."
+                "Score \(score) was your last reading. A lot can change in a few days. Take a look."
             ]
             let index = max(0, daysInactive) % variants.count
             return variants[index]
@@ -420,18 +420,18 @@ extension Copy {
         }
 
         static func engagementDay2Body(insight: String) -> String {
-            "\(insight) Tap to see the full breakdown and today's one-minute action. \u{1F4CA}"
+            "\(insight) Tap to see the full picture and today's one-minute action. \u{1F4CA}"
         }
 
-        static let engagementDay2Fallback = "Tap to reveal today's recovery score and your one-minute morning action. \u{1F4CA}"
+        static let engagementDay2Fallback = "Tap to see today's recovery score and your one-minute morning action. \u{1F4CA}"
 
         static let engagementDay3Title = "A sleep pattern is forming"
 
         static func engagementDay3Body(finding: String) -> String {
-            "\(finding) Open Laso to see what changed and a small tonight-only tweak to try. \u{1F634}"
+            "\(finding) Open Laso to see what changed and a small tweak to try tonight. \u{1F634}"
         }
 
-        static let engagementDay3Fallback = "Your sleep is starting to tell a story. Open Laso for the early pattern and a one-step tonight tweak. \u{1F634}"
+        static let engagementDay3Fallback = "Your sleep is starting to tell a story. Open Laso for the early pattern and a simple tweak for tonight. \u{1F634}"
 
         static func engagementDay5Title(percent: Int) -> String {
             "Personalization is \(percent)% complete"
@@ -441,24 +441,24 @@ extension Copy {
             if daysRemaining <= 0 {
                 return "Your baseline is ready. Open Laso to see patterns built from your first month of data. \u{1F4CA}"
             }
-            return "Check in for \(daysRemaining) more day\(daysRemaining == 1 ? "" : "s") to lock in a stronger personal baseline. \u{1F3AF}"
+            return "Check in for \(daysRemaining) more day\(daysRemaining == 1 ? "" : "s") to build a stronger personal baseline. \u{1F3AF}"
         }
 
         // Softer Day 5 variant used when the user has not yet seen a second recovery score.
         // Avoids claiming personalization has advanced when we do not actually have the data yet.
         static let engagementDay5SoftTitle = "Your baseline is still forming"
-        static let engagementDay5SoftBody  = "Each morning check in sharpens your recovery picture. Open Laso to take the next step."
+        static let engagementDay5SoftBody  = "Each morning check in makes your recovery picture clearer. Open Laso to take the next step."
 
         static func engagementDay7Title(patternCount: Int) -> String {
             "We have found \(patternCount) early signals"
         }
 
         static func engagementDay7BodyTrend(metric: String, direction: String) -> String {
-            "Your \(metric) is \(direction). Open Laso before the trend slips past you. \u{1F4C8}"
+            "Your \(metric) is \(direction). Open Laso before the trend slips by. \u{1F4C8}"
         }
 
         static func engagementDay7BodyGeneric(count: Int) -> String {
-            "\(count) early patterns are waiting in your data. Open Laso to review them before they fade. \u{1F4CA}"
+            "\(count) early patterns are waiting in your data. Open Laso to check them before they fade. \u{1F4CA}"
         }
 
         // MARK: - Watch Monitor

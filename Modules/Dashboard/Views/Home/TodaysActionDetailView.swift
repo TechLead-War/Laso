@@ -68,7 +68,7 @@ struct TodaysActionDetailView: View {
         .scrollBounceBehavior(.basedOnSize)
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .accessibilityIdentifier("screen.todaysAction")
-        .navigationTitle("Today's Action")
+        .navigationTitle(Copy.Home.todaysAction)
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $isShowingWorkoutPlan) {
             NavigationStack {
@@ -243,7 +243,7 @@ struct TodaysActionDetailView: View {
                 Image(systemName: "target")
                     .font(DS.Typography.bodySemibold)
                     .foregroundStyle(DS.scoreColor(readinessScore))
-                Text("Do Today")
+                Text(Copy.Home.TodaysActionDetail.doToday)
                     .font(DS.Typography.bodySemibold)
                     .foregroundStyle(AppColour.textPrimary)
             }
@@ -330,7 +330,7 @@ struct TodaysActionDetailView: View {
                     Image(systemName: "waveform.path.ecg")
                         .font(DS.Typography.bodySemibold)
                         .foregroundStyle(AppColour.danger)
-                    Text("What's off today")
+                    Text(Copy.Home.TodaysActionDetail.whatsOffToday)
                         .font(DS.Typography.bodySemibold)
                         .foregroundStyle(AppColour.textPrimary)
                 }
@@ -342,7 +342,7 @@ struct TodaysActionDetailView: View {
                             metric: .heartRateVariability,
                             current: current,
                             baseline: recoverySignals.hrvBaseline,
-                            baselineLabel: "baseline"
+                            baselineLabel: Copy.Home.TodaysActionDetail.baseline
                         )
                     }
                     if let current = recoverySignals.rhrCurrent {
@@ -351,7 +351,7 @@ struct TodaysActionDetailView: View {
                             metric: .restingHeartRate,
                             current: current,
                             baseline: recoverySignals.rhrBaseline,
-                            baselineLabel: "baseline"
+                            baselineLabel: Copy.Home.TodaysActionDetail.baseline
                         )
                     }
                     if let current = recoverySignals.sleepHoursLast {
@@ -429,7 +429,7 @@ struct TodaysActionDetailView: View {
                     Image(systemName: "arrow.triangle.branch")
                         .font(DS.Typography.bodySemibold)
                         .foregroundStyle(AppColour.categoryStress)
-                    Text("What's leading to what")
+                    Text(Copy.Home.TodaysActionDetail.whatsLeadingToWhat)
                         .font(DS.Typography.bodySemibold)
                         .foregroundStyle(AppColour.textPrimary)
                 }
@@ -467,7 +467,7 @@ struct TodaysActionDetailView: View {
                 Image(systemName: "stethoscope")
                     .font(DS.Typography.bodySemibold)
                     .foregroundStyle(AppColour.info)
-                Text("Your coach's notes")
+                Text(Copy.Home.TodaysActionDetail.yourCoachsNotes)
                     .font(DS.Typography.bodySemibold)
                     .foregroundStyle(AppColour.textPrimary)
             }
@@ -486,6 +486,9 @@ struct TodaysActionDetailView: View {
                     insightRow(insight)
                 }
                 .buttonStyle(.plain)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(insight.metric.displayName) insight: \(insight.title)")
+                .accessibilityHint("Opens detailed metric view")
                 .padding(.horizontal, DS.screenPadding)
             }
         }
@@ -530,7 +533,7 @@ struct TodaysActionDetailView: View {
                 Image(systemName: "figure.run.circle.fill")
                     .font(DS.Typography.bodySemibold)
                     .foregroundStyle(AppColour.warning)
-                Text("Today's Workout")
+                Text(Copy.Home.TodaysActionDetail.todaysWorkout)
                     .font(DS.Typography.bodySemibold)
                     .foregroundStyle(AppColour.textPrimary)
             }

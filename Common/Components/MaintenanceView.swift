@@ -42,6 +42,8 @@ struct MaintenanceView: View {
                         .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
+                .accessibilityLabel("Continue anyway")
+                .accessibilityHint("Dismisses the maintenance notice and continues to the app")
                 .padding(.horizontal, DS.space7)
             }
 

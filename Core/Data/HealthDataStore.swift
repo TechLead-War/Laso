@@ -165,6 +165,12 @@ final class HealthDataStore {
     private static let encoderKey = "Laso.HealthDataStore.encoder"
     private static let decoderKey = "Laso.HealthDataStore.decoder"
 
+    /// Pass 11 AF: cached calendar — `saveAnalysisSnapshot`, `saveDailyStrain`,
+    /// `loadDailyStrainHistory`, and the recommendation/notification prune helpers
+    /// run on every analysis cycle and notification settle. One static avoids
+    /// allocating `Calendar.current` on each call.
+    private static let cal: Calendar = Calendar.current
+
     private static func threadEncoder() -> JSONEncoder {
         let dictionary = Thread.current.threadDictionary
         if let encoder = dictionary[encoderKey] as? JSONEncoder {
@@ -443,8 +449,8 @@ final class HealthDataStore {
         categoryScores: [HealthScore],
         baselines: [HealthMetric: UserBaseline]
     ) {
-        let today = Calendar.current.startOfDay(for: Date())
-        guard let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today) else { return }
+        let today = Self.cal.startOfDay(for: Date())
+        guard let tomorrow = Self.cal.date(byAdding: .day, value: 1, to: today) else { return }
         let predicate = #Predicate<StoredAnalysisSnapshot> { $0.date >= today && $0.date < tomorrow }
         let descriptor = FetchDescriptor(predicate: predicate)
 
@@ -497,7 +503,7 @@ final class HealthDataStore {
     func loadScoreHistory(days: Int? = nil) -> [(date: Date, score: Int)] {
         var descriptor: FetchDescriptor<StoredAnalysisSnapshot>
         if let days {
-            let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+            let cutoff = Self.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
             let predicate = #Predicate<StoredAnalysisSnapshot> { $0.date >= cutoff }
             descriptor = FetchDescriptor(predicate: predicate, sortBy: [SortDescriptor(\.date)])
         } else {
@@ -548,7 +554,7 @@ final class HealthDataStore {
         level: String,
         hrZoneMinutes: [Double]
     ) {
-        let calendar = Calendar.current
+        let calendar = Self.cal
         let dayStart = calendar.startOfDay(for: date)
         guard let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart) else { return }
 
@@ -586,7 +592,7 @@ final class HealthDataStore {
 
     /// Load persisted strain history from [today-lookbackDays, today], sorted ascending.
     func loadDailyStrainHistory(lookbackDays: Int = 7) -> [DailyStrainRecord] {
-        let calendar = Calendar.current
+        let calendar = Self.cal
         let today = calendar.startOfDay(for: Date())
         let startDate = calendar.date(byAdding: .day, value: -max(lookbackDays, 0), to: today) ?? today
         guard let endDate = calendar.date(byAdding: .day, value: 1, to: today) else { return [] }
@@ -704,7 +710,7 @@ final class HealthDataStore {
     /// Human-readable description of how much data is stored
     var dataSpanDescription: String {
         guard let oldest = oldestDataDate else { return "No data yet" }
-        let days = Calendar.current.dateComponents([.day], from: oldest, to: Date()).day ?? 0
+        let days = Self.cal.dateComponents([.day], from: oldest, to: Date()).day ?? 0
         if days < 30 { return "\(days) days of data" }
         let months = days / 30
         if months < 12 { return "\(months) months of data" }
@@ -782,7 +788,7 @@ final class HealthDataStore {
 
     /// Load evaluated recommendations within a date range
     func loadEvaluatedRecommendations(days: Int) -> [StoredRecommendation] {
-        let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let cutoff = Self.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
         let predicate = #Predicate<StoredRecommendation> { $0.shownDate >= cutoff && $0.evaluated7d }
         let descriptor = FetchDescriptor(predicate: predicate)
         return (try? modelContext?.fetch(descriptor)) ?? []
@@ -790,7 +796,7 @@ final class HealthDataStore {
 
     /// Delete recommendations older than 60 days
     func pruneOldRecommendations() {
-        let cutoff = Calendar.current.date(byAdding: .day, value: -60, to: Date()) ?? Date()
+        let cutoff = Self.cal.date(byAdding: .day, value: -60, to: Date()) ?? Date()
         let predicate = #Predicate<StoredRecommendation> { $0.shownDate < cutoff }
         let descriptor = FetchDescriptor(predicate: predicate)
         guard let old = try? modelContext?.fetch(descriptor) else { return }
@@ -803,7 +809,7 @@ final class HealthDataStore {
     /// Record that a notification was sent
     func recordNotificationSent(id: String, type: String) {
         let now = Date()
-        let cal = Calendar.current
+        let cal = Self.cal
         modelContext?.insert(StoredNotificationEvent(
             notificationId: id,
             typeRawValue: type,
@@ -826,7 +832,7 @@ final class HealthDataStore {
 
     /// Load notification events from the last N days
     func loadNotificationEvents(days: Int) -> [StoredNotificationEvent] {
-        let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let cutoff = Self.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
         let predicate = #Predicate<StoredNotificationEvent> { $0.sentDate >= cutoff }
         let descriptor = FetchDescriptor(predicate: predicate, sortBy: [SortDescriptor(\.sentDate)])
         return (try? modelContext?.fetch(descriptor)) ?? []
@@ -834,7 +840,7 @@ final class HealthDataStore {
 
     /// Delete notification events older than 90 days
     func pruneOldNotificationEvents() {
-        let cutoff = Calendar.current.date(byAdding: .day, value: -90, to: Date()) ?? Date()
+        let cutoff = Self.cal.date(byAdding: .day, value: -90, to: Date()) ?? Date()
         let predicate = #Predicate<StoredNotificationEvent> { $0.sentDate < cutoff }
         let descriptor = FetchDescriptor(predicate: predicate)
         guard let old = try? modelContext?.fetch(descriptor) else { return }

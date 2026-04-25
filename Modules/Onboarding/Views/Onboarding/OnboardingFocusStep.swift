@@ -55,6 +55,11 @@ struct OnboardingFocusSelectionStep: View {
                     }
                     .buttonStyle(.dsPress)
                     .sensoryFeedback(.selection, trigger: isSelected)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel(focus.displayName)
+                    .accessibilityValue(isSelected ? "Selected" : "Not selected")
+                    .accessibilityHint("Toggles \(focus.displayName) as a focus area")
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
                 }
             }
             .padding(.horizontal, DS.space5)
@@ -81,6 +86,7 @@ struct OnboardingFocusSelectionStep: View {
             .disabled(selectedFocuses.isEmpty)
             .opacity(selectedFocuses.isEmpty ? 0.55 : 1.0)
             .accessibilityIdentifier("onboarding.prioritySelectionContinue")
+            .accessibilityHint("Saves your selected focus areas and continues onboarding")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

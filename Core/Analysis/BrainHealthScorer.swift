@@ -36,11 +36,18 @@ enum BrainHealthState: String, CaseIterable, Codable {
         }
     }
 
+    /// Lower-bound score (inclusive) for the `sharp` state.
+    static let sharpLowerBound: Int = 80
+    /// Lower-bound score (inclusive) for the `focused` state (also upper-exclusive bound for `sharp`).
+    static let focusedLowerBound: Int = 65
+    /// Lower-bound score (inclusive) for the `baseline` state (also upper-exclusive bound for `focused`).
+    static let baselineLowerBound: Int = 45
+
     init(score: Int) {
         switch score {
-        case 80...100: self = .sharp
-        case 65..<80: self = .focused
-        case 45..<65: self = .baseline
+        case BrainHealthState.sharpLowerBound...100: self = .sharp
+        case BrainHealthState.focusedLowerBound..<BrainHealthState.sharpLowerBound: self = .focused
+        case BrainHealthState.baselineLowerBound..<BrainHealthState.focusedLowerBound: self = .baseline
         default: self = .foggy
         }
     }
@@ -101,6 +108,126 @@ final class BrainHealthScorer {
     private static let neurovascularWeight = 0.15
     private static let circadianWeight = 0.10
 
+    // MARK: - Score classification thresholds
+
+    /// Score delta (points) above which `brainHealthTrend` reports "improving".
+    private static let trendImprovingDelta = 5.0
+    /// Score delta (points) below which `brainHealthTrend` reports "declining".
+    private static let trendDecliningDelta = -5.0
+
+    // MARK: - Stress-cognition scaling
+
+    /// HRV drop fraction at which stress impact saturates (30% drop = max stress impact).
+    private static let hrvDropMaxImpact: Double = 0.30
+    /// RHR rise fraction at which stress impact saturates (15% rise = max stress impact).
+    private static let rhrRiseMaxImpact: Double = 0.15
+
+    // MARK: - Neurovascular score reference points
+
+    /// VO2max value treated as the floor (poor) of the neurovascular subscore.
+    private static let vo2MaxFloor: Double = 20
+    /// Span (excellent − poor) of the VO2max scoring range.
+    private static let vo2MaxRange: Double = 35
+    /// Resting HR (bpm) treated as the ceiling (poor) of the RHR subscore.
+    private static let rhrCeilingBpm: Double = 90
+    /// Span (poor − excellent) of the RHR scoring range.
+    private static let rhrRangeBpm: Double = 40
+    /// Bonus added to the RHR score when the recent average is trending below the older average.
+    private static let rhrTrendBonus: Double = 5
+    /// Daily step count at/above which the steps subscore saturates.
+    private static let stepsSaturation: Double = 12000
+
+    // MARK: - Coefficient-of-variation thresholds
+
+    /// Coefficient of variation at which circadian alignment is considered "poor" (score 0).
+    private static let circadianCVPoor: Double = 0.30
+
+    // MARK: - Top-factor thresholds
+
+    /// Percent deviation from baseline above which HRV / sleep stages count as a top factor.
+    private static let factorPercentThreshold: Double = 5
+    /// Percent deviation from baseline above which RHR counts as a top factor (RHR is more sensitive).
+    private static let rhrFactorPercentThreshold: Double = 3
+    /// Circadian alignment score above which "consistent timing" is celebrated as a positive factor.
+    private static let circadianStrongScore: Double = 80
+    /// Circadian alignment score below which "irregular timing" is flagged as a negative factor.
+    private static let circadianWeakScore: Double = 40
+
+    // MARK: - Headline thresholds
+
+    /// HRV multiplier above baseline that qualifies as "above baseline" for headlines.
+    private static let headlineHRVAboveMultiplier: Double = 1.05
+    /// REM/Deep multiplier above baseline that qualifies as "above baseline" for headlines.
+    private static let headlineSleepAboveMultiplier: Double = 1.05
+    /// HRV multiplier below baseline that qualifies as "below baseline" for foggy headlines.
+    private static let headlineHRVBelowMultiplier: Double = 0.90
+    /// REM multiplier below baseline that qualifies as "below baseline" for foggy headlines.
+    private static let headlineREMBelowMultiplier: Double = 0.85
+
+    // MARK: - Sample-size minimums
+
+    /// Minimum samples required before a baseline (mean, sd) is computed.
+    private static let minSamplesForBaseline = 5
+    /// Minimum samples required for a recent-window summary statistic.
+    private static let minSamplesForRecent = 3
+
+    /// Number of trailing days included in the rolling weekly-average score.
+    private static let weeklyAverageWindowDays = 7
+    /// Minimum samples required before `weeklyAverage` is reported.
+    private static let weeklyAverageMinSamples = 3
+    /// HRV component weight inside the cognitive-readiness subscore.
+    private static let cogReadinessHRVWeight: Double = 0.40
+    /// Deep-sleep component weight inside the cognitive-readiness subscore.
+    private static let cogReadinessDeepWeight: Double = 0.30
+    /// REM-sleep component weight inside the cognitive-readiness subscore.
+    private static let cogReadinessREMWeight: Double = 0.20
+    /// Sleep-duration component weight inside the cognitive-readiness subscore.
+    private static let cogReadinessDurationWeight: Double = 0.10
+    /// REM weight inside the memory-recovery subscore.
+    private static let memoryRecoveryREMWeight: Double = 0.50
+    /// Deep-sleep weight inside the memory-recovery subscore.
+    private static let memoryRecoveryDeepWeight: Double = 0.50
+    /// VO2max weight inside the neurovascular-fitness subscore.
+    private static let neuroVO2Weight: Double = 0.50
+    /// Resting-HR weight inside the neurovascular-fitness subscore.
+    private static let neuroRHRWeight: Double = 0.30
+    /// Steps weight inside the neurovascular-fitness subscore.
+    private static let neuroStepsWeight: Double = 0.20
+    /// Trailing window (days) used for the resting-HR recent average.
+    private static let neuroRHRRecentDays = 7
+    /// Trailing window (days) used for the resting-HR older comparison average.
+    private static let neuroRHROlderDays = 14
+    /// Trailing window (days) used for the steps recent average.
+    private static let neuroStepsRecentDays = 7
+    /// Trailing window (days) used for circadian alignment variability calculation.
+    private static let circadianWindowDays = 7
+    /// Trailing window (days) used when fetching the most-recent daily VO2 value.
+    private static let mostRecentVO2LookbackDays = 2
+    /// Z-score lower bound (z = -2 maps to 0) used by `normalizeZScore`.
+    private static let zScoreNormLower: Double = -2.0
+    /// Span of the z-score window normalized by `normalizeZScore` (z range [-2, +2] = 4).
+    private static let zScoreNormSpan: Double = 4.0
+    /// 0-100 score scale used to convert a normalized z-score into a subscore.
+    private static let subscoreScale: Double = 100.0
+    /// Default subscore returned when a component cannot be computed (mid-scale).
+    private static let subscoreDefault: Double = 50.0
+    /// Confidence baseline contribution from having HRV data.
+    private static let confidenceHRVBase: Double = 0.40
+    /// Confidence contribution from each of deep, REM, RHR signals.
+    private static let confidenceDeepBonus: Double = 0.15
+    private static let confidenceREMBonus: Double = 0.15
+    private static let confidenceRHRBonus: Double = 0.10
+    private static let confidenceVO2Bonus: Double = 0.05
+    private static let confidenceDurationBonus: Double = 0.05
+    /// Maximum HRV-stability confidence bonus.
+    private static let confidenceStabilityBonusCap: Double = 0.10
+    /// Coefficient of variation at which the HRV-stability bonus reaches its cap.
+    private static let stabilityFullStrengthCV: Double = 0.1
+    /// Coefficient of variation span over which the HRV-stability bonus decays to zero.
+    private static let stabilityCVRange: Double = 0.3
+    /// Reference midpoint subtracted from circadian alignment when computing factor magnitudes.
+    private static let circadianFactorMidpoint: Double = 50
+
     // MARK: - Outputs
 
     /// The most recently computed brain health score, or nil if insufficient data
@@ -114,15 +241,15 @@ final class BrainHealthScorer {
 
     /// Average brain health score over the last 7 days, or nil if insufficient history
     var weeklyAverage: Int? {
-        let last7 = weeklyHistory.suffix(7)
-        guard last7.count >= 3 else { return nil }
+        let last7 = weeklyHistory.suffix(Self.weeklyAverageWindowDays)
+        guard last7.count >= Self.weeklyAverageMinSamples else { return nil }
         let sum = last7.map(\.score).reduce(0, +)
         return sum / last7.count
     }
 
     /// Trend direction of brain health over the recent history
     var brainHealthTrend: String {
-        guard weeklyHistory.count >= 7 else { return "stable" }
+        guard weeklyHistory.count >= Self.weeklyAverageWindowDays else { return "stable" }
 
         let count = weeklyHistory.count
         let halfPoint = count / 2
@@ -135,8 +262,8 @@ final class BrainHealthScorer {
         let secondAvg = Double(secondHalf.map(\.score).reduce(0, +)) / Double(secondHalf.count)
 
         let delta = secondAvg - firstAvg
-        if delta > 5.0 { return "improving" }
-        if delta < -5.0 { return "declining" }
+        if delta > Self.trendImprovingDelta { return "improving" }
+        if delta < Self.trendDecliningDelta { return "declining" }
         return "stable"
     }
 
@@ -317,36 +444,36 @@ final class BrainHealthScorer {
         var weightedSum = 0.0
         var totalWeight = 0.0
 
-        // HRV z-score (40% of sub)
+        // HRV z-score
         let hrvZ = zScore(current: currentHRV, baseline: hrvBaseline)
         let hrvNorm = normalizeZScore(hrvZ)
-        weightedSum += hrvNorm * 0.40
-        totalWeight += 0.40
+        weightedSum += hrvNorm * Self.cogReadinessHRVWeight
+        totalWeight += Self.cogReadinessHRVWeight
 
-        // Deep sleep z-score (30% of sub)
+        // Deep sleep z-score
         if let deep = currentDeep, let deepBase = deepBaseline {
             let deepZ = zScore(current: deep, baseline: deepBase)
-            weightedSum += normalizeZScore(deepZ) * 0.30
-            totalWeight += 0.30
+            weightedSum += normalizeZScore(deepZ) * Self.cogReadinessDeepWeight
+            totalWeight += Self.cogReadinessDeepWeight
         }
 
-        // REM sleep z-score (20% of sub)
+        // REM sleep z-score
         if let rem = currentREM, let remBase = remBaseline {
             let remZ = zScore(current: rem, baseline: remBase)
-            weightedSum += normalizeZScore(remZ) * 0.20
-            totalWeight += 0.20
+            weightedSum += normalizeZScore(remZ) * Self.cogReadinessREMWeight
+            totalWeight += Self.cogReadinessREMWeight
         }
 
-        // Sleep duration z-score (10% of sub)
+        // Sleep duration z-score
         if let dur = currentDuration, let durBase = durationBaseline {
             let durZ = zScore(current: dur, baseline: durBase)
-            weightedSum += normalizeZScore(durZ) * 0.10
-            totalWeight += 0.10
+            weightedSum += normalizeZScore(durZ) * Self.cogReadinessDurationWeight
+            totalWeight += Self.cogReadinessDurationWeight
         }
 
         // Re-normalize if some components are missing
-        guard totalWeight > 0 else { return 50.0 }
-        return weightedSum / totalWeight * 100.0
+        guard totalWeight > 0 else { return Self.subscoreDefault }
+        return weightedSum / totalWeight * Self.subscoreScale
     }
 
     /// Memory & Recovery: REM (50%), Deep sleep (50%)
@@ -359,18 +486,18 @@ final class BrainHealthScorer {
 
         if let rem = currentREM, let remBase = remBaseline {
             let remZ = zScore(current: rem, baseline: remBase)
-            weightedSum += normalizeZScore(remZ) * 0.50
-            totalWeight += 0.50
+            weightedSum += normalizeZScore(remZ) * Self.memoryRecoveryREMWeight
+            totalWeight += Self.memoryRecoveryREMWeight
         }
 
         if let deep = currentDeep, let deepBase = deepBaseline {
             let deepZ = zScore(current: deep, baseline: deepBase)
-            weightedSum += normalizeZScore(deepZ) * 0.50
-            totalWeight += 0.50
+            weightedSum += normalizeZScore(deepZ) * Self.memoryRecoveryDeepWeight
+            totalWeight += Self.memoryRecoveryDeepWeight
         }
 
-        guard totalWeight > 0 else { return 50.0 }
-        return weightedSum / totalWeight * 100.0
+        guard totalWeight > 0 else { return Self.subscoreDefault }
+        return weightedSum / totalWeight * Self.subscoreScale
     }
 
     /// Stress-Cognition Load: inverse of stress impact (higher = less stress = better for brain)
@@ -384,22 +511,22 @@ final class BrainHealthScorer {
         // HRV below baseline = higher stress impact
         if hrvBaseline.mean > 0 {
             let hrvDrop = max(0, (hrvBaseline.mean - currentHRV) / hrvBaseline.mean)
-            // Scale: 0% drop = 0 impact, 30%+ drop = 100 impact
-            stressImpact += min(100, hrvDrop / 0.30 * 100.0)
+            // Scale: 0% drop = 0 impact, hrvDropMaxImpact (e.g. 30%) drop = 100 impact
+            stressImpact += min(Self.subscoreScale, hrvDrop / Self.hrvDropMaxImpact * Self.subscoreScale)
             components += 1
         }
 
         // RHR above baseline = higher stress impact
         if let rhr = currentRHR, let rhrBase = rhrBaseline, rhrBase.mean > 0 {
             let rhrRise = max(0, (rhr - rhrBase.mean) / rhrBase.mean)
-            // Scale: 0% rise = 0 impact, 15%+ rise = 100 impact
-            stressImpact += min(100, rhrRise / 0.15 * 100.0)
+            // Scale: 0% rise = 0 impact, rhrRiseMaxImpact (e.g. 15%) rise = 100 impact
+            stressImpact += min(Self.subscoreScale, rhrRise / Self.rhrRiseMaxImpact * Self.subscoreScale)
             components += 1
         }
 
-        guard components > 0 else { return 50.0 }
+        guard components > 0 else { return Self.subscoreDefault }
         let avgStress = stressImpact / Double(components)
-        return max(0, min(100, 100 - avgStress))
+        return max(0, min(Self.subscoreScale, Self.subscoreScale - avgStress))
     }
 
     /// Neurovascular Fitness: VO2max level, resting HR trend, activity consistency
@@ -413,55 +540,54 @@ final class BrainHealthScorer {
 
         // VO2max component (simple population-norm scale)
         if let vo2 = vo2Series, let recentVO2 = mostRecentDailyValue(vo2) {
-            // General population scale: 20 = poor, 35 = fair, 45 = good, 55+ = excellent
-            let vo2Score = min(100, max(0, (recentVO2 - 20.0) / 35.0 * 100.0))
-            weightedSum += vo2Score * 0.50
-            totalWeight += 0.50
+            // General population scale: vo2MaxFloor = poor, fair, good, excellent at floor + range
+            let vo2Score = min(Self.subscoreScale, max(0, (recentVO2 - Self.vo2MaxFloor) / Self.vo2MaxRange * Self.subscoreScale))
+            weightedSum += vo2Score * Self.neuroVO2Weight
+            totalWeight += Self.neuroVO2Weight
         }
 
         // Resting HR component. lower is generally better, declining trend is good
         if let rhr = rhrSeries {
-            let recentSamples = rhr.samples(lastDays: 7)
-            let olderSamples = rhr.samples(lastDays: 14)
-            if recentSamples.count >= 3, olderSamples.count >= 5 {
+            let recentSamples = rhr.samples(lastDays: Self.neuroRHRRecentDays)
+            let olderSamples = rhr.samples(lastDays: Self.neuroRHROlderDays)
+            if recentSamples.count >= Self.minSamplesForRecent, olderSamples.count >= Self.minSamplesForBaseline {
                 let recentMean = recentSamples.mean(of: \.value)
                 let olderMean = olderSamples.mean(of: \.value)
                 // Lower RHR = better; score based on absolute level
-                // 50 bpm = excellent (100), 70 bpm = average (50), 90+ bpm = poor (0)
-                let levelScore = min(100, max(0, (90.0 - recentMean) / 40.0 * 100.0))
+                let levelScore = min(Self.subscoreScale, max(0, (Self.rhrCeilingBpm - recentMean) / Self.rhrRangeBpm * Self.subscoreScale))
                 // Trending down adds a small bonus
-                let trendBonus = olderMean > recentMean ? 5.0 : 0.0
-                weightedSum += min(100, levelScore + trendBonus) * 0.30
-                totalWeight += 0.30
+                let trendBonus = olderMean > recentMean ? Self.rhrTrendBonus : 0.0
+                weightedSum += min(Self.subscoreScale, levelScore + trendBonus) * Self.neuroRHRWeight
+                totalWeight += Self.neuroRHRWeight
             }
         }
 
         // Steps/activity consistency
         if let steps = stepsSeries {
-            let recentSteps = steps.samples(lastDays: 7)
-            if recentSteps.count >= 3 {
+            let recentSteps = steps.samples(lastDays: Self.neuroStepsRecentDays)
+            if recentSteps.count >= Self.minSamplesForRecent {
                 let avgSteps = recentSteps.mean(of: \.value)
-                // 4000 = low (30), 8000 = moderate (60), 12000+ = high (100)
-                let stepsScore = min(100, max(0, avgSteps / 12000.0 * 100.0))
-                weightedSum += stepsScore * 0.20
-                totalWeight += 0.20
+                // Saturates at stepsSaturation (e.g. 12k = high)
+                let stepsScore = min(Self.subscoreScale, max(0, avgSteps / Self.stepsSaturation * Self.subscoreScale))
+                weightedSum += stepsScore * Self.neuroStepsWeight
+                totalWeight += Self.neuroStepsWeight
             }
         }
 
-        guard totalWeight > 0 else { return 50.0 }
+        guard totalWeight > 0 else { return Self.subscoreDefault }
         return weightedSum / totalWeight
     }
 
     /// Circadian Alignment: sleep duration variability over last 7 days
     private func computeCircadianAlignment(durationSeries: MetricTimeSeries?) -> Double {
-        guard let dur = durationSeries else { return 50.0 }
+        guard let dur = durationSeries else { return Self.subscoreDefault }
 
-        let recentSamples = dur.samples(lastDays: 7)
-        guard recentSamples.count >= 3 else { return 50.0 }
+        let recentSamples = dur.samples(lastDays: Self.circadianWindowDays)
+        guard recentSamples.count >= Self.minSamplesForRecent else { return Self.subscoreDefault }
 
         let values = recentSamples.map(\.value)
         let mean = values.mean
-        guard mean > 0 else { return 50.0 }
+        guard mean > 0 else { return Self.subscoreDefault }
 
         // Compute standard deviation of sleep duration
         var sumOfSquares = 0.0
@@ -473,8 +599,8 @@ final class BrainHealthScorer {
 
         // Coefficient of variation: lower = more consistent = better alignment
         let cv = sd / mean
-        // CV of 0 = perfect (100), CV of 0.3+ = poor (0)
-        let score = min(100, max(0, (1.0 - cv / 0.30) * 100.0))
+        // CV of 0 = perfect (100), CV of circadianCVPoor+ = poor (0)
+        let score = min(Self.subscoreScale, max(0, (1.0 - cv / Self.circadianCVPoor) * Self.subscoreScale))
         return score
     }
 
@@ -483,7 +609,7 @@ final class BrainHealthScorer {
     /// Compute mean and standard deviation for a baseline window
     private func computeBaseline(_ series: MetricTimeSeries, days: Int) -> (mean: Double, sd: Double)? {
         let samples = series.samples(lastDays: days)
-        guard samples.count >= 5 else { return nil }
+        guard samples.count >= Self.minSamplesForBaseline else { return nil }
 
         let mean = samples.mean(of: \.value)
         guard mean > 0 else { return nil }
@@ -500,7 +626,7 @@ final class BrainHealthScorer {
 
     /// Get the most recent daily average value from a time series (last 2 days)
     private func mostRecentDailyValue(_ series: MetricTimeSeries) -> Double? {
-        let recent = series.samples(lastDays: 2)
+        let recent = series.samples(lastDays: Self.mostRecentVO2LookbackDays)
         guard !recent.isEmpty else { return nil }
         return recent.last?.value
     }
@@ -525,7 +651,7 @@ final class BrainHealthScorer {
 
     /// Normalize a z-score to 0-1 range: z of -2 → 0, z of +2 → 1
     private func normalizeZScore(_ z: Double) -> Double {
-        min(max((z + 2.0) / 4.0, 0), 1)
+        min(max((z - Self.zScoreNormLower) / Self.zScoreNormSpan, 0), 1)
     }
 
     /// Compute confidence based on data availability
@@ -538,19 +664,22 @@ final class BrainHealthScorer {
         hrvBaseline: (mean: Double, sd: Double)
     ) -> Double {
         // HRV is mandatory and provides base confidence
-        var confidence = 0.40
+        var confidence = Self.confidenceHRVBase
 
         // Each additional signal adds confidence
-        if hasDeep { confidence += 0.15 }
-        if hasREM { confidence += 0.15 }
-        if hasRHR { confidence += 0.10 }
-        if hasVO2 { confidence += 0.05 }
-        if hasDuration { confidence += 0.05 }
+        if hasDeep { confidence += Self.confidenceDeepBonus }
+        if hasREM { confidence += Self.confidenceREMBonus }
+        if hasRHR { confidence += Self.confidenceRHRBonus }
+        if hasVO2 { confidence += Self.confidenceVO2Bonus }
+        if hasDuration { confidence += Self.confidenceDurationBonus }
 
-        // Baseline stability bonus (up to 0.10)
+        // Baseline stability bonus
         if hrvBaseline.mean > 0 {
             let cv = hrvBaseline.sd / hrvBaseline.mean
-            let stabilityBonus = max(0, min(0.10, 0.10 * (1.0 - (cv - 0.1) / 0.3)))
+            let stabilityBonus = max(0, min(
+                Self.confidenceStabilityBonusCap,
+                Self.confidenceStabilityBonusCap * (1.0 - (cv - Self.stabilityFullStrengthCV) / Self.stabilityCVRange)
+            ))
             confidence += stabilityBonus
         }
 
@@ -574,7 +703,7 @@ final class BrainHealthScorer {
 
         // HRV factor
         let hrvPct = (currentHRV - hrvBaseline.mean) / max(hrvBaseline.mean, 1) * 100
-        if abs(hrvPct) > 5 {
+        if abs(hrvPct) > Self.factorPercentThreshold {
             let isPositive = hrvPct > 0
             let direction = isPositive ? "above" : "below"
             factors.append((
@@ -588,7 +717,7 @@ final class BrainHealthScorer {
         // REM factor
         if let rem = currentREM, let remBase = remBaseline {
             let remPct = (rem - remBase.mean) / max(remBase.mean, 1) * 100
-            if abs(remPct) > 5 {
+            if abs(remPct) > Self.factorPercentThreshold {
                 let isPositive = remPct > 0
                 let direction = isPositive ? "above" : "below"
                 factors.append((
@@ -603,7 +732,7 @@ final class BrainHealthScorer {
         // Deep sleep factor
         if let deep = currentDeep, let deepBase = deepBaseline {
             let deepPct = (deep - deepBase.mean) / max(deepBase.mean, 1) * 100
-            if abs(deepPct) > 5 {
+            if abs(deepPct) > Self.factorPercentThreshold {
                 let isPositive = deepPct > 0
                 let direction = isPositive ? "above" : "below"
                 factors.append((
@@ -618,7 +747,7 @@ final class BrainHealthScorer {
         // Resting HR factor
         if let rhr = currentRHR, let rhrBase = rhrBaseline {
             let rhrPct = (rhr - rhrBase.mean) / max(rhrBase.mean, 1) * 100
-            if abs(rhrPct) > 3 {
+            if abs(rhrPct) > Self.rhrFactorPercentThreshold {
                 // For RHR, lower is better (inverted)
                 let isPositive = rhrPct < 0
                 let direction = rhrPct < 0 ? "below" : "above"
@@ -632,19 +761,19 @@ final class BrainHealthScorer {
         }
 
         // Circadian alignment factor
-        if circadianAlignment > 80 {
+        if circadianAlignment > Self.circadianStrongScore {
             factors.append((
                 label: "Sleep Schedule",
                 impact: "consistent timing",
                 isPositive: true,
-                magnitude: circadianAlignment - 50
+                magnitude: circadianAlignment - Self.circadianFactorMidpoint
             ))
-        } else if circadianAlignment < 40 {
+        } else if circadianAlignment < Self.circadianWeakScore {
             factors.append((
                 label: "Sleep Schedule",
                 impact: "irregular timing",
                 isPositive: false,
-                magnitude: 50 - circadianAlignment
+                magnitude: Self.circadianFactorMidpoint - circadianAlignment
             ))
         }
 
@@ -661,14 +790,14 @@ final class BrainHealthScorer {
         currentREM: Double?, remBaseline: (mean: Double, sd: Double)?,
         currentDeep: Double?, deepBaseline: (mean: Double, sd: Double)?
     ) -> String {
-        let hrvAbove = currentHRV > hrvBaseline.mean * 1.05
+        let hrvAbove = currentHRV > hrvBaseline.mean * Self.headlineHRVAboveMultiplier
         let remAbove: Bool = {
             guard let rem = currentREM, let base = remBaseline else { return false }
-            return rem > base.mean * 1.05
+            return rem > base.mean * Self.headlineSleepAboveMultiplier
         }()
         let deepAbove: Bool = {
             guard let deep = currentDeep, let base = deepBaseline else { return false }
-            return deep > base.mean * 1.05
+            return deep > base.mean * Self.headlineSleepAboveMultiplier
         }()
 
         switch state {
@@ -700,10 +829,10 @@ final class BrainHealthScorer {
             }
 
         case .foggy:
-            let hrvBelow = currentHRV < hrvBaseline.mean * 0.90
+            let hrvBelow = currentHRV < hrvBaseline.mean * Self.headlineHRVBelowMultiplier
             let remBelow: Bool = {
                 guard let rem = currentREM, let base = remBaseline else { return false }
-                return rem < base.mean * 0.85
+                return rem < base.mean * Self.headlineREMBelowMultiplier
             }()
             if hrvBelow && remBelow {
                 return Copy.BrainHealth.headlineFoggyBoth
@@ -828,7 +957,7 @@ final class BrainHealthScorer {
             }
         }
 
-        guard values.count >= 5 else { return nil }
+        guard values.count >= Self.minSamplesForBaseline else { return nil }
 
         let mean = values.reduce(0, +) / Double(values.count)
         guard mean > 0 else { return nil }

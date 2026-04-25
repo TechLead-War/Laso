@@ -157,19 +157,30 @@ final class UserProfileStore {
     // MARK: - Save to Firestore
 
     /// Save profile to Firestore and cache locally.
-    /// Uses deviceId as the Firestore document ID for upsert behavior.
+    /// Document ID is the Firebase Auth UID so subscription / profile state is
+    /// Apple-ID-bound (cross-device, survives reinstall after Sign In with Apple
+    /// links the anonymous account). `deviceId` stays in the body for analytics.
     func save(_ profile: UserProfile) {
         // Always cache locally first
         saveLocal(profile)
 
         // Prepare Firestore document data. anonymized only (no PII: name, email, DOB excluded)
-        // firebaseUid is required by security rules to bind ownership to the
-        // anonymous Firebase Auth user.
+        // firebaseUid binds ownership; the doc ID equals firebaseUid so the
+        // record is keyed by Apple ID (post-link) rather than device.
         #if canImport(FirebaseAuth)
         let firebaseUid = Auth.auth().currentUser?.uid ?? ""
         #else
         let firebaseUid = ""
         #endif
+
+        // Without a Firebase UID we cannot satisfy the security rules.
+        // Skip the write rather than write to a deviceId-keyed orphan doc.
+        guard !firebaseUid.isEmpty else {
+            #if DEBUG
+            print("[UserProfileStore] Skipping Firestore write — no Firebase Auth UID yet.")
+            #endif
+            return
+        }
 
         let data: [String: Any] = [
             "gender": profile.gender.rawValue,
@@ -186,14 +197,16 @@ final class UserProfileStore {
 #if canImport(FirebaseFirestore)
         Firestore.firestore()
             .collection(collectionName)
-            .document(profile.deviceId)
+            .document(firebaseUid)
             .setData(data, merge: true) { error in
                 if let error {
+                    #if DEBUG
                     print("[UserProfileStore] Firestore write failed: \(error.localizedDescription)")
+                    #endif
                 }
             }
 #else
-        print("[UserProfileStore] Would write to Firestore: \(data)")
+        _ = data
 #endif
     }
 

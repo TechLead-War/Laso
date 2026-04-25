@@ -36,6 +36,19 @@ final class DecisionPolicyEngine {
     /// Maximum feedback entries retained
     private static let maxFeedbackHistory = 200
 
+    /// Pass 11 AF: cached calendar — exposure-window math runs `dateByAdding`
+    /// per candidate generation; one static avoids allocating `Calendar.current`
+    /// per call.
+    private static let cal: Calendar = Calendar.current
+
+    /// Pass 11 AF: cached decimal NumberFormatter — `formatted(_:)` is called
+    /// up to three times per recommendation title. Per-call allocation is wasteful.
+    private static let decimalFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        return formatter
+    }()
+
     // MARK: - Candidate Generation
 
     /// Generate intervention candidates from all available ML signal sources.
@@ -161,7 +174,7 @@ final class DecisionPolicyEngine {
     /// Count how many times this actionType was shown in the past 7 days.
     func recentExposureCount(for actionType: InterventionCandidate.ActionType) -> Int {
         let key = actionType.rawValue
-        let cutoff = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+        let cutoff = Self.cal.date(byAdding: .day, value: -7, to: Date()) ?? Date()
         guard let dates = exposureLog[key] else { return 0 }
         return dates.filter { $0 > cutoff }.count
     }
@@ -173,7 +186,7 @@ final class DecisionPolicyEngine {
         guard exposure >= 3 else { return false }
 
         // Check for any positive feedback for this action type in recent history
-        let cutoff = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+        let cutoff = Self.cal.date(byAdding: .day, value: -7, to: Date()) ?? Date()
         let hasPositiveFeedback = feedbackHistory.contains { feedback in
             feedback.actionType == candidate.actionType.rawValue
                 && feedback.shownAt > cutoff
@@ -190,7 +203,7 @@ final class DecisionPolicyEngine {
         dates.append(Date())
 
         // Trim to last 14 days
-        let cutoff = Calendar.current.date(byAdding: .day, value: -14, to: Date()) ?? Date()
+        let cutoff = Self.cal.date(byAdding: .day, value: -14, to: Date()) ?? Date()
         dates = dates.filter { $0 > cutoff }
         exposureLog[key] = dates
     }
@@ -207,30 +220,10 @@ final class DecisionPolicyEngine {
     func decide(candidates: [InterventionCandidate], focusCategories: Set<HealthCategory> = []) -> PolicyDecision? {
         guard !candidates.isEmpty else { return nil }
 
-        // Score and filter suppressed candidates
-        var scored: [(candidate: InterventionCandidate, utility: Double, novelty: Double)] = []
-
-        for candidate in candidates {
-            guard !isSuppressed(candidate) else { continue }
-            var utility = scoreCandidate(candidate)
-            let novelty = noveltyFactor(for: candidate.actionType)
-            // Boost utility for candidates targeting user's focus areas
-            if !focusCategories.isEmpty && focusCategories.contains(candidate.targetMetric.category) {
-                utility *= 1.3
-            }
-            scored.append((candidate, utility, novelty))
-        }
-
-        // If all were suppressed, allow the original list through without suppression
+        // Score and filter suppressed candidates; if all suppressed, fall back to unfiltered
+        var scored = scoreCandidates(candidates, focusCategories: focusCategories, applySuppression: true)
         if scored.isEmpty {
-            for candidate in candidates {
-                var utility = scoreCandidate(candidate)
-                let novelty = noveltyFactor(for: candidate.actionType)
-                if !focusCategories.isEmpty && focusCategories.contains(candidate.targetMetric.category) {
-                    utility *= 1.3
-                }
-                scored.append((candidate, utility, novelty))
-            }
+            scored = scoreCandidates(candidates, focusCategories: focusCategories, applySuppression: false)
         }
 
         // Sort by utility descending
@@ -286,18 +279,7 @@ final class DecisionPolicyEngine {
         let rationale = buildRationale(primary: primary.candidate, utility: primary.utility,
                                         secondary: secondary?.candidate)
 
-        // Decision confidence: weighted mean of top 3 candidates' upliftConfidence
-        let top3 = scored.prefix(3)
-        let totalUtility = top3.reduce(0.0) { $0 + $1.utility }
-        let decisionConfidence: Double
-        if totalUtility > 0 {
-            decisionConfidence = top3.reduce(0.0) { sum, item in
-                sum + item.candidate.upliftConfidence * (item.utility / totalUtility)
-            }
-        } else {
-            decisionConfidence = top3.reduce(0.0) { $0 + $1.candidate.upliftConfidence }
-                / max(1.0, Double(top3.count))
-        }
+        let decisionConfidence = computeDecisionConfidence(scored: scored)
 
         // Record exposure for selected actions
         recordExposure(primary.candidate.actionType)
@@ -324,6 +306,43 @@ final class DecisionPolicyEngine {
         }
 
         return decision
+    }
+
+    // MARK: - Decision helpers
+
+    private typealias ScoredCandidate = (candidate: InterventionCandidate, utility: Double, novelty: Double)
+
+    /// Score every candidate, optionally skipping ones that are currently suppressed.
+    private func scoreCandidates(
+        _ candidates: [InterventionCandidate],
+        focusCategories: Set<HealthCategory>,
+        applySuppression: Bool
+    ) -> [ScoredCandidate] {
+        var scored: [ScoredCandidate] = []
+        for candidate in candidates {
+            if applySuppression, isSuppressed(candidate) { continue }
+            var utility = scoreCandidate(candidate)
+            let novelty = noveltyFactor(for: candidate.actionType)
+            // Boost utility for candidates targeting user's focus areas
+            if !focusCategories.isEmpty && focusCategories.contains(candidate.targetMetric.category) {
+                utility *= 1.3
+            }
+            scored.append((candidate, utility, novelty))
+        }
+        return scored
+    }
+
+    /// Decision confidence: weighted mean of top 3 candidates' upliftConfidence.
+    private func computeDecisionConfidence(scored: [ScoredCandidate]) -> Double {
+        let top3 = scored.prefix(3)
+        let totalUtility = top3.reduce(0.0) { $0 + $1.utility }
+        if totalUtility > 0 {
+            return top3.reduce(0.0) { sum, item in
+                sum + item.candidate.upliftConfidence * (item.utility / totalUtility)
+            }
+        }
+        return top3.reduce(0.0) { $0 + $1.candidate.upliftConfidence }
+            / max(1.0, Double(top3.count))
     }
 
     /// Full pipeline: generate candidates, score, decide, and attach natural language.
@@ -1743,8 +1762,6 @@ final class DecisionPolicyEngine {
     }
 
     private static func formatted(_ value: Int) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
+        return Self.decimalFormatter.string(from: NSNumber(value: value)) ?? "\(value)"
     }
 }

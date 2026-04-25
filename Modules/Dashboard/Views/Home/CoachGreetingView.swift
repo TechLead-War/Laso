@@ -4,6 +4,10 @@ import SwiftUI
 /// no prescription, no overflow menu — the recovery card is Home's single
 /// content hero, and the score guide opens from tapping the card itself.
 struct CoachGreetingView: View {
+    /// Pass 12 BE perf: cached current calendar. `timeOfDay` is read on every
+    /// Home render via the greeting line; per-render alloc is wasteful.
+    private static let cal: Calendar = Calendar.current
+
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(compactGreetingLine)
@@ -31,32 +35,17 @@ struct CoachGreetingView: View {
         "\(dayMonthString.uppercased()) · \(timeString)"
     }
 
-    private static let weekdayFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "EEEE"
-        return f
-    }()
-
-    private static let dayMonthFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "d MMMM"
-        return f
-    }()
-
-    private static let timeFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "HH:mm"
-        return f
-    }()
-
-    private var weekdayString: String { Self.weekdayFormatter.string(from: Date()) }
-    private var dayMonthString: String { Self.dayMonthFormatter.string(from: Date()) }
-    private var timeString: String { Self.timeFormatter.string(from: Date()) }
+    // Pass 8 Y: locale-aware. `.dateTime` resolves ordering / separators
+    // and the time formatter respects 24h vs 12h based on `Locale.current`.
+    // Weekday + day + month names are localized (e.g. "lundi" / "lunes").
+    private var weekdayString: String { Date().formatted(.dateTime.weekday(.wide)) }
+    private var dayMonthString: String { Date().formatted(.dateTime.day().month(.wide)) }
+    private var timeString: String { Date().formatted(.dateTime.hour().minute()) }
 
     // MARK: - Context-Aware Greeting
 
     private var timeOfDay: TimeOfDay {
-        let hour = Calendar.current.component(.hour, from: Date())
+        let hour = Self.cal.component(.hour, from: Date())
         switch hour {
         case 5..<12: return .morning
         case 12..<17: return .afternoon
