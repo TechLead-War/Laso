@@ -481,14 +481,16 @@
               <div class="screenshots-form-hint" id="ss-screens-count">15 of 15 selected</div>
             </div>
 
-            <!-- Command output + copy -->
+            <!-- Command output + copy + (local-only) generate -->
             <div class="screenshots-cmd-row">
               <code class="screenshots-cmd" id="screenshots-cmd">./Scripts/capture-app-store-screenshots.sh</code>
-              <button class="btn btn-primary" type="button" id="screenshots-cmd-copy">Copy command</button>
+              <button class="btn" type="button" id="screenshots-cmd-copy">Copy command</button>
+              <button class="btn btn-primary" type="button" id="screenshots-generate" hidden>Generate</button>
             </div>
-            <p class="card-hint card-hint-secondary">
+            <p class="card-hint card-hint-secondary" id="screenshots-cmd-hint">
               Run from the repo root. Each shot takes ~9 seconds. Capturing all 15 takes about 3 minutes.
             </p>
+            <div class="card-hint" id="screenshots-status" style="margin-top:6px;"></div>
           </div>
         </div>
 

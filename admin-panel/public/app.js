@@ -1422,6 +1422,17 @@ const ScreenshotsPage = (() => {
       }
     });
 
+    // Local-only "Generate" button. Only visible when the dashboard is
+    // running on localhost (i.e., the dev-runner helper is reachable). Posts
+    // the same args the Copy command would carry to the helper, which
+    // spawns the screenshot script and returns when done.
+    const isLocalhost = ["localhost", "127.0.0.1"].includes(location.hostname);
+    const generateBtn = document.getElementById("screenshots-generate");
+    if (generateBtn && isLocalhost) {
+      generateBtn.hidden = false;
+      generateBtn.addEventListener("click", () => runGenerate());
+    }
+
     document.getElementById("screenshots-refresh")?.addEventListener("click", refresh);
 
     document.getElementById("ss-select-all")?.addEventListener("click", () => {
@@ -1452,6 +1463,81 @@ const ScreenshotsPage = (() => {
   // confusion when the name has a space or special character.
   function shellSingleQuote(value) {
     return `'${String(value).replace(/'/g, `'\\''`)}'`;
+  }
+
+  /// Build the raw arg array (no shell-escaping) the dev-runner expects.
+  function buildRawArgs() {
+    const checked = Array.from(document.querySelectorAll(".ss-screen:checked")).map((el) => el.value);
+    const total = document.querySelectorAll(".ss-screen").length;
+    const args = [];
+    if (checked.length > 0 && checked.length < total) {
+      args.push(`--shots=${checked.join(",")}`);
+    }
+    const name = document.getElementById("ss-name")?.value.trim();
+    const overall = document.getElementById("ss-overall")?.value.trim();
+    const sleep = document.getElementById("ss-sleep")?.value.trim();
+    const activity = document.getElementById("ss-activity")?.value.trim();
+    const suffix = document.getElementById("ss-suffix")?.value.trim();
+    if (name)     args.push(`--override-name=${name}`);
+    if (overall)  args.push(`--override-overall-score=${parseInt(overall, 10) || 0}`);
+    if (sleep)    args.push(`--override-sleep-score=${parseInt(sleep, 10) || 0}`);
+    if (activity) args.push(`--override-activity-score=${parseInt(activity, 10) || 0}`);
+    if (suffix)   args.push(`--folder-suffix=${suffix.replace(/[^A-Za-z0-9_-]/g, "")}`);
+    return { args, checkedCount: checked.length };
+  }
+
+  /// Click handler for the "Generate" button. POSTs to the dev-runner on
+  /// 127.0.0.1:5099, waits for the script to finish, then refreshes the
+  /// captured-runs list so the new run appears at the top.
+  async function runGenerate() {
+    const generateBtn = document.getElementById("screenshots-generate");
+    const statusEl = document.getElementById("screenshots-status");
+    const { args, checkedCount } = buildRawArgs();
+
+    if (checkedCount === 0) {
+      UI.showToast("Select at least one screen first.", true);
+      return;
+    }
+
+    const originalLabel = generateBtn.textContent;
+    generateBtn.disabled = true;
+    generateBtn.textContent = "Generating…";
+    if (statusEl) {
+      statusEl.textContent = `Running capture (${checkedCount} shot${checkedCount > 1 ? "s" : ""}, ~${Math.max(1, Math.round(checkedCount * 9 / 60))} min)…`;
+    }
+
+    try {
+      const res = await fetch("http://127.0.0.1:5099/api/generate-screenshots", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ args }),
+      });
+      if (!res.ok) throw new Error(`Helper returned ${res.status}`);
+      const data = await res.json();
+
+      if (data.success) {
+        UI.showToast(`Capture done in ${(data.durationMs / 1000).toFixed(0)}s`);
+        if (statusEl) statusEl.textContent = "";
+        await refresh();
+      } else {
+        const lastErr = (data.stderrTail || "").trim().split("\n").slice(-1)[0] || `exit ${data.exitCode}`;
+        UI.showToast(`Capture failed: ${lastErr}`, true);
+        if (statusEl) statusEl.textContent = `Failed (exit ${data.exitCode}). Check Terminal for full log.`;
+        console.error("[capture stdout]", data.stdoutTail);
+        console.error("[capture stderr]", data.stderrTail);
+      }
+    } catch (err) {
+      UI.showToast(
+        "Helper not running. Start it with:  node admin-panel/dev-runner/server.js",
+        true,
+      );
+      if (statusEl) {
+        statusEl.textContent = "Generate helper unreachable on port 5099. Run: node admin-panel/dev-runner/server.js";
+      }
+    } finally {
+      generateBtn.disabled = false;
+      generateBtn.textContent = originalLabel;
+    }
   }
 
   function rebuildCommand() {
