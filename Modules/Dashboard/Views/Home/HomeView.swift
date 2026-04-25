@@ -327,7 +327,7 @@ struct HomeView: View {
                         .onAppear { illnessTracker.appeared(); risksTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 20) }
                         .onDisappear { illnessTracker.disappeared(); risksTracker.disappeared() }
 
-                    sectionHeader("INTELLIGENCE")
+                    sectionHeader("VITALS")
                         .padding(.top, DS.space3)
 
                     // 4. Metric Strip. horizontal scroll replacing 6 vertical cards

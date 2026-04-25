@@ -126,6 +126,69 @@ final class MenstrualCycleTracker {
     var isReady: Bool { currentCycle != nil }
     var isApplicable: Bool = true
 
+    // MARK: - Snapshot Persistence
+
+    /// UserDefaults key for the last successfully computed cycle snapshot.
+    /// Restored in `init()` so the first render after launch shows the most
+    /// recent known cycle phase instead of a blank tile while the async
+    /// HealthKit fetch is in flight.
+    private static let snapshotKey = "MenstrualCycleTracker.snapshot.v1"
+
+    /// Maximum age of a snapshot before it is considered stale and discarded.
+    /// Cycle phase changes daily, so anything older than ~1.5 days is unsafe to show.
+    private static let snapshotMaxAge: TimeInterval = 36 * 60 * 60
+
+    private struct Snapshot: Codable {
+        var currentPhase: String
+        var dayInCycle: Int
+        var cycleLength: Int
+        var lastPeriodStart: Date?
+        var nextPeriodEstimate: Date?
+        var daysUntilNextPeriod: Int?
+        var phaseProgress: Double
+        var savedAt: Date
+    }
+
+    init() {
+        guard
+            let data = UserDefaults.standard.data(forKey: Self.snapshotKey),
+            let snap = try? JSONDecoder().decode(Snapshot.self, from: data)
+        else { return }
+        // Discard stale snapshots: cycle phase moves daily, so showing
+        // a week-old phase would mislead the user.
+        guard Date().timeIntervalSince(snap.savedAt) <= Self.snapshotMaxAge else { return }
+        guard let phase = CyclePhase(rawValue: snap.currentPhase) else { return }
+        currentCycle = CycleInfo(
+            currentPhase: phase,
+            dayInCycle: snap.dayInCycle,
+            cycleLength: snap.cycleLength,
+            lastPeriodStart: snap.lastPeriodStart,
+            nextPeriodEstimate: snap.nextPeriodEstimate,
+            daysUntilNextPeriod: snap.daysUntilNextPeriod,
+            phaseProgress: snap.phaseProgress
+        )
+    }
+
+    private func saveSnapshot() {
+        // Only persist a real, non-degraded cycle. Saving nil/placeholder state
+        // would just paint an empty tile on the next launch and bury the last
+        // known good snapshot.
+        guard let cycle = currentCycle else { return }
+        let snap = Snapshot(
+            currentPhase: cycle.currentPhase.rawValue,
+            dayInCycle: cycle.dayInCycle,
+            cycleLength: cycle.cycleLength,
+            lastPeriodStart: cycle.lastPeriodStart,
+            nextPeriodEstimate: cycle.nextPeriodEstimate,
+            daysUntilNextPeriod: cycle.daysUntilNextPeriod,
+            phaseProgress: cycle.phaseProgress,
+            savedAt: Date()
+        )
+        if let data = try? JSONEncoder().encode(snap) {
+            UserDefaults.standard.set(data, forKey: Self.snapshotKey)
+        }
+    }
+
     /// How the current phase affects recovery expectations.
     var phaseImpactOnRecovery: String {
         guard let phase = currentCycle?.currentPhase else {
@@ -166,7 +229,7 @@ final class MenstrualCycleTracker {
             return
         }
 
-        // Group bleeding days into distinct periods (gap > 20 days = new cycle).
+        // Group bleeding days into distinct periods (gap >= 18 days = new cycle).
         let cycleStarts = identifyCycleStarts(from: bleedingDays)
         guard !cycleStarts.isEmpty else {
             currentCycle = nil
@@ -197,7 +260,9 @@ final class MenstrualCycleTracker {
         // Determine current day in cycle.
         let lastStart = cycleStarts.last!
         let daysSinceLastStart = calendar.dateComponents([.day], from: lastStart, to: Date()).day ?? 0
-        let dayInCycle = daysSinceLastStart + 1 // 1-indexed
+        // Clamp to 1: a future-dated period log would otherwise yield 0/negative,
+        // fall through phaseForDay's switch, and silently land in .luteal.
+        let dayInCycle = max(1, daysSinceLastStart + 1) // 1-indexed
 
         let phase = phaseForDay(dayInCycle, cycleLength: averageLength)
         let nextPeriod = estimateNextPeriod(lastStart: lastStart, averageLength: averageLength)
@@ -215,15 +280,19 @@ final class MenstrualCycleTracker {
             daysUntilNextPeriod: daysUntilNext,
             phaseProgress: progress
         )
+        saveSnapshot()
     }
 
     // MARK: - Visibility
 
     /// Whether menstrual cycle UI should be shown for this user.
-    /// Returns true for female users or when gender is unknown (nil).
+    /// Returns true only for female users, or when gender is unknown (nil)
+    /// so users who skipped gender during onboarding still see the UI.
+    /// Mirrors DashboardViewModel's stricter `isApplicable` rule
+    /// (gender == .female) instead of the looser "non-male" check.
     func shouldShow(gender: String?) -> Bool {
         guard let gender = gender?.lowercased() else { return true }
-        return gender != "male"
+        return gender == "female"
     }
 
     // MARK: - Helpers
@@ -257,7 +326,9 @@ final class MenstrualCycleTracker {
     // MARK: - Private
 
     /// Identify cycle start dates from sorted bleeding days.
-    /// A gap of more than 20 days between bleeding days marks a new cycle.
+    /// A gap of 18 or more days between bleeding days marks a new cycle.
+    /// Threshold is 18 to align with the cycleHistory accepted range (18...45);
+    /// a higher threshold (e.g. >20) would silently drop valid 19-20 day cycles.
     private func identifyCycleStarts(from sortedBleedingDays: [Date]) -> [Date] {
         guard let first = sortedBleedingDays.first else { return [] }
         var starts: [Date] = [first]
@@ -266,7 +337,7 @@ final class MenstrualCycleTracker {
         for day in sortedBleedingDays.dropFirst() {
             guard let lastStart = starts.last else { continue }
             let gap = calendar.dateComponents([.day], from: lastStart, to: day).day ?? 0
-            if gap > 20 {
+            if gap >= 18 {
                 starts.append(day)
             }
         }

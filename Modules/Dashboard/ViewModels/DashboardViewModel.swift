@@ -957,6 +957,17 @@ final class DashboardViewModel {
         // Phase 2A: Essential insights. lightweight (~15K ops), runs immediately
         let cycleFlowSamples = await cycleFlowSamplesTask
 
+        // Resolve cycle applicability BEFORE compute so the very first refresh
+        // gates correctly. Default `isApplicable` is `true`, so without this
+        // hoist a male user (or female with cycle tracking off) would run a
+        // full cycle compute on first launch. Mirrors the assignment in
+        // computeNewEngines exactly so the two stay in sync.
+        let cycleProfile = UserProfileStore.shared.loadLocal()
+        let cycleIsFemale = cycleProfile?.gender == .female
+        let cyclePref = UserDefaults.standard.object(forKey: AppKeys.Cycle.trackingEnabled) as? Bool
+        let cycleEnabled = cyclePref ?? true
+        menstrualCycleTracker.isApplicable = cycleIsFemale && cycleEnabled
+
         // Compute menstrual cycle if applicable
         if menstrualCycleTracker.isApplicable {
             await menstrualCycleTracker.compute(from: healthKitManager)
@@ -1380,12 +1391,9 @@ final class DashboardViewModel {
             vitalityScorer.compute(from: store, chronologicalAge: age, timeSeries: timeSeries)
         }
 
-        // Menstrual cycle. female users + explicit onboarding opt-in.
-        // Backward compatibility: if preference is absent (older installs), keep prior behavior.
-        let isFemale = profile?.gender == .female
-        let cyclePreference = UserDefaults.standard.object(forKey: AppKeys.Cycle.trackingEnabled) as? Bool
-        let cycleTrackingEnabled = cyclePreference ?? true
-        menstrualCycleTracker.isApplicable = isFemale && cycleTrackingEnabled
+        // Menstrual cycle applicability is resolved at the top of refresh()
+        // (just before the cycle compute call) so that ordering is correct on
+        // the very first refresh. Do not duplicate the assignment here.
     }
 
     // MARK: - Sleep Tile Snapshot
@@ -1503,8 +1511,10 @@ final class DashboardViewModel {
             ))
         }
 
-        // Cycle
-        if let cycle = menstrualCycleTracker.currentCycle {
+        // Cycle. require isApplicable so a male user (or female with tracking
+        // off) never sees a cycle tile even when stray flow samples exist in
+        // HealthKit (shared device, family member's data).
+        if menstrualCycleTracker.isApplicable, let cycle = menstrualCycleTracker.currentCycle {
             tiles.append(MetricTile(
                 id: "cycle_detail", icon: cycle.currentPhase.icon, label: "Cycle",
                 value: "Day \(cycle.dayInCycle)",
