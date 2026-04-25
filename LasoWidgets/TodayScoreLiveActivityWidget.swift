@@ -7,7 +7,10 @@ struct TodayScoreLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: TodayScoreActivityAttributes.self) { context in
             CoachLockScreenView(state: context.state)
-                .activityBackgroundTint(AppColour.surfaceRaised)
+                // Pure-black OS chrome — matches AppColour.surfaceBase so the
+                // Live Activity feels carved out of the lock-screen wallpaper
+                // instead of a flat grey overlay (Apple-Music vibe).
+                .activityBackgroundTint(AppColour.surfaceBase)
                 .activitySystemActionForegroundColor(AppColour.textPrimary)
         } dynamicIsland: { context in
             DynamicIsland {
@@ -86,13 +89,16 @@ private struct CoachLockScreenView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(
-            LinearGradient(
-                colors: modeGradientColors(for: state.mode),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
+        // Pure-black card body. Mode-specific tint stays on the ring and the
+        // accent icon (line 64-65) so colour signals the score state without
+        // washing the whole card into grey.
+        .background(AppColour.surfaceBase)
+        .overlay(alignment: .topLeading) {
+            // 1px score-tint hairline at the top — subtle premium accent.
+            Rectangle()
+                .fill(tint.opacity(0.55))
+                .frame(height: 1)
+        }
     }
 }
 

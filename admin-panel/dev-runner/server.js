@@ -17,7 +17,7 @@ const REPO_ROOT = path.resolve(__dirname, "..", "..");
 const SCRIPT = "./Scripts/capture-app-store-screenshots.sh";
 
 // Whitelist regex — only these CLI flag shapes are forwarded to the script.
-const ALLOWED_FLAG = /^--(shots|folder-suffix|override-name|override-overall-score|override-sleep-score|override-activity-score)=.*/;
+const ALLOWED_FLAG = /^--(shots|folder-suffix|override-name|override-overall-score|override-sleep-score|override-activity-score|workers)=.*/;
 
 const server = http.createServer((req, res) => {
   // Permissive CORS — server is bound to 127.0.0.1 only, so this is just

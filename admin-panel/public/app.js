@@ -1355,27 +1355,58 @@ const ScreenshotsPage = (() => {
 
   // Single source of truth for the 15 shots that the capture script supports.
   // Order and labels mirror the SHOTS array in capture-app-store-screenshots.sh.
+  // Order follows the user's journey through the app — onboarding first
+  // (the first thing a new user sees), then daily-use screens, then settings
+  // and edge cases at the end. Each title is human-readable; the snake_case
+  // ids and angle ids stay internal and are hidden in the rendered UI.
   const SHOT_CATALOG = [
-    { angle: "01_thriving", title: "Wake up thriving", shots: [
-      { id: "01_home",     label: "Home dashboard" },
-      { id: "02_sleep",    label: "Sleep Coach" },
-      { id: "03_weekly",   label: "Weekly Review" },
-      { id: "04_state",    label: "Health State Timeline" },
-      { id: "05_vitality", label: "Vitality" },
+    { angle: "01_onboarding", title: "Onboarding", shots: [
+      { id: "01_pulse",      label: "Pulse (welcome)" },
+      { id: "02_profile",    label: "Profile" },
+      { id: "03_connect",    label: "Connect Apple Health" },
+      { id: "04_priorities", label: "Priorities" },
+      { id: "05_mirror",     label: "Mirror Moment" },
+      { id: "06_promise",    label: "7-Day Promise" },
     ]},
-    { angle: "02_coach", title: "Your sleep coach in your pocket", shots: [
-      { id: "01_home",     label: "Home with morning check-in" },
-      { id: "02_action",   label: "Today's Action detail" },
-      { id: "03_sleep",    label: "Sleep Coach" },
-      { id: "04_insights", label: "Insights" },
-      { id: "05_ask",      label: "Ask Your Data" },
+    { angle: "02_today", title: "Today", shots: [
+      { id: "01_home",          label: "Home dashboard" },
+      { id: "02_home_morning",  label: "Home with morning check-in" },
+      { id: "03_todays_action", label: "Today's Action detail" },
+      { id: "04_weekly_review", label: "Weekly Review" },
+      { id: "05_health_state",  label: "Health State Timeline" },
     ]},
-    { angle: "03_clinical", title: "Clinical clarity", shots: [
-      { id: "01_live",         label: "Live tab" },
-      { id: "02_strain",       label: "Strain" },
-      { id: "03_stress",       label: "Stress Monitor" },
-      { id: "04_brain",        label: "Brain Health" },
-      { id: "05_correlations", label: "Correlations" },
+    { angle: "03_sleep", title: "Sleep", shots: [
+      { id: "01_sleep_coach", label: "Sleep Coach" },
+    ]},
+    { angle: "04_activity", title: "Activity & Strain", shots: [
+      { id: "01_live_tab", label: "Live tab" },
+      { id: "02_strain",   label: "Strain" },
+      { id: "03_stress",   label: "Stress Monitor" },
+    ]},
+    { angle: "05_recovery", title: "Recovery & Vitality", shots: [
+      { id: "01_vitality",     label: "Vitality" },
+      { id: "02_brain_health", label: "Brain Health" },
+      { id: "03_cycle",        label: "Cycle Detail" },
+    ]},
+    { angle: "06_insights", title: "Insights & Intelligence", shots: [
+      { id: "01_insights",      label: "Insights" },
+      { id: "02_correlations",  label: "Correlations" },
+      { id: "03_ask_your_data", label: "Ask Your Data" },
+      { id: "04_journal",       label: "Journal Entry" },
+    ]},
+    { angle: "07_settings", title: "Settings", shots: [
+      { id: "01_root",          label: "Settings (root)" },
+      { id: "02_notifications", label: "Notifications" },
+      { id: "03_devices",       label: "Connected Devices" },
+      { id: "04_siri",          label: "Siri & Shortcuts" },
+    ]},
+    { angle: "08_states", title: "Edge cases & states", shots: [
+      { id: "01_disclaimer",           label: "Medical Disclaimer" },
+      { id: "02_paywall",              label: "Paywall" },
+      { id: "03_pro_lock",             label: "Pro Feature Overlay" },
+      { id: "04_connect_health_empty", label: "Connect Apple Health (empty)" },
+      { id: "05_achievements",         label: "Achievements" },
+      { id: "06_explore_tab",          label: "Explore tab" },
     ]},
   ];
 
@@ -1392,9 +1423,12 @@ const ScreenshotsPage = (() => {
   function renderScreenPicker() {
     const grid = document.getElementById("ss-screens-grid");
     if (!grid) return;
+    // Apple-style: human-readable label only. Internal angle/shot ids stay in
+    // the data model (used for the captured filename + the script's --shots
+    // filter) but never surface in the UI — the user picks screens by name.
     grid.innerHTML = SHOT_CATALOG.map((group) => `
       <div class="screenshots-screens-group">
-        <div class="screenshots-screens-group-title">${UI.escapeHtml(group.title)} <span class="screenshots-angle-id">${UI.escapeHtml(group.angle)}</span></div>
+        <div class="screenshots-screens-group-title">${UI.escapeHtml(group.title)}</div>
         <div class="screenshots-screens-checks">
           ${group.shots.map((s) => {
             const value = `${group.angle}/${s.id}`;
@@ -1402,7 +1436,6 @@ const ScreenshotsPage = (() => {
               <label class="screenshots-screen-check">
                 <input type="checkbox" class="ss-screen" value="${UI.escapeHtml(value)}" checked />
                 <span class="screenshots-screen-label">${UI.escapeHtml(s.label)}</span>
-                <span class="screenshots-screen-meta">${UI.escapeHtml(s.id)}</span>
               </label>
             `;
           }).join("")}
@@ -1444,7 +1477,7 @@ const ScreenshotsPage = (() => {
       rebuildCommand();
     });
 
-    ["ss-name", "ss-overall", "ss-sleep", "ss-activity", "ss-suffix"].forEach((id) => {
+    ["ss-name", "ss-overall", "ss-sleep", "ss-activity", "ss-suffix", "ss-workers"].forEach((id) => {
       document.getElementById(id)?.addEventListener("input", rebuildCommand);
     });
     document.getElementById("ss-screens-grid")?.addEventListener("change", rebuildCommand);
@@ -1483,6 +1516,9 @@ const ScreenshotsPage = (() => {
     if (sleep)    args.push(`--override-sleep-score=${parseInt(sleep, 10) || 0}`);
     if (activity) args.push(`--override-activity-score=${parseInt(activity, 10) || 0}`);
     if (suffix)   args.push(`--folder-suffix=${suffix.replace(/[^A-Za-z0-9_-]/g, "")}`);
+
+    const workers = parseInt(document.getElementById("ss-workers")?.value || "1", 10);
+    if (workers > 1) args.push(`--workers=${Math.min(6, Math.max(1, workers))}`);
     return { args, checkedCount: checked.length };
   }
 
@@ -1562,6 +1598,9 @@ const ScreenshotsPage = (() => {
     if (sleep)    parts.push(`--override-sleep-score=${parseInt(sleep, 10) || 0}`);
     if (activity) parts.push(`--override-activity-score=${parseInt(activity, 10) || 0}`);
     if (suffix)   parts.push(`--folder-suffix=${suffix.replace(/[^A-Za-z0-9_-]/g, "")}`);
+
+    const workers = parseInt(document.getElementById("ss-workers")?.value || "1", 10);
+    if (workers > 1) parts.push(`--workers=${Math.min(6, Math.max(1, workers))}`);
 
     const cmdEl = document.getElementById("screenshots-cmd");
     const copyBtn = document.getElementById("screenshots-cmd-copy");

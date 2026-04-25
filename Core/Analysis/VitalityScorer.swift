@@ -276,6 +276,51 @@ final class VitalityScorer {
     /// Whether vitality age is fully personalized for presentation.
     var isFullyMature: Bool { personalizationProgress >= 1 }
 
+    // MARK: - Snapshot Persistence
+
+    /// UserDefaults key for the last successfully computed vitality snapshot.
+    /// Restored in `init()` so the first render after launch shows the most
+    /// recent known values instead of zeros while async refresh is in flight.
+    /// Bumped to v2 to discard any v1 snapshots that may have stored degraded
+    /// (no-data) zeros from earlier builds.
+    private static let snapshotKey = "VitalityScorer.snapshot.v2"
+
+    private struct Snapshot: Codable {
+        var vitalityAge: Int
+        var chronologicalAge: Int
+        var personalizationProgress: Double
+        var availableDays: Int
+    }
+
+    init() {
+        guard
+            let data = UserDefaults.standard.data(forKey: Self.snapshotKey),
+            let snap = try? JSONDecoder().decode(Snapshot.self, from: data)
+        else { return }
+        vitalityAge = snap.vitalityAge
+        chronologicalAge = snap.chronologicalAge
+        computedBiologicalAge = snap.vitalityAge
+        personalizationProgress = snap.personalizationProgress
+        availableDays = snap.availableDays
+        isReady = true
+    }
+
+    private func saveSnapshot() {
+        // Guard against persisting degraded values. Without a real
+        // chronological age and a non-zero vitality age, restoring this
+        // snapshot would just paint zeros on the next launch.
+        guard chronologicalAge > 0, vitalityAge > 0 else { return }
+        let snap = Snapshot(
+            vitalityAge: vitalityAge,
+            chronologicalAge: chronologicalAge,
+            personalizationProgress: personalizationProgress,
+            availableDays: availableDays
+        )
+        if let data = try? JSONEncoder().encode(snap) {
+            UserDefaults.standard.set(data, forKey: Self.snapshotKey)
+        }
+    }
+
     // MARK: - Compute
 
     /// Compute vitality age from health metric time series.
@@ -473,7 +518,11 @@ final class VitalityScorer {
             totalWeight += w
         }
 
-        // If fewer than 2 metrics available, default to chronological age
+        // If fewer than 2 metrics available, default to chronological age.
+        // Do NOT save a snapshot here — this is a degraded compute path with
+        // no real personalization. Saving would overwrite the last known good
+        // snapshot with a placeholder, so first-render after launch would
+        // show chronological age (or 0) instead of the real vitality age.
         if components.count < 2 || totalWeight <= 0 {
             computedBiologicalAge = chronologicalAge
             vitalityAge = chronologicalAge
@@ -499,6 +548,7 @@ final class VitalityScorer {
         // Compute historical trend and pace of aging
         computeHistory(from: store)
         computePaceOfAging()
+        saveSnapshot()
     }
 
     // MARK: - Top Improvement Opportunities

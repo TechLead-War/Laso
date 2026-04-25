@@ -464,6 +464,11 @@
                 <input type="text" id="ss-suffix" placeholder="optional, e.g. preview-A" maxlength="32" />
                 <div class="screenshots-form-hint">Appended to the timestamp folder name</div>
               </div>
+              <div class="screenshots-form-field">
+                <label for="ss-workers">Parallel workers</label>
+                <input type="number" id="ss-workers" min="1" max="6" value="1" />
+                <div class="screenshots-form-hint">1 = sequential. 2-4 spawns ephemeral sims for speed.</div>
+              </div>
             </div>
 
             <!-- Screens picker -->

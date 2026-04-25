@@ -16,6 +16,8 @@ enum UITestMode {
     private static let subscribedFlag = "--ui-test-subscribed"
     private static let initialTabPrefix = "--ui-test-initial-tab="
     private static let initialRoutePrefix = "--ui-test-initial-route="
+    private static let onboardingStepPrefix = "--ui-test-onboarding-step="
+    private static let settingsRoutePrefix = "--ui-test-settings-route="
     private static let overrideNamePrefix = "--ui-test-override-name="
     private static let overrideOverallScorePrefix = "--ui-test-override-overall-score="
     private static let overrideSleepScorePrefix = "--ui-test-override-sleep-score="
@@ -107,6 +109,17 @@ enum UITestMode {
         }
         return String(arg.dropFirst(initialRoutePrefix.count))
     }
+
+    /// Onboarding step the test harness wants to land on when
+    /// `--ui-test-show-onboarding` is also set. Raw value matches
+    /// `OnboardingView.OnboardingStep` cases (pulse|profile|connect|priority|mirror|promise).
+    /// Format: `--ui-test-onboarding-step=connect`
+    static var onboardingStartStep: String? { stringValue(for: onboardingStepPrefix) }
+
+    /// Settings sub-page the test harness wants pushed onto the Settings tab on
+    /// first appear so a single launch can capture e.g. NotificationsSettingsView.
+    /// Format: `--ui-test-settings-route=notifications|devices|siri`
+    static var settingsInitialRoute: String? { stringValue(for: settingsRoutePrefix) }
 
     // MARK: - Showcase value overrides
 

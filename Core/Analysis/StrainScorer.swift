@@ -100,6 +100,51 @@ final class StrainScorer {
         5: 14.0    // Max: anaerobic / sprint
     ]
 
+    // MARK: - Snapshot Persistence
+
+    /// UserDefaults key for the last successfully computed strain snapshot.
+    /// Restored in `init()` so the first render after launch shows the most
+    /// recent known strain instead of 0.0/Low while async refresh is in flight.
+    /// Bumped to v2 to discard any v1 snapshots that may have stored degraded
+    /// (no-data) zeros from earlier builds.
+    private static let snapshotKey = "StrainScorer.snapshot.v2"
+
+    private struct Snapshot: Codable {
+        var currentStrain: Double
+        var todayCalories: Double
+        var savedAt: Date
+    }
+
+    init() {
+        guard
+            let data = UserDefaults.standard.data(forKey: Self.snapshotKey),
+            let snap = try? JSONDecoder().decode(Snapshot.self, from: data)
+        else { return }
+        // Only restore if the snapshot is from today; strain is a daily metric
+        // and showing yesterday's value with today's date would mislead.
+        if Calendar.current.isDateInToday(snap.savedAt) {
+            currentStrain = snap.currentStrain
+            todayCalories = snap.todayCalories
+            isReady = true
+        }
+    }
+
+    private func saveSnapshot() {
+        // Guard against persisting degraded values. If neither calories nor
+        // strain came back from compute, the input data was empty; saving 0.0
+        // here would just paint zeros on the next launch and bury the last
+        // real snapshot.
+        guard todayCalories > 0 || currentStrain > 0 else { return }
+        let snap = Snapshot(
+            currentStrain: currentStrain,
+            todayCalories: todayCalories,
+            savedAt: Date()
+        )
+        if let data = try? JSONEncoder().encode(snap) {
+            UserDefaults.standard.set(data, forKey: Self.snapshotKey)
+        }
+    }
+
     // MARK: - Compute
 
     /// Compute strain score from HealthKit data.
@@ -186,6 +231,7 @@ final class StrainScorer {
         currentStrain = min(21.0, max(0.0, 21.0 * logNumerator / logDenominator))
 
         isReady = true
+        saveSnapshot()
 
         // Persist today's computed strain so historical displays can rely on stored snapshots.
         store.saveDailyStrain(

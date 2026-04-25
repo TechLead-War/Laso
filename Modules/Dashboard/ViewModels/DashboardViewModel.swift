@@ -564,6 +564,64 @@ final class DashboardViewModel {
         self.healthKitManager = healthKitManager
         self.analysisEngine = analysisEngine
         self.store = store
+        // Build the initial metric tiles synchronously from whatever the
+        // scorers restored from their on-disk snapshots. This way the very
+        // first frame after launch shows the last known Vitality and Strain
+        // instead of an empty strip (or zeros from a default scorer state).
+        // Sleep tile is omitted here since live sleep data isn't available
+        // until LiveViewModel populates; HomeView.onAppear rebuilds with sleep.
+        rebuildMetricTiles()
+        // If a scorer had no on-disk snapshot to restore (fresh install,
+        // app update from a build without snapshots, or expired daily Strain
+        // snapshot), compute it once synchronously from the persisted
+        // SwiftData store so the user sees real values on the very first
+        // frame instead of waiting for the async HealthKit refresh to land.
+        prewarmScorersFromStoreIfNeeded()
+    }
+
+    /// One-shot synchronous warm-up that populates every Intelligence-strip
+    /// scorer from persisted SwiftData on launch so the first frame shows
+    /// all four tiles (Vitality, Strain, Brain, Stress) together rather
+    /// than only the snapshot-restored ones with the rest popping in a
+    /// second later. Skips Vitality/Strain when their snapshots already
+    /// restored, and skips them entirely if no real chronological age is
+    /// available — we never feed engines a fabricated age.
+    @MainActor
+    private func prewarmScorersFromStoreIfNeeded() {
+        let needsVitality = !vitalityScorer.isReady
+        let needsStrain = !strainScorer.isReady
+        // Brain + Stress have no on-disk snapshot today and their tiles only
+        // appear once `currentScore` / `currentStress` is non-nil, so always
+        // run them on launch when missing.
+        let needsBrain = brainHealthScorer.currentScore == nil
+        let needsStress = stressScorer.currentStress == nil
+
+        guard needsVitality || needsStrain || needsBrain || needsStress else { return }
+
+        if needsBrain {
+            brainHealthScorer.compute(from: store, timeSeries: nil)
+        }
+        if needsStress {
+            stressScorer.compute(from: store, timeSeries: nil)
+        }
+        if let age = resolveChronologicalAge() {
+            if needsStrain {
+                strainScorer.compute(
+                    from: store,
+                    age: age,
+                    restingHR: nil,
+                    todayHRSamples: [],
+                    timeSeries: nil
+                )
+            }
+            if needsVitality {
+                vitalityScorer.compute(from: store, chronologicalAge: age, timeSeries: nil)
+            }
+        }
+        // Tiles built before prewarm reflected the empty default scorer
+        // state; rebuild now so the first rendered frame uses the freshly
+        // computed values.
+        rebuildMetricTiles()
     }
 
     /// Use results produced by onboarding calibration without re-running heavy first-load work.
@@ -1192,6 +1250,27 @@ final class DashboardViewModel {
         }
     }
 
+    // MARK: - Age Resolution
+
+    /// Return the user's chronological age from the most authoritative real
+    /// source available, in priority order: stored profile, then HealthKit.
+    /// Returns `nil` when no real DOB is available so callers can skip
+    /// age-dependent computation instead of falling back to a fake number.
+    @MainActor
+    private func resolveChronologicalAge(profile: UserProfile? = nil) -> Int? {
+        let resolvedProfile = profile ?? UserProfileStore.shared.loadLocal()
+        if let years = resolvedProfile?.ageFromDateOfBirth, years > 0 {
+            return years
+        }
+        if let dob = try? healthKitManager.healthStore.dateOfBirthComponents(),
+           let birthDate = Calendar.current.date(from: dob),
+           let years = Calendar.current.dateComponents([.year], from: birthDate, to: Date()).year,
+           years > 0 {
+            return years
+        }
+        return nil
+    }
+
     // MARK: - New Engine Computation
 
     @MainActor
@@ -1220,18 +1299,25 @@ final class DashboardViewModel {
         lastScorerDay = today
 
         let profile = UserProfileStore.shared.loadLocal()
-        let age = profile?.ageFromDateOfBirth ?? 30
+        // Resolve chronological age from real sources only — no hardcoded
+        // fallback. Profile DOB first, HealthKit DOB second. Age-dependent
+        // engines (Strain, Sleep Need, Vitality) only run when we have a
+        // real age; the others run regardless so the rest of the dashboard
+        // stays populated even when DOB is missing.
+        let resolvedAge = resolveChronologicalAge(profile: profile)
         let sleepSeries = timeSeries[.sleepDuration]
 
         // Strain. pass raw per-sample HR for accurate zone classification,
         // and in-memory time series for freshest data (avoids SwiftData read lag).
-        strainScorer.compute(
-            from: store,
-            age: age,
-            restingHR: analysisEngine.baselines[.restingHeartRate]?.mean,
-            todayHRSamples: todayRawHR,
-            timeSeries: timeSeries
-        )
+        if let age = resolvedAge {
+            strainScorer.compute(
+                from: store,
+                age: age,
+                restingHR: analysisEngine.baselines[.restingHeartRate]?.mean,
+                todayHRSamples: todayRawHR,
+                timeSeries: timeSeries
+            )
+        }
 
         // Strain Coach
         let _ = strainCoach.computeTarget(
@@ -1266,16 +1352,18 @@ final class DashboardViewModel {
             return calendar.date(bySettingHour: rec.optimalWindowEnd, minute: 0, second: 0, of: base)
         }()
 
-        let need = sleepNeedCalculator.compute(
-            from: store,
-            currentStrain: strainScorer.currentStrain,
-            sleepDebt: debtHours,
-            targetWakeTime: circadianWakeTime,
-            age: age,
-            recoveryScore: Double(scores.overallScore.score),
-            sleepSeries: sleepSeries
-        )
-        _ = need  // stored internally in sleepNeedCalculator
+        if let age = resolvedAge {
+            let need = sleepNeedCalculator.compute(
+                from: store,
+                currentStrain: strainScorer.currentStrain,
+                sleepDebt: debtHours,
+                targetWakeTime: circadianWakeTime,
+                age: age,
+                recoveryScore: Double(scores.overallScore.score),
+                sleepSeries: sleepSeries
+            )
+            _ = need  // stored internally in sleepNeedCalculator
+        }
 
         // Gamification
         let sessionDays = SessionTracker.shared.daysSinceInstall
@@ -1288,7 +1376,9 @@ final class DashboardViewModel {
         )
 
         // Vitality Age. pass in-memory timeSeries for guaranteed freshness
-        vitalityScorer.compute(from: store, chronologicalAge: age, timeSeries: timeSeries)
+        if let age = resolvedAge {
+            vitalityScorer.compute(from: store, chronologicalAge: age, timeSeries: timeSeries)
+        }
 
         // Menstrual cycle. female users + explicit onboarding opt-in.
         // Backward compatibility: if preference is absent (older installs), keep prior behavior.
@@ -1296,6 +1386,43 @@ final class DashboardViewModel {
         let cyclePreference = UserDefaults.standard.object(forKey: AppKeys.Cycle.trackingEnabled) as? Bool
         let cycleTrackingEnabled = cyclePreference ?? true
         menstrualCycleTracker.isApplicable = isFemale && cycleTrackingEnabled
+    }
+
+    // MARK: - Sleep Tile Snapshot
+
+    /// On-disk snapshot of the most recent sleep tile values. DashboardViewModel
+    /// doesn't own LiveViewModel's sleep state, so we cache the values it
+    /// provides and replay them on the next launch's first frame instead of
+    /// waiting for LiveViewModel to refetch from HealthKit.
+    private struct SleepTileSnapshot: Codable {
+        var duration: TimeInterval
+        var quality: String
+        var savedAt: Date
+    }
+
+    private static let sleepSnapshotKey = "DashboardViewModel.sleepTile.v1"
+
+    /// Persist the latest live sleep values for use on the next launch's
+    /// first frame. Skips zero-duration "no data" inputs so we never restore
+    /// an empty placeholder.
+    private static func saveSleepSnapshot(duration: TimeInterval, quality: String) {
+        guard duration > 0 else { return }
+        let snap = SleepTileSnapshot(duration: duration, quality: quality, savedAt: Date())
+        if let data = try? JSONEncoder().encode(snap) {
+            UserDefaults.standard.set(data, forKey: sleepSnapshotKey)
+        }
+    }
+
+    /// Restore the saved sleep tile values only when they're recent enough to
+    /// still represent "last night". 36h covers app launches throughout the
+    /// next day without surfacing stale multi-day-old sleep.
+    private static func loadFreshSleepSnapshot() -> SleepTileSnapshot? {
+        guard let data = UserDefaults.standard.data(forKey: sleepSnapshotKey),
+              let snap = try? JSONDecoder().decode(SleepTileSnapshot.self, from: data) else {
+            return nil
+        }
+        if Date().timeIntervalSince(snap.savedAt) > 36 * 3600 { return nil }
+        return snap
     }
 
     // MARK: - Metric Tiles Cache
@@ -1324,15 +1451,29 @@ final class DashboardViewModel {
         ))
 
         // Sleep
-        if hasSleepData {
-            let sleepHours = lastNightSleepDuration / 3600
+        // Use the live values when LiveViewModel has them, otherwise fall
+        // back to the most recent snapshot so the tile shows on the very
+        // first frame after launch instead of waiting for LiveViewModel to
+        // finish its async fetch.
+        let effectiveSleep: (duration: TimeInterval, quality: String)? = {
+            if hasSleepData {
+                Self.saveSleepSnapshot(duration: lastNightSleepDuration, quality: sleepQualityLabel)
+                return (lastNightSleepDuration, sleepQualityLabel)
+            }
+            if let snap = Self.loadFreshSleepSnapshot() {
+                return (snap.duration, snap.quality)
+            }
+            return nil
+        }()
+        if let sleep = effectiveSleep, sleep.duration > 0 {
+            let sleepHours = sleep.duration / 3600
             let h = Int(sleepHours)
             let m = Int((sleepHours - Double(h)) * 60)
             let sleepValue = h == 0 ? "\(m)m" : "\(h)h \(String(format: "%02d", m))m"
-            let sleepTileColor: Color = sleepQualityLabel == "Great" || sleepQualityLabel == "Good" ? .indigo : .orange
+            let sleepTileColor: Color = sleep.quality == "Great" || sleep.quality == "Good" ? .indigo : .orange
             tiles.append(MetricTile(
                 id: "sleep_coach", icon: "moon.fill", label: "Sleep",
-                value: sleepValue, badge: sleepQualityLabel, color: sleepTileColor, route: .sleepCoach
+                value: sleepValue, badge: sleep.quality, color: sleepTileColor, route: .sleepCoach
             ))
         }
 

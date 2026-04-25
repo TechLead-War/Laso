@@ -72,8 +72,18 @@ struct SettingsView: View {
 
     // MARK: - Body
 
+    /// Identifies the deep-linkable Settings sub-screens. Used by UI-test launch
+    /// flag (`--ui-test-settings-route=`) to push directly into a sub-page.
+    enum SettingsRoute: String, Hashable {
+        case notifications
+        case devices
+        case siri
+    }
+
+    @State private var deepLinkPath: [SettingsRoute] = []
+
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $deepLinkPath) {
             Form {
                 profileSection
                 dataSection
@@ -87,9 +97,34 @@ struct SettingsView: View {
             .accessibilityIdentifier("screen.settings")
             .navigationTitle(Copy.Settings.settings)
             .navigationBarTitleDisplayMode(.large)
+            .navigationDestination(for: SettingsRoute.self) { route in
+                switch route {
+                case .notifications:
+                    NotificationsSettingsView(
+                        preferences: $preferences,
+                        hasAppleWatchSource: hasAppleWatchSource
+                    )
+                case .devices:
+                    ConnectedDevicesView(
+                        viewModel: ConnectedDevicesViewModel(
+                            deviceSourceManager: deviceSourceManager,
+                            healthKitManager: healthKitManager
+                        )
+                    )
+                case .siri:
+                    siriDetailView
+                }
+            }
             .onAppear {
                 AppAnalytics.shared.trackFeatureOpen(.settings)
                 AppAnalytics.shared.trackActivationMilestone(.firstSettingsVisit)
+                // UI-test deep-link: push the requested sub-page on first appear.
+                if UITestMode.isEnabled,
+                   let raw = UITestMode.settingsInitialRoute,
+                   let route = SettingsRoute(rawValue: raw),
+                   deepLinkPath.isEmpty {
+                    deepLinkPath = [route]
+                }
             }
             .task {
                 guard healthKitManager.isAuthorized,

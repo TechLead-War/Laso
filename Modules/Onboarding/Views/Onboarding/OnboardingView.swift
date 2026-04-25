@@ -100,6 +100,13 @@ struct OnboardingView: View {
             onboardingStartDate = Date()
             stepStartDate = Date()
             AppAnalytics.shared.trackFeatureOpen(.onboarding)
+            // UI-test deep-link: jump to the requested onboarding step on first
+            // appear so each step can be screenshotted in a single launch.
+            if UITestMode.isEnabled,
+               let raw = UITestMode.onboardingStartStep,
+               let step = OnboardingStep(rawValue: raw) {
+                currentStep = step
+            }
         }
         .onChange(of: currentStep) { oldStep, newStep in
             guard oldStep != newStep else { return }
