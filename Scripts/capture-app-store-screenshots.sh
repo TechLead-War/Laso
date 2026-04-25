@@ -225,10 +225,13 @@ for shot in "${SHOTS[@]}"; do
   read -r -a EXTRA_ARR <<< "$extras"
   echo "▶ [$i/$SHOT_COUNT] $angle/$filename ← ${EXTRA_ARR[*]}"
 
+  # `${arr[@]+"${arr[@]}"}` is the bash-portable way to expand an array's
+  # elements when set, or nothing when empty — keeps `set -u` happy on the
+  # nights where the user passes no overrides / no extras.
   xcrun simctl launch "$SIM_UDID" "$APP_BUNDLE_ID" \
     "${COMMON_FLAGS[@]}" \
-    "${IOS_OVERRIDES[@]}" \
-    "${EXTRA_ARR[@]}" > /dev/null
+    ${IOS_OVERRIDES[@]+"${IOS_OVERRIDES[@]}"} \
+    ${EXTRA_ARR[@]+"${EXTRA_ARR[@]}"} > /dev/null
 
   sleep "$SHOT_SLEEP"
 
