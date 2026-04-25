@@ -113,7 +113,23 @@ struct VitalityHeroSection: View {
         }
         .padding(DS.cardPadding)
         .frame(maxWidth: .infinity)
-        .background(AppColour.surfaceOverlay.opacity(0.95), in: RoundedRectangle(cornerRadius: DS.cardRadius, style: .continuous))
+        // Pure-black base lets the OrganicParticleOrbView pop, plus a soft
+        // radial pace-tint glow at the edges so the card feels lit, not pale.
+        .background(
+            RoundedRectangle(cornerRadius: DS.cardRadius, style: .continuous)
+                .fill(Color.black)
+                .overlay(
+                    RoundedRectangle(cornerRadius: DS.cardRadius, style: .continuous)
+                        .fill(
+                            RadialGradient(
+                                colors: [Color.clear, paceTint.opacity(0.20)],
+                                center: .center,
+                                startRadius: 60,
+                                endRadius: 320
+                            )
+                        )
+                )
+        )
         .overlay(
             RoundedRectangle(cornerRadius: DS.cardRadius, style: .continuous)
                 .strokeBorder(paceTint.opacity(0.42), lineWidth: 1)

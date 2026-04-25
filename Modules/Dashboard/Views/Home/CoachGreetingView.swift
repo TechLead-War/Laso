@@ -1,45 +1,22 @@
 import SwiftUI
 
-/// Compact greeting header. Shows the time-of-day kicker, the date row, and an
-/// ellipsis menu for the score guide. No streak, no prescription — Home keeps
-/// the recovery card as the single content hero.
+/// Compact greeting header. Time-of-day kicker + date row only. No streak,
+/// no prescription, no overflow menu — the recovery card is Home's single
+/// content hero, and the score guide opens from tapping the card itself.
 struct CoachGreetingView: View {
-    var onTapScoreInfo: (() -> Void)? = nil
-
     var body: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(compactGreetingLine)
-                    .font(DS.Typography.captionSemibold)
-                    .tracking(0.8)
-                    .foregroundStyle(AppColour.textTertiary)
+        VStack(alignment: .leading, spacing: 3) {
+            Text(compactGreetingLine)
+                .font(DS.Typography.captionSemibold)
+                .tracking(0.8)
+                .foregroundStyle(AppColour.textTertiary)
 
-                Text(compactDateLine)
-                    .font(DS.Typography.caption)
-                    .tracking(0.8)
-                    .foregroundStyle(AppColour.textTertiary)
-            }
-
-            Spacer()
-
-            if onTapScoreInfo != nil {
-                Button {
-                    onTapScoreInfo?()
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(DS.Typography.callout)
-                        .foregroundStyle(.secondary)
-                        .frame(width: 36, height: 36)
-                        .overlay(
-                            Circle()
-                                .strokeBorder(.primary.opacity(0.14), lineWidth: 1)
-                        )
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Score guide")
-                .accessibilityHint("Opens score breakdown")
-            }
+            Text(compactDateLine)
+                .font(DS.Typography.caption)
+                .tracking(0.8)
+                .foregroundStyle(AppColour.textTertiary)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, DS.screenPadding)
         .padding(.top, 2)
     }
@@ -105,7 +82,7 @@ struct CoachGreetingView: View {
 
 #Preview {
     VStack(spacing: 20) {
-        CoachGreetingView(onTapScoreInfo: {})
+        CoachGreetingView()
         Divider()
         CoachGreetingView()
     }

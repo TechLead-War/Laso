@@ -232,9 +232,7 @@ struct HomeView: View {
         ScrollView(.vertical) {
             LazyVStack(spacing: DS.itemSpacing) {
                 // 1. Greeting header. context-aware with recovery state
-                CoachGreetingView(
-                    onTapScoreInfo: { showScoreGuide = true }
-                )
+                CoachGreetingView()
                 .padding(.top, DS.space1)
 
                 if shouldShowEmptyState {
