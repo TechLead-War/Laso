@@ -470,7 +470,7 @@ final class TodayIntelligenceEngine {
 
         // Find the most stressed system
         let sortedSystems = systemScores.sorted { $0.score > $1.score }
-        let worstSystem = sortedSystems.first!
+        guard let worstSystem = sortedSystems.first else { return nil }
 
         let severity: IntelligenceCard.CardSeverity
         let color: IntelligenceCard.AccentColor
@@ -1077,11 +1077,18 @@ final class TodayIntelligenceEngine {
         return String(format: "%d:%02d %@", h12, m, ampm)
     }
 
+    /// Cached short-date formatter. Performance Pass 2: today-intelligence runs
+    /// on every dashboard refresh, so avoid per-call DateFormatter allocation.
+    private static let shortDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "MMM d"
+        return f
+    }()
+
     /// Short date string: "Mar 3" format.
     private func shortDateString(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        return formatter.string(from: date)
+        Self.shortDateFormatter.string(from: date)
     }
 
     /// Day name from weekday number (1=Sun, 7=Sat).

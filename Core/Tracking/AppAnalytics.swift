@@ -354,6 +354,14 @@ final class AppAnalytics {
     private let session = SessionTracker.shared
     private let defaults = UserDefaults.standard
 
+    /// Cached app version string. Performance Pass 2: `Bundle.main.infoDictionary`
+    /// was being read on every analytics event. The marketing version is fixed
+    /// for the lifetime of the running process, so cache it once at startup.
+    private static let cachedAppVersion: String = {
+        let info = Bundle.main.infoDictionary
+        return (info?["CFBundleShortVersionString"] as? String) ?? "unknown"
+    }()
+
     private var openTimestamps: [AppFeature: Date] = [:]
     private var streamingStartDate: Date?
     private enum Key {
@@ -422,7 +430,7 @@ final class AppAnalytics {
         props["os_version"] = UIDevice.current.systemVersion
 
         // App version
-        props["app_version"] = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
+        props["app_version"] = Self.cachedAppVersion
 
         // Accessibility settings
         props["uses_voiceover"] = UIAccessibility.isVoiceOverRunning ? "yes" : "no"
@@ -712,7 +720,7 @@ final class AppAnalytics {
             "day_of_week": dayNames[weekday],
             "streak_days": session.streakDays,
             "session_source": session.currentSessionSource.rawValue,
-            "app_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown",
+            "app_version": Self.cachedAppVersion,
             "days_since_install": session.daysSinceInstall,
             "weekly_active_days": session.weeklyActiveDays,
             "network_type": networkType,
@@ -1718,7 +1726,7 @@ final class AppAnalytics {
         logEvent("daily_active", parameters: [
             "session_source": session.currentSessionSource.rawValue,
             "weekly_active_days": session.weeklyActiveDays,
-            "app_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
+            "app_version": Self.cachedAppVersion
         ])
     }
 
@@ -3139,7 +3147,7 @@ final class AppAnalytics {
             enriched["organic_session_pct"] = session.organicSessionPercent
         }
         if enriched["app_version"] == nil {
-            enriched["app_version"] = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
+            enriched["app_version"] = Self.cachedAppVersion
         }
         if enriched["subscription_status"] == nil {
             enriched["subscription_status"] = defaults.string(forKey: Key.lastKnownStatus) ?? "unknown"

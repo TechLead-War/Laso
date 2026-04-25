@@ -278,6 +278,12 @@ final class VitalityScorer {
 
     // MARK: - Snapshot Persistence
 
+    // Performance Pass 2 hot-path caches: avoid per-call allocations for the
+    // snapshot save/restore round trip and any calendar component reads below.
+    private static let cal: Calendar = Calendar.current
+    private static let jsonEncoder: JSONEncoder = JSONEncoder()
+    private static let jsonDecoder: JSONDecoder = JSONDecoder()
+
     /// UserDefaults key for the last successfully computed vitality snapshot.
     /// Restored in `init()` so the first render after launch shows the most
     /// recent known values instead of zeros while async refresh is in flight.
@@ -295,7 +301,7 @@ final class VitalityScorer {
     init() {
         guard
             let data = UserDefaults.standard.data(forKey: Self.snapshotKey),
-            let snap = try? JSONDecoder().decode(Snapshot.self, from: data)
+            let snap = try? Self.jsonDecoder.decode(Snapshot.self, from: data)
         else { return }
         vitalityAge = snap.vitalityAge
         chronologicalAge = snap.chronologicalAge
@@ -316,7 +322,7 @@ final class VitalityScorer {
             personalizationProgress: personalizationProgress,
             availableDays: availableDays
         )
-        if let data = try? JSONEncoder().encode(snap) {
+        if let data = try? Self.jsonEncoder.encode(snap) {
             UserDefaults.standard.set(data, forKey: Self.snapshotKey)
         }
     }
@@ -703,7 +709,7 @@ final class VitalityScorer {
 
         let earlyDate = earlySlice.first!.date
         let lateDate = lateSlice.last!.date
-        let calendarDays = Calendar.current.dateComponents([.day], from: earlyDate, to: lateDate).day ?? 1
+        let calendarDays = Self.cal.dateComponents([.day], from: earlyDate, to: lateDate).day ?? 1
         let calendarYears = Double(max(calendarDays, 1)) / 365.25
 
         if calendarYears > 0 {

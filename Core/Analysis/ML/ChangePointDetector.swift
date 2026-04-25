@@ -482,10 +482,17 @@ final class ChangePointDetector {
         return desc
     }
 
-    private func fmtDate(_ date: Date) -> String {
+    /// Cached short-date formatter. Performance Pass 2: avoids per-call allocation
+    /// when describing change points across many metrics.
+    private static let shortDateFormatter: DateFormatter = {
         let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
         f.dateFormat = "MMM d"
-        return f.string(from: date)
+        return f
+    }()
+
+    private func fmtDate(_ date: Date) -> String {
+        Self.shortDateFormatter.string(from: date)
     }
 
     // MARK: - Query API

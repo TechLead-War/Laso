@@ -60,6 +60,15 @@ final class SleepNeedCalculator {
 
     private static let minimumDaysRequired = 7
     private static let baselineWindowDays = 30
+
+    // Performance Pass 2: cache the bedtime formatter so the computed property
+    // does not allocate a fresh DateFormatter on every Sleep tile render.
+    private static let bedtimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "h:mm a"
+        return f
+    }()
     private static let wakeTimeWindowDays = 14
 
     // Hard bounds (science-backed: NSF, AASM, Cappuccio 2010)
@@ -168,9 +177,7 @@ final class SleepNeedCalculator {
 
     var formattedBedtime: String? {
         guard let bedtime = currentNeed?.recommendedBedtime else { return nil }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "h:mm a"
-        return formatter.string(from: bedtime)
+        return Self.bedtimeFormatter.string(from: bedtime)
     }
 
     var formattedNeed: String {
@@ -220,7 +227,9 @@ final class SleepNeedCalculator {
         let avgMinute = Int(avgMinutes) % 60
 
         // Project to tomorrow
-        let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: Date()))!
+        guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: Date())) else {
+            return nil
+        }
         return calendar.date(bySettingHour: avgHour, minute: avgMinute, second: 0, of: tomorrow)
     }
 

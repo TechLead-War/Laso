@@ -15,6 +15,15 @@ enum WakeUpTimeDetector {
     /// Number of days to look back for sleep data.
     private static let lookbackDays = 14
 
+    /// Cached "yyyy-MM-dd" formatter. Performance Pass 2: avoids reallocating
+    /// inside the per-sample loop below.
+    private static let dayKeyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
     /// Detect the user's typical wake-up time from recent sleep sessions.
     /// Returns `(hour, minute)` or `nil` if insufficient data.
     static func detect(healthStore: HKHealthStore) async -> (hour: Int, minute: Int)? {
@@ -46,8 +55,7 @@ enum WakeUpTimeDetector {
                 // Group samples into sleep sessions by date.
                 // For each calendar day, find the latest wake-up time (end of last sleep stage).
                 var wakeUpTimesByDay: [String: Date] = [:]
-                let formatter = DateFormatter()
-                formatter.dateFormat = "yyyy-MM-dd"
+                let formatter = dayKeyFormatter
 
                 for sample in samples {
                     // Only consider actual sleep stages (not inBed/awake)

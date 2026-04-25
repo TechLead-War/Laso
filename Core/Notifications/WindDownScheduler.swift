@@ -88,9 +88,16 @@ struct WindDownScheduler {
         NotificationManager.shared.cancelNotification(identifier: identifier)
     }
 
+    /// Cached "h:mm a" formatter. Performance Pass 2: scheduling runs every
+    /// time HealthKit data refreshes, so avoid per-call DateFormatter alloc.
+    private static let bedtimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "h:mm a"
+        return f
+    }()
+
     private static func formatBedtime(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "h:mm a"
-        return formatter.string(from: date)
+        bedtimeFormatter.string(from: date)
     }
 }

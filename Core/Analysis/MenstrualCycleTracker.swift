@@ -138,6 +138,12 @@ final class MenstrualCycleTracker {
     /// Cycle phase changes daily, so anything older than ~1.5 days is unsafe to show.
     private static let snapshotMaxAge: TimeInterval = 36 * 60 * 60
 
+    // Performance Pass 2 hot-path caches: the cycle compute path runs every
+    // dashboard refresh and walks a year of bleeding samples in a tight loop.
+    private static let cal: Calendar = Calendar.current
+    private static let jsonEncoder: JSONEncoder = JSONEncoder()
+    private static let jsonDecoder: JSONDecoder = JSONDecoder()
+
     private struct Snapshot: Codable {
         var currentPhase: String
         var dayInCycle: Int
@@ -152,7 +158,7 @@ final class MenstrualCycleTracker {
     init() {
         guard
             let data = UserDefaults.standard.data(forKey: Self.snapshotKey),
-            let snap = try? JSONDecoder().decode(Snapshot.self, from: data)
+            let snap = try? Self.jsonDecoder.decode(Snapshot.self, from: data)
         else { return }
         // Discard stale snapshots: cycle phase moves daily, so showing
         // a week-old phase would mislead the user.
@@ -184,7 +190,7 @@ final class MenstrualCycleTracker {
             phaseProgress: cycle.phaseProgress,
             savedAt: Date()
         )
-        if let data = try? JSONEncoder().encode(snap) {
+        if let data = try? Self.jsonEncoder.encode(snap) {
             UserDefaults.standard.set(data, forKey: Self.snapshotKey)
         }
     }
@@ -238,7 +244,7 @@ final class MenstrualCycleTracker {
         }
 
         // Build cycle history from consecutive starts.
-        let calendar = Calendar.current
+        let calendar = Self.cal
         var history: [(startDate: Date, length: Int)] = []
         for i in 0..<(cycleStarts.count - 1) {
             let length = calendar.dateComponents([.day], from: cycleStarts[i], to: cycleStarts[i + 1]).day ?? 28
@@ -258,7 +264,11 @@ final class MenstrualCycleTracker {
         }
 
         // Determine current day in cycle.
-        let lastStart = cycleStarts.last!
+        guard let lastStart = cycleStarts.last else {
+            currentCycle = nil
+            cycleHistory = []
+            return
+        }
         let daysSinceLastStart = calendar.dateComponents([.day], from: lastStart, to: Date()).day ?? 0
         // Clamp to 1: a future-dated period log would otherwise yield 0/negative,
         // fall through phaseForDay's switch, and silently land in .luteal.
@@ -320,7 +330,7 @@ final class MenstrualCycleTracker {
 
     /// Estimate the start date of the next period.
     func estimateNextPeriod(lastStart: Date, averageLength: Int) -> Date {
-        Calendar.current.date(byAdding: .day, value: averageLength, to: lastStart) ?? lastStart
+        Self.cal.date(byAdding: .day, value: averageLength, to: lastStart) ?? lastStart
     }
 
     // MARK: - Private
@@ -332,7 +342,7 @@ final class MenstrualCycleTracker {
     private func identifyCycleStarts(from sortedBleedingDays: [Date]) -> [Date] {
         guard let first = sortedBleedingDays.first else { return [] }
         var starts: [Date] = [first]
-        let calendar = Calendar.current
+        let calendar = Self.cal
 
         for day in sortedBleedingDays.dropFirst() {
             guard let lastStart = starts.last else { continue }

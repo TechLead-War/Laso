@@ -100,6 +100,14 @@ final class StrainScorer {
         5: 14.0    // Max: anaerobic / sprint
     ]
 
+    // Performance Pass 2 hot-path caches: avoid per-compute allocations.
+    // StrainScorer.compute runs on every Dashboard refresh; both the calendar
+    // and JSON coders are cheap to instantiate but allocating per call adds up
+    // over thousands of refreshes.
+    private static let cal: Calendar = Calendar.current
+    private static let jsonEncoder: JSONEncoder = JSONEncoder()
+    private static let jsonDecoder: JSONDecoder = JSONDecoder()
+
     // MARK: - Snapshot Persistence
 
     /// UserDefaults key for the last successfully computed strain snapshot.
@@ -118,11 +126,11 @@ final class StrainScorer {
     init() {
         guard
             let data = UserDefaults.standard.data(forKey: Self.snapshotKey),
-            let snap = try? JSONDecoder().decode(Snapshot.self, from: data)
+            let snap = try? Self.jsonDecoder.decode(Snapshot.self, from: data)
         else { return }
         // Only restore if the snapshot is from today; strain is a daily metric
         // and showing yesterday's value with today's date would mislead.
-        if Calendar.current.isDateInToday(snap.savedAt) {
+        if Self.cal.isDateInToday(snap.savedAt) {
             currentStrain = snap.currentStrain
             todayCalories = snap.todayCalories
             isReady = true
@@ -140,7 +148,7 @@ final class StrainScorer {
             todayCalories: todayCalories,
             savedAt: Date()
         )
-        if let data = try? JSONEncoder().encode(snap) {
+        if let data = try? Self.jsonEncoder.encode(snap) {
             UserDefaults.standard.set(data, forKey: Self.snapshotKey)
         }
     }
@@ -280,8 +288,7 @@ final class StrainScorer {
         let historicalSamples = series.samples(lastDays: 28)
 
         // Exclude today's samples
-        let calendar = Calendar.current
-        let todayStart = calendar.startOfDay(for: Date())
+        let todayStart = Self.cal.startOfDay(for: Date())
         let pastSamples = historicalSamples.filter { $0.date < todayStart }
 
         guard pastSamples.count >= 5 else { return 400.0 }
@@ -289,7 +296,7 @@ final class StrainScorer {
         // Group by day, take daily totals, then average
         var dailyTotals: [Date: Double] = [:]
         for sample in pastSamples {
-            let day = calendar.startOfDay(for: sample.date)
+            let day = Self.cal.startOfDay(for: sample.date)
             dailyTotals[day, default: 0] += sample.value
         }
 
@@ -385,7 +392,7 @@ final class StrainScorer {
         maxHR: Double,
         calorieBaseline: Double
     ) {
-        let calendar = Calendar.current
+        let calendar = Self.cal
         let today = calendar.startOfDay(for: Date())
         let lookbackDays = 7
         var history: [(date: Date, strain: Double)] = []
@@ -432,7 +439,7 @@ final class StrainScorer {
         maxHR: Double,
         calorieBaseline: Double
     ) -> Double {
-        let nextDate = Calendar.current.date(byAdding: .day, value: 1, to: targetDate) ?? targetDate
+        let nextDate = Self.cal.date(byAdding: .day, value: 1, to: targetDate) ?? targetDate
 
         let dayCals = sumSamples(allSeries[.activeCalories], from: targetDate, to: nextDate)
         let dayExercise = sumSamples(allSeries[.exerciseMinutes], from: targetDate, to: nextDate)

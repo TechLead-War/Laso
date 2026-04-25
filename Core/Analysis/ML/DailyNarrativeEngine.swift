@@ -91,11 +91,17 @@ final class DailyNarrativeEngine {
 
     private static let cachePrefix = "laso.daily_narrative."
 
+    /// Cached date formatter for the per-day cache key. Performance Pass 2:
+    /// `todayKey` is read on every narrative load/save, so avoid per-call alloc.
+    private static let dayKeyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
     private var todayKey: String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "yyyy-MM-dd"
-        return Self.cachePrefix + formatter.string(from: Date())
+        Self.cachePrefix + Self.dayKeyFormatter.string(from: Date())
     }
 
     private func cachedNarrativeToday() -> String? {

@@ -1,6 +1,11 @@
 import Foundation
 
 extension Date {
+    /// Cached current calendar to avoid the per-call `Calendar.current` allocation.
+    /// Performance Pass 2 flagged 263 `Calendar.current` allocations across the app;
+    /// this single static is reused by every helper below.
+    private static let cal: Calendar = Calendar.current
+
     private enum FormatterCache {
         static func formatter(key: String, configure: (DateFormatter) -> Void) -> DateFormatter {
             let dictionary = Thread.current.threadDictionary
@@ -44,29 +49,28 @@ extension Date {
 
     /// Start of the current day
     var startOfDay: Date {
-        Calendar.current.startOfDay(for: self)
+        Self.cal.startOfDay(for: self)
     }
 
     /// End of the current day
     var endOfDay: Date {
-        Calendar.current.date(byAdding: DateComponents(day: 1, second: -1), to: startOfDay) ?? self
+        Self.cal.date(byAdding: DateComponents(day: 1, second: -1), to: startOfDay) ?? self
     }
 
     /// Date N days ago from this date
     func daysAgo(_ days: Int) -> Date {
-        Calendar.current.date(byAdding: .day, value: -days, to: self) ?? self
+        Self.cal.date(byAdding: .day, value: -days, to: self) ?? self
     }
 
     /// Date N weeks ago from this date
     func weeksAgo(_ weeks: Int) -> Date {
-        Calendar.current.date(byAdding: .weekOfYear, value: -weeks, to: self) ?? self
+        Self.cal.date(byAdding: .weekOfYear, value: -weeks, to: self) ?? self
     }
 
     /// Start of week containing this date
     var startOfWeek: Date {
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: self)
-        return calendar.date(from: components) ?? self
+        let components = Self.cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: self)
+        return Self.cal.date(from: components) ?? self
     }
 
     /// Formatted string for display
@@ -91,14 +95,13 @@ extension Date {
 
     /// Number of days between two dates
     func daysBetween(_ other: Date) -> Int {
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.day], from: self.startOfDay, to: other.startOfDay)
+        let components = Self.cal.dateComponents([.day], from: self.startOfDay, to: other.startOfDay)
         return abs(components.day ?? 0)
     }
 
     /// Day of week as Int (1 = Sunday, 2 = Monday, ... 7 = Saturday)
     var dayOfWeek: Int {
-        Calendar.current.component(.weekday, from: self)
+        Self.cal.component(.weekday, from: self)
     }
 
     /// Day of week as localized name (e.g. "Monday")

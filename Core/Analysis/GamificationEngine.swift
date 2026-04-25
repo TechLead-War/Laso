@@ -269,6 +269,15 @@ final class GamificationEngine {
         return f
     }()
 
+    /// Cached year-month formatter (UTC) for marathon-month detection. Performance Pass 2:
+    /// avoids allocating a DateFormatter on every gamification recompute.
+    private static let monthFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM"
+        f.timeZone = TimeZone(identifier: "UTC")
+        return f
+    }()
+
     // MARK: - Streak Computation
 
     private func computeStreaks(
@@ -884,11 +893,9 @@ final class GamificationEngine {
     /// Check if any calendar month has total steps > 300K.
     private static func hasMarathonMonth(stepsByDay: [String: Double], calendar: Calendar, today: Date) -> Bool {
         let formatter = dayFormatter
+        let monthFormatter = Self.monthFormatter
         // Group steps by year-month
         var monthlyTotals: [String: Double] = [:]
-        let monthFormatter = DateFormatter()
-        monthFormatter.dateFormat = "yyyy-MM"
-        monthFormatter.timeZone = TimeZone(identifier: "UTC")
 
         for (key, value) in stepsByDay {
             guard let date = formatter.date(from: key) else { continue }
