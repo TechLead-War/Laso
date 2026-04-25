@@ -50,6 +50,14 @@ final class HealthKitManager {
     struct SleepSessionBoundary: Sendable {
         let bedtime: Date
         let wakeTime: Date
+        /// Sum of `asleepCore` + `asleepUnspecified` samples within the session, in hours.
+        let coreHours: Double
+        /// Sum of `asleepDeep` samples within the session, in hours.
+        let deepHours: Double
+        /// Sum of `asleepREM` samples within the session, in hours.
+        let remHours: Double
+        /// Time inside the bedtime…wakeTime window not classified as any asleep stage.
+        let awakeHours: Double
     }
     var sleepSessionBoundaries: [Date: SleepSessionBoundary] = [:]
 
@@ -773,12 +781,14 @@ final class HealthKitManager {
                     .filter { asleepStageValues.contains($0.value) }
                     .sorted { $0.startDate < $1.startDate }
 
-                // Group contiguous asleep segments into sessions. A gap > 60 min
-                // means a new session — brief overnight wakeups (a few mins to
-                // ~30 min) stay inside the same session, preserving true bedtime.
+                // Group contiguous asleep segments into sessions, retaining the
+                // raw samples per session so we can later attribute time to each
+                // stage. A gap > 60 min between asleep samples splits sessions —
+                // brief wakeups stay inside the same session, preserving bedtime.
                 struct SleepSession {
                     var start: Date
                     var end: Date
+                    var samples: [HKCategorySample]
                 }
                 var sessions: [SleepSession] = []
                 let gapThreshold: TimeInterval = 60 * 60
@@ -786,10 +796,45 @@ final class HealthKitManager {
                     if var last = sessions.last,
                        sample.startDate.timeIntervalSince(last.end) <= gapThreshold {
                         if sample.endDate > last.end { last.end = sample.endDate }
+                        last.samples.append(sample)
                         sessions[sessions.count - 1] = last
                     } else {
-                        sessions.append(SleepSession(start: sample.startDate, end: sample.endDate))
+                        sessions.append(SleepSession(start: sample.startDate, end: sample.endDate, samples: [sample]))
                     }
+                }
+
+                /// Builds a SleepSessionBoundary by attributing each stage sample's
+                /// duration to its category, then deriving awake time from the rest
+                /// of the bedtime…wakeTime window.
+                func buildBoundary(for session: SleepSession) -> SleepSessionBoundary {
+                    var coreSec: TimeInterval = 0
+                    var deepSec: TimeInterval = 0
+                    var remSec: TimeInterval = 0
+                    for sample in session.samples {
+                        let dur = sample.endDate.timeIntervalSince(sample.startDate)
+                        switch sample.value {
+                        case HKCategoryValueSleepAnalysis.asleepDeep.rawValue:
+                            deepSec += dur
+                        case HKCategoryValueSleepAnalysis.asleepREM.rawValue:
+                            remSec += dur
+                        case HKCategoryValueSleepAnalysis.asleepCore.rawValue,
+                             HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue:
+                            coreSec += dur
+                        default:
+                            break
+                        }
+                    }
+                    let totalSec = session.end.timeIntervalSince(session.start)
+                    let asleepSec = coreSec + deepSec + remSec
+                    let awakeSec = max(0, totalSec - asleepSec)
+                    return SleepSessionBoundary(
+                        bedtime: session.start,
+                        wakeTime: session.end,
+                        coreHours: coreSec / 3600.0,
+                        deepHours: deepSec / 3600.0,
+                        remHours: remSec / 3600.0,
+                        awakeHours: awakeSec / 3600.0
+                    )
                 }
 
                 // Keep only "overnight" sessions: end in 4 AM–noon and last ≥ 2 h.
@@ -802,14 +847,15 @@ final class HealthKitManager {
                     let durationHours = session.end.timeIntervalSince(session.start) / 3600.0
                     guard durationHours >= 2 else { continue }
                     let day = session.end.startOfDay
+                    let candidate = buildBoundary(for: session)
                     if let existing = dict[day] {
                         let existingDur = existing.wakeTime.timeIntervalSince(existing.bedtime)
                         let newDur = session.end.timeIntervalSince(session.start)
                         if newDur > existingDur {
-                            dict[day] = SleepSessionBoundary(bedtime: session.start, wakeTime: session.end)
+                            dict[day] = candidate
                         }
                     } else {
-                        dict[day] = SleepSessionBoundary(bedtime: session.start, wakeTime: session.end)
+                        dict[day] = candidate
                     }
                 }
                 continuation.resume(returning: dict)

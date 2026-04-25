@@ -263,28 +263,44 @@ final class StressScorer {
 
     /// Get the most recent daily average value from a time series
     private func mostRecentDailyValue(_ series: MetricTimeSeries) -> Double? {
-        let recent = series.samples(lastDays: 2)
-        guard !recent.isEmpty else { return nil }
-        return recent.last?.value
+        mostRecentDailyMean(series.samples(lastDays: 2))
     }
 
     /// Get the current heart rate, preferring resting HR, falling back to general HR
     private func currentHeartRateValue(_ allSeries: [HealthMetric: MetricTimeSeries]) -> Double? {
         // Prefer resting heart rate as it is less noisy
-        if let rhrSeries = allSeries[.restingHeartRate] {
-            let recent = rhrSeries.samples(lastDays: 2)
-            if let last = recent.last {
-                return last.value
-            }
+        if let rhrSeries = allSeries[.restingHeartRate],
+           let mean = mostRecentDailyMean(rhrSeries.samples(lastDays: 2)) {
+            return mean
         }
         // Fall back to general heart rate
-        if let hrSeries = allSeries[.heartRate] {
-            let recent = hrSeries.samples(lastDays: 2)
-            if let last = recent.last {
-                return last.value
-            }
+        if let hrSeries = allSeries[.heartRate],
+           let mean = mostRecentDailyMean(hrSeries.samples(lastDays: 2)) {
+            return mean
         }
         return nil
+    }
+
+    /// Aggregate samples by calendar day and return the most recent day's mean.
+    /// Avoids the single-sample noise that caused the score to clip to 0 when one
+    /// raw reading happened to land at or above the 14-day baseline mean.
+    private func mostRecentDailyMean(_ samples: [MetricSample]) -> Double? {
+        guard !samples.isEmpty else { return nil }
+        let calendar = Calendar.current
+        var byDay: [Date: (sum: Double, count: Int)] = [:]
+        for sample in samples {
+            let day = calendar.startOfDay(for: sample.date)
+            if var existing = byDay[day] {
+                existing.sum += sample.value
+                existing.count += 1
+                byDay[day] = existing
+            } else {
+                byDay[day] = (sum: sample.value, count: 1)
+            }
+        }
+        guard let latestDay = byDay.keys.max(),
+              let agg = byDay[latestDay], agg.count > 0 else { return nil }
+        return agg.sum / Double(agg.count)
     }
 
     /// Compute the stress score from current values and baselines

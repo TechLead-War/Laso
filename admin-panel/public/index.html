@@ -53,6 +53,9 @@
         <a class="nav-item" href="#audit" data-page="audit">
           <span class="nav-icon">&#9998;</span> Audit Log
         </a>
+        <a class="nav-item" href="#screenshots" data-page="screenshots">
+          <span class="nav-icon">&#9636;</span> App Screenshots
+        </a>
       </div>
 
       <div class="sidebar-footer">
@@ -416,6 +419,107 @@
         </div>
       </div>
 
+      <!-- ═══ Page: App Screenshots ═══ -->
+      <div class="page" id="page-screenshots">
+        <div class="page-header">
+          <h1>App Screenshots</h1>
+          <span class="page-subtitle">Premium-showcase captures for the App Store, organised by date and marketing angle</span>
+        </div>
+
+        <!-- Generate a fresh set (customisable) -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Generate a fresh set</h2>
+          </div>
+          <div class="card-body">
+            <p class="card-hint">
+              Pick the screens you want, optionally tweak the visible scores and profile name, then copy the
+              generated command. Run it from the repo root in Terminal. The page auto-refreshes when you return.
+            </p>
+
+            <!-- Profile + value overrides -->
+            <div class="screenshots-form-grid">
+              <div class="screenshots-form-field">
+                <label for="ss-name">Profile name</label>
+                <input type="text" id="ss-name" placeholder="Alex Taylor" maxlength="40" />
+                <div class="screenshots-form-hint">Default: Alex Taylor</div>
+              </div>
+              <div class="screenshots-form-field">
+                <label for="ss-overall">Overall score</label>
+                <input type="number" id="ss-overall" min="0" max="100" placeholder="92" />
+                <div class="screenshots-form-hint">Big hero number on Home (0 to 100)</div>
+              </div>
+              <div class="screenshots-form-field">
+                <label for="ss-sleep">Sleep score</label>
+                <input type="number" id="ss-sleep" min="0" max="100" placeholder="92" />
+                <div class="screenshots-form-hint">Sleep category card (0 to 100)</div>
+              </div>
+              <div class="screenshots-form-field">
+                <label for="ss-activity">Activity score</label>
+                <input type="number" id="ss-activity" min="0" max="100" placeholder="94" />
+                <div class="screenshots-form-hint">Activity category card (0 to 100)</div>
+              </div>
+              <div class="screenshots-form-field">
+                <label for="ss-suffix">Folder suffix</label>
+                <input type="text" id="ss-suffix" placeholder="optional, e.g. preview-A" maxlength="32" />
+                <div class="screenshots-form-hint">Appended to the timestamp folder name</div>
+              </div>
+            </div>
+
+            <!-- Screens picker -->
+            <div class="screenshots-screens">
+              <div class="screenshots-screens-header">
+                <h3>Screens to capture</h3>
+                <div class="screenshots-screens-actions">
+                  <button class="btn btn-link" type="button" id="ss-select-all">Select all</button>
+                  <button class="btn btn-link" type="button" id="ss-clear-all">Clear</button>
+                </div>
+              </div>
+              <div class="screenshots-screens-grid" id="ss-screens-grid">
+                <!-- Injected by JS -->
+              </div>
+              <div class="screenshots-form-hint" id="ss-screens-count">15 of 15 selected</div>
+            </div>
+
+            <!-- Command output + copy -->
+            <div class="screenshots-cmd-row">
+              <code class="screenshots-cmd" id="screenshots-cmd">./Scripts/capture-app-store-screenshots.sh</code>
+              <button class="btn btn-primary" type="button" id="screenshots-cmd-copy">Copy command</button>
+            </div>
+            <p class="card-hint card-hint-secondary">
+              Run from the repo root. Each shot takes ~9 seconds. Capturing all 15 takes about 3 minutes.
+            </p>
+          </div>
+        </div>
+
+        <!-- Mock-data values -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Premium-showcase mock data</h2>
+            <span class="card-header-action" id="screenshots-meta-source">--</span>
+          </div>
+          <div class="card-body">
+            <p class="card-hint">These are the values seeded into the simulator before each shot. They live in <code>Core/Data/PremiumShowcaseDataProvider.swift</code> and are reproduced here so you can confirm what the user sees post-purchase.</p>
+            <div class="stats-grid stats-grid-5" id="screenshots-mock-grid">
+              <div class="empty-state">Run the capture script to populate.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Runs (newest first) -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Captured runs</h2>
+            <span class="card-header-action" id="screenshots-refresh">Refresh</span>
+          </div>
+          <div class="card-body">
+            <div id="screenshots-runs">
+              <div class="empty-state">Loading…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ═══ Page: Audit Log ═══ -->
       <div class="page" id="page-audit">
         <div class="page-header">
@@ -452,6 +556,13 @@
         <button class="btn btn-danger" id="modal-confirm">Confirm</button>
       </div>
     </div>
+  </div>
+
+  <!-- ═══ Screenshot Lightbox ═══ -->
+  <div class="screenshots-lightbox" id="screenshots-lightbox">
+    <button class="screenshots-lightbox-close" id="screenshots-lightbox-close">×</button>
+    <img class="screenshots-lightbox-img" id="screenshots-lightbox-img" alt="screenshot preview" />
+    <div class="screenshots-lightbox-caption" id="screenshots-lightbox-caption"></div>
   </div>
 
   <!-- ═══ Toast ═══ -->

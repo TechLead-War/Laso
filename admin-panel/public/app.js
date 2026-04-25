@@ -21,11 +21,39 @@ const db = firebase.firestore();
 // ─── Config Schema ───────────────────────────────────────────────────────────
 // All keys match RemoteConfigManager.swift defaults.
 
-const FEATURE_GROUPS = [
+// ─── Feature Taxonomy ────────────────────────────────────────────────────────
+// Group hint for known feature keys. Any feature_access_* key that arrives
+// from Firebase but is NOT listed here lands in the "New Features" group, so
+// adding a new feature on the iOS side (or directly in Remote Config) makes
+// it appear in the dashboard with zero JS edit. Move it into a proper group
+// here at your leisure — the dashboard never needs the row to be hardcoded.
+const FEATURE_TAXONOMY = [
+  {
+    title: "Core",
+    items: [
+      { key: "feature_access_healthScore",     label: "Health Score" },
+      { key: "feature_access_categoryScores",  label: "Category Scores" },
+      { key: "feature_access_basicMetrics",    label: "Basic Metrics" },
+      { key: "feature_access_basicInsights",   label: "Basic Insights" },
+    ],
+  },
   {
     title: "Intelligence & Analytics",
     items: [
-      { key: "feature_access_advancedAnalytics", label: "Advanced Analytics" },
+      { key: "feature_access_allMetrics",            label: "All Metrics" },
+      { key: "feature_access_allInsights",           label: "All Insights" },
+      { key: "feature_access_advancedAnalytics",     label: "Advanced Analytics" },
+      { key: "feature_access_simulation",            label: "Simulation" },
+      { key: "feature_access_clinicalIntelligence",  label: "Clinical Intelligence" },
+    ],
+  },
+  {
+    title: "Trends & Risk",
+    items: [
+      { key: "feature_access_sevenDayTrends",   label: "7-Day Trends" },
+      { key: "feature_access_extendedHistory",  label: "Extended History" },
+      { key: "feature_access_riskPredictions",  label: "Risk Predictions" },
+      { key: "feature_access_focusAreas",       label: "Focus Areas" },
     ],
   },
   {
@@ -40,9 +68,63 @@ const FEATURE_GROUPS = [
       { key: "feature_access_exportReport", label: "Export Reports" },
     ],
   },
+  {
+    title: "Specialized",
+    items: [
+      { key: "feature_access_ecgIntelligence",         label: "ECG Intelligence" },
+      { key: "feature_access_nutritionCorrelations",   label: "Nutrition Correlations" },
+      { key: "feature_access_circadianAnalysis",       label: "Circadian Analysis" },
+      { key: "feature_access_adherenceTracking",       label: "Adherence Tracking" },
+    ],
+  },
 ];
 
-const FEATURES = FEATURE_GROUPS.flatMap((g) => g.items);
+// Populated dynamically after Firebase Remote Config loads. Treated as
+// `const` outside of `discoverFeatures` — never reassign elsewhere.
+let FEATURE_GROUPS = [];
+let FEATURES = [];
+
+/// Convert a feature_access_* key into a human label.
+/// "feature_access_advancedAnalytics" -> "Advanced Analytics"
+function deriveFeatureLabel(key) {
+  const stripped = key.replace(/^feature_access_/, "");
+  return stripped
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, (c) => c.toUpperCase())
+    .trim();
+}
+
+/// Build FEATURE_GROUPS / FEATURES from the taxonomy plus whatever Remote
+/// Config returned. Taxonomy keys ALWAYS render (so a freshly bootstrapped
+/// project with an empty Remote Config still shows the full feature list);
+/// any extra `feature_access_*` keys discovered live land in "New Features"
+/// so additions on the iOS side surface immediately.
+function discoverFeatures(serverParams) {
+  const liveKeys = Object.keys(serverParams).filter((k) =>
+    k.startsWith("feature_access_")
+  );
+  const taxonomyKeys = new Set(
+    FEATURE_TAXONOMY.flatMap((g) => g.items.map((i) => i.key))
+  );
+
+  // Known features render with their curated labels. Order is preserved.
+  FEATURE_GROUPS = FEATURE_TAXONOMY.map(({ title, items }) => ({
+    title,
+    items: items.slice(),
+  }));
+
+  // Unknown keys (added on the iOS side or directly in Remote Config) fall
+  // through to the auto-derived label.
+  const newKeys = liveKeys.filter((k) => !taxonomyKeys.has(k)).sort();
+  if (newKeys.length > 0) {
+    FEATURE_GROUPS.push({
+      title: "New Features",
+      items: newKeys.map((k) => ({ key: k, label: deriveFeatureLabel(k) })),
+    });
+  }
+
+  FEATURES = FEATURE_GROUPS.flatMap((g) => g.items);
+}
 
 const LIMITS = [
   { key: "free_metric_detail_limit", label: "Free Metric Detail Limit", type: "number" },
@@ -126,9 +208,25 @@ const TIERS = ["free", "pro"];
 // ─── Defaults (mirrors RemoteConfigManager.swift) ────────────────────────────
 
 const DEFAULTS = {
-  "feature_access_advancedAnalytics": "pro",
+  "feature_access_healthScore":       "free,pro",
+  "feature_access_categoryScores":    "free,pro",
+  "feature_access_basicMetrics":      "free,pro",
+  "feature_access_allMetrics":        "pro",
+  "feature_access_sevenDayTrends":    "free,pro",
+  "feature_access_extendedHistory":   "pro",
+  "feature_access_riskPredictions":   "pro",
+  "feature_access_focusAreas":        "pro",
+  "feature_access_basicInsights":     "free,pro",
+  "feature_access_allInsights":       "pro",
   "feature_access_liveTab":           "pro",
   "feature_access_exportReport":      "pro",
+  "feature_access_advancedAnalytics": "pro",
+  "feature_access_simulation":        "pro",
+  "feature_access_clinicalIntelligence": "pro",
+  "feature_access_ecgIntelligence":   "pro",
+  "feature_access_nutritionCorrelations": "pro",
+  "feature_access_circadianAnalysis": "pro",
+  "feature_access_adherenceTracking": "pro",
   "free_metric_detail_limit":   "3",
   "free_metrics":               "heartRate,steps,sleepAnalysis",
   "free_insight_limit":         "2",
@@ -176,7 +274,10 @@ const DEFAULTS = {
 };
 
 function getValue(params, key) {
-  return params[key]?.defaultValue ?? DEFAULTS[key] ?? "";
+  // Fallback for unknown feature_access_* keys is "pro" so a freshly-added
+  // feature is locked behind the paywall by default — safer for monetization.
+  const fallback = key.startsWith("feature_access_") ? "pro" : "";
+  return params[key]?.defaultValue ?? DEFAULTS[key] ?? fallback;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -255,6 +356,7 @@ const Router = (() => {
     feedback: document.getElementById("page-feedback"),
     users: document.getElementById("page-users"),
     audit: document.getElementById("page-audit"),
+    screenshots: document.getElementById("page-screenshots"),
   };
 
   const navItems = document.querySelectorAll(".nav-item");
@@ -274,6 +376,7 @@ const Router = (() => {
 
     // Trigger page-specific init
     if (page === "dashboard") DashboardPage.init();
+    if (page === "screenshots") ScreenshotsPage.init();
   }
 
   function init() {
@@ -312,6 +415,13 @@ const ConfigManager = (() => {
       const getConfig = functions.httpsCallable("getRemoteConfig");
       const result = await getConfig();
       serverParams = result.data.parameters || {};
+
+      // Discover features from the live Remote Config payload, then render
+      // rows. Anything new on the iOS side appears here automatically.
+      discoverFeatures(serverParams);
+      const featuresContainer = document.getElementById("section-features");
+      featuresContainer.innerHTML = "";
+      buildFeatureGroups(featuresContainer, FEATURE_GROUPS);
 
       populateFeatures();
       populateInputSections();
@@ -484,8 +594,10 @@ function buildMixedRows(container, fields) {
   });
 }
 
-// Build all config sections
-buildFeatureGroups(document.getElementById("section-features"), FEATURE_GROUPS);
+// Build all config sections.
+// section-features is built dynamically inside ConfigManager.load() once
+// Firebase has resolved the live parameter list, so it is intentionally
+// skipped here.
 buildMixedRows(document.getElementById("section-monetization"), MONETIZATION);
 buildInputRows(document.getElementById("section-limits"), LIMITS);
 buildInputRows(document.getElementById("section-pricing"), PRICING);
@@ -1224,4 +1336,311 @@ const AuditPage = (() => {
   }
 
   return { loadAuditLog };
+})();
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Screenshots Page Module
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// Lists every dated capture run produced by Scripts/capture-app-store-screenshots.sh.
+// Screenshots are mirrored to /screenshots/<timestamp>/ inside the public folder
+// when the script runs, and an index.json sits at /screenshots/index.json.
+//
+// Static-only — there is no Cloud Function bridge to trigger captures from a
+// web page (xcodebuild requires a local Xcode install). The page surfaces the
+// exact terminal command instead, with a copy button.
+
+const ScreenshotsPage = (() => {
+  let initialized = false;
+
+  // Single source of truth for the 15 shots that the capture script supports.
+  // Order and labels mirror the SHOTS array in capture-app-store-screenshots.sh.
+  const SHOT_CATALOG = [
+    { angle: "01_thriving", title: "Wake up thriving", shots: [
+      { id: "01_home",     label: "Home dashboard" },
+      { id: "02_sleep",    label: "Sleep Coach" },
+      { id: "03_weekly",   label: "Weekly Review" },
+      { id: "04_state",    label: "Health State Timeline" },
+      { id: "05_vitality", label: "Vitality" },
+    ]},
+    { angle: "02_coach", title: "Your sleep coach in your pocket", shots: [
+      { id: "01_home",     label: "Home with morning check-in" },
+      { id: "02_action",   label: "Today's Action detail" },
+      { id: "03_sleep",    label: "Sleep Coach" },
+      { id: "04_insights", label: "Insights" },
+      { id: "05_ask",      label: "Ask Your Data" },
+    ]},
+    { angle: "03_clinical", title: "Clinical clarity", shots: [
+      { id: "01_live",         label: "Live tab" },
+      { id: "02_strain",       label: "Strain" },
+      { id: "03_stress",       label: "Stress Monitor" },
+      { id: "04_brain",        label: "Brain Health" },
+      { id: "05_correlations", label: "Correlations" },
+    ]},
+  ];
+
+  async function init() {
+    if (!initialized) {
+      renderScreenPicker();
+      bindOneTime();
+      initialized = true;
+    }
+    rebuildCommand();
+    await refresh();
+  }
+
+  function renderScreenPicker() {
+    const grid = document.getElementById("ss-screens-grid");
+    if (!grid) return;
+    grid.innerHTML = SHOT_CATALOG.map((group) => `
+      <div class="screenshots-screens-group">
+        <div class="screenshots-screens-group-title">${UI.escapeHtml(group.title)} <span class="screenshots-angle-id">${UI.escapeHtml(group.angle)}</span></div>
+        <div class="screenshots-screens-checks">
+          ${group.shots.map((s) => {
+            const value = `${group.angle}/${s.id}`;
+            return `
+              <label class="screenshots-screen-check">
+                <input type="checkbox" class="ss-screen" value="${UI.escapeHtml(value)}" checked />
+                <span class="screenshots-screen-label">${UI.escapeHtml(s.label)}</span>
+                <span class="screenshots-screen-meta">${UI.escapeHtml(s.id)}</span>
+              </label>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function bindOneTime() {
+    document.getElementById("screenshots-cmd-copy")?.addEventListener("click", async () => {
+      const cmd = document.getElementById("screenshots-cmd").textContent;
+      try {
+        await navigator.clipboard.writeText(cmd);
+        UI.showToast("Command copied. Paste it in Terminal at the repo root.");
+      } catch (err) {
+        UI.showToast("Could not copy: " + err.message, true);
+      }
+    });
+
+    document.getElementById("screenshots-refresh")?.addEventListener("click", refresh);
+
+    document.getElementById("ss-select-all")?.addEventListener("click", () => {
+      document.querySelectorAll(".ss-screen").forEach((el) => { el.checked = true; });
+      rebuildCommand();
+    });
+    document.getElementById("ss-clear-all")?.addEventListener("click", () => {
+      document.querySelectorAll(".ss-screen").forEach((el) => { el.checked = false; });
+      rebuildCommand();
+    });
+
+    ["ss-name", "ss-overall", "ss-sleep", "ss-activity", "ss-suffix"].forEach((id) => {
+      document.getElementById(id)?.addEventListener("input", rebuildCommand);
+    });
+    document.getElementById("ss-screens-grid")?.addEventListener("change", rebuildCommand);
+
+    const lightbox = document.getElementById("screenshots-lightbox");
+    document.getElementById("screenshots-lightbox-close")?.addEventListener("click", closeLightbox);
+    lightbox?.addEventListener("click", (e) => {
+      if (e.target === lightbox) closeLightbox();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && lightbox.classList.contains("active")) closeLightbox();
+    });
+  }
+
+  // Quote a value for safe inclusion as a single-flag arg in bash. Avoids
+  // confusion when the name has a space or special character.
+  function shellSingleQuote(value) {
+    return `'${String(value).replace(/'/g, `'\\''`)}'`;
+  }
+
+  function rebuildCommand() {
+    const checked = Array.from(document.querySelectorAll(".ss-screen:checked")).map((el) => el.value);
+    const total = document.querySelectorAll(".ss-screen").length;
+    const countEl = document.getElementById("ss-screens-count");
+    if (countEl) countEl.textContent = `${checked.length} of ${total} selected`;
+
+    const parts = ["./Scripts/capture-app-store-screenshots.sh"];
+    if (checked.length > 0 && checked.length < total) {
+      parts.push(`--shots=${checked.join(",")}`);
+    }
+
+    const name = document.getElementById("ss-name")?.value.trim();
+    const overall = document.getElementById("ss-overall")?.value.trim();
+    const sleep = document.getElementById("ss-sleep")?.value.trim();
+    const activity = document.getElementById("ss-activity")?.value.trim();
+    const suffix = document.getElementById("ss-suffix")?.value.trim();
+
+    if (name)     parts.push(`--override-name=${shellSingleQuote(name)}`);
+    if (overall)  parts.push(`--override-overall-score=${parseInt(overall, 10) || 0}`);
+    if (sleep)    parts.push(`--override-sleep-score=${parseInt(sleep, 10) || 0}`);
+    if (activity) parts.push(`--override-activity-score=${parseInt(activity, 10) || 0}`);
+    if (suffix)   parts.push(`--folder-suffix=${suffix.replace(/[^A-Za-z0-9_-]/g, "")}`);
+
+    const cmdEl = document.getElementById("screenshots-cmd");
+    const copyBtn = document.getElementById("screenshots-cmd-copy");
+    if (cmdEl) {
+      if (checked.length === 0) {
+        cmdEl.textContent = "(select at least one screen)";
+        if (copyBtn) copyBtn.disabled = true;
+      } else {
+        cmdEl.textContent = parts.join(" ");
+        if (copyBtn) copyBtn.disabled = false;
+      }
+    }
+  }
+
+  async function refresh() {
+    const runsEl = document.getElementById("screenshots-runs");
+    const mockGrid = document.getElementById("screenshots-mock-grid");
+    const metaSource = document.getElementById("screenshots-meta-source");
+    runsEl.innerHTML = '<div class="empty-state">Loading…</div>';
+
+    let index;
+    try {
+      const res = await fetch(`screenshots/index.json?t=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) throw new Error(`index.json status ${res.status}`);
+      index = await res.json();
+    } catch (err) {
+      runsEl.innerHTML = `
+        <div class="empty-state">
+          <div>No captured runs yet.</div>
+          <div class="card-hint card-hint-secondary">
+            Run <code>./Scripts/capture-app-store-screenshots.sh</code> to produce the first set.
+          </div>
+        </div>`;
+      mockGrid.innerHTML = '<div class="empty-state">Run the capture script to populate.</div>';
+      metaSource.textContent = "";
+      return;
+    }
+
+    const runs = (index.runs || []).filter((r) => r.meta);
+    if (runs.length === 0) {
+      runsEl.innerHTML = '<div class="empty-state">No completed runs found in index.json.</div>';
+      mockGrid.innerHTML = '<div class="empty-state">Run the capture script to populate.</div>';
+      metaSource.textContent = "";
+      return;
+    }
+
+    // Mock-data panel: show the values from the most recent run (index is sorted newest-first by the script)
+    const latest = runs[0];
+    metaSource.textContent = `From ${formatTimestamp(latest.timestamp)} · ${latest.meta.device || ""}`;
+    mockGrid.innerHTML = renderMockValues(latest.meta.values || {});
+
+    // Runs list: every run as a collapsible card with thumbnails by angle
+    runsEl.innerHTML = runs.map((run, i) => renderRun(run, i === 0)).join("");
+
+    // Bind thumbnails to the lightbox
+    runsEl.querySelectorAll(".screenshots-thumb").forEach((el) => {
+      el.addEventListener("click", () => {
+        openLightbox(el.dataset.fullsrc, el.dataset.caption);
+      });
+    });
+
+    // Bind collapse headers
+    runsEl.querySelectorAll(".screenshots-run-toggle").forEach((el) => {
+      el.addEventListener("click", () => {
+        const card = el.closest(".screenshots-run");
+        card.classList.toggle("collapsed");
+      });
+    });
+  }
+
+  function renderMockValues(v) {
+    const fmt = (val, suffix = "") => (val === undefined || val === null) ? "--" : `${val}${suffix}`;
+    const pairs = [
+      { label: "Overall Score",      value: fmt(v.overall_score) },
+      { label: "Recovery (Green)",   value: fmt(v.recovery_green_score) },
+      { label: "HRV",                value: fmt(v.hrv_ms, " ms") },
+      { label: "Resting HR",         value: fmt(v.rhr_bpm, " bpm") },
+      { label: "VO₂ Max",            value: fmt(v.vo2_max) },
+      { label: "Sleep",              value: fmt(v.sleep_hours, " h") },
+      { label: "Sleep Streak",       value: fmt(v.sleep_streak_days, " d") },
+      { label: "Steps Avg",          value: fmt(v.steps_average) },
+      { label: "Active kcal",        value: fmt(v.active_calories_kcal) },
+      { label: "Exercise / day",     value: fmt(v.exercise_minutes_daily, " min") },
+      { label: "Workout Streak",     value: fmt(v.workout_streak_weeks, " wk") },
+      { label: "Mindful / day",      value: fmt(v.mindful_minutes_daily, " min") },
+    ];
+    return pairs.map((p) => `
+      <div class="stat-card">
+        <div class="stat-content">
+          <div class="stat-value">${UI.escapeHtml(String(p.value))}</div>
+          <div class="stat-label">${UI.escapeHtml(p.label)}</div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function renderRun(run, expanded) {
+    const ts = run.timestamp;
+    const meta = run.meta;
+    const angles = (meta.angles || []).map((angle) => `
+      <div class="screenshots-angle">
+        <div class="screenshots-angle-header">
+          <h3>${UI.escapeHtml(angle.title || angle.id)}</h3>
+          <span class="screenshots-angle-id">${UI.escapeHtml(angle.id)}</span>
+        </div>
+        <div class="screenshots-angle-desc">${UI.escapeHtml(angle.description || "")}</div>
+        <div class="screenshots-thumb-row">
+          ${(angle.shots || []).map((shot) => {
+            const src = `screenshots/${ts}/${shot.file}`;
+            const captionLine = `${shot.screen || ""} — ${shot.caption || ""}`;
+            return `
+              <button class="screenshots-thumb" data-fullsrc="${src}" data-caption="${UI.escapeHtml(captionLine)}" title="${UI.escapeHtml(captionLine)}">
+                <img src="${src}" alt="${UI.escapeHtml(shot.screen || shot.file)}" loading="lazy" />
+                <div class="screenshots-thumb-label">${UI.escapeHtml(shot.screen || shot.file)}</div>
+              </button>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    `).join("");
+
+    return `
+      <div class="screenshots-run ${expanded ? "" : "collapsed"}">
+        <div class="screenshots-run-header screenshots-run-toggle">
+          <div>
+            <div class="screenshots-run-title">${UI.escapeHtml(formatTimestamp(ts))}</div>
+            <div class="screenshots-run-meta">${UI.escapeHtml(meta.device || "")} · ${UI.escapeHtml(meta.theme || "")} · ${UI.escapeHtml(meta.mock_profile || "")}</div>
+          </div>
+          <span class="collapse-icon">&#9660;</span>
+        </div>
+        <div class="screenshots-run-body">
+          ${angles || '<div class="empty-state">No angles recorded for this run.</div>'}
+          <div class="screenshots-run-footer card-hint card-hint-secondary">
+            Folder: <code>screenshots/${UI.escapeHtml(ts)}</code> &nbsp;·&nbsp;
+            Mirrored at <code>admin-panel/public/screenshots/${UI.escapeHtml(ts)}</code>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function formatTimestamp(ts) {
+    // Input is "YYYY-MM-DD_HH-MM-SS"
+    const m = /^(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})$/.exec(ts);
+    if (!m) return ts;
+    const d = new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}`);
+    if (isNaN(d.getTime())) return ts;
+    return d.toLocaleString("en-US", {
+      month: "short", day: "numeric", year: "numeric",
+      hour: "2-digit", minute: "2-digit"
+    });
+  }
+
+  function openLightbox(src, caption) {
+    const lb = document.getElementById("screenshots-lightbox");
+    document.getElementById("screenshots-lightbox-img").src = src;
+    document.getElementById("screenshots-lightbox-caption").textContent = caption || "";
+    lb.classList.add("active");
+  }
+
+  function closeLightbox() {
+    const lb = document.getElementById("screenshots-lightbox");
+    lb.classList.remove("active");
+    document.getElementById("screenshots-lightbox-img").src = "";
+  }
+
+  return { init, refresh };
 })();

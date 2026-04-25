@@ -103,6 +103,9 @@ final class AppContainer {
     /// Seeds the in-memory stores with SampleDataProvider output so screenshot
     /// tests can exercise every data-dependent screen. Only runs when
     /// `UITestMode.isEnabled` so the production path is untouched.
+    /// When `--ui-test-premium-showcase` is passed, swaps in
+    /// `PremiumShowcaseDataProvider` so values reflect a thriving, post-purchase
+    /// user (used to capture App Store screenshots).
     func injectUITestMockData() {
         guard UITestMode.isEnabled else { return }
 
@@ -110,7 +113,7 @@ final class AppContainer {
         let gender: Gender = UITestMode.simulateFemaleProfile ? .female : .male
         let dob = Calendar.current.date(byAdding: .year, value: -32, to: Date()) ?? Date()
         let profile = UserProfileStore.shared.makeProfile(
-            name: "Alex Taylor",
+            name: UITestMode.overrideName ?? "Alex Taylor",
             email: "alex@example.com",
             gender: gender,
             dateOfBirth: dob,
@@ -118,32 +121,67 @@ final class AppContainer {
         )
         UserProfileStore.shared.saveLocal(profile)
 
+        let useShowcase = UITestMode.premiumShowcase
+
         // Time series + baselines drive every metric/detail view
-        healthKitManager.timeSeries = SampleDataProvider.generateAllTimeSeries(days: 90)
+        healthKitManager.timeSeries = useShowcase
+            ? PremiumShowcaseDataProvider.generateAllTimeSeries(days: 90)
+            : SampleDataProvider.generateAllTimeSeries(days: 90)
         healthKitManager.isAuthorized = true
         healthKitManager.lastRefresh = Date()
 
-        analysisEngine.baselines = SampleDataProvider.generateBaselines()
-        let (overall, categories) = SampleDataProvider.generateSampleScores()
+        analysisEngine.baselines = useShowcase
+            ? PremiumShowcaseDataProvider.generateBaselines()
+            : SampleDataProvider.generateBaselines()
+        var (overall, categories) = useShowcase
+            ? PremiumShowcaseDataProvider.generateSampleScores()
+            : SampleDataProvider.generateSampleScores()
+
+        // Apply per-run value overrides from launch args. Lets the admin
+        // dashboard customise the numbers visible on the home hero card and
+        // category cards without rebuilding the app.
+        if let v = UITestMode.overrideOverallScore {
+            overall = HealthScore(score: max(0, min(100, v)))
+        }
+        if let v = UITestMode.overrideSleepScore,
+           let i = categories.firstIndex(where: { $0.category == .sleep }) {
+            categories[i] = HealthScore(category: .sleep, score: max(0, min(100, v)), breakdown: categories[i].breakdown)
+        }
+        if let v = UITestMode.overrideActivityScore,
+           let i = categories.firstIndex(where: { $0.category == .activity }) {
+            categories[i] = HealthScore(category: .activity, score: max(0, min(100, v)), breakdown: categories[i].breakdown)
+        }
+
         analysisEngine.overallScore = overall
         analysisEngine.categoryScores = categories
-        analysisEngine.insights = SampleDataProvider.generateSampleInsights()
-        analysisEngine.healthRisks = SampleDataProvider.generateSampleRisks()
+        analysisEngine.insights = useShowcase
+            ? PremiumShowcaseDataProvider.generateSampleInsights()
+            : SampleDataProvider.generateSampleInsights()
+        analysisEngine.healthRisks = useShowcase
+            ? PremiumShowcaseDataProvider.generateSampleRisks()
+            : SampleDataProvider.generateSampleRisks()
         analysisEngine.lastAnalysis = Date()
 
         // Persist samples + snapshots so detail views that read SwiftData render
         for (metric, series) in healthKitManager.timeSeries {
             healthDataStore.saveSamples(series.samples, for: metric)
         }
+        // Premium showcase: high but balanced strain across the week (10-14 range,
+        // peaking mid-week). Default mock: linear ramp 8 -> 13.4.
         for dayOffset in 0..<7 {
-            let strain = 8.0 + Double(dayOffset) * 0.9
+            let strain: Double = useShowcase
+                ? [12.6, 13.4, 11.2, 14.1, 10.8, 13.0, 9.5][dayOffset]
+                : 8.0 + Double(dayOffset) * 0.9
+            let zoneMinutes: [Double] = useShowcase
+                ? [30, 95, 75, 35, 10]
+                : [45, 90, 60, 20, 5]
             let level = StrainLevel(strain: strain).rawValue
             let date = Calendar.current.date(byAdding: .day, value: -dayOffset, to: Date()) ?? Date()
             healthDataStore.saveDailyStrain(
                 date: date,
                 strain: strain,
                 level: level,
-                hrZoneMinutes: [45, 90, 60, 20, 5]
+                hrZoneMinutes: zoneMinutes
             )
         }
         healthDataStore.saveAnalysisSnapshot(
@@ -151,6 +189,14 @@ final class AppContainer {
             categoryScores: categories,
             baselines: analysisEngine.baselines
         )
+
+        // Force a paid subscription state so paywalls don't intercept and feature
+        // gates render the post-purchase UI.
+        if UITestMode.forceSubscribed {
+            SubscriptionManager.shared.setStatusForUITestMode(
+                .subscribed(expirationDate: .distantFuture)
+            )
+        }
 
         // Seed connected devices so Settings → Connected Devices renders and
         // watch-dependent paths (Live tab, stress, readiness) light up.

@@ -11,22 +11,56 @@ struct SleepCoachView: View {
     let consistencyScore: Int
 
     @State private var showAllTips = false
+    @State private var expandedDayId: UUID? = nil
 
     /// A single day's sleep record for the 14-day history chart.
     struct DayEntry: Identifiable {
         let id = UUID()
         let date: Date
-        let actual: Double   // hours slept
+        let actual: Double   // hours slept (asleep stages summed)
         let needed: Double   // hours needed
         let bedtime: Date?
         let wakeTime: Date?
+        /// Per-stage breakdown — populated when HealthKit stage data is available.
+        let coreHours: Double?
+        let deepHours: Double?
+        let remHours: Double?
+        let awakeHours: Double?
 
-        init(date: Date, actual: Double, needed: Double, bedtime: Date? = nil, wakeTime: Date? = nil) {
+        init(
+            date: Date,
+            actual: Double,
+            needed: Double,
+            bedtime: Date? = nil,
+            wakeTime: Date? = nil,
+            coreHours: Double? = nil,
+            deepHours: Double? = nil,
+            remHours: Double? = nil,
+            awakeHours: Double? = nil
+        ) {
             self.date = date
             self.actual = actual
             self.needed = needed
             self.bedtime = bedtime
             self.wakeTime = wakeTime
+            self.coreHours = coreHours
+            self.deepHours = deepHours
+            self.remHours = remHours
+            self.awakeHours = awakeHours
+        }
+
+        /// Total bed-to-wake span in hours when both timestamps are present.
+        /// Falls back to `actual` (sum of asleep stages) when boundaries are missing.
+        var bedToWakeHours: Double {
+            if let bedtime, let wakeTime {
+                return max(0, wakeTime.timeIntervalSince(bedtime) / 3600.0)
+            }
+            return actual
+        }
+
+        /// Whether per-stage data is available for the expanded breakdown view.
+        var hasStageBreakdown: Bool {
+            coreHours != nil || deepHours != nil || remHours != nil || awakeHours != nil
         }
     }
 
@@ -263,7 +297,7 @@ struct SleepCoachView: View {
             } else {
                 VStack(spacing: 6) {
                     ForEach(Array(dailyHistory.suffix(14).reversed())) { day in
-                        historyBar(day)
+                        historyRow(day)
                     }
                 }
                 .padding(DS.cardPadding)
@@ -273,10 +307,35 @@ struct SleepCoachView: View {
         }
     }
 
-    private func historyBar(_ day: DayEntry) -> some View {
+    /// Tappable row — collapsed shows day/bedtime/bar/wake/total. Expanded
+    /// reveals the per-stage breakdown (Deep / REM / Core / Awake).
+    @ViewBuilder
+    private func historyRow(_ day: DayEntry) -> some View {
+        let isExpanded = expandedDayId == day.id
+
+        VStack(alignment: .leading, spacing: 8) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.22)) {
+                    expandedDayId = isExpanded ? nil : day.id
+                }
+            } label: {
+                historyBar(day, isExpanded: isExpanded)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(dayLabel(day.date)) sleep: \(formatDuration(day.bedToWakeHours)) in bed")
+            .accessibilityHint(isExpanded ? "Tap to collapse stage breakdown" : "Tap to show stage breakdown")
+
+            if isExpanded {
+                stageBreakdown(day)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+    }
+
+    private func historyBar(_ day: DayEntry, isExpanded: Bool) -> some View {
         HStack(spacing: DS.space2) {
             Text(dayLabel(day.date))
-                .font(DS.Typography.caption2.weight(.medium).monospacedDigit())
+                .font(DS.Typography.caption2.weight(.semibold).monospacedDigit())
                 .foregroundStyle(AppColour.textSecondary)
                 .frame(width: 28, alignment: .leading)
 
@@ -285,32 +344,114 @@ struct SleepCoachView: View {
                 .foregroundStyle(day.bedtime == nil ? AppColour.textTertiary : AppColour.textSecondary)
                 .frame(width: 42, alignment: .trailing)
 
-            GeometryReader { geo in
-                let maxHours: Double = 12
-                let neededWidth = geo.size.width * min(day.needed / maxHours, 1)
-                let actualWidth = geo.size.width * min(day.actual / maxHours, 1)
-
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: DS.Radius.xs)
-                        .fill(AppColour.borderLow)
-                        .frame(width: neededWidth, height: 14)
-
-                    RoundedRectangle(cornerRadius: DS.Radius.xs)
-                        .fill(day.actual >= day.needed ? AppColour.categorySleep : AppColour.warning)
-                        .frame(width: actualWidth, height: 14)
-                }
-            }
-            .frame(height: 14)
+            sleepBar(day)
+                .frame(height: 18)
 
             Text(day.wakeTime.map(Self.timeFormatter.string(from:)) ?? "—")
                 .font(DS.Typography.caption2.monospacedDigit())
                 .foregroundStyle(day.wakeTime == nil ? AppColour.textTertiary : AppColour.textSecondary)
                 .frame(width: 42, alignment: .leading)
 
-            Text(formatDuration(day.actual))
-                .font(DS.Typography.caption2.monospacedDigit())
+            Text(formatDuration(day.bedToWakeHours))
+                .font(DS.Typography.caption2.weight(.semibold).monospacedDigit())
                 .foregroundStyle(day.actual >= day.needed ? AnyShapeStyle(AppColour.textPrimary) : AnyShapeStyle(AppColour.warning))
                 .frame(width: 46, alignment: .trailing)
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(AppColour.textTertiary)
+                .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                .frame(width: 10)
+        }
+        .padding(.vertical, 4)
+        .contentShape(Rectangle())
+    }
+
+    /// Per-stage breakdown shown when a row is expanded. Falls back to a hint
+    /// when HealthKit didn't return any stage data for that night.
+    @ViewBuilder
+    private func stageBreakdown(_ day: DayEntry) -> some View {
+        if day.hasStageBreakdown {
+            VStack(spacing: 6) {
+                stageRow(label: "Deep",  hours: day.deepHours,  total: day.bedToWakeHours, color: AppColour.categorySleep)
+                stageRow(label: "REM",   hours: day.remHours,   total: day.bedToWakeHours, color: AppColour.categoryStress)
+                stageRow(label: "Core",  hours: day.coreHours,  total: day.bedToWakeHours, color: AppColour.scoreOptimal)
+                stageRow(label: "Awake", hours: day.awakeHours, total: day.bedToWakeHours, color: AppColour.warning)
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 4)
+        } else {
+            Text("Stage data not available for this night")
+                .font(DS.Typography.caption2)
+                .foregroundStyle(AppColour.textTertiary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 6)
+                .padding(.horizontal, 4)
+        }
+    }
+
+    private func stageRow(label: String, hours: Double?, total: Double, color: Color) -> some View {
+        let value = hours ?? 0
+        let frac = total > 0 ? max(0, min(1, value / total)) : 0
+        return HStack(spacing: DS.space2) {
+            Text(label)
+                .font(DS.Typography.caption2.weight(.medium))
+                .foregroundStyle(AppColour.textSecondary)
+                .frame(width: 44, alignment: .leading)
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(color.opacity(0.15))
+                    Capsule()
+                        .fill(color)
+                        .frame(width: max(2, geo.size.width * frac))
+                }
+            }
+            .frame(height: 6)
+
+            Text(formatDuration(value))
+                .font(DS.Typography.caption2.weight(.semibold).monospacedDigit())
+                .foregroundStyle(AppColour.textPrimary)
+                .frame(width: 56, alignment: .trailing)
+        }
+    }
+
+    private func sleepBar(_ day: DayEntry) -> some View {
+        GeometryReader { geo in
+            let maxHours: Double = 12
+            let neededFrac = max(0, min(1, day.needed / maxHours))
+            let actualFrac = max(0, min(1, day.actual / maxHours))
+            let goalMet = day.actual >= day.needed
+            let accent: Color = goalMet ? AppColour.categorySleep : AppColour.warning
+
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(AppColour.borderLow)
+                    .frame(width: geo.size.width, height: 4)
+
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                accent.opacity(0.55),
+                                accent,
+                                accent.opacity(0.9)
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(width: max(2, geo.size.width * actualFrac), height: 8)
+                    .shadow(color: accent.opacity(goalMet ? 0.55 : 0.35),
+                            radius: goalMet ? 5 : 3, x: 0, y: 1)
+
+                Rectangle()
+                    .fill(AppColour.textTertiary.opacity(0.5))
+                    .frame(width: 1.5, height: 12)
+                    .offset(x: max(0, geo.size.width * neededFrac - 0.75))
+            }
+            .frame(maxHeight: .infinity, alignment: .center)
         }
     }
 

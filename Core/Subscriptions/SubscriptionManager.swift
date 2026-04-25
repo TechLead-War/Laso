@@ -106,6 +106,13 @@ final class SubscriptionManager {
         AppAnalytics.shared.updateSubscriptionProperties(status: status)
     }
 
+    /// Forces a status used only when capturing App Store screenshots in UI test
+    /// mode. The guard ensures the bypass cannot be invoked outside that mode.
+    func setStatusForUITestMode(_ status: Status) {
+        guard UITestMode.isEnabled else { return }
+        self.status = status
+    }
+
     // MARK: - Products
 
     @MainActor

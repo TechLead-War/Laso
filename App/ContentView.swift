@@ -25,6 +25,13 @@ struct ContentView: View {
         _dashboardViewModel = State(wrappedValue: container.makeDashboardViewModel())
         _liveViewModel = State(wrappedValue: container.makeLiveViewModel())
         _webExportViewModel = State(wrappedValue: container.makeWebExportViewModel())
+
+        // App Store screenshot pre-positioning: if a launch flag asks to land on
+        // a specific tab, honor it before the first render so the screenshot is
+        // captured on that tab without tap navigation.
+        if UITestMode.isEnabled, let tab = UITestMode.initialTab.flatMap(AppTab.init(rawValue:)) {
+            _selectedTab = State(initialValue: tab)
+        }
     }
 
     var body: some View {
@@ -199,6 +206,21 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .healthPulseNavigateToExplore)) { _ in
             selectedTab = .explore
+        }
+        .task(id: appStateStore.onboardingCompleted) {
+            // Push the requested deep-link route once the dashboard has had a
+            // moment to load mock data so the destination view renders with
+            // populated values. UI-test-only.
+            guard UITestMode.isEnabled,
+                  appStateStore.onboardingCompleted,
+                  let raw = UITestMode.initialRoute,
+                  let route = Route.fromUITestIdentifier(raw) else { return }
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            switch selectedTab {
+            case .home: homePath.append(route)
+            case .explore: explorePath.append(route)
+            case .live, .settings: navigationPath.append(route)
+            }
         }
     }
 
@@ -509,7 +531,11 @@ struct ContentView: View {
                     actual: max(0, baseline - entry.deficit),
                     needed: baseline,
                     bedtime: boundary?.bedtime,
-                    wakeTime: boundary?.wakeTime
+                    wakeTime: boundary?.wakeTime,
+                    coreHours: boundary?.coreHours,
+                    deepHours: boundary?.deepHours,
+                    remHours: boundary?.remHours,
+                    awakeHours: boundary?.awakeHours
                 )
             }
             SleepCoachView(

@@ -233,10 +233,6 @@ struct HomeView: View {
             LazyVStack(spacing: DS.itemSpacing) {
                 // 1. Greeting header. context-aware with recovery state
                 CoachGreetingView(
-                    streakDays: SessionTracker.shared.streakDays,
-                    scoreChangeFromYesterday: viewModel.scores.scoreChangeFromYesterday,
-                    currentScore: hasData ? liveReadinessScore : nil,
-                    recoveryState: hasData && hasLiveReadiness ? DashboardViewModel.RecoveryState(score: liveReadinessScore) : nil,
                     onTapScoreInfo: { showScoreGuide = true }
                 )
                 .padding(.top, DS.space1)
@@ -370,13 +366,20 @@ struct HomeView: View {
                     .onAppear { weeklyReviewTracker.appeared(); maxScrollDepth = max(maxScrollDepth, 90) }
                     .onDisappear { weeklyReviewTracker.disappeared() }
 
-                    // Last updated footer
-                    if let lastRefresh = viewModel.lastRefresh {
-                        Copy.Home.updatedAgo(lastRefresh)
-                            .font(DS.Typography.caption)
-                            .foregroundStyle(AppColour.textTertiary)
-                            .accessibilityLabel(Copy.Home.lastUpdatedAgo(lastRefresh))
+                    // Last updated footer. always rendered so the user can confirm
+                    // the screen is alive; falls back to a pull-to-refresh hint
+                    // when no sync has happened yet (very first launch).
+                    Group {
+                        if let lastRefresh = viewModel.lastRefresh {
+                            Copy.Home.updatedAgo(lastRefresh)
+                                .accessibilityLabel(Copy.Home.lastUpdatedAgo(lastRefresh))
+                        } else {
+                            Copy.Home.pullToRefresh
+                                .accessibilityLabel(Copy.Home.notSyncedYetAccessibility)
+                        }
                     }
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textTertiary)
                 }
             }
             .frame(maxWidth: .infinity)
@@ -395,42 +398,6 @@ struct HomeView: View {
         ) {
             await viewModel.refresh()
             liveViewModel.fetchHomeData()
-        }
-    }
-
-    // MARK: - Pro Feature Teaser
-
-    private func proTeaser(title: String, subtitle: String, icon: String) -> some View {
-        HStack(spacing: 14) {
-            Image(systemName: icon)
-                .font(DS.Typography.title)
-                .foregroundStyle(.tint)
-                .frame(width: 36)
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 4) {
-                    Text(title)
-                        .font(DS.Typography.bodySemibold)
-                    Text("PRO")
-                        .font(DS.Typography.captionSemibold)
-                        .padding(.horizontal, DS.badgeH)
-                        .padding(.vertical, DS.badgeV)
-                        .background(.tint, in: Capsule())
-                        .foregroundStyle(.white)
-                }
-                Text(subtitle)
-                    .font(DS.Typography.footnote)
-                    .foregroundStyle(AppColour.textSecondary)
-            }
-            Spacer()
-            Image(systemName: "lock.fill")
-                .font(DS.Typography.footnote)
-                .foregroundStyle(AppColour.textTertiary)
-        }
-        .padding(DS.cardPadding)
-        .cardStyle()
-        .padding(.horizontal, DS.screenPadding)
-        .onTapGesture {
-            AppAnalytics.shared.trackPremiumFeatureAttempted(feature: title, screen: .home)
         }
     }
 
@@ -596,46 +563,6 @@ struct HomeView: View {
         .buttonStyle(.plain)
         .padding(.horizontal, DS.screenPadding)
         .accessibilityIdentifier("home.todaysActionCard")
-    }
-
-    // MARK: - Journal Prompt Card
-
-    @ViewBuilder
-    private var journalPromptCard: some View {
-        let hour = Calendar.current.component(.hour, from: Date())
-        // Show journal prompt in the evening (after 6pm)
-        if hour >= 18 {
-            NavigationLink(value: Route.journalEntry) {
-                HStack(spacing: 12) {
-                    Image(systemName: "square.and.pencil")
-                        .font(DS.Typography.title3)
-                        .foregroundStyle(.purple)
-                        .frame(width: 36)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(Copy.Home.howWasToday)
-                            .font(DS.Typography.bodySemibold)
-                            .foregroundStyle(AppColour.textPrimary)
-
-                        Text(Copy.Home.journalSubtitle)
-                            .font(DS.Typography.footnote)
-                            .foregroundStyle(AppColour.textSecondary)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.75)
-                    }
-
-                    Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .font(DS.Typography.caption)
-                        .foregroundStyle(AppColour.textTertiary)
-                }
-                .padding(DS.cardPadding)
-                .cardStyle(tint: .purple)
-            }
-            .buttonStyle(.plain)
-            .padding(.horizontal, DS.screenPadding)
-        }
     }
 
     /// Routes Today's Action card contextually based on action text content.

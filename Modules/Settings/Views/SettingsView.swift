@@ -430,26 +430,28 @@ struct SettingsView: View {
     @ViewBuilder
     private var updateAppRow: some View {
         let checker = AppStoreVersionChecker.shared
-        if checker.isUpdateAvailable, let latest = checker.latestVersion {
-            Button {
-                AppAnalytics.shared.trackBlockTap(
-                    title: Copy.Settings.updateApp,
-                    type: .updateApp,
-                    screen: .settings,
-                    metadata: [
-                        "destination": "app_store_product_page",
-                        "latest_version": latest
-                    ]
-                )
-                _ = checker.openAppStoreForUpdate(using: { openURL($0) })
-            } label: {
-                HStack(spacing: 12) {
-                    iconBadge(icon: "arrow.down.circle.fill", color: .green)
-                    VStack(alignment: .leading, spacing: 2) {
-                        HStack(spacing: 6) {
-                            Text(Copy.Settings.updateApp)
-                                .font(DS.Typography.subheadlineMedium)
-                                .foregroundStyle(.primary)
+        let updateAvailable = checker.isUpdateAvailable
+        Button {
+            AppAnalytics.shared.trackBlockTap(
+                title: Copy.Settings.updateApp,
+                type: .updateApp,
+                screen: .settings,
+                metadata: [
+                    "destination": "app_store_product_page",
+                    "latest_version": checker.latestVersion ?? "unknown",
+                    "update_available": updateAvailable
+                ]
+            )
+            _ = checker.openAppStoreForUpdate(using: { openURL($0) })
+        } label: {
+            HStack(spacing: 12) {
+                iconBadge(icon: "arrow.down.circle.fill", color: .green)
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Text(Copy.Settings.updateApp)
+                            .font(DS.Typography.subheadlineMedium)
+                            .foregroundStyle(.primary)
+                        if updateAvailable {
                             Text(Copy.Settings.updateAvailableBadge)
                                 .font(.caption2.weight(.bold))
                                 .foregroundStyle(AppColour.textPrimary)
@@ -457,20 +459,26 @@ struct SettingsView: View {
                                 .padding(.vertical, DS.badgeV)
                                 .background(AppColour.success, in: Capsule())
                         }
+                    }
+                    if updateAvailable, let latest = checker.latestVersion {
                         Text(Copy.Settings.updateAvailableSubtitle(latest))
                             .font(DS.Typography.caption)
                             .foregroundStyle(.secondary)
                             .lineLimit(2)
+                    } else {
+                        Text(Copy.Settings.appUpToDateSubtitle(checker.currentAppVersion))
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(.secondary)
                     }
-                    Spacer()
-                    Image(systemName: "arrow.up.right")
-                        .font(DS.Typography.captionSemibold)
-                        .foregroundStyle(.tertiary)
                 }
+                Spacer()
+                Image(systemName: "arrow.up.right")
+                    .font(DS.Typography.captionSemibold)
+                    .foregroundStyle(.tertiary)
             }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("settings.row.updateApp")
         }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("settings.row.updateApp")
     }
 
     private var supportSection: some View {

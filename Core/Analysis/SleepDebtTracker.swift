@@ -102,7 +102,6 @@ final class SleepDebtTracker {
     var formattedDebt: String {
         guard let debt = currentDebt else { return "—" }
         let hours = debt.totalDebtHours
-        if hours >= 20 { return "20+ hours" }
         let h = Int(hours)
         let m = Int((hours - Double(h)) * 60)
         if h == 0 && m == 0 { return "0h" }
@@ -183,9 +182,6 @@ final class SleepDebtTracker {
             }
         }
 
-        // Cap tracked debt at 20 hours
-        let cappedDebt = Swift.min(cumulativeDebt, 20)
-
         // Average sleep duration over the 14-day window
         let averageSleep = last14.valueMean
 
@@ -193,16 +189,16 @@ final class SleepDebtTracker {
         // Each night you can recoup ~25% of the deficit (sleeping 25% extra beyond baseline)
         let payoffPerNight = personalBaseline * 0.25
         let daysToPayOff: Int
-        if cappedDebt <= 0 || payoffPerNight <= 0 {
+        if cumulativeDebt <= 0 || payoffPerNight <= 0 {
             daysToPayOff = 0
         } else {
-            daysToPayOff = Int(ceil(cappedDebt / payoffPerNight))
+            daysToPayOff = Int(ceil(cumulativeDebt / payoffPerNight))
         }
 
-        let debtLevel = DebtLevel(hours: cappedDebt)
+        let debtLevel = DebtLevel(hours: cumulativeDebt)
 
         currentDebt = SleepDebtInfo(
-            totalDebtHours: cappedDebt,
+            totalDebtHours: cumulativeDebt,
             debtLevel: debtLevel,
             dailyDeficits: dailyDeficits,
             averageSleepDuration: averageSleep,

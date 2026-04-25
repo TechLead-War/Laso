@@ -1,70 +1,47 @@
 import SwiftUI
 
-/// Context-aware greeting header that combines time of day with recovery state
-/// to deliver a data-driven one-line observation alongside date and streak badge.
+/// Compact greeting header. Shows the time-of-day kicker, the date row, and an
+/// ellipsis menu for the score guide. No streak, no prescription — Home keeps
+/// the recovery card as the single content hero.
 struct CoachGreetingView: View {
-    var streakDays: Int = 0
-    var scoreChangeFromYesterday: Int? = nil
-    var currentScore: Int? = nil
-    var recoveryState: DashboardViewModel.RecoveryState? = nil
     var onTapScoreInfo: (() -> Void)? = nil
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Top meta row. compact uppercase greeting + date on left, overflow on right
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(compactGreetingLine)
-                        .font(DS.Typography.captionSemibold)
-                        .tracking(0.8)
-                        .foregroundStyle(AppColour.textTertiary)
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(compactGreetingLine)
+                    .font(DS.Typography.captionSemibold)
+                    .tracking(0.8)
+                    .foregroundStyle(AppColour.textTertiary)
 
-                    Text(compactDateLine)
-                        .font(DS.Typography.caption)
-                        .tracking(0.8)
-                        .foregroundStyle(AppColour.textTertiary)
-                }
-
-                Spacer()
-
-                if onTapScoreInfo != nil {
-                    Button {
-                        onTapScoreInfo?()
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .font(DS.Typography.callout)
-                            .foregroundStyle(.secondary)
-                            .frame(width: 36, height: 36)
-                            .overlay(
-                                Circle()
-                                    .strokeBorder(.primary.opacity(0.14), lineWidth: 1)
-                            )
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Score guide")
-                    .accessibilityHint("Opens score breakdown")
-                }
+                Text(compactDateLine)
+                    .font(DS.Typography.caption)
+                    .tracking(0.8)
+                    .foregroundStyle(AppColour.textTertiary)
             }
 
-            // Streak badge (only when relevant)
-            if streakDays > 1 {
-                HStack(spacing: 3) {
-                    Image(systemName: "flame.fill")
-                        .font(DS.Typography.caption)
-                    Text(Copy.Home.Greeting.streakBadge(streakDays))
-                        .font(DS.Typography.captionSemibold.monospacedDigit())
+            Spacer()
+
+            if onTapScoreInfo != nil {
+                Button {
+                    onTapScoreInfo?()
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(DS.Typography.callout)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 36, height: 36)
+                        .overlay(
+                            Circle()
+                                .strokeBorder(.primary.opacity(0.14), lineWidth: 1)
+                        )
                 }
-                .foregroundStyle(.orange)
-                .padding(.horizontal, DS.space2)
-                .padding(.vertical, 3)
-                .background(Color.orange.opacity(0.12), in: Capsule())
+                .buttonStyle(.plain)
+                .accessibilityLabel("Score guide")
+                .accessibilityHint("Opens score breakdown")
             }
         }
         .padding(.horizontal, DS.screenPadding)
         .padding(.top, 2)
-        .overlay(alignment: .top) {
-            streakMilestoneOverlay
-        }
     }
 
     // MARK: - Compact Header Lines
@@ -99,22 +76,6 @@ struct CoachGreetingView: View {
     private var dayMonthString: String { Self.dayMonthFormatter.string(from: Date()) }
     private var timeString: String { Self.timeFormatter.string(from: Date()) }
 
-    // MARK: - Streak Milestone
-
-    @ViewBuilder
-    private var streakMilestoneOverlay: some View {
-        if let milestone = SessionTracker.shared.checkStreakMilestone() {
-            Text(Copy.Home.Greeting.streakMilestone(milestone))
-                .font(DS.Typography.footnoteMedium)
-                .foregroundStyle(.white)
-                .padding(.horizontal, DS.space3)
-                .padding(.vertical, 6)
-                .background(.orange.gradient, in: Capsule())
-                .transition(.move(edge: .top).combined(with: .opacity))
-                .offset(y: -32)
-        }
-    }
-
     // MARK: - Context-Aware Greeting
 
     private var timeOfDay: TimeOfDay {
@@ -144,29 +105,8 @@ struct CoachGreetingView: View {
 
 #Preview {
     VStack(spacing: 20) {
-        CoachGreetingView(
-            streakDays: 14,
-            scoreChangeFromYesterday: 3,
-            currentScore: 82,
-            recoveryState: .green
-        )
-
+        CoachGreetingView(onTapScoreInfo: {})
         Divider()
-
-        CoachGreetingView(
-            streakDays: 5,
-            scoreChangeFromYesterday: -2,
-            currentScore: 55,
-            recoveryState: .yellow
-        )
-
-        Divider()
-
-        CoachGreetingView(
-            streakDays: 0,
-            scoreChangeFromYesterday: -8,
-            currentScore: 35,
-            recoveryState: .red
-        )
+        CoachGreetingView()
     }
 }

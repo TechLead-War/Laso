@@ -9,9 +9,18 @@ extension Copy {
         static func updatedAgo(_ date: Date) -> Text {
             Text("Updated \(date, style: .relative) ago")
         }
-        static func lastUpdatedAgo(_ date: Date) -> Text {
-            Text("Last updated \(date, style: .relative) ago")
+        /// Plain-string variant for `accessibilityLabel(_:)`, which rejects styled `Text`.
+        static func lastUpdatedAgo(_ date: Date) -> String {
+            "Last updated \(Self.relativeFormatter.localizedString(for: date, relativeTo: Date()))"
         }
+        static let pullToRefresh: Text = Text("Pull to refresh")
+        static let notSyncedYetAccessibility = "Health data not synced yet. Pull down to refresh."
+
+        private static let relativeFormatter: RelativeDateTimeFormatter = {
+            let f = RelativeDateTimeFormatter()
+            f.unitsStyle = .full
+            return f
+        }()
 
         // MARK: - Loading
 

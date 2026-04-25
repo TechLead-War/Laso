@@ -12,6 +12,14 @@ enum UITestMode {
     private static let showPaywallFlag = "--ui-test-show-paywall"
     private static let forceProLockFlag = "--ui-test-force-pro-lock"
     private static let forceMorningCheckInFlag = "--ui-test-force-morning-checkin"
+    private static let premiumShowcaseFlag = "--ui-test-premium-showcase"
+    private static let subscribedFlag = "--ui-test-subscribed"
+    private static let initialTabPrefix = "--ui-test-initial-tab="
+    private static let initialRoutePrefix = "--ui-test-initial-route="
+    private static let overrideNamePrefix = "--ui-test-override-name="
+    private static let overrideOverallScorePrefix = "--ui-test-override-overall-score="
+    private static let overrideSleepScorePrefix = "--ui-test-override-sleep-score="
+    private static let overrideActivityScorePrefix = "--ui-test-override-activity-score="
 
     static var isEnabled: Bool {
         ProcessInfo.processInfo.arguments.contains(launchFlag)
@@ -64,6 +72,63 @@ enum UITestMode {
     /// 5 AM to 11 AM time window so the card can be captured in any test run.
     static var forceMorningCheckIn: Bool {
         ProcessInfo.processInfo.arguments.contains(forceMorningCheckInFlag)
+    }
+
+    /// When true, AppContainer seeds PremiumShowcaseDataProvider (thriving values)
+    /// instead of SampleDataProvider so App Store screenshots reflect the
+    /// post-purchase experience.
+    static var premiumShowcase: Bool {
+        ProcessInfo.processInfo.arguments.contains(premiumShowcaseFlag)
+    }
+
+    /// When true, SubscriptionManager.status is forced to `.subscribed` so
+    /// paywalls and feature gates reflect a paid user during screenshot capture.
+    static var forceSubscribed: Bool {
+        ProcessInfo.processInfo.arguments.contains(subscribedFlag)
+    }
+
+    /// Optional initial tab. When set, ContentView selects this tab on first
+    /// appear so a single launch can land directly on Home, Live, Explore, or
+    /// Settings without tap navigation.
+    /// Format: `--ui-test-initial-tab=home|live|explore|settings`
+    static var initialTab: String? {
+        guard let arg = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix(initialTabPrefix) }) else {
+            return nil
+        }
+        return String(arg.dropFirst(initialTabPrefix.count)).lowercased()
+    }
+
+    /// Optional initial deep-link route appended to the home navigation stack on
+    /// first appear so a single launch can land directly on a detail screen.
+    /// Format: `--ui-test-initial-route=sleepCoach|vitalityDetail|strainDetail|...`
+    static var initialRoute: String? {
+        guard let arg = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix(initialRoutePrefix) }) else {
+            return nil
+        }
+        return String(arg.dropFirst(initialRoutePrefix.count))
+    }
+
+    // MARK: - Showcase value overrides
+
+    /// Profile display name override. Visible anywhere the app personalises copy.
+    static var overrideName: String? { stringValue(for: overrideNamePrefix) }
+    /// Overall daily score override (0-100). Renders as the big hero number on Home.
+    static var overrideOverallScore: Int? { intValue(for: overrideOverallScorePrefix) }
+    /// Sleep category score override (0-100).
+    static var overrideSleepScore: Int? { intValue(for: overrideSleepScorePrefix) }
+    /// Activity category score override (0-100).
+    static var overrideActivityScore: Int? { intValue(for: overrideActivityScorePrefix) }
+
+    private static func stringValue(for prefix: String) -> String? {
+        guard let arg = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix(prefix) }) else {
+            return nil
+        }
+        let v = String(arg.dropFirst(prefix.count))
+        return v.isEmpty ? nil : v
+    }
+
+    private static func intValue(for prefix: String) -> Int? {
+        stringValue(for: prefix).flatMap(Int.init)
     }
 
     static func configureDefaults() {

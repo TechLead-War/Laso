@@ -138,6 +138,9 @@ extension Copy {
         static func updateAvailableSubtitle(_ version: String) -> String {
             "Version \(version) is available. Tap to update."
         }
+        static func appUpToDateSubtitle(_ version: String) -> String {
+            "App is up to date · v\(version)"
+        }
 
         // MARK: - Loading
 

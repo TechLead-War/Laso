@@ -162,10 +162,15 @@ enum DS {
     // MARK: - Score Mapping
 
     /// Score-based recovery color. Uses AppColour tokens for dark-mode safe tints.
+    ///
+    /// IMPORTANT: This must mirror `DashboardViewModel.RecoveryState`'s 3-band model
+    /// (>75 green, ≥50 yellow/amber, <50 red) so the day-type pill, ring, and any
+    /// other surface tinted by score all agree on the same threshold table.
+    /// Adding a tier here without also updating `RecoveryState` will reintroduce
+    /// the green-pill-saying-Yellow-Day kind of bug.
     static func scoreColor(_ score: Int) -> Color {
         switch recoveryTier(for: score) {
         case .optimal: return AppColour.scoreOptimal
-        case .good:    return AppColour.scoreGood
         case .fair:    return AppColour.scoreFair
         case .poor:    return AppColour.scorePoor
         }
@@ -181,24 +186,23 @@ enum DS {
         )
     }
 
-    /// Human-readable recovery label from score bands.
+    /// Human-readable recovery label from score bands. Mirrors `scoreColor`'s tiers.
     static func scoreLabel(_ score: Int) -> String {
         switch recoveryTier(for: score) {
         case .optimal: return "Optimal"
-        case .good:    return "Good"
-        case .fair:    return "Fair"
-        case .poor:    return "Poor"
+        case .fair:    return "Moderate"
+        case .poor:    return "Low"
         }
     }
 
     private enum RecoveryTier {
-        case optimal, good, fair, poor
+        case optimal, fair, poor
     }
 
+    /// Threshold table — must stay aligned with `DashboardViewModel.RecoveryState.init(score:)`.
     private static func recoveryTier(for score: Int) -> RecoveryTier {
         if score > 75 { return .optimal }
-        if score >= 50 { return .good }
-        if score >= 30 { return .fair }
+        if score >= 50 { return .fair }
         return .poor
     }
 }
