@@ -29,7 +29,7 @@ extension Copy {
         // MARK: - Empty State
 
         static let connectHealthData = "Connect Your Health Data"
-        static let connectHealthDescription = "Laso reads from Apple Health. Most other wearables need their app to share data with Apple Health."
+        static let connectHealthDescription = "Laso reads from Apple Health. Most other wearables need their apps to share data with Apple Health."
         static let worksWith = "Works with"
         static let syncsAutomatically = "Syncs automatically"
         static func viaApp(_ name: String) -> String { "Via \(name) app" }
@@ -85,7 +85,7 @@ extension Copy {
 
         // MARK: - Watch This
 
-        static let earlyWarning = "Watch This"
+        static let earlyWarning = "Worth Noticing"
         static let severityHigh = "High"
         static let severityModerate = "Moderate"
         static let severityLow = "Low"
@@ -473,7 +473,7 @@ extension Copy {
 
             // Live data: high stress
             static let highStressTitle = "Your stress is higher than usual right now"
-            static let highStressSubtitle = "Box breathing (4-4-4-4) for 5 min can bring it down. Your body is asking for a reset"
+            static let highStressSubtitle = "Box breathing (4-4-4-4) for 5 min can bring it down. Your body is asking for a reset."
             static func highStressRationale(_ stress: Int) -> String {
                 "Your live stress reading is \(stress)%, which is above your comfortable range."
             }
@@ -481,7 +481,7 @@ extension Copy {
             // Live data: low sleep
             static let lowSleepTitle = "Go easy today"
             static func lowSleepSubtitle(_ formattedSleep: String) -> String {
-                "Only \(formattedSleep) of sleep. Skip intense workouts, your body needs to save energy"
+                "Only \(formattedSleep) of sleep. Skip intense workouts. Your body needs to save energy."
             }
             static let lowSleepRationale = "You got much less sleep than your body needs. Hard effort today would add to the shortfall."
 
@@ -516,7 +516,7 @@ extension Copy {
             static func deepSleepSubtitle(_ minutes: Int) -> String {
                 "Only \(minutes) min of deep sleep. Try cutting caffeine after 2 PM"
             }
-            static let deepSleepRationale = "Deep sleep is when your body repairs muscle, locks in memory, and balances hormones. You are getting less than the 45 minute mark."
+            static let deepSleepRationale = "Deep sleep is when your body repairs muscle, locks in memory, and balances hormones. You are getting less than the 45-minute mark."
 
             // Focus: bedtime
             static let earlyBedTitle = "Get to bed 30 min earlier"

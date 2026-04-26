@@ -5,11 +5,11 @@ extension Copy {
 
         // MARK: - Navigation
 
-        static let title = "Cognitive Wellness"
+        static let title = "Brain Health"
 
         // MARK: - Hero
 
-        static let brainHealthLabel = "COGNITIVE WELLNESS"
+        static let brainHealthLabel = "BRAIN HEALTH"
         static let heroExplainer = "How sharp and focused your mind is likely to feel today"
         static let learningPatterns = "Learning your patterns"
         static let scaleAndDirection = "out of 100  ·  Higher is sharper"
@@ -29,9 +29,9 @@ extension Copy {
         static let headlineBaselineSteady = "Signals near your usual range. Stick to routine tasks today."
         static let headlineBaselineMixed = "Mixed signals today. Match your effort to how you feel as the day goes on."
 
-        static let headlineFoggyBoth = "Low HRV and less REM. Expect brain fog. Keep work simple today."
-        static let headlineFoggyHRV = "HRV well below your usual. Heavy thinking will feel harder today."
-        static let headlineFoggySleep = "Sleep quality is low. Go easy on tough decisions today."
+        static let headlineFoggyBoth = "HRV is low and REM was short last night. Keep work simple today."
+        static let headlineFoggyHRV = "HRV is well below your usual. Keep work simple today."
+        static let headlineFoggySleep = "Sleep quality was low last night. Keep work simple today."
 
         // MARK: - Sleep Recovery
 
@@ -53,11 +53,11 @@ extension Copy {
         // MARK: - Mental Energy
 
         static let mentalEnergy = "Mental Energy"
-        static let mentalEnergyExplanation = "How much mental energy is left after stress"
+        static let mentalEnergyExplanation = "How much mental energy is left after stress."
 
-        // MARK: - Cognitive Wellness Over Time
+        // MARK: - Brain Health Over Time
 
-        static let brainHealthOverTime = "Cognitive Wellness Over Time"
+        static let brainHealthOverTime = "Brain Health Over Time"
         static let heartAndBrain = "Heart and Brain"
         static let sleepRhythm = "Sleep Rhythm"
         static let longTermExplanation = "A healthy heart and a regular sleep schedule help keep your brain sharp over time."

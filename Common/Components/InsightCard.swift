@@ -13,12 +13,14 @@ struct InsightCard: View {
                 .frame(width: 36, height: 36)
                 .background(insight.metric.category.color, in: Circle())
 
-            // Action + context
+            // Action + context. Each row reserves space so every card has the
+            // same total height regardless of which optional context is present.
             VStack(alignment: .leading, spacing: 4) {
                 Text(actionText)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
-                    .lineLimit(3)
+                    .lineLimit(2, reservesSpace: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
                 HStack(spacing: 8) {
                     Text(insight.metric.displayName)
@@ -33,31 +35,28 @@ struct InsightCard: View {
                         .foregroundStyle(insight.severity.color)
                 }
 
-                // Causation context (only when data exists)
-                if let becauseLine = causationLine {
-                    Text(becauseLine)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                }
-
-                if let basisLine = dataBasisLine {
-                    Text(basisLine)
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.75)
-                }
+                Text(contextLine ?? " ")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1, reservesSpace: true)
+                    .opacity(contextLine == nil ? 0 : 1)
             }
 
         }
-        .frame(minHeight: 72, alignment: .center)
         .padding(DS.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .cardStyle()
     }
 }
 
 private extension InsightCard {
+    /// One context line shown below metric/severity. Prefer the causal
+    /// "because X" line; fall back to the data-basis line. Returns nil only
+    /// when neither piece of context is available.
+    var contextLine: String? {
+        causationLine ?? dataBasisLine
+    }
+
     /// First sentence of the recommendation. the actionable part
     var actionText: String {
         let rec = insight.recommendation

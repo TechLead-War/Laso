@@ -37,14 +37,14 @@ extension Copy {
 
             /// Tomorrow risk prediction with top factor.
             static func tomorrowHeadline(probability: String) -> String {
-                "Tomorrow might feel heavy on your body. Going to bed early could help."
+                "A few of your numbers are shifting together. An earlier bedtime tonight could help."
             }
 
             static func tomorrowDetailWithFactor(metricName: String) -> String {
-                "Your \(metricName.lowercased()) has been a little off lately. A good night of sleep tonight should help you feel better."
+                "Your \(metricName.lowercased()) has been a little off lately. A good night of sleep tonight could help."
             }
 
-            static let tomorrowDetailGeneric = "A few of your numbers are shifting together. Taking it easy tomorrow should help."
+            static let tomorrowDetailGeneric = "A few of your numbers are shifting together. Taking it easy could help."
         }
 
         // MARK: - Regime Shift Card (Something Changed)
@@ -75,7 +75,7 @@ extension Copy {
 
             /// Triggered precursor pattern.
             static func precursorHeadline(signalDescription: String, predictedEvent: String, accuracy: String) -> String {
-                "Your \(signalDescription.lowercased()) looks the way it did before \(predictedEvent.lowercased()) last time. A calmer day could really help."
+                "Your \(signalDescription.lowercased()) is shifting in a way that has often been linked with \(predictedEvent.lowercased()) before. A calmer day could help."
             }
 
             static func precursorDetail(description: String) -> String {
@@ -84,7 +84,7 @@ extension Copy {
 
             /// Active temporal sequence.
             static func sequenceHeadline(outcome: String, confidence: String) -> String {
-                "It looks like \(outcome.lowercased()) might be on the way over the next few days. Some extra rest now would go a long way."
+                "Some of your numbers are shifting in a pattern often seen with \(outcome.lowercased()). Extra rest over the next few days could help."
             }
 
             static func sequenceDetail(description: String) -> String {

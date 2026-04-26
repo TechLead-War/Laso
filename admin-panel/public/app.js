@@ -18,6 +18,14 @@ const auth = firebase.auth();
 const functions = firebase.functions();
 const db = firebase.firestore();
 
+// When the admin panel runs against the local Firebase emulator (hosting on
+// localhost), route Cloud Functions calls to the local Functions emulator
+// instead of production. Keeps local-only features (e.g., Pricing/ASC) self-
+// contained and safe to iterate on.
+if (typeof window !== "undefined" && /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname)) {
+  try { functions.useEmulator(window.location.hostname, 5001); } catch (_) {}
+}
+
 // ─── Config Schema ───────────────────────────────────────────────────────────
 // All keys match RemoteConfigManager.swift defaults.
 
@@ -126,11 +134,31 @@ function discoverFeatures(serverParams) {
   FEATURES = FEATURE_GROUPS.flatMap((g) => g.items);
 }
 
+// Period options offered to free users (mirrors the iOS TimeRangeSelector buckets).
+// Adding a new key here surfaces it as a checkbox in the admin panel.
+const PERIOD_OPTIONS = ["7d", "30d", "3m", "6m", "1y"];
+
+// All HealthMetric.rawValue cases from Core/Models/HealthMetric.swift.
+// Keep in sync when new metrics are added on iOS.
+const METRIC_OPTIONS = [
+  "heartRate","restingHeartRate","heartRateVariability","walkingHeartRateAverage","heartRateRecovery","atrialFibrillationBurden","peripheralPerfusionIndex",
+  "sleepDuration","sleepREM","sleepDeep","sleepCore","sleepAwake","sleepBreathingDisturbances",
+  "steps","activeCalories","basalCalories","exerciseMinutes","standHours","distanceWalkingRunning","flightsClimbed","distanceCycling","distanceSwimming","swimmingStrokeCount","appleMoveTime","runningPower","runningGroundContactTime","runningVerticalOscillation","runningStrideLength","underwaterDepth","waterTemperature",
+  "weight","bmi","bodyFatPercentage","bloodPressureSystolic","bloodPressureDiastolic","bodyTemperature","appleSleepingWristTemperature","leanBodyMass","waistCircumference",
+  "vo2Max","bloodOxygen","respiratoryRate","peakExpiratoryFlowRate","forcedVitalCapacity","forcedExpiratoryVolume1",
+  "mindfulMinutes","timeInDaylight","electrodermalActivity",
+  "walkingSpeed","walkingStepLength","walkingAsymmetry","walkingDoubleSupportPercentage","stairAscentSpeed","stairDescentSpeed","sixMinuteWalkTestDistance","walkingSteadiness","numberOfTimesFallen",
+  "waterIntake","caffeineIntake","proteinIntake","fiberIntake","sugarIntake","sodiumIntake","totalCaloriesIntake","carbohydrateIntake","fatIntake",
+  "bloodGlucose","insulinDelivery",
+  "workoutCount","workoutDuration",
+  "headphoneAudioExposure","environmentalAudioExposure",
+];
+
 const LIMITS = [
   { key: "free_metric_detail_limit", label: "Free Metric Detail Limit", type: "number" },
-  { key: "free_metrics",             label: "Free Metrics (CSV)",       type: "text" },
+  { key: "free_metrics",             label: "Free Metrics",             type: "multiselect", options: METRIC_OPTIONS },
   { key: "free_insight_limit",       label: "Free Insight Limit",       type: "number" },
-  { key: "free_periods",             label: "Free Periods (CSV)",       type: "text" },
+  { key: "free_periods",             label: "Free Periods",             type: "multiselect", options: PERIOD_OPTIONS },
 ];
 
 const PRICING = [
@@ -228,7 +256,7 @@ const DEFAULTS = {
   "feature_access_circadianAnalysis": "pro",
   "feature_access_adherenceTracking": "pro",
   "free_metric_detail_limit":   "3",
-  "free_metrics":               "heartRate,steps,sleepAnalysis",
+  "free_metrics":               "heartRate,steps,sleepDuration",
   "free_insight_limit":         "2",
   "free_periods":               "7d,30d",
   "pricing_pro_monthly_product_id":    "com.lasohealth.monthly",
@@ -356,6 +384,7 @@ const Router = (() => {
     feedback: document.getElementById("page-feedback"),
     users: document.getElementById("page-users"),
     audit: document.getElementById("page-audit"),
+    pricing: document.getElementById("page-pricing"),
     screenshots: document.getElementById("page-screenshots"),
   };
 
@@ -377,6 +406,7 @@ const Router = (() => {
     // Trigger page-specific init
     if (page === "dashboard") DashboardPage.init();
     if (page === "screenshots") ScreenshotsPage.init();
+    if (page === "pricing") PricingPage.init();
   }
 
   function init() {
@@ -449,9 +479,17 @@ const ConfigManager = (() => {
 
   function populateInputSections() {
     const allInputFields = [...LIMITS, ...PRICING, ...ALERTS, ...WATCH, ...NOTIFICATIONS, ...ANALYSIS, ...SYSTEM, ...RETENTION, ...FORCE_UPDATE];
-    allInputFields.forEach(({ key }) => {
-      const input = document.querySelector(`input[data-key="${key}"]`);
-      if (input) input.value = getValue(serverParams, key);
+    allInputFields.forEach(({ key, type }) => {
+      if (type === "multiselect") {
+        const value = getValue(serverParams, key);
+        const selected = new Set(value.split(",").map((s) => s.trim()).filter(Boolean));
+        document.querySelectorAll(`input[data-key="${key}"][data-option]`).forEach((cb) => {
+          cb.checked = selected.has(cb.dataset.option);
+        });
+      } else {
+        const input = document.querySelector(`input[data-key="${key}"]`);
+        if (input) input.value = getValue(serverParams, key);
+      }
     });
   }
 
@@ -482,9 +520,17 @@ const ConfigManager = (() => {
 
     // Input fields
     const allInputFields = [...LIMITS, ...PRICING, ...ALERTS, ...WATCH, ...NOTIFICATIONS, ...ANALYSIS, ...SYSTEM, ...RETENTION, ...FORCE_UPDATE];
-    allInputFields.forEach(({ key }) => {
-      const input = document.querySelector(`input[data-key="${key}"]`);
-      if (input) parameters[key] = input.value;
+    allInputFields.forEach(({ key, type }) => {
+      if (type === "multiselect") {
+        const checked = [];
+        document.querySelectorAll(`input[data-key="${key}"][data-option]`).forEach((cb) => {
+          if (cb.checked) checked.push(cb.dataset.option);
+        });
+        parameters[key] = checked.join(",");
+      } else {
+        const input = document.querySelector(`input[data-key="${key}"]`);
+        if (input) parameters[key] = input.value;
+      }
     });
 
     // Toggles
@@ -560,13 +606,27 @@ function buildFeatureGroups(container, groups) {
 }
 
 function buildInputRows(container, fields) {
-  fields.forEach(({ key, label, type }) => {
+  fields.forEach(({ key, label, type, options }) => {
     const row = document.createElement("div");
-    row.className = "input-row";
-    row.innerHTML = `
-      <span class="input-label">${label}</span>
-      <input type="${type}" data-key="${key}" />
-    `;
+    if (type === "multiselect") {
+      row.className = "input-row multi-select-row";
+      const boxes = (options || [])
+        .map(
+          (opt) =>
+            `<label class="multi-option"><input type="checkbox" data-key="${key}" data-option="${opt}" /> ${opt}</label>`
+        )
+        .join("");
+      row.innerHTML = `
+        <span class="input-label">${label}</span>
+        <div class="multi-select-options">${boxes}</div>
+      `;
+    } else {
+      row.className = "input-row";
+      row.innerHTML = `
+        <span class="input-label">${label}</span>
+        <input type="${type}" data-key="${key}" />
+      `;
+    }
     container.appendChild(row);
   });
 }
@@ -782,9 +842,9 @@ const DashboardPage = (() => {
         div.className = "dash-feedback-item";
         div.innerHTML = `
           <div class="dash-feedback-header">
-            <span class="feedback-category-badge">${e.category || "?"}</span>
-            <span class="feedback-date">${date}</span>
-            ${e.app_version ? `<span class="feedback-version">v${e.app_version}</span>` : ""}
+            <span class="feedback-category-badge">${UI.escapeHtml(e.category || "?")}</span>
+            <span class="feedback-date">${UI.escapeHtml(date)}</span>
+            ${e.app_version ? `<span class="feedback-version">v${UI.escapeHtml(e.app_version)}</span>` : ""}
           </div>
           <div class="dash-feedback-text">${UI.escapeHtml(e.text || "")}</div>
         `;
@@ -890,7 +950,7 @@ const FeedbackPage = (() => {
       // Build category filter options
       const categories = [...new Set(allEntries.map((e) => e.category || "unknown"))].sort();
       categoryFilter.innerHTML = '<option value="">All Categories</option>' +
-        categories.map((c) => `<option value="${c}">${c}</option>`).join("");
+        categories.map((c) => `<option value="${UI.escapeHtml(c)}">${UI.escapeHtml(c)}</option>`).join("");
 
       // Build summary
       const categoryCounts = {};
@@ -969,10 +1029,10 @@ const FeedbackPage = (() => {
       return `
         <div class="feedback-entry">
           <div class="feedback-entry-meta">
-            <span class="feedback-category-badge">${e.category || "?"}</span>
-            <span class="feedback-date">${date}</span>
-            ${e.days_since_install != null ? `<span class="feedback-days">Day ${e.days_since_install}</span>` : ""}
-            ${e.app_version ? `<span class="feedback-version">v${e.app_version}</span>` : ""}
+            <span class="feedback-category-badge">${UI.escapeHtml(e.category || "?")}</span>
+            <span class="feedback-date">${UI.escapeHtml(date)}</span>
+            ${e.days_since_install != null ? `<span class="feedback-days">Day ${UI.escapeHtml(String(e.days_since_install))}</span>` : ""}
+            ${e.app_version ? `<span class="feedback-version">v${UI.escapeHtml(e.app_version)}</span>` : ""}
           </div>
           <div class="feedback-text">${UI.escapeHtml(e.text || "")}</div>
         </div>
@@ -1354,6 +1414,258 @@ const AuditPage = (() => {
   }
 
   return { loadAuditLog };
+})();
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Pricing Page Module — App Store Connect (read-only, local dev)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const PricingPage = (() => {
+  const refreshBtn = document.getElementById("pricing-refresh-btn");
+  const ascLink = document.getElementById("pricing-asc-link");
+  const appNameEl = document.getElementById("pricing-app-name");
+  const subEl = document.getElementById("pricing-status-sub");
+  const statsEl = document.getElementById("pricing-stats");
+  const statGroups = document.getElementById("pricing-stat-groups");
+  const statProducts = document.getElementById("pricing-stat-products");
+  const statTerritories = document.getElementById("pricing-stat-territories");
+  const statOffers = document.getElementById("pricing-stat-offers");
+  const productsEl = document.getElementById("pricing-products");
+
+  let loaded = false;
+
+  refreshBtn.addEventListener("click", () => load(true));
+
+  async function init() {
+    if (loaded) return;
+    await load(false);
+  }
+
+  async function load(force) {
+    refreshBtn.disabled = true;
+    const originalLabel = refreshBtn.textContent;
+    refreshBtn.textContent = "Loading…";
+    UI.showLoading(true);
+
+    try {
+      const fn = functions.httpsCallable("getAppStorePricing");
+      const result = await fn({ force: !!force });
+      const data = result.data || {};
+      loaded = true;
+      render(data);
+      UI.showToast(force ? "Pricing refreshed from App Store Connect" : "Pricing loaded");
+    } catch (err) {
+      const msg = (err && err.message) || "Unknown error";
+      productsEl.innerHTML = `<div class="empty-state">Failed to load pricing: ${UI.escapeHtml(msg)}</div>`;
+      subEl.textContent = "Failed to load. Tap Refresh to retry.";
+      UI.showToast("Failed to load pricing: " + msg, true);
+    } finally {
+      refreshBtn.disabled = false;
+      refreshBtn.textContent = originalLabel || "Refresh";
+      UI.showLoading(false);
+    }
+  }
+
+  function render(data) {
+    const products = Array.isArray(data.products) ? data.products : [];
+
+    const fetchedAt = data.fetchedAt ? new Date(data.fetchedAt) : null;
+    const fetchedLabel = fetchedAt
+      ? fetchedAt.toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+      : "--";
+    appNameEl.textContent = data.appName ? `${data.appName} — ${data.bundleId}` : (data.bundleId || "Unknown app");
+    const cachedNote = data.cached ? ` · cached (${Math.round((data.cacheAgeMs || 0) / 1000)}s old)` : "";
+    subEl.textContent = `Last fetched ${fetchedLabel}${cachedNote}`;
+
+    if (data.appId) {
+      ascLink.href = `https://appstoreconnect.apple.com/apps/${data.appId}/distribution/iaps`;
+    }
+
+    const territories = new Set();
+    let offerCount = 0;
+    for (const p of products) {
+      for (const pr of (p.prices || [])) if (pr.territoryId) territories.add(pr.territoryId);
+      offerCount += (p.introOffers?.length || 0);
+    }
+    statGroups.textContent = String(data.groupCount ?? 0);
+    statProducts.textContent = String(products.length);
+    statTerritories.textContent = String(territories.size);
+    statOffers.textContent = String(offerCount);
+    statsEl.hidden = false;
+
+    productsEl.innerHTML = "";
+    if (products.length === 0) {
+      productsEl.appendChild(buildEmptyCard(data.appId));
+      return;
+    }
+    products.forEach((p) => productsEl.appendChild(buildProductCard(p)));
+  }
+
+  function buildEmptyCard(appId) {
+    const wrap = document.createElement("div");
+    wrap.className = "pricing-empty-card";
+    const ascHref = appId
+      ? `https://appstoreconnect.apple.com/apps/${appId}/distribution/iaps`
+      : "https://appstoreconnect.apple.com";
+    wrap.innerHTML = `
+      <h3>No subscriptions configured yet</h3>
+      <p>App Store Connect responded successfully but this app has no auto-renewable subscriptions or in-app purchases set up. Once you create them in App Store Connect, they will appear here automatically.</p>
+      <a class="btn btn-primary" href="${ascHref}" target="_blank" rel="noopener">Open App Store Connect ↗</a>
+    `;
+    return wrap;
+  }
+
+  function buildProductCard(product) {
+    const card = document.createElement("div");
+    card.className = "pricing-product-card";
+
+    const period = formatPeriod(product.duration);
+    const stateClass = product.state === "READY_FOR_REVIEW" || product.state === "APPROVED"
+      ? "pricing-tag-state-ready"
+      : product.state === "WAITING_FOR_REVIEW" || product.state === "IN_REVIEW"
+      ? "pricing-tag-state-waiting"
+      : product.state === "REJECTED"
+      ? "pricing-tag-state-rejected"
+      : "";
+
+    const familyTag = product.familySharable ? `<span class="pricing-tag">Family Sharable</span>` : "";
+    const stateTag = product.state ? `<span class="pricing-tag ${stateClass}">${UI.escapeHtml(product.state)}</span>` : "";
+
+    const prices = (product.prices || []).filter((p) => p.customerPrice != null);
+    const usPrice = prices.find((p) => p.territoryId === "USA") || null;
+    const baseline = usPrice || prices[0] || null;
+    const baselineDisplay = baseline
+      ? `${formatMoney(baseline.customerPrice, baseline.territoryCurrency)} ${baseline.territoryId === "USA" ? "(US)" : `(${baseline.territoryId || "—"})`}`
+      : "Not priced";
+
+    const intros = (product.introOffers || []).map((o) => {
+      const periods = o.numberOfPeriods != null ? `× ${o.numberOfPeriods}` : "";
+      const dur = o.duration ? formatPeriod(o.duration) : "";
+      const territory = o.territoryId ? ` · ${o.territoryId}` : "";
+      const price = o.customerPrice != null && o.offerMode !== "FREE_TRIAL"
+        ? ` · ${formatMoney(o.customerPrice, o.territoryCurrency)}`
+        : "";
+      const mode = (o.offerMode || "OFFER").replace(/_/g, " ");
+      return `<span class="pricing-intro-pill"><span class="pricing-intro-mode">${UI.escapeHtml(mode)}</span> ${UI.escapeHtml([dur, periods].filter(Boolean).join(" "))}${UI.escapeHtml(price)}${UI.escapeHtml(territory)}</span>`;
+    }).join("");
+
+    card.innerHTML = `
+      <div class="pricing-product-header">
+        <div class="pricing-product-title">
+          <div class="pricing-product-name">${UI.escapeHtml(product.name || product.productId || "Subscription")}</div>
+          <div class="pricing-product-id">${UI.escapeHtml(product.productId || "")}</div>
+        </div>
+        <div class="pricing-product-tags">${stateTag}${familyTag}</div>
+      </div>
+
+      <div class="pricing-product-meta-grid">
+        <div>
+          <div class="pricing-meta-item-label">Billing Period</div>
+          <div class="pricing-meta-item-value">${UI.escapeHtml(period)}</div>
+        </div>
+        <div>
+          <div class="pricing-meta-item-label">Baseline Price</div>
+          <div class="pricing-meta-item-value">${UI.escapeHtml(baselineDisplay)}</div>
+        </div>
+        <div>
+          <div class="pricing-meta-item-label">Territories Priced</div>
+          <div class="pricing-meta-item-value">${prices.length}</div>
+        </div>
+        <div>
+          <div class="pricing-meta-item-label">Group Level</div>
+          <div class="pricing-meta-item-value">${product.groupLevel ?? "—"}</div>
+        </div>
+      </div>
+
+      ${intros ? `<div>
+        <div class="pricing-meta-item-label" style="margin-bottom:6px;">Introductory Offers</div>
+        <div class="pricing-intro-list">${intros}</div>
+      </div>` : ""}
+
+      <div>
+        <div class="pricing-meta-item-label" style="margin-bottom:6px;">Country Pricing</div>
+        <div class="pricing-territory-toolbar">
+          <input type="text" class="pricing-territory-search" placeholder="Search country code (e.g. USA, IND, GBR)…" />
+          <span class="pricing-territory-count"></span>
+        </div>
+        <div class="pricing-table-wrap">
+          <table class="pricing-table">
+            <thead>
+              <tr>
+                <th style="width:30%;">Country</th>
+                <th style="width:25%;">Price</th>
+                <th style="width:20%;">Currency</th>
+                <th style="width:25%;">Effective From</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    const tbody = card.querySelector("tbody");
+    const search = card.querySelector(".pricing-territory-search");
+    const countLabel = card.querySelector(".pricing-territory-count");
+
+    function renderRows(filter) {
+      const f = (filter || "").trim().toUpperCase();
+      const rows = prices
+        .slice()
+        .sort((a, b) => (a.territoryId || "").localeCompare(b.territoryId || ""))
+        .filter((p) => !f || (p.territoryId || "").includes(f) || (p.territoryCurrency || "").toUpperCase().includes(f));
+
+      countLabel.textContent = `${rows.length} of ${prices.length} territories`;
+
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="padding:18px;text-align:center;color:var(--text-secondary);">No territories match "${UI.escapeHtml(filter)}"</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = rows.map((r) => {
+        const eff = r.startDate
+          ? new Date(r.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+          : "—";
+        return `<tr>
+          <td>${UI.escapeHtml(r.territoryId || "—")}</td>
+          <td class="pricing-cell-amount">${UI.escapeHtml(formatMoney(r.customerPrice, r.territoryCurrency))}</td>
+          <td class="pricing-cell-currency">${UI.escapeHtml(r.territoryCurrency || "—")}</td>
+          <td>${UI.escapeHtml(eff)}</td>
+        </tr>`;
+      }).join("");
+    }
+
+    search.addEventListener("input", (e) => renderRows(e.target.value));
+    renderRows("");
+
+    return card;
+  }
+
+  function formatMoney(amount, currency) {
+    if (amount == null || amount === "") return "—";
+    const num = Number(amount);
+    if (!isFinite(num)) return String(amount);
+    if (currency) {
+      try {
+        return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 2 }).format(num);
+      } catch { /* fallthrough */ }
+    }
+    return num.toFixed(2);
+  }
+
+  function formatPeriod(period) {
+    if (!period) return "—";
+    const map = {
+      ONE_WEEK: "Weekly",
+      ONE_MONTH: "Monthly",
+      TWO_MONTHS: "Every 2 months",
+      THREE_MONTHS: "Every 3 months",
+      SIX_MONTHS: "Every 6 months",
+      ONE_YEAR: "Yearly",
+    };
+    return map[period] || period.replace(/_/g, " ").toLowerCase();
+  }
+
+  return { init, refresh: () => load(true) };
 })();
 
 // ═══════════════════════════════════════════════════════════════════════════════

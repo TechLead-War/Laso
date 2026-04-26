@@ -10,6 +10,9 @@
     "--" : {
 
     },
+    "—" : {
+
+    },
     "·" : {
 
     },
@@ -159,6 +162,9 @@
     "%@ Logged" : {
 
     },
+    "%@ ms" : {
+
+    },
     "%@ of %@" : {
       "localizations" : {
         "en" : {
@@ -178,6 +184,12 @@
           }
         }
       }
+    },
+    "%@ range" : {
+
+    },
+    "%@ range, locked, requires Pro" : {
+
     },
     "%@ rating %lld of %lld" : {
       "localizations" : {
@@ -324,16 +336,6 @@
     },
     "%@, needs attention" : {
 
-    },
-    "%@, risk level %lld out of 100, %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@, risk level %2$lld out of 100, %3$@"
-          }
-        }
-      }
     },
     "%@, unlocked" : {
 
@@ -521,6 +523,16 @@
         }
       }
     },
+    "%lld more insight%@ with Pro" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld more insight%2$@ with Pro"
+          }
+        }
+      }
+    },
     "%lld of %lld" : {
       "localizations" : {
         "en" : {
@@ -597,6 +609,16 @@
     },
     "%lldd" : {
 
+    },
+    "%lldh %lldm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lldh %2$lldm"
+          }
+        }
+      }
     },
     "•" : {
 
@@ -727,6 +749,15 @@
       }
     },
     "Breathwork" : {
+
+    },
+    "Building accuracy · %lld%%" : {
+
+    },
+    "Building your sleep profile" : {
+
+    },
+    "Building your stress baseline" : {
 
     },
     "Bundle: %@" : {
@@ -996,6 +1027,9 @@
     "Day" : {
 
     },
+    "DAY %lld" : {
+
+    },
     "days" : {
 
     },
@@ -1085,6 +1119,9 @@
     "Gender" : {
 
     },
+    "h" : {
+
+    },
     "Health" : {
 
     },
@@ -1151,6 +1188,9 @@
     "How would you feel if you could no longer use Laso?" : {
 
     },
+    "HRV · weekly average" : {
+
+    },
     "I couldn't calculate your readiness. Make sure Apple Health has recent HRV and resting heart rate data." : {
 
     },
@@ -1206,6 +1246,12 @@
       }
     },
     "Laso" : {
+
+    },
+    "last %@" : {
+
+    },
+    "Last 7 nights" : {
 
     },
     "Last Known Readings" : {
@@ -1274,6 +1320,9 @@
     "Log a ${durationMinutes} minute ${workoutType} workout" : {
 
     },
+    "Log a workout in Apple Health or wear your watch during exercise. Your strain score will appear here once activity is recorded." : {
+
+    },
     "Log Entry" : {
 
     },
@@ -1325,6 +1374,9 @@
     "Low" : {
 
     },
+    "m" : {
+
+    },
     "Maximum notifications per day" : {
 
     },
@@ -1349,10 +1401,22 @@
     "No data" : {
 
     },
+    "no data yet" : {
+
+    },
+    "No nights recorded yet" : {
+
+    },
     "No score yet" : {
 
     },
+    "No workout data yet" : {
+
+    },
     "Not Enough Data" : {
+
+    },
+    "Not enough HRV samples across the week" : {
 
     },
     "Not selected" : {
@@ -1484,7 +1548,13 @@
     "Respiratory" : {
 
     },
+    "Resting HR" : {
+
+    },
     "Restores any prior subscription tied to your Apple ID" : {
+
+    },
+    "Retry" : {
 
     },
     "Retry loading health data" : {
@@ -1596,6 +1666,9 @@
     "Sleep" : {
 
     },
+    "Sleep Coach" : {
+
+    },
     "Sleep Summary" : {
 
     },
@@ -1691,6 +1764,9 @@
     "Tap to show tier progression details" : {
 
     },
+    "target 7h" : {
+
+    },
     "Target High" : {
 
     },
@@ -1734,9 +1810,6 @@
 
     },
     "Time period selector" : {
-
-    },
-    "Time Range" : {
 
     },
     "Today: %lld–%lld bpm" : {
@@ -1784,6 +1857,12 @@
 
     },
     "Under Maintenance" : {
+
+    },
+    "Unlock %lld more insights with Pro" : {
+
+    },
+    "Unlock the full set with a Pro subscription." : {
 
     },
     "Update" : {
@@ -1846,6 +1925,15 @@
     "We analyzed your health history" : {
 
     },
+    "We need a few nights of overnight sleep data from your Apple Watch to learn your normal range. Wear your watch to bed and your sleep coach will appear here." : {
+
+    },
+    "We need about 14 days of overnight HRV data to learn your normal range. Wear your Apple Watch to bed and your stress signal will appear here." : {
+
+    },
+    "We need more nights of sleep + HRV data before locking in your brain readiness number." : {
+
+    },
     "Weekly Review. Score %lld. %lld wins." : {
       "localizations" : {
         "en" : {
@@ -1875,6 +1963,9 @@
 
     },
     "Workout Type" : {
+
+    },
+    "years" : {
 
     },
     "Yoga" : {

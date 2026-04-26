@@ -248,7 +248,7 @@ struct CognitiveEnergyAnalyzer {
         return Insight(
             metric: .sleepDuration,
             title: Copy.Analysis.CognitiveEnergy.sleepDebtAccumulating,
-            summary: "You have accumulated \(debtStr) hours of sleep debt this week (averaging \(avgStr) hrs vs your \(baselineStr) hr baseline). Cognitive impairment compounds with each deficit day \u{2014} reaction time and decision-making are most affected.",
+            summary: "You have built up \(debtStr) hours of sleep debt this week (averaging \(avgStr) hrs vs your \(baselineStr) hr baseline). Short sleep can affect how alert and clear-headed you feel each day.",
             recommendation: "An extra hour per night for \(catchUpNights) nights can help clear this deficit. Setting a bedtime alarm 45 min before your target sleep time is a good starting point.",
             severity: cumulativeDebt >= 5.0 ? .warning : .info,
             trend: .declining,

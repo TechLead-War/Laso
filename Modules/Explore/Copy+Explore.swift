@@ -79,7 +79,7 @@ extension Copy {
         // MARK: - Pro Upsell
 
         static let pro = "PRO"
-        static let discoverHiddenConnections = "Find hidden links between your health metrics"
+        static let discoverHiddenConnections = "Find hidden links between your health metrics."
 
         // MARK: - Declining Trends Section
 

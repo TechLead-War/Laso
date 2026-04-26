@@ -168,8 +168,17 @@ final class StrainScorer {
     @MainActor
     func compute(from store: HealthDataStore, age: Int, restingHR: Double?, todayHRSamples: [MetricSample] = [], timeSeries: [HealthMetric: MetricTimeSeries]? = nil) {
         // Prefer in-memory time series from HealthKitManager (freshest data)
-        // over re-reading from SwiftData (may lag behind)
-        let allSeries = timeSeries ?? store.loadAllTimeSeries()
+        // over re-reading from SwiftData (may lag behind). Defensive: an empty
+        // dictionary (HealthKit fetch silently dropped keys, or compute fired
+        // before sync populated anything) is treated the same as nil so we
+        // don't render an empty Strain screen when the persisted store has
+        // years of workout/HR history.
+        let allSeries: [HealthMetric: MetricTimeSeries]
+        if let timeSeries, !timeSeries.isEmpty {
+            allSeries = timeSeries
+        } else {
+            allSeries = store.loadAllTimeSeries()
+        }
 
         // Resolve resting heart rate: parameter > HealthKit > population default
         let effectiveRestingHR = resolveRestingHR(restingHR, from: allSeries)

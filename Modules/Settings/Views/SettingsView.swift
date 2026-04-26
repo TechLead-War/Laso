@@ -70,6 +70,19 @@ struct SettingsView: View {
         FeatureGate.hasFullAccess ? Copy.Settings.proMember : Copy.Settings.freePlan
     }
 
+    /// Caption shown under the Pro badge so the user knows till when access lasts.
+    /// Real subscribers see "Renews DD MMM YYYY"; free-year users see
+    /// "Free until DD MMM YYYY" when an end date is configured in Remote Config.
+    private var subscriptionDateText: String? {
+        if let expiration = FeatureGate.subscriptionExpirationDate {
+            return Copy.Settings.renews(expiration)
+        }
+        if FeatureGate.freeYearActive, let endDate = FeatureGate.freeYearEndDate {
+            return Copy.Settings.freeUntil(endDate)
+        }
+        return nil
+    }
+
     private var appVersion: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
@@ -92,6 +105,7 @@ struct SettingsView: View {
         NavigationStack(path: $deepLinkPath) {
             Form {
                 profileSection
+                subscriptionSection
                 dataSection
                 notificationsSection
                 aboutSection
@@ -185,7 +199,22 @@ struct SettingsView: View {
 
                 Spacer()
 
-                subscriptionBadge
+                VStack(alignment: .trailing, spacing: 4) {
+                    subscriptionBadge
+                    if let dateText = subscriptionDateText {
+                        Text(dateText)
+                            .font(DS.Typography.caption2)
+                            .foregroundStyle(.secondary)
+                            // Match the capsule's internal horizontal padding so
+                            // the date text's right edge aligns with the "Pro
+                            // Member" label's right edge (not the capsule's
+                            // outer edge). Without this, the caption visually
+                            // sits flush-right while the badge text appears
+                            // inset, creating the misalignment in screenshots.
+                            .padding(.trailing, DS.space3)
+                            .accessibilityIdentifier("settings.subscription.dateCaption")
+                    }
+                }
             }
             .padding(.vertical, 6)
             .listRowBackground(AppColour.surfaceRaised)
@@ -217,6 +246,27 @@ struct SettingsView: View {
                 : AnyShapeStyle(.fill.tertiary),
             in: Capsule()
         )
+    }
+
+    // MARK: - Subscription Section
+
+    @ViewBuilder
+    private var subscriptionSection: some View {
+        if FeatureGate.hasFullAccess, let manageURL = URL(string: AppSecrets.URLs.manageSubscriptions) {
+            Section {
+                Link(destination: manageURL) {
+                    settingsRow(
+                        icon: "creditcard.fill",
+                        iconColor: .orange,
+                        title: Copy.Settings.manageSubscription,
+                        subtitle: Copy.Settings.manageSubscriptionSubtitle,
+                        trailing: "arrow.up.right"
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("settings.row.subscription.top")
+            }
+        }
     }
 
     // MARK: - Data Section
@@ -434,19 +484,6 @@ struct SettingsView: View {
                     )
                 }
                 .buttonStyle(.plain)
-            }
-            if FeatureGate.hasFullAccess, let manageURL = URL(string: AppSecrets.URLs.manageSubscriptions) {
-                Link(destination: manageURL) {
-                    settingsRow(
-                        icon: "creditcard.fill",
-                        iconColor: .orange,
-                        title: Copy.Settings.manageSubscription,
-                        subtitle: nil,
-                        trailing: "arrow.up.right"
-                    )
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("settings.row.subscription")
             }
             NavigationLink {
                 AcknowledgementsView()

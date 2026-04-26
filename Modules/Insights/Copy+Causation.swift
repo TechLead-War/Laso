@@ -147,19 +147,19 @@ extension Copy {
         // MARK: - Reversal Recommendation Sentences
 
         static func reversalRecoveringWithCause(metricName: String, current: String, unit: String, previous: String, causeName: String) -> String {
-            "your \(metricName.lowercased()) is recovering, now \(current) \(unit) vs \(previous) \(unit) previously. Keep your \(causeName.lowercased()) consistent"
+            "Your \(metricName.lowercased()) is recovering, now \(current) \(unit) vs \(previous) \(unit) previously. Keep your \(causeName.lowercased()) consistent."
         }
 
         static func reversalRecovering(metricName: String, current: String, unit: String, previous: String) -> String {
-            "your \(metricName.lowercased()) is recovering, now \(current) \(unit) vs \(previous) \(unit) previously"
+            "Your \(metricName.lowercased()) is recovering, now \(current) \(unit) vs \(previous) \(unit) previously."
         }
 
         static func reversalDeclinedWithCause(metricName: String, causeName: String) -> String {
-            "your \(metricName.lowercased()) reversed direction. Focus on your \(causeName.lowercased()) to get back on track"
+            "Your \(metricName.lowercased()) reversed direction. Focus on your \(causeName.lowercased()) to get back on track."
         }
 
         static func reversalDeclined(metricName: String) -> String {
-            "your \(metricName.lowercased()) reversed direction. Review what changed in the past few days"
+            "Your \(metricName.lowercased()) reversed direction. Review what changed in the past few days."
         }
 
         // MARK: - Title Patterns (Causation Style)

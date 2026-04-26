@@ -40,20 +40,30 @@ final class RemoteConfigManager {
 
     // MARK: - Helpers
 
+    /// Touch a tracked stored property so SwiftUI's Observation framework
+    /// registers a dependency on this manager. After `fetchAndActivate()`
+    /// mutates `lastFetchTime`, any view that read a config value during its
+    /// last body evaluation will be re-rendered automatically.
+    private func observeFetchUpdates() { _ = lastFetchTime }
+
     private func stringValue(forKey key: String) -> String {
-        remoteConfig?.configValue(forKey: key).stringValue ?? (Self.defaults[key] as? String ?? "")
+        observeFetchUpdates()
+        return remoteConfig?.configValue(forKey: key).stringValue ?? (Self.defaults[key] as? String ?? "")
     }
 
     private func intValue(forKey key: String) -> Int {
-        remoteConfig?.configValue(forKey: key).numberValue.intValue ?? (Self.defaults[key] as? NSNumber)?.intValue ?? 0
+        observeFetchUpdates()
+        return remoteConfig?.configValue(forKey: key).numberValue.intValue ?? (Self.defaults[key] as? NSNumber)?.intValue ?? 0
     }
 
     private func doubleValue(forKey key: String) -> Double {
-        remoteConfig?.configValue(forKey: key).numberValue.doubleValue ?? (Self.defaults[key] as? NSNumber)?.doubleValue ?? 0
+        observeFetchUpdates()
+        return remoteConfig?.configValue(forKey: key).numberValue.doubleValue ?? (Self.defaults[key] as? NSNumber)?.doubleValue ?? 0
     }
 
     private func boolValue(forKey key: String) -> Bool {
-        remoteConfig?.configValue(forKey: key).boolValue ?? (Self.defaults[key] as? NSNumber)?.boolValue ?? false
+        observeFetchUpdates()
+        return remoteConfig?.configValue(forKey: key).boolValue ?? (Self.defaults[key] as? NSNumber)?.boolValue ?? false
     }
 
     // MARK: - Fetch
@@ -279,6 +289,14 @@ final class RemoteConfigManager {
         boolValue(forKey: "free_year_active")
     }
 
+    /// Free-year mode end date (Unix timestamp seconds). Returns nil when unset (0).
+    /// Configure in Firebase Remote Config to surface "Free until DD MMM YYYY" on the Pro badge.
+    var freeYearEndDate: Date? {
+        let timestamp = doubleValue(forKey: "free_year_end_date")
+        guard timestamp > 0 else { return nil }
+        return Date(timeIntervalSince1970: timestamp)
+    }
+
     // MARK: - Intelligence Notifications
 
     /// Whether ML intelligence card notifications are enabled
@@ -389,7 +407,7 @@ extension RemoteConfigManager {
 
         // Limits
         "free_metric_detail_limit": 3 as NSNumber,
-        "free_metrics":             "heartRate,steps,sleepAnalysis" as NSString,
+        "free_metrics":             "heartRate,steps,sleepDuration" as NSString,
         "free_insight_limit":       2 as NSNumber,
         "free_periods":             "7d,30d" as NSString,
 
@@ -445,7 +463,8 @@ extension RemoteConfigManager {
         "intelligence_notifications_enabled": true as NSNumber,
 
         // Monetization
-        "free_year_active":          true as NSNumber,
+        "free_year_active":          false as NSNumber,    // Safe default: no accidental Pro grants when fetch fails or is pending. Flip via Firebase Remote Config.
+        "free_year_end_date":        1808697600 as NSNumber,    // 2027-04-26 UTC; override in Firebase Remote Config (0 = hide date)
 
         // Kill switches (all off by default)
         "kill_switch_enabled":       false as NSNumber,

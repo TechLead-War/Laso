@@ -53,6 +53,9 @@
         <a class="nav-item" href="#audit" data-page="audit">
           <span class="nav-icon">&#9998;</span> Audit Log
         </a>
+        <a class="nav-item" href="#pricing" data-page="pricing">
+          <span class="nav-icon">&#9733;</span> Pricing
+        </a>
         <a class="nav-item" href="#screenshots" data-page="screenshots">
           <span class="nav-icon">&#9636;</span> App Screenshots
         </a>
@@ -524,6 +527,54 @@
               <div class="empty-state">Loading…</div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- ═══ Page: Pricing (App Store Connect, read-only) ═══ -->
+      <div class="page" id="page-pricing">
+        <div class="page-header">
+          <h1>Pricing</h1>
+          <span class="page-subtitle">Live snapshot from App Store Connect. Read-only — change prices in App Store Connect itself.</span>
+        </div>
+
+        <!-- Status / actions bar -->
+        <div class="card">
+          <div class="card-body pricing-status-bar">
+            <div class="pricing-status-meta">
+              <div class="pricing-status-app" id="pricing-app-name">Loading…</div>
+              <div class="pricing-status-sub" id="pricing-status-sub">Tap Refresh to fetch live data from App Store Connect</div>
+            </div>
+            <div class="pricing-status-actions">
+              <a class="btn btn-link" id="pricing-asc-link"
+                 href="https://appstoreconnect.apple.com" target="_blank" rel="noopener">Open App Store Connect ↗</a>
+              <button class="btn btn-secondary" id="pricing-refresh-btn">Refresh</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top-line stats -->
+        <div class="stats-grid stats-grid-4 pricing-stats" id="pricing-stats" hidden>
+          <div class="stat-card">
+            <div class="stat-label">Subscription Groups</div>
+            <div class="stat-value" id="pricing-stat-groups">--</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Products</div>
+            <div class="stat-value" id="pricing-stat-products">--</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Territories</div>
+            <div class="stat-value" id="pricing-stat-territories">--</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Intro Offers</div>
+            <div class="stat-value" id="pricing-stat-offers">--</div>
+          </div>
+        </div>
+
+        <!-- Product list — populated by PricingPage module -->
+        <div id="pricing-products">
+          <div class="empty-state">Click <strong>Refresh</strong> to load live pricing from App Store Connect.</div>
         </div>
       </div>
 

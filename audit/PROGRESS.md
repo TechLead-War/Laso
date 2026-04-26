@@ -6,6 +6,33 @@
 [18:35 IST]       Pass 5  [████████████████████] 100%  Wave 1+2 done — 35+ Critical/High auto-fixes, BUILD SUCCEEDED
 [18:40 IST]       Pass 6  [█░░░░░░░░░░░░░░░░░░░]   5%  USER REQUEST — solve all remaining auto-fixable
 [19:15 IST]       Pass 6  [████████████████████] 100%  Pass 6 done — 8 agents completed, BUILD SUCCEEDED + runtime verified
+[2026-04-26]      Pass 7  [████████████████████] 100%  Copy + medical-wording sweep — BUILD SUCCEEDED (runtime sim launch not done)
+                                                       • 26 capitalization + grammar fixes across Insights, Causation, Analysis,
+                                                         Explore, Discovery, Home, BrainHealth, StressMonitor, Reports
+                                                         (lowercase "your" → "Your", missing periods, leading spaces, "7-Day" hyphen,
+                                                          "long-term" hyphen, "keeps up→continues", "their app→their apps",
+                                                          comma splice fix, "45-minute" hyphen)
+                                                       • App-Review-safe medical-wording rebrand:
+                                                         - RiskGrade: Low/Moderate/Elevated/High/Very High → Within range/Steady/
+                                                           Worth a look/Worth attention/Pattern observed
+                                                         - RiskFactorStatus: Concerning/Critical → Worth a look/Outside your usual
+                                                         - HealthRiskEngine: stripped clinical numeric targets (50–70 bpm, 40+ ms SDNN,
+                                                           <120/80 mmHg, >12 bpm drop, sodium <2,300mg/day, <1% AFib burden,
+                                                           "below 90% = emergency"); softened to "Aim for steady readings"
+                                                         - VO2 Max: removed "single strongest predictor of longevity" claim
+                                                         - AFib recommendation rewritten as neutral non-interpretive note
+                                                         - SpO2: removed "medical emergency requiring urgent care" wording
+                                                         - BrainHealthState: "Foggy" → "Low energy"
+                                                         - Copy+BrainHealth headlines: "Expect brain fog" removed
+                                                         - CognitiveEnergyAnalyzer: "Cognitive impairment compounds" softened
+                                                         - HealthRiskDetailView accessibility label: dropped "risk level X out of 100"
+                                                         - Copy+Home: "Watch This" → "Worth Noticing"
+                                                         - Copy+Briefing: tomorrow/precursor predictions softened to non-prophetic
+                                                         - Copy+Policy: engineering jargon source labels simplified
+                                                           (counterfactual/circadian rhythm analysis → what-if check/body clock signal)
+                                                         - Copy+Settings: "Delete All My Data" → "Delete Account and All Data"
+                                                         - BrainHealth naming unified to "Brain Health" (was mixed with "Cognitive Wellness")
+                                                       Final build: BUILD SUCCEEDED on generic iOS Simulator destination.
                                                        Net Pass 6 outcome (≈100+ further fixes):
                                                          • Agent A — 16 force-unwrap crash bombs in Core/Analysis/ + ML safed
                                                          • Agent B — 2 PII-leaking prints removed, 9 prints DEBUG-gated
@@ -32,7 +59,7 @@
 
 1. `GoogleService-Info.plist` regen (Firebase Console)
 2. APNs production .p8 Auth Key upload
-3. Risk + BrainHealth medical-claim rebrand (legal counsel)
+3. Risk + BrainHealth medical-claim rebrand — FIRST PASS DONE in Pass 7 (still needs legal counsel sign-off on final wording)
 4. App Store Server Notifications V2 webhook setup
 5. Pricing strategy decision (annual price tier + trial length)
 6. Sign in with Apple addition

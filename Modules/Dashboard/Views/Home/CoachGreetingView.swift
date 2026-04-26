@@ -1,56 +1,53 @@
 import SwiftUI
 
-/// Compact greeting header. Time-of-day kicker + date row only. No streak,
-/// no prescription, no overflow menu — the recovery card is Home's single
-/// content hero, and the score guide opens from tapping the card itself.
+/// Compact greeting header. Shows "Good morning, {Name}" + the full date,
+/// matching the Apple-style header the user requested. Name is read from
+/// `UserProfileStore.shared.storedName()`, populated from Sign In with Apple
+/// on first authorization. If no name is available, the comma is dropped.
 struct CoachGreetingView: View {
-    /// Pass 12 BE perf: cached current calendar. `timeOfDay` is read on every
-    /// Home render via the greeting line; per-render alloc is wasteful.
     private static let cal: Calendar = Calendar.current
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text(compactGreetingLine)
-                .font(DS.Typography.captionSemibold)
-                .tracking(0.8)
-                .foregroundStyle(AppColour.textTertiary)
+    @State private var firstName: String?
 
-            Text(compactDateLine)
-                .font(DS.Typography.caption)
-                .tracking(0.8)
-                .foregroundStyle(AppColour.textTertiary)
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(greetingTitle)
+                .font(DS.Typography.title2)
+                .fontWeight(.bold)
+                .foregroundStyle(AppColour.textPrimary)
+            Text(dateLine)
+                .font(DS.Typography.body)
+                .foregroundStyle(AppColour.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, DS.screenPadding)
         .padding(.top, 2)
+        .onAppear { firstName = Self.loadFirstName() }
     }
 
-    // MARK: - Compact Header Lines
+    // MARK: - Strings
 
-    private var compactGreetingLine: String {
-        "\(contextGreeting.uppercased()) · \(weekdayString.uppercased())"
+    private var greetingTitle: String {
+        if let name = firstName, !name.isEmpty {
+            return "\(contextGreeting), \(name)"
+        }
+        return contextGreeting
     }
 
-    private var compactDateLine: String {
-        "\(dayMonthString.uppercased()) · \(timeString)"
+    /// Locale-aware "Tuesday, April 26" style line.
+    private var dateLine: String {
+        Date().formatted(.dateTime.weekday(.wide).month(.wide).day())
     }
 
-    // Pass 8 Y: locale-aware. `.dateTime` resolves ordering / separators
-    // and the time formatter respects 24h vs 12h based on `Locale.current`.
-    // Weekday + day + month names are localized (e.g. "lundi" / "lunes").
-    private var weekdayString: String { Date().formatted(.dateTime.weekday(.wide)) }
-    private var dayMonthString: String { Date().formatted(.dateTime.day().month(.wide)) }
-    private var timeString: String { Date().formatted(.dateTime.hour().minute()) }
-
-    // MARK: - Context-Aware Greeting
+    // MARK: - Time-of-day
 
     private var timeOfDay: TimeOfDay {
         let hour = Self.cal.component(.hour, from: Date())
         switch hour {
-        case 5..<12: return .morning
+        case 5..<12:  return .morning
         case 12..<17: return .afternoon
         case 17..<22: return .evening
-        default: return .night
+        default:      return .night
         }
     }
 
@@ -60,13 +57,31 @@ struct CoachGreetingView: View {
 
     private var contextGreeting: String {
         switch timeOfDay {
-        case .morning: return Copy.Home.Greeting.goodMorning
+        case .morning:   return Copy.Home.Greeting.goodMorning
         case .afternoon: return Copy.Home.Greeting.goodAfternoon
-        case .evening: return Copy.Home.Greeting.goodEvening
-        case .night: return Copy.Home.Greeting.goodNight
+        case .evening:   return Copy.Home.Greeting.goodEvening
+        case .night:     return Copy.Home.Greeting.goodNight
         }
     }
 
+    // MARK: - Name lookup
+
+    /// Reads the encrypted display name and returns just the first whitespace
+    /// segment so "Aman Kumar" renders as "Aman" in the greeting. Honors the
+    /// `--ui-test-override-name=` launch flag so screenshot tooling can pin the
+    /// rendered name without going through Sign In with Apple.
+    private static func loadFirstName() -> String? {
+        let raw: String?
+        if let override = UITestMode.overrideName, !override.isEmpty {
+            raw = override
+        } else {
+            raw = UserProfileStore.shared.storedName()
+        }
+        guard let stored = raw else { return nil }
+        let trimmed = stored.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        return trimmed.split(separator: " ").first.map(String.init)
+    }
 }
 
 #Preview {

@@ -97,7 +97,7 @@ struct LasoApp: App {
                             appStateStore.markOnboardingCompleted()
                         }}
                     )) {
-                        OnboardingView(
+                        OnboardingV2View(
                             healthKitManager: container.healthKitManager,
                             appStateStore: appStateStore,
                             subscriptionManager: subscriptionManager,

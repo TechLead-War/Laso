@@ -89,13 +89,6 @@ struct WeeklyReviewView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                if let lastUpdated = viewModel.lastUpdated,
-                   let caption = Copy.Common.relativeUpdated(lastUpdated) {
-                    Text(caption)
-                        .font(DS.Typography.caption2)
-                        .foregroundStyle(.tertiary)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                }
                 if let review = viewModel.review {
                     // Weekly averages hero
                     weeklyAveragesSection(review)

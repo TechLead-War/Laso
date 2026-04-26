@@ -3,6 +3,9 @@ const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { setGlobalOptions } = require("firebase-functions/v2");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
+const fs = require("fs");
+const path = require("path");
+const jwt = require("jsonwebtoken");
 
 admin.initializeApp();
 
@@ -174,6 +177,25 @@ async function verifyAdmin(request) {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Must be signed in.");
   }
+
+  // Local emulator path: Application Default Credentials usually lack the
+  // identitytoolkit IAM permission, so admin.auth().getUser() throws. The
+  // callable runtime has already verified the ID token signature, so we can
+  // trust the email claim from request.auth.token and gate purely on the
+  // allowlist. Production keeps the full getUser + custom-claim flow below.
+  if (process.env.FUNCTIONS_EMULATOR === "true") {
+    const tokenEmail = (request.auth.token?.email || "").toLowerCase().trim();
+    if (!ALLOWED_ADMIN_EMAILS.includes(tokenEmail)) {
+      logger.warn("Admin access denied (emulator)", { email: redactEmail(tokenEmail) });
+      throw new HttpsError("permission-denied", "Admin access denied.");
+    }
+    const key = `admin:${request.auth.uid}`;
+    if (!checkRateLimit(key, RATE_LIMIT_ADMIN)) {
+      throw new HttpsError("resource-exhausted", "Too many requests. Try again shortly.");
+    }
+    return { uid: request.auth.uid, email: tokenEmail };
+  }
+
   const user = await admin.auth().getUser(request.auth.uid);
   const email = (user.email || "").toLowerCase().trim();
 
@@ -565,6 +587,205 @@ exports.getAuditLog = onCall({ invoker: "public" }, async (request) => {
 
   return { entries };
 });
+
+// ═══ App Store Connect Pricing (read-only, local-dev only) ══════════════════
+// Pulls live pricing for the iOS app's auto-renewable subscriptions across
+// every territory, plus introductory offers. Read-only — admin panel must
+// never mutate App Store Connect; pricing edits stay in ASC UI.
+//
+// Local-only setup: the .p8 key sits at functions/secrets/AuthKey_<KEYID>.p8
+// (gitignored). For production we would switch to a Firebase Secret.
+
+const ASC_KEY_ID = "SDUJFUCDD2";
+const ASC_ISSUER_ID = "224ee32c-121a-4e32-a7a4-9a93c5ea8987";
+const ASC_BUNDLE_ID = "com.lasohealth.fit";
+const ASC_API_BASE = "https://api.appstoreconnect.apple.com/v1";
+
+const ASC_CACHE_TTL_MS = 10 * 60 * 1000;
+let ascPricingCache = null;
+let ascPricingInflight = null;
+
+function loadAscPrivateKey() {
+  const fromSecret = process.env.ASC_PRIVATE_KEY;
+  if (fromSecret && fromSecret.trim().startsWith("-----BEGIN")) {
+    return fromSecret;
+  }
+  const keyPath = path.join(__dirname, "secrets", `AuthKey_${ASC_KEY_ID}.p8`);
+  if (fs.existsSync(keyPath)) {
+    return fs.readFileSync(keyPath, "utf8");
+  }
+  throw new Error(`ASC private key missing at ${keyPath}`);
+}
+
+function signAscJwt() {
+  const privateKey = loadAscPrivateKey();
+  const now = Math.floor(Date.now() / 1000);
+  return jwt.sign(
+    { iss: ASC_ISSUER_ID, iat: now, exp: now + 1140, aud: "appstoreconnect-v1" },
+    privateKey,
+    { algorithm: "ES256", header: { alg: "ES256", kid: ASC_KEY_ID, typ: "JWT" } }
+  );
+}
+
+async function ascFetch(token, urlOrPath) {
+  const url = urlOrPath.startsWith("http") ? urlOrPath : `${ASC_API_BASE}${urlOrPath}`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`ASC ${res.status} ${url}: ${body.slice(0, 300)}`);
+  }
+  return res.json();
+}
+
+async function ascFetchAll(token, startPath) {
+  let urlOrPath = startPath;
+  const items = [];
+  const included = [];
+  while (urlOrPath) {
+    const page = await ascFetch(token, urlOrPath);
+    if (Array.isArray(page.data)) items.push(...page.data);
+    if (Array.isArray(page.included)) included.push(...page.included);
+    urlOrPath = page.links?.next || null;
+  }
+  return { data: items, included };
+}
+
+async function fetchAscPricing() {
+  const token = signAscJwt();
+
+  const appsRes = await ascFetch(
+    token,
+    `/apps?filter[bundleId]=${encodeURIComponent(ASC_BUNDLE_ID)}&limit=1`
+  );
+  const app = appsRes.data?.[0];
+  if (!app) throw new Error(`No App Store app found for bundle ${ASC_BUNDLE_ID}`);
+  const appId = app.id;
+
+  const groupsRes = await ascFetchAll(token, `/apps/${appId}/subscriptionGroups?limit=200`);
+  const groups = groupsRes.data;
+
+  const allSubs = [];
+  for (const g of groups) {
+    const subsRes = await ascFetchAll(
+      token,
+      `/subscriptionGroups/${g.id}/subscriptions?limit=200&fields[subscriptions]=name,productId,subscriptionPeriod,state,familySharable,reviewNote,groupLevel`
+    );
+    for (const s of subsRes.data) {
+      allSubs.push({ groupId: g.id, sub: s });
+    }
+  }
+
+  const products = await Promise.all(allSubs.map(async ({ groupId, sub }) => {
+    const [pricesRes, introRes] = await Promise.all([
+      ascFetchAll(
+        token,
+        `/subscriptions/${sub.id}/prices?limit=200&include=subscriptionPricePoint,territory`
+      ).catch(() => ({ data: [], included: [] })),
+      ascFetchAll(
+        token,
+        `/subscriptions/${sub.id}/introductoryOffers?limit=200&include=subscriptionPricePoint,territory`
+      ).catch(() => ({ data: [], included: [] })),
+    ]);
+
+    const pricePoints = new Map();
+    const territories = new Map();
+    for (const inc of [...(pricesRes.included || []), ...(introRes.included || [])]) {
+      if (inc.type === "subscriptionPricePoints") pricePoints.set(inc.id, inc.attributes || {});
+      else if (inc.type === "territories") territories.set(inc.id, inc.attributes || {});
+    }
+
+    function resolvePrice(rel) {
+      const ppId = rel?.subscriptionPricePoint?.data?.id;
+      const tId = rel?.territory?.data?.id;
+      const pp = ppId ? pricePoints.get(ppId) : null;
+      const t = tId ? territories.get(tId) : null;
+      return {
+        territoryId: tId || null,
+        territoryCurrency: t?.currency || null,
+        customerPrice: pp?.customerPrice || null,
+        proceeds: pp?.proceeds || null,
+      };
+    }
+
+    const prices = (pricesRes.data || []).map((p) => ({
+      id: p.id,
+      startDate: p.attributes?.startDate || null,
+      ...resolvePrice(p.relationships || {}),
+    }));
+
+    const introOffers = (introRes.data || []).map((o) => ({
+      id: o.id,
+      offerMode: o.attributes?.offerMode || null,
+      duration: o.attributes?.duration || null,
+      numberOfPeriods: o.attributes?.numberOfPeriods ?? null,
+      startDate: o.attributes?.startDate || null,
+      endDate: o.attributes?.endDate || null,
+      ...resolvePrice(o.relationships || {}),
+    }));
+
+    return {
+      id: sub.id,
+      groupId,
+      productId: sub.attributes?.productId,
+      name: sub.attributes?.name,
+      state: sub.attributes?.state,
+      duration: sub.attributes?.subscriptionPeriod,
+      familySharable: sub.attributes?.familySharable ?? false,
+      groupLevel: sub.attributes?.groupLevel ?? null,
+      prices,
+      introOffers,
+    };
+  }));
+
+  return {
+    appId,
+    bundleId: ASC_BUNDLE_ID,
+    appName: app.attributes?.name || null,
+    fetchedAt: new Date().toISOString(),
+    groupCount: groups.length,
+    products,
+  };
+}
+
+exports.getAppStorePricing = onCall(
+  { invoker: "public", timeoutSeconds: 120, memory: "512MiB" },
+  async (request) => {
+    const adminUser = await verifyAdmin(request);
+
+    const force = request.data?.force === true;
+    const now = Date.now();
+    if (!force && ascPricingCache && (now - ascPricingCache.fetchedAt) < ASC_CACHE_TTL_MS) {
+      return { ...ascPricingCache.data, cached: true, cacheAgeMs: now - ascPricingCache.fetchedAt };
+    }
+
+    if (ascPricingInflight) {
+      const data = await ascPricingInflight;
+      return { ...data, cached: false };
+    }
+
+    ascPricingInflight = (async () => {
+      try {
+        const data = await fetchAscPricing();
+        ascPricingCache = { fetchedAt: Date.now(), data };
+        return data;
+      } finally {
+        ascPricingInflight = null;
+      }
+    })();
+
+    try {
+      const data = await ascPricingInflight;
+      logger.info("ASC pricing fetched", {
+        admin: redactEmail(adminUser.email),
+        productCount: data.products?.length ?? 0,
+      });
+      return { ...data, cached: false };
+    } catch (err) {
+      logger.error("getAppStorePricing failed", { message: err.message });
+      throw new HttpsError("internal", `ASC fetch failed: ${err.message}`);
+    }
+  }
+);
 
 // ═══ Scheduled Cleanup ═══════════════════════════════════════════════════════
 

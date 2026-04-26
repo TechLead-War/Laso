@@ -128,7 +128,7 @@ struct DiscoveryEngine {
             let formattedDiff = pair.effect.formatValue(absDiff)
             let direction = directionWord(for: pair.effect, diff: diff)
 
-            let headline = "Your \(pair.effect.displayName.lowercased()) \(direction) \(formattedDiff)\(effectUnit) when \(pair.thresholdLabel)"
+            let headline = "Your \(pair.effect.displayName.lowercased()) \(direction) by \(formattedDiff) \(effectUnit) when \(pair.thresholdLabel)"
             let detail = detailText(effect: pair.effect, aboveMean: aboveMean, belowMean: belowMean, diff: diff)
             let months = max(1, totalPairs / 30)
             let evidence = "Based on \(totalPairs) days over \(months) month\(months == 1 ? "" : "s")"
@@ -242,7 +242,7 @@ struct DiscoveryEngine {
             let diffFormatted = ladder.effect.formatValue(abs(best.diff))
             let direction = directionWord(for: ladder.effect, diff: best.diff)
 
-            let headline = "The magic number is \(causeFormatted) \(ladder.metric.unit). Your \(ladder.effect.displayName.lowercased()) \(direction) \(diffFormatted)\(ladder.effect.unit) past that point"
+            let headline = "The magic number is \(causeFormatted) \(ladder.metric.unit). Your \(ladder.effect.displayName.lowercased()) \(direction) by \(diffFormatted) \(ladder.effect.unit) past that point"
             let months = max(1, totalDays / 30)
             let evidence = "Based on \(totalDays) days over \(months) month\(months == 1 ? "" : "s")"
 

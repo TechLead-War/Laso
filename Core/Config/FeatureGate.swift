@@ -2,6 +2,14 @@ import Foundation
 
 /// Single source of truth for feature access decisions.
 /// Combines subscription tier with Remote Config feature flags.
+///
+/// Observation note: although the accessors are static, every accessor reads
+/// instance properties on `RemoteConfigManager.shared` (via `observeFetchUpdates`
+/// touching `lastFetchTime`) and/or `SubscriptionManager.shared` (`status`).
+/// SwiftUI's Observation framework tracks any tracked-property read inside the
+/// active body-evaluation scope, so static intermediates do not break tracking.
+/// Views consuming `FeatureGate.*` automatically re-render when fetches land or
+/// subscription status changes.
 @MainActor
 struct FeatureGate {
 
@@ -18,7 +26,16 @@ struct FeatureGate {
 
     /// Whether free-year mode is active (all features unlocked for PMF signal).
     /// Controlled via Remote Config. flip from admin panel without an app update.
-    private static var freeYearActive: Bool { config.freeYearActive }
+    static var freeYearActive: Bool { config.freeYearActive }
+
+    /// End date of free-year mode (when configured in Remote Config). nil when unset.
+    static var freeYearEndDate: Date? { config.freeYearEndDate }
+
+    /// Real subscription expiration when the user has actually purchased. nil otherwise.
+    static var subscriptionExpirationDate: Date? {
+        if case .subscribed(let expiration) = subscription.status { return expiration }
+        return nil
+    }
 
     /// Whether the user can access a specific feature.
     static func canAccess(_ feature: RemoteConfigManager.FeatureKey) -> Bool {

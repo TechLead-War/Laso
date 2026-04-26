@@ -78,8 +78,8 @@ extension Copy {
 
         enum CyclePhase {
             static func title(_ phaseName: String) -> String { "Cycle Phase Analyzer: \(phaseName)" }
-            static let scaleIntensityNote = " Your body is reacting more than usual right now. Take it easier for the next 2 days and see how you feel."
-            static let keepLoggingNote = " Keep logging every day so we can better learn what is normal for you."
+            static let scaleIntensityNote = "Your body is reacting more than usual right now. Take it easier for the next 2 days and see how you feel."
+            static let keepLoggingNote = "Keep logging every day so we can better learn what is normal for you."
         }
 
         // MARK: - Personal Records
@@ -265,8 +265,8 @@ extension Copy {
             static let exceptionalPersonalBest = "This is your best ever. Whatever you are doing, keep it up."
             static let rareLevelMayWarrantAttention = "This is rare for you. If it stays this way for more than a few days, it is worth a closer look."
             static let outperformingSeasonalNorm = "You are doing better than usual for this time of year. That is solid progress."
-            static let longTermImprovementReliable = "Your long term trend is positive. A few bad days do not erase months of good progress."
-            static let sustainedDeclineStructural = "This has been going down for a while. If it keeps up, it is worth a closer look."
+            static let longTermImprovementReliable = "Your long-term trend is positive. A few bad days do not erase months of good progress."
+            static let sustainedDeclineStructural = "This has been going down for a while. If it continues, it is worth a closer look."
             static let unusualValuesMonitor = "One bad day does not mean much. If this lasts a few days, take a closer look."
         }
     }

@@ -140,6 +140,17 @@ final class UserProfileStore {
         return String(data: data, encoding: .utf8)
     }
 
+    /// Persist the user's display name (e.g. captured from Sign In with Apple).
+    /// Apple returns `fullName` only on the FIRST authorization, so this must
+    /// be called on the same flow that received it; subsequent reads via
+    /// `storedName()` will succeed across launches.
+    func saveDisplayName(_ name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              let data = trimmed.data(using: .utf8) else { return }
+        encryptedStore.save(data, forKey: AppKeys.Profile.name)
+    }
+
     /// Decrypt and return the stored email, or nil if absent.
     func storedEmail() -> String? {
         guard let data = encryptedStore.load(forKey: AppKeys.Profile.email) else { return nil }

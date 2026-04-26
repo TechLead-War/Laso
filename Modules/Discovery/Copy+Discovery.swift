@@ -6,7 +6,7 @@ extension Copy {
         // MARK: - Opening Page
 
         static let openingTitle = "We looked at your health history"
-        static let openingHere = "Here is what we found"
+        static let openingHere = "Here is what we found."
         static let openingSwipeHint = "Swipe to explore"
         static let labelOfHealthData = "of health data"
         static let labelDataPoints = "data points"

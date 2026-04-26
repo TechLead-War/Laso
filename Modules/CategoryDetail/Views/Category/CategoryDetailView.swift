@@ -102,12 +102,16 @@ struct CategoryDetailView: View {
 
                 // Insights for this category
                 if !viewModel.insights.isEmpty {
+                    let displayLimit = FeatureGate.isFreeTier ? FeatureGate.insightLimit : Int.max
+                    let visibleInsights = Array(viewModel.insights.prefix(displayLimit))
+                    let hiddenInsights = max(0, viewModel.insights.count - visibleInsights.count)
+
                     VStack(alignment: .leading, spacing: DS.itemSpacing) {
                         Text(Copy.CategoryDetail.insights)
                             .font(DS.Typography.headline)
                             .padding(.horizontal)
 
-                        ForEach(viewModel.insights) { insight in
+                        ForEach(visibleInsights) { insight in
                             Button {
                                 AppAnalytics.shared.trackInsightTapped(
                                     category: insight.category.rawValue,
@@ -121,6 +125,11 @@ struct CategoryDetailView: View {
                             }
                             .buttonStyle(.dsPress)
                             .padding(.horizontal)
+                        }
+
+                        if hiddenInsights > 0 {
+                            LockedInsightsCTA(hiddenCount: hiddenInsights)
+                                .padding(.horizontal)
                         }
                     }
                     .onAppear { insightsTracker.appeared() }

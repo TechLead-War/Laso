@@ -25,11 +25,11 @@
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
+	<true/>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Laso reads your health data from Apple Watch and iPhone to provide real-time vitals, personalized health scores, trend analysis, and actionable insights.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Laso requests write access to Apple Health to allow future features like logging workouts and health entries directly from the app.</string>
+	<string>Laso writes water, weight and mindful minutes you log into Apple Health.</string>
 	<key>NSSiriUsageDescription</key>
 	<string>Laso uses Siri to let you check your health score, log water, view sleep data, and track workouts hands-free.</string>
 	<key>NSSupportsLiveActivities</key>
@@ -42,6 +42,7 @@
 	<array>
 		<string>fetch</string>
 		<string>processing</string>
+		<string>remote-notification</string>
 	</array>
 	<key>UILaunchScreen</key>
 	<dict>

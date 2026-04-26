@@ -810,9 +810,12 @@ struct InsightGenerator {
                 )
             }
         } else if let topFactor = ctx.correlatedFactors.first,
-                  topFactor.sampleCount >= 5,
-                  abs(topFactor.correlation) >= 0.35 {
-            // No root cause but a strong correlated factor
+                  topFactor.sampleCount >= 30,
+                  abs(topFactor.correlation) >= 0.5 {
+            // Stricter gate: claim "X and Y are linked" only with at least 30
+            // paired observations (statistical significance) and a moderate-or-
+            // stronger correlation (|r| >= 0.5). Weaker signals get suppressed
+            // rather than presented as user-facing causation.
             sentences.append(
                 Copy.Causation.correlatedFactorSentence(
                     factorName: topFactor.metric.displayName,

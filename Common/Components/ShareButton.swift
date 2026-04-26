@@ -71,6 +71,12 @@ struct ShareButton: View {
             activityItems: activityItems,
             applicationActivities: nil
         )
+        activityVC.excludedActivityTypes = [
+            .print,
+            .copyToPasteboard,
+            .saveToCameraRoll,
+            .assignToContact
+        ]
 
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let rootVC = windowScene.windows.first?.rootViewController else {

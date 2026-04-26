@@ -20,12 +20,6 @@ struct BrainHealthDetailView: View {
 
             ScrollView {
                 VStack(spacing: DS.sectionSpacing) {
-                    if let lastUpdated, let caption = Copy.Common.relativeUpdated(lastUpdated) {
-                        Text(caption)
-                            .font(DS.Typography.caption2)
-                            .foregroundStyle(.tertiary)
-                            .frame(width: sectionWidth)
-                    }
                     heroSection.frame(width: sectionWidth)
                     weeklyChartSection.frame(width: sectionWidth)
                     readinessSection.frame(width: sectionWidth)
@@ -47,8 +41,14 @@ struct BrainHealthDetailView: View {
     // MARK: - Hero
 
     private var heroSection: some View {
-        VStack(spacing: DS.itemSpacing) {
-            Text("\(brainScore.score)")
+        // Hide the numeric score whenever we don't have enough confidence
+        // (< 0.7) to back it. Replace it with a "—" placeholder + a clear
+        // "Building accuracy (X%)" badge so users don't misread an under-
+        // confident score as a real reading.
+        let hasConfidence = brainScore.confidence >= 0.7
+
+        return VStack(spacing: DS.itemSpacing) {
+            Text(hasConfidence ? "\(brainScore.score)" : "—")
                 .font(DS.Typography.displayXL.monospacedDigit())
                 .foregroundStyle(AppColour.textPrimary)
                 .postHogMask()
@@ -69,28 +69,34 @@ struct BrainHealthDetailView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, DS.space2)
 
-            Text(brainScore.state.displayName)
-                .font(DS.Typography.title3.weight(.bold))
-                .foregroundStyle(brainScore.state.color)
+            if hasConfidence {
+                Text(brainScore.state.displayName)
+                    .font(DS.Typography.title3.weight(.bold))
+                    .foregroundStyle(brainScore.state.color)
 
-            // What this state means + what to do today
-            Text(brainScore.headline)
-                .font(DS.Typography.subheadline)
-                .foregroundStyle(AppColour.textPrimary)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-
-            if brainScore.confidence < 0.7 {
+                Text(brainScore.headline)
+                    .font(DS.Typography.subheadline)
+                    .foregroundStyle(AppColour.textPrimary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
                 HStack(spacing: DS.space1) {
                     Image(systemName: "clock.arrow.circlepath")
                         .font(DS.Typography.caption2.weight(.bold))
-                    Text(Copy.BrainHealth.learningPatterns)
+                    Text("Building accuracy · \(Int(brainScore.confidence * 100))%")
                         .font(DS.Typography.captionSemibold)
                 }
                 .foregroundStyle(AppColour.textTertiary)
                 .padding(.horizontal, DS.itemSpacing)
                 .padding(.vertical, DS.space2)
                 .background(AppColour.textSecondary.opacity(0.1), in: Capsule())
+
+                Text("We need more nights of sleep + HRV data before locking in your brain readiness number.")
+                    .font(DS.Typography.subheadline)
+                    .foregroundStyle(AppColour.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, DS.space2)
             }
         }
         .padding(DS.cardPadding)

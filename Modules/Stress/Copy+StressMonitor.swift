@@ -38,7 +38,7 @@ extension Copy {
 
         // MARK: - History
 
-        static let sevenDayStress = "7 Day Stress"
+        static let sevenDayStress = "7-Day Stress"
 
         // MARK: - Tips
 

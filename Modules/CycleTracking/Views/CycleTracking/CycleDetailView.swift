@@ -140,11 +140,6 @@ struct CycleDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: DS.sectionSpacing) {
-                if let lastUpdated, let caption = Copy.Common.relativeUpdated(lastUpdated) {
-                    Text(caption)
-                        .font(DS.Typography.caption2)
-                        .foregroundStyle(.tertiary)
-                }
                 // Hero: Circular cycle wheel
                 cycleWheelSection
 

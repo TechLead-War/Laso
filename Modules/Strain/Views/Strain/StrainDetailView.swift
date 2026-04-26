@@ -87,6 +87,17 @@ struct StrainDetailView: View {
         min(strainValue / maxStrain, 1.0)
     }
 
+    /// True only when we actually have signal: any HR-zone minutes today, OR
+    /// today's strain is meaningfully above zero, OR the week's history has at
+    /// least one non-zero day. Pure zero across all three means no workout/HK
+    /// data flowed in — show an empty state instead of "0.0 / 21 Light day".
+    private var hasData: Bool {
+        if strainValue > 0 { return true }
+        if zoneMinutes.values.contains(where: { $0 > 0 }) { return true }
+        if weekHistory.contains(where: { $0.strain > 0 }) { return true }
+        return false
+    }
+
     private var strainContext: String {
         switch strainLevel {
         case .low:          return Copy.Strain.contextLow
@@ -101,16 +112,15 @@ struct StrainDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: DS.sectionSpacing) {
-                if let lastUpdated, let caption = Copy.Common.relativeUpdated(lastUpdated) {
-                    Text(caption)
-                        .font(DS.Typography.caption2)
-                        .foregroundStyle(.tertiary)
+                if hasData {
+                    heroSection
+                    if !weekHistory.isEmpty {
+                        historySection
+                    }
+                    snapshotSection
+                } else {
+                    emptyStateSection
                 }
-                heroSection
-                if !weekHistory.isEmpty {
-                    historySection
-                }
-                snapshotSection
                 learnMoreSection
                 disclaimerNote
             }
@@ -207,6 +217,33 @@ struct StrainDetailView: View {
                 .strokeBorder(strainLevel.color.opacity(DS.strokeAlpha * 2), lineWidth: 1)
         )
         .shadow(color: strainLevel.color.opacity(0.15), radius: 12, y: 4)
+        .padding(.horizontal)
+    }
+
+    /// Honest empty state shown when no workout/HR-zone data is available
+    /// today and there's no week history to fall back on. Replaces the
+    /// previous "0.0 / 21 Light day for your body" silent fallback.
+    private var emptyStateSection: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "figure.run.circle")
+                .font(.system(size: 56, weight: .light))
+                .foregroundStyle(.secondary)
+                .padding(.top, DS.space3)
+
+            Text("No workout data yet")
+                .font(DS.Typography.title3.weight(.semibold))
+
+            Text("Log a workout in Apple Health or wear your watch during exercise. Your strain score will appear here once activity is recorded.")
+                .font(DS.Typography.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, DS.space4)
+                .padding(.bottom, DS.space4)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, DS.space4)
+        .cardStyle()
         .padding(.horizontal)
     }
 

@@ -339,8 +339,13 @@ final class VitalityScorer {
     ///   - timeSeries: Fresh in-memory time series from HealthKitManager.
     func compute(from store: HealthDataStore, chronologicalAge: Int, timeSeries: [HealthMetric: MetricTimeSeries]? = nil) {
         self.chronologicalAge = chronologicalAge
+        // Defensive: if the caller passed an empty in-memory dictionary
+        // (HealthKit fetch silently dropped keys, or the dashboard called
+        // compute before sync populated anything), fall back to the persisted
+        // store. Otherwise availableDays ends up 0 even when years of watch
+        // data exist on disk.
         let allSeries: [HealthMetric: MetricTimeSeries]
-        if let timeSeries {
+        if let timeSeries, !timeSeries.isEmpty {
             allSeries = timeSeries
         } else {
             allSeries = MainActor.assumeIsolated { store.loadAllTimeSeries() }
@@ -606,6 +611,15 @@ final class VitalityScorer {
         for (metric, minSamples) in Self.usableDataSampleThresholds {
             guard let series = allSeries[metric], series.totalDataPoints >= minSamples else { continue }
             maxUsableDays = max(maxUsableDays, series.daysOfData)
+        }
+        // Defensive: if none of the curated metrics matched (e.g. user has
+        // bodyFat/exerciseMinutes missing but plenty of HR/sleep history),
+        // widen the lens to ANY metric with samples so we don't lock the UI
+        // into "Building your profile" for users who clearly have history.
+        if maxUsableDays == 0 {
+            for (_, series) in allSeries where series.totalDataPoints > 0 {
+                maxUsableDays = max(maxUsableDays, series.daysOfData)
+            }
         }
         return maxUsableDays
     }

@@ -46,11 +46,11 @@ enum RiskGrade: String {
 
     var displayName: String {
         switch self {
-        case .low: return "Low"
-        case .moderate: return "Moderate"
-        case .elevated: return "Elevated"
-        case .high: return "High"
-        case .veryHigh: return "Very High"
+        case .low: return "Within range"
+        case .moderate: return "Steady"
+        case .elevated: return "Worth a look"
+        case .high: return "Worth attention"
+        case .veryHigh: return "Pattern observed"
         }
     }
 
@@ -180,10 +180,10 @@ enum RiskFactorStatus: String {
 
     var displayName: String {
         switch self {
-        case .optimal: return "Optimal"
+        case .optimal: return "Within range"
         case .borderline: return "Borderline"
-        case .concerning: return "Concerning"
-        case .critical: return "Critical"
+        case .concerning: return "Worth a look"
+        case .critical: return "Outside your usual"
         case .unmeasured: return "Not Measured"
         }
     }

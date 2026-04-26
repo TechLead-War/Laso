@@ -31,6 +31,11 @@ struct OnboardingView: View {
     let runCalibration: () async -> String?
     let onComplete: () -> Void
 
+    /// Onboarding steps. Kept stable (always 7 entries) so the TabView selection
+    /// binding can never point at a missing tag. Skipping the paywall when the
+    /// user already has full access is handled by the promise step's branching
+    /// closure and PaywallView's own self-advance on appear, not by mutating
+    /// this list mid-flow (which would cause a blank-tab render glitch).
     private var flowSteps: [OnboardingStep] {
         [.pulse, .profile, .connect, .priority, .mirror, .promise, .trial]
     }
@@ -72,7 +77,15 @@ struct OnboardingView: View {
                 .tag(OnboardingStep.mirror)
 
                 OnboardingPromiseStep(discovery: discovery) {
-                    advance(to: .trial)
+                    // Skip the paywall step entirely when full access is
+                    // already granted (e.g. free-year RC bypass or restored
+                    // entitlement) so the user never sees an autopay prompt
+                    // they don't need.
+                    if FeatureGate.hasFullAccess {
+                        finishOnboarding()
+                    } else {
+                        advance(to: .trial)
+                    }
                 }
                 .tag(OnboardingStep.promise)
 

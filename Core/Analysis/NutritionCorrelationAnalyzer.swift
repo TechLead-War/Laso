@@ -104,7 +104,10 @@ struct NutritionCorrelationAnalyzer {
                 }
             }
 
-            guard nutritionValues.count >= 10 else { continue }
+            // Require >= 30 paired observations before claiming a nutrition–outcome
+            // link. Below this, Pearson correlation is too noisy to ship as an
+            // "X affects Y" insight to the user.
+            guard nutritionValues.count >= 30 else { continue }
 
             // Compute Pearson correlation
             let r = pearsonCorrelation(x: nutritionValues, y: outcomeValues)

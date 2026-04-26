@@ -252,7 +252,12 @@ final class CircadianAnalyzer {
         if let hr = results[.heartRate] {
             return hr.acrophase
         }
-        return 14.0  // Default midday assumption
+        // Last resort: derive from steps activity, since active periods drive
+        // HR up. This is a real-data proxy rather than a fabricated default.
+        if let steps = results[.steps] {
+            return steps.acrophase
+        }
+        return 14.0
     }
 
     private func deriveHRNadir(results: [HealthMetric: CosinorResult]) -> Double {
@@ -263,7 +268,11 @@ final class CircadianAnalyzer {
         if let hr = results[.heartRate] {
             return normalizeHour(hr.acrophase + 12.0)
         }
-        return 3.0  // Default 3 AM
+        // Last resort: opposite of activity peak. Real signal beats a fake 3 AM.
+        if let steps = results[.steps] {
+            return normalizeHour(steps.acrophase + 12.0)
+        }
+        return 3.0
     }
 
     private func deriveTempNadir(results: [HealthMetric: CosinorResult]) -> Double? {

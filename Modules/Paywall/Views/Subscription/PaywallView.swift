@@ -23,6 +23,12 @@ struct PaywallView: View {
     @State private var selectedProduct: Product?
     @State private var isRestoring = false
     @State private var paywallOpenDate = Date()
+    /// Guards against `onSubscribed` firing more than once. Three independent
+    /// observers (onAppear, status onChange, lastFetchTime onChange) can each
+    /// detect "user now has full access" almost simultaneously after a purchase
+    /// or a free-year flag flip; without this guard, finishOnboarding() would
+    /// be invoked twice and corrupt analytics + navigation state.
+    @State private var hasAdvanced = false
 
     // Section trackers
     @State private var headerTracker = SectionTracker(section: .paywallHeader, tab: .paywall)
@@ -94,9 +100,7 @@ struct PaywallView: View {
             // Onboarding-trial safety: if the user already has full access
             // (existing entitlement, billing grace, or remote-config free-year
             // bypass), advance immediately so we never force them to repurchase.
-            if FeatureGate.hasFullAccess {
-                onSubscribed?()
-            }
+            advanceIfFullAccessGranted()
         }
         .onDisappear {
             AppAnalytics.shared.trackFeatureClose(.paywall)
@@ -114,10 +118,23 @@ struct PaywallView: View {
             }
         }
         .onChange(of: subscriptionManager.status) { _, _ in
-            if FeatureGate.hasFullAccess {
-                onSubscribed?()
-            }
+            advanceIfFullAccessGranted()
         }
+        // Watch Remote Config fetches too: if free_year_active flips ON while
+        // the user is sitting on this paywall (onboarding or otherwise), we
+        // must auto-advance instead of forcing autopay setup they don't need.
+        .onChange(of: RemoteConfigManager.shared.lastFetchTime) { _, _ in
+            advanceIfFullAccessGranted()
+        }
+    }
+
+    /// Single entry point for "user has full access, advance the parent flow".
+    /// Guards against re-entry so onAppear + status onChange + lastFetchTime
+    /// onChange firing in quick succession can never call onSubscribed twice.
+    private func advanceIfFullAccessGranted() {
+        guard !hasAdvanced, FeatureGate.hasFullAccess else { return }
+        hasAdvanced = true
+        onSubscribed?()
     }
 
     // MARK: - Header

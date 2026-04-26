@@ -30,5 +30,17 @@ extension Copy {
 
         static func trialDuration(_ days: Int) -> String { "\(days)-day free trial" }
         static func afterTrial(_ price: String) -> String { "After your free trial, you will be charged \(price) automatically" }
+
+        // MARK: - Legal Disclosure
+
+        static let appleAutoRenewDisclosure = "Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless it is canceled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. You can manage and cancel your subscriptions by going to your App Store account settings after purchase."
+
+        // MARK: - Accessibility
+
+        static func planAccessibilityLabel(_ label: String, _ detail: String) -> String { "\(label) plan, \(detail)" }
+        static func planAccessibilityHint(_ planLabel: String) -> String { "Selects the \(planLabel) subscription plan" }
+        static let trialCTAHint = "Starts your free trial and subscribes after"
+        static let subscribeCTAHint = "Subscribes you to the selected plan"
+        static let restoreHint = "Restores any prior subscription tied to your Apple ID"
     }
 }

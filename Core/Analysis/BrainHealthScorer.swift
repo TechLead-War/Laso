@@ -14,7 +14,7 @@ enum BrainHealthState: String, CaseIterable, Codable {
         case .sharp: return "Sharp"
         case .focused: return "Focused"
         case .baseline: return "Baseline"
-        case .foggy: return "Foggy"
+        case .foggy: return "Low energy"
         }
     }
 

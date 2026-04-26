@@ -875,7 +875,7 @@ final class TemporalSequenceMiner {
 
                 let directionText = result.direction == "declining" ? "declining" : (result.direction == "low" ? "low" : "elevated")
 
-                let description = "\(metric.displayName) \(directionText) (\(metric.formatValue(result.avgPrecursorValue))\(metric.unit)) \(leadDays) day\(leadDays == 1 ? "" : "s") before bad days. accurate \(Int(result.accuracy * 100))% of the time (\(result.hitCount)/\(result.totalChecked))"
+                let description = "\(metric.displayName) \(directionText) (\(metric.formatValue(result.avgPrecursorValue)) \(metric.unit)) \(leadDays) day\(leadDays == 1 ? "" : "s") before bad days. accurate \(Int(result.accuracy * 100))% of the time (\(result.hitCount)/\(result.totalChecked))"
 
                 let pattern = PrecursorPattern(
                     warningSignals: [(metric: metric, direction: directionText, leadDays: leadDays)],
@@ -1467,7 +1467,7 @@ final class TemporalSequenceMiner {
         isActive: Bool,
         baselines: [HealthMetric: UserBaseline]
     ) -> String {
-        let causeDesc = "\(causeMetric.displayName) \(conditionVerb(causeCondition)) \(causeCondition == .below || causeCondition == .declining ? "below" : "above") \(causeMetric.formatValue(causeThreshold))\(causeMetric.unit)"
+        let causeDesc = "\(causeMetric.displayName) \(conditionVerb(causeCondition)) \(causeCondition == .below || causeCondition == .declining ? "below" : "above") \(causeMetric.formatValue(causeThreshold)) \(causeMetric.unit)"
 
         // Effect magnitude as percentage of baseline if available
         let effectDesc: String
@@ -1475,7 +1475,7 @@ final class TemporalSequenceMiner {
             let pctChange = (avgEffectMagnitude / effectBaseline.mean) * 100
             effectDesc = "\(effectMetric.displayName) \(conditionVerb(effectCondition)) by \(String(format: "%.0f", pctChange))%"
         } else {
-            effectDesc = "\(effectMetric.displayName) \(conditionVerb(effectCondition)) by \(effectMetric.formatValue(avgEffectMagnitude))\(effectMetric.unit)"
+            effectDesc = "\(effectMetric.displayName) \(conditionVerb(effectCondition)) by \(effectMetric.formatValue(avgEffectMagnitude)) \(effectMetric.unit)"
         }
 
         var text = "When your \(causeDesc), your \(effectDesc) within \(avgLag) day\(avgLag == 1 ? "" : "s") (happened \(hits)/\(trials) times)"
@@ -1502,7 +1502,7 @@ final class TemporalSequenceMiner {
             return "Your \(effectMetric.displayName) may \(verb) by ~\(String(format: "%.0f", pctChange))% within \(avgLag) day\(avgLag == 1 ? "" : "s")"
         }
 
-        return "Your \(effectMetric.displayName) may \(verb) by \(effectMetric.formatValue(avgEffectMagnitude))\(effectMetric.unit) within \(avgLag) day\(avgLag == 1 ? "" : "s")"
+        return "Your \(effectMetric.displayName) may \(verb) by \(effectMetric.formatValue(avgEffectMagnitude)) \(effectMetric.unit) within \(avgLag) day\(avgLag == 1 ? "" : "s")"
     }
 
     /// Generate a specific description for a compounding effect.

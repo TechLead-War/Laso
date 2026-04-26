@@ -305,32 +305,32 @@ struct HealthRiskEngine {
         case .restingHeartRate:
             return (
                 "Lower Resting Heart Rate",
-                "Regular aerobic exercise (brisk walking, cycling) 30 min/day can reduce RHR by 5-10 bpm over weeks. Reduce caffeine and manage stress.",
-                "Target: 50–70 bpm"
+                "Regular brisk walking or cycling for about 30 min a day can help your resting heart rate ease over weeks. Try cutting back on caffeine and managing stress.",
+                "Aim for steady, lower readings over time"
             )
         case .heartRateVariability:
             return (
                 "Improve Heart Rate Variability",
-                "HRV reflects autonomic nervous system health. Prioritize sleep quality, practice box breathing (4-4-4-4), and include recovery days between hard workouts.",
-                "Target: 40+ ms (SDNN)"
+                "Better sleep, slow breathing (4 in, 4 hold, 4 out, 4 hold), and recovery days between hard workouts can help.",
+                "Aim for steady, higher readings over time"
             )
         case .bloodPressureSystolic, .bloodPressureDiastolic:
             return (
-                "Manage Blood Pressure",
-                "Reduce sodium to <2,300mg/day, exercise 150 min/week, maintain healthy weight, limit alcohol. Monitor regularly.",
-                "Target: <120/80 mmHg"
+                "Support Blood Pressure",
+                "Try eating less salty and processed food, moving more through the week, keeping a healthy weight, and going easy on alcohol.",
+                "Aim for steady readings in your usual range"
             )
         case .heartRateRecovery:
             return (
                 "Improve Heart Rate Recovery",
-                "Better recovery indicates stronger cardiac fitness. Increase cardio frequency and include cool-down periods after exercise.",
-                "Target: >12 bpm drop in 1 min"
+                "Faster recovery often follows regular cardio. Try adding short cool-down walks at the end of workouts.",
+                "Aim for a quicker drop after exercise over time"
             )
         case .atrialFibrillationBurden:
             return (
-                "Monitor AFib Patterns",
-                "Track when episodes occur. Reduce alcohol, caffeine, and stress. Worth monitoring closely if burden increases.",
-                "Target: <1% burden"
+                "About Heart Rhythm Notifications",
+                "Heart rhythm detection requires Apple Watch ECG. Laso shows the data only and does not interpret it for you. Talk to a qualified professional about anything you notice.",
+                ""
             )
         default:
             return nil
@@ -397,21 +397,21 @@ struct HealthRiskEngine {
         switch metric {
         case .bloodOxygen:
             return (
-                "Monitor Blood Oxygen",
-                "SpO2 below 95% warrants attention. Below 90% is a medical emergency requiring urgent care. Practice deep breathing exercises and sleep with head slightly elevated if levels drop at night. If readings fall below 90%, retake the measurement and seek immediate medical attention if confirmed.",
-                "Target: 95–100% (below 90% = emergency)"
+                "Track Blood Oxygen",
+                "Try slow, deep breathing through the day, and sleep with your head slightly raised if readings dip at night. If a reading looks unusually low, take another reading and reach out to a qualified professional if it stays low.",
+                "Aim for steady readings in your usual range"
             )
         case .vo2Max:
             return (
                 "Build Cardiovascular Fitness",
-                "VO2 Max is the single strongest predictor of longevity. Add 3-4 sessions of zone 2 cardio (conversational pace) per week for 30+ minutes.",
-                "Target: Improve by 5% in 8 weeks"
+                "VO2 Max reflects how well your heart, lungs, and muscles use oxygen during exercise. Try adding 3 to 4 easy-pace cardio sessions a week for 30+ minutes.",
+                "Aim for steady improvement over weeks"
             )
         case .respiratoryRate:
             return (
-                "Normalize Breathing Rate",
-                "Elevated respiratory rate may indicate stress or illness. Practice diaphragmatic breathing: 4 seconds in, 6 seconds out, 5 minutes daily.",
-                "Target: 12–20 breaths/min at rest"
+                "Steady Your Breathing Rate",
+                "A higher than usual breathing rate can follow stress or feeling unwell. Try slow belly breathing: 4 seconds in, 6 seconds out, for 5 minutes daily.",
+                "Aim for steady readings in your usual range"
             )
         default:
             return nil

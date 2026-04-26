@@ -70,7 +70,20 @@ struct ContentView: View {
                 dashboardViewModel.hydrateFromCalibration()
                 appStateStore.setPendingCalibrationHydration(false)
             } else {
-                await dashboardViewModel.load()
+                // First cold launch (or any cold launch where the in-memory
+                // scorers are still empty): force the heavy, non-debounced
+                // calibration so VitalityScorer / StrainScorer / SleepNeed see
+                // the full HealthKit pull before any detail screen reads them.
+                // The default `load()` goes through the 500ms debounced path,
+                // which makes detail screens read empty scorers and render
+                // "Building your profile" / "No workout data yet" even when
+                // years of watch history exist on disk.
+                let needsFullCalibration = dashboardViewModel.lastRefresh == nil
+                    || healthKitManager.timeSeries.isEmpty
+                await dashboardViewModel.load(
+                    awaitDeferredAnalysis: needsFullCalibration,
+                    forceHeavyDeferred: needsFullCalibration
+                )
             }
             await refreshDeviceSourcesIfNeeded()
             // HomeView.onAppear handles its own initial fetch. no duplicate needed here
@@ -555,6 +568,37 @@ struct ContentView: View {
                 lastUpdated: dashboardViewModel.lastRefresh,
                 onRefresh: { await dashboardViewModel.refresh() }
             )
+            .task {
+                await healthKitManager.refreshSleepBoundaries(days: 14)
+            }
+        } else {
+            ScrollView {
+                VStack(spacing: 14) {
+                    Image(systemName: "moon.zzz")
+                        .font(.system(size: 56, weight: .light))
+                        .foregroundStyle(.secondary)
+                        .padding(.top, DS.space5)
+
+                    Text("Building your sleep profile")
+                        .font(DS.Typography.title3.weight(.semibold))
+
+                    Text("We need a few nights of overnight sleep data from your Apple Watch to learn your normal range. Wear your watch to bed and your sleep coach will appear here.")
+                        .font(DS.Typography.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, DS.space5)
+                        .padding(.bottom, DS.space5)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, DS.space5)
+                .cardStyle()
+                .padding(.horizontal)
+                .padding(.top, DS.space4)
+            }
+            .background(AppColour.surfaceBase.ignoresSafeArea())
+            .navigationTitle("Sleep Coach")
+            .navigationBarTitleDisplayMode(.large)
             .task {
                 await healthKitManager.refreshSleepBoundaries(days: 14)
             }

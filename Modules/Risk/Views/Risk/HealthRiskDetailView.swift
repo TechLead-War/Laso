@@ -12,11 +12,6 @@ struct HealthRiskDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: DS.sectionSpacing) {
-                if let lastUpdated, let caption = Copy.Common.relativeUpdated(lastUpdated) {
-                    Text(caption)
-                        .font(DS.Typography.caption2)
-                        .foregroundStyle(.tertiary)
-                }
                 // Hero: risk level gauge
                 riskGaugeSection
 
@@ -101,7 +96,7 @@ struct HealthRiskDetailView: View {
                 .foregroundStyle(AppColour.textSecondary)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(risk.riskType.displayName), risk level \(risk.level) out of 100, \(risk.riskGrade.displayName)")
+        .accessibilityLabel("\(risk.riskType.displayName), \(risk.riskGrade.displayName)")
     }
 
     // MARK: - Focus Areas

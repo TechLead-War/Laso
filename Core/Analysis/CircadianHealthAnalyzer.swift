@@ -264,8 +264,12 @@ struct CircadianHealthAnalyzer: InsightAnalyzer {
 
     /// Computes sleep regularity index and social jet lag in a single pass over sleep samples.
     private static func computeSleepMetrics(sleepSeries: MetricTimeSeries?, calendar: Calendar) -> (sri: Double, socialJetLag: Double) {
-        guard let series = sleepSeries, series.samples.count >= 7 else {
-            return (sri: 50, socialJetLag: 0) // defaults when insufficient data
+        guard let series = sleepSeries, series.samples.count >= 14 else {
+            // Neutral defaults that DON'T trigger downstream warnings (the
+            // "Irregular sleep pattern detected" insight fires when SRI < 60).
+            // Returning 75 keeps the score above that threshold so users with
+            // insufficient sleep history don't see a fabricated warning.
+            return (sri: 75, socialJetLag: 0)
         }
 
         // Single pass: accumulate stats for SRI (mean + variance) and social jet lag (weekday/weekend split)

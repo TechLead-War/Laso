@@ -7,3 +7,5 @@ node_modules/
 /lib
 /functions/lib
 .DS_Store
+functions/secrets/
+*.p8

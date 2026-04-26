@@ -759,6 +759,53 @@ body {
   border-color: var(--blue);
 }
 
+/* ═══ Multi-Select Rows ══════════════════════════════════════════════════ */
+
+.multi-select-row {
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.multi-select-row .input-label {
+  flex: 0 0 auto;
+  min-width: 160px;
+  padding-top: 4px;
+}
+
+.multi-select-options {
+  flex: 1 1 360px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  justify-content: flex-end;
+}
+
+.multi-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  background: var(--surface, #fff);
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.multi-option:hover {
+  border-color: var(--blue);
+}
+
+.multi-option input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--blue);
+  cursor: pointer;
+}
+
 /* ═══ Toggle Rows ════════════════════════════════════════════════════════ */
 
 .toggle-label {
@@ -1693,4 +1740,270 @@ body {
   cursor: pointer;
   line-height: 1;
   padding: 8px 12px;
+}
+
+/* ═══ Pricing Page ════════════════════════════════════════════════════════ */
+
+.stats-grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.pricing-status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.pricing-status-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 70%;
+}
+
+.pricing-status-app {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.pricing-status-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.pricing-status-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pricing-status-actions .btn-link {
+  font-size: 13px;
+}
+
+#pricing-products {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pricing-empty-card {
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 36px 24px;
+  text-align: center;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.pricing-empty-card h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.pricing-empty-card p {
+  font-size: 13px;
+  max-width: 540px;
+  line-height: 1.55;
+}
+
+.pricing-empty-card code {
+  background: #f0f0f5;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.pricing-product-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pricing-product-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pricing-product-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pricing-product-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.pricing-product-id {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.pricing-product-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pricing-tag {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #eef0f4;
+  color: #4b5063;
+}
+
+.pricing-tag-state-ready    { background: #e3f7e9; color: #1a7a3e; }
+.pricing-tag-state-waiting  { background: #fff4dd; color: #8a5a00; }
+.pricing-tag-state-rejected { background: #fde2df; color: #b1241b; }
+
+.pricing-product-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px 20px;
+}
+
+.pricing-meta-item-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.pricing-meta-item-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.pricing-intro-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pricing-intro-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #f1f6ff;
+  color: #0a4baa;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.pricing-intro-pill .pricing-intro-mode {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.pricing-territory-toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.pricing-territory-search {
+  flex: 1 1 220px;
+  min-width: 200px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  background: var(--bg);
+}
+
+.pricing-territory-search:focus {
+  outline: none;
+  border-color: var(--blue);
+  background: var(--bg-card);
+}
+
+.pricing-territory-count {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.pricing-table-wrap {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.pricing-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.pricing-table thead th {
+  position: sticky;
+  top: 0;
+  background: #fafafc;
+  text-align: left;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pricing-table tbody td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-primary);
+}
+
+.pricing-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.pricing-table tbody tr:hover {
+  background: #fafbfd;
+}
+
+.pricing-table .pricing-cell-amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+.pricing-table .pricing-cell-currency {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
 }

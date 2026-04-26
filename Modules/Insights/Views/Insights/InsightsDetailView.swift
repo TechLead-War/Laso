@@ -78,12 +78,6 @@ struct InsightsDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DS.space4) {
-                if let lastUpdated, let caption = Copy.Common.relativeUpdated(lastUpdated) {
-                    Text(caption)
-                        .font(DS.Typography.caption2)
-                        .foregroundStyle(.tertiary)
-                        .padding(.horizontal)
-                }
                 // Headline summary from the Home card (shown in full here)
                 if let headline = headlineSummary {
                     Text(headline)
@@ -107,7 +101,11 @@ struct InsightsDetailView: View {
                 .scrollBounceBehavior(.basedOnSize)
 
                 if !displayedItems.isEmpty {
-                    ForEach(displayedItems) { insight in
+                    let displayLimit = FeatureGate.isFreeTier ? FeatureGate.insightLimit : Int.max
+                    let visibleItems = Array(displayedItems.prefix(displayLimit))
+                    let hiddenItems = max(0, displayedItems.count - visibleItems.count)
+
+                    ForEach(visibleItems) { insight in
                         Button {
                             AppAnalytics.shared.trackInsightTapped(
                                 category: insight.category.rawValue,
@@ -128,6 +126,11 @@ struct InsightsDetailView: View {
                         }
                         .buttonStyle(.dsPress)
                         .padding(.horizontal)
+                    }
+
+                    if hiddenItems > 0 {
+                        LockedInsightsCTA(hiddenCount: hiddenItems)
+                            .padding(.horizontal)
                     }
                 } else {
                     DSEmptyState(

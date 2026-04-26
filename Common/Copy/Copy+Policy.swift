@@ -56,14 +56,14 @@ extension Copy {
 
         // MARK: - Source Descriptions
 
-        static let sourcePredictive = "wellness trend analysis"
-        static let sourceCausal = "pattern analysis"
-        static let sourceCircadian = "circadian rhythm analysis"
-        static let sourceState = "health state analysis"
-        static let sourceAnomaly = "pattern change notification"
-        static let sourceTrend = "trend analysis"
-        static let sourceBaseline = "baseline comparison"
-        static let sourceCounterfactual = "what-if analysis"
+        static let sourcePredictive = "trend signal"
+        static let sourceCausal = "pattern signal"
+        static let sourceCircadian = "body clock signal"
+        static let sourceState = "today's snapshot"
+        static let sourceAnomaly = "change alert"
+        static let sourceTrend = "trend signal"
+        static let sourceBaseline = "compared to your usual"
+        static let sourceCounterfactual = "what-if check"
 
         // MARK: - Time to Benefit
 

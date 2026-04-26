@@ -14,20 +14,31 @@ struct StressMonitorView: View {
     /// Drives a small "Updated …" caption at the top of the screen.
     var lastUpdated: Date? = nil
 
+    /// True only when we actually have signal: drivers above zero, OR a non-
+    /// trivial gauge reading, OR any meaningful weekly history. All-zero across
+    /// these means baselines never built — render an honest empty state
+    /// instead of "0.0 Calm / Your body feels relaxed".
+    private var hasData: Bool {
+        if stressScore > 0.01 { return true }
+        if hrvDeviation > 0.01 { return true }
+        if hrElevation > 0.01 { return true }
+        if weeklyScores.contains(where: { $0.score > 0.01 }) { return true }
+        return false
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: DS.sectionSpacing) {
-                if let lastUpdated, let caption = Copy.Common.relativeUpdated(lastUpdated) {
-                    Text(caption)
-                        .font(DS.Typography.caption2)
-                        .foregroundStyle(.tertiary)
+                if hasData {
+                    heroGauge
+                    driverSection
+                    weeklyChartSection
+                    weeklyComparison
+                    tipsSection
+                    breathingCTA
+                } else {
+                    emptyStateSection
                 }
-                heroGauge
-                driverSection
-                weeklyChartSection
-                weeklyComparison
-                tipsSection
-                breathingCTA
             }
             .padding(.horizontal)
             .padding(.bottom, DS.space7)
@@ -41,6 +52,32 @@ struct StressMonitorView: View {
         .onDisappear {
             AppAnalytics.shared.trackFeatureClose(.stressMonitor)
         }
+    }
+
+    /// Honest empty state shown when no HRV/HR baseline has formed yet
+    /// (typically requires 14 days of HRV samples). Replaces the previous
+    /// silent "0.0 Calm / Your body feels relaxed" fallback.
+    private var emptyStateSection: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "waveform.path.ecg")
+                .font(.system(size: 56, weight: .light))
+                .foregroundStyle(.secondary)
+                .padding(.top, DS.space3)
+
+            Text("Building your stress baseline")
+                .font(DS.Typography.title3.weight(.semibold))
+
+            Text("We need about 14 days of overnight HRV data to learn your normal range. Wear your Apple Watch to bed and your stress signal will appear here.")
+                .font(DS.Typography.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, DS.space4)
+                .padding(.bottom, DS.space4)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, DS.space4)
+        .cardStyle()
     }
 
     // MARK: - Hero Gauge
@@ -105,17 +142,33 @@ struct StressMonitorView: View {
     }
 
     private func arcSegment(from startFraction: Double, to endFraction: Double, color: Color) -> some View {
-        Circle()
-            .trim(from: startFraction * 240 / 360 + 150 / 360,
-                  to: endFraction * 240 / 360 + 150 / 360)
-            .stroke(color, style: StrokeStyle(lineWidth: 14, lineCap: .round))
-            .frame(width: 160, height: 160)
-            .rotationEffect(.degrees(0))
-            .opacity(scoreFraction >= startFraction ? 1.0 : 0.3)
+        // 240° gauge arc anchored at 8 o'clock (150°) sweeping clockwise through 12 to 4 o'clock (390°).
+        // Drawn with Path.addArc so the endpoints stay in degree space and never overflow trim's [0,1].
+        let arcStart: Double = 150
+        let arcSpan: Double = 240
+        let lineWidth: CGFloat = 14
+        let diameter: CGFloat = 160
+
+        return Path { path in
+            let radius = (diameter - lineWidth) / 2
+            let center = CGPoint(x: diameter / 2, y: diameter / 2)
+            path.addArc(
+                center: center,
+                radius: radius,
+                startAngle: .degrees(arcStart + startFraction * arcSpan),
+                endAngle: .degrees(arcStart + endFraction * arcSpan),
+                clockwise: false
+            )
+        }
+        .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+        .frame(width: diameter, height: diameter)
+        .opacity(scoreFraction >= startFraction ? 1.0 : 0.3)
     }
 
     private var needleIndicator: some View {
-        let angle = 150 + scoreFraction * 240
+        // Aligns the needle with the 240° arc above: 0.0 score → 8 o'clock (calm end),
+        // 1.0 → 4 o'clock (high-stress end), passing through 12 o'clock at the midpoint.
+        let angle = 240 + scoreFraction * 240
 
         return Circle()
             .fill(.primary)

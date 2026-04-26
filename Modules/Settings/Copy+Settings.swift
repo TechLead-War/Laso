@@ -47,9 +47,17 @@ extension Copy {
         static let freePlan = "Free Plan"
         static let trialActive = "Trial Active"
 
+        static func freeUntil(_ date: Date) -> String {
+            "Free until \(date.formatted(.dateTime.day().month(.abbreviated).year()))"
+        }
+        static func renews(_ date: Date) -> String {
+            "Renews \(date.formatted(.dateTime.day().month(.abbreviated).year()))"
+        }
+
         // MARK: - Subscription Management
 
         static let manageSubscription = "Manage Subscription"
+        static let manageSubscriptionSubtitle = "Pause or cancel anytime"
 
         // MARK: - Section Icons & Labels
 
@@ -159,7 +167,7 @@ extension Copy {
         // MARK: - Data Management
 
         static let dataManagement = "Data Management"
-        static let deleteAllMyData = "Delete All My Data"
+        static let deleteAllMyData = "Delete Account and All Data"
         static let deleteAllDataQuestion = "Delete All Data?"
         static let deleteEverything = "Delete Everything"
         static let deleteDataWarning = "This will permanently erase all your data from this device, including your profile, preferences, and saved health data. This cannot be undone. The app will close so changes take full effect."

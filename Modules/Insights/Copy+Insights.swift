@@ -42,8 +42,8 @@ extension Copy {
 
         // MARK: - Follow-Up Sentences
 
-        static let recheckIn48Hours = "Follow up: check again in 48 hours to make sure this is steadying before it reaches warning range."
-        static let reviewIn3Days = "Follow up: review this trend again in 3 days to confirm the direction has gotten better."
+        static let recheckIn48Hours = "Follow up: Check again in 48 hours to make sure this is steadying before it reaches warning range."
+        static let reviewIn3Days = "Follow up: Review this trend again in 3 days to confirm the direction has gotten better."
 
         // MARK: - Lead Time Labels
 
@@ -76,53 +76,59 @@ extension Copy {
         }
 
         // MARK: - Causal Hints
+        //
+        // Generic guidance shown alongside per-metric insights. Earlier copies
+        // led with "Based on your history…" which falsely implied the hint
+        // was personalized from each user's data — it isn't, it's general
+        // population guidance. Reworded as "Heads up:" / "Worth knowing:" to
+        // stay honest while still being useful.
 
-        static let causalHintHRV = "Based on your history, this level usually follows nights with less than 6 hours of sleep."
-        static let causalHintRHR = "Based on your history, a higher resting heart rate often follows times of less sleep or high stress. Try for an earlier bedtime tonight."
-        static let causalHintBloodOxygen = "Based on your history, lower blood oxygen usually goes with broken sleep patterns."
-        static let causalHintSleepDuration = "Based on your history, shorter sleep often follows days with low activity or late workouts."
-        static let causalHintSleepDeep = "Based on your history, drops in deep sleep often go with higher stress or shifting bedtimes."
-        static let causalHintVO2Max = "Based on your history, VO2 Max changes tend to follow shifts in workout routine over 2 to 4 weeks."
-        static let causalHintActiveCalories = "Based on your history, lower calorie burn usually follows fewer steps and workout minutes."
-        static let causalHintExercise = "Based on your history, dips in exercise often line up with broken sleep patterns."
-        static let causalHintBodyTemp = "Based on your history, changes in temperature often go with shifts in sleep length and HRV."
-        static let causalHintRespiratoryRate = "Based on your history, breathing rate changes often track with sleep quality and stress levels."
+        static let causalHintHRV = "Heads up: this level often follows nights with less than 6 hours of sleep."
+        static let causalHintRHR = "Heads up: a higher resting heart rate often follows times of less sleep or high stress. Try for an earlier bedtime tonight."
+        static let causalHintBloodOxygen = "Worth knowing: lower blood oxygen often goes with broken sleep patterns."
+        static let causalHintSleepDuration = "Worth knowing: shorter sleep often follows days with low activity or late workouts."
+        static let causalHintSleepDeep = "Worth knowing: drops in deep sleep often go with higher stress or shifting bedtimes."
+        static let causalHintVO2Max = "Worth knowing: VO2 Max changes tend to follow shifts in workout routine over 2 to 4 weeks."
+        static let causalHintActiveCalories = "Worth knowing: lower calorie burn often follows fewer steps and workout minutes."
+        static let causalHintExercise = "Worth knowing: dips in exercise often line up with broken sleep patterns."
+        static let causalHintBodyTemp = "Worth knowing: changes in temperature often go with shifts in sleep length and HRV."
+        static let causalHintRespiratoryRate = "Worth knowing: breathing rate changes often track with sleep quality and stress levels."
 
         // MARK: - Action Protocol Strings
 
         static func sleepMetricsOff(dev: Int) -> String {
-            "your sleep numbers are \(dev)% off your usual"
+            "Your sleep numbers are \(dev)% off your usual"
         }
         static func activityDeviation(dev: Int, direction: String) -> String {
-            "your activity is \(dev)% \(direction) your recent average"
+            "Your activity is \(dev)% \(direction) your recent average"
         }
         static func hrvTrending(direction: String, dev: Int) -> String {
-            "your HRV is trending \(direction), \(dev)% from your usual"
+            "Your HRV is trending \(direction), \(dev)% from your usual"
         }
         static func rhrShifted(dev: Int) -> String {
-            "your resting heart rate shifted \(dev)% from your usual"
+            "Your resting heart rate shifted \(dev)% from your usual"
         }
         static func mindfulnessDeviation(dev: Int, direction: String) -> String {
-            "your mindfulness time is \(dev)% \(direction) your average"
+            "Your mindfulness time is \(dev)% \(direction) your average"
         }
         static func daylightDeviation(dev: Int, direction: String) -> String {
-            "your daylight time is \(dev)% \(direction) your average"
+            "Your daylight time is \(dev)% \(direction) your average"
         }
-        static let bpOutsideRange = "your blood pressure reading is outside your usual range"
-        static let recheckSingleReading = "check again to confirm, since single readings can vary"
+        static let bpOutsideRange = "Your blood pressure reading is outside your usual range"
+        static let recheckSingleReading = "Check again to confirm, since single readings can vary"
         static let readingOutsideRange = "this reading is outside your usual range. Keep an eye on it."
-        static let recheckMetricTrend = "check this again to confirm the trend"
+        static let recheckMetricTrend = "Check this again to confirm the trend"
         static func bodyMetricsShifted(dev: Int) -> String {
-            "your body numbers shifted \(dev)% from your usual"
+            "Your body numbers shifted \(dev)% from your usual"
         }
         static func vo2MaxTrending(direction: String, dev: Int) -> String {
-            "your VO2 max is trending \(direction), \(dev)% from your usual"
+            "Your VO2 max is trending \(direction), \(dev)% from your usual"
         }
         static func mobilityMetricsOff(dev: Int) -> String {
-            "your mobility numbers are \(dev)% off your usual"
+            "Your mobility numbers are \(dev)% off your usual"
         }
         static func genericMetricDeviation(metricName: String, dev: Int) -> String {
-            "your \(metricName) is \(dev)% from your usual"
+            "Your \(metricName) is \(dev)% from your usual"
         }
 
         // MARK: - Correlations

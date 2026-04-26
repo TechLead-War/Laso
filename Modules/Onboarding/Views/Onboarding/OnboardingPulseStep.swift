@@ -5,6 +5,7 @@ import SwiftUI
 struct OnboardingPulseStep: View {
     let onContinue: () -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var pulseScale: CGFloat = 1.0
     @State private var haloOpacity: Double = 0.0
     @State private var headlineOpacity: Double = 0.0
@@ -71,9 +72,11 @@ struct OnboardingPulseStep: View {
                     Image(systemName: "heart.fill")
                         .font(DS.Typography.mediumIcon)
                         .foregroundStyle(AppColour.primary)
+                        .accessibilityHidden(true)
                 )
                 .scaleEffect(1.0 + (pulseScale - 1.0) * 0.25)
         }
+        .accessibilityHidden(true)
     }
 
     private func startAnimation() {
@@ -83,9 +86,17 @@ struct OnboardingPulseStep: View {
         withAnimation(.easeOut(duration: 0.8).delay(0.3)) {
             buttonOpacity = 1.0
         }
-        withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) {
-            pulseScale = 1.35
-            haloOpacity = 0.9
+        if reduceMotion {
+            // 06-F12: honor Reduce Motion. Skip the infinite pulse loop and
+            // settle on a static halo so VoiceOver users with motion sensitivity
+            // do not see the looping scale animation.
+            pulseScale = 1.0
+            haloOpacity = 0.6
+        } else {
+            withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) {
+                pulseScale = 1.35
+                haloOpacity = 0.9
+            }
         }
     }
 }

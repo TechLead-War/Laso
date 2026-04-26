@@ -51,7 +51,7 @@ enum InsightCategory: String, CaseIterable, Identifiable, Codable {
         case .causalChain: return "Cause & Effect"
         case .crossMetricAnomaly: return "Cross-Metric"
         case .cognitiveEnergy: return "Cognitive & Energy"
-        case .brainHealth: return "Cognitive Wellness"
+        case .brainHealth: return "Brain Health"
         case .cyclePhase: return "Cycle Phase"
         case .mlPattern: return "ML Pattern"
         case .mlState: return "ML State"

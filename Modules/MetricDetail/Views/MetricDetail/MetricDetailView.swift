@@ -20,6 +20,20 @@ struct MetricDetailView: View {
     @State private var comparisonTracker = SectionTracker(section: .metricDetailComparison, tab: .metricDetail)
 
     var body: some View {
+        if FeatureGate.isFreeTier && !FeatureGate.allowedFreeMetrics.contains(viewModel.metric.rawValue) {
+            ProFeatureOverlay(
+                feature: viewModel.metric.displayName,
+                icon: viewModel.metric.systemImageName,
+                description: "Deep-dive charts, baselines, and insights for \(viewModel.metric.displayName.lowercased()) are part of Pro."
+            )
+            .navigationTitle(viewModel.metric.displayName)
+            .navigationBarTitleDisplayMode(.inline)
+        } else {
+            metricDetailBody
+        }
+    }
+
+    private var metricDetailBody: some View {
         ScrollView {
             VStack(spacing: DS.space5) {
                 if viewModel.chartSamples.isEmpty {
@@ -192,13 +206,22 @@ struct MetricDetailView: View {
 
             // Still show insights if they exist (they come from analysis, not chart data)
             if !viewModel.insights.isEmpty {
+                let displayLimit = FeatureGate.isFreeTier ? FeatureGate.insightLimit : Int.max
+                let visibleInsights = Array(viewModel.insights.prefix(displayLimit))
+                let hiddenInsights = max(0, viewModel.insights.count - visibleInsights.count)
+
                 VStack(alignment: .leading, spacing: 10) {
                     Text(Copy.Insights.MetricDetail.insights)
                         .font(DS.Typography.headline)
                         .padding(.horizontal)
 
-                    ForEach(viewModel.insights) { insight in
+                    ForEach(visibleInsights) { insight in
                         InsightCard(insight: insight)
+                            .padding(.horizontal)
+                    }
+
+                    if hiddenInsights > 0 {
+                        LockedInsightsCTA(hiddenCount: hiddenInsights)
                             .padding(.horizontal)
                     }
                 }
@@ -519,11 +542,15 @@ struct MetricDetailView: View {
     // MARK: - Insights
 
     private var insightsSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        let displayLimit = FeatureGate.isFreeTier ? FeatureGate.insightLimit : Int.max
+        let visibleInsights = Array(viewModel.insights.prefix(displayLimit))
+        let hiddenInsights = max(0, viewModel.insights.count - visibleInsights.count)
+
+        return VStack(alignment: .leading, spacing: 8) {
             sectionHeader(icon: "lightbulb.fill", title: Copy.Insights.MetricDetail.insights)
 
             VStack(spacing: 0) {
-                ForEach(Array(viewModel.insights.enumerated()), id: \.element.id) { index, insight in
+                ForEach(Array(visibleInsights.enumerated()), id: \.element.id) { index, insight in
                     sectionRow(
                         icon: insight.metric.systemImageName,
                         iconColor: insight.metric.category.color,
@@ -532,13 +559,18 @@ struct MetricDetailView: View {
                         detailColor: insight.severity.color
                     )
 
-                    if index < viewModel.insights.count - 1 {
+                    if index < visibleInsights.count - 1 {
                         Divider().padding(.leading, Self.rowDividerLeading)
                     }
                 }
             }
             .cardStyle()
             .padding(.horizontal)
+
+            if hiddenInsights > 0 {
+                LockedInsightsCTA(hiddenCount: hiddenInsights)
+                    .padding(.horizontal)
+            }
         }
     }
 

@@ -112,9 +112,26 @@ final class SubscriptionManager {
     }
 
     func configure() async {
+        // Drain any pending StoreKit transactions before checking entitlements.
+        // The Task.detached `listenForTransactions()` started in init() may not
+        // have begun consuming Transaction.updates yet on a cold launch; an
+        // unfinished purchase from a previous app session could otherwise be
+        // missed by refreshStatus(), leaving a paid user incorrectly expired.
+        await processUnfinishedTransactions()
         await loadProducts()
         await refreshStatus()
         AppAnalytics.shared.updateSubscriptionProperties(status: status)
+    }
+
+    /// Finishes any unfinished StoreKit transactions queued for this app.
+    /// Apple stores unfinished transactions across launches; calling
+    /// `transaction.finish()` here closes the StoreKit handshake so the
+    /// transaction listener does not need to handle them later.
+    private func processUnfinishedTransactions() async {
+        for await result in Transaction.unfinished {
+            guard case .verified(let transaction) = result else { continue }
+            await transaction.finish()
+        }
     }
 
     /// Forces a status used only when capturing App Store screenshots in UI test
@@ -128,18 +145,53 @@ final class SubscriptionManager {
 
     @MainActor
     func loadProducts() async {
+        let ids = SubscriptionConfig.allProductIDs
+        NSLog("[StoreKit] requesting products for IDs: %@", "\(ids)")
         do {
-            let loaded = try await Product.products(for: SubscriptionConfig.allProductIDs)
+            let loaded = try await Self.withTimeout(seconds: 8) {
+                try await Product.products(for: ids)
+            }
+            NSLog("[StoreKit] got %d products: %@", loaded.count, "\(loaded.map { $0.id })")
             products = loaded.sorted { $0.price > $1.price } // yearly first
             errorMessage = nil
+        } catch is TimeoutError {
+            NSLog("[StoreKit] timeout")
+            errorMessage = "Loading prices took too long. Check your connection and tap Retry."
         } catch {
+            NSLog("[StoreKit] error: %@", "\(error)")
             errorMessage = "Could not load subscription options. Check your connection."
+        }
+    }
+
+    private struct TimeoutError: Error {}
+
+    /// Runs `operation` and throws `TimeoutError` if it does not complete within
+    /// `seconds`. Apple's `Product.products(for:)` has no built-in timeout and
+    /// can hang indefinitely on degraded networks; this guard prevents a stuck
+    /// "Loading prices..." spinner on the paywall.
+    private static func withTimeout<T: Sendable>(
+        seconds: Double,
+        operation: @escaping @Sendable () async throws -> T
+    ) async throws -> T {
+        try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask { try await operation() }
+            group.addTask {
+                try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+                throw TimeoutError()
+            }
+            guard let first = try await group.next() else { throw TimeoutError() }
+            group.cancelAll()
+            return first
         }
     }
 
     // MARK: - Purchase
 
     func purchase(_ product: Product) async {
+        // Re-entrancy guard: protects against rapid double-taps that race past
+        // the disabled-button check (Task is scheduled async from the main actor;
+        // the second tap can land before isPurchasing flips to true here).
+        guard !isPurchasing else { return }
         isPurchasing = true
         errorMessage = nil
         defer { isPurchasing = false }

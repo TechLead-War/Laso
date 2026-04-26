@@ -23,7 +23,7 @@ enum AppSecrets {
     // MARK: - CloudKit
 
     enum CloudKit {
-        static let containerID = "iCloud.com.lasohealth.app"
+        static let containerID = "iCloud.com.lasohealth.fit"
         static let recordType = "HealthBackup"
         static let recordID = "HealthBackup-v1"
     }
