@@ -66,7 +66,7 @@ struct VitalityDataMaturityBanner: View {
                     .foregroundStyle(vitalityPersonalizationTint(for: scorer))
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(scorer.personalizationStatus.rawValue)
+                    Text(bannerTitle)
                         .font(.subheadline.weight(.semibold))
 
                     Text(dataMaturityDescription)
@@ -117,6 +117,13 @@ struct VitalityDataMaturityBanner: View {
             return Copy.Vitality.buildingProfileDescription
         }
         return Copy.Vitality.earlyEstimateDescription
+    }
+
+    private var bannerTitle: String {
+        if scorer.personalizationStatus == .buildingProfile {
+            return Copy.Vitality.profileProgressTitle
+        }
+        return scorer.personalizationStatus.rawValue
     }
 }
 

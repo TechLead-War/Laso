@@ -23,6 +23,10 @@ struct PaywallView: View {
     @State private var selectedProduct: Product?
     @State private var isRestoring = false
     @State private var paywallOpenDate = Date()
+    /// Drives the in-app Safari sheet for Terms / Privacy. SwiftUI `Link`
+    /// inside a `fullScreenCover` does not fire on iPad (App Review 2.1
+    /// rejection on iPadOS 26), so we present SFSafariViewController instead.
+    @State private var legalSheet: IdentifiedURL?
     /// Guards against `onSubscribed` firing more than once. Three independent
     /// observers (onAppear, status onChange, lastFetchTime onChange) can each
     /// detect "user now has full access" almost simultaneously after a purchase
@@ -415,12 +419,20 @@ struct PaywallView: View {
 
             HStack(spacing: DS.space4) {
                 if let termsURL = URL(string: AppSecrets.URLs.termsOfUse) {
-                    Link(Copy.Privacy.termsOfUse, destination: termsURL)
+                    Button(Copy.Privacy.termsOfUse) {
+                        footerTracker.tapped(target: "terms_of_use")
+                        legalSheet = IdentifiedURL(url: termsURL)
+                    }
+                    .accessibilityIdentifier("paywall.termsLink")
                 }
                 Text("\u{00B7}")
                     .foregroundStyle(AppColour.textQuaternary)
                 if let privacyURL = URL(string: AppSecrets.URLs.privacyPolicy) {
-                    Link(Copy.Privacy.privacyPolicy, destination: privacyURL)
+                    Button(Copy.Privacy.privacyPolicy) {
+                        footerTracker.tapped(target: "privacy_policy")
+                        legalSheet = IdentifiedURL(url: privacyURL)
+                    }
+                    .accessibilityIdentifier("paywall.privacyLink")
                 }
             }
             .font(DS.Typography.caption2)
@@ -430,5 +442,9 @@ struct PaywallView: View {
         .padding(.top, DS.space3)
         .padding(.bottom, DS.space2)
         .background(.ultraThinMaterial)
+        .sheet(item: $legalSheet) { item in
+            SafariView(url: item.url)
+                .ignoresSafeArea()
+        }
     }
 }

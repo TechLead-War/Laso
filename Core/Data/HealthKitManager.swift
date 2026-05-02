@@ -169,6 +169,10 @@ final class HealthKitManager {
             await MainActor.run {
                 AppAnalytics.shared.trackHealthPermissionResult(granted: 0, denied: totalRequested, total: totalRequested)
                 AppAnalytics.shared.trackError(type: "healthkit_authorization", screen: .home, message: error.localizedDescription)
+                // Data-pipeline failure signal: lets analytics see HealthKit auth/sync
+                // failures separately from generic errors so churn analysis can isolate
+                // permission-related drop-off from runtime errors.
+                AppAnalytics.shared.trackSyncFailed(reason: "healthkit_authorization: \(error.localizedDescription)")
             }
         }
     }
@@ -260,6 +264,16 @@ final class HealthKitManager {
                     // Check if this metric's latest sample is stale
                     let latestSampleDate = timeSeries[metric]?.samples.last?.date
                     if let latestSampleDate, latestSampleDate < staleCutoff {
+                        // Stale data signal: latest sample is older than 7 days,
+                        // strongest churn precursor for wearable users (device
+                        // not worn, paired wrong, sync broken).
+                        let staleHours = Int(Date().timeIntervalSince(latestSampleDate) / 3600)
+                        await MainActor.run {
+                            AppAnalytics.shared.trackStaleDataDetected(
+                                staleSinceHours: staleHours,
+                                metric: metric.rawValue
+                            )
+                        }
                         syncProgress?.metricsCompleted += 1
                         fetchedMetrics.insert(metric)
                         continue

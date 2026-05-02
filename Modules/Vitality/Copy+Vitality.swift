@@ -59,6 +59,7 @@ extension Copy {
 
         static let buildingProfileDescription = "Your vitality age matches your real age while we learn what is normal for you. Keep wearing your device."
         static let earlyEstimateDescription = "Early estimate. Gets more accurate each day as we learn your patterns."
+        static let profileProgressTitle = "Profile progress"
         static func dataProgress(days: Int, target: Int) -> String { "\(days) of \(target) days" }
 
         // MARK: - Trend

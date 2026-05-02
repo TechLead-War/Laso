@@ -13,6 +13,12 @@ struct ScoreGuideSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 28) {
+                    Color.clear.frame(height: 0).onAppear {
+                        AppAnalytics.shared.trackExplanationViewed(
+                            type: "health_score",
+                            screen: .home
+                        )
+                    }
                     // MARK: - Hero
                     VStack(spacing: 16) {
                         HealthScoreRing(score: score, label: Copy.Home.ScoreGuide.healthScore, size: 120, lineWidth: 12)

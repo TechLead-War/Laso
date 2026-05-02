@@ -209,7 +209,7 @@ final class DashboardHousekeepingService {
             let topTrends: [(metric: String, direction: String, change: Double)] = payload.currentTrends
                 .sorted { abs($0.value.weekOverWeekChange) > abs($1.value.weekOverWeekChange) }
                 .prefix(5)
-                .map { (metric: $0.key.displayName, direction: $0.value.direction.symbol, change: $0.value.weekOverWeekChange) }
+                .map { (metric: $0.key.displayName, direction: TrendDirection.arrowSymbol(forChange: $0.value.weekOverWeekChange), change: $0.value.weekOverWeekChange) }
 
             WeeklySummaryScheduler.schedule(
                 score: payload.currentScore,

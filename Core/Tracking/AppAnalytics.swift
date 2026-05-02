@@ -1335,27 +1335,6 @@ final class AppAnalytics {
     // MARK: - 10. Emotional / NPS
     // ══════════════════════════════════════════════════════════════════════
 
-    /// Call when user submits NPS score (0-10).
-    func trackNPSSubmitted(score: Int, source: String) {
-        logEvent("nps_submitted", parameters: [
-            "score": score,
-            "source": source,
-            "days_since_install": session.daysSinceInstall,
-            "total_sessions": session.totalSessions,
-            "lifetime_core_actions": session.lifetimeCoreActions,
-            "was_activated": session.isActivated ? 1 : 0
-        ])
-
-        defaults.set(Date(), forKey: AppKeys.Feedback.lastNPSDate)
-        defaults.set(score, forKey: AppKeys.Feedback.lastNPSScore)
-
-        let category: String
-        if score >= 9 { category = "promoter" }
-        else if score >= 7 { category = "passive" }
-        else { category = "detractor" }
-        setUserProperty("nps_category", value: category)
-    }
-
     // ══════════════════════════════════════════════════════════════════════
     // MARK: - 11. Friction Metrics
     // ══════════════════════════════════════════════════════════════════════
@@ -1646,58 +1625,9 @@ final class AppAnalytics {
         ])
     }
 
-    // Generic action is intentionally unavailable to prevent non-actionable analytics.
-    @available(*, unavailable, message: "Use specific AppAnalytics tracking methods with explicit metadata.")
-    func trackAction(_ action: String, metadata: [String: Any] = [:]) {
-        let sanitized = sanitizeEventName(action)
-        logEvent(sanitized, parameters: metadata)
-    }
-
     // ══════════════════════════════════════════════════════════════════════
     // MARK: - 14. Intelligence Suite
     // ══════════════════════════════════════════════════════════════════════
-
-    func trackSimulationRun(adjustedMetrics: Int, scoreDelta: Int, confidence: Double) {
-        logEvent("simulation_run", parameters: [
-            "adjusted_metrics": adjustedMetrics,
-            "score_delta": scoreDelta,
-            "confidence": String(format: "%.2f", confidence),
-            "screen": AppFeature.simulation.rawValue
-        ])
-    }
-
-    func trackROIRecommendationTapped(metric: String, predictedGain: Int, effortLevel: String) {
-        logEvent("roi_recommendation_tapped", parameters: [
-            "metric": metric,
-            "predicted_gain": predictedGain,
-            "effort_level": effortLevel,
-            "screen": AppFeature.simulation.rawValue
-        ])
-    }
-
-    func trackECGAnalysisCompleted(recordingsCount: Int, afibCount: Int, insightsGenerated: Int) {
-        logEvent("ecg_analysis_completed", parameters: [
-            "recordings_count": recordingsCount,
-            "afib_count": afibCount,
-            "insights_generated": insightsGenerated
-        ])
-    }
-
-    func trackNutritionCorrelationDiscovered(nutritionMetric: String, outcomeMetric: String, correlation: Double) {
-        logEvent("nutrition_correlation_discovered", parameters: [
-            "nutrition_metric": nutritionMetric,
-            "outcome_metric": outcomeMetric,
-            "correlation": String(format: "%.2f", correlation)
-        ])
-    }
-
-    func trackClinicalInsightGenerated(metric: String, stage: String, trajectory: String) {
-        logEvent("clinical_insight_generated", parameters: [
-            "metric": metric,
-            "clinical_stage": stage,
-            "trajectory": trajectory
-        ])
-    }
 
     func trackHealthStateTimelineViewed(currentState: String, daysInState: Int, totalStates: Int) {
         logEvent("health_state_timeline_viewed", parameters: [
@@ -1705,14 +1635,6 @@ final class AppAnalytics {
             "days_in_state": daysInState,
             "total_states": totalStates,
             "screen": AppFeature.healthStateTimeline.rawValue
-        ])
-    }
-
-    func trackCircadianAnalysisCompleted(chronotype: String, metricsAnalyzed: Int, confidence: Double) {
-        logEvent("circadian_analysis_completed", parameters: [
-            "chronotype": chronotype,
-            "metrics_analyzed": metricsAnalyzed,
-            "confidence": String(format: "%.2f", confidence)
         ])
     }
 
@@ -1911,23 +1833,6 @@ final class AppAnalytics {
         ])
     }
 
-    /// Call when user marks an insight as helpful.
-    func trackInsightMarkedHelpful(category: String, metric: String) {
-        logEvent("insight_marked_helpful", parameters: [
-            "insight_category": category,
-            "metric": metric
-        ])
-    }
-
-    /// Call when user marks an insight as unhelpful / false positive.
-    func trackInsightMarkedUnhelpful(category: String, metric: String, reason: String = "") {
-        logEvent("insight_marked_unhelpful", parameters: [
-            "insight_category": category,
-            "metric": metric,
-            "reason": reason
-        ])
-    }
-
     /// Call when user views the privacy/data policy page.
     func trackPrivacyPageViewed(source: String) {
         logEvent("privacy_page_viewed", parameters: [
@@ -1978,24 +1883,6 @@ final class AppAnalytics {
     // ══════════════════════════════════════════════════════════════════════
     // MARK: - 19. Feature Lifecycle Metrics
     // ══════════════════════════════════════════════════════════════════════
-
-    func trackWorkoutPlanGenerated(
-        plan: WorkoutPlan,
-        recoveryBand: WorkoutRecoveryBand,
-        cyclePhase: CyclePhaseModifier?,
-        screen: AppFeature
-    ) {
-        logEvent("workout_plan_generated", parameters: [
-            "screen": screen.rawValue,
-            "training_zone": plan.zone.rawValue,
-            "recovery_band": recoveryBand.rawValue,
-            "target_duration_min": plan.targetDuration,
-            "estimated_calories": plan.estimatedCalories,
-            "main_block_count": plan.mainBlocks.count,
-            "has_cycle_adjustment": cyclePhase == nil ? 0 : 1,
-            "cycle_phase": cyclePhase?.displayName ?? "none"
-        ])
-    }
 
     func trackWorkoutPlanOpened(
         plan: WorkoutPlan,
@@ -2249,12 +2136,6 @@ final class AppAnalytics {
     // MARK: - 20b. Referral Events
     // ══════════════════════════════════════════════════════════════════════
 
-    func trackReferralCodeShared(code: String) {
-        logEvent("referral_code_shared", parameters: [
-            "code": code
-        ])
-    }
-
     func trackReferralCodeRedeemed(code: String, success: Bool, failureReason: String? = nil) {
         var params: [String: Any] = [
             "code": code,
@@ -2313,14 +2194,6 @@ final class AppAnalytics {
         ]
         if let metric { params["metric"] = metric }
         logEvent("alert_acted_on", parameters: params)
-    }
-
-    func trackAlertDismissed(alertType: String, metric: String? = nil) {
-        var params: [String: Any] = [
-            "alert_type": alertType
-        ]
-        if let metric { params["metric"] = metric }
-        logEvent("alert_dismissed", parameters: params)
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -3073,20 +2946,6 @@ final class AppAnalytics {
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // MARK: - 27. Deep Link / Attribution
-    // ══════════════════════════════════════════════════════════════════════
-
-    /// Call when the app is opened via a deep link or universal link.
-    func trackDeepLinkOpened(url: String, source: String, campaign: String? = nil) {
-        var params: [String: Any] = [
-            "url": String(url.prefix(200)),
-            "source": source
-        ]
-        if let campaign { params["campaign"] = campaign }
-        logEvent("deep_link_opened", parameters: params)
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
     // MARK: - 28. Notification Permission Funnel
     // ══════════════════════════════════════════════════════════════════════
 
@@ -3169,6 +3028,27 @@ final class AppAnalytics {
             enriched["activation_status"] = session.isActivated ? "activated" : "not_activated"
         }
 
+        // Universal super-properties — previously only attached to `session_start`,
+        // which made "Network Type Distribution", "Usage by Hour of Day", and
+        // "Users by Engagement Level" panels empty for every other event type.
+        if enriched["network_type"] == nil {
+            enriched["network_type"] = ConnectivityMonitor.shared.isOnline
+                ? (ConnectivityMonitor.shared.isExpensive ? "cellular" : "wifi")
+                : "offline"
+        }
+        if enriched["hour_of_day"] == nil {
+            enriched["hour_of_day"] = Calendar.current.component(.hour, from: Date())
+        }
+        if enriched["engagement_level"] == nil {
+            enriched["engagement_level"] = computeEngagementLevel().rawValue
+        }
+        // Raw event-kind so PostHog panels can group/filter by the canonical
+        // base name (e.g. "screen_viewed") even when the captured event name
+        // is composed (e.g. "home_screen_viewed").
+        if enriched["event_kind"] == nil {
+            enriched["event_kind"] = name
+        }
+
         let eventName = sanitizeEventName(canonicalEventName(name, parameters: enriched))
         let params = sanitizeParameters(enriched)
         PostHogManager.shared.capture(event: eventName, properties: params)
@@ -3181,35 +3061,7 @@ final class AppAnalytics {
     // ══════════════════════════════════════════════════════════════════════
     // MARK: - 25. Widget & Watch Engagement
     // ══════════════════════════════════════════════════════════════════════
-
-    /// Call when user taps the home screen widget.
-    func trackWidgetTapped(widgetKind: String) {
-        logEvent("widget_tapped", parameters: [
-            "widget_kind": widgetKind,
-            "days_since_install": session.daysSinceInstall
-        ])
-    }
-
-    /// Call when the widget is rendered on the home screen.
-    func trackWidgetDisplayed(widgetKind: String, hasData: Bool) {
-        logEvent("widget_displayed", parameters: [
-            "widget_kind": widgetKind,
-            "has_data": hasData ? 1 : 0
-        ])
-    }
-
-    /// Call when the Apple Watch companion app opens.
-    func trackWatchAppSessionStart() {
-        logEvent("watch_app_session_start", parameters: [
-            "days_since_install": session.daysSinceInstall
-        ])
-    }
-
-    /// Call when the Apple Watch companion app goes to background.
-    func trackWatchAppSessionEnd(durationSec: Int) {
-        logEvent("watch_app_session_end", parameters: [
-            "duration_sec": durationSec,
-            "days_since_install": session.daysSinceInstall
-        ])
-    }
+    // (Widget interaction + Apple Watch session tracking methods removed —
+    // they had zero call sites because widget/watchOS instrumentation was
+    // never wired. Re-add when those surfaces actually emit events.)
 }

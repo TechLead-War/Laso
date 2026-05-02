@@ -79,6 +79,12 @@ final class CategoryDetailViewModel {
         return TrendAnalyzer.formattedPercentChange(trend.weekOverWeekChange)
     }
 
+    /// Numeric period change for a metric — used to drive arrow direction in
+    /// `TrendBadge` so the arrow follows the value, not sentiment.
+    func numericWeekOverWeekChange(for metric: HealthMetric) -> Double? {
+        trendResult(for: metric)?.weekOverWeekChange
+    }
+
     /// Historical highlights for metrics in this category
     var historicalHighlights: [(metric: HealthMetric, text: String, icon: String)] {
         var results: [(metric: HealthMetric, text: String, icon: String, significance: Double)] = []

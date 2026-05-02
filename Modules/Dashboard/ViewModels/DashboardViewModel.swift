@@ -657,6 +657,7 @@ final class DashboardViewModel {
         guard healthKitManager.isHealthKitAvailable else {
             ui.errorMessage = "HealthKit is not available on this device. Please run on a real iPhone with the Health app enabled."
             AppAnalytics.shared.trackError(type: "healthkit_unavailable", screen: .home)
+            AppAnalytics.shared.trackScoreGenerationFailed(reason: "healthkit_unavailable")
             return
         }
 
@@ -666,6 +667,7 @@ final class DashboardViewModel {
             let msg = healthKitManager.error ?? "HealthKit authorization required"
             ui.errorMessage = msg
             AppAnalytics.shared.trackError(type: "healthkit_auth_failed", screen: .home, message: msg)
+            AppAnalytics.shared.trackScoreGenerationFailed(reason: "healthkit_unauthorized")
             return
         }
 
@@ -1183,6 +1185,22 @@ final class DashboardViewModel {
         scores.cachedScoreChangeFromYesterday = computeScoreChangeFromYesterday()
         scores.rollingAverageScore = computeRollingAverageScore()
         scores.scoreExplanation = analysisEngine.scoreExplanation
+
+        // North-star activation event: fire exactly once per install when the
+        // first non-zero score is computed. Gate on a UserDefaults flag so
+        // re-launches don't double-fire. Without this, activation rate cannot
+        // be measured for ad-driven cohorts.
+        let firstScore = analysisEngine.overallScore.score
+        if firstScore > 0 && !UserDefaults.standard.bool(forKey: "laso.firstScoreFired") {
+            UserDefaults.standard.set(true, forKey: "laso.firstScoreFired")
+            let installTs = UserDefaults.standard.double(forKey: AppKeys.Lifecycle.installDate)
+            let secondsSinceInstall = installTs > 0 ? Int(Date().timeIntervalSince1970 - installTs) : 0
+            AppAnalytics.shared.trackFirstScoreGenerated(
+                score: firstScore,
+                timeSinceInstallSec: secondsSinceInstall,
+                metricsUsed: healthKitManager.timeSeries.count
+            )
+        }
 
         // Update weakest category name (used by ScoreGuideSheet)
         cachedWeakestCategoryName = scores.categoryScores

@@ -7,6 +7,9 @@ final class AppLaunchCoordinator {
     private let remoteConfigManager: RemoteConfigManager
     private let analyticsManager: PostHogManager
 
+    /// Retained so we can deregister on teardown (currently lifetime = app lifetime).
+    private var authStateHandle: AuthStateDidChangeListenerHandle?
+
     init(
         remoteConfigManager: RemoteConfigManager = .shared,
         analyticsManager: PostHogManager = .shared
@@ -38,6 +41,23 @@ final class AppLaunchCoordinator {
 
         analyticsManager.configure()
         analyticsManager.installCrashHandlers()
+
+        // PostHog identity. Without `identify`, every session is anonymous and
+        // retention/LTV cohorts cannot be built. We bind PostHog's distinct_id
+        // to the Firebase UID so the same user is tracked across sessions and
+        // across the anonymous → Apple Sign-In transition.
+        if let uid = Auth.auth().currentUser?.uid {
+            analyticsManager.identify(userId: uid, properties: [
+                "auth_provider": Auth.auth().currentUser?.isAnonymous == true ? "anonymous" : "apple"
+            ])
+        }
+        authStateHandle = Auth.auth().addStateDidChangeListener { [weak self] _, user in
+            guard let self, let user else { return }
+            self.analyticsManager.identify(userId: user.uid, properties: [
+                "auth_provider": user.isAnonymous ? "anonymous" : "apple"
+            ])
+        }
+
         Task { @MainActor in
             AppAnalytics.shared.startScreenshotTracking()
         }

@@ -108,8 +108,8 @@ struct SettingsView: View {
                 subscriptionSection
                 dataSection
                 notificationsSection
-                aboutSection
                 supportSection
+                aboutSection
                 dangerZoneSection
                 disclaimerSection
             }
@@ -472,6 +472,9 @@ struct SettingsView: View {
                     )
                 }
                 .buttonStyle(.plain)
+                .simultaneousGesture(TapGesture().onEnded {
+                    AppAnalytics.shared.trackPrivacyPageViewed(source: "settings")
+                })
             }
             if let termsURL = URL(string: AppSecrets.URLs.termsOfUse) {
                 Link(destination: termsURL) {

@@ -104,6 +104,15 @@ struct ContentView: View {
             if shouldShowHKReprompt {
                 showHealthKitReprompt = true
             }
+
+            // Notification permission fallback: the onboarding prompt only fires
+            // inside the Apple Sign-In success branch, so users who completed
+            // onboarding via any other path land here in `.notDetermined` and
+            // never receive notifications. Trigger the system prompt once.
+            // iOS no-ops this call when status is already `.authorized`/`.denied`.
+            if await NotificationManager.shared.shouldRequestAuthorizationOnLaunch() {
+                _ = await NotificationManager.shared.requestAuthorization(source: "launch_fallback")
+            }
         }
         .onAppear {
             startSessionAnalytics()
@@ -572,7 +581,13 @@ struct ContentView: View {
                 await healthKitManager.refreshSleepBoundaries(days: 14)
             }
         } else {
-            ScrollView {
+            sleepCoachEmptyState
+        }
+    }
+
+    private var sleepCoachEmptyState: some View {
+        ScrollView {
+            VStack(spacing: DS.sectionSpacing) {
                 VStack(spacing: 14) {
                     Image(systemName: "moon.zzz")
                         .font(.system(size: 56, weight: .light))
@@ -594,15 +609,80 @@ struct ContentView: View {
                 .padding(.vertical, DS.space5)
                 .cardStyle()
                 .padding(.horizontal)
-                .padding(.top, DS.space4)
+
+                sleepCoachEmptyTipsSection
             }
-            .background(AppColour.surfaceBase.ignoresSafeArea())
-            .navigationTitle("Sleep Coach")
-            .navigationBarTitleDisplayMode(.large)
-            .task {
-                await healthKitManager.refreshSleepBoundaries(days: 14)
-            }
+            .padding(.top, DS.space4)
+            .padding(.bottom, DS.space6)
         }
+        .background(AppColour.surfaceBase.ignoresSafeArea())
+        .navigationTitle("Sleep Coach")
+        .navigationBarTitleDisplayMode(.large)
+        .task {
+            await healthKitManager.refreshSleepBoundaries(days: 14)
+        }
+    }
+
+    private var sleepCoachEmptyTipsSection: some View {
+        VStack(alignment: .leading, spacing: DS.itemSpacing) {
+            HStack(spacing: DS.space2) {
+                Image(systemName: "lightbulb.fill")
+                    .font(DS.Typography.subheadlineSemibold)
+                    .foregroundStyle(AppColour.categorySleep)
+                Text("While you wait")
+                    .font(DS.Typography.headline)
+            }
+            .padding(.horizontal)
+
+            VStack(spacing: 0) {
+                sleepCoachEmptyTipRow(
+                    icon: "clock.fill",
+                    color: AppColour.categorySleep,
+                    title: Copy.SleepCoach.tipConsistentScheduleTitle,
+                    detail: Copy.SleepCoach.tipConsistentScheduleDetail
+                )
+                Divider().padding(.leading, 44)
+                sleepCoachEmptyTipRow(
+                    icon: "thermometer.snowflake",
+                    color: .cyan,
+                    title: Copy.SleepCoach.tipCoolBedroomTitle,
+                    detail: Copy.SleepCoach.tipCoolBedroomDetail
+                )
+                Divider().padding(.leading, 44)
+                sleepCoachEmptyTipRow(
+                    icon: "sun.max.fill",
+                    color: .orange,
+                    title: Copy.SleepCoach.tipMorningSunlightTitle,
+                    detail: Copy.SleepCoach.tipMorningSunlightDetail
+                )
+            }
+            .padding(.vertical, DS.space2)
+            .cardStyle()
+            .padding(.horizontal)
+        }
+    }
+
+    private func sleepCoachEmptyTipRow(icon: String, color: Color, title: String, detail: String) -> some View {
+        HStack(spacing: DS.itemSpacing) {
+            Image(systemName: icon)
+                .font(DS.Typography.subheadline)
+                .foregroundStyle(color)
+                .frame(width: 32, height: 32)
+                .background(color.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.iconRadius))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(DS.Typography.subheadlineMedium)
+                Text(detail)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer()
+        }
+        .padding(.horizontal, DS.cardPadding)
+        .padding(.vertical, DS.space2)
     }
 
     @ViewBuilder

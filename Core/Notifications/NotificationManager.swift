@@ -67,6 +67,16 @@ final class NotificationManager {
         }
     }
 
+    /// `true` when the OS-level authorization status is `.notDetermined`,
+    /// meaning we have never asked the user. Used by the launch fallback in
+    /// `ContentView` to recover users who completed onboarding without going
+    /// through the Apple Sign-In success branch (which is the only place the
+    /// onboarding-time prompt fires).
+    func shouldRequestAuthorizationOnLaunch() async -> Bool {
+        let settings = await center.notificationSettings()
+        return settings.authorizationStatus == .notDetermined
+    }
+
     /// Check whether notifications are currently authorized without prompting the user.
     func isCurrentlyAuthorized() async -> Bool {
         let settings = await center.notificationSettings()

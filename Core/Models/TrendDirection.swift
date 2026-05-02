@@ -38,4 +38,18 @@ enum TrendDirection: String, Codable {
         case .declining: return "↓"
         }
     }
+
+    // Arrow points in the direction the numeric value moved, independent of
+    // sentiment. Color/label still come from `TrendDirection` (sentiment).
+    static func arrowImageName(forChange change: Double) -> String {
+        if change > 0 { return "arrow.up.right" }
+        if change < 0 { return "arrow.down.right" }
+        return "arrow.right"
+    }
+
+    static func arrowSymbol(forChange change: Double) -> String {
+        if change > 0 { return "↑" }
+        if change < 0 { return "↓" }
+        return "→"
+    }
 }

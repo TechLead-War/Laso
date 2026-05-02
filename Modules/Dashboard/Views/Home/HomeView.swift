@@ -26,7 +26,7 @@ struct HomeView: View {
 
     var body: some View {
         Group {
-            if viewModel.ui.isLoading {
+            if viewModel.ui.isLoading && viewModel.healthKitManager.timeSeries.isEmpty {
                 if viewModel.ui.isFirstLaunchSync {
                     firstLaunchLoadingView
                 } else {
@@ -396,6 +396,15 @@ struct HomeView: View {
         ) {
             await viewModel.refresh()
             liveViewModel.fetchHomeData()
+        }
+        .onAppear {
+            // Empty-state friction signal: fires when the user lands on Home
+            // without HealthKit data, so analytics can isolate "no-data churn"
+            // from authorized-but-engaged users.
+            AppAnalytics.shared.trackEmptyStateShown(
+                screen: .home,
+                reason: viewModel.healthKitManager.isAuthorized ? "authorized_no_data" : "not_authorized"
+            )
         }
     }
 

@@ -245,7 +245,8 @@ struct MetricDetailView: View {
             HStack(spacing: 8) {
                 TrendBadge(
                     direction: viewModel.trendDirection,
-                    changeText: viewModel.weekOverWeekChange
+                    changeText: viewModel.weekOverWeekChange,
+                    numericChange: viewModel.trend?.weekOverWeekChange
                 )
 
                 if viewModel.isOutsideNormalRange {
@@ -366,7 +367,8 @@ struct MetricDetailView: View {
                     .foregroundStyle(.secondary)
                 TrendBadge(
                     direction: viewModel.trendDirection,
-                    changeText: nil
+                    changeText: nil,
+                    numericChange: viewModel.trend?.weekOverWeekChange
                 )
             }
             .frame(maxWidth: .infinity)

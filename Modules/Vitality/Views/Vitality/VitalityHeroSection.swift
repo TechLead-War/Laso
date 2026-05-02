@@ -31,11 +31,13 @@ struct VitalityHeroSection: View {
                             .tracking(2)
                             .foregroundStyle(.white.opacity(0.8))
 
-                        Text(deltaBadgeText)
-                            .font(DS.Typography.title3.weight(.bold))
-                            .foregroundStyle(vitalityDeltaColor(for: scorer.delta))
-                            .monospacedDigit()
-                            .postHogMask()
+                        if scorer.personalizationStatus != .buildingProfile {
+                            Text(deltaBadgeText)
+                                .font(DS.Typography.title3.weight(.bold))
+                                .foregroundStyle(vitalityDeltaColor(for: scorer.delta))
+                                .monospacedDigit()
+                                .postHogMask()
+                        }
                     }
 
                     if heroComponents.indices.contains(0) {

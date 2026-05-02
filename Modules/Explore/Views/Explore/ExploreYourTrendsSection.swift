@@ -86,7 +86,7 @@ struct ExploreYourTrendsSection: View {
             .frame(width: 52, height: 24)
 
             HStack(spacing: DS.space1) {
-                Image(systemName: item.trend.direction.systemImageName)
+                Image(systemName: TrendDirection.arrowImageName(forChange: item.trend.weekOverWeekChange))
                     .font(DS.Typography.caption2Semibold)
                 Text(TrendAnalyzer.formattedPercentChange(item.trend.weekOverWeekChange))
                     .font(DS.Typography.captionSemibold.monospacedDigit())

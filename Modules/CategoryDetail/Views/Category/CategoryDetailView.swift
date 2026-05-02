@@ -278,7 +278,10 @@ struct CategoryDetailView: View {
 
                 HStack(spacing: DS.space1) {
                     if let trend = viewModel.trend(for: metric) {
-                        TrendBadge(direction: trend)
+                        TrendBadge(
+                            direction: trend,
+                            numericChange: viewModel.numericWeekOverWeekChange(for: metric)
+                        )
                     }
 
                     let wow = viewModel.weekOverWeekChange(for: metric)

@@ -25,7 +25,7 @@
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
-	<true/>
+	<false/>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Laso reads your health data from Apple Watch and iPhone to provide real-time vitals, personalized health scores, trend analysis, and actionable insights.</string>
 	<key>NSHealthUpdateUsageDescription</key>
