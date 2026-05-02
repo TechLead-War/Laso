@@ -128,7 +128,39 @@ struct OnboardingV2View: View {
     }
 
     private func advance(to next: Screen) {
+        // Track backward navigation as a separate signal so funnel analysis can
+        // distinguish completed steps from steps the user reconsidered. Screens
+        // are ordered by `Self.screenOrdinal`; any move to a lower ordinal is "back".
+        if Self.screenOrdinal(next) < Self.screenOrdinal(screen) {
+            AppAnalytics.shared.trackOnboardingNavTapped(
+                step: Self.screenOrdinal(screen),
+                stepName: String(describing: screen),
+                action: "back"
+            )
+        }
         screen = next
+    }
+
+    /// Step number used in analytics. Matches the user-visible 1-based step index.
+    private static func screenOrdinal(_ screen: Screen) -> Int {
+        switch screen {
+        case .welcome:  return 1
+        case .promise:  return 2
+        case .about:    return 3
+        case .goal:     return 4
+        case .symptoms: return 5
+        case .activity: return 6
+        case .wearable: return 7
+        case .bridge:   return 8
+        case .scan:     return 10
+        case .heart:    return 11
+        case .sleep:    return 12
+        case .hrv:      return 13
+        case .preview:  return 14
+        case .signIn:   return 15
+        case .paywall:  return 16
+        case .done:     return 17
+        }
     }
 
     /// Persist V2 onboarding inputs to the same encrypted stores the legacy flow

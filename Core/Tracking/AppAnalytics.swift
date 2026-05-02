@@ -545,6 +545,16 @@ final class AppAnalytics {
         ])
     }
 
+    /// Call when the user taps Back or Skip on a specific onboarding step.
+    /// Action should be one of "back" or "skip".
+    func trackOnboardingNavTapped(step: Int, stepName: String, action: String) {
+        logEvent("onboarding_nav_tapped", parameters: [
+            "step": step,
+            "step_name": stepName,
+            "action": action
+        ])
+    }
+
     enum ActivationMilestone: String {
         case firstDataLoad = "first_data_load"
         case firstScoreSeen = "first_score_seen"
@@ -793,16 +803,17 @@ final class AppAnalytics {
             self.openTimestamps[feature] = now
         }
 
+        // Always send previous_screen and transition with explicit "first_screen"
+        // placeholders on the first screen of a session so PostHog funnels can
+        // group/filter without a missing-property branch.
         var params: [String: Any] = [
             "screen": feature.rawValue,
             "screen_id": feature.rawValue,
             "tab": session.currentTab,
-            "depth": session.currentDepth
+            "depth": session.currentDepth,
+            "previous_screen": previousScreen ?? "first_screen",
+            "transition": previousScreen.map { "\($0)->\(feature.rawValue)" } ?? "first_screen->\(feature.rawValue)"
         ]
-        if let previousScreen {
-            params["previous_screen"] = previousScreen
-            params["transition"] = "\(previousScreen)->\(feature.rawValue)"
-        }
         for (k, v) in metadata { params[k] = v }
         logEvent("screen_viewed", parameters: params)
 
@@ -1116,6 +1127,30 @@ final class AppAnalytics {
         ])
     }
 
+    /// Call when user toggles between yearly / monthly plans on the paywall
+    /// (before the final CTA tap). Lets us see plan-selection bias separately
+    /// from final purchase intent.
+    func trackPaywallPlanSelected(productID: String, period: String, price: String) {
+        logEvent("paywall_plan_selected", parameters: [
+            "product_id": productID,
+            "period": period,
+            "price": price,
+            "days_since_install": session.daysSinceInstall
+        ])
+    }
+
+    /// Call when paywall hits an error: products fail to load, restore fails,
+    /// network times out, or payment is declined. Distinct from `purchase_failed`
+    /// which is post-CTA only.
+    func trackPaywallError(errorType: String, source: String, timeOnPaywallSec: Int) {
+        logEvent("paywall_error", parameters: [
+            "error_type": errorType,
+            "source": source,
+            "time_on_paywall_sec": timeOnPaywallSec,
+            "days_since_install": session.daysSinceInstall
+        ])
+    }
+
     /// Call after a successful purchase.
     func trackSubscriptionPurchased(productID: String, price: String, isTrialConversion: Bool, revenueAmount: Double? = nil, currency: String? = nil, subscriptionPeriod: String? = nil) {
         let region = Locale.current.region?.identifier ?? "unknown"
@@ -1131,9 +1166,12 @@ final class AppAnalytics {
             "milestones_completed": session.completedMilestones.count,
             "lifetime_core_actions": session.lifetimeCoreActions
         ]
-        if let revenue = revenueAmount { params["revenue"] = revenue }
-        if let curr = currency { params["currency"] = curr }
-        if let period = subscriptionPeriod { params["subscription_period"] = period }
+        // Always send revenue/currency/period with placeholders so PostHog
+        // revenue dashboards have a consistent shape across all purchase events.
+        params["revenue"] = revenueAmount ?? 0.0
+        params["revenue_known"] = revenueAmount == nil ? 0 : 1
+        params["currency"] = currency ?? "unknown"
+        params["subscription_period"] = subscriptionPeriod ?? "unknown"
         logEvent("subscription_purchased", parameters: params)
 
         if isTrialConversion {
@@ -1353,13 +1391,12 @@ final class AppAnalytics {
     // ══════════════════════════════════════════════════════════════════════
 
     func trackDeviceDetected(deviceType: String, metricsCount: Int, isActive: Bool, modelName: String? = nil) {
-        var params: [String: Any] = [
+        logEvent("device_detected", parameters: [
             "device_type": deviceType,
             "metrics_count": metricsCount,
-            "is_active": isActive ? 1 : 0
-        ]
-        if let modelName { params["device_model_name"] = modelName }
-        logEvent("device_detected", parameters: params)
+            "is_active": isActive ? 1 : 0,
+            "device_model_name": modelName ?? "unknown"
+        ])
     }
 
     func updateDeviceProperties(activeCount: Int, primaryDevice: String) {
@@ -1522,16 +1559,19 @@ final class AppAnalytics {
 
     // Recommendation outcome
     func trackRecommendationOutcome(category: String, metric: String, severity: String, lift24h: Double?, lift7d: Double?, wasTapped: Bool, outcome: String) {
-        var params: [String: Any] = [
+        // Always send lift_24h / lift_7d so PostHog can chart them as continuous series.
+        // The `_known` flags let analysts exclude rows where the value is a placeholder.
+        logEvent("recommendation_outcome", parameters: [
             "category": category,
             "metric": metric,
             "severity": severity,
             "was_tapped": wasTapped,
-            "outcome": outcome
-        ]
-        if let lift24h { params["lift_24h"] = lift24h }
-        if let lift7d { params["lift_7d"] = lift7d }
-        logEvent("recommendation_outcome", parameters: params)
+            "outcome": outcome,
+            "lift_24h": lift24h ?? 0.0,
+            "lift_24h_known": lift24h == nil ? 0 : 1,
+            "lift_7d": lift7d ?? 0.0,
+            "lift_7d_known": lift7d == nil ? 0 : 1
+        ])
     }
 
     // Notification opened
@@ -1543,14 +1583,14 @@ final class AppAnalytics {
         let hookCategory = defaults.string(forKey: "healthpulse.notif.hook.\(identifier)") ?? "unknown"
         let sentTimestamp = defaults.double(forKey: "healthpulse.notif.sent.\(identifier)")
 
-        // Compute time-to-open in minutes
+        // Compute time-to-open in minutes. When the sent timestamp was never
+        // recorded, send a sibling `latency_known` flag instead of a -1 sentinel
+        // so PostHog averages over latency_minutes_minutes aren't poisoned.
         let now = Date()
-        let latencyMinutes: Int
-        if sentTimestamp > 0 {
-            latencyMinutes = Int(now.timeIntervalSince1970 - sentTimestamp) / 60
-        } else {
-            latencyMinutes = -1 // unknown
-        }
+        let latencyKnown = sentTimestamp > 0
+        let latencyMinutes: Int = latencyKnown
+            ? Int(now.timeIntervalSince1970 - sentTimestamp) / 60
+            : 0
 
         let cal = Calendar.current
 
@@ -1558,26 +1598,27 @@ final class AppAnalytics {
         // Formats: healthpulse.triage.[metric].[level], healthpulse.spike.[metric].[type],
         //          healthpulse.reversal.[metric].[direction], healthpulse.celebration.[metric]
         let parts = identifier.split(separator: ".")
-        let alertMetric: String? = parts.count >= 3 ? String(parts[2]) : nil
-        let alertSubtype: String? = parts.count >= 4 ? String(parts[3]) : nil
+        let alertMetric: String = parts.count >= 3 ? String(parts[2]) : "none"
+        let alertSubtype: String = parts.count >= 4 ? String(parts[3]) : "none"
 
-        var params: [String: Any] = [
+        let params: [String: Any] = [
             "notification_id": identifier,
             "type": type,
             "hook_category": hookCategory,
             "latency_minutes": latencyMinutes,
-            "hour_opened": cal.component(.hour, from: now),
-            "day_of_week": cal.component(.weekday, from: now)
+            "latency_known": latencyKnown ? 1 : 0,
+            "hour_opened_local": cal.component(.hour, from: now),
+            "day_of_week": cal.component(.weekday, from: now),
+            "alert_metric": alertMetric,
+            "alert_subtype": alertSubtype
         ]
-        if let alertMetric { params["alert_metric"] = alertMetric }
-        if let alertSubtype { params["alert_subtype"] = alertSubtype }
         logEvent("notification_opened", parameters: params)
 
         // Also fire alert_acted_on for health alert types
         if type == "alert" || type == "watch_monitor" {
             trackAlertActedOn(
                 alertType: type,
-                metric: alertMetric,
+                metric: alertMetric == "none" ? nil : alertMetric,
                 action: "opened"
             )
         }
@@ -1850,7 +1891,7 @@ final class AppAnalytics {
         logEvent("recommendation_viewed", parameters: [
             "recommendation_type": type,
             "metric": metric,
-            "difficulty": difficulty
+            "difficulty": difficulty.isEmpty ? "unspecified" : difficulty
         ])
     }
 
@@ -1876,7 +1917,7 @@ final class AppAnalytics {
         logEvent("recommendation_skipped", parameters: [
             "recommendation_type": type,
             "metric": metric,
-            "reason": reason
+            "reason": reason.isEmpty ? "unspecified" : reason
         ])
     }
 
@@ -2064,18 +2105,15 @@ final class AppAnalytics {
         deltaMinutes: Int?,
         sleepDetected: Bool
     ) {
-        var params: [String: Any] = [
+        logEvent("live_activity_sleep_outcome", parameters: [
             "activity_kind": kind,
             "bedtime_epoch": bedtimeEpoch,
-            "sleep_detected": sleepDetected ? 1 : 0
-        ]
-        if let sleepOnsetEpoch {
-            params["sleep_onset_epoch"] = sleepOnsetEpoch
-        }
-        if let deltaMinutes {
-            params["delta_minutes"] = deltaMinutes
-        }
-        logEvent("live_activity_sleep_outcome", parameters: params)
+            "sleep_detected": sleepDetected ? 1 : 0,
+            "sleep_onset_epoch": sleepOnsetEpoch ?? 0,
+            "sleep_onset_known": sleepOnsetEpoch == nil ? 0 : 1,
+            "delta_minutes": deltaMinutes ?? 0,
+            "delta_minutes_known": deltaMinutes == nil ? 0 : 1
+        ])
     }
 
     func trackWidgetSnapshotUpdated(
@@ -2137,12 +2175,11 @@ final class AppAnalytics {
     // ══════════════════════════════════════════════════════════════════════
 
     func trackReferralCodeRedeemed(code: String, success: Bool, failureReason: String? = nil) {
-        var params: [String: Any] = [
+        logEvent("referral_code_redeemed", parameters: [
             "code": code,
-            "success": success ? 1 : 0
-        ]
-        if let failureReason { params["failure_reason"] = failureReason }
-        logEvent("referral_code_redeemed", parameters: params)
+            "success": success ? 1 : 0,
+            "failure_reason": failureReason ?? "none"
+        ])
     }
 
     func trackReferralCompleted(role: String) {
@@ -2175,12 +2212,11 @@ final class AppAnalytics {
     // ══════════════════════════════════════════════════════════════════════
 
     func trackDeviceDisconnected(deviceType: String, daysSinceLastData: Int, modelName: String? = nil) {
-        var params: [String: Any] = [
+        logEvent("device_disconnected", parameters: [
             "device_type": deviceType,
-            "days_since_last_data": daysSinceLastData
-        ]
-        if let modelName { params["device_model_name"] = modelName }
-        logEvent("device_disconnected", parameters: params)
+            "days_since_last_data": daysSinceLastData,
+            "device_model_name": modelName ?? "unknown"
+        ])
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -2188,12 +2224,11 @@ final class AppAnalytics {
     // ══════════════════════════════════════════════════════════════════════
 
     func trackAlertActedOn(alertType: String, metric: String? = nil, action: String) {
-        var params: [String: Any] = [
+        logEvent("alert_acted_on", parameters: [
             "alert_type": alertType,
-            "action": action
-        ]
-        if let metric { params["metric"] = metric }
-        logEvent("alert_acted_on", parameters: params)
+            "action": action,
+            "metric": metric ?? "none"
+        ])
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -2396,9 +2431,14 @@ final class AppAnalytics {
 
         if isRitual && !defaults.bool(forKey: HabitKey.ritualDetected) {
             defaults.set(true, forKey: HabitKey.ritualDetected)
+            // peak_hour is computed only when at least one session hour exists.
+            // Send a sibling `peak_hour_known` flag instead of a -1 sentinel so
+            // PostHog charts that average peak_hour aren't poisoned.
+            let computedPeakHour = hours.max(by: { a, b in hours.filter { $0 == a }.count < hours.filter { $0 == b }.count })
             logEvent("habit_ritual_formed", parameters: [
-                "ritual_strength": String(format: "%.2f", ritualStrength),
-                "peak_hour": hours.max(by: { a, b in hours.filter { $0 == a }.count < hours.filter { $0 == b }.count }) ?? -1,
+                "ritual_strength_ratio": ritualStrength,
+                "peak_hour_local": computedPeakHour ?? 0,
+                "peak_hour_known": computedPeakHour == nil ? 0 : 1,
                 "days_since_install": session.daysSinceInstall,
                 "streak_days": session.streakDays
             ])

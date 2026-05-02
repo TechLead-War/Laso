@@ -41,7 +41,8 @@ const jsonLd = [
     "url": "https://lasohealth.fit",
     "logo": "https://lasohealth.fit/favicon.svg",
     "sameAs": [
-      "https://twitter.com/lasohealth"
+      "https://www.instagram.com/healthlaso/",
+      "https://apps.apple.com/in/app/laso/id6762501313"
     ],
     "areaServed": [
       { "@type": "Country", "name": "United States" },
@@ -52,13 +53,7 @@ const jsonLd = [
       { "@type": "Country", "name": "Germany" },
       { "@type": "Country", "name": "Singapore" },
       { "@type": "Country", "name": "United Arab Emirates" }
-    ],
-    "contactPoint": {
-      "@type": "ContactPoint",
-      "email": "support@lasohealth.fit",
-      "contactType": "customer support",
-      "availableLanguage": ["English", "Hindi"]
-    }
+    ]
   },
   {
     "@context": "https://schema.org",
@@ -153,8 +148,9 @@ const jsonLd = [
           <a href="/faq" class="text-[13px] font-medium text-apple-secondary hover:text-apple-dark transition-colors whitespace-nowrap">FAQ</a>
           <a href="/about" class="text-[13px] font-medium text-apple-secondary hover:text-apple-dark transition-colors whitespace-nowrap">About</a>
         </div>
-        <a href="#early-access" class="bg-apple-dark text-white text-xs font-medium rounded-full px-3 sm:px-4 py-1.5 min-h-[44px] flex items-center hover:bg-black transition-colors shrink-0 whitespace-nowrap">
-          Get Early Access
+        <a href="https://apps.apple.com/in/app/laso/id6762501313" target="_blank" rel="noopener" data-cta="nav_app_store" class="bg-apple-dark text-white text-[12px] font-medium rounded-full pl-2.5 pr-3.5 h-8 flex items-center gap-1.5 hover:bg-black transition-colors shrink-0 whitespace-nowrap">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-3 h-3"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+          App Store
         </a>
       </div>
     </nav>
@@ -162,52 +158,59 @@ const jsonLd = [
 
     <main>
     <!-- ════════ HERO ════════ -->
-    <section data-section="hero" class="hero-gradient pt-24 pb-12 sm:pt-32 sm:pb-16 md:pt-44 md:pb-24 px-5 text-center">
-      <div class="inline-flex items-center gap-2 bg-apple-blue/10 text-apple-blue text-sm font-medium rounded-full px-4 py-1.5 mb-6">
-        <span class="w-2 h-2 bg-apple-blue rounded-full animate-pulse"></span>
-        iOS Early Access Open
-      </div>
-      <h1 class="text-[2rem] leading-[1.12] sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-apple-dark text-balance max-w-4xl mx-auto sm:leading-[1.08]">
-        Finally,
-        <span class="gradient-text">understand your body.</span>
-      </h1>
-      <p class="mt-5 text-base sm:text-lg md:text-xl text-apple-secondary max-w-2xl mx-auto text-balance leading-relaxed">
-        Every morning, one clear answer about what your body needs today. Built from your data. Not an age group average.
-      </p>
-      <div class="mt-8 max-w-md mx-auto w-full px-1 sm:px-0">
-        <form id="hero-form" class="flex flex-col sm:flex-row gap-3">
-          <input
-            type="email"
-            placeholder="your@email.com"
-            required
-            class="hero-email-input w-full sm:flex-1 rounded-full border border-gray-200 px-5 py-3 min-h-[48px] text-[16px] sm:text-[15px] text-apple-dark placeholder:text-apple-secondary/50 focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue/30 transition-colors"
-          />
-          <button
-            type="submit"
-            class="bg-apple-dark text-white font-medium rounded-full px-7 py-3 min-h-[48px] text-[16px] sm:text-[15px] hover:bg-black transition-colors active:scale-[0.97] cursor-pointer shrink-0"
-          >
-            Join Early Access
-          </button>
-        </form>
-        <p class="hero-success mt-3 text-sm text-emerald-600 font-medium hidden">You're in! We'll be in touch soon.</p>
-        <p class="mt-3 text-[13px] text-apple-secondary/60">Free 7-day trial. Joined by <strong class="text-apple-dark"><span class="signup-counter">550</span> early testers</strong>.</p>
-      </div>
-      <!-- Hero trust strip -->
-      <div class="mt-8 flex flex-wrap justify-center gap-3 sm:gap-5 text-[13px] text-apple-secondary/70">
-        <span class="flex items-center gap-1.5">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
-          100% on-device
-        </span>
-        <span class="flex items-center gap-1.5">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3"/></svg>
-          Apple Health compatible
-        </span>
-        <span class="flex items-center gap-1.5">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-          No account required
-        </span>
-      </div>
+    <section data-section="hero" class="hero-gradient pt-24 pb-12 sm:pt-32 sm:pb-16 md:pt-36 md:pb-20 px-5">
+      <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+        <!-- Left: copy + CTA -->
+        <div class="text-center md:text-left order-2 md:order-1">
+          <div class="inline-flex items-center gap-2 bg-apple-blue/10 text-apple-blue text-sm font-medium rounded-full px-4 py-1.5 mb-6">
+            <span class="w-2 h-2 bg-apple-blue rounded-full animate-pulse"></span>
+            Now on the App Store
+          </div>
+          <h1 class="text-[2rem] leading-[1.12] sm:text-5xl md:text-[3.4rem] lg:text-6xl font-semibold tracking-tight text-apple-dark text-balance sm:leading-[1.08]">
+            Finally,
+            <span class="gradient-text">understand your body.</span>
+          </h1>
+          <p class="mt-5 text-base sm:text-lg md:text-xl text-apple-secondary max-w-2xl md:max-w-none mx-auto md:mx-0 text-balance leading-relaxed">
+            Every morning, one clear answer about what your body needs today. Built from your data. Not an age group average.
+          </p>
+          <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center md:justify-start items-center">
+            <a href="https://apps.apple.com/in/app/laso/id6762501313" target="_blank" rel="noopener" data-cta="hero_app_store" class="inline-flex items-center justify-center gap-2 bg-apple-dark text-white font-medium rounded-full px-7 py-3 min-h-[48px] text-[15px] hover:bg-black transition-colors active:scale-[0.97]">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+              Download on the App Store
+            </a>
+            <a href="https://www.instagram.com/healthlaso/" target="_blank" rel="noopener" data-cta="hero_instagram" class="inline-flex items-center justify-center gap-2 bg-white text-apple-dark font-medium rounded-full px-6 py-3 min-h-[48px] text-[15px] border border-gray-200 hover:border-apple-dark transition-colors">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="w-4 h-4"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
+              Follow on Instagram
+            </a>
+          </div>
+          <div class="mt-6 flex flex-wrap justify-center md:justify-start gap-3 sm:gap-5 text-[13px] text-apple-secondary/70">
+            <span class="flex items-center gap-1.5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
+              100% on-device
+            </span>
+            <span class="flex items-center gap-1.5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3"/></svg>
+              Apple Health compatible
+            </span>
+            <span class="flex items-center gap-1.5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+              No account required
+            </span>
+          </div>
+        </div>
 
+        <!-- Right: vitality orb -->
+        <div class="flex justify-center md:justify-end order-1 md:order-2">
+          <div class="vitality-orb-stage">
+            <canvas id="vitality-orb" class="vitality-orb-canvas" width="700" height="700" aria-hidden="true"></canvas>
+            <div class="vitality-orb-label pointer-events-none">
+              <span class="vitality-orb-age">27</span>
+              <span class="vitality-orb-title">vitality age</span>
+              <span class="vitality-orb-delta">3 years younger</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- ════════ YOUR MORNING BRIEF ════════ -->
@@ -220,8 +223,8 @@ const jsonLd = [
           Each one is compared to your own history. Not an age group average, not a generic benchmark. Your data, your baseline.
         </p>
 
-        <div class="mt-14 grid grid-cols-2 md:grid-cols-5 gap-4 justify-items-center">
-          <div class="section-reveal bg-white rounded-2xl p-5 text-center w-full">
+        <div class="mt-14 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+          <div class="section-reveal bg-white rounded-2xl p-5 text-center">
             <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-3">
               <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
             </div>
@@ -257,7 +260,7 @@ const jsonLd = [
             <p class="text-[11px] text-apple-secondary mt-0.5">Below your normal</p>
           </div>
 
-          <div class="section-reveal bg-white rounded-2xl p-5 text-center col-span-2 md:col-span-1 max-w-[calc(50%-0.5rem)] sm:max-w-none" style="transition-delay:240ms">
+          <div class="section-reveal bg-white rounded-2xl p-5 text-center col-span-2 sm:col-span-3 md:col-span-1 sm:max-w-xs sm:mx-auto md:max-w-none" style="transition-delay:240ms">
             <div class="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center mx-auto mb-3">
               <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="1.5" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
             </div>
@@ -410,7 +413,7 @@ const jsonLd = [
 
         <!-- Differentiator image -->
         <div class="section-reveal mt-10 relative rounded-2xl overflow-hidden h-[180px] sm:h-[200px] md:h-[300px]">
-          <img src="https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80&auto=format&fit=crop" alt="Sprinter in starting blocks on track, close-up detail" class="w-full h-full object-cover" loading="lazy" />
+          <img src="/images/sprinter.jpg" alt="Sprinter in starting blocks on track, close-up detail" class="w-full h-full object-cover" loading="lazy" />
           <div class="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent"></div>
           <div class="absolute bottom-6 left-6 md:bottom-8 md:left-8">
             <p class="text-white text-sm md:text-base font-semibold max-w-xs">Dozens of Apple Health signals from the device on your wrist. One app that makes sense of them.</p>
@@ -475,12 +478,12 @@ const jsonLd = [
 
     <!-- ════════ LIFESTYLE BREAK ════════ -->
     <section class="relative h-[220px] sm:h-[280px] md:h-[420px] overflow-hidden">
-      <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1400&q=80&auto=format&fit=crop" alt="Person training with weights in a gym, representing an active fitness lifestyle" class="w-full h-full object-cover" loading="lazy" />
+      <img src="/images/training.jpg" alt="Person training with weights in a gym, representing an active fitness lifestyle" class="w-full h-full object-cover" loading="lazy" />
       <div class="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-white"></div>
     </section>
 
-    <!-- ════════ EARLY ACCESS CTA ════════ -->
-    <section id="early-access" data-section="early-access" class="py-20 md:py-28 px-5">
+    <!-- ════════ APP STORE CTA ════════ -->
+    <section id="get-the-app" data-section="get-the-app" class="py-20 md:py-28 px-5 bg-apple-gray">
       <div class="max-w-2xl mx-auto text-center">
         <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-balance">
           Try it free for 7 days.
@@ -488,38 +491,17 @@ const jsonLd = [
         <p class="section-reveal mt-4 text-apple-secondary text-[15px] md:text-base leading-relaxed max-w-lg mx-auto">
           You already have the wearable. Laso does the rest. No credit card needed.
         </p>
-        <div class="section-reveal mt-10 max-w-md mx-auto w-full px-1 sm:px-0">
-          <form id="early-access-form" class="flex flex-col sm:flex-row gap-3">
-            <input
-              type="email"
-              placeholder="your@email.com"
-              required
-              class="ea-email-input w-full sm:flex-1 rounded-full border border-gray-200 px-5 py-3 min-h-[48px] text-[16px] sm:text-[15px] text-apple-dark placeholder:text-apple-secondary/50 focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue/30 transition-colors"
-            />
-            <button
-              type="submit"
-              class="bg-apple-dark text-white font-medium rounded-full px-7 py-3 min-h-[48px] text-[16px] sm:text-[15px] hover:bg-black transition-colors active:scale-[0.97] cursor-pointer shrink-0"
-            >
-              Join Early Access
-            </button>
-          </form>
-          <p class="ea-success mt-3 text-sm text-emerald-600 font-medium hidden">You're in! We'll be in touch soon.</p>
-          <p class="mt-3 text-[13px] text-apple-secondary/60"><strong class="text-apple-dark"><span class="signup-counter">550</span> have joined</strong>. We'll notify you when it's ready.</p>
-        </div>
-        <div class="section-reveal mt-10 flex flex-wrap justify-center gap-3">
-          <a href="mailto:hello@lasohealth.fit" class="inline-flex items-center gap-2 bg-white rounded-full px-5 py-2.5 min-h-[44px] text-sm font-medium text-apple-dark hover:bg-gray-100 transition-colors">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/>
-            </svg>
-            Say Hello
+        <div class="section-reveal mt-10 flex flex-col sm:flex-row gap-3 justify-center items-center">
+          <a href="https://apps.apple.com/in/app/laso/id6762501313" target="_blank" rel="noopener" data-cta="cta_app_store" class="inline-flex items-center justify-center gap-2 bg-apple-dark text-white font-medium rounded-full px-7 py-3 min-h-[48px] text-[15px] hover:bg-black transition-colors active:scale-[0.97]">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+            Download on the App Store
           </a>
-          <a href="https://twitter.com/lasohealth" target="_blank" rel="noopener" class="inline-flex items-center gap-2 bg-white rounded-full px-5 py-2.5 min-h-[44px] text-sm font-medium text-apple-dark hover:bg-gray-100 transition-colors">
-            <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-            </svg>
-            Follow Updates
+          <a href="https://www.instagram.com/healthlaso/" target="_blank" rel="noopener" data-cta="cta_instagram" class="inline-flex items-center justify-center gap-2 bg-white text-apple-dark font-medium rounded-full px-6 py-3 min-h-[48px] text-[15px] border border-gray-200 hover:border-apple-dark transition-colors">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="w-4 h-4"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
+            Follow on Instagram
           </a>
         </div>
+        <p class="section-reveal mt-6 text-[13px] text-apple-secondary/70">Free 7-day trial. iPhone &amp; Apple Watch. iOS 17+.</p>
       </div>
     </section>
 
@@ -527,7 +509,7 @@ const jsonLd = [
     <section data-section="learn" class="py-20 md:py-28 px-5">
       <div class="max-w-2xl mx-auto">
         <h2 class="section-reveal text-3xl md:text-4xl font-semibold tracking-tight text-apple-dark text-center text-balance">
-          The science, in plain English.
+          Understand the numbers behind your score.
         </h2>
         <div class="section-reveal mt-14 border-t border-b border-gray-100 divide-y divide-gray-100">
           <a href="/learn/heart-rate-variability" class="flex items-center justify-between py-5 text-apple-dark hover:text-apple-blue transition-colors">
@@ -666,7 +648,7 @@ const jsonLd = [
               <li><a href="/learn" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">Learn</a></li>
               <li><a href="/faq" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">FAQ</a></li>
               <li><a href="/about" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">About</a></li>
-              <li><a href="mailto:support@lasohealth.fit" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">Contact</a></li>
+              <li><a href="https://www.instagram.com/healthlaso/" target="_blank" rel="noopener" class="text-[13px] text-apple-secondary hover:text-apple-dark transition-colors">Instagram</a></li>
             </ul>
           </div>
           <div>
@@ -680,11 +662,11 @@ const jsonLd = [
         <div class="border-t border-gray-100 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p class="text-[12px] text-apple-secondary">&copy; 2026 Laso Health. All rights reserved. Not medical advice.</p>
           <div class="flex items-center gap-4">
-            <a href="https://twitter.com/lasohealth" target="_blank" rel="noopener" class="text-apple-secondary hover:text-apple-dark transition-colors" aria-label="Follow Laso on X">
-              <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            <a href="https://apps.apple.com/in/app/laso/id6762501313" target="_blank" rel="noopener" class="text-apple-secondary hover:text-apple-dark transition-colors" aria-label="Download Laso on the App Store">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
             </a>
-            <a href="mailto:hello@lasohealth.fit" class="text-apple-secondary hover:text-apple-dark transition-colors" aria-label="Email Laso">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg>
+            <a href="https://www.instagram.com/healthlaso/" target="_blank" rel="noopener" class="text-apple-secondary hover:text-apple-dark transition-colors" aria-label="Follow Laso on Instagram">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="w-4 h-4"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
             </a>
           </div>
         </div>
@@ -723,157 +705,12 @@ const jsonLd = [
     const gclid = urlParams.get('gclid')
     if (gclid) utmParams['gclid'] = gclid
 
-    // ── Signup counter ──
-    const SIGNUP_API_BASE = 'https://us-central1-laso-health-v1.cloudfunctions.net'
-    const SIGNUP_COUNT_URL = `${SIGNUP_API_BASE}/getSignupCount`
-    const SIGNUP_SUBMIT_URL = `${SIGNUP_API_BASE}/earlyAccessSignup`
-    const SIGNED_UP_KEY = 'laso_signed_up_v2'
-    let currentSignupCount = 0
-
-    async function fetchSignupCount(): Promise<number | null> {
-      try {
-        const res = await fetch(SIGNUP_COUNT_URL, { method: 'GET' })
-        if (res.ok) {
-          const data = await res.json()
-          const rawCount = Number(data?.count)
-          if (Number.isFinite(rawCount) && rawCount >= 0) return Math.floor(rawCount)
-        }
-      } catch { /* silent */ }
-      return null
-    }
-
-    const COUNTER_OFFSET = 550
-    function updateCounterDisplay(count: number) {
-      currentSignupCount = count
-      const displayCount = count + COUNTER_OFFSET
-      document.querySelectorAll('.signup-counter').forEach(el => {
-        el.textContent = String(displayCount)
-      })
-    }
-
-    async function refreshSignupCount() {
-      const count = await fetchSignupCount()
-      if (count !== null) updateCounterDisplay(count)
-    }
-
-    refreshSignupCount()
-    window.setInterval(refreshSignupCount, 15000)
-
-    // ── Early access form handler ──
-    async function handleSignup(form: HTMLFormElement) {
-      const emailInput = form.querySelector('input[type="email"]') as HTMLInputElement | null
-      const email = emailInput?.value?.trim()
-      if (!email) return
-
-      const emailDomain = email.split('@')[1] ?? 'unknown'
-      const formId = form.id === 'hero-form' ? 'hero' : 'early_access_cta'
-
-      trackEvent('early_access_signup', { email_domain: emailDomain, form_location: formId, ...utmParams })
-      trackMeta('Lead', { content_name: 'early_access', content_category: 'signup', value: 0, currency: 'USD' })
-      trackMeta('AddToWishlist', { content_name: 'laso_app', content_category: formId })
-
-      localStorage.setItem(SIGNED_UP_KEY, 'true')
-      localStorage.setItem('laso_signed_up', 'true')
-
-      let submittedCount: number | null = null
-      try {
-        const payload: Record<string, string> = {
-          email,
-          source: utmParams['utm_source'] || 'direct',
-          medium: utmParams['utm_medium'] || 'none',
-          campaign: utmParams['utm_campaign'] || '',
-          referrer: document.referrer || 'none',
-          landing_page: window.location.pathname,
-          form_location: formId,
-          user_agent: navigator.userAgent,
-          screen_size: `${screen.width}x${screen.height}`,
-          locale: navigator.language || '',
-        }
-        if (utmParams['utm_content']) payload['utm_content'] = utmParams['utm_content']
-        if (utmParams['utm_term']) payload['utm_term'] = utmParams['utm_term']
-        if (utmParams['fbclid']) payload['fbclid'] = utmParams['fbclid']
-        if (utmParams['gclid']) payload['gclid'] = utmParams['gclid']
-
-        const res = await fetch(SIGNUP_SUBMIT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        })
-        if (res.ok) {
-          const data = await res.json()
-          const rawCount = Number(data?.count)
-          if (Number.isFinite(rawCount) && rawCount >= 0) submittedCount = Math.floor(rawCount)
-        }
-      } catch { /* silent */ }
-
-      if (submittedCount !== null) {
-        updateCounterDisplay(submittedCount)
-      } else {
-        const latestCount = await fetchSignupCount()
-        if (latestCount !== null) updateCounterDisplay(latestCount)
-        else updateCounterDisplay(currentSignupCount + 1)
-      }
-
-      const success = form.parentElement?.querySelector('.hero-success, .ea-success')
-      if (success) success.classList.remove('hidden')
-      if (emailInput) emailInput.value = ''
-      const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null
-      if (btn) {
-        btn.textContent = "You're in!"
-        btn.disabled = true
-        btn.classList.add('opacity-60')
-      }
-    }
-
-    document.querySelectorAll<HTMLFormElement>('#hero-form, #early-access-form').forEach((form) => {
-      form.addEventListener('submit', (e) => {
-        e.preventDefault()
-        handleSignup(form)
-      })
-    })
-
-    // ── Restore signed-up state ──
-    const hasSignedUp = localStorage.getItem(SIGNED_UP_KEY) === 'true' || localStorage.getItem('laso_signed_up') === 'true'
-    if (hasSignedUp) {
-      document.querySelectorAll<HTMLFormElement>('#hero-form, #early-access-form').forEach((form) => {
-        const emailInput = form.querySelector('input[type="email"]') as HTMLInputElement | null
-        if (emailInput) emailInput.value = ''
-        const success = form.parentElement?.querySelector('.hero-success, .ea-success')
-        if (success) success.classList.remove('hidden')
-        const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null
-        if (btn) {
-          btn.textContent = "You're in!"
-          btn.disabled = true
-          btn.classList.add('opacity-60')
-        }
-      })
-    }
-
-    // ── Form interaction tracking ──
-    let formFocused = false
-    let formStarted = false
-    document.querySelectorAll<HTMLInputElement>('input[type="email"]').forEach(input => {
-      input.addEventListener('focus', () => {
-        if (!formFocused) {
-          formFocused = true
-          trackEvent('form_focus', { form: 'early_access' })
-          trackMeta('FormInteraction', { action: 'focus' })
-        }
-      })
-      input.addEventListener('input', () => {
-        if (!formStarted) {
-          formStarted = true
-          trackEvent('form_start', { form: 'early_access' })
-          trackMeta('FormInteraction', { action: 'typing' })
-        }
-      })
-    })
-
-    // ── CTA click tracking ──
-    document.querySelectorAll('a[href="#early-access"]').forEach(el => {
+    // ── App Store + Instagram CTA click tracking ──
+    document.querySelectorAll<HTMLAnchorElement>('a[data-cta]').forEach(el => {
       el.addEventListener('click', () => {
-        trackEvent('cta_click', { button: 'get_early_access_nav' })
-        trackMeta('CTAClick', { button: 'get_early_access_nav' })
+        const cta = el.dataset.cta || 'unknown'
+        trackEvent('cta_click', { button: cta, ...utmParams })
+        trackMeta('CTAClick', { button: cta })
       })
     })
 
@@ -958,6 +795,380 @@ const jsonLd = [
         trackMeta('TimeOnPage', { seconds: duration })
       }
     })
+
+    // ── Vitality Orb - neon plasma ring replica ──
+    ;(function initVitalityOrb() {
+      const canvas = document.getElementById('vitality-orb') as HTMLCanvasElement | null
+      if (!canvas) return
+      const ctx = canvas.getContext('2d')!
+      const TAU = Math.PI * 2
+      const DPR = Math.min(window.devicePixelRatio || 1, 2)
+      let W = canvas.width
+      let H = canvas.height
+      let cx = W / 2
+      let cy = H / 2
+      let R = Math.min(W, H) * 0.314
+      let time = 0
+      let animId = 0
+
+      function resizeCanvas() {
+        const bounds = canvas.getBoundingClientRect()
+        const nextW = Math.max(420, Math.round(bounds.width * DPR))
+        const nextH = Math.max(420, Math.round(bounds.height * DPR))
+        if (canvas.width !== nextW || canvas.height !== nextH) {
+          canvas.width = nextW
+          canvas.height = nextH
+        }
+        W = canvas.width
+        H = canvas.height
+        cx = W / 2
+        cy = H / 2
+        R = Math.min(W, H) * 0.314
+      }
+
+      function loopDisplacement(a: number, t: number, wobble: number, drift: number, rippleScale: number) {
+        const safeWobble = Math.max(wobble, 0.0001)
+        const macro =
+          Math.sin(a * 2.08 + t * 0.86 + drift) * wobble +
+          Math.sin(a * 3.46 - t * 0.64 - drift * 0.48) * wobble * 0.52 +
+          Math.cos(a * 5.52 + t * 0.36 - drift * 0.25) * wobble * 0.24
+        const macroNorm = macro / safeWobble
+        const carrier = Math.sin(a * 8.7 - t * 1.2 + drift * 1.3 + macroNorm * 0.95)
+        const nested = Math.sin(a * 17.8 + t * 1.92 + carrier * 2.4 - drift * 0.7)
+        const envelope = 0.54 + 0.46 * Math.pow(Math.abs(Math.sin(a * 1.12 - t * 0.34 + drift * 0.45)), 0.82)
+        return macro + (carrier * wobble * rippleScale + nested * wobble * rippleScale * 0.46) * envelope
+      }
+
+      function traceLoop(radius: number, t: number, wobble: number, drift: number, detail: number, rippleScale = 0.2) {
+        ctx.beginPath()
+        for (let i = 0; i <= detail; i++) {
+          const p = i / detail
+          const a = p * TAU
+          const distortion = loopDisplacement(a, t, wobble, drift, rippleScale)
+          const rr = radius + distortion
+          const x = cx + Math.cos(a) * rr
+          const y = cy + Math.sin(a) * rr
+          if (i === 0) ctx.moveTo(x, y)
+          else ctx.lineTo(x, y)
+        }
+        ctx.closePath()
+      }
+
+      function drawAtmosphere(t: number) {
+        ctx.save()
+        const halo = ctx.createRadialGradient(cx, cy, R * 0.2, cx, cy, R * 1.58)
+        halo.addColorStop(0, 'rgba(6, 182, 212, 0.2)')
+        halo.addColorStop(0.55, 'rgba(0, 113, 227, 0.18)')
+        halo.addColorStop(1, 'rgba(3, 14, 44, 0)')
+        ctx.fillStyle = halo
+        ctx.beginPath()
+        ctx.arc(cx, cy, R * 1.6, 0, TAU)
+        ctx.fill()
+        ctx.restore()
+
+        ctx.save()
+        traceLoop(R * 0.968, t * 0.31, R * 0.02, 1.3, 360, 0.1)
+        ctx.clip()
+
+        const body = ctx.createRadialGradient(cx - R * 0.2, cy - R * 0.21, R * 0.05, cx, cy, R * 1.05)
+        body.addColorStop(0, 'rgba(7, 31, 74, 0.08)')
+        body.addColorStop(0.4, 'rgba(5, 26, 74, 0.24)')
+        body.addColorStop(1, 'rgba(2, 18, 58, 0.86)')
+        ctx.fillStyle = body
+        ctx.fillRect(cx - R * 1.26, cy - R * 1.26, R * 2.52, R * 2.52)
+
+        ctx.globalCompositeOperation = 'lighter'
+        ctx.filter = 'blur(22px)'
+        const hotspot = ctx.createRadialGradient(cx - R * 0.28, cy - R * 0.17, 0, cx - R * 0.28, cy - R * 0.17, R * 0.66)
+        hotspot.addColorStop(0, 'rgba(140, 240, 255, 0.18)')
+        hotspot.addColorStop(0.32, 'rgba(6, 182, 212, 0.09)')
+        hotspot.addColorStop(1, 'rgba(6, 182, 212, 0)')
+        ctx.fillStyle = hotspot
+        ctx.beginPath()
+        ctx.arc(cx - R * 0.28, cy - R * 0.17, R * 0.66, 0, TAU)
+        ctx.fill()
+
+        const rimMist = ctx.createRadialGradient(cx + R * 0.16, cy + R * 0.32, 0, cx + R * 0.16, cy + R * 0.32, R * 0.76)
+        rimMist.addColorStop(0, 'rgba(34, 197, 255, 0.1)')
+        rimMist.addColorStop(1, 'rgba(34, 197, 255, 0)')
+        ctx.fillStyle = rimMist
+        ctx.beginPath()
+        ctx.arc(cx + R * 0.16, cy + R * 0.32, R * 0.76, 0, TAU)
+        ctx.fill()
+
+        const softCore = ctx.createRadialGradient(cx - R * 0.03, cy + R * 0.02, 0, cx - R * 0.03, cy + R * 0.02, R * 0.55)
+        softCore.addColorStop(0, 'rgba(0, 113, 227, 0.07)')
+        softCore.addColorStop(1, 'rgba(0, 113, 227, 0)')
+        ctx.fillStyle = softCore
+        ctx.beginPath()
+        ctx.arc(cx - R * 0.03, cy + R * 0.02, R * 0.55, 0, TAU)
+        ctx.fill()
+
+        ctx.globalCompositeOperation = 'source-over'
+        ctx.filter = 'blur(0px)'
+        const centerVoid = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 0.72)
+        centerVoid.addColorStop(0, 'rgba(2, 16, 50, 0.78)')
+        centerVoid.addColorStop(0.58, 'rgba(2, 16, 50, 0.38)')
+        centerVoid.addColorStop(1, 'rgba(2, 16, 50, 0)')
+        ctx.fillStyle = centerVoid
+        ctx.beginPath()
+        ctx.arc(cx, cy, R * 0.72, 0, TAU)
+        ctx.fill()
+
+        ctx.filter = 'none'
+        ctx.globalCompositeOperation = 'source-over'
+        ctx.restore()
+      }
+
+      function drawOuterShell(t: number) {
+        ctx.save()
+        ctx.globalCompositeOperation = 'lighter'
+        ctx.filter = 'blur(0.08px)'
+
+        const shells = [
+          { base: R * 1.35, spread: R * 0.08, ribs: 26, points: 260, offset: 0, alpha: 0.74, size: 2.2, speed: 1.35, spin: 0.42, rgb: [0, 113, 227] as const },
+          { base: R * 1.3, spread: R * 0.064, ribs: 18, points: 230, offset: 1.34, alpha: 0.56, size: 1.7, speed: 0.95, spin: -0.24, rgb: [6, 182, 212] as const },
+        ]
+
+        function outerRadius(a: number, phase: number, base: number, spread: number) {
+          const slow = Math.sin(a * 2.04 + phase) * spread
+          const mid = Math.sin(a * 3.66 - phase * 1.24) * spread * 0.56
+          const carrier = Math.sin(a * 9.4 + phase * 2.3 + slow / Math.max(spread, 0.0001) * 0.6)
+          const nested = Math.sin(a * 18.4 - phase * 3.1 + carrier * 2.7) * spread * 0.18
+          const envelope = 0.5 + 0.5 * Math.pow(Math.abs(Math.sin(a * 1.08 - phase * 0.46)), 0.84)
+          return base + slow + mid + (carrier * spread * 0.3 + nested) * envelope
+        }
+
+        for (const shell of shells) {
+          for (let rib = 0; rib < shell.ribs; rib++) {
+            const ribNorm = shell.ribs <= 1 ? 0.5 : rib / (shell.ribs - 1)
+            const ribCenter = 1 - Math.pow(Math.abs(ribNorm - 0.5) * 2, 1.45)
+            const ribPhase = t * shell.speed + rib * 0.165 + shell.offset
+            const ribRadiusShift = (ribNorm - 0.5) * R * 0.02
+
+            for (let i = 0; i < shell.points; i++) {
+              const p = i / shell.points
+              const a = p * TAU + t * shell.spin + rib * 0.006
+              const rr = outerRadius(a, ribPhase, shell.base + ribRadiusShift, shell.spread)
+              const x = cx + Math.cos(a) * rr
+              const y = cy + Math.sin(a) * rr
+              const lobe = Math.pow(Math.abs(Math.sin(a * 1.14 - t * 0.76 + shell.offset * 0.5)), 1.48)
+              const shimmer = 0.72 + 0.28 * Math.sin(a * 7.2 + t * 3.35 + rib * 0.11)
+              const travel = 0.7 + 0.3 * Math.sin(a * 2.1 - t * 2.4 + shell.offset)
+              const alpha = (0.18 + shell.alpha * ribCenter * (0.54 + 0.46 * lobe)) * shimmer * travel
+              const size = shell.size * (0.74 + ribCenter * 0.66)
+              ctx.fillStyle = `rgba(${shell.rgb[0]}, ${shell.rgb[1]}, ${shell.rgb[2]}, ${alpha})`
+              ctx.fillRect(x - size / 2, y - size / 2, size, size)
+            }
+          }
+        }
+
+        ctx.globalCompositeOperation = 'source-over'
+        ctx.restore()
+      }
+
+      function drawRings(t: number) {
+        const pulse = 0.92 + 0.08 * Math.sin(t * 1.25)
+        ctx.lineCap = 'round'
+        ctx.lineJoin = 'round'
+
+        ctx.save()
+        ctx.filter = 'blur(30px)'
+        traceLoop(R * 0.982, t * 0.52, R * 0.008, 0.2, 440, 0.08)
+        ctx.strokeStyle = `rgba(0, 113, 227, ${0.18 * pulse})`
+        ctx.lineWidth = R * 0.22
+        ctx.stroke()
+        ctx.restore()
+
+        ctx.save()
+        ctx.filter = 'blur(11px)'
+        traceLoop(R * 0.982, t * 0.52, R * 0.008, 0.2, 440, 0.08)
+        ctx.strokeStyle = `rgba(6, 182, 212, ${0.22 * pulse})`
+        ctx.lineWidth = R * 0.07
+        ctx.stroke()
+        ctx.restore()
+
+        const mainGrad = ctx.createLinearGradient(cx - R, cy - R * 0.85, cx + R, cy + R)
+        mainGrad.addColorStop(0, `rgba(255, 255, 255, ${0.97 * pulse})`)
+        mainGrad.addColorStop(0.3, `rgba(254, 254, 255, ${0.96 * pulse})`)
+        mainGrad.addColorStop(0.66, `rgba(251, 253, 255, ${0.94 * pulse})`)
+        mainGrad.addColorStop(1, `rgba(247, 251, 255, ${0.93 * pulse})`)
+        traceLoop(R * 0.982, t * 0.52, R * 0.0065, 0.2, 440, 0.08)
+        ctx.save()
+        ctx.globalAlpha = 0.9
+        ctx.strokeStyle = mainGrad
+        ctx.lineWidth = R * 0.0155
+        ctx.stroke()
+        ctx.restore()
+
+        const secondBlurGrad = ctx.createLinearGradient(cx - R * 1.15, cy + R * 0.6, cx + R * 1.15, cy - R * 0.7)
+        secondBlurGrad.addColorStop(0, `rgba(0, 113, 227, ${0.42 * pulse})`)
+        secondBlurGrad.addColorStop(0.45, `rgba(6, 182, 212, ${0.38 * pulse})`)
+        secondBlurGrad.addColorStop(1, `rgba(52, 211, 153, ${0.28 * pulse})`)
+        ctx.save()
+        ctx.filter = 'blur(7px)'
+        traceLoop(R * 1.016, -t * 0.64, R * 0.049, 2.1, 500, 0.38)
+        ctx.strokeStyle = secondBlurGrad
+        ctx.lineWidth = R * 0.04
+        ctx.stroke()
+        ctx.restore()
+
+        const secondCoreGrad = ctx.createLinearGradient(cx - R * 1.15, cy + R * 0.6, cx + R * 1.15, cy - R * 0.7)
+        secondCoreGrad.addColorStop(0, `rgba(255, 255, 255, ${0.52 * pulse})`)
+        secondCoreGrad.addColorStop(0.45, `rgba(6, 182, 212, ${0.52 * pulse})`)
+        secondCoreGrad.addColorStop(1, `rgba(52, 211, 153, ${0.44 * pulse})`)
+        traceLoop(R * 1.016, -t * 0.64, R * 0.049, 2.1, 500, 0.38)
+        ctx.strokeStyle = secondCoreGrad
+        ctx.lineWidth = R * 0.0105
+        ctx.stroke()
+
+        const hotA = t * 0.42 + 2.24
+        const hotB = t * 0.42 + 5.14
+        const hx1 = cx + Math.cos(hotA) * (R * 0.985)
+        const hy1 = cy + Math.sin(hotA) * (R * 0.985)
+        const hx2 = cx + Math.cos(hotB) * (R * 0.985)
+        const hy2 = cy + Math.sin(hotB) * (R * 0.985)
+
+        ctx.save()
+        ctx.filter = 'blur(15px)'
+        const glow1 = ctx.createRadialGradient(hx1, hy1, 0, hx1, hy1, R * 0.26)
+        glow1.addColorStop(0, 'rgba(255, 255, 255, 0.48)')
+        glow1.addColorStop(0.35, 'rgba(6, 182, 212, 0.2)')
+        glow1.addColorStop(1, 'transparent')
+        ctx.fillStyle = glow1
+        ctx.beginPath()
+        ctx.arc(hx1, hy1, R * 0.26, 0, TAU)
+        ctx.fill()
+
+        const glow2 = ctx.createRadialGradient(hx2, hy2, 0, hx2, hy2, R * 0.2)
+        glow2.addColorStop(0, 'rgba(52, 211, 153, 0.36)')
+        glow2.addColorStop(1, 'transparent')
+        ctx.fillStyle = glow2
+        ctx.beginPath()
+        ctx.arc(hx2, hy2, R * 0.2, 0, TAU)
+        ctx.fill()
+        ctx.restore()
+      }
+
+      function drawInnerVoid(t: number) {
+        ctx.save()
+        const driftX = Math.sin(t * 0.63) * R * 0.032
+        const driftY = Math.cos(t * 0.47) * R * 0.026
+
+        const traceBlob = (
+          baseR: number,
+          wobble: number,
+          drift: number,
+          ripple: number,
+          squashX: number,
+          squashY: number,
+          offsetX: number,
+          offsetY: number,
+          detail = 360,
+        ) => {
+          ctx.beginPath()
+          for (let i = 0; i <= detail; i++) {
+            const p = i / detail
+            const a = p * TAU
+            const disp = loopDisplacement(a, t * 0.88, wobble, drift, ripple)
+            const rr = baseR + disp
+            const sx = 1 + squashX * Math.sin(a * 1.35 - t * 0.37 + drift)
+            const sy = 1 + squashY * Math.cos(a * 1.72 + t * 0.42 - drift * 0.5)
+            const x = cx + offsetX + Math.cos(a) * rr * sx
+            const y = cy + offsetY + Math.sin(a) * rr * sy
+            if (i === 0) ctx.moveTo(x, y)
+            else ctx.lineTo(x, y)
+          }
+          ctx.closePath()
+        }
+
+        traceBlob(R * 0.79, R * 0.078, 0.9, 0.72, 0.14, -0.12, driftX, driftY, 420)
+        const darkOuter = ctx.createRadialGradient(cx - R * 0.12 + driftX, cy + R * 0.06 + driftY, R * 0.08, cx + driftX, cy + driftY, R * 0.92)
+        darkOuter.addColorStop(0, 'rgba(2, 16, 50, 0.68)')
+        darkOuter.addColorStop(0.58, 'rgba(2, 16, 50, 0.34)')
+        darkOuter.addColorStop(1, 'rgba(2, 16, 50, 0)')
+        ctx.fillStyle = darkOuter
+        ctx.fill()
+
+        traceBlob(R * 0.56, R * 0.062, 2.4, 0.78, -0.16, 0.12, -driftX * 0.8, -driftY * 0.6, 380)
+        const cavity = ctx.createRadialGradient(cx + R * 0.03 - driftX * 0.6, cy - R * 0.05 - driftY * 0.3, 0, cx - driftX * 0.2, cy - driftY * 0.15, R * 0.66)
+        cavity.addColorStop(0, 'rgba(2, 16, 50, 0.56)')
+        cavity.addColorStop(1, 'rgba(2, 16, 50, 0)')
+        ctx.fillStyle = cavity
+        ctx.fill()
+
+        traceBlob(R * 0.37, R * 0.048, 4.1, 0.82, 0.2, -0.18, R * 0.06, -R * 0.03, 320)
+        const pocket = ctx.createRadialGradient(cx + R * 0.08, cy - R * 0.08, 0, cx + R * 0.08, cy - R * 0.08, R * 0.45)
+        pocket.addColorStop(0, 'rgba(2, 16, 50, 0.44)')
+        pocket.addColorStop(1, 'rgba(2, 16, 50, 0)')
+        ctx.fillStyle = pocket
+        ctx.fill()
+
+        ctx.globalCompositeOperation = 'lighter'
+        ctx.filter = 'blur(10px)'
+        traceBlob(R * 0.62, R * 0.022, 1.2, 0.5, 0.08, -0.05, driftX * 0.3, driftY * 0.3, 360)
+        ctx.strokeStyle = 'rgba(6, 182, 212, 0.1)'
+        ctx.lineWidth = R * 0.038
+        ctx.stroke()
+
+        traceBlob(R * 0.46, R * 0.02, 3.1, 0.55, -0.09, 0.07, -R * 0.05, R * 0.03, 340)
+        ctx.strokeStyle = 'rgba(0, 113, 227, 0.08)'
+        ctx.lineWidth = R * 0.03
+        ctx.stroke()
+
+        ctx.filter = 'blur(16px)'
+        const energy = ctx.createRadialGradient(
+          cx - R * 0.15 + driftX * 0.5,
+          cy - R * 0.11 + driftY * 0.4,
+          0,
+          cx - R * 0.15 + driftX * 0.5,
+          cy - R * 0.11 + driftY * 0.4,
+          R * 0.3,
+        )
+        energy.addColorStop(0, 'rgba(6, 182, 212, 0.08)')
+        energy.addColorStop(1, 'rgba(6, 182, 212, 0)')
+        ctx.fillStyle = energy
+        ctx.beginPath()
+        ctx.arc(cx - R * 0.15 + driftX * 0.5, cy - R * 0.11 + driftY * 0.4, R * 0.3, 0, TAU)
+        ctx.fill()
+        ctx.restore()
+      }
+
+      function frame() {
+        time += 0.0066
+        resizeCanvas()
+
+        const breathe = 1 + 0.018 * Math.sin(time * 0.9)
+        ctx.clearRect(0, 0, W, H)
+        ctx.save()
+        ctx.translate(cx, cy)
+        ctx.scale(breathe, breathe)
+        ctx.translate(-cx, -cy)
+
+        const glowPulse = 0.7 + 0.3 * Math.sin(time * 1.1)
+        ctx.globalAlpha = glowPulse
+        drawAtmosphere(time)
+        ctx.globalAlpha = 1
+        drawOuterShell(time)
+        drawRings(time)
+        drawInnerVoid(time)
+        ctx.restore()
+        animId = requestAnimationFrame(frame)
+      }
+
+      resizeCanvas()
+      window.addEventListener('resize', resizeCanvas)
+
+      const observer = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting) {
+          if (!animId) frame()
+        } else if (animId) {
+          cancelAnimationFrame(animId)
+          animId = 0
+        }
+      }, { threshold: 0.1 })
+      observer.observe(canvas)
+    })()
 
   </script>
 </Base>

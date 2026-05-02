@@ -22,6 +22,21 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         return true
     }
 
+    // MARK: - Lifecycle (analytics flush)
+
+    /// Flush PostHog queue when the app is backgrounded. Without this,
+    /// session_end and any tail events can be lost if the OS reaps the
+    /// process before the SDK's auto-flush timer fires.
+    func applicationDidEnterBackground(_ application: UIApplication) {
+        PostHogManager.shared.flush()
+    }
+
+    /// Last-chance flush. iOS sometimes calls willTerminate before reaping
+    /// (e.g. user kills app from app switcher when not suspended).
+    func applicationWillTerminate(_ application: UIApplication) {
+        PostHogManager.shared.flush()
+    }
+
     // MARK: - UNUserNotificationCenterDelegate
 
     func userNotificationCenter(

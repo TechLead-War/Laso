@@ -16,6 +16,12 @@ struct HomeConnectHealthView: View {
                 .font(DS.Typography.heroIcon)
                 .foregroundStyle(heroIconColor)
                 .symbolRenderingMode(.hierarchical)
+                .onAppear {
+                    AppAnalytics.shared.trackEmptyStateShown(
+                        screen: .home,
+                        reason: emptyStateReason
+                    )
+                }
 
             VStack(spacing: DS.space2) {
                 Text(titleText)
@@ -76,6 +82,16 @@ struct HomeConnectHealthView: View {
             return .stale(inactive)
         }
         return .waiting
+    }
+
+    /// Stable analytics label for the reason this empty state is showing.
+    private var emptyStateReason: String {
+        if healthKitManager.syncProgress != nil { return "syncing" }
+        switch connectionState {
+        case .waiting:   return "no_device_connected"
+        case .receiving: return "device_connected_no_data"
+        case .stale:     return "device_stale"
+        }
     }
 
     private var primaryDevice: SupportedDevice? {

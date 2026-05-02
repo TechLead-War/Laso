@@ -175,15 +175,15 @@
 }
 
 /* Mobile responsive overrides */
-@media (max-width: 480px) {
+@media (max-width: 767px) {
   .vitality-orb-stage {
-    width: min(82vw, 340px);
+    width: min(72vw, 300px);
   }
 }
 
 @media (max-width: 374px) {
   .vitality-orb-stage {
-    width: min(88vw, 300px);
+    width: min(78vw, 260px);
   }
 }
 

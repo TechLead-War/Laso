@@ -130,6 +130,36 @@ struct PaywallView: View {
         .onChange(of: RemoteConfigManager.shared.lastFetchTime) { _, _ in
             advanceIfFullAccessGranted()
         }
+        // Surface paywall errors to PostHog the moment they appear (purchase
+        // declined, restore failed, products fetch failed). Distinct from
+        // `purchase_failed` (post-CTA) so we capture network/timeout cases too.
+        .onChange(of: subscriptionManager.errorMessage) { _, newValue in
+            guard let message = newValue, !message.isEmpty else { return }
+            AppAnalytics.shared.trackPaywallError(
+                errorType: classifyPaywallError(message),
+                source: source,
+                timeOnPaywallSec: Int(Date().timeIntervalSince(paywallOpenDate))
+            )
+        }
+    }
+
+    /// Map a free-form StoreKit error message to a stable `error_type` bucket
+    /// so PostHog can group similar failures across iOS locales.
+    private func classifyPaywallError(_ message: String) -> String {
+        let lower = message.lowercased()
+        if lower.contains("network") || lower.contains("internet") || lower.contains("connection") {
+            return "network"
+        }
+        if lower.contains("cancel") {
+            return "cancelled"
+        }
+        if lower.contains("declin") || lower.contains("payment") {
+            return "payment_declined"
+        }
+        if lower.contains("not allowed") || lower.contains("permission") {
+            return "not_permitted"
+        }
+        return "unknown"
     }
 
     /// Single entry point for "user has full access, advance the parent flow".
@@ -250,6 +280,13 @@ struct PaywallView: View {
                     "price": product.displayPrice,
                     "billing_period": label.lowercased()
                 ]
+            )
+            // Plan-selection funnel signal: distinct from CTA tap so we can see
+            // how many users toggle yearly vs monthly before committing.
+            AppAnalytics.shared.trackPaywallPlanSelected(
+                productID: product.id,
+                period: label.lowercased(),
+                price: product.displayPrice
             )
             pricingTracker.tapped(target: label.lowercased())
         } label: {
@@ -376,6 +413,13 @@ struct PaywallView: View {
                         return false
                     }()
                     AppAnalytics.shared.trackRestoreAttempted(success: restored)
+                    if !restored {
+                        AppAnalytics.shared.trackPaywallError(
+                            errorType: "restore_failed",
+                            source: source,
+                            timeOnPaywallSec: Int(Date().timeIntervalSince(paywallOpenDate))
+                        )
+                    }
                     isRestoring = false
                 }
             } label: {

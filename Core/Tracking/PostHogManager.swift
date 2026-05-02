@@ -1,5 +1,8 @@
 import Foundation
 import PostHog
+#if os(iOS)
+import UIKit
+#endif
 
 /// Central PostHog wrapper. sole analytics backend.
 /// All events, user properties, screen views, and error tracking flow through here.
@@ -40,7 +43,56 @@ final class PostHogManager {
         #endif
         PostHogSDK.shared.setup(config)
         isConfigured = true
+
+        // Super-properties auto-attach to every captured event. These let dashboards
+        // filter prod-only data (`app_environment == "release"`) and segment by build,
+        // OS, locale, device without recomputing per event.
+        registerStaticSuperProperties()
     }
+
+    /// Register process-lifetime super-properties on the PostHog SDK so every
+    /// captured event carries them without per-call enrichment.
+    private func registerStaticSuperProperties() {
+        let info = Bundle.main.infoDictionary ?? [:]
+        let appVersion = (info["CFBundleShortVersionString"] as? String) ?? "unknown"
+        let buildNumber = (info["CFBundleVersion"] as? String) ?? "unknown"
+
+        var props: [String: Any] = [
+            "app_environment": Self.appEnvironment,
+            "is_debug": Self.isDebugBuild ? 1 : 0,
+            "app_version": appVersion,
+            "app_build": buildNumber,
+            "locale_language": Locale.current.language.languageCode?.identifier ?? "unknown",
+            "locale_country": Locale.current.region?.identifier ?? "unknown",
+            "timezone_id": TimeZone.current.identifier
+        ]
+        #if os(iOS)
+        props["ios_version"] = UIDevice.current.systemVersion
+        #endif
+        PostHogSDK.shared.register(props)
+    }
+
+    /// True when this binary was compiled with the DEBUG configuration.
+    static let isDebugBuild: Bool = {
+        #if DEBUG
+        return true
+        #else
+        return false
+        #endif
+    }()
+
+    /// "debug", "testflight", or "release" — used as a super-property so prod
+    /// dashboards can filter out internal builds.
+    static let appEnvironment: String = {
+        #if DEBUG
+        return "debug"
+        #else
+        if Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt" {
+            return "testflight"
+        }
+        return "release"
+        #endif
+    }()
 
     // MARK: - Events
 
