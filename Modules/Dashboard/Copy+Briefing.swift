@@ -103,7 +103,7 @@ extension Copy {
             }
 
             static func detailWithPartial(partialR: String, stability: String, sampleCount: Int) -> String {
-                "Even after other things are considered, this link still holds. Based on the past few weeks of your data."
+                "This connection seems strong, even when looking at other factors. Based on the past few weeks of your data."
             }
 
             static func detailSimple(sampleCount: Int, stability: String) -> String {

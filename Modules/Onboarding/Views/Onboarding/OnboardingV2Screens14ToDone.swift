@@ -220,6 +220,7 @@ struct OnbV2Screen16Paywall: View {
 
     @State private var selectedIsAnnual = true
 
+    @Environment(\.openURL) private var openURL
     private let manager = SubscriptionManager.shared
 
     var body: some View {
@@ -400,7 +401,9 @@ struct OnbV2Screen16Paywall: View {
                         }
 
                         Button {
-                            // TODO: open Terms URL
+                            if let url = URL(string: "https://laso.ai/terms") {
+                                openURL(url)
+                            }
                         } label: {
                             Text(Copy.OnboardingV2.s16Terms)
                                 .font(.system(size: 12))
@@ -408,7 +411,9 @@ struct OnbV2Screen16Paywall: View {
                         }
 
                         Button {
-                            // TODO: open Privacy URL
+                            if let url = URL(string: "https://laso.ai/privacy") {
+                                openURL(url)
+                            }
                         } label: {
                             Text(Copy.OnboardingV2.s16Privacy)
                                 .font(.system(size: 12))

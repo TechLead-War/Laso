@@ -8,11 +8,7 @@ struct MetricTimeSeries: Identifiable {
     let samples: [MetricSample]
     private let distinctDayCount: Int
 
-    // Cached statistics — computed once at init, O(1) access thereafter.
-    private let _mean: Double
-    private let _standardDeviation: Double
-    private let _min: Double?
-    private let _max: Double?
+    // Removed pre-computed stats variables to save CPU and memory on init.
 
     /// Pass 11 AF: cached calendar — `init`'s distinct-day pass and the
     /// `samples(lastDays:)` / `samples(forMonth:)` accessors all hit it.
@@ -22,55 +18,44 @@ struct MetricTimeSeries: Identifiable {
 
     init(metric: HealthMetric, samples: [MetricSample]) {
         let sortedSamples = samples.sorted { $0.date < $1.date }
+        
+        // Filter out absurd physiological outliers to prevent data corruption
+        let validSamples = sortedSamples.filter { sample in
+            switch metric {
+            case .heartRate, .restingHeartRate:
+                return sample.value > 25 && sample.value < 250
+            case .heartRateVariability, .heartRateVariabilitySDNN:
+                return sample.value > 5 && sample.value < 250
+            case .bloodOxygen:
+                return sample.value >= 0.5 && sample.value <= 1.0
+            case .respiratoryRate:
+                return sample.value > 5 && sample.value < 50
+            case .bodyTemperature:
+                return sample.value > 30 && sample.value < 45 // Celsius
+            case .sleepDuration:
+                return sample.value >= 0 && sample.value <= 24 // hours
+            case .vo2Max:
+                return sample.value > 15 && sample.value < 90
+            default:
+                return true
+            }
+        }
+        
         self.metric = metric
-        self.samples = sortedSamples
+        self.samples = validSamples
 
         let calendar = Self.cal
         var distinctDayCount = 0
         var previousDay: Date?
 
-        // Single pass: compute distinct days, sum, min, max simultaneously
-        var total = 0.0
-        var minimum: Double?
-        var maximum: Double?
-        for sample in sortedSamples {
+        for sample in validSamples {
             let currentDay = calendar.startOfDay(for: sample.date)
             if currentDay != previousDay {
                 distinctDayCount += 1
                 previousDay = currentDay
             }
-            total += sample.value
-            if let curMin = minimum {
-                if sample.value < curMin { minimum = sample.value }
-            } else {
-                minimum = sample.value
-            }
-            if let curMax = maximum {
-                if sample.value > curMax { maximum = sample.value }
-            } else {
-                maximum = sample.value
-            }
         }
         self.distinctDayCount = distinctDayCount
-        self._min = minimum
-        self._max = maximum
-
-        // Compute mean
-        let n = sortedSamples.count
-        let mean = n > 0 ? total / Double(n) : 0
-        self._mean = mean
-
-        // Compute standard deviation (second pass, unavoidable without online algo)
-        if n > 1 {
-            var sumOfSquares = 0.0
-            for sample in sortedSamples {
-                let delta = sample.value - mean
-                sumOfSquares += delta * delta
-            }
-            self._standardDeviation = (sumOfSquares / Double(n)).squareRoot()
-        } else {
-            self._standardDeviation = 0
-        }
     }
 
     /// Samples in chronological order. O(1), already sorted at init.
@@ -84,17 +69,38 @@ struct MetricTimeSeries: Identifiable {
         samples.last?.value
     }
 
-    var mean: Double { _mean }
+    var mean: Double { 
+        let n = samples.count
+        guard n > 0 else { return 0 }
+        let total = samples.reduce(0.0) { $0 + $1.value }
+        return total / Double(n)
+    }
 
-    var standardDeviation: Double { _standardDeviation }
+    var standardDeviation: Double { 
+        let n = samples.count
+        guard n > 1 else { return 0 }
+        let currentMean = mean
+        let sumOfSquares = samples.reduce(0.0) { sum, sample in
+            let delta = sample.value - currentMean
+            return sum + (delta * delta)
+        }
+        return (sumOfSquares / Double(n)).squareRoot()
+    }
 
-    var min: Double? { _min }
+    var min: Double? { samples.min(by: { $0.value < $1.value })?.value }
 
-    var max: Double? { _max }
+    var max: Double? { samples.max(by: { $0.value < $1.value })?.value }
 
     var range: Double {
-        guard let lo = _min, let hi = _max else { return 0 }
+        guard let lo = min, let hi = max else { return 0 }
         return hi - lo
+    }
+
+    /// Check if the latest data is older than the given number of days.
+    func isStale(thresholdDays: Int = 2) -> Bool {
+        guard let lastDate = samples.last?.date else { return true }
+        let cutoff = Self.cal.date(byAdding: .day, value: -thresholdDays, to: Date()) ?? Date()
+        return lastDate < cutoff
     }
 
     /// Samples within the last N days

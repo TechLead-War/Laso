@@ -201,66 +201,45 @@ struct InsightGenerator {
     static func actionabilityScore(_ insight: Insight) -> Int {
         var score = 0
 
-        // Contains specific numbers (deviation %, values) → +20
-        let hasNumbers = insight.summary.contains("%") ||
-            insight.summary.range(of: #"\d+\.?\d*\s*(bpm|ms|hrs|kcal|steps|min|kg|mmHg|°C|km|%)"#, options: .regularExpression) != nil
-        if hasNumbers { score += 20 }
-
-        // References a specific time frame → +15
-        let timeFramePatterns = ["week", "month", "day", "year", "last", "past", "recent", "today", "yesterday"]
-        let hasTimeFrame = timeFramePatterns.contains { insight.summary.localizedCaseInsensitiveContains($0) }
-        if hasTimeFrame { score += 15 }
-
-        // Provides a concrete action (not just "monitor") → +25
-        let concreteActions = ["consider", "try", "increase", "reduce", "consult", "adjust", "review", "focus", "prioritize", "aim for", "schedule"]
-        let genericActions = ["monitor", "keep an eye", "watch", "observe", "track", "note"]
-        let recLower = insight.recommendation.lowercased()
-        let hasConcrete = concreteActions.contains { recLower.contains($0) }
-        let isGenericAction = !hasConcrete && genericActions.contains { recLower.contains($0) }
-        if hasConcrete { score += 25 }
-        if isGenericAction { score -= 10 }
-        if recLower.contains("priority today") { score += 10 }
-
-        let genericRecommendationPatterns = [
-            "within normal range",
-            "is normal",
-            "is stable",
-            "holding steady"
-        ]
-        if insight.severity == .info &&
-            genericRecommendationPatterns.contains(where: { recLower.contains($0) }) &&
-            abs(insight.deviationPercent) < 8 {
-            score -= 15
+        // 1. Data specificity: If there's a meaningful numerical deviation, it's specific → +20
+        if abs(insight.deviationPercent) > 1.0 || insight.currentValue > 0 {
+            score += 20
         }
 
-        // Severity is warning or critical → +20
-        if insight.severity >= .warning { score += 20 }
+        // 2. Trend & Context: Insights with a clear trend or timeframe are actionable → +15
+        if insight.trend != .stable || insight.context?.recentValues != nil {
+            score += 15
+        }
 
-        // Has related metrics (cross-metric insight) → +20
-        if !insight.relatedMetrics.isEmpty { score += 20 }
+        // 3. Severity & Urgency: Problems need action → +25 for warning/critical, -10 for stable/info
+        if insight.severity >= .warning {
+            score += 25
+            // Extra boost for critical issues
+            if insight.severity == .critical {
+                score += 10
+            }
+        } else if insight.severity == .info && insight.trend == .stable && abs(insight.deviationPercent) < 5 {
+            // Penalize generic stable platitudes
+            score -= 25
+        }
 
-        // Is a causal chain or illness warning → +20 (inherently actionable)
-        if insight.category == .causalChain || insight.category == .watchSignal { score += 20 }
+        // 4. Cross-metric relationships: Linking two metrics is highly actionable → +20
+        if !insight.relatedMetrics.isEmpty {
+            score += 20
+        }
 
-        // Penalize generic stable/improving platitudes → -30
-        let summaryLower = insight.summary.lowercased()
-        let genericPatterns = [" is stable", " is improving", " looks good", " within normal", " on track"]
-        let isGenericAdvice = genericPatterns.contains { summaryLower.contains($0) }
-            && insight.severity == .info
-            && abs(insight.deviationPercent) < 5
-        if isGenericAdvice { score -= 30 }
+        // 5. Category boosts: Causal chains and watch signals are inherently actionable → +20
+        if insight.category == .causalChain || insight.category == .watchSignal {
+            score += 20
+        }
 
-        // Boost context-rich insights
+        // 6. Contextual depth boosts
         if let ctx = insight.context {
             if !ctx.correlatedFactors.isEmpty { score += 10 }
-            if ctx.projectedDaysToThreshold != nil { score += 5 }
-            if ctx.rootCauseMetric != nil { score += 10 }
+            if ctx.projectedDaysToThreshold != nil { score += 10 }
+            if ctx.rootCauseMetric != nil { score += 15 } // Root cause is extremely actionable
             if ctx.dataPointCount ?? 0 >= 30 { score += 5 }
         }
-
-        // Boost causation-style narratives (they contain "because" or "the last N times")
-        if summaryLower.contains("because") { score += 10 }
-        if summaryLower.contains("the last") && summaryLower.contains("times") { score += 10 }
 
         return max(0, min(100, score))
     }

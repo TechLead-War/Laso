@@ -70,7 +70,7 @@ extension Copy {
             "Many people find that 8+ hours of sleep tonight helps them feel more resilient tomorrow."
         ]
         static let tipsModerate = [
-            "Consider a walk or gentle stretching.",
+            "Try a short walk or gentle stretching.",
             "Limiting caffeine and stimulants for the next few hours may help.",
             "Try progressive muscle relaxation.",
             "Shorten your to-do list and focus on essentials."
@@ -83,7 +83,7 @@ extension Copy {
         static let tipsLow = [
             "Your body is calm. Great time for challenging work.",
             "Maintain this state with regular sleep and hydration.",
-            "Consider a creative or deep-focus task right now."
+            "This is a great time for creative or deep-focus work."
         ]
         static let tipsDefault = [
             "Monitor your stress throughout the day.",

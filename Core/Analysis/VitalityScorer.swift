@@ -363,6 +363,7 @@ final class VitalityScorer {
 
         // --- VO2 Max ---
         if let series = allSeries[.vo2Max],
+           !series.isStale(thresholdDays: 2),
            let avg = recentAverage(series, days: 30) {
             let age = VitalityNorms.metricAge(value: avg, table: VitalityNorms.vo2Max, higherIsBetter: true)
             let w = Self.weightFor(.vo2Max)
@@ -378,6 +379,7 @@ final class VitalityScorer {
 
         // --- Resting Heart Rate ---
         if let series = allSeries[.restingHeartRate],
+           !series.isStale(thresholdDays: 2),
            let avg = recentAverage(series, days: 14) {
             let age = VitalityNorms.metricAge(value: avg, table: VitalityNorms.restingHeartRate, higherIsBetter: false)
             let w = Self.weightFor(.restingHeartRate)
@@ -393,6 +395,7 @@ final class VitalityScorer {
 
         // --- HRV ---
         if let series = allSeries[.heartRateVariability],
+           !series.isStale(thresholdDays: 2),
            let avg = recentAverage(series, days: 14) {
             let age = VitalityNorms.metricAge(value: avg, table: VitalityNorms.hrv, higherIsBetter: true)
             let w = Self.weightFor(.hrv)
@@ -408,6 +411,7 @@ final class VitalityScorer {
 
         // --- Sleep Efficiency (computed from duration and awake time) ---
         if let sleepSeries = allSeries[.sleepDuration],
+           !sleepSeries.isStale(thresholdDays: 2),
            let awakeSeries = allSeries[.sleepAwake] {
             let recentSleep = sleepSeries.samples(lastDays: 14)
             let recentAwake = awakeSeries.samples(lastDays: 14)
@@ -433,6 +437,7 @@ final class VitalityScorer {
 
         // --- Deep Sleep % ---
         if let deepSeries = allSeries[.sleepDeep],
+           !deepSeries.isStale(thresholdDays: 2),
            let sleepSeries = allSeries[.sleepDuration] {
             let recentDeep = deepSeries.samples(lastDays: 14)
             let recentSleep = sleepSeries.samples(lastDays: 14)
@@ -457,6 +462,7 @@ final class VitalityScorer {
 
         // --- Walking Speed ---
         if let series = allSeries[.walkingSpeed],
+           !series.isStale(thresholdDays: 2),
            let avg = recentAverage(series, days: 30) {
             let age = VitalityNorms.metricAge(value: avg, table: VitalityNorms.walkingSpeed, higherIsBetter: true)
             let w = Self.weightFor(.walkingSpeed)
@@ -472,6 +478,7 @@ final class VitalityScorer {
 
         // --- Steps ---
         if let series = allSeries[.steps],
+           !series.isStale(thresholdDays: 2),
            let avg = recentAverage(series, days: 14) {
             let age = VitalityNorms.metricAge(value: avg, table: VitalityNorms.steps, higherIsBetter: true)
             let w = Self.weightFor(.steps)
@@ -487,6 +494,7 @@ final class VitalityScorer {
 
         // --- Exercise Minutes ---
         if let series = allSeries[.exerciseMinutes],
+           !series.isStale(thresholdDays: 2),
            let avg = recentAverage(series, days: 14) {
             let age = VitalityNorms.metricAge(value: avg, table: VitalityNorms.exerciseMinutes, higherIsBetter: true)
             let w = Self.weightFor(.exerciseMinutes)
@@ -502,6 +510,7 @@ final class VitalityScorer {
 
         // --- Body Composition (BMI or Body Fat %) ---
         if let bfSeries = allSeries[.bodyFatPercentage],
+           !bfSeries.isStale(thresholdDays: 30), // Body comp doesn't change fast
            let avg = recentAverage(bfSeries, days: 30) {
             let age = VitalityNorms.metricAge(value: avg, table: VitalityNorms.bodyFatPercent, higherIsBetter: false)
             let w = Self.weightFor(.bodyComposition)
@@ -514,6 +523,7 @@ final class VitalityScorer {
             weightedAgeSum += Double(age) * w
             totalWeight += w
         } else if let bmiSeries = allSeries[.bmi],
+                  !bmiSeries.isStale(thresholdDays: 30),
                   let avg = recentAverage(bmiSeries, days: 30) {
             // Fall back to BMI if no body fat data
             // Map BMI deviation from optimal to an age offset

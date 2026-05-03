@@ -306,7 +306,7 @@ extension Copy {
             // Morning
             static let morningGreen = "Your body is recovered and ready. Great day to push hard."
             static let morningYellow = "Recovery is moderate. Steady effort today, nothing extreme."
-            static let morningRed = "Your body needs rest. Go easy and prioritize sleep tonight."
+            static let morningRed = "Your body needs rest. Take it easy and try to get a good night's sleep tonight."
 
             // Afternoon
             static let afternoonGreen = "Still looking strong. Good time for a workout if you have not done one yet."
