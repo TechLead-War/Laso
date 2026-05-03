@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Canvas Perf Test</title>
+</head>
+<body>
+  <canvas id="c1" width="700" height="700"></canvas>
+  <script>
+    const canvas = document.getElementById('c1');
+    const ctx = canvas.getContext('2d');
+    const R = 300;
+    const cx = 350, cy = 350;
+
+    const shells = [
+      { base: R * 1.35, spread: R * 0.08, ribs: 26, points: 260, offset: 0, alpha: 0.74, size: 2.2, speed: 1.35, spin: 0.42, rgb: [0, 113, 227] },
+      { base: R * 1.3, spread: R * 0.064, ribs: 18, points: 230, offset: 1.34, alpha: 0.56, size: 1.7, speed: 0.95, spin: -0.24, rgb: [6, 182, 212] },
+    ]
+
+    function outerRadius(a, phase, base, spread) {
+      const slow = Math.sin(a * 2.04 + phase) * spread
+      const mid = Math.sin(a * 3.66 - phase * 1.24) * spread * 0.56
+      const carrier = Math.sin(a * 9.4 + phase * 2.3 + slow / Math.max(spread, 0.0001) * 0.6)
+      const nested = Math.sin(a * 18.4 - phase * 3.1 + carrier * 2.7) * spread * 0.18
+      const envelope = 0.5 + 0.5 * Math.pow(Math.abs(Math.sin(a * 1.08 - phase * 0.46)), 0.84)
+      return base + slow + mid + (carrier * spread * 0.3 + nested) * envelope
+    }
+
+    const alphaColors = [new Array(101), new Array(101)];
+    for(let i=0; i<=100; i++) {
+        alphaColors[0][i] = `rgba(0, 113, 227, ${i/100})`;
+        alphaColors[1][i] = `rgba(6, 182, 212, ${i/100})`;
+    }
+
+    function testOriginal(t) {
+        ctx.globalCompositeOperation = 'lighter'
+        let shellIdx = 0;
+        for (const shell of shells) {
+          for (let rib = 0; rib < shell.ribs; rib++) {
+            const ribNorm = shell.ribs <= 1 ? 0.5 : rib / (shell.ribs - 1)
+            const ribCenter = 1 - Math.pow(Math.abs(ribNorm - 0.5) * 2, 1.45)
+            const ribPhase = t * shell.speed + rib * 0.165 + shell.offset
+            const ribRadiusShift = (ribNorm - 0.5) * R * 0.02
+
+            for (let i = 0; i < shell.points; i++) {
+              const p = i / shell.points
+              const a = p * Math.PI * 2 + t * shell.spin + rib * 0.006
+              const rr = outerRadius(a, ribPhase, shell.base + ribRadiusShift, shell.spread)
+              const x = cx + Math.cos(a) * rr
+              const y = cy + Math.sin(a) * rr
+              const lobe = Math.pow(Math.abs(Math.sin(a * 1.14 - t * 0.76 + shell.offset * 0.5)), 1.48)
+              const shimmer = 0.72 + 0.28 * Math.sin(a * 7.2 + t * 3.35 + rib * 0.11)
+              const travel = 0.7 + 0.3 * Math.sin(a * 2.1 - t * 2.4 + shell.offset)
+              const alpha = (0.18 + shell.alpha * ribCenter * (0.54 + 0.46 * lobe)) * shimmer * travel
+              const size = shell.size * (0.74 + ribCenter * 0.66)
+              ctx.fillStyle = `rgba(${shell.rgb[0]}, ${shell.rgb[1]}, ${shell.rgb[2]}, ${alpha})`
+              ctx.fillRect(x - size / 2, y - size / 2, size, size)
+            }
+          }
+          shellIdx++;
+        }
+    }
+
+    function testOptimized1(t) {
+        ctx.globalCompositeOperation = 'lighter'
+        let shellIdx = 0;
+        for (const shell of shells) {
+          for (let rib = 0; rib < shell.ribs; rib++) {
+            const ribNorm = shell.ribs <= 1 ? 0.5 : rib / (shell.ribs - 1)
+            const ribCenter = 1 - Math.pow(Math.abs(ribNorm - 0.5) * 2, 1.45)
+            const ribPhase = t * shell.speed + rib * 0.165 + shell.offset
+            const ribRadiusShift = (ribNorm - 0.5) * R * 0.02
+            const size = shell.size * (0.74 + ribCenter * 0.66)
+            const halfSize = size / 2;
+
+            for (let i = 0; i < shell.points; i++) {
+              const p = i / shell.points
+              const a = p * Math.PI * 2 + t * shell.spin + rib * 0.006
+              const rr = outerRadius(a, ribPhase, shell.base + ribRadiusShift, shell.spread)
+              const x = cx + Math.cos(a) * rr
+              const y = cy + Math.sin(a) * rr
+              const lobe = Math.pow(Math.abs(Math.sin(a * 1.14 - t * 0.76 + shell.offset * 0.5)), 1.48)
+              const shimmer = 0.72 + 0.28 * Math.sin(a * 7.2 + t * 3.35 + rib * 0.11)
+              const travel = 0.7 + 0.3 * Math.sin(a * 2.1 - t * 2.4 + shell.offset)
+              let alpha = (0.18 + shell.alpha * ribCenter * (0.54 + 0.46 * lobe)) * shimmer * travel
+              
+              if (alpha < 0) alpha = 0;
+              if (alpha > 1) alpha = 1;
+              const alphaBin = Math.round(alpha * 100);
+
+              ctx.fillStyle = alphaColors[shellIdx][alphaBin]
+              ctx.fillRect(x - halfSize, y - halfSize, size, size)
+            }
+          }
+          shellIdx++;
+        }
+    }
+
+    async function runTest() {
+        // Warmup
+        for(let i=0; i<10; i++) testOriginal(i);
+        
+        let start = performance.now();
+        for(let i=0; i<50; i++) {
+            ctx.clearRect(0,0,700,700);
+            testOriginal(i * 0.1);
+        }
+        let end = performance.now();
+        let origTime = end - start;
+
+        // Warmup
+        for(let i=0; i<10; i++) testOptimized1(i);
+
+        start = performance.now();
+        for(let i=0; i<50; i++) {
+            ctx.clearRect(0,0,700,700);
+            testOptimized1(i * 0.1);
+        }
+        end = performance.now();
+        let opt1Time = end - start;
+
+        document.body.innerHTML += `<p>Original: ${origTime.toFixed(2)}ms</p>`;
+        document.body.innerHTML += `<p>Optimized1 (String cache): ${opt1Time.toFixed(2)}ms</p>`;
+    }
+
+    runTest();
+  </script>
+</body>
+</html>

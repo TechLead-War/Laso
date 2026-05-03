@@ -22,22 +22,56 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>fb$(FACEBOOK_APP_ID)</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>FacebookAppID</key>
+	<string>$(FACEBOOK_APP_ID)</string>
+	<key>FacebookClientToken</key>
+	<string>$(FACEBOOK_CLIENT_TOKEN)</string>
+	<key>FacebookDisplayName</key>
+	<string>Laso</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>fbapi</string>
+		<string>fbauth2</string>
+		<string>fb-messenger-share-api</string>
+	</array>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Laso reads your health data from Apple Watch and iPhone to provide real-time vitals, personalized health scores, trend analysis, and actionable insights.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Laso writes water, weight and mindful minutes you log into Apple Health.</string>
+	<string>Laso requests write access to Apple Health to allow future features like logging workouts and health entries directly from the app.</string>
 	<key>NSSiriUsageDescription</key>
 	<string>Laso uses Siri to let you check your health score, log water, view sleep data, and track workouts hands-free.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>We use this identifier to measure ad performance and improve Laso for you.</string>
 	<key>POSTHOG_API_KEY</key>
 	<string>$(POSTHOG_API_KEY)</string>
 	<key>POSTHOG_HOST</key>
 	<string>$(POSTHOG_HOST)</string>
+	<key>SKAdNetworkItems</key>
+	<array>
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>v9wttpbfk9.skadnetwork</string>
+		</dict>
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>n38lu8286q.skadnetwork</string>
+		</dict>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

@@ -1,8 +1,7 @@
 ---
 name: Distinguished Engineer Working Style
-description: Core rules — explain first, discuss before coding, smallest correct change, double verify before delivering, no guessing, production-grade code only.
+Core rules: Explain in 2–3 plain lines what solution you are thinking no code context just tell what your approach is → wait for approval → implement the smallest correct change → verify end-to-end → deliver only if fully correct; otherwise ask—never guess.
 ---
-Act as a senior distinguished engineer. Every deliverable must be complete and production-ready. Double check if working once the work is done.
 
 **Rules:**
 

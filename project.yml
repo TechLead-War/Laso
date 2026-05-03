@@ -18,6 +18,9 @@ packages:
   PostHog:
     url: https://github.com/PostHog/posthog-ios
     from: 3.0.0
+  FacebookSDK:
+    url: https://github.com/facebook/facebook-ios-sdk
+    from: 17.0.0
 
 targets:
   Laso:
@@ -36,6 +39,8 @@ targets:
         product: FirebaseFirestore
       - package: PostHog
         product: PostHog
+      - package: FacebookSDK
+        product: FacebookCore
       - target: LasoWidgets
         embed: true
     sources:
@@ -58,9 +63,20 @@ targets:
         NSHealthUpdateUsageDescription: "Laso requests write access to Apple Health to allow future features like logging workouts and health entries directly from the app."
         POSTHOG_API_KEY: $(POSTHOG_API_KEY)
         POSTHOG_HOST: $(POSTHOG_HOST)
+        FacebookAppID: $(FACEBOOK_APP_ID)
+        FacebookClientToken: $(FACEBOOK_CLIENT_TOKEN)
+        FacebookDisplayName: Laso
+        CFBundleURLTypes:
+          - CFBundleURLSchemes:
+              - fb$(FACEBOOK_APP_ID)
+        LSApplicationQueriesSchemes: [fbapi, fbauth2, fb-messenger-share-api]
+        NSUserTrackingUsageDescription: "We use this identifier to measure ad performance and improve Laso for you."
+        SKAdNetworkItems:
+          - SKAdNetworkIdentifier: v9wttpbfk9.skadnetwork
+          - SKAdNetworkIdentifier: n38lu8286q.skadnetwork
         NSSupportsLiveActivities: true
         ITSAppUsesNonExemptEncryption: false
-        UIBackgroundModes: [fetch, processing]
+        UIBackgroundModes: [fetch, processing, remote-notification]
         BGTaskSchedulerPermittedIdentifiers: ["com.lasohealth.fit.background-refresh"]
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         UILaunchScreen:

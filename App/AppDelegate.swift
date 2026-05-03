@@ -1,5 +1,6 @@
 import UIKit
 import UserNotifications
+import FacebookCore
 
 /// AppDelegate for background delivery registration and notification setup
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
@@ -10,6 +11,11 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        ApplicationDelegate.shared.application(
+            application,
+            didFinishLaunchingWithOptions: launchOptions
+        )
+
         launchCoordinator.configureOnLaunch()
 
         // Set up notification delegate
@@ -22,6 +28,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         return true
     }
 
+<<<<<<< Updated upstream
     // MARK: - Lifecycle (analytics flush)
 
     /// Flush PostHog queue when the app is backgrounded. Without this,
@@ -35,6 +42,19 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     /// (e.g. user kills app from app switcher when not suspended).
     func applicationWillTerminate(_ application: UIApplication) {
         PostHogManager.shared.flush()
+=======
+    func application(
+        _ app: UIApplication,
+        open url: URL,
+        options: [UIApplication.OpenURLOptionsKey: Any] = [:]
+    ) -> Bool {
+        ApplicationDelegate.shared.application(
+            app,
+            open: url,
+            sourceApplication: options[.sourceApplication] as? String,
+            annotation: options[.annotation]
+        )
+>>>>>>> Stashed changes
     }
 
     // MARK: - UNUserNotificationCenterDelegate
