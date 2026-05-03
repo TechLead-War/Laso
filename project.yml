@@ -20,7 +20,7 @@ packages:
     from: 3.0.0
   FacebookSDK:
     url: https://github.com/facebook/facebook-ios-sdk
-    from: 17.0.0
+    from: 18.0.0
 
 targets:
   Laso:

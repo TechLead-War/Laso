@@ -3,7 +3,7 @@ import HealthKit
 import Observation
 
 @Observable
-final class HealthKitManager {
+final class HealthKitManager: @unchecked Sendable {
     let healthStore = HKHealthStore()
 
     struct SyncProgress {
@@ -1112,9 +1112,8 @@ final class HealthKitManager {
             let observer = HKObserverQuery(sampleType: sampleType, predicate: nil) { [weak self] _, completionHandler, error in
                 defer { completionHandler() }
                 if error != nil { return }
-                guard let self else { return }
-                Task { @MainActor in
-                    self.scheduleDashboardObserverRefresh(onCoreDataChanged: onCoreDataChanged)
+                Task { @MainActor [weak self] in
+                    self?.scheduleDashboardObserverRefresh(onCoreDataChanged: onCoreDataChanged)
                 }
             }
 

@@ -845,7 +845,6 @@
 		D5689557671179E561CD73D0 /* PersonalOptimizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalOptimizer.swift; sourceTree = "<group>"; };
 		D74BCC34906053350BD6C187 /* CalibrationDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationDiscovery.swift; sourceTree = "<group>"; };
 		D77EF02BEAA6CCDBD0BE35DF /* CoreMLEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreMLEngine.swift; sourceTree = "<group>"; };
-		D7BB8EAB4BAC7D6917587EE9 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		D8DFAAB50F7FFF64996BF7D6 /* TrendDirection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendDirection.swift; sourceTree = "<group>"; };
 		D8F0D26D7782E75B48E710B7 /* MLOrchestrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLOrchestrator.swift; sourceTree = "<group>"; };
 		D8F6915E5718E8B9919DC3FD /* MetricDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricDetailViewModel.swift; sourceTree = "<group>"; };
@@ -856,6 +855,7 @@
 		DC5783E567450D3A195DAFB2 /* IllnessEarlyWarning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IllnessEarlyWarning.swift; sourceTree = "<group>"; };
 		DDBED8EE5CB6B5BEEFC7F005 /* JournalEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalEntryView.swift; sourceTree = "<group>"; };
 		DE6F78E354D1C59E90591591 /* Math+Clamp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Math+Clamp.swift"; sourceTree = "<group>"; };
+		DF56AAAE411B922C2E742FB8 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		DFBE1DD4324C9805BD96F3E1 /* PersonalHealthForecastCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalHealthForecastCard.swift; sourceTree = "<group>"; };
 		E020657065005DF616545BF6 /* Date+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Extensions.swift"; sourceTree = "<group>"; };
 		E17DC17084EE2545DDF26472 /* ROIRanker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ROIRanker.swift; sourceTree = "<group>"; };
@@ -1913,15 +1913,6 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
-		BE6504EDC50932E5A53EA67C /* agent-a3bcbea348b0025ab */ = {
-			isa = PBXGroup;
-			children = (
-				D7BB8EAB4BAC7D6917587EE9 /* Secrets.xcconfig */,
-			);
-			name = "agent-a3bcbea348b0025ab";
-			path = .;
-			sourceTree = "<group>";
-		};
 		BEDCC1F47A9BCFE6C9F9A324 /* MetricDetail */ = {
 			isa = PBXGroup;
 			children = (
@@ -1997,6 +1988,15 @@
 				AC573403E33E258222BD2903 /* ConnectedDevicesViewModel.swift */,
 			);
 			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		E539D755BFE39275A3539FF3 /* HealthPulse */ = {
+			isa = PBXGroup;
+			children = (
+				DF56AAAE411B922C2E742FB8 /* Secrets.xcconfig */,
+			);
+			name = HealthPulse;
+			path = .;
 			sourceTree = "<group>";
 		};
 		E54850172D124017E5E661ED /* Views */ = {
@@ -2096,10 +2096,10 @@
 				4F0ADF675FBAD032C37D2E17 /* Assets.xcassets */,
 				68F87CBA1450FC8A2A904FB3 /* GoogleService-Info.plist */,
 				4024E1BFAFFCCDFB7436F99A /* PrivacyInfo.xcprivacy */,
-				BE6504EDC50932E5A53EA67C /* agent-a3bcbea348b0025ab */,
 				245B633267003874872B05C6 /* App */,
 				53CCE31CF6A15F16DA081F2E /* Common */,
 				A8E5CFB21D057A5EF7F1E794 /* Core */,
+				E539D755BFE39275A3539FF3 /* HealthPulse */,
 				0FBA80065D66CD82E801C536 /* LasoUITests */,
 				08ACFB443AD621527464CB1D /* LasoWidgets */,
 				39C809F6F509B49421DA1671 /* Modules */,
@@ -2847,7 +2847,7 @@
 		};
 		1FD22930FF81F2E3F11E35EB /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D7BB8EAB4BAC7D6917587EE9 /* Secrets.xcconfig */;
+			baseConfigurationReference = DF56AAAE411B922C2E742FB8 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -2952,7 +2952,7 @@
 		};
 		54E525B1609CEFA42BE641F2 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D7BB8EAB4BAC7D6917587EE9 /* Secrets.xcconfig */;
+			baseConfigurationReference = DF56AAAE411B922C2E742FB8 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -3102,7 +3102,7 @@
 			repositoryURL = "https://github.com/facebook/facebook-ios-sdk";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 17.0.0;
+				minimumVersion = 18.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

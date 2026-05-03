@@ -99,9 +99,11 @@ final class WatchMonitor {
                 completionHandler()
                 return
             }
-            // This fires in BACKGROUND. check watch data and reschedule notification
-            self?.onHeartRateDelivery()
-            completionHandler()
+            // Fires in BACKGROUND. hop to MainActor to call isolated state.
+            Task { @MainActor [weak self] in
+                self?.onHeartRateDelivery()
+                completionHandler()
+            }
         }
 
         healthStore.execute(query)
@@ -156,28 +158,22 @@ final class WatchMonitor {
             limit: 3,
             sortDescriptors: [sortDescriptor]
         ) { [weak self] _, samples, error in
-            guard let self, let samples, error == nil else { return }
+            guard let samples, error == nil else { return }
 
-            for sample in samples {
-                if self.isFromAppleWatch(sample: sample) {
-                    // Watch is alive. record timestamp
-                    defaults.set(sample.startDate.timeIntervalSince1970, forKey: self.lastWatchDataKey)
-
-                    // Push the "not worn" notification forward. it won't fire
-                    // as long as data keeps coming.
-                    self.scheduleNotWornNotification()
-
-                    // Check battery from sample metadata (if available)
-                    self.checkBatteryFromSample(sample)
-
-                    return
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                for sample in samples {
+                    if self.isFromAppleWatch(sample: sample) {
+                        UserDefaults.standard.set(sample.startDate.timeIntervalSince1970, forKey: self.lastWatchDataKey)
+                        self.scheduleNotWornNotification()
+                        self.checkBatteryFromSample(sample)
+                        return
+                    }
                 }
-            }
-
-            // No fresh watch data. ensure a notification is pending
-            let lastDataTime = defaults.double(forKey: self.lastWatchDataKey)
-            if lastDataTime > 0 {
-                self.ensureNotWornScheduled()
+                let lastDataTime = UserDefaults.standard.double(forKey: self.lastWatchDataKey)
+                if lastDataTime > 0 {
+                    self.ensureNotWornScheduled()
+                }
             }
         }
 
@@ -254,10 +250,12 @@ final class WatchMonitor {
     /// timer, just make sure one is scheduled.
     private func ensureNotWornScheduled() {
         UNUserNotificationCenter.current().getPendingNotificationRequests { [weak self] requests in
-            guard let self else { return }
-            let hasPending = requests.contains { $0.identifier == self.scheduledNotWornIdentifier }
-            if !hasPending {
-                self.scheduleNotWornNotification()
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                let hasPending = requests.contains { $0.identifier == self.scheduledNotWornIdentifier }
+                if !hasPending {
+                    self.scheduleNotWornNotification()
+                }
             }
         }
     }
