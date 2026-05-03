@@ -216,7 +216,7 @@ class VitalityScorer {
         var totalWeight = 0.0
 
         // ── Resting Heart Rate ──────────────────────────────────────────────
-        recentAverage(timeSeries[HealthMetric.RESTING_HEART_RATE], days = 14)?.let { avg ->
+        recentAverage(timeSeries[HealthMetric.RESTING_HEART_RATE], days = 14, metric = HealthMetric.RESTING_HEART_RATE)?.let { avg ->
             val age = VitalityNorms.metricAge(avg, VitalityNorms.restingHeartRate, higherIsBetter = false)
             val w = MetricKey.RESTING_HR.weight
             val median = VitalityNorms.interpolateMedian(chronologicalAge, VitalityNorms.restingHeartRate)
@@ -233,7 +233,7 @@ class VitalityScorer {
         }
 
         // ── HRV ─────────────────────────────────────────────────────────────
-        recentAverage(timeSeries[HealthMetric.HEART_RATE_VARIABILITY], days = 14)?.let { avg ->
+        recentAverage(timeSeries[HealthMetric.HEART_RATE_VARIABILITY], days = 14, metric = HealthMetric.HEART_RATE_VARIABILITY)?.let { avg ->
             val age = VitalityNorms.metricAge(avg, VitalityNorms.hrv, higherIsBetter = true)
             val w = MetricKey.HRV.weight
             val median = VitalityNorms.interpolateMedian(chronologicalAge, VitalityNorms.hrv)
@@ -250,7 +250,7 @@ class VitalityScorer {
         }
 
         // ── Sleep Duration (used as proxy for sleep quality) ────────────────
-        recentAverage(timeSeries[HealthMetric.SLEEP_DURATION], days = 14)?.let { avg ->
+        recentAverage(timeSeries[HealthMetric.SLEEP_DURATION], days = 14, metric = HealthMetric.SLEEP_DURATION)?.let { avg ->
             // Map sleep duration (hours) to efficiency-style score.
             // 7-8h is optimal (maps to ~90%), <5h or >10h penalised.
             val efficiency = sleepDurationToEfficiency(avg)
@@ -270,7 +270,7 @@ class VitalityScorer {
         }
 
         // ── VO2 Max ─────────────────────────────────────────────────────────
-        recentAverage(timeSeries[HealthMetric.VO2_MAX], days = 30)?.let { avg ->
+        recentAverage(timeSeries[HealthMetric.VO2_MAX], days = 30, metric = HealthMetric.VO2_MAX)?.let { avg ->
             val age = VitalityNorms.metricAge(avg, VitalityNorms.vo2Max, higherIsBetter = true)
             val w = MetricKey.VO2_MAX.weight
             val median = VitalityNorms.interpolateMedian(chronologicalAge, VitalityNorms.vo2Max)
@@ -287,7 +287,7 @@ class VitalityScorer {
         }
 
         // ── Blood Oxygen ────────────────────────────────────────────────────
-        recentAverage(timeSeries[HealthMetric.BLOOD_OXYGEN], days = 14)?.let { avg ->
+        recentAverage(timeSeries[HealthMetric.BLOOD_OXYGEN], days = 14, metric = HealthMetric.BLOOD_OXYGEN)?.let { avg ->
             // SpO2 is tightly clustered: 95-100% is normal. Map to age contribution.
             // Below 95% is abnormal at any age; 97-99% is youthful.
             val age = bloodOxygenToAge(avg, chronologicalAge)
@@ -305,7 +305,7 @@ class VitalityScorer {
         }
 
         // ── Steps ───────────────────────────────────────────────────────────
-        recentAverage(timeSeries[HealthMetric.STEPS], days = 14)?.let { avg ->
+        recentAverage(timeSeries[HealthMetric.STEPS], days = 14, metric = HealthMetric.STEPS)?.let { avg ->
             val age = VitalityNorms.metricAge(avg, VitalityNorms.steps, higherIsBetter = true)
             val w = MetricKey.STEPS.weight
             val median = VitalityNorms.interpolateMedian(chronologicalAge, VitalityNorms.steps)
@@ -322,7 +322,7 @@ class VitalityScorer {
         }
 
         // ── Active Calories ─────────────────────────────────────────────────
-        recentAverage(timeSeries[HealthMetric.ACTIVE_CALORIES], days = 14)?.let { avg ->
+        recentAverage(timeSeries[HealthMetric.ACTIVE_CALORIES], days = 14, metric = HealthMetric.ACTIVE_CALORIES)?.let { avg ->
             // Map active calories to exercise minutes equivalent for norm lookup.
             // Rough conversion: ~10 kcal per minute of moderate activity.
             val equivMinutes = avg / 10.0
@@ -342,7 +342,7 @@ class VitalityScorer {
         }
 
         // ── Respiratory Rate ────────────────────────────────────────────────
-        recentAverage(timeSeries[HealthMetric.RESPIRATORY_RATE], days = 14)?.let { avg ->
+        recentAverage(timeSeries[HealthMetric.RESPIRATORY_RATE], days = 14, metric = HealthMetric.RESPIRATORY_RATE)?.let { avg ->
             // Normal adult: 12-20 br/min. Optimal (young) is ~14-16.
             val age = respiratoryRateToAge(avg, chronologicalAge)
             val w = MetricKey.RESPIRATORY_RATE.weight
@@ -359,8 +359,8 @@ class VitalityScorer {
         }
 
         // ── Body Mass (BMI or Body Fat %) ───────────────────────────────────
-        val bodyFatAvg = recentAverage(timeSeries[HealthMetric.BODY_FAT_PERCENTAGE], days = 30)
-        val bmiAvg = recentAverage(timeSeries[HealthMetric.BMI], days = 30)
+        val bodyFatAvg = recentAverage(timeSeries[HealthMetric.BODY_FAT_PERCENTAGE], days = 30, metric = HealthMetric.BODY_FAT_PERCENTAGE)
+        val bmiAvg = recentAverage(timeSeries[HealthMetric.BMI], days = 30, metric = HealthMetric.BMI)
         if (bodyFatAvg != null) {
             val age = VitalityNorms.metricAge(bodyFatAvg, VitalityNorms.bodyFatPercent, higherIsBetter = false)
             val w = MetricKey.BODY_MASS.weight
@@ -442,11 +442,23 @@ class VitalityScorer {
 
     // ── Private Helpers ─────────────────────────────────────────────────────
 
-    /** Recent average requiring at least 3 data points in the last [days]. */
-    private fun recentAverage(samples: List<DailySample>?, days: Int): Double? {
+    /** Recent average requiring at least 3 data points in the last [days]. Also filters by staleness. */
+    private fun recentAverage(samples: List<DailySample>?, days: Int, metric: HealthMetric): Double? {
         if (samples.isNullOrEmpty()) return null
         val sorted = samples.sortedByDescending { it.date }
-        val cutoff = sorted.first().date - days * MILLIS_PER_DAY
+        
+        val latestTimestamp = sorted.first().date
+        val stalenessMillis = System.currentTimeMillis() - latestTimestamp
+        val maxStaleness = if (metric == HealthMetric.BMI || metric == HealthMetric.BODY_FAT_PERCENTAGE) {
+            30L * 86_400_000L // 30 days
+        } else {
+            2L * 86_400_000L // 48 hours
+        }
+        if (stalenessMillis > maxStaleness) {
+            return null
+        }
+        
+        val cutoff = System.currentTimeMillis() - days * MILLIS_PER_DAY
         val recent = sorted.filter { it.date >= cutoff }
         if (recent.size < MIN_SAMPLES_FOR_AVERAGE) return null
         return recent.map { it.value }.average()

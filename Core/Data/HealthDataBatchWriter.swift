@@ -85,7 +85,7 @@ struct HealthDataBatchWriter {
         let descriptor = FetchDescriptor(predicate: predicate)
         let existing = (try? context.fetch(descriptor)) ?? []
 
-        var existingByDate: [Date: StoredDailySample] = [:]
+        var existingByDate: [Int64: StoredDailySample] = [:]
         for sample in existing {
             existingByDate[MetricSample.utcDayBucket(for: sample.date)] = sample
         }

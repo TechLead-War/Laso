@@ -58,6 +58,7 @@ import com.lasohealth.android.feature.journal.JournalInsightsScreen
 import com.lasohealth.android.feature.live.LiveScreen
 import com.lasohealth.android.feature.reports.AnnualReportScreen
 import com.lasohealth.android.feature.reports.MonthlyReviewScreen
+import com.lasohealth.android.feature.settings.NotificationsSettingsScreen
 import com.lasohealth.android.feature.settings.SettingsScreen
 
 @Composable
@@ -141,6 +142,9 @@ fun LasoNavScaffold(
             // Settings
             composable(AppRoute.Settings.route) {
                 SettingsScreen(navController = navController, repository = repository)
+            }
+            composable(AppRoute.NotificationsSettings.route) {
+                NotificationsSettingsScreen(navController = navController)
             }
 
             // Score Guide

@@ -202,6 +202,30 @@ fun PaywallScreen(
             textAlign = TextAlign.Center,
         )
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 9. Legal Links
+        val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = { uriHandler.openUri("https://laso.ai/terms") }) {
+                Text(
+                    text = "Terms of Service",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                )
+            }
+            TextButton(onClick = { uriHandler.openUri("https://laso.ai/privacy") }) {
+                Text(
+                    text = "Privacy Policy",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                )
+            }
+        }
+
         Spacer(modifier = Modifier.height(32.dp))
     }
 }

@@ -698,7 +698,7 @@ private fun tipsForLevel(level: String): List<String> = when (level.lowercase())
     "low" -> listOf(
         "Your body is calm. Great time for challenging work.",
         "Maintain this state with regular sleep and hydration.",
-        "Consider a creative or deep-focus task right now.",
+        "Try a creative or deep-focus task right now.",
     )
     "mild" -> listOf(
         "Try a 5-minute breathing exercise.",
@@ -706,7 +706,7 @@ private fun tipsForLevel(level: String): List<String> = when (level.lowercase())
         "A short walk can help reset your nervous system.",
     )
     "moderate" -> listOf(
-        "Consider a walk or gentle stretching.",
+        "Try a short walk or gentle stretching.",
         "Limiting caffeine and stimulants for the next few hours may help.",
         "Try progressive muscle relaxation.",
         "Shorten your to-do list and focus on essentials.",

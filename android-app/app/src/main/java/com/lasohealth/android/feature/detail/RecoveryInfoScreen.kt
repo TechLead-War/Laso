@@ -188,7 +188,7 @@ fun RecoveryInfoScreen(
                         range = "20\u201339",
                         label = "Fatigued",
                         color = AccentRed,
-                        description = "Your body needs rest. Prioritize easy movement and sleep.",
+                        description = "Your body needs rest. Focus on easy movement and sleep.",
                     )
                     HorizontalDivider(
                         modifier = Modifier.padding(start = 52.dp),

@@ -6,6 +6,7 @@ import com.lasohealth.android.core.model.HealthMetric
 sealed class AppRoute(val route: String) {
     // Detail screens
     data object Settings : AppRoute("settings")
+    data object NotificationsSettings : AppRoute("notificationsSettings")
     data object ScoreGuide : AppRoute("scoreGuide")
     data object InsightsDetail : AppRoute("insightsDetail")
     data object WeeklyReview : AppRoute("weeklyReview")

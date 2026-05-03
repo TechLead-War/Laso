@@ -77,7 +77,7 @@ fun FocusSelectionStep(onContinue: (Set<HealthFocus>) -> Unit) {
         Spacer(modifier = Modifier.height(10.dp))
 
         Text(
-            text = "Pick your areas — those insights get prioritized first.",
+            text = "Pick your areas — those insights will be highlighted first.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
             textAlign = TextAlign.Center,

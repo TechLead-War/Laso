@@ -209,9 +209,9 @@ class DecisionPolicyEngine {
 
         return report.signals.filter { it.probability >= 0.3 }.map { signal ->
             val (action, emoji) = when (signal.type) {
-                SignalType.FATIGUE -> "Prioritize rest today" to "\uD83D\uDCA4"
+                SignalType.FATIGUE -> "Focus on rest today" to "\uD83D\uDCA4"
                 SignalType.BURNOUT -> "Take a recovery day" to "\u2764\uFE0F"
-                SignalType.OVERTRAINING -> "Consider a deload" to "\uD83C\uDFCB\uFE0F"
+                SignalType.OVERTRAINING -> "Try a deload" to "\uD83C\uDFCB\uFE0F"
                 SignalType.INSOMNIA -> "Focus on sleep quality" to "\uD83C\uDF19"
                 SignalType.IMMUNE_DIP -> "Support your immune system" to "\uD83C\uDF4A"
                 SignalType.INACTIVITY -> "Get moving today" to "\uD83C\uDFC3"

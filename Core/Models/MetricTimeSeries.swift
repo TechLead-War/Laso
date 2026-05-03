@@ -24,7 +24,7 @@ struct MetricTimeSeries: Identifiable {
             switch metric {
             case .heartRate, .restingHeartRate:
                 return sample.value > 25 && sample.value < 250
-            case .heartRateVariability, .heartRateVariabilitySDNN:
+            case .heartRateVariability:
                 return sample.value > 5 && sample.value < 250
             case .bloodOxygen:
                 return sample.value >= 0.5 && sample.value <= 1.0

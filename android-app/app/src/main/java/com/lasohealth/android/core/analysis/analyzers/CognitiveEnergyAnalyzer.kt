@@ -293,7 +293,7 @@ class CognitiveEnergyAnalyzer : InsightAnalyzer {
             title = "Recovery Day Needed",
             detail = "You've been highly active for $consecutiveHighDays days straight and your recovery markers " +
                 "are strained \u2014 ${recoverySignals.joinToString(", ")}. Without recovery, both mental sharpness " +
-                "and physical performance decline. Consider a lighter day with walking, stretching, and extra sleep.",
+                "and physical performance decline. Try a lighter day with walking, stretching, and extra sleep.",
             metric = HealthMetric.HEART_RATE_VARIABILITY,
             priority = InsightPriority.HIGH,
             directive = InsightDirective.REST,

@@ -154,7 +154,7 @@ class SampleHealthDataRepository : HealthDataRepository {
                 ),
                 InsightUi(
                     title = "Resting HR creeping up",
-                    detail = "Resting heart rate has risen 8 bpm over 3 days. Consider a lighter training day if this continues.",
+                    detail = "Resting heart rate has risen 8 bpm over 3 days. Try a lighter training day if this continues.",
                     metric = HealthMetric.RESTING_HEART_RATE,
                 ),
             ),
@@ -1101,7 +1101,7 @@ class SampleHealthDataRepository : HealthDataRepository {
             ),
             recommendations = listOf(
                 RecommendationUi(
-                    "Prioritize Sleep Consistency",
+                    "Focus on Sleep Consistency",
                     "Your sleep score dipped in Q4. Focus on a consistent bedtime to reverse the trend.",
                     "\uD83C\uDF19",
                 ),
@@ -1187,7 +1187,7 @@ class SampleHealthDataRepository : HealthDataRepository {
                 RiskFocusAreaUi(
                     title = "Increase HRV Through Recovery",
                     impact = "High",
-                    description = "Prioritize sleep quality and add recovery days between intense workouts to boost HRV.",
+                    description = "Focus on sleep quality and add recovery days between intense workouts to boost HRV.",
                 ),
                 RiskFocusAreaUi(
                     title = "Monitor Blood Pressure",

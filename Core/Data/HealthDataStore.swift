@@ -284,7 +284,7 @@ final class HealthDataStore {
         let existing = (try? modelContext?.fetch(descriptor)) ?? []
 
         // Build lookup by normalized UTC day for O(1) dedup.
-        var existingByDate: [Date: StoredDailySample] = [:]
+        var existingByDate: [Int64: StoredDailySample] = [:]
         for sample in existing {
             existingByDate[MetricSample.utcDayBucket(for: sample.date)] = sample
         }
@@ -607,11 +607,12 @@ final class HealthDataStore {
         if records.isEmpty { return [] }
 
         // Dedup by normalized UTC day so historical charts remain stable even if old duplicates exist.
-        var dedupedByDay: [Date: DailyStrainRecord] = [:]
+        var dedupedByDay: [Int64: DailyStrainRecord] = [:]
         for record in records {
             let dayBucket = MetricSample.utcDayBucket(for: record.date)
+            let bucketDate = Date(timeIntervalSince1970: Double(dayBucket) * 86400.0)
             dedupedByDay[dayBucket] = DailyStrainRecord(
-                date: dayBucket,
+                date: bucketDate,
                 strain: record.strain,
                 level: record.level,
                 hrZoneMinutes: Self.decodeJSON([Double].self, from: record.hrZoneMinutesJSON) ?? []
