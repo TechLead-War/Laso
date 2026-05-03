@@ -4,10 +4,6 @@ import Observation
 /// ViewModel for category detail view showing all metrics, analytics, and trends in a category
 @MainActor @Observable
 final class CategoryDetailViewModel {
-    /// Pass 12 BE perf: cached current calendar. `historicalHighlights`
-    /// (read on every category-detail render) calls
-    /// `Calendar.current.monthSymbols[component(.month, ...)]` once per call.
-    private static let cal: Calendar = Calendar.current
 
     let category: HealthCategory
     let healthKitManager: HealthKitManager
@@ -88,7 +84,7 @@ final class CategoryDetailViewModel {
     /// Historical highlights for metrics in this category
     var historicalHighlights: [(metric: HealthMetric, text: String, icon: String)] {
         var results: [(metric: HealthMetric, text: String, icon: String, significance: Double)] = []
-        let monthName = Self.cal.monthSymbols[Self.cal.component(.month, from: Date()) - 1]
+        let monthName = Date.cal.monthSymbols[Date.cal.component(.month, from: Date()) - 1]
 
         for metric in metrics {
             guard let ctx = analysisEngine.historicalContext[metric] else { continue }

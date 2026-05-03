@@ -91,7 +91,7 @@ final class ChangePointDetector {
 
         changePoints = []
         regimeComparisons = []
-        let calendar = Calendar.current
+        let calendar = Date.cal
 
         // Phase 1: CUSUM detection + validation per metric
         var allCandidates: [HealthMetric: [Candidate]] = [:]
@@ -482,7 +482,7 @@ final class ChangePointDetector {
         return desc
     }
 
-    /// Cached short-date formatter. Performance Pass 2: avoids per-call allocation
+    /// Cached short-date formatter. avoids per-call allocation
     /// when describing change points across many metrics.
     private static let shortDateFormatter: DateFormatter = {
         let f = DateFormatter()

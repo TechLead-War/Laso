@@ -10,7 +10,7 @@ struct StressMonitorView: View {
     let weeklyScores: [DailyStressPoint]
     let weeklyAverage: Double
     let previousWeekAverage: Double
-    /// Pass 8 V (F45): freshness timestamp from the parent dashboard refresh.
+    /// Freshness timestamp from the parent dashboard refresh.
     /// Drives a small "Updated …" caption at the top of the screen.
     var lastUpdated: Date? = nil
 
@@ -64,10 +64,10 @@ struct StressMonitorView: View {
                 .foregroundStyle(.secondary)
                 .padding(.top, DS.space3)
 
-            Text("Building your stress baseline")
+            Text(Copy.StressMonitor.buildingBaselineTitle)
                 .font(DS.Typography.title3.weight(.semibold))
 
-            Text("We need about 14 days of overnight HRV data to learn your normal range. Wear your Apple Watch to bed and your stress signal will appear here.")
+            Text(Copy.StressMonitor.needHRVData)
                 .font(DS.Typography.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

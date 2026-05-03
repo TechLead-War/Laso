@@ -355,7 +355,7 @@ final class DashboardViewModel {
 
             // Compare with previous equivalent period
             let previousSamples = series.sortedSamples.filter { sample in
-                let daysAgo = Calendar.current.dateComponents([.day], from: sample.date, to: Date()).day ?? 0
+                let daysAgo = Date.cal.dateComponents([.day], from: sample.date, to: Date()).day ?? 0
                 return daysAgo >= days && daysAgo < days * 2
             }
             let previousAvg = previousSamples.isEmpty ? 0.0 : previousSamples.map(\.value).mean
@@ -461,7 +461,7 @@ final class DashboardViewModel {
         for (metric, series) in healthKitManager.timeSeries {
             let currentSamples = series.samples(lastDays: days)
             let previousSamples = series.sortedSamples.filter { sample in
-                let daysAgo = Calendar.current.dateComponents([.day], from: sample.date, to: Date()).day ?? 0
+                let daysAgo = Date.cal.dateComponents([.day], from: sample.date, to: Date()).day ?? 0
                 return daysAgo >= days && daysAgo < days * 2
             }
 
@@ -831,7 +831,7 @@ final class DashboardViewModel {
         let now = Date()
         let thermalManager = ThermalManager.shared
         let recentlyAnalyzed = lastAnalysisDate.map { now.timeIntervalSince($0) < thermalManager.analysisRefreshInterval } ?? false
-        let sameDay = lastAnalysisDate.map { Calendar.current.isDate($0, inSameDayAs: now) } ?? false
+        let sameDay = lastAnalysisDate.map { Date.cal.isDate($0, inSameDayAs: now) } ?? false
         let shouldReuseThermalSnapshot = thermalManager.shouldThrottle && lastAnalysisDate != nil
         if recentlyAnalyzed && sameDay && !syncResult.isFirstSync {
             if !syncResult.hasNewData || thermalManager.shouldThrottle {
@@ -1147,7 +1147,7 @@ final class DashboardViewModel {
             // use today's live anomaly count for the current day, 0 for historical.
             anomalyCounts[entry.date] = 0
         }
-        let today = Calendar.current.startOfDay(for: Date())
+        let today = Date.cal.startOfDay(for: Date())
         anomalyCounts[today] = analysisEngine.anomalies.count
 
         guard !RemoteConfigManager.shared.killMLPipeline else { return }
@@ -1292,8 +1292,8 @@ final class DashboardViewModel {
             return years
         }
         if let dob = try? healthKitManager.healthStore.dateOfBirthComponents(),
-           let birthDate = Calendar.current.date(from: dob),
-           let years = Calendar.current.dateComponents([.year], from: birthDate, to: Date()).year,
+           let birthDate = Date.cal.date(from: dob),
+           let years = Date.cal.dateComponents([.year], from: birthDate, to: Date()).year,
            years > 0 {
             return years
         }
@@ -1308,7 +1308,7 @@ final class DashboardViewModel {
 
         // Memoize: skip recomputation if timeSeries hasn't changed within the same calendar day.
         // Scorers produce identical output for identical input, so this saves ~300-500ms per refresh.
-        let today = Calendar.current.ordinality(of: .day, in: .year, for: Date()) ?? 0
+        let today = Date.cal.ordinality(of: .day, in: .year, for: Date()) ?? 0
         var inputHasher = Hasher()
         inputHasher.combine(timeSeries.count)
         for (metric, series) in timeSeries {
@@ -1375,7 +1375,7 @@ final class DashboardViewModel {
             guard let rec = sleepRec, analysisEngine.mlOrchestrator.circadianAnalyzer.isReady else {
                 return nil
             }
-            let calendar = Calendar.current
+            let calendar = Date.cal
             let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: Date()))
             guard let base = tomorrow else { return nil }
             return calendar.date(bySettingHour: rec.optimalWindowEnd, minute: 0, second: 0, of: base)
@@ -1561,7 +1561,7 @@ final class DashboardViewModel {
     private func scoreHistoryCached(days: Int) -> [(date: Date, score: Int)] {
         let all = scoreHistoryCached()
         guard days < 365 else { return all }
-        let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let cutoff = Date.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
         return all.filter { $0.date >= cutoff }
     }
 
@@ -1660,7 +1660,7 @@ final class DashboardViewModel {
         var highlights: [HistoricalHighlight] = []
         let focuses = insights.focusCategories
         let now = Date()
-        let calendar = Calendar.current
+        let calendar = Date.cal
         guard let thisWeekStart = calendar.date(byAdding: .day, value: -7, to: now),
               let lastWeekStart = calendar.date(byAdding: .day, value: -14, to: now) else {
             return []
@@ -1766,10 +1766,10 @@ final class DashboardViewModel {
     /// Cached per calendar day. stable within a day, refreshed on new day or after analysis re-run.
     @MainActor
     func smartDailyAction(liveVM: LiveViewModel) -> SmartAction {
-        let today = Calendar.current.startOfDay(for: Date())
+        let today = Date.cal.startOfDay(for: Date())
         if let cached = _cachedDailyAction,
            let cachedDate = _cachedDailyActionDate,
-           Calendar.current.isDate(cachedDate, inSameDayAs: today) {
+           Date.cal.isDate(cachedDate, inSameDayAs: today) {
             return cached
         }
 
@@ -1781,7 +1781,7 @@ final class DashboardViewModel {
 
         let recommendation = smartActionAdvisor.recommend(
             live: DashboardSmartActionAdvisor.LiveSnapshot(
-                hour: Calendar.current.component(.hour, from: Date()),
+                hour: Date.cal.component(.hour, from: Date()),
                 stressLevel: liveVM.recovery.stressLevel,
                 readinessScore: liveVM.recovery.readinessScore,
                 hasSleepData: liveVM.sleep.hasSleepData,

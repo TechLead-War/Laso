@@ -4,9 +4,9 @@ import SwiftUI
 struct HealthRiskDetailView: View {
     let risk: HealthRisk
     let onTapMetric: (HealthMetric) -> Void
-    /// Pass 11 AK (F45): freshness timestamp from the parent dashboard refresh.
+    /// Freshness timestamp from the parent dashboard refresh.
     var lastUpdated: Date? = nil
-    /// Pass 11 AK (F31): pull-to-refresh hook wired by the route destination.
+    /// Pull-to-refresh hook wired by the route destination.
     var onRefresh: (() async -> Void)? = nil
 
     var body: some View {

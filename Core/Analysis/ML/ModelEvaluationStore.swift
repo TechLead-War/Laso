@@ -428,7 +428,7 @@ enum ModelEvaluationEngine {
     ) -> AnomalyMetrics? {
         guard !flaggedDates.isEmpty else { return nil }
 
-        let calendar = Calendar.current
+        let calendar = Date.cal
         var selfResolved = 0
         var persistent = 0
         var severitySum = 0.0

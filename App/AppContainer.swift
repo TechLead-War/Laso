@@ -114,7 +114,7 @@ final class AppContainer {
 
         // Seed a completed user profile (female if requested so cycle flows appear)
         let gender: Gender = UITestMode.simulateFemaleProfile ? .female : .male
-        let dob = Calendar.current.date(byAdding: .year, value: -32, to: Date()) ?? Date()
+        let dob = Date.cal.date(byAdding: .year, value: -32, to: Date()) ?? Date()
         let profile = UserProfileStore.shared.makeProfile(
             name: UITestMode.overrideName ?? "Alex Taylor",
             email: "alex@example.com",
@@ -179,7 +179,7 @@ final class AppContainer {
                 ? [30, 95, 75, 35, 10]
                 : [45, 90, 60, 20, 5]
             let level = StrainLevel(strain: strain).rawValue
-            let date = Calendar.current.date(byAdding: .day, value: -dayOffset, to: Date()) ?? Date()
+            let date = Date.cal.date(byAdding: .day, value: -dayOffset, to: Date()) ?? Date()
             healthDataStore.saveDailyStrain(
                 date: date,
                 strain: strain,

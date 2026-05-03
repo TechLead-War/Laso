@@ -130,9 +130,9 @@ struct CycleDetailView: View {
     let phaseDuration: Int
     let cycleHistory: [CycleHistoryEntry]
     let nextPeriodDate: Date?
-    /// Pass 11 AK (F45): freshness timestamp from the parent dashboard refresh.
+    /// Freshness timestamp from the parent dashboard refresh.
     var lastUpdated: Date? = nil
-    /// Pass 11 AK (F31): pull-to-refresh hook wired by the route destination.
+    /// Pull-to-refresh hook wired by the route destination.
     var onRefresh: (() async -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
@@ -690,13 +690,13 @@ struct CycleArcSegment: Shape {
             dayInPhase: 3,
             phaseDuration: 8,
             cycleHistory: [
-                CycleHistoryEntry(startDate: Calendar.current.date(byAdding: .day, value: -28, to: .now)!, length: 28),
-                CycleHistoryEntry(startDate: Calendar.current.date(byAdding: .day, value: -56, to: .now)!, length: 27),
-                CycleHistoryEntry(startDate: Calendar.current.date(byAdding: .day, value: -83, to: .now)!, length: 29),
-                CycleHistoryEntry(startDate: Calendar.current.date(byAdding: .day, value: -112, to: .now)!, length: 28),
-                CycleHistoryEntry(startDate: Calendar.current.date(byAdding: .day, value: -140, to: .now)!, length: 30),
+                CycleHistoryEntry(startDate: Date.cal.date(byAdding: .day, value: -28, to: .now)!, length: 28),
+                CycleHistoryEntry(startDate: Date.cal.date(byAdding: .day, value: -56, to: .now)!, length: 27),
+                CycleHistoryEntry(startDate: Date.cal.date(byAdding: .day, value: -83, to: .now)!, length: 29),
+                CycleHistoryEntry(startDate: Date.cal.date(byAdding: .day, value: -112, to: .now)!, length: 28),
+                CycleHistoryEntry(startDate: Date.cal.date(byAdding: .day, value: -140, to: .now)!, length: 30),
             ],
-            nextPeriodDate: Calendar.current.date(byAdding: .day, value: 20, to: .now)
+            nextPeriodDate: Date.cal.date(byAdding: .day, value: 20, to: .now)
         )
     }
 }
@@ -711,7 +711,7 @@ struct CycleArcSegment: Shape {
             dayInPhase: 3,
             phaseDuration: 5,
             cycleHistory: [],
-            nextPeriodDate: Calendar.current.date(byAdding: .day, value: 25, to: .now)
+            nextPeriodDate: Date.cal.date(byAdding: .day, value: 25, to: .now)
         )
     }
 }

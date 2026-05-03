@@ -6,9 +6,6 @@ struct LiveActivitySection: View {
     var quickStatsTracker: SectionTracker
     @Binding var maxScrollDepth: Int
 
-    /// Pass 12 BE perf: cached current calendar. The empty-state branch
-    /// re-evaluates the hour predicate on every Live tab render.
-    private static let cal: Calendar = Calendar.current
 
     private var isActivityAllZeros: Bool {
         activity.todayActiveCalories == 0 && activity.todayExerciseMinutes == 0 && activity.todayStandHours == 0
@@ -20,7 +17,7 @@ struct LiveActivitySection: View {
                 .font(DS.Typography.headline)
                 .padding(.horizontal)
 
-            if isActivityAllZeros && Self.cal.component(.hour, from: Date()) < 10 {
+            if isActivityAllZeros && Date.cal.component(.hour, from: Date()) < 10 {
                 HStack(spacing: DS.itemSpacing) {
                     Image(systemName: "figure.stand")
                         .font(DS.Typography.title2)

@@ -30,7 +30,7 @@ struct ScoreTrajectoryAnalyzer {
     // MARK: - Trajectory (30-day score direction)
 
     private static func analyzeTrajectory(scoreHistory: [(date: Date, score: Int)], days: Int, categoryScores: [HealthScore] = []) -> Insight? {
-        let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let cutoff = Date.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
         let recent = scoreHistory.filter { $0.date >= cutoff }
         guard recent.count >= 5 else { return nil }
 

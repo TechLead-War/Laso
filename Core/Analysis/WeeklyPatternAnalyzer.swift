@@ -220,7 +220,7 @@ struct WeeklyPatternAnalyzer {
 
     private static func dayName(for weekday: Int) -> String {
         let index = weekday - 1
-        guard index >= 0, index < weekdaySymbols.count else { return "Unknown" }
+        guard index >= 0, index < weekdaySymbols.count else { return Copy.Analysis.WeeklyPatternStrings.unknownDay }
         return weekdaySymbols[index]  // weekday is 1-indexed
     }
 }
@@ -228,10 +228,6 @@ struct WeeklyPatternAnalyzer {
 /// Maps daily health data against menstrual cycle phases and generates phase-aware guidance.
 struct CyclePhaseAnalyzer {
 
-    /// Pass 11 AF: cached calendar — `assignPhases` walks day-by-day across a
-    /// cycle window and `daysBetween` runs once per cycle boundary. One static
-    /// avoids per-iteration `Calendar.current` allocation.
-    private static let cal: Calendar = Calendar.current
 
     private enum Phase: String, CaseIterable {
         case menstrual
@@ -245,27 +241,19 @@ struct CyclePhaseAnalyzer {
 
         var baselineExpectation: String {
             switch self {
-            case .menstrual:
-                return "Lower energy and recovery variability can be normal during menstruation."
-            case .follicular:
-                return "Energy and training readiness often improve through the follicular phase."
-            case .ovulatory:
-                return "Many people experience peak readiness around ovulation."
-            case .luteal:
-                return "Slightly lower energy in the luteal phase is common and usually expected."
+            case .menstrual:  return Copy.Analysis.CyclePhase.menstrualBaseline
+            case .follicular: return Copy.Analysis.CyclePhase.follicularBaseline
+            case .ovulatory:  return Copy.Analysis.CyclePhase.ovulatoryBaseline
+            case .luteal:     return Copy.Analysis.CyclePhase.lutealBaseline
             }
         }
 
         var recommendation: String {
             switch self {
-            case .menstrual:
-                return "Prioritize recovery-first days: lighter training, hydration, and consistent sleep."
-            case .follicular:
-                return "Use this phase for progressive overload and higher-focus tasks while readiness is trending up."
-            case .ovulatory:
-                return "Schedule your key workouts here, then protect sleep and hydration to stabilize recovery."
-            case .luteal:
-                return "Plan slightly lower-intensity sessions, lock in an earlier bedtime, and favor steady routines."
+            case .menstrual:  return Copy.Analysis.CyclePhase.menstrualRecommendation
+            case .follicular: return Copy.Analysis.CyclePhase.follicularRecommendation
+            case .ovulatory:  return Copy.Analysis.CyclePhase.ovulatoryRecommendation
+            case .luteal:     return Copy.Analysis.CyclePhase.lutealRecommendation
             }
         }
     }
@@ -307,9 +295,9 @@ struct CyclePhaseAnalyzer {
             .map { daysBetween($0, $1) }
             .filter { (18...45).contains($0) }
 
-        let estimatedCycleLength = clamp(median(cycleLengths) ?? 28, min: 21, max: 40)
+        let estimatedCycleLength = clamp(Self.upperMedian(cycleLengths) ?? 28, min: 21, max: 40)
         let estimatedMenstrualLength = clamp(
-            median(episodes.map(\.lengthDays).filter { (2...10).contains($0) }) ?? 5,
+            Self.upperMedian(episodes.map(\.lengthDays).filter { (2...10).contains($0) }) ?? 5,
             min: 3,
             max: 8
         )
@@ -462,7 +450,7 @@ struct CyclePhaseAnalyzer {
 
         while day <= endDate {
             guard let startIndex = cycleStarts.lastIndex(where: { $0 <= day }) else {
-                day = Self.cal.date(byAdding: .day, value: 1, to: day) ?? day
+                day = Date.cal.date(byAdding: .day, value: 1, to: day) ?? day
                 continue
             }
 
@@ -480,7 +468,7 @@ struct CyclePhaseAnalyzer {
                 menstrualLength: menstrualLength
             )
 
-            day = Self.cal.date(byAdding: .day, value: 1, to: day) ?? day
+            day = Date.cal.date(byAdding: .day, value: 1, to: day) ?? day
         }
 
         return phaseByDay
@@ -599,18 +587,15 @@ struct CyclePhaseAnalyzer {
         return ((current - baseline) / baseline) * 100
     }
 
-    private static func median(_ values: [Int]) -> Int? {
+    /// Upper-middle integer median (matches the legacy estimator's bias toward the higher of two middle values).
+    private static func upperMedian(_ values: [Int]) -> Int? {
         guard !values.isEmpty else { return nil }
         let sorted = values.sorted()
         return sorted[sorted.count / 2]
     }
 
-    private static func clamp(_ value: Int, min: Int, max: Int) -> Int {
-        Swift.max(min, Swift.min(max, value))
-    }
-
     private static func daysBetween(_ start: Date, _ end: Date) -> Int {
-        Self.cal.dateComponents([.day], from: start.startOfDay, to: end.startOfDay).day ?? 0
+        Date.cal.dateComponents([.day], from: start.startOfDay, to: end.startOfDay).day ?? 0
     }
 }
 

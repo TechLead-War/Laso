@@ -136,7 +136,7 @@ struct OnboardingMirrorMomentStep: View {
                     .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
         } else {
-            // Pass 11 AK: pre-progress fallback gets a label so the spinner has context.
+            // Pre-progress fallback gets a label so the spinner has context.
             VStack(spacing: DS.space2) {
                 ProgressView()
                     .progressViewStyle(.circular)

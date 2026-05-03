@@ -316,7 +316,6 @@ struct CausalChainEngine {
 
         guard deviationsAligned else { return nil }
 
-        // Build the explanation for this link
         let explanation = buildLinkExplanation(
             causeMetric: causeMetric,
             causeDeviation: causeDevPct,
@@ -358,7 +357,7 @@ struct CausalChainEngine {
         // For lag=0: last 3 days (matches AnomalyDetector)
         // For lag=N: N+1 to N+3 days ago
         let samples = series.sortedSamples
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let now = Date()
 
         let windowStart = calendar.date(byAdding: .day, value: -(lagDays + 3), to: now) ?? now
@@ -476,29 +475,33 @@ struct CausalChainEngine {
         let causeName = link.causeMetric.displayName.lowercased()
         let effectDev = formatDeviation(link.effectDeviation)
         let causeDev = formatDeviation(link.causeDeviation)
-        let effectDirection = link.effectDeviation > 0 ? "increased" : "decreased"
-        let causeDirection = link.causeDeviation > 0 ? "increased" : "decreased"
+        let effectDirection = link.effectDeviation > 0 ? Copy.Causation.directionIncreased : Copy.Causation.directionDecreased
+        let causeDecreased = link.causeDeviation <= 0
         let absR = String(format: "%.2f", abs(link.correlation))
-        let timeFrame = link.lagDays == 0 ? "this week" : (link.lagDays == 1 ? "over the past few days" : "over the past \(link.lagDays + 2) days")
+        let timeFrame: String = {
+            if link.lagDays == 0 { return Copy.Causation.timeThisWeek }
+            if link.lagDays == 1 { return Copy.Causation.timePastFewDays }
+            return Copy.Causation.timePastDays(link.lagDays + 2)
+        }()
 
-        var narrative = "Your \(effectName) \(effectDirection) \(effectDev) \(timeFrame). "
-        narrative += "Based on your personal data, this appears most likely connected to your \(causeName) "
-        narrative += "\(causeDirection == "decreased" ? "dropping" : "rising") \(causeDev)"
+        var narrative = Copy.Causation.chainEffectOpening(effect: effectName, direction: effectDirection, dev: effectDev, timeFrame: timeFrame)
+        narrative += Copy.Causation.chainConnectedTo(cause: causeName)
+        let causeChangeWord = causeDecreased ? Copy.Causation.directionDropping : Copy.Causation.directionRising
+        narrative += Copy.Causation.chainCauseChange(change: causeChangeWord, dev: causeDev)
 
-        // Add baseline context if available
         if let causeBaseline = baselines[link.causeMetric] {
             let baselineFormatted = link.causeMetric.formatValue(causeBaseline.mean)
-            narrative += " (from your \(baselineFormatted) \(link.causeMetric.unit) baseline)"
+            narrative += Copy.Causation.chainBaselineParenthetical(baseline: baselineFormatted, unit: link.causeMetric.unit)
         }
 
         narrative += ". "
 
-        // Add personal pattern context
-        let strengthWord = abs(link.correlation) >= 0.5 ? "strong" : "moderate"
-        narrative += "Your data shows a \(strengthWord) personal pattern between these metrics (r=\(absR))"
+        let strengthWord = abs(link.correlation) >= 0.5 ? Copy.Causation.strengthStrong : Copy.Causation.strengthModerate
+        narrative += Copy.Causation.chainPersonalPattern(strength: strengthWord, r: absR)
 
         if link.lagDays > 0 {
-            narrative += " with effects typically showing \(link.lagDays == 1 ? "the next day" : "after \(link.lagDays) days")"
+            let lagPhrase = link.lagDays == 1 ? Copy.Causation.chainNextDay : Copy.Causation.chainAfterDays(link.lagDays)
+            narrative += Copy.Causation.chainEffectsAppearing(lagPhrase)
         }
 
         narrative += "."
@@ -525,37 +528,42 @@ struct CausalChainEngine {
         let intermediateDev = formatDeviation(rootLink.effectDeviation)
         let rootDev = formatDeviation(rootLink.causeDeviation)
 
-        let affectedDirection = finalLink.effectDeviation > 0 ? "increased" : "dropped"
-        let intermediateDirection = rootLink.effectDeviation > 0 ? "increased" : "decreased"
-        let rootDirection = rootLink.causeDeviation > 0 ? "increased" : "decreased"
+        let affectedDirection = finalLink.effectDeviation > 0 ? Copy.Causation.directionIncreased : Copy.Causation.directionDropped
+        let intermediateDirection = rootLink.effectDeviation > 0 ? Copy.Causation.directionIncreased : Copy.Causation.directionDecreased
+        let rootDirection = rootLink.causeDeviation > 0 ? Copy.Causation.directionIncreased : Copy.Causation.directionDecreased
 
         let rootR = String(format: "%.2f", abs(rootLink.correlation))
 
-        var narrative = "Your \(affectedName) \(affectedDirection) \(affectedDev) this week. "
-        narrative += "This appears connected to your \(intermediateName). "
+        var narrative = Copy.Causation.twoLinkOpening(affected: affectedName, direction: affectedDirection, dev: affectedDev)
+        narrative += Copy.Causation.twoLinkConnected(intermediate: intermediateName)
 
-        if intermediateDirection == "decreased" {
-            narrative += "your \(intermediateName) \(intermediateDirection) \(intermediateDev) over the same period. "
+        if intermediateDirection == Copy.Causation.directionDecreased {
+            narrative += Copy.Causation.twoLinkIntermediateOver(intermediate: intermediateName, direction: intermediateDirection, dev: intermediateDev)
         } else {
-            narrative += "your \(intermediateName) \(intermediateDirection) \(intermediateDev) recently. "
+            narrative += Copy.Causation.twoLinkIntermediateRecent(intermediate: intermediateName, direction: intermediateDirection, dev: intermediateDev)
         }
 
-        narrative += "Looking deeper, your \(rootCauseName) \(rootDirection) \(rootDev)"
+        narrative += Copy.Causation.twoLinkRootDeeper(root: rootCauseName, direction: rootDirection, dev: rootDev)
 
-        // Add time context for root cause
         let rootTimeWindow = rootLink.lagDays + finalLink.lagDays
         if rootTimeWindow > 0 {
-            narrative += " in the past \(rootTimeWindow + 3) days"
+            narrative += Copy.Causation.timeInPastDays(rootTimeWindow + 3)
         } else {
-            narrative += " over the past week"
+            narrative += " " + Copy.Causation.timePastWeek
         }
 
-        narrative += ", which correlates with \(intermediateDirection == "decreased" ? "reduced" : "elevated") \(intermediateName) for you (r=\(rootR)). "
+        let intermChange = intermediateDirection == Copy.Causation.directionDecreased
+            ? Copy.Causation.directionReduced
+            : Copy.Causation.directionElevated
+        narrative += Copy.Causation.twoLinkCorrelation(intermediateChange: intermChange, intermediate: intermediateName, r: rootR)
 
-        // The punchline: the likely chain
-        narrative += "The likely chain: \(rootDirection) \(rootCauseName) -> "
-        narrative += "\(intermediateDirection == "decreased" ? "less" : "more") \(intermediateName) -> "
-        narrative += "\(affectedDirection == "dropped" ? "lower" : "higher") \(affectedName)."
+        let intermDirShort = intermediateDirection == Copy.Causation.directionDecreased
+            ? Copy.Causation.directionLess
+            : Copy.Causation.directionMore
+        let affDirShort = affectedDirection == Copy.Causation.directionDropped
+            ? Copy.Causation.directionLower
+            : Copy.Causation.directionHigher
+        narrative += Copy.Causation.twoLinkChainPunchline(rootDir: rootDirection, root: rootCauseName, intermDir: intermDirShort, intermediate: intermediateName, affDir: affDirShort, affected: affectedName)
 
         return narrative
     }
@@ -574,34 +582,31 @@ struct CausalChainEngine {
 
         let affectedName = affectedMetric.displayName.lowercased()
         let affectedDev = formatDeviation(finalLink.effectDeviation)
-        let affectedDirection = finalLink.effectDeviation > 0 ? "increased" : "dropped"
+        let affectedDirection = finalLink.effectDeviation > 0 ? Copy.Causation.directionIncreased : Copy.Causation.directionDropped
 
-        var narrative = "Your \(affectedName) \(affectedDirection) \(affectedDev) this week. "
-        narrative += "Your data suggests a cascade of connected changes. "
+        var narrative = Copy.Causation.twoLinkOpening(affected: affectedName, direction: affectedDirection, dev: affectedDev)
+        narrative += Copy.Causation.threeLinkCascade
 
-        // Root cause
         let rootName = rootLink.causeMetric.displayName.lowercased()
         let rootDev = formatDeviation(rootLink.causeDeviation)
-        let rootDirection = rootLink.causeDeviation > 0 ? "rose" : "dropped"
-        narrative += "It started with your \(rootName), which \(rootDirection) \(rootDev). "
+        let rootDirection = rootLink.causeDeviation > 0 ? Copy.Causation.directionRose : Copy.Causation.directionDropped
+        narrative += Copy.Causation.threeLinkRootStarted(root: rootName, direction: rootDirection, dev: rootDev)
 
-        // Middle link
         let midEffectName = midLink.effectMetric.displayName.lowercased()
         let midDev = formatDeviation(midLink.effectDeviation)
-        let midDirection = midLink.effectDeviation > 0 ? "increased" : "decreased"
-        narrative += "That appears to have \(midDirection == "decreased" ? "reduced" : "elevated") your \(midEffectName) (\(midDirection) \(midDev)). "
+        let midDirection = midLink.effectDeviation > 0 ? Copy.Causation.directionIncreased : Copy.Causation.directionDecreased
+        let midVerb = midDirection == Copy.Causation.directionDecreased ? Copy.Causation.directionReduced : Copy.Causation.directionElevated
+        narrative += Copy.Causation.threeLinkMidEffect(verb: midVerb, midEffect: midEffectName, direction: midDirection, dev: midDev)
 
-        // Final link
         let finalCauseName = finalLink.causeMetric.displayName.lowercased()
-        let finalDirection = finalLink.effectDeviation > 0 ? "pushed up" : "brought down"
-        narrative += "In turn, the change in \(finalCauseName) likely \(finalDirection) your \(affectedName). "
+        let finalDirection = finalLink.effectDeviation > 0 ? Copy.Causation.directionPushedUp : Copy.Causation.directionBroughtDown
+        narrative += Copy.Causation.threeLinkFinalEffect(finalCause: finalCauseName, direction: finalDirection, affected: affectedName)
 
-        // Summary chain
         let chainSummary = links.map { link in
-            let dir = link.causeDeviation > 0 ? "higher" : "lower"
-            return "\(dir) \(link.causeMetric.displayName.lowercased())"
+            let dir = link.causeDeviation > 0 ? Copy.Causation.directionHigher : Copy.Causation.directionLower
+            return Copy.Causation.chainCauseDirNoun(direction: dir, cause: link.causeMetric.displayName.lowercased())
         }
-        narrative += "Likely chain: " + chainSummary.joined(separator: " -> ") + " -> \(affectedDirection) \(affectedName)."
+        narrative += Copy.Causation.threeLinkChainSummary(chainSummary.joined(separator: " -> "), affectedDirection, affectedName)
 
         return narrative
     }

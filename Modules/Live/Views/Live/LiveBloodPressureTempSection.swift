@@ -84,7 +84,7 @@ struct LiveBloodPressureTempSection: View {
                                     .foregroundStyle(AppColour.textSecondary)
                             }
 
-                            // Pass 8 Y: body temperature is stored canonically
+                            // Body temperature is stored canonically
                             // in °C by HealthKit but US/UK users expect °F.
                             // Convert via Measurement<UnitTemperature> so the
                             // value + unit label respect Locale.current.
@@ -116,7 +116,7 @@ struct LiveBloodPressureTempSection: View {
         }
     }
 
-    // Pass 8 Y: convert the canonical Celsius value into the user's
+    // Convert the canonical Celsius value into the user's
     // measurement system. Using `Measurement<UnitTemperature>` keeps this
     // self-contained and avoids depending on shared helpers that other
     // agents may revert. `Locale.current.measurementSystem == .metric`

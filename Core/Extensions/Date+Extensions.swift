@@ -1,12 +1,12 @@
 import Foundation
 
 extension Date {
-    /// Cached current calendar to avoid the per-call `Calendar.current` allocation.
-    /// Performance Pass 2 flagged 263 `Calendar.current` allocations across the app;
-    /// this single static is reused by every helper below.
-    private static let cal: Calendar = Calendar.current
+    /// Process-wide cached calendar. `Calendar.current` allocates a new copy on
+    /// every access; this single static is reused everywhere `Calendar` math is
+    /// needed so we never re-allocate on hot paths.
+    static let cal: Calendar = Calendar.current
 
-    private enum FormatterCache {
+    enum FormatterCache {
         static func formatter(key: String, configure: (DateFormatter) -> Void) -> DateFormatter {
             let dictionary = Thread.current.threadDictionary
             if let cached = dictionary[key] as? DateFormatter {
@@ -18,6 +18,26 @@ extension Date {
             dictionary[key] = formatter
             return formatter
         }
+    }
+
+    /// Returns a thread-cached `DateFormatter` configured with the given format string.
+    /// Reuses one formatter per `(thread, format)` pair so callers never allocate per use.
+    static func formatter(format: String) -> DateFormatter {
+        FormatterCache.formatter(key: "Laso.Date.format.\(format)") { formatter in
+            formatter.dateFormat = format
+        }
+    }
+
+    /// Returns the shared ISO-8601 formatter (thread-cached).
+    static var iso8601Formatter: ISO8601DateFormatter {
+        let key = "Laso.Date.iso8601"
+        let dictionary = Thread.current.threadDictionary
+        if let cached = dictionary[key] as? ISO8601DateFormatter {
+            return cached
+        }
+        let formatter = ISO8601DateFormatter()
+        dictionary[key] = formatter
+        return formatter
     }
 
     private static var shortDateFormatter: DateFormatter {

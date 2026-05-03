@@ -3,9 +3,9 @@ import SwiftUI
 /// Lists the open source libraries Laso depends on, with the license they
 /// ship under and a link to their public source repository.
 ///
-/// Required by the Apache 2.0 and MIT licenses many of these libraries use
-/// (Compliance Pass 2, item N36). The list mirrors `Package.resolved` —
-/// keep both in sync when adding or removing a Swift Package dependency.
+/// Required by the Apache 2.0 and MIT licenses many of these libraries use.
+/// The list mirrors `Package.resolved` — keep both in sync when adding or
+/// removing a Swift Package dependency.
 struct AcknowledgementsView: View {
 
     struct Library: Identifiable {
@@ -119,7 +119,7 @@ struct AcknowledgementsView: View {
                     }
                     .padding(.vertical, 4)
                     .accessibilityElement(children: .combine)
-                    .accessibilityLabel("\(library.name), \(library.license)")
+                    .accessibilityLabel(Copy.Settings.libraryLicense(name: library.name, license: library.license))
                     .accessibilityHint(Copy.Settings.viewSource)
                 }
             } footer: {

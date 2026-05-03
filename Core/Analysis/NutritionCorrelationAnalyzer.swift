@@ -74,7 +74,7 @@ struct NutritionCorrelationAnalyzer {
     /// Analyze curated nutrition-outcome pairs using available time series data.
     static func analyze(timeSeries: [HealthMetric: MetricTimeSeries]) -> [NutritionCorrelation] {
         var results: [NutritionCorrelation] = []
-        let calendar = Calendar.current
+        let calendar = Date.cal
 
         for pair in curatedPairs {
             guard let nutritionSeries = timeSeries[pair.nutrition],
@@ -164,7 +164,7 @@ struct NutritionCorrelationAnalyzer {
     // MARK: - Helpers
 
     private static func buildDateLookup(samples: [MetricSample]) -> [Date: Double] {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         var lookup: [Date: Double] = [:]
         for sample in samples {
             lookup[calendar.startOfDay(for: sample.date)] = sample.value

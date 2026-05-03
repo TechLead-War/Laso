@@ -127,7 +127,7 @@ struct TrendAnalyzer {
         }
 
         let now = Date()
-        let calendar = Calendar.current
+        let calendar = Date.cal
 
         // Pre-compute all day-boundary cutoffs once
         let periodDays = days ?? 30

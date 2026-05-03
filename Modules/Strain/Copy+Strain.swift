@@ -29,6 +29,41 @@ extension Copy {
         static let optimalDescription = "You are training in your best range for your current recovery. Nice work."
         static let overreachingDescription = "You are pushing harder than your body can recover from. Rest and go lighter."
 
+        // MARK: - Coach Zone Display Names
+
+        static let zoneRestoring = "Recovery Focus"
+        static let zoneMaintaining = "Maintain Fitness"
+        static let zoneBuilding = "Progressive Overload"
+        static let zoneOverreaching = "Functional Overreach"
+
+        // MARK: - Strain Balance Display Names (Coach)
+
+        static let balanceUnderTraining = "Under-Training"
+        static let balanceOptimal = "Optimal Load"
+        static let balanceOverreaching = "Over-Reaching"
+
+        // MARK: - Coach Guidance
+
+        static let coachLimitedData = "Limited data \u{2014} this target is estimated. Keep logging for more accurate recommendations."
+        static func coachRedRecovery(target: String) -> String {
+            "Your body needs recovery. Focus on gentle movement like walking or stretching. Aim to keep strain under \(target)."
+        }
+        static func coachConsecutiveHigh(days: Int) -> String {
+            "You've pushed hard \(days) days in a row. Take it easy today to avoid overtraining."
+        }
+        static let coachActiveRecovery = "Active recovery day. Light activity to promote blood flow without adding fatigue."
+        static func coachMaintaining(remaining: String, target: String) -> String {
+            "Moderate training day. You have \(remaining) strain remaining to hit your target of \(target)."
+        }
+        static let coachMaintainHit = "You've reached your maintenance target. Additional strain is fine but keep intensity controlled."
+        static func coachBuilding(target: String) -> String {
+            "Your body is ready for a challenge. Push toward a strain of \(target) with a hard workout."
+        }
+        static func coachBuildingHit(upper: String) -> String {
+            "Great work \u{2014} you've hit your building target. You can keep going up to \(upper)."
+        }
+        static let coachOverreaching = "Functional overreach zone. Push to your limit today, then plan recovery tomorrow."
+
         // MARK: - Coach
 
         static let strainCoach = "Strain Coach"
@@ -74,7 +109,7 @@ extension Copy {
 
         static let strainDisclaimer = "Strain is based on your heart rate during activity. It is not a medical measurement. Talk to a qualified professional before making big changes to your exercise routine."
 
-        // MARK: - Today's Workout (Pass 8 Q)
+        // MARK: - Today's Workout
 
         static let todaysWorkout = "Today's Workout"
         static let tapToViewWorkout = "Tap to view warm-up, blocks, and cooldown"
@@ -98,8 +133,19 @@ extension Copy {
         }
         static func minutesShort(_ minutes: Int) -> String { "\(minutes) min" }
 
-        // MARK: - Strain Detail (Pass 8 Q)
+        // MARK: - Strain Detail
 
         static func zoneShort(_ zone: Int) -> String { "Z\(zone)" }
+        static let noWorkoutData = "No workout data yet"
+        static let logWorkoutHint = "Log a workout in Apple Health or wear your watch during exercise. Your strain score will appear here once activity is recorded."
+
+        // MARK: - Strain Levels
+
+        static let strainLevelLow = "Low"
+        static let strainLevelLight = "Light"
+        static let strainLevelModerate = "Moderate"
+        static let strainLevelHigh = "High"
+        static let strainLevelPeak = "Peak"
+        static let strainLevelAllOut = "All Out"
     }
 }

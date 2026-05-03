@@ -11,10 +11,10 @@ enum BrainHealthState: String, CaseIterable, Codable {
 
     var displayName: String {
         switch self {
-        case .sharp: return "Sharp"
-        case .focused: return "Focused"
-        case .baseline: return "Baseline"
-        case .foggy: return "Low energy"
+        case .sharp: return Copy.BrainHealth.stateSharp
+        case .focused: return Copy.BrainHealth.stateFocused
+        case .baseline: return Copy.BrainHealth.stateBaseline
+        case .foggy: return Copy.BrainHealth.stateLowEnergy
         }
     }
 
@@ -249,22 +249,22 @@ final class BrainHealthScorer {
 
     /// Trend direction of brain health over the recent history
     var brainHealthTrend: String {
-        guard weeklyHistory.count >= Self.weeklyAverageWindowDays else { return "stable" }
+        guard weeklyHistory.count >= Self.weeklyAverageWindowDays else { return Copy.BrainHealth.trendStable }
 
         let count = weeklyHistory.count
         let halfPoint = count / 2
         let firstHalf = weeklyHistory.prefix(halfPoint)
         let secondHalf = weeklyHistory.suffix(halfPoint)
 
-        guard !firstHalf.isEmpty, !secondHalf.isEmpty else { return "stable" }
+        guard !firstHalf.isEmpty, !secondHalf.isEmpty else { return Copy.BrainHealth.trendStable }
 
         let firstAvg = Double(firstHalf.map(\.score).reduce(0, +)) / Double(firstHalf.count)
         let secondAvg = Double(secondHalf.map(\.score).reduce(0, +)) / Double(secondHalf.count)
 
         let delta = secondAvg - firstAvg
-        if delta > Self.trendImprovingDelta { return "improving" }
-        if delta < Self.trendDecliningDelta { return "declining" }
-        return "stable"
+        if delta > Self.trendImprovingDelta { return Copy.BrainHealth.trendImproving }
+        if delta < Self.trendDecliningDelta { return Copy.BrainHealth.trendDeclining }
+        return Copy.BrainHealth.trendStable
     }
 
     // MARK: - Compute
@@ -705,10 +705,10 @@ final class BrainHealthScorer {
         let hrvPct = (currentHRV - hrvBaseline.mean) / max(hrvBaseline.mean, 1) * 100
         if abs(hrvPct) > Self.factorPercentThreshold {
             let isPositive = hrvPct > 0
-            let direction = isPositive ? "above" : "below"
+            let direction = isPositive ? Copy.BrainHealth.directionAbove : Copy.BrainHealth.directionBelow
             factors.append((
-                label: "HRV",
-                impact: "\(Int(abs(hrvPct)))% \(direction) baseline",
+                label: Copy.BrainHealth.factorHRV,
+                impact: Copy.BrainHealth.percentAboveBelowBaseline(Int(abs(hrvPct)), direction: direction),
                 isPositive: isPositive,
                 magnitude: abs(hrvPct)
             ))
@@ -719,10 +719,10 @@ final class BrainHealthScorer {
             let remPct = (rem - remBase.mean) / max(remBase.mean, 1) * 100
             if abs(remPct) > Self.factorPercentThreshold {
                 let isPositive = remPct > 0
-                let direction = isPositive ? "above" : "below"
+                let direction = isPositive ? Copy.BrainHealth.directionAbove : Copy.BrainHealth.directionBelow
                 factors.append((
-                    label: "REM Sleep",
-                    impact: "\(direction) baseline",
+                    label: Copy.BrainHealth.factorREM,
+                    impact: Copy.BrainHealth.directionBaseline(direction),
                     isPositive: isPositive,
                     magnitude: abs(remPct)
                 ))
@@ -734,10 +734,10 @@ final class BrainHealthScorer {
             let deepPct = (deep - deepBase.mean) / max(deepBase.mean, 1) * 100
             if abs(deepPct) > Self.factorPercentThreshold {
                 let isPositive = deepPct > 0
-                let direction = isPositive ? "above" : "below"
+                let direction = isPositive ? Copy.BrainHealth.directionAbove : Copy.BrainHealth.directionBelow
                 factors.append((
-                    label: "Deep Sleep",
-                    impact: "\(direction) baseline",
+                    label: Copy.BrainHealth.factorDeepSleep,
+                    impact: Copy.BrainHealth.directionBaseline(direction),
                     isPositive: isPositive,
                     magnitude: abs(deepPct)
                 ))
@@ -748,12 +748,12 @@ final class BrainHealthScorer {
         if let rhr = currentRHR, let rhrBase = rhrBaseline {
             let rhrPct = (rhr - rhrBase.mean) / max(rhrBase.mean, 1) * 100
             if abs(rhrPct) > Self.rhrFactorPercentThreshold {
-                // For RHR, lower is better (inverted)
+                // Lower is better for RHR — flip the polarity.
                 let isPositive = rhrPct < 0
-                let direction = rhrPct < 0 ? "below" : "above"
+                let direction = rhrPct < 0 ? Copy.BrainHealth.directionBelow : Copy.BrainHealth.directionAbove
                 factors.append((
-                    label: "Resting HR",
-                    impact: "\(direction) baseline",
+                    label: Copy.BrainHealth.factorRestingHR,
+                    impact: Copy.BrainHealth.directionBaseline(direction),
                     isPositive: isPositive,
                     magnitude: abs(rhrPct)
                 ))
@@ -763,15 +763,15 @@ final class BrainHealthScorer {
         // Circadian alignment factor
         if circadianAlignment > Self.circadianStrongScore {
             factors.append((
-                label: "Sleep Schedule",
-                impact: "consistent timing",
+                label: Copy.BrainHealth.factorSleepSchedule,
+                impact: Copy.BrainHealth.timingConsistent,
                 isPositive: true,
                 magnitude: circadianAlignment - Self.circadianFactorMidpoint
             ))
         } else if circadianAlignment < Self.circadianWeakScore {
             factors.append((
-                label: "Sleep Schedule",
-                impact: "irregular timing",
+                label: Copy.BrainHealth.factorSleepSchedule,
+                impact: Copy.BrainHealth.timingIrregular,
                 isPositive: false,
                 magnitude: Self.circadianFactorMidpoint - circadianAlignment
             ))
@@ -851,7 +851,7 @@ final class BrainHealthScorer {
         allSeries: [HealthMetric: MetricTimeSeries],
         hrvSeries: MetricTimeSeries
     ) {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let today = calendar.startOfDay(for: Date())
         let historyDays = Self.historyWindowDays
         let lookbackDays = historyDays + Self.baselineWindowDays
@@ -918,7 +918,7 @@ final class BrainHealthScorer {
 
     /// Build a lookup of date -> average value for a set of samples
     private func buildDailyLookup(_ samples: [MetricSample]) -> [Date: Double] {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         var grouped: [Date: (sum: Double, count: Int)] = [:]
 
         for sample in samples {

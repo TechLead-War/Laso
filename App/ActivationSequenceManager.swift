@@ -3,10 +3,9 @@ import Foundation
 // MARK: - Activation Sequence Manager
 
 /// Manages the first-8-days progressive activation experience.
-/// Based on retention research (npj Digital Medicine 2023): 67.6% retention
-/// when users see personalized feedback loops, versus 6% industry average.
-/// RevenueCat 2025: health apps demonstrating personal value within trial
-/// convert at 68%+ vs 40% median.
+/// The day-by-day milestone unlocks are an engagement strategy: each day
+/// teases the next layer of insight so users return to discover what gets
+/// unlocked, not what was already there.
 ///
 /// Progression:
 /// - Day 1: First baseline established, basic stats visible
@@ -240,14 +239,14 @@ final class ActivationSequenceManager {
     }
 
     private static func daysSinceInstall(_ installDate: Date) -> Int {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         return max(0, calendar.dateComponents([.day], from: calendar.startOfDay(for: installDate), to: calendar.startOfDay(for: Date())).day ?? 0)
     }
 
     private static func installDateFromDefaults() -> Date? {
         // Try the unified install date key first
         if let dateStr = UserDefaults.standard.string(forKey: "laso.install_date"),
-           let date = ISO8601DateFormatter().date(from: dateStr) {
+           let date = Date.iso8601Formatter.date(from: dateStr) {
             return date
         }
         if let timeInterval = UserDefaults.standard.object(forKey: "laso.install_date") as? Double, timeInterval > 0 {

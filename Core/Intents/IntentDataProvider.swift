@@ -45,7 +45,7 @@ enum IntentDataProvider {
         guard HKHealthStore.isHealthDataAvailable() else { return nil }
         let healthStore = HKHealthStore()
 
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let now = Date()
         // Look back from 3 PM yesterday to 3 PM today to capture a full sleep window
         guard let windowStart = calendar.date(bySettingHour: 15, minute: 0, second: 0, of: calendar.date(byAdding: .day, value: -1, to: now)!),
@@ -115,7 +115,7 @@ enum IntentDataProvider {
         let healthStore = HKHealthStore()
 
         let now = Date()
-        let oneDayAgo = Calendar.current.date(byAdding: .day, value: -1, to: now)!
+        let oneDayAgo = Date.cal.date(byAdding: .day, value: -1, to: now)!
 
         async let rhrResult = fetchLatestQuantity(
             store: healthStore,

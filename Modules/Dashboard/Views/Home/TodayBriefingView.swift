@@ -240,7 +240,7 @@ private struct BriefingDetailSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button(Copy.Buttons.done) { dismiss() }
                 }
             }
         }

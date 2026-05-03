@@ -2,7 +2,7 @@ import SwiftUI
 
 struct VitalityDetailView: View {
     let scorer: VitalityScorer
-    /// Pass 8 V (F45): freshness timestamp from the parent dashboard refresh.
+    /// Freshness timestamp from the parent dashboard refresh.
     /// Drives a small "Updated …" caption at the top of the screen.
     var lastUpdated: Date? = nil
 

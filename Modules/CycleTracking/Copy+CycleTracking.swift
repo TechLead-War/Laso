@@ -88,5 +88,50 @@ extension Copy {
         static func dayOfCycle(_ day: Int) -> String { "Day \(day)" }
         static func ofTotal(_ total: Int) -> String { "of \(total)" }
         static func dayOfPhase(_ day: Int, duration: Int) -> String { "Day \(day) of \(duration)" }
+
+        // MARK: - Tracker Phase Display Names
+
+        static let trackerMenstrualDisplay = "Menstrual"
+        static let trackerFollicularDisplay = "Follicular"
+        static let trackerOvulationDisplay = "Ovulation"
+        static let trackerLutealDisplay = "Luteal"
+
+        // MARK: - Tracker Phase Descriptions
+
+        static let trackerMenstrualDescription = "Energy and recovery capacity are typically at their lowest. The body is shedding the uterine lining, and iron levels may dip. Fatigue and mild discomfort are common."
+        static let trackerFollicularDescription = "Rising estrogen boosts energy, mood, and recovery speed. This phase favors learning new skills and building strength as the body ramps toward peak performance."
+        static let trackerOvulationDescription = "Peak estrogen and a surge in luteinizing hormone drive the highest energy and performance potential of the cycle. Reaction time and power output tend to peak."
+        static let trackerLutealDescription = "Progesterone rises while estrogen declines. Core temperature increases slightly, recovery slows, and energy gradually tapers toward the end of the phase."
+
+        // MARK: - Tracker Exercise Recommendations
+
+        static let trackerMenstrualExercise = "Favor light movement. walking, gentle yoga, or stretching. Avoid heavy lifts or high-impact sessions if energy is low."
+        static let trackerFollicularExercise = "Great time to push intensity. Try heavy strength training, HIIT, or learning new movement patterns. Recovery is fast."
+        static let trackerOvulationExercise = "Peak performance window. Go for PRs, high-intensity intervals, or competitive efforts. Stay mindful of joint laxity from elevated relaxin."
+        static let trackerLutealExercise = "Moderate steady-state cardio and maintenance-level strength work. Reduce volume in the late luteal phase as fatigue builds."
+
+        // MARK: - Tracker Sleep Impact
+
+        static let trackerMenstrualSleep = "Sleep may be disrupted by cramps or discomfort in the first days. Prioritize earlier bedtimes and a cool sleep environment."
+        static let trackerFollicularSleep = "Sleep quality typically improves as estrogen rises. This is often the easiest phase for consistent, restorative sleep."
+        static let trackerOvulationSleep = "Sleep remains generally good, though some experience lighter sleep around the LH surge. Maintain consistent sleep timing."
+        static let trackerLutealSleep = "Rising progesterone raises core temperature, which can reduce deep sleep. Expect more fragmented sleep in the late luteal phase."
+
+        // MARK: - Tracker Nutrition Tips
+
+        static let trackerMenstrualNutrition = "Focus on iron-rich foods (red meat, spinach, lentils) to offset menstrual losses. Anti-inflammatory foods like fatty fish and ginger can ease discomfort."
+        static let trackerFollicularNutrition = "Support rising estrogen with cruciferous vegetables and lean protein. Carbohydrate tolerance is higher. A good window for complex carbs around workouts."
+        static let trackerOvulationNutrition = "Maintain balanced macros with emphasis on antioxidants and fiber. Hydration is important as energy expenditure peaks."
+        static let trackerLutealNutrition = "Cravings for carbs and fats are common due to increased caloric needs (~100-300 kcal/day more). Choose whole grains, magnesium-rich foods, and healthy fats."
+
+        // MARK: - Tracker Recovery Impact
+
+        static let trackerNoCycleData = "No cycle data available to assess recovery impact."
+        static let trackerMenstrualRecoveryImpact = "Recovery is slower during menstruation. Allow extra rest between intense sessions and monitor HRV for readiness."
+        static let trackerFollicularRecoveryImpact = "Recovery is at its fastest. The body adapts well to training stimulus. shorter rest periods are feasible."
+        static let trackerOvulationRecoveryImpact = "Recovery remains strong but joint laxity may increase injury risk. Warm up thoroughly and prioritize form."
+        static let trackerLutealRecoveryImpact = "Recovery slows as progesterone rises and core temperature climbs. Expect longer HRV recovery and higher resting heart rate."
+
+        static let trackerNoCycleExerciseFallback = "Track at least one menstrual period to receive phase-specific training advice."
     }
 }

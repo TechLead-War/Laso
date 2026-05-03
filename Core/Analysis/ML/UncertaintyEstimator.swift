@@ -159,7 +159,7 @@ enum UncertaintyEstimator {
         let metricCoverage = requiredMetrics.isEmpty ? 0 : Double(presentCount) / Double(requiredMetrics.count)
 
         // Recency: exponential decay from most recent data point
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let now = Date()
         let latestDate = timeSeries.values
             .compactMap { $0.sortedSamples.last?.date }

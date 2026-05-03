@@ -3,6 +3,15 @@ import Foundation
 extension Copy {
     enum Onboarding {
 
+        // MARK: - Snapshot Cards
+
+        static let restingHRLabel = "Resting HR"
+        static let last7NightsLabel = "Last 7 nights"
+        static let noNightsRecorded = "No nights recorded yet"
+        static let hrvWeeklyAverage = "HRV · weekly average"
+        static let notEnoughHRVSamples = "Not enough HRV samples across the week"
+        static func dayLabel(_ day: Int) -> String { "DAY \(day)" }
+
         // MARK: - Pulse (Screen 1)
 
         static let pulseHeadline = "See what your body has been telling you."

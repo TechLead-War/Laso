@@ -586,7 +586,7 @@ struct InsightGenerator {
         let actionMetric = lever?.metric ?? metric
         let actionDeviation = lever.map { abs($0.effectPercent) } ?? abs(deviationPercent)
         let direction = deviationPercent > 0 ? "above" : "below"
-        return "Priority today: \(actionProtocol(for: actionMetric, severity: severity, deviation: actionDeviation, direction: direction))."
+        return Copy.Insights.priorityToday(actionProtocol: actionProtocol(for: actionMetric, severity: severity, deviation: actionDeviation, direction: direction))
     }
 
     private static func followUpSentence(severity: Severity, context: InsightContext?) -> String? {
@@ -910,7 +910,7 @@ struct InsightGenerator {
 
             // Seasonal context
             if let seasonalDev = ctx.seasonalDeviation, abs(seasonalDev) >= 5, ctx.yearsOfData >= 1 {
-                let monthName = Calendar.current.monthSymbols[Calendar.current.component(.month, from: Date()) - 1]
+                let monthName = Date.cal.monthSymbols[Date.cal.component(.month, from: Date()) - 1]
                 let seasonalAbs = String(format: "%.0f", abs(seasonalDev))
                 parts.append("\(seasonalDev > 0 ? "above" : "below") your typical \(monthName) by \(seasonalAbs)%")
             }
@@ -926,18 +926,18 @@ struct InsightGenerator {
         // Projection sentence from InsightContext
         let projectionNote: String
         if trend == .declining, let days = insightContext?.projectedDaysToThreshold, days > 0, days <= 21 {
-            projectionNote = " At the current rate, this could reach warning level in about \(days) days."
+            projectionNote = Copy.Insights.projectionWarning(days: days)
         } else {
             projectionNote = ""
         }
 
         switch trend {
         case .declining:
-            return "Your \(metric.displayName.lowercased()) is \(absDeviation)% \(direction) your baseline (\(formattedBaseline) \(metric.unit)). Current: \(formattedCurrent) \(metric.unit).\(inflectionNote)\(projectionNote)\(causalHint)\(historyNote)"
+            return Copy.Insights.decliningSummary(metricLower: metric.displayName.lowercased(), deviation: absDeviation, direction: direction, baseline: formattedBaseline, unit: metric.unit, current: formattedCurrent, inflectionNote: inflectionNote, projectionNote: projectionNote, causalHint: causalHint, historyNote: historyNote)
         case .improving:
-            return "Your \(metric.displayName.lowercased()) has improved \(absDeviation)% from your baseline. Current: \(formattedCurrent) \(metric.unit).\(inflectionNote)\(causalHint)\(historyNote)"
+            return Copy.Insights.improvingSummary(metricLower: metric.displayName.lowercased(), deviation: absDeviation, current: formattedCurrent, unit: metric.unit, inflectionNote: inflectionNote, causalHint: causalHint, historyNote: historyNote)
         case .stable:
-            return "Your \(metric.displayName.lowercased()) is \(absDeviation)% \(direction) your baseline (\(formattedBaseline) \(metric.unit)).\(causalHint)\(historyNote)"
+            return Copy.Insights.stableSummary(metricLower: metric.displayName.lowercased(), deviation: absDeviation, direction: direction, baseline: formattedBaseline, unit: metric.unit, causalHint: causalHint, historyNote: historyNote)
         }
     }
 

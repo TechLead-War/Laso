@@ -86,7 +86,7 @@ final class OnboardingHealthSnapshot {
 
     private func earliestSampleAge(for type: HKSampleType) async -> TimeInterval? {
         let endDate = Date()
-        guard let startDate = Calendar.current.date(byAdding: .day, value: -Self.scanWindowDays, to: endDate) else {
+        guard let startDate = Date.cal.date(byAdding: .day, value: -Self.scanWindowDays, to: endDate) else {
             return nil
         }
         let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: [])
@@ -110,7 +110,7 @@ final class OnboardingHealthSnapshot {
     // MARK: - Resting heart rate (last 365 days, matches scanWindowDays)
 
     private func recentRestingHR() async -> (average: Int?, months: Int?) {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let endDate = Date()
         guard let startDate = calendar.date(byAdding: .day, value: -Self.scanWindowDays, to: endDate) else {
             return (nil, nil)
@@ -142,7 +142,7 @@ final class OnboardingHealthSnapshot {
     // MARK: - Sleep (last 30 days, group by night)
 
     private func recent7NightSleep() async -> (hours: Int?, mins: Int?, last7: [Double], months: Int?) {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let endDate = Date()
         guard let startDate = calendar.date(byAdding: .day, value: -30, to: endDate) else {
             return (nil, nil, [], nil)
@@ -199,7 +199,7 @@ final class OnboardingHealthSnapshot {
         weeksOfData: Int?,
         weekdayMeans: [Double?]
     ) {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let endDate = Date()
         guard let startDate = calendar.date(byAdding: .day, value: -84, to: endDate) else {
             return (nil, nil, nil, Array(repeating: nil, count: 7))

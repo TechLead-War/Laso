@@ -354,7 +354,7 @@ final class AppAnalytics {
     private let session = SessionTracker.shared
     private let defaults = UserDefaults.standard
 
-    /// Cached app version string. Performance Pass 2: `Bundle.main.infoDictionary`
+    /// Cached app version string. `Bundle.main.infoDictionary`
     /// was being read on every analytics event. The marketing version is fixed
     /// for the lifetime of the running process, so cache it once at startup.
     private static let cachedAppVersion: String = {
@@ -387,7 +387,7 @@ final class AppAnalytics {
 
         // Age bracket. derived from encrypted date of birth
         if let dob = UserProfileStore.shared.storedDateOfBirth() {
-            let age = Calendar.current.dateComponents([.year], from: dob, to: Date()).year ?? 0
+            let age = Date.cal.dateComponents([.year], from: dob, to: Date()).year ?? 0
             if age > 0 {
                 let bracket: String
                 switch age {
@@ -710,7 +710,7 @@ final class AppAnalytics {
         }
         setUserProperty("rest_credits_remaining", value: "\(session.restCreditsRemaining)")
 
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let now = Date()
         let hour = calendar.component(.hour, from: now)
         let weekday = calendar.component(.weekday, from: now)
@@ -1291,7 +1291,7 @@ final class AppAnalytics {
 
     private var monthsSubscribed: Int {
         guard let startDate = defaults.object(forKey: Key.subscriptionStartDate) as? Date else { return 0 }
-        return Calendar.current.dateComponents([.month], from: startDate, to: Date()).month ?? 0
+        return Date.cal.dateComponents([.month], from: startDate, to: Date()).month ?? 0
     }
 
     /// Days since the user first started a subscription (0 for non-subscribers).
@@ -1299,7 +1299,7 @@ final class AppAnalytics {
     /// retention cohorts directly in PostHog without post-hoc event joins.
     private var subscriptionAgeDays: Int {
         guard let startDate = defaults.object(forKey: Key.subscriptionStartDate) as? Date else { return 0 }
-        return Calendar.current.dateComponents([.day], from: startDate, to: Date()).day ?? 0
+        return Date.cal.dateComponents([.day], from: startDate, to: Date()).day ?? 0
     }
 
     private func updateMonthsSubscribed() {
@@ -1592,7 +1592,7 @@ final class AppAnalytics {
             ? Int(now.timeIntervalSince1970 - sentTimestamp) / 60
             : 0
 
-        let cal = Calendar.current
+        let cal = Date.cal
 
         // Extract metric name from structured alert identifiers
         // Formats: healthpulse.triage.[metric].[level], healthpulse.spike.[metric].[type],
@@ -1696,7 +1696,7 @@ final class AppAnalytics {
     /// Track notification delivery (when we schedule a local notification).
     func trackNotificationScheduled(type: String, identifier: String, hookCategory: String? = nil) {
         let now = Date()
-        let cal = Calendar.current
+        let cal = Date.cal
         var params: [String: Any] = [
             "type": type,
             "notification_id": identifier,
@@ -2409,7 +2409,7 @@ final class AppAnalytics {
 
     /// Call from session start. Builds up a pattern of open-times to detect ritual formation.
     func detectHabitPattern() {
-        let hour = Calendar.current.component(.hour, from: Date())
+        let hour = Date.cal.component(.hour, from: Date())
 
         // Store last 14 session hours
         var hours = defaults.array(forKey: HabitKey.sessionHours) as? [Int] ?? []
@@ -3077,7 +3077,7 @@ final class AppAnalytics {
                 : "offline"
         }
         if enriched["hour_of_day"] == nil {
-            enriched["hour_of_day"] = Calendar.current.component(.hour, from: Date())
+            enriched["hour_of_day"] = Date.cal.component(.hour, from: Date())
         }
         if enriched["engagement_level"] == nil {
             enriched["engagement_level"] = computeEngagementLevel().rawValue

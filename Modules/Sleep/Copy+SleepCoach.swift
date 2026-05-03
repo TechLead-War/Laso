@@ -36,6 +36,27 @@ extension Copy {
         static let debtModerate = "Moderate"
         static let debtHigh = "High"
 
+        // Tracker debt level display names (longer form used by analyzer)
+        static let trackerDebtNone = "No debt"
+        static let trackerDebtMild = "Mild debt"
+        static let trackerDebtModerate = "Moderate debt"
+        static let trackerDebtSignificant = "Significant debt"
+        static let trackerDebtSevere = "Severe debt"
+
+        // Tracker debt level descriptions
+        static let trackerDescNone = "You are well-rested. Your sleep is meeting your personal needs."
+        static let trackerDescMild = "A small sleep deficit is building. An extra 30 minutes tonight can help."
+        static let trackerDescModerate = "Noticeable sleep debt is accumulating. You may experience reduced focus and slower reaction times."
+        static let trackerDescSignificant = "Substantial sleep debt is affecting your recovery and cognitive performance. Prioritize sleep this week."
+        static let trackerDescSevere = "Critical sleep debt. Expect impaired judgment, weakened immunity, and poor recovery. Extended catch-up sleep is needed."
+
+        // Duration formatter pieces
+        static let durationPlaceholder = "—"
+        static let durationZero = "0h"
+        static func durationMinutes(_ m: Int) -> String { "\(m)m" }
+        static func durationHours(_ h: Int) -> String { "\(h)h" }
+        static func durationHoursMinutes(_ h: Int, _ m: Int) -> String { "\(h)h \(m)m" }
+
         // Debt trends
         static let tracking = "Tracking"
         static let payingOff = "Paying off"
@@ -86,7 +107,7 @@ extension Copy {
         static let tipExerciseTimingTitle = "Exercise timing"
         static let tipExerciseTimingDetail = "Regular exercise helps you sleep better. Try to finish hard workouts at least 3 hours before bed."
 
-        // MARK: - Stages (Pass 8 Q)
+        // MARK: - Stages
 
         static let stageDeep = "Deep"
         static let stageRem = "REM"
@@ -94,7 +115,7 @@ extension Copy {
         static let stageAwake = "Awake"
         static let stageDataUnavailable = "Stage data not available for this night"
 
-        // MARK: - Tips Disclosure (Pass 8 Q)
+        // MARK: - Tips Disclosure
 
         static func showMoreTips(_ count: Int) -> String { "Show \(count) more tips" }
     }

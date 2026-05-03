@@ -119,6 +119,33 @@ extension Array where Element == Double {
         return filter { abs($0 - avg) <= maxDeviations * sd }
     }
 
+    /// Linear regression on a paired `(x, y)` series. Returns `(slope, intercept)`.
+    /// Returns `(0, mean(y))` when fewer than 2 paired samples or zero variance in x.
+    static func linearRegression(x: [Double], y: [Double]) -> (slope: Double, intercept: Double) {
+        let n = Swift.min(x.count, y.count)
+        guard n > 1 else { return (0, y.first ?? 0) }
+        var xTotal = 0.0
+        var yTotal = 0.0
+        for i in 0..<n {
+            xTotal += x[i]
+            yTotal += y[i]
+        }
+        let xMean = xTotal / Double(n)
+        let yMean = yTotal / Double(n)
+
+        var numerator = 0.0
+        var denominator = 0.0
+        for i in 0..<n {
+            let xDiff = x[i] - xMean
+            let yDiff = y[i] - yMean
+            numerator += xDiff * yDiff
+            denominator += xDiff * xDiff
+        }
+        guard denominator != 0 else { return (0, yMean) }
+        let slope = numerator / denominator
+        return (slope, yMean - slope * xMean)
+    }
+
     /// Pearson correlation coefficient between two equal-length arrays
     /// Returns nil if fewer than 5 paired samples or zero variance
     static func pearsonCorrelation(_ x: [Double], _ y: [Double]) -> Double? {
@@ -149,6 +176,29 @@ extension Array where Element == Double {
         guard xDenom > 0, yDenom > 0 else { return nil }
         return numerator / (xDenom.squareRoot() * yDenom.squareRoot())
     }
+}
+
+extension Array where Element == Int {
+    /// Median value (returns nil for empty arrays). For even counts the
+    /// integer mean of the two middle elements is returned (rounded down).
+    var median: Int? {
+        guard !isEmpty else { return nil }
+        let sorted = self.sorted()
+        let mid = count / 2
+        if count.isMultiple(of: 2) {
+            return (sorted[mid - 1] + sorted[mid]) / 2
+        } else {
+            return sorted[mid]
+        }
+    }
+}
+
+/// Z-score of a value against a baseline mean and standard deviation.
+/// Returns 0 when `stdDev` is 0 (no variance baseline → no signal).
+@inlinable
+func zScore(value: Double, baselineMean: Double, baselineStdDev: Double) -> Double {
+    guard baselineStdDev > 0 else { return 0 }
+    return (value - baselineMean) / baselineStdDev
 }
 
 extension Sequence {

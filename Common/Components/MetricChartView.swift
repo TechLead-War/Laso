@@ -52,7 +52,7 @@ struct MetricChartView: View {
     /// Find the closest sample to the selected date
     private var selectedSample: MetricSample? {
         guard let selectedDate, !samples.isEmpty else { return nil }
-        let insertionIndex = Self.firstIndex(onOrAfter: selectedDate, in: samples)
+        let insertionIndex = samples.firstIndex(onOrAfter: selectedDate)
         if insertionIndex <= 0 {
             return samples.first
         }
@@ -98,7 +98,7 @@ struct MetricChartView: View {
                 .foregroundStyle(color.gradient)
                 .lineStyle(StrokeStyle(lineWidth: 2))
                 .interpolationMethod(.catmullRom)
-                // Pass 8 P2-F17: per-mark VoiceOver labels so users can navigate
+                // Per-mark VoiceOver labels so users can navigate
                 // each data point in the chart by date and value.
                 .accessibilityLabel(Text(sample.date.formatted(date: .abbreviated, time: .omitted)))
                 .accessibilityValue(Text("\(formattedValue(sample.value)) \(metric.unit)"))
@@ -287,7 +287,7 @@ struct MetricChartView: View {
             selectedValueOverlay
         }
         .sensoryFeedback(.selection, trigger: selectedSample?.id)
-        // Pass 8 P2-F17: chart-level summary so VoiceOver announces what the chart
+        // Chart-level summary so VoiceOver announces what the chart
         // shows on focus (metric name, time span, latest value, trend direction).
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text(chartAccessibilityLabel))
@@ -362,7 +362,7 @@ struct MetricChartView: View {
 
     private static func makeDataSpanDays(samples: [MetricSample]) -> Int {
         guard let first = samples.first?.date, let last = samples.last?.date else { return 7 }
-        return max(1, Calendar.current.dateComponents([.day], from: first, to: last).day ?? 7)
+        return max(1, Date.cal.dateComponents([.day], from: first, to: last).day ?? 7)
     }
 
     private static func makePeriodLabel(dataSpanDays: Int) -> String {
@@ -441,19 +441,6 @@ struct MetricChartView: View {
         return low...high
     }
 
-    private static func firstIndex(onOrAfter date: Date, in samples: [MetricSample]) -> Int {
-        var low = 0
-        var high = samples.count
-        while low < high {
-            let mid = (low + high) / 2
-            if samples[mid].date < date {
-                low = mid + 1
-            } else {
-                high = mid
-            }
-        }
-        return low
-    }
 }
 
 #if DEBUG

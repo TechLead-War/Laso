@@ -58,22 +58,13 @@ final class SleepNeedCalculator {
 
     // MARK: - Constants
 
-    private static let minimumDaysRequired = 7
-    private static let baselineWindowDays = 30
+    private typealias Cfg = SleepNeedConfig
 
-    // Pass 8 Y: bedtime is rendered on the Sleep tile, so it must follow the
+    // Bedtime is rendered on the Sleep tile, so it must follow the
     // user's clock preference (12h vs 24h, AM/PM symbols). The Date.FormatStyle
     // path below uses `Locale.current` automatically and Foundation caches
     // the underlying formatter, so the per-call cost is negligible — no
     // explicit DateFormatter cache needed.
-    private static let wakeTimeWindowDays = 14
-
-    // Hard bounds (science-backed: NSF, AASM, Cappuccio 2010)
-    private static let floorHours = 6.5
-    private static let ceilingHours = 9.0
-
-    // Debt
-    private static let maxDebtAdjustment = 0.5
 
     // MARK: - Compute
 
@@ -92,55 +83,46 @@ final class SleepNeedCalculator {
             return fallbackNeed(performanceLevel: performanceLevel)
         }
 
-        let recentSamples = sleepSeries.samples(lastDays: Self.minimumDaysRequired)
-        isReady = recentSamples.count >= Self.minimumDaysRequired
+        let recentSamples = sleepSeries.samples(lastDays: Cfg.minimumDaysRequired)
+        isReady = recentSamples.count >= Cfg.minimumDaysRequired
 
-        // --- New formula: base + adjustments, clamped to [6.5, 9.0] ---
-
-        // 1. Base from performance level
         let base = performanceLevel.baseHours
 
-        // 2. Age adjustment
         let ageAdjustment: Double
-        if age < 26 {
-            ageAdjustment = 0.25       // Young adults need slightly more
-        } else if age <= 64 {
-            ageAdjustment = 0           // Standard adult range
+        if age < Cfg.ageYoungAdultUpper {
+            ageAdjustment = Cfg.ageYoungAdultAdjustment
+        } else if age <= Cfg.ageOlderAdultLower {
+            ageAdjustment = 0
         } else {
-            ageAdjustment = -0.25       // Older adults need slightly less (NSF)
+            ageAdjustment = Cfg.ageOlderAdultAdjustment
         }
 
-        // 3. Recovery adjustment (how recovered is the body right now)
         let recoveryAdjustment: Double
-        if recoveryScore < 40 {
-            recoveryAdjustment = 0.5    // Low recovery — body needs more sleep
-        } else if recoveryScore < 60 {
-            recoveryAdjustment = 0.25   // Moderate recovery
-        } else if recoveryScore < 80 {
-            recoveryAdjustment = 0      // Good recovery — on track
+        if recoveryScore < Cfg.recoveryLowCeiling {
+            recoveryAdjustment = Cfg.recoveryLowAdjustment
+        } else if recoveryScore < Cfg.recoveryModerateCeiling {
+            recoveryAdjustment = Cfg.recoveryModerateAdjustment
+        } else if recoveryScore < Cfg.recoveryGoodCeiling {
+            recoveryAdjustment = 0
         } else {
-            recoveryAdjustment = -0.25  // Excellent recovery — can get by with less
+            recoveryAdjustment = Cfg.recoveryExcellentAdjustment
         }
 
-        // 4. Strain adjustment (how hard was today)
         let strainAdjustment: Double
-        if currentStrain > 15 {
-            strainAdjustment = 0.5      // Heavy strain day
-        } else if currentStrain > 10 {
-            strainAdjustment = 0.25     // Moderate strain
+        if currentStrain > Cfg.strainHeavyFloor {
+            strainAdjustment = Cfg.strainHeavyAdjustment
+        } else if currentStrain > Cfg.strainModerateFloor {
+            strainAdjustment = Cfg.strainModerateAdjustment
         } else {
-            strainAdjustment = 0        // Light day
+            strainAdjustment = 0
         }
 
-        // 5. Debt adjustment (accumulated sleep deficit, capped)
-        let debtAdjustment = sleepDebt > 0 ? Self.maxDebtAdjustment : 0.0
+        let debtAdjustment = sleepDebt > 0 ? Cfg.maxDebtAdjustment : 0.0
 
-        // 6. Sleep quality trend (declining quality over 7+ days)
-        let trendAdjustment = sleepQualityDeclining(sleepSeries) ? 0.25 : 0.0
+        let trendAdjustment = sleepQualityDeclining(sleepSeries) ? Cfg.qualityTrendAdjustment : 0.0
 
-        // Total, clamped to hard bounds
         let rawTotal = base + ageAdjustment + recoveryAdjustment + strainAdjustment + debtAdjustment + trendAdjustment
-        let totalHoursNeeded = min(max(rawTotal, Self.floorHours), Self.ceilingHours)
+        let totalHoursNeeded = min(max(rawTotal, Cfg.floorHours), Cfg.ceilingHours)
 
         // Wake time: use circadian-optimal or estimate from 14-day average
         let wakeTime = targetWakeTime ?? estimateWakeTime(from: sleepSeries)
@@ -174,7 +156,7 @@ final class SleepNeedCalculator {
 
     var formattedBedtime: String? {
         guard let bedtime = currentNeed?.recommendedBedtime else { return nil }
-        // Pass 8 Y: locale-aware. Picks 24h vs 12h from `Locale.current`.
+        // Locale-aware. Picks 24h vs 12h from `Locale.current`.
         return bedtime.formatted(.dateTime.hour().minute())
     }
 
@@ -194,24 +176,24 @@ final class SleepNeedCalculator {
     /// Check if sleep quality has been declining over the last 7 days
     /// compared to the 30-day average.
     private func sleepQualityDeclining(_ sleepSeries: MetricTimeSeries) -> Bool {
-        let recent = sleepSeries.samples(lastDays: 7)
-        let baseline = sleepSeries.samples(lastDays: 30)
-        guard recent.count >= 5, baseline.count >= 14 else { return false }
+        let recent = sleepSeries.samples(lastDays: Cfg.qualityTrendRecentWindowDays)
+        let baseline = sleepSeries.samples(lastDays: Cfg.qualityTrendBaselineWindowDays)
+        guard recent.count >= Cfg.qualityTrendRecentMinSamples,
+              baseline.count >= Cfg.qualityTrendBaselineMinSamples else { return false }
 
         let recentAvg = recent.valueMean
         let baselineAvg = baseline.valueMean
 
-        // Declining if recent 7-day average is 30+ minutes below 30-day average
-        return baselineAvg - recentAvg > 0.5
+        return baselineAvg - recentAvg > Cfg.qualityTrendDecliningGapHours
     }
 
     private func estimateWakeTime(from sleepSeries: MetricTimeSeries) -> Date? {
-        let recentSamples = sleepSeries.samples(lastDays: Self.wakeTimeWindowDays)
-        guard recentSamples.count >= 3 else { return nil }
+        let recentSamples = sleepSeries.samples(lastDays: Cfg.wakeTimeWindowDays)
+        guard recentSamples.count >= Cfg.wakeTimeMinSamples else { return nil }
 
         // Estimate wake time from sleep end: sample date represents the sleep period end.
         // Compute average wake hour across recent samples.
-        let calendar = Calendar.current
+        let calendar = Date.cal
         var totalMinutesFromMidnight = 0.0
 
         for sample in recentSamples {
@@ -232,8 +214,8 @@ final class SleepNeedCalculator {
     }
 
     private func computeConsistencyScore(from sleepSeries: MetricTimeSeries) -> Double {
-        let samples = sleepSeries.samples(lastDays: Self.baselineWindowDays)
-        guard samples.count >= Self.minimumDaysRequired else { return 0 }
+        let samples = sleepSeries.samples(lastDays: Cfg.baselineWindowDays)
+        guard samples.count >= Cfg.minimumDaysRequired else { return 0 }
 
         // Duration consistency: lower standard deviation = higher score
         let values = samples.map(\.value)
@@ -246,14 +228,11 @@ final class SleepNeedCalculator {
         } / Double(values.count)
         let stdDev = variance.squareRoot()
 
-        // Coefficient of variation: stdDev / mean
-        // Perfect consistency (CV = 0) → score 100
-        // Poor consistency (CV >= 0.3) → score 0
         let cv = stdDev / mean
-        let score = max(0, min(100, (1.0 - cv / 0.3) * 100))
+        let score = max(Cfg.consistencyMinScore, min(Cfg.consistencyMaxScore, (1.0 - cv / Cfg.consistencyCVZeroScoreThreshold) * Cfg.consistencyMaxScore))
 
         // Timing consistency from sample dates
-        let calendar = Calendar.current
+        let calendar = Date.cal
         var bedtimeMinutes: [Double] = []
 
         for sample in samples {
@@ -262,9 +241,9 @@ final class SleepNeedCalculator {
             let estimatedBedtime = sample.date.addingTimeInterval(-sleepHours * 3600)
             let components = calendar.dateComponents([.hour, .minute], from: estimatedBedtime)
             var minutesFromMidnight = Double(components.hour ?? 0) * 60 + Double(components.minute ?? 0)
-            // Normalize: bedtimes after 6 PM are treated as negative offset from midnight
-            if minutesFromMidnight > 1080 {
-                minutesFromMidnight -= 1440
+            // Bedtimes after 6 PM are treated as a negative offset from midnight.
+            if minutesFromMidnight > Cfg.bedtimeWrapAroundThresholdMinutes {
+                minutesFromMidnight -= Cfg.minutesPerDay
             }
             bedtimeMinutes.append(minutesFromMidnight)
         }
@@ -278,11 +257,9 @@ final class SleepNeedCalculator {
         } / Double(bedtimeMinutes.count)
         let bedtimeStdDev = bedtimeVariance.squareRoot()
 
-        // Bedtime stdDev of 0 minutes → 100, 90+ minutes → 0
-        let timingScore = max(0, min(100, (1.0 - bedtimeStdDev / 90.0) * 100))
+        let timingScore = max(Cfg.consistencyMinScore, min(Cfg.consistencyMaxScore, (1.0 - bedtimeStdDev / Cfg.timingStdDevZeroScoreMinutes) * Cfg.consistencyMaxScore))
 
-        // Blend duration consistency (40%) and timing consistency (60%)
-        return score * 0.4 + timingScore * 0.6
+        return score * Cfg.consistencyDurationWeight + timingScore * Cfg.consistencyTimingWeight
     }
 
     private func fallbackNeed(performanceLevel: PerformanceLevel) -> SleepNeed {

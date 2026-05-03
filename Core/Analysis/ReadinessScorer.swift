@@ -51,26 +51,26 @@ struct ReadinessScorer {
         if let hrv = input.hrv {
             let baseline = input.hrvBaseline
             let score = hrvScore(current: hrv, baseline: baseline)
-            let age = input.hrvTimestamp.map { input.now.timeIntervalSince($0) } ?? (72 * 3600)
-            let freshness = freshnessConfidence(age: age, maxAge: 48 * 3600)
-            let baselineConfidence = baseline.map { min(1.0, Double($0.sampleCount) / 21.0) } ?? 0.55
-            signals.append(Signal(score: score, weight: 0.40, confidence: freshness * baselineConfidence))
+            let age = input.hrvTimestamp.map { input.now.timeIntervalSince($0) } ?? ReadinessScorerConfig.missingCardiacAgeSeconds
+            let freshness = freshnessConfidence(age: age, maxAge: ReadinessScorerConfig.cardiacFreshnessHorizonSeconds)
+            let baselineConfidence = baseline.map { min(1.0, Double($0.sampleCount) / ReadinessScorerConfig.baselineConfidenceSampleCap) } ?? ReadinessScorerConfig.defaultBaselineConfidence
+            signals.append(Signal(score: score, weight: ReadinessScorerConfig.hrvSignalWeight, confidence: freshness * baselineConfidence))
         }
 
         if let restingHeartRate = input.restingHeartRate {
             let baseline = input.restingHeartRateBaseline
             let score = rhrScore(current: restingHeartRate, baseline: baseline)
-            let age = input.restingHeartRateTimestamp.map { input.now.timeIntervalSince($0) } ?? (72 * 3600)
-            let freshness = freshnessConfidence(age: age, maxAge: 48 * 3600)
-            let baselineConfidence = baseline.map { min(1.0, Double($0.sampleCount) / 21.0) } ?? 0.55
-            signals.append(Signal(score: score, weight: 0.35, confidence: freshness * baselineConfidence))
+            let age = input.restingHeartRateTimestamp.map { input.now.timeIntervalSince($0) } ?? ReadinessScorerConfig.missingCardiacAgeSeconds
+            let freshness = freshnessConfidence(age: age, maxAge: ReadinessScorerConfig.cardiacFreshnessHorizonSeconds)
+            let baselineConfidence = baseline.map { min(1.0, Double($0.sampleCount) / ReadinessScorerConfig.baselineConfidenceSampleCap) } ?? ReadinessScorerConfig.defaultBaselineConfidence
+            signals.append(Signal(score: score, weight: ReadinessScorerConfig.rhrSignalWeight, confidence: freshness * baselineConfidence))
         }
 
         let sleepHours = input.sleepDuration / 3600.0
         if sleepHours > 0 {
             let score = sleepDurationScore(hours: sleepHours)
-            let confidence = min(1.0, max(0.5, sleepHours / 7.0))
-            signals.append(Signal(score: score, weight: 0.15, confidence: confidence))
+            let confidence = min(1.0, max(ReadinessScorerConfig.sleepDurationConfidenceFloor, sleepHours / ReadinessScorerConfig.sleepDurationConfidenceTargetHours))
+            signals.append(Signal(score: score, weight: ReadinessScorerConfig.sleepDurationSignalWeight, confidence: confidence))
         }
 
         if input.hasSleepStageBreakdown, input.sleepDuration > 0 {
@@ -79,7 +79,7 @@ struct ReadinessScorer {
                 rem: input.remSleep,
                 total: input.sleepDuration
             )
-            signals.append(Signal(score: score, weight: 0.06, confidence: 0.85))
+            signals.append(Signal(score: score, weight: ReadinessScorerConfig.sleepStageSignalWeight, confidence: ReadinessScorerConfig.sleepStageConfidence))
         }
 
         if let workoutDate = input.workoutTimestamp,
@@ -90,8 +90,9 @@ struct ReadinessScorer {
                 durationMinutes: workoutDuration,
                 calories: input.workoutCalories
             )
-            let confidence = min(1.0, max(0.4, 1.0 - (max(0.0, hoursSinceWorkout - 36.0) / 24.0)))
-            signals.append(Signal(score: score, weight: 0.04, confidence: confidence))
+            let staleHours = max(0.0, hoursSinceWorkout - ReadinessScorerConfig.workoutRecoveryConfidenceOnsetHours)
+            let confidence = min(1.0, max(ReadinessScorerConfig.workoutRecoveryConfidenceFloor, 1.0 - (staleHours / ReadinessScorerConfig.workoutRecoveryConfidenceDecayHours)))
+            signals.append(Signal(score: score, weight: ReadinessScorerConfig.workoutSignalWeight, confidence: confidence))
         }
 
         guard !signals.isEmpty else { return nil }
@@ -105,14 +106,14 @@ struct ReadinessScorer {
 
         let totalConfiguredWeight = signals.reduce(0.0) { $0 + $1.weight }
         let confidence = min(1.0, effectiveWeightTotal / max(totalConfiguredWeight, 0.0001))
-        var score = 50 + (weightedScore - 50) * (0.35 + 0.65 * confidence)
+        var score = ReadinessScorerConfig.scoreCenter + (weightedScore - ReadinessScorerConfig.scoreCenter) * (ReadinessScorerConfig.scoreConfidenceFloor + ReadinessScorerConfig.scoreConfidenceSlope * confidence)
 
         if let bestAge = freshestCardiacAgeHours(
             hrvTimestamp: input.hrvTimestamp,
             rhrTimestamp: input.restingHeartRateTimestamp,
             now: input.now
-        ), bestAge > 24 {
-            score -= min(12.0, (bestAge - 24.0) * 0.5)
+        ), bestAge > ReadinessScorerConfig.cardiacStalenessOnsetHours {
+            score -= min(ReadinessScorerConfig.cardiacStalenessMaxPenalty, (bestAge - ReadinessScorerConfig.cardiacStalenessOnsetHours) * ReadinessScorerConfig.cardiacStalenessPenaltyPerHour)
         }
 
         let clampedScore = clamp(score, min: 0, max: 100)
@@ -162,8 +163,15 @@ struct ReadinessScorer {
 
     static func stressLevel(hrv: Double?, restingHeartRate: Double?) -> Int? {
         guard let hrv, let restingHeartRate else { return nil }
-        let hrvStress = min(max((60 - hrv) / 40.0 * 50, 0), 50)
-        let rhrStress = min(max((restingHeartRate - 50) / 30.0 * 50, 0), 50)
+        let cap = ReadinessScorerConfig.stressChannelCap
+        let hrvStress = min(
+            max((ReadinessScorerConfig.stressHRVAnchor - hrv) / ReadinessScorerConfig.stressHRVRange * cap, 0),
+            cap
+        )
+        let rhrStress = min(
+            max((restingHeartRate - ReadinessScorerConfig.stressRHRAnchor) / ReadinessScorerConfig.stressRHRRange * cap, 0),
+            cap
+        )
         return Int(hrvStress + rhrStress)
     }
 
@@ -192,39 +200,58 @@ struct ReadinessScorer {
     private static func hrvScore(current: Double, baseline: BaselineStats?) -> Double {
         if let baseline {
             let z = (current - baseline.median) / baseline.standardDeviation
-            let normalized = tanh(z / 1.8)
-            return clamp(55 + normalized * 35, min: 0, max: 100)
+            let normalized = tanh(z / ReadinessScorerConfig.hrvRhrTanhDivisor)
+            return clamp(
+                ReadinessScorerConfig.hrvRhrScoreCenter + normalized * ReadinessScorerConfig.hrvRhrScoreSpread,
+                min: 0, max: 100
+            )
         }
 
-        return clamp((current - 15) / 55 * 100, min: 0, max: 100)
+        return clamp(
+            (current - ReadinessScorerConfig.hrvFallbackAnchor) / ReadinessScorerConfig.hrvFallbackRange * 100,
+            min: 0, max: 100
+        )
     }
 
     private static func rhrScore(current: Double, baseline: BaselineStats?) -> Double {
         if let baseline {
             let z = (baseline.median - current) / baseline.standardDeviation
-            let normalized = tanh(z / 1.8)
-            return clamp(55 + normalized * 35, min: 0, max: 100)
+            let normalized = tanh(z / ReadinessScorerConfig.hrvRhrTanhDivisor)
+            return clamp(
+                ReadinessScorerConfig.hrvRhrScoreCenter + normalized * ReadinessScorerConfig.hrvRhrScoreSpread,
+                min: 0, max: 100
+            )
         }
 
-        return clamp((85 - current) / 40 * 100, min: 0, max: 100)
+        return clamp(
+            (ReadinessScorerConfig.rhrFallbackAnchor - current) / ReadinessScorerConfig.rhrFallbackRange * 100,
+            min: 0, max: 100
+        )
     }
 
     private static func sleepDurationScore(hours: Double) -> Double {
-        if hours < 7.5 {
-            let deficit = 7.5 - hours
-            let penalty = deficit * 13 + deficit * deficit * 4
-            return clamp(100 - penalty, min: 10, max: 100)
+        let target = ReadinessScorerConfig.sleepTargetHours
+        if hours < target {
+            let deficit = target - hours
+            let penalty = deficit * ReadinessScorerConfig.sleepDeficitLinearPenalty
+                + deficit * deficit * ReadinessScorerConfig.sleepDeficitQuadraticPenalty
+            return clamp(100 - penalty, min: ReadinessScorerConfig.sleepDurationDeficitFloor, max: 100)
         }
 
-        let excess = hours - 7.5
-        let penalty = excess * 7 + excess * excess * 2
-        return clamp(100 - penalty, min: 35, max: 100)
+        let excess = hours - target
+        let penalty = excess * ReadinessScorerConfig.sleepExcessLinearPenalty
+            + excess * excess * ReadinessScorerConfig.sleepExcessQuadraticPenalty
+        return clamp(100 - penalty, min: ReadinessScorerConfig.sleepDurationExcessFloor, max: 100)
     }
 
     private static func sleepStageScore(deep: TimeInterval, rem: TimeInterval, total: TimeInterval) -> Double {
         guard total > 0 else { return 50 }
         let restorativeRatio = (deep + rem) / total
-        return clamp((restorativeRatio - 0.16) / 0.24 * 100, min: 0, max: 100)
+        return clamp(
+            (restorativeRatio - ReadinessScorerConfig.sleepRestorativeRatioFloor)
+                / ReadinessScorerConfig.sleepRestorativeRatioRange * 100,
+            min: 0, max: 100
+        )
     }
 
     private static func workoutRecoveryScore(
@@ -232,20 +259,29 @@ struct ReadinessScorer {
         durationMinutes: Double,
         calories: Double?
     ) -> Double {
-        let workoutLoad = min(1.0, max(durationMinutes / 75.0, (calories ?? 0) / 600.0))
-        if hoursSinceWorkout < 6 {
-            return 85 - workoutLoad * 35
+        let workoutLoad = min(
+            1.0,
+            max(
+                durationMinutes / ReadinessScorerConfig.workoutLoadDurationCap,
+                (calories ?? 0) / ReadinessScorerConfig.workoutLoadCalorieCap
+            )
+        )
+        if hoursSinceWorkout < ReadinessScorerConfig.workoutRecoveryRecentBandHours {
+            return ReadinessScorerConfig.workoutRecoveryRecentBase - workoutLoad * ReadinessScorerConfig.workoutRecoveryRecentLoadPenalty
         }
-        if hoursSinceWorkout < 18 {
-            return 92 - workoutLoad * 25
+        if hoursSinceWorkout < ReadinessScorerConfig.workoutRecoveryMidBandHours {
+            return ReadinessScorerConfig.workoutRecoveryMidBase - workoutLoad * ReadinessScorerConfig.workoutRecoveryMidLoadPenalty
         }
-        return 96 - workoutLoad * 12
+        return ReadinessScorerConfig.workoutRecoveryLateBase - workoutLoad * ReadinessScorerConfig.workoutRecoveryLateLoadPenalty
     }
 
     private static func freshnessConfidence(age: TimeInterval, maxAge: TimeInterval) -> Double {
-        guard age.isFinite else { return 0.35 }
-        let ratio = clamp(age / maxAge, min: 0, max: 2)
-        return clamp(1.0 - ratio * 0.65, min: 0.35, max: 1.0)
+        guard age.isFinite else { return ReadinessScorerConfig.freshnessFloor }
+        let ratio = clamp(age / maxAge, min: 0, max: ReadinessScorerConfig.freshnessRatioClampMax)
+        return clamp(
+            1.0 - ratio * ReadinessScorerConfig.freshnessRatioWeight,
+            min: ReadinessScorerConfig.freshnessFloor, max: 1.0
+        )
     }
 
     private static func freshestCardiacAgeHours(
@@ -260,7 +296,4 @@ struct ReadinessScorer {
         return ages.min()
     }
 
-    private static func clamp(_ value: Double, min lower: Double, max upper: Double) -> Double {
-        Swift.max(lower, Swift.min(upper, value))
-    }
 }

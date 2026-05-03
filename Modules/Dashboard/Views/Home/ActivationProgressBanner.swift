@@ -157,16 +157,12 @@ struct ActivationProgressBanner: View {
 struct AskYourDataCard: View {
     let onTap: () -> Void
 
-    /// Pass 12 BE perf: cached current calendar. `samplePrompt` is read on
-    /// every render of the home Ask-Your-Data card; per-render
-    /// `Calendar.current` allocation is wasteful.
-    private static let cal: Calendar = Calendar.current
 
     /// Deterministic prompt rotation. picks a sample question based on the
     /// current day so it shifts daily without flickering within a session.
     private var samplePrompt: String {
         let prompts = Copy.Home.AskYourData.conciergePrompts
-        let day = Self.cal.ordinality(of: .day, in: .year, for: Date()) ?? 1
+        let day = Date.cal.ordinality(of: .day, in: .year, for: Date()) ?? 1
         return prompts[day % prompts.count]
     }
 
@@ -215,7 +211,7 @@ struct AskYourDataCard: View {
             state: ActivationSequenceManager.ActivationState(
                 currentDay: 5,
                 milestonesCompleted: [.firstBaseline, .firstComparison, .firstTrend, .firstPattern],
-                installDate: Calendar.current.date(byAdding: .day, value: -4, to: Date())!,
+                installDate: Date.cal.date(byAdding: .day, value: -4, to: Date())!,
                 lastMilestoneDate: Date()
             ),
             latestMilestone: ActivationSequenceManager.MilestoneEvent(

@@ -14,6 +14,11 @@ extension Copy {
         static let levelMild = "Mild"
         static let levelCalm = "Calm"
 
+        // MARK: - Empty State
+
+        static let buildingBaselineTitle = "Building your stress baseline"
+        static let needHRVData = "We need about 14 days of overnight HRV data to learn your normal range. Wear your Apple Watch to bed and your stress signal will appear here."
+
         // MARK: - Hero
 
         static let heroExplainer = "How much pressure your body is under right now"
@@ -93,6 +98,48 @@ extension Copy {
         // MARK: - Accessibility
 
         static let startBreathingA11y = "Start breathing exercise"
+
+        // MARK: - Stress Level Display Names (Scorer)
+
+        static let stressLevelLow = "Low Stress"
+        static let stressLevelMild = "Mild Stress"
+        static let stressLevelModerate = "Moderate Stress"
+        static let stressLevelHigh = "High Stress"
+
+        // MARK: - Stress Trend Display Names (Scorer)
+
+        static let trendDecreasing = "Decreasing"
+        static let trendStable = "Stable"
+        static let trendIncreasing = "Increasing"
+
+        // MARK: - Stress Descriptions (Scorer)
+
+        static let descriptionNoData = "Not enough data to assess stress yet. Keep heart rate and HRV data syncing to establish your personal baseline."
+
+        static func descriptionLow(score: String) -> String {
+            "Your stress level is low (\(score)/3.0). Your HRV and heart rate are within your normal range. Keep up your current routine. Your body is recovering well."
+        }
+        static func descriptionMildPrefix(score: String) -> String {
+            "Your stress level is mildly elevated (\(score)/3.0). "
+        }
+        static func descriptionModeratePrefix(score: String) -> String {
+            "Your stress level is moderate (\(score)/3.0). "
+        }
+        static func descriptionHighPrefix(score: String) -> String {
+            "Your stress level is high (\(score)/3.0). "
+        }
+        static func descriptionHRVMention(percent: Int) -> String {
+            "Your HRV is \(percent)% below your baseline. "
+        }
+        static func descriptionHRMention(percent: Int) -> String {
+            "Your heart rate is \(percent)% above your resting average. "
+        }
+        static let descriptionMildSuffix = "Consider lighter exercise today and prioritize sleep tonight."
+        static let descriptionModerateSuffix = "Focus on recovery: deep breathing, gentle movement, and adequate hydration."
+        static let descriptionHighSuffix = "Prioritize rest and recovery. Avoid intense exercise, reduce caffeine, and consider mindfulness or breathing exercises."
+        static func descriptionHighHRVAndHRTyped(hrvPercent: Int, hrPercent: Int) -> String {
+            "Your HRV is \(hrvPercent)% below baseline and heart rate is \(hrPercent)% elevated. "
+        }
     }
 
     enum Breathwork {
@@ -111,7 +158,7 @@ extension Copy {
         static let sessionComplete = "Session Complete"
         static let howDoYouFeel = "How do you feel?"
 
-        // MARK: - Stop Confirmation (Pass 8 Q)
+        // MARK: - Stop Confirmation
 
         static let endSessionTitle = "End Session?"
         static let endSessionConfirm = "End"

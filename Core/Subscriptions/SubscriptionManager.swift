@@ -269,7 +269,7 @@ final class SubscriptionManager {
 
         // 3. Check our own extended grace (Apple stopped retrying but < 30 days since grace started)
         if let graceStart = defaults.object(forKey: Key.graceStartDate) as? Date {
-            let daysSinceGrace = Calendar.current.dateComponents([.day], from: graceStart, to: Date()).day ?? 0
+            let daysSinceGrace = Date.cal.dateComponents([.day], from: graceStart, to: Date()).day ?? 0
             if daysSinceGrace <= Self.billingGraceDays {
                 status = .billingGrace(daysSinceExpiry: daysSinceGrace)
                 return
@@ -318,7 +318,7 @@ final class SubscriptionManager {
 
     private func startOrContinueGrace() -> Int {
         if let existing = defaults.object(forKey: Key.graceStartDate) as? Date {
-            return Calendar.current.dateComponents([.day], from: existing, to: Date()).day ?? 0
+            return Date.cal.dateComponents([.day], from: existing, to: Date()).day ?? 0
         }
         // First time entering grace. record the start
         defaults.set(Date(), forKey: Key.graceStartDate)
@@ -329,7 +329,7 @@ final class SubscriptionManager {
     private func clearGraceState() {
         if let graceStart = defaults.object(forKey: Key.graceStartDate) as? Date {
             let wasActive = isBillingGrace
-            let daysInGrace = Calendar.current.dateComponents([.day], from: graceStart, to: Date()).day ?? 0
+            let daysInGrace = Date.cal.dateComponents([.day], from: graceStart, to: Date()).day ?? 0
             defaults.removeObject(forKey: Key.graceStartDate)
             if wasActive {
                 AppAnalytics.shared.trackBillingGraceResolved(daysInGrace: daysInGrace)

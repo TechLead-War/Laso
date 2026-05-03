@@ -481,7 +481,7 @@ struct GrangerCausalityEngine {
 
         let n = seriesA.count
         var windowResults: [(startDate: Date, pValue: Double, fStat: Double, isCausal: Bool)] = []
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let baseDate = calendar.startOfDay(for: Date())
 
         var start = 0

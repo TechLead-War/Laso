@@ -1,6 +1,5 @@
 import Foundation
 
-/// Research: Apple Heart & Movement Study (2026) + multiple validation studies.
 /// Finding: Heart rate recovery (HRR) after exercise is one of the strongest
 /// autonomic health markers. Abnormal recovery (<12 bpm drop in 1 min)
 /// predicts mortality. HRR improves dose-response with 6+ months of exercise.
@@ -44,14 +43,14 @@ struct HRRFitnessAnalyzer {
 
         if sorted.count >= 10 {
             let firstQuarter = Array(sorted.prefix(sorted.count / 4)).map(\.value).mean
-            let lastQuarter = Array(sorted.suffix(sorted.count / 4)).map(\.value).mean
+            let lastQuarter = sorted.tailMean(sorted.count / 4)
             totalChange = lastQuarter - firstQuarter
             trajectory = totalChange > 2 ? .improving : totalChange < -2 ? .declining : .stable
         }
 
         let daysSpanned: Int
         if let firstDate = sorted.first?.date, let lastDate = sorted.last?.date {
-            daysSpanned = Calendar.current.dateComponents([.day], from: firstDate, to: lastDate).day ?? 0
+            daysSpanned = Date.cal.dateComponents([.day], from: firstDate, to: lastDate).day ?? 0
         } else {
             daysSpanned = 0
         }
@@ -59,11 +58,12 @@ struct HRRFitnessAnalyzer {
 
         // Insight 1: Current HRR assessment
         if currentHRR < abnormalThreshold {
+            let currentText = String(format: "%.0f", currentHRR)
             insights.append(InsightFactory.make(
                 metric: .heartRateRecovery,
-                title: "Heart Rate Recovery Below Clinical Threshold",
-                summary: "Your heart rate recovery is \(String(format: "%.0f", currentHRR)) bpm. below the clinical threshold of \(Int(abnormalThreshold)) bpm. This indicates reduced parasympathetic reactivation after exercise.",
-                recommendation: "A heart rate recovery <\(Int(abnormalThreshold)) bpm at 1 minute post-exercise is associated with reduced overall fitness in large population studies. Your average HRR of \(String(format: "%.0f", currentHRR)) bpm across \(recent.count > 0 ? recent.count : allSamples.count) measurements suggests blunted autonomic recovery.",
+                title: Copy.Analysis.Research.HRRFitness.belowClinicalTitle,
+                summary: Copy.Analysis.Research.HRRFitness.belowClinicalSummary(currentHRR: currentText, threshold: Int(abnormalThreshold)),
+                recommendation: Copy.Analysis.Research.HRRFitness.belowClinicalRecommendation(threshold: Int(abnormalThreshold), currentHRR: currentText, sampleCount: recent.count > 0 ? recent.count : allSamples.count),
                 severity: .warning,
                 trend: trajectory,
                 currentValue: currentHRR,
@@ -79,11 +79,12 @@ struct HRRFitnessAnalyzer {
                 )
             ))
         } else if currentHRR >= excellentThreshold {
+            let currentText = String(format: "%.0f", currentHRR)
             insights.append(InsightFactory.observation(
                 metric: .heartRateRecovery,
-                title: "Excellent Heart Rate Recovery",
-                summary: "Your heart rate drops \(String(format: "%.0f", currentHRR)) bpm after exercise. well above the \(Int(goodThreshold)) bpm threshold for good autonomic function. This indicates strong parasympathetic tone.",
-                recommendation: "An HRR of \(String(format: "%.0f", currentHRR)) bpm places you in the excellent range. Research shows this level of post-exercise recovery is associated with better heart fitness and superior autonomic nervous system health.",
+                title: Copy.Analysis.Research.HRRFitness.excellentTitle,
+                summary: Copy.Analysis.Research.HRRFitness.excellentSummary(currentHRR: currentText, goodThreshold: Int(goodThreshold)),
+                recommendation: Copy.Analysis.Research.HRRFitness.excellentRecommendation(currentHRR: currentText),
                 currentValue: currentHRR,
                 baselineValue: excellentThreshold,
                 deviationPercent: ((currentHRR - excellentThreshold) / excellentThreshold) * 100,
@@ -95,11 +96,12 @@ struct HRRFitnessAnalyzer {
         // Insight 2: HRR trajectory over months
         if daysSpanned >= 90 && sorted.count >= 10 {
             if trajectory == .improving && totalChange >= 3 {
+                let changeText = String(format: "%.0f", abs(totalChange))
                 insights.append(InsightFactory.observation(
                     metric: .heartRateRecovery,
-                    title: "Heart Recovery Improving Over \(monthsSpanned) Months",
-                    summary: "Your heart rate recovery has improved by \(String(format: "%.0f", abs(totalChange))) bpm over the past \(monthsSpanned) months. Research shows HRR improves dose-dependently with regular exercise training.",
-                    recommendation: "A \(String(format: "%.0f", abs(totalChange))) bpm improvement in HRR over \(monthsSpanned) months reflects measurable gains in autonomic fitness. Studies show as few as 6 months of consistent exercise produces this kind of parasympathetic adaptation.",
+                    title: Copy.Analysis.Research.HRRFitness.improvingTitle(months: monthsSpanned),
+                    summary: Copy.Analysis.Research.HRRFitness.improvingSummary(change: changeText, months: monthsSpanned),
+                    recommendation: Copy.Analysis.Research.HRRFitness.improvingRecommendation(change: changeText, months: monthsSpanned),
                     currentValue: currentHRR,
                     baselineValue: currentHRR - totalChange,
                     deviationPercent: (totalChange / max(currentHRR - totalChange, 1)) * 100,
@@ -111,11 +113,14 @@ struct HRRFitnessAnalyzer {
                     )
                 ))
             } else if trajectory == .declining && totalChange <= -3 {
+                let changeText = String(format: "%.0f", abs(totalChange))
+                let startText = String(format: "%.0f", currentHRR - totalChange)
+                let currentText = String(format: "%.0f", currentHRR)
                 insights.append(InsightFactory.make(
                     metric: .heartRateRecovery,
-                    title: "Heart Recovery Declining",
-                    summary: "Your heart rate recovery has worsened by \(String(format: "%.0f", abs(totalChange))) bpm over \(monthsSpanned) months. A declining HRR trajectory suggests reduced autonomic fitness.",
-                    recommendation: "HRR dropped from \(String(format: "%.0f", currentHRR - totalChange)) to \(String(format: "%.0f", currentHRR)) bpm over \(monthsSpanned) months. This may reflect detraining, increased stress, or an underlying condition. Regular aerobic exercise is the strongest intervention for improving HRR.",
+                    title: Copy.Analysis.Research.HRRFitness.decliningTitle,
+                    summary: Copy.Analysis.Research.HRRFitness.decliningSummary(change: changeText, months: monthsSpanned),
+                    recommendation: Copy.Analysis.Research.HRRFitness.decliningRecommendation(start: startText, current: currentText, months: monthsSpanned),
                     severity: currentHRR < abnormalThreshold ? .warning : .info,
                     trend: .declining,
                     currentValue: currentHRR,

@@ -40,12 +40,12 @@ struct JournalEntryView: View {
             }
             .scrollBounceBehavior(.basedOnSize)
             .background(AppColour.surfaceBase.ignoresSafeArea())
-            .navigationTitle("Log Entry")
+            .navigationTitle(Copy.Journal.logEntryTitle)
             .navigationBarTitleDisplayMode(.inline)
             .accessibilityIdentifier("screen.journalEntry")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(Copy.Buttons.cancel) {
                         AppAnalytics.shared.trackBlockTap(
                             title: "Cancel",
                             type: .journalEntryCancelled,
@@ -82,7 +82,7 @@ struct JournalEntryView: View {
 
     private var categoryGrid: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text("What would you like to log?")
+            Text(Copy.Journal.whatToLog)
                 .font(DS.Typography.headline)
 
             LazyVGrid(columns: columns, spacing: 12) {
@@ -148,7 +148,7 @@ struct JournalEntryView: View {
     private func valueInput(for category: JournalCategory) -> some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
             HStack {
-                Text("Amount")
+                Text(Copy.Journal.amount)
                     .font(DS.Typography.headline)
                 Spacer()
                 Text("\(formattedValue(value, for: category)) \(category.unit)")
@@ -238,7 +238,7 @@ struct JournalEntryView: View {
 
     private var notesField: some View {
         VStack(alignment: .leading, spacing: DS.space2) {
-            Text("Notes")
+            Text(Copy.Journal.notes)
                 .font(DS.Typography.headline)
 
             TextField("Optional notes...", text: $notes, axis: .vertical)
@@ -275,7 +275,7 @@ struct JournalEntryView: View {
         } label: {
             HStack(spacing: DS.space2) {
                 Image(systemName: category.icon)
-                Text("Log \(category.displayName)")
+                Text(Copy.Journal.logEntry(displayName: category.displayName))
                     .font(DS.Typography.headline)
             }
             .foregroundStyle(.white)
@@ -294,7 +294,7 @@ struct JournalEntryView: View {
             Image(systemName: "checkmark.circle.fill")
                 .font(DS.Typography.heroIcon)
                 .foregroundStyle(AppColour.success)
-            Text("Logged")
+            Text(Copy.Journal.logged)
                 .font(DS.Typography.title3)
         }
         .padding(DS.space7)

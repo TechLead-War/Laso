@@ -38,7 +38,7 @@ struct BaselineDriftDetector {
         history: [(date: Date, baseline: UserBaseline)]
     ) -> (percent: Double, label: String)? {
         guard history.count >= 30 else { return nil }
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let now = Date()
         let comparisons: [(days: Int, label: String)] = [
             (30, "month"), (90, "3 months"), (180, "6 months"), (365, "year")
@@ -73,7 +73,7 @@ struct BaselineDriftDetector {
         guard history.count >= 30 else { return nil }
 
         // Compare across multiple time horizons. pick the most significant
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let now = Date()
         let comparisons: [(days: Int, label: String)] = [
             (30, "month"),

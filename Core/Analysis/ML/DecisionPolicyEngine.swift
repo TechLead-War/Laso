@@ -36,12 +36,8 @@ final class DecisionPolicyEngine {
     /// Maximum feedback entries retained
     private static let maxFeedbackHistory = 200
 
-    /// Pass 11 AF: cached calendar — exposure-window math runs `dateByAdding`
-    /// per candidate generation; one static avoids allocating `Calendar.current`
-    /// per call.
-    private static let cal: Calendar = Calendar.current
 
-    /// Pass 11 AF: cached decimal NumberFormatter — `formatted(_:)` is called
+    /// Cached decimal NumberFormatter — `formatted(_:)` is called
     /// up to three times per recommendation title. Per-call allocation is wasteful.
     private static let decimalFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
@@ -174,7 +170,7 @@ final class DecisionPolicyEngine {
     /// Count how many times this actionType was shown in the past 7 days.
     func recentExposureCount(for actionType: InterventionCandidate.ActionType) -> Int {
         let key = actionType.rawValue
-        let cutoff = Self.cal.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+        let cutoff = Date.cal.date(byAdding: .day, value: -7, to: Date()) ?? Date()
         guard let dates = exposureLog[key] else { return 0 }
         return dates.filter { $0 > cutoff }.count
     }
@@ -186,7 +182,7 @@ final class DecisionPolicyEngine {
         guard exposure >= 3 else { return false }
 
         // Check for any positive feedback for this action type in recent history
-        let cutoff = Self.cal.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+        let cutoff = Date.cal.date(byAdding: .day, value: -7, to: Date()) ?? Date()
         let hasPositiveFeedback = feedbackHistory.contains { feedback in
             feedback.actionType == candidate.actionType.rawValue
                 && feedback.shownAt > cutoff
@@ -203,7 +199,7 @@ final class DecisionPolicyEngine {
         dates.append(Date())
 
         // Trim to last 14 days
-        let cutoff = Self.cal.date(byAdding: .day, value: -14, to: Date()) ?? Date()
+        let cutoff = Date.cal.date(byAdding: .day, value: -14, to: Date()) ?? Date()
         dates = dates.filter { $0 > cutoff }
         exposureLog[key] = dates
     }
@@ -873,82 +869,59 @@ final class DecisionPolicyEngine {
         switch candidate.source {
         case .predictiveModel:
             let prob = Int(candidate.upliftConfidence * 100)
-            let topFactor = candidate.evidence.contributingFeatures.first
-            if let factor = topFactor {
-                return "Your risk score for tomorrow is elevated (\(prob)% model confidence)."
-                    + " The #1 driver is your \(factor.metric.displayName.lowercased())"
-                    + ". this action directly targets it."
+            if let factor = candidate.evidence.contributingFeatures.first {
+                return Copy.Policy.predictiveWithFactor(prob: prob, factorMetric: factor.metric.displayName.lowercased())
             }
-            return "Your risk score for tomorrow is elevated (\(prob)% confidence)."
-                + " This targets the top risk factor."
+            return Copy.Policy.predictiveDefault(prob: prob)
 
         case .causalDiscovery:
             let lag = candidate.evidence.grangerOptimalLag
             let effectSize = candidate.evidence.grangerEffectSize ?? 0
-            let effectLabel = effectSize > 0.35 ? "strong" : effectSize > 0.15 ? "notable" : "measurable"
+            let effectLabel = effectSize > 0.35 ? Copy.Policy.effectStrong : effectSize > 0.15 ? Copy.Policy.effectNotable : Copy.Policy.effectMeasurable
             if let lag, lag > 0 {
-                return "Your data shows a \(effectLabel) causal link: changes in \(metric.displayName.lowercased())"
-                    + " predict downstream health changes \(lag) day\(lag == 1 ? "" : "s") later."
-                    + " This isn't just correlation. it's a directional cause."
+                return Copy.Policy.causalWithLag(effectLabel: effectLabel, metric: metric.displayName.lowercased(), lag: lag)
             }
-            return "Causal analysis identified \(metric.displayName.lowercased())"
-                + " as a \(effectLabel) upstream driver of your overall health."
+            return Copy.Policy.causalDefault(metric: metric.displayName.lowercased(), effectLabel: effectLabel)
 
         case .stateTransition:
-            return "Your body has been in its current state for"
-                + " \(max(1, Int(candidate.upliftConfidence / 0.03))) days."
-                + " \(metric.displayName) is the key metric differentiating this state"
-                + " from a healthier one. improving it accelerates the transition."
+            return Copy.Policy.stateTransition(days: max(1, Int(candidate.upliftConfidence / 0.03)), metricName: metric.displayName)
 
         case .anomalyResponse:
             if let current = currentValue, let bl = baseline {
                 let devPct = Int(abs(bl.deviationPercent(for: current)))
-                return "Your \(metric.displayName.lowercased()) is \(devPct)% outside your normal range."
-                    + " Unusual readings that persist can affect sleep, recovery, and next-day performance."
+                return Copy.Policy.anomalyWithDeviation(metric: metric.displayName.lowercased(), devPct: devPct)
             }
-            return "An unusual reading in \(metric.displayName.lowercased())"
-                + " was detected. Addressing it early prevents cascading effects."
+            return Copy.Policy.anomalyDefault(metric: metric.displayName.lowercased())
 
         case .trendReversal:
             if let trend {
                 let wowPct = Int(abs(trend.weekOverWeekChange))
                 let rate: String
                 switch trend.rateOfChange {
-                case .rapid: rate = "rapidly"
-                case .moderate: rate = "steadily"
-                case .gradual: rate = "gradually"
-                case .negligible: rate = "slightly"
+                case .rapid: rate = Copy.Policy.rateRapidly
+                case .moderate: rate = Copy.Policy.rateSteadily
+                case .gradual: rate = Copy.Policy.rateGradually
+                case .negligible: rate = Copy.Policy.rateSlightly
                 }
-                return "Your \(metric.displayName.lowercased())"
-                    + " has been \(rate) declining (\(wowPct)% per week)."
-                    + " Early intervention requires far less effort than reversing a deep decline."
+                return Copy.Policy.trendDeclining(metric: metric.displayName.lowercased(), rate: rate, wowPct: wowPct)
             }
-            return "Stopping a negative trend early requires less effort"
-                + " than reversing a well-established decline."
+            return Copy.Policy.trendDecliningDefault
 
         case .circadianTiming:
-            return "Your biological rhythms make this window 2-3x more effective"
-                + " for \(metric.displayName.lowercased()) improvement."
-                + " Working with your circadian clock, not against it."
+            return Copy.Policy.circadianTiming(metric: metric.displayName.lowercased())
 
         case .baselineRecovery:
             if let current = currentValue, let bl = baseline {
                 let gap = metric.formatValue(abs(current - bl.mean))
-                return "You're \(gap) \(metric.unit) below your personal baseline."
-                    + " Your body performs best near \(metric.formatValue(bl.mean)) \(metric.unit)"
-                    + ". closing this gap yields the biggest payoff right now."
+                return Copy.Policy.baselineRecovery(gap: gap, unit: metric.unit, baseline: metric.formatValue(bl.mean))
             }
-            return "Being below your personal baseline means your body"
-                + " isn't operating at its best. Returning to baseline"
-                + " is the highest-ROI action right now."
+            return Copy.Policy.baselineRecoveryDefault
 
         case .counterfactual:
             if let delta = candidate.evidence.forecastedScoreDelta {
-                return "Simulated scenario: making this change could shift your overall score"
-                    + " by \(Int(abs(delta))) points tomorrow. the largest single-action impact available."
+                return Copy.Policy.counterfactualWithDelta(delta: Int(abs(delta)))
             }
-            return "Scenario analysis shows this is the single change"
-                + " most likely to improve your overall score tomorrow."
+            return Copy.Policy.counterfactualDefault
         }
     }
 

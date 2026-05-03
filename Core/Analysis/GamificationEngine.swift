@@ -144,7 +144,7 @@ final class GamificationEngine {
 
     /// Achievements unlocked within the last 7 days.
     var recentlyUnlocked: [Achievement] {
-        let cutoff = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+        let cutoff = Date.cal.date(byAdding: .day, value: -7, to: Date()) ?? Date()
         return achievements.filter { $0.isUnlocked && ($0.unlockedDate ?? .distantPast) >= cutoff }
     }
 
@@ -181,7 +181,7 @@ final class GamificationEngine {
         } else {
             allTimeSeries = MainActor.assumeIsolated { store.loadAllTimeSeries() }
         }
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let today = calendar.startOfDay(for: Date())
 
         // Build per-day lookups
@@ -269,8 +269,8 @@ final class GamificationEngine {
         return f
     }()
 
-    /// Cached year-month formatter (UTC) for marathon-month detection. Performance Pass 2:
-    /// avoids allocating a DateFormatter on every gamification recompute.
+    /// Cached year-month formatter (UTC) for marathon-month detection.
+    /// Avoids allocating a DateFormatter on every gamification recompute.
     private static let monthFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM"
@@ -838,7 +838,7 @@ final class GamificationEngine {
 
         var consecutive = 0
         var previousDate: Date?
-        let calendar = Calendar.current
+        let calendar = Date.cal
 
         for date in dates {
             let key = formatter.string(from: date)
@@ -940,7 +940,7 @@ final class GamificationEngine {
 
         guard sorted.count >= days else { return false }
 
-        let calendar = Calendar.current
+        let calendar = Date.cal
         for startIdx in 0...(sorted.count - days) {
             let window = sorted[startIdx..<(startIdx + days)]
             let windowArray = Array(window)

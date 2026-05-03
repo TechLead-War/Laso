@@ -8,7 +8,7 @@ struct BrainHealthDetailView: View {
     let weeklyHistory: [(date: Date, score: Int)]
     let weeklyAverage: Int?
     let trend: String
-    /// Pass 8 V (F45): freshness timestamp from the parent dashboard refresh.
+    /// Freshness timestamp from the parent dashboard refresh.
     /// Drives a small "Updated …" caption at the top of the screen.
     var lastUpdated: Date? = nil
 
@@ -83,7 +83,7 @@ struct BrainHealthDetailView: View {
                 HStack(spacing: DS.space1) {
                     Image(systemName: "clock.arrow.circlepath")
                         .font(DS.Typography.caption2.weight(.bold))
-                    Text("Building accuracy · \(Int(brainScore.confidence * 100))%")
+                    Text(Copy.BrainHealth.buildingAccuracy(percent: Int(brainScore.confidence * 100)))
                         .font(DS.Typography.captionSemibold)
                 }
                 .foregroundStyle(AppColour.textTertiary)
@@ -91,7 +91,7 @@ struct BrainHealthDetailView: View {
                 .padding(.vertical, DS.space2)
                 .background(AppColour.textSecondary.opacity(0.1), in: Capsule())
 
-                Text("We need more nights of sleep + HRV data before locking in your brain readiness number.")
+                Text(Copy.BrainHealth.needMoreData)
                     .font(DS.Typography.subheadline)
                     .foregroundStyle(AppColour.textSecondary)
                     .multilineTextAlignment(.center)
@@ -471,12 +471,12 @@ private struct BrainWeeklyPoint: Identifiable {
                 confidence: 0.85
             ),
             weeklyHistory: [
-                (date: Calendar.current.date(byAdding: .day, value: -6, to: Date())!, score: 72),
-                (date: Calendar.current.date(byAdding: .day, value: -5, to: Date())!, score: 68),
-                (date: Calendar.current.date(byAdding: .day, value: -4, to: Date())!, score: 75),
-                (date: Calendar.current.date(byAdding: .day, value: -3, to: Date())!, score: 80),
-                (date: Calendar.current.date(byAdding: .day, value: -2, to: Date())!, score: 77),
-                (date: Calendar.current.date(byAdding: .day, value: -1, to: Date())!, score: 82),
+                (date: Date.cal.date(byAdding: .day, value: -6, to: Date())!, score: 72),
+                (date: Date.cal.date(byAdding: .day, value: -5, to: Date())!, score: 68),
+                (date: Date.cal.date(byAdding: .day, value: -4, to: Date())!, score: 75),
+                (date: Date.cal.date(byAdding: .day, value: -3, to: Date())!, score: 80),
+                (date: Date.cal.date(byAdding: .day, value: -2, to: Date())!, score: 77),
+                (date: Date.cal.date(byAdding: .day, value: -1, to: Date())!, score: 82),
                 (date: Date(), score: 78)
             ],
             weeklyAverage: 76,

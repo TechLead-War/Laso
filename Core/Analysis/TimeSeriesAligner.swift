@@ -63,7 +63,7 @@ struct TimeSeriesAligner {
 
         var pairs: [AlignedPair] = []
         pairs.reserveCapacity(Swift.min(mapA.count, mapB.count))
-        let calendar = Calendar.current
+        let calendar = Date.cal
         for (dateA, valueA) in mapA {
             let dateB = calendar.date(byAdding: .day, value: dayOffset, to: dateA)?.startOfDay ?? dateA
             if let valueB = mapB[dateB] {

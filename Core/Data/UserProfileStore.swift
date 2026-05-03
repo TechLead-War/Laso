@@ -45,7 +45,7 @@ struct UserProfile: Codable {
 
     /// Age in years derived from dateOfBirth
     var ageFromDateOfBirth: Int {
-        Calendar.current.dateComponents([.year], from: dateOfBirth, to: Date()).year ?? 0
+        Date.cal.dateComponents([.year], from: dateOfBirth, to: Date()).year ?? 0
     }
 
     /// Age bracket for demographics grouping

@@ -4,11 +4,9 @@ import NaturalLanguage
 // MARK: - Health Data Query Engine
 
 /// Natural language query engine for personal health data.
-/// Inspired by Google's PHIA (Nature Communications 2025): transforms
-/// user questions into structured queries over the full ML pipeline.
-///
-/// Uses Apple's on-device NaturalLanguage framework for semantic intent
-/// matching via NLEmbedding. no external API calls required.
+/// Transforms user questions into structured queries over the full ML
+/// pipeline. Uses Apple's on-device NaturalLanguage framework for semantic
+/// intent matching via NLEmbedding — no external API calls required.
 final class HealthDataQueryEngine {
 
     // MARK: - Types
@@ -582,21 +580,21 @@ final class HealthDataQueryEngine {
         }
 
         let actionAdvice = trendActionAdvice(metric: metric, pctChange: pctChange, sentiment: sentiment)
-        let answer = "\(actionAdvice) Your \(metric.displayName) is \(direction) over \(period.displayName), averaging \(formatValue(avg, metric: metric))."
+        let answer = Copy.Analysis.HealthDataQuery.trendingAnswer(action: actionAdvice, metric: metric.displayName, direction: direction, period: period.displayName, avg: formatValue(avg, metric: metric))
 
         return QueryResult(
-            question: "How is my \(metric.displayName) trending?",
+            question: Copy.Analysis.HealthDataQuery.qHowTrending(metric.displayName),
             answer: answer,
             dataPoints: [
-                .init(label: "Average", value: avg, unit: metric.unit, date: nil),
-                .init(label: "Change", value: pctChange, unit: "%", date: nil),
-                .init(label: "Latest", value: values.last ?? 0, unit: metric.unit, date: recent.last?.date),
+                .init(label: Copy.Analysis.HealthDataQuery.labelAverage, value: avg, unit: metric.unit, date: nil),
+                .init(label: Copy.Analysis.HealthDataQuery.labelChange, value: pctChange, unit: "%", date: nil),
+                .init(label: Copy.Analysis.HealthDataQuery.labelLatest, value: values.last ?? 0, unit: metric.unit, date: recent.last?.date),
             ],
             confidence: min(1.0, Double(recent.count) / 14.0),
             relatedQuestions: [
-                "What affects my \(metric.displayName)?",
-                "Predict my \(metric.displayName) for tomorrow",
-                "Do I have any \(metric.displayName) patterns?",
+                Copy.Analysis.HealthDataQuery.relatedAffects(metric.displayName),
+                Copy.Analysis.HealthDataQuery.relatedPredict(metric.displayName),
+                Copy.Analysis.HealthDataQuery.relatedPatterns(metric.displayName),
             ]
         )
     }
@@ -617,16 +615,18 @@ final class HealthDataQueryEngine {
         let better = (pctDiff > 0 && metric.higherIsBetter) || (pctDiff < 0 && !metric.higherIsBetter)
         let verdict: String
         if abs(pctDiff) < 3 {
-            verdict = "roughly the same"
+            verdict = Copy.Analysis.HealthDataQuery.comparisonRoughlySame
         } else {
-            verdict = better ? "looking better" : "a bit lower"
+            verdict = better ? Copy.Analysis.HealthDataQuery.comparisonLookingBetter : Copy.Analysis.HealthDataQuery.comparisonABitLower
         }
 
-        let comparisonAction = better ? "Keep up whatever you changed. It's working." : (abs(pctDiff) < 3 ? "You're holding steady, which is a good sign." : "Try to get back to your \(periodB.displayName) routine. Your body did better then.")
-        let answer = "\(comparisonAction) Your \(metric.displayName) \(periodA.displayName) is \(verdict) compared to \(periodB.displayName) (\(formatValue(avgA, metric: metric)) vs \(formatValue(avgB, metric: metric)))."
+        let comparisonAction = better
+            ? Copy.Analysis.HealthDataQuery.comparisonKeepUp
+            : (abs(pctDiff) < 3 ? Copy.Analysis.HealthDataQuery.comparisonHoldingSteady : Copy.Analysis.HealthDataQuery.comparisonGetBack(period: periodB.displayName))
+        let answer = Copy.Analysis.HealthDataQuery.comparisonAnswer(action: comparisonAction, metric: metric.displayName, periodA: periodA.displayName, verdict: verdict, periodB: periodB.displayName, avgA: formatValue(avgA, metric: metric), avgB: formatValue(avgB, metric: metric))
 
         return QueryResult(
-            question: "Compare my \(metric.displayName)",
+            question: Copy.Analysis.HealthDataQuery.qCompare(metric.displayName),
             answer: answer,
             dataPoints: [
                 .init(label: periodA.displayName.capitalized, value: avgA, unit: metric.unit, date: nil),
@@ -634,8 +634,8 @@ final class HealthDataQueryEngine {
             ],
             confidence: 0.85,
             relatedQuestions: [
-                "How is my \(metric.displayName) trending?",
-                "What affects my \(metric.displayName)?",
+                Copy.Analysis.HealthDataQuery.qHowTrending(metric.displayName),
+                Copy.Analysis.HealthDataQuery.relatedAffects(metric.displayName),
             ]
         )
     }
@@ -647,28 +647,32 @@ final class HealthDataQueryEngine {
         }
 
         if let corr = match {
-            let strength = abs(corr.pearsonR) >= 0.7 ? "strong" : abs(corr.pearsonR) >= 0.4 ? "moderate" : abs(corr.pearsonR) >= 0.2 ? "mild" : "very weak"
-            let direction = corr.pearsonR > 0 ? "move together" : "move in opposite directions"
+            let strength = abs(corr.pearsonR) >= 0.7 ? Copy.Analysis.HealthDataQuery.strengthStrong
+                : abs(corr.pearsonR) >= 0.4 ? Copy.Analysis.HealthDataQuery.strengthModerate
+                : abs(corr.pearsonR) >= 0.2 ? Copy.Analysis.HealthDataQuery.strengthMild
+                : Copy.Analysis.HealthDataQuery.strengthVeryWeak
+            let direction = corr.pearsonR > 0 ? Copy.Analysis.HealthDataQuery.directionMoveTogether : Copy.Analysis.HealthDataQuery.directionMoveOpposite
 
             var answer: String
             if corr.grangerCausal {
-                let lagText = corr.grangerOptimalLag == 1 ? "the next day" : "\(corr.grangerOptimalLag) days later"
-                answer = "Pay attention to your \(corr.metricA.displayName). When it changes, your \(corr.metricB.displayName) tends to follow \(lagText). There's a \(strength) link between the two, and they \(direction)."
+                let lagText = corr.grangerOptimalLag == 1 ? Copy.Analysis.HealthDataQuery.lagNextDay : Copy.Analysis.HealthDataQuery.lagDaysLater(corr.grangerOptimalLag)
+                answer = Copy.Analysis.HealthDataQuery.correlationCausal(metricA: corr.metricA.displayName, metricB: corr.metricB.displayName, lag: lagText, strength: strength, direction: direction)
             } else {
                 let actionableMetric = metricA.higherIsBetter == metricB.higherIsBetter ? metricA : metricB
-                answer = "Yes, improving your \(actionableMetric.displayName) is likely to help your \(actionableMetric == metricA ? metricB.displayName : metricA.displayName) too. There's a \(strength) connection and they \(direction)."
+                let otherMetric = actionableMetric == metricA ? metricB : metricA
+                answer = Copy.Analysis.HealthDataQuery.correlationActionable(actionable: actionableMetric.displayName, other: otherMetric.displayName, strength: strength, direction: direction)
             }
 
             return QueryResult(
-                question: "Does \(metricA.displayName) affect \(metricB.displayName)?",
+                question: Copy.Analysis.HealthDataQuery.qDoesAffect(metricA.displayName, metricB.displayName),
                 answer: answer,
                 dataPoints: [
-                    .init(label: "Correlation", value: corr.pearsonR, unit: "r", date: nil),
-                    .init(label: "Stability", value: corr.stability, unit: "", date: nil),
+                    .init(label: Copy.Analysis.HealthDataQuery.labelCorrelation, value: corr.pearsonR, unit: "r", date: nil),
+                    .init(label: Copy.Analysis.HealthDataQuery.labelStability, value: corr.stability, unit: "", date: nil),
                 ],
                 confidence: corr.stability,
                 relatedQuestions: [
-                    "How is my \(metricA.displayName) trending?",
+                    Copy.Analysis.HealthDataQuery.qHowTrending(metricA.displayName),
                     "What else affects my \(metricB.displayName)?",
                 ]
             )
@@ -683,13 +687,13 @@ final class HealthDataQueryEngine {
             dataPoints.append(.init(label: metricB.displayName, value: latestB.value, unit: metricB.unit, date: latestB.date))
         }
         return QueryResult(
-            question: "Does \(metricA.displayName) affect \(metricB.displayName)?",
-            answer: "I haven't found a clear statistical connection between your \(metricA.displayName) and \(metricB.displayName) so far. They appear to move independently based on the data I have.",
+            question: Copy.Analysis.HealthDataQuery.qDoesAffect(metricA.displayName, metricB.displayName),
+            answer: Copy.Analysis.HealthDataQuery.correlationNoLink(metricA: metricA.displayName, metricB: metricB.displayName),
             dataPoints: dataPoints,
             confidence: 0.5,
             relatedQuestions: [
-                "How is my \(metricA.displayName) trending?",
-                "How is my \(metricB.displayName) trending?",
+                Copy.Analysis.HealthDataQuery.qHowTrending(metricA.displayName),
+                Copy.Analysis.HealthDataQuery.qHowTrending(metricB.displayName),
             ]
         )
     }
@@ -705,32 +709,32 @@ final class HealthDataQueryEngine {
                     let latest = recent.last?.value ?? avg
                     let when = horizon == 1 ? "tomorrow" : "in \(horizon) days"
                     return QueryResult(
-                        question: "What will my \(metric.displayName) be?",
-                        answer: "I don't have a full forecasting model for \(metric.displayName) yet, but based on your recent trend (averaging \(formatValue(avg, metric: metric)) over the past week, latest at \(formatValue(latest, metric: metric))), you can expect it to stay in a similar range \(when).",
+                        question: Copy.Analysis.HealthDataQuery.qWhatWillBe(metric.displayName),
+                        answer: Copy.Analysis.HealthDataQuery.forecastNoModel(metric: metric.displayName, avg: formatValue(avg, metric: metric), latest: formatValue(latest, metric: metric), when: when),
                         dataPoints: [
                             .init(label: "7-day avg", value: avg, unit: metric.unit, date: nil),
-                            .init(label: "Latest", value: latest, unit: metric.unit, date: recent.last?.date),
+                            .init(label: Copy.Analysis.HealthDataQuery.labelLatest, value: latest, unit: metric.unit, date: recent.last?.date),
                         ],
                         confidence: 0.4,
-                        relatedQuestions: ["How is my \(metric.displayName) trending?"]
+                        relatedQuestions: [Copy.Analysis.HealthDataQuery.qHowTrending(metric.displayName)]
                     )
                 }
             }
             return QueryResult(
-                question: "What will my \(metric.displayName) be?",
-                answer: "I need a bit more \(metric.displayName) data to make a prediction. Once I have a couple of weeks of history, I'll be able to forecast ahead for you.",
+                question: Copy.Analysis.HealthDataQuery.qWhatWillBe(metric.displayName),
+                answer: Copy.Analysis.HealthDataQuery.forecastNeedMore(metric: metric.displayName),
                 dataPoints: [],
                 confidence: 0.3,
-                relatedQuestions: ["How is my \(metric.displayName) trending?"]
+                relatedQuestions: [Copy.Analysis.HealthDataQuery.qHowTrending(metric.displayName)]
             )
         }
 
         let when = horizon == 1 ? "tomorrow" : "in \(horizon) days"
         let forecastAction = forecastActionAdvice(metric: metric, predicted: result.value, context: ctx)
-        let answer = "\(forecastAction) I'm expecting your \(metric.displayName) to be around \(formatValue(result.value, metric: metric)) \(when), based on your patterns."
+        let answer = Copy.Analysis.HealthDataQuery.forecastAnswer(action: forecastAction, metric: metric.displayName, value: formatValue(result.value, metric: metric), when: when)
 
         return QueryResult(
-            question: "What will my \(metric.displayName) be \(when)?",
+            question: Copy.Analysis.HealthDataQuery.qWhatWillBeWhen(metric.displayName, when: when),
             answer: answer,
             dataPoints: [
                 .init(label: "Predicted", value: result.value, unit: metric.unit, date: nil),
@@ -739,8 +743,8 @@ final class HealthDataQueryEngine {
             ],
             confidence: max(0.3, 1.0 - result.ciWidth / max(1, result.value)),
             relatedQuestions: [
-                "How is my \(metric.displayName) trending?",
-                "What affects my \(metric.displayName)?",
+                Copy.Analysis.HealthDataQuery.qHowTrending(metric.displayName),
+                Copy.Analysis.HealthDataQuery.relatedAffects(metric.displayName),
             ]
         )
     }
@@ -758,11 +762,11 @@ final class HealthDataQueryEngine {
 
         if anomalies.isEmpty {
             return QueryResult(
-                question: "Anything unusual?",
-                answer: "Everything looks within your normal ranges right now. No spikes, no dips. your body is humming along as expected.",
+                question: Copy.Analysis.HealthDataQuery.qAnythingUnusual,
+                answer: Copy.Analysis.HealthDataQuery.anomalyAllNormal,
                 dataPoints: [],
                 confidence: 0.7,
-                relatedQuestions: ["How am I doing overall?", "Am I at risk for anything?"]
+                relatedQuestions: [Copy.Analysis.HealthDataQuery.rqHowAmIDoingOverall, Copy.Analysis.HealthDataQuery.rqAmIAtRiskForAnything]
             )
         }
 
@@ -770,14 +774,14 @@ final class HealthDataQueryEngine {
         let top = anomalies[0]
         let dir = (ctx.baselines[top.metric].map { top.value > $0.mean } ?? true) ? "higher" : "lower"
         let anomalyAction = anomalyActionAdvice(metric: top.metric, isHigh: dir == "higher")
-        var answer = "\(anomalyAction) Your \(top.metric.displayName) at \(formatValue(top.value, metric: top.metric)) is noticeably \(dir) than your usual."
+        var answer = Copy.Analysis.HealthDataQuery.anomalyAnswer(action: anomalyAction, metric: top.metric.displayName, value: formatValue(top.value, metric: top.metric), dir: dir)
         if anomalies.count > 1 {
             let others = anomalies.dropFirst().prefix(2).map { $0.metric.displayName }.joined(separator: " and ")
             answer += " Your \(others) \(anomalies.count > 2 ? "are" : "is") also outside the usual range."
         }
 
         return QueryResult(
-            question: "Anything unusual?",
+            question: Copy.Analysis.HealthDataQuery.qAnythingUnusual,
             answer: answer,
             dataPoints: anomalies.prefix(3).map {
                 .init(label: $0.metric.displayName, value: $0.value, unit: $0.metric.unit, date: nil)
@@ -803,16 +807,17 @@ final class HealthDataQueryEngine {
         let dateStr = DateFormatter.localizedString(from: target.date, dateStyle: .medium, timeStyle: .none)
         let label = seeking == .best ? "best" : "worst"
 
-        let answer = "Your \(label) \(metric.displayName) on record was \(formatValue(target.value, metric: metric)), recorded on \(dateStr). \(seeking == .best ? "That's a solid benchmark to work toward again." : "Everyone has off days. what matters is the overall trajectory.")"
+        let suffix = seeking == .best ? Copy.Analysis.HealthDataQuery.prBestSuffix : Copy.Analysis.HealthDataQuery.prWorstSuffix
+        let answer = Copy.Analysis.HealthDataQuery.prAnswer(label: label, metric: metric.displayName, value: formatValue(target.value, metric: metric), dateStr: dateStr, suffix: suffix)
 
         return QueryResult(
-            question: "What was my \(label) \(metric.displayName)?",
+            question: Copy.Analysis.HealthDataQuery.qWhatWasLabel(label, metric.displayName),
             answer: answer,
             dataPoints: [.init(label: label.capitalized, value: target.value, unit: metric.unit, date: target.date)],
             confidence: 0.95,
             relatedQuestions: [
-                "How is my \(metric.displayName) trending?",
-                "What was my \(seeking == .best ? "worst" : "best") \(metric.displayName)?",
+                Copy.Analysis.HealthDataQuery.qHowTrending(metric.displayName),
+                Copy.Analysis.HealthDataQuery.qWhatWasLabel(seeking == .best ? "worst" : "best", metric.displayName),
             ]
         )
     }
@@ -832,27 +837,24 @@ final class HealthDataQueryEngine {
 
         if let baseline = ctx.baselines[m] {
             let dev = (avg - baseline.mean) / max(1, baseline.standardDeviation)
+            let latestStr = formatValue(latest, metric: m)
             if dev > 1 {
-                if m.higherIsBetter {
-                    answer = "Keep doing what you're doing. Your \(m.displayName) is above your personal baseline at \(formatValue(latest, metric: m)). Whatever your routine is right now, it's working."
-                } else {
-                    answer = "Try to ease up a bit today. Your \(m.displayName) is running high at \(formatValue(latest, metric: m)), above your usual baseline."
-                }
+                answer = m.higherIsBetter
+                    ? Copy.Analysis.HealthDataQuery.statusKeepDoing(metric: m.displayName, latest: latestStr)
+                    : Copy.Analysis.HealthDataQuery.statusEaseUp(metric: m.displayName, latest: latestStr)
             } else if dev < -1 {
-                if m.higherIsBetter {
-                    answer = "Your \(m.displayName) has dipped to \(formatValue(latest, metric: m)), below your usual level. Focus on recovery. Sleep, hydration, and lighter activity can help bring it back up."
-                } else {
-                    answer = "Nice, your \(m.displayName) is at \(formatValue(latest, metric: m)), below your baseline, which is a good sign. Keep it up."
-                }
+                answer = m.higherIsBetter
+                    ? Copy.Analysis.HealthDataQuery.statusDipped(metric: m.displayName, latest: latestStr)
+                    : Copy.Analysis.HealthDataQuery.statusBelowGood(metric: m.displayName, latest: latestStr)
             } else {
-                answer = "Your \(m.displayName) is right where it should be at \(formatValue(latest, metric: m)). Steady and consistent. That's what you want to see."
+                answer = Copy.Analysis.HealthDataQuery.statusOnBaseline(metric: m.displayName, latest: latestStr)
             }
         } else {
-            answer = "Your \(m.displayName) is at \(formatValue(latest, metric: m)) with a 7-day average of \(formatValue(avg, metric: m)). As I learn your patterns, I'll be able to give you more personalized advice."
+            answer = Copy.Analysis.HealthDataQuery.statusLearning(metric: m.displayName, latest: formatValue(latest, metric: m), avg: formatValue(avg, metric: m))
         }
 
         return QueryResult(
-            question: "How is my \(m.displayName)?",
+            question: Copy.Analysis.HealthDataQuery.qHowIsMetric(m.displayName),
             answer: answer,
             dataPoints: [
                 .init(label: "Current", value: latest, unit: m.unit, date: recent.last?.date),
@@ -860,9 +862,9 @@ final class HealthDataQueryEngine {
             ],
             confidence: 0.85,
             relatedQuestions: [
-                "How is my \(m.displayName) trending?",
-                "What affects my \(m.displayName)?",
-                "Predict my \(m.displayName) for tomorrow",
+                Copy.Analysis.HealthDataQuery.qHowTrending(m.displayName),
+                Copy.Analysis.HealthDataQuery.relatedAffects(m.displayName),
+                Copy.Analysis.HealthDataQuery.relatedPredict(m.displayName),
             ]
         )
     }
@@ -876,11 +878,11 @@ final class HealthDataQueryEngine {
             let metricCount = activeMetrics.count
             if metricCount == 0 {
                 return QueryResult(
-                    question: "How is my body doing?",
-                    answer: "No health data available yet. Once you connect your Apple Watch or allow Health access, I'll be able to tell you how your body is doing.",
+                    question: Copy.Analysis.HealthDataQuery.qHowIsBodyDoing,
+                    answer: Copy.Analysis.HealthDataQuery.bodyNoData,
                     dataPoints: [],
                     confidence: 0.3,
-                    relatedQuestions: ["What data do I have?"]
+                    relatedQuestions: [Copy.Analysis.HealthDataQuery.rqWhatDataDoIHave]
                 )
             }
             // Build a basic summary from available baselines and latest values
@@ -892,29 +894,30 @@ final class HealthDataQueryEngine {
                 let label = metric.displayName
                 if let baseline = ctx.baselines[metric] {
                     let dev = (latest.value - baseline.mean) / max(1, baseline.standardDeviation)
+                    let valueStr = formatValue(latest.value, metric: metric)
                     if dev > 1 {
-                        highlights.append("\(label) is a bit high at \(formatValue(latest.value, metric: metric))")
+                        highlights.append(Copy.Analysis.HealthDataQuery.highlightHigh(label: label, value: valueStr))
                     } else if dev < -1 {
-                        highlights.append("\(label) is on the low side at \(formatValue(latest.value, metric: metric))")
+                        highlights.append(Copy.Analysis.HealthDataQuery.highlightLow(label: label, value: valueStr))
                     } else {
-                        highlights.append("\(label) is normal at \(formatValue(latest.value, metric: metric))")
+                        highlights.append(Copy.Analysis.HealthDataQuery.highlightNormal(label: label, value: valueStr))
                     }
                 } else {
-                    highlights.append("\(label) is at \(formatValue(latest.value, metric: metric))")
+                    highlights.append(Copy.Analysis.HealthDataQuery.highlightDefault(label: label, value: formatValue(latest.value, metric: metric)))
                 }
                 dataPoints.append(.init(label: label, value: latest.value, unit: metric.unit, date: latest.date))
                 if dataPoints.count >= 4 { break }
             }
             let summary = highlights.isEmpty
-                ? "I'm tracking \(metricCount) metrics. Everything I see looks within expected ranges."
+                ? Copy.Analysis.HealthDataQuery.metricsTrackingNormal(count: metricCount)
                 : highlights.joined(separator: ". ") + "."
-            let answer = "Here's a snapshot of your body right now. \(summary) As I gather more history, I'll be able to classify your body's overall state automatically."
+            let answer = Copy.Analysis.HealthDataQuery.bodySnapshot(summary: summary)
             return QueryResult(
-                question: "How is my body doing?",
+                question: Copy.Analysis.HealthDataQuery.qHowIsBodyDoing,
                 answer: answer,
                 dataPoints: dataPoints,
                 confidence: 0.5,
-                relatedQuestions: ["Am I at risk for anything?", "How is my HRV trending?", "How is my sleep trending?"]
+                relatedQuestions: [Copy.Analysis.HealthDataQuery.rqAmIAtRiskForAnything, Copy.Analysis.HealthDataQuery.rqHowIsMyHRVTrending, Copy.Analysis.HealthDataQuery.rqHowIsMySleepTrending]
             )
         }
 
@@ -932,14 +935,14 @@ final class HealthDataQueryEngine {
             : ""
 
         let traitList = traitDescriptions.joined(separator: ", ")
-        let answer = "\(healthStateConclusion(state: state)) Your body is in a \"\(state.label)\" state right now, where \(traitList).\(durationNote)"
+        let answer = Copy.Analysis.HealthDataQuery.bodyStateAnswer(conclusion: healthStateConclusion(state: state), label: state.label, traits: traitList, durationNote: durationNote)
 
         let dataPoints: [QueryResult.DataPoint] = topTraits.map {
             .init(label: $0.metric.displayName, value: $0.zScore, unit: "z", date: nil)
         }
 
         return QueryResult(
-            question: "What state is my body in?",
+            question: Copy.Analysis.HealthDataQuery.qWhatStateIsBody,
             answer: answer,
             dataPoints: dataPoints,
             confidence: 0.8,
@@ -956,14 +959,14 @@ final class HealthDataQueryEngine {
             if let risk = ctx.tomorrowRiskPrediction {
                 let pct = Int(risk.probability * 100)
                 let answer = pct > 50
-                    ? "Based on your recent data, there's a \(pct)% chance tomorrow could be a rough day. \(riskFactorSummary(risk.topFactors))"
-                    : "Looking ahead, your risk of a bad day tomorrow is low (\(pct)%). You're in a good position."
+                    ? Copy.Analysis.HealthDataQuery.riskRoughDay(percent: pct, summary: riskFactorSummary(risk.topFactors))
+                    : Copy.Analysis.HealthDataQuery.riskLowDay(percent: pct)
                 return QueryResult(
-                    question: "Am I at risk?",
+                    question: Copy.Analysis.HealthDataQuery.qAmIAtRisk,
                     answer: answer,
                     dataPoints: [.init(label: "Tomorrow risk", value: risk.probability * 100, unit: "%", date: nil)],
                     confidence: risk.confidence,
-                    relatedQuestions: ["What state is my body in?", "What should I do today?"]
+                    relatedQuestions: [Copy.Analysis.HealthDataQuery.rqWhatStateIsMyBody, Copy.Analysis.HealthDataQuery.rqWhatShouldIDoToday]
                 )
             }
             // Graceful fallback: check baselines for any outlier metrics
@@ -977,23 +980,23 @@ final class HealthDataQueryEngine {
             if !warnings.isEmpty {
                 warnings.sort { $0.deviation > $1.deviation }
                 let top = warnings[0]
-                let answer = "Based on your recent readings, your \(top.metric.displayName) at \(formatValue(top.value, metric: top.metric)) is outside your usual range. Worth keeping an eye on. As I build a longer history, I'll be able to run deeper risk assessments."
+                let answer = Copy.Analysis.HealthDataQuery.riskOutsideRange(metric: top.metric.displayName, value: formatValue(top.value, metric: top.metric))
                 return QueryResult(
-                    question: "Am I at risk?",
+                    question: Copy.Analysis.HealthDataQuery.qAmIAtRisk,
                     answer: answer,
                     dataPoints: warnings.prefix(3).map {
                         .init(label: $0.metric.displayName, value: $0.value, unit: $0.metric.unit, date: nil)
                     },
                     confidence: 0.5,
-                    relatedQuestions: ["How is my \(top.metric.displayName) trending?", "How am I doing overall?"]
+                    relatedQuestions: [Copy.Analysis.HealthDataQuery.qHowTrending(top.metric.displayName), Copy.Analysis.HealthDataQuery.rqHowAmIDoingOverall]
                 )
             }
             return QueryResult(
-                question: "Am I at risk?",
-                answer: "Based on the data I have, nothing looks concerning right now. All your recent readings are within your normal ranges. I'll keep monitoring and alert you if anything changes.",
+                question: Copy.Analysis.HealthDataQuery.qAmIAtRisk,
+                answer: Copy.Analysis.HealthDataQuery.riskNothingConcerning,
                 dataPoints: [],
                 confidence: 0.5,
-                relatedQuestions: ["How am I doing overall?", "Anything unusual in my data?"]
+                relatedQuestions: [Copy.Analysis.HealthDataQuery.rqHowAmIDoingOverall, Copy.Analysis.HealthDataQuery.rqAnythingUnusualInData]
             )
         }
 
@@ -1010,28 +1013,31 @@ final class HealthDataQueryEngine {
         let elevated = signals.filter { $0.risk >= .moderate }.sorted { $0.score > $1.score }
 
         if elevated.isEmpty {
-            var answer = "No significant health risks detected. your fatigue, burnout, overtraining, sleep, immune, and activity signals all look healthy."
+            var answer = Copy.Analysis.HealthDataQuery.riskAllHealthy
             if let risk = ctx.tomorrowRiskPrediction, risk.probability < 0.3 {
                 answer += " Tomorrow is looking good too."
             }
             return QueryResult(
-                question: "Am I at risk?",
+                question: Copy.Analysis.HealthDataQuery.qAmIAtRisk,
                 answer: answer,
                 dataPoints: [],
                 confidence: 0.85,
-                relatedQuestions: ["What state is my body in?", "How is my HRV trending?"]
+                relatedQuestions: [Copy.Analysis.HealthDataQuery.rqWhatStateIsMyBody, Copy.Analysis.HealthDataQuery.rqHowIsMyHRVTrending]
             )
         }
 
         let top = elevated[0]
-        var answer = "\(top.recommendation) Your \(top.name.lowercased()) is \(top.risk == .critical ? "at a critical level" : top.risk == .high ? "elevated" : "worth watching"). \(top.explanation)"
+        let level = top.risk == .critical ? Copy.Analysis.HealthDataQuery.riskCritical
+            : top.risk == .high ? Copy.Analysis.HealthDataQuery.riskHigh
+            : Copy.Analysis.HealthDataQuery.riskWatching
+        var answer = Copy.Analysis.HealthDataQuery.riskAnswer(recommendation: top.recommendation, name: top.name.lowercased(), level: level, explanation: top.explanation)
         if elevated.count > 1 {
             let others = elevated.dropFirst().prefix(2).map { $0.name.lowercased() }.joined(separator: " and ")
             answer += " Also keep an eye on your \(others)."
         }
 
         return QueryResult(
-            question: "Am I at risk?",
+            question: Copy.Analysis.HealthDataQuery.qAmIAtRisk,
             answer: answer,
             dataPoints: elevated.prefix(3).map {
                 .init(label: $0.name, value: $0.score * 100, unit: "%", date: nil)
@@ -1061,17 +1067,17 @@ final class HealthDataQueryEngine {
                 let unmet = profile.conditions.filter { !$0.isCurrentlyMet }.prefix(2)
                 if !unmet.isEmpty {
                     let gaps = unmet.map { $0.metric.displayName }.joined(separator: " and ")
-                    answer = "Focus on your \(gaps) today. That's your biggest opportunity to improve. "
+                    answer = Copy.Analysis.HealthDataQuery.greatDayFocusOn(gaps)
                 } else {
-                    answer = "You're close to your ideal day. Keep your current routine going. "
+                    answer = Copy.Analysis.HealthDataQuery.greatDayCloseToIdeal
                 }
             } else {
                 answer = ""
             }
-            answer += "Your data says to aim for: \(targetList). Hit those targets and you're looking at a score of \(Int(ideal.predictedScore))."
+            answer += Copy.Analysis.HealthDataQuery.optimizationAimFor(targetList: targetList, score: Int(ideal.predictedScore))
 
             return QueryResult(
-                question: "How do I have a great day?",
+                question: Copy.Analysis.HealthDataQuery.qHowGreatDay,
                 answer: answer,
                 dataPoints: topTargets.map {
                     .init(label: $0.metric.displayName, value: $0.targetValue, unit: $0.metric.unit, date: nil)
@@ -1091,8 +1097,8 @@ final class HealthDataQueryEngine {
             let levers = top.map { "\($0.metric.displayName) (\($0.description))" }.joined(separator: "; ")
 
             return QueryResult(
-                question: "How do I improve?",
-                answer: "The metrics with the biggest impact on your score are: \(levers). Small improvements here will move the needle the most.",
+                question: Copy.Analysis.HealthDataQuery.qHowImprove,
+                answer: Copy.Analysis.HealthDataQuery.improveBiggestImpact(levers),
                 dataPoints: top.map { .init(label: $0.metric.displayName, value: $0.slope, unit: "pts/σ", date: nil) },
                 confidence: 0.7,
                 relatedQuestions: top.map { "How is my \($0.metric.displayName) trending?" }
@@ -1115,8 +1121,8 @@ final class HealthDataQueryEngine {
             let topSuggestions = suggestions.prefix(3)
             let tips = topSuggestions.map { $0.tip }.joined(separator: "; ")
             return QueryResult(
-                question: "How do I improve?",
-                answer: "Here's where you have the most room to improve right now: \(tips). Focus on bringing these back to your baseline and you should feel the difference.",
+                question: Copy.Analysis.HealthDataQuery.qHowImprove,
+                answer: Copy.Analysis.HealthDataQuery.improveMostRoom(tips),
                 dataPoints: topSuggestions.map {
                     .init(label: $0.metric.displayName, value: $0.value, unit: $0.metric.unit, date: nil)
                 },
@@ -1125,11 +1131,11 @@ final class HealthDataQueryEngine {
             )
         }
         return QueryResult(
-            question: "How do I improve?",
-            answer: "Your key metrics are all close to your personal baselines right now, which is a great sign. Keep up the consistency, and as I learn more about what drives your best days, I'll give you more targeted advice.",
+            question: Copy.Analysis.HealthDataQuery.qHowImprove,
+            answer: Copy.Analysis.HealthDataQuery.improveAllOnBaseline,
             dataPoints: [],
             confidence: 0.5,
-            relatedQuestions: ["How am I doing overall?", "Am I at risk for anything?", "Do I have any patterns?"]
+            relatedQuestions: [Copy.Analysis.HealthDataQuery.rqHowAmIDoingOverall, Copy.Analysis.HealthDataQuery.rqAmIAtRiskForAnything, Copy.Analysis.HealthDataQuery.rqDoIHaveAnyPatterns]
         )
     }
 
@@ -1148,35 +1154,35 @@ final class HealthDataQueryEngine {
             let weaker = patterns.sorted { $0.strength > $1.strength }
             if let weakTop = weaker.first {
                 let target = metric?.displayName ?? weakTop.metric.displayName
-                var answer = "I'm seeing some emerging patterns in your \(target), but they're not strong enough to be definitive yet."
+                var answer = Copy.Analysis.HealthDataQuery.patternEmerging(target: target)
                 if let peakDay = weakTop.peakDayOfWeek {
-                    answer += " There's a hint of a \(weakTop.patternType.rawValue) cycle, with a mild peak on \(weekdayName(peakDay))s."
+                    answer += Copy.Analysis.HealthDataQuery.patternCycleHint(type: weakTop.patternType.rawValue, dayName: weekdayName(peakDay))
                 }
                 return QueryResult(
-                    question: "Any patterns?",
+                    question: Copy.Analysis.HealthDataQuery.qAnyPatterns,
                     answer: answer,
                     dataPoints: weaker.prefix(2).map {
                         .init(label: $0.metric.displayName, value: $0.strength * 100, unit: "% strength", date: nil)
                     },
                     confidence: 0.4,
-                    relatedQuestions: ["How is my \(weakTop.metric.displayName) trending?", "Anything unusual in my data?"]
+                    relatedQuestions: [Copy.Analysis.HealthDataQuery.qHowTrending(weakTop.metric.displayName), Copy.Analysis.HealthDataQuery.rqAnythingUnusualInData]
                 )
             }
-            let target = metric?.displayName ?? "your metrics"
+            let target = metric?.displayName ?? Copy.Analysis.HealthDataQuery.yourMetrics
             return QueryResult(
-                question: "Any patterns?",
-                answer: "No recurring patterns detected in \(target) at this time. This can actually be a good sign. it means your body is responding consistently. I'll keep looking for weekly and monthly rhythms.",
+                question: Copy.Analysis.HealthDataQuery.qAnyPatterns,
+                answer: Copy.Analysis.HealthDataQuery.patternNoneFound(target: target),
                 dataPoints: [],
                 confidence: 0.4,
-                relatedQuestions: ["How is my HRV trending?", "Anything unusual in my data?"]
+                relatedQuestions: [Copy.Analysis.HealthDataQuery.rqHowIsMyHRVTrending, Copy.Analysis.HealthDataQuery.rqAnythingUnusualInData]
             )
         }
 
         var answer: String
         if let peakDay = top.peakDayOfWeek, let troughDay = top.troughDayOfWeek {
-            answer = "Plan your toughest activities for \(weekdayName(peakDay))s when your \(top.metric.displayName) peaks, and take it easier on \(weekdayName(troughDay))s when it dips. Your \(top.metric.displayName) follows a clear \(top.patternType.rawValue) cycle."
+            answer = Copy.Analysis.HealthDataQuery.patternPeakTrough(peakDay: weekdayName(peakDay), metric: top.metric.displayName, troughDay: weekdayName(troughDay), type: top.patternType.rawValue)
         } else {
-            answer = "Your \(top.metric.displayName) follows a clear \(top.patternType.rawValue) cycle. Use that rhythm to your advantage by scheduling harder days around your peaks."
+            answer = Copy.Analysis.HealthDataQuery.patternCycleAdvice(metric: top.metric.displayName, type: top.patternType.rawValue)
         }
         if let peakVal = top.peakMeanValue, let troughVal = top.troughMeanValue {
             answer += " The swing is about \(formatValue(peakVal - troughVal, metric: top.metric)) \(top.metric.unit) between highs and lows."
@@ -1188,7 +1194,7 @@ final class HealthDataQueryEngine {
         }
 
         return QueryResult(
-            question: "Any patterns in my data?",
+            question: Copy.Analysis.HealthDataQuery.qAnyPatternsInData,
             answer: answer,
             dataPoints: strong.prefix(3).map {
                 .init(label: $0.metric.displayName, value: $0.strength * 100, unit: "% strength", date: nil)
@@ -1204,14 +1210,14 @@ final class HealthDataQueryEngine {
     private func answerCircadian(ctx: QueryContext) -> QueryResult {
         guard let profile = ctx.circadianProfile else {
             // Graceful fallback: use available sleep and activity data for basic timing insights
-            var answer = "I'm still building your full circadian profile."
+            var answer = Copy.Analysis.HealthDataQuery.buildingCircadianProfile
             var dataPoints: [QueryResult.DataPoint] = []
 
             if let sleepSeries = ctx.timeSeries[.sleepDuration] {
                 let recent = recentSamples(from: sleepSeries, days: 7)
                 if !recent.isEmpty {
                     let avgSleep = recent.valueMean
-                    answer += " Based on your recent sleep (\(formatValue(avgSleep, metric: .sleepDuration)) average), aim to be consistent with your bedtime."
+                    answer += Copy.Analysis.HealthDataQuery.circadianRecentSleep(avg: formatValue(avgSleep, metric: .sleepDuration))
                     dataPoints.append(.init(label: "Avg sleep", value: avgSleep / 3600, unit: "hrs", date: nil))
                 }
             }
@@ -1219,19 +1225,19 @@ final class HealthDataQueryEngine {
                 let recent = recentSamples(from: stepsSeries, days: 7)
                 if !recent.isEmpty {
                     let avgSteps = recent.valueMean
-                    answer += " You're averaging \(Int(avgSteps)) steps. a morning or afternoon walk is generally a great time to move."
+                    answer += Copy.Analysis.HealthDataQuery.circadianAvgSteps(steps: Int(avgSteps))
                     dataPoints.append(.init(label: "Avg steps", value: avgSteps, unit: "steps", date: nil))
                 }
             }
-            if answer == "I'm still building your full circadian profile." {
-                answer += " In the meantime, a good general rule: exercise in the morning or early afternoon, wind down 1-2 hours before bed, and keep your sleep schedule consistent."
+            if answer == Copy.Analysis.HealthDataQuery.buildingCircadianProfile {
+                answer += Copy.Analysis.HealthDataQuery.circadianGeneralAdvice
             }
             return QueryResult(
-                question: "When should I work out?",
+                question: Copy.Analysis.HealthDataQuery.qWhenWorkOut,
                 answer: answer,
                 dataPoints: dataPoints,
                 confidence: 0.4,
-                relatedQuestions: ["How is my sleep trending?", "Do I have any patterns?"]
+                relatedQuestions: [Copy.Analysis.HealthDataQuery.rqHowIsMySleepTrending, Copy.Analysis.HealthDataQuery.rqDoIHaveAnyPatterns]
             )
         }
 
@@ -1243,17 +1249,17 @@ final class HealthDataQueryEngine {
             let timingLines = recs.map { rec -> String in
                 "\(rec.activity.rawValue): \(formatHour(Double(rec.optimalWindowStart)))-\(formatHour(Double(rec.optimalWindowEnd)))"
             }
-            answer = "Here are your best windows based on your body clock: \(timingLines.joined(separator: "; ")). You're a \(chronotype), with peak energy around \(formatHour(profile.activityAcrophaseHour))."
+            answer = Copy.Analysis.HealthDataQuery.circadianBestWindows(lines: timingLines.joined(separator: "; "), chronotype: chronotype, peak: formatHour(profile.activityAcrophaseHour))
         } else {
-            answer = "You're a \(chronotype). Your peak energy is around \(formatHour(profile.activityAcrophaseHour)), so schedule your hardest workout or deep work then."
+            answer = Copy.Analysis.HealthDataQuery.circadianChronotype(chronotype: chronotype, peak: formatHour(profile.activityAcrophaseHour))
         }
 
         if let hrvPeak = profile.hrvAcrophaseHour {
-            answer += " Your recovery peaks around \(formatHour(hrvPeak)), which is a good time for lighter activity."
+            answer += Copy.Analysis.HealthDataQuery.circadianRecoveryPeak(hour: formatHour(hrvPeak))
         }
 
         return QueryResult(
-            question: "What's my body clock like?",
+            question: Copy.Analysis.HealthDataQuery.qBodyClock,
             answer: answer,
             dataPoints: [
                 .init(label: "Activity peak", value: profile.activityAcrophaseHour, unit: "hr", date: nil),
@@ -1344,7 +1350,7 @@ final class HealthDataQueryEngine {
                 .init(label: $0.metric.displayName, value: $0.value, unit: $0.metric.unit, date: nil)
             },
             confidence: 0.5,
-            relatedQuestions: ["How am I doing overall?", "Am I at risk for anything?"]
+            relatedQuestions: [Copy.Analysis.HealthDataQuery.rqHowAmIDoingOverall, Copy.Analysis.HealthDataQuery.rqAmIAtRiskForAnything]
         )
     }
 
@@ -1426,7 +1432,7 @@ final class HealthDataQueryEngine {
                 answer: answer,
                 dataPoints: avg.map { [QueryResult.DataPoint(label: "Recent avg", value: $0, unit: metric.unit, date: nil)] } ?? [],
                 confidence: 0.4,
-                relatedQuestions: ["How is my \(metric.displayName) trending?", "Anything unusual in my \(metric.displayName)?"]
+                relatedQuestions: [Copy.Analysis.HealthDataQuery.qHowTrending(metric.displayName), Copy.Analysis.HealthDataQuery.rqAnythingUnusualInMetric(metric.displayName)]
             )
         }
         return QueryResult(
@@ -1434,7 +1440,7 @@ final class HealthDataQueryEngine {
             answer: "I don't have \(metric.displayName) data yet. Once it starts coming in, I'll be able to analyze what drives it.",
             dataPoints: [],
             confidence: 0.3,
-            relatedQuestions: ["What data do I have?"]
+            relatedQuestions: [Copy.Analysis.HealthDataQuery.rqWhatDataDoIHave]
         )
     }
 
@@ -1553,7 +1559,7 @@ final class HealthDataQueryEngine {
                     answer: "Something worth your attention: \(warning.2)",
                     dataPoints: [],
                     confidence: 0.8,
-                    relatedQuestions: ["Am I at risk for anything?", "What should I do today?"]
+                    relatedQuestions: [Copy.Analysis.HealthDataQuery.rqAmIAtRiskForAnything, Copy.Analysis.HealthDataQuery.rqWhatShouldIDoToday]
                 )
             }
         }
@@ -1757,7 +1763,7 @@ final class HealthDataQueryEngine {
     // MARK: - Helpers
 
     private func recentSamples(from series: MetricTimeSeries, days: Int, offset: Int = 0) -> [MetricSample] {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let endDate = calendar.date(byAdding: .day, value: -offset, to: Date()) ?? Date()
         let startDate = calendar.date(byAdding: .day, value: -days, to: endDate) ?? endDate
         return series.samples.filter { $0.date >= startDate && $0.date <= endDate }
@@ -1800,7 +1806,7 @@ final class HealthDataQueryEngine {
             answer: "I don't have \(metric.displayName) data available right now. This metric may need a compatible device (like Apple Watch) or manual entry in the Health app. Try asking about a different metric.",
             dataPoints: [],
             confidence: 0.3,
-            relatedQuestions: ["How am I doing overall?", "What should I focus on?"]
+            relatedQuestions: [Copy.Analysis.HealthDataQuery.rqHowAmIDoingOverall, Copy.Analysis.HealthDataQuery.rqWhatShouldIFocusOn]
         )
     }
 

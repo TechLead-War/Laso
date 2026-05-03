@@ -1,6 +1,5 @@
 import Foundation
 
-/// Research: JMIR (Feb 2026) + systematic reviews on digital phenotyping.
 /// Finding: Sleep irregularity + reduced activity + decreased daylight exposure
 /// predicts depression/anxiety onset with clinical-grade accuracy.
 /// No invasive phone tracking needed. HealthKit metrics suffice.
@@ -69,12 +68,13 @@ struct WellbeingTrendAnalyzer {
                 .prefix(4)
                 .map(\.detail)
                 .joined(separator: ". ")
+            let scoreText = String(format: "%.0f", (weightedScore + 1) * 50)
 
             insights.append(InsightFactory.make(
                 metric: .sleepDuration,
-                title: "Wellbeing Pattern Shift Detected",
-                summary: "\(concerningSignals.count) of \(signals.count) behavioral indicators are trending in directions associated with mood decline: \(concernList).",
-                recommendation: "Research on digital phenotyping shows that simultaneous changes in sleep regularity, physical activity, daylight exposure, and autonomic tone predict mood shifts with high accuracy. These patterns are observational. not diagnostic. but are worth noting. Score: \(String(format: "%.0f", (weightedScore + 1) * 50))/100.",
+                title: Copy.Analysis.Research.WellbeingTrend.patternShiftTitle,
+                summary: Copy.Analysis.Research.WellbeingTrend.patternShiftSummary(concerningCount: concerningSignals.count, total: signals.count, concerns: concernList),
+                recommendation: Copy.Analysis.Research.WellbeingTrend.patternShiftRecommendation(score: scoreText),
                 severity: concerningSignals.count >= 4 ? .warning : .info,
                 trend: .declining,
                 currentValue: (weightedScore + 1) * 50,
@@ -93,9 +93,9 @@ struct WellbeingTrendAnalyzer {
 
             insights.append(InsightFactory.observation(
                 metric: .sleepDuration,
-                title: "Mild Wellbeing Pattern Change",
-                summary: "Two behavioral indicators are shifting: \(concernList). Not yet a strong signal, but worth monitoring.",
-                recommendation: "Research shows that isolated changes in one or two behavioral markers are common and often transient. If these patterns persist for another week alongside further deterioration, they become more meaningful.",
+                title: Copy.Analysis.Research.WellbeingTrend.mildPatternChangeTitle,
+                summary: Copy.Analysis.Research.WellbeingTrend.mildSummary(concerns: concernList),
+                recommendation: Copy.Analysis.Research.WellbeingTrend.mildRecommendation,
                 currentValue: (weightedScore + 1) * 50,
                 baselineValue: 70,
                 deviationPercent: ((weightedScore + 1) * 50 - 70) / 70 * 100,
@@ -108,9 +108,9 @@ struct WellbeingTrendAnalyzer {
         if positiveSignals.count >= 3 && concerningSignals.isEmpty {
             insights.append(InsightFactory.observation(
                 metric: .steps,
-                title: "Strong Wellbeing Indicators",
-                summary: "Your behavioral pattern across \(signals.count) indicators. sleep regularity, activity, daylight exposure\(signals.count >= 4 ? ", mindfulness" : ""). is consistent with positive mental wellbeing.",
-                recommendation: "Research on digital phenotyping shows that consistent sleep, regular activity, adequate daylight exposure, and strong autonomic tone are collectively protective for mental health. Your current patterns reflect all of these.",
+                title: Copy.Analysis.Research.WellbeingTrend.strongIndicatorsTitle,
+                summary: Copy.Analysis.Research.WellbeingTrend.strongSummary(total: signals.count, includeMindfulness: signals.count >= 4),
+                recommendation: Copy.Analysis.Research.WellbeingTrend.strongRecommendation,
                 currentValue: (weightedScore + 1) * 50,
                 baselineValue: 70,
                 deviationPercent: ((weightedScore + 1) * 50 - 70) / 70 * 100,
@@ -139,19 +139,19 @@ struct WellbeingTrendAnalyzer {
         let detail: String
         if cv < 0.12 {
             score = 0.8
-            detail = "sleep is very regular"
+            detail = Copy.Analysis.Research.WellbeingTrend.sleepVeryRegular
         } else if cv < 0.20 {
             score = 0.2
-            detail = "sleep regularity is moderate"
+            detail = Copy.Analysis.Research.WellbeingTrend.sleepModeratelyRegular
         } else if cv < 0.30 {
             score = -0.5
-            detail = "sleep timing varies significantly"
+            detail = Copy.Analysis.Research.WellbeingTrend.sleepVariesSignificantly
         } else {
             score = -0.9
-            detail = "sleep is highly irregular"
+            detail = Copy.Analysis.Research.WellbeingTrend.sleepHighlyIrregular
         }
 
-        return WellbeingSignal(name: "Sleep Regularity", score: score, weight: 0.30, detail: detail)
+        return WellbeingSignal(name: Copy.Analysis.Research.WellbeingTrend.sleepRegularitySignal, score: score, weight: 0.30, detail: detail)
     }
 
     private static func evaluateActivityTrend(context: AnalysisContext) -> WellbeingSignal? {
@@ -159,7 +159,7 @@ struct WellbeingTrendAnalyzer {
 
         let recent7 = stepsSeries.samples(lastDays: 7)
         let prior7 = stepsSeries.samples(lastDays: 14).filter { sample in
-            sample.date < Calendar.current.date(byAdding: .day, value: -7, to: Date())!
+            sample.date < Date.cal.date(byAdding: .day, value: -7, to: Date())!
         }
 
         guard recent7.count >= 4, prior7.count >= 4 else { return nil }
@@ -174,19 +174,19 @@ struct WellbeingTrendAnalyzer {
         let detail: String
         if change > 0.10 {
             score = 0.7
-            detail = "activity increased this week"
+            detail = Copy.Analysis.Research.WellbeingTrend.activityIncreased
         } else if change > -0.10 {
             score = 0.3
-            detail = "activity level is stable"
+            detail = Copy.Analysis.Research.WellbeingTrend.activityStable
         } else if change > -0.25 {
             score = -0.4
-            detail = "activity dropped \(String(format: "%.0f", abs(change) * 100))% this week"
+            detail = Copy.Analysis.Research.WellbeingTrend.activityDropped(percent: String(format: "%.0f", abs(change) * 100))
         } else {
             score = -0.8
-            detail = "activity dropped \(String(format: "%.0f", abs(change) * 100))% this week"
+            detail = Copy.Analysis.Research.WellbeingTrend.activityDropped(percent: String(format: "%.0f", abs(change) * 100))
         }
 
-        return WellbeingSignal(name: "Activity Level", score: score, weight: 0.25, detail: detail)
+        return WellbeingSignal(name: Copy.Analysis.Research.WellbeingTrend.activityLevelSignal, score: score, weight: 0.25, detail: detail)
     }
 
     private static func evaluateDaylightExposure(context: AnalysisContext) -> WellbeingSignal? {
@@ -199,21 +199,22 @@ struct WellbeingTrendAnalyzer {
 
         let score: Double
         let detail: String
+        let minutesText = String(format: "%.0f", avgMinutes)
         if avgMinutes >= 30 {
             score = 0.8
-            detail = "good daylight exposure (\(String(format: "%.0f", avgMinutes)) min/day)"
+            detail = Copy.Analysis.Research.WellbeingTrend.goodDaylight(minutes: minutesText)
         } else if avgMinutes >= 15 {
             score = 0.1
-            detail = "moderate daylight exposure"
+            detail = Copy.Analysis.Research.WellbeingTrend.moderateDaylight
         } else if avgMinutes >= 5 {
             score = -0.5
-            detail = "low daylight exposure (\(String(format: "%.0f", avgMinutes)) min/day)"
+            detail = Copy.Analysis.Research.WellbeingTrend.lowDaylight(minutes: minutesText)
         } else {
             score = -0.9
-            detail = "very low daylight exposure"
+            detail = Copy.Analysis.Research.WellbeingTrend.veryLowDaylight
         }
 
-        return WellbeingSignal(name: "Daylight", score: score, weight: 0.20, detail: detail)
+        return WellbeingSignal(name: Copy.Analysis.Research.WellbeingTrend.daylightSignal, score: score, weight: 0.20, detail: detail)
     }
 
     private static func evaluateMindfulness(context: AnalysisContext) -> WellbeingSignal? {
@@ -229,16 +230,16 @@ struct WellbeingTrendAnalyzer {
         let detail: String
         if avgDaily >= 10 {
             score = 0.7
-            detail = "consistent mindfulness practice"
+            detail = Copy.Analysis.Research.WellbeingTrend.mindfulnessConsistent
         } else if avgDaily >= 3 {
             score = 0.3
-            detail = "some mindfulness activity"
+            detail = Copy.Analysis.Research.WellbeingTrend.mindfulnessSome
         } else {
             score = -0.2
-            detail = "minimal mindfulness engagement"
+            detail = Copy.Analysis.Research.WellbeingTrend.mindfulnessMinimal
         }
 
-        return WellbeingSignal(name: "Mindfulness", score: score, weight: 0.10, detail: detail)
+        return WellbeingSignal(name: Copy.Analysis.Research.WellbeingTrend.mindfulnessSignal, score: score, weight: 0.10, detail: detail)
     }
 
     private static func evaluateHRVTrend(context: AnalysisContext) -> WellbeingSignal? {
@@ -255,19 +256,19 @@ struct WellbeingTrendAnalyzer {
         let detail: String
         if deviation > 0.5 {
             score = 0.6
-            detail = "autonomic tone is strong"
+            detail = Copy.Analysis.Research.WellbeingTrend.autonomicStrong
         } else if deviation > -0.5 {
             score = 0.2
-            detail = "autonomic tone is normal"
+            detail = Copy.Analysis.Research.WellbeingTrend.autonomicNormal
         } else if deviation > -1.5 {
             score = -0.4
-            detail = "HRV below baseline (autonomic stress)"
+            detail = Copy.Analysis.Research.WellbeingTrend.autonomicBelowBaseline
         } else {
             score = -0.8
-            detail = "HRV significantly suppressed"
+            detail = Copy.Analysis.Research.WellbeingTrend.autonomicSuppressed
         }
 
-        return WellbeingSignal(name: "Autonomic Tone", score: score, weight: 0.15, detail: detail)
+        return WellbeingSignal(name: Copy.Analysis.Research.WellbeingTrend.autonomicToneSignal, score: score, weight: 0.15, detail: detail)
     }
 }
 

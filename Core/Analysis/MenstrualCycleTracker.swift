@@ -18,10 +18,10 @@ final class MenstrualCycleTracker {
 
         var displayName: String {
             switch self {
-            case .menstrual:  return "Menstrual"
-            case .follicular: return "Follicular"
-            case .ovulation:  return "Ovulation"
-            case .luteal:     return "Luteal"
+            case .menstrual:  return Copy.CycleTracking.trackerMenstrualDisplay
+            case .follicular: return Copy.CycleTracking.trackerFollicularDisplay
+            case .ovulation:  return Copy.CycleTracking.trackerOvulationDisplay
+            case .luteal:     return Copy.CycleTracking.trackerLutealDisplay
             }
         }
 
@@ -45,14 +45,10 @@ final class MenstrualCycleTracker {
 
         var description: String {
             switch self {
-            case .menstrual:
-                return "Energy and recovery capacity are typically at their lowest. The body is shedding the uterine lining, and iron levels may dip. Fatigue and mild discomfort are common."
-            case .follicular:
-                return "Rising estrogen boosts energy, mood, and recovery speed. This phase favors learning new skills and building strength as the body ramps toward peak performance."
-            case .ovulation:
-                return "Peak estrogen and a surge in luteinizing hormone drive the highest energy and performance potential of the cycle. Reaction time and power output tend to peak."
-            case .luteal:
-                return "Progesterone rises while estrogen declines. Core temperature increases slightly, recovery slows, and energy gradually tapers toward the end of the phase."
+            case .menstrual:  return Copy.CycleTracking.trackerMenstrualDescription
+            case .follicular: return Copy.CycleTracking.trackerFollicularDescription
+            case .ovulation:  return Copy.CycleTracking.trackerOvulationDescription
+            case .luteal:     return Copy.CycleTracking.trackerLutealDescription
             }
         }
 
@@ -68,40 +64,28 @@ final class MenstrualCycleTracker {
 
         var exerciseRecommendation: String {
             switch self {
-            case .menstrual:
-                return "Favor light movement. walking, gentle yoga, or stretching. Avoid heavy lifts or high-impact sessions if energy is low."
-            case .follicular:
-                return "Great time to push intensity. Try heavy strength training, HIIT, or learning new movement patterns. Recovery is fast."
-            case .ovulation:
-                return "Peak performance window. Go for PRs, high-intensity intervals, or competitive efforts. Stay mindful of joint laxity from elevated relaxin."
-            case .luteal:
-                return "Moderate steady-state cardio and maintenance-level strength work. Reduce volume in the late luteal phase as fatigue builds."
+            case .menstrual:  return Copy.CycleTracking.trackerMenstrualExercise
+            case .follicular: return Copy.CycleTracking.trackerFollicularExercise
+            case .ovulation:  return Copy.CycleTracking.trackerOvulationExercise
+            case .luteal:     return Copy.CycleTracking.trackerLutealExercise
             }
         }
 
         var sleepImpact: String {
             switch self {
-            case .menstrual:
-                return "Sleep may be disrupted by cramps or discomfort in the first days. Prioritize earlier bedtimes and a cool sleep environment."
-            case .follicular:
-                return "Sleep quality typically improves as estrogen rises. This is often the easiest phase for consistent, restorative sleep."
-            case .ovulation:
-                return "Sleep remains generally good, though some experience lighter sleep around the LH surge. Maintain consistent sleep timing."
-            case .luteal:
-                return "Rising progesterone raises core temperature, which can reduce deep sleep. Expect more fragmented sleep in the late luteal phase."
+            case .menstrual:  return Copy.CycleTracking.trackerMenstrualSleep
+            case .follicular: return Copy.CycleTracking.trackerFollicularSleep
+            case .ovulation:  return Copy.CycleTracking.trackerOvulationSleep
+            case .luteal:     return Copy.CycleTracking.trackerLutealSleep
             }
         }
 
         var nutritionTip: String {
             switch self {
-            case .menstrual:
-                return "Focus on iron-rich foods (red meat, spinach, lentils) to offset menstrual losses. Anti-inflammatory foods like fatty fish and ginger can ease discomfort."
-            case .follicular:
-                return "Support rising estrogen with cruciferous vegetables and lean protein. Carbohydrate tolerance is higher. A good window for complex carbs around workouts."
-            case .ovulation:
-                return "Maintain balanced macros with emphasis on antioxidants and fiber. Hydration is important as energy expenditure peaks."
-            case .luteal:
-                return "Cravings for carbs and fats are common due to increased caloric needs (~100-300 kcal/day more). Choose whole grains, magnesium-rich foods, and healthy fats."
+            case .menstrual:  return Copy.CycleTracking.trackerMenstrualNutrition
+            case .follicular: return Copy.CycleTracking.trackerFollicularNutrition
+            case .ovulation:  return Copy.CycleTracking.trackerOvulationNutrition
+            case .luteal:     return Copy.CycleTracking.trackerLutealNutrition
             }
         }
     }
@@ -138,9 +122,8 @@ final class MenstrualCycleTracker {
     /// Cycle phase changes daily, so anything older than ~1.5 days is unsafe to show.
     private static let snapshotMaxAge: TimeInterval = 36 * 60 * 60
 
-    // Performance Pass 2 hot-path caches: the cycle compute path runs every
+    // Hot-path caches: the cycle compute path runs every
     // dashboard refresh and walks a year of bleeding samples in a tight loop.
-    private static let cal: Calendar = Calendar.current
     private static let jsonEncoder: JSONEncoder = JSONEncoder()
     private static let jsonDecoder: JSONDecoder = JSONDecoder()
 
@@ -198,24 +181,20 @@ final class MenstrualCycleTracker {
     /// How the current phase affects recovery expectations.
     var phaseImpactOnRecovery: String {
         guard let phase = currentCycle?.currentPhase else {
-            return "No cycle data available to assess recovery impact."
+            return Copy.CycleTracking.trackerNoCycleData
         }
         switch phase {
-        case .menstrual:
-            return "Recovery is slower during menstruation. Allow extra rest between intense sessions and monitor HRV for readiness."
-        case .follicular:
-            return "Recovery is at its fastest. The body adapts well to training stimulus. shorter rest periods are feasible."
-        case .ovulation:
-            return "Recovery remains strong but joint laxity may increase injury risk. Warm up thoroughly and prioritize form."
-        case .luteal:
-            return "Recovery slows as progesterone rises and core temperature climbs. Expect longer HRV recovery and higher resting heart rate."
+        case .menstrual:  return Copy.CycleTracking.trackerMenstrualRecoveryImpact
+        case .follicular: return Copy.CycleTracking.trackerFollicularRecoveryImpact
+        case .ovulation:  return Copy.CycleTracking.trackerOvulationRecoveryImpact
+        case .luteal:     return Copy.CycleTracking.trackerLutealRecoveryImpact
         }
     }
 
     /// Phase-specific training guidance.
     var phaseExerciseGuidance: String {
         currentCycle?.currentPhase.exerciseRecommendation
-            ?? "Track at least one menstrual period to receive phase-specific training advice."
+            ?? Copy.CycleTracking.trackerNoCycleExerciseFallback
     }
 
     // MARK: - Compute
@@ -244,7 +223,7 @@ final class MenstrualCycleTracker {
         }
 
         // Build cycle history from consecutive starts.
-        let calendar = Self.cal
+        let calendar = Date.cal
         var history: [(startDate: Date, length: Int)] = []
         for i in 0..<(cycleStarts.count - 1) {
             let length = calendar.dateComponents([.day], from: cycleStarts[i], to: cycleStarts[i + 1]).day ?? 28
@@ -330,7 +309,7 @@ final class MenstrualCycleTracker {
 
     /// Estimate the start date of the next period.
     func estimateNextPeriod(lastStart: Date, averageLength: Int) -> Date {
-        Self.cal.date(byAdding: .day, value: averageLength, to: lastStart) ?? lastStart
+        Date.cal.date(byAdding: .day, value: averageLength, to: lastStart) ?? lastStart
     }
 
     // MARK: - Private
@@ -342,7 +321,7 @@ final class MenstrualCycleTracker {
     private func identifyCycleStarts(from sortedBleedingDays: [Date]) -> [Date] {
         guard let first = sortedBleedingDays.first else { return [] }
         var starts: [Date] = [first]
-        let calendar = Self.cal
+        let calendar = Date.cal
 
         for day in sortedBleedingDays.dropFirst() {
             guard let lastStart = starts.last else { continue }

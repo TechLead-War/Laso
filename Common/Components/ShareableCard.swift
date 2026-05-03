@@ -129,7 +129,7 @@ struct ShareableScoreCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 24))
     }
 
-    // Pass 8 Y: locale-aware. `.dateTime.day().month().year()` resolves the
+    // Locale-aware. `.dateTime.day().month().year()` resolves the
     // ordering / separators / month-name length per `Locale.current` (e.g.
     // "Apr 25, 2026" en-US, "25 Apr 2026" en-GB, "25 avr. 2026" fr-FR).
     private var formattedDate: String {
@@ -256,7 +256,7 @@ struct ShareableInsightCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 24))
     }
 
-    // Pass 8 Y: locale-aware (see notes on the score-card formatter above).
+    // Locale-aware (see notes on the score-card formatter above).
     private var formattedDate: String {
         Date().formatted(.dateTime.day().month().year())
     }

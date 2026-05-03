@@ -692,11 +692,6 @@ enum PersonalizationBlender {
         1.0 / (1.0 + exp(-Double(days - rampCenter) / rampScale))
     }
 
-    /// Clamp a value to [0, 1].
-    private static func clamp01(_ value: Double) -> Double {
-        max(0.0, min(1.0, value))
-    }
-
     /// Build a human-readable explanation for cold-start predictions.
     private static func buildColdStartExplanation(
         riskScore: Double,

@@ -54,15 +54,6 @@ final class BackgroundRefreshCoordinator {
         try? BGTaskScheduler.shared.submit(request)
     }
 
-    private static func gradeForScore(_ score: Int) -> String {
-        switch score {
-        case 90...100: return "A+"
-        case 80..<90: return "A"
-        case 70..<80: return "B"
-        case 60..<70: return "C"
-        default: return "D"
-        }
-    }
 
     func handle(_ task: BGAppRefreshTask) {
         if ThermalManager.shared.shouldThrottle {
@@ -106,7 +97,7 @@ final class BackgroundRefreshCoordinator {
             if let score = liveViewModel.recovery.readinessScore {
                 let snapshot = WidgetReadinessSnapshot(
                     score: score,
-                    grade: Self.gradeForScore(score),
+                    grade: HealthScore.gradeWithPlus(for: score),
                     dayType: "",
                     updatedAt: Date()
                 )

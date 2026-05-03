@@ -78,7 +78,7 @@ struct ContextFeatures: Codable {
 
     /// Create context features from a date
     static func from(date: Date) -> ContextFeatures {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let weekday = Double(calendar.component(.weekday, from: date)) // 1=Sun, 7=Sat
         let month = Double(calendar.component(.month, from: date))     // 1-12
 
@@ -121,10 +121,10 @@ struct MLPrediction {
     /// Human-readable risk level
     var riskLevel: String {
         switch probability {
-        case 0.7...: return "High"
-        case 0.5..<0.7: return "Moderate"
-        case 0.3..<0.5: return "Low"
-        default: return "Very Low"
+        case 0.7...: return Copy.Insights.riskLevelHigh
+        case 0.5..<0.7: return Copy.Insights.riskLevelModerate
+        case 0.3..<0.5: return Copy.Insights.riskLevelLow
+        default: return Copy.Insights.riskLevelVeryLow
         }
     }
 }
@@ -227,13 +227,13 @@ struct DiscoveredPattern {
 
     static func dayName(_ weekday: Int) -> String? {
         switch weekday {
-        case 1: return "Sunday"
-        case 2: return "Monday"
-        case 3: return "Tuesday"
-        case 4: return "Wednesday"
-        case 5: return "Thursday"
-        case 6: return "Friday"
-        case 7: return "Saturday"
+        case 1: return Copy.Insights.daySunday
+        case 2: return Copy.Insights.dayMonday
+        case 3: return Copy.Insights.dayTuesday
+        case 4: return Copy.Insights.dayWednesday
+        case 5: return Copy.Insights.dayThursday
+        case 6: return Copy.Insights.dayFriday
+        case 7: return Copy.Insights.daySaturday
         default: return nil
         }
     }

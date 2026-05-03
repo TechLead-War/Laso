@@ -5,7 +5,7 @@ import Observation
 final class WeeklyReviewViewModel {
     private let dashboardViewModel: DashboardViewModel
     private let persistence = PersistenceManager()
-    private let calendar = Calendar.current
+    private let calendar = Date.cal
 
     private static let minimumDailyStepTarget = 4000
     private static let maximumDailyStepTarget = 15000
@@ -13,7 +13,7 @@ final class WeeklyReviewViewModel {
 
     var review: WeeklyReview?
     var isLoading = false
-    /// Pass 8 V (F45): timestamp of the most recent successful `load()`.
+    /// Timestamp of the most recent successful `load()`.
     /// Drives a small "Updated …" caption at the top of the screen.
     private(set) var lastUpdated: Date?
 

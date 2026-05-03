@@ -74,5 +74,11 @@ extension Copy {
         static let steadyHandDescription = "Keep your health score within 10 points for 14 consecutive days"
         static let dailyDevoteeTitle = "Daily Devotee"
         static let dailyDevoteeDescription = "14 day check-in streak. Health is a daily practice."
+
+        // MARK: - Section Headers
+
+        static let highestLevelAchieved = "Highest level achieved"
+        static let activeStreaks = "Active Streaks"
+        static let achievementsTitle = "Achievements"
     }
 }

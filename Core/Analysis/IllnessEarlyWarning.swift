@@ -117,7 +117,7 @@ struct IllnessEarlyWarning {
         timeSeries: [HealthMetric: MetricTimeSeries],
         baselines: [HealthMetric: UserBaseline]
     ) -> [Warning] {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let now = Date()
 
         // If the user had intense workouts during the signal window, skip detection

@@ -522,7 +522,7 @@ struct SettingsView: View {
     private var siriDetailView: some View {
         Form {
             Section {
-                Text("Add Laso shortcuts to Siri so you can check your health score, view your sleep summary, or open today's dashboard hands free.")
+                Text(Copy.Settings.siriDetailDescription)
                     .font(DS.Typography.footnote)
                     .foregroundStyle(AppColour.textSecondary)
                     .listRowBackground(Color.clear)
@@ -685,7 +685,7 @@ struct SettingsView: View {
             .disabled(isDeleting)
             .accessibilityIdentifier("settings.deleteAllDataButton")
         } header: {
-            Text("Danger Zone")
+            Text(Copy.Settings.dangerZone)
                 .font(DS.Typography.captionSemibold)
                 .foregroundStyle(AppColour.danger)
         }

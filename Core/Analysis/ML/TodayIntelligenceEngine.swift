@@ -47,7 +47,7 @@ final class TodayIntelligenceEngine {
 
     static let maxCardsToShow = 4
 
-    private let calendar = Calendar.current
+    private let calendar = Date.cal
 
     // MARK: - Public API
 
@@ -1046,9 +1046,9 @@ final class TodayIntelligenceEngine {
         let percentile = Int(round(Double(countBelow) / Double(dailyScores.count) * 100))
 
         if percentile >= 85 {
-            return "Highest in \(dailyScores.count) days (top \(100 - percentile)%)"
+            return Copy.Insights.highestInDays(days: dailyScores.count, topPercent: 100 - percentile)
         } else if percentile <= 15 {
-            return "Lowest in \(dailyScores.count) days (bottom \(percentile)%)"
+            return Copy.Insights.lowestInDays(days: dailyScores.count, bottomPercent: percentile)
         } else {
             return "\(ordinal(percentile)) percentile over the last \(dailyScores.count) days"
         }
@@ -1077,7 +1077,7 @@ final class TodayIntelligenceEngine {
         return String(format: "%d:%02d %@", h12, m, ampm)
     }
 
-    // Pass 8 Y: short date appears inside a user-visible IntelligenceCard
+    // Short date appears inside a user-visible IntelligenceCard
     // narrative, so it must localize the month name + day order
     // ("Mar 3" en-US, "3 mars" fr-FR, "3 Mar" en-GB). `.dateTime.day().month()`
     // reads `Locale.current` automatically. Foundation caches the underlying
@@ -1089,13 +1089,13 @@ final class TodayIntelligenceEngine {
     /// Day name from weekday number (1=Sun, 7=Sat).
     private func dayName(for weekday: Int) -> String {
         switch weekday {
-        case 1: return "Sunday"
-        case 2: return "Monday"
-        case 3: return "Tuesday"
-        case 4: return "Wednesday"
-        case 5: return "Thursday"
-        case 6: return "Friday"
-        case 7: return "Saturday"
+        case 1: return Copy.Insights.daySunday
+        case 2: return Copy.Insights.dayMonday
+        case 3: return Copy.Insights.dayTuesday
+        case 4: return Copy.Insights.dayWednesday
+        case 5: return Copy.Insights.dayThursday
+        case 6: return Copy.Insights.dayFriday
+        case 7: return Copy.Insights.daySaturday
         default: return "day"
         }
     }

@@ -52,13 +52,13 @@ struct ProFeatureOverlay: View {
                 ])
                 showPaywall = true
             } label: {
-                Text("Upgrade to Pro")
+                Text(Copy.Paywall.upgradeToPro)
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
             }
             .buttonStyle(.borderedProminent)
-            .accessibilityLabel("Upgrade to Pro")
+            .accessibilityLabel(Copy.Paywall.upgradeToPro)
             .accessibilityHint("Opens the subscription paywall to unlock \(feature)")
             .padding(.horizontal, 40)
 

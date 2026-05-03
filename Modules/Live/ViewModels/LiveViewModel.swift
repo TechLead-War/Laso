@@ -40,10 +40,6 @@ final class LiveViewModel {
     private var lastCumulativeFetch: Date = .distantPast
     private static let cumulativeThrottleInterval: TimeInterval = 15
 
-    /// Pass 12 BE perf: cached current calendar to avoid the per-call
-    /// `Calendar.current` allocation. `startOfDay(for:)` runs every Live tab
-    /// refresh (steps / activity / cumulative-throttle gating).
-    private static let cal: Calendar = Calendar.current
     private var respiratoryAvailabilityWorkItem: DispatchWorkItem?
 
     /// Persistent observer for background delivery. survives app backgrounding so HealthKit
@@ -166,8 +162,8 @@ final class LiveViewModel {
         if let cached = _cachedMaxHR { return cached }
         let result: Double
         if let dob = try? healthStore.dateOfBirthComponents(),
-           let birthDate = Self.cal.date(from: dob) {
-            let age = Self.cal.dateComponents([.year], from: birthDate, to: Date()).year ?? 30
+           let birthDate = Date.cal.date(from: dob) {
+            let age = Date.cal.dateComponents([.year], from: birthDate, to: Date()).year ?? 30
             result = Double(220 - age)
         } else {
             result = 190
@@ -386,7 +382,7 @@ final class LiveViewModel {
     /// updates as soon as new samples arrive (e.g. Apple Watch syncs steps).
     /// Replaces 30-second timer polling with instant, event-driven updates.
     private func startActivityObservers() {
-        let startOfDay = Self.cal.startOfDay(for: Date())
+        let startOfDay = Date.cal.startOfDay(for: Date())
         let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: nil, options: .strictStartDate)
 
         let identifiers: [HKQuantityTypeIdentifier] = [
@@ -582,7 +578,7 @@ final class LiveViewModel {
 
     func fetchTodayCumulativeStats() {
         guard beginCumulativeStatsFetch(expectedCallbacks: 6) else { return }
-        let startOfDay = Self.cal.startOfDay(for: Date())
+        let startOfDay = Date.cal.startOfDay(for: Date())
         fetchTodayStat(.stepCount, unit: .count(), from: startOfDay) { [weak self] v in
             Task { @MainActor in
                 self?.activity.todaySteps = v
@@ -670,7 +666,7 @@ final class LiveViewModel {
     func fetchActivityGoals() {
         guard HKHealthStore.isHealthDataAvailable() else { return }
 
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let now = Date()
         let startOfDay = calendar.startOfDay(for: now)
 
@@ -762,7 +758,7 @@ final class LiveViewModel {
     func fetchTodayHeartRateRange() {
         let type = HKQuantityType(.heartRate)
         let unit = HKUnit.count().unitDivided(by: .minute())
-        let startOfDay = Self.cal.startOfDay(for: Date())
+        let startOfDay = Date.cal.startOfDay(for: Date())
         let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: Date(), options: .strictStartDate)
 
         let query = HKStatisticsQuery(
@@ -822,7 +818,7 @@ final class LiveViewModel {
         // giving users a stable, trustworthy number that only changes the next day.
         if let locked = dailyLockedScore,
            let lockDate = dailyLockDate,
-           Self.cal.isDateInToday(lockDate) {
+           Date.cal.isDateInToday(lockDate) {
             recovery.readinessScore = locked
             return
         }
@@ -899,7 +895,7 @@ final class LiveViewModel {
 
     func fetchTodayMindfulMinutes() {
         let mindfulType = HKCategoryType(.mindfulSession)
-        let startOfDay = Self.cal.startOfDay(for: Date())
+        let startOfDay = Date.cal.startOfDay(for: Date())
         let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: Date(), options: .strictStartDate)
 
         let query = HKSampleQuery(
@@ -1047,7 +1043,7 @@ final class LiveViewModel {
         identifier: HKQuantityTypeIdentifier,
         unit: HKUnit
     ) async -> [Double] {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let now = Date()
         let baselineEnd = calendar.date(byAdding: .day, value: -Self.readinessBaselineGapDays, to: now) ?? now
         let baselineStart = calendar.date(

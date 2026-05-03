@@ -291,16 +291,9 @@ struct PredictiveHealthSignals {
     // MARK: - Shared Helpers
 
     /// Compute exponential moving average from a chronologically ordered array of values.
-    /// Returns the EMA series (same length as input).
+    /// Delegates to the canonical `Array<Double>.exponentialSmoothing` helper.
     private static func ema(_ values: [Double], alpha: Double) -> [Double] {
-        guard !values.isEmpty else { return [] }
-        var result = [values[0]]
-        result.reserveCapacity(values.count)
-        for i in 1..<values.count {
-            let smoothed = alpha * values[i] + (1.0 - alpha) * result[i - 1]
-            result.append(smoothed)
-        }
-        return result
+        values.exponentialSmoothing(alpha: alpha)
     }
 
     /// Get recent N days of values for a metric from daily map, in chronological order.
@@ -313,7 +306,7 @@ struct PredictiveHealthSignals {
         guard let map = dailyMaps[metric], !map.isEmpty else { return [] }
         
         let now = Date()
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let cutoffDate = calendar.date(byAdding: .day, value: -days, to: now) ?? now
         let cutoffDay = calendar.startOfDay(for: cutoffDate)
         
@@ -352,11 +345,6 @@ struct PredictiveHealthSignals {
     ) -> String {
         let unit = metric.unit.isEmpty ? "" : " \(metric.unit)"
         return "\(metric.formatValue(value))\(unit)"
-    }
-
-    /// Clamp a value between 0 and 1.
-    private static func clamp01(_ value: Double) -> Double {
-        Swift.min(1.0, Swift.max(0.0, value))
     }
 
     // MARK: - 1. Fatigue Accumulation Score
@@ -1297,7 +1285,7 @@ struct PredictiveHealthSignals {
         let sleepBaseline = baselines[.sleepDuration]
         let activityBaseline = baselines[.activeCalories]
 
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let now = Date()
         var dailyRiskScores: [(date: Date, score: Double)] = []
         var consecutiveHighRisk = 0

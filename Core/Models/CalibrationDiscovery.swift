@@ -17,7 +17,7 @@ struct CalibrationDiscovery {
 
     var dataSpanDescription: String? {
         guard let oldest = oldestDataDate else { return nil }
-        let days = Calendar.current.dateComponents([.day], from: oldest, to: Date()).day ?? 0
+        let days = Date.cal.dateComponents([.day], from: oldest, to: Date()).day ?? 0
         if days >= 365 {
             let years = days / 365
             let months = (days % 365) / 30
@@ -95,7 +95,7 @@ struct CalibrationDiscovery {
         return discovery
     }
 
-    /// Pass 11 AF: cached step formatter — `formatSteps` runs once per priority
+    /// Cached step formatter — `formatSteps` runs once per priority
     /// metric (up to 4 calls per discovery build) and `discovery.build(from:)`
     /// is invoked on the Mirror Moment onboarding step. One static avoids the
     /// per-call NumberFormatter allocation.

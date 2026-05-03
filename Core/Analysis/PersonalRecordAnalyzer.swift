@@ -131,7 +131,6 @@ struct PersonalRecordAnalyzer {
 
         // Only report if it's a meaningful PR (within 2% of previous best counts as "tied")
         guard improvement < 2 || movingAverages.count <= window + 1 else {
-            // Calculate how long the previous record stood
             let previousBestIndex: Int
             if lowerIsBetter {
                 previousBestIndex = movingAverages.dropLast().enumerated().min(by: { $0.element < $1.element })?.offset ?? 0
@@ -194,7 +193,7 @@ struct PersonalRecordAnalyzer {
             while true {
                 if let value = valueMap[today], value >= threshold {
                     currentStreak += 1
-                    today = Calendar.current.date(byAdding: .day, value: -1, to: today)?.startOfDay ?? today
+                    today = Date.cal.date(byAdding: .day, value: -1, to: today)?.startOfDay ?? today
                 } else {
                     break
                 }

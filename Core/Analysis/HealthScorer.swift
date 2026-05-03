@@ -1,8 +1,12 @@
 import Foundation
 
 /// Computes health scores (0-100) based on anomalies, trends, and normal ranges.
-/// Supports both equal weighting (legacy) and adaptive weighting (WHOOP 5.0-style).
+/// Uses adaptive weighting that promotes high-signal categories and damps stale ones.
+/// Deduction ladders, adaptive-weight factors, and the coverage curve live in
+/// `HealthScorerConfig`.
 struct HealthScorer {
+
+    private typealias Cfg = HealthScorerConfig
 
     // MARK: - Score Transparency Models
 
@@ -37,17 +41,15 @@ struct HealthScorer {
         anomaly: AnomalyDetector.AnomalyResult?,
         trend: TrendAnalyzer.TrendResult?
     ) -> (score: Int, components: [ScoreComponent]) {
-        var score = 100
+        var score = Cfg.perfectScore
         var components: [ScoreComponent] = []
 
-        // Anomaly deductions. proportional to z-score magnitude
         if let anomaly {
             let absZ = abs(anomaly.zScore)
 
             switch anomaly.severity {
             case .critical:
-                // Scale: z=2.5 → -30, z=3.0 → -36, z=4.0 → -48 (capped at -50)
-                let deduction = -min(50, Int(absZ * 12))
+                let deduction = -min(Cfg.criticalDeductionCap, Int(absZ * Cfg.criticalDeductionPerZ))
                 score += deduction
                 components.append(ScoreComponent(
                     metric: metric,
@@ -55,8 +57,7 @@ struct HealthScorer {
                     reason: "Critical deviation (z=\(String(format: "%.1f", absZ)), \(String(format: "%.1f", anomaly.deviationPercent))% from baseline)"
                 ))
             case .warning:
-                // Scale: z=1.5 → -12, z=2.0 → -16, z=2.4 → -19
-                let deduction = -min(25, Int(absZ * 8))
+                let deduction = -min(Cfg.warningDeductionCap, Int(absZ * Cfg.warningDeductionPerZ))
                 score += deduction
                 components.append(ScoreComponent(
                     metric: metric,
@@ -78,13 +79,11 @@ struct HealthScorer {
             }
         }
 
-        // Trend adjustments. proportional to rate of change
         if let trend {
             switch trend.direction {
             case .declining:
                 let absWoW = abs(trend.weekOverWeekChange)
-                // Scale: 2% → -5, 5% → -8, 10% → -15, 20% → -25 (capped at -30)
-                let deduction = -min(30, Int(absWoW * 1.3 + 2))
+                let deduction = -min(Cfg.decliningDeductionCap, Int(absWoW * Cfg.decliningDeductionPerPercent + Cfg.decliningDeductionOffset))
                 score += deduction
                 components.append(ScoreComponent(
                     metric: metric,
@@ -93,8 +92,7 @@ struct HealthScorer {
                 ))
             case .improving:
                 let absWoW = abs(trend.weekOverWeekChange)
-                // Improving bonus scales too: 2% → +3, 5% → +5, 10%+ → +8
-                let bonus = min(8, Int(absWoW * 0.6 + 2))
+                let bonus = min(Cfg.improvingBonusCap, Int(absWoW * Cfg.improvingBonusPerPercent + Cfg.improvingBonusOffset))
                 score += bonus
                 components.append(ScoreComponent(
                     metric: metric,
@@ -106,7 +104,7 @@ struct HealthScorer {
             }
         }
 
-        return (max(0, min(100, score)), components)
+        return (max(Cfg.minScore, min(Cfg.perfectScore, score)), components)
     }
 
     // MARK: - Category Scoring
@@ -127,7 +125,7 @@ struct HealthScorer {
         metricWeights: [HealthMetric: Double]?
     ) -> HealthScore {
         guard !metricScores.isEmpty else {
-            return HealthScore(category: category, score: 100)
+            return HealthScore(category: category, score: Cfg.perfectScore)
         }
 
         let avgScore: Int
@@ -167,7 +165,7 @@ struct HealthScorer {
         weights: [HealthCategory: Double]?
     ) -> HealthScore {
         guard !categoryScores.isEmpty else {
-            return HealthScore(score: 100)
+            return HealthScore(score: Cfg.perfectScore)
         }
 
         let avgScore: Int
@@ -233,34 +231,26 @@ struct HealthScorer {
                 }
                 avgCV = cvValues.isEmpty ? 0.0 : cvValues.reduce(0, +) / Double(cvValues.count)
             }
-            // Normalize: CV of 0.0 → 0.5, CV of 0.1 → 1.0, CV of 0.3+ → 2.0 (capped)
-            let volatilityFactor = min(2.0, 0.5 + avgCV * 5.0)
+            let volatilityFactor = min(Cfg.volatilityFactorCap, Cfg.volatilityFactorBase + avgCV * Cfg.volatilityFactorSlope)
 
             // --- Factor 2: Data richness (number of measured metrics) ---
-            // More metrics measured = richer signal for this category.
             let metricCount = Double(categoryBaselines.count)
             let totalMetricsInCategory = Double(category.metrics.count)
-            // Coverage ratio: 0-1 representing how many of the possible metrics have data
             let coverage = totalMetricsInCategory > 0 ? metricCount / totalMetricsInCategory : 0.0
-            // Scale: 0% coverage → 0.3, 50% → 0.65, 100% → 1.0
-            let richnessFactor = 0.3 + coverage * 0.7
+            let richnessFactor = Cfg.richnessFactorBase + coverage * Cfg.richnessFactorRange
 
-            // --- Factor 3: Anomaly density (active anomalies / measured metrics) ---
-            // More anomalies = more relevant to current health state.
+            // --- Factor 3: Anomaly density ---
             let activeAnomalies = categoryAnomalies.filter { $0.severity != .info }
             let anomalyDensity = metricCount > 0 ? Double(activeAnomalies.count) / metricCount : 0.0
-            // Scale: 0 anomalies → 0.5, 50% density → 1.25, 100% density → 2.0
-            let anomalyFactor = 0.5 + anomalyDensity * 1.5
+            let anomalyFactor = Cfg.anomalyFactorBase + anomalyDensity * Cfg.anomalyFactorSlope
 
             // --- Factor 4: User focus boost (from onboarding selection) ---
-            // Categories the user cares about get a 40% boost to their weight.
-            let focusBoost: Double = focusCategories.contains(category) ? 1.2 : 0.0
+            let focusBoost: Double = focusCategories.contains(category) ? Cfg.focusBoost : 0.0
 
             rawWeights[category] = volatilityFactor + richnessFactor + anomalyFactor + focusBoost
         }
 
-        // Apply minimum floor of 0.05 per category, then normalize to sum to 1.0
-        return normalizeWeights(rawWeights, minimumWeight: 0.05)
+        return normalizeWeights(rawWeights, minimumWeight: Cfg.categoryWeightFloor)
     }
 
     // MARK: - Adaptive Metric Weights Within Category
@@ -278,40 +268,33 @@ struct HealthScorer {
 
         for metric in metrics {
             guard let baseline = baselines[metric] else {
-                // No baseline → minimal weight (will be floored)
-                rawWeights[metric] = 0.1
+                rawWeights[metric] = Cfg.noBaselineWeight
                 continue
             }
 
-            // --- Factor 1: Coefficient of variation ---
             let cv: Double
             if baseline.mean != 0 {
                 cv = baseline.standardDeviation / abs(baseline.mean)
             } else {
                 cv = 0.0
             }
-            // Scale: CV of 0 → 0.5, CV of 0.1 → 1.0, CV of 0.3+ → 2.0 (capped)
-            let variabilityFactor = min(2.0, 0.5 + cv * 5.0)
+            let variabilityFactor = min(Cfg.volatilityFactorCap, Cfg.volatilityFactorBase + cv * Cfg.volatilityFactorSlope)
 
-            // --- Factor 2: Data freshness ---
-            // How recently was the baseline updated? More recent = higher weight.
-            let daysSinceUpdate = Calendar.current.dateComponents([.day], from: baseline.lastUpdated, to: now).day ?? 0
-            // Scale: 0 days → 1.0, 7 days → 0.7, 30+ days → 0.3
+            let daysSinceUpdate = Date.cal.dateComponents([.day], from: baseline.lastUpdated, to: now).day ?? 0
             let freshnessFactor: Double
-            if daysSinceUpdate <= 1 {
-                freshnessFactor = 1.0
-            } else if daysSinceUpdate <= 7 {
-                freshnessFactor = 1.0 - Double(daysSinceUpdate - 1) * 0.05  // 1.0 → 0.7
+            if daysSinceUpdate <= Cfg.freshnessFreshDayCutoff {
+                freshnessFactor = Cfg.freshnessFreshScore
+            } else if daysSinceUpdate <= Cfg.freshnessRecentDayCutoff {
+                freshnessFactor = Cfg.freshnessFreshScore - Double(daysSinceUpdate - Cfg.freshnessFreshDayCutoff) * Cfg.freshnessRecentDecayPerDay
             } else {
-                freshnessFactor = max(0.3, 0.7 - Double(daysSinceUpdate - 7) * 0.017)  // 0.7 → 0.3 over ~24 days
+                freshnessFactor = max(Cfg.freshnessFloor, Cfg.freshnessLongTermBase - Double(daysSinceUpdate - Cfg.freshnessRecentDayCutoff) * Cfg.freshnessLongTermDecayPerDay)
             }
 
             rawWeights[metric] = variabilityFactor * freshnessFactor
         }
 
-        // Normalize to sum to 1.0 with a small floor per metric
-        let minWeight = 1.0 / (Double(metrics.count) * 5.0)  // at least 20% of equal share
-        return normalizeWeights(rawWeights, minimumWeight: max(0.02, minWeight))
+        let minWeight = 1.0 / (Double(metrics.count) * Cfg.metricWeightEqualShareDivisor)
+        return normalizeWeights(rawWeights, minimumWeight: max(Cfg.metricWeightAbsoluteFloor, minWeight))
     }
 
     // MARK: - Score Explanation
@@ -345,24 +328,21 @@ struct HealthScorer {
 
         let totalScore = totalWeight > 0
             ? Int((totalWeightedScore / totalWeight).rounded())
-            : 100
+            : Cfg.perfectScore
 
-        // Sort contributions by weighted impact (highest first)
         contributions.sort { $0.weightedContribution > $1.weightedContribution }
 
-        // Build score factors from anomalies and trends
         var factors: [ScoreFactor] = []
 
-        // Anomaly-based factors
         for anomaly in anomalies where anomaly.severity != .info {
             let absDeviation = abs(anomaly.deviationPercent)
             let direction = anomaly.isAboveBaseline ? "rose" : "dropped"
             let impact: Int
             switch anomaly.severity {
             case .critical:
-                impact = -min(50, Int(abs(anomaly.zScore) * 12))
+                impact = -min(Cfg.criticalDeductionCap, Int(abs(anomaly.zScore) * Cfg.criticalDeductionPerZ))
             case .warning:
-                impact = -min(25, Int(abs(anomaly.zScore) * 8))
+                impact = -min(Cfg.warningDeductionCap, Int(abs(anomaly.zScore) * Cfg.warningDeductionPerZ))
             case .info:
                 impact = 0
             }
@@ -375,12 +355,11 @@ struct HealthScorer {
             ))
         }
 
-        // Trend-based factors
         for (metric, trend) in trends {
             switch trend.direction {
             case .declining:
                 let absWoW = abs(trend.weekOverWeekChange)
-                let impact = -min(30, Int(absWoW * 1.3 + 2))
+                let impact = -min(Cfg.decliningDeductionCap, Int(absWoW * Cfg.decliningDeductionPerPercent + Cfg.decliningDeductionOffset))
                 factors.append(ScoreFactor(
                     metric: metric,
                     impact: impact,
@@ -389,7 +368,7 @@ struct HealthScorer {
                 ))
             case .improving:
                 let absWoW = abs(trend.weekOverWeekChange)
-                let impact = min(8, Int(absWoW * 0.6 + 2))
+                let impact = min(Cfg.improvingBonusCap, Int(absWoW * Cfg.improvingBonusPerPercent + Cfg.improvingBonusOffset))
                 factors.append(ScoreFactor(
                     metric: metric,
                     impact: impact,
@@ -414,11 +393,10 @@ struct HealthScorer {
             }
         }
 
-        // Sort by absolute impact (largest first), take top 3
         let topFactors = Array(
             bestFactorByMetric.values
                 .sorted { abs($0.impact) > abs($1.impact) }
-                .prefix(3)
+                .prefix(Cfg.maxTopFactors)
         )
 
         return ScoreExplanation(
@@ -453,20 +431,16 @@ struct HealthScorer {
             metricsPerCategory[metric.category, default: 0] += 1
         }
 
-        // Each category contributes min(metricCount / 2, 1). full weight at 2+ metrics
         var weightedCoverage = 0.0
         for (_, metricCount) in metricsPerCategory {
-            weightedCoverage += min(Double(metricCount) / 2.0, 1.0)
+            weightedCoverage += min(Double(metricCount) / Cfg.coverageFullWeightMetrics, 1.0)
         }
         weightedCoverage /= Double(totalCategories)
 
-        // Power curve. early categories pull away from neutral faster (diminishing returns)
-        let effectiveCoverage = pow(weightedCoverage, 0.6)
+        let effectiveCoverage = pow(weightedCoverage, Cfg.coveragePower)
 
-        // Shrink toward neutral
-        let neutralScore = 75.0
-        let adjusted = effectiveCoverage * Double(rawScore) + (1.0 - effectiveCoverage) * neutralScore
-        return max(0, min(100, Int(adjusted.rounded())))
+        let adjusted = effectiveCoverage * Double(rawScore) + (1.0 - effectiveCoverage) * Cfg.neutralScore
+        return max(Cfg.minScore, min(Cfg.perfectScore, Int(adjusted.rounded())))
     }
 
     // MARK: - Private Helpers
@@ -525,9 +499,8 @@ struct HealthScorer {
             }
         }
 
-        // Final normalization pass to handle any floating-point drift
         let finalSum = normalized.values.reduce(0, +)
-        if finalSum > 0 && abs(finalSum - 1.0) > 0.001 {
+        if finalSum > 0 && abs(finalSum - 1.0) > Cfg.weightSumTolerance {
             normalized = normalized.mapValues { $0 / finalSum }
         }
 

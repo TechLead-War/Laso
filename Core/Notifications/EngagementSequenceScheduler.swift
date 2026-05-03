@@ -35,10 +35,6 @@ enum EngagementSequenceScheduler {
 
     private static let defaults = UserDefaults.standard
 
-    /// Pass 11 AF: cached calendar — `daysSinceInstall` and `scheduleNotification`
-    /// (called multiple times when planning the engagement sequence) both read
-    /// the calendar; one static avoids repeated allocations.
-    private static let cal: Calendar = Calendar.current
 
     /// Days on which engagement notifications fire. Preserved for backward compat.
     static let activeDays: Set<Int> = [1, 2, 3, 5, 7]
@@ -259,7 +255,7 @@ enum EngagementSequenceScheduler {
         guard let installDate = defaults.object(forKey: AppKeys.Lifecycle.installDate) as? Date else {
             return -1
         }
-        return Self.cal.dateComponents([.day], from: installDate, to: Date()).day ?? 0
+        return Date.cal.dateComponents([.day], from: installDate, to: Date()).day ?? 0
     }
 
     private static var lastScheduledDay: Int {
@@ -559,7 +555,7 @@ enum EngagementSequenceScheduler {
         var dateComponents = DateComponents()
         dateComponents.hour = wakeHour
         dateComponents.minute = wakeMinute
-        dateComponents.calendar = Self.cal
+        dateComponents.calendar = Date.cal
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
 
@@ -597,12 +593,12 @@ enum EngagementSequenceScheduler {
         }
 
         // Schedule for a future date at wake time
-        guard let targetDate = Self.cal.date(byAdding: .day, value: daysFromNow, to: Date()) else { return }
+        guard let targetDate = Date.cal.date(byAdding: .day, value: daysFromNow, to: Date()) else { return }
 
-        var dateComponents = Self.cal.dateComponents([.year, .month, .day], from: targetDate)
+        var dateComponents = Date.cal.dateComponents([.year, .month, .day], from: targetDate)
         dateComponents.hour = wakeHour
         dateComponents.minute = wakeMinute
-        dateComponents.calendar = Self.cal
+        dateComponents.calendar = Date.cal
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
 
@@ -625,17 +621,18 @@ enum EngagementSequenceScheduler {
     // MARK: - Helpers
 
     private static func insightForScore(_ score: Int) -> String {
-        switch score {
-        case 85...100:
+        if score >= ScoreBucketsConfig.engagementWellRecoveredFloor {
             return "You are well recovered today."
-        case 70..<85:
-            return "Solid recovery. A good day to stay active."
-        case 55..<70:
-            return "Moderate recovery. Listen to your body today."
-        case 40..<55:
-            return "Your body is still catching up."
-        default:
-            return "Take it easy. Your body needs rest."
         }
+        if score >= ScoreBucketsConfig.engagementLookingGoodFloor {
+            return "Solid recovery. A good day to stay active."
+        }
+        if score >= ScoreBucketsConfig.engagementModerateFloor {
+            return "Moderate recovery. Listen to your body today."
+        }
+        if score >= ScoreBucketsConfig.engagementNeedsAttentionFloor {
+            return "Your body is still catching up."
+        }
+        return "Take it easy. Your body needs rest."
     }
 }

@@ -77,7 +77,7 @@ final class InteractionEffectEngine {
         timeSeries: [HealthMetric: MetricTimeSeries],
         baselines: [HealthMetric: UserBaseline]
     ) -> [InteractionEffect] {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         var dateValues: [HealthMetric: [Date: Double]] = [:]
         for (metric, series) in timeSeries {
             var dv: [Date: Double] = [:]
@@ -289,7 +289,7 @@ final class InteractionEffectEngine {
         // Split: weekday vs weekend
         var wdC = [Double](), wdE = [Double](), weC = [Double](), weE = [Double]()
         for i in 0..<n {
-            let dow = cal.component(.weekday, from: dates[i])
+            let dow = Date.cal.component(.weekday, from: dates[i])
             if dow == 1 || dow == 7 { weC.append(cv[i]); weE.append(ev[i]) }
             else { wdC.append(cv[i]); wdE.append(ev[i]) }
         }

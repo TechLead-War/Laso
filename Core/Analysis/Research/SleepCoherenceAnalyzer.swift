@@ -1,6 +1,5 @@
 import Foundation
 
-/// Research: Stanford SleepFM (Nature Medicine, Jan 2026)
 /// Finding: When body systems go out of sync during sleep. brain asleep but heart awake —
 /// that signals disease risk. 130 conditions predictable from sleep signal coherence.
 ///
@@ -188,11 +187,15 @@ struct SleepCoherenceAnalyzer {
         _ = Double(incoherentNights) / Double(totalNights) * 100
 
         if avgCoherence < 60 || incoherentNights >= 4 {
+            let scoreText = String(format: "%.0f", avgCoherence)
+            let severityLabel = avgCoherence < 35
+                ? Copy.Analysis.Research.SleepCoherence.severitySignificant
+                : Copy.Analysis.Research.SleepCoherence.severityModerate
             return InsightFactory.make(
                 metric: .sleepDeep,
-                title: "Sleep Systems Out of Sync",
-                summary: "Your body's systems aren't fully aligning during sleep. On \(incoherentNights) of \(totalNights) recent nights, your heart rate and HRV didn't follow expected sleep-stage patterns. coherence score: \(String(format: "%.0f", avgCoherence))/100.",
-                recommendation: "Research shows that physiological incoherence during sleep. when your heart stays 'awake' while your brain sleeps. is associated with reduced overall wellness. Your coherence score of \(String(format: "%.0f", avgCoherence)) suggests \(avgCoherence < 35 ? "significant" : "moderate") desynchronization across \(totalNights) measured nights.",
+                title: Copy.Analysis.Research.SleepCoherence.outOfSyncTitle,
+                summary: Copy.Analysis.Research.SleepCoherence.outOfSyncSummary(incoherent: incoherentNights, total: totalNights, score: scoreText),
+                recommendation: Copy.Analysis.Research.SleepCoherence.outOfSyncRecommendation(score: scoreText, severityLabel: severityLabel, total: totalNights),
                 severity: severity,
                 trend: coherenceTrend,
                 currentValue: avgCoherence,
@@ -208,11 +211,12 @@ struct SleepCoherenceAnalyzer {
                 )
             )
         } else if avgCoherence >= 75 {
+            let scoreText = String(format: "%.0f", avgCoherence)
             return InsightFactory.observation(
                 metric: .sleepDeep,
-                title: "Strong Sleep Coherence",
-                summary: "Your body's systems sync well during sleep. heart rate drops appropriately, HRV rises, and sleep architecture looks healthy. Coherence score: \(String(format: "%.0f", avgCoherence))/100 across \(totalNights) nights.",
-                recommendation: "A coherence score of \(String(format: "%.0f", avgCoherence)) means your heart and nervous system are well-aligned during sleep. Research links high sleep coherence to better overall wellness across many dimensions of health.",
+                title: Copy.Analysis.Research.SleepCoherence.strongCoherenceTitle,
+                summary: Copy.Analysis.Research.SleepCoherence.strongCoherenceSummary(score: scoreText, total: totalNights),
+                recommendation: Copy.Analysis.Research.SleepCoherence.strongCoherenceRecommendation(score: scoreText),
                 currentValue: avgCoherence,
                 baselineValue: 70,
                 deviationPercent: ((avgCoherence - 70) / 70) * 100,
@@ -233,11 +237,14 @@ struct SleepCoherenceAnalyzer {
         coherenceTrend: TrendDirection
     ) -> Insight? {
         guard coherenceTrend == .declining && (priorCoherence - recentCoherence) >= 10 else { return nil }
+        let priorText = String(format: "%.0f", priorCoherence)
+        let recentText = String(format: "%.0f", recentCoherence)
+        let dropText = String(format: "%.0f", priorCoherence - recentCoherence)
         return InsightFactory.make(
             metric: .heartRateVariability,
-            title: "Sleep Coherence Declining",
-            summary: "Your sleep coherence dropped from \(String(format: "%.0f", priorCoherence)) to \(String(format: "%.0f", recentCoherence)) over the past two weeks. Your heart and nervous system are less synchronized during sleep than before.",
-            recommendation: "A \(String(format: "%.0f", priorCoherence - recentCoherence))-point drop in sleep coherence over 2 weeks may reflect increased stress, an irregular schedule, or your body working harder to recover. This pattern often appears before you start feeling off.",
+            title: Copy.Analysis.Research.SleepCoherence.decliningCoherenceTitle,
+            summary: Copy.Analysis.Research.SleepCoherence.decliningSummary(prior: priorText, recent: recentText),
+            recommendation: Copy.Analysis.Research.SleepCoherence.decliningRecommendation(drop: dropText),
             severity: .warning,
             trend: .declining,
             currentValue: recentCoherence,

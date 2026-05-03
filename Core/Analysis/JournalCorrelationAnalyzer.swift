@@ -21,9 +21,9 @@ struct JournalCorrelationAnalyzer {
 
         var strengthLabel: String {
             let absR = abs(correlation)
-            if absR >= 0.6 { return "Strong" }
-            if absR >= 0.4 { return "Moderate" }
-            return "Mild"
+            if absR >= 0.6 { return Copy.Journal.correlationStrong }
+            if absR >= 0.4 { return Copy.Journal.correlationModerate }
+            return Copy.Journal.correlationMild
         }
 
         var confidenceLevel: ConfidenceLevel {
@@ -118,7 +118,7 @@ struct JournalCorrelationAnalyzer {
         timeSeries: [HealthMetric: MetricTimeSeries],
         lookbackDays: Int = 90
     ) -> [JournalCorrelation] {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         var results: [JournalCorrelation] = []
 
         for pair in outcomePairs {
@@ -273,48 +273,41 @@ struct JournalCorrelationAnalyzer {
         let sorted = journalValues.sorted()
         let median = sorted[sorted.count / 2]
 
-        // Generate category-specific personalized insights
         switch pair.category {
         case .caffeine:
             let cups = String(format: "%.0f", median)
             if pair.metric == .sleepDeep || pair.metric == .sleepDuration {
-                return "When you have \(cups)+ cups of coffee, your \(metricName) drops \(absDiff)%. Based on \(sampleCount) days of your data."
+                return Copy.Journal.Correlation.caffeineSleep(cups: cups, metric: metricName, percent: absDiff, days: sampleCount)
             }
-            return "Days with \(cups)+ cups of caffeine show \(absDiff)% \(direction) \(metricName) the next day."
+            return Copy.Journal.Correlation.caffeineGeneric(cups: cups, percent: absDiff, direction: direction, metric: metricName)
 
         case .alcohol:
             let drinks = String(format: "%.0f", median)
             if pair.metric == .sleepDeep || pair.metric == .sleepREM {
-                return "Nights with \(drinks)+ drinks reduce your \(metricName) by \(absDiff)%. Your body needs alcohol-free evenings for quality sleep."
+                return Copy.Journal.Correlation.alcoholSleep(drinks: drinks, metric: metricName, percent: absDiff)
             }
-            return "\(drinks)+ drinks impact your next-day \(metricName) by \(absDiff)%."
+            return Copy.Journal.Correlation.alcoholGeneric(drinks: drinks, metric: metricName, percent: absDiff)
 
         case .stress:
-            let level = String(format: "%.0f", median)
-            return "When your stress is \(level)+ out of 10, your \(metricName) is \(absDiff)% \(direction). Stress management directly impacts your recovery."
+            return Copy.Journal.Correlation.stressImpact(level: String(format: "%.0f", median), metric: metricName, percent: absDiff, direction: direction)
 
         case .meditation:
-            let mins = String(format: "%.0f", median)
-            return "\(mins)+ minutes of meditation boosts your \(metricName) by \(absDiff)%. Consistency matters more than duration."
+            return Copy.Journal.Correlation.meditationImpact(mins: String(format: "%.0f", median), metric: metricName, percent: absDiff)
 
         case .screenTime:
-            let hrs = String(format: "%.1f", median)
-            return "Days with \(hrs)+ hrs of screen time show \(absDiff)% \(direction) \(metricName). Consider a screen curfew before bed."
+            return Copy.Journal.Correlation.screenTimeImpact(hrs: String(format: "%.1f", median), percent: absDiff, direction: direction, metric: metricName)
 
         case .mealTiming:
-            let hrs = String(format: "%.1f", median)
-            return "Eating \(hrs)+ hrs before bed improves your \(metricName) by \(absDiff)%. Earlier dinners support better sleep."
+            return Copy.Journal.Correlation.mealTimingImpact(hrs: String(format: "%.1f", median), metric: metricName, percent: absDiff)
 
         case .water:
-            let glasses = String(format: "%.0f", median)
-            return "Drinking \(glasses)+ glasses of water leads to \(absDiff)% \(direction) \(metricName) the next day."
+            return Copy.Journal.Correlation.waterImpact(glasses: String(format: "%.0f", median), percent: absDiff, direction: direction, metric: metricName)
 
         case .mood:
-            let rating = String(format: "%.0f", median)
-            return "On days when your mood is \(rating)+, your \(metricName) averages \(absDiff)% \(direction)."
+            return Copy.Journal.Correlation.moodImpact(rating: String(format: "%.0f", median), metric: metricName, percent: absDiff, direction: direction)
 
         case .supplements:
-            return "Days with supplements show \(absDiff)% \(direction) next-day \(metricName). Based on \(sampleCount) observations."
+            return Copy.Journal.Correlation.supplementsImpact(percent: absDiff, direction: direction, metric: metricName, observations: sampleCount)
         }
     }
 

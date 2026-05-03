@@ -30,7 +30,7 @@ final class CorrelationDiscovery {
     /// Discover all significant correlations between metric pairs
     func discover(timeSeries: [HealthMetric: MetricTimeSeries]) {
         correlations = []
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let recentCutoff = calendar.date(byAdding: .day, value: -7, to: Date()) ?? Date()
 
         // Filter to metrics with data in the past 7 days

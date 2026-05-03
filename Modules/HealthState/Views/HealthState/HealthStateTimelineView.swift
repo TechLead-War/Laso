@@ -6,10 +6,6 @@ struct HealthStateTimelineView: View {
     let viewModel: HealthStateTimelineViewModel
     @State private var selectedMonth = Date()
 
-    /// Pass 12 BE perf: cached current calendar. Calendar grid renders re-evaluate
-    /// the prev/next/disabled buttons on every state mutation; per-render
-    /// `Calendar.current` allocation is wasteful.
-    private static let cal: Calendar = Calendar.current
 
     // Section trackers
     @State private var currentStateTracker = SectionTracker(section: .healthStateCurrent, tab: .healthStateTimeline)
@@ -169,7 +165,7 @@ struct HealthStateTimelineView: View {
             // Month navigation
             HStack {
                 Button {
-                    selectedMonth = Self.cal.date(byAdding: .month, value: -1, to: selectedMonth) ?? selectedMonth
+                    selectedMonth = Date.cal.date(byAdding: .month, value: -1, to: selectedMonth) ?? selectedMonth
                     AppAnalytics.shared.trackBlockTap(
                         title: "Previous Month",
                         type: .healthStatePrevMonth,
@@ -193,7 +189,7 @@ struct HealthStateTimelineView: View {
                 Spacer()
 
                 Button {
-                    let next = Self.cal.date(byAdding: .month, value: 1, to: selectedMonth) ?? selectedMonth
+                    let next = Date.cal.date(byAdding: .month, value: 1, to: selectedMonth) ?? selectedMonth
                     if next <= Date() {
                         selectedMonth = next
                         AppAnalytics.shared.trackBlockTap(
@@ -211,7 +207,7 @@ struct HealthStateTimelineView: View {
                     Image(systemName: "chevron.right")
                         .font(DS.Typography.captionSemibold)
                 }
-                .disabled(Self.cal.isDate(selectedMonth, equalTo: Date(), toGranularity: .month))
+                .disabled(Date.cal.isDate(selectedMonth, equalTo: Date(), toGranularity: .month))
             }
 
             // Day-of-week header
@@ -282,7 +278,7 @@ struct HealthStateTimelineView: View {
         let total = max(1, distribution.values.reduce(0, +))
 
         return VStack(alignment: .leading, spacing: DS.space2) {
-            Text("Distribution")
+            Text(Copy.HealthStateTimeline.distributionHeader)
                 .font(DS.Typography.subheadlineSemibold)
 
             GeometryReader { geo in
@@ -316,7 +312,7 @@ struct HealthStateTimelineView: View {
 
     private var transitionSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text("Common Transitions")
+            Text(Copy.HealthStateTimeline.commonTransitionsHeader)
                 .font(DS.Typography.subheadlineSemibold)
 
             ForEach(Array(viewModel.commonTransitions.prefix(5).enumerated()), id: \.offset) { _, transition in
@@ -360,7 +356,7 @@ struct HealthStateTimelineView: View {
 
     private var stateDescriptions: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text("State Guide")
+            Text(Copy.HealthStateTimeline.stateGuideHeader)
                 .font(DS.Typography.subheadlineSemibold)
 
             ForEach(viewModel.states, id: \.label) { state in

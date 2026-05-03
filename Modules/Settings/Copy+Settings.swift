@@ -38,6 +38,24 @@ extension Copy {
         static let connectDataSourceHint = "Laso reads from Apple Health. Connect a watch or other app to start."
         static let waitingForData = "Waiting for Health Data"
         static let waitingForDataHint = "Make sure your watch or health app is sharing with Apple Health."
+
+        // MARK: - Siri Detail
+
+        static let siriDetailDescription = "Add Laso shortcuts to Siri so you can check your health score, view your sleep summary, or open today's dashboard hands free."
+
+        // MARK: - Danger Zone
+
+        static let dangerZone = "Danger Zone"
+
+        // MARK: - Notifications Detail
+
+        static let maxNotificationsLabel = "Maximum notifications per day"
+
+        // MARK: - Acknowledgements
+
+        static func libraryLicense(name: String, license: String) -> String {
+            "\(name), \(license)"
+        }
         static let syncingData = "Syncing Your Data"
         static let refreshNow = "Refresh Now"
 

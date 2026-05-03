@@ -11,10 +11,10 @@ enum StressLevel: String, CaseIterable, Codable {
 
     var displayName: String {
         switch self {
-        case .low: return "Low Stress"
-        case .mild: return "Mild Stress"
-        case .moderate: return "Moderate Stress"
-        case .high: return "High Stress"
+        case .low: return Copy.StressMonitor.stressLevelLow
+        case .mild: return Copy.StressMonitor.stressLevelMild
+        case .moderate: return Copy.StressMonitor.stressLevelModerate
+        case .high: return Copy.StressMonitor.stressLevelHigh
         }
     }
 
@@ -62,9 +62,9 @@ enum StressTrend: String, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .decreasing: return "Decreasing"
-        case .stable: return "Stable"
-        case .increasing: return "Increasing"
+        case .decreasing: return Copy.StressMonitor.trendDecreasing
+        case .stable: return Copy.StressMonitor.trendStable
+        case .increasing: return Copy.StressMonitor.trendIncreasing
         }
     }
 
@@ -189,36 +189,36 @@ final class StressScorer {
     /// Human-readable description of current stress state with actionable advice
     var stressDescription: String {
         guard let stress = currentStress else {
-            return "Not enough data to assess stress yet. Keep heart rate and HRV data syncing to establish your personal baseline."
+            return Copy.StressMonitor.descriptionNoData
         }
 
         let scoreText = String(format: "%.1f", stress.score)
 
         switch stress.level {
         case .low:
-            return "Your stress level is low (\(scoreText)/3.0). Your HRV and heart rate are within your normal range. Keep up your current routine. Your body is recovering well."
+            return Copy.StressMonitor.descriptionLow(score: scoreText)
 
         case .mild:
-            return "Your stress level is mildly elevated (\(scoreText)/3.0). "
+            return Copy.StressMonitor.descriptionMildPrefix(score: scoreText)
                 + (stress.hrvDeviation > Self.mildHRVMentionThreshold
-                    ? "Your HRV is \(Int(stress.hrvDeviation * 100))% below your baseline. "
+                    ? Copy.StressMonitor.descriptionHRVMention(percent: Int(stress.hrvDeviation * 100))
                     : "")
-                + "Consider lighter exercise today and prioritize sleep tonight."
+                + Copy.StressMonitor.descriptionMildSuffix
 
         case .moderate:
-            return "Your stress level is moderate (\(scoreText)/3.0). "
+            return Copy.StressMonitor.descriptionModeratePrefix(score: scoreText)
                 + (stress.hrvDeviation > Self.moderateHRVMentionThreshold
-                    ? "Your HRV is \(Int(stress.hrvDeviation * 100))% below your baseline. "
+                    ? Copy.StressMonitor.descriptionHRVMention(percent: Int(stress.hrvDeviation * 100))
                     : "")
                 + (stress.hrElevation > Self.moderateHRMentionThreshold
-                    ? "Your heart rate is \(Int(stress.hrElevation * 100))% above your resting average. "
+                    ? Copy.StressMonitor.descriptionHRMention(percent: Int(stress.hrElevation * 100))
                     : "")
-                + "Focus on recovery: deep breathing, gentle movement, and adequate hydration."
+                + Copy.StressMonitor.descriptionModerateSuffix
 
         case .high:
-            return "Your stress level is high (\(scoreText)/3.0). "
-                + "Your HRV is \(Int(stress.hrvDeviation * 100))% below baseline and heart rate is \(Int(stress.hrElevation * 100))% elevated. "
-                + "Prioritize rest and recovery. Avoid intense exercise, reduce caffeine, and consider mindfulness or breathing exercises."
+            return Copy.StressMonitor.descriptionHighPrefix(score: scoreText)
+                + Copy.StressMonitor.descriptionHighHRVAndHRTyped(hrvPercent: Int(stress.hrvDeviation * 100), hrPercent: Int(stress.hrElevation * 100))
+                + Copy.StressMonitor.descriptionHighSuffix
         }
     }
 
@@ -328,7 +328,7 @@ final class StressScorer {
     /// raw reading happened to land at or above the 14-day baseline mean.
     private func mostRecentDailyMean(_ samples: [MetricSample]) -> Double? {
         guard !samples.isEmpty else { return nil }
-        let calendar = Calendar.current
+        let calendar = Date.cal
         var byDay: [Date: (sum: Double, count: Int)] = [:]
         for sample in samples {
             let day = calendar.startOfDay(for: sample.date)
@@ -438,7 +438,7 @@ final class StressScorer {
         rhrSeries: MetricTimeSeries?,
         hrSeries: MetricTimeSeries?
     ) {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let today = calendar.startOfDay(for: Date())
         let historyDays = Self.historyWindowDays
 
@@ -485,7 +485,7 @@ final class StressScorer {
 
     /// Build a lookup of date -> average value for a set of samples
     private func buildDailyLookup(_ samples: [MetricSample]) -> [Date: Double] {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         var grouped: [Date: (sum: Double, count: Int)] = [:]
 
         for sample in samples {

@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - Morning Check-In View
 
 /// Compact 3-question morning check-in for subjective recovery data.
-/// Based on HRV research (Sensors MDPI 2025): combining physiological signals
+/// combining physiological signals
 /// (HRV, RHR) with subjective well-being scores significantly improves
 /// readiness prediction accuracy over either alone.
 ///

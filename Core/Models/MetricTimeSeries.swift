@@ -10,12 +10,6 @@ struct MetricTimeSeries: Identifiable {
 
     // Removed pre-computed stats variables to save CPU and memory on init.
 
-    /// Pass 11 AF: cached calendar — `init`'s distinct-day pass and the
-    /// `samples(lastDays:)` / `samples(forMonth:)` accessors all hit it.
-    /// MetricTimeSeries is constructed once per metric per refresh, then
-    /// queried multiple times during analysis.
-    private static let cal: Calendar = Calendar.current
-
     init(metric: HealthMetric, samples: [MetricSample]) {
         let sortedSamples = samples.sorted { $0.date < $1.date }
         
@@ -44,7 +38,7 @@ struct MetricTimeSeries: Identifiable {
         self.metric = metric
         self.samples = validSamples
 
-        let calendar = Self.cal
+        let calendar = Date.cal
         var distinctDayCount = 0
         var previousDay: Date?
 
@@ -99,13 +93,13 @@ struct MetricTimeSeries: Identifiable {
     /// Check if the latest data is older than the given number of days.
     func isStale(thresholdDays: Int = 2) -> Bool {
         guard let lastDate = samples.last?.date else { return true }
-        let cutoff = Self.cal.date(byAdding: .day, value: -thresholdDays, to: Date()) ?? Date()
+        let cutoff = Date.cal.date(byAdding: .day, value: -thresholdDays, to: Date()) ?? Date()
         return lastDate < cutoff
     }
 
     /// Samples within the last N days
     func samples(lastDays days: Int) -> [MetricSample] {
-        let cutoff = Self.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let cutoff = Date.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
         guard !samples.isEmpty else { return [] }
 
         let startIndex = firstIndex(onOrAfter: cutoff)
@@ -122,13 +116,13 @@ struct MetricTimeSeries: Identifiable {
 
     /// Samples from a specific calendar month across all years (for seasonal analysis)
     func samples(forMonth month: Int) -> [MetricSample] {
-        let calendar = Self.cal
+        let calendar = Date.cal
         return samples.filter { calendar.component(.month, from: $0.date) == month }
     }
 
     /// Samples from the same calendar month in a specific year
     func samples(forMonth month: Int, year: Int) -> [MetricSample] {
-        let calendar = Self.cal
+        let calendar = Date.cal
         return samples.filter {
             return calendar.component(.month, from: $0.date) == month &&
                 calendar.component(.year, from: $0.date) == year
@@ -166,7 +160,7 @@ struct MetricTimeSeries: Identifiable {
     /// Number of years of data available
     var yearsOfData: Int {
         guard let first = samples.first, let last = samples.last else { return 0 }
-        let years = Self.cal.dateComponents([.year], from: first.date, to: last.date).year ?? 0
+        let years = Date.cal.dateComponents([.year], from: first.date, to: last.date).year ?? 0
         return Swift.max(1, years + 1)
     }
 
@@ -179,30 +173,10 @@ struct MetricTimeSeries: Identifiable {
     var totalDataPoints: Int { samples.count }
 
     private func firstIndex(onOrAfter date: Date) -> Int {
-        var low = 0
-        var high = samples.count
-        while low < high {
-            let mid = (low + high) / 2
-            if samples[mid].date < date {
-                low = mid + 1
-            } else {
-                high = mid
-            }
-        }
-        return low
+        samples.firstIndex(onOrAfter: date)
     }
 
     private func firstIndex(after date: Date) -> Int {
-        var low = 0
-        var high = samples.count
-        while low < high {
-            let mid = (low + high) / 2
-            if samples[mid].date <= date {
-                low = mid + 1
-            } else {
-                high = mid
-            }
-        }
-        return low
+        samples.firstIndex(after: date)
     }
 }

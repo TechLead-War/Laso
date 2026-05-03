@@ -37,20 +37,14 @@ struct HeartRateTarget {
     let label: String
 
     static func forZone(_ zone: Int, maxHR: Int) -> HeartRateTarget {
-        let ranges: [(Double, Double, String)] = [
-            (0.50, 0.60, "Active Recovery"),
-            (0.60, 0.70, "Fat Burn"),
-            (0.70, 0.80, "Aerobic"),
-            (0.80, 0.90, "Threshold"),
-            (0.90, 1.00, "Anaerobic"),
-        ]
-        let idx = max(0, min(zone - 1, 4))
-        let (low, high, label) = ranges[idx]
+        let zones = WorkoutBandsConfig.hrZones
+        let idx = max(0, min(zone - 1, zones.count - 1))
+        let range = zones[idx]
         return HeartRateTarget(
             zone: zone,
-            minBPM: Int(Double(maxHR) * low),
-            maxBPM: Int(Double(maxHR) * high),
-            label: label
+            minBPM: Int(Double(maxHR) * range.lowerFraction),
+            maxBPM: Int(Double(maxHR) * range.upperFraction),
+            label: range.label
         )
     }
 }
@@ -86,9 +80,9 @@ enum WorkoutRecoveryBand: String, CaseIterable {
     case green
 
     init(score: Int) {
-        if score > 75 {
+        if score > WorkoutBandsConfig.greenBandScoreFloor {
             self = .green
-        } else if score >= 50 {
+        } else if score >= WorkoutBandsConfig.yellowBandScoreFloor {
             self = .yellow
         } else {
             self = .red
@@ -98,11 +92,11 @@ enum WorkoutRecoveryBand: String, CaseIterable {
     var recoveryScoreSeed: Int {
         switch self {
         case .red:
-            return 35
+            return WorkoutBandsConfig.redBandSeed
         case .yellow:
-            return 65
+            return WorkoutBandsConfig.yellowBandSeed
         case .green:
-            return 82
+            return WorkoutBandsConfig.greenBandSeed
         }
     }
 }
@@ -117,7 +111,7 @@ struct WorkoutProgrammer {
         strainTarget: Double? = nil,
         healthSignals: HealthSignalFlags = .none,
         cyclePhase: CyclePhaseModifier? = nil,
-        estimatedMaxHR: Int = 190,
+        estimatedMaxHR: Int = WorkoutBandsConfig.defaultEstimatedMaxHR,
         lastWorkoutType: String? = nil,
         exerciseMinutesToday: Double = 0
     ) -> WorkoutPlan {
@@ -138,7 +132,7 @@ struct WorkoutProgrammer {
         strainTarget: Double? = nil,
         healthSignals: HealthSignalFlags = .none,
         cyclePhase: CyclePhaseModifier? = nil,
-        estimatedMaxHR: Int = 190,
+        estimatedMaxHR: Int = WorkoutBandsConfig.defaultEstimatedMaxHR,
         lastWorkoutType: String? = nil,
         exerciseMinutesToday: Double = 0
     ) -> WorkoutPlan {
@@ -190,9 +184,9 @@ struct WorkoutProgrammer {
 
     private static func zoneForRecovery(_ score: Int) -> TrainingZone {
         switch score {
-        case 0..<50: return .restoring
-        case 50..<75: return .maintaining
-        case 75..<90: return .building
+        case 0..<WorkoutBandsConfig.zoneRestoringScoreCeiling: return .restoring
+        case WorkoutBandsConfig.zoneRestoringScoreCeiling..<WorkoutBandsConfig.zoneMaintainingScoreCeiling: return .maintaining
+        case WorkoutBandsConfig.zoneMaintainingScoreCeiling..<WorkoutBandsConfig.zoneBuildingScoreCeiling: return .building
         default: return .overreaching
         }
     }

@@ -60,7 +60,7 @@ final class AdaptiveAnomalyDetector {
     /// Eliminates 7x redundant full-dataset conversion + mean/std computation per pipeline.
     private var cachedTrainingMeans: [Double] = []
     private var cachedTrainingStds: [Double] = []
-    /// Cached global centroid for legacyContextualZScore fallback path
+    /// Cached global centroid for globalDistanceContextualZScore fallback path
     private var cachedCentroid: [Double] = []
     private var cachedPeerDistanceMean: Double = 0
     private var cachedPeerDistanceStd: Double = 0
@@ -180,7 +180,7 @@ final class AdaptiveAnomalyDetector {
             cachedTrainingStds[i] = variance.squareRoot()
         }
 
-        // Precompute centroid + peer distance stats for legacyContextualZScore fallback
+        // Precompute centroid + peer distance stats for globalDistanceContextualZScore fallback
         cachedCentroid = [Double](repeating: 0, count: dim)
         var centroidCounts = [Double](repeating: 0, count: dim)
         for arr in dataArrays {
@@ -321,7 +321,7 @@ final class AdaptiveAnomalyDetector {
 
         // Compute context for this vector
         let context: DayContext
-        if let allVectors = allVectors, let idx = allVectors.firstIndex(where: { Calendar.current.isDate($0.date, inSameDayAs: vector.date) }) {
+        if let allVectors = allVectors, let idx = allVectors.firstIndex(where: { Date.cal.isDate($0.date, inSameDayAs: vector.date) }) {
             context = computeContext(for: vector, allVectors: allVectors, index: idx)
         } else {
             context = computeContext(for: vector, allVectors: trainingVectors, index: trainingVectors.count - 1)
@@ -523,7 +523,8 @@ final class AdaptiveAnomalyDetector {
     }
 
     /// Compute contextual z-score using per-bucket statistics.
-    /// Falls back to the legacy distance-based method if the bucket is too small.
+    /// Falls back to the global distance-based method when the per-bucket
+    /// sample is too small to be statistically meaningful.
     private func contextualZScoreFromBucket(features: [Double], context: DayContext) -> Double {
         // Try exact bucket first
         if let stats = bucketStatsCache[context.bucketLabel] {
@@ -536,8 +537,8 @@ final class AdaptiveAnomalyDetector {
             return maxFeatureZ(features: features, stats: stats)
         }
 
-        // Final fallback: legacy distance-based contextual z-score across all training data
-        return legacyContextualZScore(features: features)
+        // Final fallback: global distance-based contextual z-score across all training data
+        return globalDistanceContextualZScore(features: features)
     }
 
     /// Contextual anomaly score = max(|feature_z_vs_context_peers|) across all features
@@ -556,7 +557,7 @@ final class AdaptiveAnomalyDetector {
 
     /// Legacy distance-based contextual z-score (fallback when bucket has < 5 peers).
     /// Uses cached centroid and peer distance stats from train() instead of recomputing.
-    private func legacyContextualZScore(features: [Double]) -> Double {
+    private func globalDistanceContextualZScore(features: [Double]) -> Double {
         guard !cachedCentroid.isEmpty, cachedPeerDistanceStd > 0 else { return 0 }
 
         let targetDist = euclideanDistanceIgnoringMissing(features, cachedCentroid)
@@ -622,7 +623,7 @@ final class AdaptiveAnomalyDetector {
             return 0
         }
 
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let anomalousMetrics = Set(anomalousFeatures.map(\.key.metric))
         var maxStreak = 0
 

@@ -181,7 +181,7 @@ final class HealthKitManager {
         isLoading = true
         defer { isLoading = false }
 
-        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Date())) ?? Date()
+        let endDate = Date.cal.date(byAdding: .day, value: 1, to: Date.cal.startOfDay(for: Date())) ?? Date()
         let startDate = Date().daysAgo(days)
 
         await withTaskGroup(of: (HealthMetric, MetricTimeSeries?).self) { group in
@@ -226,7 +226,7 @@ final class HealthKitManager {
         let syncDates = store.allSyncDates()
         let isFirstSync = syncDates.isEmpty
         // Use start-of-tomorrow so daily statistics buckets always include today's partial data
-        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Date())) ?? Date()
+        let endDate = Date.cal.date(byAdding: .day, value: 1, to: Date.cal.startOfDay(for: Date())) ?? Date()
         syncProgress?.phase = .fetching
 
         var newData: [(HealthMetric, MetricTimeSeries)] = []
@@ -246,8 +246,8 @@ final class HealthKitManager {
         let syncCount = UserDefaults.standard.integer(forKey: syncCountKey)
         UserDefaults.standard.set(syncCount + 1, forKey: syncCountKey)
 
-        let staleCutoff = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
-        let recentSyncCutoff = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
+        let staleCutoff = Date.cal.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+        let recentSyncCutoff = Date.cal.date(byAdding: .day, value: -1, to: Date()) ?? Date()
 
         await withTaskGroup(of: (HealthMetric, MetricTimeSeries?).self) { group in
             for metric in HealthMetric.allCases {
@@ -283,11 +283,11 @@ final class HealthKitManager {
                 group.addTask { [self] in
                     let startDate: Date
                     if let lastSync {
-                        startDate = Calendar.current.date(byAdding: .day, value: -1, to: lastSync) ?? lastSync
+                        startDate = Date.cal.date(byAdding: .day, value: -1, to: lastSync) ?? lastSync
                     } else {
                         // Fetch all available HealthKit history (up to 10 years) so the
                         // Explore "days" counter reflects the user's full data span.
-                        startDate = Calendar.current.date(byAdding: .year, value: -10, to: endDate) ?? endDate
+                        startDate = Date.cal.date(byAdding: .year, value: -10, to: endDate) ?? endDate
                     }
                     let series = await self.fetchMetric(metric, from: startDate, to: endDate)
                     return (metric, series)
@@ -512,7 +512,7 @@ final class HealthKitManager {
         let config = HealthKitMetricRegistry.config(for: metric)
         guard let quantityType = config.quantityType else { return nil }
 
-        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Date())) ?? Date()
+        let endDate = Date.cal.date(byAdding: .day, value: 1, to: Date.cal.startOfDay(for: Date())) ?? Date()
         let startDate = Date().daysAgo(days)
 
         return await withCheckedContinuation { continuation in
@@ -537,7 +537,7 @@ final class HealthKitManager {
 
                 // Bin values by hour-of-day (0-23)
                 var hourBins: [[Double]] = Array(repeating: [], count: 24)
-                let calendar = Calendar.current
+                let calendar = Date.cal
 
                 results.enumerateStatistics(from: startDate, to: endDate) { statistics, _ in
                     let value: Double?
@@ -591,7 +591,7 @@ final class HealthKitManager {
         var currentCycle: [Date] = []
         for day in bleedingDays.sorted() {
             if let last = currentCycle.last,
-               Calendar.current.dateComponents([.day], from: last, to: day).day ?? 0 > 20 {
+               Date.cal.dateComponents([.day], from: last, to: day).day ?? 0 > 20 {
                 if !currentCycle.isEmpty { cycles.append(currentCycle) }
                 currentCycle = [day]
             } else {
@@ -603,7 +603,7 @@ final class HealthKitManager {
 
         // Estimate cycle length from consecutive cycle starts
         var phaseDays: [CyclePhaseDay] = []
-        let calendar = Calendar.current
+        let calendar = Date.cal
 
         for i in 0..<(cycles.count - 1) {
             guard let cycleStart = cycles[i].first,
@@ -630,7 +630,7 @@ final class HealthKitManager {
     // MARK: - Raw Intra-Day Heart Rate (for Strain Zone Classification)
 
     func fetchTodayRawHeartRateSamples() async -> [MetricSample] {
-        let startOfDay = Calendar.current.startOfDay(for: Date())
+        let startOfDay = Date.cal.startOfDay(for: Date())
         let type = HKQuantityType(.heartRate)
         let unit = HKUnit.count().unitDivided(by: .minute())
 
@@ -762,8 +762,8 @@ final class HealthKitManager {
     /// times even after a cold start (when the routine sync only fetches the last 1–2 days).
     @MainActor
     func refreshSleepBoundaries(days: Int = 14) async {
-        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Date())) ?? Date()
-        let startDate = Calendar.current.date(byAdding: .day, value: -days, to: endDate) ?? endDate
+        let endDate = Date.cal.date(byAdding: .day, value: 1, to: Date.cal.startOfDay(for: Date())) ?? Date()
+        let startDate = Date.cal.date(byAdding: .day, value: -days, to: endDate) ?? endDate
         let boundaries = await queryOvernightBoundaries(from: startDate, to: endDate)
         sleepSessionBoundaries.merge(boundaries) { _, new in new }
     }
@@ -856,7 +856,7 @@ final class HealthKitManager {
                 // day has multiple overnight candidates (rare).
                 var dict: [Date: SleepSessionBoundary] = [:]
                 for session in sessions {
-                    let endHour = Calendar.current.component(.hour, from: session.end)
+                    let endHour = Date.cal.component(.hour, from: session.end)
                     guard endHour >= 4 && endHour < 12 else { continue }
                     let durationHours = session.end.timeIntervalSince(session.start) / 3600.0
                     guard durationHours >= 2 else { continue }
@@ -932,7 +932,7 @@ final class HealthKitManager {
                         dailyDurations[day, default: 0] += duration
                         // Track wake time from overnight sleep only (ends 4 AM–noon).
                         // This filters out afternoon naps that would skew the average.
-                        let endHour = Calendar.current.component(.hour, from: sample.endDate)
+                        let endHour = Date.cal.component(.hour, from: sample.endDate)
                         if endHour >= 4 && endHour < 12 {
                             if let existing = dailyWakeTimes[day] {
                                 if sample.endDate > existing { dailyWakeTimes[day] = sample.endDate }
@@ -965,7 +965,7 @@ final class HealthKitManager {
     /// complete a user's data pipeline is — the wellness-app industry's standard proxy
     /// for "active user".
     func daysWithAnyDataInLast(days: Int = 7) -> Int {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let endDay = calendar.startOfDay(for: Date())
         guard let startDay = calendar.date(byAdding: .day, value: -(days - 1), to: endDay) else {
             return 0
@@ -1204,11 +1204,11 @@ final class HealthKitManager {
 
     @MainActor
     func refreshMetric(_ metric: HealthMetric, store: HealthDataStore) async {
-        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: Date())) ?? Date()
+        let endDate = Date.cal.date(byAdding: .day, value: 1, to: Date.cal.startOfDay(for: Date())) ?? Date()
         // Use the existing stored data's oldest date to preserve full history,
         // falling back to 10 years for metrics without stored data yet.
         let existingOldest = timeSeries[metric]?.samples.first?.date
-        let startDate = existingOldest ?? Calendar.current.date(byAdding: .year, value: -10, to: endDate) ?? endDate
+        let startDate = existingOldest ?? Date.cal.date(byAdding: .year, value: -10, to: endDate) ?? endDate
         guard let series = await fetchMetric(metric, from: startDate, to: endDate) else { return }
         store.saveSamples(series.samples, for: metric)
         let reloaded = store.loadTimeSeries(for: metric)

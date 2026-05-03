@@ -187,7 +187,7 @@ struct RecoveryAnalyzer {
 
         for workoutDay in workoutDays {
             for dayAfter in 1...7 {
-                guard let checkDate = Calendar.current.date(byAdding: .day, value: dayAfter, to: workoutDay) else { break }
+                guard let checkDate = Date.cal.date(byAdding: .day, value: dayAfter, to: workoutDay) else { break }
                 let checkDay = checkDate.startOfDay
                 guard let value = valueMap[checkDay] else { continue }
 

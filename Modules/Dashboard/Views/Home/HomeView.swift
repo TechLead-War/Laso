@@ -643,7 +643,6 @@ struct HomeView: View {
             }
         }
 
-        // Build the line based on recovery state
         switch state {
         case .green:
             let top = positiveFactors.first ?? Copy.Home.RecoveryHero.hrvBounced

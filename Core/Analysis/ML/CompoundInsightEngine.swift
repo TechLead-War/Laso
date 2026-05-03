@@ -83,7 +83,7 @@ final class CompoundInsightEngine {
     var isReady: Bool { !insights.isEmpty }
     var topInsights: [CompoundInsight] { Array(insights.prefix(Self.topInsightsLimit)) }
 
-    private let calendar = Calendar.current
+    private let calendar = Date.cal
 
     // Natural Language Generator
     private let llmGenerator = LLMInsightGenerator()
@@ -308,7 +308,7 @@ final class CompoundInsightEngine {
 
             results.append(CompoundInsight(
                 id: "trajectory_coordinated_improvement",
-                title: "Your Health Is Building Momentum",
+                title: Copy.Insights.healthBuildingMomentum,
                 narrative: narrative,
                 recommendation: "\(improving.count) metrics improving in lockstep, averaging \(formatPercent(avgChange)) over 7 days across \(categories.count) categories.",
                 involvedMetrics: metrics,
@@ -344,7 +344,7 @@ final class CompoundInsightEngine {
 
             results.append(CompoundInsight(
                 id: "trajectory_coordinated_decline",
-                title: "Multiple Metrics Declining Together",
+                title: Copy.Insights.multipleMetricsDecliningTogether,
                 narrative: narrative,
                 recommendation: "\(declining.count) metrics declining simultaneously, averaging \(formatPercent(avgChange)) over 7 days across \(categories.count) categories. \(topMetric.metric.displayName) is the most affected.",
                 involvedMetrics: metrics,
@@ -369,7 +369,7 @@ final class CompoundInsightEngine {
 
                 results.append(CompoundInsight(
                     id: "trajectory_state_transition",
-                    title: "New Health Phase: \(state.label)",
+                    title: Copy.Insights.newHealthPhase(state.label),
                     narrative: narrative,
                     recommendation: "Transitioned from \"\(prevState.label)\" to \"\(state.label)\". this transition had a \(formatPercent(transitionProb * 100)) historical probability.",
                     involvedMetrics: state.characteristics.map(\.metric),
@@ -460,7 +460,7 @@ final class CompoundInsightEngine {
 
             results.append(CompoundInsight(
                 id: "hidden_weekend_cascade",
-                title: "Your \(topTroughName) Problem",
+                title: Copy.Insights.troughProblem(topTroughName),
                 narrative: narrative,
                 recommendation: "Your \(top.metric.displayName) swings \(formatPercent(top.peakTroughDeltaPercent)) between \(topPeakName) and \(topTroughName) weekly. \(second.metric.displayName) also shifts \(formatPercent(second.peakTroughDeltaPercent)).",
                 involvedMetrics: involvedMetrics,
@@ -502,7 +502,7 @@ final class CompoundInsightEngine {
 
             results.append(CompoundInsight(
                 id: "hidden_cross_category_\(catA.rawValue)_\(catB.rawValue)",
-                title: "Your \(catA.rawValue.capitalized) and \(catB.rawValue.capitalized) Are Linked",
+                title: Copy.Insights.categoriesLinked(catA.rawValue.capitalized, catB.rawValue.capitalized),
                 narrative: narrative,
                 recommendation: "\(strongest.metricA.displayName) and \(strongest.metricB.displayName) \(direction) (\(rCoeff))\(strongest.grangerCausal ? ", with \(strongest.metricA.displayName) leading by \(strongest.grangerOptimalLag) day\(strongest.grangerOptimalLag == 1 ? "" : "s")" : "").",
                 involvedMetrics: [strongest.metricA, strongest.metricB],
@@ -535,7 +535,7 @@ final class CompoundInsightEngine {
 
                     results.append(CompoundInsight(
                         id: "hidden_variability_contrast",
-                        title: "Your Most Responsive Metric",
+                        title: Copy.Insights.mostResponsiveMetric,
                         narrative: narrative,
                         recommendation: "\(mostVariable.0.displayName) has \(formatPercent(ratio * 100 - 100)) more day-to-day variability than \(leastVariable.0.displayName). it responds most to daily changes in your data.",
                         involvedMetrics: [mostVariable.0, leastVariable.0],
@@ -715,7 +715,7 @@ final class CompoundInsightEngine {
 
             results.append(CompoundInsight(
                 id: "risk_converging_signals",
-                title: "Warning Signs Converging",
+                title: Copy.Insights.warningSignsConverging,
                 narrative: narrative,
                 recommendation: "\(riskSignals) risk signals converging.\(pastCrashes >= 2 ? " Similar patterns preceded your last \(pastCrashes) score dips." : "")\(predictionRisk > Self.predictionMentionProbability ? " Tomorrow's risk estimate: \(Int(predictionRisk * 100))%." : "")",
                 involvedMetrics: Array(uniqueMetrics.prefix(5)),
@@ -748,7 +748,7 @@ final class CompoundInsightEngine {
 
                 results.append(CompoundInsight(
                     id: "risk_prediction_breakdown",
-                    title: "Tomorrow's Risk: \(Int(pred.probability * 100))%",
+                    title: Copy.Insights.tomorrowsRisk(Int(pred.probability * 100)),
                     narrative: narrative,
                     recommendation: "Top risk factor: \(riskFactors.first?.metric.displayName ?? "recovery") (\(riskFactors.first?.featureType.rawValue ?? "current level")).\(protective.isEmpty ? "" : " Protective factors: \(protective.map(\.metric.displayName).joined(separator: ", ")).")",
                     involvedMetrics: (Array(riskFactors) + Array(protective)).map(\.metric),
@@ -817,7 +817,7 @@ final class CompoundInsightEngine {
 
             results.append(CompoundInsight(
                 id: "optimization_biggest_gap",
-                title: "Biggest Opportunity: \(biggest.metric.displayName)",
+                title: Copy.Insights.biggestOpportunity(biggest.metric.displayName),
                 narrative: narrative,
                 recommendation: "Your \(biggest.metric.displayName) is at \(currentStr) \(biggest.metric.unit). \(gapStr) \(biggest.metric.higherIsBetter ? "below" : "above") your \(baselineStr) \(biggest.metric.unit) baseline. Estimated score impact: ~\(estimatedScoreImpact) points.",
                 involvedMetrics: [biggest.metric] + (scoreLever.map { [$0.metricA == biggest.metric ? $0.metricB : $0.metricA] } ?? []),
@@ -861,7 +861,7 @@ final class CompoundInsightEngine {
 
                 results.append(CompoundInsight(
                     id: "optimization_best_day_profile",
-                    title: "Your Best-Day Formula",
+                    title: Copy.Insights.yourBestDayFormula,
                     narrative: narrative,
                     recommendation: "On your best days, \(top.0.displayName) averages \(top.0.formatValue(top.1)) \(top.0.unit) and \(second.0.displayName) averages \(second.0.formatValue(second.1)) \(second.0.unit). These two metrics best distinguish your top-scoring days.",
                     involvedMetrics: metricDiffs.prefix(3).map(\.0),
@@ -933,7 +933,7 @@ final class CompoundInsightEngine {
 
             results.append(CompoundInsight(
                 id: "recovery_trajectory",
-                title: "Recovery Underway",
+                title: Copy.Insights.recoveryUnderway,
                 narrative: narrative,
                 recommendation: "\(improvingRecovery.count) metrics recovering over \(improvingRecovery.first?.dayCount ?? 7) days.\(returningToBaseline.isEmpty ? "" : " \(returningToBaseline.count) converging back toward baseline.")\(avgRecoveryDays.map { " Historical average recovery: \($0) days." } ?? "")",
                 involvedMetrics: improvingRecovery.map(\.metric),
@@ -1101,7 +1101,6 @@ final class CompoundInsightEngine {
             let values = recentSamples.map(\.value)
             let recentMean = values.reduce(0, +) / Double(values.count)
 
-            // Compare to prior window
             let priorSamples = series.samples(lastDays: windowDays * 2)
                 .filter { sample in
                     let daysAgo = calendar.dateComponents([.day], from: sample.date, to: Date()).day ?? 0
@@ -1272,12 +1271,12 @@ final class CompoundInsightEngine {
     /// Describe the dominant characteristics of a health state.
     private func describeStateCharacteristics(_ state: HealthState) -> String {
         let notable = state.characteristics.filter { $0.level != .normal }.prefix(3)
-        guard !notable.isEmpty else { return "This state is characterized by normal levels across metrics." }
+        guard !notable.isEmpty else { return Copy.Insights.normalAcrossMetrics }
 
         let descriptions = notable.map { char in
             "\(char.level.rawValue) \(char.metric.displayName)"
         }
-        return "Characterized by \(descriptions.joined(separator: ", "))."
+        return Copy.Insights.characterizedBy(descriptions.joined(separator: ", "))
     }
 
     /// Count how many of the last 12 weekends showed a similar day-of-week pattern.
@@ -1395,13 +1394,13 @@ final class CompoundInsightEngine {
 
     private func dayName(_ weekday: Int) -> String {
         switch weekday {
-        case 1: return "Sunday"
-        case 2: return "Monday"
-        case 3: return "Tuesday"
-        case 4: return "Wednesday"
-        case 5: return "Thursday"
-        case 6: return "Friday"
-        case 7: return "Saturday"
+        case 1: return Copy.Insights.daySunday
+        case 2: return Copy.Insights.dayMonday
+        case 3: return Copy.Insights.dayTuesday
+        case 4: return Copy.Insights.dayWednesday
+        case 5: return Copy.Insights.dayThursday
+        case 6: return Copy.Insights.dayFriday
+        case 7: return Copy.Insights.daySaturday
         default: return "Day \(weekday)"
         }
     }

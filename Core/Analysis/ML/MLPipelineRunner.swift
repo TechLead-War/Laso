@@ -332,7 +332,7 @@ final class MLPipelineRunner {
             }
         }
 
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let weekday = calendar.component(.weekday, from: Date())
         for (metric, series) in timeSeries {
             if let latest = series.sortedSamples.last {

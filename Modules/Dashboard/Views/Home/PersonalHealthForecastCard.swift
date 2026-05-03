@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - Personal Health Forecast Card
 
 /// Displays forward-looking metric forecasts with statistically guaranteed confidence intervals.
-/// Based on conformal prediction research (Communications Engineering 2025): wraps predictions
+/// wraps predictions
 /// in intervals with guaranteed coverage, creating a "predicted you" vs actual tracking.
 struct PersonalHealthForecastCard: View {
     let forecasts: [MetricForecast]

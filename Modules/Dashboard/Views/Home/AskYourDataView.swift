@@ -3,7 +3,6 @@ import SwiftUI
 // MARK: - Ask Your Data View
 
 /// Natural language query interface for personal health data.
-/// Based on Google's PHIA research (Nature Communications 2025):
 /// lets users ask questions about their health in plain language.
 struct AskYourDataView: View {
     let viewModel: DashboardViewModel

@@ -172,7 +172,7 @@ final class MLResultAggregator {
         for pattern in discoveredPatterns.prefix(3) {
             insights.append(Insight(
                 metric: pattern.metric,
-                title: "Discovered \(pattern.patternType.rawValue) Pattern",
+                title: Copy.Insights.discoveredPattern(pattern.patternType.rawValue),
                 summary: pattern.description,
                 recommendation: recommendationForPattern(pattern),
                 severity: .info,
@@ -196,7 +196,7 @@ final class MLResultAggregator {
 
             insights.append(Insight(
                 metric: .heartRateVariability,
-                title: "Current State: \(state.label)",
+                title: Copy.Insights.currentState(state.label),
                 summary: "You've been in a \"\(state.label)\" state for \(state.daysInState) day\(state.daysInState == 1 ? "" : "s"). " +
                          describeStateCharacteristics(state),
                 recommendation: recommendationForState(state),
@@ -229,7 +229,7 @@ final class MLResultAggregator {
 
             insights.append(Insight(
                 metric: topRisk?.metric ?? .heartRateVariability,
-                title: "Tomorrow Outlook: \(prediction.riskLevel) Risk",
+                title: Copy.Insights.tomorrowOutlook(prediction.riskLevel),
                 summary: summary,
                 recommendation: recommendationForPrediction(prediction),
                 severity: severity,
@@ -285,7 +285,7 @@ final class MLResultAggregator {
         for precursor in precursorPatterns where precursor.isCurrentlyTriggered {
             insights.append(Insight(
                 metric: precursor.warningSignals.first?.metric ?? .heartRateVariability,
-                title: "Active Warning: \(precursor.predictedEvent)",
+                title: Copy.Insights.activeWarning(precursor.predictedEvent),
                 summary: precursor.description,
                 recommendation: "This pattern has been \(Int(precursor.historicalAccuracy * 100))% accurate in your history. Take preventive action now.",
                 severity: precursor.historicalAccuracy > 0.7 ? .critical : .warning,
@@ -304,7 +304,7 @@ final class MLResultAggregator {
         for seq in temporalSequences.prefix(2) where seq.isCurrentlyActive {
             insights.append(Insight(
                 metric: seq.steps.first?.metric ?? .heartRateVariability,
-                title: "Sequence In Progress",
+                title: Copy.Insights.sequenceInProgress,
                 summary: seq.description + (seq.predictedOutcome.map { " Predicted: \($0)" } ?? ""),
                 recommendation: "Based on \(seq.totalOccurrences) past occurrences, this sequence typically leads to the predicted outcome.",
                 severity: .warning,
@@ -349,7 +349,7 @@ final class MLResultAggregator {
             let gaps = unmet.map { $0.description }.joined(separator: ". ")
             insights.append(Insight(
                 metric: unmet.first?.metric ?? .heartRateVariability,
-                title: "Optimization: \(Int((1.0 - profile.matchPercentage) * 100))% Gap to Your Best",
+                title: Copy.Insights.optimizationGap(Int((1.0 - profile.matchPercentage) * 100)),
                 summary: "You're matching \(Int(profile.matchPercentage * 100))% of your optimal profile (avg score \(Int(profile.avgScoreWhenOptimal)) vs \(Int(profile.avgScoreWhenNot)) when not). \(gaps)",
                 recommendation: unmet.first?.description ?? "Focus on the top gaps to reach your optimal state.",
                 severity: profile.matchPercentage < 0.4 ? .warning : .info,
@@ -368,7 +368,7 @@ final class MLResultAggregator {
         if let ideal = idealDay {
             insights.append(Insight(
                 metric: ideal.targets.first?.metric ?? .heartRateVariability,
-                title: "Your Ideal Day Blueprint",
+                title: Copy.Insights.yourIdealDayBlueprint,
                 summary: ideal.description,
                 recommendation: ideal.targets.prefix(3).map { $0.description }.joined(separator: " "),
                 severity: .info,

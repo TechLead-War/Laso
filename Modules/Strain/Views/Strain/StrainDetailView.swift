@@ -66,7 +66,7 @@ struct StrainDetailView: View {
     let strainBalance: StrainBalance
     let workoutRecoveryBand: WorkoutRecoveryBand
     let cyclePhase: CyclePhaseModifier?
-    /// Pass 8 V (F45): freshness timestamp from the parent dashboard refresh.
+    /// Freshness timestamp from the parent dashboard refresh.
     /// Drives a small "Updated …" caption at the top of the screen.
     var lastUpdated: Date? = nil
 
@@ -230,10 +230,10 @@ struct StrainDetailView: View {
                 .foregroundStyle(.secondary)
                 .padding(.top, DS.space3)
 
-            Text("No workout data yet")
+            Text(Copy.Strain.noWorkoutData)
                 .font(DS.Typography.title3.weight(.semibold))
 
-            Text("Log a workout in Apple Health or wear your watch during exercise. Your strain score will appear here once activity is recorded.")
+            Text(Copy.Strain.logWorkoutHint)
                 .font(DS.Typography.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -270,7 +270,7 @@ struct StrainDetailView: View {
                         )
                         .foregroundStyle(point.level.color.gradient)
                         .cornerRadius(4)
-                        // Pass 8 P2-F17: per-bar VoiceOver readout for the 7-day strain history.
+                        // Per-bar VoiceOver readout for the 7-day strain history.
                         .accessibilityLabel(Text(point.date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())))
                         .accessibilityValue(Text("Strain \(String(format: "%.1f", point.strain)), \(point.level.displayName)"))
                     }
@@ -305,7 +305,7 @@ struct StrainDetailView: View {
                 }
                 .chartXSelection(value: $selectedHistoryDate)
                 .chartYScale(domain: 0...21)
-                // Pass 8 P2-F17: chart-level VoiceOver summary for the strain history.
+                // Chart-level VoiceOver summary for the strain history.
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel(Text("Strain over the last \(weekHistory.count) days"))
                 .accessibilityValue(Text(strainChartAccessibilityValue))
@@ -348,7 +348,7 @@ struct StrainDetailView: View {
                                 let x = location.x - origin.x
                                 if let date: Date = proxy.value(atX: x) {
                                     if let current = selectedHistoryDate,
-                                       Calendar.current.isDate(current, inSameDayAs: date) {
+                                       Date.cal.isDate(current, inSameDayAs: date) {
                                         selectedHistoryDate = nil
                                     } else {
                                         selectedHistoryDate = date
@@ -666,12 +666,12 @@ struct StrainDetailView: View {
             trainingZone: "Zone 2 to 3 (Aerobic Base)",
             guidanceText: "Your recovery supports moderate to high strain today. Focus on sustained aerobic work for cardiovascular benefit without overreaching.",
             weekHistory: [
-                DailyStrainPoint(date: Calendar.current.date(byAdding: .day, value: -6, to: .now)!, strain: 8.5, level: .moderate),
-                DailyStrainPoint(date: Calendar.current.date(byAdding: .day, value: -5, to: .now)!, strain: 12.3, level: .moderate),
-                DailyStrainPoint(date: Calendar.current.date(byAdding: .day, value: -4, to: .now)!, strain: 15.8, level: .high),
-                DailyStrainPoint(date: Calendar.current.date(byAdding: .day, value: -3, to: .now)!, strain: 5.2, level: .low),
-                DailyStrainPoint(date: Calendar.current.date(byAdding: .day, value: -2, to: .now)!, strain: 11.0, level: .moderate),
-                DailyStrainPoint(date: Calendar.current.date(byAdding: .day, value: -1, to: .now)!, strain: 18.9, level: .overreaching),
+                DailyStrainPoint(date: Date.cal.date(byAdding: .day, value: -6, to: .now)!, strain: 8.5, level: .moderate),
+                DailyStrainPoint(date: Date.cal.date(byAdding: .day, value: -5, to: .now)!, strain: 12.3, level: .moderate),
+                DailyStrainPoint(date: Date.cal.date(byAdding: .day, value: -4, to: .now)!, strain: 15.8, level: .high),
+                DailyStrainPoint(date: Date.cal.date(byAdding: .day, value: -3, to: .now)!, strain: 5.2, level: .low),
+                DailyStrainPoint(date: Date.cal.date(byAdding: .day, value: -2, to: .now)!, strain: 11.0, level: .moderate),
+                DailyStrainPoint(date: Date.cal.date(byAdding: .day, value: -1, to: .now)!, strain: 18.9, level: .overreaching),
                 DailyStrainPoint(date: .now, strain: 14.2, level: .high)
             ],
             strainBalance: .optimal,

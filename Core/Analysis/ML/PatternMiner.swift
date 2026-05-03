@@ -22,7 +22,7 @@ final class PatternMiner {
         patterns = []
         weekdayMeans = [:]
 
-        let calendar = Calendar.current
+        let calendar = Date.cal
         for (metric, series) in timeSeries {
             let values = series.sortedSamples.map(\.value)
             guard values.count >= Self.minimumDays else { continue }

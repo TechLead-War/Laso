@@ -259,7 +259,7 @@ struct AchievementsView: View {
                     Image(systemName: "sparkles")
                         .font(DS.Typography.captionSemibold)
                         .foregroundStyle(levelInfo.level.color)
-                    Text("Highest level achieved")
+                    Text(Copy.Achievements.highestLevelAchieved)
                         .font(DS.Typography.captionSemibold)
                         .foregroundStyle(levelInfo.level.color)
                 }
@@ -285,7 +285,7 @@ struct AchievementsView: View {
 
     private var streaksSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text("Active Streaks")
+            Text(Copy.Achievements.activeStreaks)
                 .font(DS.Typography.headline)
                 .padding(.horizontal)
 
@@ -408,7 +408,7 @@ struct AchievementsView: View {
     private var achievementsSection: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
             HStack {
-                Text("Achievements")
+                Text(Copy.Achievements.achievementsTitle)
                     .font(DS.Typography.headline)
 
                 Spacer()
@@ -548,7 +548,7 @@ struct AchievementsView: View {
 
 #Preview {
     let now = Date()
-    let cal = Calendar.current
+    let cal = Date.cal
 
     NavigationStack {
         AchievementsView(

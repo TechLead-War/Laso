@@ -93,7 +93,7 @@ final class HealthStateTimelineViewModel {
 
     /// State distribution for a given month: [label: day count]
     func stateDistribution(for month: Date) -> [String: Int] {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let monthComponents = calendar.dateComponents([.year, .month], from: month)
         var distribution: [String: Int] = [:]
 
@@ -160,7 +160,7 @@ final class HealthStateTimelineViewModel {
 
     /// Days in the selected month with state data, grouped by week rows for a calendar grid
     func calendarDays(for month: Date) -> [[CalendarDay]] {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let monthComponents = calendar.dateComponents([.year, .month], from: month)
         guard let monthStart = calendar.date(from: monthComponents),
               let monthRange = calendar.range(of: .day, in: .month, for: monthStart) else { return [] }

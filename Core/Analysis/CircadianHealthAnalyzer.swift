@@ -2,10 +2,11 @@ import Foundation
 
 // MARK: - Circadian Health Analyzer
 
-/// Computes 6 circadian biomarkers from activity and sleep data.
-/// Based on chronomedicine research (Diagnostics 2025): activity amplitude,
-/// inter-daily stability, intra-daily variability, sleep regularity index,
-/// social jet lag, and a composite circadian alignment score.
+/// Computes 6 circadian biomarkers from activity and sleep data:
+/// activity amplitude, inter-daily stability, intra-daily variability,
+/// sleep regularity index, social jet lag, and a composite circadian
+/// alignment score. Thresholds are heuristic and unvalidated; treat
+/// outputs as informational signals, not clinical measurements.
 struct CircadianHealthAnalyzer: InsightAnalyzer {
 
     static var analyzerID: String { "circadian_health" }
@@ -163,7 +164,7 @@ struct CircadianHealthAnalyzer: InsightAnalyzer {
     // MARK: - Core Computation
 
     static func computeBiomarkers(from context: AnalysisContext) -> CircadianBiomarkers? {
-        let calendar = Calendar.current
+        let calendar = Date.cal
 
         // Need at least 7 days of step/activity data
         guard let stepsSeries = context.timeSeries[.steps],

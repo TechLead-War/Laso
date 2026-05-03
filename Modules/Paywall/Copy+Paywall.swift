@@ -38,6 +38,12 @@ extension Copy {
         // MARK: - Accessibility
 
         static func planAccessibilityLabel(_ label: String, _ detail: String) -> String { "\(label) plan, \(detail)" }
+
+        static func unlockMoreInsights(hiddenCount: Int) -> String {
+            "Unlock \(hiddenCount) more insights with Pro"
+        }
+
+        static let upgradeToPro = "Upgrade to Pro"
         static func planAccessibilityHint(_ planLabel: String) -> String { "Selects the \(planLabel) subscription plan" }
         static let trialCTAHint = "Starts your free trial and subscribes after"
         static let subscribeCTAHint = "Subscribes you to the selected plan"

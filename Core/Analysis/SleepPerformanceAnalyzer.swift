@@ -3,10 +3,6 @@ import Foundation
 /// Analyzes how sleep duration and quality affect next-day activity performance
 struct SleepPerformanceAnalyzer {
 
-    /// Pass 12 BE perf: cached current calendar. Quality-vs-performance comparison
-    /// loops over high- and low-quality day arrays, calling `date(byAdding:)`
-    /// per day across up to 90 days of sleep history.
-    private static let cal: Calendar = Calendar.current
 
     // MARK: - Thresholds (named so they are auditable in one place)
     /// Sleep duration (hours) at/above which a night counts as "good sleep" for next-day comparisons.
@@ -140,11 +136,11 @@ struct SleepPerformanceAnalyzer {
         let calMap = TimeSeriesAligner.dailyValueMap(calSeries)
 
         let highQualityCals = highQualityDays.compactMap { day -> Double? in
-            let nextDay = Self.cal.date(byAdding: .day, value: 1, to: day)?.startOfDay ?? day
+            let nextDay = Date.cal.date(byAdding: .day, value: 1, to: day)?.startOfDay ?? day
             return calMap[nextDay]
         }
         let lowQualityCals = lowQualityDays.compactMap { day -> Double? in
-            let nextDay = Self.cal.date(byAdding: .day, value: 1, to: day)?.startOfDay ?? day
+            let nextDay = Date.cal.date(byAdding: .day, value: 1, to: day)?.startOfDay ?? day
             return calMap[nextDay]
         }
 
@@ -190,7 +186,7 @@ struct SleepPerformanceAnalyzer {
         let cv = stdDev / mean  // coefficient of variation
 
         // Weekday vs weekend split
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let weekdaySamples = last30Samples.filter { sample in
             let weekday = calendar.component(.weekday, from: sample.date)
             return weekday >= 2 && weekday <= 6 // Mon-Fri

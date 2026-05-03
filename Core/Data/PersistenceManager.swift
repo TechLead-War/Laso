@@ -189,7 +189,7 @@ final class PersistenceManager {
     func recordWeeklyScore(_ score: Int) {
         let now = Date()
         if let savedDate = scoreDate(),
-           !Calendar.current.isDate(savedDate, equalTo: now, toGranularity: .weekOfYear),
+           !Date.cal.isDate(savedDate, equalTo: now, toGranularity: .weekOfYear),
            let oldScore = loadEncryptedValue(Int.self, forKey: currentScoreKey),
            oldScore > 0 {
             saveEncryptedValue(oldScore, forKey: previousWeekScoreKey)

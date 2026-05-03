@@ -6,10 +6,6 @@ struct DailySummaryScheduler {
     private static let identifier = AppConstants.NotificationID.dailySummary
     private static let eveningIdentifier = AppConstants.NotificationID.eveningSummary
 
-    /// Pass 12 BE perf: cached current calendar. `schedule(...)` invokes
-    /// `Calendar.current` three times per call (weekday lookup + two
-    /// trigger-component assignments).
-    private static let cal: Calendar = Calendar.current
 
     /// Schedule rich daily summary with dynamic, varied copy and wake-time-aware scheduling.
     static func schedule(
@@ -45,7 +41,7 @@ struct DailySummaryScheduler {
 
         // Dynamic body. adds context without repeating the title
         let topAction: String? = topInsights.first.map { firstSentence($0.recommendation) }
-        let dayOfWeek = Self.cal.component(.weekday, from: Date())
+        let dayOfWeek = Date.cal.component(.weekday, from: Date())
 
         let body = Copy.Notifications.dynamicDailySummaryBody(
             score: score,
@@ -62,7 +58,7 @@ struct DailySummaryScheduler {
         var dateComponents = DateComponents()
         dateComponents.hour = wakeTime.hour
         dateComponents.minute = wakeTime.minute
-        dateComponents.calendar = Self.cal
+        dateComponents.calendar = Date.cal
 
         let trigger = UNCalendarNotificationTrigger(
             dateMatching: dateComponents,
@@ -93,7 +89,7 @@ struct DailySummaryScheduler {
         let body = Copy.Notifications.eveningSummaryBody(strainLevel: strainLevel, score: score)
 
         var dateComponents = preferences.eveningSummaryTime
-        dateComponents.calendar = Self.cal
+        dateComponents.calendar = Date.cal
 
         let trigger = UNCalendarNotificationTrigger(
             dateMatching: dateComponents,
@@ -142,16 +138,6 @@ struct DailySummaryScheduler {
 
     static func cancelEvening() {
         NotificationManager.shared.cancelNotification(identifier: eveningIdentifier)
-    }
-
-    private static func gradeFor(score: Int) -> String {
-        switch score {
-        case 90...100: return "A"
-        case 80..<90: return "B"
-        case 70..<80: return "C"
-        case 60..<70: return "D"
-        default: return "F"
-        }
     }
 
     private static func firstSentence(_ text: String) -> String {

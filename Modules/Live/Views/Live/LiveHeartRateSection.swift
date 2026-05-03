@@ -249,7 +249,7 @@ struct LiveHeartRateSection: View {
                 .foregroundStyle(.red.opacity(0.8))
                 .interpolationMethod(.catmullRom)
                 .lineStyle(StrokeStyle(lineWidth: 2))
-                // Pass 8 P2-F17: per-point VoiceOver readout. Note the parent
+                // Per-point VoiceOver readout. Note the parent
                 // hero button uses children:.ignore so these are exposed only
                 // when the chart is read directly (e.g., via Accessibility
                 // Inspector or future flat-mode VoiceOver navigation).

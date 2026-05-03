@@ -390,7 +390,7 @@ struct OnbV2Screen11Heart: View {
     private var ekgCard: some View {
         VStack(spacing: 10) {
             HStack {
-                Text("Resting HR")
+                Text(Copy.Onboarding.restingHRLabel)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(OnbV2.fg3)
                 Spacer()
@@ -562,7 +562,7 @@ struct OnbV2Screen12Sleep: View {
     private var sleepCard: some View {
         VStack(spacing: 10) {
             HStack {
-                Text("Last 7 nights")
+                Text(Copy.Onboarding.last7NightsLabel)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(OnbV2.fg3)
                 Spacer()
@@ -582,7 +582,7 @@ struct OnbV2Screen12Sleep: View {
                 .frame(height: 80)
 
                 if nightlyHours.isEmpty {
-                    Text("No nights recorded yet")
+                    Text(Copy.Onboarding.noNightsRecorded)
                         .font(.system(size: 12))
                         .foregroundStyle(OnbV2.fg4)
                         .frame(height: 80)
@@ -729,7 +729,7 @@ struct OnbV2Screen13HRV: View {
     private var hrvCard: some View {
         VStack(spacing: 10) {
             HStack {
-                Text("HRV · weekly average")
+                Text(Copy.Onboarding.hrvWeeklyAverage)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(OnbV2.fg3)
                 Spacer()
@@ -748,7 +748,7 @@ struct OnbV2Screen13HRV: View {
                 weekdayBarChart
                     .frame(height: 80)
             } else {
-                Text("Not enough HRV samples across the week")
+                Text(Copy.Onboarding.notEnoughHRVSamples)
                     .font(.system(size: 12))
                     .foregroundStyle(OnbV2.fg4)
                     .frame(maxWidth: .infinity, minHeight: 80)

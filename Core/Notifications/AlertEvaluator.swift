@@ -457,7 +457,7 @@ struct AlertEvaluator {
 
     /// Returns true if the current time is within 1 hour of the daily summary time.
     private func isNearDailySummaryTime(_ summaryTime: DateComponents) -> Bool {
-        let cal = Calendar.current
+        let cal = Date.cal
         let now = Date()
         let hour = cal.component(.hour, from: now)
         let minute = cal.component(.minute, from: now)
@@ -468,7 +468,7 @@ struct AlertEvaluator {
     }
 
     private func hasSubdailyResolution(_ series: MetricTimeSeries) -> Bool {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         return series.sortedSamples.contains { sample in
             let components = calendar.dateComponents([.hour, .minute, .second], from: sample.date)
             return (components.hour ?? 0) != 0 || (components.minute ?? 0) != 0 || (components.second ?? 0) != 0

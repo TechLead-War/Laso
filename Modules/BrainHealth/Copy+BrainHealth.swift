@@ -7,6 +7,28 @@ extension Copy {
 
         static let title = "Brain Health"
 
+        // MARK: - Factor Labels
+
+        static let factorHRV = "HRV"
+        static let factorREM = "REM Sleep"
+        static let factorDeepSleep = "Deep Sleep"
+        static let factorRestingHR = "Resting HR"
+        static let factorSleepSchedule = "Sleep Schedule"
+
+        // MARK: - Factor Impact Fragments
+
+        static let directionAbove = "above"
+        static let directionBelow = "below"
+        static let timingConsistent = "consistent timing"
+        static let timingIrregular = "irregular timing"
+
+        static func percentAboveBelowBaseline(_ percent: Int, direction: String) -> String {
+            "\(percent)% \(direction) baseline"
+        }
+        static func directionBaseline(_ direction: String) -> String {
+            "\(direction) baseline"
+        }
+
         // MARK: - Hero
 
         static let brainHealthLabel = "BRAIN HEALTH"
@@ -74,5 +96,25 @@ extension Copy {
 
         static let learnMore = "Learn More"
         static let learnMoreHint = "Dream sleep, mental energy, and long term trends."
+
+        // MARK: - Building Confidence
+
+        static func buildingAccuracy(percent: Int) -> String {
+            "Building accuracy · \(percent)%"
+        }
+        static let needMoreData = "We need more nights of sleep + HRV data before locking in your brain readiness number."
+
+        // MARK: - State Trend Labels
+
+        static let trendStable = "stable"
+        static let trendImproving = "improving"
+        static let trendDeclining = "declining"
+
+        // MARK: - State Display Labels
+
+        static let stateSharp = "Sharp"
+        static let stateFocused = "Focused"
+        static let stateBaseline = "Baseline"
+        static let stateLowEnergy = "Low energy"
     }
 }

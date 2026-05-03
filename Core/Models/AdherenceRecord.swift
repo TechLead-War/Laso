@@ -15,11 +15,6 @@ enum TargetDirection: String, Codable {
 /// Tracks whether advice was followed and what the outcome was.
 @Model
 final class StoredAdherenceRecord {
-    /// Pass 12 BE perf: cached current calendar. `isReadyForEvaluation` is
-    /// evaluated for every adherence record on each evaluation sweep.
-    /// `@Model` ignores `static` members for SwiftData persistence so this
-    /// is safe.
-    private static let cal: Calendar = Calendar.current
 
     @Attribute(.unique) var id: String
     var insightCategoryRaw: String
@@ -80,7 +75,7 @@ final class StoredAdherenceRecord {
     /// Whether this record is ready for evaluation (1-3 days old, not yet evaluated)
     var isReadyForEvaluation: Bool {
         guard !isEvaluated else { return false }
-        let daysSinceGiven = Self.cal.dateComponents([.day], from: givenDate, to: Date()).day ?? 0
+        let daysSinceGiven = Date.cal.dateComponents([.day], from: givenDate, to: Date()).day ?? 0
         return daysSinceGiven >= 1 && daysSinceGiven <= 3
     }
 }

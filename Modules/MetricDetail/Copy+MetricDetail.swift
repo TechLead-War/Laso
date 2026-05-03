@@ -10,14 +10,14 @@ extension Copy {
         static let waterIntakeHeader = "Water Intake"
         static let sessionDurationHeader = "Session Duration"
 
-        // MARK: - Discard Confirmation (Pass 8 Q)
+        // MARK: - Discard Confirmation
 
         static let discardChangesTitle = "Discard changes?"
         static let discardButton = "Discard"
         static let keepEditingButton = "Keep editing"
         static let unsavedEntryMessage = "Your unsaved entry will be lost."
 
-        // MARK: - Toolbar (Pass 8 Q)
+        // MARK: - Toolbar
 
         static let cancel = "Cancel"
         static let save = "Save"

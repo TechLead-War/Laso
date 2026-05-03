@@ -18,10 +18,10 @@ final class StrainCoach {
 
         var displayName: String {
             switch self {
-            case .restoring: "Recovery Focus"
-            case .maintaining: "Maintain Fitness"
-            case .building: "Progressive Overload"
-            case .overreaching: "Functional Overreach"
+            case .restoring: Copy.Strain.zoneRestoring
+            case .maintaining: Copy.Strain.zoneMaintaining
+            case .building: Copy.Strain.zoneBuilding
+            case .overreaching: Copy.Strain.zoneOverreaching
             }
         }
 
@@ -43,26 +43,23 @@ final class StrainCoach {
             }
         }
 
-        /// Strain ranges per recovery state
+        /// Strain ranges per recovery state.
         func strainRange(for recovery: DashboardViewModel.RecoveryState) -> ClosedRange<Double> {
             switch (self, recovery) {
-            // Green recovery
-            case (.restoring, .green):     return 0...9
-            case (.maintaining, .green):   return 10...14
-            case (.building, .green):      return 14...18
-            case (.overreaching, .green):  return 18...21
+            case (.restoring, .green):     return StrainCoachConfig.greenRestoringRange
+            case (.maintaining, .green):   return StrainCoachConfig.greenMaintainingRange
+            case (.building, .green):      return StrainCoachConfig.greenBuildingRange
+            case (.overreaching, .green):  return StrainCoachConfig.greenOverreachingRange
 
-            // Yellow recovery
-            case (.restoring, .yellow):    return 0...7
-            case (.maintaining, .yellow):  return 8...12
+            case (.restoring, .yellow):    return StrainCoachConfig.yellowRestoringRange
+            case (.maintaining, .yellow):  return StrainCoachConfig.yellowMaintainingRange
             case (.building, .yellow),
-                 (.overreaching, .yellow): return 0...0 // not available
+                 (.overreaching, .yellow): return StrainCoachConfig.unavailableRange
 
-            // Red recovery
-            case (.restoring, .red):       return 0...5
+            case (.restoring, .red):       return StrainCoachConfig.redRestoringRange
             case (.maintaining, .red),
                  (.building, .red),
-                 (.overreaching, .red):    return 0...0 // not available
+                 (.overreaching, .red):    return StrainCoachConfig.unavailableRange
             }
         }
     }
@@ -75,9 +72,9 @@ final class StrainCoach {
         let guidance: String
         let icon: String
 
-        /// Fraction of the 0-21 scale that the target represents
+        /// Fraction of the normalised strain scale that the target represents.
         var targetFraction: Double {
-            targetStrain / 21.0
+            targetStrain / StrainCoachConfig.maxStrain
         }
     }
 
@@ -88,9 +85,9 @@ final class StrainCoach {
 
         var displayName: String {
             switch self {
-            case .undertraining: "Under-Training"
-            case .optimal: "Optimal Load"
-            case .overreaching: "Over-Reaching"
+            case .undertraining: Copy.Strain.balanceUnderTraining
+            case .optimal: Copy.Strain.balanceOptimal
+            case .overreaching: Copy.Strain.balanceOverreaching
             }
         }
 
@@ -124,17 +121,7 @@ final class StrainCoach {
 
     // MARK: - Constants
 
-    /// Minimum days of strain history required for pattern-aware adjustments
-    private static let minHistoryDays = 3
-
-    /// Number of consecutive high-strain days that triggers a dial-back
-    private static let consecutiveHighThreshold = 3
-
-    /// High strain threshold on the 0-21 scale
-    private static let highStrainValue: Double = 14.0
-
-    /// Rest day threshold. strain below this counts as a rest day
-    private static let restDayThreshold: Double = 5.0
+    private typealias Cfg = StrainCoachConfig
 
     // MARK: - Public API
 
@@ -152,9 +139,9 @@ final class StrainCoach {
         recentStrainHistory: [(date: Date, strain: Double)],
         daysOfData: Int
     ) -> StrainTarget {
-        let hasEnoughHistory = recentStrainHistory.count >= Self.minHistoryDays
+        let hasEnoughHistory = recentStrainHistory.count >= Cfg.minHistoryDays
         let consecutiveHighDays = countConsecutiveHighDays(recentStrainHistory)
-        let hadRecentRest = hasRecentRestDay(recentStrainHistory, withinDays: 3)
+        let hadRecentRest = hasRecentRestDay(recentStrainHistory, withinDays: Cfg.recentRestWindowDays)
 
         let (zone, target, min, max) = computeZoneAndRange(
             recovery: recoveryState,
@@ -204,26 +191,28 @@ final class StrainCoach {
     ) -> (zone: TrainingZone, target: Double, min: Double, max: Double) {
         switch recovery {
         case .green:
-            // Dial back if 3+ consecutive high-strain days even on green
-            if hasHistory && consecutiveHighDays >= Self.consecutiveHighThreshold {
-                return (.maintaining, 12.0, 10.0, 14.0)
+            if hasHistory && consecutiveHighDays >= Cfg.consecutiveHighThreshold {
+                let band = Cfg.greenDialBackBand
+                return (.maintaining, band.target, band.min, band.max)
             }
-            // Allow overreaching only if had recent rest
             if hadRecentRest && hasHistory {
-                return (.building, 16.0, 14.0, 18.0)
+                let band = Cfg.greenAfterRestBand
+                return (.building, band.target, band.min, band.max)
             }
-            // Default green day
-            return (.building, 15.5, 14.0, 17.0)
+            let band = Cfg.greenDefaultBand
+            return (.building, band.target, band.min, band.max)
 
         case .yellow:
-            // If already stacking moderate days, pull back slightly
-            if hasHistory && consecutiveHighDays >= 2 {
-                return (.restoring, 7.0, 5.0, 9.0)
+            if hasHistory && consecutiveHighDays >= Cfg.yellowConsecutiveHighThreshold {
+                let band = Cfg.yellowDialBackBand
+                return (.restoring, band.target, band.min, band.max)
             }
-            return (.maintaining, 11.5, 10.0, 13.0)
+            let band = Cfg.yellowDefaultBand
+            return (.maintaining, band.target, band.min, band.max)
 
         case .red:
-            return (.restoring, 5.0, 0.0, 5.0)
+            let band = Cfg.redBand
+            return (.restoring, band.target, band.min, band.max)
         }
     }
 
@@ -235,9 +224,8 @@ final class StrainCoach {
         consecutiveHighDays: Int,
         daysOfData: Int
     ) -> String {
-        // Cold-start caveat
-        if daysOfData < 7 {
-            return "Limited data \u{2014} this target is estimated. Keep logging for more accurate recommendations."
+        if daysOfData < Cfg.coldStartDays {
+            return Copy.Strain.coachLimitedData
         }
 
         let remaining = max(0, target - currentStrain)
@@ -245,35 +233,34 @@ final class StrainCoach {
         switch zone {
         case .restoring:
             if recovery == .red {
-                return "Your body needs recovery. Focus on gentle movement like walking or stretching. Aim to keep strain under \(formatted(target))."
+                return Copy.Strain.coachRedRecovery(target: formatted(target))
             }
-            if consecutiveHighDays >= Self.consecutiveHighThreshold {
-                return "You've pushed hard \(consecutiveHighDays) days in a row. Take it easy today to avoid overtraining."
+            if consecutiveHighDays >= Cfg.consecutiveHighThreshold {
+                return Copy.Strain.coachConsecutiveHigh(days: consecutiveHighDays)
             }
-            return "Active recovery day. Light activity to promote blood flow without adding fatigue."
+            return Copy.Strain.coachActiveRecovery
 
         case .maintaining:
             if remaining > 0 {
-                return "Moderate training day. You have \(formatted(remaining)) strain remaining to hit your target of \(formatted(target))."
+                return Copy.Strain.coachMaintaining(remaining: formatted(remaining), target: formatted(target))
             }
-            return "You've reached your maintenance target. Additional strain is fine but keep intensity controlled."
+            return Copy.Strain.coachMaintainHit
 
         case .building:
             if remaining > 0 {
-                return "Your body is ready for a challenge. Push toward a strain of \(formatted(target)) with a hard workout."
+                return Copy.Strain.coachBuilding(target: formatted(target))
             }
-            return "Great work \u{2014} you've hit your building target. You can keep going up to \(formatted(zone.strainRange(for: recovery).upperBound))."
+            return Copy.Strain.coachBuildingHit(upper: formatted(zone.strainRange(for: recovery).upperBound))
 
         case .overreaching:
-            return "Functional overreach zone. Push to your limit today, then plan recovery tomorrow."
+            return Copy.Strain.coachOverreaching
         }
     }
 
     private func countConsecutiveHighDays(_ history: [(date: Date, strain: Double)]) -> Int {
-        // Walk backward through sorted history counting consecutive high-strain days
         var count = 0
         for entry in history.reversed() {
-            if entry.strain >= Self.highStrainValue {
+            if entry.strain >= Cfg.highStrainValue {
                 count += 1
             } else {
                 break
@@ -283,9 +270,9 @@ final class StrainCoach {
     }
 
     private func hasRecentRestDay(_ history: [(date: Date, strain: Double)], withinDays: Int) -> Bool {
-        let cutoff = Calendar.current.date(byAdding: .day, value: -withinDays, to: Date()) ?? Date()
+        let cutoff = Date.cal.date(byAdding: .day, value: -withinDays, to: Date()) ?? Date()
         return history.contains { entry in
-            entry.date >= cutoff && entry.strain <= Self.restDayThreshold
+            entry.date >= cutoff && entry.strain <= Cfg.restDayThreshold
         }
     }
 
@@ -293,18 +280,18 @@ final class StrainCoach {
         recentHistory: [(date: Date, strain: Double)],
         target: Double
     ) {
-        let last7 = recentHistory.suffix(7)
-        guard last7.count >= 3 else {
+        let recentWindow = recentHistory.suffix(Cfg.balanceWindowDays)
+        guard recentWindow.count >= Cfg.balanceMinSamples else {
             strainBalance = .optimal
             return
         }
 
-        let averageStrain = last7.map(\.strain).reduce(0, +) / Double(last7.count)
+        let averageStrain = recentWindow.map(\.strain).reduce(0, +) / Double(recentWindow.count)
         let ratio = target > 0 ? averageStrain / target : 1.0
 
-        if ratio < 0.7 {
+        if ratio < Cfg.undertrainingRatioCeiling {
             strainBalance = .undertraining
-        } else if ratio > 1.3 {
+        } else if ratio > Cfg.overreachingRatioFloor {
             strainBalance = .overreaching
         } else {
             strainBalance = .optimal

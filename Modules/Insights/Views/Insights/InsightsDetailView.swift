@@ -6,7 +6,7 @@ struct InsightsDetailView: View {
     let insightsByCategory: [(category: InsightCategory, insights: [Insight])]
     let onTapMetric: (HealthMetric) -> Void
     var headlineSummary: String?
-    /// Pass 8 V (F45): timestamp of the parent dashboard's most recent refresh.
+    /// Timestamp of the parent dashboard's most recent refresh.
     /// Drives a small "Updated …" caption at the top of the screen.
     var lastUpdated: Date? = nil
 

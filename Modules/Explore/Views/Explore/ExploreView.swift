@@ -317,13 +317,7 @@ struct ExploreView: View {
     }
 
     private var grade: String {
-        switch viewModel.scores.rollingAverageScore {
-        case 90...100: return "A"
-        case 80..<90: return "B"
-        case 70..<80: return "C"
-        case 60..<70: return "D"
-        default: return "F"
-        }
+        HealthScore.grade(for: viewModel.scores.rollingAverageScore)
     }
 
     private var decliningHighlights: [DashboardViewModel.HistoricalHighlight] {

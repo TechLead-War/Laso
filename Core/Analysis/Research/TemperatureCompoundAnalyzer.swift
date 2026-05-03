@@ -1,6 +1,5 @@
 import Foundation
 
-/// Research: Multiple 2025 studies on wrist temperature + metabolic health.
 /// Finding: Wrist temperature during sleep detects ovulation (82-93% accuracy),
 /// metabolic shifts, and subclinical infection. Temperature rhythm disruption
 /// linked to metabolic syndrome.
@@ -67,13 +66,15 @@ struct TemperatureCompoundAnalyzer {
             let hrvSuppressed = isHRVSuppressed(context: context)
 
             if hrvSuppressed && deviation >= mildElevationThreshold {
-                // Compound signal. already reported by InflammationRiskAnalyzer
-                // We add the temperature-specific detail
+                // Compound signal — already reported by InflammationRiskAnalyzer; this adds the temperature-specific detail.
+                let deviationText = String(format: "%.1f", deviation)
+                let plusDeviationText = String(format: "+%.1f", deviation)
+                let baselineText = String(format: "%.1f", baselineMean)
                 insights.append(InsightFactory.make(
                     metric: .appleSleepingWristTemperature,
-                    title: "Body Temperature Elevated \(consecutiveElevated) Nights",
-                    summary: "Your sleeping wrist temperature is \(String(format: "%.1f", deviation))°C above your 30-day baseline for \(consecutiveElevated) consecutive nights. Combined with suppressed HRV, this compound pattern is associated with early immune response.",
-                    recommendation: "Sustained nighttime temperature elevation (\(String(format: "+%.1f", deviation))°C vs baseline \(String(format: "%.1f", baselineMean))°C) alongside low HRV reflects the autonomic and thermoregulatory signatures of immune activation. This compound signal typically precedes symptom onset by 1-3 days.",
+                    title: Copy.Analysis.Research.TemperatureCompound.bodyTempElevatedTitle(nights: consecutiveElevated),
+                    summary: Copy.Analysis.Research.TemperatureCompound.compoundSummary(deviation: deviationText, nights: consecutiveElevated),
+                    recommendation: Copy.Analysis.Research.TemperatureCompound.compoundRecommendation(deviation: plusDeviationText, baseline: baselineText),
                     severity: deviation >= significantElevationThreshold ? .warning : .info,
                     trend: .declining,
                     currentValue: recentMean,
@@ -89,11 +90,15 @@ struct TemperatureCompoundAnalyzer {
                 ))
             } else {
                 // Temperature-only elevation
+                let deviationText = String(format: "%.1f", deviation)
+                let recentText = String(format: "%.1f", recentMean)
+                let baselineText = String(format: "%.1f", baselineMean)
+                let sdText = String(format: "%.2f", baselineSD)
                 insights.append(InsightFactory.make(
                     metric: .appleSleepingWristTemperature,
-                    title: "Nighttime Temperature Above Baseline",
-                    summary: "Your sleeping wrist temperature has been \(String(format: "%.1f", deviation))°C above your personal baseline for \(consecutiveElevated) nights. Sustained elevation can reflect metabolic shifts, stress, or early subclinical changes.",
-                    recommendation: "Your nighttime temperature: \(String(format: "%.1f", recentMean))°C vs 30-day baseline of \(String(format: "%.1f", baselineMean))°C (\u{00B1}\(String(format: "%.2f", baselineSD))). Research shows wrist temperature deviations >0.3°C sustained over multiple nights may indicate metabolic changes, hormonal shifts, or early immune responses.",
+                    title: Copy.Analysis.Research.TemperatureCompound.nighttimeAboveBaselineTitle,
+                    summary: Copy.Analysis.Research.TemperatureCompound.tempOnlySummary(deviation: deviationText, nights: consecutiveElevated),
+                    recommendation: Copy.Analysis.Research.TemperatureCompound.tempOnlyRecommendation(recent: recentText, baseline: baselineText, sd: sdText),
                     severity: .info,
                     trend: .declining,
                     currentValue: recentMean,
@@ -110,11 +115,13 @@ struct TemperatureCompoundAnalyzer {
         if isCyclicalPattern {
             let cycleAmplitude = computeCycleAmplitude(sorted: sorted, baselineMean: baselineMean)
             if cycleAmplitude >= 0.2 {
+                let amplitudeText = String(format: "%.1f", cycleAmplitude)
+                let baselineText = String(format: "%.1f", baselineMean)
                 insights.append(InsightFactory.observation(
                     metric: .appleSleepingWristTemperature,
-                    title: "Temperature Cycle Pattern Detected",
-                    summary: "Your wrist temperature shows a recurring cyclical pattern with \(String(format: "%.1f", cycleAmplitude))°C amplitude. consistent with hormonal cycle influence. Research shows wrist temperature tracks ovulation with 82-93% accuracy.",
-                    recommendation: "The cyclical temperature variation of \(String(format: "%.1f", cycleAmplitude))°C around your baseline of \(String(format: "%.1f", baselineMean))°C reflects the biphasic pattern driven by progesterone. Post-ovulation temperatures typically rise 0.2-0.5°C above the follicular phase baseline.",
+                    title: Copy.Analysis.Research.TemperatureCompound.cyclePatternTitle,
+                    summary: Copy.Analysis.Research.TemperatureCompound.cyclePatternSummary(amplitude: amplitudeText),
+                    recommendation: Copy.Analysis.Research.TemperatureCompound.cyclePatternRecommendation(amplitude: amplitudeText, baseline: baselineText),
                     currentValue: cycleAmplitude,
                     baselineValue: 0.3,
                     deviationPercent: ((cycleAmplitude - 0.3) / 0.3) * 100,
@@ -127,11 +134,13 @@ struct TemperatureCompoundAnalyzer {
         // Insight 3: Temperature variability as metabolic health marker
         let cv = baselineSD / max(abs(baselineMean), 0.1)
         if cv > 0.05 && !isCyclicalPattern && samples.count >= 30 {
+            let sdText = String(format: "%.2f", baselineSD)
+            let cvText = String(format: "%.1f", cv * 100)
             insights.append(InsightFactory.observation(
                 metric: .appleSleepingWristTemperature,
-                title: "High Temperature Variability",
-                summary: "Your nighttime wrist temperature varies significantly night to night (\u{00B1}\(String(format: "%.2f", baselineSD))°C). High thermoregulatory variability is associated with disrupted circadian rhythm and metabolic health.",
-                recommendation: "Temperature coefficient of variation: \(String(format: "%.1f", cv * 100))%. Research links elevated nighttime temperature variability to circadian disruption, poor sleep quality, and reduced metabolic wellness. Stable temperatures reflect stronger circadian entrainment.",
+                title: Copy.Analysis.Research.TemperatureCompound.highVariabilityTitle,
+                summary: Copy.Analysis.Research.TemperatureCompound.highVariabilitySummary(sd: sdText),
+                recommendation: Copy.Analysis.Research.TemperatureCompound.highVariabilityRecommendation(cvPercent: cvText),
                 currentValue: cv * 100,
                 baselineValue: 3,
                 deviationPercent: ((cv * 100 - 3) / 3) * 100,
@@ -170,7 +179,7 @@ struct TemperatureCompoundAnalyzer {
             }
         }
 
-        let daysSpanned = Calendar.current.dateComponents(
+        let daysSpanned = Date.cal.dateComponents(
             [.day], from: firstSample.date, to: lastSample.date
         ).day ?? 1
 

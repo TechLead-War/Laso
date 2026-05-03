@@ -53,7 +53,7 @@ struct PMFSurveySheet: View {
             }
             .padding(DS.space6)
         }
-        .navigationTitle("Quick question")
+        .navigationTitle(Copy.Common.quickQuestion)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -258,7 +258,7 @@ final class PMFSurveyManager {
         guard totalSessions >= minSessions else { return false }
 
         if let lastDate = defaults.object(forKey: Key.lastSurveyDate) as? Date {
-            let daysSinceLast = Calendar.current.dateComponents([.day], from: lastDate, to: Date()).day ?? 0
+            let daysSinceLast = Date.cal.dateComponents([.day], from: lastDate, to: Date()).day ?? 0
             return daysSinceLast >= cooldownDays
         }
 

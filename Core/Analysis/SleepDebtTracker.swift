@@ -33,11 +33,11 @@ final class SleepDebtTracker {
 
         var displayName: String {
             switch self {
-            case .none:        "No debt"
-            case .mild:        "Mild debt"
-            case .moderate:    "Moderate debt"
-            case .significant: "Significant debt"
-            case .severe:      "Severe debt"
+            case .none:        Copy.SleepCoach.trackerDebtNone
+            case .mild:        Copy.SleepCoach.trackerDebtMild
+            case .moderate:    Copy.SleepCoach.trackerDebtModerate
+            case .significant: Copy.SleepCoach.trackerDebtSignificant
+            case .severe:      Copy.SleepCoach.trackerDebtSevere
             }
         }
 
@@ -63,16 +63,11 @@ final class SleepDebtTracker {
 
         var description: String {
             switch self {
-            case .none:
-                "You are well-rested. Your sleep is meeting your personal needs."
-            case .mild:
-                "A small sleep deficit is building. An extra 30 minutes tonight can help."
-            case .moderate:
-                "Noticeable sleep debt is accumulating. You may experience reduced focus and slower reaction times."
-            case .significant:
-                "Substantial sleep debt is affecting your recovery and cognitive performance. Prioritize sleep this week."
-            case .severe:
-                "Critical sleep debt. Expect impaired judgment, weakened immunity, and poor recovery. Extended catch-up sleep is needed."
+            case .none:        Copy.SleepCoach.trackerDescNone
+            case .mild:        Copy.SleepCoach.trackerDescMild
+            case .moderate:    Copy.SleepCoach.trackerDescModerate
+            case .significant: Copy.SleepCoach.trackerDescSignificant
+            case .severe:      Copy.SleepCoach.trackerDescSevere
             }
         }
     }
@@ -100,14 +95,14 @@ final class SleepDebtTracker {
 
     /// Formatted debt string, e.g. "3h 30m"
     var formattedDebt: String {
-        guard let debt = currentDebt else { return "—" }
+        guard let debt = currentDebt else { return Copy.SleepCoach.durationPlaceholder }
         let hours = debt.totalDebtHours
         let h = Int(hours)
         let m = Int((hours - Double(h)) * 60)
-        if h == 0 && m == 0 { return "0h" }
-        if h == 0 { return "\(m)m" }
-        if m == 0 { return "\(h)h" }
-        return "\(h)h \(m)m"
+        if h == 0 && m == 0 { return Copy.SleepCoach.durationZero }
+        if h == 0 { return Copy.SleepCoach.durationMinutes(m) }
+        if m == 0 { return Copy.SleepCoach.durationHours(h) }
+        return Copy.SleepCoach.durationHoursMinutes(h, m)
     }
 
     /// Color corresponding to the current debt level
@@ -119,7 +114,8 @@ final class SleepDebtTracker {
 
     /// Recommended minimum sleep for adults (hours). Used as a floor for
     /// the personal baseline so that chronically short sleepers still
-    /// accumulate debt against a science-backed target (NSF guidelines: 7-9h).
+    /// accumulate debt against a 7-9h target rather than against their
+    /// already-too-low personal average.
     private static let recommendedMinimumSleep: Double = 7.5
 
     /// Compute sleep debt from the data store's sleep duration time series.
@@ -152,7 +148,7 @@ final class SleepDebtTracker {
         let personalBaseline = Swift.max(averageSleepBaseline, Self.recommendedMinimumSleep)
 
         // Build a date-indexed map of the last 14 days of sleep
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let today = calendar.startOfDay(for: Date())
 
         var dailyMap: [Date: Double] = [:]

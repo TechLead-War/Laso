@@ -221,7 +221,7 @@ final class DeviceSourceManager {
                 let info = devices.first { Self.activityKey(for: $0) == activityKey }
                 let daysSince: Int
                 if let lastDate = info?.lastDataDate {
-                    daysSince = Calendar.current.dateComponents([.day], from: lastDate, to: Date()).day ?? 0
+                    daysSince = Date.cal.dateComponents([.day], from: lastDate, to: Date()).day ?? 0
                 } else {
                     daysSince = 0
                 }

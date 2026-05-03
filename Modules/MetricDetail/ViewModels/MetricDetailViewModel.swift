@@ -4,10 +4,6 @@ import Observation
 /// ViewModel for the metric detail deep-dive view with charts, stats, moving averages, and baseline data
 @MainActor @Observable
 final class MetricDetailViewModel {
-    /// Pass 12 BE perf: cached current calendar. `historicalFacts` reads
-    /// `Calendar.current.monthSymbols[component(.month, ...)]` on every render
-    /// of the metric detail historical-context section.
-    private static let cal: Calendar = Calendar.current
 
     let metric: HealthMetric
     let healthKitManager: HealthKitManager
@@ -100,7 +96,7 @@ final class MetricDetailViewModel {
     var historicalFacts: [HistoricalFact] {
         guard let ctx = historicalContext else { return [] }
         var facts: [HistoricalFact] = []
-        let monthName = Self.cal.monthSymbols[Self.cal.component(.month, from: Date()) - 1]
+        let monthName = Date.cal.monthSymbols[Date.cal.component(.month, from: Date()) - 1]
 
         // All-time percentile
         if ctx.totalDataPoints >= 90 {
@@ -194,7 +190,7 @@ final class MetricDetailViewModel {
     /// Forecast extension from MLOrchestrator (1d, 3d, 7d horizons)
     var forecastSamples: [MetricSample] {
         guard let forecast = analysisEngine.mlOrchestrator.multiHorizonForecasts[metric] else { return [] }
-        let cal = Calendar.current
+        let cal = Date.cal
         let today = cal.startOfDay(for: Date())
         return forecast.horizons.compactMap { horizon in
             guard let futureDate = cal.date(byAdding: .day, value: horizon.horizon, to: today) else { return nil }
@@ -215,7 +211,7 @@ final class MetricDetailViewModel {
 
     var monthComparison: MonthComparison? {
         guard let series = timeSeries else { return nil }
-        let cal = Calendar.current
+        let cal = Date.cal
         let now = Date()
 
         // This month: from start of current month to today

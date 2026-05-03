@@ -1,6 +1,5 @@
 import Foundation
 
-/// Research: Google Research (2025) + npj Parkinson's Disease (2025)
 /// Finding: Simultaneous deterioration of multiple gait metrics (walking speed,
 /// double support time, step length, asymmetry) over months predicts
 /// neurodegenerative decline years before clinical diagnosis.
@@ -25,13 +24,13 @@ struct MobilityDeclineAnalyzer {
     }
 
     private static let indicators: [MobilityIndicator] = [
-        .init(metric: .walkingSpeed, declineDirection: .decreasing, label: "walking speed"),
-        .init(metric: .walkingStepLength, declineDirection: .decreasing, label: "step length"),
-        .init(metric: .walkingDoubleSupportPercentage, declineDirection: .increasing, label: "double support time"),
-        .init(metric: .walkingAsymmetry, declineDirection: .increasing, label: "gait asymmetry"),
-        .init(metric: .stairAscentSpeed, declineDirection: .decreasing, label: "stair climbing speed"),
-        .init(metric: .stairDescentSpeed, declineDirection: .decreasing, label: "stair descent speed"),
-        .init(metric: .walkingSteadiness, declineDirection: .decreasing, label: "walking steadiness"),
+        .init(metric: .walkingSpeed, declineDirection: .decreasing, label: Copy.Analysis.Research.MobilityDecline.walkingSpeedLabel),
+        .init(metric: .walkingStepLength, declineDirection: .decreasing, label: Copy.Analysis.Research.MobilityDecline.stepLengthLabel),
+        .init(metric: .walkingDoubleSupportPercentage, declineDirection: .increasing, label: Copy.Analysis.Research.MobilityDecline.doubleSupportLabel),
+        .init(metric: .walkingAsymmetry, declineDirection: .increasing, label: Copy.Analysis.Research.MobilityDecline.asymmetryLabel),
+        .init(metric: .stairAscentSpeed, declineDirection: .decreasing, label: Copy.Analysis.Research.MobilityDecline.stairAscentLabel),
+        .init(metric: .stairDescentSpeed, declineDirection: .decreasing, label: Copy.Analysis.Research.MobilityDecline.stairDescentLabel),
+        .init(metric: .walkingSteadiness, declineDirection: .decreasing, label: Copy.Analysis.Research.MobilityDecline.steadinessLabel)
     ]
 
     private static let minMonthsRequired = 3
@@ -55,7 +54,7 @@ struct MobilityDeclineAnalyzer {
 
             let sorted = samples.sorted { $0.date < $1.date }
             let firstQuarter = Array(sorted.prefix(sorted.count / 3)).map(\.value).mean
-            let lastQuarter = Array(sorted.suffix(sorted.count / 3)).map(\.value).mean
+            let lastQuarter = sorted.tailMean(sorted.count / 3)
 
             guard firstQuarter > 0 else { continue }
 
@@ -101,9 +100,9 @@ struct MobilityDeclineAnalyzer {
 
             insights.append(InsightFactory.make(
                 metric: leadDecline.indicator.metric,
-                title: "Multi-Metric Mobility Decline",
-                summary: "\(decliningMetrics.count) of \(totalEvaluated) mobility metrics are declining over the past 6 months: \(metricList). Concurrent deterioration across multiple gait parameters warrants attention.",
-                recommendation: "Research shows simultaneous decline in walking speed, step length, and gait symmetry can be an early indicator of shifts in overall wellness. Changes in mobility patterns are often detectable well before they become noticeable in daily life.",
+                title: Copy.Analysis.Research.MobilityDecline.multiMetricDeclineTitle,
+                summary: Copy.Analysis.Research.MobilityDecline.multiMetricSummary(declining: decliningMetrics.count, total: totalEvaluated, metricList: metricList),
+                recommendation: Copy.Analysis.Research.MobilityDecline.multiMetricRecommendation,
                 severity: decliningMetrics.count >= 4 ? .warning : .info,
                 trend: .declining,
                 currentValue: Double(decliningMetrics.count),
@@ -123,11 +122,12 @@ struct MobilityDeclineAnalyzer {
         if let speedDecline = decliningMetrics.first(where: { $0.indicator.metric == .walkingSpeed }),
            speedDecline.changePercent >= 10,
            decliningMetrics.count < 3 { // Don't double-report if already in multi-metric
+            let percentText = String(format: "%.0f", speedDecline.changePercent)
             insights.append(InsightFactory.make(
                 metric: .walkingSpeed,
-                title: "Walking Speed Declining",
-                summary: "Your walking speed has decreased \(String(format: "%.0f", speedDecline.changePercent))% over the past 6 months. Walking speed is called the 'sixth vital sign'. it's one of the strongest predictors of functional health and longevity.",
-                recommendation: "In population studies, each 0.1 m/s decrease in walking speed is associated with reduced overall wellness. Your \(String(format: "%.0f", speedDecline.changePercent))% decline across \(speedDecline.samples) measurements is worth monitoring.",
+                title: Copy.Analysis.Research.MobilityDecline.walkingSpeedDecliningTitle,
+                summary: Copy.Analysis.Research.MobilityDecline.walkingSpeedSummary(percent: percentText),
+                recommendation: Copy.Analysis.Research.MobilityDecline.walkingSpeedRecommendation(percent: percentText, samples: speedDecline.samples),
                 severity: speedDecline.changePercent >= 15 ? .warning : .info,
                 trend: .declining,
                 currentValue: 100 - speedDecline.changePercent,
@@ -142,11 +142,12 @@ struct MobilityDeclineAnalyzer {
         // Growing asymmetry (early neurological signal)
         if let asymDecline = decliningMetrics.first(where: { $0.indicator.metric == .walkingAsymmetry }),
            asymDecline.changePercent >= 15 {
+            let percentText = String(format: "%.0f", asymDecline.changePercent)
             insights.append(InsightFactory.make(
                 metric: .walkingAsymmetry,
-                title: "Gait Asymmetry Increasing",
-                summary: "Your walking asymmetry has increased \(String(format: "%.0f", asymDecline.changePercent))% over 6 months. Growing left-right imbalance in gait is an early indicator of changes in movement quality.",
-                recommendation: "Increasing gait asymmetry. the difference between left and right step patterns. can reflect changes in balance, joint comfort, or overall movement quality. A \(String(format: "%.0f", asymDecline.changePercent))% increase warrants attention.",
+                title: Copy.Analysis.Research.MobilityDecline.asymmetryIncreasingTitle,
+                summary: Copy.Analysis.Research.MobilityDecline.asymmetrySummary(percent: percentText),
+                recommendation: Copy.Analysis.Research.MobilityDecline.asymmetryRecommendation(percent: percentText),
                 severity: asymDecline.changePercent >= 25 ? .warning : .info,
                 trend: .declining,
                 currentValue: asymDecline.changePercent,
@@ -160,14 +161,19 @@ struct MobilityDeclineAnalyzer {
 
         // Positive: All mobility metrics stable or improving
         if decliningMetrics.isEmpty && totalEvaluated >= 3 {
-            let improvingList = improvingMetrics.isEmpty ? ""
-                : " Improving: \(improvingMetrics.map { "\($0.indicator.label) (+\(String(format: "%.0f", $0.changePercent))%)" }.joined(separator: ", "))."
+            let improvingList: String
+            if improvingMetrics.isEmpty {
+                improvingList = ""
+            } else {
+                let items = improvingMetrics.map { "\($0.indicator.label) (+\(String(format: "%.0f", $0.changePercent))%)" }.joined(separator: ", ")
+                improvingList = Copy.Analysis.Research.MobilityDecline.mobilityStableImprovingFragment(items: items)
+            }
 
             insights.append(InsightFactory.observation(
                 metric: .walkingSpeed,
-                title: "Mobility Profile Stable",
-                summary: "All \(totalEvaluated) tracked mobility metrics are stable or improving over the past 6 months. This indicates strong functional movement quality.\(improvingList)",
-                recommendation: "Stable or improving gait metrics across \(totalEvaluated) parameters (walking speed, step length, symmetry, steadiness) reflect strong functional health. Research shows these are among the best predictors of healthspan and longevity.",
+                title: Copy.Analysis.Research.MobilityDecline.mobilityStableTitle,
+                summary: Copy.Analysis.Research.MobilityDecline.mobilityStableSummary(total: totalEvaluated, improvingList: improvingList),
+                recommendation: Copy.Analysis.Research.MobilityDecline.mobilityStableRecommendation(total: totalEvaluated),
                 currentValue: Double(totalEvaluated),
                 baselineValue: Double(totalEvaluated),
                 deviationPercent: 0,

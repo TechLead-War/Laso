@@ -3,7 +3,7 @@ import Foundation
 // MARK: - Receptivity Estimator
 
 /// Estimates user receptivity for nudge/recommendation delivery timing.
-/// Based on JITAI research (Frontiers in Digital Health 2025): effective interventions
+/// effective interventions
 /// require detecting vulnerability AND receptivity states before delivering.
 ///
 /// Receptivity signals:
@@ -72,7 +72,7 @@ final class ReceptivityEstimator {
 
     /// Assess current receptivity given all available signals.
     func assess(
-        currentHour: Int = Calendar.current.component(.hour, from: Date()),
+        currentHour: Int = Date.cal.component(.hour, from: Date()),
         currentHRV: Double? = nil,
         recentStressLevel: Double? = nil,
         lastAppOpenDate: Date? = nil,

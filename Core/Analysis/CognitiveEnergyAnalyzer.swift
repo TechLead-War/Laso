@@ -64,7 +64,7 @@ struct CognitiveEnergyAnalyzer {
             componentName: "HRV",
             componentContribution: { z, _ in
                 let pctBelow = String(format: "%.0f", abs(z * hrvBaseline.standardDeviation / hrvBaseline.mean * 100))
-                return "down \(pctBelow)% from baseline"
+                return Copy.Analysis.CognitiveEnergy.downFromBaseline(percent: pctBelow)
             },
             score: &score,
             totalWeight: &totalWeight,
@@ -82,7 +82,7 @@ struct CognitiveEnergyAnalyzer {
                 componentName: "deep sleep",
                 componentContribution: { _, avg in
                     let pctBelow = String(format: "%.0f", abs((avg - deepBaseline.mean) / deepBaseline.mean * 100))
-                    return "\(pctBelow)% below baseline"
+                    return Copy.Analysis.CognitiveEnergy.belowBaseline(percent: pctBelow)
                 },
                 score: &score,
                 totalWeight: &totalWeight,
@@ -101,7 +101,7 @@ struct CognitiveEnergyAnalyzer {
                 componentName: "REM sleep",
                 componentContribution: { _, avg in
                     let pctBelow = String(format: "%.0f", abs((avg - remBaseline.mean) / remBaseline.mean * 100))
-                    return "\(pctBelow)% below baseline"
+                    return Copy.Analysis.CognitiveEnergy.belowBaseline(percent: pctBelow)
                 },
                 score: &score,
                 totalWeight: &totalWeight,
@@ -135,7 +135,7 @@ struct CognitiveEnergyAnalyzer {
             componentName: "sleep duration",
             componentContribution: { _, avg in
                 let deficit = String(format: "%.1f", sleepBaseline.mean - avg)
-                return "\(deficit) hrs below your baseline"
+                return Copy.Analysis.CognitiveEnergy.hoursBelowBaseline(hours: deficit)
             },
             score: &score,
             totalWeight: &totalWeight,
@@ -197,12 +197,11 @@ struct CognitiveEnergyAnalyzer {
         let summary: String
         let recommendation: String
         if isLow {
-            summary = "Your cognitive energy is at \(finalScore)/100\(componentText). Addressing these factors can sharpen mental clarity and processing speed."
-            // Find the biggest lever
+            summary = Copy.Analysis.CognitiveEnergy.cognitiveLowSummary(score: finalScore, componentText: componentText)
             let topComponent = components.first?.name ?? "sleep"
-            recommendation = "Consider extending tonight's sleep by 45 min. Your \(topComponent) is the biggest factor right now. A single night of 8+ hr sleep typically improves next-day HRV and deep sleep."
+            recommendation = Copy.Analysis.CognitiveEnergy.cognitiveLowRecommendation(topComponent: topComponent)
         } else {
-            summary = "Your cognitive energy is strong at \(finalScore)/100. HRV, sleep quality, and recovery markers are all above baseline."
+            summary = Copy.Analysis.CognitiveEnergy.cognitiveStrongSummary(score: finalScore)
             recommendation = Copy.Analysis.CognitiveEnergy.brainPrimedForWork
         }
 
@@ -248,8 +247,8 @@ struct CognitiveEnergyAnalyzer {
         return Insight(
             metric: .sleepDuration,
             title: Copy.Analysis.CognitiveEnergy.sleepDebtAccumulating,
-            summary: "You have built up \(debtStr) hours of sleep debt this week (averaging \(avgStr) hrs vs your \(baselineStr) hr baseline). Short sleep can affect how alert and clear-headed you feel each day.",
-            recommendation: "An extra hour per night for \(catchUpNights) nights can help clear this deficit. Setting a bedtime alarm 45 min before your target sleep time is a good starting point.",
+            summary: Copy.Analysis.CognitiveEnergy.sleepDebtSummary(debt: debtStr, avg: avgStr, baseline: baselineStr),
+            recommendation: Copy.Analysis.CognitiveEnergy.sleepDebtRecommendation(catchUpNights: catchUpNights),
             severity: cumulativeDebt >= 5.0 ? .warning : .info,
             trend: .declining,
             currentValue: weeklyAvg,
@@ -290,7 +289,7 @@ struct CognitiveEnergyAnalyzer {
         if hrvDeclining { summaryParts.append("HRV dropped \(String(format: "%.0f", abs(hrvChange)))%") }
         if deepSleepDeclining { summaryParts.append("deep sleep down \(String(format: "%.0f", abs(deepChange)))%") }
 
-        let summary = "Your \(summaryParts.joined(separator: " and ")) over the past week \u{2014} this combination is strongly associated with mental fatigue, slower processing, and difficulty concentrating."
+        let summary = Copy.Analysis.CognitiveEnergy.mentalFatigueSummary(parts: summaryParts.joined(separator: " and "))
 
         // Build ranked recommendations
         var actions: [String] = []
@@ -310,7 +309,7 @@ struct CognitiveEnergyAnalyzer {
             metric: .heartRateVariability,
             title: Copy.Analysis.CognitiveEnergy.mentalFatiguePatternDetected,
             summary: summary,
-            recommendation: "Three actions ranked by impact: \(actions.joined(separator: ". ")).",
+            recommendation: Copy.Analysis.CognitiveEnergy.mentalFatigueRecommendation(actions: actions.joined(separator: ". ")),
             severity: .warning,
             trend: .declining,
             currentValue: abs(hrvChange),
@@ -378,7 +377,7 @@ struct CognitiveEnergyAnalyzer {
         return Insight(
             metric: .steps,
             title: Copy.Analysis.CognitiveEnergy.lowPhysicalEnergy,
-            summary: "Your physical energy indicators are low: \(signalText). You're likely feeling fatigued and heavy.",
+            summary: Copy.Analysis.CognitiveEnergy.lowPhysicalSummary(signalText: signalText),
             recommendation: recommendation,
             severity: signals.count >= 3 ? .warning : .info,
             trend: .declining,
@@ -446,7 +445,7 @@ struct CognitiveEnergyAnalyzer {
         return Insight(
             metric: .heartRateVariability,
             title: Copy.Analysis.CognitiveEnergy.recoveryDayNeeded,
-            summary: "You've been highly active for \(consecutiveHighDays) days straight and your recovery markers are strained \u{2014} \(signalText). Without recovery, both mental sharpness and physical performance decline.",
+            summary: Copy.Analysis.CognitiveEnergy.recoveryNeededSummary(consecutiveHighDays: consecutiveHighDays, signalText: signalText),
             recommendation: Copy.Analysis.CognitiveEnergy.recoveryDayRecommendation,
             severity: .warning,
             trend: .declining,
@@ -493,8 +492,8 @@ struct CognitiveEnergyAnalyzer {
         return Insight(
             metric: .timeInDaylight,
             title: Copy.Analysis.CognitiveEnergy.daylightSleepCognitionChain,
-            summary: "Your daylight exposure dropped \(daylightChange)% and \(deepDeclining ? "deep sleep" : "sleep duration") declined \(deepChange)% in the same window. These are connected \u{2014} natural light sets your circadian clock, which drives sleep architecture and next-day cognitive clarity.",
-            recommendation: "Get 20+ min of outdoor light before noon tomorrow.\(effectNote) This single change impacts your sleep timing, deep sleep percentage, and next-day mental sharpness.",
+            summary: Copy.Analysis.CognitiveEnergy.daylightChainSummary(daylightChange: daylightChange, deepDeclining: deepDeclining, deepChange: deepChange),
+            recommendation: Copy.Analysis.CognitiveEnergy.daylightChainRecommendation(effectNote: effectNote),
             severity: .info,
             trend: .declining,
             currentValue: abs(daylightTrend.weekOverWeekChange),

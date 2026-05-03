@@ -50,9 +50,10 @@ struct HTMLReportGenerator {
         }
         body += "</div>"
 
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateStyle = .long
-        dateFormatter.timeStyle = .short
+        let dateFormatter = Date.FormatterCache.formatter(key: "Laso.HTMLReport.long") { f in
+            f.dateStyle = .long
+            f.timeStyle = .short
+        }
         let dateString = dateFormatter.string(from: Date())
 
         return ReportTemplate.html(

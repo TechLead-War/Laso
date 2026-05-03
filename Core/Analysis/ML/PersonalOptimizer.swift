@@ -115,7 +115,7 @@ final class PersonalOptimizer {
         scoreHistory: [(date: Date, score: Int)],
         vectors: [DailyFeatureVector]
     ) {
-        let cal = Calendar.current
+        let cal = Date.cal
         var scoreByDate: [Date: Int] = [:]
         for e in scoreHistory { scoreByDate[cal.startOfDay(for: e.date)] = e.score }
 
@@ -302,7 +302,7 @@ final class PersonalOptimizer {
         let mean = scores.avg, sd = scores.std
         guard sd > 0 else { return nil }
         let threshold = mean - sd
-        let cal = Calendar.current
+        let cal = Date.cal
 
         struct Dip { let endIdx: Int; var recovDays: Int?; var recovMetrics: [HealthMetric: Double] }
         var dips = [Dip]()
@@ -359,7 +359,7 @@ final class PersonalOptimizer {
         guard sorted.count >= 30 else { return [] }
         let stressors: [HealthMetric] = [.sleepDuration, .sleepDeep, .sleepREM, .heartRateVariability, .restingHeartRate].filter { metrics.contains($0) }
         let buffers: [HealthMetric] = [.exerciseMinutes, .steps, .activeCalories, .sleepDuration, .sleepDeep, .mindfulMinutes, .heartRateVariability].filter { metrics.contains($0) }
-        let cal = Calendar.current
+        let cal = Date.cal
         var factors = [ResilienceFactor]()
 
         for stressor in stressors {

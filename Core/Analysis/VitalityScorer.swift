@@ -4,12 +4,13 @@ import Observation
 // MARK: - Age-Adjusted Population Norms
 
 /// Reference tables mapping metric values to the age at which that value
-/// would be median. Sourced from ACSM, AHA, and WHO population studies.
+/// would be median. Heuristic — values approximate widely used population
+/// norms but no specific source DOIs are linked; treat outputs as
+/// informational signals only, not clinical measurements.
 /// Each table maps age -> expected median value for that age group.
 private enum VitalityNorms {
 
     /// VO2 Max norms (mL/kg/min) by age. combined sex average.
-    /// Sources: ACSM Guidelines for Exercise Testing (11th ed.)
     static let vo2Max: [(age: Int, value: Double)] = [
         (20, 46), (25, 45), (30, 43), (35, 41), (40, 39),
         (45, 37), (50, 35), (55, 33), (60, 31), (65, 29),
@@ -17,7 +18,6 @@ private enum VitalityNorms {
     ]
 
     /// Resting heart rate norms (bpm) by age. lower is better.
-    /// Sources: AHA, Framingham Heart Study population data.
     static let restingHeartRate: [(age: Int, value: Double)] = [
         (20, 63), (25, 64), (30, 65), (35, 66), (40, 67),
         (45, 68), (50, 69), (55, 70), (60, 71), (65, 72),
@@ -25,7 +25,6 @@ private enum VitalityNorms {
     ]
 
     /// HRV (SDNN, ms) by age. higher is better.
-    /// Sources: Nunan et al. 2010, Meta-analysis of HRV norms.
     static let hrv: [(age: Int, value: Double)] = [
         (20, 62), (25, 58), (30, 54), (35, 50), (40, 46),
         (45, 42), (50, 38), (55, 34), (60, 30), (65, 27),
@@ -33,7 +32,6 @@ private enum VitalityNorms {
     ]
 
     /// Sleep efficiency (%) by age. % of time in bed asleep.
-    /// Sources: Ohayon et al. 2004, meta-analysis of sleep parameters.
     static let sleepEfficiency: [(age: Int, value: Double)] = [
         (20, 92), (25, 91), (30, 90), (35, 89), (40, 88),
         (45, 87), (50, 86), (55, 85), (60, 83), (65, 81),
@@ -41,7 +39,6 @@ private enum VitalityNorms {
     ]
 
     /// Deep sleep % of total by age.
-    /// Sources: AASM staging data, Redline et al.
     static let deepSleepPercent: [(age: Int, value: Double)] = [
         (20, 22), (25, 20), (30, 18), (35, 17), (40, 16),
         (45, 15), (50, 14), (55, 13), (60, 12), (65, 11),
@@ -49,7 +46,6 @@ private enum VitalityNorms {
     ]
 
     /// Walking speed (km/h) by age.
-    /// Sources: Bohannon & Andrews 2011, normative walking speed data.
     static let walkingSpeed: [(age: Int, value: Double)] = [
         (20, 5.4), (25, 5.3), (30, 5.2), (35, 5.1), (40, 5.0),
         (45, 4.9), (50, 4.8), (55, 4.7), (60, 4.5), (65, 4.3),
@@ -57,7 +53,6 @@ private enum VitalityNorms {
     ]
 
     /// Steps per day norms by age.
-    /// Sources: Tudor-Locke et al. 2011, NHANES normative data.
     static let steps: [(age: Int, value: Double)] = [
         (20, 10000), (25, 9800), (30, 9500), (35, 9000), (40, 8500),
         (45, 8000), (50, 7500), (55, 7000), (60, 6500), (65, 6000),
@@ -65,7 +60,6 @@ private enum VitalityNorms {
     ]
 
     /// Exercise minutes per day norms by age.
-    /// Sources: WHO Physical Activity Guidelines population data.
     static let exerciseMinutes: [(age: Int, value: Double)] = [
         (20, 45), (25, 42), (30, 40), (35, 38), (40, 35),
         (45, 33), (50, 30), (55, 28), (60, 25), (65, 22),
@@ -77,7 +71,6 @@ private enum VitalityNorms {
     static let bmiOptimal: Double = 22.5
 
     /// Body fat % norms by age. combined sex average.
-    /// Sources: Jackson & Pollock, ACE body fat norms.
     static let bodyFatPercent: [(age: Int, value: Double)] = [
         (20, 18), (25, 19), (30, 20), (35, 21), (40, 22),
         (45, 23), (50, 24), (55, 25), (60, 26), (65, 27),
@@ -280,9 +273,8 @@ final class VitalityScorer {
 
     // MARK: - Snapshot Persistence
 
-    // Performance Pass 2 hot-path caches: avoid per-call allocations for the
+    // Hot-path caches: avoid per-call allocations for the
     // snapshot save/restore round trip and any calendar component reads below.
-    private static let cal: Calendar = Calendar.current
     private static let jsonEncoder: JSONEncoder = JSONEncoder()
     private static let jsonDecoder: JSONDecoder = JSONDecoder()
 
@@ -734,7 +726,7 @@ final class VitalityScorer {
 
         let earlyAvgAge = Double(earlySlice.map(\.age).reduce(0, +)) / Double(earlySlice.count)
         let lateAvgAge = Double(lateSlice.map(\.age).reduce(0, +)) / Double(lateSlice.count)
-        let calendarDays = Self.cal.dateComponents([.day], from: earlyDate, to: lateDate).day ?? 1
+        let calendarDays = Date.cal.dateComponents([.day], from: earlyDate, to: lateDate).day ?? 1
         let calendarYears = Double(max(calendarDays, 1)) / 365.25
 
         if calendarYears > 0 {

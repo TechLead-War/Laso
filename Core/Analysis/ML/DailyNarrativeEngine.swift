@@ -75,7 +75,7 @@ final class DailyNarrativeEngine {
         if signals.streakDays > 0 {
             parts.append("Current streak: \(signals.streakDays) days.")
         }
-        let hour = Calendar.current.component(.hour, from: Date())
+        let hour = Date.cal.component(.hour, from: Date())
         let timeOfDay: String
         switch hour {
         case 5..<11:  timeOfDay = "morning"
@@ -91,7 +91,7 @@ final class DailyNarrativeEngine {
 
     private static let cachePrefix = "laso.daily_narrative."
 
-    /// Cached date formatter for the per-day cache key. Performance Pass 2:
+    /// Cached date formatter for the per-day cache key.
     /// `todayKey` is read on every narrative load/save, so avoid per-call alloc.
     private static let dayKeyFormatter: DateFormatter = {
         let f = DateFormatter()

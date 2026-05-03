@@ -11,9 +11,6 @@ struct NotificationsSettingsView: View {
     @State private var alertsTracker = SectionTracker(section: .settingsAlerts, tab: .settings)
     @State private var metricAlertsTracker = SectionTracker(section: .settingsMetricAlerts, tab: .settings)
 
-    /// Pass 12 BE perf: cached current calendar. The DatePicker get/set
-    /// closures fire on every render of the Daily Summary time row.
-    private static let cal: Calendar = Calendar.current
 
     var body: some View {
         Form {
@@ -50,9 +47,9 @@ struct NotificationsSettingsView: View {
                 DatePicker(
                     Copy.Settings.summaryTime,
                     selection: Binding(
-                        get: { Self.cal.date(from: preferences.dailySummaryTime) ?? Date() },
+                        get: { Date.cal.date(from: preferences.dailySummaryTime) ?? Date() },
                         set: { newDate in
-                            let components = Self.cal.dateComponents([.hour, .minute], from: newDate)
+                            let components = Date.cal.dateComponents([.hour, .minute], from: newDate)
                             preferences.dailySummaryTime = components
                             let hour = components.hour ?? 0
                             let minute = components.minute ?? 0
@@ -103,7 +100,7 @@ struct NotificationsSettingsView: View {
                 value: $preferences.maxNotificationsPerDay,
                 in: 1...15
             )
-            .accessibilityLabel("Maximum notifications per day")
+            .accessibilityLabel(Copy.Settings.maxNotificationsLabel)
             .accessibilityValue("\(preferences.maxNotificationsPerDay) per day")
             .accessibilityHint("Sets the daily cap on health notifications")
             .onChange(of: preferences.maxNotificationsPerDay) { _, newValue in

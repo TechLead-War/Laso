@@ -46,7 +46,7 @@ struct LockedInsightsCTA: View {
             .cardStyle()
         }
         .buttonStyle(.dsPress)
-        .accessibilityLabel("Unlock \(hiddenCount) more insights with Pro")
+        .accessibilityLabel(Copy.Paywall.unlockMoreInsights(hiddenCount: hiddenCount))
         .sheet(isPresented: $showPaywall) {
             PaywallView(subscriptionManager: SubscriptionManager.shared)
         }

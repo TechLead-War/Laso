@@ -174,6 +174,89 @@ extension Copy {
             "\(metricName) Improving, \(rootCauseName) Helped"
         }
 
+        // MARK: - Chain Engine Narratives
+
+        static let directionIncreased = "increased"
+        static let directionDecreased = "decreased"
+        static let directionDropped = "dropped"
+        static let directionRose = "rose"
+        static let directionRising = "rising"
+        static let directionDropping = "dropping"
+        static let directionLess = "less"
+        static let directionMore = "more"
+        static let directionLower = "lower"
+        static let directionHigher = "higher"
+        static let directionPushedUp = "pushed up"
+        static let directionBroughtDown = "brought down"
+        static let directionReduced = "reduced"
+        static let directionElevated = "elevated"
+        static let strengthStrong = "strong"
+        static let strengthModerate = "moderate"
+
+        static let timeThisWeek = "this week"
+        static let timePastFewDays = "over the past few days"
+        static func timePastDays(_ days: Int) -> String { "over the past \(days) days" }
+        static let timePastWeek = "over the past week"
+        static func timeInPastDays(_ days: Int) -> String { " in the past \(days) days" }
+
+        static func chainEffectOpening(effect: String, direction: String, dev: String, timeFrame: String) -> String {
+            "Your \(effect) \(direction) \(dev) \(timeFrame). "
+        }
+        static func chainConnectedTo(cause: String) -> String {
+            "Based on your personal data, this appears most likely connected to your \(cause) "
+        }
+        static func chainCauseChange(change: String, dev: String) -> String {
+            "\(change) \(dev)"
+        }
+        static func chainBaselineParenthetical(baseline: String, unit: String) -> String {
+            " (from your \(baseline) \(unit) baseline)"
+        }
+        static func chainPersonalPattern(strength: String, r: String) -> String {
+            "Your data shows a \(strength) personal pattern between these metrics (r=\(r))"
+        }
+        static let chainNextDay = "the next day"
+        static func chainAfterDays(_ days: Int) -> String { "after \(days) days" }
+        static func chainEffectsAppearing(_ phrase: String) -> String { " with effects typically showing \(phrase)" }
+
+        static func twoLinkOpening(affected: String, direction: String, dev: String) -> String {
+            "Your \(affected) \(direction) \(dev) this week. "
+        }
+        static func twoLinkConnected(intermediate: String) -> String {
+            "This appears connected to your \(intermediate). "
+        }
+        static func twoLinkIntermediateOver(intermediate: String, direction: String, dev: String) -> String {
+            "your \(intermediate) \(direction) \(dev) over the same period. "
+        }
+        static func twoLinkIntermediateRecent(intermediate: String, direction: String, dev: String) -> String {
+            "your \(intermediate) \(direction) \(dev) recently. "
+        }
+        static func twoLinkRootDeeper(root: String, direction: String, dev: String) -> String {
+            "Looking deeper, your \(root) \(direction) \(dev)"
+        }
+        static func twoLinkCorrelation(intermediateChange: String, intermediate: String, r: String) -> String {
+            ", which correlates with \(intermediateChange) \(intermediate) for you (r=\(r)). "
+        }
+        static func twoLinkChainPunchline(rootDir: String, root: String, intermDir: String, intermediate: String, affDir: String, affected: String) -> String {
+            "The likely chain: \(rootDir) \(root) -> \(intermDir) \(intermediate) -> \(affDir) \(affected)."
+        }
+
+        static let threeLinkCascade = "Your data suggests a cascade of connected changes. "
+        static func threeLinkRootStarted(root: String, direction: String, dev: String) -> String {
+            "It started with your \(root), which \(direction) \(dev). "
+        }
+        static func threeLinkMidEffect(verb: String, midEffect: String, direction: String, dev: String) -> String {
+            "That appears to have \(verb) your \(midEffect) (\(direction) \(dev)). "
+        }
+        static func threeLinkFinalEffect(finalCause: String, direction: String, affected: String) -> String {
+            "In turn, the change in \(finalCause) likely \(direction) your \(affected). "
+        }
+        static func threeLinkChainSummary(_ chain: String, _ affDir: String, _ affected: String) -> String {
+            "Likely chain: \(chain) -> \(affDir) \(affected)."
+        }
+        static func chainCauseDirNoun(direction: String, cause: String) -> String {
+            "\(direction) \(cause)"
+        }
+
         // MARK: - Helpers
 
         private static func trendVerb(trend: TrendDirection, deviation: Double) -> String {

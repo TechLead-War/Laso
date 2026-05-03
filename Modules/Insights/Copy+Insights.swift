@@ -3,6 +3,86 @@ import Foundation
 extension Copy {
     enum Insights {
 
+        // MARK: - Summary Templates
+
+        static func decliningSummary(metricLower: String, deviation: String, direction: String, baseline: String, unit: String, current: String, inflectionNote: String, projectionNote: String, causalHint: String, historyNote: String) -> String {
+            "Your \(metricLower) is \(deviation)% \(direction) your baseline (\(baseline) \(unit)). Current: \(current) \(unit).\(inflectionNote)\(projectionNote)\(causalHint)\(historyNote)"
+        }
+        static func improvingSummary(metricLower: String, deviation: String, current: String, unit: String, inflectionNote: String, causalHint: String, historyNote: String) -> String {
+            "Your \(metricLower) has improved \(deviation)% from your baseline. Current: \(current) \(unit).\(inflectionNote)\(causalHint)\(historyNote)"
+        }
+        static func stableSummary(metricLower: String, deviation: String, direction: String, baseline: String, unit: String, causalHint: String, historyNote: String) -> String {
+            "Your \(metricLower) is \(deviation)% \(direction) your baseline (\(baseline) \(unit)).\(causalHint)\(historyNote)"
+        }
+        static func projectionWarning(days: Int) -> String {
+            " At the current rate, this could reach warning level in about \(days) days."
+        }
+        static func priorityToday(actionProtocol: String) -> String {
+            "Priority today: \(actionProtocol)."
+        }
+
+        // MARK: - Compound Insight Engine Titles
+
+        static let healthBuildingMomentum = "Your Health Is Building Momentum"
+        static let multipleMetricsDecliningTogether = "Multiple Metrics Declining Together"
+        static func newHealthPhase(_ label: String) -> String { "New Health Phase: \(label)" }
+        static func troughProblem(_ name: String) -> String { "Your \(name) Problem" }
+        static func categoriesLinked(_ a: String, _ b: String) -> String { "Your \(a) and \(b) Are Linked" }
+        static let mostResponsiveMetric = "Your Most Responsive Metric"
+        static let warningSignsConverging = "Warning Signs Converging"
+        static func tomorrowsRisk(_ percent: Int) -> String { "Tomorrow's Risk: \(percent)%" }
+        static func biggestOpportunity(_ metric: String) -> String { "Biggest Opportunity: \(metric)" }
+        static let yourBestDayFormula = "Your Best-Day Formula"
+        static let recoveryUnderway = "Recovery Underway"
+        static let normalAcrossMetrics = "This state is characterized by normal levels across metrics."
+        static func characterizedBy(_ descriptions: String) -> String { "Characterized by \(descriptions)." }
+
+        // MARK: - ML Risk Levels
+
+        static let riskLevelHigh = "High"
+        static let riskLevelModerate = "Moderate"
+        static let riskLevelLow = "Low"
+        static let riskLevelVeryLow = "Very Low"
+
+        // MARK: - Today Intelligence
+
+        static func highestInDays(days: Int, topPercent: Int) -> String {
+            "Highest in \(days) days (top \(topPercent)%)"
+        }
+        static func lowestInDays(days: Int, bottomPercent: Int) -> String {
+            "Lowest in \(days) days (bottom \(bottomPercent)%)"
+        }
+
+        // MARK: - Day Names
+
+        static let daySunday = "Sunday"
+        static let dayMonday = "Monday"
+        static let dayTuesday = "Tuesday"
+        static let dayWednesday = "Wednesday"
+        static let dayThursday = "Thursday"
+        static let dayFriday = "Friday"
+        static let daySaturday = "Saturday"
+
+        // MARK: - ML Compound / Aggregator Title Templates
+
+        static func discoveredPattern(_ patternType: String) -> String {
+            "Discovered \(patternType) Pattern"
+        }
+        static func currentState(_ label: String) -> String {
+            "Current State: \(label)"
+        }
+        static func tomorrowOutlook(_ riskLevel: String) -> String {
+            "Tomorrow Outlook: \(riskLevel) Risk"
+        }
+        static func activeWarning(_ predictedEvent: String) -> String {
+            "Active Warning: \(predictedEvent)"
+        }
+        static let sequenceInProgress = "Sequence In Progress"
+        static func optimizationGap(_ percent: Int) -> String {
+            "Optimization: \(percent)% Gap to Your Best"
+        }
+        static let yourIdealDayBlueprint = "Your Ideal Day Blueprint"
+
         // MARK: - Inflection Notes
 
         static let accelerating = " The rate of change is speeding up."

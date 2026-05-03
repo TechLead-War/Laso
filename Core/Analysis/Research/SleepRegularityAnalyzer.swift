@@ -1,6 +1,5 @@
 import Foundation
 
-/// Research: Circulation Research (2025) + systematic review (2025)
 /// Finding: Sleep irregularity is a STRONGER predictor of cardiometabolic disease
 /// than sleep duration. Irregular sleepers face 26-53% higher dementia risk,
 /// 20-88% higher all-cause mortality. SRI (Sleep Regularity Index) validated
@@ -12,7 +11,6 @@ struct SleepRegularityAnalyzer {
 
     // MARK: - Constants
 
-    /// SRI thresholds from literature
     private static let poorSRI: Double = 60
     private static let moderateSRI: Double = 70
     private static let goodSRI: Double = 80
@@ -55,11 +53,13 @@ struct SleepRegularityAnalyzer {
 
         // Insight: Sleep Regularity Score
         if sri < poorSRI {
+            let sriText = String(format: "%.0f", sri)
+            let jetLagText = String(format: "%.0f", socialJetLag)
             insights.append(InsightFactory.make(
                 metric: .sleepDuration,
-                title: "Irregular Sleep Pattern Detected",
-                summary: "Your Sleep Regularity Index is \(String(format: "%.0f", sri))/100. placing you in the irregular category. Research shows this is a stronger predictor of long-term wellness than sleep duration alone.",
-                recommendation: "Across 5 large cohorts, irregular sleepers (SRI <60) may experience reduced cognitive performance and overall wellness over time, independent of how many hours they sleep. Your SRI of \(String(format: "%.0f", sri)) over \(samples.count) measured nights suggests significant night-to-night variability.\(socialJetLag > 60 ? " Social jet lag of \(String(format: "%.0f", socialJetLag)) min is also elevated." : "")",
+                title: Copy.Analysis.Research.SleepRegularity.irregularTitle,
+                summary: Copy.Analysis.Research.SleepRegularity.irregularSummary(sri: sriText),
+                recommendation: Copy.Analysis.Research.SleepRegularity.irregularRecommendation(sri: sriText, samples: samples.count, socialJetLag: socialJetLag, jetLagMinutes: jetLagText),
                 severity: .warning,
                 trend: trendDirection,
                 currentValue: sri,
@@ -74,11 +74,13 @@ struct SleepRegularityAnalyzer {
                 )
             ))
         } else if sri < moderateSRI {
+            let sriText = String(format: "%.0f", sri)
+            let jetLagText = String(format: "%.0f", socialJetLag)
             insights.append(InsightFactory.make(
                 metric: .sleepDuration,
-                title: "Sleep Regularity Needs Attention",
-                summary: "Your Sleep Regularity Index is \(String(format: "%.0f", sri))/100. moderate but room for improvement. Consistent sleep timing matters more than duration for long-term health.",
-                recommendation: "Your SRI of \(String(format: "%.0f", sri)) across \(samples.count) nights falls in the moderate range. Research links each 10-point SRI improvement to measurable gains in heart and metabolic wellness.\(socialJetLag > 45 ? " Reducing your \(String(format: "%.0f", socialJetLag))-min social jet lag would help most." : "")",
+                title: Copy.Analysis.Research.SleepRegularity.needsAttentionTitle,
+                summary: Copy.Analysis.Research.SleepRegularity.needsAttentionSummary(sri: sriText),
+                recommendation: Copy.Analysis.Research.SleepRegularity.needsAttentionRecommendation(sri: sriText, samples: samples.count, socialJetLag: socialJetLag, jetLagMinutes: jetLagText),
                 severity: .info,
                 trend: trendDirection,
                 currentValue: sri,
@@ -89,11 +91,12 @@ struct SleepRegularityAnalyzer {
                 relatedMetrics: [.sleepDuration, .sleepDeep, .sleepREM]
             ))
         } else if sri >= goodSRI {
+            let sriText = String(format: "%.0f", sri)
             insights.append(InsightFactory.observation(
                 metric: .sleepDuration,
-                title: "Excellent Sleep Regularity",
-                summary: "Your Sleep Regularity Index is \(String(format: "%.0f", sri))/100. your sleep timing and duration are highly consistent. This is independently supportive of long-term wellness.",
-                recommendation: "An SRI of \(String(format: "%.0f", sri)) across \(samples.count) nights places you in the most regular category. Research shows this level of sleep consistency is associated with better cognitive performance and substantially better overall wellness over time.",
+                title: Copy.Analysis.Research.SleepRegularity.excellentTitle,
+                summary: Copy.Analysis.Research.SleepRegularity.excellentSummary(sri: sriText),
+                recommendation: Copy.Analysis.Research.SleepRegularity.excellentRecommendation(sri: sriText, samples: samples.count),
                 currentValue: sri,
                 baselineValue: Double(goodSRI),
                 deviationPercent: ((sri - Double(goodSRI)) / Double(goodSRI)) * 100,
@@ -104,11 +107,12 @@ struct SleepRegularityAnalyzer {
 
         // Insight: Social jet lag warning
         if socialJetLag > 60 {
+            let jetLagText = String(format: "%.0f", socialJetLag)
             insights.append(InsightFactory.make(
                 metric: .sleepDuration,
-                title: "Social Jet Lag: \(String(format: "%.0f", socialJetLag)) Minutes",
-                summary: "Your weekend sleep timing shifts by \(String(format: "%.0f", socialJetLag)) minutes compared to weekdays. equivalent to crossing a time zone every week. This is linked to reduced metabolic wellness independent of sleep duration.",
-                recommendation: "Social jet lag >\(60) min is associated with reduced metabolic wellness and increased body stress in adults with otherwise normal sleep duration. Your \(String(format: "%.0f", socialJetLag))-min shift suggests significant circadian misalignment on weekends.",
+                title: Copy.Analysis.Research.SleepRegularity.socialJetLagTitle(minutes: jetLagText),
+                summary: Copy.Analysis.Research.SleepRegularity.socialJetLagSummary(minutes: jetLagText),
+                recommendation: Copy.Analysis.Research.SleepRegularity.socialJetLagRecommendation(minutes: jetLagText),
                 severity: socialJetLag > 90 ? .warning : .info,
                 trend: .stable,
                 currentValue: socialJetLag,
@@ -145,7 +149,7 @@ struct SleepRegularityAnalyzer {
         var dayToDayDiffs: [Double] = []
         let sorted = samples.sorted { $0.date < $1.date }
         for i in 1..<sorted.count {
-            let daysBetween = Calendar.current.dateComponents(
+            let daysBetween = Date.cal.dateComponents(
                 [.day], from: sorted[i-1].date, to: sorted[i].date
             ).day ?? 1
             if daysBetween == 1 {
@@ -167,7 +171,7 @@ struct SleepRegularityAnalyzer {
     /// Computes social jet lag in minutes: difference between weekday and weekend
     /// average sleep duration, approximating timing shift.
     private static func computeSocialJetLag(samples: [MetricSample]) -> Double {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         var weekdayDurations: [Double] = []
         var weekendDurations: [Double] = []
 

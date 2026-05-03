@@ -68,16 +68,16 @@ struct MultiMetricClusterAnalyzer {
                     let currentValue = baseline.mean * (1.0 + item.deviation / 100.0)
                     let formatted = item.metric.formatValue(currentValue)
                     let devStr = String(format: "%.0f", abs(item.deviation))
-                    let dir = item.deviation > 0 ? "above" : "below"
-                    return "\(item.metric.displayName): \(formatted) \(item.metric.unit) (\(devStr)% \(dir) baseline)"
+                    let dir = item.deviation > 0 ? Copy.Analysis.MultiMetricCluster.directionAbove : Copy.Analysis.MultiMetricCluster.directionBelow
+                    return Copy.Analysis.MultiMetricCluster.metricDetail(name: item.metric.displayName, formatted: formatted, unit: item.metric.unit, dev: devStr, dir: dir)
                 }
-                return "\(item.metric.displayName) (\(String(format: "%.0f", abs(item.deviation)))% deviation)"
+                return Copy.Analysis.MultiMetricCluster.metricDeviation(name: item.metric.displayName, dev: String(format: "%.0f", abs(item.deviation)))
             }.joined(separator: ", ")
 
             let insight = Insight(
                 metric: sorted[0].metric,
                 title: Copy.Analysis.MultiMetricCluster.categoryDeclining(category.displayName),
-                summary: "\(decliningMetrics.count) metrics declining together in \(category.displayName): \(metricDetails).",
+                summary: Copy.Analysis.MultiMetricCluster.clusterSummary(count: decliningMetrics.count, categoryName: category.displayName, details: metricDetails),
                 recommendation: recommendationForCluster(category: category, count: decliningMetrics.count, avgDeviation: avgDeviation, metrics: sorted.map(\.metric)),
                 severity: worstSeverity >= .warning ? .critical : .warning,
                 trend: .declining,
@@ -115,8 +115,8 @@ struct MultiMetricClusterAnalyzer {
         return Insight(
             metric: .restingHeartRate,
             title: Copy.Analysis.MultiMetricCluster.widespreadHealthDecline,
-            summary: "\(totalDeclining) metrics across \(categoriesWithDecline.count) categories are declining: \(categoryNames).",
-            recommendation: "\(totalDeclining) metrics declining across \(categoriesWithDecline.count) categories: \(categoryNames).",
+            summary: Copy.Analysis.MultiMetricCluster.crossCategorySummary(total: totalDeclining, categoryCount: categoriesWithDecline.count, names: categoryNames),
+            recommendation: Copy.Analysis.MultiMetricCluster.crossCategoryRecommendation(total: totalDeclining, categoryCount: categoriesWithDecline.count, names: categoryNames),
             severity: .warning,
             trend: .declining,
             currentValue: Double(totalDeclining),
@@ -132,24 +132,15 @@ struct MultiMetricClusterAnalyzer {
         let devStr = String(format: "%.0f", avgDeviation)
         let metricNames = metrics.prefix(4).map(\.displayName).joined(separator: ", ")
         switch category {
-        case .heart:
-            return "Multiple heart metrics declining simultaneously \u{2014} \(count) metrics affected: \(metricNames). Avg \(devStr)% below baseline."
-        case .sleep:
-            return "Sleep deteriorating across \(count) dimensions \u{2014} \(metricNames). Avg \(devStr)% below baseline."
-        case .activity:
-            return "Activity declining across \(count) metrics \u{2014} \(metricNames). Avg \(devStr)% below baseline."
-        case .body:
-            return "Body composition metrics shifting \u{2014} \(count) metrics affected: \(metricNames). Avg \(devStr)% from baseline."
-        case .respiratory:
-            return "Respiratory metrics elevated \u{2014} \(count) metrics affected: \(metricNames). Avg \(devStr)% from baseline."
-        case .mindfulness:
-            return "Mindfulness metrics declining \u{2014} \(count) metrics affected: \(metricNames). Avg \(devStr)% below baseline."
-        case .mobility:
-            return "Mobility metrics declining across \(count) indicators \u{2014} \(metricNames). Avg \(devStr)% below baseline."
-        case .nutrition:
-            return "Nutrition metrics shifted from baseline \u{2014} \(count) metrics affected: \(metricNames). Avg \(devStr)% from baseline."
-        case .hearing:
-            return "Hearing metrics changed \u{2014} \(count) metrics affected: \(metricNames). Avg \(devStr)% from baseline."
+        case .heart:        return Copy.Analysis.MultiMetricCluster.heartCluster(count: count, names: metricNames, dev: devStr)
+        case .sleep:        return Copy.Analysis.MultiMetricCluster.sleepCluster(count: count, names: metricNames, dev: devStr)
+        case .activity:     return Copy.Analysis.MultiMetricCluster.activityCluster(count: count, names: metricNames, dev: devStr)
+        case .body:         return Copy.Analysis.MultiMetricCluster.bodyCluster(count: count, names: metricNames, dev: devStr)
+        case .respiratory:  return Copy.Analysis.MultiMetricCluster.respiratoryCluster(count: count, names: metricNames, dev: devStr)
+        case .mindfulness:  return Copy.Analysis.MultiMetricCluster.mindfulnessCluster(count: count, names: metricNames, dev: devStr)
+        case .mobility:     return Copy.Analysis.MultiMetricCluster.mobilityCluster(count: count, names: metricNames, dev: devStr)
+        case .nutrition:    return Copy.Analysis.MultiMetricCluster.nutritionCluster(count: count, names: metricNames, dev: devStr)
+        case .hearing:      return Copy.Analysis.MultiMetricCluster.hearingCluster(count: count, names: metricNames, dev: devStr)
         }
     }
 }

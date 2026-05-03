@@ -89,7 +89,7 @@ struct HealthRiskEngine {
                 status: .unmeasured,
                 currentValue: 0,
                 optimalRange: optimalRangeString(for: metric),
-                explanation: "No recent data available. Keep Apple Health syncing to track this metric."
+                explanation: Copy.Analysis.HealthRiskEngine.noRecentDataExplanation
             )
         }
 
@@ -243,27 +243,27 @@ struct HealthRiskEngine {
         let unit = metric.unit
 
         if riskScore < 15 {
-            return "\(metric.displayName) is \(formatted) \(unit), within the healthy range."
+            return Copy.Analysis.HealthRiskEngine.withinHealthyRange(metricName: metric.displayName, formatted: formatted, unit: unit)
         }
 
         var parts: [String] = []
-        parts.append("\(metric.displayName) is \(formatted) \(unit)")
+        parts.append(Copy.Analysis.HealthRiskEngine.metricValuePrefix(metricName: metric.displayName, formatted: formatted, unit: unit))
 
         if !isInRange {
             if currentValue < normalRange.low {
-                parts.append("below the optimal range")
+                parts.append(Copy.Analysis.HealthRiskEngine.belowOptimalRange)
             } else {
-                parts.append("above the optimal range")
+                parts.append(Copy.Analysis.HealthRiskEngine.aboveOptimalRange)
             }
         }
 
         switch trend {
         case .declining:
-            let dir = metric.higherIsBetter ? "decreasing" : "rising"
-            parts.append("and \(dir)")
+            let dir = metric.higherIsBetter ? Copy.Analysis.HealthRiskEngine.directionDecreasing : Copy.Analysis.HealthRiskEngine.directionRising
+            parts.append(Copy.Analysis.HealthRiskEngine.andDirection(dir))
         case .improving:
-            let dir = metric.higherIsBetter ? "increasing" : "decreasing"
-            parts.append("while trending \(dir)")
+            let dir = metric.higherIsBetter ? Copy.Analysis.HealthRiskEngine.directionIncreasing : Copy.Analysis.HealthRiskEngine.directionDecreasing
+            parts.append(Copy.Analysis.HealthRiskEngine.whileTrending(dir))
         case .stable:
             break
         }
@@ -302,220 +302,78 @@ struct HealthRiskEngine {
 
     private static func cardiacFocusRecommendation(metric: HealthMetric) -> (title: String, description: String, target: String)? {
         switch metric {
-        case .restingHeartRate:
-            return (
-                "Lower Resting Heart Rate",
-                "Regular brisk walking or cycling for about 30 min a day can help your resting heart rate ease over weeks. Try cutting back on caffeine and managing stress.",
-                "Aim for steady, lower readings over time"
-            )
-        case .heartRateVariability:
-            return (
-                "Improve Heart Rate Variability",
-                "Better sleep, slow breathing (4 in, 4 hold, 4 out, 4 hold), and recovery days between hard workouts can help.",
-                "Aim for steady, higher readings over time"
-            )
-        case .bloodPressureSystolic, .bloodPressureDiastolic:
-            return (
-                "Support Blood Pressure",
-                "Try eating less salty and processed food, moving more through the week, keeping a healthy weight, and going easy on alcohol.",
-                "Aim for steady readings in your usual range"
-            )
-        case .heartRateRecovery:
-            return (
-                "Improve Heart Rate Recovery",
-                "Faster recovery often follows regular cardio. Try adding short cool-down walks at the end of workouts.",
-                "Aim for a quicker drop after exercise over time"
-            )
-        case .atrialFibrillationBurden:
-            return (
-                "About Heart Rhythm Notifications",
-                "Heart rhythm detection requires Apple Watch ECG. Laso shows the data only and does not interpret it for you. Talk to a qualified professional about anything you notice.",
-                ""
-            )
-        default:
-            return nil
+        case .restingHeartRate: return Copy.Analysis.HealthRiskFocus.lowerRHR
+        case .heartRateVariability: return Copy.Analysis.HealthRiskFocus.improveHRV
+        case .bloodPressureSystolic, .bloodPressureDiastolic: return Copy.Analysis.HealthRiskFocus.supportBP
+        case .heartRateRecovery: return Copy.Analysis.HealthRiskFocus.improveHRR
+        case .atrialFibrillationBurden: return Copy.Analysis.HealthRiskFocus.aboutAFib
+        default: return nil
         }
     }
 
     private static func sleepDeficitFocusRecommendation(metric: HealthMetric) -> (title: String, description: String, target: String)? {
         switch metric {
-        case .sleepDuration:
-            return (
-                "Increase Sleep Duration",
-                "Set a fixed bedtime 8 hours before your alarm. No screens 1 hour before bed. Keep your bedroom cool (65-68°F) and dark.",
-                "Target: 7–9 hours"
-            )
-        case .sleepDeep:
-            return (
-                "Boost Deep Sleep",
-                "Exercise earlier in the day (not within 3 hours of bedtime), avoid alcohol which fragments deep sleep, and maintain a cool bedroom.",
-                "Target: 1–2 hours per night"
-            )
-        case .sleepREM:
-            return (
-                "Improve REM Sleep",
-                "REM sleep is essential for memory and emotional processing. Consistent sleep schedule and avoiding sleep aids can increase REM proportion.",
-                "Target: 1.5–2 hours per night"
-            )
-        case .sleepAwake:
-            return (
-                "Reduce Nighttime Waking",
-                "Limit fluids 2 hours before bed, avoid caffeine after noon, use white noise, and keep the room dark. Address any sleep apnea concerns.",
-                "Target: <30 min per night"
-            )
-        default:
-            return nil
+        case .sleepDuration: return Copy.Analysis.HealthRiskFocus.increaseSleepDuration
+        case .sleepDeep: return Copy.Analysis.HealthRiskFocus.boostDeepSleep
+        case .sleepREM: return Copy.Analysis.HealthRiskFocus.improveREM
+        case .sleepAwake: return Copy.Analysis.HealthRiskFocus.reduceWaking
+        default: return nil
         }
     }
 
     private static func overtrainingFocusRecommendation(metric: HealthMetric) -> (title: String, description: String, target: String)? {
         switch metric {
-        case .heartRateVariability:
-            return (
-                "Allow Recovery Time",
-                "Low HRV with high training load signals insufficient recovery. Take 1-2 rest days, prioritize sleep, and reduce workout intensity by 20%.",
-                "Target: HRV returning to baseline"
-            )
-        case .restingHeartRate:
-            return (
-                "Watch for Elevated RHR",
-                "A rising RHR despite regular training is a classic overtraining sign. Reduce volume this week and monitor RHR each morning before getting up.",
-                "Target: Within 5 bpm of personal baseline"
-            )
-        case .exerciseMinutes:
-            return (
-                "Balance Training Load",
-                "More isn't always better. Follow the 80/20 rule: 80% easy, 20% hard. Include at least 2 rest days per week.",
-                "Target: 150–300 min/week with rest days"
-            )
-        default:
-            return nil
+        case .heartRateVariability: return Copy.Analysis.HealthRiskFocus.allowRecovery
+        case .restingHeartRate: return Copy.Analysis.HealthRiskFocus.watchElevatedRHR
+        case .exerciseMinutes: return Copy.Analysis.HealthRiskFocus.balanceLoad
+        default: return nil
         }
     }
 
     private static func respiratoryFocusRecommendation(metric: HealthMetric) -> (title: String, description: String, target: String)? {
         switch metric {
-        case .bloodOxygen:
-            return (
-                "Track Blood Oxygen",
-                "Try slow, deep breathing through the day, and sleep with your head slightly raised if readings dip at night. If a reading looks unusually low, take another reading and reach out to a qualified professional if it stays low.",
-                "Aim for steady readings in your usual range"
-            )
-        case .vo2Max:
-            return (
-                "Build Cardiovascular Fitness",
-                "VO2 Max reflects how well your heart, lungs, and muscles use oxygen during exercise. Try adding 3 to 4 easy-pace cardio sessions a week for 30+ minutes.",
-                "Aim for steady improvement over weeks"
-            )
-        case .respiratoryRate:
-            return (
-                "Steady Your Breathing Rate",
-                "A higher than usual breathing rate can follow stress or feeling unwell. Try slow belly breathing: 4 seconds in, 6 seconds out, for 5 minutes daily.",
-                "Aim for steady readings in your usual range"
-            )
-        default:
-            return nil
+        case .bloodOxygen: return Copy.Analysis.HealthRiskFocus.trackBloodOxygen
+        case .vo2Max: return Copy.Analysis.HealthRiskFocus.buildCardio
+        case .respiratoryRate: return Copy.Analysis.HealthRiskFocus.steadyBreathing
+        default: return nil
         }
     }
 
     private static func metabolicFocusRecommendation(metric: HealthMetric) -> (title: String, description: String, target: String)? {
         switch metric {
-        case .bmi, .weight:
-            return (
-                "Optimize Body Composition",
-                "Focus on sustainable changes: reduce processed foods, increase protein and vegetables, combine cardio with resistance training.",
-                "Target: BMI 18.5–25"
-            )
-        case .bodyFatPercentage:
-            return (
-                "Reduce Body Fat",
-                "Combine resistance training 3x/week with 150+ min cardio/week. Prioritize protein (0.8g/lb bodyweight) and sleep for fat loss.",
-                "Target: 10–20% (men) / 18–28% (women)"
-            )
-        case .waistCircumference:
-            return (
-                "Reduce Waist Circumference",
-                "Abdominal fat is a key metabolic risk indicator. Daily walks, core exercises, and reduced sugar intake have the biggest impact.",
-                "Target: <94 cm (men) / <80 cm (women)"
-            )
-        case .steps:
-            return (
-                "Increase Daily Movement",
-                "Low step count is strongly linked to metabolic risk. Start with 2,000 more steps than current average. Take walking meetings and post-meal walks.",
-                "Target: 8,000–10,000 steps/day"
-            )
-        default:
-            return nil
+        case .bmi, .weight: return Copy.Analysis.HealthRiskFocus.optimizeBodyComp
+        case .bodyFatPercentage: return Copy.Analysis.HealthRiskFocus.reduceBodyFat
+        case .waistCircumference: return Copy.Analysis.HealthRiskFocus.reduceWaist
+        case .steps: return Copy.Analysis.HealthRiskFocus.increaseMovement
+        default: return nil
         }
     }
 
     private static func stressFocusRecommendation(metric: HealthMetric) -> (title: String, description: String, target: String)? {
         switch metric {
-        case .heartRateVariability:
-            return (
-                "Reduce Chronic Stress",
-                "HRV is the most reliable stress biomarker. Try 10 minutes of meditation daily, box breathing before bed, and time in nature.",
-                "Target: HRV trending upward week over week"
-            )
-        case .sleepDuration:
-            return (
-                "Prioritize Recovery Sleep",
-                "Sleep is the #1 stress recovery tool. Set a non-negotiable bedtime. Remove work apps from your phone after 9 PM.",
-                "Target: 7–8 hours consistently"
-            )
-        case .mindfulMinutes:
-            return (
-                "Build Mindfulness Practice",
-                "Even 5 minutes of daily mindfulness reduces cortisol levels. Use a guided app to start. Morning sessions have the most impact.",
-                "Target: 10–20 min daily"
-            )
-        case .electrodermalActivity:
-            return (
-                "Manage Sympathetic Activation",
-                "Elevated EDA reflects sympathetic nervous system arousal. Practice progressive muscle relaxation and reduce stimulant intake.",
-                "Target: Return to personal baseline"
-            )
-        default:
-            return nil
+        case .heartRateVariability: return Copy.Analysis.HealthRiskFocus.reduceChronicStress
+        case .sleepDuration: return Copy.Analysis.HealthRiskFocus.prioritizeRecoverySleep
+        case .mindfulMinutes: return Copy.Analysis.HealthRiskFocus.buildMindfulness
+        case .electrodermalActivity: return Copy.Analysis.HealthRiskFocus.manageSympathetic
+        default: return nil
         }
     }
 
     private static func mobilityFocusRecommendation(metric: HealthMetric) -> (title: String, description: String, target: String)? {
         switch metric {
-        case .walkingSpeed:
-            return (
-                "Maintain Walking Speed",
-                "Walking speed is a key vitality indicator. Include brisk walking intervals (2 min fast, 2 min normal) in daily walks.",
-                "Target: >1.0 m/s (3.6 km/h)"
-            )
-        case .walkingAsymmetry:
-            return (
-                "Correct Gait Asymmetry",
-                "Asymmetry above 10% may indicate muscle imbalance or joint issues. Single-leg exercises and stretching can help. See a PT if persistent.",
-                "Target: <10% asymmetry"
-            )
-        case .sixMinuteWalkTestDistance:
-            return (
-                "Build Functional Endurance",
-                "The 6-minute walk distance reflects overall functional capacity. Daily walks of increasing duration will improve this steadily.",
-                "Target: >500 meters"
-            )
-        case .walkingDoubleSupportPercentage:
-            return (
-                "Improve Balance",
-                "High double support time indicates balance challenges. Practice single-leg stands, heel-to-toe walking, and tai chi or yoga.",
-                "Target: 20–30%"
-            )
-        default:
-            return nil
+        case .walkingSpeed: return Copy.Analysis.HealthRiskFocus.maintainWalkingSpeed
+        case .walkingAsymmetry: return Copy.Analysis.HealthRiskFocus.correctGaitAsymmetry
+        case .sixMinuteWalkTestDistance: return Copy.Analysis.HealthRiskFocus.buildFunctionalEndurance
+        case .walkingDoubleSupportPercentage: return Copy.Analysis.HealthRiskFocus.improveBalance
+        default: return nil
         }
     }
 
     private static func defaultFocusRecommendation(metric: HealthMetric) -> (title: String, description: String, target: String) {
         return (
-            "Improve \(metric.displayName)",
-            "Focus on bringing \(metric.displayName.lowercased()) into the optimal range through consistent healthy habits.",
-            "Target: \(optimalRangeString(for: metric))"
+            Copy.Analysis.HealthRiskFocus.improveMetric(metric.displayName),
+            Copy.Analysis.HealthRiskFocus.bringIntoOptimalRange(metric.displayName.lowercased()),
+            Copy.Analysis.HealthRiskFocus.targetRange(optimalRangeString(for: metric))
         )
     }
 

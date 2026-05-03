@@ -1,8 +1,8 @@
 import Foundation
 
-/// Based on population wellness studies (AHA, Nature, Lancet).
-/// Finding: A rising resting heart rate over time is one of the most important
-/// long-term fitness indicators. Tracking RHR trends helps spot changes early.
+/// Heuristic — unvalidated. A rising resting heart rate over time is a
+/// commonly cited long-term fitness signal; this analyzer surfaces those
+/// trends so the user can spot changes early.
 ///
 /// Implementation: Computes multi-month RHR trajectory slope.
 /// Flags rising RHR when activity level hasn't declined.
@@ -16,7 +16,6 @@ struct RHRTrajectoryAnalyzer {
     /// Rising RHR threshold: >1 bpm increase per 6 months while activity is stable
     private static let risingSlopeThreshold = 1.0 / 180.0 // bpm per day
 
-    /// Population norms: RHR should gently decline with regular activity over years
     /// AHA data: normal aging = slight decrease in RHR
     private static let normalAgingSlope = -0.002 // ~-0.7 bpm/year decline is normal
 
@@ -52,18 +51,21 @@ struct RHRTrajectoryAnalyzer {
             let activityDeclined = isActivityDeclining(context: context, days: window.days)
 
             let totalChange = slopePerDay * Double(window.days)
-            let currentRHR = Array(samples.suffix(7)).map(\.value).mean
+            let currentRHR = samples.tailMean(7)
             let startRHR = Array(samples.prefix(7)).map(\.value).mean
 
             // Insight: Rising RHR without activity decline
             if slopePerDay > risingSlopeThreshold && !activityDeclined {
                 let severity: Severity = totalChange >= 3 ? .warning : .info
+                let changeText = String(format: "%.1f", abs(totalChange))
+                let startText = String(format: "%.0f", startRHR)
+                let currentText = String(format: "%.0f", currentRHR)
 
                 insights.append(InsightFactory.make(
                     metric: .restingHeartRate,
-                    title: "Resting Heart Rate Rising",
-                    summary: "Your resting heart rate has increased by \(String(format: "%.1f", abs(totalChange))) bpm over the past \(window.label). from \(String(format: "%.0f", startRHR)) to \(String(format: "%.0f", currentRHR)) bpm. without a decline in your activity levels.",
-                    recommendation: "Population studies show a rising resting heart rate is an important long-term fitness indicator. A \(String(format: "%.1f", abs(totalChange))) bpm rise over \(window.label) while maintaining activity is worth paying attention to.\(totalChange >= 3 ? " Consider discussing this trend with your doctor." : "")",
+                    title: Copy.Analysis.Research.RHRTrajectory.risingTitle,
+                    summary: Copy.Analysis.Research.RHRTrajectory.risingSummary(change: changeText, windowLabel: window.label, startRHR: startText, currentRHR: currentText),
+                    recommendation: Copy.Analysis.Research.RHRTrajectory.risingRecommendation(change: changeText, windowLabel: window.label, includeMedicalNote: totalChange >= 3),
                     severity: severity,
                     trend: .declining,
                     currentValue: currentRHR,
@@ -83,11 +85,14 @@ struct RHRTrajectoryAnalyzer {
 
             // Insight: Improving RHR trajectory
             if slopePerDay < normalAgingSlope * 2 && totalChange <= -2 {
+                let changeText = String(format: "%.1f", abs(totalChange))
+                let startText = String(format: "%.0f", startRHR)
+                let currentText = String(format: "%.0f", currentRHR)
                 insights.append(InsightFactory.observation(
                     metric: .restingHeartRate,
-                    title: "Heart Rate Trajectory Improving",
-                    summary: "Your resting heart rate has dropped \(String(format: "%.1f", abs(totalChange))) bpm over the past \(window.label). from \(String(format: "%.0f", startRHR)) to \(String(format: "%.0f", currentRHR)) bpm. This is a positive trend for your heart fitness.",
-                    recommendation: "A declining RHR trajectory reflects improved cardiovascular efficiency. A lower resting heart rate over time is associated with better overall fitness and wellness in population studies.",
+                    title: Copy.Analysis.Research.RHRTrajectory.improvingTitle,
+                    summary: Copy.Analysis.Research.RHRTrajectory.improvingSummary(change: changeText, windowLabel: window.label, startRHR: startText, currentRHR: currentText),
+                    recommendation: Copy.Analysis.Research.RHRTrajectory.improvingRecommendation,
                     currentValue: currentRHR,
                     baselineValue: startRHR,
                     deviationPercent: ((currentRHR - startRHR) / max(startRHR, 1)) * 100,
@@ -116,7 +121,7 @@ struct RHRTrajectoryAnalyzer {
             guard samples.count >= 20 else { continue }
 
             let firstHalf = Array(samples.prefix(samples.count / 2)).map(\.value).mean
-            let secondHalf = Array(samples.suffix(samples.count / 2)).map(\.value).mean
+            let secondHalf = samples.tailMean(samples.count / 2)
             guard firstHalf > 0 else { continue }
 
             let change = (secondHalf - firstHalf) / firstHalf
@@ -126,20 +131,7 @@ struct RHRTrajectoryAnalyzer {
     }
 
     private static func linearRegression(x: [Double], y: [Double]) -> (slope: Double, intercept: Double) {
-        let n = Double(x.count)
-        guard n > 1 else { return (0, y.first ?? 0) }
-
-        let sumX = x.reduce(0, +)
-        let sumY = y.reduce(0, +)
-        let sumXY = zip(x, y).map(*).reduce(0, +)
-        let sumXX = x.map { $0 * $0 }.reduce(0, +)
-
-        let denom = n * sumXX - sumX * sumX
-        guard abs(denom) > 1e-10 else { return (0, sumY / n) }
-
-        let slope = (n * sumXY - sumX * sumY) / denom
-        let intercept = (sumY - slope * sumX) / n
-        return (slope, intercept)
+        Array<Double>.linearRegression(x: x, y: y)
     }
 }
 

@@ -182,7 +182,7 @@ struct OnboardingView: View {
         // a fake DOB -- a fake age would silently corrupt Vitality Age and any other
         // age-norm calculation downstream.
         guard let age = profileAge,
-              let dateOfBirth = Calendar.current.date(byAdding: .year, value: -age, to: Date()) else {
+              let dateOfBirth = Date.cal.date(byAdding: .year, value: -age, to: Date()) else {
             return
         }
 

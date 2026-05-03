@@ -5,7 +5,6 @@ import SwiftUI
 /// `UserProfileStore.shared.storedName()`, populated from Sign In with Apple
 /// on first authorization. If no name is available, the comma is dropped.
 struct CoachGreetingView: View {
-    private static let cal: Calendar = Calendar.current
 
     @State private var firstName: String?
 
@@ -42,7 +41,7 @@ struct CoachGreetingView: View {
     // MARK: - Time-of-day
 
     private var timeOfDay: TimeOfDay {
-        let hour = Self.cal.component(.hour, from: Date())
+        let hour = Date.cal.component(.hour, from: Date())
         switch hour {
         case 5..<12:  return .morning
         case 12..<17: return .afternoon

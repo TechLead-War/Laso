@@ -20,9 +20,6 @@ struct ExpandedJournalView: View {
     /// Haptic trigger for toggle changes
     @State private var toggleTrigger = false
 
-    /// Pass 12 BE perf: cached current calendar. `saveBehaviors()` runs on
-    /// every Save tap; `startOfDay(for:)` is on the hot save path.
-    private static let cal: Calendar = Calendar.current
 
     // MARK: - Body
 
@@ -48,11 +45,11 @@ struct ExpandedJournalView: View {
                 }
             }
             .animation(.easeInOut(duration: 0.25), value: hasModifications)
-            .navigationTitle("Daily Check-in")
+            .navigationTitle(Copy.Journal.dailyCheckInTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button(Copy.Buttons.cancel) { dismiss() }
                 }
             }
             .sensoryFeedback(.selection, trigger: toggleTrigger)
@@ -362,7 +359,7 @@ struct ExpandedJournalView: View {
         } label: {
             HStack(spacing: DS.space2) {
                 Image(systemName: "checkmark.circle.fill")
-                Text("Log \(loggedBehaviors.count) Behavior\(loggedBehaviors.count == 1 ? "" : "s")")
+                Text(Copy.Journal.logCount(loggedBehaviors.count))
                     .font(DS.Typography.headline)
             }
             .foregroundStyle(.white)
@@ -372,7 +369,7 @@ struct ExpandedJournalView: View {
             .padding(.horizontal)
         }
         .buttonStyle(.dsPress)
-        .accessibilityLabel("Log \(loggedBehaviors.count) behavior\(loggedBehaviors.count == 1 ? "" : "s")")
+        .accessibilityLabel(Copy.Journal.loggedCount(loggedBehaviors.count))
         .accessibilityHint("Saves the selected behaviors and dismisses this sheet")
         .padding(.bottom, DS.space2)
         .background(
@@ -392,7 +389,7 @@ struct ExpandedJournalView: View {
             Image(systemName: "checkmark.circle.fill")
                 .font(DS.Typography.heroIcon)
                 .foregroundStyle(AppColour.success)
-            Text("Logged \(savedCount) behavior\(savedCount == 1 ? "" : "s")")
+            Text(Copy.Journal.loggedCount(savedCount))
                 .font(DS.Typography.title3)
         }
         .padding(DS.space7)
@@ -403,7 +400,7 @@ struct ExpandedJournalView: View {
 
     private func saveBehaviors() {
         let store = JournalStore(modelContext: modelContext)
-        let today = Self.cal.startOfDay(for: Date())
+        let today = Date.cal.startOfDay(for: Date())
         var count = 0
 
         for (behavior, value) in loggedBehaviors {

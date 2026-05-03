@@ -49,10 +49,6 @@ struct CrossMetricAnomalyDetector {
     /// Maximum similar days in history before we stop considering it anomalous
     private static let maxSimilarDaysThreshold = 5
 
-    /// Pass 12 BE perf: cached current calendar. `detect(...)` calls
-    /// `dateComponents([.day]…)` once per daily-vector across the 90-day
-    /// history window for both the history and recent filters.
-    private static let cal: Calendar = Calendar.current
 
     // MARK: - Severity thresholds (composite anomaly score 0-100)
     private static let criticalScoreThreshold: Double = 90
@@ -101,7 +97,7 @@ struct CrossMetricAnomalyDetector {
 
         // Need enough history to establish what "normal" looks like
         let historyVectors = dailyVectors.filter { vector in
-            let daysAgo = Self.cal.dateComponents([.day], from: vector.date, to: Date()).day ?? 0
+            let daysAgo = Date.cal.dateComponents([.day], from: vector.date, to: Date()).day ?? 0
             return daysAgo >= recentWindowDays
         }
         guard historyVectors.count >= minHistoryDays else { return [] }
@@ -114,7 +110,7 @@ struct CrossMetricAnomalyDetector {
 
         // Step 4: Score recent days and generate anomalies
         let recentVectors = dailyVectors.filter { vector in
-            let daysAgo = Self.cal.dateComponents([.day], from: vector.date, to: Date()).day ?? 0
+            let daysAgo = Date.cal.dateComponents([.day], from: vector.date, to: Date()).day ?? 0
             return daysAgo < recentWindowDays
         }
 
@@ -181,7 +177,7 @@ struct CrossMetricAnomalyDetector {
         baselines: [HealthMetric: UserBaseline],
         days: Int
     ) -> [DailyFeatureVector] {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let today = calendar.startOfDay(for: Date())
 
         // Build a date-indexed lookup for each metric
@@ -336,7 +332,6 @@ struct CrossMetricAnomalyDetector {
         // Component 3: Historical rarity. how many similar days exist
         let similarDays = countSimilarDays(day: day, history: historyVectors)
 
-        // Build the metric deviations list
         let deviations = day.zScores.compactMap { (metric, z) -> MetricDeviation? in
             guard abs(z) > 0.5 else { return nil }  // Only include notably deviated metrics
             return MetricDeviation(
@@ -642,25 +637,18 @@ struct CrossMetricAnomalyDetector {
 
         switch anomaly.severity {
         case .critical:
-            return "This combination of metric values (\(topMetrics)) is extremely rare for you. Worth exploring what was different yesterday \u{2014} travel, diet timing, late workouts, or stress shifts often trigger this. If this pattern shows up for 2+ days, it may be worth discussing with a healthcare provider."
+            return Copy.Analysis.CrossMetricNarratives.extremelyRare(metrics: topMetrics)
         case .warning:
             if !anomaly.brokenCorrelations.isEmpty {
                 let broken = anomaly.brokenCorrelations[0]
-                return "The usual relationship between your \(broken.metricA.displayName.lowercased()) " +
-                    "and \(broken.metricB.displayName.lowercased()) has broken down. Review what was different yesterday \u{2014} " +
-                    "travel, diet changes, late exercise, or unusual stress are common triggers. " +
-                    "Track whether this normalizes within 48 hours."
+                return Copy.Analysis.CrossMetricNarratives.brokenRelationship(metricA: broken.metricA.displayName.lowercased(), metricB: broken.metricB.displayName.lowercased())
             }
             if involvedCategories.count >= 2 {
-                return "Unusual pattern across \(involvedCategories.count) categories (\(topMetrics)). " +
-                    "Review what was different yesterday \u{2014} travel, diet, late exercise, or stress changes are the most common triggers. " +
-                    "If you feel fine, this may be a one-off."
+                return Copy.Analysis.CrossMetricNarratives.unusualMultiCategory(categoryCount: involvedCategories.count, metrics: topMetrics)
             }
-            return "Unusual combination in \(topMetrics). Review what was different yesterday \u{2014} " +
-                "travel, diet, late exercise, or stress changes are common triggers."
+            return Copy.Analysis.CrossMetricNarratives.unusualCombination(metrics: topMetrics)
         case .info:
-            return "Unusual but mild pattern in \(topMetrics). No immediate action needed \u{2014} " +
-                "track whether this recurs over the next 3 days to determine if it's a one-off or emerging trend."
+            return Copy.Analysis.CrossMetricNarratives.unusualMild(metrics: topMetrics)
         }
     }
 }

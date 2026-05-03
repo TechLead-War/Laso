@@ -1,11 +1,8 @@
 import Foundation
 
-/// Research: npj Digital Medicine (2024) + Chronobiology in Medicine (2025)
-/// + Nature (Dec 2024) on circadian markers and mental health.
-/// Finding: Circadian disruption measurable from wearable activity/sleep data
-/// underlies metabolic disorders, cardiovascular disease, cancer, and aging.
-/// CosinorAge correlates r=0.87-0.89 with blood-based biological age.
-/// Bidirectional links between circadian disruption and mood confirmed.
+/// Heuristic — unvalidated. Surfaces circadian disruption signals derived
+/// from wearable activity/sleep data; treat outputs as informational, not
+/// clinical, measurements.
 ///
 /// Implementation: Computes circadian rhythm metrics from daily activity patterns:
 /// rest-activity amplitude, acrophase stability, and intradaily variability.
@@ -33,12 +30,12 @@ struct CircadianDisruptionAnalyzer {
 
         // Composite circadian health score (0-100)
         var components: [(score: Double, weight: Double, label: String)] = []
-        components.append((rhythmMetrics.amplitudeScore, 0.30, "activity amplitude"))
-        components.append((rhythmMetrics.regularityScore, 0.25, "rhythm regularity"))
-        components.append((rhythmMetrics.restActivityRatio, 0.20, "rest-activity contrast"))
+        components.append((rhythmMetrics.amplitudeScore, 0.30, Copy.Analysis.Research.CircadianDisruption.amplitudeComponent))
+        components.append((rhythmMetrics.regularityScore, 0.25, Copy.Analysis.Research.CircadianDisruption.regularityComponent))
+        components.append((rhythmMetrics.restActivityRatio, 0.20, Copy.Analysis.Research.CircadianDisruption.restActivityComponent))
 
         if let sleepScore = sleepTimingConsistency {
-            components.append((sleepScore, 0.25, "sleep timing"))
+            components.append((sleepScore, 0.25, Copy.Analysis.Research.CircadianDisruption.sleepTimingComponent))
         }
 
         let totalWeight = components.map(\.weight).reduce(0, +)
@@ -49,11 +46,13 @@ struct CircadianDisruptionAnalyzer {
 
         // Insight 1: Circadian health assessment
         if circadianScore < 40 {
+            let scoreText = String(format: "%.0f", circadianScore)
+            let weakestScoreText = String(format: "%.0f", weakestComponent.score)
             insights.append(InsightFactory.make(
                 metric: .steps,
-                title: "Circadian Rhythm Disrupted",
-                summary: "Your circadian health score is \(String(format: "%.0f", circadianScore))/100. indicating significant disruption in your daily biological rhythm. Weakest area: \(weakestComponent.label) (\(String(format: "%.0f", weakestComponent.score))/100).",
-                recommendation: "Research shows circadian disruption is linked to reduced metabolic health, heart wellness, mood, and long-term wellness. Your activity patterns lack the strong daily rhythm (high daytime activity, low nighttime activity) associated with healthy circadian function. Circadian rhythm amplitude measured from wearables strongly correlates with overall fitness age.",
+                title: Copy.Analysis.Research.CircadianDisruption.disruptedTitle,
+                summary: Copy.Analysis.Research.CircadianDisruption.disruptedSummary(score: scoreText, weakest: weakestComponent.label, weakestScore: weakestScoreText),
+                recommendation: Copy.Analysis.Research.CircadianDisruption.disruptedRecommendation,
                 severity: .warning,
                 trend: .declining,
                 currentValue: circadianScore,
@@ -68,11 +67,13 @@ struct CircadianDisruptionAnalyzer {
                 )
             ))
         } else if circadianScore < 60 {
+            let scoreText = String(format: "%.0f", circadianScore)
+            let weakestScoreText = String(format: "%.0f", weakestComponent.score)
             insights.append(InsightFactory.make(
                 metric: .steps,
-                title: "Circadian Rhythm: Room for Improvement",
-                summary: "Your circadian health score is \(String(format: "%.0f", circadianScore))/100. Your daily rhythm is present but could be stronger. Focus area: \(weakestComponent.label).",
-                recommendation: "A circadian score of \(String(format: "%.0f", circadianScore)) suggests your body's 24-hour rhythm is moderately aligned. Strengthening your \(weakestComponent.label) (currently \(String(format: "%.0f", weakestComponent.score))/100) would have the most impact. Regular light exposure in the morning and consistent sleep timing are the most effective interventions.",
+                title: Copy.Analysis.Research.CircadianDisruption.needsImprovementTitle,
+                summary: Copy.Analysis.Research.CircadianDisruption.needsImprovementSummary(score: scoreText, weakest: weakestComponent.label),
+                recommendation: Copy.Analysis.Research.CircadianDisruption.needsImprovementRecommendation(score: scoreText, weakest: weakestComponent.label, weakestScore: weakestScoreText),
                 severity: .info,
                 trend: .stable,
                 currentValue: circadianScore,
@@ -83,11 +84,12 @@ struct CircadianDisruptionAnalyzer {
                 relatedMetrics: [.steps, .sleepDuration, .timeInDaylight]
             ))
         } else if circadianScore >= 80 {
+            let scoreText = String(format: "%.0f", circadianScore)
             insights.append(InsightFactory.observation(
                 metric: .steps,
-                title: "Strong Circadian Rhythm",
-                summary: "Your circadian health score is \(String(format: "%.0f", circadianScore))/100. Your daily biological rhythm shows strong amplitude, good regularity, and clear rest-activity contrast. Strongest area: \(strongestComponent.label).",
-                recommendation: "A circadian score of \(String(format: "%.0f", circadianScore)) reflects a well-entrained biological clock. Research shows strong circadian rhythmicity is independently supportive of metabolic health, cognitive performance, and long-term wellness. correlating with a younger fitness age.",
+                title: Copy.Analysis.Research.CircadianDisruption.strongRhythmTitle,
+                summary: Copy.Analysis.Research.CircadianDisruption.strongRhythmSummary(score: scoreText, strongest: strongestComponent.label),
+                recommendation: Copy.Analysis.Research.CircadianDisruption.strongRhythmRecommendation(score: scoreText),
                 currentValue: circadianScore,
                 baselineValue: 70,
                 deviationPercent: ((circadianScore - 70) / 70) * 100,
@@ -121,7 +123,7 @@ struct CircadianDisruptionAnalyzer {
         let sorted = samples.sorted { $0.date < $1.date }
         var dayDiffs: [Double] = []
         for i in 1..<sorted.count {
-            let daysBetween = Calendar.current.dateComponents(
+            let daysBetween = Date.cal.dateComponents(
                 [.day], from: sorted[i-1].date, to: sorted[i].date
             ).day ?? 1
             if daysBetween == 1 && sorted[i-1].value > 0 {
@@ -161,7 +163,7 @@ struct CircadianDisruptionAnalyzer {
         let cv = values.standardDeviation / mean
 
         // Also check weekday vs weekend gap
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let weekday = samples.filter { calendar.component(.weekday, from: $0.date) >= 2 && calendar.component(.weekday, from: $0.date) <= 6 }.map(\.value)
         let weekend = samples.filter { calendar.component(.weekday, from: $0.date) == 1 || calendar.component(.weekday, from: $0.date) == 7 }.map(\.value)
 

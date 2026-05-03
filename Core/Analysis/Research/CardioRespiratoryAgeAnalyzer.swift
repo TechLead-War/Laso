@@ -1,38 +1,17 @@
 import Foundation
 
-/// Research: Apple Heart & Movement Study (2026) + multiple population studies.
 /// Finding: VO2max is one of the strongest indicators of long-term fitness and
 /// overall wellness. Each 1 MET increase is associated with meaningful improvements.
-/// Age/sex percentile tables now available from large populations.
 ///
-/// Implementation: Maps user's VO2max to population percentile by age bracket,
+/// Implementation: Maps user's VO2max to a population percentile by age bracket,
 /// computes a Cardiorespiratory Age, and tracks VO2max trajectory over months.
+/// All bracket cutoffs and percentile points live in `CardioRespiratoryAgeConfig`.
 struct CardioRespiratoryAgeAnalyzer {
 
-    // MARK: - VO2max Percentile Tables (from Apple Heart & Movement Study 2026)
-    // Approximated from published averages + population distributions.
-    // Format: (percentile, VO2max) for combined sex.
+    private typealias Cfg = CardioRespiratoryAgeConfig
+    private typealias AgeBracket = CardioRespiratoryAgeConfig.AgeBracket
 
-    private struct AgeBracket {
-        let ageRange: String
-        let p10: Double // Poor
-        let p25: Double // Below average
-        let p50: Double // Average
-        let p75: Double // Good
-        let p90: Double // Excellent
-        let p95: Double // Superior
-    }
-
-    /// Percentile brackets by age (mL/kg/min), combined sex averages
-    private static let brackets: [AgeBracket] = [
-        AgeBracket(ageRange: "18-29", p10: 28, p25: 32, p50: 35, p75: 40, p90: 45, p95: 50),
-        AgeBracket(ageRange: "30-39", p10: 26, p25: 30, p50: 33, p75: 37, p90: 42, p95: 47),
-        AgeBracket(ageRange: "40-49", p10: 24, p25: 28, p50: 31, p75: 35, p90: 39, p95: 44),
-        AgeBracket(ageRange: "50-59", p10: 22, p25: 26, p50: 29, p75: 33, p90: 37, p95: 41),
-        AgeBracket(ageRange: "60-69", p10: 20, p25: 24, p50: 27, p75: 30, p90: 34, p95: 38),
-        AgeBracket(ageRange: "70-79", p10: 18, p25: 22, p50: 25, p75: 28, p90: 31, p95: 35),
-        AgeBracket(ageRange: "80+", p10: 16, p25: 20, p50: 24, p75: 27, p90: 30, p95: 33),
-    ]
+    private static let brackets = Cfg.brackets
 
     // MARK: - Analysis
 
@@ -41,49 +20,48 @@ struct CardioRespiratoryAgeAnalyzer {
 
         guard let vo2Series = context.timeSeries[.vo2Max] else { return [] }
 
-        let recent = vo2Series.samples(lastDays: 90)
-        guard recent.count >= 3 else { return [] }
+        let recent = vo2Series.samples(lastDays: Cfg.recentVO2WindowDays)
+        guard recent.count >= Cfg.minSamplesForAnalysis else { return [] }
 
-        let currentVO2 = Array(recent.suffix(5)).map(\.value).mean
+        let currentVO2 = recent.tailMean(Cfg.recentVO2MeanWindow)
 
-        // Find which age bracket this VO2max is "average" for
         let fitnessAge = findFitnessAge(vo2max: currentVO2)
 
-        // Compute percentile (approximate. we don't know user's exact age)
-        // Use middle bracket as reference and find where they fall
-        let refBracket = brackets[2] // 40-49 as middle reference
+        let refBracket = brackets[Cfg.referenceBracketIndex]
         let percentile = computePercentile(vo2max: currentVO2, bracket: refBracket)
 
-        // Compute trajectory
-        let allSamples = vo2Series.samples(lastDays: 365)
+        let allSamples = vo2Series.samples(lastDays: Cfg.trajectoryWindowDays)
         var trajectory: TrendDirection = .stable
         var changeOverPeriod: Double = 0
         var monthsTracked = 0
 
-        if allSamples.count >= 5 {
+        if allSamples.count >= Cfg.trajectoryMinSamples {
             let sorted = allSamples.sorted { $0.date < $1.date }
-            let firstValues = Array(sorted.prefix(max(3, sorted.count / 4))).map(\.value).mean
-            let lastValues = Array(sorted.suffix(max(3, sorted.count / 4))).map(\.value).mean
+            let segmentSize = max(Cfg.trajectorySegmentMinSize, sorted.count / Cfg.trajectorySegmentDivisor)
+            let firstValues = Array(sorted.prefix(segmentSize)).map(\.value).mean
+            let lastValues = sorted.tailMean(segmentSize)
             changeOverPeriod = lastValues - firstValues
 
             let daysSpanned: Int
             if let firstDate = sorted.first?.date, let lastDate = sorted.last?.date {
-                daysSpanned = Calendar.current.dateComponents([.day], from: firstDate, to: lastDate).day ?? 0
+                daysSpanned = Date.cal.dateComponents([.day], from: firstDate, to: lastDate).day ?? 0
             } else {
                 daysSpanned = 0
             }
             monthsTracked = max(1, daysSpanned / 30)
 
-            trajectory = changeOverPeriod > 0.5 ? .improving
-                : changeOverPeriod < -0.5 ? .declining : .stable
+            trajectory = changeOverPeriod > Cfg.trajectoryStableBand ? .improving
+                : changeOverPeriod < -Cfg.trajectoryStableBand ? .declining : .stable
         }
 
-        // Insight 1: VO2max fitness age equivalent
+        let ageText = String(format: "%.0f", fitnessAge)
+        let vo2Text = String(format: "%.1f", currentVO2)
+        let percentileText = String(format: "%.0f", percentile)
         insights.append(InsightFactory.observation(
             metric: .vo2Max,
-            title: "Cardio Fitness Age: ~\(String(format: "%.0f", fitnessAge))",
-            summary: "Your VO2max of \(String(format: "%.1f", currentVO2)) mL/kg/min is average for someone around age \(String(format: "%.0f", fitnessAge)). VO2max is one of the most important indicators of long-term fitness and overall wellness.",
-            recommendation: "At \(String(format: "%.1f", currentVO2)) mL/kg/min, your cardiorespiratory fitness places you approximately at the \(String(format: "%.0f", percentile))th percentile for a middle-aged adult. Each 1 MET (~3.5 mL/kg/min) improvement is associated with meaningful health benefits.",
+            title: Copy.Analysis.Research.CardioRespiratoryAge.cardioFitnessAgeTitle(age: ageText),
+            summary: Copy.Analysis.Research.CardioRespiratoryAge.cardioFitnessAgeSummary(vo2: vo2Text, age: ageText),
+            recommendation: Copy.Analysis.Research.CardioRespiratoryAge.cardioFitnessAgeRecommendation(vo2: vo2Text, percentile: percentileText),
             severity: .info,
             trend: trajectory,
             currentValue: currentVO2,
@@ -92,32 +70,35 @@ struct CardioRespiratoryAgeAnalyzer {
             category: .clinicalTrajectory,
             relatedMetrics: [.vo2Max, .exerciseMinutes, .heartRateRecovery, .restingHeartRate],
             context: InsightContext(
-                confidenceLevel: min(Double(recent.count) / 10.0, 1.0),
+                confidenceLevel: min(Double(recent.count) / Cfg.confidenceFullSampleCount, 1.0),
                 dataPointCount: recent.count
             )
         ))
 
-        // Insight 2: VO2max trajectory
-        if monthsTracked >= 3 && allSamples.count >= 5 {
-            if trajectory == .improving && changeOverPeriod >= 1.0 {
+        if monthsTracked >= Cfg.minMonthsTrackedForInsight && allSamples.count >= Cfg.trajectoryMinSamples {
+            if trajectory == .improving && changeOverPeriod >= Cfg.trajectoryReportableChange {
+                let changeText = String(format: "%.1f", changeOverPeriod)
                 insights.append(InsightFactory.observation(
                     metric: .vo2Max,
-                    title: "VO2max Improving: +\(String(format: "%.1f", changeOverPeriod)) Over \(monthsTracked) Months",
-                    summary: "Your cardiorespiratory fitness has improved by \(String(format: "%.1f", changeOverPeriod)) mL/kg/min over \(monthsTracked) months. This is a meaningful fitness gain based on population wellness studies.",
-                    recommendation: "A \(String(format: "%.1f", changeOverPeriod)) mL/kg/min VO2max improvement represents real progress. This shifts your fitness age younger and is associated with better long-term wellness outcomes.",
+                    title: Copy.Analysis.Research.CardioRespiratoryAge.vo2ImprovingTitle(change: changeText, months: monthsTracked),
+                    summary: Copy.Analysis.Research.CardioRespiratoryAge.vo2ImprovingSummary(change: changeText, months: monthsTracked),
+                    recommendation: Copy.Analysis.Research.CardioRespiratoryAge.vo2ImprovingRecommendation(change: changeText, months: monthsTracked),
                     currentValue: currentVO2,
                     baselineValue: currentVO2 - changeOverPeriod,
                     deviationPercent: (changeOverPeriod / max(currentVO2 - changeOverPeriod, 1)) * 100,
                     category: .clinicalTrajectory,
                     relatedMetrics: [.vo2Max, .exerciseMinutes, .activeCalories]
                 ))
-            } else if trajectory == .declining && changeOverPeriod <= -1.0 {
+            } else if trajectory == .declining && changeOverPeriod <= -Cfg.trajectoryReportableChange {
+                let changeText = String(format: "%.1f", changeOverPeriod)
+                let absChangeText = String(format: "%.1f", abs(changeOverPeriod))
+                let perMonthText = String(format: "%.1f", abs(changeOverPeriod / Double(monthsTracked)))
                 insights.append(InsightFactory.make(
                     metric: .vo2Max,
-                    title: "VO2max Declining: \(String(format: "%.1f", changeOverPeriod)) Over \(monthsTracked) Months",
-                    summary: "Your cardiorespiratory fitness has dropped by \(String(format: "%.1f", abs(changeOverPeriod))) mL/kg/min over \(monthsTracked) months. Since VO2max is a key fitness indicator, this trend is worth reversing.",
-                    recommendation: "A \(String(format: "%.1f", abs(changeOverPeriod))) mL/kg/min decline shifts your fitness age older. The decline rate of \(String(format: "%.1f", abs(changeOverPeriod / Double(monthsTracked)))) mL/kg/min per month is faster than typical aging (~1 to 2 mL/kg/min per decade). Increasing aerobic exercise frequency or intensity can help reverse this.",
-                    severity: abs(changeOverPeriod) >= 2.0 ? .warning : .info,
+                    title: Copy.Analysis.Research.CardioRespiratoryAge.vo2DecliningTitle(change: changeText, months: monthsTracked),
+                    summary: Copy.Analysis.Research.CardioRespiratoryAge.vo2DecliningSummary(absChange: absChangeText, months: monthsTracked),
+                    recommendation: Copy.Analysis.Research.CardioRespiratoryAge.vo2DecliningRecommendation(absChange: absChangeText, perMonth: perMonthText, months: monthsTracked),
+                    severity: abs(changeOverPeriod) >= Cfg.warningDeclineMagnitude ? .warning : .info,
                     trend: .declining,
                     currentValue: currentVO2,
                     baselineValue: currentVO2 - changeOverPeriod,
@@ -129,17 +110,17 @@ struct CardioRespiratoryAgeAnalyzer {
             }
         }
 
-        // Insight 3: Very low VO2max warning
-        if currentVO2 < 20 {
+        if currentVO2 < Cfg.veryLowVO2Threshold {
+            let vo2BelowText = String(format: "%.1f", currentVO2)
             insights.append(InsightFactory.medicalAdvice(
                 metric: .vo2Max,
-                title: "VO2max Below Typical Threshold",
-                summary: "Your VO2max of \(String(format: "%.1f", currentVO2)) mL/kg/min is below 20. a threshold associated with reduced fitness capacity across all age groups.",
-                recommendation: "A VO2max below 20 mL/kg/min places you in the lowest fitness category regardless of age. Population studies consistently show this threshold as an important point for overall wellness. Even modest improvements from this baseline can make a meaningful difference.",
+                title: Copy.Analysis.Research.CardioRespiratoryAge.belowThresholdTitle,
+                summary: Copy.Analysis.Research.CardioRespiratoryAge.belowThresholdSummary(vo2: vo2BelowText, threshold: Int(Cfg.veryLowVO2Threshold)),
+                recommendation: Copy.Analysis.Research.CardioRespiratoryAge.belowThresholdRecommendation(threshold: Int(Cfg.veryLowVO2Threshold)),
                 trend: trajectory,
                 currentValue: currentVO2,
-                baselineValue: 20,
-                deviationPercent: ((currentVO2 - 20) / 20) * 100,
+                baselineValue: Cfg.veryLowVO2Threshold,
+                deviationPercent: ((currentVO2 - Cfg.veryLowVO2Threshold) / Cfg.veryLowVO2Threshold) * 100,
                 relatedMetrics: [.vo2Max, .exerciseMinutes, .restingHeartRate]
             ))
         }
@@ -149,53 +130,55 @@ struct CardioRespiratoryAgeAnalyzer {
 
     // MARK: - Helpers
 
-    /// Find the age at which this VO2max is the 50th percentile
+    /// Find the age at which this VO2max is the 50th percentile.
     private static func findFitnessAge(vo2max: Double) -> Double {
-        let ageMidpoints: [Double] = [24, 35, 45, 55, 65, 75, 85]
+        let ageMidpoints = Cfg.bracketAgeMidpoints
 
         for i in 0..<brackets.count {
             if vo2max >= brackets[i].p50 {
                 if i == 0 {
-                    // Better than youngest bracket's average
-                    let excess = (vo2max - brackets[0].p50) / max(brackets[0].p50 - (brackets.count > 1 ? brackets[1].p50 : brackets[0].p50 - 5), 1)
-                    return max(15, ageMidpoints[0] - excess * 10)
+                    let neighborDelta = brackets.count > 1
+                        ? brackets[0].p50 - brackets[1].p50
+                        : Cfg.singleBracketFallbackDelta
+                    let excess = (vo2max - brackets[0].p50) / max(neighborDelta, 1)
+                    return max(Cfg.minExtrapolatedAge, ageMidpoints[0] - excess * Cfg.extrapolatedYearsPerExcessUnit)
                 }
-                // Interpolate between this bracket and the one before
                 let prevP50 = brackets[i-1].p50
                 let currP50 = brackets[i].p50
-                let fraction = (prevP50 - vo2max) / max(prevP50 - currP50, 0.1)
+                let fraction = (prevP50 - vo2max) / max(prevP50 - currP50, Cfg.percentileInterpolationEpsilon)
                 return ageMidpoints[i-1] + fraction * (ageMidpoints[i] - ageMidpoints[i-1])
             }
         }
 
-        // Below the lowest bracket
-        return min(90, (ageMidpoints.last ?? 85) + 5)
+        return min(Cfg.maxExtrapolatedAge, (ageMidpoints.last ?? 85) + Cfg.belowAllBracketsAgeOffset)
     }
 
-    /// Approximate percentile within a bracket
+    /// Approximate percentile within a bracket using piecewise interpolation.
     private static func computePercentile(vo2max: Double, bracket: AgeBracket) -> Double {
         let thresholds: [(percentile: Double, value: Double)] = [
-            (5, bracket.p10 - 3),
+            (Cfg.percentileFloor, bracket.p10 - Cfg.lowestPercentileOffset),
             (10, bracket.p10),
             (25, bracket.p25),
             (50, bracket.p50),
             (75, bracket.p75),
             (90, bracket.p90),
-            (95, bracket.p95),
+            (95, bracket.p95)
         ]
 
-        guard let firstThreshold = thresholds.first, let lastThreshold = thresholds.last else { return 50 }
-        if vo2max <= firstThreshold.value { return 5 }
-        if vo2max >= lastThreshold.value { return 97 }
+        guard let firstThreshold = thresholds.first, let lastThreshold = thresholds.last else {
+            return Cfg.percentileMidpointFallback
+        }
+        if vo2max <= firstThreshold.value { return Cfg.percentileFloor }
+        if vo2max >= lastThreshold.value { return Cfg.percentileCeiling }
 
         for i in 0..<(thresholds.count - 1) {
             if vo2max >= thresholds[i].value && vo2max < thresholds[i+1].value {
-                let fraction = (vo2max - thresholds[i].value) / max(thresholds[i+1].value - thresholds[i].value, 0.1)
+                let fraction = (vo2max - thresholds[i].value) / max(thresholds[i+1].value - thresholds[i].value, Cfg.percentileInterpolationEpsilon)
                 return thresholds[i].percentile + fraction * (thresholds[i+1].percentile - thresholds[i].percentile)
             }
         }
 
-        return 50
+        return Cfg.percentileMidpointFallback
     }
 }
 

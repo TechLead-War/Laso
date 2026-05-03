@@ -13,24 +13,31 @@ enum StrainLevel: String, CaseIterable {
     case allOut
 
     init(strain: Double) {
-        switch strain {
-        case ..<6:   self = .low
-        case ..<10:  self = .light
-        case ..<14:  self = .moderate
-        case ..<18:  self = .high
-        case ..<20:  self = .overreaching
-        default:     self = .allOut
+        // Bucket boundaries are sourced from `StrainScorerConfig` and must
+        // stay in sync with the named constants there.
+        if strain < StrainScorerConfig.lowUpperExclusive {
+            self = .low
+        } else if strain < StrainScorerConfig.lightUpperExclusive {
+            self = .light
+        } else if strain < StrainScorerConfig.moderateUpperExclusive {
+            self = .moderate
+        } else if strain < StrainScorerConfig.highUpperExclusive {
+            self = .high
+        } else if strain < StrainScorerConfig.overreachingUpperExclusive {
+            self = .overreaching
+        } else {
+            self = .allOut
         }
     }
 
     var displayName: String {
         switch self {
-        case .low:          return "Low"
-        case .light:        return "Light"
-        case .moderate:     return "Moderate"
-        case .high:         return "High"
-        case .overreaching: return "Peak"
-        case .allOut:       return "All Out"
+        case .low:          return Copy.Strain.strainLevelLow
+        case .light:        return Copy.Strain.strainLevelLight
+        case .moderate:     return Copy.Strain.strainLevelModerate
+        case .high:         return Copy.Strain.strainLevelHigh
+        case .overreaching: return Copy.Strain.strainLevelPeak
+        case .allOut:       return Copy.Strain.strainLevelAllOut
         }
     }
 
@@ -84,27 +91,18 @@ final class StrainScorer {
     // MARK: - Constants
 
     /// The maximum expected physiological load used to normalize the logarithmic scale.
-    /// Calibrated so that an elite-level training day (~1200 kcal active, 90 min zone 4-5)
-    /// maps to approximately strain 20-21.
-    private static let maxExpectedLoad: Double = 800.0
+    private static let maxExpectedLoad: Double = StrainScorerConfig.maxExpectedLoad
 
-    /// Minimum days of calorie data required before computing strain
-    private static let minimumDaysForBaseline: Int = 7
+    /// Minimum days of calorie data required before computing strain.
+    private static let minimumDaysForBaseline: Int = StrainScorerConfig.minimumDaysForBaseline
 
-    /// HR zone multipliers. higher zones contribute disproportionately more strain
-    private static let zoneMultipliers: [Int: Double] = [
-        1: 1.0,    // Light: minimal strain contribution
-        2: 2.0,    // Moderate: steady aerobic
-        3: 4.0,    // Vigorous: tempo / threshold
-        4: 8.0,    // High: VO2 max intervals
-        5: 14.0    // Max: anaerobic / sprint
-    ]
+    /// HR zone multipliers. higher zones contribute disproportionately more strain.
+    private static let zoneMultipliers: [Int: Double] = StrainScorerConfig.zoneMultipliers
 
-    // Performance Pass 2 hot-path caches: avoid per-compute allocations.
+    // Hot-path caches: avoid per-compute allocations.
     // StrainScorer.compute runs on every Dashboard refresh; both the calendar
     // and JSON coders are cheap to instantiate but allocating per call adds up
     // over thousands of refreshes.
-    private static let cal: Calendar = Calendar.current
     private static let jsonEncoder: JSONEncoder = JSONEncoder()
     private static let jsonDecoder: JSONDecoder = JSONDecoder()
 
@@ -130,7 +128,7 @@ final class StrainScorer {
         else { return }
         // Only restore if the snapshot is from today; strain is a daily metric
         // and showing yesterday's value with today's date would mislead.
-        if Self.cal.isDateInToday(snap.savedAt) {
+        if Date.cal.isDateInToday(snap.savedAt) {
             currentStrain = snap.currentStrain
             todayCalories = snap.todayCalories
             isReady = true
@@ -297,7 +295,7 @@ final class StrainScorer {
         let historicalSamples = series.samples(lastDays: 28)
 
         // Exclude today's samples
-        let todayStart = Self.cal.startOfDay(for: Date())
+        let todayStart = Date.cal.startOfDay(for: Date())
         let pastSamples = historicalSamples.filter { $0.date < todayStart }
 
         guard pastSamples.count >= 5 else { return 400.0 }
@@ -305,7 +303,7 @@ final class StrainScorer {
         // Group by day, take daily totals, then average
         var dailyTotals: [Date: Double] = [:]
         for sample in pastSamples {
-            let day = Self.cal.startOfDay(for: sample.date)
+            let day = Date.cal.startOfDay(for: sample.date)
             dailyTotals[day, default: 0] += sample.value
         }
 
@@ -401,7 +399,7 @@ final class StrainScorer {
         maxHR: Double,
         calorieBaseline: Double
     ) {
-        let calendar = Self.cal
+        let calendar = Date.cal
         let today = calendar.startOfDay(for: Date())
         let lookbackDays = 7
         var history: [(date: Date, strain: Double)] = []
@@ -448,7 +446,7 @@ final class StrainScorer {
         maxHR: Double,
         calorieBaseline: Double
     ) -> Double {
-        let nextDate = Self.cal.date(byAdding: .day, value: 1, to: targetDate) ?? targetDate
+        let nextDate = Date.cal.date(byAdding: .day, value: 1, to: targetDate) ?? targetDate
 
         let dayCals = sumSamples(allSeries[.activeCalories], from: targetDate, to: nextDate)
         let dayExercise = sumSamples(allSeries[.exerciseMinutes], from: targetDate, to: nextDate)

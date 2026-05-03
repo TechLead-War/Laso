@@ -11,15 +11,11 @@ struct ConnectedDeviceInfo: Identifiable {
     /// Specific device model name from HKDevice (e.g. "Apple Watch Series 10", "Garmin Fenix 8")
     var deviceModelName: String?
 
-    /// Pass 11 AF: cached calendar — `isActive` and `lastSyncText` render in
-    /// the device-list cell on every Settings re-render. Single static avoids
-    /// per-row `Calendar.current` allocation.
-    private static let cal: Calendar = Calendar.current
 
     /// Device is considered active if it contributed data within the last 7 days
     var isActive: Bool {
         guard let lastDate = lastDataDate else { return false }
-        return Self.cal.dateComponents([.day], from: lastDate, to: Date()).day ?? 999 <= 7
+        return Date.cal.dateComponents([.day], from: lastDate, to: Date()).day ?? 999 <= 7
     }
 
     var metricCount: Int {
@@ -57,7 +53,7 @@ struct ConnectedDeviceInfo: Identifiable {
 
     var lastSyncText: String {
         guard let lastDate = lastDataDate else { return "No data" }
-        let days = Self.cal.dateComponents([.day], from: lastDate, to: Date()).day ?? 0
+        let days = Date.cal.dateComponents([.day], from: lastDate, to: Date()).day ?? 0
         if days == 0 { return "Today" }
         if days == 1 { return "Yesterday" }
         return "\(days) days ago"

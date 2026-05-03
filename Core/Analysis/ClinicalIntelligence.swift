@@ -359,20 +359,9 @@ struct ClinicalIntelligence {
     /// Simple linear regression slope (value per day)
     private static func linearRegressionSlope(samples: [MetricSample]) -> Double {
         guard samples.count >= 2, let firstDate = samples.first?.date else { return 0 }
-
-        let n = Double(samples.count)
         let xs = samples.map { $0.date.timeIntervalSince(firstDate) / secondsPerDay }
         let ys = samples.map(\.value)
-
-        let sumX = xs.reduce(0, +)
-        let sumY = ys.reduce(0, +)
-        let sumXY = zip(xs, ys).reduce(0) { $0 + $1.0 * $1.1 }
-        let sumX2 = xs.reduce(0) { $0 + $1 * $1 }
-
-        let denominator = n * sumX2 - sumX * sumX
-        guard denominator != 0 else { return 0 }
-
-        return (n * sumXY - sumX * sumY) / denominator
+        return Array<Double>.linearRegression(x: xs, y: ys).slope
     }
 
     /// Project how many days until the next clinical threshold is reached

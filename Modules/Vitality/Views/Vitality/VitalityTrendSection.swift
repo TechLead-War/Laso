@@ -42,7 +42,7 @@ struct VitalityTrendSection: View {
                         .interpolationMethod(.catmullRom)
                         .foregroundStyle(historyLineColor)
                         .lineStyle(StrokeStyle(lineWidth: 2.5))
-                        // Pass 8 P2-F17: per-mark VoiceOver readout so users can
+                        // Per-mark VoiceOver readout so users can
                         // navigate each daily vitality-age point.
                         .accessibilityLabel(Text(point.date.formatted(date: .abbreviated, time: .omitted)))
                         .accessibilityValue(Text(Copy.Vitality.chartPointAccessibilityValue(age: point.age)))
@@ -79,7 +79,7 @@ struct VitalityTrendSection: View {
                 }
                 .chartXSelection(value: $selectedTrendDate)
                 .chartYScale(domain: chartYRange)
-                // Pass 8 P2-F17: chart-level VoiceOver summary.
+                // Chart-level VoiceOver summary.
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel(Text(Copy.Vitality.chartAccessibilityLabel(dayCount: scorer.history.count)))
                 .accessibilityValue(Text(vitalityChartAccessibilityValue))
@@ -126,7 +126,7 @@ struct VitalityTrendSection: View {
                                 let x = location.x - origin.x
                                 if let date: Date = proxy.value(atX: x) {
                                     if let current = selectedTrendDate,
-                                       Calendar.current.isDate(current, inSameDayAs: date) {
+                                       Date.cal.isDate(current, inSameDayAs: date) {
                                         selectedTrendDate = nil
                                     } else {
                                         selectedTrendDate = date

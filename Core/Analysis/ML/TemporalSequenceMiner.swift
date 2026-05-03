@@ -119,7 +119,7 @@ final class TemporalSequenceMiner {
         (.sleepREM, .heartRateVariability),
     ]
 
-    private let calendar = Calendar.current
+    private let calendar = Date.cal
     /// Minimum support: sequence must occur at least this many times
     private let minSupport = 3
     /// Maximum lag between steps in a sequence (days)
@@ -1335,27 +1335,7 @@ final class TemporalSequenceMiner {
 
     /// Simple linear regression: y = slope * x + intercept
     private func linearRegressionFit(x: [Double], y: [Double]) -> (slope: Double, intercept: Double) {
-        let n = min(x.count, y.count)
-        guard n >= 2 else { return (0, y.first ?? 0) }
-
-        let xSlice = Array(x.prefix(n))
-        let ySlice = Array(y.prefix(n))
-        let xMean = xSlice.mean
-        let yMean = ySlice.mean
-
-        var numerator: Double = 0
-        var denominator: Double = 0
-        for i in 0..<n {
-            let xDiff: Double = xSlice[i] - xMean
-            let yDiff: Double = ySlice[i] - yMean
-            numerator += xDiff * yDiff
-            denominator += xDiff * xDiff
-        }
-
-        guard denominator > 0 else { return (0, yMean) }
-        let slope = numerator / denominator
-        let intercept = yMean - slope * xMean
-        return (slope, intercept)
+        Array<Double>.linearRegression(x: x, y: y)
     }
 
     // MARK: - Condition Helpers

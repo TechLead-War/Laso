@@ -82,7 +82,7 @@ final class ReferralManager {
     /// Days remaining on referral-based free Pro access.
     var referralDaysRemaining: Int? {
         guard let freeUntil = referralFreeUntil, freeUntil > Date() else { return nil }
-        return Calendar.current.dateComponents([.day], from: Date(), to: freeUntil).day
+        return Date.cal.dateComponents([.day], from: Date(), to: freeUntil).day
     }
 
     // MARK: - Sync with Firestore
@@ -149,9 +149,9 @@ final class ReferralManager {
         let db = Firestore.firestore()
 
         do {
-            // Find referrer by code via Cloud Function (user_profiles list is
-            // admin-only after Pass 5 Agent 8; direct whereField query is no
-            // longer permitted for non-admin users).
+            // Find referrer by code via Cloud Function. The `user_profiles`
+            // collection is admin-only, so direct whereField queries are not
+            // permitted for end users.
             let result = try await Functions.functions()
                 .httpsCallable("lookupReferralCode")
                 .call(["code": trimmed])
@@ -247,7 +247,7 @@ final class ReferralManager {
                 "completedAt": Date().timeIntervalSince1970
             ])
 
-            let oneMonth = Calendar.current.date(byAdding: .month, value: 1, to: Date())!
+            let oneMonth = Date.cal.date(byAdding: .month, value: 1, to: Date())!
 
             // Grant self (referred user) 1 month free. Include ownership fields
             // so merge-writes on a new doc still satisfy the create rule.
@@ -269,7 +269,7 @@ final class ReferralManager {
             } else {
                 baseDate = Date()
             }
-            let newFreeUntil = Calendar.current.date(byAdding: .month, value: 1, to: baseDate)!
+            let newFreeUntil = Date.cal.date(byAdding: .month, value: 1, to: baseDate)!
             try await db.collection("user_profiles").document(referrerDeviceId).setData([
                 "referralFreeUntil": newFreeUntil.timeIntervalSince1970
             ], merge: true)

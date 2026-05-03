@@ -1,18 +1,12 @@
 import Foundation
 
-/// Research: npj Digital Medicine (2024). CosinorAge
-/// Finding: Biological age estimated purely from wearable accelerometry data
-/// correlates r=0.87-0.89 with blood-based biological age clocks.
-/// Uses cosinor analysis of rest-activity rhythms (amplitude, acrophase).
-///
-/// Also: Apple Heart & Movement Study (2026). VO2max age percentiles.
-/// VO2max is stronger than smoking/diabetes/hypertension for mortality prediction.
-///
-/// Implementation: Computes a composite Biological Age from activity rhythm
-/// amplitude, VO2max percentile, RHR trajectory, and mobility metrics.
+/// Heuristic — unvalidated. Computes a composite "biological age" estimate
+/// from activity rhythm amplitude (cosinor analysis), a VO2max percentile,
+/// RHR trajectory, and mobility metrics. The bracket cutoffs are heuristic
+/// and not clinically validated; treat outputs as informational signals.
 struct BiologicalAgeAnalyzer {
 
-    // MARK: - VO2max Age/Sex Norms (from Apple Heart & Movement Study 2026)
+    // MARK: - VO2max Age/Sex Norms (heuristic — unvalidated)
     // Each tuple: (ageBracketMidpoint, maleAvg, femaleAvg)
 
     private static let vo2maxNorms: [(age: Double, male: Double, female: Double)] = [
@@ -69,19 +63,20 @@ struct BiologicalAgeAnalyzer {
         // the result as a relative fitness equivalent and compare components.
         let componentBreakdown = ageEstimates
             .sorted { $0.estimatedAge < $1.estimatedAge }
-            .map { "\($0.component): ~\(String(format: "%.0f", $0.estimatedAge)) yrs" }
+            .map { Copy.Analysis.Research.BiologicalAge.componentBreakdownEntry(component: $0.component, years: String(format: "%.0f", $0.estimatedAge)) }
             .joined(separator: ", ")
 
         let youngestComponent = ageEstimates.min(by: { $0.estimatedAge < $1.estimatedAge })!
         let oldestComponent = ageEstimates.max(by: { $0.estimatedAge < $1.estimatedAge })!
         let ageSpread = oldestComponent.estimatedAge - youngestComponent.estimatedAge
+        let weightedAgeText = String(format: "%.0f", weightedAge)
 
         // Primary insight: Biological age estimate
         insights.append(InsightFactory.observation(
             metric: .vo2Max,
-            title: "Fitness Age Estimate: ~\(String(format: "%.0f", weightedAge))",
-            summary: "Based on \(ageEstimates.count) physiological markers, your body performs like someone around \(String(format: "%.0f", weightedAge)) years old. Strongest area: \(youngestComponent.component). Area with most room: \(oldestComponent.component).",
-            recommendation: "Breakdown. \(componentBreakdown). Each component is mapped to population norms from large-scale studies. VO2max alone (one of the most meaningful indicators of your overall fitness) suggests a fitness age equivalent.",
+            title: Copy.Analysis.Research.BiologicalAge.fitnessAgeTitle(years: weightedAgeText),
+            summary: Copy.Analysis.Research.BiologicalAge.fitnessAgeSummary(componentCount: ageEstimates.count, years: weightedAgeText, strongest: youngestComponent.component, oldest: oldestComponent.component),
+            recommendation: Copy.Analysis.Research.BiologicalAge.fitnessAgeRecommendation(breakdown: componentBreakdown),
             currentValue: weightedAge,
             baselineValue: weightedAge,
             deviationPercent: 0,
@@ -95,11 +90,14 @@ struct BiologicalAgeAnalyzer {
 
         // Insight: Large spread between components → imbalance
         if ageSpread > 15 {
+            let spreadText = String(format: "%.0f", ageSpread)
+            let youngestText = String(format: "%.0f", youngestComponent.estimatedAge)
+            let oldestText = String(format: "%.0f", oldestComponent.estimatedAge)
             insights.append(InsightFactory.make(
                 metric: .vo2Max,
-                title: "Age Component Imbalance",
-                summary: "There's a \(String(format: "%.0f", ageSpread))-year gap between your youngest system (\(youngestComponent.component): ~\(String(format: "%.0f", youngestComponent.estimatedAge))) and oldest (\(oldestComponent.component): ~\(String(format: "%.0f", oldestComponent.estimatedAge))). This imbalance is worth addressing.",
-                recommendation: "A large spread between fitness age components suggests one system is aging faster than others. Focusing on your \(oldestComponent.component) could bring your overall fitness age down significantly.",
+                title: Copy.Analysis.Research.BiologicalAge.imbalanceTitle,
+                summary: Copy.Analysis.Research.BiologicalAge.imbalanceSummary(spread: spreadText, youngestComponent: youngestComponent.component, youngestAge: youngestText, oldestComponent: oldestComponent.component, oldestAge: oldestText),
+                recommendation: Copy.Analysis.Research.BiologicalAge.imbalanceRecommendation(oldestComponent: oldestComponent.component),
                 severity: .info,
                 trend: .stable,
                 currentValue: ageSpread,
@@ -121,7 +119,7 @@ struct BiologicalAgeAnalyzer {
         let recent = vo2Series.samples(lastDays: 90)
         guard recent.count >= 3 else { return nil }
 
-        let currentVO2 = Array(recent.suffix(5)).map(\.value).mean
+        let currentVO2 = recent.tailMean(5)
         guard currentVO2 > 10 else { return nil }
 
         // Find the age where this VO2max is average (interpolate between norms)
@@ -148,7 +146,7 @@ struct BiologicalAgeAnalyzer {
             }
         }
 
-        return ("Cardio Fitness", estimatedAge, 0.35) // Highest weight. strongest mortality predictor
+        return (Copy.Analysis.Research.BiologicalAge.cardioFitnessComponent, estimatedAge, BiologicalAgeConfig.cardioFitnessWeight)
     }
 
     private static func computeRHRAge(context: AnalysisContext) -> (component: String, estimatedAge: Double, weight: Double)? {
@@ -156,23 +154,26 @@ struct BiologicalAgeAnalyzer {
         let recent = rhrSeries.samples(lastDays: 30)
         guard recent.count >= 10 else { return nil }
 
-        let currentRHR = Array(recent.suffix(7)).map(\.value).mean
+        let currentRHR = recent.tailMean(7)
 
-        // Population norms: RHR increases with poor cardiovascular health
-        // Young fit adult: ~55-65 bpm, average: ~65-75, older/unfit: 75-85+
-        // Map RHR to approximate functional age
         let rhrAge: Double
-        if currentRHR <= 55 {
-            rhrAge = 20
-        } else if currentRHR <= 65 {
-            rhrAge = 20 + (currentRHR - 55) * 2.0 // 20-40
-        } else if currentRHR <= 75 {
-            rhrAge = 40 + (currentRHR - 65) * 2.0 // 40-60
+        if currentRHR <= BiologicalAgeConfig.rhrYoungFitCeiling {
+            rhrAge = BiologicalAgeConfig.rhrYoungFitAge
+        } else if currentRHR <= BiologicalAgeConfig.rhrAverageCeiling {
+            rhrAge = BiologicalAgeConfig.rhrYoungFitAge
+                + (currentRHR - BiologicalAgeConfig.rhrYoungFitCeiling)
+                * BiologicalAgeConfig.rhrSlopeYoungToAverage
+        } else if currentRHR <= BiologicalAgeConfig.rhrElevatedCeiling {
+            rhrAge = BiologicalAgeConfig.rhrAverageAge
+                + (currentRHR - BiologicalAgeConfig.rhrAverageCeiling)
+                * BiologicalAgeConfig.rhrSlopeAverageToElevated
         } else {
-            rhrAge = 60 + (currentRHR - 75) * 1.5 // 60+
+            rhrAge = BiologicalAgeConfig.rhrElevatedAge
+                + (currentRHR - BiologicalAgeConfig.rhrElevatedCeiling)
+                * BiologicalAgeConfig.rhrSlopeElevated
         }
 
-        return ("Resting Heart Rate", min(rhrAge, 90), 0.20)
+        return (Copy.Analysis.Research.BiologicalAge.restingHeartRateComponent, min(rhrAge, BiologicalAgeConfig.maxComputedAge), BiologicalAgeConfig.restingHeartRateWeight)
     }
 
     private static func computeActivityRhythmAge(context: AnalysisContext) -> (component: String, estimatedAge: Double, weight: Double)? {
@@ -199,51 +200,76 @@ struct BiologicalAgeAnalyzer {
         let avgDayDiff = dayDiffs.isEmpty ? stdDev : dayDiffs.mean
         let regularity = 1.0 - min(avgDayDiff / max(mean, 1), 1.0)
 
-        // Combine: high amplitude + high regularity = younger
-        let rhythmScore = (relativeAmplitude * 0.5 + regularity * 0.5)
+        let rhythmScore = relativeAmplitude * BiologicalAgeConfig.rhythmAmplitudeWeight
+            + regularity * BiologicalAgeConfig.rhythmRegularityWeight
 
-        // Map to age: score 0.6+ → ~25, score 0.3 → ~50, score 0.15 → ~70
         let rhythmAge: Double
-        if rhythmScore >= 0.55 {
-            rhythmAge = 25
-        } else if rhythmScore >= 0.35 {
-            rhythmAge = 25 + (0.55 - rhythmScore) / 0.20 * 25
+        if rhythmScore >= BiologicalAgeConfig.rhythmYoungThreshold {
+            rhythmAge = BiologicalAgeConfig.rhythmYoungAge
+        } else if rhythmScore >= BiologicalAgeConfig.rhythmMidThreshold {
+            rhythmAge = BiologicalAgeConfig.rhythmYoungAge
+                + (BiologicalAgeConfig.rhythmYoungThreshold - rhythmScore)
+                / BiologicalAgeConfig.rhythmMidBracketSpan
+                * BiologicalAgeConfig.rhythmMidBracketAgeSpan
         } else {
-            rhythmAge = 50 + (0.35 - rhythmScore) / 0.20 * 25
+            rhythmAge = BiologicalAgeConfig.rhythmMidAge
+                + (BiologicalAgeConfig.rhythmMidThreshold - rhythmScore)
+                / BiologicalAgeConfig.rhythmOlderBracketSpan
+                * BiologicalAgeConfig.rhythmOlderBracketAgeSpan
         }
 
-        return ("Activity Rhythm", min(max(rhythmAge, 18), 90), 0.20)
+        return (Copy.Analysis.Research.BiologicalAge.activityRhythmComponent, min(max(rhythmAge, BiologicalAgeConfig.minComputedAge), BiologicalAgeConfig.maxComputedAge), BiologicalAgeConfig.activityRhythmWeight)
     }
 
     private static func computeMobilityAge(context: AnalysisContext) -> (component: String, estimatedAge: Double, weight: Double)? {
         var mobilityScores: [Double] = []
 
-        // Walking speed: 1.4 m/s = young, 1.0 = middle-age, <0.8 = elderly
         if let speedSeries = context.timeSeries[.walkingSpeed] {
             let recent = speedSeries.samples(lastDays: 30)
             if recent.count >= 5 {
-                let speed = Array(recent.suffix(10)).map(\.value).mean
+                let speed = recent.tailMean(10)
                 let speedAge: Double
-                if speed >= 1.4 { speedAge = 25 }
-                else if speed >= 1.2 { speedAge = 25 + (1.4 - speed) / 0.2 * 15 }
-                else if speed >= 1.0 { speedAge = 40 + (1.2 - speed) / 0.2 * 15 }
-                else { speedAge = 55 + (1.0 - speed) / 0.2 * 20 }
-                mobilityScores.append(min(speedAge, 85))
+                if speed >= BiologicalAgeConfig.walkingSpeedYoungAnchor {
+                    speedAge = BiologicalAgeConfig.walkingSpeedYoungAge
+                } else if speed >= BiologicalAgeConfig.walkingSpeedMidAnchor {
+                    speedAge = BiologicalAgeConfig.walkingSpeedYoungAge
+                        + (BiologicalAgeConfig.walkingSpeedYoungAnchor - speed)
+                        / BiologicalAgeConfig.walkingSpeedMidBracketSpan
+                        * BiologicalAgeConfig.walkingSpeedMidBracketAgeSpan
+                } else if speed >= BiologicalAgeConfig.walkingSpeedSlowAnchor {
+                    speedAge = BiologicalAgeConfig.walkingSpeedMidAge
+                        + (BiologicalAgeConfig.walkingSpeedMidAnchor - speed)
+                        / BiologicalAgeConfig.walkingSpeedSlowBracketSpan
+                        * BiologicalAgeConfig.walkingSpeedSlowBracketAgeSpan
+                } else {
+                    speedAge = BiologicalAgeConfig.walkingSpeedSlowAge
+                        + (BiologicalAgeConfig.walkingSpeedSlowAnchor - speed)
+                        / BiologicalAgeConfig.walkingSpeedVerySlowBracketSpan
+                        * BiologicalAgeConfig.walkingSpeedVerySlowBracketAgeSpan
+                }
+                mobilityScores.append(min(speedAge, BiologicalAgeConfig.walkingSpeedAgeCap))
             }
         }
 
-        // Double support percentage: lower = younger (15-20% young, 25-30% elderly)
         if let dspSeries = context.timeSeries[.walkingDoubleSupportPercentage] {
             let recent = dspSeries.samples(lastDays: 30)
             if recent.count >= 5 {
-                let dsp = Array(recent.suffix(10)).map(\.value).mean
-                let dspAge = max(18, min(85, 20 + (dsp - 20) * 3))
+                let dsp = recent.tailMean(10)
+                let dspAge = max(
+                    BiologicalAgeConfig.doubleSupportFloorAge,
+                    min(
+                        BiologicalAgeConfig.doubleSupportCapAge,
+                        BiologicalAgeConfig.doubleSupportYoungAge
+                            + (dsp - BiologicalAgeConfig.doubleSupportYoungAnchor)
+                            * BiologicalAgeConfig.doubleSupportSlope
+                    )
+                )
                 mobilityScores.append(dspAge)
             }
         }
 
         guard !mobilityScores.isEmpty else { return nil }
-        return ("Mobility", mobilityScores.mean, 0.15)
+        return (Copy.Analysis.Research.BiologicalAge.mobilityComponent, mobilityScores.mean, BiologicalAgeConfig.mobilityWeight)
     }
 
     private static func computeHRVAge(context: AnalysisContext) -> (component: String, estimatedAge: Double, weight: Double)? {
@@ -251,17 +277,34 @@ struct BiologicalAgeAnalyzer {
         let recent = hrvSeries.samples(lastDays: 30)
         guard recent.count >= 10 else { return nil }
 
-        let currentHRV = Array(recent.suffix(7)).map(\.value).mean
+        let currentHRV = recent.tailMean(7)
 
-        // HRV population norms (SDNN): 20s: ~60-80ms, 40s: ~40-60ms, 60s: ~25-40ms
         let hrvAge: Double
-        if currentHRV >= 70 { hrvAge = 22 }
-        else if currentHRV >= 50 { hrvAge = 22 + (70 - currentHRV) / 20 * 18 }
-        else if currentHRV >= 35 { hrvAge = 40 + (50 - currentHRV) / 15 * 15 }
-        else if currentHRV >= 20 { hrvAge = 55 + (35 - currentHRV) / 15 * 20 }
-        else { hrvAge = 75 + (20 - currentHRV) / 10 * 10 }
+        if currentHRV >= BiologicalAgeConfig.hrvYoungAnchor {
+            hrvAge = BiologicalAgeConfig.hrvYoungAge
+        } else if currentHRV >= BiologicalAgeConfig.hrvAdultAnchor {
+            hrvAge = BiologicalAgeConfig.hrvYoungAge
+                + (BiologicalAgeConfig.hrvYoungAnchor - currentHRV)
+                / BiologicalAgeConfig.hrvAdultBracketSpan
+                * BiologicalAgeConfig.hrvAdultBracketAgeSpan
+        } else if currentHRV >= BiologicalAgeConfig.hrvMidlifeAnchor {
+            hrvAge = BiologicalAgeConfig.hrvAdultAge
+                + (BiologicalAgeConfig.hrvAdultAnchor - currentHRV)
+                / BiologicalAgeConfig.hrvMidlifeBracketSpan
+                * BiologicalAgeConfig.hrvMidlifeBracketAgeSpan
+        } else if currentHRV >= BiologicalAgeConfig.hrvOlderAnchor {
+            hrvAge = BiologicalAgeConfig.hrvMidlifeAge
+                + (BiologicalAgeConfig.hrvMidlifeAnchor - currentHRV)
+                / BiologicalAgeConfig.hrvOlderBracketSpan
+                * BiologicalAgeConfig.hrvOlderBracketAgeSpan
+        } else {
+            hrvAge = BiologicalAgeConfig.hrvOlderAge
+                + (BiologicalAgeConfig.hrvOlderAnchor - currentHRV)
+                / BiologicalAgeConfig.hrvVeryLowBracketSpan
+                * BiologicalAgeConfig.hrvVeryLowBracketAgeSpan
+        }
 
-        return ("Autonomic Nervous System", min(hrvAge, 90), 0.10)
+        return (Copy.Analysis.Research.BiologicalAge.autonomicComponent, min(hrvAge, BiologicalAgeConfig.maxComputedAge), BiologicalAgeConfig.hrvWeight)
     }
 }
 

@@ -113,7 +113,7 @@ final class FeatureEngine {
         timeSeries: [HealthMetric: MetricTimeSeries],
         baselines: [HealthMetric: UserBaseline]
     ) -> [DailyFeatureVector] {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let today = calendar.startOfDay(for: Date())
 
         // Determine date range from available data
@@ -453,7 +453,7 @@ final class FeatureEngine {
     /// Retrieve interaction features for a specific date.
     /// Returns an empty dictionary if no interactions were computed for that date.
     func interactions(for date: Date) -> [InteractionFeature: Double] {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let day = calendar.startOfDay(for: date)
         return interactionsByDate[day] ?? [:]
     }

@@ -1,6 +1,5 @@
 import Foundation
 
-/// Research: Diagnostics systematic review (Feb 2026) + Nature Scientific Reports (2025)
 /// Finding: Wearable-derived HRV detects systemic inflammation via vagal withdrawal.
 /// Sustained drop in overnight HRV RMSSD for 3-5 consecutive nights precedes
 /// inflammatory events (IBD flares, RA flares, infections).
@@ -70,11 +69,14 @@ struct InflammationRiskAnalyzer {
         let isCompoundSignal = hrvDeviation < -1.0 && temperatureElevated && !exerciseLoadIncreased
 
         if isCompoundSignal {
+            let dropText = String(format: "%.0f", hrvDropPercent)
+            let currentText = String(format: "%.0f", currentHRV)
+            let baselineText = String(format: "%.0f", hrvBaseline.mean)
             insights.append(InsightFactory.make(
                 metric: .heartRateVariability,
-                title: "Body Stress Signal",
-                summary: "Your HRV has dropped \(String(format: "%.0f", hrvDropPercent))% below baseline while wrist temperature is elevated. a compound pattern suggesting your body may be under increased stress.",
-                recommendation: "The combination of suppressed HRV (autonomic stress) and elevated body temperature is a well-validated early signal that your body is working harder than usual to recover. In research studies, this pattern often appears 1 to 3 days before you feel off. Current HRV: \(String(format: "%.0f", currentHRV)) ms vs baseline \(String(format: "%.0f", hrvBaseline.mean)) ms.",
+                title: Copy.Analysis.Research.InflammationRisk.bodyStressSignalTitle,
+                summary: Copy.Analysis.Research.InflammationRisk.bodyStressSummary(dropPercent: dropText),
+                recommendation: Copy.Analysis.Research.InflammationRisk.bodyStressRecommendation(currentHRV: currentText, baseline: baselineText),
                 severity: .warning,
                 trend: .declining,
                 currentValue: currentHRV,
@@ -90,12 +92,14 @@ struct InflammationRiskAnalyzer {
                 )
             ))
         } else if hrvDeviation < -1.0 && consecutiveDeclines >= consecutiveDropThreshold && !exerciseLoadIncreased {
-            // HRV-only inflammation signal
+            let dropText = String(format: "%.0f", hrvDropPercent)
+            let currentText = String(format: "%.0f", currentHRV)
+            let baselineText = String(format: "%.0f", hrvBaseline.mean)
             insights.append(InsightFactory.make(
                 metric: .heartRateVariability,
-                title: "Elevated Body Stress",
-                summary: "Your HRV has been declining for \(consecutiveDeclines) consecutive measurement windows. currently \(String(format: "%.0f", hrvDropPercent))% below your personal baseline. This sustained drop pattern suggests your body may be under increased stress.",
-                recommendation: "Research shows sustained HRV suppression (without increased exercise load) reflects reduced recovery capacity. In wearable studies, this pattern often appeared days before people felt run down. HRV: \(String(format: "%.0f", currentHRV)) ms vs baseline \(String(format: "%.0f", hrvBaseline.mean)) ms over \(recent14.count) days.",
+                title: Copy.Analysis.Research.InflammationRisk.elevatedBodyStressTitle,
+                summary: Copy.Analysis.Research.InflammationRisk.elevatedBodyStressSummary(consecutiveDeclines: consecutiveDeclines, dropPercent: dropText),
+                recommendation: Copy.Analysis.Research.InflammationRisk.elevatedBodyStressRecommendation(currentHRV: currentText, baseline: baselineText, days: recent14.count),
                 severity: hrvDeviation < -2.0 ? .warning : .info,
                 trend: .declining,
                 currentValue: currentHRV,
@@ -114,11 +118,14 @@ struct InflammationRiskAnalyzer {
 
         // Positive insight: Strong vagal tone = low inflammation
         if hrvDeviation > 1.0 && currentHRV > hrvBaseline.mean * 1.1 {
+            let aboveText = String(format: "%.0f", abs(hrvDropPercent))
+            let currentText = String(format: "%.0f", currentHRV)
+            let baselineText = String(format: "%.0f", hrvBaseline.mean)
             insights.append(InsightFactory.observation(
                 metric: .heartRateVariability,
-                title: "Strong Recovery Tone",
-                summary: "Your HRV is \(String(format: "%.0f", abs(hrvDropPercent)))% above baseline. indicating strong vagal tone. Research links elevated parasympathetic activity to better overall recovery and resilience.",
-                recommendation: "An HRV of \(String(format: "%.0f", currentHRV)) ms (vs baseline \(String(format: "%.0f", hrvBaseline.mean)) ms) reflects robust parasympathetic dominance. When vagal tone is high, your body is in a strong recovery state.",
+                title: Copy.Analysis.Research.InflammationRisk.strongRecoveryToneTitle,
+                summary: Copy.Analysis.Research.InflammationRisk.strongRecoverySummary(abovePercent: aboveText),
+                recommendation: Copy.Analysis.Research.InflammationRisk.strongRecoveryRecommendation(currentHRV: currentText, baseline: baselineText),
                 currentValue: currentHRV,
                 baselineValue: hrvBaseline.mean,
                 deviationPercent: ((currentHRV - hrvBaseline.mean) / max(hrvBaseline.mean, 1)) * 100,
@@ -136,7 +143,7 @@ struct InflammationRiskAnalyzer {
         guard let calSeries = context.timeSeries[.activeCalories] else { return false }
         let recent7 = calSeries.samples(lastDays: 7)
         let prior7 = calSeries.samples(lastDays: 14).filter { sample in
-            sample.date < Calendar.current.date(byAdding: .day, value: -7, to: Date())!
+            sample.date < Date.cal.date(byAdding: .day, value: -7, to: Date())!
         }
 
         guard recent7.count >= 3, prior7.count >= 3 else { return false }

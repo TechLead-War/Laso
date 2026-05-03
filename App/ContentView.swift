@@ -616,7 +616,7 @@ struct ContentView: View {
             .padding(.bottom, DS.space6)
         }
         .background(AppColour.surfaceBase.ignoresSafeArea())
-        .navigationTitle("Sleep Coach")
+        .navigationTitle(Copy.SleepCoach.title)
         .navigationBarTitleDisplayMode(.large)
         .task {
             await healthKitManager.refreshSleepBoundaries(days: 14)

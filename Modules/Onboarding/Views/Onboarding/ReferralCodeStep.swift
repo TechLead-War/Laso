@@ -84,7 +84,7 @@ struct ReferralCodeStep: View {
             }
 
             if isRedeeming {
-                // Pass 11 AK: pair the spinner with a caption so the user knows
+                // Pair the spinner with a caption so the user knows
                 // a network call is in flight rather than seeing an unlabeled wheel.
                 HStack(spacing: DS.space2) {
                     ProgressView()

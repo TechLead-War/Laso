@@ -57,9 +57,6 @@ final class SessionTracker {
     private(set) var retentionMilestones: Set<String> = []
     private(set) var streakMilestonesReached: Set<String> = []
 
-    /// Pass 12 BE perf: cached current calendar. `daysSinceLastSession` is read
-    /// on every session start; the lifecycle update path also uses it.
-    private static let cal: Calendar = Calendar.current
 
     private enum Key {
         static let lastActiveDate = AppKeys.Session.lastActiveDate
@@ -94,7 +91,7 @@ final class SessionTracker {
 
     /// Refill monthly if interval has passed. Called in `startSession`.
     private func maybeGrantRestCredit() {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let last = defaults.object(forKey: Key.lastRestCreditGrantDate) as? Date
         if let last {
             let days = calendar.dateComponents([.day], from: last, to: Date()).day ?? 0
@@ -198,7 +195,7 @@ final class SessionTracker {
     }
 
     private func updateStreak() {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let today = calendar.startOfDay(for: Date())
 
         if let lastDate = defaults.object(forKey: Key.lastActiveDate) as? Date {
@@ -318,7 +315,7 @@ final class SessionTracker {
         }
 
         let installDate = defaults.object(forKey: Key.installDate) as? Date ?? Date()
-        daysSinceInstall = Self.cal.dateComponents([.day], from: installDate, to: Date()).day ?? 0
+        daysSinceInstall = Date.cal.dateComponents([.day], from: installDate, to: Date()).day ?? 0
     }
 
     private func updateLifecycleOnStart() {
@@ -330,7 +327,7 @@ final class SessionTracker {
     /// Days since last session (for return session tracking). Returns nil for first session.
     var daysSinceLastSession: Int? {
         guard let lastDate = defaults.object(forKey: Key.lastSessionDate) as? Date else { return nil }
-        return Self.cal.dateComponents([.day], from: lastDate, to: Date()).day
+        return Date.cal.dateComponents([.day], from: lastDate, to: Date()).day
     }
 
     /// Record an activation milestone. Returns true if this is the FIRST time it's recorded.
@@ -376,7 +373,7 @@ final class SessionTracker {
     /// Tracks unique active days in the current ISO calendar week.
     /// Resets when a new week begins.
     private func updateStickiness() {
-        let calendar = Calendar.current
+        let calendar = Date.cal
         let today = calendar.startOfDay(for: Date())
         let currentWeek = calendar.component(.weekOfYear, from: today)
         let currentYear = calendar.component(.yearForWeekOfYear, from: today)

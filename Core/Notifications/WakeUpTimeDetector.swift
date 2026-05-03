@@ -15,7 +15,7 @@ enum WakeUpTimeDetector {
     /// Number of days to look back for sleep data.
     private static let lookbackDays = 14
 
-    /// Cached "yyyy-MM-dd" formatter. Performance Pass 2: avoids reallocating
+    /// Cached "yyyy-MM-dd" formatter. avoids reallocating
     /// inside the per-sample loop below.
     private static let dayKeyFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -29,7 +29,7 @@ enum WakeUpTimeDetector {
     static func detect(healthStore: HKHealthStore) async -> (hour: Int, minute: Int)? {
         let sleepType = HKCategoryType(.sleepAnalysis)
 
-        let calendar = Calendar.current
+        let calendar = Date.cal
         guard let startDate = calendar.date(byAdding: .day, value: -lookbackDays, to: Date()) else {
             return nil
         }

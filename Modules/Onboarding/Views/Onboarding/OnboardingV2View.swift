@@ -175,7 +175,7 @@ struct OnboardingV2View: View {
         PersistenceManager().saveHealthFocuses(focuses)
 
         guard profile.age > 0,
-              let dateOfBirth = Calendar.current.date(byAdding: .year, value: -profile.age, to: Date()) else {
+              let dateOfBirth = Date.cal.date(byAdding: .year, value: -profile.age, to: Date()) else {
             return
         }
 

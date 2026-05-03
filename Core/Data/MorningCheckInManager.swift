@@ -8,16 +8,15 @@ final class MorningCheckInManager {
     private static let dismissedDateKey = "laso.morning_checkin.dismissed_date"
     private static let maxHistoryDays = 90
 
-    // Performance Pass 2 hot-path caches: avoid per-call allocations on every
+    // Hot-path caches: avoid per-call allocations on every
     // HomeView render and every check-in save.
-    private static let cal: Calendar = Calendar.current
     private static let iso8601: ISO8601DateFormatter = ISO8601DateFormatter()
     private static let jsonEncoder: JSONEncoder = JSONEncoder()
     private static let jsonDecoder: JSONDecoder = JSONDecoder()
 
     /// Whether to show the morning check-in today
     static func shouldShowCheckIn() -> Bool {
-        let hour = cal.component(.hour, from: Date())
+        let hour = Date.cal.component(.hour, from: Date())
 
         // Only show between 5 AM and 11 AM
         guard hour >= 5 && hour < 11 else { return false }
@@ -25,7 +24,7 @@ final class MorningCheckInManager {
         // Check if already completed today
         if let lastDateStr = UserDefaults.standard.string(forKey: lastCheckInKey),
            let lastDate = iso8601.date(from: lastDateStr) {
-            if cal.isDateInToday(lastDate) {
+            if Date.cal.isDateInToday(lastDate) {
                 return false
             }
         }
@@ -33,7 +32,7 @@ final class MorningCheckInManager {
         // Check if user explicitly dismissed today
         if let dismissedStr = UserDefaults.standard.string(forKey: dismissedDateKey),
            let dismissedDate = iso8601.date(from: dismissedStr) {
-            if cal.isDateInToday(dismissedDate) {
+            if Date.cal.isDateInToday(dismissedDate) {
                 return false
             }
         }
@@ -53,7 +52,7 @@ final class MorningCheckInManager {
         history.append(checkIn)
 
         // Prune to last 90 days
-        let cutoff = cal.date(byAdding: .day, value: -maxHistoryDays, to: Date()) ?? Date()
+        let cutoff = Date.cal.date(byAdding: .day, value: -maxHistoryDays, to: Date()) ?? Date()
         history = history.filter { $0.date > cutoff }
 
         if let data = try? jsonEncoder.encode(history) {
@@ -75,12 +74,12 @@ final class MorningCheckInManager {
 
     /// Get today's check-in if completed
     static func todaysCheckIn() -> MorningCheckIn? {
-        return loadHistory().first { cal.isDateInToday($0.date) }
+        return loadHistory().first { Date.cal.isDateInToday($0.date) }
     }
 
     /// Get average composite score over last N days
     static func recentAverageScore(days: Int = 7) -> Double? {
-        let cutoff = cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let cutoff = Date.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
         let recent = loadHistory().filter { $0.date > cutoff }
         guard !recent.isEmpty else { return nil }
         return recent.map(\.compositeScore).reduce(0, +) / Double(recent.count)

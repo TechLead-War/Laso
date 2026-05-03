@@ -539,43 +539,43 @@ final class HealthStateClassifier {
 
         // Pattern matching for common states
         if highHRV && longSleep && lowRHR {
-            return "Recovery"
+            return Copy.HealthStateTimeline.stateRecovery
         } else if highHRV && highActivity {
-            return "Peak Performance"
+            return Copy.HealthStateTimeline.statePeakPerformance
         } else if lowHRV && highRHR && shortSleep {
-            return "Stressed"
+            return Copy.HealthStateTimeline.stateStressed
         } else if shortSleep && !highActivity {
-            return "Under-Slept"
+            return Copy.HealthStateTimeline.stateUnderSlept
         } else if highActivity && !longSleep {
-            return "Active"
+            return Copy.HealthStateTimeline.stateActive
         } else if lowHRV && !highRHR {
-            return "Fatigued"
+            return Copy.HealthStateTimeline.stateFatigued
         } else if longSleep && !highActivity {
-            return "Resting"
+            return Copy.HealthStateTimeline.stateResting
         }
 
         // Deterministic fallback: derive a semantic name from the strongest
         // non-normal characteristic so users never see "State N" in the UI.
         let notable = characteristics.filter { $0.level != .normal }
         guard let dominant = notable.max(by: { abs($0.zScore) < abs($1.zScore) }) else {
-            return "Balanced"
+            return Copy.HealthStateTimeline.stateBalanced
         }
 
         switch (dominant.metric, dominant.level) {
         case (.heartRateVariability, .high), (.restingHeartRate, .low), (.vo2Max, .high):
-            return "Recovering"
+            return Copy.HealthStateTimeline.stateRecovering
         case (.heartRateVariability, .low), (.restingHeartRate, .high), (.sleepDeep, .low):
-            return "Strained"
+            return Copy.HealthStateTimeline.stateStrained
         case (.activeCalories, .low), (.steps, .low), (.vo2Max, .low):
-            return "Low Energy"
+            return Copy.HealthStateTimeline.stateLowEnergy
         case (.sleepDuration, .high), (.sleepDeep, .high):
-            return "Restful"
+            return Copy.HealthStateTimeline.stateRestful
         case (.activeCalories, .high), (.steps, .high):
-            return "Active"
+            return Copy.HealthStateTimeline.stateActive
         case (.sleepDuration, .low):
-            return "Under-Slept"
+            return Copy.HealthStateTimeline.stateUnderSlept
         default:
-            return "Balanced"
+            return Copy.HealthStateTimeline.stateBalanced
         }
     }
 
@@ -1087,7 +1087,7 @@ final class HealthStateClassifier {
         let toState = states.first { $0.label == toLabel }
 
         guard let fromState, let toState else {
-            return "Transition from \(fromLabel) to \(toLabel) not observed."
+            return Copy.HealthStateTimeline.transitionNotObserved(from: fromLabel, to: toLabel)
         }
 
         // Compute average duration in destination state from history

@@ -91,7 +91,7 @@ struct OnbV2Screen14Preview: View {
                         .frame(width: 16, height: 16)
 
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("DAY \(day.day)")
+                            Text(Copy.Onboarding.dayLabel(day.day))
                                 .font(.system(size: 11, weight: .semibold))
                                 .tracking(0.7)
                                 .foregroundStyle(OnbV2.blue)
@@ -354,7 +354,7 @@ struct OnbV2Screen16Paywall: View {
                                     Button {
                                         Task { @MainActor in await SubscriptionManager.shared.loadProducts() }
                                     } label: {
-                                        Text("Retry")
+                                        Text(Copy.Buttons.retry)
                                             .font(.system(size: 13, weight: .semibold))
                                             .foregroundStyle(OnbV2.blue)
                                     }

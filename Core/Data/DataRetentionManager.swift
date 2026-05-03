@@ -5,19 +5,16 @@ import SwiftData
 /// Runs at most once per calendar day to avoid redundant work.
 final class DataRetentionManager {
 
-    /// Pass 11 AF: cached calendar — `pruneIfNeeded` runs at every launch and
-    /// `cutoffDate` is called once per persistent type (9 calls per prune).
-    private static let cal: Calendar = Calendar.current
 
     // MARK: - Prune
 
     /// Delete rows older than their retention window. Skips if already ran today.
     func pruneIfNeeded(context: ModelContext) {
         let defaults = UserDefaults.standard
-        let today = Self.cal.startOfDay(for: Date())
+        let today = Date.cal.startOfDay(for: Date())
 
         if let last = defaults.object(forKey: AppKeys.Retention.lastPruneDate) as? Date,
-           Self.cal.isDate(last, inSameDayAs: today) {
+           Date.cal.isDate(last, inSameDayAs: today) {
             return
         }
 
@@ -59,7 +56,7 @@ final class DataRetentionManager {
 
     private func cutoffDate(olderThanDays days: Int) -> Date? {
         guard days > 0 else { return nil }
-        return Self.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        return Date.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
     }
 
     private func deleteAll<T: PersistentModel>(_ descriptor: FetchDescriptor<T>, context: ModelContext) -> Int {

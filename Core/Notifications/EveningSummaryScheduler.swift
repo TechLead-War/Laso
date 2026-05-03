@@ -20,7 +20,7 @@ struct EveningSummaryScheduler {
         let body = Copy.Notifications.eveningSummaryBody(strainLevel: strainLevel, score: score)
 
         var dateComponents = preferences.eveningSummaryTime
-        dateComponents.calendar = Calendar.current
+        dateComponents.calendar = Date.cal
 
         let trigger = UNCalendarNotificationTrigger(
             dateMatching: dateComponents,

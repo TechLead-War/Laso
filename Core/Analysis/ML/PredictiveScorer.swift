@@ -122,7 +122,7 @@ final class PredictiveScorer {
         let totalFeatures = orderedKeys.count + contextSize + 1
 
         // Build training data
-        let calendar = Calendar.current
+        let calendar = Date.cal
         var scoreLookup: [Date: Int] = [:]
         for entry in scoreHistory {
             scoreLookup[calendar.startOfDay(for: entry.date)] = entry.score
@@ -466,7 +466,7 @@ final class PredictiveScorer {
         guard !trees.isEmpty else { return nil }
 
         // Return cached prediction if it was computed today (tree walk is deterministic for same input)
-        let calendar = Calendar.current
+        let calendar = Date.cal
         if let cached = currentPrediction,
            let lastDate = lastPredictionDate,
            calendar.isDateInToday(lastDate) {

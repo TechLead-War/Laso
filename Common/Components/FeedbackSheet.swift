@@ -206,7 +206,7 @@ struct FeedbackSheet: View {
                         ProgressView()
                             .frame(maxWidth: .infinity)
                             .frame(height: 44)
-                            .accessibilityLabel("Sending feedback")
+                            .accessibilityLabel(Copy.Common.sendingFeedback)
                     } else {
                         Text(submitButtonTitle)
                             .font(.headline)

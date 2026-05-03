@@ -43,4 +43,11 @@ extension Array where Element == MetricSample {
         guard !isEmpty else { return 0 }
         return map(\.value).reduce(0, +) / Double(count)
     }
+
+    /// Mean of the last `n` sample values without materializing an intermediate array.
+    /// Returns 0 if the array is empty or `n` is non-positive.
+    func tailMean(_ n: Int) -> Double {
+        guard n > 0, !isEmpty else { return 0 }
+        return suffix(n).mean(of: \.value)
+    }
 }

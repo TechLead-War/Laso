@@ -128,10 +128,10 @@ struct DiscoveryEngine {
             let formattedDiff = pair.effect.formatValue(absDiff)
             let direction = directionWord(for: pair.effect, diff: diff)
 
-            let headline = "Your \(pair.effect.displayName.lowercased()) \(direction) by \(formattedDiff) \(effectUnit) when \(pair.thresholdLabel)"
+            let headline = Copy.Discovery.conditionalHeadline(effect: pair.effect.displayName.lowercased(), direction: direction, diff: formattedDiff, unit: effectUnit, thresholdLabel: pair.thresholdLabel)
             let detail = detailText(effect: pair.effect, aboveMean: aboveMean, belowMean: belowMean, diff: diff)
             let months = max(1, totalPairs / 30)
-            let evidence = "Based on \(totalPairs) days over \(months) month\(months == 1 ? "" : "s")"
+            let evidence = Copy.Discovery.evidenceMonths(days: totalPairs, months: months)
 
             discoveries.append(Discovery(
                 headline: headline,
@@ -242,13 +242,13 @@ struct DiscoveryEngine {
             let diffFormatted = ladder.effect.formatValue(abs(best.diff))
             let direction = directionWord(for: ladder.effect, diff: best.diff)
 
-            let headline = "The magic number is \(causeFormatted) \(ladder.metric.unit). Your \(ladder.effect.displayName.lowercased()) \(direction) by \(diffFormatted) \(ladder.effect.unit) past that point"
+            let headline = Copy.Discovery.ladderHeadline(causeFormatted: causeFormatted, causeUnit: ladder.metric.unit, effect: ladder.effect.displayName.lowercased(), direction: direction, diff: diffFormatted, effectUnit: ladder.effect.unit)
             let months = max(1, totalDays / 30)
-            let evidence = "Based on \(totalDays) days over \(months) month\(months == 1 ? "" : "s")"
+            let evidence = Copy.Discovery.evidenceMonths(days: totalDays, months: months)
 
             discoveries.append(Discovery(
                 headline: headline,
-                detail: "Below \(causeFormatted) \(ladder.metric.unit), your \(ladder.effect.displayName.lowercased()) stays flat. Above it, there's a clear jump.",
+                detail: Copy.Discovery.ladderDetail(causeFormatted: causeFormatted, causeUnit: ladder.metric.unit, effect: ladder.effect.displayName.lowercased()),
                 evidence: evidence,
                 metrics: [ladder.metric, ladder.effect],
                 type: .thresholdEffect,
@@ -305,11 +305,11 @@ struct DiscoveryEngine {
 
             let headline = "\(topDayName) is your \(label) \(metric.displayName.lowercased()) day. \(formattedDiff) \(metric.unit) \(isHigherBetter ? "more" : "lower") than \(botDayName)"
             let months = max(1, totalSamples / 30)
-            let evidence = "Based on \(totalSamples) data points over \(months) month\(months == 1 ? "" : "s")"
+            let evidence = Copy.Discovery.evidenceMonths(days: totalSamples, months: months)
 
             discoveries.append(Discovery(
                 headline: headline,
-                detail: "Your weekly pattern is consistent. \(topDayName)s tend to be your strongest day for \(metric.displayName.lowercased()).",
+                detail: Copy.Discovery.consistentDayDetail(topDayName: topDayName, metric: metric.displayName.lowercased()),
                 evidence: evidence,
                 metrics: [metric],
                 type: .dayOfWeekPattern,
@@ -347,13 +347,13 @@ struct DiscoveryEngine {
                 absoluteDetail = ". That is \(formatted) \(metric.unit) total"
             }
 
-            let headline = "Your \(metric.displayName.lowercased()) has quietly \(direction) \(String(format: "%.0f", abs(changePercent)))% over the \(periodLabel)"
+            let headline = Copy.Discovery.quietShiftHeadline(metric: metric.displayName.lowercased(), direction: direction, percent: String(format: "%.0f", abs(changePercent)), periodLabel: periodLabel)
             let impactScore = min(abs(changePercent) * 1.2, 100)
-            let evidence = "Based on \(context.totalDataPoints) data points over \(periodLabel)"
+            let evidence = Copy.Discovery.evidenceDataPoints(samples: context.totalDataPoints, periodLabel: periodLabel)
 
             discoveries.append(Discovery(
                 headline: headline,
-                detail: "This is a gradual shift you might not notice day to day\(absoluteDetail).",
+                detail: Copy.Discovery.quietShiftDetail(absoluteDetail: absoluteDetail),
                 evidence: evidence,
                 metrics: [metric],
                 type: .longTermTrend,
@@ -383,16 +383,16 @@ struct DiscoveryEngine {
             let isGood = isHigh == metric.higherIsBetter
             let bracket = isHigh ? "top 5%" : "bottom 5%"
 
-            let headline = "Your \(metric.displayName.lowercased()) this month is in your \(bracket) of all time"
+            let headline = Copy.Discovery.bracketHeadline(metric: metric.displayName.lowercased(), bracket: bracket)
             let impactScore = min(abs(percentile - 50) * 1.5, 100)
             let periodLabel = "the past year"
-            let evidence = "Based on \(context.totalDataPoints) data points across \(periodLabel)"
+            let evidence = Copy.Discovery.evidenceDataPoints(samples: context.totalDataPoints, periodLabel: periodLabel)
 
             discoveries.append(Discovery(
                 headline: headline,
                 detail: isGood
-                    ? "This is an exceptional period for your \(metric.displayName.lowercased()). Keep doing what you're doing."
-                    : "Your \(metric.displayName.lowercased()) is at an unusual level. Worth paying attention to.",
+                    ? Copy.Discovery.bracketDetailExceptional(metric: metric.displayName.lowercased())
+                    : Copy.Discovery.bracketDetailUnusual(metric: metric.displayName.lowercased()),
                 evidence: evidence,
                 metrics: [metric],
                 type: .personalExtreme,
@@ -494,13 +494,13 @@ struct DiscoveryEngine {
             let formattedPercent = String(format: "%.0f", percentDiff)
             let direction = directionWord(for: compound.outcome, diff: diff)
 
-            let headline = "When you \(compound.conditionA.label) AND \(compound.conditionB.label), your \(compound.outcome.displayName.lowercased()) is \(formattedPercent)% \(direction)"
+            let headline = Copy.Discovery.compoundHeadline(condA: compound.conditionA.label, condB: compound.conditionB.label, outcome: compound.outcome.displayName.lowercased(), percent: formattedPercent, direction: direction)
             let months = max(1, totalDays / 30)
-            let evidence = "Based on \(totalDays) days over \(months) month\(months == 1 ? "" : "s")"
+            let evidence = Copy.Discovery.evidenceMonths(days: totalDays, months: months)
 
             discoveries.append(Discovery(
                 headline: headline,
-                detail: "The combination matters more than either habit alone. On days you do both, \(compound.outcome.displayName.lowercased()) averages \(compound.outcome.formatValue(bothMean)) \(compound.outcome.unit) vs \(compound.outcome.formatValue(neitherMean)) \(compound.outcome.unit).",
+                detail: Copy.Discovery.compoundDetail(outcome: compound.outcome.displayName.lowercased(), bothFormatted: compound.outcome.formatValue(bothMean), neitherFormatted: compound.outcome.formatValue(neitherMean), unit: compound.outcome.unit),
                 evidence: evidence,
                 metrics: [compound.conditionA.metric, compound.conditionB.metric, compound.outcome],
                 type: .compoundPattern,
@@ -528,6 +528,6 @@ struct DiscoveryEngine {
     private static func detailText(effect: HealthMetric, aboveMean: Double, belowMean: Double, diff: Double) -> String {
         let aboveFormatted = effect.formatValue(aboveMean)
         let belowFormatted = effect.formatValue(belowMean)
-        return "Average \(effect.displayName.lowercased()): \(aboveFormatted) \(effect.unit) (with) vs \(belowFormatted) \(effect.unit) (without)."
+        return Copy.Discovery.averageEffectDetail(effect: effect.displayName.lowercased(), aboveFormatted: aboveFormatted, belowFormatted: belowFormatted, unit: effect.unit)
     }
 }

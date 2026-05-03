@@ -58,7 +58,7 @@ final class AdherenceTracker {
         baselines: [HealthMetric: UserBaseline],
         scoreHistory: [(date: Date, score: Int)]
     ) {
-        let calendar = Calendar.current
+        let calendar = Date.cal
 
         for record in pendingRecords {
             guard record.isReadyForEvaluation,

@@ -104,7 +104,7 @@ struct DiscoveryView: View {
             }
 
             VStack(spacing: DS.itemSpacing) {
-                Text("We analyzed your health history")
+                Text(Copy.Discovery.analyzedHistory)
                     .font(DS.Typography.title3)
                     .multilineTextAlignment(.center)
 
@@ -117,7 +117,7 @@ struct DiscoveryView: View {
                 .padding(.top, DS.space2)
             }
 
-            Text("Here is what we found")
+            Text(Copy.Discovery.hereWhatWeFound)
                 .font(DS.Typography.headline)
                 .foregroundStyle(AppColour.primary)
                 .padding(.top, DS.space2)
@@ -127,7 +127,7 @@ struct DiscoveryView: View {
                 Image(systemName: "chevron.right")
                     .font(DS.Typography.caption2Semibold)
                     .foregroundStyle(AppColour.textTertiary)
-                Text("Swipe to explore")
+                Text(Copy.Discovery.swipeToExplore)
                     .font(DS.Typography.caption)
                     .foregroundStyle(AppColour.textTertiary)
             }
@@ -208,10 +208,10 @@ struct DiscoveryView: View {
             }
 
             VStack(spacing: DS.space2) {
-                Text("Your Dashboard is Ready")
+                Text(Copy.Discovery.ctaTitle)
                     .font(DS.Typography.title3)
 
-                Text("Track these patterns and more. Updated every time you open the app.")
+                Text(Copy.Discovery.ctaSubtitle)
                     .font(DS.Typography.subheadline)
                     .foregroundStyle(AppColour.textSecondary)
                     .multilineTextAlignment(.center)
@@ -234,10 +234,10 @@ struct DiscoveryView: View {
                 )
                 onDismiss()
             } label: {
-                Text("Continue")
+                Text(Copy.Buttons.continueButton)
             }
             .buttonStyle(.dsPrimary)
-            .accessibilityLabel("Continue to dashboard")
+            .accessibilityLabel(Copy.Discovery.continueToDashboard)
             .accessibilityHint("Closes discovery and opens your dashboard")
             .padding(.horizontal, DS.space6)
 
