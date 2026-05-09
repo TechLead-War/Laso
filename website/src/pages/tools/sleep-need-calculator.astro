@@ -93,9 +93,8 @@ const jsonLd = [
         <div>
           <label for="calc-goal" class="block text-[14px] font-semibold text-[#1d1d1f] mb-2">Goal</label>
           <select id="calc-goal" class="w-full border border-[#d2d2d7] rounded-xl px-4 py-3 text-[15px] text-[#1d1d1f] bg-white focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:border-transparent">
-            <option value="0.5">Peak performance</option>
-            <option value="0" selected>Solid performance</option>
-            <option value="-0.5">Get by</option>
+            <option value="0.5">Peak performance (athletic, cognitive)</option>
+            <option value="0" selected>Everyday well being</option>
           </select>
         </div>
 
@@ -128,11 +127,12 @@ const jsonLd = [
     <!-- How this works -->
     <section class="mb-10">
       <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">How this calculator works</h2>
-      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">This calculator starts with the National Sleep Foundation's age based guidelines for recommended sleep duration. It then adjusts for two additional factors:</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">This calculator starts with the midpoint of the National Sleep Foundation 2015 age based guidelines (Hirshkowitz et al., Sleep Health journal). It then adjusts for two factors, with the result always kept inside the official recommended range for your age:</p>
       <ul class="list-disc pl-6 space-y-2 text-[15px] text-[#1d1d1f] leading-relaxed mb-3">
-        <li><strong>Activity level:</strong> Physical activity increases your body's need for recovery sleep. More active individuals generally need more sleep for adequate muscle repair, glycogen replenishment, and nervous system recovery.</li>
-        <li><strong>Performance goal:</strong> If you are optimizing for peak performance in athletics or cognitively demanding work, the research supports sleeping at the higher end of recommended ranges. If you simply need to function well, the midpoint is sufficient.</li>
+        <li><strong>Activity level:</strong> Physical activity raises the need for recovery sleep. Athletic populations consistently report sleeping toward the higher end of the recommended range.</li>
+        <li><strong>Performance goal:</strong> If you train hard or do cognitively demanding work, sleeping at the upper end of the range supports better recovery and performance.</li>
       </ul>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">The result is always capped at the upper end of the NSF range for your age, so it never recommends more sleep than the official guideline.</p>
       <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">The deficit and weekly debt calculations show the gap between your estimated need and what you currently average. Sleep debt accumulates over time and affects cognitive performance, recovery, immune function, and mood.</p>
       <p class="text-[14px] text-[#6e6e73] leading-relaxed">Note: This calculator provides a general estimate. Individual sleep needs vary based on genetics, health conditions, stress levels, and other factors that a population based formula cannot capture.</p>
     </section>
@@ -172,13 +172,23 @@ const jsonLd = [
   var form = document.getElementById('sleep-calc-form');
   var resultEl = document.getElementById('sleep-result');
 
+  // Base sleep need by age, midpoint of National Sleep Foundation 2015 ranges.
   function getBaseNeed(age) {
-    if (age <= 5) return 11;
-    if (age <= 13) return 10;
-    if (age <= 17) return 9;
-    if (age <= 25) return 8.25;
-    if (age <= 64) return 8;
-    return 7.5;
+    if (age <= 5) return 11;   // 3-5y range 10-13
+    if (age <= 13) return 10;  // 6-13y range 9-11
+    if (age <= 17) return 9;   // 14-17y range 8-10
+    if (age <= 64) return 8;   // 18-64y range 7-9
+    return 7.5;                // 65+ range 7-8
+  }
+
+  // NSF upper bound by age, used to cap activity + goal adjustments
+  // so the result never exceeds the recommended range.
+  function getUpperBound(age) {
+    if (age <= 5) return 13;
+    if (age <= 13) return 11;
+    if (age <= 17) return 10;
+    if (age <= 64) return 9;
+    return 8;
   }
 
   function formatHours(h) {
@@ -231,7 +241,10 @@ const jsonLd = [
     if (isNaN(age) || isNaN(currentSleep)) return;
 
     var baseNeed = getBaseNeed(age);
+    var upperBound = getUpperBound(age);
     var totalNeed = baseNeed + activityAdj + goalAdj;
+    // Clamp to the NSF recommended range so the result stays evidence based.
+    totalNeed = Math.max(baseNeed, Math.min(upperBound, totalNeed));
     totalNeed = Math.round(totalNeed * 4) / 4;
 
     var deficit = Math.max(0, totalNeed - currentSleep);

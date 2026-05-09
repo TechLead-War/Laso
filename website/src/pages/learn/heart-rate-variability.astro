@@ -32,7 +32,7 @@ const jsonLd = [
         "name": "What is a good HRV for my age?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "HRV varies widely between individuals. As a rough guide, RMSSD values for adults in their 20s average 55-105 ms, declining to 20-55 ms for those over 60. However, your personal baseline matters far more than population averages."
+          "text": "HRV varies widely between individuals. As a rough guide, short term HRV values (SDNN or RMSSD, in milliseconds) for adults in their 20s average roughly 55 to 105 ms, declining to about 20 to 55 ms for those over 60. Your personal baseline matters far more than population averages."
         }
       },
       {
@@ -78,9 +78,10 @@ const jsonLd = [
       <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">HRV is controlled by your autonomic nervous system (ANS), which manages involuntary body functions like breathing, digestion, and heart rate. The two branches of the ANS, the sympathetic (fight or flight) and parasympathetic (rest and digest) nervous systems, constantly interact to adjust your heart rhythm.</p>
       <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">HRV is most commonly measured using two metrics:</p>
       <ul class="list-disc pl-6 space-y-2 text-[15px] text-[#1d1d1f] leading-relaxed mb-3">
-        <li><strong>RMSSD</strong> (root mean square of successive differences) measures short term variability and is the standard used by most wearables including Apple Watch.</li>
-        <li><strong>SDNN</strong> (standard deviation of normal-to-normal intervals) captures overall variability and is common in clinical settings.</li>
+        <li><strong>SDNN</strong> (standard deviation of normal-to-normal intervals) captures overall variability and is what Apple Watch and Apple Health report.</li>
+        <li><strong>RMSSD</strong> (root mean square of successive differences) emphasises short term beat to beat variability and is used by Whoop, Oura, Garmin and most other wearables, as well as much HRV research.</li>
       </ul>
+      <p class="text-[14px] text-[#6e6e73] leading-relaxed mb-3">In short resting recordings (the kind your watch captures), SDNN and RMSSD values are similar in size, so general reference ranges apply to both.</p>
       <p class="text-[15px] text-[#1d1d1f] leading-relaxed">Higher HRV generally indicates that your body can adapt efficiently to stress and recover quickly. Lower HRV often reflects fatigue, illness, or elevated stress.</p>
     </section>
 
@@ -100,13 +101,13 @@ const jsonLd = [
     <!-- Normal HRV ranges -->
     <section class="mb-10">
       <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">Normal HRV ranges by age</h2>
-      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-4">HRV naturally declines with age. The table below shows approximate RMSSD ranges for healthy adults. These are population level estimates and should be treated as a rough reference, not a diagnostic tool.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-4">HRV naturally declines with age. The table below shows approximate short term HRV ranges (SDNN or RMSSD, in ms) for healthy adults. These are population level estimates and should be treated as a rough reference, not a diagnostic tool.</p>
       <div class="overflow-x-auto mb-4">
         <table class="w-full text-[14px] text-left border-collapse">
           <thead>
             <tr class="border-b border-[#e5e5e7]">
               <th class="py-3 pr-4 font-semibold text-[#1d1d1f]">Age group</th>
-              <th class="py-3 pr-4 font-semibold text-[#1d1d1f]">RMSSD range (ms)</th>
+              <th class="py-3 pr-4 font-semibold text-[#1d1d1f]">Typical range (ms)</th>
             </tr>
           </thead>
           <tbody class="text-[#424245]">
@@ -160,7 +161,7 @@ const jsonLd = [
     <section class="mb-10">
       <h2 class="text-xl md:text-2xl font-semibold text-[#1d1d1f] mb-4">How wearables measure HRV</h2>
       <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Apple Watch and other consumer wearables estimate HRV using optical heart rate sensors (photoplethysmography, or PPG). These sensors shine green LED light into your wrist and measure changes in blood volume to detect each heartbeat, then calculate the variation between beats.</p>
-      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Apple Watch records HRV automatically during sleep and at periodic intervals throughout the day. The reading shown in the Apple Health app is an RMSSD value measured during a brief sampling window. For the most consistent and meaningful data, sleep-time and morning measurements are preferred because daytime HRV is heavily influenced by movement, posture changes, and emotional state.</p>
+      <p class="text-[15px] text-[#1d1d1f] leading-relaxed mb-3">Apple Watch records HRV automatically during sleep and at periodic intervals throughout the day. The reading shown in the Apple Health app is an SDNN value measured during a brief sampling window of about 60 seconds. Most other wearables (Whoop, Oura, Garmin) report RMSSD instead. In short resting recordings the two metrics are similar in magnitude. For the most consistent and meaningful data, sleep-time and morning measurements are preferred because daytime HRV is heavily influenced by movement, posture changes, and emotional state.</p>
       <p class="text-[15px] text-[#1d1d1f] leading-relaxed">Wrist-based optical sensors are less precise than medical-grade chest strap electrocardiograms (ECGs), but research has shown they are reliable enough for tracking personal trends over time, which is what matters most for practical use.</p>
     </section>
 

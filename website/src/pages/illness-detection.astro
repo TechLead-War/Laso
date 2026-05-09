@@ -14,7 +14,7 @@ const jsonLd = {
       "name": "How does Laso detect illness early?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Laso monitors six key health metrics from your wearable: HRV, resting heart rate, sleep patterns, respiratory rate, body temperature trends, and activity levels. When multiple metrics deviate from your personal baselines at the same time, Laso flags that your body may be under stress from illness, overtraining, or burnout. This multi-metric approach catches subtle shifts that single-metric tools miss."
+        "text": "Laso monitors six key health metrics from your wearable: HRV, resting heart rate, sleep patterns, respiratory rate, body temperature trends, and activity levels. When multiple metrics deviate from your personal baselines at the same time, Laso flags that your body may be under stress from illness, overtraining, or chronic stress accumulation. This multi-metric approach catches subtle shifts that single-metric tools miss."
       }
     },
     {
@@ -38,7 +38,7 @@ const jsonLd = {
       "name": "What are the 6 wellness signals Laso tracks?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "The six wellness signals are: fatigue patterns from sustained low recovery, burnout indicators from chronic stress accumulation, overtraining markers from excessive strain without adequate rest, insomnia risk from degraded sleep metrics, recovery dips from unexplained drops in readiness, and inactivity patterns from sudden changes in movement behavior. Together, these form a comprehensive picture of your body's wellness state."
+        "text": "The six wellness signals are: fatigue patterns from sustained low recovery, chronic stress load from elevated stress accumulation over weeks, overtraining markers from excessive strain without adequate rest, sleep disturbance pattern from degraded sleep metrics, recovery dips from unexplained drops in readiness, and inactivity patterns from sudden changes in movement behavior. These are wellness signals from your wearable data, not clinical diagnoses."
       }
     }
   ]
@@ -113,16 +113,16 @@ const jsonLd = {
               <p class="mt-2 text-[14px] text-[#6e6e73] leading-relaxed">Sustained low recovery scores across multiple days, indicating your body is not bouncing back from daily demands.</p>
             </div>
             <div class="bg-white rounded-2xl p-6 border border-black/[0.06]">
-              <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Burnout</h3>
-              <p class="mt-2 text-[14px] text-[#6e6e73] leading-relaxed">Chronic stress accumulation over weeks, where elevated stress scores become the norm rather than the exception.</p>
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Chronic stress load</h3>
+              <p class="mt-2 text-[14px] text-[#6e6e73] leading-relaxed">Elevated stress scores sustained over weeks, where high stress has become the norm rather than the exception. A wellness signal, not a diagnosis of burnout.</p>
             </div>
             <div class="bg-white rounded-2xl p-6 border border-black/[0.06]">
               <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Overtraining</h3>
               <p class="mt-2 text-[14px] text-[#6e6e73] leading-relaxed">Excessive strain load without adequate recovery windows. Laso spots when your training volume outpaces your body's ability to adapt.</p>
             </div>
             <div class="bg-white rounded-2xl p-6 border border-black/[0.06]">
-              <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Insomnia risk</h3>
-              <p class="mt-2 text-[14px] text-[#6e6e73] leading-relaxed">Degraded sleep efficiency, longer time to fall asleep, and increased wakefulness that may indicate developing sleep problems.</p>
+              <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Sleep disturbance pattern</h3>
+              <p class="mt-2 text-[14px] text-[#6e6e73] leading-relaxed">Lower sleep efficiency, longer time to fall asleep, and increased wakefulness across consecutive nights. A signal worth watching, not a clinical sleep diagnosis.</p>
             </div>
             <div class="bg-white rounded-2xl p-6 border border-black/[0.06]">
               <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Recovery dips</h3>
@@ -201,6 +201,15 @@ const jsonLd = {
 
       <!-- CTA -->
       <CtaSection heading="Catch what you cannot feel yet." subheading="Your wearable data holds clues. Laso connects them for you." />
+
+      <!-- Medical disclaimer -->
+      <section class="px-5 py-8">
+        <div class="max-w-3xl mx-auto bg-amber-50 border border-amber-200 rounded-xl p-5">
+          <p class="text-[13px] text-amber-800 leading-relaxed">
+            <strong>Not medical advice and not a diagnostic tool.</strong> Laso is a personal wellness tool, not a medical device. Wellness signals from your wearable data cannot diagnose illness, infection, burnout, insomnia, or any clinical condition. If you feel unwell or notice persistent changes, please consult a qualified healthcare professional. In a medical emergency, call your local emergency number.
+          </p>
+        </div>
+      </section>
     </main>
 
     <SiteFooter />

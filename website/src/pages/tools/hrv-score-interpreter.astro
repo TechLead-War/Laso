@@ -29,7 +29,7 @@ const jsonLd = [
         "name": "What is a good HRV score?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "A good HRV score depends on your age, gender, and fitness level. For adults in their 30s, an RMSSD above 45 to 50 ms is generally considered above average. However, individual baselines vary enormously, and your personal trend matters far more than any single number or population comparison."
+          "text": "A good HRV score depends on your age, sex, and fitness level. For adults in their 30s, an HRV reading above about 45 to 50 ms (whether reported as SDNN or RMSSD from a short term recording) is generally considered above average. Individual baselines vary widely, so your own trend matters far more than any single number or population comparison."
         }
       },
       {
@@ -87,19 +87,21 @@ const jsonLd = [
         </div>
 
         <div>
-          <label for="hrv-gender" class="block text-[14px] font-semibold text-[#1d1d1f] mb-2">Gender</label>
+          <label for="hrv-gender" class="block text-[14px] font-semibold text-[#1d1d1f] mb-2">Sex (for reference comparison)</label>
           <select id="hrv-gender" class="w-full border border-[#d2d2d7] rounded-xl px-4 py-3 text-[15px] text-[#1d1d1f] bg-white focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:border-transparent">
             <option value="male">Male</option>
             <option value="female">Female</option>
+            <option value="combined">Prefer not to say (combined range)</option>
           </select>
         </div>
 
         <div>
           <label for="hrv-type" class="block text-[14px] font-semibold text-[#1d1d1f] mb-2">Measurement type</label>
           <select id="hrv-type" class="w-full border border-[#d2d2d7] rounded-xl px-4 py-3 text-[15px] text-[#1d1d1f] bg-white focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:border-transparent">
-            <option value="rmssd">RMSSD (most wearables, Apple Watch)</option>
-            <option value="sdnn">SDNN (clinical, some Garmin devices)</option>
+            <option value="sdnn" selected>SDNN (Apple Watch, Apple Health, clinical)</option>
+            <option value="rmssd">RMSSD (Whoop, Oura, Garmin, most other wearables)</option>
           </select>
+          <p class="mt-2 text-[12px] text-[#6e6e73]">Apple Health stores HRV as SDNN. Most other wearables report RMSSD. In short resting readings the two are similar in magnitude, so the same reference range is used for both.</p>
         </div>
 
         <button type="submit" class="w-full bg-[#1d1d1f] text-white font-medium rounded-full px-7 py-3.5 text-[15px] hover:bg-black transition-colors">
@@ -190,9 +192,13 @@ const jsonLd = [
   var form = document.getElementById('hrv-form');
   var resultEl = document.getElementById('hrv-result');
 
-  // RMSSD reference data by age group: [p25, p50, p75] for male and female
-  // Based on aggregated published data (Nunan et al., van den Berg et al.)
-  var rmssdRanges = {
+  // Reference ranges by age group: [low, typical median, high] in ms.
+  // Short term resting recordings, approximated from Nunan et al. 2010
+  // (Annals of Noninvasive Electrocardiology) and van den Berg et al. 2018
+  // population data. In short resting recordings short term SDNN and RMSSD
+  // are close in magnitude, so the same range is used for both.
+  // These are general references, not diagnostic cutoffs.
+  var hrvRanges = {
     male: {
       20: [42, 62, 90],
       25: [38, 58, 85],
@@ -220,11 +226,22 @@ const jsonLd = [
       65: [13, 21, 34],
       70: [11, 19, 30],
       80: [9, 16, 26]
+    },
+    combined: {
+      20: [41, 60, 87],
+      25: [37, 56, 82],
+      30: [33, 50, 75],
+      35: [29, 44, 67],
+      40: [25, 39, 60],
+      45: [22, 35, 54],
+      50: [19, 31, 48],
+      55: [17, 27, 43],
+      60: [15, 24, 39],
+      65: [13, 21, 35],
+      70: [11, 19, 31],
+      80: [9, 16, 27]
     }
   };
-
-  // SDNN ranges are typically ~1.5x RMSSD ranges in resting conditions
-  var sdnnMultiplier = 1.5;
 
   function interpolateRange(ranges, age) {
     var keys = Object.keys(ranges).map(Number).sort(function(a,b){return a-b;});
@@ -252,12 +269,15 @@ const jsonLd = [
   }
 
   function classify(value, range) {
-    // range = [p25, p50, p75]
-    if (value < range[0]) return { label: 'Below average', pct: Math.max(5, Math.round((value / range[0]) * 25)), color: 'text-orange-600' };
-    if (value < range[1]) return { label: 'Average', pct: 25 + Math.round(((value - range[0]) / (range[1] - range[0])) * 25), color: 'text-yellow-600' };
-    if (value < range[2]) return { label: 'Above average', pct: 50 + Math.round(((value - range[1]) / (range[2] - range[1])) * 25), color: 'text-green-600' };
+    // range = [low, median, high] (approximate quartile-style anchors)
+    // We position the marker on a 0-100 scale for the visual bar only.
+    // We do NOT call this a percentile, because real HRV percentile curves
+    // are non-linear and would mislead users.
+    if (value < range[0]) return { label: 'Below average', pos: Math.max(5, Math.round((value / range[0]) * 25)), color: 'text-orange-600' };
+    if (value < range[1]) return { label: 'Average', pos: 25 + Math.round(((value - range[0]) / (range[1] - range[0])) * 25), color: 'text-yellow-600' };
+    if (value < range[2]) return { label: 'Above average', pos: 50 + Math.round(((value - range[1]) / (range[2] - range[1])) * 25), color: 'text-green-600' };
     var extra = Math.min(20, Math.round(((value - range[2]) / range[2]) * 40));
-    return { label: 'Excellent', pct: Math.min(95, 75 + extra), color: 'text-emerald-600' };
+    return { label: 'Excellent', pos: Math.min(95, 75 + extra), color: 'text-emerald-600' };
   }
 
   function getContext(classification, age) {
@@ -283,13 +303,12 @@ const jsonLd = [
 
     if (isNaN(hrv) || isNaN(age)) return;
 
-    var genderRanges = rmssdRanges[gender] || rmssdRanges.male;
-    var range = interpolateRange(genderRanges, age);
+    var sexRanges = hrvRanges[gender] || hrvRanges.combined;
+    var range = interpolateRange(sexRanges, age);
 
-    // If SDNN, scale the ranges up
-    if (type === 'sdnn') {
-      range = range.map(function(v) { return v * sdnnMultiplier; });
-    }
+    // Short term SDNN and RMSSD are close in magnitude in resting recordings,
+    // so we apply the same reference range to both. Long term (24 hour) SDNN
+    // would be larger, but consumer wearables report short term values.
 
     var result = classify(hrv, range);
     var context = getContext(result, age);
@@ -297,23 +316,19 @@ const jsonLd = [
     document.getElementById('hrv-classification').textContent = result.label;
     document.getElementById('hrv-classification').className = 'text-2xl font-bold mb-1 ' + result.color;
 
-    var pctText = 'Approximately ' + result.pct + getSuffix(result.pct) + ' percentile for ' + gender + 's age ' + Math.round(age);
-    document.getElementById('hrv-percentile').textContent = pctText;
+    var sexLabel = gender === 'combined' ? 'adults' : (gender === 'male' ? 'males' : 'females');
+    var rangeText = 'Typical range for ' + sexLabel + ' age ' + Math.round(age) + ': ' +
+      Math.round(range[0]) + ' to ' + Math.round(range[2]) + ' ms (median ' + Math.round(range[1]) + ' ms)';
+    document.getElementById('hrv-percentile').textContent = rangeText;
 
-    // Position marker
-    var markerPct = Math.max(2, Math.min(98, result.pct));
-    document.getElementById('hrv-marker').style.left = markerPct + '%';
+    // Position marker on the visual bar (not a real percentile)
+    var markerPos = Math.max(2, Math.min(98, result.pos));
+    document.getElementById('hrv-marker').style.left = markerPos + '%';
 
     document.getElementById('hrv-context').textContent = context;
 
     resultEl.classList.remove('hidden');
     resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
-
-  function getSuffix(n) {
-    var s = ['th','st','nd','rd'];
-    var v = n % 100;
-    return s[(v - 20) % 10] || s[v] || s[0];
-  }
 })();
 </script>

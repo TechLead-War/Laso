@@ -46,7 +46,7 @@ const jsonLd = [
         "name": "What 9 metrics go into Vitality Age?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Laso computes Vitality Age from nine health indicators: VO2 Max (cardiorespiratory fitness), heart rate variability (nervous system resilience), resting heart rate (cardiovascular efficiency), sleep efficiency (percentage of time in bed spent asleep), deep sleep percentage (restorative sleep quality), walking speed (functional mobility), daily steps (overall activity), exercise minutes (intentional physical activity), and body composition (lean mass to fat ratio)."
+          "text": "Laso computes Vitality Age from nine health indicators: VO2 Max (cardiorespiratory fitness), heart rate variability (nervous system resilience), resting heart rate (cardiovascular efficiency), sleep efficiency (percentage of time in bed spent asleep), deep sleep percentage (restorative sleep quality), walking speed (functional mobility), daily steps (overall activity), exercise minutes (intentional physical activity), and body composition (body fat percentage, or BMI when body fat is not available)."
         }
       },
       {
@@ -54,7 +54,7 @@ const jsonLd = [
         "name": "How is Vitality Age different from biological age tests?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Traditional biological age tests use blood biomarkers or DNA methylation and cost hundreds of dollars per test. They give you a snapshot a few times per year at best. Vitality Age updates every single day using data your wearable already collects, so you can see the impact of lifestyle changes in weeks rather than waiting months for your next lab draw. It measures functional fitness markers rather than molecular markers."
+          "text": "Vitality Age is a fitness age estimate, not a clinical biological age. Traditional biological age tests use blood biomarkers or DNA methylation (epigenetic clocks like PhenoAge or GrimAge), cost hundreds of dollars per test, and give you a snapshot a few times per year at best. Vitality Age updates every single day using data your wearable already collects, so you can see the impact of lifestyle changes in weeks rather than waiting months for your next lab draw. It measures functional fitness markers rather than molecular markers, and is meant to complement, not replace, lab based testing."
         }
       },
       {
@@ -139,7 +139,7 @@ const jsonLd = [
           </div>
           <div>
             <h3 class="text-[15px] font-semibold text-[#1d1d1f]">Body composition</h3>
-            <p class="mt-1 text-[14px] text-[#6e6e73] leading-relaxed">The ratio of lean mass to body fat. A healthy body composition supports better metabolic health, joint function, and hormonal balance. Laso uses available measurements from Apple Health to factor this into your overall score.</p>
+            <p class="mt-1 text-[14px] text-[#6e6e73] leading-relaxed">Body fat percentage when available from Apple Health, or BMI as a fallback. Healthier body composition supports better metabolic health, joint function, and hormonal balance.</p>
           </div>
         </div>
       </div>
@@ -209,19 +209,19 @@ const jsonLd = [
           <div>
             <h3 class="text-[17px] font-semibold text-[#1d1d1f]">What is Vitality Age?</h3>
             <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
-              Vitality Age is Laso's daily fitness age estimate. It compares your current health metrics against population-level data to determine how old your body is performing relative to your actual age. If you are 35 but your metrics match a typical healthy 29 year old, your Vitality Age would be 29. It updates every day using data from your wearable, with no lab tests needed.
+              Vitality Age is Laso's daily fitness age estimate. It compares your current health metrics against population-level data to estimate how old your body is performing relative to your actual age. If you are 35 but your metrics match a typical healthy 29 year old, your Vitality Age would be around 29. It updates every day using data from your wearable, with no lab tests needed. It is a fitness age estimate, not a clinical biological age test.
             </p>
           </div>
           <div>
             <h3 class="text-[17px] font-semibold text-[#1d1d1f]">What 9 metrics go into Vitality Age?</h3>
             <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
-              Laso computes Vitality Age from VO2 Max, heart rate variability, resting heart rate, sleep efficiency, deep sleep percentage, walking speed, daily steps, exercise minutes, and body composition. Each is weighted by how strongly it correlates with long-term health outcomes, and together they capture cardiovascular, sleep, mobility, and body health.
+              Laso computes Vitality Age from VO2 Max, heart rate variability, resting heart rate, sleep efficiency, deep sleep percentage, walking speed, daily steps, exercise minutes, and body composition (body fat percentage, or BMI when not available). Each is weighted by how strongly it correlates with long-term health outcomes, and together they capture cardiovascular, sleep, mobility, and body health.
             </p>
           </div>
           <div>
             <h3 class="text-[17px] font-semibold text-[#1d1d1f]">How is Vitality Age different from biological age tests?</h3>
             <p class="mt-2 text-[15px] text-[#6e6e73] leading-relaxed">
-              Traditional biological age tests use blood biomarkers or DNA methylation and cost hundreds of dollars per test. They give you a snapshot a few times per year. Vitality Age updates every day using data your wearable already collects, so you can see the impact of lifestyle changes in weeks rather than months. It measures functional fitness markers rather than molecular markers, and the two approaches complement each other well.
+              Vitality Age is a fitness age estimate, not a clinical biological age test. Traditional biological age tests use blood biomarkers or DNA methylation (epigenetic clocks like PhenoAge or GrimAge), cost hundreds of dollars per test, and give you a snapshot a few times per year. Vitality Age updates every day using data your wearable already collects, so you can see the impact of lifestyle changes in weeks rather than months. The two approaches measure different things and complement each other.
             </p>
           </div>
           <div>
@@ -255,6 +255,15 @@ const jsonLd = [
 
     <!-- CTA -->
     <CtaSection heading="Know your real fitness age." subheading="Laso turns your wearable data into a daily Vitality Age with zero lab visits." />
+
+    <!-- Medical disclaimer -->
+    <section class="px-5 py-8">
+      <div class="max-w-3xl mx-auto bg-amber-50 border border-amber-200 rounded-xl p-5">
+        <p class="text-[13px] text-amber-800 leading-relaxed">
+          <strong>Not medical advice.</strong> Laso is a personal wellness tool, not a medical device. Vitality Age is a fitness age estimate, not a clinical biological age. It does not diagnose, treat, or cure any condition. Always consult a qualified healthcare professional for medical questions.
+        </p>
+      </div>
+    </section>
 
   </main>
 
