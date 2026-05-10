@@ -5,16 +5,34 @@ import SiteFooter from '../components/SiteFooter.astro'
 import CtaSection from '../components/CtaSection.astro'
 import '../styles/globals.css'
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "Laso Health",
-  "url": "https://lasohealth.fit",
-  "logo": "https://lasohealth.fit/favicon.svg",
-  "description": "Privacy-first health intelligence app that turns wearable data into personal recovery scores, strain targets, sleep coaching, and early wellness detection. All processed on-device.",
-  "sameAs": ["https://www.instagram.com/healthlaso/", "https://apps.apple.com/in/app/laso/id6762501313"],
-  "foundingDate": "2025"
-}
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "name": "About Laso — Privacy First Health Intelligence",
+    "url": "https://lasohealth.fit/about",
+    "inLanguage": "en",
+    "description": "Laso is a health intelligence app that turns wearable data into actionable insights. Built on the belief that your health data should stay on your device and your scores should be about you.",
+    "isPartOf": { "@type": "WebSite", "name": "Laso Health", "url": "https://lasohealth.fit" },
+    "about": {
+      "@type": "Organization",
+      "name": "Laso Health",
+      "url": "https://lasohealth.fit",
+      "logo": "https://lasohealth.fit/favicon.svg",
+      "description": "Privacy-first health intelligence app that turns wearable data into personal recovery scores, strain targets, sleep coaching, and early wellness detection. All processed on-device.",
+      "sameAs": ["https://www.instagram.com/healthlaso/", "https://apps.apple.com/in/app/laso/id6762501313"],
+      "foundingDate": "2025",
+    },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://lasohealth.fit" },
+      { "@type": "ListItem", "position": 2, "name": "About", "item": "https://lasohealth.fit/about" },
+    ],
+  },
+]
 ---
 
 <Base title="About Laso — Privacy First Health Intelligence | Laso" description="Laso is a health intelligence app that turns wearable data into actionable insights. Built on the belief that your health data should stay on your device and your scores should be about you." jsonLd={jsonLd}>

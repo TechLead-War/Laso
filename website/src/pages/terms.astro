@@ -1,8 +1,29 @@
 ---
 import Base from '../layouts/Base.astro'
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Terms of Use",
+    "description": "Laso Terms of Use. Subscription terms, health disclaimer, and conditions for using the Laso app.",
+    "url": "https://lasohealth.fit/terms",
+    "inLanguage": "en",
+    "isPartOf": { "@type": "WebSite", "name": "Laso Health", "url": "https://lasohealth.fit" },
+    "publisher": { "@type": "Organization", "name": "Laso Health", "url": "https://lasohealth.fit" },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://lasohealth.fit" },
+      { "@type": "ListItem", "position": 2, "name": "Terms", "item": "https://lasohealth.fit/terms" },
+    ],
+  },
+]
 ---
 
-<Base title="Terms of Use | Laso" description="Laso Terms of Use. Subscription terms, health disclaimer, and conditions for using the Laso app.">
+<Base title="Terms of Use | Laso" description="Laso Terms of Use. Subscription terms, health disclaimer, and conditions for using the Laso app." jsonLd={jsonLd}>
 
   <!-- Nav -->
   <nav aria-label="Page navigation" class="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-black/[0.06]">

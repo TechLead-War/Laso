@@ -187,18 +187,41 @@ const metrics = [
   },
 ]
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  "name": "Your Body, Decoded",
-  "description": "A plain-English field guide to the health metrics your wearable already tracks. HRV, VO2 Max, sleep stages, recovery, strain, vitality age — what each one means, what healthy looks like, and the small habits that move the needle.",
-  "url": "https://lasohealth.fit/decoded",
-  "publisher": {
-    "@type": "Organization",
-    "name": "Laso Health",
-    "url": "https://lasohealth.fit"
-  }
-}
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Your Body, Decoded",
+    "description": "A plain-English field guide to the health metrics your wearable already tracks. HRV, VO2 Max, sleep stages, recovery, strain, vitality age — what each one means, what healthy looks like, and the small habits that move the needle.",
+    "url": "https://lasohealth.fit/decoded",
+    "inLanguage": "en",
+    "isPartOf": { "@type": "WebSite", "name": "Laso Health", "url": "https://lasohealth.fit" },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Laso Health",
+      "url": "https://lasohealth.fit",
+    },
+    "mainEntity": {
+      "@type": "ItemList",
+      "name": "Health metrics decoded",
+      "numberOfItems": metrics.length,
+      "itemListElement": metrics.map((m, i) => ({
+        "@type": "ListItem",
+        "position": i + 1,
+        "name": m.name,
+        "description": m.what,
+      })),
+    },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://lasohealth.fit" },
+      { "@type": "ListItem", "position": 2, "name": "Decoded", "item": "https://lasohealth.fit/decoded" },
+    ],
+  },
+]
 ---
 
 <Base title="Your Body, Decoded. | Laso" description="A plain-English field guide to the health metrics your wearable already tracks. HRV, VO2 Max, sleep stages, recovery, strain, vitality age — what each one means, what healthy looks like, and the small habits that move the needle." jsonLd={jsonLd}>

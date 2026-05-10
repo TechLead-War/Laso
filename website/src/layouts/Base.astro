@@ -3,10 +3,13 @@ interface Props {
   title: string
   description: string
   jsonLd?: Record<string, unknown>[] | Record<string, unknown>
+  keywords?: string
+  ogImage?: string
 }
-const { title, description, jsonLd } = Astro.props
+const { title, description, jsonLd, keywords, ogImage } = Astro.props
 const GA_ID = 'G-JQYL4TRHLQ'
 const canonicalURL = new URL(Astro.url.pathname, 'https://lasohealth.fit')
+const ogImageURL = ogImage ?? 'https://lasohealth.fit/og-image.jpg'
 ---
 <!doctype html>
 <html lang="en">
@@ -16,12 +19,13 @@ const canonicalURL = new URL(Astro.url.pathname, 'https://lasohealth.fit')
   <meta name="theme-color" content="#ffffff" />
   <title>{title}</title>
   <meta name="description" content={description} />
-  <meta name="keywords" content="health tracking app,recovery score app,apple watch recovery score,sleep tracking app,sleep debt tracker,strain tracking app,strain score,HRV tracking,HRV-based recovery,readiness score,fitness age app,vitality age,health metrics app,wellness pattern detection,overtraining detection,stress monitor app,wearable data analysis,on-device health analytics,private health tracking,HealthKit app,apple watch health app,oura alternative,whoop alternative app,garmin health analytics,sleep coaching app,health trend insights,fitness recovery app,workout recovery tracker,body composition tracker,VO2 max tracker,resting heart rate tracker,heart rate variability app,personal health baselines,health trend analysis,cycle tracking app,menstrual cycle training,Laso,Laso Health" />
+  {keywords && <meta name="keywords" content={keywords} />}
   <meta name="author" content="Laso Health" />
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
   <link rel="canonical" href={canonicalURL.href} />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="icon" href="/apple-touch-icon.png" type="image/png" sizes="180x180" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
   <link rel="sitemap" href="/sitemap-index.xml" />
 
   <!-- hreflang: one canonical English page serving all English-speaking markets.
@@ -44,16 +48,17 @@ const canonicalURL = new URL(Astro.url.pathname, 'https://lasohealth.fit')
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
   <meta property="og:url" content={canonicalURL.href} />
-  <meta property="og:image" content="https://lasohealth.fit/og-image.png" />
+  <meta property="og:image" content={ogImageURL} />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/jpeg" />
   <meta property="og:image:alt" content="Laso — Recovery score, strain tracking, sleep coaching, and health intelligence from your wearable" />
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={title} />
   <meta name="twitter:description" content={description} />
-  <meta name="twitter:image" content="https://lasohealth.fit/og-image.png" />
+  <meta name="twitter:image" content={ogImageURL} />
   <meta name="twitter:image:alt" content="Laso — Recovery score, strain tracking, sleep coaching, and health intelligence from your wearable" />
 
   <!-- Apple -->
