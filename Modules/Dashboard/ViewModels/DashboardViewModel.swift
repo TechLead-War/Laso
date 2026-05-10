@@ -3,6 +3,21 @@ import Observation
 import SwiftUI
 import os
 
+/// Smoothing parameters for the Explore weekly score (`computeRollingAverageScore`).
+/// Anchored to EWMA literature and commercial wearable practice; see that
+/// function's doc comment for source links.
+enum WeeklyScoreSmoothing {
+    /// EWMA decay parameter. 0.05–0.25 is the standard tutorial range for
+    /// non-stationary health time series; 0.2 trends recent days without
+    /// over-reacting to a single outlier day.
+    static let lambda: Double = 0.2
+
+    /// Two weeks of completed daily snapshots. Long enough that one bad day
+    /// cannot dominate the visible weekly number, short enough to track real
+    /// adaptations in HRV / sleep / activity.
+    static let windowDays: Int = 14
+}
+
 /// ViewModel for the main dashboard showing overall score, top insights, and category cards.
 /// Properties are grouped into nested @Observable sub-objects to reduce unnecessary SwiftUI re-renders.
 @MainActor @Observable
@@ -96,12 +111,16 @@ final class DashboardViewModel {
     final class ScoreState {
         fileprivate(set) var cachedScoreChangeFromLastWeek: Int?
         fileprivate(set) var cachedScoreChangeFromYesterday: Int?
+        /// EWMA-vs-EWMA-7-days-ago delta. Used by Explore so the weekly badge
+        /// describes the same series as the displayed weekly score.
+        fileprivate(set) var cachedWeeklyScoreChange: Int?
         /// Set by parent after each analysis refresh
         fileprivate(set) var overallScore: HealthScore = HealthScore(score: 0)
         fileprivate(set) var categoryScores: [HealthScore] = []
 
         var scoreChangeFromLastWeek: Int? { cachedScoreChangeFromLastWeek }
         var scoreChangeFromYesterday: Int? { cachedScoreChangeFromYesterday }
+        var weeklyScoreChange: Int? { cachedWeeklyScoreChange }
 
         var recoveryState: RecoveryState {
             RecoveryState(score: overallScore.score)
@@ -1184,6 +1203,7 @@ final class DashboardViewModel {
         scores.cachedScoreChangeFromLastWeek = computeScoreChangeFromLastWeek()
         scores.cachedScoreChangeFromYesterday = computeScoreChangeFromYesterday()
         scores.rollingAverageScore = computeRollingAverageScore()
+        scores.cachedWeeklyScoreChange = computeWeeklyScoreChange()
         scores.scoreExplanation = analysisEngine.scoreExplanation
 
         // North-star activation event: fire exactly once per install when the
@@ -1587,15 +1607,60 @@ final class DashboardViewModel {
         )
     }
 
-    /// 7-day rolling average score for the Explore tab.
-    /// Returns today's score when fewer than 2 history entries exist.
+    /// EWMA-smoothed weekly score for the Explore tab.
+    ///
+    /// Why EWMA over completed days only: today's overall score is recomputed
+    /// live from whatever HealthKit currently has, so including it makes the
+    /// "weekly" number swing every time the watch syncs. Both WHOOP Recovery
+    /// and Oura Readiness lock per completed day for the same reason; clinical
+    /// longitudinal monitoring uses EWMA for the same reason.
+    ///
+    /// Sources:
+    ///   - Luxenberg & Boyd, Exponentially Weighted Moving Models, Stanford
+    ///     https://web.stanford.edu/~boyd/papers/pdf/ewmm.pdf
+    ///   - PMC10248291, EWMA tutorial for longitudinal psychological data
+    ///   - whoop.com/.../how-does-whoop-recovery-work-101
+    ///   - livity-app.com/en/blog/readiness-score-explained (Oura)
     @MainActor
     private func computeRollingAverageScore() -> Int {
-        let history = scoreHistoryCached(days: 7)
-        guard history.count >= 2 else { return overallScore.score }
-        // Include today's score in the average
-        let total = history.map(\.score).reduce(0, +) + overallScore.score
-        return Int((Double(total) / Double(history.count + 1)).rounded())
+        let today = Date.cal.startOfDay(for: Date())
+        return ewmaWeeklyScore(asOf: today) ?? overallScore.score
+    }
+
+    /// EWMA over completed daily snapshots strictly before `asOf`.
+    /// Returns nil when no completed-day data is available for the anchor.
+    @MainActor
+    private func ewmaWeeklyScore(asOf anchor: Date) -> Int? {
+        let cal = Date.cal
+        var perDay: [Date: Int] = [:]
+        for entry in scoreHistoryCached() {
+            let day = cal.startOfDay(for: entry.date)
+            if day < anchor { perDay[day] = entry.score }
+        }
+        let recent = perDay
+            .sorted { $0.key < $1.key }
+            .suffix(WeeklyScoreSmoothing.windowDays)
+        guard let first = recent.first else { return nil }
+        let lambda = WeeklyScoreSmoothing.lambda
+        var ewma = Double(first.value)
+        for (_, score) in recent.dropFirst() {
+            ewma = lambda * Double(score) + (1.0 - lambda) * ewma
+        }
+        return Int(ewma.rounded())
+    }
+
+    /// EWMA-now minus EWMA-anchored-7-days-ago. Used by the Explore hero
+    /// badge so the "± pts this week" label describes the same EWMA series
+    /// as the headline number, instead of mixing live daily with smoothed.
+    @MainActor
+    private func computeWeeklyScoreChange() -> Int? {
+        let cal = Date.cal
+        let today = cal.startOfDay(for: Date())
+        guard let weekAgo = cal.date(byAdding: .day, value: -7, to: today),
+              let current = ewmaWeeklyScore(asOf: today),
+              let old = ewmaWeeklyScore(asOf: weekAgo) else { return nil }
+        let delta = current - old
+        return delta == 0 ? nil : delta
     }
 
     /// Count consecutive recent days where the score improved day-over-day.
@@ -1659,8 +1724,11 @@ final class DashboardViewModel {
     private func computeHistoricalHighlights() -> [HistoricalHighlight] {
         var highlights: [HistoricalHighlight] = []
         let focuses = insights.focusCategories
-        let now = Date()
         let calendar = Date.cal
+        // Anchor windows at start-of-day so "this week" / "last week" do not
+        // slide by seconds and re-shuffle the surfaced highlights between
+        // refreshes within the same day.
+        let now = calendar.startOfDay(for: Date())
         guard let thisWeekStart = calendar.date(byAdding: .day, value: -7, to: now),
               let lastWeekStart = calendar.date(byAdding: .day, value: -14, to: now) else {
             return []
@@ -1871,11 +1939,17 @@ final class DashboardViewModel {
     /// Write current analysis state to App Group UserDefaults for widgets.
     @MainActor
     func writeWidgetSnapshots() {
-        let score = overallScore.score
         let grade = overallScore.grade
 
+        // Prefer today's morning Recovery lock when one exists so the widget
+        // matches the Home hero card. Fall back to the overall daily health
+        // score only when no morning lock has been set yet today (very early
+        // first day, or no overnight wear).
+        let readinessStore = ReadinessStore()
+        let widgetScore = readinessStore.loadMorningLock(for: Date()) ?? overallScore.score
+
         let readiness = WidgetReadinessSnapshot(
-            score: score,
+            score: widgetScore,
             grade: grade,
             dayType: strainCoach.currentTarget?.zone.displayName ?? "Maintain",
             updatedAt: Date()
@@ -2198,7 +2272,10 @@ final class DashboardViewModel {
             let aFocused = focuses.contains(a.category)
             let bFocused = focuses.contains(b.category)
             if aFocused != bFocused { return aFocused }
-            return aScore < bScore
+            if aScore != bScore { return aScore < bScore }
+            // Stable tiebreak so the list order does not flip across refreshes
+            // when two categories share the same score.
+            return a.category.rawValue < b.category.rawValue
         }
     }
 
@@ -2207,7 +2284,10 @@ final class DashboardViewModel {
             guard let score = analysisEngine.score(for: cat)?.score else { return nil }
             return (category: cat, score: score)
         }
-        return scored.min(by: { $0.score < $1.score })
+        return scored.min(by: { a, b in
+            if a.score != b.score { return a.score < b.score }
+            return a.category.rawValue < b.category.rawValue
+        })
     }
 
     func makeHealthDataQueryRequest() -> HealthDataQueryRequest {

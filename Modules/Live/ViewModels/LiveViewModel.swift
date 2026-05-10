@@ -57,17 +57,20 @@ final class LiveViewModel {
         case restingHeartRate
     }
 
-    private static let readinessBaselineWindowDays = 42
+    // 60-day window matches the Plews/Altini methodology used by HRV4Training
+    // and athlete-grade HRV studies: long enough to capture menstrual cycle
+    // and travel variance, short enough that a sustained training adaptation
+    // still moves the personal baseline within a few weeks.
+    private static let readinessBaselineWindowDays = 60
     private static let readinessBaselineGapDays = 2
     private static let readinessBaselineRefreshInterval: TimeInterval = 6 * 3600
+    private static let weeklyTrendDays = 7
 
     private var readinessBaselines: [ReadinessMetric: ReadinessScorer.BaselineStats] = [:]
     private var lastReadinessBaselineRefresh: Date?
     private var readinessBaselineRefreshTask: Task<Void, Never>?
     private var deferredRefreshTask: Task<Void, Never>?
     private var smoothedReadinessScore: Double?
-    private var dailyLockedScore: Int?
-    private var dailyLockDate: Date?
     private var refreshState = LiveRefreshPlanner.State()
     private var lastHomeFetchDate: Date?
     private var lastTieredFetchDate: Date?
@@ -810,21 +813,77 @@ final class LiveViewModel {
         healthStore.execute(query)
     }
 
-    // MARK: - Readiness Score
+    // MARK: - Recovery → Live Energy
 
+    /// Locks today's Recovery anchor each morning, then drains it through the
+    /// day from accumulated active calories. The single number on Home is:
+    /// • the morning Recovery lock when the watch is off-wrist,
+    /// • `max(energyFloor, lock - strainDrain)` rounded to Int when on-wrist,
+    /// • blank only when no lock exists today AND the watch is off.
     func computeReadinessScore() {
-        // Daily lock: once a confident score is set for today, keep returning it.
-        // This prevents the score from jumping on pull-to-refresh or background fetches,
-        // giving users a stable, trustworthy number that only changes the next day.
-        if let locked = dailyLockedScore,
-           let lockDate = dailyLockDate,
-           Date.cal.isDateInToday(lockDate) {
-            recovery.readinessScore = locked
+        let now = Date()
+        let hrAge = vitals.heartRateTimestamp.map { now.timeIntervalSince($0) } ?? .infinity
+
+        if hrAge > ReadinessScorerConfig.onWristMaxAgeSeconds {
+            recovery.isWearingWatch = false
+            recovery.scoreLabel = "Recovery"
+            // On-wrist preserve: a morning lock is a legitimate snapshot from
+            // when the watch WAS on the wrist overnight; mid-day wrist removal
+            // does not invalidate it. Keep showing the anchor (no live drain
+            // because we have no current activity stream).
+            if let lock = readinessStore.loadMorningLock(for: now) {
+                recovery.readinessScore = lock
+                recovery.readinessConfidence = readinessStore.loadMorningLockConfidence(for: now) ?? recovery.readinessConfidence
+            } else if recovery.hasCheckedOnWristOnce {
+                recovery.readinessScore = nil
+                recovery.readinessConfidence = nil
+            }
+            // else: cold-launch flicker guard — the very first call after
+            // `init` may run before HR has streamed in. Leave whatever the
+            // initialiser loaded so the ring does not flash empty for a frame.
+            recovery.hasCheckedOnWristOnce = true
             return
         }
 
+        recovery.isWearingWatch = true
+        recovery.hasCheckedOnWristOnce = true
+
+        guard let lock = resolveMorningRecoveryLock(now: now) else {
+            // No lock yet today and the gates have not been met. Do not blank
+            // a previously displayed lock — `recovery.readinessScore` already
+            // holds whatever the last successful pass produced.
+            return
+        }
+
+        let strainDrain = computeStrainDrainSinceWake()
+        let liveEnergy = Int((max(ReadinessScorerConfig.energyFloor, Double(lock) - strainDrain)).rounded())
+        recovery.readinessScore = liveEnergy
+        recovery.scoreLabel = strainDrain < ReadinessScorerConfig.energyLabelStrainThreshold ? "Recovery" : "Energy"
+        // Legacy widget compat: the existing widget reads `loadCachedScore`,
+        // so keep mirroring the live number there. The widget snapshot in
+        // `DashboardViewModel.writeWidgetSnapshots` independently prefers the
+        // morning lock for stability — this only feeds the legacy timeline.
+        readinessStore.saveCachedScore(liveEnergy)
+    }
+
+    /// Returns today's morning Recovery anchor, computing and persisting it
+    /// the first time the gates pass. Gate: last-night sleep present plus HRV
+    /// and RHR each within `morningLockFreshnessHours` so we never anchor on
+    /// stale overnight data.
+    private func resolveMorningRecoveryLock(now: Date) -> Int? {
+        if let existing = readinessStore.loadMorningLock(for: now) {
+            return existing
+        }
+
+        guard sleep.hasSleepData else { return nil }
+
+        let freshnessSeconds = ReadinessScorerConfig.morningLockFreshnessHours * 3600
+        let hrvAge = recovery.latestHRVTimestamp.map { now.timeIntervalSince($0) } ?? .infinity
+        let rhrAge = recovery.latestRestingHeartRateTimestamp.map { now.timeIntervalSince($0) } ?? .infinity
+        guard hrvAge <= freshnessSeconds, rhrAge <= freshnessSeconds else { return nil }
+
         let input = ReadinessScorer.Input(
-            now: Date(),
+            now: now,
             hrv: recovery.latestHRV,
             hrvTimestamp: recovery.latestHRVTimestamp,
             hrvBaseline: readinessBaselines[.heartRateVariability],
@@ -841,24 +900,21 @@ final class LiveViewModel {
             previousSmoothedScore: smoothedReadinessScore
         )
 
-        guard let assessment = ReadinessScorer.assess(input) else {
-            recovery.readinessScore = nil
-            recovery.readinessConfidence = nil
-            smoothedReadinessScore = nil
-            return
-        }
+        guard let assessment = ReadinessScorer.assess(input) else { return nil }
 
         smoothedReadinessScore = assessment.smoothedScore
-        recovery.readinessScore = assessment.score
+        readinessStore.saveMorningLock(assessment.score, for: now)
+        readinessStore.saveMorningLockConfidence(assessment.confidence, for: now)
         recovery.readinessConfidence = assessment.confidence
-        readinessStore.saveCachedScore(assessment.score)
+        return assessment.score
+    }
 
-        // Lock the score for today once we have sufficient confidence
-        // (meaning HRV + RHR + sleep data have all arrived)
-        if assessment.confidence >= 50 {
-            dailyLockedScore = assessment.score
-            dailyLockDate = Date()
-        }
+    /// Strain drain in score-points since wake. HealthKit's `activeEnergyBurned`
+    /// already includes any workout calories — adding `lastWorkoutCalories` on
+    /// top would double-count and over-drain Energy after a workout.
+    private func computeStrainDrainSinceWake() -> Double {
+        let raw = activity.todayActiveCalories / ReadinessScorerConfig.kcalPerStrainPoint
+        return min(raw, ReadinessScorerConfig.maxStrainDrain)
     }
 
     // MARK: - Last Night's Sleep Fetch
@@ -1021,9 +1077,15 @@ final class LiveViewModel {
                 identifier: .heartRateVariabilitySDNN,
                 unit: HKUnit.secondUnit(with: .milli)
             )
+            async let recentHRV = self.fetchRecentDailyAverages(
+                identifier: .heartRateVariabilitySDNN,
+                unit: HKUnit.secondUnit(with: .milli),
+                days: Self.weeklyTrendDays
+            )
 
             let rhrBaseline = ReadinessScorer.makeBaseline(values: await rhrValues, minimumSD: 2.0)
             let hrvBaseline = ReadinessScorer.makeBaseline(values: await hrvValues, minimumSD: 4.0)
+            let recent = await recentHRV
 
             await MainActor.run {
                 if let rhrBaseline {
@@ -1032,10 +1094,79 @@ final class LiveViewModel {
                 if let hrvBaseline {
                     self.readinessBaselines[.heartRateVariability] = hrvBaseline
                 }
+                self.recovery.weeklyTrend = self.computeWeeklyHRVTrend(recent: recent)
                 self.lastReadinessBaselineRefresh = Date()
                 self.readinessBaselineRefreshTask = nil
                 self.computeReadinessScore()
             }
+        }
+    }
+
+    /// Classifies the last 7 days of daily HRV averages against the personal
+    /// baseline. Threshold is a multiple of the baseline standard deviation so
+    /// noisy daily swings stay "stable" while a sustained shift surfaces. The
+    /// caption is hidden until we have both a baseline and at least
+    /// `weeklyTrendMinDays` recent samples.
+    private func computeWeeklyHRVTrend(recent: [Double]) -> WeeklyHRVTrend {
+        let baselineMean = readinessBaselines[.heartRateVariability]?.mean
+        let baselineSD = readinessBaselines[.heartRateVariability]?.standardDeviation
+        guard recent.count >= ReadinessScorerConfig.weeklyTrendMinDays,
+              let mean = baselineMean,
+              let sd = baselineSD else {
+            return .insufficientData
+        }
+        let recentMean = recent.reduce(0, +) / Double(recent.count)
+        let threshold = ReadinessScorerConfig.weeklyTrendThresholdSDMultiplier * sd
+        if recentMean > mean + threshold { return .improving }
+        if recentMean < mean - threshold { return .declining }
+        return .stable
+    }
+
+    /// Fetches `days` of daily averages ending today, no baseline gap. Mirrors
+    /// `fetchHistoricalDailyAverages` so the two queries share their HK setup
+    /// and stay easy to compare side-by-side.
+    private func fetchRecentDailyAverages(
+        identifier: HKQuantityTypeIdentifier,
+        unit: HKUnit,
+        days: Int
+    ) async -> [Double] {
+        let calendar = Date.cal
+        let now = Date()
+        let end = now
+        let start = calendar.date(byAdding: .day, value: -days, to: now)
+            ?? now.addingTimeInterval(-Double(days) * 24 * 3600)
+
+        return await withCheckedContinuation { continuation in
+            let type = HKQuantityType(identifier)
+            let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
+            var interval = DateComponents()
+            interval.day = 1
+
+            let query = HKStatisticsCollectionQuery(
+                quantityType: type,
+                quantitySamplePredicate: predicate,
+                options: .discreteAverage,
+                anchorDate: calendar.startOfDay(for: start),
+                intervalComponents: interval
+            )
+
+            query.initialResultsHandler = { _, results, _ in
+                guard let results else {
+                    continuation.resume(returning: [])
+                    return
+                }
+
+                var values: [Double] = []
+                results.enumerateStatistics(from: start, to: end) { statistics, _ in
+                    guard let average = statistics.averageQuantity()?.doubleValue(for: unit),
+                          average.isFinite,
+                          average > 0 else { return }
+                    values.append(average)
+                }
+                continuation.resume(returning: values)
+            }
+
+            healthStore.execute(query)
         }
     }
 

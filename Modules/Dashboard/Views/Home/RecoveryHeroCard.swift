@@ -11,6 +11,9 @@ struct RecoveryHeroCard: View {
     var recoveryWhyLine: String? = nil
     var hasLiveReadiness: Bool = true
     var lastRefresh: Date? = nil
+    var scoreLabel: String = "Recovery"
+    var isWearingWatch: Bool = true
+    var weeklyTrendCaption: String? = nil
     var onTap: (() -> Void)? = nil
 
     @State private var appeared = false
@@ -31,28 +34,68 @@ struct RecoveryHeroCard: View {
         return !isStale(refresh)
     }
 
+    /// True when there is no morning lock today AND the watch is currently off.
+    /// In every other state (lock present, or watch on streaming live energy)
+    /// the normal card content shows the legitimate score.
+    private var shouldShowWearWatch: Bool {
+        !isWearingWatch && score == 0
+    }
+
     var body: some View {
         Button {
             onTap?()
         } label: {
-            cardContent
+            Group {
+                if shouldShowWearWatch {
+                    wearWatchEmptyState
+                } else {
+                    cardContent
+                }
+            }
         }
         .buttonStyle(.dsPress)
         .padding(.horizontal, DS.screenPadding)
         .onAppear {
             appeared = true
-            // Activation gate for the engagement sequence.
-            // Only count this as "first recovery score seen" when it is a real
-            // live readiness reading, not the placeholder health score card.
-            if hasLiveReadiness, score > 0 {
-                if UserDefaults.standard.bool(forKey: AppKeys.Engagement.firstRecoveryScoreSeen) {
-                    // Promote to the second score gate on any subsequent real score.
-                    EngagementSequenceScheduler.markActivation(.secondRecoveryScore)
-                } else {
-                    EngagementSequenceScheduler.markActivation(.firstRecoveryScore)
-                }
+            // Activation gate for the engagement sequence. Skip when there is
+            // nothing legitimate to show — placeholder Health rings, watch-off
+            // empty states, and zero scores must not promote the user toward
+            // the "second recovery score" milestone.
+            guard isWearingWatch, hasLiveReadiness, score > 0 else { return }
+            if UserDefaults.standard.bool(forKey: AppKeys.Engagement.firstRecoveryScoreSeen) {
+                EngagementSequenceScheduler.markActivation(.secondRecoveryScore)
+            } else {
+                EngagementSequenceScheduler.markActivation(.firstRecoveryScore)
             }
         }
+    }
+
+    // MARK: - Wear Watch Empty State
+
+    private var wearWatchEmptyState: some View {
+        HStack(spacing: 16) {
+            Image(systemName: "applewatch")
+                .font(DS.Typography.title2)
+                .foregroundStyle(AppColour.textTertiary)
+                .frame(width: 56, height: 56)
+                .background(AppColour.surfaceRaised, in: Circle())
+
+            Text(Copy.Home.wearAppleWatchForRecovery)
+                .font(DS.Typography.bodyMedium)
+                .foregroundStyle(AppColour.textSecondary)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Spacer(minLength: 0)
+        }
+        .padding(DS.cardPadding + 4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppColour.surfaceRaised.opacity(0.6))
+        .clipShape(RoundedRectangle(cornerRadius: DS.cardRadius))
+        .overlay(RoundedRectangle(cornerRadius: DS.cardRadius).strokeBorder(AppColour.textTertiary.opacity(0.18), lineWidth: 1))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Copy.Home.wearAppleWatchForRecovery)
+        .accessibilityIdentifier("home.recoveryCard.wearWatch")
     }
 
     // MARK: - Card Content
@@ -80,7 +123,7 @@ struct RecoveryHeroCard: View {
                 // agrees with the title and the day-type pill.
                 HealthScoreRing(
                     score: score,
-                    label: hasLiveReadiness ? "Recovery" : "Health",
+                    label: hasLiveReadiness ? scoreLabel : "Health",
                     size: 120,
                     lineWidth: 12,
                     tint: hasLiveReadiness ? recoveryState.color : nil
@@ -130,6 +173,15 @@ struct RecoveryHeroCard: View {
                         .padding(.vertical, 5)
                         .background(scoreColor.opacity(DS.badgeBg), in: Capsule())
 
+                    // 7-day HRV trend caption (only when we have a live score, a
+                    // real number to attach the caption to, and a definitive
+                    // trend — `.insufficientData` returns nil from the caller).
+                    if hasLiveReadiness, score > 0, let caption = weeklyTrendCaption {
+                        Text(caption)
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(AppColour.textSecondary)
+                    }
+
                     // Staleness indicator or fallback hint
                     if !hasLiveReadiness {
                         Text(Copy.Home.wearAppleWatchForRecovery)
@@ -172,7 +224,7 @@ struct RecoveryHeroCard: View {
         .clipShape(RoundedRectangle(cornerRadius: DS.cardRadius))
         .overlay(RoundedRectangle(cornerRadius: DS.cardRadius).strokeBorder(scoreColor.opacity(0.25), lineWidth: 1))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(hasLiveReadiness ? "Recovery" : "Health") score \(score). \(recoveryLabel). \(recoveryWhyLine ?? ""). \(dayType).")
+        .accessibilityLabel("\(hasLiveReadiness ? scoreLabel : "Health") score \(score). \(recoveryLabel). \(recoveryWhyLine ?? ""). \(dayType). \(weeklyTrendCaption ?? "")")
         .accessibilityHint("Opens score breakdown")
         .accessibilityIdentifier("home.recoveryCard")
     }
@@ -190,7 +242,9 @@ struct RecoveryHeroCard: View {
             recoveryLabel: "Fully Recovered",
             dayType: "Green Day. Push Hard",
             scoreChangeFromLastWeek: 5,
-            recoveryWhyLine: "HRV bounced back and resting heart rate is low"
+            recoveryWhyLine: "HRV bounced back and resting heart rate is low",
+            scoreLabel: "Recovery",
+            weeklyTrendCaption: "HRV trending up this week"
         )
 
         RecoveryHeroCard(
@@ -198,15 +252,17 @@ struct RecoveryHeroCard: View {
             recoveryLabel: "Moderate Recovery",
             dayType: "Yellow Day. Maintain",
             scoreChangeFromLastWeek: -3,
-            recoveryWhyLine: "Sleep was short, keeping recovery moderate"
+            recoveryWhyLine: "Sleep was short, keeping recovery moderate",
+            scoreLabel: "Energy",
+            weeklyTrendCaption: "HRV steady this week"
         )
 
         RecoveryHeroCard(
-            score: 32,
-            recoveryLabel: "Low Recovery",
-            dayType: "Red Day. Recover",
-            scoreChangeFromLastWeek: -12,
-            recoveryWhyLine: "HRV has not recovered yet and sleep was short"
+            score: 0,
+            recoveryLabel: "",
+            dayType: "",
+            scoreChangeFromLastWeek: nil,
+            isWearingWatch: false
         )
     }
     .padding(.vertical)

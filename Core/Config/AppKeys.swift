@@ -124,6 +124,14 @@ enum AppKeys {
     enum Readiness {
         static let cachedScore     = "laso.readiness.cached_score"
         static let cachedTimestamp = "laso.readiness.cached_timestamp"
+
+        // Per-day morning lock. Score and confidence are stamped once each
+        // morning when last-night sleep + overnight HRV/RHR vs the 60-day
+        // baseline land, then re-used by every refresh that day so the live
+        // energy drain has a stable anchor.
+        static let morningLockScorePrefix      = "laso.readiness.morning_lock_score."
+        static let morningLockDatePrefix       = "laso.readiness.morning_lock_date."
+        static let morningLockConfidencePrefix = "laso.readiness.morning_lock_confidence."
     }
 
     // MARK: - Referral

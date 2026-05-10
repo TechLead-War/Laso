@@ -56,7 +56,7 @@ struct ExploreCategoryRow: View {
 
     private var needsAttention: Bool {
         guard let score else { return false }
-        return score < 70
+        return HealthScoreBand.from(score: score).requiresAttention
     }
 
     var body: some View {
@@ -109,23 +109,22 @@ struct ExploreCategoryRow: View {
 
     private var scoreStatus: String {
         guard let score else { return Copy.Explore.noDataYet }
-        switch score {
-        case 85...100: return Copy.Explore.onTrack
-        case 70..<85: return Copy.Explore.doingWell
-        case 55..<70: return Copy.Explore.roomToImprove
-        case 40..<55: return Copy.Explore.needsWork
-        default: return Copy.Explore.needsAttention
+        switch HealthScoreBand.from(score: score) {
+        case .excellent: return Copy.Explore.onTrack
+        case .good: return Copy.Explore.doingWell
+        case .fair: return Copy.Explore.roomToImprove
+        case .needsAttention: return Copy.Explore.needsWork
+        case .critical: return Copy.Explore.needsAttention
         }
     }
 
     private var scoreStatusColor: Color {
         guard let score else { return .secondary }
-        switch score {
-        case 85...100: return .green
-        case 70..<85: return .secondary
-        case 55..<70: return .orange
-        case 40..<55: return .red
-        default: return .red
+        switch HealthScoreBand.from(score: score) {
+        case .excellent: return .green
+        case .good: return .secondary
+        case .fair: return .orange
+        case .needsAttention, .critical: return .red
         }
     }
 }

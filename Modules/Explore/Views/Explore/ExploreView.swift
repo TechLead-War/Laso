@@ -27,7 +27,7 @@ struct ExploreView: View {
                     // 1. Score Hero with trend
                     ExploreScoreHeroSection(
                         overallScore: viewModel.scores.rollingAverageScore,
-                        scoreChangeFromLastWeek: viewModel.scores.scoreChangeFromLastWeek,
+                        scoreChangeFromLastWeek: viewModel.scores.weeklyScoreChange,
                         weakestCategory: weakestCategory,
                         onScoreInfoTapped: {
                             AppAnalytics.shared.trackBlockTap(
@@ -35,7 +35,10 @@ struct ExploreView: View {
                                 type: .exploreScoreInfo,
                                 screen: .explore,
                                 metadata: [
-                                    "score": viewModel.scores.overallScore.score,
+                                    // Send the same EWMA value the user sees,
+                                    // not the live daily score, so analytics
+                                    // never disagree with the UI.
+                                    "score": viewModel.scores.rollingAverageScore,
                                     "grade": grade
                                 ]
                             )
@@ -70,7 +73,10 @@ struct ExploreView: View {
                                     screen: .explore,
                                     metadata: [
                                         "metric_id": item.metric.rawValue,
-                                        "change_pct": item.trend.weekOverWeekChange,
+                                        // Half-vs-half of the selected window,
+                                        // not actual week-over-week unless the
+                                        // user picked the 7D timeframe.
+                                        "period_change_pct": item.trend.weekOverWeekChange,
                                         "direction": item.trend.direction.rawValue,
                                         "timeframe": trendTimeframe
                                     ]
@@ -134,7 +140,13 @@ struct ExploreView: View {
                             guard let cat = score.category else { return nil }
                             return (category: cat, score: score.score)
                         })
-                        .max(by: { $0.score < $1.score }) {
+                        // Stable tiebreak by category.rawValue — without this
+                        // the displayed strongest pill flips between refreshes
+                        // when two categories share the top score.
+                        .max(by: { a, b in
+                            if a.score != b.score { return a.score < b.score }
+                            return a.category.rawValue > b.category.rawValue
+                        }) {
                         HStack(spacing: 6) {
                             Image(systemName: strongest.category.systemImageName)
                                 .font(.caption)
@@ -293,7 +305,8 @@ struct ExploreView: View {
             ScoreGuideSheet(
                 score: viewModel.scores.rollingAverageScore,
                 weakestCategoryName: weakestCategory?.category.displayName,
-                appStateStore: appStateStore
+                appStateStore: appStateStore,
+                kind: .weekly
             )
         }
         .refreshable {

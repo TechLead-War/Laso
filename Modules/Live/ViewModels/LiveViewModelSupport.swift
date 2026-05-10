@@ -4,6 +4,14 @@ import Observation
 import SwiftUI
 
 extension LiveViewModel {
+
+    /// 7-day HRV trend caption shown beneath the day-type badge on the Recovery
+    /// hero. `.insufficientData` hides the caption — surface it only when we
+    /// have enough recent samples and a baseline to compare against.
+    enum WeeklyHRVTrend {
+        case improving, stable, declining, insufficientData
+    }
+
     enum HeartRateZone: String {
         case rest = "Rest"
         case warmUp = "Warm Up"
@@ -228,10 +236,23 @@ extension LiveViewModel {
         var latestHRVTimestamp: Date?
         var readinessScore: Int?
         var readinessConfidence: Int?
+        var isWearingWatch: Bool = true
+        var scoreLabel: String = "Recovery"
+        /// Stays false until `computeReadinessScore` has had a chance to inspect
+        /// `vitals.heartRateTimestamp`. Cold-launch flicker guard: without this,
+        /// the first frame after init would render the loaded morning lock and
+        /// the next frame would blank it because the wrist age has not been
+        /// evaluated yet.
+        var hasCheckedOnWristOnce: Bool = false
+        var weeklyTrend: WeeklyHRVTrend = .insufficientData
 
         init(readinessStore: ReadinessStore) {
-            if let cachedScore = readinessStore.loadCachedScore() {
-                readinessScore = cachedScore
+            // Seed only from today's morning lock. Yesterday's drained Energy
+            // (saved via `saveCachedScore` for legacy widget compat) is not a
+            // valid anchor for today, so we deliberately skip `loadCachedScore`.
+            if let lock = readinessStore.loadMorningLock(for: Date()) {
+                readinessScore = lock
+                readinessConfidence = readinessStore.loadMorningLockConfidence(for: Date())
             }
         }
 

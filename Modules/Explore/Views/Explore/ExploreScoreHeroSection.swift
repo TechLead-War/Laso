@@ -41,9 +41,9 @@ struct ExploreScoreHeroSection: View {
                             .foregroundStyle(AppColour.textTertiary)
                     }
 
-                    Text(grade)
+                    Text(displayScore)
                         .font(DS.Typography.displayL)
-                        .foregroundStyle(gradeColor)
+                        .foregroundStyle(displayScoreColor)
                         .postHogMask()
 
                     if let delta = scoreChangeFromLastWeek {
@@ -83,20 +83,29 @@ struct ExploreScoreHeroSection: View {
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: DS.Radius.xl))
     }
 
-    private var grade: String {
+    private var displayScore: String {
         "\(overallScore)"
     }
 
-    private var gradeColor: Color {
-        DS.scoreColor(overallScore)
+    /// Routes through `HealthScoreBand` so the score-number colour and the
+    /// status label below it always sit in the same band — using `DS.scoreColor`
+    /// here would mix the recovery-tier scheme (75/50) with the band scheme
+    /// (85/70/55/40) and let, e.g., a 72 colour yellow while reading "Good".
+    private var displayScoreColor: Color {
+        switch HealthScoreBand.from(score: overallScore) {
+        case .excellent: return AppColour.success
+        case .good: return AppColour.scoreOptimal
+        case .fair: return AppColour.scoreFair
+        case .needsAttention, .critical: return AppColour.scorePoor
+        }
     }
 
     private var scoreLabel: String {
-        switch overallScore {
-        case 85...100: return Copy.Explore.excellentShape
-        case 70..<85: return Copy.Explore.lookingGood
-        case 55..<70: return Copy.Explore.roomToImprove
-        default: return Copy.Explore.needsAttention
+        switch HealthScoreBand.from(score: overallScore) {
+        case .excellent: return Copy.Explore.excellentShape
+        case .good: return Copy.Explore.lookingGood
+        case .fair: return Copy.Explore.roomToImprove
+        case .needsAttention, .critical: return Copy.Explore.needsAttention
         }
     }
 }

@@ -2,9 +2,14 @@ import SwiftUI
 
 /// Tutorial sheet explaining the Health Score to users.
 struct ScoreGuideSheet: View {
+    /// `.daily` is the live Home score; `.weekly` is the EWMA-smoothed
+    /// Explore score that only updates at the day boundary.
+    enum Kind { case daily, weekly }
+
     let score: Int
     let weakestCategoryName: String?
     let appStateStore: AppStateStore
+    var kind: Kind = .daily
 
     @Environment(\.dismiss) private var dismiss
     @State private var contentTracker = SectionTracker(section: .scoreGuideContent, tab: .scoreGuide)
@@ -23,10 +28,10 @@ struct ScoreGuideSheet: View {
                     VStack(spacing: 16) {
                         HealthScoreRing(score: score, label: Copy.Home.ScoreGuide.healthScore, size: 120, lineWidth: 12)
 
-                        Text(Copy.Home.ScoreGuide.title)
+                        Text(titleText)
                             .font(.system(size: 24).weight(.semibold))
 
-                        Text(Copy.Home.ScoreGuide.description)
+                        Text(descriptionText)
                             .font(.system(size: 18))
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -93,7 +98,7 @@ struct ScoreGuideSheet: View {
                             .padding(.leading, DS.screenPadding + DS.space5)
                             .padding(.trailing, DS.screenPadding)
 
-                        Text(Copy.Home.ScoreGuide.howItsCalculatedBody)
+                        Text(howItsCalculatedBodyText)
                             .font(.system(size: 18))
                             .foregroundStyle(.secondary)
                             .padding(.leading, DS.screenPadding + DS.space5)
@@ -126,7 +131,7 @@ struct ScoreGuideSheet: View {
                                     .foregroundStyle(.blue)
                                     .frame(width: 24)
 
-                                Text(Copy.Home.ScoreGuide.whenItUpdatesBody)
+                                Text(whenItUpdatesBodyText)
                                     .font(.system(size: 18))
                                     .foregroundStyle(.secondary)
                             }
@@ -210,6 +215,36 @@ struct ScoreGuideSheet: View {
                 AppAnalytics.shared.trackFeatureClose(.scoreGuide)
                 contentTracker.disappeared()
             }
+        }
+    }
+
+    // MARK: - Variant copy
+
+    private var titleText: String {
+        switch kind {
+        case .daily: return Copy.Home.ScoreGuide.title
+        case .weekly: return Copy.Explore.ScoreGuide.title
+        }
+    }
+
+    private var descriptionText: String {
+        switch kind {
+        case .daily: return Copy.Home.ScoreGuide.description
+        case .weekly: return Copy.Explore.ScoreGuide.description
+        }
+    }
+
+    private var howItsCalculatedBodyText: String {
+        switch kind {
+        case .daily: return Copy.Home.ScoreGuide.howItsCalculatedBody
+        case .weekly: return Copy.Explore.ScoreGuide.howItsCalculatedBody
+        }
+    }
+
+    private var whenItUpdatesBodyText: String {
+        switch kind {
+        case .daily: return Copy.Home.ScoreGuide.whenItUpdatesBody
+        case .weekly: return Copy.Explore.ScoreGuide.whenItUpdatesBody
         }
     }
 

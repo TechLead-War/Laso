@@ -111,7 +111,7 @@ extension Copy {
         static let nextWeekTarget = "Next week target"
         static let askYourData = "Ask your data"
         static let seeSleepTips = "See sleep tips \u{2192}"
-        static let wearAppleWatchForRecovery = "Wear Apple Watch for recovery data"
+        static let wearAppleWatchForRecovery = "Wear your Apple Watch to see your live energy"
         static let tapToUnderstandScore = "Tap to understand your score"
 
         // MARK: - Recovery Labels
@@ -163,14 +163,14 @@ extension Copy {
 
             static func whatDoesItMeanBody(score: Int, weakestCategory: String?) -> String {
                 let levelExplanation: String
-                switch score {
-                case 80...100:
+                switch HealthScoreBand.from(score: score) {
+                case .excellent:
                     levelExplanation = "Your numbers are steady or getting better compared to your usual. Everything looks well balanced."
-                case 60..<80:
+                case .good:
                     levelExplanation = "Most of your numbers are on track, but a few areas have shifted a bit from your usual."
-                case 40..<60:
+                case .fair:
                     levelExplanation = "Several numbers have shifted from your usual. This is worth paying attention to."
-                default:
+                case .needsAttention, .critical:
                     levelExplanation = "Several numbers are off from your usual. Check your insights for areas to focus on."
                 }
                 let categoryHint: String
@@ -184,17 +184,18 @@ extension Copy {
 
             static let scoreLevels = "Score levels"
 
-            // Score level ranges
-            static let excellentRange = "80 to 100"
+            // Score level ranges. Bands match `HealthScoreBand` (single source
+            // of truth) so the guide and the live UI never disagree.
+            static let excellentRange = "85 to 100"
             static let excellentLabel = "Excellent"
             static let excellentDescription = "Everything looks great. Keep doing what you are doing."
-            static let goodRange = "60 to 79"
+            static let goodRange = "70 to 84"
             static let goodLabel = "Good"
             static let goodDescription = "Most things are on track with small areas to watch."
-            static let fairRange = "40 to 59"
+            static let fairRange = "55 to 69"
             static let fairLabel = "Fair"
             static let fairDescription = "A few numbers have shifted. Worth paying attention to."
-            static let needsAttentionRange = "Below 40"
+            static let needsAttentionRange = "Below 55"
             static let needsAttentionLabel = "Room to Grow"
             static let needsAttentionDescription = "Several things are off from your usual. Check your insights."
 
@@ -369,8 +370,8 @@ extension Copy {
         // MARK: - Recovery Info
 
         enum RecoveryInfo {
-            static let title = "How Recovery Works"
-            static let description = "Your Recovery score (0 to 100) shows how rested your body is, based on overnight data while you sleep."
+            static let title = "How Your Score Works"
+            static let description = "Each morning your Recovery is locked in from last night's sleep and your overnight heart rate data. As you move and burn energy through the day, the number drops to show your live Energy. Take off the Apple Watch and the live drain pauses, but your morning Recovery still stays on the screen."
 
             // Score levels
             static let scoreLevels = "Score levels"
@@ -413,7 +414,15 @@ extension Copy {
 
             // Refresh timing
             static let whenItUpdatesTitle = "When does it update?"
-            static let whenItUpdatesBody = "Your Recovery score updates each morning using overnight data. It usually takes 1 to 3 days of overnight wear before changes in your routine show up in the score."
+            static let whenItUpdatesBody = "Your Recovery is set once each morning from last night's signals and stays as the day's anchor. The number on Home then drains live as you burn energy. If you take the watch off, the morning Recovery stays put. If you do not have a morning reading yet and the watch is off, the score is hidden until your next overnight wear."
+        }
+
+        // MARK: - Recovery Trend (7-day HRV caption)
+
+        enum RecoveryTrend {
+            static let improving = "HRV trending up this week"
+            static let stable    = "HRV steady this week"
+            static let declining = "HRV trending down this week"
         }
 
         // MARK: - Cycle Phase Card

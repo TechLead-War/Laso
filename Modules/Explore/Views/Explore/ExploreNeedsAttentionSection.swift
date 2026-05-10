@@ -5,11 +5,21 @@ struct ExploreNeedsAttentionSection: View {
     let onFactorTapped: (HealthScorer.ScoreFactor) -> Void
     let onWeakCategoryTapped: (HealthScorer.CategoryContribution) -> Void
 
+    /// Routes weak-category colour through `HealthScoreBand` so the red/orange
+    /// split matches the bands used everywhere else in Explore.
+    private func weakCategoryColor(score: Int) -> Color {
+        switch HealthScoreBand.from(score: score) {
+        case .critical, .needsAttention: return AppColour.danger
+        case .fair: return AppColour.warning
+        case .good, .excellent: return AppColour.warning
+        }
+    }
+
     var body: some View {
         if let explanation = scoreExplanation {
             let negativeFactors = explanation.topFactors.filter { !$0.isPositive }
             let weakCategories = explanation.categoryContributions
-                .filter { $0.score < 75 }
+                .filter { HealthScoreBand.from(score: $0.score).requiresAttention }
                 .sorted { $0.score < $1.score }
 
             if !negativeFactors.isEmpty || !weakCategories.isEmpty {
@@ -88,7 +98,7 @@ struct ExploreNeedsAttentionSection: View {
                                             .foregroundStyle(contrib.category.color)
                                         Text("\(contrib.score)")
                                             .font(.caption.weight(.bold).monospacedDigit())
-                                            .foregroundStyle(contrib.score < 60 ? AppColour.danger : AppColour.warning)
+                                            .foregroundStyle(weakCategoryColor(score: contrib.score))
                                         Text(contrib.category.shortName)
                                             .font(.caption2)
                                             .foregroundStyle(AppColour.textSecondary)

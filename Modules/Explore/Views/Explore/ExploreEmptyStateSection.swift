@@ -31,7 +31,7 @@ struct ExploreEmptyStateSection: View {
 
             if !isAuthorized, let onConnectHealth {
                 Button(action: onConnectHealth) {
-                    Label("Connect Apple Health", systemImage: "heart.fill")
+                    Label(Copy.Explore.emptyStateConnectButton, systemImage: "heart.fill")
                         .font(DS.Typography.subheadlineSemibold)
                         .frame(maxWidth: .infinity)
                 }
@@ -46,7 +46,7 @@ struct ExploreEmptyStateSection: View {
         if hasAnyHealthData {
             return Copy.Explore.almostThere
         }
-        return isAuthorized ? "Syncing your first insights" : Copy.Explore.noDataYet
+        return isAuthorized ? Copy.Explore.emptyStateSyncing : Copy.Explore.noDataYet
     }
 
     private var bodyText: String {
@@ -54,7 +54,7 @@ struct ExploreEmptyStateSection: View {
             return Copy.Explore.almostThereBody
         }
         if isAuthorized {
-            return "Apple Health is already connected. Explore will populate after the next batch of imported samples is analyzed."
+            return Copy.Explore.emptyStateSyncingBody
         }
         return Copy.Explore.noDataYetBody
     }

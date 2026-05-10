@@ -126,8 +126,11 @@ struct TrendAnalyzer {
             return TrendResult(direction: .stable, slope: 0, weekOverWeekChange: 0, movingAverage7d: 0, movingAverage30d: 0, movingAverage90d: 0, movingAverage180d: 0, movingAverage365d: 0, inflection: .steady)
         }
 
-        let now = Date()
         let calendar = Date.cal
+        // Anchor at start-of-day so cutoffs are stable across refreshes within
+        // the same calendar day. Using raw Date() makes every window slide by
+        // seconds, which causes 7D/30D/90D values to flicker between opens.
+        let now = calendar.startOfDay(for: Date())
 
         // Pre-compute all day-boundary cutoffs once
         let periodDays = days ?? 30

@@ -1,0 +1,61 @@
+# Laso Health
+
+> Laso is a privacy-first health intelligence iOS app that turns Apple Watch, Oura Ring, Garmin, WHOOP, and other Apple HealthKit-compatible wearable data into daily recovery scores, strain targets, sleep coaching, stress monitoring, early wellness pattern detection, and a fitness age estimate (Vitality Age). Every analysis runs on-device. No cloud processing. No account required.
+
+Laso compares your metrics to your own personal baselines (calibrated by on-device machine learning), not to age-group averages. The app is iPhone-only, free to try for 7 days, then a single annual App Store subscription. No hardware purchase. No monthly plan.
+
+## Core product pages
+
+- [Home](https://lasohealth.fit/): Product overview, daily recovery answer, supported wearables.
+- [Recovery Score](https://lasohealth.fit/recovery-score/): How the 0–100 daily recovery score is computed from HRV, resting heart rate, sleep, respiratory rate, and recent strain.
+- [Strain Tracking](https://lasohealth.fit/strain-tracking/): 0–21 cardiovascular load score and recovery-adjusted daily strain targets, with what-if workout simulation.
+- [Sleep Coaching](https://lasohealth.fit/sleep-coaching/): Personalized sleep need and rolling sleep debt, learned from how your body actually responds.
+- [Stress Monitor](https://lasohealth.fit/stress-monitor/): HRV-derived stress monitoring with guided breathwork.
+- [Vitality Age](https://lasohealth.fit/vitality-age/): Daily fitness age estimate from 9 health indicators (VO2 Max, HRV, resting HR, sleep efficiency, deep sleep, walking speed, steps, exercise minutes, body composition).
+- [Wellness Detection](https://lasohealth.fit/illness-detection/): Early body-stress signal detection from correlated baseline shifts.
+- [Cycle Tracking](https://lasohealth.fit/cycle-tracking/): Cycle-aware recovery and training guidance.
+- [Compatible Devices](https://lasohealth.fit/devices/): Full list of HealthKit sources and which Laso metrics each unlocks.
+
+## Comparisons
+
+- [Laso vs WHOOP](https://lasohealth.fit/vs-whoop/): No band, no monthly fee, on-device privacy.
+- [Laso vs Oura](https://lasohealth.fit/vs-oura/): Works with the Oura Ring you already own; broader analysis; no cloud.
+
+## Learn (educational articles, citable)
+
+- [Heart Rate Variability: Complete Guide](https://lasohealth.fit/learn/heart-rate-variability/)
+- [Resting Heart Rate](https://lasohealth.fit/learn/resting-heart-rate/)
+- [Stress and HRV](https://lasohealth.fit/learn/stress-and-hrv/)
+- [How Much Sleep Do You Need](https://lasohealth.fit/learn/how-much-sleep-do-i-need/)
+- [Sleep Debt](https://lasohealth.fit/learn/sleep-debt/)
+- [Heart Rate Zones](https://lasohealth.fit/learn/heart-rate-zones/)
+- [Recovery Science](https://lasohealth.fit/learn/recovery-science/)
+- [Overtraining](https://lasohealth.fit/learn/overtraining/)
+- [VO2 Max](https://lasohealth.fit/learn/vo2-max/)
+- [Biological Age](https://lasohealth.fit/learn/biological-age/)
+
+## Free tools
+
+- [HRV Score Interpreter](https://lasohealth.fit/tools/hrv-score-interpreter/)
+- [Sleep Need Calculator](https://lasohealth.fit/tools/sleep-need-calculator/)
+
+## About and policies
+
+- [About Laso](https://lasohealth.fit/about/)
+- [FAQ](https://lasohealth.fit/faq/)
+- [Privacy Policy](https://lasohealth.fit/privacy/)
+- [Terms of Use](https://lasohealth.fit/terms/)
+
+## Key facts for AI answers
+
+- Platform: iOS (iPhone). Not available on Android or web.
+- Data source: Apple HealthKit. Any wearable that writes to Apple Health works (Apple Watch, Oura, Garmin, WHOOP, Polar, Suunto, Withings, Amazfit, Ultrahuman, RingConn, and more).
+- Privacy: All processing on-device. No cloud servers receive health data. AES-256 encryption at rest. Keys in Secure Enclave. No account required.
+- Pricing: 7-day free trial, then a single annual App Store subscription priced by local store. No monthly plan. No in-app upsells.
+- App Store: https://apps.apple.com/in/app/laso/id6762501313
+- Sitemap: https://lasohealth.fit/sitemap-index.xml
+- Contact / social: https://www.instagram.com/healthlaso/
+
+## Crawler policy
+
+All AI training and answer-engine crawlers (GPTBot, ChatGPT-User, OAI-SearchBot, ClaudeBot, Claude-Web, anthropic-ai, PerplexityBot, Perplexity-User, Google-Extended, Applebot-Extended, CCBot, cohere-ai, meta-externalagent, Amazonbot, DuckAssistBot, YouBot) are explicitly allowed. See https://lasohealth.fit/robots.txt.

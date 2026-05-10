@@ -202,6 +202,16 @@ extension RemoteConfigManager {
 
         // Experiments.
         RC.experimentRecoveryCardStyle:       "control" as NSString,
+
+        // Recovery → Live Energy.
+        RC.energyOnWristMaxAgeSeconds:                 600    as NSNumber,
+        RC.energyMorningLockFreshnessHours:            12.0   as NSNumber,
+        RC.energyKcalPerStrainPoint:                   50.0   as NSNumber,
+        RC.energyMaxStrainDrain:                       60.0   as NSNumber,
+        RC.energyFloor:                                5.0    as NSNumber,
+        RC.energyLabelStrainThreshold:                 5.0    as NSNumber,
+        RC.recoveryWeeklyTrendMinDays:                 4      as NSNumber,
+        RC.recoveryWeeklyTrendThresholdSDMultiplier:   0.3    as NSNumber,
     ]
 }
 
@@ -402,4 +412,15 @@ extension RemoteConfigManager {
     // MARK: Experiments
 
     var experimentRecoveryCardStyle: String    { string(forKey: RC.experimentRecoveryCardStyle) ?? "control" }
+
+    // MARK: Recovery → Live Energy
+
+    var energyOnWristMaxAgeSeconds: TimeInterval        { double(forKey: RC.energyOnWristMaxAgeSeconds) }
+    var energyMorningLockFreshnessHours: Double         { double(forKey: RC.energyMorningLockFreshnessHours) }
+    var energyKcalPerStrainPoint: Double                { double(forKey: RC.energyKcalPerStrainPoint) }
+    var energyMaxStrainDrain: Double                    { double(forKey: RC.energyMaxStrainDrain) }
+    var energyFloor: Double                             { double(forKey: RC.energyFloor) }
+    var energyLabelStrainThreshold: Double              { double(forKey: RC.energyLabelStrainThreshold) }
+    var recoveryWeeklyTrendMinDays: Int                 { int(forKey: RC.recoveryWeeklyTrendMinDays) }
+    var recoveryWeeklyTrendThresholdSDMultiplier: Double { double(forKey: RC.recoveryWeeklyTrendThresholdSDMultiplier) }
 }

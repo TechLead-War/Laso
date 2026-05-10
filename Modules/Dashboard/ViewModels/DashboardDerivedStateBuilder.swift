@@ -17,7 +17,10 @@ struct DashboardDerivedStateBuilder {
     ) -> Int? {
         guard history.count >= 2 else { return nil }
 
-        let weekAgo = calendar.date(byAdding: .day, value: -7, to: now) ?? now
+        // Anchor the cutoff at start-of-today so the "old" snapshot picked is
+        // stable across refreshes within the same calendar day.
+        let today = calendar.startOfDay(for: now)
+        let weekAgo = calendar.date(byAdding: .day, value: -7, to: today) ?? today
         guard let oldScore = history
             .filter({ $0.date <= weekAgo })
             .last?.score else { return nil }

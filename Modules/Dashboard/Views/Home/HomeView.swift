@@ -64,7 +64,10 @@ struct HomeView: View {
             )
         }
         .sheet(isPresented: $showRecoveryInfo) {
-            RecoveryInfoSheet(score: liveReadinessScore)
+            // Nil-safe value: `liveReadinessScore` falls back to the daily
+            // health score when no readiness exists, which would mislabel the
+            // info sheet. Pass 0 in that case so the sheet renders neutrally.
+            RecoveryInfoSheet(score: liveViewModel.recovery.readinessScore ?? 0)
         }
         .refreshable {
             AppAnalytics.shared.trackPullToRefresh(screen: .home)
@@ -152,6 +155,17 @@ struct HomeView: View {
     /// Whether we have a real live readiness score (not a fallback)
     private var hasLiveReadiness: Bool {
         liveViewModel.recovery.readinessScore != nil
+    }
+
+    /// Plain-English caption for the 7-day HRV trend. Returns nil when the
+    /// trend is `.insufficientData` so the hero card hides the line cleanly.
+    private var weeklyTrendCaptionString: String? {
+        switch liveViewModel.recovery.weeklyTrend {
+        case .improving:        return Copy.Home.RecoveryTrend.improving
+        case .stable:           return Copy.Home.RecoveryTrend.stable
+        case .declining:        return Copy.Home.RecoveryTrend.declining
+        case .insufficientData: return nil
+        }
     }
 
     /// Name of the lowest-scoring category for personalized score explanation.
@@ -257,6 +271,9 @@ struct HomeView: View {
                         recoveryWhyLine: recoveryWhyLine,
                         hasLiveReadiness: hasLiveReadiness,
                         lastRefresh: viewModel.lastRefresh,
+                        scoreLabel: liveViewModel.recovery.scoreLabel,
+                        isWearingWatch: liveViewModel.recovery.isWearingWatch,
+                        weeklyTrendCaption: weeklyTrendCaptionString,
                         onTap: { showRecoveryInfo = true }
                     )
                     .onAppear {

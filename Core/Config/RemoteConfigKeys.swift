@@ -227,6 +227,20 @@ enum RC {
 
     // MARK: A/B experiments
     static let experimentRecoveryCardStyle       = "experiment_recovery_card_style"
+
+    // MARK: Recovery → Live Energy
+    //
+    // Tunables for the morning Recovery lock + live Energy drain on Home.
+    // Consumer: Modules/Live/ViewModels/LiveViewModel.swift via
+    // `ReadinessScorerConfig` typed accessors.
+    static let energyOnWristMaxAgeSeconds        = "energy_on_wrist_max_age_seconds"
+    static let energyMorningLockFreshnessHours   = "energy_morning_lock_freshness_hours"
+    static let energyKcalPerStrainPoint          = "energy_kcal_per_strain_point"
+    static let energyMaxStrainDrain              = "energy_max_strain_drain"
+    static let energyFloor                       = "energy_floor"
+    static let energyLabelStrainThreshold        = "energy_label_strain_threshold"
+    static let recoveryWeeklyTrendMinDays        = "recovery_weekly_trend_min_days"
+    static let recoveryWeeklyTrendThresholdSDMultiplier = "recovery_weekly_trend_threshold_sd_multiplier"
 }
 
 // MARK: - Hex → Color

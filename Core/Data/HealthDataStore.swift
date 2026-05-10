@@ -463,12 +463,16 @@ final class HealthDataStore {
         let baseJSON = Self.encodeJSON(baseDict) ?? Data()
 
         if let existing = try? modelContext?.fetch(descriptor).first {
+            // Anchor stored date at start-of-day so any callers filtering by
+            // calendar-day cutoffs see a deterministic boundary instead of
+            // whatever clock-second the first save of the day happened to land on.
+            existing.date = today
             existing.overallScore = overallScore
             existing.categoryScoresJSON = catJSON
             existing.baselinesJSON = baseJSON
         } else {
             modelContext?.insert(StoredAnalysisSnapshot(
-                date: Date(),
+                date: today,
                 overallScore: overallScore,
                 categoryScoresJSON: catJSON,
                 baselinesJSON: baseJSON

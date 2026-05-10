@@ -30,8 +30,8 @@ Core rules: Explain in 2–3 plain lines what solution you are thinking no code 
 19. Optimize for correctness → maintainability.
 20. Explain risks and tradeoffs in final output.
 21. Discuss before coding; align with user before implementation.
-22. Every response must include a real confidence score with exact verification status.
+22. Simplest solution, every move — before any action (read, write, agent, research, design), pick the smallest correct solution. Each step must be deliberate, not reflexive. No premature abstraction, no extra parallel agents when one read does it, no elaborate automation when a manual step is simpler. Full scope still applies, just take the simplest path.
 
-**Why:** Enforces fast, correct, production-grade execution with zero ambiguity.
+**Why:** Enforces fast, correct, production-grade execution with zero ambiguity. Reflex complexity wastes time and ships more bugs than it prevents.
 
-**How to apply:** Understand → align → execute (parallel where possible) → verify → deliver with risks + confidence.
+**How to apply:** Understand → align → execute (parallel where possible) → verify → deliver with risks + confidence. Pause before every move and ask "what is the smallest correct change?". Use heavy tools (parallel agents, deep research, worktrees, automation) only when the task genuinely needs them.
