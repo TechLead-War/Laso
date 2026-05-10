@@ -89,56 +89,111 @@ enum AppColour {
     static let danger  = Color(uiColor: #colorLiteral(red: 0.90, green: 0.28, blue: 0.30, alpha: 1.00)) // #E5484D soft red
     static let info    = Color(uiColor: #colorLiteral(red: 0.00, green: 0.44, blue: 0.89, alpha: 1.00)) // #0071E3 matches primary
 
-    // MARK: - 4. Score Tiers
-    static let scoreOptimal = Color(uiColor: #colorLiteral(red: 0.06, green: 0.73, blue: 0.51, alpha: 1.00)) // #10B981
-    static let scoreGood    = Color(uiColor: #colorLiteral(red: 0.20, green: 0.83, blue: 0.60, alpha: 1.00)) // #34D399 teal
-    static let scoreFair    = Color(uiColor: #colorLiteral(red: 0.96, green: 0.62, blue: 0.04, alpha: 1.00)) // #F59E0B
-    static let scorePoor    = Color(uiColor: #colorLiteral(red: 0.90, green: 0.28, blue: 0.30, alpha: 1.00)) // #E5484D
+    // MARK: - Remote-overridable wrapper
+    //
+    // Designer-tweakable tokens read Firebase Remote Config (hex string) at
+    // call time; if the key is missing or malformed they fall back to the
+    // bundled `_default` value below. This keeps the design system safe
+    // during cold start, offline, throttle, and the documented Firebase
+    // Remote Config outages — the app never renders an undefined Color.
+    //
+    // The widget extension (`WIDGET_EXTENSION` compilation condition) does
+    // NOT link Firebase, so the helper short-circuits to the bundled fallback.
+    // Widgets therefore always render with the in-binary palette; live RC
+    // overrides apply only inside the main app process.
+    private static func remote(_ key: String, fallback: Color) -> Color {
+        #if WIDGET_EXTENSION
+        return fallback
+        #else
+        return RemoteConfigManager.shared.color(forKey: key) ?? fallback
+        #endif
+    }
 
-    // MARK: - 5. Health Categories (desaturated)
-    static let categoryHeart    = Color(uiColor: #colorLiteral(red: 0.97, green: 0.44, blue: 0.44, alpha: 1.00)) // #F87171 soft rose
-    static let categorySleep    = Color(uiColor: #colorLiteral(red: 0.51, green: 0.55, blue: 0.97, alpha: 1.00)) // #818CF8 soft indigo
-    static let categoryActivity = Color(uiColor: #colorLiteral(red: 0.98, green: 0.75, blue: 0.14, alpha: 1.00)) // #FBBF24 soft amber
-    static let categoryStress   = Color(uiColor: #colorLiteral(red: 0.65, green: 0.55, blue: 0.98, alpha: 1.00)) // #A78BFA soft purple
-    static let categoryVitality = Color(uiColor: #colorLiteral(red: 0.20, green: 0.83, blue: 0.60, alpha: 1.00)) // #34D399 teal
-    static let categoryBrain    = Color(uiColor: #colorLiteral(red: 0.96, green: 0.45, blue: 0.71, alpha: 1.00)) // #F472B6 soft magenta
+    // MARK: - 4. Score Tiers (RC-overridable)
+    static var scoreOptimal: Color { remote(RC.colorScoreOptimal, fallback: _scoreOptimal) }
+    static var scoreGood:    Color { remote(RC.colorScoreGood,    fallback: _scoreGood) }
+    static var scoreFair:    Color { remote(RC.colorScoreFair,    fallback: _scoreFair) }
+    static var scorePoor:    Color { remote(RC.colorScorePoor,    fallback: _scorePoor) }
 
-    // MARK: - 6a. Achievement / Gamification Tiers
+    private static let _scoreOptimal = Color(uiColor: #colorLiteral(red: 0.06, green: 0.73, blue: 0.51, alpha: 1.00)) // #10B981
+    private static let _scoreGood    = Color(uiColor: #colorLiteral(red: 0.20, green: 0.83, blue: 0.60, alpha: 1.00)) // #34D399 teal
+    private static let _scoreFair    = Color(uiColor: #colorLiteral(red: 0.96, green: 0.62, blue: 0.04, alpha: 1.00)) // #F59E0B
+    private static let _scorePoor    = Color(uiColor: #colorLiteral(red: 0.90, green: 0.28, blue: 0.30, alpha: 1.00)) // #E5484D
+
+    // MARK: - 5. Health Categories (RC-overridable, desaturated)
+    static var categoryHeart:    Color { remote(RC.colorCategoryHeart,    fallback: _categoryHeart) }
+    static var categorySleep:    Color { remote(RC.colorCategorySleep,    fallback: _categorySleep) }
+    static var categoryActivity: Color { remote(RC.colorCategoryActivity, fallback: _categoryActivity) }
+    static var categoryStress:   Color { remote(RC.colorCategoryStress,   fallback: _categoryStress) }
+    static var categoryVitality: Color { remote(RC.colorCategoryVitality, fallback: _categoryVitality) }
+    static var categoryBrain:    Color { remote(RC.colorCategoryBrain,    fallback: _categoryBrain) }
+
+    private static let _categoryHeart    = Color(uiColor: #colorLiteral(red: 0.97, green: 0.44, blue: 0.44, alpha: 1.00)) // #F87171 soft rose
+    private static let _categorySleep    = Color(uiColor: #colorLiteral(red: 0.51, green: 0.55, blue: 0.97, alpha: 1.00)) // #818CF8 soft indigo
+    private static let _categoryActivity = Color(uiColor: #colorLiteral(red: 0.98, green: 0.75, blue: 0.14, alpha: 1.00)) // #FBBF24 soft amber
+    private static let _categoryStress   = Color(uiColor: #colorLiteral(red: 0.65, green: 0.55, blue: 0.98, alpha: 1.00)) // #A78BFA soft purple
+    private static let _categoryVitality = Color(uiColor: #colorLiteral(red: 0.20, green: 0.83, blue: 0.60, alpha: 1.00)) // #34D399 teal
+    private static let _categoryBrain    = Color(uiColor: #colorLiteral(red: 0.96, green: 0.45, blue: 0.71, alpha: 1.00)) // #F472B6 soft magenta
+
+    // MARK: - 6a. Achievement / Gamification Tiers (RC-overridable)
     // Source: Modules/Profile/Views/Profile/AchievementsView.swift:29-33
     //         Core/Analysis/GamificationEngine.swift:32-37 (same RGB + legend)
-    static let achievementBronze   = Color(uiColor: #colorLiteral(red: 0.80, green: 0.50, blue: 0.20, alpha: 1.00))
-    static let achievementSilver   = Color(uiColor: #colorLiteral(red: 0.75, green: 0.75, blue: 0.78, alpha: 1.00))
-    static let achievementGold     = Color(uiColor: #colorLiteral(red: 1.00, green: 0.84, blue: 0.00, alpha: 1.00))
-    static let achievementPlatinum = Color(uiColor: #colorLiteral(red: 0.90, green: 0.91, blue: 0.98, alpha: 1.00))
-    static let achievementDiamond  = Color(uiColor: #colorLiteral(red: 0.72, green: 0.95, blue: 1.00, alpha: 1.00))
-    static let achievementLegend   = Color(uiColor: #colorLiteral(red: 0.75, green: 0.72, blue: 0.98, alpha: 1.00)) // shifted toward calm lavender
+    static var achievementBronze:   Color { remote(RC.colorAchievementBronze,   fallback: _achievementBronze) }
+    static var achievementSilver:   Color { remote(RC.colorAchievementSilver,   fallback: _achievementSilver) }
+    static var achievementGold:     Color { remote(RC.colorAchievementGold,     fallback: _achievementGold) }
+    static var achievementPlatinum: Color { remote(RC.colorAchievementPlatinum, fallback: _achievementPlatinum) }
+    static var achievementDiamond:  Color { remote(RC.colorAchievementDiamond,  fallback: _achievementDiamond) }
+    static var achievementLegend:   Color { remote(RC.colorAchievementLegend,   fallback: _achievementLegend) }
 
-    // MARK: - 6b. Vitality Pace Palette
+    private static let _achievementBronze   = Color(uiColor: #colorLiteral(red: 0.80, green: 0.50, blue: 0.20, alpha: 1.00))
+    private static let _achievementSilver   = Color(uiColor: #colorLiteral(red: 0.75, green: 0.75, blue: 0.78, alpha: 1.00))
+    private static let _achievementGold     = Color(uiColor: #colorLiteral(red: 1.00, green: 0.84, blue: 0.00, alpha: 1.00))
+    private static let _achievementPlatinum = Color(uiColor: #colorLiteral(red: 0.90, green: 0.91, blue: 0.98, alpha: 1.00))
+    private static let _achievementDiamond  = Color(uiColor: #colorLiteral(red: 0.72, green: 0.95, blue: 1.00, alpha: 1.00))
+    private static let _achievementLegend   = Color(uiColor: #colorLiteral(red: 0.75, green: 0.72, blue: 0.98, alpha: 1.00)) // shifted toward calm lavender
+
+    // MARK: - 6b. Vitality Pace Palette (RC-overridable, except `vitalityDeltaNegative`)
     // Source: Modules/Vitality/Views/Vitality/VitalityDetailHelpers.swift:3-5, 41
-    static let vitalityWhoopGreen    = Color(uiColor: #colorLiteral(red: 0.20, green: 0.83, blue: 0.60, alpha: 1.00)) // #34D399 teal
-    static let vitalityPaceYellow    = Color(uiColor: #colorLiteral(red: 0.96, green: 0.62, blue: 0.04, alpha: 1.00)) // #F59E0B amber
-    static let vitalityPaceRed       = Color(uiColor: #colorLiteral(red: 0.90, green: 0.28, blue: 0.30, alpha: 1.00)) // #E5484D soft red
+    static var vitalityWhoopGreen: Color { remote(RC.colorVitalityGreen,  fallback: _vitalityWhoopGreen) }
+    static var vitalityPaceYellow: Color { remote(RC.colorVitalityYellow, fallback: _vitalityPaceYellow) }
+    static var vitalityPaceRed:    Color { remote(RC.colorVitalityRed,    fallback: _vitalityPaceRed) }
+
+    private static let _vitalityWhoopGreen = Color(uiColor: #colorLiteral(red: 0.20, green: 0.83, blue: 0.60, alpha: 1.00)) // #34D399 teal
+    private static let _vitalityPaceYellow = Color(uiColor: #colorLiteral(red: 0.96, green: 0.62, blue: 0.04, alpha: 1.00)) // #F59E0B amber
+    private static let _vitalityPaceRed    = Color(uiColor: #colorLiteral(red: 0.90, green: 0.28, blue: 0.30, alpha: 1.00)) // #E5484D soft red
+    /// Cyan delta indicator. Brand-locked — never expose to RC.
     static let vitalityDeltaNegative = Color(uiColor: #colorLiteral(red: 0.13, green: 0.83, blue: 0.93, alpha: 1.00)) // cyan
 
-    // MARK: - 6c. Health State Timeline
+    // MARK: - 6c. Health State Timeline (RC-overridable)
     // Source: Modules/HealthState/ViewModels/HealthStateTimelineViewModel.swift:42-52
-    static let stateRecovery        = Color(uiColor: #colorLiteral(red: 0.20, green: 0.83, blue: 0.60, alpha: 1.00)) // #34D399
-    static let statePeakPerformance = Color(uiColor: #colorLiteral(red: 0.00, green: 0.44, blue: 0.89, alpha: 1.00)) // #0071E3
-    static let stateStressed        = Color(uiColor: #colorLiteral(red: 0.90, green: 0.28, blue: 0.30, alpha: 1.00)) // #E5484D
-    static let stateUnderSlept      = Color(uiColor: #colorLiteral(red: 0.65, green: 0.55, blue: 0.98, alpha: 1.00)) // #A78BFA
-    static let stateActive          = Color(uiColor: #colorLiteral(red: 0.06, green: 0.73, blue: 0.51, alpha: 1.00)) // #10B981
-    static let stateFatigued        = Color(uiColor: #colorLiteral(red: 0.96, green: 0.62, blue: 0.04, alpha: 1.00)) // #F59E0B
-    static let stateResting         = Color(uiColor: #colorLiteral(red: 0.30, green: 0.64, blue: 1.00, alpha: 1.00)) // #4DA3FF
-    static let stateDefault         = Color(uiColor: #colorLiteral(red: 0.50, green: 0.50, blue: 0.50, alpha: 1.00))
+    static var stateRecovery:        Color { remote(RC.colorStateRecovery,        fallback: _stateRecovery) }
+    static var statePeakPerformance: Color { remote(RC.colorStatePeakPerformance, fallback: _statePeakPerformance) }
+    static var stateStressed:        Color { remote(RC.colorStateStressed,        fallback: _stateStressed) }
+    static var stateUnderSlept:      Color { remote(RC.colorStateUnderSlept,      fallback: _stateUnderSlept) }
+    static var stateActive:          Color { remote(RC.colorStateActive,          fallback: _stateActive) }
+    static var stateFatigued:        Color { remote(RC.colorStateFatigued,        fallback: _stateFatigued) }
+    static var stateResting:         Color { remote(RC.colorStateResting,         fallback: _stateResting) }
 
-    // MARK: - 6d. Premium / Subscription Badge
+    private static let _stateRecovery        = Color(uiColor: #colorLiteral(red: 0.20, green: 0.83, blue: 0.60, alpha: 1.00)) // #34D399
+    private static let _statePeakPerformance = Color(uiColor: #colorLiteral(red: 0.00, green: 0.44, blue: 0.89, alpha: 1.00)) // #0071E3
+    private static let _stateStressed        = Color(uiColor: #colorLiteral(red: 0.90, green: 0.28, blue: 0.30, alpha: 1.00)) // #E5484D
+    private static let _stateUnderSlept      = Color(uiColor: #colorLiteral(red: 0.65, green: 0.55, blue: 0.98, alpha: 1.00)) // #A78BFA
+    private static let _stateActive          = Color(uiColor: #colorLiteral(red: 0.06, green: 0.73, blue: 0.51, alpha: 1.00)) // #10B981
+    private static let _stateFatigued        = Color(uiColor: #colorLiteral(red: 0.96, green: 0.62, blue: 0.04, alpha: 1.00)) // #F59E0B
+    private static let _stateResting         = Color(uiColor: #colorLiteral(red: 0.30, green: 0.64, blue: 1.00, alpha: 1.00)) // #4DA3FF
+    /// Neutral default; never overridden — used only when `HealthState` is unknown.
+    static let stateDefault = Color(uiColor: #colorLiteral(red: 0.50, green: 0.50, blue: 0.50, alpha: 1.00))
+
+    // MARK: - 6d. Premium / Subscription Badge (gradient RC-overridable, text locked)
     // Source: Modules/Settings/Views/SettingsView.swift:178, 185-186
-    static let premiumBadgeText      = dynamic(
+    static let premiumBadgeText = dynamic(
         light: #colorLiteral(red: 0.35, green: 0.22, blue: 0.02, alpha: 1.00),
         dark:  #colorLiteral(red: 0.12, green: 0.08, blue: 0.02, alpha: 1.00)
     )
-    static let premiumGradientTop    = Color(uiColor: #colorLiteral(red: 1.00, green: 0.85, blue: 0.45, alpha: 1.00))
-    static let premiumGradientBottom = Color(uiColor: #colorLiteral(red: 0.96, green: 0.64, blue: 0.18, alpha: 1.00))
+    static var premiumGradientTop:    Color { remote(RC.colorPremiumGradientTop,    fallback: _premiumGradientTop) }
+    static var premiumGradientBottom: Color { remote(RC.colorPremiumGradientBottom, fallback: _premiumGradientBottom) }
+    private static let _premiumGradientTop    = Color(uiColor: #colorLiteral(red: 1.00, green: 0.85, blue: 0.45, alpha: 1.00))
+    private static let _premiumGradientBottom = Color(uiColor: #colorLiteral(red: 0.96, green: 0.64, blue: 0.18, alpha: 1.00))
 
     // MARK: - 6e. Shareable Score Card (dark-themed tier backgrounds)
     // Source: Common/Components/ShareableCard.swift:28-31, 186

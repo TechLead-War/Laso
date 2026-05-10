@@ -5,34 +5,42 @@ import Foundation
 /// HEURISTIC — unvalidated. The recovery-score thresholds and HR zone
 /// fractions below are common training-zone conventions, not anchored to
 /// a specific peer-reviewed dataset. Treat outputs as coaching guidance.
+///
+/// The band thresholds, seeds, ceilings, and default max-HR live in Firebase
+/// Remote Config (see `RC.workout*` in `RemoteConfigSchema.swift`). HR zone
+/// fractions stay code-side because they are exercise-physiology convention,
+/// not a product-tuning knob — changing them would invalidate every cached
+/// workout zone classification.
 enum WorkoutBandsConfig {
+
+    private static var rc: RemoteConfigManager { .shared }
 
     // MARK: - Recovery Bands (recovery score → band)
 
-    /// Score above this falls in the green band.
-    static let greenBandScoreFloor: Int = 75
-
-    /// Score at or above this (and at or below `greenBandScoreFloor`) falls in yellow.
-    static let yellowBandScoreFloor: Int = 50
+    static var greenBandScoreFloor: Int           { rc.workoutGreenBandFloor }
+    static var yellowBandScoreFloor: Int          { rc.workoutYellowBandFloor }
 
     // MARK: - Recovery Score Seeds (band → seed score)
 
-    static let redBandSeed: Int = 35
-    static let yellowBandSeed: Int = 65
-    static let greenBandSeed: Int = 82
+    static var redBandSeed: Int                   { rc.workoutRedBandSeed }
+    static var yellowBandSeed: Int                { rc.workoutYellowBandSeed }
+    static var greenBandSeed: Int                 { rc.workoutGreenBandSeed }
 
     // MARK: - Recovery → Training Zone
 
-    static let zoneRestoringScoreCeiling: Int = 50
-    static let zoneMaintainingScoreCeiling: Int = 75
-    static let zoneBuildingScoreCeiling: Int = 90
+    static var zoneRestoringScoreCeiling: Int     { rc.workoutZoneRestoringCeiling }
+    static var zoneMaintainingScoreCeiling: Int   { rc.workoutZoneMaintainingCeiling }
+    static var zoneBuildingScoreCeiling: Int      { rc.workoutZoneBuildingCeiling }
 
     // MARK: - Default Athlete Profile
 
-    /// Default estimated max HR used when the caller has no measurement.
-    static let defaultEstimatedMaxHR: Int = 190
+    static var defaultEstimatedMaxHR: Int         { rc.workoutDefaultMaxHR }
 
-    // MARK: - HR Zone Fractions (% of max HR)
+    // MARK: - HR Zone Fractions (% of max HR) — locked
+    //
+    // Standard exercise-physiology convention (Karvonen / ACSM zone bands).
+    // Not a product knob — changing any of these would invalidate every
+    // cached workout zone classification across the app history.
 
     struct HRZoneRange: Sendable {
         let lowerFraction: Double

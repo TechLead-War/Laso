@@ -5,94 +5,79 @@ import Foundation
 /// HEURISTIC — unvalidated. The deduction ladders, adaptive-weight factors,
 /// and coverage curve below are tuned for product feel and are not anchored
 /// to a specific peer-reviewed source. Treat outputs as informational.
+///
+/// Every tunable value lives in Firebase Remote Config (see `RC.health*`
+/// in `RemoteConfigSchema.swift`). The bundled defaults set inside the
+/// binary are the same numbers that previously lived here as `static let`,
+/// so behaviour is bit-identical until an operator overrides a key in the
+/// Firebase Console. Keep the constant-shaped API (`HealthScorerConfig.foo`)
+/// so existing call sites compile unchanged.
 enum HealthScorerConfig {
 
-    // MARK: - Score Scale
+    private static var rc: RemoteConfigManager { .shared }
 
+    // MARK: - Score Scale (locked)
+    //
+    // The 0-100 scale is part of the public score contract. Never expose to
+    // RC — changing the scale silently would corrupt every cached score and
+    // render historical comparisons meaningless.
     static let perfectScore: Int = 100
     static let minScore: Int = 0
 
     // MARK: - Anomaly Deductions
 
-    /// Maximum deduction for a critical anomaly.
-    static let criticalDeductionCap: Int = 50
-
-    /// Multiplier applied to the absolute z-score for critical anomalies.
-    static let criticalDeductionPerZ: Double = 12
-
-    /// Maximum deduction for a warning anomaly.
-    static let warningDeductionCap: Int = 25
-
-    /// Multiplier applied to the absolute z-score for warning anomalies.
-    static let warningDeductionPerZ: Double = 8
+    static var criticalDeductionCap: Int          { rc.healthCriticalDeductionCap }
+    static var criticalDeductionPerZ: Double      { rc.healthCriticalDeductionPerZ }
+    static var warningDeductionCap: Int           { rc.healthWarningDeductionCap }
+    static var warningDeductionPerZ: Double       { rc.healthWarningDeductionPerZ }
 
     // MARK: - Trend Adjustments
 
-    static let decliningDeductionCap: Int = 30
-    static let decliningDeductionPerPercent: Double = 1.3
-    static let decliningDeductionOffset: Double = 2
-
-    static let improvingBonusCap: Int = 8
-    static let improvingBonusPerPercent: Double = 0.6
-    static let improvingBonusOffset: Double = 2
+    static var decliningDeductionCap: Int         { rc.healthDecliningDeductionCap }
+    static var decliningDeductionPerPercent: Double { rc.healthDecliningDeductionPerPercent }
+    static var decliningDeductionOffset: Double   { rc.healthDecliningDeductionOffset }
+    static var improvingBonusCap: Int             { rc.healthImprovingBonusCap }
+    static var improvingBonusPerPercent: Double   { rc.healthImprovingBonusPerPercent }
+    static var improvingBonusOffset: Double       { rc.healthImprovingBonusOffset }
 
     // MARK: - Adaptive Category Weights
 
-    /// Coefficient-of-variation factor: rawWeight = base + cv * slope, capped.
-    static let volatilityFactorBase: Double = 0.5
-    static let volatilityFactorSlope: Double = 5.0
-    static let volatilityFactorCap: Double = 2.0
-
-    /// Coverage of measured metrics within a category: base + ratio * range.
-    static let richnessFactorBase: Double = 0.3
-    static let richnessFactorRange: Double = 0.7
-
-    /// Anomaly density: base + density * slope.
-    static let anomalyFactorBase: Double = 0.5
-    static let anomalyFactorSlope: Double = 1.5
-
-    /// Boost added when a category appears in the user's onboarding focus set.
-    static let focusBoost: Double = 1.2
-
-    /// Floor enforced per category after normalisation.
-    static let categoryWeightFloor: Double = 0.05
+    static var volatilityFactorBase: Double       { rc.healthVolatilityFactorBase }
+    static var volatilityFactorSlope: Double      { rc.healthVolatilityFactorSlope }
+    static var volatilityFactorCap: Double        { rc.healthVolatilityFactorCap }
+    static var richnessFactorBase: Double         { rc.healthRichnessFactorBase }
+    static var richnessFactorRange: Double        { rc.healthRichnessFactorRange }
+    static var anomalyFactorBase: Double          { rc.healthAnomalyFactorBase }
+    static var anomalyFactorSlope: Double         { rc.healthAnomalyFactorSlope }
+    static var focusBoost: Double                 { rc.healthFocusBoost }
+    static var categoryWeightFloor: Double        { rc.healthCategoryWeightFloor }
 
     // MARK: - Adaptive Metric Weights
 
-    /// Weight assigned when a metric has no baseline (will be floored).
-    static let noBaselineWeight: Double = 0.1
-
-    /// Freshness curve: ≤1d → fresh, 2-7d → linear decay, >7d → log decay.
-    static let freshnessFreshDayCutoff: Int = 1
-    static let freshnessFreshScore: Double = 1.0
-    static let freshnessRecentDayCutoff: Int = 7
-    static let freshnessRecentDecayPerDay: Double = 0.05
-    static let freshnessLongTermBase: Double = 0.7
-    static let freshnessLongTermDecayPerDay: Double = 0.017
-    static let freshnessFloor: Double = 0.3
-
-    /// Per-metric absolute floor (below which the metric is treated as floor weight).
-    static let metricWeightAbsoluteFloor: Double = 0.02
-
-    /// Floor expressed as a fraction of the equal-share weight.
-    static let metricWeightEqualShareDivisor: Double = 5.0
+    static var noBaselineWeight: Double           { rc.healthNoBaselineWeight }
+    static var freshnessFreshDayCutoff: Int       { rc.healthFreshnessFreshDayCutoff }
+    static var freshnessFreshScore: Double        { rc.healthFreshnessFreshScore }
+    static var freshnessRecentDayCutoff: Int      { rc.healthFreshnessRecentDayCutoff }
+    static var freshnessRecentDecayPerDay: Double { rc.healthFreshnessRecentDecayPerDay }
+    static var freshnessLongTermBase: Double      { rc.healthFreshnessLongTermBase }
+    static var freshnessLongTermDecayPerDay: Double { rc.healthFreshnessLongTermDecayPerDay }
+    static var freshnessFloor: Double             { rc.healthFreshnessFloor }
+    static var metricWeightAbsoluteFloor: Double  { rc.healthMetricWeightAbsoluteFloor }
+    static var metricWeightEqualShareDivisor: Double { rc.healthMetricWeightEqualShareDivisor }
 
     // MARK: - Coverage-Based Shrinkage
 
-    /// Each category contributes min(metricCount / `coverageFullWeightMetrics`, 1).
-    static let coverageFullWeightMetrics: Double = 2.0
+    static var coverageFullWeightMetrics: Double  { rc.healthCoverageFullWeightMetrics }
+    static var coveragePower: Double              { rc.healthCoveragePower }
+    static var neutralScore: Double               { rc.healthNeutralScore }
 
-    /// Power applied to weighted coverage to flatten diminishing returns.
-    static let coveragePower: Double = 0.6
+    // MARK: - Score Explanation (locked)
 
-    /// Score the raw is shrunk toward when coverage is sparse.
-    static let neutralScore: Double = 75.0
-
-    // MARK: - Score Explanation
-
-    /// Maximum number of factors surfaced in a score explanation.
+    /// Hard-coded — surfacing more than 3 factors clutters the explanation
+    /// card and is a UI invariant, not a tuning knob.
     static let maxTopFactors: Int = 3
 
-    /// Tolerance for the "weights sum to 1.0" final pass.
+    /// Tolerance for the "weights sum to 1.0" final pass. Floating-point
+    /// epsilon, not a product knob — locked.
     static let weightSumTolerance: Double = 0.001
 }

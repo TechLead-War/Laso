@@ -25,7 +25,10 @@ struct OnboardingV2View: View {
     @State private var calibrationStarted = false
     @State private var healthSnapshot = OnboardingHealthSnapshot()
 
-    enum Screen: Hashable {
+    /// Raw values intentionally match the case names so the Firebase Remote
+    /// Config key `onboarding_skip_screens` (CSV) can reference them by name
+    /// at runtime.
+    enum Screen: String, Hashable, CaseIterable {
         case welcome        // 1
         case promise        // 2
         case about          // 3
@@ -52,6 +55,13 @@ struct OnboardingV2View: View {
         }
         .animation(.timingCurve(0.22, 1, 0.36, 1, duration: 0.42), value: screen)
         .onAppear {
+            // Hotfix kill switch — when a middle screen crashes mid-flow, flip
+            // ON in Firebase Remote Config to send new installs straight to the
+            // paywall while a fix ships. Only honoured if we are still on the
+            // welcome screen so a user mid-flow does not get teleported.
+            if screen == .welcome, RemoteConfigManager.shared.onboardingForceSkipToPaywall {
+                screen = .paywall
+            }
             Task { @MainActor in
                 if subscriptionManager.products.isEmpty {
                     await subscriptionManager.loadProducts()
@@ -128,17 +138,35 @@ struct OnboardingV2View: View {
     }
 
     private func advance(to next: Screen) {
+        // Honour the Firebase Remote Config `onboarding_skip_screens` CSV by
+        // walking forward through the ordinal order until a non-skipped screen.
+        // Back navigation is never skipped — we want the user to land where
+        // they tapped, even if that screen happens to be in the skip set.
+        var target = next
+        let goingForward = Self.screenOrdinal(next) > Self.screenOrdinal(screen)
+        if goingForward {
+            let skipSet = RemoteConfigManager.shared.onboardingSkipScreens
+            while skipSet.contains(target.rawValue) {
+                let currentOrdinal = Self.screenOrdinal(target)
+                let later = Screen.allCases
+                    .filter { Self.screenOrdinal($0) > currentOrdinal }
+                    .min(by: { Self.screenOrdinal($0) < Self.screenOrdinal($1) })
+                guard let after = later, after != target else { break }
+                target = after
+            }
+        }
+
         // Track backward navigation as a separate signal so funnel analysis can
         // distinguish completed steps from steps the user reconsidered. Screens
         // are ordered by `Self.screenOrdinal`; any move to a lower ordinal is "back".
-        if Self.screenOrdinal(next) < Self.screenOrdinal(screen) {
+        if Self.screenOrdinal(target) < Self.screenOrdinal(screen) {
             AppAnalytics.shared.trackOnboardingNavTapped(
                 step: Self.screenOrdinal(screen),
                 stepName: String(describing: screen),
                 action: "back"
             )
         }
-        screen = next
+        screen = target
     }
 
     /// Step number used in analytics. Matches the user-visible 1-based step index.

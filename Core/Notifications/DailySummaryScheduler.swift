@@ -6,6 +6,28 @@ struct DailySummaryScheduler {
     private static let identifier = AppConstants.NotificationID.dailySummary
     private static let eveningIdentifier = AppConstants.NotificationID.eveningSummary
 
+    private static let scoreDeltaThreshold: Int = 3
+    private static let anomalyPercentThreshold: Double = 10
+    private static let streakMilestoneInterval: Int = 7
+    private static let extremeHighScore: Int = 90
+    private static let extremeLowScore: Int = 65
+
+    // Bell et al. 2023 (PMC10337295) micro-randomized trial found fixed daily
+    // notifications produce zero retention benefit (p=0.42) and recommended
+    // adaptive triggering — only fire when there is a real signal worth surfacing.
+    static func shouldFire(
+        score: Int,
+        scoreDelta: Int?,
+        topAnomalyPercent: Double?,
+        streakDays: Int,
+        improvingDays: Int
+    ) -> Bool {
+        if let d = scoreDelta, abs(d) >= scoreDeltaThreshold { return true }
+        if let p = topAnomalyPercent, abs(p) >= anomalyPercentThreshold { return true }
+        if streakDays > 0, streakDays.isMultiple(of: streakMilestoneInterval) { return true }
+        if score >= extremeHighScore || score < extremeLowScore { return true }
+        return false
+    }
 
     /// Schedule rich daily summary with dynamic, varied copy and wake-time-aware scheduling.
     static func schedule(
@@ -20,6 +42,17 @@ struct DailySummaryScheduler {
         improvingDays: Int = 0
     ) {
         guard preferences.dailySummaryEnabled else {
+            NotificationManager.shared.cancelNotification(identifier: identifier)
+            return
+        }
+
+        guard shouldFire(
+            score: score,
+            scoreDelta: scoreChangeFromYesterday,
+            topAnomalyPercent: topAnomaly?.changePercent,
+            streakDays: streakDays,
+            improvingDays: improvingDays
+        ) else {
             NotificationManager.shared.cancelNotification(identifier: identifier)
             return
         }

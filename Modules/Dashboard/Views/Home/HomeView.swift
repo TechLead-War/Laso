@@ -180,6 +180,10 @@ struct HomeView: View {
 
     private func startReadinessRefresh() {
         readinessRefreshTimer.stop()
+        // Hotfix kill switch — flip ON in Firebase Remote Config when watch
+        // sync is thrashing battery. Live readiness card reverts to whatever
+        // is already cached on the live view model.
+        guard !RemoteConfigManager.shared.killHomeLiveReadiness else { return }
         guard let interval = thermalManager.liveReadinessRefreshInterval else { return }
 
         readinessRefreshTimer.start(interval: interval, tolerance: min(120, interval * 0.2)) {

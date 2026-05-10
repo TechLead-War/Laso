@@ -34,7 +34,12 @@ final class RemoteConfigManager {
         settings.minimumFetchInterval = 3600  // 1 hour in production
         #endif
         rc.configSettings = settings
-        rc.setDefaults(Self.defaults)
+        // Merge the original defaults set with the expanded schema added in
+        // `RemoteConfigSchema.swift`. Original keys win on overlap so that
+        // historical behaviour stays bit-identical when the schema mirrors a
+        // pre-existing key.
+        let merged = Self.defaults.merging(Self.expandedDefaults) { current, _ in current }
+        rc.setDefaults(merged)
         remoteConfig = rc
     }
 
@@ -48,22 +53,22 @@ final class RemoteConfigManager {
 
     private func stringValue(forKey key: String) -> String {
         observeFetchUpdates()
-        return remoteConfig?.configValue(forKey: key).stringValue ?? (Self.defaults[key] as? String ?? "")
+        return remoteConfig?.configValue(forKey: key).stringValue ?? (Self.mergedDefaults[key] as? String ?? "")
     }
 
     private func intValue(forKey key: String) -> Int {
         observeFetchUpdates()
-        return remoteConfig?.configValue(forKey: key).numberValue.intValue ?? (Self.defaults[key] as? NSNumber)?.intValue ?? 0
+        return remoteConfig?.configValue(forKey: key).numberValue.intValue ?? (Self.mergedDefaults[key] as? NSNumber)?.intValue ?? 0
     }
 
     private func doubleValue(forKey key: String) -> Double {
         observeFetchUpdates()
-        return remoteConfig?.configValue(forKey: key).numberValue.doubleValue ?? (Self.defaults[key] as? NSNumber)?.doubleValue ?? 0
+        return remoteConfig?.configValue(forKey: key).numberValue.doubleValue ?? (Self.mergedDefaults[key] as? NSNumber)?.doubleValue ?? 0
     }
 
     private func boolValue(forKey key: String) -> Bool {
         observeFetchUpdates()
-        return remoteConfig?.configValue(forKey: key).boolValue ?? (Self.defaults[key] as? NSNumber)?.boolValue ?? false
+        return remoteConfig?.configValue(forKey: key).boolValue ?? (Self.mergedDefaults[key] as? NSNumber)?.boolValue ?? false
     }
 
     // MARK: - Fetch
@@ -396,6 +401,14 @@ extension RemoteConfigManager {
 // MARK: - Defaults
 
 extension RemoteConfigManager {
+
+    /// Merged dict used by the typed helpers as the no-Firebase fallback.
+    /// Holds every key from `defaults` (this file) and `expandedDefaults`
+    /// (`RemoteConfigSchema.swift`). Existing keys win on overlap so legacy
+    /// behaviour is bit-identical when the schema mirrors a pre-existing key.
+    static let mergedDefaults: [String: NSObject] = {
+        defaults.merging(expandedDefaults) { current, _ in current }
+    }()
 
     /// In-app defaults used when Remote Config hasn't been fetched yet.
     /// These mirror the initial values set in the admin panel.

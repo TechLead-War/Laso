@@ -79,6 +79,10 @@ struct DailyNarrativeCard: View {
         guard !didAttempt else { return }
         didAttempt = true
 
+        // Affirmative gate — flip OFF in Firebase Remote Config to silence the
+        // narrative card without rebuilding (e.g. on-device LLM regression).
+        guard RemoteConfigManager.shared.aiNarrativeEnabled else { return }
+
         #if canImport(FoundationModels)
         guard #available(iOS 26, *) else { return }
         isLoading = true

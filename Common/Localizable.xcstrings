@@ -662,9 +662,6 @@
     "A new version of Laso is available with important fixes. Please update to continue." : {
 
     },
-    "Achievements" : {
-
-    },
     "Acknowledges the medical disclaimer and continues into the app" : {
 
     },
@@ -672,9 +669,6 @@
 
     },
     "Active Sources" : {
-
-    },
-    "Active Streaks" : {
 
     },
     "Activity" : {
@@ -693,9 +687,6 @@
         }
       }
     },
-    "Add Laso shortcuts to Siri so you can check your health score, view your sleep summary, or open today's dashboard hands free." : {
-
-    },
     "Adjust the amount you logged" : {
 
     },
@@ -706,9 +697,6 @@
 
     },
     "ago" : {
-
-    },
-    "Amount" : {
 
     },
     "Amount (liters)" : {
@@ -751,19 +739,10 @@
     "Breathwork" : {
 
     },
-    "Building accuracy · %lld%%" : {
-
-    },
     "Building your sleep profile" : {
 
     },
-    "Building your stress baseline" : {
-
-    },
     "Bundle: %@" : {
-
-    },
-    "Cancel" : {
 
     },
     "Causal chain affecting %@" : {
@@ -794,9 +773,6 @@
 
     },
     "Collapsed" : {
-
-    },
-    "Common Transitions" : {
 
     },
     "common.button.cancel" : {
@@ -991,13 +967,7 @@
     "Continue" : {
 
     },
-    "Continue anyway" : {
-
-    },
     "Continue Anyway" : {
-
-    },
-    "Continue to dashboard" : {
 
     },
     "Cooldown" : {
@@ -1006,16 +976,7 @@
     "Cycling" : {
 
     },
-    "Daily Check-in" : {
-
-    },
     "Dance" : {
-
-    },
-    "Danger Zone" : {
-
-    },
-    "Data confidence: %@ tier" : {
 
     },
     "Data Source" : {
@@ -1025,9 +986,6 @@
 
     },
     "Day" : {
-
-    },
-    "DAY %lld" : {
 
     },
     "days" : {
@@ -1072,9 +1030,6 @@
 
     },
     "Dismisses the maintenance notice and continues to the app" : {
-
-    },
-    "Distribution" : {
 
     },
     "Done" : {
@@ -1143,9 +1098,6 @@
     "Heart & Cardio" : {
 
     },
-    "Here is what we found" : {
-
-    },
     "Hides the milestone unlock card" : {
 
     },
@@ -1156,9 +1108,6 @@
 
     },
     "High" : {
-
-    },
-    "Highest level achieved" : {
 
     },
     "HIIT" : {
@@ -1186,9 +1135,6 @@
 
     },
     "How would you feel if you could no longer use Laso?" : {
-
-    },
-    "HRV · weekly average" : {
 
     },
     "I couldn't calculate your readiness. Make sure Apple Health has recent HRV and resting heart rate data." : {
@@ -1251,9 +1197,6 @@
     "last %@" : {
 
     },
-    "Last 7 nights" : {
-
-    },
     "Last Known Readings" : {
 
     },
@@ -1294,36 +1237,10 @@
     "Log %@" : {
 
     },
-    "Log %lld behavior%@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Log %1$lld behavior%2$@"
-          }
-        }
-      }
-    },
-    "Log %lld Behavior%@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Log %1$lld Behavior%2$@"
-          }
-        }
-      }
-    },
     "Log ${amount} liters of water" : {
 
     },
     "Log a ${durationMinutes} minute ${workoutType} workout" : {
-
-    },
-    "Log a workout in Apple Health or wear your watch during exercise. Your strain score will appear here once activity is recorded." : {
-
-    },
-    "Log Entry" : {
 
     },
     "Log Water" : {
@@ -1335,25 +1252,12 @@
     "Log Workout" : {
 
     },
-    "Logged" : {
-
-    },
     "Logged %@ of water (%lld mL) to Apple Health." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Logged %1$@ of water (%2$lld mL) to Apple Health."
-          }
-        }
-      }
-    },
-    "Logged %lld behavior%@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Logged %1$lld behavior%2$@"
           }
         }
       }
@@ -1375,9 +1279,6 @@
 
     },
     "m" : {
-
-    },
-    "Maximum notifications per day" : {
 
     },
     "Metrics" : {
@@ -1404,25 +1305,13 @@
     "no data yet" : {
 
     },
-    "No nights recorded yet" : {
-
-    },
     "No score yet" : {
-
-    },
-    "No workout data yet" : {
 
     },
     "Not Enough Data" : {
 
     },
-    "Not enough HRV samples across the week" : {
-
-    },
     "Not selected" : {
-
-    },
-    "Notes" : {
 
     },
     "Open App Store" : {
@@ -1512,9 +1401,6 @@
     "Optional notes..." : {
 
     },
-    "Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless it is canceled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. You can manage and cancel your subscriptions by going to your App Store account settings after purchase." : {
-
-    },
     "Period" : {
 
     },
@@ -1525,9 +1411,6 @@
 
     },
     "Pulls the latest health data from connected sources" : {
-
-    },
-    "Quick question" : {
 
     },
     "Quickly log a workout to your Health app with a type and duration." : {
@@ -1548,13 +1431,7 @@
     "Respiratory" : {
 
     },
-    "Resting HR" : {
-
-    },
     "Restores any prior subscription tied to your Apple ID" : {
-
-    },
-    "Retry" : {
 
     },
     "Retry loading health data" : {
@@ -1633,9 +1510,6 @@
     "Selects the %@ subscription plan" : {
 
     },
-    "Sending feedback" : {
-
-    },
     "Sends negative feedback on this answer" : {
 
     },
@@ -1654,9 +1528,6 @@
     "Setup Guide" : {
 
     },
-    "Share health card" : {
-
-    },
     "Show Health Trends" : {
 
     },
@@ -1664,9 +1535,6 @@
 
     },
     "Sleep" : {
-
-    },
-    "Sleep Coach" : {
 
     },
     "Sleep Summary" : {
@@ -1691,9 +1559,6 @@
 
     },
     "Starts your free trial and subscribes after" : {
-
-    },
-    "State Guide" : {
 
     },
     "Strain" : {
@@ -1735,9 +1600,6 @@
 
     },
     "Swimming" : {
-
-    },
-    "Swipe to explore" : {
 
     },
     "Switch to %@ tab" : {
@@ -1844,9 +1706,6 @@
     "Toggles a causal explanation for why this metric declined" : {
 
     },
-    "Track these patterns and more. Updated every time you open the app." : {
-
-    },
     "Track your health with Laso" : {
 
     },
@@ -1857,9 +1716,6 @@
 
     },
     "Under Maintenance" : {
-
-    },
-    "Unlock %lld more insights with Pro" : {
 
     },
     "Unlock the full set with a Pro subscription." : {
@@ -1878,9 +1734,6 @@
 
     },
     "Updated %@ ago" : {
-
-    },
-    "Upgrade to Pro" : {
 
     },
     "via %@" : {
@@ -1922,16 +1775,7 @@
     "Water Logged" : {
 
     },
-    "We analyzed your health history" : {
-
-    },
     "We need a few nights of overnight sleep data from your Apple Watch to learn your normal range. Wear your watch to bed and your sleep coach will appear here." : {
-
-    },
-    "We need about 14 days of overnight HRV data to learn your normal range. Wear your Apple Watch to bed and your stress signal will appear here." : {
-
-    },
-    "We need more nights of sleep + HRV data before locking in your brain readiness number." : {
 
     },
     "Weekly Review. Score %lld. %lld wins." : {
@@ -1959,9 +1803,6 @@
     "What type of workout did you do?" : {
 
     },
-    "What would you like to log?" : {
-
-    },
     "While you wait" : {
 
     },
@@ -1985,9 +1826,6 @@
       }
     },
     "you@example.com" : {
-
-    },
-    "Your Dashboard is Ready" : {
 
     },
     "Your email" : {

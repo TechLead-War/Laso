@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -20,6 +20,7 @@
 		0901C78DEA61ADB1FEA001D3 /* AdherenceRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C55C2536AC9AE941DDFAB32 /* AdherenceRecord.swift */; };
 		09F2933AF2645FE7C26125EF /* OnboardingConnectHealthStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92EFEBABE937B9AFD39D996C /* OnboardingConnectHealthStep.swift */; };
 		0B241C38AC72F42837C9BB10 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A260467379612091A6B0F24B /* AppDelegate.swift */; };
+		0B7F7B2D645144CAB014E4C5 /* RemoteConfigKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 777C162E27BD0D780E9D43A5 /* RemoteConfigKeys.swift */; };
 		0BA034199EEE6FDFC960B61A /* AnalysisSummaryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 904302FDB500593CF09CC92A /* AnalysisSummaryWidget.swift */; };
 		0BC728283F344678988F17BA /* UserBaseline.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2528F279EF11BFB08AE04FB /* UserBaseline.swift */; };
 		0C16CC0888FD046F4CB534DA /* InsightsDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FC920152F8808345BE3999F /* InsightsDetailView.swift */; };
@@ -218,6 +219,7 @@
 		7A51132C40FC657213FDAE3F /* AchievementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6CADCA0D3141F5EB53F7056 /* AchievementsView.swift */; };
 		7B9AE2E27259473E6B65A151 /* InsightCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD254B169AC9BC98F1E1D195 /* InsightCard.swift */; };
 		7DC1B74F4A5D692F80A0EE81 /* TrendDirection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DFAAB50F7FFF64996BF7D6 /* TrendDirection.swift */; };
+		7E212410C665673BD2FC78F0 /* RemoteConfigSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D06B19176F332865EF07E79 /* RemoteConfigSchema.swift */; };
 		7F2CBA30F251CFDEC4AA3CA8 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 68F87CBA1450FC8A2A904FB3 /* GoogleService-Info.plist */; };
 		7F9CD5A35B0AFBEEA5BA5589 /* HRRFitnessAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F504A261844112700CFB346 /* HRRFitnessAnalyzer.swift */; };
 		80AC1861A726D03C86D25A1C /* WorkoutEffectivenessAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5D8C4A6668F3E76A40E24D /* WorkoutEffectivenessAnalyzer.swift */; };
@@ -307,6 +309,8 @@
 		AF832D43060E793A960082FF /* SectionTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B261CA79AE5F8EE731B0B35 /* SectionTracker.swift */; };
 		B0FDB7774EBF898406B7FB4D /* LiveActivitySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00013E913654C8217CCD3B78 /* LiveActivitySection.swift */; };
 		B19A1FF877167A668CF7526B /* DeviceSourceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B84E7B92FC24D92EDC8302A /* DeviceSourceManager.swift */; };
+		B1C001CUEAAAAAAAAAAAAAAA /* MetricCue.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C001CUEFFFFFFFFFFFFFFF /* MetricCue.swift */; };
+		B1C002BCTAAAAAAAAAAAAAAA /* BedtimeChronotype.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C002BCTFFFFFFFFFFFFFFF /* BedtimeChronotype.swift */; };
 		B286237FFD4722DDE28A1278 /* ShareableCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88530F4B9515D8E0DD6C9FBF /* ShareableCard.swift */; };
 		B2D2EF8F61F11AF77D1AF97B /* BiologicalAgeConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40D2A73BAF6AE0371B4C739E /* BiologicalAgeConfig.swift */; };
 		B3BD73E3290C08C924E749B2 /* OnboardingMirrorMomentStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97D3DA83586090293DEA094F /* OnboardingMirrorMomentStep.swift */; };
@@ -426,6 +430,7 @@
 		F7CB42219F1E619D33E8B2AC /* StrainDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F93C89F001476F58AC2EF95 /* StrainDetailView.swift */; };
 		F86FCDD7F9DAEAB2543F3F42 /* Copy.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD9B994459360428746ABED /* Copy.swift */; };
 		F878F975CAC7C202B06FC4F9 /* VitalityOrganicOrb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5359ACAE4300CE1A64B27A07 /* VitalityOrganicOrb.swift */; };
+		F9DD580F0CE41F762801AB86 /* RemoteConfigKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 777C162E27BD0D780E9D43A5 /* RemoteConfigKeys.swift */; };
 		FA2BA1624F30A94BBAE03C10 /* VitalitySupportingSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832487B229BF25CBEBCEF718 /* VitalitySupportingSections.swift */; };
 		FAC4E6C7482CA6C0B4AD9239 /* OnboardingV2View.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC23934CCED0695BED3ACAD7 /* OnboardingV2View.swift */; };
 		FB08B62C51EB64755B11BAA3 /* PersistenceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 061E761938B2C28A7973AE8C /* PersistenceManager.swift */; };
@@ -548,9 +553,10 @@
 		2AEDA0678B60183E8E39DF7F /* EveningSummaryScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EveningSummaryScheduler.swift; sourceTree = "<group>"; };
 		2B9B4E13B3E0CBF33D986638 /* CorrelationDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorrelationDiscovery.swift; sourceTree = "<group>"; };
 		2BD5106A411BF786550CB911 /* BrainHealthDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrainHealthDetailView.swift; sourceTree = "<group>"; };
+		2D06B19176F332865EF07E79 /* RemoteConfigSchema.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RemoteConfigSchema.swift; sourceTree = "<group>"; };
 		2E09D3D7E71AA46E72FF86DA /* VitalityHeroSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VitalityHeroSection.swift; sourceTree = "<group>"; };
 		2E4D873EED5C71C13BBC1A5F /* DSToast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DSToast.swift; sourceTree = "<group>"; };
-		2E6A79C6A57A85AF78D95A7B /* Laso.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Laso.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2E6A79C6A57A85AF78D95A7B /* Laso.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Laso.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2E766E483790D639837DE686 /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
 		2E78C29DCF6A62EC4F927060 /* LiveHeartRateSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveHeartRateSection.swift; sourceTree = "<group>"; };
 		2E8E7E55F415A448AF3B28F3 /* LasoUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LasoUITests.swift; sourceTree = "<group>"; };
@@ -589,7 +595,7 @@
 		3E0FF72B5323F23F5726B0CD /* AnalysisEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisEngine.swift; sourceTree = "<group>"; };
 		3E1418B90C1EBE51F8714C3C /* JournalCorrelationAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalCorrelationAnalyzer.swift; sourceTree = "<group>"; };
 		3E8777F7E756E6EB52002D6E /* AnalysisWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisWidgetView.swift; sourceTree = "<group>"; };
-		4024E1BFAFFCCDFB7436F99A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		4024E1BFAFFCCDFB7436F99A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		40D2A73BAF6AE0371B4C739E /* BiologicalAgeConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiologicalAgeConfig.swift; sourceTree = "<group>"; };
 		4110E401704451F4474260E9 /* StoredECGFeatures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredECGFeatures.swift; sourceTree = "<group>"; };
 		41B116FC0FBDF4CF61E91515 /* PeriodSummarySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeriodSummarySection.swift; sourceTree = "<group>"; };
@@ -687,6 +693,7 @@
 		7553FA1757B4960F8C760018 /* SleepSummaryIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepSummaryIntent.swift; sourceTree = "<group>"; };
 		7645C33E2BC23C63E1F1BF07 /* ConnectedDevicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectedDevicesView.swift; sourceTree = "<group>"; };
 		77717BE0C826ED4BCC307EB5 /* InsightAnalyzerProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightAnalyzerProtocol.swift; sourceTree = "<group>"; };
+		777C162E27BD0D780E9D43A5 /* RemoteConfigKeys.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RemoteConfigKeys.swift; sourceTree = "<group>"; };
 		7819843EFAB7EAF1A1CE4C25 /* PatternCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatternCard.swift; sourceTree = "<group>"; };
 		788A6E50CB537408CC49F80B /* Copy+StressMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Copy+StressMonitor.swift"; sourceTree = "<group>"; };
 		78D0A7A8A5CE97B2C4468D86 /* RulesConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesConfiguration.swift; sourceTree = "<group>"; };
@@ -795,6 +802,8 @@
 		B1685CFC4B37F96EC679A309 /* OnboardingFocusStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFocusStep.swift; sourceTree = "<group>"; };
 		B17EA97B4819C200C955CB4A /* DiscoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryView.swift; sourceTree = "<group>"; };
 		B196E886F79A91323B2778F8 /* FoundationModelTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelTools.swift; sourceTree = "<group>"; };
+		B1C001CUEFFFFFFFFFFFFFFF /* MetricCue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricCue.swift; sourceTree = "<group>"; };
+		B1C002BCTFFFFFFFFFFFFFFF /* BedtimeChronotype.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BedtimeChronotype.swift; sourceTree = "<group>"; };
 		B31985DC9984558EDF16D01E /* AppSecrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSecrets.swift; sourceTree = "<group>"; };
 		B4330F5DBB4D9868E568F8C7 /* SubscriptionConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionConfig.swift; sourceTree = "<group>"; };
 		B501EB7BABE62289E55639E7 /* WindDownActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindDownActivityAttributes.swift; sourceTree = "<group>"; };
@@ -849,9 +858,9 @@
 		D8F0D26D7782E75B48E710B7 /* MLOrchestrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLOrchestrator.swift; sourceTree = "<group>"; };
 		D8F6915E5718E8B9919DC3FD /* MetricDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricDetailViewModel.swift; sourceTree = "<group>"; };
 		D901E75F4ECF2BFD747AD3F9 /* ExploreScoreHeroSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreScoreHeroSection.swift; sourceTree = "<group>"; };
-		DB5737EEB9C2C63A4808E158 /* LasoUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LasoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		DB5737EEB9C2C63A4808E158 /* LasoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LasoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DB64CE551229B9165432537B /* AnalysisWidgetProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisWidgetProvider.swift; sourceTree = "<group>"; };
-		DC1489C7446344221C0AA886 /* LasoWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = LasoWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		DC1489C7446344221C0AA886 /* LasoWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LasoWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC5783E567450D3A195DAFB2 /* IllnessEarlyWarning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IllnessEarlyWarning.swift; sourceTree = "<group>"; };
 		DDBED8EE5CB6B5BEEFC7F005 /* JournalEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalEntryView.swift; sourceTree = "<group>"; };
 		DE6F78E354D1C59E90591591 /* Math+Clamp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Math+Clamp.swift"; sourceTree = "<group>"; };
@@ -893,7 +902,7 @@
 		FC79ED8A50F93F40BED373A0 /* WebExportViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebExportViewModel.swift; sourceTree = "<group>"; };
 		FC809FB75555302A82EC9770 /* AppAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAnalytics.swift; sourceTree = "<group>"; };
 		FE0DF92F32206A9FE3B6D7DC /* NutritionCorrelationAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionCorrelationAnalyzer.swift; sourceTree = "<group>"; };
-		FF0815EDD721B3BB38683925 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		FF0815EDD721B3BB38683925 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1033,6 +1042,8 @@
 				72E987E767FDDCAFD0451FF5 /* RemoteConfigManager.swift */,
 				C3C2BDC454A62ECE1B1805CD /* ServiceProtocols.swift */,
 				67B7592107380119651070ED /* ThermalManager.swift */,
+				2D06B19176F332865EF07E79 /* RemoteConfigSchema.swift */,
+				777C162E27BD0D780E9D43A5 /* RemoteConfigKeys.swift */,
 			);
 			path = Config;
 			sourceTree = "<group>";
@@ -1209,6 +1220,7 @@
 			isa = PBXGroup;
 			children = (
 				CA4D4342ADADDD79F4F52A79 /* AlertEvaluator.swift */,
+				B1C002BCTFFFFFFFFFFFFFFF /* BedtimeChronotype.swift */,
 				7D5A57E05D8AC45D9CEB69E9 /* Copy+Notifications.swift */,
 				12ECFEAFA40B197B07F8A055 /* DailySummaryScheduler.swift */,
 				86FF3D33B2154ACB498EE0DD /* EngagementSequenceScheduler.swift */,
@@ -1216,6 +1228,7 @@
 				B15735738BDFA91C28F42354 /* FrequencyCapManager.swift */,
 				84946F896C3C96E80C9C236A /* IntelligenceAlertEvaluator.swift */,
 				ABADFB768D9AA25EA2D32F26 /* NotificationFatigueTracker.swift */,
+				B1C001CUEFFFFFFFFFFFFFFF /* MetricCue.swift */,
 				A063270DE935D1F0AB38584D /* NotificationManager.swift */,
 				8544B094AAEAF9BA1286F5D7 /* NotificationOptimizer.swift */,
 				64E3472403085C1A2A22D24C /* NotificationRepromptManager.swift */,
@@ -2195,8 +2208,6 @@
 				5B66791FC7824D564260130D /* PBXTargetDependency */,
 			);
 			name = LasoUITests;
-			packageProductDependencies = (
-			);
 			productName = LasoUITests;
 			productReference = DB5737EEB9C2C63A4808E158 /* LasoUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
@@ -2213,8 +2224,6 @@
 			dependencies = (
 			);
 			name = LasoWidgets;
-			packageProductDependencies = (
-			);
 			productName = LasoWidgets;
 			productReference = DC1489C7446344221C0AA886 /* LasoWidgets.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -2226,10 +2235,9 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1500;
+				LastUpgradeCheck = 2630;
 				TargetAttributes = {
 					08AD24A007F4503B8999A065 = {
-						DevelopmentTeam = S2MAH8X8JM;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.BackgroundModes = {
@@ -2246,7 +2254,6 @@
 						TestTargetID = 08AD24A007F4503B8999A065;
 					};
 					2131E0565430F53E4EC2F615 = {
-						DevelopmentTeam = S2MAH8X8JM;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
@@ -2271,7 +2278,7 @@
 				525DEF767B88AE8AA4386F79 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				5CC06B5893DD0C0D5077ECE7 /* XCRemoteSwiftPackageReference "posthog-ios" */,
 			);
-			preferredProjectObjectVersion = 77;
+			productRefGroup = 85D693CEA74B6AE4E9169174 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -2418,6 +2425,8 @@
 				62B5DDB18221D1F1B0A721CB /* Copy+Live.swift in Sources */,
 				1DA5C2A958EE393E24886840 /* Copy+MetricDetail.swift in Sources */,
 				A7ED1C8AF206BEA1B5F35277 /* Copy+Notifications.swift in Sources */,
+				B1C001CUEAAAAAAAAAAAAAAA /* MetricCue.swift in Sources */,
+				B1C002BCTAAAAAAAAAAAAAAA /* BedtimeChronotype.swift in Sources */,
 				993499C9392E5AF07E20133C /* Copy+Onboarding.swift in Sources */,
 				66CC55CC599DA2CB45ACB30D /* Copy+Paywall.swift in Sources */,
 				4B773F9C735552245456F7FF /* Copy+Policy.swift in Sources */,
@@ -2732,6 +2741,8 @@
 				80AC1861A726D03C86D25A1C /* WorkoutEffectivenessAnalyzer.swift in Sources */,
 				6F360E3091B28350486DC8FF /* WorkoutProgrammer.swift in Sources */,
 				775BF78290BA7A95FB61E1CF /* WorkoutTypeAppEnum.swift in Sources */,
+				7E212410C665673BD2FC78F0 /* RemoteConfigSchema.swift in Sources */,
+				0B7F7B2D645144CAB014E4C5 /* RemoteConfigKeys.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2755,6 +2766,7 @@
 				FD102DD60C684E03972A056F /* WidgetStyle.swift in Sources */,
 				E282EB84611AB2EA50D0016E /* WindDownActivityAttributes.swift in Sources */,
 				C8CA6E38054858675455E643 /* WindDownLiveActivityWidget.swift in Sources */,
+				F9DD580F0CE41F762801AB86 /* RemoteConfigKeys.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2819,6 +2831,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -2839,6 +2852,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.9;
@@ -2856,7 +2870,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 4;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2908,6 +2922,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -2921,6 +2936,7 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.9;
@@ -2934,7 +2950,7 @@
 				CODE_SIGN_ENTITLEMENTS = LasoWidgets/LasoWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 4;
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2945,6 +2961,7 @@
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.widgets;
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = WIDGET_EXTENSION;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -2961,7 +2978,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 4;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2983,7 +3000,7 @@
 				CODE_SIGN_ENTITLEMENTS = LasoWidgets/LasoWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 4;
-				DEVELOPMENT_TEAM = S2MAH8X8JM;
+				DEVELOPMENT_TEAM = SGX8SC86TT;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LasoWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2994,6 +3011,7 @@
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lasohealth.fit.widgets;
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = WIDGET_EXTENSION;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

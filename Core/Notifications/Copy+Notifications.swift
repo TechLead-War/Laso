@@ -3,130 +3,131 @@ import Foundation
 extension Copy {
     enum Notifications {
 
+        // MARK: - Length Budgets
+
+        /// Airship 2026 health & fitness benchmark: titles over 50 chars get
+        /// truncated by iOS notification UI. OneSignal 2026 confirms <=50.
+        private static let titleMax = 50
+        /// Airship 2026: bodies under 100 chars receive ~11x the click-through
+        /// of bodies over 300. 90 leaves headroom for emoji + iOS truncation.
+        private static let bodyMax  = 90
+
+        /// Hard cap a string at `max` chars, breaking at the last space if possible.
+        /// Used to enforce title and body budgets per Airship 2026 health & fitness
+        /// optimum (under-100-char bodies get ~11x the click rate).
+        static func clip(_ s: String, max: Int) -> String {
+            if s.count <= max { return s }
+            let cutoff = s.index(s.startIndex, offsetBy: max - 1)
+            let head = s[..<cutoff]
+            if let lastSpace = head.lastIndex(of: " ") {
+                return String(head[..<lastSpace]).trimmingCharacters(in: .whitespacesAndNewlines) + "."
+            }
+            return String(head) + "."
+        }
+
         // MARK: - Alert Titles
 
-        static func criticalMetric(_ name: String) -> String { "\(name) Worth a Look" }
-        static func warningMetric(_ name: String) -> String { "\(name) Worth Monitoring" }
-
-        // MARK: - Metric Action Hints (internal helpers)
-
-        /// Picks a short, concrete action phrase for an anomaly based on metric + direction.
-        /// Stays short so it fits inside the 160-char body budget.
-        static func anomalyAction(metric: String, isAbove: Bool) -> String {
-            let key = metric.lowercased()
-            // HRV must be checked before "heart rate", because "heart rate variability"
-            // contains the substring "heart rate".
-            if key.contains("hrv") || key.contains("variability") {
-                return isAbove ? "Nice sign of recovery." : "Consider an early night."
-            }
-            if key.contains("heart rate") || key.contains("resting") {
-                return isAbove ? "Try a few slow breaths." : "Sit down, sip some water."
-            }
-            if key.contains("oxygen") || key.contains("spo2") {
-                return "Rest and check again soon."
-            }
-            if key.contains("breath") || key.contains("respiratory") {
-                return isAbove ? "A few slow, deep breaths can help." : "Worth a look if this keeps up."
-            }
-            if key.contains("sleep") {
-                return "Aim for a calmer wind-down tonight."
-            }
-            if key.contains("steps") || key.contains("activity") {
-                return "A short walk can reset things."
-            }
-            return "Worth a look."
+        static func criticalMetric(_ name: String) -> String {
+            clip("\(name) Worth a Look", max: titleMax)
+        }
+        static func warningMetric(_ name: String) -> String {
+            clip("\(name) Worth Monitoring", max: titleMax)
         }
 
         // MARK: - Heart Rate Alerts
 
-        static let restingHRTitle = "Resting Heart Rate Higher Than Usual"
+        static let restingHRTitle = clip("Resting Heart Rate Higher Than Usual", max: titleMax)
         static func restingHRElevated(current: Int, average: Int) -> String {
             let diff = current - average
             let pct = average > 0 ? Int(round(Double(diff) / Double(average) * 100)) : 0
-            return "Your resting heart rate is \(current) bpm, \(pct)% above your \(average) bpm average. \u{2764}\u{FE0F} Rest up and check again later."
+            return clip("Resting HR \(current) bpm, \(pct)% above your \(average) avg. Rest and recheck. \u{2764}\u{FE0F}", max: bodyMax)
         }
 
-        static let highHRTitle = "Heart Rate Above Your Usual"
+        static let highHRTitle = clip("Heart Rate Above Your Usual", max: titleMax)
         static func highHRBody(current: Int, threshold: Int) -> String {
             let diff = max(0, current - threshold)
-            return "Your heart rate hit \(current) bpm, \(diff) bpm above your usual \(threshold) bpm top. If you are not training, try a few slow breaths. \u{2764}\u{FE0F}"
+            return clip("HR hit \(current) bpm, \(diff) above your usual \(threshold). Try a 60-second box breath. \u{2764}\u{FE0F}", max: bodyMax)
         }
 
-        static let lowHRTitle = "Heart Rate Below Your Usual"
+        static let lowHRTitle = clip("Heart Rate Below Your Usual", max: titleMax)
         static func lowHRBody(current: Int, threshold: Int) -> String {
             let diff = max(0, threshold - current)
-            return "Your heart rate dropped to \(current) bpm, \(diff) bpm below your usual \(threshold) bpm bottom. If you feel dizzy, sit down and sip water. \u{2764}\u{FE0F}"
+            return clip("HR dropped to \(current) bpm, \(diff) below your usual \(threshold). Sit and sip water. \u{2764}\u{FE0F}", max: bodyMax)
         }
 
         // MARK: - HRV
 
-        static let hrvLowTitle = "HRV Running Low"
+        static let hrvLowTitle = clip("HRV Running Low", max: titleMax)
         static func hrvLowBody(current: Int, dropPercent: Int) -> String {
-            "Your HRV is \(current) ms, \(dropPercent)% below your recent average. You may feel stressed or worn down today. Take it easy and try an early night. \u{1F634}"
+            clip("HRV \(current) ms, \(dropPercent)% below recent average. Take it easy and aim for an early night. \u{1F634}", max: bodyMax)
         }
 
         // MARK: - Blood Oxygen
 
-        static let spo2CriticalTitle = "Blood Oxygen Below Typical Range"
+        static let spo2CriticalTitle = clip("Blood Oxygen Below Typical Range", max: titleMax)
         static func spo2CriticalBody(value: String) -> String {
-            "Your blood oxygen is \(value)%, below your usual range. Rest, breathe slowly, and check again in a few minutes. \u{1FAC1}"
+            clip("Blood oxygen \(value)%, below your usual range. Rest 5 minutes, then recheck. \u{1FAC1}", max: bodyMax)
         }
 
-        static let spo2WarningTitle = "Blood Oxygen Worth Monitoring"
+        static let spo2WarningTitle = clip("Blood Oxygen Worth Monitoring", max: titleMax)
         static func spo2WarningBody(value: String) -> String {
-            "Your blood oxygen reading is \(value)%, a bit lower than your typical range. Worth keeping an eye on. \u{1FAC1}"
+            clip("Blood oxygen \(value)%, a touch below your typical range. Recheck in 10 min. \u{1FAC1}", max: bodyMax)
         }
 
         // MARK: - Respiratory Rate
 
-        static let respiratoryRateTitle = "Breathing Rate Higher Than Usual"
+        static let respiratoryRateTitle = clip("Breathing Rate Higher Than Usual", max: titleMax)
         static func respiratoryRateBody(current: String, average: String) -> String {
-            "Your breathing rate is \(current) br/min, above your \(average) br/min average. A few slow, deep breaths can help reset it. \u{1FAC1}"
+            clip("Breathing \(current) br/min, above your \(average) avg. Slow, deep breaths can reset it. \u{1FAC1}", max: bodyMax)
         }
 
         // MARK: - Anomaly Alerts
 
+        /// Body shape: metric + magnitude + direction + value, then a single
+        /// concrete tail from `MetricCue`. The old version concatenated a
+        /// generic "Worth a closer look" prefix on top of the cue, which
+        /// produced duplicated filler tails. One specific action only.
         static func anomalyBody(metric: String, deviation: String, direction: String, current: String, unit: String) -> String {
             let isAbove = direction.lowercased().contains("above")
-            let action = anomalyAction(metric: metric, isAbove: isAbove)
-            return "Your \(metric) is \(deviation)% \(direction) your usual (now \(current) \(unit)). Worth a closer look. \(action)"
+            let cue = MetricCue.from(rawMetric: metric)
+            return clip("Your \(metric) is \(deviation)% \(direction) usual (\(current) \(unit)). \(cue.tail(isAbove: isAbove))", max: bodyMax)
         }
         static func anomalyWarningBody(metric: String, deviation: String, direction: String) -> String {
             let isAbove = direction.lowercased().contains("above")
-            let action = anomalyAction(metric: metric, isAbove: isAbove)
-            return "Your \(metric) is \(deviation)% \(direction) your usual. \(action)"
+            let cue = MetricCue.from(rawMetric: metric)
+            return clip("Your \(metric) is \(deviation)% \(direction) usual. \(cue.tail(isAbove: isAbove))", max: bodyMax)
         }
 
         // MARK: - Trend Reversal
 
-        static func trendRecoveringTitle(metric: String) -> String { "\(metric) Recovering" }
+        static func trendRecoveringTitle(metric: String) -> String { clip("\(metric) Recovering", max: titleMax) }
         static func trendRecoveringBody(metric: String) -> String {
-            "Your \(metric) was declining, and now it is trending back up. Whatever you changed is working. \u{1F4C8}"
+            clip("\(metric) was declining, now trending back up. Whatever you changed is working. \u{1F4C8}", max: bodyMax)
         }
 
-        static func trendDecliningTitle(metric: String) -> String { "\(metric) Worth a Look" }
+        static func trendDecliningTitle(metric: String) -> String { clip("\(metric) Worth a Look", max: titleMax) }
         static func trendDecliningBody(metric: String) -> String {
-            "Your \(metric) was getting better but has started to slip. Check your last few days of sleep, training, and stress. \u{1F4CA}"
+            clip("\(metric) was improving but is starting to slip. Review recent sleep and stress. \u{1F4CA}", max: bodyMax)
         }
 
         // MARK: - Improvement Celebration
 
         static func improvementTitle(metric: String, percent: String) -> String {
-            "\(metric) Up \(percent)%!"
+            clip("\(metric) Up \(percent)%!", max: titleMax)
         }
         static func improvementBody(metric: String) -> String {
-            "Your \(metric) got better this week. Whatever you are doing, keep it going. \u{1F4AA}"
+            clip("Your \(metric) got better this week. Keep it going. \u{1F4AA}", max: bodyMax)
         }
 
         /// Optional richer body when the exact percent is available.
         static func improvementBody(metric: String, percent: String) -> String {
-            "Your \(metric) is up \(percent)% this week. Whatever you are doing, keep it going. \u{1F4AA}"
+            clip("\(metric) is up \(percent)% this week. Keep it going. \u{1F4AA}", max: bodyMax)
         }
 
         // MARK: - Daily Summary
 
         static func dailySummaryTitle(score: Int, grade: String, suffix: String) -> String {
-            "Health Score: \(score)/100 (\(grade))\(suffix)"
+            clip("Health Score: \(score)/100 (\(grade))\(suffix)", max: titleMax)
         }
         static func anomalyCallout(metric: String, direction: String, percent: String) -> String {
             "\(metric) \(direction) \(percent)%."
@@ -176,14 +177,18 @@ extension Copy {
             }
 
             // Loss-frame hooks
+            // Concrete deadline ("11:59 PM tonight") outperforms vague "tonight" in
+            // Customer.io 2026 urgency tests because users can mentally schedule it.
             if streakDays >= 3 {
-                candidates.append((.lossFrame, "Your \(streakDays)-day streak expires tonight."))
+                candidates.append((.lossFrame, "Your \(streakDays)-day streak ends at 11:59 PM tonight."))
             }
             if let delta = scoreDelta, delta <= -3 {
                 candidates.append((.lossFrame, "You are losing ground from last week."))
             }
+            // Only fire the "slipping" loss frame when we have a concrete delta to cite.
+            // Vague "Yesterday's gains are slipping" without data tested as filler.
             if improvingDays == 0, let delta = scoreDelta, delta < 0 {
-                candidates.append((.lossFrame, "Yesterday's gains are slipping."))
+                candidates.append((.lossFrame, "Down \(abs(delta)) since yesterday — easy to claw back."))
             }
 
             // Progress hooks (endowed progress)
@@ -224,12 +229,12 @@ extension Copy {
             // Pick the first match (data-driven priority order)
             if let chosen = pool.first {
                 UserDefaults.standard.set(chosen.category.rawValue, forKey: AppKeys.Notifications.lastDailyHookCategory)
-                return chosen.title
+                return clip(chosen.title, max: titleMax)
             }
 
             // Ultimate fallback
             UserDefaults.standard.set(HookCategory.curiosity.rawValue, forKey: AppKeys.Notifications.lastDailyHookCategory)
-            return "Your morning health check is ready."
+            return clip("Your morning health check is ready.", max: titleMax)
         }
 
         /// Body text. short, data-rich, complements the title.
@@ -276,28 +281,37 @@ extension Copy {
                 parts.append("\(streakDays)-day streak.")
             }
 
-            return parts.joined(separator: " ")
+            return clip(parts.joined(separator: " "), max: bodyMax)
         }
 
         // MARK: - Evening Summary
 
         static func eveningSummaryTitle(strainLevel: String) -> String {
-            "Today's Recap: \(strainLevel) Day"
-        }
-        static func eveningSummaryBody(strainLevel: String, score: Int) -> String {
-            let anchor = bedtimeAnchor(for: strainLevel)
-            return "A \(strainLevel.lowercased()) effort day ended at \(score)/100. \(anchor) \u{1F319}"
+            clip("Today's Recap: \(strainLevel) Day", max: titleMax)
         }
 
-        /// Picks a gentle bedtime anchor based on strain. Keeps things numeric without needing per-user data.
-        private static func bedtimeAnchor(for strainLevel: String) -> String {
+        /// `chronotypeBedtime` is the user's recent median bedtime, computed
+        /// upstream by `BedtimeChronotype`. Optional so existing callers that
+        /// have not been wired through still compile and fall back to the
+        /// "10:45 PM" default inside `bedtimeAnchor`.
+        static func eveningSummaryBody(strainLevel: String, score: Int, chronotypeBedtime: String? = nil) -> String {
+            let anchor = bedtimeAnchor(strainLevel: strainLevel, chronotypeBedtime: chronotypeBedtime)
+            return clip("\(strainLevel.lowercased()) day ended at \(score)/100. \(anchor) \u{1F319}", max: bodyMax)
+        }
+
+        /// Compute a strain-adjusted bedtime display from the user's chronotype.
+        /// `chronotypeBedtime` is the user's recent median bedtime, passed in
+        /// by the scheduler. Hard days shift earlier by 15 min, easy days
+        /// keep the chronotype anchor unchanged.
+        private static func bedtimeAnchor(strainLevel: String, chronotypeBedtime: String?) -> String {
+            let base = chronotypeBedtime ?? "10:45 PM"
             switch strainLevel.lowercased() {
             case "high", "very high", "hard":
-                return "Try for lights out by 10:30 PM to recover well."
+                return "Lights out 15 min earlier than usual (around \(base))."
             case "moderate", "medium":
-                return "Try for lights out by 10:45 PM tonight."
+                return "Lights out around \(base) tonight."
             default:
-                return "Try for lights out by 11:00 PM to protect tomorrow's score."
+                return "Lights out by \(base) to protect tomorrow."
             }
         }
 
@@ -315,30 +329,32 @@ extension Copy {
             let lastIndex = defaults.integer(forKey: AppKeys.Notifications.windDownVariantIndex)
             let nextIndex = (lastIndex + 1) % variants.count
             defaults.set(nextIndex, forKey: AppKeys.Notifications.windDownVariantIndex)
-            return variants[nextIndex]
+            return clip(variants[nextIndex], max: titleMax)
         }
 
         /// Body for the wind-down push. Always includes the specific bedtime as a hard number.
         /// `hrvHint` is an optional lead-in like "Your HRV suggests an early night" when data supports it.
-        static func windDownBody(bedtimeDisplay: String, hrvHint: String?) -> String {
+        /// `chronotypeBedtime` reserved for future scheduler wiring; the
+        /// caller-supplied `bedtimeDisplay` already carries the resolved time.
+        static func windDownBody(bedtimeDisplay: String, hrvHint: String?, chronotypeBedtime: String? = nil) -> String {
             if let hrvHint, !hrvHint.isEmpty {
-                return "\(hrvHint) Try for lights out by \(bedtimeDisplay)."
+                return clip("\(hrvHint) Lights out by \(bedtimeDisplay).", max: bodyMax)
             }
             let variants = [
-                "Start dimming the lights. Try for lights out by \(bedtimeDisplay).",
-                "Your suggested bedtime is \(bedtimeDisplay). Step away from screens and breathe.",
+                "Dim the lights. Lights out by \(bedtimeDisplay).",
+                "Suggested bedtime is \(bedtimeDisplay). Step away from screens.",
                 "Wind down now to hit lights out by \(bedtimeDisplay).",
-                "Tonight's target bedtime is \(bedtimeDisplay). Give yourself time to ease in."
+                "Tonight's target bedtime is \(bedtimeDisplay)."
             ]
             // Reuse the rotation index (set by windDownTitle this same firing) so body stays in sync.
             let index = UserDefaults.standard.integer(forKey: AppKeys.Notifications.windDownVariantIndex)
-            return variants[index % variants.count]
+            return clip(variants[index % variants.count], max: bodyMax)
         }
 
         // MARK: - Weekly Summary
 
         static func weeklyReportTitle(score: Int, change: String) -> String {
-            "Weekly Report: \(score)/100 (\(change))"
+            clip("Weekly Report: \(score)/100 (\(change))", max: titleMax)
         }
         static func improvedCount(_ count: Int) -> String { "\(count) improved" }
         static func declinedCount(_ count: Int) -> String { "\(count) declined" }
@@ -352,11 +368,11 @@ extension Copy {
         ) -> String? {
             switch (improver, decliner) {
             case let (imp?, dec?):
-                return "\(imp.metric) leads at \(imp.changeText), while \(dec.metric) slipped to \(dec.changeText). \u{1F4CA}"
+                return clip("\(imp.metric) leads at \(imp.changeText), while \(dec.metric) slipped to \(dec.changeText). \u{1F4CA}", max: bodyMax)
             case let (imp?, nil):
-                return "\(imp.metric) is your top climber at \(imp.changeText). \u{1F4AA}"
+                return clip("\(imp.metric) is your top climber at \(imp.changeText). \u{1F4AA}", max: bodyMax)
             case let (nil, dec?):
-                return "\(dec.metric) slipped the most, down by \(dec.changeText). Worth a closer look."
+                return clip("\(dec.metric) slipped the most, down \(dec.changeText). See what changed.", max: bodyMax)
             default:
                 return nil
             }
@@ -364,16 +380,16 @@ extension Copy {
 
         // MARK: - Reengagement
 
-        static let healthSnapshot = "Your Health Snapshot Is Waiting"
+        static let healthSnapshot = clip("Your Health Snapshot Is Waiting", max: titleMax)
         static func lastScoreBody(score: Int) -> String {
-            "Your last score was \(score)/100. It has been 3 days, and your trends are changing without you. \u{1F4CA}"
+            clip("Last score \(score)/100. 3 days on, your trends have moved. View the dip. \u{1F4CA}", max: bodyMax)
         }
         /// Richer reengagement body when a trend direction is known.
         static func lastScoreBody(score: Int, trendingMetric: String, direction: String) -> String {
-            "Your last score was \(score)/100. It has been 3 days, and your \(trendingMetric.lowercased()) was \(direction.lowercased()). Catch the change before it slips by. \u{1F4CA}"
+            clip("Last score \(score)/100. \(trendingMetric.lowercased()) was \(direction.lowercased()). Catch the change. \u{1F4CA}", max: bodyMax)
         }
-        static let insightsReady = "Your Health Insights Are Ready"
-        static let insightsReadyBody = "It has been a few days since you checked in. Open Laso to see what your body did while you were gone. \u{1F4CA}"
+        static let insightsReady = clip("Your Health Insights Are Ready", max: titleMax)
+        static let insightsReadyBody = clip("It has been a few days. See what your body did while you were gone. \u{1F4CA}", max: bodyMax)
 
         /// Loss-framed, data-grounded body referencing the user's actual last HRV + trend direction.
         /// Rotated by days-inactive so a repeat lapser sees a fresh framing each time.
@@ -385,102 +401,102 @@ extension Copy {
             case .stable:    trendWord = "holding steady"
             }
             let variants = [
-                "Your sleep trend was \(trendWord) before you left. Your last HRV was \(hrvMs) ms. Open Laso to see what changed.",
-                "Last score: \(score). HRV was \(hrvMs) ms and \(trendWord). Come back and see if the trend held up.",
-                "Before you stepped away, your HRV trend was \(trendWord) (\(hrvMs) ms). Check where it stands today."
+                "Sleep trend was \(trendWord). Last HRV \(hrvMs) ms. View the dip.",
+                "Last score \(score). HRV \(hrvMs) ms, \(trendWord). Catch the change.",
+                "HRV trend was \(trendWord) at \(hrvMs) ms. See where it stands today."
             ]
             let index = max(0, daysInactive) % variants.count
-            return variants[index]
+            return clip(variants[index], max: bodyMax)
         }
 
         /// Lighter loss-frame when only a score is available (no HRV snapshot yet).
         static func lapsedScoreOnlyBody(score: Int, daysInactive: Int) -> String {
             let variants = [
-                "Your last health score was \(score)/100. Come back to see what changed while you were gone.",
-                "You were at \(score)/100 when you last checked in. Open Laso to see where you stand today.",
-                "Score \(score) was your last reading. A lot can change in a few days. Take a look."
+                "Last health score \(score)/100. See what changed while you were gone.",
+                "You were at \(score)/100 last check-in. View where you stand today.",
+                "Score \(score) was your last reading. Catch the change."
             ]
             let index = max(0, daysInactive) % variants.count
-            return variants[index]
+            return clip(variants[index], max: bodyMax)
         }
 
         // MARK: - Engagement Sequence
 
         static func engagementDay1Title(name: String?) -> String {
             if let name, !name.isEmpty {
-                return "Morning check-in, \(name)"
+                return clip("Morning check-in, \(name)", max: titleMax)
             }
-            return "Your first morning check-in"
+            return clip("Your first morning check-in", max: titleMax)
         }
 
-        static let engagementDay1Body = "Open Laso now to log your morning heart rate and start your recovery baseline. \u{2764}\u{FE0F}"
+        static let engagementDay1Body = clip("Log your morning heart rate to start your recovery baseline. Check today's number. \u{2764}\u{FE0F}", max: bodyMax)
 
         static func engagementDay2Title(score: Int) -> String {
-            "Your recovery score is \(score)"
+            clip("Your recovery score is \(score)", max: titleMax)
         }
 
         static func engagementDay2Body(insight: String) -> String {
-            "\(insight) Tap to see the full picture and today's one-minute action. \u{1F4CA}"
+            clip("\(insight) See what changed and today's one-minute action. \u{1F4CA}", max: bodyMax)
         }
 
-        static let engagementDay2Fallback = "Tap to see today's recovery score and your one-minute morning action. \u{1F4CA}"
+        static let engagementDay2Fallback = clip("See today's recovery score and your one-minute morning action. \u{1F4CA}", max: bodyMax)
 
-        static let engagementDay3Title = "A sleep pattern is forming"
+        static let engagementDay3Title = clip("A sleep pattern is forming", max: titleMax)
 
         static func engagementDay3Body(finding: String) -> String {
-            "\(finding) Open Laso to see what changed and a small tweak to try tonight. \u{1F634}"
+            clip("\(finding) See what changed and a small tweak to try tonight. \u{1F634}", max: bodyMax)
         }
 
-        static let engagementDay3Fallback = "Your sleep is starting to tell a story. Open Laso for the early pattern and a simple tweak for tonight. \u{1F634}"
+        static let engagementDay3Fallback = clip("Your sleep is starting to tell a story. See the early pattern and a small tweak. \u{1F634}", max: bodyMax)
 
         static func engagementDay5Title(percent: Int) -> String {
-            "Personalization is \(percent)% complete"
+            clip("Personalization is \(percent)% complete", max: titleMax)
         }
 
         static func engagementDay5Body(daysRemaining: Int) -> String {
             if daysRemaining <= 0 {
-                return "Your baseline is ready. Open Laso to see patterns built from your first month of data. \u{1F4CA}"
+                return clip("Your baseline is ready. See patterns built from your first month of data. \u{1F4CA}", max: bodyMax)
             }
-            return "Check in for \(daysRemaining) more day\(daysRemaining == 1 ? "" : "s") to build a stronger personal baseline. \u{1F3AF}"
+            return clip("Check in for \(daysRemaining) more day\(daysRemaining == 1 ? "" : "s") to build a stronger baseline. \u{1F3AF}", max: bodyMax)
         }
 
         // Softer Day 5 variant used when the user has not yet seen a second recovery score.
         // Avoids claiming personalization has advanced when we do not actually have the data yet.
-        static let engagementDay5SoftTitle = "Your baseline is still forming"
-        static let engagementDay5SoftBody  = "Each morning check in makes your recovery picture clearer. Open Laso to take the next step."
+        static let engagementDay5SoftTitle = clip("Your baseline is still forming", max: titleMax)
+        static let engagementDay5SoftBody  = clip("Each morning check-in makes your recovery picture clearer. Check today's number.", max: bodyMax)
 
         static func engagementDay7Title(patternCount: Int) -> String {
-            "We have found \(patternCount) early signals"
+            clip("We have found \(patternCount) early signals", max: titleMax)
         }
 
         static func engagementDay7BodyTrend(metric: String, direction: String) -> String {
-            "Your \(metric) is \(direction). Open Laso before the trend slips by. \u{1F4C8}"
+            clip("Your \(metric) is \(direction). Read the 30-sec note before the trend slips. \u{1F4C8}", max: bodyMax)
         }
 
         static func engagementDay7BodyGeneric(count: Int) -> String {
-            "\(count) early patterns are waiting in your data. Open Laso to check them before they fade. \u{1F4CA}"
+            clip("\(count) early patterns waiting in your data. Read the 30-sec note before they fade. \u{1F4CA}", max: bodyMax)
         }
 
         // MARK: - Watch Monitor
 
-        static let watchBatteryLow = "Watch Battery Low"
+        static let watchBatteryLow = clip("Watch Battery Low", max: titleMax)
         static func watchBatteryBody(device: String, percent: Int) -> String {
-            "Your \(device) battery is at \(percent)%. Charge it soon to avoid missing health data."
+            clip("\(device) battery at \(percent)%. Charge it soon to avoid missing health data.", max: bodyMax)
         }
         static func watchNotWornScheduled(device: String, wearToTrack: String) -> String {
-            "\(device) has not recorded data for a while. \(wearToTrack)"
+            clip("\(device) has not recorded data for a while. \(wearToTrack)", max: bodyMax)
         }
         static func watchNotWornHours(device: String, hours: Int, minutes: Int, wearToTrack: String) -> String {
-            "\(device) has not recorded data for \(hours)h \(minutes)m. \(wearToTrack)"
+            clip("\(device) has not recorded data for \(hours)h \(minutes)m. \(wearToTrack)", max: bodyMax)
         }
         static func watchNotWornRecent(device: String, wearToTrack: String) -> String {
-            "\(device) has not recorded data recently. \(wearToTrack)"
+            clip("\(device) has not recorded data recently. \(wearToTrack)", max: bodyMax)
         }
 
         // MARK: - Permission Re-prompt
 
-        static let repromptTitle = "Stay on top of your health"
-        static let repromptBody = "Notifications are off. You are missing alerts about unusual heart rate, sleep changes, and your weekly progress."
+        static let repromptTitle = clip("Stay on top of your health", max: titleMax)
+        static let repromptBody = clip("Notifications are off. You are missing alerts on heart rate, sleep, and weekly progress.", max: bodyMax)
         static let repromptAction = "Turn On in Settings"
         static let repromptDismiss = "Not Now"
     }

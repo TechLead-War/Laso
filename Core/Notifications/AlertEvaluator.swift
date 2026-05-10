@@ -50,6 +50,11 @@ struct AlertEvaluator {
         previousTrends: [HealthMetric: TrendDirection],
         preferences: NotificationPreferences
     ) {
+        // Hotfix kill switch — flip ON in Firebase Remote Config when threshold
+        // tuning produces false-positive alert floods. Cooldown / dedup logic
+        // remains in place for the next time the switch flips OFF.
+        guard !RemoteConfigManager.shared.killAnomalyAlerts else { return }
+
         // Morning suppression: skip real-time alerts within 1 hour of the daily summary
         // since the summary already includes the top anomaly info.
         if preferences.dailySummaryEnabled, isNearDailySummaryTime(preferences.dailySummaryTime) {

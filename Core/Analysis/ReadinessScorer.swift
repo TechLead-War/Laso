@@ -46,6 +46,10 @@ struct ReadinessScorer {
         _ input: Input,
         smoothingAlpha: Double = defaultSmoothingAlpha
     ) -> Assessment? {
+        // Hotfix kill switch — flip ON in Firebase Remote Config when readiness
+        // ML output is bad in production. Callers fall back to the daily score.
+        guard !RemoteConfigManager.shared.killReadinessScorer else { return nil }
+
         var signals: [Signal] = []
 
         if let hrv = input.hrv {
