@@ -9,7 +9,16 @@ final class CategoryDetailViewModel {
     let healthKitManager: HealthKitManager
     let analysisEngine: AnalysisEngine
 
-    var selectedTimeRange: Int = TrendAnalyzer.homeTrendDays
+    /// Cached trend results for the current `selectedTimeRange`. Cleared on
+    /// range change so a tap recomputes once instead of every row × method.
+    @ObservationIgnored
+    private var trendCache: [HealthMetric: TrendAnalyzer.TrendResult]?
+
+    var selectedTimeRange: Int = TrendAnalyzer.homeTrendDays {
+        didSet {
+            if oldValue != selectedTimeRange { trendCache = nil }
+        }
+    }
 
     var metrics: [HealthMetric] {
         category.metrics
@@ -158,11 +167,35 @@ final class CategoryDetailViewModel {
     }
 
     private func trendResult(for metric: HealthMetric) -> TrendAnalyzer.TrendResult? {
-        TrendAnalyzer.canonicalTrend(
-            metric: metric,
-            series: healthKitManager.timeSeries[metric],
-            analysisEngine: analysisEngine,
-            days: selectedTimeRange
-        )
+        if trendCache == nil {
+            var dict: [HealthMetric: TrendAnalyzer.TrendResult] = [:]
+            for m in metrics {
+                if let result = TrendAnalyzer.canonicalTrend(
+                    metric: m,
+                    series: healthKitManager.timeSeries[m],
+                    analysisEngine: analysisEngine,
+                    days: selectedTimeRange
+                ) {
+                    dict[m] = result
+                }
+            }
+            trendCache = dict
+        }
+        return trendCache?[metric]
+    }
+
+    /// Period-aware display value: average of samples within the selected
+    /// range. Falls back to the latest sample when the range has no data.
+    func valueForRange(for metric: HealthMetric) -> String {
+        guard let series = healthKitManager.timeSeries[metric], !series.samples.isEmpty else {
+            return "--"
+        }
+        let cutoff = Date.cal.date(byAdding: .day, value: -selectedTimeRange, to: Date()) ?? Date()
+        let inRange = series.samples.filter { $0.date >= cutoff }
+        if inRange.isEmpty {
+            return metric.formatValue(series.latestValue ?? 0)
+        }
+        let avg = inRange.map(\.value).reduce(0, +) / Double(inRange.count)
+        return metric.formatValue(avg)
     }
 }

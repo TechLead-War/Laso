@@ -13,7 +13,7 @@ struct CategoryDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: DS.sectionSpacing) {
-                // Category Score
+                // Category Score (timeframe-independent overall score)
                 if let score = viewModel.categoryScore {
                     HealthScoreRing(
                         score: score.score,
@@ -25,30 +25,6 @@ struct CategoryDetailView: View {
                     .onAppear { scoreTracker.appeared() }
                     .onDisappear { scoreTracker.disappeared() }
                 }
-
-                // Category Analytics Summary
-                categoryAnalyticsSection
-                    .onAppear { analyticsTracker.appeared() }
-                    .onDisappear { analyticsTracker.disappeared() }
-
-                // Time Range Selector
-                TimeRangeSelector(selectedDays: Binding(
-                    get: { viewModel.selectedTimeRange },
-                    set: { newRange in
-                        let oldRange = viewModel.selectedTimeRange
-                        viewModel.selectedTimeRange = newRange
-                        if oldRange != newRange {
-                            AppAnalytics.shared.trackTimeRangeChanged(
-                                screen: .categoryDetail,
-                                context: viewModel.category.displayName,
-                                fromDays: oldRange,
-                                toDays: newRange
-                            )
-                            AppAnalytics.shared.trackCoreAction(.changedTimeRange, screen: .categoryDetail)
-                        }
-                    }
-                ))
-                .padding(.horizontal)
 
                 // Historical highlights for this category
                 if !viewModel.historicalHighlights.isEmpty {
@@ -135,6 +111,32 @@ struct CategoryDetailView: View {
                     .onAppear { insightsTracker.appeared() }
                     .onDisappear { insightsTracker.disappeared() }
                 }
+
+                // Time Range Selector — grouped with the timeframe-aware
+                // sections below (counters + per-metric values + trends) so
+                // tapping a range visibly refreshes the cluster it controls.
+                TimeRangeSelector(selectedDays: Binding(
+                    get: { viewModel.selectedTimeRange },
+                    set: { newRange in
+                        let oldRange = viewModel.selectedTimeRange
+                        viewModel.selectedTimeRange = newRange
+                        if oldRange != newRange {
+                            AppAnalytics.shared.trackTimeRangeChanged(
+                                screen: .categoryDetail,
+                                context: viewModel.category.displayName,
+                                fromDays: oldRange,
+                                toDays: newRange
+                            )
+                            AppAnalytics.shared.trackCoreAction(.changedTimeRange, screen: .categoryDetail)
+                        }
+                    }
+                ))
+                .padding(.horizontal)
+
+                // Category Analytics Summary (Improving/Stable/Declining + attention badge)
+                categoryAnalyticsSection
+                    .onAppear { analyticsTracker.appeared() }
+                    .onDisappear { analyticsTracker.disappeared() }
 
                 // Metric List. sorted by severity
                 VStack(alignment: .leading, spacing: DS.itemSpacing) {
@@ -273,7 +275,7 @@ struct CategoryDetailView: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: DS.space1 / 2) {
-                Text("\(viewModel.latestValue(for: metric)) \(metric.unit)")
+                Text("\(viewModel.valueForRange(for: metric)) \(metric.unit)")
                     .font(DS.Typography.subheadlineSemibold)
 
                 HStack(spacing: DS.space1) {
@@ -301,7 +303,7 @@ struct CategoryDetailView: View {
         .cardStyle()
         .padding(.horizontal)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(metric.displayName), \(viewModel.latestValue(for: metric)) \(metric.unit)")
+        .accessibilityLabel("\(metric.displayName), \(viewModel.valueForRange(for: metric)) \(metric.unit)")
         .accessibilityHint("View \(metric.displayName) details")
     }
 }

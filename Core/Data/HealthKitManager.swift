@@ -113,40 +113,18 @@ final class HealthKitManager: @unchecked Sendable {
             return
         }
 
-        // Core read types only — request the minimal set needed for primary
-        // features. HealthKit will still return data for types the user has
-        // authorized via other apps, so non-core metrics work opportunistically.
-        let readTypes: Set<HKObjectType> = [
-            // Heart
-            HKQuantityType(.heartRate),
-            HKQuantityType(.restingHeartRate),
-            HKQuantityType(.heartRateVariabilitySDNN),
-            // Blood
-            HKQuantityType(.oxygenSaturation),
-            HKQuantityType(.bloodPressureSystolic),
-            HKQuantityType(.bloodPressureDiastolic),
-            // Activity
-            HKQuantityType(.stepCount),
-            HKQuantityType(.activeEnergyBurned),
-            HKQuantityType(.appleExerciseTime),
-            HKQuantityType(.appleStandTime),
-            HKQuantityType(.distanceWalkingRunning),
-            // Sleep
-            HKCategoryType(.sleepAnalysis),
-            // Body
-            HKQuantityType(.bodyMass),
-            HKQuantityType(.bodyFatPercentage),
-            HKQuantityType(.height),
-            // Respiratory
-            HKQuantityType(.respiratoryRate),
-            // Other
-            HKQuantityType(.bodyTemperature),
-            HKCategoryType(.mindfulSession),
-            // Menstrual
-            HKCategoryType(.menstrualFlow),
-            // ECG
-            HKObjectType.electrocardiogramType(),
-        ]
+        // Read types are derived from the metric registry so every supported
+        // HealthMetric is included in the permission prompt. HealthKit returns
+        // empty data for types the user never authorized, so a partial list
+        // silently blanks entire categories (Hearing, Mobility, etc.).
+        var readTypes: Set<HKObjectType> = []
+        for metric in HealthMetric.allCases {
+            if let sampleType = HealthKitMetricRegistry.config(for: metric).sampleType {
+                readTypes.insert(sampleType)
+            }
+        }
+        readTypes.insert(HKCategoryType(.menstrualFlow))
+        readTypes.insert(HKObjectType.electrocardiogramType())
 
         // Write permissions removed from onboarding — requested lazily in
         // each save method via requestWriteAuthorizationIfNeeded(for:) so
