@@ -234,7 +234,7 @@ struct InsightsDetailView: View {
                     .font(selectedFilter == filter ? DS.Typography.subheadlineSemibold : DS.Typography.subheadline)
 
                 if count > 0 && selectedFilter == filter {
-                    Text("\(count)")
+                    Text(Copy.Insights.xText(count))
                         .font(DS.Typography.caption2Semibold.monospacedDigit())
                 }
             }

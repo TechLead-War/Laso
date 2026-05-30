@@ -47,7 +47,7 @@ struct MedicalDisclaimerView: View {
                         .background(.blue, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
                 .accessibilityLabel(Copy.Disclaimer.acknowledge)
-                .accessibilityHint("Acknowledges the medical disclaimer and continues into the app")
+                .accessibilityHint(Copy.Common.acknowledgesTheMedicalDisclaimerAndContinuesHint)
                 .padding(.horizontal, DS.space6)
                 .padding(.bottom, 40)
             }

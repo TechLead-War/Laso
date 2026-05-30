@@ -66,11 +66,11 @@ struct LiveHeartRateSection: View {
                                 .animation(.easeInOut(duration: 0.3), value: hr)
                                 .postHogMask()
 
-                            Text("bpm")
+                            Text(Copy.Live.bpm)
                                 .font(DS.Typography.title3)
                                 .foregroundStyle(AppColour.textSecondary.opacity(isHeartRateStale ? 0.5 : 1.0))
                         } else {
-                            Text("Syncing")
+                            Text(Copy.Live.syncing)
                                 .font(DS.Typography.title2)
                                 .foregroundStyle(AppColour.textTertiary)
                         }
@@ -79,7 +79,7 @@ struct LiveHeartRateSection: View {
                     // Stale: show prominent "Last Reading X ago" instead of zone
                     if isHeartRateStale {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Last Reading")
+                            Text(Copy.Live.lastReading)
                                 .font(DS.Typography.captionSemibold)
                                 .foregroundStyle(.white.opacity(0.8))
                                 .padding(.horizontal, DS.badgeH)
@@ -92,7 +92,7 @@ struct LiveHeartRateSection: View {
                                         .font(DS.Typography.caption2)
                                     Text(ts, style: .relative)
                                         .font(DS.Typography.captionMedium)
-                                    Text("ago")
+                                    Text(Copy.Live.ago)
                                         .font(DS.Typography.captionMedium)
                                 }
                                 .foregroundStyle(AppColour.textSecondary)
@@ -142,7 +142,7 @@ struct LiveHeartRateSection: View {
                 HStack(spacing: 4) {
                     Image(systemName: "calendar")
                         .font(DS.Typography.caption2)
-                    Text("Today: \(Int(minHR))–\(Int(maxHR)) bpm")
+                    Text(Copy.Live.todayBpmText(Int(minHR), Int(maxHR)))
                         .font(DS.Typography.caption2)
                         .postHogMask()
                 }
@@ -228,7 +228,7 @@ struct LiveHeartRateSection: View {
                         .foregroundStyle(AppColour.textTertiary)
                 }
             } else {
-                Text("···")
+                Text(Copy.Live.x)
                     .font(DS.Typography.subheadlineSemibold)
                     .foregroundStyle(AppColour.textQuaternary)
             }
@@ -254,7 +254,7 @@ struct LiveHeartRateSection: View {
                 // when the chart is read directly (e.g., via Accessibility
                 // Inspector or future flat-mode VoiceOver navigation).
                 .accessibilityLabel(Text(entry.date.formatted(date: .omitted, time: .shortened)))
-                .accessibilityValue(Text("\(Int(entry.value)) beats per minute"))
+                .accessibilityValue(Text(Copy.Live.beatsPerMinuteText(Int(entry.value))))
 
                 AreaMark(
                     x: .value("Time", entry.date),
@@ -289,7 +289,7 @@ struct LiveHeartRateSection: View {
             AxisMarks(position: .trailing, values: .automatic(desiredCount: 3)) { value in
                 AxisValueLabel {
                     if let v = value.as(Double.self) {
-                        Text("\(Int(v))")
+                        Text(Copy.Live.xText(Int(v)))
                             .font(DS.Typography.caption2)
                             .foregroundStyle(AppColour.textTertiary)
                     }

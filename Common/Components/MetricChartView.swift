@@ -69,7 +69,7 @@ struct MetricChartView: View {
 
     var body: some View {
         if samples.count < 2 {
-            ContentUnavailableView("Not Enough Data", systemImage: "chart.line.downtrend.xyaxis", description: Text("At least 2 data points needed"))
+            ContentUnavailableView("Not Enough Data", systemImage: "chart.line.downtrend.xyaxis", description: Text(Copy.Common.atLeast2DataPointsNeeded))
                 .frame(height: 220)
         } else {
         chart
@@ -101,7 +101,7 @@ struct MetricChartView: View {
                 // Per-mark VoiceOver labels so users can navigate
                 // each data point in the chart by date and value.
                 .accessibilityLabel(Text(sample.date.formatted(date: .abbreviated, time: .omitted)))
-                .accessibilityValue(Text("\(formattedValue(sample.value)) \(metric.unit)"))
+                .accessibilityValue(Text(Copy.Common.sampleValueWithUnit(formattedValue(sample.value), metric.unit)))
 
                 AreaMark(
                     x: .value("Date", sample.date),
@@ -124,7 +124,7 @@ struct MetricChartView: View {
                     .foregroundStyle(.secondary.opacity(0.5))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
                     .annotation(position: .top, alignment: .trailing) {
-                        Text("Baseline")
+                        Text(Copy.Common.baseline)
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }

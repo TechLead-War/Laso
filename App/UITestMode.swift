@@ -18,6 +18,7 @@ enum UITestMode {
     private static let initialTabPrefix = "--ui-test-initial-tab="
     private static let initialRoutePrefix = "--ui-test-initial-route="
     private static let onboardingStepPrefix = "--ui-test-onboarding-step="
+    private static let onboardingV2ScreenPrefix = "--ui-test-onboarding-v2-screen="
     private static let settingsRoutePrefix = "--ui-test-settings-route="
     private static let overrideNamePrefix = "--ui-test-override-name="
     private static let overrideOverallScorePrefix = "--ui-test-override-overall-score="
@@ -117,6 +118,14 @@ enum UITestMode {
     /// Format: `--ui-test-onboarding-step=connect`
     static var onboardingStartStep: String? { stringValue(for: onboardingStepPrefix) }
 
+    /// V2 onboarding screen the test harness wants to land on directly so each
+    /// of the 16 screens can be captured from a single launch (the V2 flow has
+    /// no TabView, so legacy `onboardingStartStep` does not reach it). Raw value
+    /// matches `OnboardingV2View.Screen` cases (welcome|promise|about|goal|
+    /// symptoms|activity|wearable|bridge|scan|heart|sleep|hrv|preview|signIn|
+    /// paywall|done). Format: `--ui-test-onboarding-v2-screen=heart`
+    static var onboardingV2StartScreen: String? { stringValue(for: onboardingV2ScreenPrefix) }
+
     /// Settings sub-page the test harness wants pushed onto the Settings tab on
     /// first appear so a single launch can capture e.g. NotificationsSettingsView.
     /// Format: `--ui-test-settings-route=notifications|devices|siri`
@@ -206,6 +215,7 @@ enum UITestMode {
     static var initialTab: String? { nil }
     static var initialRoute: String? { nil }
     static var onboardingStartStep: String? { nil }
+    static var onboardingV2StartScreen: String? { nil }
     static var settingsInitialRoute: String? { nil }
     static var overrideName: String? { nil }
     static var overrideOverallScore: Int? { nil }

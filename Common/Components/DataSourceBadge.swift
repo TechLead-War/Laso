@@ -16,7 +16,7 @@ struct DataSourceBadge: View {
                 .font(.caption2)
                 .foregroundStyle(device.iconColor)
 
-            Text("via \(sourceName ?? device.displayName)")
+            Text(Copy.Common.viaText(sourceName ?? device.displayName))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }

@@ -13,7 +13,7 @@ struct LiveActivitySection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DS.itemSpacing) {
-            Text("Activity Rings")
+            Text(Copy.Live.activityRings)
                 .font(DS.Typography.headline)
                 .padding(.horizontal)
 
@@ -24,9 +24,9 @@ struct LiveActivitySection: View {
                         .foregroundStyle(AppColour.textSecondary)
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("No activity yet")
+                        Text(Copy.Live.noActivityYet)
                             .font(DS.Typography.subheadlineMedium)
-                        Text("Your rings will fill as you move throughout the day.")
+                        Text(Copy.Live.yourRingsWillFillAsYou)
                             .font(DS.Typography.caption)
                             .foregroundStyle(AppColour.textSecondary)
                     }
@@ -91,7 +91,7 @@ struct LiveActivitySection: View {
                 .padding(DS.cardPadding)
                 .cardStyle()
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel("Activity rings. Move: \(Int(activity.todayActiveCalories)) of \(Int(activity.moveGoal)) calories, \(Int(activity.moveProgress * 100)) percent. Exercise: \(Int(activity.todayExerciseMinutes)) of \(Int(activity.exerciseGoal)) minutes, \(Int(activity.exerciseProgress * 100)) percent. Stand: \(Int(activity.todayStandHours)) of \(Int(activity.standGoal)) hours, \(Int(activity.standProgress * 100)) percent.")
+                .accessibilityLabel(Copy.Live.activityRingsMoveOfCaloriesLabel(Int(activity.todayActiveCalories), Int(activity.moveGoal), Int(activity.moveProgress * 100), Int(activity.todayExerciseMinutes), Int(activity.exerciseGoal), Int(activity.exerciseProgress * 100), Int(activity.todayStandHours), Int(activity.standGoal), Int(activity.standProgress * 100)))
             }
             .buttonStyle(.dsPress)
             .padding(.horizontal)
@@ -160,7 +160,7 @@ struct LiveActivitySection: View {
 
             Spacer()
 
-            Text("\(Int(progress * 100))%")
+            Text(Copy.Live.xText(Int(progress * 100)))
                 .font(DS.Typography.caption2Semibold.monospacedDigit())
                 .foregroundStyle(color)
         }
@@ -203,7 +203,7 @@ struct LiveActivitySection: View {
             .padding(.vertical, DS.space3)
             .background(color.opacity(DS.tintBg), in: RoundedRectangle(cornerRadius: DS.cardRadius))
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(label): \(value)")
+            .accessibilityLabel(Copy.Live.xLabel(label, value))
         }
         .buttonStyle(.dsPress)
     }

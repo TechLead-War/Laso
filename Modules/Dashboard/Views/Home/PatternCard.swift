@@ -68,8 +68,8 @@ struct PatternCard: View {
         }
         .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(insight.category.displayName) insight: \(insight.title)")
-        .accessibilityHint("View metric details")
+        .accessibilityLabel(Copy.Home.insightLabel(insight.category.displayName, insight.title))
+        .accessibilityHint(Copy.Home.viewMetricDetailsHint)
         .accessibilityAddTraits(.isButton)
     }
 }

@@ -34,7 +34,7 @@ struct LiveStaleVitalsPrompt: View {
                         Image(systemName: "clock.arrow.circlepath")
                             .font(DS.Typography.captionSemibold)
                             .foregroundStyle(AppColour.textSecondary)
-                        Text("Last Known Readings")
+                        Text(Copy.Live.lastKnownReadings)
                             .font(DS.Typography.captionSemibold)
                             .foregroundStyle(AppColour.textSecondary)
                     }

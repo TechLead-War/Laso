@@ -304,6 +304,11 @@ Consumer: `Core/Notifications/*`.
 | `notification_evening_start_hour` | Int | 20 | Earliest hour for wind-down |
 | `notification_evening_end_hour` | Int | 23 | Latest hour for wind-down |
 | `notification_hook_style` | String | `"rotate"` | One of `rotate`, `curiosity`, `loss_frame`, `progress`, `record`, `question` |
+| `notification_quiet_hours_start` | Int | 22 | Do-not-disturb window start hour. Non-critical pushes inside the window are suppressed. Overnight window (start > end) is supported |
+| `notification_quiet_hours_end` | Int | 7 | Do-not-disturb window end hour |
+| `notification_conversion_window_hours` | Int | 24 | Hours after a notification tap within which a goal counts as a conversion |
+| `weekly_summary_fire_hour` | Int | 10 | Local hour the weekly summary fires. Set to 10 (not 9) to avoid colliding with the morning daily summary near wake time |
+| `weekly_summary_fire_minute` | Int | 0 | Local minute the weekly summary fires |
 
 ---
 

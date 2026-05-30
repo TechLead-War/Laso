@@ -5,22 +5,22 @@ extension Copy {
 
         // MARK: - Shared UI Tokens
 
-        static let notEnoughData = "Not enough data yet"
-        static let avg = "Avg"
-        static let thisWeek = "This Week"
-        static let lastWeek = "Last Week"
-        static let improved = "Improved"
-        static let increased = "Increased"
+        static var notEnoughData: String { RemoteConfigManager.shared.copyString("copy_common_common_not_enough_data", default: "Not enough data yet") }
+        static var avg: String { RemoteConfigManager.shared.copyString("copy_common_common_avg", default: "Avg") }
+        static var thisWeek: String { RemoteConfigManager.shared.copyString("copy_common_common_this_week", default: "This Week") }
+        static var lastWeek: String { RemoteConfigManager.shared.copyString("copy_common_common_last_week", default: "Last Week") }
+        static var improved: String { RemoteConfigManager.shared.copyString("copy_common_common_improved", default: "Improved") }
+        static var increased: String { RemoteConfigManager.shared.copyString("copy_common_common_increased", default: "Increased") }
 
         // MARK: - Shared Accessibility Labels
 
-        static let continueAnyway = "Continue anyway"
-        static let sendingFeedback = "Sending feedback"
-        static let quickQuestion = "Quick question"
-        static let shareHealthCard = "Share health card"
+        static var sendingFeedbackContinueAnyway: String { RemoteConfigManager.shared.copyString("copy_common_common_continue_anyway", default: "Continue anyway") }
+        static var sendingFeedback: String { RemoteConfigManager.shared.copyString("copy_common_common_sending_feedback", default: "Sending feedback") }
+        static var quickQuestion: String { RemoteConfigManager.shared.copyString("copy_common_common_quick_question", default: "Quick question") }
+        static var shareHealthCard: String { RemoteConfigManager.shared.copyString("copy_common_common_share_health_card", default: "Share health card") }
 
         static func dataConfidence(tier: String) -> String {
-            "Data confidence: \(tier) tier"
+            String(format: RemoteConfigManager.shared.copyString("copy_common_common_data_confidence", default: "Data confidence: %@ tier"), tier)
         }
 
         /// Caption shown above detail screens — "Updated 2 minutes ago" style.
@@ -33,5 +33,80 @@ extension Copy {
             formatter.unitsStyle = .abbreviated
             return "Updated \(formatter.localizedString(for: date, relativeTo: Date()))"
         }
+
+        // MARK: - Lifted view literals
+        static var healthScore: String { RemoteConfigManager.shared.copyString("copy_common_health_score", default: "Health Score") }
+        static var lastNightSSleep: String { RemoteConfigManager.shared.copyString("copy_common_last_night_s_sleep", default: "Last Night's Sleep") }
+        static var readiness: String { RemoteConfigManager.shared.copyString("copy_common_readiness", default: "Readiness") }
+        static var recoveryStatus: String { RemoteConfigManager.shared.copyString("copy_common_recovery_status", default: "Recovery Status") }
+        static var waterLogged: String { RemoteConfigManager.shared.copyString("copy_common_water_logged", default: "Water Logged") }
+        static var savedToAppleHealth: String { RemoteConfigManager.shared.copyString("copy_common_saved_to_apple_health", default: "Saved to Apple Health") }
+        static var savedToAppleHealth2: String { RemoteConfigManager.shared.copyString("copy_common_saved_to_apple_health2", default: "Saved to Apple Health") }
+        static var thisHealthRiskAssessmentIsNo: String { RemoteConfigManager.shared.copyString("copy_common_this_health_risk_assessment_is_no", default: "This health risk assessment is no longer available. Pull to refresh your data.") }
+        static var buildingYourSleepProfile: String { RemoteConfigManager.shared.copyString("copy_common_building_your_sleep_profile", default: "Building your sleep profile") }
+        static var weNeedAFewNightsOf: String { RemoteConfigManager.shared.copyString("copy_common_we_need_a_few_nights_of", default: "We need a few nights of overnight sleep data from your Apple Watch to learn your normal range. Wear your watch to bed and your sleep coach will appear here.") }
+        static var whileYouWait: String { RemoteConfigManager.shared.copyString("copy_common_while_you_wait", default: "While you wait") }
+        static var updateYourPaymentMethodToKeep: String { RemoteConfigManager.shared.copyString("copy_common_update_your_payment_method_to_keep", default: "Update your payment method to keep your subscription active.") }
+        static var underMaintenance: String { RemoteConfigManager.shared.copyString("copy_common_under_maintenance", default: "Under Maintenance") }
+        static var someFeaturesMayNotWorkAs: String { RemoteConfigManager.shared.copyString("copy_common_some_features_may_not_work_as", default: "Some features may not work as expected right now.") }
+        static var continueAnyway: String { RemoteConfigManager.shared.copyString("copy_common_continue_anyway", default: "Continue Anyway") }
+        static var dismissesTheMaintenanceNoticeAndContinuesHint: String { RemoteConfigManager.shared.copyString("copy_common_dismisses_the_maintenance_notice_and_continues_hint", default: "Dismisses the maintenance notice and continues to the app") }
+        static var x: String { RemoteConfigManager.shared.copyString("copy_common_x", default: "·") }
+        static var laso: String { RemoteConfigManager.shared.copyString("copy_common_laso", default: "Laso") }
+        static var trackYourHealthWithLaso: String { RemoteConfigManager.shared.copyString("copy_common_track_your_health_with_laso", default: "Track your health with Laso") }
+        static var laso2: String { RemoteConfigManager.shared.copyString("copy_common_laso2", default: "Laso") }
+        static var discoverYourHealthPatternsWithLaso: String { RemoteConfigManager.shared.copyString("copy_common_discover_your_health_patterns_with_laso", default: "Discover your health patterns with Laso") }
+        static var hidesThisBannerWithoutChangingNotificationHint: String { RemoteConfigManager.shared.copyString("copy_common_hides_this_banner_without_changing_notification_hint", default: "Hides this banner without changing notification settings") }
+        static var opensTheSystemSettingsAppToHint: String { RemoteConfigManager.shared.copyString("copy_common_opens_the_system_settings_app_to_hint", default: "Opens the system Settings app to enable notifications") }
+        static var updateRequired: String { RemoteConfigManager.shared.copyString("copy_common_update_required", default: "Update Required") }
+        static var aNewVersionOfLasoIs: String { RemoteConfigManager.shared.copyString("copy_common_a_new_version_of_laso_is", default: "A new version of Laso is available with important fixes. Please update to continue.") }
+        static var updateNow: String { RemoteConfigManager.shared.copyString("copy_common_update_now", default: "Update Now") }
+        static var skipButton: String { RemoteConfigManager.shared.copyString("copy_common_skip_button", default: "Skip") }
+        static var howWouldYouFeelIfYou: String { RemoteConfigManager.shared.copyString("copy_common_how_would_you_feel_if_you", default: "How would you feel if you could no longer use Laso?") }
+        static var whatTypeOfPersonDoYou: String { RemoteConfigManager.shared.copyString("copy_common_what_type_of_person_do_you", default: "What made you want to use Laso?") }
+        static var continueLabel: String { RemoteConfigManager.shared.copyString("copy_common_continue", default: "Continue") }
+        static var whatIsTheMainBenefitYou: String { RemoteConfigManager.shared.copyString("copy_common_what_is_the_main_benefit_you", default: "What is the main benefit you get from Laso?") }
+        static var continueLabel2: String { RemoteConfigManager.shared.copyString("copy_common_continue2", default: "Continue") }
+        static var howCanWeImproveLasoFor: String { RemoteConfigManager.shared.copyString("copy_common_how_can_we_improve_laso_for", default: "How can we improve Laso for you?") }
+        static var thankYou: String { RemoteConfigManager.shared.copyString("copy_common_thank_you", default: "Thank you") }
+        static var yourFeedbackShapesWhatWeBuild: String { RemoteConfigManager.shared.copyString("copy_common_your_feedback_shapes_what_we_build", default: "Your feedback shapes what we build next.") }
+        static var doneButton: String { RemoteConfigManager.shared.copyString("copy_common_done_button", default: "Done") }
+        static var atLeast2DataPointsNeeded: String { RemoteConfigManager.shared.copyString("copy_common_at_least2_data_points_needed", default: "At least 2 data points needed") }
+        static var baseline: String { RemoteConfigManager.shared.copyString("copy_common_baseline", default: "Baseline") }
+        static var hidesThisBannerWithoutChangingHealthHint: String { RemoteConfigManager.shared.copyString("copy_common_hides_this_banner_without_changing_health_hint", default: "Hides this banner without changing Health app settings") }
+        static var whatIsThisAbout: String { RemoteConfigManager.shared.copyString("copy_common_what_is_this_about", default: "What is this about?") }
+        static var yourEmail: String { RemoteConfigManager.shared.copyString("copy_common_your_email", default: "Your email") }
+        static var rendersThisCardAndOpensTheHint: String { RemoteConfigManager.shared.copyString("copy_common_renders_this_card_and_opens_the_hint", default: "Renders this card and opens the share sheet") }
+        static var securityCheckFailed: String { RemoteConfigManager.shared.copyString("copy_common_security_check_failed", default: "Security Check Failed") }
+        static var thisAppCannotRunOnA: String { RemoteConfigManager.shared.copyString("copy_common_this_app_cannot_run_on_a", default: "This app cannot run on a modified device. Your health data security cannot be guaranteed in this environment.") }
+        static var ifYouBelieveThisIsAn: String { RemoteConfigManager.shared.copyString("copy_common_if_you_believe_this_is_an", default: "If you believe this is an error, please reinstall the app from the App Store.") }
+        static var acknowledgesTheMedicalDisclaimerAndContinuesHint: String { RemoteConfigManager.shared.copyString("copy_common_acknowledges_the_medical_disclaimer_and_continues_hint", default: "Acknowledges the medical disclaimer and continues into the app") }
+        static var pro: String { RemoteConfigManager.shared.copyString("copy_common_pro", default: "PRO") }
+        static var unlockTheFullSetWithA: String { RemoteConfigManager.shared.copyString("copy_common_unlock_the_full_set_with_a", default: "Unlock the full set with a Pro subscription.") }
+        static var pmfVeryDisappointed: String { RemoteConfigManager.shared.copyString("copy_common_pmf_very_disappointed", default: "Very disappointed") }
+        static var pmfSomewhatDisappointed: String { RemoteConfigManager.shared.copyString("copy_common_pmf_somewhat_disappointed", default: "Somewhat disappointed") }
+        static var pmfNotDisappointed: String { RemoteConfigManager.shared.copyString("copy_common_pmf_not_disappointed", default: "Not disappointed") }
+
+        // MARK: - Lifted interpolated view literals
+        static func activeText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_active_text", default: "%d active"), p0) }
+        static func xText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_x_text", default: "%d"), p0) }
+        static func sampleValueWithUnit(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_sample_value_with_unit", default: "%@ %@"), p0, p1) }
+        static func metricsLabel(_ p0: Int, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_metrics_label", default: "%d metrics %@"), p0, p1) }
+        static func xText2(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_x_text2", default: "%@ %@"), p0, p1) }
+        static func intentReadinessScoreText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_intent_readiness_score_text", default: "%d"), p0) }
+        static func xLabel(_ p0: String, _ p1: String, _ p2: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_x_label", default: "%@, %@ %@"), p0, p1, p2) }
+        static func riskTypeAndGradeLabel(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_risk_type_and_grade_label", default: "%@, %@"), p0, p1) }
+        static func viewDetailsHint(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_view_details_hint", default: "View %@ details"), p0) }
+        static func xLabel2(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_x_label2", default: "%@, %@"), p0, p1) }
+        static func xLabel3(_ p0: String, _ p1: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_x_label3", default: "%@: %@"), p0, p1) }
+        static func loggedText(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_logged_text", default: "%@ Logged"), p0) }
+        static func switchToTabHint(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_switch_to_tab_hint", default: "Switch to %@ tab"), p0) }
+        static func dayStreakText(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_day_streak_text", default: "%d-day streak"), p0) }
+        static func x10100Text(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_x10100_text", default: "%d%%"), p0) }
+        static func percentValue(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_percent_value", default: "%d percent"), p0) }
+        static func daysOfDataTrackedValue(_ p0: Int) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_days_of_data_tracked_value", default: "%d days of data tracked"), p0) }
+        static func errorText(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_error_text", default: "Error: %@"), p0) }
+        static func viaText(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_via_text", default: "via %@"), p0) }
+        static func opensTheSubscriptionPaywallToHint(_ p0: String) -> String { String(format: RemoteConfigManager.shared.copyString("copy_common_opens_the_subscription_paywall_to_hint", default: "Opens the subscription paywall to unlock %@"), p0) }
     }
 }

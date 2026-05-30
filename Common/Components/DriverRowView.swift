@@ -33,7 +33,7 @@ struct DriverRowView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                    Text("\(Int(min(max(value, 0), 1.0) * 100))%")
+                    Text(Copy.Common.x10100Text(Int(min(max(value, 0), 1.0) * 100)))
                         .font(.subheadline.weight(.bold).monospacedDigit())
                         .foregroundStyle(color)
                         .frame(minWidth: 40, alignment: .trailing)

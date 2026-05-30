@@ -101,12 +101,13 @@ final class BrainHealthScorer {
     private static let recentWindowDays = 3
     private static let historyWindowDays = 14
 
-    // Subscore weights (must sum to 1.0)
-    private static let cognitiveReadinessWeight = 0.30
-    private static let memoryRecoveryWeight = 0.25
-    private static let stressCognitionWeight = 0.20
-    private static let neurovascularWeight = 0.15
-    private static let circadianWeight = 0.10
+    // Subscore weights (must sum to 1.0). Exposed (non-private) so the
+    // Improve-Your-Score section can read them without duplicating magic numbers.
+    static let cognitiveReadinessWeight = 0.30
+    static let memoryRecoveryWeight = 0.25
+    static let stressCognitionWeight = 0.20
+    static let neurovascularWeight = 0.15
+    static let circadianWeight = 0.10
 
     // MARK: - Score classification thresholds
 

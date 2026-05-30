@@ -1,6 +1,18 @@
 import SwiftUI
 
 enum WidgetStyle {
+    /// Single source of truth for score-band tinting across every Live Activity
+    /// surface. Bands match `TodayScoreTint.from(score:)` so the ring, hero
+    /// number, and accent icon always agree on the same colour for a given score.
+    static func scoreBandColor(score: Int) -> Color {
+        switch TodayScoreTint.from(score: score) {
+        case .excellent: return AppColour.scoreOptimal
+        case .good:      return AppColour.scoreGood
+        case .fair:      return AppColour.scoreFair
+        case .poor:      return AppColour.scorePoor
+        }
+    }
+
     static func readinessColor(score: Int) -> Color {
         switch score {
         case ..<50:

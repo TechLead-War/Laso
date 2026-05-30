@@ -1445,12 +1445,6 @@ final class AppAnalytics {
         ])
     }
 
-    func trackNotificationSent(type: String) {
-        logEvent("notification_sent", parameters: [
-            "type": type
-        ])
-    }
-
     func trackShareSheetPresented(contentType: String) {
         logEvent("share_sheet_presented", parameters: [
             "content_type": contentType,
@@ -1626,6 +1620,74 @@ final class AppAnalytics {
         // Clean up stored context
         defaults.removeObject(forKey: "healthpulse.notif.hook.\(identifier)")
         defaults.removeObject(forKey: "healthpulse.notif.sent.\(identifier)")
+    }
+
+    /// Notification surfaced in foreground (willPresent). Mirrors trackNotificationOpened's
+    /// latency + metric-split shape but does NOT clear the stored sent/hook keys, because a
+    /// later open still needs them. Analytics-only; the store write lives in HealthDataStore.
+    func trackNotificationPresented(identifier: String) {
+        let defaults = UserDefaults.standard
+        let type = NotificationManager.notificationType(identifier)
+
+        let sentTimestamp = defaults.double(forKey: "healthpulse.notif.sent.\(identifier)")
+        let now = Date()
+        let latencyKnown = sentTimestamp > 0
+        let latencyMinutes: Int = latencyKnown
+            ? Int(now.timeIntervalSince1970 - sentTimestamp) / 60
+            : 0
+
+        let cal = Date.cal
+        let parts = identifier.split(separator: ".")
+        let alertMetric: String = parts.count >= 3 ? String(parts[2]) : "none"
+        let alertSubtype: String = parts.count >= 4 ? String(parts[3]) : "none"
+
+        logEvent("notification_presented", parameters: [
+            "notification_id": identifier,
+            "type": type,
+            "latency_minutes": latencyMinutes,
+            "latency_known": latencyKnown ? 1 : 0,
+            "hour_presented_local": cal.component(.hour, from: now),
+            "day_of_week": cal.component(.weekday, from: now),
+            "alert_metric": alertMetric,
+            "alert_subtype": alertSubtype
+        ])
+    }
+
+    /// User swipe-dismissed the notification (terminal funnel signal, no store write).
+    /// Fired from didReceive when actionIdentifier == UNNotificationDismissActionIdentifier.
+    func trackNotificationDismissed(identifier: String) {
+        let type = NotificationManager.notificationType(identifier)
+        let parts = identifier.split(separator: ".")
+        let alertMetric: String = parts.count >= 3 ? String(parts[2]) : "none"
+        let alertSubtype: String = parts.count >= 4 ? String(parts[3]) : "none"
+
+        logEvent("notification_dismissed", parameters: [
+            "notification_id": identifier,
+            "type": type,
+            "alert_metric": alertMetric,
+            "alert_subtype": alertSubtype
+        ])
+    }
+
+    /// center.add() threw. Distinct from notification_suppressed (cap/filter). `error` is the
+    /// NSError.localizedDescription, not user-facing. Fired from the schedule error branch.
+    func trackNotificationFailed(type: String, identifier: String, error: String) {
+        logEvent("notification_failed", parameters: [
+            "type": type,
+            "notification_id": identifier,
+            "error": error
+        ])
+    }
+
+    /// A notification drove a downstream goal completion. The conversion-window decision
+    /// belongs to the caller (RemoteConfigManager.shared.notificationConversionWindowHours);
+    /// this method only records the attributed event. No caller wired this batch.
+    func trackNotificationConverted(identifier: String, goal: String) {
+        logEvent("notification_converted", parameters: [
+            "notification_id": identifier,
+            "type": NotificationManager.notificationType(identifier),
+            "goal": goal
+        ])
     }
 
     // Monetization signals

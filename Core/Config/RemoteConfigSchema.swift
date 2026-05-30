@@ -200,6 +200,16 @@ extension RemoteConfigManager {
         RC.notificationEveningEndHour:        23 as NSNumber,
         RC.notificationHookStyle:             "rotate" as NSString,
 
+        // Quiet hours — SOURCE: common DND default (10 PM–7 AM). Overnight
+        // window (start > end) handled by the consumer wrap-around comparison.
+        RC.notificationQuietHoursStart:       22 as NSNumber,
+        RC.notificationQuietHoursEnd:         7  as NSNumber,
+        // SOURCE: industry push-conversion attribution window ~24h.
+        RC.notificationConversionWindowHours: 24 as NSNumber,
+        // Weekly summary fire time — 10:00 to avoid the wake-time morning daily.
+        RC.weeklySummaryFireHour:             10 as NSNumber,
+        RC.weeklySummaryFireMinute:           0  as NSNumber,
+
         // Experiments.
         RC.experimentRecoveryCardStyle:       "control" as NSString,
 
@@ -408,6 +418,18 @@ extension RemoteConfigManager {
     var notificationEveningStartHour: Int      { int(forKey: RC.notificationEveningStartHour) }
     var notificationEveningEndHour: Int        { int(forKey: RC.notificationEveningEndHour) }
     var notificationHookStyle: String          { string(forKey: RC.notificationHookStyle) ?? "rotate" }
+
+    /// Start/end of the non-critical notification do-not-disturb window
+    /// (local hour 0-23). Overnight (start > end) is handled by the consumer.
+    var quietHoursStartHour: Int               { int(forKey: RC.notificationQuietHoursStart) }
+    var quietHoursEndHour: Int                 { int(forKey: RC.notificationQuietHoursEnd) }
+
+    /// Hours after a notification tap within which a goal counts as a conversion.
+    var notificationConversionWindowHours: Int { int(forKey: RC.notificationConversionWindowHours) }
+
+    /// Local hour/minute the weekly summary fires (default 10:00).
+    var weeklySummaryFireHour: Int             { int(forKey: RC.weeklySummaryFireHour) }
+    var weeklySummaryFireMinute: Int           { int(forKey: RC.weeklySummaryFireMinute) }
 
     // MARK: Experiments
 

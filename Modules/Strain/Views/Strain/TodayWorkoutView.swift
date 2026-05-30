@@ -192,7 +192,7 @@ struct WorkoutPlanSheet: View {
 
                 Spacer()
 
-                Text("\(block.duration) min")
+                Text(Copy.Strain.minText(block.duration))
                     .font(DS.Typography.captionSemibold)
                     .foregroundStyle(tint)
                     .padding(.horizontal, 10)

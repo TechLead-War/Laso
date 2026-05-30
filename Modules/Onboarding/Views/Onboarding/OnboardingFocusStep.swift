@@ -58,7 +58,7 @@ struct OnboardingFocusSelectionStep: View {
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel(focus.displayName)
                     .accessibilityValue(isSelected ? "Selected" : "Not selected")
-                    .accessibilityHint("Toggles \(focus.displayName) as a focus area")
+                    .accessibilityHint(Copy.Onboarding.togglesAsAFocusAreaHint(focus.displayName))
                     .accessibilityAddTraits(isSelected ? .isSelected : [])
                 }
             }
@@ -86,7 +86,7 @@ struct OnboardingFocusSelectionStep: View {
             .disabled(selectedFocuses.isEmpty)
             .opacity(selectedFocuses.isEmpty ? 0.55 : 1.0)
             .accessibilityIdentifier("onboarding.prioritySelectionContinue")
-            .accessibilityHint("Saves your selected focus areas and continues onboarding")
+            .accessibilityHint(Copy.Onboarding.savesYourSelectedFocusAreasAndHint)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

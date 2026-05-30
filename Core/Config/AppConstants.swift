@@ -13,7 +13,6 @@ enum AppConstants {
         static let windDown = "healthpulse.windDown"
         static let reengagement = "healthpulse.reengagement.3day"
         static let watchNotWornScheduled = "healthpulse.watch.notWorn.scheduled"
-        static let watchNotWorn = "healthpulse.watch.notWorn"
         static let watchLowBattery = "healthpulse.watch.lowBattery"
 
         // Prefix-based identifiers (appended with metric/level info)
@@ -23,6 +22,16 @@ enum AppConstants {
         static let reversalPrefix = "healthpulse.reversal."
         static let celebrationPrefix = "healthpulse.celebration."
         static let engagementPrefix = "healthpulse.engagement."
+    }
+
+    // MARK: - Notification Categories
+
+    /// UNNotificationCategory identifiers. Registered in AppDelegate (D3) with
+    /// the `.customDismissAction` option so a swipe-dismiss fires `didReceive`
+    /// and is tracked as a dismissal. Set as `content.categoryIdentifier` on
+    /// outgoing notifications. Non-UI identifier, no Copy key.
+    enum NotificationCategory {
+        static let standard = "healthpulse.category.standard"
     }
 
     // MARK: - Notification Names (NotificationCenter)

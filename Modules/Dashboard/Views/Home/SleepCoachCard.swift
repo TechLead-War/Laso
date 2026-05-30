@@ -58,7 +58,7 @@ struct SleepCoachCard: View {
         .padding(.horizontal, DS.screenPadding)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityDescription)
-        .accessibilityHint("View sleep coach details")
+        .accessibilityHint(Copy.Home.viewSleepCoachDetailsHint)
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("home.sleepCoachCard")
     }
@@ -66,7 +66,7 @@ struct SleepCoachCard: View {
     // MARK: - Subviews
 
     private func debtPill(_ debt: Double) -> some View {
-        Text("\(formatDuration(debt)) debt")
+        Text(Copy.Home.debtText(formatDuration(debt)))
             .font(DS.Typography.captionSemibold)
             .foregroundStyle(AppColour.warning)
             .padding(.horizontal, DS.badgeH)

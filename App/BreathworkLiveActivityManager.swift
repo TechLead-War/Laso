@@ -47,7 +47,10 @@ final class BreathworkLiveActivityManager {
         do {
             activity = try Activity.request(
                 attributes: BreathworkActivityAttributes(title: "Breathwork"),
-                content: ActivityContent(state: contentState, staleDate: nil),
+                // Stale at session end — once the timer runs out the activity has
+                // nothing live left to show, so iOS dims it instead of leaving a
+                // frozen countdown until the terminal end() lands.
+                content: ActivityContent(state: contentState, staleDate: contentState.sessionEndDate),
                 pushType: nil
             )
             AppAnalytics.shared.trackLiveActivityStateChanged(
@@ -88,7 +91,7 @@ final class BreathworkLiveActivityManager {
         lastContentState = contentState
 
         Task {
-            await activity.update(ActivityContent(state: contentState, staleDate: nil))
+            await activity.update(ActivityContent(state: contentState, staleDate: contentState.sessionEndDate))
         }
         AppAnalytics.shared.trackLiveActivityStateChanged(
             kind: "breathwork",

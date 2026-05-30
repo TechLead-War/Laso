@@ -13,7 +13,7 @@ struct LiveHeaderSection: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: DS.space1) {
-                Text("Live")
+                Text(Copy.Live.live)
                     .font(DS.Typography.largeTitle)
 
                 HStack(spacing: 6) {

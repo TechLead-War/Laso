@@ -169,7 +169,7 @@ struct ExpandedJournalView: View {
 
             let count = groupLoggedCount(group)
             if count > 0 {
-                Text("\(count)")
+                Text(Copy.Journal.xText(count))
                     .font(.caption2.weight(.bold).monospacedDigit())
                     .foregroundStyle(group.color)
                     .padding(.horizontal, DS.badgeH)
@@ -252,7 +252,7 @@ struct ExpandedJournalView: View {
         .labelsHidden()
         .fixedSize()
         .accessibilityLabel(behavior.displayName)
-        .accessibilityHint("Toggle to log or unlog \(behavior.displayName) today")
+        .accessibilityHint(Copy.Journal.toggleToLogOrUnlogHint(behavior.displayName))
     }
 
     // MARK: Quantity Stepper
@@ -278,8 +278,8 @@ struct ExpandedJournalView: View {
             }
             .disabled(currentValue == nil)
             .buttonStyle(.plain)
-            .accessibilityLabel("Decrease \(behavior.displayName)")
-            .accessibilityHint("Decreases the logged amount by \(formattedQuantity(step, step: step)) \(unit)")
+            .accessibilityLabel(Copy.Journal.decreaseLabel(behavior.displayName))
+            .accessibilityHint(Copy.Journal.decreasesTheLoggedAmountByHint(formattedQuantity(step, step: step), unit))
 
             // Value display
             Text(formattedQuantity(displayValue, step: step))
@@ -307,8 +307,8 @@ struct ExpandedJournalView: View {
                     .foregroundStyle(color)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Increase \(behavior.displayName)")
-            .accessibilityHint("Increases the logged amount by \(formattedQuantity(step, step: step)) \(unit)")
+            .accessibilityLabel(Copy.Journal.increaseLabel(behavior.displayName))
+            .accessibilityHint(Copy.Journal.increasesTheLoggedAmountByHint(formattedQuantity(step, step: step), unit))
         }
     }
 
@@ -337,8 +337,8 @@ struct ExpandedJournalView: View {
                         .foregroundStyle(isFilled ? color : AppColour.textTertiary)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("\(behavior.displayName) rating \(index) of \(displayMax)")
-                .accessibilityHint("Selects rating \(index) out of \(displayMax)")
+                .accessibilityLabel(Copy.Journal.ratingOfLabel(behavior.displayName, index, displayMax))
+                .accessibilityHint(Copy.Journal.selectsRatingOutOfHint(index, displayMax))
                 .accessibilityAddTraits(isFilled ? .isSelected : [])
             }
 
@@ -370,7 +370,7 @@ struct ExpandedJournalView: View {
         }
         .buttonStyle(.dsPress)
         .accessibilityLabel(Copy.Journal.loggedCount(loggedBehaviors.count))
-        .accessibilityHint("Saves the selected behaviors and dismisses this sheet")
+        .accessibilityHint(Copy.Journal.savesTheSelectedBehaviorsAndDismissesHint)
         .padding(.bottom, DS.space2)
         .background(
             LinearGradient(

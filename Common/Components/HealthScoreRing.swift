@@ -54,7 +54,7 @@ struct HealthScoreRing: View {
         .frame(width: size, height: size)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(label.isEmpty ? "Score \(score)" : "\(label) score \(score) out of 100")
-        .accessibilityValue("\(score) percent")
+        .accessibilityValue(Copy.Common.percentValue(score))
         .onAppear {
             animatedProgress = progress
         }
@@ -69,7 +69,7 @@ struct HealthScoreRing: View {
             Spacer(minLength: 0)
 
             if showScore {
-                Text("\(score)")
+                Text(Copy.Common.xText(score))
                     .font(.system(size: size * 0.28, weight: .bold, design: .rounded))
                     .foregroundStyle(ringColor)
                     .contentTransition(.numericText())

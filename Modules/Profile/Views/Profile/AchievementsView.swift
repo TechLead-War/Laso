@@ -182,7 +182,7 @@ struct AchievementsView: View {
         }
         .scrollIndicators(.hidden)
         .background(AppColour.surfaceBase.ignoresSafeArea())
-        .navigationTitle("Your Progress")
+        .navigationTitle(Copy.Achievements.yourProgressNavTitle)
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.achievements)
@@ -223,7 +223,7 @@ struct AchievementsView: View {
                         .foregroundStyle(levelInfo.level.color)
 
                     if levelInfo.level != .diamond {
-                        Text("\(Int(levelInfo.progressToNext * 100))%")
+                        Text(Copy.Achievements.xText(Int(levelInfo.progressToNext * 100)))
                             .font(DS.Typography.caption2Semibold)
                             .foregroundStyle(AppColour.textSecondary)
                     }
@@ -237,7 +237,7 @@ struct AchievementsView: View {
                 .foregroundStyle(AppColour.textPrimary)
 
             // Days tracked subtitle
-            Text("\(levelInfo.totalDaysTracked) days tracked")
+            Text(Copy.Achievements.daysTrackedText(levelInfo.totalDaysTracked))
                 .font(DS.Typography.subheadline)
                 .foregroundStyle(AppColour.textSecondary)
 
@@ -247,7 +247,7 @@ struct AchievementsView: View {
                     Image(systemName: next.icon)
                         .font(DS.Typography.captionSemibold)
                         .foregroundStyle(next.color)
-                    Text("\(daysRemaining) days to \(next.name)")
+                    Text(Copy.Achievements.daysToText(daysRemaining, next.name))
                         .font(DS.Typography.captionSemibold)
                         .foregroundStyle(.secondary)
                 }
@@ -327,12 +327,12 @@ struct AchievementsView: View {
                     .foregroundStyle(.secondary)
                     .textCase(.uppercase)
 
-                Text("\(streak.current)")
+                Text(Copy.Achievements.xText2(streak.current))
                     .font(DS.Typography.displayS)
                     .foregroundStyle(AppColour.textPrimary)
                     .contentTransition(.numericText())
 
-                Text("days")
+                Text(Copy.Achievements.days)
                     .font(DS.Typography.caption2Medium)
                     .foregroundStyle(.tertiary)
             }
@@ -342,7 +342,7 @@ struct AchievementsView: View {
                 Image(systemName: "trophy.fill")
                     .font(DS.Typography.caption2)
                     .foregroundStyle(AppColour.warning)
-                Text("\(streak.best)")
+                Text(Copy.Achievements.xText3(streak.best))
                     .font(DS.Typography.caption2Semibold)
                     .foregroundStyle(AppColour.textSecondary)
             }
@@ -413,7 +413,7 @@ struct AchievementsView: View {
 
                 Spacer()
 
-                Text("\(sortedAchievements.filter(\.isUnlocked).count) of \(sortedAchievements.count)")
+                Text(Copy.Achievements.countOfText(sortedAchievements.filter(\.isUnlocked).count, sortedAchievements.count))
                     .font(DS.Typography.captionMedium)
                     .foregroundStyle(.secondary)
             }

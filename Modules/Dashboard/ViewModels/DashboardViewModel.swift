@@ -900,6 +900,10 @@ final class DashboardViewModel {
             )
             // Invalidate score history cache after saving. the new snapshot is now part of the data
             invalidateScoreHistoryCache()
+            // Seed historical snapshots from HK history so EWMA on Explore has
+            // real per-day scores immediately on a fresh install instead of
+            // needing two weeks of app usage. No-op once history is full.
+            backfillScoreHistoryIfNeeded()
             updateCachedProperties()
             if !shouldReuseThermalSnapshot {
                 computeNewEngines(todayRawHR: todayRawHR)
@@ -1589,6 +1593,40 @@ final class DashboardViewModel {
     @MainActor
     private func invalidateScoreHistoryCache() {
         _cachedScoreHistory = nil
+    }
+
+    /// Replays the scorer over the last `WeeklyScoreSmoothing.windowDays`
+    /// calendar days using the user's existing HK history and writes one
+    /// `StoredAnalysisSnapshot` per missing day. Idempotent: existing rows
+    /// are never overwritten and the loop short-circuits once the history
+    /// already meets the window length, so this stays cheap on warm launches.
+    @MainActor
+    private func backfillScoreHistoryIfNeeded() {
+        let cal = Date.cal
+        let history = scoreHistoryCached()
+        if history.count >= WeeklyScoreSmoothing.windowDays { return }
+
+        let today = cal.startOfDay(for: Date())
+        let presentDays = Set(history.map { cal.startOfDay(for: $0.date) })
+        let timeSeries = healthKitManager.timeSeries
+        var inserted = 0
+
+        for offset in 1...WeeklyScoreSmoothing.windowDays {
+            guard let day = cal.date(byAdding: .day, value: -offset, to: today),
+                  !presentDays.contains(day) else { continue }
+            guard let result = AnalysisEngine.replay(asOf: day, timeSeries: timeSeries) else { continue }
+            store.saveBackfillSnapshot(
+                date: day,
+                overallScore: result.overallScore,
+                categoryScores: result.categoryScores,
+                baselines: result.baselines
+            )
+            inserted += 1
+        }
+
+        if inserted > 0 {
+            invalidateScoreHistoryCache()
+        }
     }
 
     @MainActor

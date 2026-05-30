@@ -270,6 +270,17 @@ struct OnbV2Screen10Scan: View {
     private func startAnimations() {
         pulse = true
 
+#if DEBUG
+        // Screenshot harness: freeze on the "all metrics found, 100%" frame and
+        // skip the completion timer so the scan screen stays put for capture
+        // instead of auto-advancing to the heart screen after ~7s.
+        if UITestMode.isEnabled {
+            foundCount = foundLabels.count
+            progress = 1.0
+            return
+        }
+#endif
+
         withAnimation(.linear(duration: 8).repeatForever(autoreverses: false)) {
             spin1 = 360
         }
@@ -353,7 +364,7 @@ struct OnbV2Screen11Heart: View {
                                     .foregroundStyle(OnbV2.fg3)
                             }
                         } else {
-                            Text("—")
+                            Text(Copy.Onboarding.x)
                                 .font(.system(size: 88, weight: .bold).monospacedDigit())
                                 .foregroundStyle(OnbV2.fg4)
                         }
@@ -399,7 +410,7 @@ struct OnbV2Screen11Heart: View {
                         .font(.system(size: 11))
                         .foregroundStyle(OnbV2.fg3)
                 } else {
-                    Text("no data yet")
+                    Text(Copy.Onboarding.noDataYet)
                         .font(.system(size: 11))
                         .foregroundStyle(OnbV2.fg3)
                 }
@@ -497,7 +508,7 @@ struct OnbV2Screen12Sleep: View {
                                     font: .system(size: 88, weight: .bold).monospacedDigit(),
                                     color: OnbV2.purple
                                 )
-                                Text("h")
+                                Text(Copy.Onboarding.h)
                                     .font(.system(size: 28, weight: .medium))
                                     .foregroundStyle(OnbV2.fg3)
 
@@ -510,7 +521,7 @@ struct OnbV2Screen12Sleep: View {
                                     font: .system(size: 88, weight: .bold).monospacedDigit(),
                                     color: OnbV2.purple
                                 )
-                                Text("m")
+                                Text(Copy.Onboarding.m)
                                     .font(.system(size: 28, weight: .medium))
                                     .foregroundStyle(OnbV2.fg3)
                             }
@@ -518,7 +529,7 @@ struct OnbV2Screen12Sleep: View {
                             (
                                 Text(Copy.OnboardingV2.s12BodyPrefix)
                                     .foregroundStyle(OnbV2.fg2)
-                                + Text("\(hours)h \(mins)m")
+                                + Text(Copy.Onboarding.hMText(hours, mins))
                                     .foregroundStyle(OnbV2.fg).bold()
                                 + Text(Copy.OnboardingV2.s12BodySuffix)
                                     .foregroundStyle(OnbV2.fg2)
@@ -527,7 +538,7 @@ struct OnbV2Screen12Sleep: View {
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: 320)
                         } else {
-                            Text("—")
+                            Text(Copy.Onboarding.x2)
                                 .font(.system(size: 88, weight: .bold).monospacedDigit())
                                 .foregroundStyle(OnbV2.fg4)
 
@@ -566,7 +577,7 @@ struct OnbV2Screen12Sleep: View {
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(OnbV2.fg3)
                 Spacer()
-                Text("target 7h")
+                Text(Copy.Onboarding.target7h)
                     .font(.system(size: 11))
                     .foregroundStyle(OnbV2.fg3)
             }
@@ -738,7 +749,7 @@ struct OnbV2Screen13HRV: View {
                         .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(OnbV2.teal)
                 } else {
-                    Text("no data yet")
+                    Text(Copy.Onboarding.noDataYet2)
                         .font(.system(size: 11))
                         .foregroundStyle(OnbV2.fg3)
                 }

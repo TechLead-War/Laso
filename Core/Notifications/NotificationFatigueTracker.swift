@@ -90,9 +90,12 @@ struct NotificationFatigueTracker {
 
     /// Record that a notification was just fired. Critical notifications do
     /// not contribute to the dismiss streak.
-    func recordFired(identifier: String, severity: Severity, now: Date = Date()) {
+    ///
+    /// `firedAt` is the trigger's true fire date (not the schedule time) so the
+    /// open-response window measures from when the notification actually fires.
+    func recordFired(identifier: String, severity: Severity, firedAt: Date = Date()) {
         guard severity != .critical else { return }
-        defaults.set(now.timeIntervalSince1970, forKey: AppKeys.Notifications.lastNonCriticalFiredAt)
+        defaults.set(firedAt.timeIntervalSince1970, forKey: AppKeys.Notifications.lastNonCriticalFiredAt)
         defaults.set(identifier, forKey: AppKeys.Notifications.lastNonCriticalFiredId)
     }
 

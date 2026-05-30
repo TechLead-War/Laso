@@ -50,11 +50,13 @@ enum SafetyTriageLevel: String, Codable, Comparable {
     case monitor
     case seekCare
 
+    /// User-facing level label. Resolved through one Copy key per level so the
+    /// wording (and any future localization) lives in Copy, not three literals.
     var displayName: String {
         switch self {
-        case .normal: return "Normal"
-        case .monitor: return "Monitor"
-        case .seekCare: return "Seek Care"
+        case .normal: return Copy.Notifications.triageLevelNormal
+        case .monitor: return Copy.Notifications.triageLevelMonitor
+        case .seekCare: return Copy.Notifications.triageLevelSeekCare
         }
     }
 
@@ -66,13 +68,9 @@ enum SafetyTriageLevel: String, Codable, Comparable {
         }
     }
 
-    var notificationPrefix: String {
-        switch self {
-        case .normal: return "Normal"
-        case .monitor: return "Monitor"
-        case .seekCare: return "Seek Care"
-        }
-    }
+    /// Same wording as `displayName`; the alert-title prefix shares the level
+    /// label, so it resolves through the same single Copy key per level.
+    var notificationPrefix: String { displayName }
 
     private var sortOrder: Int {
         switch self {
@@ -98,20 +96,20 @@ struct SafetyTriageAssessment {
 
     var summaryNote: String? {
         guard level != .normal else { return nil }
-        return "Triage level: \(level.displayName). \(action)"
+        return Copy.Notifications.triageSummaryNote(level: level.displayName, action: action)
     }
 
     var alertTitle: String {
-        "\(level.notificationPrefix): \(metric.displayName)"
+        Copy.Notifications.triageAlertTitle(prefix: level.notificationPrefix, metric: metric.displayName)
     }
 
     var alertBody: String {
-        "\(reason) \(action)"
+        Copy.Notifications.triageAlertBody(reason: reason, action: action)
     }
 
     func decorateRecommendation(_ recommendation: String) -> String {
         guard level != .normal else { return recommendation }
-        return "Triage level: \(level.displayName). \(action) \(recommendation)"
+        return Copy.Notifications.triageRecommendationDecorated(level: level.displayName, action: action, recommendation: recommendation)
     }
 }
 

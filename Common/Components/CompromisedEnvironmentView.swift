@@ -17,23 +17,23 @@ struct CompromisedEnvironmentView: View {
                     .font(.system(size: 64))
                     .foregroundStyle(.red)
 
-                Text("Security Check Failed")
+                Text(Copy.Common.securityCheckFailed)
                     .font(.title2.bold())
                     .foregroundStyle(.white)
 
-                Text("This app cannot run on a modified device. Your health data security cannot be guaranteed in this environment.")
+                Text(Copy.Common.thisAppCannotRunOnA)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
 
-                Text("Error: \(reason)")
+                Text(Copy.Common.errorText(reason))
                     .font(.caption.monospaced())
                     .foregroundStyle(.secondary.opacity(0.5))
 
                 Spacer()
 
-                Text("If you believe this is an error, please reinstall the app from the App Store.")
+                Text(Copy.Common.ifYouBelieveThisIsAn)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

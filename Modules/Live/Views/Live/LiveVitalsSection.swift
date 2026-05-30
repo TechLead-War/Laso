@@ -87,7 +87,7 @@ struct LiveVitalsSection: View {
 
                 if isUnavailable && value == nil {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("No data")
+                        Text(Copy.Live.noData)
                             .font(DS.Typography.subheadlineMedium)
                             .foregroundStyle(AppColour.textTertiary)
                         if let hint = unavailableHint {
@@ -109,7 +109,7 @@ struct LiveVitalsSection: View {
                             .foregroundStyle(AppColour.textSecondary.opacity(isStale ? 0.5 : 1.0))
                     }
                 } else {
-                    Text("Syncing")
+                    Text(Copy.Live.syncing)
                         .font(DS.Typography.subheadlineMedium)
                         .foregroundStyle(AppColour.textTertiary)
                 }
@@ -122,7 +122,7 @@ struct LiveVitalsSection: View {
                                 .font(DS.Typography.caption2)
                             Text(ts, style: .relative)
                                 .font(DS.Typography.caption2Medium)
-                            Text("ago")
+                            Text(Copy.Live.ago)
                                 .font(DS.Typography.caption2Medium)
                         }
                         .foregroundStyle(AppColour.textSecondary)
@@ -153,7 +153,7 @@ struct LiveVitalsSection: View {
             .cardStyle()
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(label), \(value ?? "no data") \(unit), \(status.label)")
-            .accessibilityHint("Opens \(label) detail")
+            .accessibilityHint(Copy.Live.opensDetailHint(label))
         }
         .buttonStyle(.dsPress)
     }

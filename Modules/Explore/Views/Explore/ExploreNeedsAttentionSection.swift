@@ -60,7 +60,7 @@ struct ExploreNeedsAttentionSection: View {
 
                                 Spacer()
 
-                                Text("\(factor.impact)")
+                                Text(Copy.Explore.xText(factor.impact))
                                     .font(.subheadline.weight(.bold).monospacedDigit())
                                     .foregroundStyle(.red)
                             }
@@ -69,9 +69,9 @@ struct ExploreNeedsAttentionSection: View {
                         }
                         .buttonStyle(.plain)
                         .accessibilityElement(children: .combine)
-                        .accessibilityLabel("\(factor.metric.displayName), needs attention")
-                        .accessibilityValue("Impact \(factor.impact). \(factor.reason)")
-                        .accessibilityHint("Opens metric details")
+                        .accessibilityLabel(Copy.Explore.needsAttentionLabel(factor.metric.displayName))
+                        .accessibilityValue(Copy.Explore.impactValue(factor.impact, factor.reason))
+                        .accessibilityHint(Copy.Explore.opensMetricDetailsHint)
                     }
 
                     if weakCategories.count >= 2 {
@@ -96,7 +96,7 @@ struct ExploreNeedsAttentionSection: View {
                                         Image(systemName: contrib.category.systemImageName)
                                             .font(.caption2)
                                             .foregroundStyle(contrib.category.color)
-                                        Text("\(contrib.score)")
+                                        Text(Copy.Explore.xText2(contrib.score))
                                             .font(.caption.weight(.bold).monospacedDigit())
                                             .foregroundStyle(weakCategoryColor(score: contrib.score))
                                         Text(contrib.category.shortName)
@@ -107,9 +107,9 @@ struct ExploreNeedsAttentionSection: View {
                                 }
                                 .buttonStyle(.plain)
                                 .accessibilityElement(children: .combine)
-                                .accessibilityLabel("\(contrib.category.displayName) category")
-                                .accessibilityValue("Score \(contrib.score)")
-                                .accessibilityHint("Opens the \(contrib.category.displayName) category detail")
+                                .accessibilityLabel(Copy.Explore.categoryLabel(contrib.category.displayName))
+                                .accessibilityValue(Copy.Explore.scoreValue(contrib.score))
+                                .accessibilityHint(Copy.Explore.opensTheCategoryDetailHint(contrib.category.displayName))
                             }
                         }
                     }

@@ -63,10 +63,19 @@ struct WorkoutEffectivenessAnalyzer {
         return Insight(
             metric: .workoutDuration,
             title: Copy.Analysis.Workout.workoutConsistency,
-            summary: "\(Int(consistencyScore))% of the last 4 weeks had 3+ workout days (avg \(String(format: "%.1f", weeklyAvg))/week). Breakdown: \(weekBreakdown).",
-            recommendation: consistencyScore >= 75 ?
-                "\(Int(consistencyScore))% of weeks hit 3+ sessions at \(String(format: "%.1f", weeklyAvg)) avg/week. Breakdown: \(weekBreakdown)." :
-                "Your weekly average is \(String(format: "%.1f", weeklyAvg)) sessions. \(weeksWithTarget) of the last 4 weeks reached 3+ workout days. Breakdown: \(weekBreakdown).",
+            summary: Copy.Analysis.WorkoutEffectiveness.consistencySummary(
+                consistencyPct: Int(consistencyScore),
+                weeklyAvg: String(format: "%.1f", weeklyAvg),
+                breakdown: weekBreakdown),
+            recommendation: consistencyScore >= 75
+                ? Copy.Analysis.WorkoutEffectiveness.consistencyRecHigh(
+                    consistencyPct: Int(consistencyScore),
+                    weeklyAvg: String(format: "%.1f", weeklyAvg),
+                    breakdown: weekBreakdown)
+                : Copy.Analysis.WorkoutEffectiveness.consistencyRecLow(
+                    weeklyAvg: String(format: "%.1f", weeklyAvg),
+                    weeksWithTarget: weeksWithTarget,
+                    breakdown: weekBreakdown),
             severity: severity,
             trend: trend,
             currentValue: consistencyScore,
@@ -110,7 +119,15 @@ struct WorkoutEffectivenessAnalyzer {
         return Insight(
             metric: .vo2Max,
             title: Copy.Analysis.Workout.vo2MaxResponse,
-            summary: "Your VO2 Max \(change > 0 ? "improved" : "decreased") \(String(format: "%.1f", abs(change)))% over the last 30 days (\(String(format: "%.1f", olderAvg)) \u{2192} \(String(format: "%.1f", recentAvg)) \(HealthMetric.vo2Max.unit)).\(weeklyProgression)",
+            summary: Copy.Analysis.WorkoutEffectiveness.vo2MaxChangeSummary(
+                direction: change > 0
+                    ? Copy.Analysis.WorkoutEffectiveness.directionImproved
+                    : Copy.Analysis.WorkoutEffectiveness.directionDecreased,
+                change: String(format: "%.1f", abs(change)),
+                olderAvg: String(format: "%.1f", olderAvg),
+                recentAvg: String(format: "%.1f", recentAvg),
+                unit: HealthMetric.vo2Max.unit,
+                weeklyProgression: weeklyProgression),
             recommendation: change > 0 ?
                 "VO2 Max trending up \(String(format: "%.1f", abs(change)))% over 30 days (\(String(format: "%.1f", olderAvg)) \u{2192} \(String(format: "%.1f", recentAvg)) \(HealthMetric.vo2Max.unit)).\(weeklyProgression)" :
                 "VO2 Max declined \(String(format: "%.1f", abs(change)))% over 30 days (\(String(format: "%.1f", olderAvg)) \u{2192} \(String(format: "%.1f", recentAvg)) \(HealthMetric.vo2Max.unit)).\(weeklyProgression)",
@@ -148,7 +165,11 @@ struct WorkoutEffectivenessAnalyzer {
         return Insight(
             metric: .activeCalories,
             title: Copy.Analysis.Workout.calorieEfficiency,
-            summary: "You are burning \(String(format: "%.1f", efficiency7d)) kcal/min this week vs \(String(format: "%.1f", efficiency30d)) kcal/min over 30 days (\(change > 0 ? "+" : "")\(String(format: "%.0f", change))%).",
+            summary: Copy.Analysis.WorkoutEffectiveness.efficiencySummary(
+                efficiency7d: String(format: "%.1f", efficiency7d),
+                efficiency30d: String(format: "%.1f", efficiency30d),
+                sign: change > 0 ? "+" : "",
+                change: String(format: "%.0f", change)),
             recommendation: change > 0 ?
                 "Calorie efficiency up \(String(format: "%.0f", change))% this week. Burning \(String(format: "%.1f", efficiency7d)) kcal/min vs your 30-day average of \(String(format: "%.1f", efficiency30d)) kcal/min." :
                 "Calorie efficiency down \(String(format: "%.0f", abs(change)))% this week. \(String(format: "%.1f", efficiency7d)) kcal/min vs your 30-day average of \(String(format: "%.1f", efficiency30d)) kcal/min.",

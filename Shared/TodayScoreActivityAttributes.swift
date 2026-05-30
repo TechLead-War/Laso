@@ -83,6 +83,16 @@ enum CoachMode: String, Codable, Hashable, Sendable {
         case .night:   return "zzz"
         }
     }
+
+    /// Label above the mode's secondary readout in the expanded trailing stack.
+    var secondaryLabel: String {
+        switch self {
+        case .morning: return "HRV"
+        case .day:     return "Steps"
+        case .evening: return "Score"
+        case .night:   return "Score"
+        }
+    }
 }
 
 /// Discriminator for which App Intent the expanded / lock screen action button should fire.
@@ -110,6 +120,35 @@ enum CoachActionKind: String, Codable, Hashable, Sendable {
         case .noop:         return ""
         }
     }
+
+    /// VoiceOver description of the action button, or `nil` when no button shows.
+    var accessibilityLabel: String? {
+        switch self {
+        case .setIntention: return "Set today's intention"
+        case .breathe:      return "Start a two minute breath"
+        case .windDown:     return "Start wind down"
+        case .noop:         return nil
+        }
+    }
+}
+
+/// User-facing copy for the Today's Score Live Activity that is not already a
+/// member of `CoachMode` / `CoachActionKind` / `TodayScoreTint`.
+///
+/// The LasoWidgets extension does NOT compile `Common/Copy`, so widget-rendered
+/// strings live here as Swift literals rather than Remote Config lookups. These
+/// MUST stay byte-identical to the app-side `copy_live_la_today_*` defaults.
+enum TodayScoreCopy {
+    /// Unit under the centre score number — the ring + number both read 0–100.
+    static let scoreUnit = "Score"
+    static let msUnit = "ms"
+    static let bpmUnit = "bpm"
+
+    /// `%d` is the overall 0–100 score. Caption under the trailing stack.
+    static let scoreCaptionTemplate = "Laso score %d"
+
+    /// `%1$d` is the overall score, `%2$@` is the mode headline. Ring VoiceOver.
+    static let ringAccessibilityTemplate = "%2$@. Laso score %1$d out of 100"
 }
 
 #if canImport(ActivityKit)
@@ -129,8 +168,6 @@ struct TodayScoreActivityAttributes: ActivityAttributes {
         var mode: CoachMode
         /// Hero integer surfaced by the current mode (readiness %, strain %, tonight score, etc).
         var heroValue: Int
-        /// Short label above the hero number ("Readiness", "Strain", "Tonight", "Resting").
-        var heroLabel: String
         /// Single-line insight. generated server-side from ML context when available.
         var insight: String
         /// Which App Intent button the expanded region should render (or `.noop`).

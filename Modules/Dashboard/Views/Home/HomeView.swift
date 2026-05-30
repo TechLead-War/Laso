@@ -267,14 +267,28 @@ struct HomeView: View {
                             ? DashboardViewModel.RecoveryState(score: liveReadinessScore).label
                             : "Daily Health Score",
                         dayType: DashboardViewModel.RecoveryState(score: liveReadinessScore).dayType,
-                        scoreChangeFromLastWeek: viewModel.scores.scoreChangeFromLastWeek,
+                        // Use the EWMA-vs-EWMA-7-days-ago delta so the badge
+                        // reflects a stable weekly comparison instead of two
+                        // point-in-time snapshots. With the live headline
+                        // moving every 30 min, the old daily-vs-snapshot
+                        // delta could swing meaninglessly between refreshes.
+                        scoreChangeFromLastWeek: viewModel.scores.weeklyScoreChange,
                         recoveryWhyLine: recoveryWhyLine,
                         hasLiveReadiness: hasLiveReadiness,
                         lastRefresh: viewModel.lastRefresh,
                         scoreLabel: liveViewModel.recovery.scoreLabel,
                         isWearingWatch: liveViewModel.recovery.isWearingWatch,
                         weeklyTrendCaption: weeklyTrendCaptionString,
-                        onTap: { showRecoveryInfo = true }
+                        // When live Recovery exists the (i) opens the Recovery
+                        // explainer; otherwise the headline is the Daily Health
+                        // Score (fallback) so we open the matching guide.
+                        onTap: {
+                            if hasLiveReadiness {
+                                showRecoveryInfo = true
+                            } else {
+                                showScoreGuide = true
+                            }
+                        }
                     )
                     .onAppear {
                         recoveryTracker.appeared()
@@ -780,7 +794,7 @@ struct HomeView: View {
     private var uiTestHiddenTriggers: some View {
         if UITestMode.isEnabled {
             VStack(spacing: 0) {
-                Button("Open Score Guide") { showScoreGuide = true }
+                Button(Copy.Home.openScoreGuideButton) { showScoreGuide = true }
                     .accessibilityIdentifier("uitest.openScoreGuide")
                 NavigationLink("Open Journal", value: Route.journalEntry)
                     .accessibilityIdentifier("uitest.openJournalEntry")
@@ -818,7 +832,7 @@ struct HomeView: View {
                 Task { await viewModel.load() }
             }
             .buttonStyle(.borderedProminent)
-            .accessibilityHint("Retry loading health data")
+            .accessibilityHint(Copy.Home.retryLoadingHealthDataHint)
         }
         .padding()
         .accessibilityElement(children: .combine)

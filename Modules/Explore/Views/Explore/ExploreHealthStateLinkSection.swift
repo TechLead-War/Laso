@@ -51,6 +51,6 @@ struct ExploreHealthStateLinkSection: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Copy.Explore.healthStates)
         .accessibilityValue(currentHealthState.map { Copy.Explore.healthStateDuration(label: $0.label, days: $0.daysInState) } ?? Copy.Explore.seeHealthStatePatterns)
-        .accessibilityHint("Opens the health states timeline")
+        .accessibilityHint(Copy.Explore.opensTheHealthStatesTimelineHint)
     }
 }

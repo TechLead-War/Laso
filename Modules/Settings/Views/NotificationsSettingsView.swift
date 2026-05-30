@@ -101,8 +101,8 @@ struct NotificationsSettingsView: View {
                 in: 1...15
             )
             .accessibilityLabel(Copy.Settings.maxNotificationsLabel)
-            .accessibilityValue("\(preferences.maxNotificationsPerDay) per day")
-            .accessibilityHint("Sets the daily cap on health notifications")
+            .accessibilityValue(Copy.Settings.perDayValue(preferences.maxNotificationsPerDay))
+            .accessibilityHint(Copy.Settings.setsTheDailyCapOnHealthHint)
             .onChange(of: preferences.maxNotificationsPerDay) { _, newValue in
                 AppAnalytics.shared.trackSettingChanged(name: "max_notifications_per_day", value: newValue)
             }
@@ -193,7 +193,7 @@ struct NotificationsSettingsView: View {
                 .tint(color)
                 .accessibilityLabel(label)
                 .accessibilityValue(Copy.Settings.bpmValue(Int(value.wrappedValue)))
-                .accessibilityHint("Adjust the heart rate threshold for alerts")
+                .accessibilityHint(Copy.Settings.adjustTheHeartRateThresholdForHint)
                 .onChange(of: value.wrappedValue) { _, newValue in
                     AppAnalytics.shared.trackSettingChanged(name: analyticsName, value: newValue)
                 }

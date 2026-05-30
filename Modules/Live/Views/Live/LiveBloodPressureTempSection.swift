@@ -30,16 +30,16 @@ struct LiveBloodPressureTempSection: View {
                                 Image(systemName: "waveform.path.ecg")
                                     .font(DS.Typography.captionSemibold)
                                     .foregroundStyle(.purple)
-                                Text("Blood Pressure")
+                                Text(Copy.Live.bloodPressure)
                                     .font(DS.Typography.caption2Medium)
                                     .foregroundStyle(AppColour.textSecondary)
                             }
 
                             HStack(alignment: .firstTextBaseline, spacing: 2) {
-                                Text("\(Int(sys))/\(Int(dia))")
+                                Text(Copy.Live.bloodPressureSysOverDia(Int(sys), Int(dia)))
                                     .font(DS.Typography.title2.monospacedDigit())
                                     .postHogMask()
-                                Text("mmHg")
+                                Text(Copy.Live.mmhg)
                                     .font(DS.Typography.caption2Medium)
                                     .foregroundStyle(AppColour.textSecondary)
                             }
@@ -79,7 +79,7 @@ struct LiveBloodPressureTempSection: View {
                                 Image(systemName: "thermometer.medium")
                                     .font(DS.Typography.captionSemibold)
                                     .foregroundStyle(AppColour.warning)
-                                Text("Temperature")
+                                Text(Copy.Live.temperature)
                                     .font(DS.Typography.caption2Medium)
                                     .foregroundStyle(AppColour.textSecondary)
                             }

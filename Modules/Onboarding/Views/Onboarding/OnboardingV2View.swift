@@ -55,6 +55,15 @@ struct OnboardingV2View: View {
         }
         .animation(.timingCurve(0.22, 1, 0.36, 1, duration: 0.42), value: screen)
         .onAppear {
+#if DEBUG
+            // Screenshot harness: jump straight to a requested screen and seed
+            // realistic health data so the data-driven screens (scan/heart/
+            // sleep/hrv) render fully instead of their empty state.
+            if let raw = UITestMode.onboardingV2StartScreen, let target = Screen(rawValue: raw) {
+                healthSnapshot.applyUITestMockData()
+                screen = target
+            }
+#endif
             // Hotfix kill switch — when a middle screen crashes mid-flow, flip
             // ON in Firebase Remote Config to send new installs straight to the
             // paywall while a fix ships. Only honoured if we are still on the
@@ -131,6 +140,7 @@ struct OnboardingV2View: View {
         case .done:
             OnbV2ScreenDone {
                 persistOnboardingProfile()
+                completeNotificationSetup()
                 appStateStore.markOnboardingCompleted()
                 onComplete()
             }
@@ -244,6 +254,23 @@ struct OnboardingV2View: View {
                     _ = await runCalibration()
                 }
             }
+        }
+    }
+
+    /// Prompt for notification permission (mirrors the HealthKit ask) and arm
+    /// the post-onboarding notification tracks. Runs after the system prompt so
+    /// the engagement drip is gated by the user's real authorization state.
+    /// The ContentView launch fallback still covers users who reach the
+    /// dashboard without passing through here.
+    private func completeNotificationSetup() {
+        Task { @MainActor in
+            _ = await NotificationManager.shared.requestAuthorization(source: "onboarding")
+            await EngagementSequenceScheduler.start(
+                healthStore: healthKitManager.healthStore,
+                dataStore: NotificationManager.shared.store,
+                userName: UserProfileStore.shared.storedName()
+            )
+            ReengagementScheduler.reschedule()
         }
     }
 

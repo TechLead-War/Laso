@@ -60,26 +60,26 @@ struct CircadianHealthAnalyzer: InsightAnalyzer {
         let scoreLevel: String
         let severity: Severity
         if biomarkers.circadianAlignmentScore >= 80 {
-            scoreLevel = "excellent"
+            scoreLevel = Copy.Analysis.Circadian.levelExcellent
             severity = .info
         } else if biomarkers.circadianAlignmentScore >= 65 {
-            scoreLevel = "good"
+            scoreLevel = Copy.Analysis.Circadian.levelGood
             severity = .info
         } else if biomarkers.circadianAlignmentScore >= 50 {
-            scoreLevel = "moderate"
+            scoreLevel = Copy.Analysis.Circadian.levelModerate
             severity = .warning
         } else {
-            scoreLevel = "disrupted"
+            scoreLevel = Copy.Analysis.Circadian.levelDisrupted
             severity = .warning
         }
 
         insights.append(InsightFactory.make(
             metric: .sleepDuration,
-            title: "Circadian alignment is \(scoreLevel)",
+            title: Copy.Analysis.Circadian.alignmentTitle(level: scoreLevel),
             summary: circadianDetailText(biomarkers),
             recommendation: biomarkers.isDisrupted
-                ? "Strengthen your circadian rhythm by keeping consistent sleep/wake times and getting daylight exposure in the morning."
-                : "Your circadian rhythm is well-aligned. Keep maintaining consistent daily patterns.",
+                ? Copy.Analysis.Circadian.alignmentRecDisrupted
+                : Copy.Analysis.Circadian.alignmentRecAligned,
             severity: severity,
             trend: biomarkers.circadianAlignmentScore >= 65 ? .stable : .declining,
             currentValue: Double(biomarkers.circadianAlignmentScore),
@@ -94,9 +94,9 @@ struct CircadianHealthAnalyzer: InsightAnalyzer {
             let hours = String(format: "%.1f", biomarkers.socialJetLag)
             insights.append(InsightFactory.make(
                 metric: .sleepDuration,
-                title: "Social jet lag detected: \(hours)h shift",
-                summary: "Your weekend sleep midpoint shifts \(hours) hours from weekdays.",
-                recommendation: "Try keeping weekend wake times within 1 hour of weekdays to reduce circadian disruption.",
+                title: Copy.Analysis.Circadian.socialJetLagTitle(hours: hours),
+                summary: Copy.Analysis.Circadian.socialJetLagSummary(hours: hours),
+                recommendation: Copy.Analysis.Circadian.socialJetLagRec,
                 severity: biomarkers.socialJetLag > 2.5 ? .critical : .warning,
                 trend: .declining,
                 currentValue: biomarkers.socialJetLag,
@@ -111,9 +111,9 @@ struct CircadianHealthAnalyzer: InsightAnalyzer {
         if biomarkers.sleepRegularityIndex < 60 {
             insights.append(InsightFactory.make(
                 metric: .sleepDuration,
-                title: "Irregular sleep pattern detected",
-                summary: "Your sleep regularity index is \(Int(biomarkers.sleepRegularityIndex))/100.",
-                recommendation: "Aim for consistent bed and wake times. Irregular sleep timing is linked to metabolic disruption and mood changes.",
+                title: Copy.Analysis.Circadian.irregularPatternTitle,
+                summary: Copy.Analysis.Circadian.irregularPatternSummary(sri: Int(biomarkers.sleepRegularityIndex)),
+                recommendation: Copy.Analysis.Circadian.irregularPatternRec,
                 severity: .warning,
                 trend: .declining,
                 currentValue: biomarkers.sleepRegularityIndex,
@@ -128,9 +128,9 @@ struct CircadianHealthAnalyzer: InsightAnalyzer {
         if biomarkers.intraDailyVariability > 1.2 {
             insights.append(InsightFactory.make(
                 metric: .steps,
-                title: "Activity rhythm is fragmented",
-                summary: "Your daily activity pattern shows high fragmentation (IV: \(String(format: "%.2f", biomarkers.intraDailyVariability))).",
-                recommendation: "A more consolidated active period during the day supports better circadian health.",
+                title: Copy.Analysis.Circadian.fragmentedRhythmTitle,
+                summary: Copy.Analysis.Circadian.fragmentedRhythmSummary(iv: String(format: "%.2f", biomarkers.intraDailyVariability)),
+                recommendation: Copy.Analysis.Circadian.fragmentedRhythmRec,
                 severity: .warning,
                 trend: .stable,
                 currentValue: biomarkers.intraDailyVariability,
@@ -145,9 +145,9 @@ struct CircadianHealthAnalyzer: InsightAnalyzer {
         if biomarkers.interDailyStability > 0.7 && biomarkers.activityAmplitude > 0.6 {
             insights.append(InsightFactory.make(
                 metric: .steps,
-                title: "Your daily rhythm is strong and consistent",
-                summary: "High inter-daily stability (\(Int(biomarkers.interDailyStability * 100))%) with robust activity amplitude.",
-                recommendation: "This pattern is associated with better metabolic health and mood regulation. Keep it up.",
+                title: Copy.Analysis.Circadian.strongRhythmTitle,
+                summary: Copy.Analysis.Circadian.strongRhythmSummary(stabilityPct: Int(biomarkers.interDailyStability * 100)),
+                recommendation: Copy.Analysis.Circadian.strongRhythmRec,
                 severity: .info,
                 trend: .improving,
                 currentValue: biomarkers.interDailyStability,

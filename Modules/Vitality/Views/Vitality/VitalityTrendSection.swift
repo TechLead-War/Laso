@@ -96,7 +96,7 @@ struct VitalityTrendSection: View {
                         AxisGridLine().foregroundStyle(.secondary.opacity(0.12))
                         AxisValueLabel {
                             if let y = value.as(Double.self) {
-                                Text("\(Int(y))")
+                                Text(Copy.Vitality.xText(Int(y)))
                                     .font(.caption2)
                                     .foregroundStyle(.secondary)
                             }
@@ -142,10 +142,10 @@ struct VitalityTrendSection: View {
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                             HStack(alignment: .firstTextBaseline, spacing: 3) {
-                                Text("\(selected.age)")
+                                Text(Copy.Vitality.xText2(selected.age))
                                     .font(.callout.weight(.bold).monospacedDigit())
                                     .foregroundStyle(historyLineColor)
-                                Text("yrs")
+                                Text(Copy.Vitality.yrs)
                                     .font(.caption.weight(.medium))
                                     .foregroundStyle(.secondary)
                             }

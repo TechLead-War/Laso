@@ -79,9 +79,9 @@ struct ProfileCaptureView: View {
                     }
                     .font(DS.Typography.subheadline)
                     .pickerStyle(.menu)
-                    .accessibilityLabel("Gender")
+                    .accessibilityLabel(Copy.Onboarding.genderLabel)
                     .accessibilityValue(gender?.displayName ?? "Not selected")
-                    .accessibilityHint("Choose your gender for personalized analysis")
+                    .accessibilityHint(Copy.Onboarding.chooseYourGenderForPersonalizedAnalysisHint)
                     .accessibilityIdentifier("onboarding.profileGender")
                 }
             }
@@ -133,7 +133,7 @@ struct ProfileCaptureView: View {
             }
             .buttonStyle(.dsPrimary)
             .accessibilityLabel(Copy.Onboarding.aboutContinue)
-            .accessibilityHint("Saves your age and gender and continues onboarding")
+            .accessibilityHint(Copy.Onboarding.savesYourAgeAndGenderAndHint)
             .padding(.horizontal, DS.space6)
             .padding(.bottom, DS.space8)
             .sensoryFeedback(.selection, trigger: buttonTapCount)

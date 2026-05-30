@@ -155,7 +155,7 @@ private struct JournalCorrelationCard: View {
             HStack(spacing: DS.space2) {
                 StrengthBadge(label: correlation.strengthLabel)
 
-                Text("\(correlation.sampleCount) days")
+                Text(Copy.Journal.daysText(correlation.sampleCount))
                     .font(DS.Typography.caption2)
                     .foregroundStyle(AppColour.textSecondary)
 
@@ -168,8 +168,8 @@ private struct JournalCorrelationCard: View {
         .padding(DS.cardPadding)
         .cardStyle(tint: categoryColor)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(correlation.category.displayName) affects \(correlation.healthMetric.displayName)")
-        .accessibilityValue("\(correlation.strengthLabel) correlation, \(correlation.sampleCount) days of data")
+        .accessibilityLabel(Copy.Journal.affectsLabel(correlation.category.displayName, correlation.healthMetric.displayName))
+        .accessibilityValue(Copy.Journal.correlationDaysOfDataValue(correlation.strengthLabel, correlation.sampleCount))
     }
 
     // MARK: - Confidence Badge

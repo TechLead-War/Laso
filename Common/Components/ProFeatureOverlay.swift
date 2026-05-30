@@ -22,7 +22,7 @@ struct ProFeatureOverlay: View {
                 HStack(spacing: 6) {
                     Text(feature)
                         .font(.title2.weight(.bold))
-                    Text("PRO")
+                    Text(Copy.Common.pro)
                         .font(.caption.weight(.bold))
                         .padding(.horizontal, DS.badgeH)
                         .padding(.vertical, DS.badgeV)
@@ -59,7 +59,7 @@ struct ProFeatureOverlay: View {
             }
             .buttonStyle(.borderedProminent)
             .accessibilityLabel(Copy.Paywall.upgradeToPro)
-            .accessibilityHint("Opens the subscription paywall to unlock \(feature)")
+            .accessibilityHint(Copy.Common.opensTheSubscriptionPaywallToHint(feature))
             .padding(.horizontal, 40)
 
             Spacer()

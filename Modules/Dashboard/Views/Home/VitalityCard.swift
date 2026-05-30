@@ -13,7 +13,7 @@ struct VitalityCard: View {
         .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityDescription)
-        .accessibilityHint("View vitality age details")
+        .accessibilityHint(Copy.Home.viewVitalityAgeDetailsHint)
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("home.vitalityCard")
     }
@@ -40,7 +40,7 @@ struct VitalityCard: View {
                         .textCase(.uppercase)
 
                     HStack(spacing: 8) {
-                        Text("\(scorer.vitalityAge)")
+                        Text(Copy.Home.xText(scorer.vitalityAge))
                             .font(.system(size: 26.4).weight(.bold).monospacedDigit())
                             .postHogMask()
 

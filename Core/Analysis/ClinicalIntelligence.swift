@@ -223,7 +223,11 @@ struct ClinicalIntelligence {
             insights.append(Insight(
                 metric: .bloodPressureSystolic,
                 title: Copy.Analysis.Clinical.bloodPressureTrendingUp,
-                summary: "Your systolic trend shows a rise of \(String(format: "%.1f", slopePerMonth)) mmHg/month over the past \(recent90.count) days. Currently in the \(currentStage.rawValue) range. This is still modifiable with lifestyle changes. \(nextStageInfo)",
+                summary: Copy.Analysis.ClinicalSentences.systolicTrendSummary(
+                    slopePerMonth: String(format: "%.1f", slopePerMonth),
+                    recentDays: recent90.count,
+                    currentStage: currentStage.rawValue,
+                    nextStageInfo: nextStageInfo),
                 recommendation: "\(Copy.Analysis.Clinical.bpRecommendation) \(Copy.Analysis.Clinical.medicalDisclaimer)",
                 severity: severity,
                 trend: .declining,
@@ -297,7 +301,11 @@ struct ClinicalIntelligence {
         return Insight(
             metric: .bloodGlucose,
             title: Copy.Analysis.Clinical.bloodGlucoseTrendingUp,
-            summary: "Your fasting glucose has been rising \(String(format: "%.1f", slopePerMonth)) mg/dL per month. Current: \(String(format: "%.0f", latest)) mg/dL (\(currentStage.rawValue)). \(nextInfo)",
+            summary: Copy.Analysis.ClinicalSentences.glucoseTrendSummary(
+                slopePerMonth: String(format: "%.1f", slopePerMonth),
+                latest: String(format: "%.0f", latest),
+                currentStage: currentStage.rawValue,
+                nextInfo: nextInfo),
             recommendation: "\(Copy.Analysis.Clinical.glucoseRecommendation) \(Copy.Analysis.Clinical.medicalDisclaimer)",
             severity: severity,
             trend: .declining,

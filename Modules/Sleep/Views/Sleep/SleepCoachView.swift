@@ -33,6 +33,11 @@ struct SleepCoachView: View {
         let deepHours: Double?
         let remHours: Double?
         let awakeHours: Double?
+        /// Total nap minutes recorded on this calendar day (sleep that didn't
+        /// qualify as the overnight session). Surfaced as a small "+ Xm nap"
+        /// badge on the history row so users can see naps that are silently
+        /// counted toward sleep balance.
+        let napMinutes: Int?
 
         init(
             date: Date,
@@ -43,7 +48,8 @@ struct SleepCoachView: View {
             coreHours: Double? = nil,
             deepHours: Double? = nil,
             remHours: Double? = nil,
-            awakeHours: Double? = nil
+            awakeHours: Double? = nil,
+            napMinutes: Int? = nil
         ) {
             self.date = date
             self.actual = actual
@@ -54,6 +60,7 @@ struct SleepCoachView: View {
             self.deepHours = deepHours
             self.remHours = remHours
             self.awakeHours = awakeHours
+            self.napMinutes = napMinutes
         }
 
         /// Total bed-to-wake span in hours when both timestamps are present.
@@ -332,8 +339,22 @@ struct SleepCoachView: View {
                 historyBar(day, isExpanded: isExpanded)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(dayLabel(day.date)) sleep: \(formatDuration(day.bedToWakeHours)) in bed")
+            .accessibilityLabel(Copy.SleepCoach.sleepInBedLabel(dayLabel(day.date), formatDuration(day.bedToWakeHours)))
             .accessibilityHint(isExpanded ? "Tap to collapse stage breakdown" : "Tap to show stage breakdown")
+
+            if let napMinutes = day.napMinutes, napMinutes > 0 {
+                HStack(spacing: 4) {
+                    Image(systemName: "moon.zzz.fill")
+                        .font(.caption2)
+                        .foregroundStyle(AppColour.textTertiary)
+                    Text(Copy.SleepCoach.mNapText(napMinutes))
+                        .font(DS.Typography.caption2.monospacedDigit())
+                        .foregroundStyle(AppColour.textSecondary)
+                    Spacer()
+                }
+                .padding(.leading, 80)
+                .accessibilityLabel(Copy.SleepCoach.daytimeNapMinutesCountedInLabel(napMinutes))
+            }
 
             if isExpanded {
                 stageBreakdown(day)
@@ -492,7 +513,7 @@ struct SleepCoachView: View {
                         .frame(width: 72, height: 72)
                         .rotationEffect(.degrees(-90))
 
-                    Text("\(consistencyScore)")
+                    Text(Copy.SleepCoach.xText(consistencyScore))
                         .font(DS.Typography.title3.weight(.bold).monospacedDigit())
                 }
 

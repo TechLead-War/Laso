@@ -11,10 +11,10 @@ struct ForceUpdateView: View {
                 .font(.system(size: 64))
                 .foregroundStyle(.blue)
 
-            Text("Update Required")
+            Text(Copy.Common.updateRequired)
                 .font(.title.bold())
 
-            Text("A new version of Laso is available with important fixes. Please update to continue.")
+            Text(Copy.Common.aNewVersionOfLasoIs)
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -23,7 +23,7 @@ struct ForceUpdateView: View {
             if let url = URL(string: AppSecrets.URLs.manageSubscriptions) {
                 // App Store link. in production, replace with your app's direct App Store URL
                 Link(destination: url) {
-                    Text("Update Now")
+                    Text(Copy.Common.updateNow)
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()

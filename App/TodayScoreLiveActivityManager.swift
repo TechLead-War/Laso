@@ -14,16 +14,26 @@ import ActivityKit
 final class TodayScoreLiveActivityManager {
     static let shared = TodayScoreLiveActivityManager()
 
-    /// 30 minutes of staleness — after which iOS shows the Live Activity as outdated
-    /// until the next `updateOrStart` call refreshes it.
-    private static let stalenessInterval: TimeInterval = 60 * 30
-
     private var activity: Activity<TodayScoreActivityAttributes>?
+    /// One-shot task that ends the activity at local midnight so yesterday's score
+    /// can never linger on the lock screen into the new day. Cancelled and replaced
+    /// on each `updateOrStart`, and on `end()`.
+    private var midnightTeardownTask: Task<Void, Never>?
 
     private init() {
         // Reattach to any activity that survived an app restart so we update
         // the existing one instead of spawning a duplicate.
         activity = Activity<TodayScoreActivityAttributes>.activities.first
+    }
+
+    /// Next local midnight (start of tomorrow) in the user's current calendar/zone.
+    /// The score is a per-day value, so this is both the staleness boundary and the
+    /// hard teardown point.
+    private static func nextLocalMidnight(after now: Date = Date()) -> Date {
+        var calendar = Calendar.current
+        calendar.timeZone = TimeZone.current
+        let startOfToday = calendar.startOfDay(for: now)
+        return calendar.date(byAdding: .day, value: 1, to: startOfToday) ?? now.addingTimeInterval(60 * 60 * 24)
     }
 
     /// Start a new activity if none is running, otherwise update the existing one.
@@ -73,13 +83,13 @@ final class TodayScoreLiveActivityManager {
             lastUpdated: Date(),
             mode: mode,
             heroValue: coach.value,
-            heroLabel: coach.label,
             insight: coach.insight,
             actionKind: coach.action
         )
 
-        let staleDate = Date().addingTimeInterval(Self.stalenessInterval)
-        let content = ActivityContent(state: contentState, staleDate: staleDate)
+        let midnight = Self.nextLocalMidnight()
+        let content = ActivityContent(state: contentState, staleDate: midnight)
+        scheduleMidnightTeardown(at: midnight)
 
         if let existing = activity ?? Activity<TodayScoreActivityAttributes>.activities.first {
             activity = existing
@@ -136,6 +146,9 @@ final class TodayScoreLiveActivityManager {
 
     /// End the current activity immediately (e.g. at midnight, or user-toggle off).
     func end() {
+        midnightTeardownTask?.cancel()
+        midnightTeardownTask = nil
+
         guard let existing = activity ?? Activity<TodayScoreActivityAttributes>.activities.first else {
             return
         }
@@ -153,11 +166,32 @@ final class TodayScoreLiveActivityManager {
         self.activity = nil
     }
 
+    /// Arm a one-shot task that ends the activity at local midnight. Replaces any
+    /// prior task so the deadline always tracks the latest `updateOrStart`. The
+    /// sleep is best-effort while the process is alive; the midnight `staleDate`
+    /// is the system-side backstop if the app is suspended before this fires.
+    private func scheduleMidnightTeardown(at midnight: Date) {
+        midnightTeardownTask?.cancel()
+        midnightTeardownTask = Task { @MainActor [weak self] in
+            let delay = midnight.timeIntervalSinceNow
+            if delay > 0 {
+                // Sleep throws CancellationError if a newer updateOrStart cancels
+                // this task; checkCancellation guards the post-sleep teardown too.
+                do {
+                    try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                    try Task.checkCancellation()
+                } catch {
+                    return
+                }
+            }
+            self?.end()
+        }
+    }
+
     // MARK: - Coach Context Derivation
 
     private struct CoachContext {
         let value: Int
-        let label: String
         let insight: String
         let action: CoachActionKind
     }
@@ -185,7 +219,6 @@ final class TodayScoreLiveActivityManager {
             }
             return CoachContext(
                 value: readiness,
-                label: "Readiness",
                 insight: message,
                 action: .setIntention
             )
@@ -213,7 +246,6 @@ final class TodayScoreLiveActivityManager {
 
             return CoachContext(
                 value: strainPct,
-                label: "Strain",
                 insight: insight,
                 action: action
             )
@@ -228,7 +260,6 @@ final class TodayScoreLiveActivityManager {
             }
             return CoachContext(
                 value: tonight,
-                label: "Tonight",
                 insight: insight,
                 action: .windDown
             )
@@ -242,7 +273,6 @@ final class TodayScoreLiveActivityManager {
             }
             return CoachContext(
                 value: overallScore,
-                label: "Resting",
                 insight: insight,
                 action: .noop
             )

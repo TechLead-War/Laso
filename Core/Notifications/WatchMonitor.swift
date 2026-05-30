@@ -270,16 +270,31 @@ final class WatchMonitor {
     /// is never present in your samples, a watchOS companion app with
     /// WatchConnectivity would be needed for reliable battery monitoring.
     private func checkBatteryFromSample(_ sample: HKSample) {
-        guard let metadata = sample.metadata else { return }
-
         // Check known metadata keys that may contain battery level (0.0–1.0)
         let batteryKeys = ["WatchBatteryLevel", "DeviceBatteryLevel", "HKDeviceBatteryLevel"]
-        for key in batteryKeys {
-            if let batteryLevel = metadata[key] as? Double {
-                handleBatteryLevel(batteryLevel)
-                return
+        if let metadata = sample.metadata {
+            for key in batteryKeys {
+                if let batteryLevel = metadata[key] as? Double {
+                    handleBatteryLevel(batteryLevel)
+                    return
+                }
             }
         }
+
+        // No battery key present. Make the gap observable instead of silently
+        // dropping it. HealthKit has no standard battery metadata key, so true
+        // watch battery needs a watchOS companion + WatchConnectivity, which is
+        // out of scope here. The suppressed event lets us see how often samples
+        // arrive without battery data.
+        reportBatteryMetadataAbsent()
+    }
+
+    private func reportBatteryMetadataAbsent() {
+        AppAnalytics.shared.trackNotificationSuppressed(
+            type: "battery_low",
+            identifier: AppConstants.NotificationID.watchLowBattery,
+            reason: "battery_metadata_absent"
+        )
     }
 
     /// Process a battery level reading (0.0–1.0). Sends a notification if below threshold.
@@ -293,14 +308,19 @@ final class WatchMonitor {
             // Only show once per low-battery cycle
             guard !defaults.bool(forKey: lowBatteryAlertShownKey) else { return }
 
+            // Actionable-but-not-clinical: bypassCap keeps a dying watch out of
+            // the daily budget so it is never swallowed, severity:.warning keeps
+            // it below the critical alarm tier. Routing through NotificationManager
+            // means it is tracked like every other notification (replaces the raw
+            // trackNotificationSent that bypassed the standard funnel).
             NotificationManager.shared.scheduleNotification(
                 title: Copy.Notifications.watchBatteryLow,
                 body: Copy.Notifications.watchBatteryBody(device: DeviceMessaging.deviceName, percent: Int(level * 100)),
                 identifier: AppConstants.NotificationID.watchLowBattery,
                 maxPerDay: 1,
+                severity: .warning,
                 bypassCap: true
             )
-            Task { @MainActor in AppAnalytics.shared.trackNotificationSent(type: "battery_low") }
 
             defaults.set(true, forKey: lowBatteryAlertShownKey)
         } else {

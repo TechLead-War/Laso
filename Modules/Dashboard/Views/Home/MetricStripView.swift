@@ -71,7 +71,7 @@ private struct MetricTileView: View {
                         .postHogMask()
                 } else {
                     // Placeholder to keep consistent height
-                    Text(" ")
+                    Text(Copy.Home.x)
                         .font(DS.Typography.caption)
                 }
             }
@@ -86,8 +86,8 @@ private struct MetricTileView: View {
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(tile.label) \(tile.value)")
-        .accessibilityHint("View \(tile.label) details")
+        .accessibilityLabel(Copy.Home.xLabel(tile.label, tile.value))
+        .accessibilityHint(Copy.Home.viewDetailsHint(tile.label))
     }
 }
 

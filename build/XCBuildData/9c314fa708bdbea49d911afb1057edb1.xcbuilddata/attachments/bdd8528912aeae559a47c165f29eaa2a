@@ -1,4 +1,0 @@
-module GoogleUtilities_Network {
-umbrella "/Users/primetrace/Library/Developer/Xcode/DerivedData/Laso-cgsvsuhaurvxyceguqswwerponfi/SourcePackages/checkouts/GoogleUtilities/GoogleUtilities/Network/Public"
-export *
-}

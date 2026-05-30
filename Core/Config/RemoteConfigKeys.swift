@@ -225,6 +225,25 @@ enum RC {
     static let notificationEveningEndHour        = "notification_evening_end_hour"
     static let notificationHookStyle             = "notification_hook_style"
 
+    /// Local-hour bounds of the do-not-disturb window. Non-critical pushes
+    /// scheduled to fire inside [start, end) are suppressed. Overnight window
+    /// (start > end) is handled by the consumer's wrap-around comparison.
+    /// Consumer: Core/Notifications/NotificationManager.isWithinQuietHours +
+    /// Core/Analysis/ML/ReceptivityEstimator.swift.
+    static let notificationQuietHoursStart       = "notification_quiet_hours_start"
+    static let notificationQuietHoursEnd         = "notification_quiet_hours_end"
+
+    /// Attribution window (hours) a caller uses to credit a goal completion to
+    /// a prior notification tap. Industry push-conversion attribution ~24h.
+    /// Consumer: AppAnalytics.trackNotificationConverted gate (caller-side).
+    static let notificationConversionWindowHours = "notification_conversion_window_hours"
+
+    /// Local fire time of the weekly summary push. Default 10:00 (not 09:00)
+    /// to avoid colliding with the morning daily summary around wake time.
+    /// Consumer: Core/Notifications/WeeklySummaryScheduler.swift.
+    static let weeklySummaryFireHour             = "weekly_summary_fire_hour"
+    static let weeklySummaryFireMinute           = "weekly_summary_fire_minute"
+
     // MARK: A/B experiments
     static let experimentRecoveryCardStyle       = "experiment_recovery_card_style"
 

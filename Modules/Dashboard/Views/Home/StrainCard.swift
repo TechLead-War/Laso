@@ -74,7 +74,7 @@ struct StrainCard: View {
         .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Today's strain \(String(format: "%.1f", strainValue)), \(strainLevel.displayName)")
-        .accessibilityHint("View strain details")
+        .accessibilityHint(Copy.Home.viewStrainDetailsHint)
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("home.strainCard")
     }
@@ -123,7 +123,7 @@ struct StrainCard: View {
                             .fill(TrainingZoneColor.color(for: zone))
                             .frame(height: max(CGFloat(fraction) * 24, 2))
 
-                        Text("\(Int(minutes))")
+                        Text(Copy.Home.xText(Int(minutes)))
                             .font(DS.Typography.footnoteMedium.monospacedDigit())
                             .foregroundStyle(AppColour.textSecondary)
                             .postHogMask()

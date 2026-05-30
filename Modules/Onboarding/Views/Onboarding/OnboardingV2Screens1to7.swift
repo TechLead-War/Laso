@@ -161,10 +161,10 @@ struct OnbV2Screen3About: View {
                                 Spacer(minLength: 0)
 
                                 HStack(alignment: .lastTextBaseline, spacing: 6) {
-                                    Text("\(profile.age)")
+                                    Text(Copy.Onboarding.xText(profile.age))
                                         .font(.system(size: 56, weight: .bold).monospacedDigit())
                                         .foregroundStyle(OnbV2.fg)
-                                    Text("years")
+                                    Text(Copy.Onboarding.years)
                                         .font(.system(size: 14))
                                         .foregroundStyle(OnbV2.fg3)
                                 }

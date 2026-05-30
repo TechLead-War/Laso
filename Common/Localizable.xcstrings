@@ -4,19 +4,10 @@
     "" : {
 
     },
-    " " : {
-
-    },
-    "--" : {
-
-    },
     "—" : {
 
     },
     "·" : {
-
-    },
-    "···" : {
 
     },
     "(%lld)" : {
@@ -24,94 +15,6 @@
     },
     "(+%lld)" : {
 
-    },
-    "%@ / %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ / %2$@"
-          }
-        }
-      }
-    },
-    "%@ %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ %2$@"
-          }
-        }
-      }
-    },
-    "%@ %@ %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ %2$@ %3$@"
-          }
-        }
-      }
-    },
-    "%@ → %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ → %2$@"
-          }
-        }
-      }
-    },
-    "%@ affects %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ affects %2$@"
-          }
-        }
-      }
-    },
-    "%@ amount" : {
-
-    },
-    "%@ category" : {
-
-    },
-    "%@ confidence" : {
-
-    },
-    "%@ correlation" : {
-
-    },
-    "%@ correlation, %lld days of data" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ correlation, %2$lld days of data"
-          }
-        }
-      }
-    },
-    "%@ data points found" : {
-
-    },
-    "%@ debt" : {
-
-    },
-    "%@ declining trend, %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ declining trend, %2$@"
-          }
-        }
-      }
     },
     "%@ dropped %@ this week." : {
       "localizations" : {
@@ -123,9 +26,6 @@
         }
       }
     },
-    "%@ forecast" : {
-
-    },
     "%@ improved by %@ this week." : {
       "localizations" : {
         "en" : {
@@ -136,80 +36,17 @@
         }
       }
     },
-    "%@ insight: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ insight: %2$@"
-          }
-        }
-      }
-    },
     "%@ kg" : {
-
-    },
-    "%@ leads to %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ leads to %2$@"
-          }
-        }
-      }
-    },
-    "%@ Logged" : {
 
     },
     "%@ ms" : {
 
-    },
-    "%@ of %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ of %2$@"
-          }
-        }
-      }
-    },
-    "%@ plan, %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ plan, %2$@"
-          }
-        }
-      }
     },
     "%@ range" : {
 
     },
     "%@ range, locked, requires Pro" : {
 
-    },
-    "%@ rating %lld of %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ rating %2$lld of %3$lld"
-          }
-        }
-      }
-    },
-    "%@ rating %lld of 5" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ rating %2$lld of 5"
-          }
-        }
-      }
     },
     "%@ score %lld out of 100" : {
       "localizations" : {
@@ -221,45 +58,12 @@
         }
       }
     },
-    "%@ score %lld. %@. %@. %@." : {
+    "%@ score %lld. %@. %@. %@. %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "%1$@ score %2$lld. %3$@. %4$@. %5$@."
-          }
-        }
-      }
-    },
-    "%@ sleep: %@ in bed" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ sleep: %2$@ in bed"
-          }
-        }
-      }
-    },
-    "%@ trend" : {
-
-    },
-    "%@, %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@, %2$@"
-          }
-        }
-      }
-    },
-    "%@, %@ %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@, %2$@ %3$@"
+            "value" : "%1$@ score %2$lld. %3$@. %4$@. %5$@. %6$@"
           }
         }
       }
@@ -284,42 +88,12 @@
         }
       }
     },
-    "%@, %@ risk" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@, %2$@ risk"
-          }
-        }
-      }
-    },
-    "%@, confidence %lld percent" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@, confidence %2$lld percent"
-          }
-        }
-      }
-    },
     "%@, current value %@ %@, %@%@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@, current value %2$@ %3$@, %4$@%5$@"
-          }
-        }
-      }
-    },
-    "%@, day %lld of %lld, %lld days until next period" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@, day %2$lld of %3$lld, %4$lld days until next period"
           }
         }
       }
@@ -334,63 +108,7 @@
         }
       }
     },
-    "%@, needs attention" : {
-
-    },
     "%@, unlocked" : {
-
-    },
-    "%@: **%@**" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@: **%2$@**"
-          }
-        }
-      }
-    },
-    "%@: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@: %2$@"
-          }
-        }
-      }
-    },
-    "%@: %@ affects %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@: %2$@ affects %3$@"
-          }
-        }
-      }
-    },
-    "%@: %lld%%" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@: %2$lld%%"
-          }
-        }
-      }
-    },
-    "%@. %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@. %2$@"
-          }
-        }
-      }
-    },
-    "%@/day" : {
 
     },
     "%@%@%% from baseline" : {
@@ -423,23 +141,7 @@
         }
       }
     },
-    "%@%lld%% vs avg" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@%2$lld%% vs avg"
-          }
-        }
-      }
-    },
     "%lld" : {
-
-    },
-    "%lld active" : {
-
-    },
-    "%lld beats per minute" : {
 
     },
     "%lld day%@ in this state" : {
@@ -452,29 +154,7 @@
         }
       }
     },
-    "%lld days" : {
-
-    },
-    "%lld days of data tracked" : {
-
-    },
-    "%lld days to %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld days to %2$@"
-          }
-        }
-      }
-    },
-    "%lld days tracked" : {
-
-    },
     "%lld from last week" : {
-
-    },
-    "%lld kcal" : {
 
     },
     "%lld metric%@ need%@ attention" : {
@@ -486,32 +166,6 @@
           }
         }
       }
-    },
-    "%lld metrics · Last sync %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld metrics · Last sync %2$@"
-          }
-        }
-      }
-    },
-    "%lld metrics %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld metrics %2$@"
-          }
-        }
-      }
-    },
-    "%lld min" : {
-
-    },
-    "%lld mL" : {
-
     },
     "%lld mL (%@ L)" : {
       "localizations" : {
@@ -533,42 +187,6 @@
         }
       }
     },
-    "%lld of %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld of %2$lld"
-          }
-        }
-      }
-    },
-    "%lld of %lld metrics" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld of %2$lld metrics"
-          }
-        }
-      }
-    },
-    "%lld of %lld metrics synced" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld of %2$lld metrics synced"
-          }
-        }
-      }
-    },
-    "%lld per day" : {
-
-    },
-    "%lld percent" : {
-
-    },
     "%lld vs actual" : {
 
     },
@@ -582,45 +200,10 @@
         }
       }
     },
-    "%lld worth noticing" : {
-
-    },
-    "%lld-day streak" : {
-
-    },
-    "%lld-step chain" : {
-
-    },
-    "%lld/%lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld/%2$lld"
-          }
-        }
-      }
-    },
     "%lld%%" : {
 
     },
-    "%lld%% conf" : {
-
-    },
     "%lldd" : {
-
-    },
-    "%lldh %lldm" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lldh %2$lldm"
-          }
-        }
-      }
-    },
-    "•" : {
 
     },
     "+%lld" : {
@@ -638,31 +221,13 @@
     "+%lldd" : {
 
     },
-    "+%lldy" : {
-
-    },
     "~%@d" : {
 
     },
     "0" : {
 
     },
-    "7D" : {
-
-    },
-    "30D" : {
-
-    },
-    "90D" : {
-
-    },
     "100" : {
-
-    },
-    "A new version of Laso is available with important fixes. Please update to continue." : {
-
-    },
-    "Acknowledges the medical disclaimer and continues into the app" : {
 
     },
     "Active" : {
@@ -674,78 +239,19 @@
     "Activity" : {
 
     },
-    "Activity Rings" : {
-
-    },
-    "Activity rings. Move: %lld of %lld calories, %lld percent. Exercise: %lld of %lld minutes, %lld percent. Stand: %lld of %lld hours, %lld percent." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Activity rings. Move: %1$lld of %2$lld calories, %3$lld percent. Exercise: %4$lld of %5$lld minutes, %6$lld percent. Stand: %7$lld of %8$lld hours, %9$lld percent."
-          }
-        }
-      }
-    },
-    "Adjust the amount you logged" : {
-
-    },
-    "Adjust the heart rate threshold for alerts" : {
-
-    },
     "Age" : {
-
-    },
-    "ago" : {
 
     },
     "Amount (liters)" : {
 
     },
-    "App: %@" : {
-
-    },
-    "At least 2 data points needed" : {
-
-    },
     "Baseline" : {
-
-    },
-    "Blood Pressure" : {
 
     },
     "Body & Vitals" : {
 
     },
-    "Body insight briefing" : {
-
-    },
-    "bpm" : {
-
-    },
     "BPM" : {
-
-    },
-    "Brain Health score %lld out of 100, %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Brain Health score %1$lld out of 100, %2$@"
-          }
-        }
-      }
-    },
-    "Breathwork" : {
-
-    },
-    "Building your sleep profile" : {
-
-    },
-    "Bundle: %@" : {
-
-    },
-    "Causal chain affecting %@" : {
 
     },
     "Check Health Score" : {
@@ -757,19 +263,7 @@
     "Check Sleep Summary" : {
 
     },
-    "Choose your gender for personalized analysis" : {
-
-    },
     "Chronological Age" : {
-
-    },
-    "Clear search" : {
-
-    },
-    "Closes discovery and opens your dashboard" : {
-
-    },
-    "Closes the check-in card without submitting" : {
 
     },
     "Collapsed" : {
@@ -955,21 +449,6 @@
         }
       }
     },
-    "Connect Apple Health" : {
-
-    },
-    "Connected But Inactive" : {
-
-    },
-    "Connected Devices" : {
-
-    },
-    "Continue" : {
-
-    },
-    "Continue Anyway" : {
-
-    },
     "Cooldown" : {
 
     },
@@ -979,57 +458,13 @@
     "Dance" : {
 
     },
-    "Data Source" : {
-
-    },
     "Date" : {
 
     },
     "Day" : {
 
     },
-    "days" : {
-
-    },
-    "Decrease %@" : {
-
-    },
-    "Decreases the logged amount by %@ %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Decreases the logged amount by %1$@ %2$@"
-          }
-        }
-      }
-    },
-    "Decreases the value by %lf %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Decreases the value by %1$lf %2$@"
-          }
-        }
-      }
-    },
     "Details" : {
-
-    },
-    "Detected" : {
-
-    },
-    "Discover your health patterns with Laso" : {
-
-    },
-    "Dismiss milestone celebration" : {
-
-    },
-    "Dismiss morning check-in" : {
-
-    },
-    "Dismisses the maintenance notice and continues to the app" : {
 
     },
     "Done" : {
@@ -1050,9 +485,6 @@
     "Elliptical" : {
 
     },
-    "Error: %@" : {
-
-    },
     "Expanded" : {
 
     },
@@ -1062,19 +494,10 @@
     "Failed to log water. Make sure Laso has write access to Apple Health." : {
 
     },
-    "Filter to show %@ metrics" : {
-
-    },
     "Focus: %@" : {
 
     },
     "Forecast" : {
-
-    },
-    "Gender" : {
-
-    },
-    "h" : {
 
     },
     "Health" : {
@@ -1086,25 +509,10 @@
     "Health Score" : {
 
     },
-    "Health score info" : {
-
-    },
-    "Health States" : {
-
-    },
     "Health Trends" : {
 
     },
     "Heart & Cardio" : {
-
-    },
-    "Hides the milestone unlock card" : {
-
-    },
-    "Hides this banner without changing Health app settings" : {
-
-    },
-    "Hides this banner without changing notification settings" : {
 
     },
     "High" : {
@@ -1114,9 +522,6 @@
 
     },
     "Hiking" : {
-
-    },
-    "How can we improve Laso for you?" : {
 
     },
     "How long was the workout in minutes" : {
@@ -1131,12 +536,6 @@
     "How many minutes was the workout?" : {
 
     },
-    "How This Source Connects" : {
-
-    },
-    "How would you feel if you could no longer use Laso?" : {
-
-    },
     "I couldn't calculate your readiness. Make sure Apple Health has recent HRV and resting heart rate data." : {
 
     },
@@ -1149,92 +548,16 @@
     "Idle" : {
 
     },
-    "If you believe this is an error, please reinstall the app from the App Store." : {
-
-    },
-    "Impact %lld. %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Impact %1$lld. %2$@"
-          }
-        }
-      }
-    },
-    "Imported Metrics" : {
-
-    },
     "Inactive" : {
 
     },
-    "Increase %@" : {
-
-    },
-    "Increases the logged amount by %@ %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Increases the logged amount by %1$@ %2$@"
-          }
-        }
-      }
-    },
-    "Increases the value by %lf %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Increases the value by %1$lf %2$@"
-          }
-        }
-      }
-    },
-    "Laso" : {
-
-    },
     "last %@" : {
-
-    },
-    "Last Known Readings" : {
-
-    },
-    "Last Night's Sleep" : {
-
-    },
-    "Last night's sleep %@, %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Last night's sleep %1$@, %2$@"
-          }
-        }
-      }
-    },
-    "Last Reading" : {
-
-    },
-    "Last signal %@ ago" : {
-
-    },
-    "Last Sync" : {
-
-    },
-    "Last Workout" : {
 
     },
     "Latest Age" : {
 
     },
     "Latest Date" : {
-
-    },
-    "Live" : {
-
-    },
-    "Log %@" : {
 
     },
     "Log ${amount} liters of water" : {
@@ -1278,31 +601,13 @@
     "Low" : {
 
     },
-    "m" : {
-
-    },
-    "Metrics" : {
-
-    },
     "Mindfulness" : {
-
-    },
-    "mmHg" : {
 
     },
     "Mobility" : {
 
     },
     "Next day effect" : {
-
-    },
-    "No activity yet" : {
-
-    },
-    "No data" : {
-
-    },
-    "no data yet" : {
 
     },
     "No score yet" : {
@@ -1312,9 +617,6 @@
 
     },
     "Not selected" : {
-
-    },
-    "Open App Store" : {
 
     },
     "Open Journal" : {
@@ -1332,67 +634,13 @@
     "Open Laso and start a quick breathing session." : {
 
     },
-    "Open Score Guide" : {
-
-    },
     "Opening your health trends in Laso." : {
-
-    },
-    "Opens %@ detail" : {
-
-    },
-    "Opens %@ detail view" : {
-
-    },
-    "Opens an explanation of how your health score is calculated" : {
-
-    },
-    "Opens Ask Your Data" : {
 
     },
     "Opens detailed metric history" : {
 
     },
-    "Opens detailed metric view" : {
-
-    },
-    "Opens guidance for today's recommended action" : {
-
-    },
     "Opens Laso to the Explore tab showing your health trends and analysis." : {
-
-    },
-    "Opens metric details" : {
-
-    },
-    "Opens score breakdown" : {
-
-    },
-    "Opens the %@ category detail" : {
-
-    },
-    "Opens the full health intelligence view" : {
-
-    },
-    "Opens the full insight" : {
-
-    },
-    "Opens the full insights screen" : {
-
-    },
-    "Opens the health states timeline" : {
-
-    },
-    "Opens the subscription paywall to unlock %@" : {
-
-    },
-    "Opens the system Settings app to enable notifications" : {
-
-    },
-    "Opens the system Settings app to re-enable Health data access" : {
-
-    },
-    "Opens your weekly review" : {
 
     },
     "Optional — anything you'd change or add" : {
@@ -1404,37 +652,13 @@
     "Period" : {
 
     },
-    "PRO" : {
-
-    },
-    "Pull to refresh" : {
-
-    },
-    "Pulls the latest health data from connected sources" : {
-
-    },
     "Quickly log a workout to your Health app with a type and duration." : {
 
     },
     "Readiness" : {
 
     },
-    "Recovery Status" : {
-
-    },
-    "Removes the current question and result" : {
-
-    },
-    "Renders this card and opens the share sheet" : {
-
-    },
     "Respiratory" : {
-
-    },
-    "Restores any prior subscription tied to your Apple ID" : {
-
-    },
-    "Retry loading health data" : {
 
     },
     "Returns a summary of your sleep from last night, including duration and quality." : {
@@ -1458,34 +682,7 @@
     "Same day" : {
 
     },
-    "Saved to Apple Health" : {
-
-    },
-    "Saves the selected behaviors and dismisses this sheet" : {
-
-    },
-    "Saves your age and gender and continues onboarding" : {
-
-    },
-    "Saves your selected focus areas and continues onboarding" : {
-
-    },
-    "Saves your sleep, energy, and soreness ratings" : {
-
-    },
-    "Scanning for devices" : {
-
-    },
     "Score %lld" : {
-
-    },
-    "Security Check Failed" : {
-
-    },
-    "See all causal explanations" : {
-
-    },
-    "See all correlations" : {
 
     },
     "Selected" : {
@@ -1494,56 +691,19 @@
     "Selected Day" : {
 
     },
-    "Selects %lld out of 5" : {
-
-    },
-    "Selects rating %lld out of %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Selects rating %1$lld out of %2$lld"
-          }
-        }
-      }
-    },
-    "Selects the %@ subscription plan" : {
-
-    },
-    "Sends negative feedback on this answer" : {
-
-    },
-    "Sends positive feedback on this answer" : {
-
-    },
     "Series" : {
 
     },
     "Set today's intention" : {
 
     },
-    "Sets the daily cap on health notifications" : {
-
-    },
-    "Setup Guide" : {
-
-    },
     "Show Health Trends" : {
-
-    },
-    "Skip" : {
 
     },
     "Sleep" : {
 
     },
     "Sleep Summary" : {
-
-    },
-    "Some features may not work as expected right now." : {
-
-    },
-    "Source App" : {
 
     },
     "Start a 2-minute breathwork reset" : {
@@ -1553,9 +713,6 @@
 
     },
     "Start wind-down routine" : {
-
-    },
-    "Starts the onboarding flow" : {
 
     },
     "Starts your free trial and subscribes after" : {
@@ -1574,9 +731,6 @@
         }
       }
     },
-    "Strain over the last %lld days" : {
-
-    },
     "Strength Training" : {
 
     },
@@ -1593,25 +747,10 @@
     "Submit" : {
 
     },
-    "Submit morning check-in" : {
-
-    },
     "Subscribes you to the selected plan" : {
 
     },
     "Swimming" : {
-
-    },
-    "Switch to %@ tab" : {
-
-    },
-    "Switches between 7-day, 30-day, and 90-day views" : {
-
-    },
-    "Sync Path" : {
-
-    },
-    "Syncing" : {
 
     },
     "Tap to collapse stage breakdown" : {
@@ -1626,19 +765,10 @@
     "Tap to show tier progression details" : {
 
     },
-    "target 7h" : {
-
-    },
     "Target High" : {
 
     },
     "Target Low" : {
-
-    },
-    "Temperature" : {
-
-    },
-    "Thank you" : {
 
     },
     "That seems like a lot! Please enter an amount under 10 liters." : {
@@ -1653,38 +783,7 @@
     "The type of workout you did" : {
 
     },
-    "These sources were detected before, but they haven't written data to Apple Health in the last 7 days." : {
-
-    },
-    "This answer was helpful" : {
-
-    },
-    "This answer was not helpful" : {
-
-    },
-    "This app cannot run on a modified device. Your health data security cannot be guaranteed in this environment." : {
-
-    },
-    "This health risk assessment is no longer available. Pull to refresh your data." : {
-
-    },
     "Time" : {
-
-    },
-    "Time period selector" : {
-
-    },
-    "Today: %lld–%lld bpm" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Today: %1$lld–%2$lld bpm"
-          }
-        }
-      }
-    },
-    "Today's action: %@" : {
 
     },
     "Today's strain %@, %@" : {
@@ -1697,119 +796,22 @@
         }
       }
     },
-    "Toggle to log or unlog %@ today" : {
-
-    },
-    "Toggles %@ as a focus area" : {
-
-    },
     "Toggles a causal explanation for why this metric declined" : {
-
-    },
-    "Track your health with Laso" : {
 
     },
     "Trend" : {
 
     },
-    "Trend timeframe" : {
-
-    },
-    "Under Maintenance" : {
-
-    },
-    "Unlock the full set with a Pro subscription." : {
-
-    },
     "Update" : {
-
-    },
-    "Update Now" : {
-
-    },
-    "Update Required" : {
-
-    },
-    "Update your payment method to keep your subscription active." : {
-
-    },
-    "Updated %@ ago" : {
-
-    },
-    "via %@" : {
-
-    },
-    "View %@ details" : {
-
-    },
-    "View brain health details" : {
-
-    },
-    "View cycle tracking details" : {
-
-    },
-    "View metric details" : {
-
-    },
-    "View risk details and recommendations" : {
-
-    },
-    "View sleep coach details" : {
-
-    },
-    "View sleep details" : {
-
-    },
-    "View strain details" : {
-
-    },
-    "View stress monitor details" : {
-
-    },
-    "View vitality age details" : {
 
     },
     "Walking" : {
 
     },
-    "Water Logged" : {
-
-    },
-    "We need a few nights of overnight sleep data from your Apple Watch to learn your normal range. Wear your watch to bed and your sleep coach will appear here." : {
-
-    },
-    "Weekly Review. Score %lld. %lld wins." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Weekly Review. Score %1$lld. %2$lld wins."
-          }
-        }
-      }
-    },
-    "What is the main benefit you get from Laso?" : {
-
-    },
-    "What is this about?" : {
-
-    },
-    "What Laso Confirms After Sync" : {
-
-    },
-    "What type of person do you think would benefit most from Laso?" : {
-
-    },
     "What type of workout did you do?" : {
 
     },
-    "While you wait" : {
-
-    },
     "Workout Type" : {
-
-    },
-    "years" : {
 
     },
     "Yoga" : {
@@ -1828,16 +830,7 @@
     "you@example.com" : {
 
     },
-    "Your email" : {
-
-    },
-    "Your feedback shapes what we build next." : {
-
-    },
     "Your idea or feedback" : {
-
-    },
-    "Your Progress" : {
 
     },
     "Your readiness is %lld%%. %@. Stress level is %@." : {
@@ -1849,12 +842,6 @@
           }
         }
       }
-    },
-    "Your rings will fill as you move throughout the day." : {
-
-    },
-    "yrs" : {
-
     }
   },
   "version" : "1.0"

@@ -6,6 +6,8 @@ struct BreathworkLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: BreathworkActivityAttributes.self) { context in
             BreathworkLiveActivityView(context: context)
+                // Fixed dark chrome — the activity is tuned for dark surfaces and
+                // must not flip to white in light mode behind the lock screen.
                 .activityBackgroundTint(AppColour.surfaceBase)
                 .activitySystemActionForegroundColor(AppColour.textPrimary)
         } dynamicIsland: { context in
@@ -13,33 +15,55 @@ struct BreathworkLiveActivityWidget: Widget {
                 DynamicIslandExpandedRegion(.leading) {
                     Label(context.state.protocolType.title, systemImage: context.state.protocolType.symbolName)
                         .font(.caption.weight(.semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     BreathworkTimerLabel(context: context)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     TimelineView(.periodic(from: .now, by: 1)) { timeline in
+                        let phase = phase(at: timeline.date, context: context)
                         HStack(spacing: 10) {
-                            Image(systemName: phase(at: timeline.date, context: context).symbolName)
-                                .foregroundStyle(AppColour.accent)
-                            Text(phase(at: timeline.date, context: context).label)
+                            BreathingOrb(phase: phase, size: 22)
+                            Text(phase.label)
                                 .font(.headline)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
                             Spacer()
                             Text(context.state.protocolType.subtitle)
                                 .font(.caption)
                                 .foregroundStyle(AppColour.textSecondary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
                         }
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(phase.accessibilityLabel)
+                        .widgetURL(Self.stressMonitorURL)
                     }
                 }
             } compactLeading: {
-                Image(systemName: phase(at: .now, context: context).symbolName)
+                TimelineView(.periodic(from: .now, by: 1)) { timeline in
+                    let phase = phase(at: timeline.date, context: context)
+                    Image(systemName: phase.symbolName)
+                        .foregroundStyle(AppColour.accent)
+                        .accessibilityLabel(phase.accessibilityLabel)
+                        .widgetURL(Self.stressMonitorURL)
+                }
             } compactTrailing: {
                 CompactTimerText(context: context)
+                    .accessibilityLabel(BreathworkCopy.timerAccessibilityLabel)
+                    .widgetURL(Self.stressMonitorURL)
             } minimal: {
                 Image(systemName: context.state.protocolType.symbolName)
+                    .accessibilityLabel(context.state.protocolType.title)
             }
         }
     }
+
+    /// Deep link target for the breathwork surface. `onOpenURL` (added by D3)
+    /// maps this via `Route.fromUITestIdentifier` to `Route.stressMonitor`.
+    private static let stressMonitorURL = URL(string: "laso://route/stressMonitor")
 
     private func phase(
         at date: Date,
@@ -54,37 +78,64 @@ struct BreathworkLiveActivityWidget: Widget {
     }
 }
 
+// MARK: - Breathing Orb
+
+/// Signature pace cue. Scales between phases following `BreathworkLivePhase.orbScale`
+/// so the orb tracks the lungs. The scaling animation is suppressed when Reduce
+/// Motion is on — the orb then renders at the phase's fixed size with no movement.
+private struct BreathingOrb: View {
+    let phase: BreathworkLivePhase
+    let size: CGFloat
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        Circle()
+            .fill(AppColour.accent.opacity(0.22))
+            .overlay(Circle().stroke(AppColour.accent, lineWidth: 1.4))
+            .frame(width: size, height: size)
+            .scaleEffect(phase.orbScale)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 1), value: phase)
+            .accessibilityHidden(true)
+    }
+}
+
 private struct BreathworkLiveActivityView: View {
     let context: ActivityViewContext<BreathworkActivityAttributes>
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { timeline in
+            let phase = phase(at: timeline.date)
             HStack(spacing: 12) {
-                Image(systemName: phase(at: timeline.date).symbolName)
-                    .font(.title2)
-                    .foregroundStyle(AppColour.accent)
-                    .frame(width: 40, height: 40)
-                    .background(AppColour.accent.opacity(0.14), in: RoundedRectangle(cornerRadius: 12))
+                BreathingOrb(phase: phase, size: 40)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(context.state.protocolType.subtitle)
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(AppColour.textSecondary)
                         .textCase(.uppercase)
-                    Text(phase(at: timeline.date).label)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Text(phase.label)
                         .font(.headline)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                     Text(statusText)
                         .font(.caption)
                         .foregroundStyle(AppColour.textSecondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
 
                 Spacer()
 
                 VStack(alignment: .trailing, spacing: 4) {
                     timerLabel(at: timeline.date)
-                    Text(context.state.status == .paused ? "Paused" : "Remaining")
+                    Text(context.state.status == .paused ? BreathworkCopy.paused : BreathworkCopy.remaining)
                         .font(.caption2)
                         .foregroundStyle(AppColour.textSecondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
             }
             .padding(.horizontal, 16)
@@ -97,9 +148,9 @@ private struct BreathworkLiveActivityView: View {
         case .active:
             return context.state.protocolType.title
         case .paused:
-            return "Session paused"
+            return BreathworkCopy.statusPaused
         case .completed:
-            return "Session complete"
+            return BreathworkCopy.statusComplete
         }
     }
 
@@ -122,7 +173,7 @@ private struct BreathworkLiveActivityView: View {
             Text(format(seconds: context.state.remainingSeconds))
                 .font(.title3.weight(.bold).monospacedDigit())
         case .completed:
-            Text("Done")
+            Text(BreathworkCopy.done)
                 .font(.title3.weight(.bold))
         }
     }
@@ -147,10 +198,11 @@ private struct BreathworkTimerLabel: View {
                 Text(format(seconds: context.state.remainingSeconds))
                     .font(.headline.monospacedDigit())
             case .completed:
-                Text("Done")
+                Text(BreathworkCopy.done)
                     .font(.headline)
             }
         }
+        .accessibilityLabel(BreathworkCopy.timerAccessibilityLabel)
     }
 
     private func format(seconds: Int) -> String {
@@ -170,10 +222,10 @@ private struct CompactTimerText: View {
                 Text(shortRemaining(at: timeline.date))
                     .font(.caption2.monospacedDigit())
             case .paused:
-                Text("II")
+                Text(BreathworkCopy.pausedCompact)
                     .font(.caption2.weight(.bold))
             case .completed:
-                Text("OK")
+                Text(BreathworkCopy.completeCompact)
                     .font(.caption2.weight(.bold))
             }
         }

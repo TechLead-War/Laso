@@ -35,8 +35,8 @@ struct BodyInsightsSection: View {
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("home.insightsCard")
-            .accessibilityLabel("Body insight briefing")
-            .accessibilityHint("Opens the full insights screen")
+            .accessibilityLabel(Copy.Home.bodyInsightBriefingLabel)
+            .accessibilityHint(Copy.Home.opensTheFullInsightsScreenHint)
         }
     }
 

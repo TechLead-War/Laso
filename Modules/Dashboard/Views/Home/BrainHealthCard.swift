@@ -41,7 +41,7 @@ struct BrainHealthCard: View {
                             .textCase(.uppercase)
 
                         HStack(spacing: DS.space2) {
-                            Text("\(score)")
+                            Text(Copy.Home.xText(score))
                                 .font(DS.Typography.displayS)
                                 .postHogMask()
 
@@ -76,8 +76,8 @@ struct BrainHealthCard: View {
         }
         .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Brain Health score \(score) out of 100, \(stateLabel)")
-        .accessibilityHint("View brain health details")
+        .accessibilityLabel(Copy.Home.brainHealthScoreOutOfLabel(score, stateLabel))
+        .accessibilityHint(Copy.Home.viewBrainHealthDetailsHint)
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("home.brainHealthCard")
     }

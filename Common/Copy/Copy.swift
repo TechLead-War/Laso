@@ -46,46 +46,46 @@ enum Copy {
 
     // MARK: - Medical Disclaimer
 
-    static let medicalDisclaimer = "Laso is not a medical device. It shares health information, not medical advice. Always talk to a qualified professional before making health decisions."
+    static var medicalDisclaimer: String { RemoteConfigManager.shared.copyString("copy_copy_medical_disclaimer", default: "Laso is not a medical device. It shares health information, not medical advice. Always talk to a qualified professional before making health decisions.") }
 
     // MARK: - Medical Disclaimer Screen
 
     enum Disclaimer {
-        static let title = "Important Health Information"
-        static let body = "Laso is not a medical device. It shares health information, not medical advice. Always talk to a qualified professional before making health decisions."
-        static let secondaryBody = "The scores, patterns, and insights here are based on your Apple Health data and are for your information only. They are not a replacement for professional health guidance."
-        static let acknowledge = "I Understand"
+        static var title: String { RemoteConfigManager.shared.copyString("copy_copy_disclaimer_title", default: "Important Health Information") }
+        static var body: String { RemoteConfigManager.shared.copyString("copy_copy_disclaimer_body", default: "Laso is not a medical device. It shares health information, not medical advice. Always talk to a qualified professional before making health decisions.") }
+        static var secondaryBody: String { RemoteConfigManager.shared.copyString("copy_copy_disclaimer_secondary_body", default: "The scores, patterns, and insights here are based on your Apple Health data and are for your information only. They are not a replacement for professional health guidance.") }
+        static var acknowledge: String { RemoteConfigManager.shared.copyString("copy_copy_disclaimer_acknowledge", default: "I Understand") }
     }
 
     // MARK: - Common Buttons
 
     enum Buttons {
-        static let done = "Done"
-        static let cancel = "Cancel"
-        static let continueButton = "Continue"
-        static let getStarted = "Get Started"
-        static let skipForNow = "Skip for now"
-        static let notNow = "Not now"
-        static let close = "Close"
-        static let retry = "Retry"
-        static let subscribe = "Subscribe"
-        static let restorePurchases = "Restore Purchases"
-        static let enable = "Enable"
+        static var done: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_done", default: "Done") }
+        static var cancel: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_cancel", default: "Cancel") }
+        static var continueButton: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_continue_button", default: "Continue") }
+        static var getStarted: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_get_started", default: "Get Started") }
+        static var skipForNow: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_skip_for_now", default: "Skip for now") }
+        static var notNow: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_not_now", default: "Not now") }
+        static var close: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_close", default: "Close") }
+        static var retry: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_retry", default: "Retry") }
+        static var subscribe: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_subscribe", default: "Subscribe") }
+        static var restorePurchases: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_restore_purchases", default: "Restore Purchases") }
+        static var enable: String { RemoteConfigManager.shared.copyString("copy_copy_buttons_enable", default: "Enable") }
     }
 
     // MARK: - Common Labels
 
     enum Labels {
-        static let pro = "PRO"
-        static let version = "Version"
-        static let appName = "Laso"
+        static var pro: String { RemoteConfigManager.shared.copyString("copy_copy_labels_pro", default: "PRO") }
+        static var version: String { RemoteConfigManager.shared.copyString("copy_copy_labels_version", default: "Version") }
+        static var appName: String { RemoteConfigManager.shared.copyString("copy_copy_labels_app_name", default: "Laso") }
     }
 
     // MARK: - Privacy
 
     enum Privacy {
-        static let healthDataOnDevice = "Health Data On-Device"
-        static let privacyPolicy = "Privacy Policy"
-        static let termsOfUse = "Terms of Use"
+        static var healthDataOnDevice: String { RemoteConfigManager.shared.copyString("copy_copy_privacy_health_data_on_device", default: "Health Data On-Device") }
+        static var privacyPolicy: String { RemoteConfigManager.shared.copyString("copy_copy_privacy_privacy_policy", default: "Privacy Policy") }
+        static var termsOfUse: String { RemoteConfigManager.shared.copyString("copy_copy_privacy_terms_of_use", default: "Terms of Use") }
     }
 }

@@ -1,4 +1,0 @@
-module nanopb {
-umbrella "/Users/primetrace/Library/Developer/Xcode/DerivedData/Laso-cgsvsuhaurvxyceguqswwerponfi/SourcePackages/checkouts/nanopb/spm_headers"
-export *
-}

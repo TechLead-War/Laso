@@ -192,7 +192,7 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(Copy.Labels.appName)
                         .font(DS.Typography.title3)
-                    Text("\(Copy.Labels.version) \(appVersion)")
+                    Text(Copy.Settings.xText(Copy.Labels.version, appVersion))
                         .font(DS.Typography.caption)
                         .foregroundStyle(.secondary)
                 }

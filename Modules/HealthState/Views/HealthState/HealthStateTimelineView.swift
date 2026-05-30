@@ -63,7 +63,7 @@ struct HealthStateTimelineView: View {
         }
         .background(AppColour.surfaceBase.ignoresSafeArea())
         .accessibilityIdentifier("screen.healthStateTimeline")
-        .navigationTitle("Health States")
+        .navigationTitle(Copy.HealthState.healthStatesNavTitle)
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.healthStateTimeline, metadata: [
@@ -254,13 +254,13 @@ struct HealthStateTimelineView: View {
     private func calendarCell(_ day: HealthStateTimelineViewModel.CalendarDay) -> some View {
         Group {
             if let label = day.stateLabel {
-                Text("\(day.dayNumber)")
+                Text(Copy.HealthState.xText(day.dayNumber))
                     .font(DS.Typography.caption2.weight(.medium).monospacedDigit())
                     .frame(maxWidth: .infinity, minHeight: 28)
                     .background(viewModel.color(for: label).opacity(0.7), in: RoundedRectangle(cornerRadius: DS.Radius.xs))
                     .foregroundStyle(.white)
             } else if day.dayNumber > 0 {
-                Text("\(day.dayNumber)")
+                Text(Copy.HealthState.xText2(day.dayNumber))
                     .font(DS.Typography.caption2.monospacedDigit())
                     .frame(maxWidth: .infinity, minHeight: 28)
                     .foregroundStyle(AppColour.textTertiary)
@@ -297,7 +297,7 @@ struct HealthStateTimelineView: View {
             HStack(spacing: DS.itemSpacing) {
                 ForEach(distribution.sorted(by: { $0.value > $1.value }), id: \.key) { label, count in
                     let pct = Int(Double(count) / Double(total) * 100)
-                    Text("\(label): \(pct)%")
+                    Text(Copy.HealthState.xText3(label, pct))
                         .font(DS.Typography.caption2)
                         .foregroundStyle(AppColour.textSecondary)
                 }
@@ -336,7 +336,7 @@ struct HealthStateTimelineView: View {
                     Spacer()
 
                     VStack(alignment: .trailing, spacing: 1) {
-                        Text("\(Int(transition.probability * 100))%")
+                        Text(Copy.HealthState.xText4(Int(transition.probability * 100)))
                             .font(DS.Typography.caption.weight(.bold).monospacedDigit())
                         if let avg = transition.avgDays {
                             Text("~\(String(format: "%.1f", avg))d")
@@ -369,7 +369,7 @@ struct HealthStateTimelineView: View {
                                 Image(systemName: char.metric.systemImageName)
                                     .font(DS.Typography.caption2)
                                     .foregroundStyle(char.metric.category.color)
-                                Text("\(char.metric.displayName): \(char.level.rawValue)")
+                                Text(Copy.HealthState.xText5(char.metric.displayName, char.level.rawValue))
                                     .font(DS.Typography.caption)
                                     .foregroundStyle(AppColour.textSecondary)
                                 Spacer()

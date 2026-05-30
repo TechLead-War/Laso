@@ -34,7 +34,7 @@ struct DataConfidenceBadge: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Copy.Common.dataConfidence(tier: tier.name))
-        .accessibilityValue("\(daysOfData) days of data tracked")
+        .accessibilityValue(Copy.Common.daysOfDataTrackedValue(daysOfData))
         .accessibilityHint(showDetail ? "Tap to collapse tier timeline" : "Tap to show tier progression details")
     }
 

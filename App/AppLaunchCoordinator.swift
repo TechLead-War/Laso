@@ -35,9 +35,31 @@ final class AppLaunchCoordinator {
             }
         }
 
+        // Bind the FCM delegate now that Firebase is configured. Swizzling stays
+        // enabled, so the proxy maps the APNS token into Messaging automatically.
+        PushNotificationManager.shared.configure()
+
         Task {
             await remoteConfigManager.fetchAndActivate()
         }
+
+        // Prime the notification-authorization cache BEFORE any scheduler runs so
+        // the first non-critical schedule at launch is not wrongly suppressed as
+        // not_authorized (the cached flag defaults to false). Critical alerts are
+        // never gated by this flag. When already authorized, register for remote
+        // notifications and refresh the FCM token document.
+        Task {
+            let authorized = await NotificationManager.shared.isCurrentlyAuthorized()
+            if authorized {
+                PushNotificationManager.shared.registerForRemoteNotifications()
+                PushNotificationManager.shared.refreshOnLaunch()
+            }
+        }
+
+        // Start the Firestore listener that streams admin-edited Copy overrides
+        // so live edits in the in-app dashboard propagate to every screen
+        // without an app relaunch. Must run after FirebaseApp.configure().
+        CopyOverridesStore.shared.start()
 
         analyticsManager.configure()
         analyticsManager.installCrashHandlers()

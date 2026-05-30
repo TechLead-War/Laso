@@ -39,7 +39,7 @@ struct ShareableScoreCard: View {
             VStack(spacing: 0) {
                 // Top bar: App name
                 HStack {
-                    Text("Laso")
+                    Text(Copy.Common.laso)
                         .font(.system(size: 16, weight: .bold, design: .rounded))
                         .foregroundStyle(.white.opacity(0.7))
                     Spacer()
@@ -76,10 +76,10 @@ struct ShareableScoreCard: View {
 
                     // Score number
                     VStack(spacing: 2) {
-                        Text("\(score)")
+                        Text(Copy.Common.xText(score))
                             .font(DS.Typography.displayXL)
                             .foregroundStyle(.white)
-                        Text("Health Score")
+                        Text(Copy.Common.healthScore)
                             .font(.system(size: 13, weight: .medium, design: .rounded))
                             .foregroundStyle(.white.opacity(0.6))
                     }
@@ -106,7 +106,7 @@ struct ShareableScoreCard: View {
                         HStack(spacing: 4) {
                             Image(systemName: "flame.fill")
                                 .font(.system(size: 11, weight: .bold))
-                            Text("\(streakDays)-day streak")
+                            Text(Copy.Common.dayStreakText(streakDays))
                                 .font(.system(size: 13, weight: .semibold))
                         }
                         .foregroundStyle(.orange)
@@ -119,7 +119,7 @@ struct ShareableScoreCard: View {
                 Spacer()
 
                 // Bottom tagline
-                Text("Track your health with Laso")
+                Text(Copy.Common.trackYourHealthWithLaso)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.white.opacity(0.4))
                     .padding(.bottom, 28)
@@ -190,7 +190,7 @@ struct ShareableInsightCard: View {
             VStack(spacing: 0) {
                 // Top bar: App name
                 HStack {
-                    Text("Laso")
+                    Text(Copy.Common.laso2)
                         .font(.system(size: 16, weight: .bold, design: .rounded))
                         .foregroundStyle(.white.opacity(0.7))
                     Spacer()
@@ -246,7 +246,7 @@ struct ShareableInsightCard: View {
                 Spacer()
 
                 // Bottom tagline
-                Text("Discover your health patterns with Laso")
+                Text(Copy.Common.discoverYourHealthPatternsWithLaso)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.white.opacity(0.4))
                     .padding(.bottom, 28)

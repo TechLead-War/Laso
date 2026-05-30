@@ -38,6 +38,36 @@ final class OnboardingHealthSnapshot {
     private(set) var hrvWeeksCovered: Int?
     private(set) var hrvWeekdayMeans: [Double?] = Array(repeating: nil, count: 7)
 
+#if DEBUG
+    /// Seeds realistic values for screenshot capture. The screenshot simulator
+    /// has no Apple Health samples, so a deep-linked scan/heart/sleep/hrv screen
+    /// would otherwise render its empty state. Used only when
+    /// `--ui-test-onboarding-v2-screen=` deep-links straight into a data screen.
+    func applyUITestMockData() {
+        let day: TimeInterval = 86400
+        heartRateAge = 730 * day   // "2y"
+        sleepAge = 550 * day       // "1y 6mo"
+        workoutsAge = 425 * day    // "1y 2mo"
+        hrvAge = 240 * day         // "8mo"
+        hasRecoverySignal = true
+
+        restingHR = 54
+        restingHRMonthsCovered = 14
+
+        sleepAvgHours = 7
+        sleepAvgMins = 36
+        sleepLast7Nights = [7.2, 6.8, 7.9, 7.4, 8.1, 6.5, 7.7]
+        sleepMonthsCovered = 12
+
+        hrvWorstWeekday = 1        // Sunday dip
+        hrvWeeklyAvgMs = 62
+        hrvWeeksCovered = 12
+        hrvWeekdayMeans = [64, 66, 63, 67, 61, 59, 52]  // Mon..Sun, Sunday lowest
+
+        isLoaded = true
+    }
+#endif
+
     func load() async {
         async let hrAge = earliestSampleAge(for: HKQuantityType(.heartRate))
         async let slpAge = earliestSampleAge(for: HKCategoryType(.sleepAnalysis))

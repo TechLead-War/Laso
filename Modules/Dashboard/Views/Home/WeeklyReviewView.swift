@@ -33,7 +33,7 @@ struct WeeklyReviewEntryCard: View {
                                 }
 
                                 if viewModel.winsCount > 0 {
-                                    Text("·")
+                                    Text(Copy.Home.x)
                                         .foregroundStyle(AppColour.textTertiary)
 
                                     Text("\(viewModel.winsCount) win\(viewModel.winsCount == 1 ? "" : "s")")
@@ -61,8 +61,8 @@ struct WeeklyReviewEntryCard: View {
                 .buttonStyle(.dsPress)
                 .padding(.horizontal, DS.screenPadding)
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("Weekly Review. Score \(review.currentScore). \(viewModel.winsCount) wins.")
-                .accessibilityHint("Opens your weekly review")
+                .accessibilityLabel(Copy.Home.weeklyReviewScoreWinsLabel(review.currentScore, viewModel.winsCount))
+                .accessibilityHint(Copy.Home.opensYourWeeklyReviewHint)
                 .accessibilityIdentifier("home.weeklyReviewCard")
             }
         }
@@ -503,7 +503,7 @@ struct WeeklyReviewView: View {
                         .font(DS.Typography.body)
                         .foregroundStyle(AppColour.textSecondary)
                     Spacer()
-                    Text("\(formatSteps(plan.currentDailyStepTarget))/day")
+                    Text(Copy.Home.dayText(formatSteps(plan.currentDailyStepTarget)))
                         .font(DS.Typography.bodySemibold.monospacedDigit())
                 }
 
@@ -512,7 +512,7 @@ struct WeeklyReviewView: View {
                         .font(DS.Typography.body)
                         .foregroundStyle(AppColour.textSecondary)
                     Spacer()
-                    Text("\(formatSteps(plan.currentAverageDailySteps))/day")
+                    Text(Copy.Home.dayText2(formatSteps(plan.currentAverageDailySteps)))
                         .font(DS.Typography.bodySemibold.monospacedDigit())
                 }
 
@@ -536,7 +536,7 @@ struct WeeklyReviewView: View {
                         .font(DS.Typography.body)
                         .foregroundStyle(AppColour.textSecondary)
                     Spacer()
-                    Text("\(formatSteps(plan.nextDailyStepTarget))/day")
+                    Text(Copy.Home.dayText3(formatSteps(plan.nextDailyStepTarget)))
                         .font(DS.Typography.bodySemibold.monospacedDigit())
                     let deltaText = deltaLabel(plan.weeklyDelta)
                     if !deltaText.isEmpty {

@@ -307,13 +307,13 @@ struct StrainDetailView: View {
                 .chartYScale(domain: 0...21)
                 // Chart-level VoiceOver summary for the strain history.
                 .accessibilityElement(children: .contain)
-                .accessibilityLabel(Text("Strain over the last \(weekHistory.count) days"))
+                .accessibilityLabel(Text(Copy.Strain.strainOverTheLastDaysText(weekHistory.count)))
                 .accessibilityValue(Text(strainChartAccessibilityValue))
                 .chartYAxis {
                     AxisMarks(values: [0, 7, 14, 21]) { value in
                         AxisValueLabel {
                             if let v = value.as(Double.self) {
-                                Text("\(Int(v))").font(DS.Typography.caption2)
+                                Text(Copy.Strain.xText(Int(v))).font(DS.Typography.caption2)
                             }
                         }
                         AxisGridLine()

@@ -69,7 +69,7 @@ struct MetricDetailView: View {
                             )
                             showLogSheet = true
                         } label: {
-                            Label("Log \(viewModel.metric.displayName)", systemImage: "plus.circle.fill")
+                            Label(Copy.MetricDetail.logMenuLabel(viewModel.metric.displayName), systemImage: "plus.circle.fill")
                         }
                         .buttonStyle(.borderedProminent)
                         .controlSize(.small)

@@ -151,7 +151,7 @@ struct JournalEntryView: View {
                 Text(Copy.Journal.amount)
                     .font(DS.Typography.headline)
                 Spacer()
-                Text("\(formattedValue(value, for: category)) \(category.unit)")
+                Text(Copy.Journal.valueWithUnitText(formattedValue(value, for: category), category.unit))
                     .font(DS.Typography.title3.monospacedDigit())
                     .foregroundStyle(categoryColor(category))
                     .contentTransition(.numericText())
@@ -180,8 +180,8 @@ struct JournalEntryView: View {
                     .foregroundStyle(value > category.valueRange.lowerBound ? categoryColor(category) : AppColour.textTertiary)
             }
             .disabled(value <= category.valueRange.lowerBound)
-            .accessibilityLabel("Decrease \(category.displayName)")
-            .accessibilityHint("Decreases the value by \(category.step) \(category.unit)")
+            .accessibilityLabel(Copy.Journal.decreaseLabel(category.displayName))
+            .accessibilityHint(Copy.Journal.decreasesTheValueByHint(category.step, category.unit))
 
             Spacer()
 
@@ -203,8 +203,8 @@ struct JournalEntryView: View {
                     .foregroundStyle(value < category.valueRange.upperBound ? categoryColor(category) : AppColour.textTertiary)
             }
             .disabled(value >= category.valueRange.upperBound)
-            .accessibilityLabel("Increase \(category.displayName)")
-            .accessibilityHint("Increases the value by \(category.step) \(category.unit)")
+            .accessibilityLabel(Copy.Journal.increaseLabel(category.displayName))
+            .accessibilityHint(Copy.Journal.increasesTheValueByHint(category.step, category.unit))
         }
         .padding(.vertical, DS.space2)
         .sensoryFeedback(.increase, trigger: value)
@@ -218,9 +218,9 @@ struct JournalEntryView: View {
                 step: category.step
             )
             .tint(categoryColor(category))
-            .accessibilityLabel("\(category.displayName) amount")
-            .accessibilityValue("\(formattedValue(value, for: category)) \(category.unit)")
-            .accessibilityHint("Adjust the amount you logged")
+            .accessibilityLabel(Copy.Journal.amountLabel(category.displayName))
+            .accessibilityValue(Copy.Journal.xValue(formattedValue(value, for: category), category.unit))
+            .accessibilityHint(Copy.Journal.adjustTheAmountYouLoggedHint)
 
             HStack {
                 Text(formattedValue(category.valueRange.lowerBound, for: category))

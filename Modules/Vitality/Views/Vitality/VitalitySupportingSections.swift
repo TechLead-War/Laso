@@ -35,7 +35,7 @@ struct VitalityImprovementSection: View {
 
                 Spacer()
 
-                Text("+\(impact)y")
+                Text(Copy.Vitality.yText(impact))
                     .font(.caption.weight(.bold).monospacedDigit())
                     .foregroundStyle(.white)
                     .padding(.horizontal, DS.badgeH + 2)
@@ -98,7 +98,7 @@ struct VitalityDataMaturityBanner: View {
                     .font(.caption2.weight(.medium))
                     .foregroundStyle(.secondary)
                 Spacer()
-                Text("\(Int(progress * 100))%")
+                Text(Copy.Vitality.xText(Int(progress * 100)))
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(vitalityWhoopGreen)
             }

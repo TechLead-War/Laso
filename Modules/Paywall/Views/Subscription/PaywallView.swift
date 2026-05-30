@@ -332,8 +332,8 @@ struct PaywallView: View {
         }
         .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(label) plan, \(detail)")
-        .accessibilityHint("Selects the \(label.lowercased()) subscription plan")
+        .accessibilityLabel(Copy.Paywall.planLabel(label, detail))
+        .accessibilityHint(Copy.Paywall.selectsTheSubscriptionPlanHint(label.lowercased()))
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
@@ -433,7 +433,7 @@ struct PaywallView: View {
             }
             .buttonStyle(.dsTertiary)
             .accessibilityLabel(Copy.Buttons.restorePurchases)
-            .accessibilityHint("Restores any prior subscription tied to your Apple ID")
+            .accessibilityHint(Copy.Paywall.restoresAnyPriorSubscriptionTiedToHint)
             .accessibilityIdentifier("paywall.restoreButton")
 
             if subscriptionManager.products.isEmpty {

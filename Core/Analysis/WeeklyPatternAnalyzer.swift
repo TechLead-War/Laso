@@ -72,9 +72,20 @@ struct WeeklyPatternAnalyzer {
                 bestDeficit = deficit
                 bestInsight = Insight(
                     metric: entry.metric,
-                    title: "Weakest Day: \(weakestName)",
-                    summary: "\(weakestName) is your least active day with \(entry.metric.formatWithUnit(weakest.avg)) avg. \(String(format: "%.0f", deficit))% below your daily average. \(strongestName) is your strongest (\(entry.metric.formatWithUnit(strongest.avg))).",
-                    recommendation: "\(weakestName) averages \(entry.metric.formatWithUnit(weakest.avg)). \(String(format: "%.0f", deficit))% below your daily mean of \(entry.metric.formatWithUnit(overallAvg)). Your strongest day is \(strongestName) at \(entry.metric.formatWithUnit(strongest.avg)).",
+                    title: Copy.Analysis.WeeklyPatternAnalyzer.weakestDayTitle(name: weakestName),
+                    summary: Copy.Analysis.WeeklyPatternAnalyzer.weakestDaySummary(
+                        weakestName: weakestName,
+                        weakestAvg: entry.metric.formatWithUnit(weakest.avg),
+                        deficit: String(format: "%.0f", deficit),
+                        strongestName: strongestName,
+                        strongestAvg: entry.metric.formatWithUnit(strongest.avg)),
+                    recommendation: Copy.Analysis.WeeklyPatternAnalyzer.weakestDayRec(
+                        weakestName: weakestName,
+                        weakestAvg: entry.metric.formatWithUnit(weakest.avg),
+                        deficit: String(format: "%.0f", deficit),
+                        overallAvg: entry.metric.formatWithUnit(overallAvg),
+                        strongestName: strongestName,
+                        strongestAvg: entry.metric.formatWithUnit(strongest.avg)),
                     severity: deficit >= 25 ? .warning : .info,
                     trend: .stable,
                     currentValue: weakest.avg,
@@ -141,15 +152,29 @@ struct WeeklyPatternAnalyzer {
 
             if abs(gap) > abs(bestGap) {
                 bestGap = gap
-                let moreActive = gap > 0 ? "weekdays" : "weekends"
+                let moreActive = gap > 0
+                    ? Copy.Analysis.WeeklyPatternAnalyzer.moreActiveWeekdays
+                    : Copy.Analysis.WeeklyPatternAnalyzer.moreActiveWeekends
 
                 bestInsight = Insight(
                     metric: entry.metric,
-                    title: "\(entry.metric.displayName): Weekday vs Weekend",
-                    summary: "Your \(entry.label) is \(String(format: "%.0f", abs(gap)))% higher on \(moreActive). Weekday avg: \(entry.metric.formatWithUnit(weekdayAvg)), weekend avg: \(entry.metric.formatWithUnit(weekendAvg)).",
-                    recommendation: gap > 20 ?
-                        "Weekend \(entry.label) averages \(entry.metric.formatWithUnit(weekendAvg)) vs \(entry.metric.formatWithUnit(weekdayAvg)) on weekdays. A \(String(format: "%.0f", abs(gap)))% gap." :
-                        "Weekday avg: \(entry.metric.formatWithUnit(weekdayAvg)), weekend avg: \(entry.metric.formatWithUnit(weekendAvg)). \(String(format: "%.0f", abs(gap)))% difference.",
+                    title: Copy.Analysis.WeeklyPatternAnalyzer.weekdayWeekendTitle(metricName: entry.metric.displayName),
+                    summary: Copy.Analysis.WeeklyPatternAnalyzer.weekdayWeekendSummary(
+                        label: entry.label,
+                        gap: String(format: "%.0f", abs(gap)),
+                        moreActive: moreActive,
+                        weekdayAvg: entry.metric.formatWithUnit(weekdayAvg),
+                        weekendAvg: entry.metric.formatWithUnit(weekendAvg)),
+                    recommendation: gap > 20
+                        ? Copy.Analysis.WeeklyPatternAnalyzer.weekdayWeekendRecBig(
+                            label: entry.label,
+                            weekendAvg: entry.metric.formatWithUnit(weekendAvg),
+                            weekdayAvg: entry.metric.formatWithUnit(weekdayAvg),
+                            gap: String(format: "%.0f", abs(gap)))
+                        : Copy.Analysis.WeeklyPatternAnalyzer.weekdayWeekendRecSmall(
+                            weekdayAvg: entry.metric.formatWithUnit(weekdayAvg),
+                            weekendAvg: entry.metric.formatWithUnit(weekendAvg),
+                            gap: String(format: "%.0f", abs(gap))),
                     severity: abs(gap) >= 30 ? .warning : .info,
                     trend: .stable,
                     currentValue: weekendAvg,
@@ -196,7 +221,7 @@ struct WeeklyPatternAnalyzer {
 
                 bestInsight = Insight(
                     metric: metric,
-                    title: "\(metric.displayName) Consistency",
+                    title: Copy.Analysis.WeeklyPatternAnalyzer.consistencyTitle(metricName: metric.displayName),
                     summary: isConsistent ?
                         "Your \(metric.displayName.lowercased()) is consistent across the week with a coefficient of variation of \(String(format: "%.0f", cv))%." :
                         "Your \(metric.displayName.lowercased()) varies \(String(format: "%.0f", cv))% across the week (coefficient of variation).",
@@ -393,7 +418,7 @@ struct CyclePhaseAnalyzer {
 
         let insight = Insight(
             metric: primarySignal.metric,
-            title: "Cycle Phase Analyzer: \(currentPhase.displayName)",
+            title: Copy.Analysis.WeeklyPatternAnalyzer.cyclePhaseTitle(phaseName: currentPhase.displayName),
             summary: summary,
             recommendation: recommendation,
             severity: severity,

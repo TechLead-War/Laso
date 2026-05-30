@@ -15,7 +15,7 @@ struct DeviceSetupGuideView: View {
 
             ForEach(Array(device.setupSteps.enumerated()), id: \.element.id) { index, step in
                 HStack(alignment: .top, spacing: DS.itemSpacing) {
-                    Text("\(index + 1)")
+                    Text(Copy.Devices.xText(index + 1))
                         .font(DS.Typography.captionSemibold)
                         .foregroundStyle(.white)
                         .frame(width: 24, height: 24)
@@ -31,7 +31,7 @@ struct DeviceSetupGuideView: View {
             HStack(spacing: 12) {
                 if let appStoreURL = device.appStoreURL {
                     Link(destination: appStoreURL) {
-                        Label("Open App Store", systemImage: "arrow.down.app.fill")
+                        Label(Copy.Devices.openAppStoreLabel, systemImage: "arrow.down.app.fill")
                             .font(DS.Typography.subheadlineMedium)
                     }
                     .buttonStyle(.borderedProminent)

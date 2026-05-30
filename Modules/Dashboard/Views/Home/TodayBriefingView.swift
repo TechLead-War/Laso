@@ -142,8 +142,8 @@ private struct BriefingCardView: View {
             onTap()
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(card.label): \(card.headline)")
-        .accessibilityHint("Opens the full insight")
+        .accessibilityLabel(Copy.Home.xLabel(card.label, card.headline))
+        .accessibilityHint(Copy.Home.opensTheFullInsightHint)
     }
 }
 

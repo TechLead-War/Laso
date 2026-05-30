@@ -32,8 +32,8 @@ struct ExploreScoreHeroSection: View {
                                     .foregroundStyle(AppColour.textSecondary)
                             }
                             .buttonStyle(.plain)
-                            .accessibilityLabel("Health score info")
-                            .accessibilityHint("Opens an explanation of how your health score is calculated")
+                            .accessibilityLabel(Copy.Explore.healthScoreInfoLabel)
+                            .accessibilityHint(Copy.Explore.opensAnExplanationOfHowYourHint)
                         }
 
                         Text(Copy.Explore.healthScoreSubtitle)

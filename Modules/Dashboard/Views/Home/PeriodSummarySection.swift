@@ -24,7 +24,7 @@ struct PeriodSummarySection: View {
             .pickerStyle(.segmented)
             .padding(.horizontal, DS.screenPadding)
             .sensoryFeedback(.selection, trigger: viewModel.ui.selectedPeriod)
-            .accessibilityLabel("Time period selector")
+            .accessibilityLabel(Copy.Home.timePeriodSelectorLabel)
             .onChange(of: viewModel.ui.selectedPeriod) { oldPeriod, newPeriod in
                 AppAnalytics.shared.trackBlockTap(
                     title: newPeriod.rawValue,
@@ -89,7 +89,7 @@ struct PeriodCounter: View {
                     Image(systemName: icon)
                         .font(DS.Typography.captionSemibold)
                         .foregroundStyle(color)
-                    Text("\(count)")
+                    Text(Copy.Home.xText(count))
                         .font(DS.Typography.displayS)
                         .foregroundStyle(AppColour.textPrimary)
                 }
@@ -103,9 +103,9 @@ struct PeriodCounter: View {
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(count) metrics \(label.lowercased())")
+        .accessibilityLabel(Copy.Home.metricsLabel(count, label.lowercased()))
         .accessibilityAddTraits(isSelected ? .isSelected : [])
-        .accessibilityHint("Filter to show \(label.lowercased()) metrics")
+        .accessibilityHint(Copy.Home.filterToShowMetricsHint(label.lowercased()))
     }
 }
 
@@ -167,7 +167,7 @@ struct MetricChangeRow: View {
                         .font(DS.Typography.bodyMedium)
                         .foregroundStyle(AppColour.textPrimary)
 
-                    Text("\(formattedAvg) \(change.metric.unit)")
+                    Text(Copy.Home.xText2(formattedAvg, change.metric.unit))
                         .font(DS.Typography.footnote.monospacedDigit())
                         .foregroundStyle(AppColour.textSecondary)
 
@@ -209,7 +209,7 @@ struct MetricChangeRow: View {
         .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(change.metric.displayName), \(formattedAvg) \(change.metric.unit), \(isStable ? "stable" : change.improved ? "improved" : "declined") \(String(format: "%.1f", abs(change.changePercent))) percent")
-        .accessibilityHint("View \(change.metric.displayName) details")
+        .accessibilityHint(Copy.Home.viewDetailsHint(change.metric.displayName))
     }
 }
 

@@ -1,4 +1,0 @@
-module GoogleAppMeasurementTarget {
-umbrella "/Users/primetrace/Library/Developer/Xcode/DerivedData/Laso-cgsvsuhaurvxyceguqswwerponfi/SourcePackages/checkouts/GoogleAppMeasurement/GoogleAppMeasurementWrapper/include"
-export *
-}

@@ -44,8 +44,8 @@ struct MorningCheckInView: View {
                         .foregroundStyle(AppColour.textTertiary)
                         .frame(width: 24, height: 24)
                 }
-                .accessibilityLabel("Dismiss morning check-in")
-                .accessibilityHint("Closes the check-in card without submitting")
+                .accessibilityLabel(Copy.Home.dismissMorningCheckInLabel)
+                .accessibilityHint(Copy.Home.closesTheCheckInCardWithoutHint)
             }
 
             // Questions
@@ -92,8 +92,8 @@ struct MorningCheckInView: View {
                     .foregroundStyle(.white)
                 }
                 .disabled(isSubmitting)
-                .accessibilityLabel("Submit morning check-in")
-                .accessibilityHint("Saves your sleep, energy, and soreness ratings")
+                .accessibilityLabel(Copy.Home.submitMorningCheckInLabel)
+                .accessibilityHint(Copy.Home.savesYourSleepEnergyAndSorenessHint)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
@@ -158,8 +158,8 @@ struct MorningCheckInView: View {
                     }
                     .buttonStyle(.plain)
                     .sensoryFeedback(.selection, trigger: selection.wrappedValue)
-                    .accessibilityLabel("\(label) rating \(value) of 5")
-                    .accessibilityHint("Selects \(value) out of 5")
+                    .accessibilityLabel(Copy.Home.ratingOf5Label(label, value))
+                    .accessibilityHint(Copy.Home.selectsOutOf5Hint(value))
                     .accessibilityAddTraits(selection.wrappedValue == value ? .isSelected : [])
                 }
             }

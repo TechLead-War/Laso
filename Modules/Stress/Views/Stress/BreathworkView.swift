@@ -180,7 +180,7 @@ struct BreathworkView: View {
                 }
             }
         }
-        .navigationTitle("Breathwork")
+        .navigationTitle(Copy.StressMonitor.breathworkNavTitle)
         .navigationBarTitleDisplayMode(.inline)
         .onReceive(timer) { _ in
             guard sessionState == .active else { return }
@@ -386,7 +386,7 @@ struct BreathworkView: View {
                 .frame(height: 8)
 
             // Session timer
-            Text("\(formattedDuration(selectedProtocol.sessionDuration - sessionTimeRemaining)) / \(formattedDuration(selectedProtocol.sessionDuration))")
+            Text(Copy.StressMonitor.xText(formattedDuration(selectedProtocol.sessionDuration - sessionTimeRemaining), formattedDuration(selectedProtocol.sessionDuration)))
                 .font(DS.Typography.subheadlineMedium.monospacedDigit())
                 .foregroundStyle(.secondary)
 
@@ -498,7 +498,7 @@ struct BreathworkView: View {
                 Text(Copy.Breathwork.sessionComplete)
                     .font(DS.Typography.title)
 
-                Text("\(formattedDuration(selectedProtocol.sessionDuration)) of \(selectedProtocol.subtitle.lowercased())")
+                Text(Copy.StressMonitor.ofText(formattedDuration(selectedProtocol.sessionDuration), selectedProtocol.subtitle.lowercased()))
                     .font(DS.Typography.subheadline)
                     .foregroundStyle(.secondary)
             }

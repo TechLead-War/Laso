@@ -63,7 +63,7 @@ struct CustomTabBar: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(tab.label)
-        .accessibilityHint("Switch to \(tab.label) tab")
+        .accessibilityHint(Copy.Common.switchToTabHint(tab.label))
         .accessibilityIdentifier("tab.\(tab.rawValue)")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }

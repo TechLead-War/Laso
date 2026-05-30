@@ -121,6 +121,15 @@ struct ContentView: View {
             if newPhase == .active && oldPhase != .active {
                 startSessionAnalytics()
                 WatchMonitor.shared.evaluateWatchStatus()
+                // Reset the dismiss-without-open fatigue streak on every active
+                // return, and confirm which scheduled notifications actually
+                // landed so the delivery funnel is accurate.
+                NotificationManager.shared.recordAppOpen()
+                Task { await NotificationManager.shared.store?.reconcileDeliveredNotifications() }
+                // Navigate to any route staged by a remote-push tap.
+                if let route = NotificationRouter.shared.consumePending() {
+                    navigate(to: route)
+                }
                 Task { await refreshDeviceSourcesIfNeeded() }
                 // Consume any pending Live Activity action so we can attribute the
                 // tap-through funnel (PMF) and eventually route the user to the
@@ -229,6 +238,15 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .healthPulseNavigateToExplore)) { _ in
             selectedTab = .explore
         }
+        .onChange(of: NotificationRouter.shared.pendingRoute) { _, newRoute in
+            // Push taps arriving while the app is already foregrounded set the
+            // pending route without a scenePhase transition; consume it here.
+            guard newRoute != nil, let route = NotificationRouter.shared.consumePending() else { return }
+            navigate(to: route)
+        }
+        .onOpenURL { url in
+            handleDeepLink(url)
+        }
         .task(id: appStateStore.onboardingCompleted) {
             // Push the requested deep-link route once the dashboard has had a
             // moment to load mock data so the destination view renders with
@@ -238,11 +256,7 @@ struct ContentView: View {
                   let raw = UITestMode.initialRoute,
                   let route = Route.fromUITestIdentifier(raw) else { return }
             try? await Task.sleep(nanoseconds: 1_500_000_000)
-            switch selectedTab {
-            case .home: homePath.append(route)
-            case .explore: explorePath.append(route)
-            case .live, .settings: navigationPath.append(route)
-            }
+            navigate(to: route)
         }
     }
 
@@ -332,7 +346,7 @@ struct ContentView: View {
                     ContentUnavailableView(
                         "Risk Data Unavailable",
                         systemImage: "heart.text.clipboard",
-                        description: Text("This health risk assessment is no longer available. Pull to refresh your data.")
+                        description: Text(Copy.Common.thisHealthRiskAssessmentIsNo)
                     )
                 }
             }
@@ -553,8 +567,12 @@ struct ContentView: View {
             let debt = dashboardViewModel.sleepDebtTracker.currentDebt
             let baseline = debt?.personalBaseline ?? need.totalHoursNeeded
             let boundaries = healthKitManager.sleepSessionBoundaries
+            let napsByDay = healthKitManager.napSessionBoundaries
             let dailyHistory = (debt?.dailyDeficits ?? []).suffix(14).map { entry in
                 let boundary = boundaries[entry.date]
+                let napTotalMin = (napsByDay[entry.date] ?? []).reduce(0.0) {
+                    $0 + ($1.coreHours + $1.deepHours + $1.remHours) * 60.0
+                }
                 return SleepCoachView.DayEntry(
                     date: entry.date,
                     actual: max(0, baseline - entry.deficit),
@@ -564,7 +582,8 @@ struct ContentView: View {
                     coreHours: boundary?.coreHours,
                     deepHours: boundary?.deepHours,
                     remHours: boundary?.remHours,
-                    awakeHours: boundary?.awakeHours
+                    awakeHours: boundary?.awakeHours,
+                    napMinutes: napTotalMin >= 1 ? Int(napTotalMin.rounded()) : nil
                 )
             }
             SleepCoachView(
@@ -594,10 +613,10 @@ struct ContentView: View {
                         .foregroundStyle(.secondary)
                         .padding(.top, DS.space5)
 
-                    Text("Building your sleep profile")
+                    Text(Copy.Common.buildingYourSleepProfile)
                         .font(DS.Typography.title3.weight(.semibold))
 
-                    Text("We need a few nights of overnight sleep data from your Apple Watch to learn your normal range. Wear your watch to bed and your sleep coach will appear here.")
+                    Text(Copy.Common.weNeedAFewNightsOf)
                         .font(DS.Typography.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -629,7 +648,7 @@ struct ContentView: View {
                 Image(systemName: "lightbulb.fill")
                     .font(DS.Typography.subheadlineSemibold)
                     .foregroundStyle(AppColour.categorySleep)
-                Text("While you wait")
+                Text(Copy.Common.whileYouWait)
                     .font(DS.Typography.headline)
             }
             .padding(.horizontal)
@@ -755,6 +774,28 @@ struct ContentView: View {
         )
     }
 
+    // MARK: - Deep-link Routing
+
+    /// Append a deep-link route onto the navigation path for the active tab,
+    /// matching the per-tab NavigationStack bindings (home/explore have their
+    /// own paths; live/settings share `navigationPath`).
+    private func navigate(to route: Route) {
+        switch selectedTab {
+        case .home: homePath.append(route)
+        case .explore: explorePath.append(route)
+        case .live, .settings: navigationPath.append(route)
+        }
+    }
+
+    /// Route a `laso://route/<name>` widget deep link. Reuses the single
+    /// string→Route map so widget and push routing stay in sync.
+    private func handleDeepLink(_ url: URL) {
+        guard url.scheme == "laso", url.host == "route" else { return }
+        let name = url.lastPathComponent
+        guard let route = Route.fromUITestIdentifier(name) else { return }
+        navigate(to: route)
+    }
+
     // MARK: - Session Analytics
 
     private func startSessionAnalytics() {
@@ -828,7 +869,7 @@ struct ContentView: View {
                     .font(.caption)
                     .foregroundStyle(.orange)
 
-                Text("Update your payment method to keep your subscription active.")
+                Text(Copy.Common.updateYourPaymentMethodToKeep)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
 

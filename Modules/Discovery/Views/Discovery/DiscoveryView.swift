@@ -238,7 +238,7 @@ struct DiscoveryView: View {
             }
             .buttonStyle(.dsPrimary)
             .accessibilityLabel(Copy.Discovery.continueToDashboard)
-            .accessibilityHint("Closes discovery and opens your dashboard")
+            .accessibilityHint(Copy.Discovery.closesDiscoveryAndOpensYourDashboardHint)
             .padding(.horizontal, DS.space6)
 
             Spacer()

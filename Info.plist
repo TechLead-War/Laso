@@ -28,6 +28,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>fb$(FACEBOOK_APP_ID)</string>
+				<string>laso</string>
 			</array>
 		</dict>
 	</array>

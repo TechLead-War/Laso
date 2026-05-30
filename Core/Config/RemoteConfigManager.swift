@@ -384,6 +384,41 @@ final class RemoteConfigManager {
     func double(forKey key: String) -> Double {
         doubleValue(forKey: key)
     }
+
+    // MARK: - Copy bridge
+
+    /// Look up a user-facing string. Resolution order: Firestore admin override
+    /// (live-editable from the in-app dashboard) → Firebase Remote Config →
+    /// bundled English default. Empty payloads at either remote layer fall
+    /// through so operators cannot accidentally blank the UI.
+    func copyString(_ key: String, default fallback: String) -> String {
+        observeFetchUpdates()
+        if let override = CopyOverridesStore.shared.string(forKey: key) {
+            return override
+        }
+        guard let raw = remoteConfig?.configValue(forKey: key).stringValue,
+              !raw.isEmpty else {
+            return fallback
+        }
+        return raw
+    }
+
+    /// Look up an array of user-facing strings. Same precedence as
+    /// `copyString`: Firestore override → RC (JSON-encoded) → baked-in
+    /// `default` array.
+    func copyArray(_ key: String, default fallback: [String]) -> [String] {
+        observeFetchUpdates()
+        if let override = CopyOverridesStore.shared.stringArray(forKey: key) {
+            return override
+        }
+        guard let raw = remoteConfig?.configValue(forKey: key).stringValue,
+              !raw.isEmpty,
+              let data = raw.data(using: .utf8),
+              let decoded = try? JSONDecoder().decode([String].self, from: data) else {
+            return fallback
+        }
+        return decoded
+    }
 }
 
 // MARK: - Feature Keys

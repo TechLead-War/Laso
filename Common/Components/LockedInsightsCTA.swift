@@ -29,7 +29,7 @@ struct LockedInsightsCTA: View {
                     Text("\(hiddenCount) more insight\(hiddenCount == 1 ? "" : "s") with Pro")
                         .font(DS.Typography.subheadlineSemibold)
                         .foregroundStyle(AppColour.textPrimary)
-                    Text("Unlock the full set with a Pro subscription.")
+                    Text(Copy.Common.unlockTheFullSetWithA)
                         .font(DS.Typography.caption)
                         .foregroundStyle(AppColour.textSecondary)
                         .multilineTextAlignment(.leading)

@@ -8,7 +8,7 @@ struct LiveWorkoutSection: View {
     var body: some View {
         if let type = workout.lastWorkoutType {
             VStack(alignment: .leading, spacing: DS.itemSpacing) {
-                Text("Last Workout")
+                Text(Copy.Live.lastWorkout)
                     .font(DS.Typography.headline)
                     .padding(.horizontal)
 
@@ -42,7 +42,7 @@ struct LiveWorkoutSection: View {
                                     HStack(spacing: 3) {
                                         Image(systemName: "clock")
                                             .font(DS.Typography.caption2)
-                                        Text("\(Int(dur)) min")
+                                        Text(Copy.Live.minText(Int(dur)))
                                             .font(DS.Typography.caption.monospacedDigit())
                                     }
                                     .foregroundStyle(AppColour.textSecondary)
@@ -52,7 +52,7 @@ struct LiveWorkoutSection: View {
                                     HStack(spacing: 3) {
                                         Image(systemName: "flame.fill")
                                             .font(DS.Typography.caption2)
-                                        Text("\(Int(cal)) kcal")
+                                        Text(Copy.Live.kcalText(Int(cal)))
                                             .font(DS.Typography.caption.monospacedDigit())
                                     }
                                     .foregroundStyle(AppColour.textSecondary)

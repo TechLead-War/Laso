@@ -88,8 +88,8 @@ struct SleepCard: View {
             }
             .buttonStyle(.dsPress)
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("Last night's sleep \(formatDuration(hours)), \(liveVM.sleep.sleepQualityLabel)")
-            .accessibilityHint("View sleep details")
+            .accessibilityLabel(Copy.Home.lastNightSSleepLabel(formatDuration(hours), liveVM.sleep.sleepQualityLabel))
+            .accessibilityHint(Copy.Home.viewSleepDetailsHint)
             .accessibilityAddTraits(.isButton)
             .accessibilityIdentifier("home.sleepCard")
         }
@@ -135,7 +135,7 @@ struct SleepCard: View {
             Circle()
                 .fill(color)
                 .frame(width: 6, height: 6)
-            Text("\(label) \(formatDuration(duration / 3600))")
+            Text(Copy.Home.sleepStageDurationText(label, formatDuration(duration / 3600)))
                 .font(DS.Typography.footnoteMedium)
                 .foregroundStyle(AppColour.textSecondary)
                 .postHogMask()
@@ -149,7 +149,7 @@ struct SleepCard: View {
         let percent = baseline > 0 ? (diff / baseline) * 100 : 0
         let arrow = diff >= 0 ? "+" : ""
         let labelColor: Color = diff >= 0 ? AppColour.success : AppColour.warning
-        return Text("\(arrow)\(Int(percent))% vs avg")
+        return Text(Copy.Home.vsAvgText(arrow, Int(percent)))
             .font(DS.Typography.footnoteMedium)
             .foregroundStyle(labelColor)
             .padding(.horizontal, DS.badgeH)

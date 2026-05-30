@@ -7,9 +7,9 @@ struct TodayScoreLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: TodayScoreActivityAttributes.self) { context in
             CoachLockScreenView(state: context.state)
-                // Pure-black OS chrome — matches AppColour.surfaceBase so the
-                // Live Activity feels carved out of the lock-screen wallpaper
-                // instead of a flat grey overlay (Apple-Music vibe).
+                // Fixed dark chrome — matches AppColour.surfaceBase so the Live
+                // Activity feels carved out of the lock screen and never flips to
+                // a white card in light mode (Apple-Music vibe).
                 .activityBackgroundTint(AppColour.surfaceBase)
                 .activitySystemActionForegroundColor(AppColour.textPrimary)
         } dynamicIsland: { context in
@@ -25,27 +25,36 @@ struct TodayScoreLiveActivityWidget: Widget {
                         .font(.footnote.weight(.medium))
                         .foregroundStyle(AppColour.textPrimary)
                         .lineLimit(2)
+                        .minimumScaleFactor(0.7)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 10)
                         .padding(.top, 4)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    CoachActionBar(kind: context.state.actionKind, tint: tintColor(for: context.state.scoreTint))
+                    CoachActionBar(kind: context.state.actionKind, tint: bandColor(for: context.state))
                         .padding(.top, 2)
                 }
             } compactLeading: {
                 Image(systemName: context.state.mode.symbolName)
-                    .foregroundStyle(tintColor(for: context.state.scoreTint))
+                    .foregroundStyle(bandColor(for: context.state))
+                    .accessibilityLabel(context.state.mode.headline)
+                    .widgetURL(Self.todaysActionURL)
             } compactTrailing: {
-                Text("\(context.state.heroValue)")
+                Text("\(context.state.overallScore)")
                     .font(.headline.weight(.bold).monospacedDigit())
-                    .foregroundStyle(tintColor(for: context.state.scoreTint))
+                    .foregroundStyle(bandColor(for: context.state))
                     .contentTransition(.numericText())
+                    .accessibilityLabel(scoreAccessibilityLabel(for: context.state))
+                    .widgetURL(Self.todaysActionURL)
             } minimal: {
                 MinimalModeBadge(state: context.state)
             }
         }
     }
+
+    /// Deep link target for the dashboard surface. `onOpenURL` (added by D3) maps
+    /// this via `Route.fromUITestIdentifier` to `Route.todaysAction`.
+    private static let todaysActionURL = URL(string: "laso://route/todaysAction")
 }
 
 // MARK: - Lock Screen
@@ -54,7 +63,7 @@ private struct CoachLockScreenView: View {
     let state: TodayScoreActivityAttributes.ContentState
 
     var body: some View {
-        let tint = tintColor(for: state.scoreTint)
+        let tint = bandColor(for: state)
 
         VStack(spacing: 8) {
             HStack(alignment: .center, spacing: 14) {
@@ -65,15 +74,19 @@ private struct CoachLockScreenView: View {
                         Image(systemName: state.mode.symbolName)
                             .font(.caption2.weight(.semibold))
                             .foregroundStyle(tint)
-                        Text(state.mode.headline.uppercased())
+                        Text(state.mode.headline)
                             .font(.caption2.weight(.semibold))
+                            .textCase(.uppercase)
                             .tracking(0.8)
                             .foregroundStyle(AppColour.textSecondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
                     }
                     Text(state.insight)
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(AppColour.textPrimary)
                         .lineLimit(2)
+                        .minimumScaleFactor(0.7)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -85,13 +98,12 @@ private struct CoachLockScreenView: View {
                 }
             }
 
-            DayProgressStrip(mode: state.mode)
+            DayProgressStrip()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        // Pure-black card body. Mode-specific tint stays on the ring and the
-        // accent icon (line 64-65) so colour signals the score state without
-        // washing the whole card into grey.
+        // Pure-black card body. Score-band tint stays on the ring and the accent
+        // icon so colour signals the score state without washing the card grey.
         .background(AppColour.surfaceBase)
         .overlay(alignment: .topLeading) {
             // 1px score-tint hairline at the top — subtle premium accent.
@@ -109,8 +121,6 @@ private struct CoachLockScreenView: View {
 /// state push. Gives the Live Activity a visible "moving through the day"
 /// signal independent of score updates.
 private struct DayProgressStrip: View {
-    let mode: CoachMode
-
     var body: some View {
         let (start, end) = Self.dayWindow()
         ProgressView(timerInterval: start...end, countsDown: false) {
@@ -119,8 +129,10 @@ private struct DayProgressStrip: View {
             EmptyView()
         }
         .progressViewStyle(.linear)
-        .tint(modeAccentColor(for: mode))
+        // Brand primary keeps the moving fill on-palette across every mode.
+        .tint(AppColour.primary)
         .frame(height: 2)
+        .accessibilityHidden(true)
     }
 
     private static func dayWindow() -> (Date, Date) {
@@ -135,15 +147,15 @@ private struct DayProgressStrip: View {
 
 // MARK: - Orb Ring (expanded leading / lock screen)
 
+/// Ring fill and centre number both read the overall 0–100 score from the same
+/// quantity, so the gauge and the digit can never disagree. Mode-specific hero
+/// metrics (HRV, steps) live only in the trailing stack.
 private struct CoachOrbRing: View {
     let state: TodayScoreActivityAttributes.ContentState
     let size: CGFloat
 
     var body: some View {
-        let tint = tintColor(for: state.scoreTint)
-        // Ring always represents the overall score (0-100). heroValue may be a
-        // raw metric (HRV ms, RHR bpm, steps) that does not map 0-100, so using
-        // it directly makes the ring over or under fill for non-score modes.
+        let tint = bandColor(for: state)
         let progress = max(0, min(1, Double(state.overallScore) / 100.0))
 
         ZStack {
@@ -156,12 +168,13 @@ private struct CoachOrbRing: View {
                 .stroke(tint, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .rotationEffect(.degrees(-90))
             VStack(spacing: 1) {
-                Text("\(state.heroValue)")
-                    .font(.system(size: size * 0.26, weight: .bold, design: .rounded).monospacedDigit())
+                Text("\(state.overallScore)")
+                    .font(.system(size: size * 0.3, weight: .bold, design: .rounded).monospacedDigit())
                     .foregroundStyle(tint)
                     .contentTransition(.numericText())
-                Text(state.heroLabel.uppercased())
+                Text(TodayScoreCopy.scoreUnit)
                     .font(.system(size: max(7, size * 0.11), weight: .semibold))
+                    .textCase(.uppercase)
                     .tracking(0.6)
                     .foregroundStyle(AppColour.textSecondary)
                     .lineLimit(1)
@@ -170,6 +183,8 @@ private struct CoachOrbRing: View {
             .padding(.horizontal, 4)
         }
         .frame(width: size, height: size)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(scoreAccessibilityLabel(for: state))
     }
 }
 
@@ -179,19 +194,24 @@ private struct CoachTrailingStack: View {
     let state: TodayScoreActivityAttributes.ContentState
 
     var body: some View {
-        let tint = tintColor(for: state.scoreTint)
+        let tint = bandColor(for: state)
 
         VStack(alignment: .trailing, spacing: 4) {
-            Text(secondaryLabel.uppercased())
-                .font(.system(size: 9, weight: .semibold))
+            Text(state.mode.secondaryLabel)
+                .font(.caption2.weight(.semibold))
+                .textCase(.uppercase)
                 .tracking(0.8)
                 .foregroundStyle(AppColour.textSecondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
 
             HStack(alignment: .lastTextBaseline, spacing: 4) {
                 Text(secondaryValue)
-                    .font(.system(size: 22, weight: .bold, design: .rounded).monospacedDigit())
+                    .font(.title.weight(.bold).monospacedDigit())
                     .foregroundStyle(AppColour.textPrimary)
                     .contentTransition(.numericText())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                 if let unit = secondaryUnit {
                     Text(unit)
                         .font(.caption2.weight(.semibold))
@@ -199,45 +219,33 @@ private struct CoachTrailingStack: View {
                 }
             }
 
-            Text(scoreTrailingCaption)
+            Text(String(format: TodayScoreCopy.scoreCaptionTemplate, state.overallScore))
                 .font(.caption2)
                 .foregroundStyle(tint.opacity(0.85))
                 .lineLimit(1)
+                .minimumScaleFactor(0.7)
         }
         .padding(.trailing, 6)
-    }
-
-    private var secondaryLabel: String {
-        switch state.mode {
-        case .morning: return "HRV"
-        case .day:     return "Steps"
-        case .evening: return "Score"
-        case .night:   return "Score"
-        }
     }
 
     private var secondaryValue: String {
         switch state.mode {
         case .morning:
             if let hrv = state.hrvMs { return "\(hrv)" }
-            return "\(state.restingHR ?? state.overallScore)"
+            return "\(state.restingHR ?? state.heroValue)"
         case .day:
             return stepsDisplay(state.steps)
         case .evening, .night:
-            return "\(state.overallScore)"
+            return "\(state.heroValue)"
         }
     }
 
     private var secondaryUnit: String? {
         switch state.mode {
-        case .morning: return state.hrvMs != nil ? "ms" : (state.restingHR != nil ? "bpm" : nil)
+        case .morning: return state.hrvMs != nil ? TodayScoreCopy.msUnit : (state.restingHR != nil ? TodayScoreCopy.bpmUnit : nil)
         case .day:     return nil
         case .evening, .night: return nil
         }
-    }
-
-    private var scoreTrailingCaption: String {
-        "Laso score \(state.overallScore)"
     }
 
     private func stepsDisplay(_ steps: Int) -> String {
@@ -255,16 +263,17 @@ private struct MinimalModeBadge: View {
     let state: TodayScoreActivityAttributes.ContentState
 
     var body: some View {
-        let tint = tintColor(for: state.scoreTint)
+        let tint = bandColor(for: state)
         ZStack {
             Circle()
                 .fill(tint.opacity(0.24))
             Circle()
                 .stroke(tint, lineWidth: 1.4)
             Image(systemName: state.mode.symbolName)
-                .font(.system(size: 9, weight: .bold))
+                .font(.caption2.weight(.bold))
                 .foregroundStyle(tint)
         }
+        .accessibilityLabel(state.mode.headline)
     }
 }
 
@@ -295,6 +304,8 @@ private struct CoachActionBar: View {
                     .font(.footnote.weight(.semibold))
                 Text(kind.label)
                     .font(.footnote.weight(.semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
             .foregroundStyle(.white)
             .padding(.horizontal, 14)
@@ -303,57 +314,18 @@ private struct CoachActionBar: View {
             .overlay(Capsule().strokeBorder(tint.opacity(0.55), lineWidth: 1))
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(kind.accessibilityLabel ?? kind.label)
     }
 }
 
-// MARK: - Tint Mapping
+// MARK: - Shared helpers
 
-private func tintColor(for tint: TodayScoreTint) -> Color {
-    switch tint {
-    case .excellent: return AppColour.scoreOptimal
-    case .good:      return AppColour.scoreGood
-    case .fair:      return AppColour.scoreFair
-    case .poor:      return AppColour.scorePoor
-    }
+/// All score-driven tints route through the single `WidgetStyle.scoreBandColor`
+/// ramp so the ring, number, and accent icon never disagree.
+private func bandColor(for state: TodayScoreActivityAttributes.ContentState) -> Color {
+    WidgetStyle.scoreBandColor(score: state.overallScore)
 }
 
-// MARK: - Mode Background
-
-/// Subtle two-stop gradient tinted by time-of-day. Lets the Live Activity
-/// card feel alive across morning peach, day blue, evening gold and night
-/// navy without overpowering the hero content.
-private func modeGradientColors(for mode: CoachMode) -> [Color] {
-    switch mode {
-    case .morning:
-        return [
-            Color(red: 1.00, green: 0.69, blue: 0.53).opacity(0.28),
-            Color(red: 0.17, green: 0.17, blue: 0.18)
-        ]
-    case .day:
-        return [
-            Color(red: 0.42, green: 0.65, blue: 1.00).opacity(0.22),
-            Color(red: 0.11, green: 0.11, blue: 0.12)
-        ]
-    case .evening:
-        return [
-            Color(red: 1.00, green: 0.63, blue: 0.38).opacity(0.28),
-            Color(red: 0.17, green: 0.17, blue: 0.18)
-        ]
-    case .night:
-        return [
-            Color(red: 0.16, green: 0.21, blue: 0.33).opacity(0.75),
-            Color(red: 0.04, green: 0.06, blue: 0.12)
-        ]
-    }
-}
-
-/// Accent for the day-progress strip. Picks a hue that blends with the
-/// mode gradient so the moving fill reads as part of the background.
-private func modeAccentColor(for mode: CoachMode) -> Color {
-    switch mode {
-    case .morning: return Color(red: 1.00, green: 0.60, blue: 0.45)
-    case .day:     return Color(red: 0.42, green: 0.65, blue: 1.00)
-    case .evening: return Color(red: 1.00, green: 0.55, blue: 0.30)
-    case .night:   return Color(red: 0.55, green: 0.62, blue: 0.90)
-    }
+private func scoreAccessibilityLabel(for state: TodayScoreActivityAttributes.ContentState) -> String {
+    String(format: TodayScoreCopy.ringAccessibilityTemplate, state.overallScore, state.mode.headline)
 }

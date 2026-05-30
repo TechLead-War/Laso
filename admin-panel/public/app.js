@@ -386,6 +386,7 @@ const Router = (() => {
     audit: document.getElementById("page-audit"),
     pricing: document.getElementById("page-pricing"),
     screenshots: document.getElementById("page-screenshots"),
+    strings: document.getElementById("page-strings"),
   };
 
   const navItems = document.querySelectorAll(".nav-item");
@@ -407,6 +408,7 @@ const Router = (() => {
     if (page === "dashboard") DashboardPage.init();
     if (page === "screenshots") ScreenshotsPage.init();
     if (page === "pricing") PricingPage.init();
+    if (page === "strings") StringsPage.init();
   }
 
   function init() {
@@ -2098,4 +2100,388 @@ const ScreenshotsPage = (() => {
   }
 
   return { init, refresh };
+})();
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Strings Page Module
+//
+// Lists every Copy / Remote Config key the iOS app reads, sourced from the
+// generated `data/copy_keys.json` registry. Subscribes to the single
+// `copy_overrides/strings` Firestore doc so any field already overridden
+// shows the live value. Admin (Firebase Auth custom claim `admin == true`)
+// can write a new override per key, which propagates to every install
+// instantly via the snapshot listener the iOS `CopyOverridesStore` keeps
+// open. Non-admins see read-only rows; the Firestore rule blocks any write
+// server-side as the real gate.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const StringsPage = (() => {
+  let initialized = false;
+  let registry = [];           // [{ key, defaultValue, sourceFile, isArray }]
+  let overrides = {};          // { key: value } — live from Firestore
+  let snapshotUnsub = null;    // Firestore listener teardown handle
+  let isAdmin = false;         // refreshed from id-token custom claim
+  let listenerReady = false;   // true after the first successful snapshot
+  let filterText = "";
+  let onlyWithOverrides = false;
+  let modalEl = null;          // dedicated edit overlay, lazily mounted
+
+  async function init() {
+    if (initialized) {
+      // Already mounted — only need to re-render in case the override doc
+      // changed while this tab was hidden behind another page.
+      render();
+      return;
+    }
+    initialized = true;
+
+    bindToolbar();
+    await Promise.all([
+      loadRegistry(),
+      refreshAdminClaim(),
+      attachOverrideListener(),
+    ]);
+    render();
+  }
+
+  // ─── Registry ────────────────────────────────────────────────────────────
+
+  async function loadRegistry() {
+    setStatus("Loading registry…", false);
+    try {
+      const res = await fetch("data/copy_keys.json", { cache: "no-cache" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      registry = await res.json();
+      setStatus("", false);
+    } catch (err) {
+      setStatus(
+        `Could not load data/copy_keys.json: ${err.message}. ` +
+        `Run scripts/dump_copy_registry.py to regenerate it.`,
+        true,
+      );
+      registry = [];
+    }
+  }
+
+  // ─── Admin gate ──────────────────────────────────────────────────────────
+
+  async function refreshAdminClaim() {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        isAdmin = false;
+        return;
+      }
+      // Force-refresh so the panel never trusts a stale claim cache after
+      // an admin grant/revoke. Cheap — single round trip.
+      const result = await user.getIdTokenResult(true);
+      isAdmin = result.claims && result.claims.admin === true;
+    } catch (_err) {
+      isAdmin = false;
+    }
+  }
+
+  // ─── Firestore live overrides ────────────────────────────────────────────
+
+  function attachOverrideListener() {
+    return new Promise((resolve) => {
+      if (snapshotUnsub) {
+        snapshotUnsub();
+        snapshotUnsub = null;
+      }
+      snapshotUnsub = db
+        .collection("copy_overrides")
+        .doc("strings")
+        .onSnapshot(
+          (snap) => {
+            overrides = (snap && snap.exists) ? (snap.data() || {}) : {};
+            listenerReady = true;
+            setStatus("", false);
+            render();
+            resolve();
+          },
+          (err) => {
+            listenerReady = false;
+            const isPerm = err.code === "permission-denied";
+            setStatus(
+              isPerm
+                ? "Live overrides cannot be read. The Firestore rules for " +
+                  "copy_overrides have not been deployed yet — run " +
+                  "`firebase deploy --only firestore:rules` from admin-panel/ " +
+                  "then reload."
+                : `Live overrides unavailable: ${err.message}`,
+              true,
+            );
+            overrides = {};
+            render();
+            resolve();
+          },
+        );
+    });
+  }
+
+  // ─── Toolbar wiring ──────────────────────────────────────────────────────
+
+  function bindToolbar() {
+    const search = document.getElementById("strings-search");
+    if (search) {
+      search.addEventListener("input", (e) => {
+        filterText = e.target.value.trim().toLowerCase();
+        render();
+      });
+    }
+    const filter = document.getElementById("strings-filter-overrides");
+    if (filter) {
+      filter.addEventListener("change", (e) => {
+        onlyWithOverrides = e.target.checked;
+        render();
+      });
+    }
+  }
+
+  // ─── Render ──────────────────────────────────────────────────────────────
+
+  function render() {
+    const container = document.getElementById("strings-list");
+    const countEl = document.getElementById("strings-count");
+    if (!container) return;
+
+    const rows = filteredRows();
+    const overrideCount = registry.filter((e) => hasOverride(e.key)).length;
+
+    if (countEl) {
+      countEl.textContent =
+        `${rows.length.toLocaleString()} shown · ` +
+        `${overrideCount.toLocaleString()} overridden · ` +
+        `${registry.length.toLocaleString()} total` +
+        (isAdmin ? " · admin mode" : " · read-only");
+    }
+
+    if (registry.length === 0) {
+      container.innerHTML = "";
+      return;
+    }
+    if (rows.length === 0) {
+      container.innerHTML = `<div class="strings-empty">No keys match this search.</div>`;
+      return;
+    }
+
+    container.innerHTML = rows.map(rowHtml).join("");
+
+    // Bind per-row buttons. Delegation would also work; for ~2400 rows the
+    // direct binding cost is negligible and keeps the code simple.
+    container.querySelectorAll("[data-strings-edit]").forEach((btn) => {
+      btn.addEventListener("click", () => openEditor(btn.dataset.stringsEdit));
+    });
+    container.querySelectorAll("[data-strings-clear]").forEach((btn) => {
+      btn.addEventListener("click", () => clearOverride(btn.dataset.stringsClear));
+    });
+  }
+
+  function filteredRows() {
+    return registry.filter((entry) => {
+      if (onlyWithOverrides && !hasOverride(entry.key)) return false;
+      if (!filterText) return true;
+      if (entry.key.toLowerCase().includes(filterText)) return true;
+      if (entry.defaultValue.toLowerCase().includes(filterText)) return true;
+      if (entry.sourceFile.toLowerCase().includes(filterText)) return true;
+      const live = overrides[entry.key];
+      if (typeof live === "string" && live.toLowerCase().includes(filterText)) return true;
+      return false;
+    });
+  }
+
+  function hasOverride(key) {
+    const v = overrides[key];
+    if (typeof v === "string") return v.length > 0;
+    if (Array.isArray(v)) return v.length > 0;
+    return false;
+  }
+
+  function rowHtml(entry) {
+    const live = overrides[entry.key];
+    const resolved = typeof live === "string" && live.length > 0
+      ? live
+      : entry.defaultValue;
+    const escKey = UI.escapeHtml(entry.key);
+    const escResolved = UI.escapeHtml(resolved);
+    const escDefault = UI.escapeHtml(entry.defaultValue);
+    const escSource = UI.escapeHtml(entry.sourceFile);
+    const overridden = hasOverride(entry.key);
+    const isArray = entry.isArray === true;
+
+    const badges = [
+      isArray ? `<span class="strings-badge strings-badge-array">ARRAY</span>` : "",
+      overridden ? `<span class="strings-badge strings-badge-override">OVERRIDE</span>` : "",
+    ].join("");
+
+    // Only expose Edit / Clear once both gates pass:
+    //   * the signed-in user has the admin custom claim (in-app gate)
+    //   * the Firestore listener actually delivered the overrides doc — when
+    //     read fails (rules not deployed, App Check, etc.) write will also
+    //     fail, so hiding the buttons prevents the confusing "Edit shown but
+    //     Save 403s" path.
+    const canEditRow = isAdmin && !isArray && listenerReady;
+    const adminButtons = canEditRow ? `
+      <button class="btn btn-secondary btn-sm" data-strings-edit="${escKey}">Edit</button>
+      ${overridden ? `<button class="btn btn-danger btn-sm" data-strings-clear="${escKey}">Clear</button>` : ""}
+    ` : "";
+
+    const arrayNote = isArray ? `
+      <div class="strings-row-note">
+        Array overrides are managed in the Firestore console directly.
+      </div>
+    ` : "";
+
+    return `
+      <div class="strings-row${overridden ? " strings-row-overridden" : ""}">
+        <div class="strings-row-head">
+          <code class="strings-row-key">${escKey}</code>
+          ${badges}
+          <span class="strings-row-source">${escSource}</span>
+        </div>
+        <div class="strings-row-value">${escResolved}</div>
+        ${overridden ? `<div class="strings-row-default">Default: ${escDefault}</div>` : ""}
+        ${arrayNote}
+        <div class="strings-row-actions">${adminButtons}</div>
+      </div>
+    `;
+  }
+
+  // ─── Edit modal ──────────────────────────────────────────────────────────
+  //
+  // Built from scratch (not reusing UI.showModal which is a fixed confirm
+  // dialog that text-escapes its title/description — it cannot render the
+  // labels + textarea this editor needs). The overlay is mounted once on
+  // first open and reused.
+
+  function mountModal() {
+    if (modalEl) return;
+    modalEl = document.createElement("div");
+    modalEl.className = "modal-overlay strings-modal-overlay";
+    modalEl.innerHTML = `
+      <div class="modal strings-modal">
+        <div class="modal-header">
+          <h2 class="modal-title">Edit string</h2>
+          <button class="modal-close" type="button" data-strings-modal-close>&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Key</label>
+            <code class="strings-modal-key" id="strings-modal-key"></code>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Bundled default</label>
+            <div class="strings-modal-default" id="strings-modal-default"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="strings-modal-input">Live value</label>
+            <textarea id="strings-modal-input" class="form-textarea" rows="4"></textarea>
+            <span class="form-hint">
+              Saving publishes this value to every iOS install instantly via
+              the Firestore listener.
+            </span>
+          </div>
+          <div id="strings-modal-error" class="form-error"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" data-strings-modal-close>Cancel</button>
+          <button class="btn btn-primary" type="button" id="strings-modal-save">Save</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modalEl);
+
+    // Close handlers: any element with data-strings-modal-close + clicks on
+    // the overlay backdrop itself.
+    modalEl.querySelectorAll("[data-strings-modal-close]").forEach((btn) => {
+      btn.addEventListener("click", closeModal);
+    });
+    modalEl.addEventListener("click", (e) => {
+      if (e.target === modalEl) closeModal();
+    });
+  }
+
+  function openEditor(key) {
+    const entry = registry.find((e) => e.key === key);
+    if (!entry) return;
+    const current = typeof overrides[key] === "string" ? overrides[key] : entry.defaultValue;
+
+    mountModal();
+    modalEl.querySelector("#strings-modal-key").textContent = key;
+    modalEl.querySelector("#strings-modal-default").textContent = entry.defaultValue;
+    modalEl.querySelector("#strings-modal-error").textContent = "";
+
+    const input = modalEl.querySelector("#strings-modal-input");
+    input.value = current;
+    modalEl.classList.add("active");
+    // Defer focus so the active class transitions in first, otherwise iOS
+    // Safari jumps the viewport.
+    requestAnimationFrame(() => {
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    });
+
+    const saveBtn = modalEl.querySelector("#strings-modal-save");
+    // Replace the click handler each open so stale closures cannot fire.
+    const newSaveBtn = saveBtn.cloneNode(true);
+    saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+    newSaveBtn.addEventListener("click", async () => {
+      const next = input.value;
+      const errEl = modalEl.querySelector("#strings-modal-error");
+      errEl.textContent = "";
+      newSaveBtn.disabled = true;
+      try {
+        await db
+          .collection("copy_overrides")
+          .doc("strings")
+          .set({ [key]: next }, { merge: true });
+        closeModal();
+        UI.showToast(`Saved ${key}`);
+      } catch (err) {
+        errEl.textContent = friendlyWriteError(err);
+      } finally {
+        newSaveBtn.disabled = false;
+      }
+    });
+  }
+
+  function closeModal() {
+    if (modalEl) modalEl.classList.remove("active");
+  }
+
+  async function clearOverride(key) {
+    if (!confirm(`Clear override for ${key}? The app will fall back to the bundled default.`)) {
+      return;
+    }
+    try {
+      await db
+        .collection("copy_overrides")
+        .doc("strings")
+        .update({ [key]: firebase.firestore.FieldValue.delete() });
+      UI.showToast(`Cleared ${key}`);
+    } catch (err) {
+      UI.showToast(friendlyWriteError(err));
+    }
+  }
+
+  function friendlyWriteError(err) {
+    if (!err) return "Save failed.";
+    if (err.code === "permission-denied") {
+      return "Permission denied — only the admin account can write copy overrides.";
+    }
+    return `Save failed: ${err.message || err}`;
+  }
+
+  // ─── Status helpers ──────────────────────────────────────────────────────
+
+  function setStatus(text, isError) {
+    const el = document.getElementById("strings-status");
+    if (!el) return;
+    el.textContent = text;
+    el.classList.toggle("strings-status-error", !!isError);
+    el.style.display = text ? "block" : "none";
+  }
+
+  return { init };
 })();

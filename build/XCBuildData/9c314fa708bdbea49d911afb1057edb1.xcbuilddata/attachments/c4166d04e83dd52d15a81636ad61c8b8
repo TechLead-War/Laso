@@ -1,4 +1,0 @@
-module GoogleAdsOnDeviceConversionTarget {
-umbrella "/Users/primetrace/Library/Developer/Xcode/DerivedData/Laso-cgsvsuhaurvxyceguqswwerponfi/SourcePackages/checkouts/google-ads-on-device-conversion-ios-sdk/GoogleAdsOnDeviceConversionWrapper/include"
-export *
-}

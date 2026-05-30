@@ -410,4 +410,91 @@ final class AnalysisEngine {
     func insights(for category: HealthCategory) -> [Insight] {
         InsightCoordinator.coordinate(insights.filter { $0.metric.category == category })
     }
+
+    // MARK: - Historical Replay (backfill)
+    //
+    // Pure, stateless reconstruction of what the overall + category scores
+    // would have looked like on `dayAnchor`, given the same HealthKit time
+    // series the live engine consumes. Used by the dashboard to seed
+    // `StoredAnalysisSnapshot` rows for users with rich HK history but a
+    // fresh app install — without it, EWMA on the Explore tab needs ~14 days
+    // of usage before showing real history.
+    //
+    // Trends are deliberately omitted from the replay path: `TrendAnalyzer`
+    // anchors on the live `Date()` and refactoring it for an as-of date is
+    // out of scope. Anomaly-only scoring (3-day mean ending on dayAnchor vs
+    // sliced baseline) is faithful enough for an EWMA seed and uses the same
+    // scorer/baseline/anomaly maths the live path runs.
+    static func replay(
+        asOf dayAnchor: Date,
+        timeSeries: [HealthMetric: MetricTimeSeries]
+    ) -> (overallScore: Int, categoryScores: [HealthScore], baselines: [HealthMetric: UserBaseline])? {
+        let cal = Date.cal
+        let day = cal.startOfDay(for: dayAnchor)
+        guard let threeDaysAgo = cal.date(byAdding: .day, value: -3, to: day),
+              let dayEnd = cal.date(byAdding: .day, value: 1, to: day) else { return nil }
+
+        var slicedSeries: [HealthMetric: MetricTimeSeries] = [:]
+        for (metric, series) in timeSeries {
+            slicedSeries[metric] = series.sliced(throughDay: day)
+        }
+
+        var newBaselines: [HealthMetric: UserBaseline] = [:]
+        for (metric, sliced) in slicedSeries {
+            if let baseline = BaselineCalculator.compute(series: sliced) {
+                newBaselines[metric] = baseline
+            }
+        }
+
+        var newAnomalies: [AnomalyDetector.AnomalyResult] = []
+        for (metric, sliced) in slicedSeries {
+            let recent = sliced.samples(from: threeDaysAgo, until: dayEnd)
+            guard !recent.isEmpty,
+                  let baseline = newBaselines[metric] else { continue }
+            let currentValue = recent.map(\.value).mean
+            var anomaly = AnomalyDetector.detect(metric: metric, currentValue: currentValue, baseline: baseline)
+            anomaly = AnomalyDetector.AnomalyResult(
+                metric: anomaly.metric,
+                severity: anomaly.severity,
+                deviationPercent: anomaly.deviationPercent,
+                zScore: anomaly.zScore,
+                currentValue: anomaly.currentValue,
+                baselineValue: anomaly.baselineValue,
+                isAboveBaseline: anomaly.isAboveBaseline,
+                outsideNormalRange: anomaly.outsideNormalRange,
+                allTimePercentile: sliced.percentile(of: currentValue)
+            )
+            newAnomalies.append(anomaly)
+        }
+
+        var metricScoresByCategory: [HealthCategory: [(metric: HealthMetric, score: Int, components: [ScoreComponent])]] = [:]
+        for category in HealthCategory.allCases {
+            metricScoresByCategory[category] = []
+        }
+        for metric in HealthMetric.allCases {
+            guard let anomaly = newAnomalies.first(where: { $0.metric == metric }) else { continue }
+            let (score, components) = HealthScorer.scoreMetric(metric: metric, anomaly: anomaly, trend: nil)
+            metricScoresByCategory[metric.category, default: []].append((metric: metric, score: score, components: components))
+        }
+
+        var newCategoryScores: [HealthScore] = []
+        for category in HealthCategory.allCases {
+            let metricScores = metricScoresByCategory[category] ?? []
+            guard !metricScores.isEmpty else { continue }
+            newCategoryScores.append(HealthScorer.scoreCategory(category: category, metricScores: metricScores))
+        }
+
+        guard !newCategoryScores.isEmpty else { return nil }
+
+        let adaptiveWeights = HealthScorer.adaptiveCategoryWeights(
+            categoryScores: newCategoryScores,
+            anomalies: newAnomalies,
+            baselines: newBaselines,
+            focusCategories: []
+        )
+        let rawOverall = HealthScorer.overallScore(categoryScores: newCategoryScores, weights: adaptiveWeights)
+        let adjusted = HealthScorer.applyCoverageAdjustment(rawScore: rawOverall.score, baselines: newBaselines)
+
+        return (overallScore: adjusted, categoryScores: newCategoryScores, baselines: newBaselines)
+    }
 }

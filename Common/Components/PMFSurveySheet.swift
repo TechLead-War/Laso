@@ -57,7 +57,7 @@ struct PMFSurveySheet: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Skip") {
+                Button(Copy.Common.skipButton) {
                     AppAnalytics.shared.trackBlockTap(
                         title: "PMF Survey Skip",
                         type: .feedbackSkip,
@@ -80,13 +80,13 @@ struct PMFSurveySheet: View {
 
     private var disappointmentStep: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("How would you feel if you could no longer use Laso?")
+            Text(Copy.Common.howWouldYouFeelIfYou)
                 .font(.title3.weight(.bold))
 
             VStack(spacing: 10) {
-                responseButton("Very disappointed", value: "very_disappointed")
-                responseButton("Somewhat disappointed", value: "somewhat_disappointed")
-                responseButton("Not disappointed", value: "not_disappointed")
+                responseButton(Copy.Common.pmfVeryDisappointed, value: "very_disappointed")
+                responseButton(Copy.Common.pmfSomewhatDisappointed, value: "somewhat_disappointed")
+                responseButton(Copy.Common.pmfNotDisappointed, value: "not_disappointed")
             }
         }
     }
@@ -119,7 +119,7 @@ struct PMFSurveySheet: View {
 
     private var segmentStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("What type of person do you think would benefit most from Laso?")
+            Text(Copy.Common.whatTypeOfPersonDoYou)
                 .font(.title3.weight(.bold))
 
             TextField("e.g., fitness enthusiast, someone with a chronic condition...", text: $segmentAnswer, axis: .vertical)
@@ -132,7 +132,7 @@ struct PMFSurveySheet: View {
                 AppAnalytics.shared.trackPMFSegmentResponse(segment: segmentAnswer)
                 withAnimation(.smooth(duration: 0.3)) { step = .benefit }
             } label: {
-                Text("Continue")
+                Text(Copy.Common.continueLabel)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, DS.space3)
             }
@@ -145,7 +145,7 @@ struct PMFSurveySheet: View {
 
     private var benefitStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("What is the main benefit you get from Laso?")
+            Text(Copy.Common.whatIsTheMainBenefitYou)
                 .font(.title3.weight(.bold))
 
             TextField("e.g., understanding my recovery, sleep insights...", text: $benefitAnswer, axis: .vertical)
@@ -158,7 +158,7 @@ struct PMFSurveySheet: View {
                 AppAnalytics.shared.trackPMFBenefitResponse(benefit: benefitAnswer)
                 withAnimation(.smooth(duration: 0.3)) { step = .improvement }
             } label: {
-                Text("Continue")
+                Text(Copy.Common.continueLabel2)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, DS.space3)
             }
@@ -171,7 +171,7 @@ struct PMFSurveySheet: View {
 
     private var improvementStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("How can we improve Laso for you?")
+            Text(Copy.Common.howCanWeImproveLasoFor)
                 .font(.title3.weight(.bold))
 
             TextField("Optional — anything you'd change or add", text: $improvementText, axis: .vertical)
@@ -202,14 +202,14 @@ struct PMFSurveySheet: View {
             Image(systemName: "heart.fill")
                 .font(.system(size: 48))
                 .foregroundStyle(.pink)
-            Text("Thank you")
+            Text(Copy.Common.thankYou)
                 .font(.title2.weight(.bold))
-            Text("Your feedback shapes what we build next.")
+            Text(Copy.Common.yourFeedbackShapesWhatWeBuild)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Spacer()
-            Button("Done") { dismiss() }
+            Button(Copy.Common.doneButton) { dismiss() }
                 .buttonStyle(.borderedProminent)
                 .padding(.bottom, DS.space6)
         }

@@ -49,8 +49,8 @@ struct ExploreDecliningTrendsSection: View {
                         .foregroundStyle(.tint)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("See all causal explanations")
-                    .accessibilityHint("Opens the full health intelligence view")
+                    .accessibilityLabel(Copy.Explore.seeAllCausalExplanationsLabel)
+                    .accessibilityHint(Copy.Explore.opensTheFullHealthIntelligenceViewHint)
                 }
             }
             .padding(.horizontal)
@@ -97,7 +97,7 @@ struct ExploreDecliningTrendsSection: View {
             }
             .buttonStyle(.plain)
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(highlight.metric.displayName) declining trend, \(highlight.title)")
+            .accessibilityLabel(Copy.Explore.decliningTrendLabel(highlight.metric.displayName, highlight.title))
             .accessibilityValue(isExpanded ? "Expanded" : (canExpand ? "Collapsed" : ""))
             .accessibilityHint(canExpand ? "Toggles a causal explanation for why this metric declined" : "Opens detailed metric history")
 
@@ -196,7 +196,7 @@ struct ExploreDecliningTrendsSection: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Copy.Explore.openMetric(highlight.metric.displayName))
-            .accessibilityHint("Opens \(highlight.metric.displayName) detail view")
+            .accessibilityHint(Copy.Explore.opensDetailViewHint(highlight.metric.displayName))
         }
     }
 

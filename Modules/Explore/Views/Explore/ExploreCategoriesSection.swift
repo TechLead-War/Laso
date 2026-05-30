@@ -34,9 +34,9 @@ struct ExploreCategoriesSection: View {
                     .contentShape(Rectangle())
                     .accessibilityIdentifier("explore.category.\(item.category.rawValue)")
                     .accessibilityElement(children: .combine)
-                    .accessibilityLabel("\(item.category.displayName) category")
+                    .accessibilityLabel(Copy.Explore.categoryLabel(item.category.displayName))
                     .accessibilityValue(item.score.map { "Score \($0)" } ?? "No score yet")
-                    .accessibilityHint("Opens the \(item.category.displayName) category detail")
+                    .accessibilityHint(Copy.Explore.opensTheCategoryDetailHint(item.category.displayName))
 
                     if index < categories.count - 1 {
                         Divider()
@@ -93,7 +93,7 @@ struct ExploreCategoryRow: View {
                     lineWidth: 4
                 )
             } else {
-                Text("--")
+                Text(Copy.Explore.x)
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(.tertiary)
                     .frame(width: 36, height: 36)

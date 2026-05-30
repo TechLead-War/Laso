@@ -52,7 +52,7 @@ enum IntentSnippetViews {
                     }
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Health Score")
+                        Text(Copy.Common.healthScore)
                             .font(DS.Typography.headline)
                         Text(summary)
                             .font(DS.Typography.subheadline)
@@ -73,7 +73,7 @@ enum IntentSnippetViews {
                         .trim(from: 0, to: Double(value) / 100.0)
                         .stroke(color, style: StrokeStyle(lineWidth: 6, lineCap: .round))
                         .rotationEffect(.degrees(-90))
-                    Text("\(value)")
+                    Text(Copy.Common.xText(value))
                         .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundStyle(color)
                 }
@@ -123,7 +123,7 @@ enum IntentSnippetViews {
                     .frame(width: 80)
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Last Night's Sleep")
+                        Text(Copy.Common.lastNightSSleep)
                             .font(DS.Typography.headline)
 
                         if deepHours > 0 || remHours > 0 {
@@ -214,11 +214,11 @@ enum IntentSnippetViews {
                                 .trim(from: 0, to: Double(readinessScore) / 100.0)
                                 .stroke(readinessColor, style: StrokeStyle(lineWidth: 6, lineCap: .round))
                                 .rotationEffect(.degrees(-90))
-                            Text("\(readinessScore)%")
+                            Text(Copy.Common.intentReadinessScoreText(readinessScore))
                                 .font(.system(size: 18, weight: .bold, design: .rounded))
                         }
                         .frame(width: 64, height: 64)
-                        Text("Readiness")
+                        Text(Copy.Common.readiness)
                             .font(DS.Typography.caption2)
                             .foregroundStyle(.secondary)
                     }
@@ -243,7 +243,7 @@ enum IntentSnippetViews {
                     }
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Recovery Status")
+                        Text(Copy.Common.recoveryStatus)
                             .font(DS.Typography.headline)
                         Text(readinessAdvice(readinessScore))
                             .font(DS.Typography.subheadline)
@@ -282,12 +282,12 @@ enum IntentSnippetViews {
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Water Logged")
+                    Text(Copy.Common.waterLogged)
                         .font(DS.Typography.headline)
                     Text("\(Int(liters * 1000)) mL (\(String(format: "%.1f", liters)) L)")
                         .font(DS.Typography.subheadline)
                         .foregroundStyle(.secondary)
-                    Text("Saved to Apple Health")
+                    Text(Copy.Common.savedToAppleHealth)
                         .font(DS.Typography.caption)
                         .foregroundStyle(.green)
                 }
@@ -314,12 +314,12 @@ enum IntentSnippetViews {
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("\(workoutType.rawValue.capitalized) Logged")
+                    Text(Copy.Common.loggedText(workoutType.rawValue.capitalized))
                         .font(DS.Typography.headline)
                     Text(formatDuration(durationMinutes))
                         .font(DS.Typography.subheadline)
                         .foregroundStyle(.secondary)
-                    Text("Saved to Apple Health")
+                    Text(Copy.Common.savedToAppleHealth2)
                         .font(DS.Typography.caption)
                         .foregroundStyle(.green)
                 }

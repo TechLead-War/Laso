@@ -81,7 +81,7 @@ struct HealthRiskDetailView: View {
                         .font(DS.Typography.title)
                         .foregroundStyle(risk.riskType.color)
 
-                    Text("\(risk.level)")
+                    Text(Copy.Common.xText(risk.level))
                         .font(DS.Typography.displayM)
                         .foregroundStyle(risk.riskGrade.color)
 
@@ -96,7 +96,7 @@ struct HealthRiskDetailView: View {
                 .foregroundStyle(AppColour.textSecondary)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(risk.riskType.displayName), \(risk.riskGrade.displayName)")
+        .accessibilityLabel(Copy.Common.riskTypeAndGradeLabel(risk.riskType.displayName, risk.riskGrade.displayName))
     }
 
     // MARK: - Focus Areas
@@ -206,7 +206,7 @@ struct HealthRiskDetailView: View {
         .padding(.horizontal)
         .opacity(factor.status == .unmeasured ? 0.6 : 1.0)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(factor.metric.displayName), \(factor.status.displayName)")
+        .accessibilityLabel(Copy.Common.xLabel2(factor.metric.displayName, factor.status.displayName))
         .accessibilityValue(factor.status != .unmeasured ? formatValue(factor.currentValue, metric: factor.metric) : "not measured")
     }
 
@@ -290,8 +290,8 @@ struct FocusAreaCard: View {
         }
         .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(area.impact.displayName): \(area.title)")
-        .accessibilityHint("View \(area.metric.displayName) details")
+        .accessibilityLabel(Copy.Common.xLabel3(area.impact.displayName, area.title))
+        .accessibilityHint(Copy.Common.viewDetailsHint(area.metric.displayName))
     }
 }
 

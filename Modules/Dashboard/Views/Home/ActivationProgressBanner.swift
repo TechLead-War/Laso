@@ -56,7 +56,7 @@ struct ActivationProgressBanner: View {
                     .font(DS.Typography.footnoteMedium)
                     .foregroundStyle(AppColour.textSecondary)
                 Spacer()
-                Text("\(Int(state.progressFraction * 100))%")
+                Text(Copy.Home.xText(Int(state.progressFraction * 100)))
                     .font(DS.Typography.captionSemibold)
                     .foregroundStyle(.tint)
             }
@@ -132,8 +132,8 @@ struct ActivationProgressBanner: View {
                     .font(DS.Typography.captionSemibold)
                     .foregroundStyle(AppColour.textTertiary)
             }
-            .accessibilityLabel("Dismiss milestone celebration")
-            .accessibilityHint("Hides the milestone unlock card")
+            .accessibilityLabel(Copy.Home.dismissMilestoneCelebrationLabel)
+            .accessibilityHint(Copy.Home.hidesTheMilestoneUnlockCardHint)
         }
         .padding(DS.space3)
         .background(
@@ -200,8 +200,8 @@ struct AskYourDataCard: View {
         .buttonStyle(.dsPress)
         .padding(.horizontal, DS.screenPadding)
         .accessibilityIdentifier("home.askYourDataCard")
-        .accessibilityLabel("\(Copy.Home.AskYourData.caption). \(samplePrompt)")
-        .accessibilityHint("Opens Ask Your Data")
+        .accessibilityLabel(Copy.Home.xLabel(Copy.Home.AskYourData.caption, samplePrompt))
+        .accessibilityHint(Copy.Home.opensAskYourDataHint)
     }
 }
 

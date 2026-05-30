@@ -31,7 +31,7 @@ struct HomeErrorView: View {
                 Task { await onRetry() }
             }
             .buttonStyle(.borderedProminent)
-            .accessibilityHint("Retry loading health data")
+            .accessibilityHint(Copy.Home.retryLoadingHealthDataHint)
         }
         .padding()
         .accessibilityElement(children: .combine)

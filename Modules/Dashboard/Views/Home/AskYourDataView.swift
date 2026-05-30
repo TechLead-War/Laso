@@ -68,8 +68,8 @@ struct AskYourDataView: View {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(AppColour.textTertiary)
                 }
-                .accessibilityLabel("Clear search")
-                .accessibilityHint("Removes the current question and result")
+                .accessibilityLabel(Copy.Home.clearSearchLabel)
+                .accessibilityHint(Copy.Home.removesTheCurrentQuestionAndResultHint)
             }
         }
         .padding(DS.space3)
@@ -159,8 +159,8 @@ struct AskYourDataView: View {
                         .font(DS.Typography.callout)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("This answer was helpful")
-                .accessibilityHint("Sends positive feedback on this answer")
+                .accessibilityLabel(Copy.Home.thisAnswerWasHelpfulLabel)
+                .accessibilityHint(Copy.Home.sendsPositiveFeedbackOnThisAnswerHint)
 
                 Button {
                     AppAnalytics.shared.trackQueryFeedback(
@@ -173,8 +173,8 @@ struct AskYourDataView: View {
                         .font(DS.Typography.callout)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("This answer was not helpful")
-                .accessibilityHint("Sends negative feedback on this answer")
+                .accessibilityLabel(Copy.Home.thisAnswerWasNotHelpfulLabel)
+                .accessibilityHint(Copy.Home.sendsNegativeFeedbackOnThisAnswerHint)
             }
             .foregroundStyle(AppColour.textSecondary)
 

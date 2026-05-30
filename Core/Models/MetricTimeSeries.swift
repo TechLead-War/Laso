@@ -157,6 +157,19 @@ struct MetricTimeSeries: Identifiable {
         return (Double(belowCount) / Double(samples.count)) * 100.0
     }
 
+    /// Returns a copy containing only samples on or before the end of the
+    /// given calendar day. Used by the historical-score backfill to replay
+    /// the scorer deterministically as it would have seen the data on dayN.
+    func sliced(throughDay day: Date) -> MetricTimeSeries {
+        let cal = Date.cal
+        guard let dayEnd = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: day)) else {
+            return self
+        }
+        let endIndex = samples.firstIndex(onOrAfter: dayEnd)
+        if endIndex >= samples.count { return self }
+        return MetricTimeSeries(metric: metric, samples: Array(samples[..<endIndex]))
+    }
+
     /// Number of years of data available
     var yearsOfData: Int {
         guard let first = samples.first, let last = samples.last else { return 0 }

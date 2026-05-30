@@ -99,11 +99,11 @@ struct OnboardingMirrorMomentStep: View {
                     .padding(.horizontal, DS.space8)
 
                 HStack(spacing: DS.space2) {
-                    Text("\(percent)%")
+                    Text(Copy.Onboarding.xText(percent))
                         .font(DS.Typography.captionSemibold)
                         .foregroundStyle(AppColour.textPrimary)
                         .contentTransition(.numericText())
-                    Text("•")
+                    Text(Copy.Onboarding.x)
                         .font(DS.Typography.caption)
                         .foregroundStyle(AppColour.textSecondary)
                     Text(progress.phase.title)
@@ -113,13 +113,13 @@ struct OnboardingMirrorMomentStep: View {
                 .animation(.smooth, value: percent)
 
                 VStack(spacing: DS.space1) {
-                    Text("\(progress.metricsCompleted) of \(max(progress.totalMetrics, 1)) metrics synced")
+                    Text(Copy.Onboarding.ofMetricsSyncedText(progress.metricsCompleted, max(progress.totalMetrics, 1)))
                         .font(DS.Typography.caption)
                         .foregroundStyle(AppColour.textSecondary)
                         .contentTransition(.numericText())
 
                     if progress.samplesDiscovered > 0 {
-                        Text("\(Self.formatCount(progress.samplesDiscovered)) data points found")
+                        Text(Copy.Onboarding.dataPointsFoundText(Self.formatCount(progress.samplesDiscovered)))
                             .font(DS.Typography.caption)
                             .foregroundStyle(AppColour.textSecondary)
                             .contentTransition(.numericText())
@@ -265,7 +265,7 @@ struct OnboardingMirrorMomentStep: View {
                         .background(highlight.color.opacity(DS.badgeBg), in: RoundedRectangle(cornerRadius: DS.Radius.sm))
 
                     VStack(alignment: .leading, spacing: DS.space1) {
-                        Text("\(highlight.metricName): **\(highlight.stat)**")
+                        Text(Copy.Onboarding.xText2(highlight.metricName, highlight.stat))
                             .font(DS.Typography.subheadline)
                         Text(highlight.detail)
                             .font(DS.Typography.caption)

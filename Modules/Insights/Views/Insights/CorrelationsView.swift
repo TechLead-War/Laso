@@ -165,7 +165,7 @@ struct CorrelationsView: View {
                     Spacer()
 
                     HStack(spacing: 4) {
-                        Text("\(unmatchedCorrelations.count)")
+                        Text(Copy.Insights.xText(unmatchedCorrelations.count))
                             .font(DS.Typography.subheadlineMedium.monospacedDigit())
                             .foregroundStyle(.secondary)
                         Image(systemName: showAllConnections ? "chevron.up" : "chevron.down")
@@ -282,7 +282,7 @@ private struct CompoundInsightCard: View {
                     }
 
                     if insight.involvedMetrics.count > 4 {
-                        Text("+\(insight.involvedMetrics.count - 4)")
+                        Text(Copy.Insights.xText2(insight.involvedMetrics.count - 4))
                             .font(DS.Typography.caption2Medium)
                             .foregroundStyle(.secondary)
                     }
@@ -382,7 +382,7 @@ struct CausalChainCard: View {
                     HStack(spacing: 8) {
                         ConfidenceBadge(confidence: chain.confidence)
 
-                        Text("\(chain.links.count)-step chain")
+                        Text(Copy.Insights.stepChainText(chain.links.count))
                             .font(DS.Typography.caption2)
                             .foregroundStyle(.secondary)
 
@@ -409,7 +409,7 @@ struct CausalChainCard: View {
                         Text(Copy.Insights.Correlations.evidenceLabel)
                             .font(DS.Typography.subheadlineSemibold)
                             .foregroundStyle(.primary)
-                        Text("\(evidence.count)")
+                        Text(Copy.Insights.xText3(evidence.count))
                             .font(DS.Typography.captionMedium.monospacedDigit())
                             .foregroundStyle(.secondary)
                         Spacer()
@@ -434,7 +434,7 @@ struct CausalChainCard: View {
         .padding(DS.cardPadding)
         .cardStyle(tint: .purple)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Causal chain affecting \(chain.affectedMetric.displayName)")
+        .accessibilityLabel(Copy.Insights.causalChainAffectingLabel(chain.affectedMetric.displayName))
         .accessibilityValue(chain.narrative)
     }
 
@@ -505,7 +505,7 @@ private struct InteractionEffectCard: View {
                 HStack(spacing: 8) {
                     StrengthDots(strength: effect.strength)
 
-                    Text("\(effect.sampleCount) days")
+                    Text(Copy.Insights.daysText(effect.sampleCount))
                         .font(DS.Typography.caption2)
                         .foregroundStyle(.secondary)
 
@@ -529,7 +529,7 @@ private struct InteractionEffectCard: View {
         }
         .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(effectTypeLabel): \(effect.cause.displayName) affects \(effect.effect.displayName)")
+        .accessibilityLabel(Copy.Insights.affectsLabel(effectTypeLabel, effect.cause.displayName, effect.effect.displayName))
         .accessibilityValue(effect.description)
         .accessibilityAddTraits(.isButton)
     }
@@ -588,7 +588,7 @@ private struct CompactCorrelationRow: View {
                     .background(correlation.metricB.category.color.opacity(0.12), in: Circle())
 
                 VStack(alignment: .leading, spacing: DS.space1) {
-                    Text("\(correlation.causeLabel) → \(correlation.effectLabel)")
+                    Text(Copy.Insights.xText4(correlation.causeLabel, correlation.effectLabel))
                         .font(DS.Typography.subheadlineMedium)
                         .foregroundStyle(.primary)
                         .lineLimit(2)
@@ -623,7 +623,7 @@ private struct ConfidenceBadge: View {
         HStack(spacing: DS.space1) {
             Image(systemName: "checkmark.seal.fill")
                 .font(DS.Typography.caption2)
-            Text("\(Int(confidence * 100))%")
+            Text(Copy.Insights.xText5(Int(confidence * 100)))
                 .font(DS.Typography.caption2Semibold.monospacedDigit())
         }
         .foregroundStyle(badgeColor)

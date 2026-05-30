@@ -21,11 +21,34 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         // Set up notification delegate
         UNUserNotificationCenter.current().delegate = self
 
+        // Register a category with `.customDismissAction` so a swipe-dismiss
+        // fires `didReceive` (default categories swallow the dismiss). Outgoing
+        // notifications set this as their categoryIdentifier.
+        let standardCategory = UNNotificationCategory(
+            identifier: AppConstants.NotificationCategory.standard,
+            actions: [],
+            intentIdentifiers: [],
+            options: [.customDismissAction]
+        )
+        UNUserNotificationCenter.current().setNotificationCategories([standardCategory])
+
         // Register background readiness refresh (30-minute cadence)
         backgroundRefreshCoordinator.register()
         backgroundRefreshCoordinator.schedule()
 
         return true
+    }
+
+    // MARK: - Remote notification registration
+
+    // No `didRegisterForRemoteNotificationsWithDeviceToken` forwarder: the
+    // Firebase swizzling proxy (left enabled) maps the APNS token into Messaging.
+
+    func application(
+        _ application: UIApplication,
+        didFailToRegisterForRemoteNotificationsWithError error: Error
+    ) {
+        PostHogManager.shared.captureError(error, context: "apns_registration")
     }
 
     func application(
@@ -58,8 +81,13 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        // Show notification even when app is in foreground
-        completionHandler([.banner, .sound])
+        let identifier = notification.request.identifier
+        Task { @MainActor in
+            AppAnalytics.shared.trackNotificationPresented(identifier: identifier)
+            NotificationManager.shared.store?.recordNotificationPresented(id: identifier)
+            // Show notification even when app is in foreground
+            completionHandler([.banner, .sound])
+        }
     }
 
     func userNotificationCenter(
@@ -68,11 +96,20 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         let identifier = response.notification.request.identifier
+        let userInfo = response.notification.request.content.userInfo
+        let isDismiss = response.actionIdentifier == UNNotificationDismissActionIdentifier
         Task { @MainActor in
-            NotificationManager.shared.store?.recordNotificationOpened(id: identifier)
-            NotificationManager.shared.recordAppOpen()
-            SessionTracker.shared.pendingSessionSource = .notification
-            AppAnalytics.shared.trackNotificationOpened(identifier: identifier)
+            if isDismiss {
+                AppAnalytics.shared.trackNotificationDismissed(identifier: identifier)
+            } else {
+                NotificationManager.shared.store?.recordNotificationOpened(id: identifier)
+                NotificationManager.shared.recordAppOpen()
+                SessionTracker.shared.pendingSessionSource = .notification
+                AppAnalytics.shared.trackNotificationOpened(identifier: identifier)
+                // Stage any deep-link route carried in the remote-push payload so
+                // the scene navigates to the right surface on activation.
+                NotificationRouter.shared.handle(userInfo: userInfo)
+            }
             completionHandler()
         }
     }

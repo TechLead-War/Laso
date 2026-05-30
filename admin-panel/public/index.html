@@ -59,6 +59,9 @@
         <a class="nav-item" href="#screenshots" data-page="screenshots">
           <span class="nav-icon">&#9636;</span> App Screenshots
         </a>
+        <a class="nav-item" href="#strings" data-page="strings">
+          <span class="nav-icon">&#9998;</span> Strings
+        </a>
       </div>
 
       <div class="sidebar-footer">
@@ -590,6 +593,39 @@
         </div>
 
         <div id="audit-list"></div>
+      </div>
+
+      <!-- ═══ Page: Strings ═══ -->
+      <!-- Lists every user-facing copy key the iOS app reads (sourced from   -->
+      <!-- the generated copy_keys.json registry) and lets the admin write    -->
+      <!-- overrides to the copy_overrides/strings Firestore doc. Edits go    -->
+      <!-- live to every install instantly via the snapshot listener that the -->
+      <!-- iOS `CopyOverridesStore` keeps open. Non-admins see the list but   -->
+      <!-- the Save button stays disabled (and the Firestore rule blocks the  -->
+      <!-- write server-side as the actual security gate).                    -->
+      <div class="page" id="page-strings">
+        <div class="page-header">
+          <h1>Strings</h1>
+          <span class="page-subtitle">Live-edit any user-facing string in the iOS app</span>
+        </div>
+
+        <div class="page-actions strings-toolbar">
+          <input
+            type="search"
+            id="strings-search"
+            class="search-input"
+            placeholder="Search key, value, or source file…"
+            autocomplete="off"
+          />
+          <label class="strings-filter">
+            <input type="checkbox" id="strings-filter-overrides" />
+            Only with overrides
+          </label>
+          <span class="strings-count" id="strings-count"></span>
+        </div>
+
+        <div id="strings-status" class="strings-status"></div>
+        <div id="strings-list" class="strings-list"></div>
       </div>
 
     </main>

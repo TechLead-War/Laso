@@ -125,7 +125,7 @@ struct FeedbackSheet: View {
                 // Category picker (only for idea entry)
                 if showsCategoryPicker {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("What is this about?")
+                        Text(Copy.Common.whatIsThisAbout)
                             .font(.subheadline.weight(.medium))
 
                         HStack(spacing: 8) {
@@ -166,7 +166,7 @@ struct FeedbackSheet: View {
                 // Email field (only for bug/support)
                 if needsEmail {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Your email")
+                        Text(Copy.Common.yourEmail)
                             .font(.subheadline.weight(.medium))
 
                         TextField("you@example.com", text: $contactEmail)
@@ -224,7 +224,7 @@ struct FeedbackSheet: View {
         .onDisappear { AppAnalytics.shared.trackFeatureClose(.feedback) }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Skip") {
+                Button(Copy.Common.skipButton) {
                     AppAnalytics.shared.trackBlockTap(
                         title: "Skip",
                         type: .feedbackSkip,
@@ -262,7 +262,7 @@ struct FeedbackSheet: View {
 
             Spacer()
 
-            Button("Done") {
+            Button(Copy.Common.doneButton) {
                 AppAnalytics.shared.trackBlockTap(
                     title: "Done After Submit",
                     type: .feedbackDoneAfterSubmit,

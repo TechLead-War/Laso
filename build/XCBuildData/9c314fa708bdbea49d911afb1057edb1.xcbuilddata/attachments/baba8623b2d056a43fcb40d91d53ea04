@@ -1,4 +1,0 @@
-module third_party_IsAppEncrypted {
-umbrella "/Users/primetrace/Library/Developer/Xcode/DerivedData/Laso-cgsvsuhaurvxyceguqswwerponfi/SourcePackages/checkouts/GoogleUtilities/third_party/IsAppEncrypted/Public"
-export *
-}

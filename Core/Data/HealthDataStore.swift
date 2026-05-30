@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import Observation
+import UserNotifications
 
 // MARK: - SwiftData Models
 
@@ -102,6 +103,12 @@ final class StoredNotificationEvent {
     var actionTaken: Bool = false
     var hourSent: Int
     var dayOfWeek: Int
+    // Added optional/defaulted ONLY so SwiftData stays a lightweight migration (a required
+    // non-defaulted prop would crash existing installs). presentedDate = first foreground
+    // surfacing; deliveredConfirmed = APNS/UN actually delivered, so open-rate is computed
+    // vs DELIVERED not vs scheduled. init signature deliberately unchanged.
+    var presentedDate: Date? = nil
+    var deliveredConfirmed: Bool = false
 
     init(notificationId: String, typeRawValue: String, sentDate: Date, hourSent: Int, dayOfWeek: Int) {
         self.notificationId = notificationId
@@ -481,6 +488,43 @@ final class HealthDataStore {
         saveContext("swiftdata_save_snapshot")
     }
 
+    /// Inserts a snapshot for a *historical* day during the first-run
+    /// backfill. No-op if a snapshot already exists for that day so we never
+    /// overwrite a real lived score with a replayed one.
+    func saveBackfillSnapshot(
+        date: Date,
+        overallScore: Int,
+        categoryScores: [HealthScore],
+        baselines: [HealthMetric: UserBaseline]
+    ) {
+        let dayStart = Date.cal.startOfDay(for: date)
+        guard let dayEnd = Date.cal.date(byAdding: .day, value: 1, to: dayStart) else { return }
+        let predicate = #Predicate<StoredAnalysisSnapshot> { $0.date >= dayStart && $0.date < dayEnd }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        if let existing = try? modelContext?.fetch(descriptor), !existing.isEmpty { return }
+
+        let catDict = Dictionary(uniqueKeysWithValues:
+            categoryScores.compactMap { score -> (String, Int)? in
+                guard let cat = score.category else { return nil }
+                return (cat.rawValue, score.score)
+            }
+        )
+        let catJSON = Self.encodeJSON(catDict) ?? Data()
+
+        let baseDict = Dictionary(uniqueKeysWithValues:
+            baselines.map { ($0.key.rawValue, $0.value) }
+        )
+        let baseJSON = Self.encodeJSON(baseDict) ?? Data()
+
+        modelContext?.insert(StoredAnalysisSnapshot(
+            date: dayStart,
+            overallScore: overallScore,
+            categoryScoresJSON: catJSON,
+            baselinesJSON: baseJSON
+        ))
+        saveContext("swiftdata_backfill_snapshot")
+    }
+
     /// Load all analysis snapshots (used for CloudKit backup)
     func loadAllAnalysisSnapshots() -> [StoredAnalysisSnapshot] {
         let descriptor = FetchDescriptor<StoredAnalysisSnapshot>(sortBy: [SortDescriptor(\.date)])
@@ -830,10 +874,72 @@ final class HealthDataStore {
         saveContext("swiftdata_save_notification_opened")
     }
 
+    /// Record that a notification was surfaced in the foreground (willPresent).
+    /// First impression wins (set presentedDate only if nil). If no row exists yet
+    /// (e.g. a push that was never locally scheduled), insert a minimal row stamped
+    /// from the present time so the funnel is not lost.
+    func recordNotificationPresented(id: String) {
+        let predicate = #Predicate<StoredNotificationEvent> { $0.notificationId == id }
+        let descriptor = FetchDescriptor(predicate: predicate)
+        let now = Date()
+        if let event = try? modelContext?.fetch(descriptor).first {
+            if event.presentedDate == nil {
+                event.presentedDate = now
+            }
+        } else {
+            let cal = Date.cal
+            let event = StoredNotificationEvent(
+                notificationId: id,
+                typeRawValue: NotificationManager.notificationType(id),
+                sentDate: now,
+                hourSent: cal.component(.hour, from: now),
+                dayOfWeek: cal.component(.weekday, from: now)
+            )
+            event.presentedDate = now
+            modelContext?.insert(event)
+        }
+        saveContext("swiftdata_save_notification_presented")
+    }
+
+    /// Reconcile against the system's delivered list so open-rate is measured vs
+    /// notifications iOS actually delivered, not vs everything we scheduled.
+    /// Caller must invoke this on foreground/scene-active or deliveredConfirmed stays false.
+    func reconcileDeliveredNotifications() async {
+        guard modelContext != nil else { return }
+        let delivered = await UNUserNotificationCenter.current().deliveredNotifications()
+        guard !delivered.isEmpty else { return }
+        for notification in delivered {
+            let id = notification.request.identifier
+            let predicate = #Predicate<StoredNotificationEvent> { $0.notificationId == id }
+            let descriptor = FetchDescriptor(predicate: predicate)
+            guard let event = try? modelContext?.fetch(descriptor).first else { continue }
+            event.deliveredConfirmed = true
+        }
+        saveContext("swiftdata_reconcile_delivered")
+    }
+
     /// Load notification events from the last N days
     func loadNotificationEvents(days: Int) -> [StoredNotificationEvent] {
         let cutoff = Date.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
         let predicate = #Predicate<StoredNotificationEvent> { $0.sentDate >= cutoff }
+        let descriptor = FetchDescriptor(predicate: predicate, sortBy: [SortDescriptor(\.sentDate)])
+        return (try? modelContext?.fetch(descriptor)) ?? []
+    }
+
+    /// Load delivery-confirmed notification events from the last N days. Exposed for the
+    /// optimizer/fatigue math so open-rate denominators count only delivered notifications.
+    func loadDeliveredNotificationEvents(days: Int) -> [StoredNotificationEvent] {
+        let cutoff = Date.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let predicate = #Predicate<StoredNotificationEvent> { $0.sentDate >= cutoff && $0.deliveredConfirmed }
+        let descriptor = FetchDescriptor(predicate: predicate, sortBy: [SortDescriptor(\.sentDate)])
+        return (try? modelContext?.fetch(descriptor)) ?? []
+    }
+
+    /// Load foreground-presented notification events from the last N days. Exposed for the
+    /// optimizer/fatigue math; not consumed this batch.
+    func loadPresentedNotificationEvents(days: Int) -> [StoredNotificationEvent] {
+        let cutoff = Date.cal.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let predicate = #Predicate<StoredNotificationEvent> { $0.sentDate >= cutoff && $0.presentedDate != nil }
         let descriptor = FetchDescriptor(predicate: predicate, sortBy: [SortDescriptor(\.sentDate)])
         return (try? modelContext?.fetch(descriptor)) ?? []
     }

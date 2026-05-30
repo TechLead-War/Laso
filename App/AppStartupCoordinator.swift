@@ -46,7 +46,9 @@ final class AppStartupCoordinator {
         watchMonitor.configure(healthStore: healthKitManager.healthStore)
         watchMonitor.startMonitoring()
 
-        WeeklySummaryScheduler.cancel()
+        // Weekly summary is a repeating calendar trigger re-armed by dashboard
+        // housekeeping; cancelling it here on every launch left users with no
+        // weekly notification until the next full refresh.
         pruneExpiredDataIfNeeded(in: healthDataStore)
     }
 

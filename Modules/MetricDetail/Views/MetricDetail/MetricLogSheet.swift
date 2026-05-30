@@ -119,7 +119,7 @@ struct MetricLogSheet: View {
     private var waterSection: some View {
         Section {
             VStack(spacing: 16) {
-                Text("\(Int(waterMl)) mL")
+                Text(Copy.MetricDetail.mlText(Int(waterMl)))
                     .font(DS.Typography.displayM)
                     .monospacedDigit()
 
@@ -138,7 +138,7 @@ struct MetricLogSheet: View {
                             )
                             formTracker.tapped(target: "water_\(amount)")
                         } label: {
-                            Text("\(amount)")
+                            Text(Copy.MetricDetail.xText(amount))
                                 .font(DS.Typography.subheadlineMedium)
                                 .frame(maxWidth: .infinity)
                         }
@@ -160,7 +160,7 @@ struct MetricLogSheet: View {
     private var mindfulSection: some View {
         Section {
             VStack(spacing: 12) {
-                Text("\(Int(mindfulMinutes)) min")
+                Text(Copy.MetricDetail.minText(Int(mindfulMinutes)))
                     .font(DS.Typography.displayM)
                     .monospacedDigit()
 

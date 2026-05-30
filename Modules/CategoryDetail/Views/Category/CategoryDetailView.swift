@@ -146,7 +146,7 @@ struct CategoryDetailView: View {
 
                         Spacer()
 
-                        Text("\(viewModel.activeMetricCount) active")
+                        Text(Copy.Common.activeText(viewModel.activeMetricCount))
                             .font(DS.Typography.caption)
                             .foregroundStyle(AppColour.textSecondary)
                     }
@@ -242,7 +242,7 @@ struct CategoryDetailView: View {
                 Image(systemName: icon)
                     .font(DS.Typography.caption2Semibold)
                     .foregroundStyle(color)
-                Text("\(count)")
+                Text(Copy.Common.xText(count))
                     .font(DS.Typography.title3)
             }
             Text(label)
@@ -251,7 +251,7 @@ struct CategoryDetailView: View {
         }
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(count) metrics \(label.lowercased())")
+        .accessibilityLabel(Copy.Common.metricsLabel(count, label.lowercased()))
     }
 
     // MARK: - Metric Row
@@ -275,7 +275,7 @@ struct CategoryDetailView: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: DS.space1 / 2) {
-                Text("\(viewModel.valueForRange(for: metric)) \(metric.unit)")
+                Text(Copy.Common.xText2(viewModel.valueForRange(for: metric), metric.unit))
                     .font(DS.Typography.subheadlineSemibold)
 
                 HStack(spacing: DS.space1) {
@@ -303,8 +303,8 @@ struct CategoryDetailView: View {
         .cardStyle()
         .padding(.horizontal)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(metric.displayName), \(viewModel.valueForRange(for: metric)) \(metric.unit)")
-        .accessibilityHint("View \(metric.displayName) details")
+        .accessibilityLabel(Copy.Common.xLabel(metric.displayName, viewModel.valueForRange(for: metric), metric.unit))
+        .accessibilityHint(Copy.Common.viewDetailsHint(metric.displayName))
     }
 }
 

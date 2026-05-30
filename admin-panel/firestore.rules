@@ -119,6 +119,37 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Copy / Remote Config overrides
+    //
+    // Single doc holds a map of <rc_key -> override value>. The iOS app's
+    // `CopyOverridesStore` keeps a snapshot listener so any change here
+    // propagates live to every install without an app release.
+    //
+    // Read: any authenticated user (including anonymous) so the in-app
+    // override layer can resolve values.
+    // Write: admin only (Firebase Auth custom claim `admin == true`,
+    // matching every other admin-write rule in this file).
+    match /copy_overrides/{docId} {
+      allow read:  if request.auth != null;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+
+    // Device Push Tokens
+    //
+    // One doc per FCM registration token (doc ID is the token). The iOS app
+    // writes its own token via PushNotificationManager so the backend can
+    // target a device. The `uid` field is the caller's (anonymous) Auth UID.
+    //
+    // Create/update: only an authenticated caller may write, and the doc's
+    // `uid` must equal the caller's UID so a client cannot claim another
+    // user's token. No client read, list, or delete (token rotation simply
+    // writes a new doc; cleanup is a backend/admin concern).
+    match /device_tokens/{token} {
+      allow create, update: if request.auth != null
+                            && request.resource.data.uid == request.auth.uid;
+      allow read, delete: if false;
+    }
+
     // Default: deny all
     match /{document=**} {
       allow read, write: if false;

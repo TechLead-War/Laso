@@ -41,7 +41,7 @@ struct HealthKitRepromptBanner: View {
                 }
                 .buttonStyle(.bordered)
                 .accessibilityLabel(Copy.Home.HealthKitReprompt.dismiss)
-                .accessibilityHint("Hides this banner without changing Health app settings")
+                .accessibilityHint(Copy.Common.hidesThisBannerWithoutChangingHealthHint)
 
                 Button {
                     AppAnalytics.shared.trackBlockTap(
@@ -60,7 +60,7 @@ struct HealthKitRepromptBanner: View {
                 .buttonStyle(.borderedProminent)
                 .tint(.pink)
                 .accessibilityLabel(Copy.Home.HealthKitReprompt.action)
-                .accessibilityHint("Opens the system Settings app to re-enable Health data access")
+                .accessibilityHint(Copy.Common.opensTheSystemSettingsAppToHint)
             }
         }
         .padding(DS.space4)

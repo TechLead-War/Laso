@@ -225,7 +225,7 @@ struct RecoveryHeroCard: View {
         .overlay(RoundedRectangle(cornerRadius: DS.cardRadius).strokeBorder(scoreColor.opacity(0.25), lineWidth: 1))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(hasLiveReadiness ? scoreLabel : "Health") score \(score). \(recoveryLabel). \(recoveryWhyLine ?? ""). \(dayType). \(weeklyTrendCaption ?? "")")
-        .accessibilityHint("Opens score breakdown")
+        .accessibilityHint(Copy.Home.opensScoreBreakdownHint)
         .accessibilityIdentifier("home.recoveryCard")
     }
 

@@ -25,6 +25,10 @@ enum ReengagementScheduler {
         // 3) Generic "insights ready" copy (cold-start fallback)
         let content = UNMutableNotificationContent()
         content.sound = .default
+        // Standard category so a swipe-dismiss fires didReceive (tracked as a
+        // dismissal). This builder bypasses NotificationManager's central one,
+        // so the category is set here directly.
+        content.categoryIdentifier = AppConstants.NotificationCategory.standard
 
         let defaults = UserDefaults.standard
         let lastScore = defaults.integer(forKey: AppKeys.Notifications.lastRecoveryScore)

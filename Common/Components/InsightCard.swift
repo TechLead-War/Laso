@@ -27,7 +27,7 @@ struct InsightCard: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
-                    Text("·")
+                    Text(Copy.Common.x)
                         .foregroundStyle(.tertiary)
 
                     Text(insight.severity.displayName)

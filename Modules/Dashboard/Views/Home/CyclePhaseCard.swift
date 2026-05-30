@@ -76,8 +76,8 @@ struct CyclePhaseCard: View {
         .onAppear { animatedProgress = cycleProgress }
         .onChange(of: dayInCycle) { animatedProgress = cycleProgress }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(phaseName), day \(dayInCycle) of \(cycleLength), \(daysUntilPeriod) days until next period")
-        .accessibilityHint("View cycle tracking details")
+        .accessibilityLabel(Copy.Home.dayOfDaysUntilNextLabel(phaseName, dayInCycle, cycleLength, daysUntilPeriod))
+        .accessibilityHint(Copy.Home.viewCycleTrackingDetailsHint)
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("home.cycleCard")
     }

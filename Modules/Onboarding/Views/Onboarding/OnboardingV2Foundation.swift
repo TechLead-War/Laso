@@ -238,7 +238,7 @@ struct OnbV2TopBar: View {
                 }
                 .frame(height: 4)
 
-                Text("\(step)/\(total)")
+                Text(Copy.Onboarding.progressStepText(step, total))
                     .font(.system(size: 12, weight: .semibold).monospacedDigit())
                     .foregroundStyle(OnbV2.fg3)
             }

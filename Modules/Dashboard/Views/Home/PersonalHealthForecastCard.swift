@@ -38,9 +38,9 @@ struct PersonalHealthForecastCard: View {
                         }
                         .buttonStyle(.dsPress)
                         .accessibilityElement(children: .combine)
-                        .accessibilityLabel("\(forecast.metric.displayName) forecast")
-                        .accessibilityValue("\(forecast.rangeDescription), confidence \(forecast.confidencePercent) percent")
-                        .accessibilityHint("Opens detailed metric view")
+                        .accessibilityLabel(Copy.Home.forecastLabel(forecast.metric.displayName))
+                        .accessibilityValue(Copy.Home.confidencePercentValue(forecast.rangeDescription, forecast.confidencePercent))
+                        .accessibilityHint(Copy.Home.opensDetailedMetricViewHint)
                     }
                 }
             }
@@ -89,7 +89,7 @@ struct PersonalHealthForecastCard: View {
                 .foregroundStyle(forecast.directionColor)
 
                 // Confidence badge
-                Text("\(forecast.confidencePercent)% conf")
+                Text(Copy.Home.confText(forecast.confidencePercent))
                     .font(DS.Typography.caption2Medium)
                     .foregroundStyle(AppColour.textSecondary)
             }

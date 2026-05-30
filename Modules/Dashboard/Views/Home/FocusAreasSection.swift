@@ -19,7 +19,7 @@ struct FocusAreasSection: View {
 
                         Spacer()
 
-                        Text("\(elevatedCount) worth noticing")
+                        Text(Copy.Home.worthNoticingText(elevatedCount))
                             .font(DS.Typography.callout)
                             .foregroundStyle(AppColour.textSecondary)
                     }
@@ -126,9 +126,9 @@ struct FocusRiskCard: View {
         }
         .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(risk.riskType.displayName), \(risk.riskGrade.displayName) risk")
+        .accessibilityLabel(Copy.Home.riskLabel(risk.riskType.displayName, risk.riskGrade.displayName))
         .accessibilityValue(risk.focusAreas.first.map { "Focus: \($0.title)" } ?? "")
-        .accessibilityHint("View risk details and recommendations")
+        .accessibilityHint(Copy.Home.viewRiskDetailsAndRecommendationsHint)
         .accessibilityAddTraits(.isButton)
     }
 }

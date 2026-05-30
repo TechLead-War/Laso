@@ -181,7 +181,7 @@ struct TodaysActionDetailView: View {
                                 Circle()
                                     .fill(confidenceColor(decision.decisionConfidence))
                                     .frame(width: 8, height: 8)
-                                Text("\(confidenceLabel(decision.decisionConfidence)) confidence")
+                                Text(Copy.Home.confidenceText(confidenceLabel(decision.decisionConfidence)))
                                     .font(DS.Typography.callout)
                                     .foregroundStyle(AppColour.textTertiary)
                             }
@@ -396,7 +396,7 @@ struct TodaysActionDetailView: View {
                     .font(DS.Typography.bodyMedium)
                     .foregroundStyle(AppColour.textPrimary)
                 if let base = baseline {
-                    Text("\(baselineLabel) \(metric.formatValue(base)) \(metric.unit)")
+                    Text(Copy.Home.baselineWithUnitText(baselineLabel, metric.formatValue(base), metric.unit))
                         .font(DS.Typography.footnote)
                         .foregroundStyle(AppColour.textTertiary)
                 }
@@ -405,7 +405,7 @@ struct TodaysActionDetailView: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: DS.space1) {
-                Text("\(metric.formatValue(current)) \(metric.unit)")
+                Text(Copy.Home.xText2(metric.formatValue(current), metric.unit))
                     .font(DS.Typography.bodySemibold.monospacedDigit())
                     .foregroundStyle(AppColour.textPrimary)
                 if let d = deviation {
@@ -487,8 +487,8 @@ struct TodaysActionDetailView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("\(insight.metric.displayName) insight: \(insight.title)")
-                .accessibilityHint("Opens detailed metric view")
+                .accessibilityLabel(Copy.Home.insightLabel(insight.metric.displayName, insight.title))
+                .accessibilityHint(Copy.Home.opensDetailedMetricViewHint)
                 .padding(.horizontal, DS.screenPadding)
             }
         }

@@ -45,7 +45,7 @@ struct OnboardingPulseStep: View {
             .padding(.bottom, DS.space8)
             .opacity(buttonOpacity)
             .accessibilityIdentifier("onboarding.pulseBegin")
-            .accessibilityHint("Starts the onboarding flow")
+            .accessibilityHint(Copy.Onboarding.startsTheOnboardingFlowHint)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {

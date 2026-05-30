@@ -58,7 +58,7 @@ struct HomeConnectHealthView: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .accessibilityLabel(Copy.Settings.refreshNow)
-            .accessibilityHint("Pulls the latest health data from connected sources")
+            .accessibilityHint(Copy.Home.pullsTheLatestHealthDataFromHint)
             .padding(.horizontal, DS.space7)
             .padding(.top, DS.space1)
 
@@ -155,7 +155,7 @@ struct HomeConnectHealthView: View {
             )
             .tint(AppColour.info)
 
-            Text("\(progress.metricsCompleted) of \(progress.totalMetrics) metrics")
+            Text(Copy.Home.ofMetricsText(progress.metricsCompleted, progress.totalMetrics))
                 .font(DS.Typography.callout)
                 .foregroundStyle(AppColour.textSecondary)
         }

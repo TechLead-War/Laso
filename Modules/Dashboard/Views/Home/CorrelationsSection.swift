@@ -26,8 +26,8 @@ struct CorrelationsSection: View {
                             }
                             .foregroundStyle(.tint)
                         }
-                        .accessibilityLabel("See all correlations")
-                        .accessibilityHint("Opens the full health intelligence view")
+                        .accessibilityLabel(Copy.Home.seeAllCorrelationsLabel)
+                        .accessibilityHint(Copy.Home.opensTheFullHealthIntelligenceViewHint)
                     }
                     .padding(.horizontal, DS.screenPadding)
 
@@ -114,9 +114,9 @@ struct CorrelationCard: View {
         }
         .buttonStyle(.dsPress)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(correlation.causeLabel) leads to \(correlation.effectLabel)")
-        .accessibilityValue("\(correlation.strengthLabel) correlation")
-        .accessibilityHint("View metric details")
+        .accessibilityLabel(Copy.Home.leadsToLabel(correlation.causeLabel, correlation.effectLabel))
+        .accessibilityValue(Copy.Home.correlationValue(correlation.strengthLabel))
+        .accessibilityHint(Copy.Home.viewMetricDetailsHint)
         .accessibilityAddTraits(.isButton)
     }
 }

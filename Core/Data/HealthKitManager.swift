@@ -61,6 +61,13 @@ final class HealthKitManager: @unchecked Sendable {
     }
     var sleepSessionBoundaries: [Date: SleepSessionBoundary] = [:]
 
+    /// Per-day daytime naps (sessions ≥ 20 min that don't qualify as the
+    /// overnight session). Keyed by the *start*-day `startOfDay` so a nap
+    /// taken on Tuesday afternoon shows up under Tuesday. Multiple naps on
+    /// the same day are preserved in order so the Sleep Coach 14-Day History
+    /// can surface them.
+    var napSessionBoundaries: [Date: [SleepSessionBoundary]] = [:]
+
     // MARK: - Dashboard Observer State
 
     /// Persistent observer queries that wake the app when core dashboard metrics
@@ -742,11 +749,12 @@ final class HealthKitManager: @unchecked Sendable {
     func refreshSleepBoundaries(days: Int = 14) async {
         let endDate = Date.cal.date(byAdding: .day, value: 1, to: Date.cal.startOfDay(for: Date())) ?? Date()
         let startDate = Date.cal.date(byAdding: .day, value: -days, to: endDate) ?? endDate
-        let boundaries = await queryOvernightBoundaries(from: startDate, to: endDate)
-        sleepSessionBoundaries.merge(boundaries) { _, new in new }
+        let result = await queryOvernightBoundaries(from: startDate, to: endDate)
+        sleepSessionBoundaries.merge(result.overnight) { _, new in new }
+        napSessionBoundaries.merge(result.naps) { _, new in new }
     }
 
-    private func queryOvernightBoundaries(from startDate: Date, to endDate: Date) async -> [Date: SleepSessionBoundary] {
+    private func queryOvernightBoundaries(from startDate: Date, to endDate: Date) async -> (overnight: [Date: SleepSessionBoundary], naps: [Date: [SleepSessionBoundary]]) {
         return await withCheckedContinuation { continuation in
             let predicate = HealthKitQueryBuilder.datePredicate(from: startDate, to: endDate)
             let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
@@ -764,7 +772,7 @@ final class HealthKitManager: @unchecked Sendable {
                 sortDescriptors: [sort]
             ) { _, results, _ in
                 guard let results = results as? [HKCategorySample] else {
-                    continuation.resume(returning: [:])
+                    continuation.resume(returning: (overnight: [:], naps: [:]))
                     return
                 }
 
@@ -783,7 +791,10 @@ final class HealthKitManager: @unchecked Sendable {
                     var samples: [HKCategorySample]
                 }
                 var sessions: [SleepSession] = []
-                let gapThreshold: TimeInterval = 60 * 60
+                // 90 min gap matches industry practice (Whoop / Oura) for
+                // "wake-within-sleep" — a brief 6:17 wake followed by a fall
+                // back to sleep at 6:35 should stay one session, not split.
+                let gapThreshold: TimeInterval = 90 * 60
                 for sample in asleep {
                     if var last = sessions.last,
                        sample.startDate.timeIntervalSince(last.end) <= gapThreshold {
@@ -829,28 +840,33 @@ final class HealthKitManager: @unchecked Sendable {
                     )
                 }
 
-                // Keep only "overnight" sessions: end in 4 AM–noon and last ≥ 2 h.
-                // Index by wake-day startOfDay, keeping the longest session if a
-                // day has multiple overnight candidates (rare).
-                var dict: [Date: SleepSessionBoundary] = [:]
+                // Classify each session as either the day's overnight sleep
+                // (ends 4 AM–noon, ≥ 2 h) or a daytime nap (≥ 20 min, ends
+                // outside the overnight window OR shorter than 2 h). Naps go
+                // into a parallel dict keyed by *start*-day so a Sunday 1pm
+                // nap surfaces under Sunday in the Sleep Coach history.
+                var overnight: [Date: SleepSessionBoundary] = [:]
+                var naps: [Date: [SleepSessionBoundary]] = [:]
                 for session in sessions {
                     let endHour = Date.cal.component(.hour, from: session.end)
-                    guard endHour >= 4 && endHour < 12 else { continue }
                     let durationHours = session.end.timeIntervalSince(session.start) / 3600.0
-                    guard durationHours >= 2 else { continue }
-                    let day = session.end.startOfDay
+                    let isOvernight = endHour >= 4 && endHour < 12 && durationHours >= 2
                     let candidate = buildBoundary(for: session)
-                    if let existing = dict[day] {
-                        let existingDur = existing.wakeTime.timeIntervalSince(existing.bedtime)
-                        let newDur = session.end.timeIntervalSince(session.start)
-                        if newDur > existingDur {
-                            dict[day] = candidate
+                    if isOvernight {
+                        let day = session.end.startOfDay
+                        if let existing = overnight[day] {
+                            let existingDur = existing.wakeTime.timeIntervalSince(existing.bedtime)
+                            let newDur = session.end.timeIntervalSince(session.start)
+                            if newDur > existingDur { overnight[day] = candidate }
+                        } else {
+                            overnight[day] = candidate
                         }
-                    } else {
-                        dict[day] = candidate
+                    } else if durationHours >= (20.0 / 60.0) {
+                        let day = session.start.startOfDay
+                        naps[day, default: []].append(candidate)
                     }
                 }
-                continuation.resume(returning: dict)
+                continuation.resume(returning: (overnight: overnight, naps: naps))
             }
 
             healthStore.execute(query)

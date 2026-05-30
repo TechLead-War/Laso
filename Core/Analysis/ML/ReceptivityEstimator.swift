@@ -64,10 +64,6 @@ final class ReceptivityEstimator {
     /// Hours since last nudge before allowing another
     private static let nudgeCooldownHours: Double = 8.0
 
-    /// Time windows considered inappropriate for nudges
-    private static let quietHoursStart = 22  // 10 PM
-    private static let quietHoursEnd = 7     // 7 AM
-
     // MARK: - Core Assessment
 
     /// Assess current receptivity given all available signals.
@@ -85,8 +81,17 @@ final class ReceptivityEstimator {
 
         var factors: [ReceptivityFactor] = []
 
+        // Single source of truth for the do-not-disturb window (Remote Config).
+        let quietHoursStart = RemoteConfigManager.shared.quietHoursStartHour
+        let quietHoursEnd = RemoteConfigManager.shared.quietHoursEndHour
+
         // 1. Time-of-day alignment with chronotype
-        let chronoScore = chronotypeAlignment(hour: currentHour, chronotype: chronotype)
+        let chronoScore = chronotypeAlignment(
+            hour: currentHour,
+            chronotype: chronotype,
+            quietHoursStart: quietHoursStart,
+            quietHoursEnd: quietHoursEnd
+        )
         factors.append(ReceptivityFactor(
             name: "Chronotype Alignment",
             score: chronoScore,
@@ -134,7 +139,7 @@ final class ReceptivityEstimator {
         if isWorkoutActive {
             contextScore = 0.05  // almost never interrupt a workout
         }
-        if currentHour >= Self.quietHoursStart || currentHour < Self.quietHoursEnd {
+        if currentHour >= quietHoursStart || currentHour < quietHoursEnd {
             contextScore = min(contextScore, 0.1)  // quiet hours
         }
         factors.append(ReceptivityFactor(
@@ -178,9 +183,9 @@ final class ReceptivityEstimator {
         if !isReceptive {
             if contextScore <= 0.1 {
                 // During quiet hours, delay until morning
-                let hoursUntilMorning = currentHour >= Self.quietHoursStart
-                    ? Double(24 - currentHour + Self.quietHoursEnd)
-                    : Double(Self.quietHoursEnd - currentHour)
+                let hoursUntilMorning = currentHour >= quietHoursStart
+                    ? Double(24 - currentHour + quietHoursEnd)
+                    : Double(quietHoursEnd - currentHour)
                 suggestedDelay = hoursUntilMorning * 3600
             } else {
                 suggestedDelay = Self.nudgeCooldownHours * 3600  // default cooldown
@@ -226,12 +231,17 @@ final class ReceptivityEstimator {
 
     // MARK: - Private Helpers
 
-    private func chronotypeAlignment(hour: Int, chronotype: Chronotype) -> Double {
+    private func chronotypeAlignment(
+        hour: Int,
+        chronotype: Chronotype,
+        quietHoursStart: Int,
+        quietHoursEnd: Int
+    ) -> Double {
         if chronotype.peakHours.contains(hour) {
             return 1.0
         } else if chronotype.eveningWindow.contains(hour) {
             return 0.7
-        } else if hour >= Self.quietHoursStart || hour < Self.quietHoursEnd {
+        } else if hour >= quietHoursStart || hour < quietHoursEnd {
             return 0.05
         } else {
             // Gradual falloff from peak hours

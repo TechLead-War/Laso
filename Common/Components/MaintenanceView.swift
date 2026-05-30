@@ -15,7 +15,7 @@ struct MaintenanceView: View {
                 .font(.system(size: 64))
                 .foregroundStyle(.orange)
 
-            Text("Under Maintenance")
+            Text(Copy.Common.underMaintenance)
                 .font(.title.bold())
 
             Text(message)
@@ -25,7 +25,7 @@ struct MaintenanceView: View {
                 .padding(.horizontal, DS.space7)
 
             if let onContinue {
-                Text("Some features may not work as expected right now.")
+                Text(Copy.Common.someFeaturesMayNotWorkAs)
                     .font(.footnote)
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
@@ -34,7 +34,7 @@ struct MaintenanceView: View {
                 Button {
                     onContinue()
                 } label: {
-                    Text("Continue Anyway")
+                    Text(Copy.Common.continueAnyway)
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -43,7 +43,7 @@ struct MaintenanceView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
                 .accessibilityLabel(Copy.Common.continueAnyway)
-                .accessibilityHint("Dismisses the maintenance notice and continues to the app")
+                .accessibilityHint(Copy.Common.dismissesTheMaintenanceNoticeAndContinuesHint)
                 .padding(.horizontal, DS.space7)
             }
 

@@ -75,9 +75,21 @@ enum EngagementSequenceScheduler {
 
     // MARK: - Public API
 
-    /// Schedule the next pending engagement notification, honoring activation gates.
-    /// Call on every app launch and after onboarding completes.
-    static func scheduleNext(
+    /// The single entry point for the engagement drip. Called at onboarding
+    /// completion and from background refresh. Wraps the per-launch gated engine
+    /// so callers never reach `scheduleNext` directly and the drip stays routed
+    /// through the capped/tracked NotificationManager.
+    static func start(
+        healthStore: HKHealthStore,
+        dataStore: HealthDataStore?,
+        userName: String?
+    ) async {
+        await scheduleNext(healthStore: healthStore, dataStore: dataStore, userName: userName)
+    }
+
+    /// Schedule the next pending engagement notification, honoring activation
+    /// gates. Reached only through `start()` so the drip stays single-entry.
+    private static func scheduleNext(
         healthStore: HKHealthStore,
         dataStore: HealthDataStore?,
         userName: String? = nil
@@ -158,68 +170,6 @@ enum EngagementSequenceScheduler {
             if nextDay >= 7 {
                 defaults.set(true, forKey: AppKeys.Engagement.sequenceCompleted)
             }
-        }
-    }
-
-    /// Schedule all remaining engagement notifications at once, respecting gates
-    /// for days whose activation is already satisfied. Days that are gated are
-    /// left to `scheduleNext(...)` on subsequent launches.
-    static func scheduleAllRemaining(
-        healthStore: HKHealthStore,
-        dataStore: HealthDataStore?,
-        userName: String? = nil
-    ) async {
-        guard !isSequenceCompleted else { return }
-
-        let wakeTime = await WakeUpTimeDetector.detectAndPersist(healthStore: healthStore)
-        let currentDay = daysSinceInstall
-        let lastScheduledDay = self.lastScheduledDay
-
-        var highestScheduled = lastScheduledDay
-
-        batchLoop: for day in activeDays.sorted() where day > lastScheduledDay {
-            let decision = gateDecision(forDay: day, daysSinceInstall: currentDay)
-
-            switch decision {
-            case .schedule(let softCopy):
-                let content: (title: String, body: String)
-                if day <= currentDay {
-                    if softCopy, day == 5 {
-                        content = softDay5Content()
-                    } else {
-                        content = await generateContent(day: day, dataStore: dataStore, userName: userName)
-                    }
-                } else {
-                    content = previewContent(day: day, userName: userName, softDay5: softCopy)
-                }
-
-                let daysFromNow = max(0, day - currentDay)
-                scheduleFutureNotification(
-                    day: day,
-                    title: content.title,
-                    body: content.body,
-                    wakeHour: wakeTime.hour,
-                    wakeMinute: wakeTime.minute,
-                    daysFromNow: daysFromNow
-                )
-                highestScheduled = max(highestScheduled, day)
-
-            case .delay(let reason):
-                // Leave for the next launch. Do not advance lastScheduledDay
-                // past this day, otherwise gated days could be silently skipped.
-                // Stop the batch here so later days do not fire out of order
-                // while an earlier day is still waiting on its gate.
-                logGate(day: day, reason: reason)
-                break batchLoop
-
-            case .skip(let reason):
-                logGate(day: day, reason: reason)
-                highestScheduled = max(highestScheduled, day)
-            }
-        }
-
-        if highestScheduled > lastScheduledDay {
-            defaults.set(highestScheduled, forKey: AppKeys.Engagement.lastScheduledDay)
         }
     }
 
@@ -523,24 +473,6 @@ enum EngagementSequenceScheduler {
         }
     }
 
-    /// Preview content for future day scheduling (before real data is available).
-    private static func previewContent(day: Int, userName: String?, softDay5: Bool = false) -> (title: String, body: String) {
-        switch day {
-        case 1:
-            return generateDay1(userName: userName)
-        case 2:
-            return ("Your morning health briefing", Copy.Notifications.engagementDay2Fallback)
-        case 3:
-            return (Copy.Notifications.engagementDay3Title, Copy.Notifications.engagementDay3Fallback)
-        case 5:
-            return softDay5 ? softDay5Content() : generateDay5()
-        case 7:
-            return (Copy.Notifications.engagementDay7Title(patternCount: 12), Copy.Notifications.engagementDay7BodyGeneric(count: 12))
-        default:
-            return ("Your Health Update", "Tap to see your latest health insights.")
-        }
-    }
-
     // MARK: - Scheduling
 
     private static func scheduleNotification(
@@ -559,6 +491,8 @@ enum EngagementSequenceScheduler {
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
 
+        // NotificationManager.scheduleNotification already emits
+        // trackNotificationScheduled on success, so we do not double-count here.
         NotificationManager.shared.scheduleNotification(
             title: title,
             body: body,
@@ -566,56 +500,6 @@ enum EngagementSequenceScheduler {
             trigger: trigger,
             severity: .info
         )
-
-        Task { @MainActor in
-            AppAnalytics.shared.trackNotificationScheduled(type: "engagement", identifier: identifier)
-        }
-    }
-
-    private static func scheduleFutureNotification(
-        day: Int,
-        title: String,
-        body: String,
-        wakeHour: Int,
-        wakeMinute: Int,
-        daysFromNow: Int
-    ) {
-        let identifier = AppConstants.NotificationID.engagementPrefix + "day\(day)"
-
-        // Cancel any existing with this identifier
-        UNUserNotificationCenter.current()
-            .removePendingNotificationRequests(withIdentifiers: [identifier])
-
-        if daysFromNow <= 0 {
-            // Schedule for today at wake time (or now if past wake time)
-            scheduleNotification(day: day, title: title, body: body, wakeHour: wakeHour, wakeMinute: wakeMinute)
-            return
-        }
-
-        // Schedule for a future date at wake time
-        guard let targetDate = Date.cal.date(byAdding: .day, value: daysFromNow, to: Date()) else { return }
-
-        var dateComponents = Date.cal.dateComponents([.year, .month, .day], from: targetDate)
-        dateComponents.hour = wakeHour
-        dateComponents.minute = wakeMinute
-        dateComponents.calendar = Date.cal
-
-        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
-
-        let content = UNMutableNotificationContent()
-        content.title = title
-        content.body = body
-        content.sound = .default
-
-        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
-
-        UNUserNotificationCenter.current().add(request) { error in
-            #if DEBUG
-            if let error {
-                print("[EngagementSequence] Failed to schedule day \(day): \(error.localizedDescription)")
-            }
-            #endif
-        }
     }
 
     // MARK: - Helpers

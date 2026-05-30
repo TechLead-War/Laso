@@ -47,10 +47,13 @@ struct WeeklySummaryScheduler {
 
         let body = bodyParts.joined(separator: " ")
 
+        // RC-driven fire time (default 10:00) so the weekly summary does not
+        // collide with the morning daily summary, which fires around the user's
+        // wake time (~7-9 AM). Baked default holds when RC is offline.
         var dateComponents = DateComponents()
         dateComponents.weekday = preferences.weeklySummaryDay
-        dateComponents.hour = 9
-        dateComponents.minute = 0
+        dateComponents.hour = RemoteConfigManager.shared.weeklySummaryFireHour
+        dateComponents.minute = RemoteConfigManager.shared.weeklySummaryFireMinute
 
         let trigger = UNCalendarNotificationTrigger(
             dateMatching: dateComponents,

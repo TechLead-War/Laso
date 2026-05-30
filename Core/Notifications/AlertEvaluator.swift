@@ -1,5 +1,29 @@
 import Foundation
 
+/// Single source of truth mapping a clinical triage level to the notification
+/// severity + cap-bypass it must fire at.
+///
+/// SOURCE: SafetyTriageLevel.minimumSeverity (Severity.swift) — the same
+/// .seekCare->.critical / .monitor->.warning / .normal->.info ladder, with the
+/// added cap-bypass decision. Thresholds are NOT duplicated here; they live in
+/// SafetyTriageEngine.assess. .seekCare bypasses the daily cap because
+/// life-safety alerts must never be dropped by the cap, fatigue, priority
+/// filter, or kill switch (mirrors WatchMonitor's battery bypassCap precedent).
+///
+/// CLINICAL REVIEW REQUIRED: before shipping a .critical-priority alert, confirm
+/// each .seekCare threshold in SafetyTriageEngine is clinically correct, and
+/// that AlertEvaluator's direct SpO2/HR critical branches match those triage
+/// thresholds so a dangerous reading never fires only as .warning.
+enum AlertSeverityMapping {
+    static func map(_ level: SafetyTriageLevel) -> (severity: Severity, bypassCap: Bool) {
+        switch level {
+        case .seekCare: return (.critical, true)
+        case .monitor:  return (.warning, false)
+        case .normal:   return (.info, false)
+        }
+    }
+}
+
 /// Manages cooldown tracking for alert deduplication
 struct CooldownManager {
     private let defaults: UserDefaults
@@ -180,7 +204,8 @@ struct AlertEvaluator {
                     title: Copy.Notifications.restingHRTitle,
                     body: Copy.Notifications.restingHRElevated(current: Int(latestRHR), average: Int(avg7d)),
                     identifier: "healthpulse.spike.rhr.elevated",
-                    maxPerDay: maxPerDay
+                    maxPerDay: maxPerDay,
+                    severity: .warning
                 )
             }
         }
@@ -209,14 +234,16 @@ struct AlertEvaluator {
                         title: Copy.Notifications.highHRTitle,
                         body: Copy.Notifications.highHRBody(current: Int(latestHR), threshold: Int(spikeThreshold)),
                         identifier: "healthpulse.spike.hr.high",
-                        maxPerDay: maxPerDay
+                        maxPerDay: maxPerDay,
+                        severity: .warning
                     )
                 } else if latestHR <= dropThreshold {
                     sendHeartRateAlert(
                         title: Copy.Notifications.lowHRTitle,
                         body: Copy.Notifications.lowHRBody(current: Int(latestHR), threshold: Int(dropThreshold)),
                         identifier: "healthpulse.spike.hr.low",
-                        maxPerDay: maxPerDay
+                        maxPerDay: maxPerDay,
+                        severity: .warning
                     )
                 }
             }
@@ -232,7 +259,8 @@ struct AlertEvaluator {
                     title: Copy.Notifications.hrvLowTitle,
                     body: Copy.Notifications.hrvLowBody(current: Int(latestHRV), dropPercent: Int(((avg7d - latestHRV) / avg7d) * 100)),
                     identifier: "healthpulse.spike.hrv.low",
-                    maxPerDay: maxPerDay
+                    maxPerDay: maxPerDay,
+                    severity: .warning
                 )
             }
         }
@@ -255,18 +283,23 @@ struct AlertEvaluator {
                     useHeartCap: true
                 )
             } else if latestSpO2 < RemoteConfigManager.shared.spo2CriticalThreshold {
+                // Direct dangerous SpO2 reading is life-safety equivalent to a
+                // .seekCare triage, so it fires critical and bypasses the cap.
                 sendHeartRateAlert(
                     title: Copy.Notifications.spo2CriticalTitle,
                     body: Copy.Notifications.spo2CriticalBody(value: String(format: "%.1f", latestSpO2)),
                     identifier: "healthpulse.spike.spo2.critical",
-                    maxPerDay: maxPerDay
+                    maxPerDay: maxPerDay,
+                    severity: .critical,
+                    bypassCap: true
                 )
             } else if latestSpO2 < RemoteConfigManager.shared.spo2WarningThreshold {
                 sendHeartRateAlert(
                     title: Copy.Notifications.spo2WarningTitle,
                     body: Copy.Notifications.spo2WarningBody(value: String(format: "%.1f", latestSpO2)),
                     identifier: "healthpulse.spike.spo2.warning",
-                    maxPerDay: maxPerDay
+                    maxPerDay: maxPerDay,
+                    severity: .warning
                 )
             }
         }
@@ -293,7 +326,8 @@ struct AlertEvaluator {
                     title: Copy.Notifications.respiratoryRateTitle,
                     body: Copy.Notifications.respiratoryRateBody(current: String(format: "%.1f", latestRR), average: String(format: "%.1f", avg7d)),
                     identifier: "healthpulse.spike.rr.elevated",
-                    maxPerDay: maxPerDay
+                    maxPerDay: maxPerDay,
+                    severity: .warning
                 )
             }
         }
@@ -316,14 +350,16 @@ struct AlertEvaluator {
                     title: Copy.Notifications.trendRecoveringTitle(metric: metric.displayName),
                     body: Copy.Notifications.trendRecoveringBody(metric: metric.displayName.lowercased()),
                     identifier: "healthpulse.reversal.\(metric.rawValue).recovering",
-                    maxPerDay: maxPerDay
+                    maxPerDay: maxPerDay,
+                    severity: .info
                 )
             } else if previousDirection == .improving && currentDirection == .declining {
                 NotificationManager.shared.scheduleNotification(
                     title: Copy.Notifications.trendDecliningTitle(metric: metric.displayName),
                     body: Copy.Notifications.trendDecliningBody(metric: metric.displayName.lowercased()),
                     identifier: "healthpulse.reversal.\(metric.rawValue).declining",
-                    maxPerDay: maxPerDay
+                    maxPerDay: maxPerDay,
+                    severity: .info
                 )
             }
         }
@@ -345,7 +381,8 @@ struct AlertEvaluator {
                 title: Copy.Notifications.improvementTitle(metric: metric.displayName, percent: String(format: "%.0f", abs(trend.weekOverWeekChange))),
                 body: Copy.Notifications.improvementBody(metric: metric.displayName.lowercased()),
                 identifier: "healthpulse.celebration.\(metric.rawValue)",
-                maxPerDay: maxPerDay
+                maxPerDay: maxPerDay,
+                severity: .info
             )
         }
     }
@@ -371,11 +408,15 @@ struct AlertEvaluator {
             current: String(format: "%.1f", anomaly.currentValue),
             unit: anomaly.metric.unit
         )
+        // Statistical anomaly already classified critical by AnomalyDetector.
+        // .critical short-circuits the suppression gates; bypassCap stays false
+        // so it still respects the daily budget (not clinical life-safety).
         sendAlert(
             title: Copy.Notifications.criticalMetric(anomaly.metric.displayName),
             body: body,
             identifier: "healthpulse.alert.\(anomaly.metric.rawValue).critical",
-            maxPerDay: maxPerDay
+            maxPerDay: maxPerDay,
+            severity: .critical
         )
     }
 
@@ -400,7 +441,8 @@ struct AlertEvaluator {
             title: Copy.Notifications.warningMetric(anomaly.metric.displayName),
             body: body,
             identifier: "healthpulse.alert.\(anomaly.metric.rawValue).warning",
-            maxPerDay: maxPerDay
+            maxPerDay: maxPerDay,
+            severity: .warning
         )
     }
 
@@ -411,19 +453,24 @@ struct AlertEvaluator {
         useHeartCap: Bool = false
     ) {
         guard assessment.level != .normal else { return }
+        let mapping = AlertSeverityMapping.map(assessment.level)
         if useHeartCap {
             sendHeartRateAlert(
                 title: assessment.alertTitle,
                 body: assessment.alertBody,
                 identifier: identifier,
-                maxPerDay: maxPerDay
+                maxPerDay: maxPerDay,
+                severity: mapping.severity,
+                bypassCap: mapping.bypassCap
             )
         } else {
             sendAlert(
                 title: assessment.alertTitle,
                 body: assessment.alertBody,
                 identifier: identifier,
-                maxPerDay: maxPerDay
+                maxPerDay: maxPerDay,
+                severity: mapping.severity,
+                bypassCap: mapping.bypassCap
             )
         }
     }
@@ -436,26 +483,30 @@ struct AlertEvaluator {
         )
     }
 
-    private func sendAlert(title: String, body: String, identifier: String, maxPerDay: Int) {
+    private func sendAlert(title: String, body: String, identifier: String, maxPerDay: Int, severity: Severity, bypassCap: Bool = false) {
         guard !cooldownManager.isOnCooldown(identifier: identifier, cooldownHours: cooldownHours) else { return }
 
         NotificationManager.shared.scheduleNotification(
             title: title,
             body: body,
             identifier: identifier,
-            maxPerDay: maxPerDay
+            maxPerDay: maxPerDay,
+            severity: severity,
+            bypassCap: bypassCap
         )
         cooldownManager.recordAlert(identifier: identifier)
     }
 
-    private func sendHeartRateAlert(title: String, body: String, identifier: String, maxPerDay: Int) {
+    private func sendHeartRateAlert(title: String, body: String, identifier: String, maxPerDay: Int, severity: Severity, bypassCap: Bool = false) {
         guard !cooldownManager.isOnCooldown(identifier: identifier, cooldownHours: cooldownHours) else { return }
 
         NotificationManager.shared.scheduleNotification(
             title: title,
             body: body,
             identifier: identifier,
-            maxPerDay: min(RemoteConfigManager.shared.heartAlertCap, maxPerDay)  // Heart alerts capped, but respect user's lower cap
+            maxPerDay: min(RemoteConfigManager.shared.heartAlertCap, maxPerDay),  // Heart alerts capped, but respect user's lower cap
+            severity: severity,
+            bypassCap: bypassCap
         )
         cooldownManager.recordAlert(identifier: identifier)
     }

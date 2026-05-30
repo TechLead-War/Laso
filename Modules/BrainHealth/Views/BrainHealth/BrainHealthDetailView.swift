@@ -24,6 +24,7 @@ struct BrainHealthDetailView: View {
                     weeklyChartSection.frame(width: sectionWidth)
                     readinessSection.frame(width: sectionWidth)
                     insightsSection.frame(width: sectionWidth)
+                    improveSection.frame(width: sectionWidth)
                     learnMoreSection.frame(width: sectionWidth)
                     disclaimerSection.frame(width: sectionWidth, alignment: .leading)
                 }
@@ -427,6 +428,222 @@ struct BrainHealthDetailView: View {
         }
     }
 
+    // MARK: - Improve Your Score (masterclass)
+
+    private var improveSection: some View {
+        let hasConfidence = brainScore.confidence >= 0.7
+        let levers = computeScoreLevers()
+
+        return VStack(alignment: .leading, spacing: DS.itemSpacing) {
+            Text(Copy.BrainHealth.improveTitle)
+                .font(DS.Typography.headline)
+
+            if hasConfidence, let topLever = levers.first {
+                heroLeverCard(lever: topLever, allLevers: levers)
+
+                VStack(alignment: .leading, spacing: DS.space3) {
+                    Text(Copy.BrainHealth.improveBreakdown)
+                        .font(DS.Typography.subheadlineSemibold)
+                        .foregroundStyle(AppColour.textSecondary)
+
+                    ForEach(levers) { lever in
+                        leverBreakdownRow(lever: lever)
+                    }
+                }
+                .padding(.top, DS.space2)
+
+                Text(Copy.BrainHealth.improveFooter)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(AppColour.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, DS.space1)
+            } else {
+                Text(Copy.BrainHealth.improveNeedsConfidence)
+                    .font(DS.Typography.subheadline)
+                    .foregroundStyle(AppColour.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(DS.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .cardStyle()
+    }
+
+    private func computeScoreLevers() -> [ScoreLever] {
+        let raw: [(title: String, icon: String, score: Double, weight: Double, kind: ScoreLever.Kind)] = [
+            (Copy.BrainHealth.subscaleCognitiveReadiness, "brain.head.profile.fill",
+             brainScore.cognitiveReadiness, BrainHealthScorer.cognitiveReadinessWeight, .cognitiveReadiness),
+            (Copy.BrainHealth.subscaleMemoryRecovery, "moon.zzz.fill",
+             brainScore.memoryRecovery, BrainHealthScorer.memoryRecoveryWeight, .memoryRecovery),
+            (Copy.BrainHealth.mentalEnergy, "bolt.heart.fill",
+             brainScore.stressCognitionLoad, BrainHealthScorer.stressCognitionWeight, .stressCognition),
+            (Copy.BrainHealth.heartAndBrain, "heart.fill",
+             brainScore.neurovascularFitness, BrainHealthScorer.neurovascularWeight, .neurovascular),
+            (Copy.BrainHealth.sleepRhythm, "clock.fill",
+             brainScore.circadianAlignment, BrainHealthScorer.circadianWeight, .circadian)
+        ]
+        return raw.map { item in
+            let s = Int(item.score.rounded())
+            let pts = max(0, Int(((100.0 - item.score) * item.weight).rounded()))
+            return ScoreLever(
+                title: item.title,
+                icon: item.icon,
+                score: s,
+                weight: item.weight,
+                pointsOnTable: pts,
+                kind: item.kind
+            )
+        }
+        .sorted { $0.pointsOnTable > $1.pointsOnTable }
+    }
+
+    @ViewBuilder
+    private func heroLeverCard(lever: ScoreLever, allLevers: [ScoreLever]) -> some View {
+        // Strong threshold reuses the scorer's "sharp" boundary so we don't invent a new clinical cutoff.
+        let isStrong = lever.score >= BrainHealthState.sharpLowerBound
+        let bestScore = allLevers.map(\.score).max() ?? lever.score
+        let projectedLift = max(0, Int((Double(bestScore - lever.score) * lever.weight).rounded()))
+        let projectedScore = min(100, brainScore.score + projectedLift)
+        let color = readinessColor(Double(lever.score) / 100)
+
+        VStack(alignment: .leading, spacing: DS.space4) {
+            HStack(spacing: DS.space3) {
+                Image(systemName: lever.icon)
+                    .font(DS.Typography.title3.weight(.semibold))
+                    .foregroundStyle(color)
+                    .frame(width: DS.iconSize, height: DS.iconSize)
+                    .background(color.opacity(0.15), in: RoundedRectangle(cornerRadius: DS.iconRadius, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(Copy.BrainHealth.biggestLeverHeader)
+                        .font(DS.Typography.caption2Medium)
+                        .tracking(1)
+                        .foregroundStyle(AppColour.textTertiary)
+                    Text(lever.title)
+                        .font(DS.Typography.subheadlineSemibold)
+                        .foregroundStyle(AppColour.textPrimary)
+                }
+
+                Spacer(minLength: 0)
+
+                Text("\(lever.score)%")
+                    .font(DS.Typography.title3.weight(.bold).monospacedDigit())
+                    .foregroundStyle(color)
+                    .postHogMask()
+            }
+
+            ProgressBarView(fraction: Double(lever.score) / 100, color: color, height: 6)
+
+            if isStrong {
+                Text(Copy.BrainHealth.improveStrongState)
+                    .font(DS.Typography.subheadline)
+                    .foregroundStyle(AppColour.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                projectionBlock(projectedScore: projectedScore, lift: projectedLift)
+                actionsBlock(actions: actions(for: lever.kind), tint: color)
+            }
+        }
+        .padding(DS.cardPadding)
+        .background(color.opacity(0.08), in: RoundedRectangle(cornerRadius: DS.cardRadius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: DS.cardRadius, style: .continuous)
+                .strokeBorder(color.opacity(0.30), lineWidth: 1)
+        )
+    }
+
+    @ViewBuilder
+    private func projectionBlock(projectedScore: Int, lift: Int) -> some View {
+        VStack(alignment: .leading, spacing: DS.space1) {
+            Text(Copy.BrainHealth.projectionLabel)
+                .font(DS.Typography.caption2Medium)
+                .foregroundStyle(AppColour.textTertiary)
+            HStack(alignment: .firstTextBaseline, spacing: DS.space2) {
+                Text("\(projectedScore)")
+                    .font(DS.Typography.title.weight(.bold).monospacedDigit())
+                    .foregroundStyle(AppColour.textPrimary)
+                    .postHogMask()
+                Text(Copy.BrainHealth.scaleSuffix)
+                    .font(DS.Typography.caption2Medium)
+                    .foregroundStyle(AppColour.textTertiary)
+                Spacer(minLength: 0)
+                if lift > 0 {
+                    Text(Copy.BrainHealth.projectionGain(points: lift))
+                        .font(DS.Typography.captionSemibold.monospacedDigit())
+                        .foregroundStyle(AppColour.success)
+                        .padding(.horizontal, DS.badgeH)
+                        .padding(.vertical, DS.badgeV)
+                        .background(AppColour.success.opacity(DS.badgeBg), in: Capsule())
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func actionsBlock(actions: [String], tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: DS.space2) {
+            Text(Copy.BrainHealth.actionsHeader)
+                .font(DS.Typography.caption2Medium)
+                .tracking(1)
+                .foregroundStyle(AppColour.textTertiary)
+            ForEach(actions, id: \.self) { action in
+                HStack(alignment: .firstTextBaseline, spacing: DS.space2) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(DS.Typography.caption.weight(.bold))
+                        .foregroundStyle(tint)
+                    Text(action)
+                        .font(DS.Typography.subheadline)
+                        .foregroundStyle(AppColour.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func leverBreakdownRow(lever: ScoreLever) -> some View {
+        let color = readinessColor(Double(lever.score) / 100)
+        HStack(alignment: .top, spacing: DS.space3) {
+            Image(systemName: lever.icon)
+                .font(DS.Typography.subheadline.weight(.semibold))
+                .foregroundStyle(color)
+                .frame(width: 24, alignment: .center)
+                .padding(.top, 2)
+
+            VStack(alignment: .leading, spacing: DS.space1) {
+                HStack(alignment: .firstTextBaseline, spacing: DS.space2) {
+                    Text(lever.title)
+                        .font(DS.Typography.subheadlineMedium)
+                        .lineLimit(1)
+                    Text(Copy.BrainHealth.weightOfScore(percent: Int((lever.weight * 100).rounded())))
+                        .font(DS.Typography.caption2Medium)
+                        .foregroundStyle(AppColour.textTertiary)
+                        .padding(.horizontal, DS.badgeH)
+                        .padding(.vertical, DS.badgeV)
+                        .background(AppColour.textSecondary.opacity(0.10), in: Capsule())
+                    Spacer(minLength: 0)
+                    Text(lever.pointsOnTable > 0
+                         ? Copy.BrainHealth.pointsLost(points: lever.pointsOnTable)
+                         : Copy.BrainHealth.projectionGain(points: 0))
+                        .font(DS.Typography.caption2.weight(.bold).monospacedDigit())
+                        .foregroundStyle(lever.pointsOnTable > 0 ? AppColour.warning : AppColour.success)
+                        .postHogMask()
+                }
+                ProgressBarView(fraction: Double(lever.score) / 100, color: color, height: 4)
+            }
+        }
+    }
+
+    private func actions(for kind: ScoreLever.Kind) -> [String] {
+        switch kind {
+        case .cognitiveReadiness: return Copy.BrainHealth.actionsCognitiveReadiness
+        case .memoryRecovery:     return Copy.BrainHealth.actionsMemoryRecovery
+        case .stressCognition:    return Copy.BrainHealth.actionsStressCognition
+        case .neurovascular:      return Copy.BrainHealth.actionsNeurovascular
+        case .circadian:          return Copy.BrainHealth.actionsCircadian
+        }
+    }
+
     // MARK: - Disclaimer
 
     private var disclaimerSection: some View {
@@ -444,6 +661,24 @@ private struct BrainWeeklyPoint: Identifiable {
     let id = UUID()
     let date: Date
     let score: Int
+}
+
+private struct ScoreLever: Identifiable {
+    let id = UUID()
+    let title: String
+    let icon: String
+    let score: Int
+    let weight: Double
+    let pointsOnTable: Int
+    let kind: Kind
+
+    enum Kind {
+        case cognitiveReadiness
+        case memoryRecovery
+        case stressCognition
+        case neurovascular
+        case circadian
+    }
 }
 
 // MARK: - Preview

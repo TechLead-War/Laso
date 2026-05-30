@@ -15,14 +15,14 @@ struct ExploreYourTrendsSection: View {
             .padding(.horizontal, DS.screenPadding)
 
             Picker(Copy.Explore.trendPeriod, selection: $trendTimeframe) {
-                Text("7D").tag(7)
-                Text("30D").tag(30)
-                Text("90D").tag(90)
+                Text(Copy.Explore.x7d).tag(7)
+                Text(Copy.Explore.x30d).tag(30)
+                Text(Copy.Explore.x90d).tag(90)
             }
             .pickerStyle(.segmented)
-            .accessibilityLabel("Trend timeframe")
-            .accessibilityValue("\(trendTimeframe) days")
-            .accessibilityHint("Switches between 7-day, 30-day, and 90-day views")
+            .accessibilityLabel(Copy.Explore.trendTimeframeLabel)
+            .accessibilityValue(Copy.Explore.daysValue(trendTimeframe))
+            .accessibilityHint(Copy.Explore.switchesBetween7Day30DayHint)
             .padding(.horizontal, DS.screenPadding)
             .onChange(of: trendTimeframe) { oldValue, newValue in
                 AppAnalytics.shared.trackBlockTap(
@@ -51,9 +51,9 @@ struct ExploreYourTrendsSection: View {
                 }
                 .buttonStyle(.dsPress)
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("\(item.metric.displayName) trend")
+                .accessibilityLabel(Copy.Explore.trendLabel(item.metric.displayName))
                 .accessibilityValue(item.rateLabel)
-                .accessibilityHint("Opens detailed metric history")
+                .accessibilityHint(Copy.Explore.opensDetailedMetricHistoryHint)
                 .padding(.horizontal, DS.screenPadding)
             }
         }

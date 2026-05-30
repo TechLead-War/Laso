@@ -116,6 +116,8 @@ final class BackgroundRefreshCoordinator {
                 }
             }
 
+            await rearmNotifications(liveViewModel: liveViewModel)
+
             task.setTaskCompleted(success: success)
             AppAnalytics.shared.trackBackgroundRefreshResult(
                 success: success,
@@ -127,5 +129,48 @@ final class BackgroundRefreshCoordinator {
         task.expirationHandler = {
             workTask.cancel()
         }
+    }
+
+    /// Re-arm the post-onboarding notification tracks during a background refresh
+    /// so they keep advancing for users who rarely foreground the app. Gated on
+    /// live authorization so we never schedule for users who declined. Runs
+    /// inside the BG MainActor block under the ~5s completion budget.
+    @MainActor
+    private func rearmNotifications(liveViewModel: LiveViewModel) async {
+        guard await NotificationManager.shared.isCurrentlyAuthorized() else { return }
+
+        let store = NotificationManager.shared.store
+
+        ReengagementScheduler.reschedule()
+        // `healthStore` flows through HealthKitManager (Core/Data) without naming
+        // the HKHealthStore type here, keeping HealthKit isolated to Core.
+        await EngagementSequenceScheduler.start(
+            healthStore: liveViewModel.healthKitManager.healthStore,
+            dataStore: store,
+            userName: UserProfileStore.shared.storedName()
+        )
+
+        // Wind-down needs a real target bedtime. Full housekeeping does not run
+        // in BG, so derive one from the stored sleep history; if the store is
+        // absent or there is not enough data, the bedtime is nil and the
+        // scheduler cancels rather than firing a faked time.
+        guard let store else {
+            WindDownScheduler.cancel()
+            return
+        }
+        let need = SleepNeedCalculator().compute(
+            from: store,
+            currentStrain: 0,
+            sleepDebt: 0,
+            targetWakeTime: nil
+        )
+        let defaults = UserDefaults.standard
+        let lastHRV = defaults.integer(forKey: AppKeys.Notifications.lastHRVValue)
+        WindDownScheduler.schedule(
+            recommendedBedtime: need.recommendedBedtime,
+            lastHRV: lastHRV > 0 ? lastHRV : nil,
+            hrvIsLow: false,
+            preferences: PersistenceManager().loadPreferences()
+        )
     }
 }

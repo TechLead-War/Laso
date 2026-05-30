@@ -38,6 +38,36 @@ enum WindDownStage: String, Codable, Hashable, Sendable {
         case .passed:                  return "zzz"
         }
     }
+
+    /// VoiceOver description of the current stage glyph + progress arc.
+    var accessibilityLabel: String {
+        switch self {
+        case .approaching: return "Wind down stage, dimming the lights"
+        case .softening:   return "Wind down stage, softening the pace"
+        case .imminent:    return "Wind down stage, time to put the phone down"
+        case .now:         return "Wind down stage, ready for bed"
+        case .passed:      return "Wind down stage, sleep well"
+        }
+    }
+}
+
+/// User-facing copy for the Wind-Down Live Activity.
+///
+/// The LasoWidgets extension does NOT compile `Common/Copy`, so widget-rendered
+/// strings live here as Swift literals rather than Remote Config lookups. These
+/// MUST stay byte-identical to the app-side `copy_live_la_winddown_*` defaults.
+enum WindDownCopy {
+    static let header = "Wind down"
+    static let toBed = "To bed"
+    static let breatheButton = "Breathe 2 min"
+    /// `%d` is the HRV value in ms.
+    static let hrvHintTemplate = "HRV %d ms, an earlier night helps"
+
+    static let compactCountdownAccessibilityLabel = "Time until bedtime"
+    static let breatheButtonAccessibilityLabel = "Start a two minute wind down breath"
+
+    /// `%@` is the styled relative countdown to bedtime.
+    static let countdownAccessibilityLabel = "Bedtime in %@"
 }
 
 #if canImport(ActivityKit)

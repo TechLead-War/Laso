@@ -27,7 +27,7 @@ struct ConnectedDevicesView: View {
 
                         if viewModel.isScanning {
                             ProgressView()
-                                .accessibilityLabel("Scanning for devices")
+                                .accessibilityLabel(Copy.Devices.scanningForDevicesLabel)
                         }
                     }
 
@@ -99,9 +99,9 @@ struct ConnectedDevicesView: View {
                         }
                     }
                 } header: {
-                    Text("Connected But Inactive")
+                    Text(Copy.Devices.connectedButInactive)
                 } footer: {
-                    Text("These sources were detected before, but they haven't written data to Apple Health in the last 7 days.")
+                    Text(Copy.Devices.theseSourcesWereDetectedBeforeBut)
                 }
             }
 
@@ -147,7 +147,7 @@ struct ConnectedDevicesView: View {
             }
         }
         .accessibilityIdentifier("screen.connectedDevices")
-        .navigationTitle("Connected Devices")
+        .navigationTitle(Copy.Devices.connectedDevicesNavTitle)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             AppAnalytics.shared.trackFeatureOpen(.connectedDevices, metadata: [
@@ -179,7 +179,7 @@ struct ConnectedDevicesView: View {
                     Text(info.presentationName)
                         .font(DS.Typography.subheadlineMedium)
                     if info.device == .generic {
-                        Text("Detected")
+                        Text(Copy.Devices.detected)
                             .font(DS.Typography.caption2Semibold)
                             .foregroundStyle(AppColour.info)
                             .padding(.horizontal, DS.space2)
@@ -199,7 +199,7 @@ struct ConnectedDevicesView: View {
                     .font(DS.Typography.caption)
                     .foregroundStyle(AppColour.textSecondary)
 
-                Text("\(info.metricCount) metrics \u{00B7} Last sync \(info.lastSyncText)")
+                Text(Copy.Devices.metricsAndLastSyncText(info.metricCount, info.lastSyncText))
                     .font(DS.Typography.caption)
                     .foregroundStyle(AppColour.textSecondary)
             }

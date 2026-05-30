@@ -65,7 +65,7 @@ struct DeviceDetailView: View {
                     .padding(.vertical, DS.space1)
                     .background(info.isActive ? AppColour.success : AppColour.warning, in: Capsule())
             } else {
-                Text("Setup Guide")
+                Text(Copy.Devices.setupGuide)
                     .font(DS.Typography.captionSemibold)
                     .foregroundStyle(.white)
                     .padding(.horizontal, DS.space3)
@@ -79,9 +79,9 @@ struct DeviceDetailView: View {
         VStack(spacing: DS.space4) {
             HStack(spacing: 0) {
                 VStack(spacing: DS.space1) {
-                    Text("\(info.metricCount)")
+                    Text(Copy.Devices.xText(info.metricCount))
                         .font(DS.Typography.title2.monospacedDigit())
-                    Text("Metrics")
+                    Text(Copy.Devices.metrics)
                         .font(DS.Typography.caption2)
                         .foregroundStyle(AppColour.textSecondary)
                 }
@@ -92,7 +92,7 @@ struct DeviceDetailView: View {
                 VStack(spacing: DS.space1) {
                     Text(info.sourceDisplayName)
                         .font(DS.Typography.title3)
-                    Text("Source App")
+                    Text(Copy.Devices.sourceApp)
                         .font(DS.Typography.caption2)
                         .foregroundStyle(AppColour.textSecondary)
                 }
@@ -103,7 +103,7 @@ struct DeviceDetailView: View {
                 VStack(spacing: DS.space1) {
                     Text(info.lastSyncText)
                         .font(DS.Typography.title3)
-                    Text("Last Sync")
+                    Text(Copy.Devices.lastSync)
                         .font(DS.Typography.caption2)
                         .foregroundStyle(AppColour.textSecondary)
                 }
@@ -114,7 +114,7 @@ struct DeviceDetailView: View {
             .padding(.horizontal)
 
             VStack(alignment: .leading, spacing: DS.space3) {
-                Text("Sync Path")
+                Text(Copy.Devices.syncPath)
                     .font(DS.Typography.subheadlineSemibold)
                 Text(syncPathDescription(for: info))
                     .font(DS.Typography.subheadline)
@@ -126,7 +126,7 @@ struct DeviceDetailView: View {
             .padding(.horizontal)
 
             VStack(alignment: .leading, spacing: DS.itemSpacing) {
-                Text("Imported Metrics")
+                Text(Copy.Devices.importedMetrics)
                     .font(DS.Typography.subheadlineSemibold)
                     .padding(.horizontal)
 
@@ -163,16 +163,16 @@ struct DeviceDetailView: View {
             .padding(.horizontal)
 
             VStack(alignment: .leading, spacing: DS.space2) {
-                Text("Data Source")
+                Text(Copy.Devices.dataSource)
                     .font(DS.Typography.subheadlineSemibold)
                 HStack {
-                    Text("App: \(info.sourceDisplayName)")
+                    Text(Copy.Devices.appText(info.sourceDisplayName))
                         .font(DS.Typography.caption)
                         .foregroundStyle(AppColour.textSecondary)
                     Spacer()
                 }
                 HStack {
-                    Text("Bundle: \(info.sourceBundleId)")
+                    Text(Copy.Devices.bundleText(info.sourceBundleId))
                         .font(DS.Typography.caption2)
                         .foregroundStyle(AppColour.textTertiary)
                     Spacer()
@@ -187,7 +187,7 @@ struct DeviceDetailView: View {
     private var notConnectedContent: some View {
         VStack(spacing: DS.space4) {
             VStack(alignment: .leading, spacing: DS.space2) {
-                Text("How This Source Connects")
+                Text(Copy.Devices.howThisSourceConnects)
                     .font(DS.Typography.subheadlineSemibold)
                     .padding(.horizontal)
 
@@ -203,7 +203,7 @@ struct DeviceDetailView: View {
             .padding(.horizontal)
 
             VStack(alignment: .leading, spacing: DS.space2) {
-                Text("What Laso Confirms After Sync")
+                Text(Copy.Devices.whatLasoConfirmsAfterSync)
                     .font(DS.Typography.subheadlineSemibold)
                 Text(setupFitDescription)
                     .font(DS.Typography.caption)
