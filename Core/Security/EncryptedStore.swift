@@ -55,7 +55,7 @@ final class EncryptedStore {
             let sealedBox = try AES.GCM.seal(data, using: key)
             return sealedBox.combined
         } catch {
-            PostHogManager.shared.captureError(error, context: "encryption_seal_failed")
+            AnalyticsBackend.provider.captureError(error, context: "encryption_seal_failed")
             return nil
         }
     }
@@ -65,7 +65,7 @@ final class EncryptedStore {
             let sealedBox = try AES.GCM.SealedBox(combined: data)
             return try AES.GCM.open(sealedBox, using: key)
         } catch {
-            PostHogManager.shared.captureError(error, context: "decryption_open_failed")
+            AnalyticsBackend.provider.captureError(error, context: "decryption_open_failed")
             return nil
         }
     }

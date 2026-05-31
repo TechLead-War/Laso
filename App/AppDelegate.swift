@@ -48,7 +48,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         _ application: UIApplication,
         didFailToRegisterForRemoteNotificationsWithError error: Error
     ) {
-        PostHogManager.shared.captureError(error, context: "apns_registration")
+        AnalyticsBackend.provider.captureError(error, context: "apns_registration")
     }
 
     func application(
@@ -67,11 +67,11 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     // MARK: - Lifecycle (analytics flush)
 
     func applicationDidEnterBackground(_ application: UIApplication) {
-        PostHogManager.shared.flush()
+        AnalyticsBackend.provider.flush()
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
-        PostHogManager.shared.flush()
+        AnalyticsBackend.provider.flush()
     }
 
     // MARK: - UNUserNotificationCenterDelegate

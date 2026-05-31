@@ -800,7 +800,10 @@ struct ContentView: View {
 
     private func startSessionAnalytics() {
         let analytics = AppAnalytics.shared
-        analytics.trackSessionStart()
+        // The 30-min idle guard: a quick app-switch resumes the open session and
+        // returns false, so the per-session events below do not re-fire and
+        // inflate DAU. They only run when a genuinely new session starts.
+        guard analytics.trackSessionStart() else { return }
         analytics.trackDailyActiveUser()
         analytics.trackReturnSession()
         analytics.trackRetentionMilestones()

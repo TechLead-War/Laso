@@ -107,16 +107,8 @@ struct InsightsDetailView: View {
 
                     ForEach(visibleItems) { insight in
                         Button {
-                            AppAnalytics.shared.trackInsightTapped(
-                                category: insight.category.rawValue,
-                                severity: insight.severity.rawValue,
-                                metric: insight.metric.rawValue,
-                                screen: .insightsDetail
-                            )
-                            AppAnalytics.shared.trackInsightEngagement(
-                                category: insight.category.rawValue,
-                                metric: insight.metric.rawValue,
-                                action: "tap_detail"
+                            AppAnalytics.shared.trackInsightOpened(
+                                metricCategory: insight.metric.category
                             )
                             store?.recordRecommendationTapped(insightId: insight.id)
                             onTapMetric(insight.metric)
@@ -169,7 +161,7 @@ struct InsightsDetailView: View {
             maybeShowAhaPaywall()
         }
         .fullScreenCover(isPresented: $showAhaPaywall) {
-            PaywallView(subscriptionManager: SubscriptionManager.shared)
+            PaywallView(subscriptionManager: SubscriptionManager.shared, source: "aha_moment")
         }
         .onDisappear {
             AppAnalytics.shared.trackFeatureClose(.insightsDetail)
@@ -207,7 +199,9 @@ struct InsightsDetailView: View {
             return
         }
         defaults.set(true, forKey: AppKeys.Session.ahaPaywallShown)
-        AppAnalytics.shared.trackPaywallViewed(source: "aha_moment")
+        // paywall_viewed fires once from PaywallView.onAppear with source
+        // "aha_moment" passed into the fullScreenCover above. Do not emit it
+        // here too, or the aha path double-fires the event.
         showAhaPaywall = true
     }
 

@@ -323,7 +323,7 @@ struct OnboardingMirrorMomentStep: View {
                 let elapsed = calibrationStartTime.map { Int(Date().timeIntervalSince($0)) } ?? 0
                 if let errorMessage {
                     state = .failed(errorMessage)
-                    PostHogManager.shared.capture(event: "calibration_failed", properties: [
+                    AnalyticsBackend.provider.capture(event: "calibration_failed", properties: [
                         "error_message": errorMessage,
                         "elapsed_sec": elapsed,
                     ])
@@ -333,7 +333,7 @@ struct OnboardingMirrorMomentStep: View {
                     withAnimation(.smooth(duration: 0.5)) {
                         state = .success
                     }
-                    PostHogManager.shared.capture(event: "calibration_completed", properties: [
+                    AnalyticsBackend.provider.capture(event: "calibration_completed", properties: [
                         "elapsed_sec": elapsed,
                         "metrics_with_data": built.metricsWithData,
                         "highlights_count": built.highlights.count,

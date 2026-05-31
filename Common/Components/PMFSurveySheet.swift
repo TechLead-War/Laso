@@ -94,7 +94,12 @@ struct PMFSurveySheet: View {
     private func responseButton(_ label: String, value: String) -> some View {
         Button {
             disappointmentAnswer = value
-            AppAnalytics.shared.trackPMFSurveyResponse(response: value, source: "pmf_survey")
+            // Single consolidated PMF event; only the controlled Sean Ellis enum
+            // ships. Free-text segment/benefit/improvement answers below are kept
+            // in-app for product use but are not sent to analytics (PII).
+            if let choice = AppAnalytics.SeanEllisChoice(rawValue: value) {
+                AppAnalytics.shared.trackSatisfactionSurveyAnswered(choice)
+            }
             withAnimation(.smooth(duration: 0.3)) { step = .segment }
         } label: {
             HStack {
@@ -129,7 +134,6 @@ struct PMFSurveySheet: View {
                 .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
 
             Button {
-                AppAnalytics.shared.trackPMFSegmentResponse(segment: segmentAnswer)
                 withAnimation(.smooth(duration: 0.3)) { step = .benefit }
             } label: {
                 Text(Copy.Common.continueLabel)
@@ -155,7 +159,6 @@ struct PMFSurveySheet: View {
                 .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
 
             Button {
-                AppAnalytics.shared.trackPMFBenefitResponse(benefit: benefitAnswer)
                 withAnimation(.smooth(duration: 0.3)) { step = .improvement }
             } label: {
                 Text(Copy.Common.continueLabel2)
@@ -181,9 +184,6 @@ struct PMFSurveySheet: View {
                 .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
 
             Button {
-                if !improvementText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    AppAnalytics.shared.trackPMFImprovementResponse(improvement: improvementText)
-                }
                 submitSurvey()
             } label: {
                 Text(improvementText.isEmpty ? "Done" : "Submit")

@@ -113,8 +113,8 @@ enum UITestMode {
     }
 
     /// Onboarding step the test harness wants to land on when
-    /// `--ui-test-show-onboarding` is also set. Raw value matches
-    /// `OnboardingView.OnboardingStep` cases (pulse|profile|connect|priority|mirror|promise).
+    /// `--ui-test-show-onboarding` is also set. Legacy hook kept for older test
+    /// launch args; current onboarding is V2 (see `onboardingV2StartScreen`).
     /// Format: `--ui-test-onboarding-step=connect`
     static var onboardingStartStep: String? { stringValue(for: onboardingStepPrefix) }
 

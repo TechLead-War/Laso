@@ -470,7 +470,7 @@ final class HealthKitManager: @unchecked Sendable {
                 sortDescriptors: [sort]
             ) { _, results, error in
                 if let error {
-                    PostHogManager.shared.captureError(error, context: "healthkit_fetch")
+                    AnalyticsBackend.provider.captureError(error, context: "healthkit_fetch")
                 }
                 guard let results = results as? [HKCategorySample], error == nil else {
                     continuation.resume(returning: [])
@@ -634,7 +634,7 @@ final class HealthKitManager: @unchecked Sendable {
                 sortDescriptors: [sort]
             ) { _, results, error in
                 if let error {
-                    PostHogManager.shared.captureError(error, context: "healthkit_fetch_raw_hr")
+                    AnalyticsBackend.provider.captureError(error, context: "healthkit_fetch_raw_hr")
                 }
                 guard let results = results as? [HKQuantitySample], error == nil else {
                     continuation.resume(returning: [])
@@ -672,7 +672,7 @@ final class HealthKitManager: @unchecked Sendable {
 
             query.initialResultsHandler = { [metric] _, results, error in
                 if let error {
-                    PostHogManager.shared.captureError(error, context: "healthkit_fetch_daily_stats", metadata: ["metric": metric.rawValue])
+                    AnalyticsBackend.provider.captureError(error, context: "healthkit_fetch_daily_stats", metadata: ["metric": metric.rawValue])
                 }
                 guard let results, error == nil else {
                     continuation.resume(returning: nil)
@@ -716,7 +716,7 @@ final class HealthKitManager: @unchecked Sendable {
                 sortDescriptors: [sort]
             ) { [metric] _, results, error in
                 if let error {
-                    PostHogManager.shared.captureError(error, context: "healthkit_fetch_quantity", metadata: ["metric": metric.rawValue])
+                    AnalyticsBackend.provider.captureError(error, context: "healthkit_fetch_quantity", metadata: ["metric": metric.rawValue])
                 }
                 guard let results = results as? [HKQuantitySample], error == nil else {
                     continuation.resume(returning: nil)
@@ -885,7 +885,7 @@ final class HealthKitManager: @unchecked Sendable {
                 sortDescriptors: [sort]
             ) { [metric] _, results, error in
                 if let error {
-                    PostHogManager.shared.captureError(error, context: "healthkit_fetch_sleep", metadata: ["metric": metric.rawValue])
+                    AnalyticsBackend.provider.captureError(error, context: "healthkit_fetch_sleep", metadata: ["metric": metric.rawValue])
                 }
                 guard let results = results as? [HKCategorySample], error == nil else {
                     continuation.resume(returning: nil)
@@ -1003,7 +1003,7 @@ final class HealthKitManager: @unchecked Sendable {
                 sortDescriptors: [sort]
             ) { _, results, error in
                 if let error {
-                    PostHogManager.shared.captureError(
+                    AnalyticsBackend.provider.captureError(
                         error,
                         context: "healthkit_fetch_sleep_onset",
                         metadata: [:]
@@ -1033,7 +1033,7 @@ final class HealthKitManager: @unchecked Sendable {
                 sortDescriptors: [sort]
             ) { [metric] _, results, error in
                 if let error {
-                    PostHogManager.shared.captureError(error, context: "healthkit_fetch_workouts", metadata: ["metric": metric.rawValue])
+                    AnalyticsBackend.provider.captureError(error, context: "healthkit_fetch_workouts", metadata: ["metric": metric.rawValue])
                 }
                 guard let workouts = results as? [HKWorkout], error == nil else {
                     continuation.resume(returning: nil)
@@ -1118,7 +1118,7 @@ final class HealthKitManager: @unchecked Sendable {
             // hourly-batched. Matches the pattern in WatchMonitor.
             healthStore.enableBackgroundDelivery(for: sampleType, frequency: .immediate) { _, bgError in
                 if let bgError {
-                    PostHogManager.shared.captureError(
+                    AnalyticsBackend.provider.captureError(
                         bgError,
                         context: "healthkit_enable_background_delivery",
                         metadata: ["metric": metric.rawValue]
@@ -1222,7 +1222,7 @@ final class HealthKitManager: @unchecked Sendable {
                 sortDescriptors: [sort]
             ) { _, results, error in
                 if let error {
-                    PostHogManager.shared.captureError(error, context: "healthkit_fetch_mindful")
+                    AnalyticsBackend.provider.captureError(error, context: "healthkit_fetch_mindful")
                 }
                 guard let results = results as? [HKCategorySample], error == nil else {
                     continuation.resume(returning: nil)

@@ -70,6 +70,14 @@ enum AppSecrets {
         static let host = "https://eu.i.posthog.com"
     }
 
+    // MARK: - Amplitude
+
+    enum Amplitude {
+        static let apiKey = ""
+        /// Data residency, "EU" or "US". Must match the Amplitude project's region.
+        static let region = "US"
+    }
+
     // MARK: - External Dependencies
 
     enum CDN {

@@ -18,6 +18,34 @@ final class SessionTracker {
     var currentTab: String = "home"
     private var lastScreen: String?
 
+    // MARK: - Idle Guard & Active Time
+
+    /// A foreground return more than this many seconds after the last activity
+    /// starts a brand-new session. Below it, the same session resumes so a quick
+    /// app-switch does not inflate DAU. Industry-standard 30-minute window.
+    private static let idleTimeoutSec: TimeInterval = 30 * 60
+
+    /// Wall-clock time of the last foreground activity (set on every foreground
+    /// return and on background). Drives the 30-minute idle decision.
+    private var lastActivityDate = Date()
+
+    /// Accumulated foreground-active seconds for the current session, excluding
+    /// time spent backgrounded/idle. `active_sec` on session_ended reads this.
+    private var accumulatedActiveSec: TimeInterval = 0
+    /// When the current active span started (foreground). nil while backgrounded.
+    private var activeSpanStart: Date?
+    /// True between a session_started and its session_ended, including while the
+    /// app is backgrounded. Distinguishes "resume the open session" from "no
+    /// session yet" when deciding whether the idle window applies.
+    private var sessionIsOpen = false
+
+    /// Reason the most recent session ended. Set by `endSession`.
+    enum EndReason: String {
+        case backgrounded
+        case idleTimeout = "idle_timeout"
+        case appTerminated = "app_terminated"
+    }
+
     // MARK: - Session Source
 
     enum SessionSource: String {
@@ -130,9 +158,26 @@ final class SessionTracker {
 
     // MARK: - Session Lifecycle
 
-    func startSession() {
+    /// Foreground entry point. Returns true when a brand-new session was minted
+    /// (the caller should fire `session_started` + per-session events), false
+    /// when the previous session resumed within the 30-minute idle window.
+    @discardableResult
+    func startSession() -> Bool {
+        let now = Date()
+        let idleFor = now.timeIntervalSince(lastActivityDate)
+        lastActivityDate = now
+
+        // Resume: still inside the idle window and a session is already open.
+        // Re-open the active span (background closed it) without resetting state.
+        if idleFor < Self.idleTimeoutSec && sessionIsOpen {
+            if activeSpanStart == nil { activeSpanStart = now }
+            return false
+        }
+
+        // New session. (Any prior session already emitted session_ended on its
+        // last background; the 30-minute gap simply means we do not resume it.)
         sessionId = UUID().uuidString
-        sessionStartDate = Date()
+        sessionStartDate = now
         screensVisited = []
         maxDepth = 0
         currentDepth = 0
@@ -141,6 +186,9 @@ final class SessionTracker {
         previousStreakBeforeBreak = nil
         didGrantCreditThisSession = false
         didSpendCreditThisSession = false
+        accumulatedActiveSec = 0
+        activeSpanStart = now
+        sessionIsOpen = true
         currentSessionSource = pendingSessionSource
         pendingSessionSource = .organic // reset for next session
         maybeGrantRestCredit()
@@ -148,12 +196,31 @@ final class SessionTracker {
         updateStickiness()
         updateSessionSourceCounts()
         updateLifecycleOnStart()
+        return true
     }
 
-    func endSession() -> (durationSec: Int, screensVisited: Int, maxDepth: Int) {
-        let duration = Int(Date().timeIntervalSince(sessionStartDate))
-        defaults.set(Date(), forKey: Key.lastSessionDate)
-        return (duration, screensVisited.count, maxDepth)
+    /// Ends the current session. Accumulates the final active span and reports
+    /// the totals `session_ended` needs. Returns zeroed values when no session
+    /// is open (e.g. background fires before any foreground).
+    func endSession(reason: EndReason = .backgrounded)
+        -> (durationSec: Int, activeSec: Int, screensVisited: Int, maxDepth: Int, coreActionsCount: Int, reason: String) {
+        let now = Date()
+        // Close the open active span into the accumulator.
+        if let spanStart = activeSpanStart {
+            accumulatedActiveSec += now.timeIntervalSince(spanStart)
+            activeSpanStart = nil
+        }
+        lastActivityDate = now
+        let duration = Int(now.timeIntervalSince(sessionStartDate))
+        defaults.set(now, forKey: Key.lastSessionDate)
+        return (
+            duration,
+            Int(accumulatedActiveSec.rounded()),
+            screensVisited.count,
+            maxDepth,
+            coreActionsThisSession.count,
+            reason.rawValue
+        )
     }
 
     /// Seconds since this session started.

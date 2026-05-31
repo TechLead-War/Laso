@@ -42,7 +42,7 @@ final class PushNotificationManager: NSObject, MessagingDelegate {
     func refreshOnLaunch() {
         Messaging.messaging().token { [weak self] token, error in
             if let error {
-                PostHogManager.shared.captureError(error, context: "fcm_token_refresh")
+                AnalyticsBackend.provider.captureError(error, context: "fcm_token_refresh")
                 return
             }
             guard let token else { return }
@@ -63,7 +63,7 @@ final class PushNotificationManager: NSObject, MessagingDelegate {
         // Anonymous auth gives every install a stable uid (AppLaunchCoordinator).
         // Without it the device_tokens rule (request.auth != null) rejects the write.
         guard let uid = Auth.auth().currentUser?.uid, !uid.isEmpty else {
-            PostHogManager.shared.captureError("missing_uid", context: "fcm_token_write")
+            AnalyticsBackend.provider.captureError("missing_uid", context: "fcm_token_write")
             return
         }
 
@@ -93,7 +93,7 @@ final class PushNotificationManager: NSObject, MessagingDelegate {
                     .document(token)
                     .setData(data, merge: true)
             } catch {
-                PostHogManager.shared.captureError(error, context: "fcm_token_write")
+                AnalyticsBackend.provider.captureError(error, context: "fcm_token_write")
             }
         }
     }

@@ -262,7 +262,7 @@ struct OnbV2Screen16Paywall: View {
         let annualSub: String = {
             guard let perMonth = perMonthApprox else { return "" }
             if trialDays > 0 {
-                return String(format: Copy.OnboardingV2.s16AnnualSubFmt, perMonth, "\(trialDays)")
+                return Copy.OnboardingV2.s16AnnualSub(perMonth: perMonth, trialDays: "\(trialDays)")
             }
             return "That's about \(perMonth) per month"
         }()

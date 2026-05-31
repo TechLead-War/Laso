@@ -5,14 +5,14 @@ import Foundation
 /// Extracts launch-time third-party setup from AppDelegate.
 final class AppLaunchCoordinator {
     private let remoteConfigManager: RemoteConfigManager
-    private let analyticsManager: PostHogManager
+    private let analyticsManager: AnalyticsProvider
 
     /// Retained so we can deregister on teardown (currently lifetime = app lifetime).
     private var authStateHandle: AuthStateDidChangeListenerHandle?
 
     init(
         remoteConfigManager: RemoteConfigManager = .shared,
-        analyticsManager: PostHogManager = .shared
+        analyticsManager: AnalyticsProvider = AnalyticsBackend.provider
     ) {
         self.remoteConfigManager = remoteConfigManager
         self.analyticsManager = analyticsManager
@@ -30,7 +30,7 @@ final class AppLaunchCoordinator {
         if Auth.auth().currentUser == nil {
             Auth.auth().signInAnonymously { _, error in
                 if let error {
-                    PostHogManager.shared.captureError(error, context: "anonymous_auth")
+                    AnalyticsBackend.provider.captureError(error, context: "anonymous_auth")
                 }
             }
         }

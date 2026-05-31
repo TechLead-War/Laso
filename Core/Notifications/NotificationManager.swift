@@ -230,7 +230,7 @@ final class NotificationManager {
                 dynamicBudget = maxPerDay
                 // Breadcrumb: the dynamic budget could not be computed (no store
                 // or off the main thread) so the static per-call budget is used.
-                PostHogManager.shared.capture(event: "notification_budget_fallback", properties: [
+                AnalyticsBackend.provider.capture(event: "notification_budget_fallback", properties: [
                     "notification_id": identifier,
                     "reason": store == nil ? "no_store" : "off_main_thread",
                     "static_budget": maxPerDay
@@ -251,7 +251,7 @@ final class NotificationManager {
             guard let self else { return }
             let pending = await self.pendingNotificationCount()
             if pending >= Self.pendingWarnThreshold {
-                PostHogManager.shared.captureError(
+                AnalyticsBackend.provider.captureError(
                     "pending notifications near iOS limit",
                     context: "notification_pending_cap",
                     metadata: ["pending": pending, "notification_id": identifier]
@@ -278,7 +278,7 @@ final class NotificationManager {
                 if !isDailySummary && !bypassCap {
                     self?.frequencyCap.releaseSlot()
                 }
-                PostHogManager.shared.captureError(error, context: "notification_schedule", metadata: [
+                AnalyticsBackend.provider.captureError(error, context: "notification_schedule", metadata: [
                     "notification_id": identifier,
                     "type": notifType
                 ])

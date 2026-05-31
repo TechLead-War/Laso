@@ -25,6 +25,12 @@ struct OnboardingV2View: View {
     @State private var calibrationStarted = false
     @State private var healthSnapshot = OnboardingHealthSnapshot()
 
+    // Onboarding funnel timing: when the current step appeared and when
+    // onboarding started. Feeds the onboarding_step_completed +
+    // onboarding_completed funnel events.
+    @State private var stepStartedAt = Date()
+    @State private var onboardingStartedAt = Date()
+
     /// Raw values intentionally match the case names so the Firebase Remote
     /// Config key `onboarding_skip_screens` (CSV) can reference them by name
     /// at runtime.
@@ -140,8 +146,14 @@ struct OnboardingV2View: View {
         case .done:
             OnbV2ScreenDone {
                 persistOnboardingProfile()
-                completeNotificationSetup()
+                // Mark complete BEFORE tracking so the onboarding_completed user
+                // property is already true when the event fires (not contradictory).
                 appStateStore.markOnboardingCompleted()
+                AppAnalytics.shared.trackOnboardingCompleted(
+                    focuses: profile.goals.map { $0.asHealthFocus.rawValue },
+                    durationSec: max(0, Int(Date().timeIntervalSince(onboardingStartedAt)))
+                )
+                completeNotificationSetup()
                 onComplete()
             }
         }
@@ -166,18 +178,35 @@ struct OnboardingV2View: View {
             }
         }
 
-        // Track backward navigation as a separate signal so funnel analysis can
-        // distinguish completed steps from steps the user reconsidered. Screens
-        // are ordered by `Self.screenOrdinal`; any move to a lower ordinal is "back".
-        if Self.screenOrdinal(target) < Self.screenOrdinal(screen) {
-            AppAnalytics.shared.trackOnboardingNavTapped(
-                step: Self.screenOrdinal(screen),
-                stepName: String(describing: screen),
-                action: "back"
+        // Screens are ordered by `Self.screenOrdinal`. A move to a higher ordinal
+        // means the current screen was completed (the forward funnel); a move to a
+        // lower ordinal is the user reconsidering and going back.
+        let durationSec = max(0, Int(Date().timeIntervalSince(stepStartedAt)))
+        if Self.screenOrdinal(target) > Self.screenOrdinal(screen) {
+            AppAnalytics.shared.trackOnboardingStepCompleted(
+                stepKey: screen.rawValue,
+                stepIndex: Self.screenOrdinal(screen),
+                stepCount: Self.stepCount,
+                durationSec: durationSec,
+                action: .completed
+            )
+        } else if Self.screenOrdinal(target) < Self.screenOrdinal(screen) {
+            AppAnalytics.shared.trackOnboardingStepCompleted(
+                stepKey: screen.rawValue,
+                stepIndex: Self.screenOrdinal(screen),
+                stepCount: Self.stepCount,
+                durationSec: durationSec,
+                action: .back
             )
         }
         screen = target
+        stepStartedAt = Date()
     }
+
+    /// Total user-facing steps in this onboarding version (excludes the post-flow
+    /// `done` screen). Computed from the flow, not a hardcoded constant, so the
+    /// drop-off funnel stays comparable across versions.
+    private static let stepCount = Screen.allCases.filter { $0 != .done }.count
 
     /// Step number used in analytics. Matches the user-visible 1-based step index.
     private static func screenOrdinal(_ screen: Screen) -> Int {

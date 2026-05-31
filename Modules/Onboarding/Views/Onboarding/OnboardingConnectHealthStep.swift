@@ -67,7 +67,7 @@ struct OnboardingConnectHealthStep: View {
                     Task {
                         if !UITestMode.isEnabled {
                             await healthKitManager.requestAuthorization()
-                            PostHogManager.shared.capture(event: "healthkit_authorized", properties: [
+                            AnalyticsBackend.provider.capture(event: "healthkit_authorized", properties: [
                                 "healthkit_available": true
                             ])
                         }

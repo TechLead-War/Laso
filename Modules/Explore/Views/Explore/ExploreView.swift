@@ -172,11 +172,6 @@ struct ExploreView: View {
                                     "metric_category": factor.metric.category.rawValue
                                 ]
                             )
-                            AppAnalytics.shared.trackInsightEngagement(
-                                category: factor.metric.category.rawValue,
-                                metric: factor.metric.rawValue,
-                                action: "tap_needs_attention"
-                            )
                             needsAttentionTracker.tapped(target: factor.metric.rawValue)
                             navigationPath.append(factor.metric)
                         },
@@ -214,11 +209,6 @@ struct ExploreView: View {
                                         "metric_category": highlight.metric.category.rawValue,
                                         "highlight_type": highlight.typeLabel
                                     ]
-                                )
-                                AppAnalytics.shared.trackInsightEngagement(
-                                    category: highlight.metric.category.rawValue,
-                                    metric: highlight.metric.rawValue,
-                                    action: "tap_declining_trend"
                                 )
                                 decliningTrendsTracker.tapped(target: highlight.metric.rawValue)
                                 navigationPath.append(highlight.metric)

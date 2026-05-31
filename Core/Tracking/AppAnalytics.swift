@@ -1,5 +1,6 @@
 import Foundation
 import UIKit
+import CryptoKit
 
 /// All trackable screens in the app.
 enum AppFeature: String, Hashable {
@@ -252,7 +253,7 @@ enum BlockType: String {
 //  feedback_submitted            category, text_length, sentiment    What they want
 //
 // ─── Q4: WHAT CONVERTS TO PAID? ─────────────────────────────────────────────
-//  paywall_viewed                source, days_since_install          When they see paywall
+//  paywall_viewed                source                              When they see paywall
 //  paywall_dismissed             time_on_paywall, source             Why they don't convert
 //  paywall_cta_tapped            product_id, price                   Purchase intent
 //  trial_started                 days_remaining                      Trial began
@@ -362,6 +363,15 @@ final class AppAnalytics {
         return (info?["CFBundleShortVersionString"] as? String) ?? "unknown"
     }()
 
+    /// Fixed UTC formatter so every event carries one comparable, human-readable
+    /// timestamp regardless of device timezone. Cached to avoid per-event
+    /// allocation in the hot `logEvent` path.
+    private static let eventTimestampFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        return formatter
+    }()
+
     private var openTimestamps: [AppFeature: Date] = [:]
     private var streamingStartDate: Date?
     private enum Key {
@@ -371,6 +381,7 @@ final class AppAnalytics {
         static let lastKnownStatus = "laso.analytics.last_known_status"
         static let lastRenewalExpirationDate = "laso.analytics.last_renewal_expiration_date"
         static let firstScoreGeneratedTracked = "laso.analytics.first_score_generated_tracked"
+        static let trialStartedTracked = "laso.analytics.trial_started_tracked"
     }
 
     private init() {}
@@ -439,7 +450,7 @@ final class AppAnalytics {
         props["uses_dynamic_type"] = contentSize != "UICTContentSizeCategoryLarge" ? contentSize : "default"
 
         if !props.isEmpty {
-            PostHogManager.shared.setUserProperties(props)
+            AnalyticsBackend.provider.setUserProperties(props)
         }
     }
 
@@ -494,65 +505,63 @@ final class AppAnalytics {
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // MARK: - Error Tracking (PostHog)
+    // MARK: - Error Tracking
     // ══════════════════════════════════════════════════════════════════════
 
-    /// Record a non-fatal error to PostHog for monitoring.
+    /// Record a non-fatal error for monitoring.
     func recordNonFatal(_ error: Error, context: String, metadata: [String: Any] = [:]) {
-        PostHogManager.shared.captureError(error, context: context, metadata: metadata)
+        AnalyticsBackend.provider.captureError(error, context: context, metadata: metadata)
     }
 
-    /// Record a string-described error (no Error object) to PostHog.
+    /// Record a string-described error (no Error object) for monitoring.
     func recordNonFatal(_ message: String, context: String, metadata: [String: Any] = [:]) {
-        PostHogManager.shared.captureError(message, context: context, metadata: metadata)
+        AnalyticsBackend.provider.captureError(message, context: context, metadata: metadata)
     }
 
     // ══════════════════════════════════════════════════════════════════════
     // MARK: - 1. Activation Events
     // ══════════════════════════════════════════════════════════════════════
 
-    /// Call when user completes a specific onboarding step.
-    func trackOnboardingStepCompleted(step: Int, stepName: String, durationSec: Int) {
+    /// How the user left an onboarding step: forward completion, a skip, or back.
+    enum OnboardingStepAction: String {
+        case completed
+        case skipped
+        case back
+    }
+
+    /// Call when the user completes, skips, or backs out of an onboarding step.
+    /// `stepKey` is the stable step id (e.g. welcome, profile, connect_health);
+    /// `stepCount` is the total steps in the CURRENT flow version (not a constant)
+    /// so per-step drop-off is comparable across onboarding versions.
+    func trackOnboardingStepCompleted(
+        stepKey: String,
+        stepIndex: Int,
+        stepCount: Int,
+        durationSec: Int,
+        action: OnboardingStepAction
+    ) {
         logEvent("onboarding_step_completed", parameters: [
-            "step": step,
-            "step_name": stepName,
-            "duration_sec": durationSec
+            "step_key": stepKey,
+            "step_index": stepIndex,
+            "step_count": stepCount,
+            "duration_sec": durationSec,
+            "action": action.rawValue
         ])
     }
 
-    /// Call when onboarding is fully completed.
-    func trackOnboardingCompleted(focuses: [String], durationSec: Int, stepsCompleted: Int) {
+    /// Call when onboarding is fully completed. The caller MUST run
+    /// `markOnboardingCompleted()` BEFORE this so the onboarding_completed user
+    /// property is already true and not self-contradictory. health_focus is kept
+    /// as a user property; the event itself carries only duration_sec.
+    func trackOnboardingCompleted(focuses: [String], durationSec: Int) {
         logEvent("onboarding_completed", parameters: [
-            "focuses": focuses.joined(separator: ","),
-            "focuses_count": focuses.count,
-            "duration_sec": durationSec,
-            "steps_completed": stepsCompleted,
-            "days_since_install": session.daysSinceInstall
+            "duration_sec": durationSec
         ])
         setUserProperty("onboarding_completed", value: "yes")
         setUserProperty("health_focus", value: focuses.joined(separator: ","))
 
         // Set demographics now that profile is captured
         setDemographicProperties()
-    }
-
-    /// Call when user drops off onboarding without completing.
-    func trackOnboardingDropOff(lastStep: Int, lastStepName: String, durationSec: Int) {
-        logEvent("onboarding_drop_off", parameters: [
-            "last_step": lastStep,
-            "last_step_name": lastStepName,
-            "duration_sec": durationSec
-        ])
-    }
-
-    /// Call when the user taps Back or Skip on a specific onboarding step.
-    /// Action should be one of "back" or "skip".
-    func trackOnboardingNavTapped(step: Int, stepName: String, action: String) {
-        logEvent("onboarding_nav_tapped", parameters: [
-            "step": step,
-            "step_name": stepName,
-            "action": action
-        ])
     }
 
     enum ActivationMilestone: String {
@@ -687,9 +696,25 @@ final class AppAnalytics {
     // MARK: - 4. Session Events
     // ══════════════════════════════════════════════════════════════════════
 
-    /// Call when app enters foreground.
-    func trackSessionStart() {
-        session.startSession()
+    /// Call when app enters foreground. Returns true when a NEW session was
+    /// minted (so the caller runs the rest of the session-start analytics), false
+    /// when the previous session resumed within the 30-minute idle window — this
+    /// is the DAU-inflation guard the taxonomy requires.
+    @discardableResult
+    func trackSessionStart() -> Bool {
+        let isNewSession = session.startSession()
+
+        // A quick app-switch resumes the open session: do not re-emit
+        // session_started or any per-session work.
+        guard isNewSession else { return false }
+
+        // first_open: the user's very first app open, emitted exactly once.
+        // Gated on totalSessions == 1 (set inside startSession). is_reinstall is
+        // backed by a Keychain install token so a reinstall is not counted as a
+        // fresh install.
+        if session.totalSessions == 1 {
+            emitFirstOpenIfNeeded()
+        }
 
         // Rest-day credit telemetry (Gentler Streak / Duolingo pattern). Emits
         // once per session when SessionTracker has flipped the flag during
@@ -697,51 +722,36 @@ final class AppAnalytics {
         if session.didGrantCreditThisSession {
             logEvent("streak_rest_credit_granted", parameters: [
                 "credits_remaining": session.restCreditsRemaining,
-                "streak_days": session.streakDays,
-                "days_since_install": session.daysSinceInstall
+                "streak_days": session.streakDays
             ])
         }
         if session.didSpendCreditThisSession {
             logEvent("streak_rest_credit_spent", parameters: [
                 "credits_remaining": session.restCreditsRemaining,
-                "streak_days_saved": session.streakDays,
-                "days_since_install": session.daysSinceInstall
+                "streak_days_saved": session.streakDays
             ])
         }
         setUserProperty("rest_credits_remaining", value: "\(session.restCreditsRemaining)")
 
         let calendar = Date.cal
         let now = Date()
-        let hour = calendar.component(.hour, from: now)
         let weekday = calendar.component(.weekday, from: now)
         let dayNames = ["", "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
 
+        // session_started carries only day_of_week; every other dimension rides
+        // as a global (session_id, hour_of_day, app_version, opened_from) or as a
+        // user property (set below), so it is never duplicated on the event.
+        logEvent("session_started", parameters: [
+            "day_of_week": dayNames[weekday]
+        ])
+
+        // User-level dimensions removed from per-event injection now live here as
+        // user properties so cohort dashboards keep working without bloating
+        // every event with them.
+        let engagement = computeEngagementLevel()
         let networkType: String = ConnectivityMonitor.shared.isOnline
             ? (ConnectivityMonitor.shared.isExpensive ? "cellular" : "wifi")
             : "offline"
-
-        let engagement = computeEngagementLevel()
-        let subAgeDays = subscriptionAgeDays
-        let monthsSub = monthsSubscribed
-
-        logEvent("session_start", parameters: [
-            "session_id": session.sessionId,
-            "hour_of_day": hour,
-            "day_of_week": dayNames[weekday],
-            "streak_days": session.streakDays,
-            "session_source": session.currentSessionSource.rawValue,
-            "app_version": Self.cachedAppVersion,
-            "days_since_install": session.daysSinceInstall,
-            "weekly_active_days": session.weeklyActiveDays,
-            "network_type": networkType,
-            // Engagement + paid-retention signals emitted on every session so
-            // PostHog cohort dashboards (L28 power-user curve, month-2 paid
-            // retention) can be built without event joins.
-            "engagement_level": engagement.rawValue,
-            "subscription_age_days": subAgeDays,
-            "months_subscribed": monthsSub
-        ])
-
         setUserProperty("streak_days", value: "\(session.streakDays)")
         setUserProperty("price_tier", value: SubscriptionConfig.currentTier.rawValue)
         setUserProperty("days_since_install", value: "\(session.daysSinceInstall)")
@@ -749,9 +759,12 @@ final class AppAnalytics {
         setUserProperty("lifetime_core_actions", value: "\(session.lifetimeCoreActions)")
         setUserProperty("weekly_active_days", value: "\(session.weeklyActiveDays)")
         setUserProperty("organic_session_pct", value: "\(session.organicSessionPercent)")
+        setUserProperty("session_source", value: session.currentSessionSource.rawValue)
+        setUserProperty("network_type", value: networkType)
+        setUserProperty("nav_depth", value: "\(session.currentDepth)")
         setUserProperty("activation_status", value: session.isActivated ? "activated" : "not_activated")
         setUserProperty("engagement_level", value: engagement.rawValue)
-        setUserProperty("subscription_age_days", value: "\(subAgeDays)")
+        setUserProperty("subscription_age_days", value: "\(subscriptionAgeDays)")
 
         // Refresh demographic & device properties every session
         setDemographicProperties()
@@ -759,24 +772,83 @@ final class AppAnalytics {
 
         // Behavioral intelligence: detect habit patterns
         detectHabitPattern()
+        return true
     }
 
-    /// Call when app enters background.
-    func trackSessionEnd() {
-        let stats = session.endSession()
-        let coreActionsCount = session.coreActionsThisSession.count
+    /// Call when app enters background (or on a 30-min idle reset). Emits
+    /// `session_ended`, keyed to the same session_id as session_started.
+    func trackSessionEnd(reason: SessionTracker.EndReason = .backgrounded) {
+        let stats = session.endSession(reason: reason)
 
-        logEvent("session_end", parameters: [
-            "session_id": session.sessionId,
+        logEvent("session_ended", parameters: [
             "duration_sec": stats.durationSec,
-            "screens_visited": stats.screensVisited,
-            "max_depth": stats.maxDepth,
-            "core_actions_count": coreActionsCount
+            "active_sec": stats.activeSec,
+            "screens_viewed": stats.screensVisited,
+            "core_actions_count": stats.coreActionsCount,
+            "ended_reason": stats.reason
         ])
 
         // Behavioral intelligence: ghost sessions, churn risk, session quality
-        evaluateSessionQuality(durationSec: stats.durationSec, screensVisited: stats.screensVisited, coreActionsCount: coreActionsCount)
-        evaluateChurnRisk(durationSec: stats.durationSec, coreActionsCount: coreActionsCount, screensVisited: stats.screensVisited)
+        evaluateSessionQuality(durationSec: stats.durationSec, screensVisited: stats.screensVisited, coreActionsCount: stats.coreActionsCount)
+        evaluateChurnRisk(durationSec: stats.durationSec, coreActionsCount: stats.coreActionsCount, screensVisited: stats.screensVisited)
+    }
+
+    // MARK: - first_open
+
+    private enum FirstOpenKey {
+        /// Keychain-backed marker that survives app deletion. Its presence on a
+        /// fresh install means this is a REINSTALL, not a first-ever install.
+        static let installToken = "laso.analytics.install_token"
+    }
+
+    /// Emits `first_open` exactly once for the user's first-ever app open.
+    /// `is_reinstall` is true when a Keychain install token already exists (the
+    /// token survives app deletion via the Keychain), false on a genuine first
+    /// install. The token is written after reading so the next reinstall is
+    /// detected.
+    private func emitFirstOpenIfNeeded() {
+        guard !defaults.bool(forKey: "laso.analytics.first_open_tracked") else { return }
+        defaults.set(true, forKey: "laso.analytics.first_open_tracked")
+
+        let hadToken = EncryptedStore.shared.load(forKey: FirstOpenKey.installToken) != nil
+        if !hadToken {
+            EncryptedStore.shared.save(Data(UUID().uuidString.utf8), forKey: FirstOpenKey.installToken)
+        }
+
+        logEvent("first_open", parameters: [
+            "is_reinstall": hadToken ? 1 : 0
+        ])
+    }
+
+    // MARK: - feature_used
+
+    /// Controlled product-action type. One `feature_used` event with this enum
+    /// replaces the fragmented per-feature event names.
+    enum FeatureAction: String {
+        case askedHealthQuery = "asked_health_query"
+        case completedBreathwork = "completed_breathwork"
+        case viewedInsight = "viewed_insight"
+        case viewedScore = "viewed_score"
+        case viewedMetricDetail = "viewed_metric_detail"
+        case viewedCorrelation = "viewed_correlation"
+        case viewedWeeklyReview = "viewed_weekly_review"
+        case interactedWithChart = "interacted_with_chart"
+        case usedLiveTab = "used_live_tab"
+        case changedTimeRange = "changed_time_range"
+        case pulledToRefresh = "pulled_to_refresh"
+        case viewedRiskDetail = "viewed_risk_detail"
+        case completedMorningCheckIn = "completed_morning_checkin"
+        case viewedDailyAction = "viewed_daily_action"
+        case loggedJournal = "logged_journal"
+    }
+
+    /// Emits the consolidated `feature_used` event. Called from `trackCoreAction`
+    /// so any meaningful product action lands under one stable event name with a
+    /// controlled `action_type`.
+    func trackFeatureUsed(_ action: FeatureAction) {
+        logEvent("feature_used", parameters: [
+            "action_type": action.rawValue
+        ])
     }
 
     func trackReturnSession() {
@@ -817,7 +889,7 @@ final class AppAnalytics {
         for (k, v) in metadata { params[k] = v }
         logEvent("screen_viewed", parameters: params)
 
-        PostHogManager.shared.screen(feature.rawValue, properties: [
+        AnalyticsBackend.provider.screen(feature.rawValue, properties: [
             "tab": session.currentTab,
             "depth": session.currentDepth
         ])
@@ -871,6 +943,13 @@ final class AppAnalytics {
 
     func trackCoreAction(_ action: CoreAction, screen: AppFeature) {
         session.recordCoreAction(action.rawValue)
+
+        // Consolidated taxonomy event: every meaningful product action also emits
+        // one feature_used with a controlled action_type. CoreAction rawValues
+        // align 1:1 with FeatureAction rawValues.
+        if let featureAction = FeatureAction(rawValue: action.rawValue) {
+            trackFeatureUsed(featureAction)
+        }
 
         // Score reaction: capture what the user does after seeing their score
         trackScoreReaction(nextAction: action.rawValue, nextScreen: screen)
@@ -1058,13 +1137,25 @@ final class AppAnalytics {
     // ══════════════════════════════════════════════════════════════════════
 
     /// Call when trial begins (first app launch after onboarding).
+    /// Fires `trial_started` exactly once per install. The persisted
+    /// `trialStartedTracked` flag is the single source of truth so the event
+    /// neither double-fires (every `updateSubscriptionProperties` while the
+    /// user is still in trial would otherwise re-emit) nor gets missed (the
+    /// old `previousStatus == "unknown"` gate skipped it whenever the first
+    /// observed status was anything other than "unknown").
     func trackTrialStarted(daysRemaining: Int) {
-        logEvent("trial_started", parameters: [
-            "days_remaining": daysRemaining
-        ])
+        // User-property maintenance always runs so a reinstall still rebuilds
+        // subscription_status / trial_converted even after the one-shot event.
         setUserProperty("subscription_status", value: "trial")
         setUserProperty("trial_converted", value: "pending")
         defaults.set("pending", forKey: Key.trialConverted)
+
+        guard !defaults.bool(forKey: Key.trialStartedTracked) else { return }
+        defaults.set(true, forKey: Key.trialStartedTracked)
+
+        logEvent("trial_started", parameters: [
+            "days_remaining": daysRemaining
+        ])
     }
 
     /// Call on each session during trial to track engagement vs trial days left.
@@ -1095,15 +1186,14 @@ final class AppAnalytics {
         defaults.set("no", forKey: Key.trialConverted)
     }
 
-    /// Call when paywall is viewed.
+    /// Call when paywall is viewed. `source` is the placement that triggered the
+    /// paywall (e.g. "onboarding", "aha_moment", "trial_expired"). Fire exactly
+    /// once per presentation, from PaywallView.onAppear. tab, days_since_install,
+    /// subscription, and activation state ship as auto-injected globals / user
+    /// properties, so they are not duplicated on the event itself.
     func trackPaywallViewed(source: String) {
         logEvent("paywall_viewed", parameters: [
-            "source": source,
-            "tab": session.currentTab,
-            "days_since_install": session.daysSinceInstall,
-            "trial_converted": defaults.string(forKey: Key.trialConverted) ?? "pending",
-            "was_activated": session.isActivated ? 1 : 0,
-            "lifetime_core_actions": session.lifetimeCoreActions
+            "source": source
         ])
     }
 
@@ -1151,28 +1241,27 @@ final class AppAnalytics {
         ])
     }
 
-    /// Call after a successful purchase.
-    func trackSubscriptionPurchased(productID: String, price: String, isTrialConversion: Bool, revenueAmount: Double? = nil, currency: String? = nil, subscriptionPeriod: String? = nil) {
-        let region = Locale.current.region?.identifier ?? "unknown"
-
-        var params: [String: Any] = [
+    /// Call after a successful StoreKit purchase. Emits `purchase_completed`.
+    /// `grossRevenue` is the gross DISPLAY price in major units (NOT Apple net
+    /// proceeds); authoritative revenue moves server-side later.
+    /// `transactionIDHash` is a one-way hash of the StoreKit transaction id for
+    /// dedupe — never the raw id.
+    func trackPurchaseCompleted(
+        productID: String,
+        billingPeriod: String,
+        grossRevenue: Double,
+        currency: String,
+        isTrialConversion: Bool,
+        transactionIDHash: String
+    ) {
+        logEvent("purchase_completed", parameters: [
             "product_id": productID,
-            "price": price,
-            "region": region,
-            "price_tier": SubscriptionConfig.currentTier.rawValue,
+            "billing_period": billingPeriod,
+            "gross_revenue": grossRevenue,
+            "currency": currency,
             "trial_converted": isTrialConversion ? 1 : 0,
-            "days_since_install": session.daysSinceInstall,
-            "total_sessions": session.totalSessions,
-            "milestones_completed": session.completedMilestones.count,
-            "lifetime_core_actions": session.lifetimeCoreActions
-        ]
-        // Always send revenue/currency/period with placeholders so PostHog
-        // revenue dashboards have a consistent shape across all purchase events.
-        params["revenue"] = revenueAmount ?? 0.0
-        params["revenue_known"] = revenueAmount == nil ? 0 : 1
-        params["currency"] = currency ?? "unknown"
-        params["subscription_period"] = subscriptionPeriod ?? "unknown"
-        logEvent("subscription_purchased", parameters: params)
+            "transaction_id_hash": transactionIDHash
+        ])
 
         if isTrialConversion {
             setUserProperty("trial_converted", value: "yes")
@@ -1220,14 +1309,25 @@ final class AppAnalytics {
         setUserProperty("renewal_count", value: "\(renewals)")
     }
 
-    /// Call when subscription transitions to expired.
-    func trackSubscriptionCancelled() {
+    /// Controlled voluntary-churn reason. `unknown` is used when the cancel is
+    /// inferred from a client status flip rather than an explicit user choice.
+    enum CancellationReason: String {
+        case tooExpensive = "too_expensive"
+        case notUsing = "not_using"
+        case missingFeature = "missing_feature"
+        case foundAlternative = "found_alternative"
+        case technical
+        case billing
+        case unknown
+    }
+
+    /// Call when paid access is lost (voluntary churn). `cancellation_reason` is a
+    /// controlled enum — never free text. Authoritative cancel truth needs a store
+    /// webhook (server-side); until then this is client-inferred from a status flip
+    /// and defaults the reason to `unknown`.
+    func trackSubscriptionCancelled(reason: CancellationReason = .unknown) {
         logEvent("subscription_cancelled", parameters: [
-            "months_subscribed": monthsSubscribed,
-            "renewal_count": defaults.integer(forKey: Key.renewalCount),
-            "total_sessions": session.totalSessions,
-            "days_since_install": session.daysSinceInstall,
-            "lifetime_core_actions": session.lifetimeCoreActions
+            "cancellation_reason": reason.rawValue
         ])
         setUserProperty("subscription_status", value: "expired")
     }
@@ -1240,12 +1340,21 @@ final class AppAnalytics {
         ])
     }
 
-    /// Call when a purchase fails.
-    func trackPurchaseFailed(productID: String, errorType: String) {
+    /// Controlled post-CTA purchase-failure reason. Never a raw error_domain/code.
+    enum PurchaseFailureReason: String {
+        case userCancelled = "user_cancelled"
+        case paymentDeclined = "payment_declined"
+        case networkError = "network_error"
+        case verification
+    }
+
+    /// Call when a post-CTA purchase attempt fails. `failure_reason` is a
+    /// controlled enum so paywall friction can be cut by reason without leaking
+    /// raw StoreKit error domains/codes.
+    func trackPurchaseFailed(productID: String, reason: PurchaseFailureReason) {
         logEvent("purchase_failed", parameters: [
             "product_id": productID,
-            "error_type": errorType,
-            "days_since_install": session.daysSinceInstall
+            "failure_reason": reason.rawValue
         ])
     }
 
@@ -1260,9 +1369,11 @@ final class AppAnalytics {
             statusLabel = "trial"
             userTier = "trial"
             trackTrialDayCheck(daysRemaining: daysRemaining)
-            if previousStatus == "unknown" {
-                trackTrialStarted(daysRemaining: daysRemaining)
-            }
+            // trackTrialStarted self-dedupes via the persisted trialStartedTracked
+            // flag, so call it on every trial observation. The old
+            // previousStatus == "unknown" gate missed the event whenever the
+            // first observed status was already non-"unknown".
+            trackTrialStarted(daysRemaining: daysRemaining)
         case .subscribed:
             statusLabel = "pro"
             userTier = "pro"
@@ -1571,51 +1682,29 @@ final class AppAnalytics {
     // Notification opened
     func trackNotificationOpened(identifier: String) {
         let defaults = UserDefaults.standard
-        let type = NotificationManager.notificationType(identifier)
 
-        // Retrieve stored context from when notification was scheduled
-        let hookCategory = defaults.string(forKey: "healthpulse.notif.hook.\(identifier)") ?? "unknown"
-        let sentTimestamp = defaults.double(forKey: "healthpulse.notif.sent.\(identifier)")
+        // hook_category is only meaningful when it maps onto a real HookCategory
+        // case. Anything else (no stored value, legacy "unknown") collapses to
+        // "none" so the property is enum-clean for Amplitude breakdowns.
+        let storedHook = defaults.string(forKey: "healthpulse.notif.hook.\(identifier)")
+        let hookCategory = Copy.Notifications.HookCategory(rawValue: storedHook ?? "").map(\.rawValue) ?? "none"
 
-        // Compute time-to-open in minutes. When the sent timestamp was never
-        // recorded, send a sibling `latency_known` flag instead of a -1 sentinel
-        // so PostHog averages over latency_minutes_minutes aren't poisoned.
-        let now = Date()
-        let latencyKnown = sentTimestamp > 0
-        let latencyMinutes: Int = latencyKnown
-            ? Int(now.timeIntervalSince1970 - sentTimestamp) / 60
-            : 0
-
-        let cal = Date.cal
-
-        // Extract metric name from structured alert identifiers
-        // Formats: healthpulse.triage.[metric].[level], healthpulse.spike.[metric].[type],
-        //          healthpulse.reversal.[metric].[direction], healthpulse.celebration.[metric]
+        // alert_metric is the metric segment, already routed through
+        // anonymizeMetricValue (it's in metricParameterKeys) so a raw condition
+        // name never reaches Amplitude.
         let parts = identifier.split(separator: ".")
         let alertMetric: String = parts.count >= 3 ? String(parts[2]) : "none"
-        let alertSubtype: String = parts.count >= 4 ? String(parts[3]) : "none"
 
         let params: [String: Any] = [
-            "notification_id": identifier,
-            "type": type,
+            // PII-safe id: any embedded HealthMetric raw value is collapsed to its
+            // parent category, so "healthpulse.spike.bloodPressureSystolic.high"
+            // ships as "healthpulse.spike.cardiovascular.high".
+            "notification_id": sanitizedNotificationID(identifier),
+            "notification_type": NotificationManager.notificationType(identifier),
             "hook_category": hookCategory,
-            "latency_minutes": latencyMinutes,
-            "latency_known": latencyKnown ? 1 : 0,
-            "hour_opened_local": cal.component(.hour, from: now),
-            "day_of_week": cal.component(.weekday, from: now),
-            "alert_metric": alertMetric,
-            "alert_subtype": alertSubtype
+            "alert_metric": alertMetric
         ]
         logEvent("notification_opened", parameters: params)
-
-        // Also fire alert_acted_on for health alert types
-        if type == "alert" || type == "watch_monitor" {
-            trackAlertActedOn(
-                alertType: type,
-                metric: alertMetric == "none" ? nil : alertMetric,
-                action: "opened"
-            )
-        }
 
         // Clean up stored context
         defaults.removeObject(forKey: "healthpulse.notif.hook.\(identifier)")
@@ -1755,15 +1844,17 @@ final class AppAnalytics {
         ])
     }
 
-    /// Track notification delivery (when we schedule a local notification).
+    /// Enqueue/intent-to-send floor (when we schedule a local notification), not delivered reach.
     func trackNotificationScheduled(type: String, identifier: String, hookCategory: String? = nil) {
         let now = Date()
-        let cal = Date.cal
+        // Raw identifiers embed the health-metric name (healthpulse.alert.[metric].[subtype]),
+        // so the join key is hashed and the metric is sent only via the anonymized alert_metric.
+        let parts = identifier.split(separator: ".")
+        let alertMetric: String = parts.count >= 3 ? String(parts[2]) : "none"
         var params: [String: Any] = [
-            "type": type,
-            "notification_id": identifier,
-            "hour_scheduled": cal.component(.hour, from: now),
-            "day_of_week": cal.component(.weekday, from: now)
+            "notification_type": type,
+            "notification_id": Self.hashedNotificationID(identifier),
+            "alert_metric": alertMetric
         ]
         if let hook = hookCategory {
             params["hook_category"] = hook
@@ -1772,6 +1863,21 @@ final class AppAnalytics {
         // Store send timestamp for time-to-open calculation
         UserDefaults.standard.set(now.timeIntervalSince1970, forKey: "healthpulse.notif.sent.\(identifier)")
         logEvent("notification_scheduled", parameters: params)
+    }
+
+    /// Stable, non-reversible join key for a notification identifier. SHA256 truncated to
+    /// 16 hex chars keeps the scheduled->opened funnel joinable without transmitting the raw
+    /// identifier, which embeds a health-metric name.
+    static func hashedNotificationID(_ identifier: String) -> String {
+        sha256Hash16(identifier)
+    }
+
+    /// Stable, non-reversible SHA256 hash truncated to 16 hex chars. Used for
+    /// dedupe/join keys (notification ids, transaction ids) without transmitting
+    /// the raw value.
+    static func sha256Hash16(_ value: String) -> String {
+        let digest = SHA256.hash(data: Data(value.utf8))
+        return digest.map { String(format: "%02x", $0) }.joined().prefix(16).description
     }
 
     /// Track when a notification is suppressed before delivery.
@@ -1812,12 +1918,13 @@ final class AppAnalytics {
         ])
     }
 
-    /// Track insight usefulness (did user act on it?).
-    func trackInsightEngagement(category: String, metric: String, action: String) {
-        logEvent("insight_engagement", parameters: [
-            "insight_category": category,
-            "metric": metric,
-            "action": action
+    /// Track that the user opened an insight. `metricCategory` must be a
+    /// controlled `HealthCategory` rawValue (heart, sleep, activity, body,
+    /// respiratory, mindfulness, mobility, nutrition, hearing) — never a raw
+    /// metric name. screen/tab/opened_from arrive as auto-injected globals.
+    func trackInsightOpened(metricCategory: HealthCategory) {
+        logEvent("insight_opened", parameters: [
+            "metric_category": metricCategory.rawValue
         ])
     }
 
@@ -2224,7 +2331,7 @@ final class AppAnalytics {
         ]
         if let watchModel { props["watch_model"] = watchModel }
         if let wearableModel { props["wearable_model"] = wearableModel }
-        PostHogManager.shared.setUserProperties(props)
+        AnalyticsBackend.provider.setUserProperties(props)
     }
 
     /// Update notification permission state as user property.
@@ -2708,179 +2815,6 @@ final class AppAnalytics {
         return normalized
     }
 
-    private func canonicalEventName(_ name: String, parameters: [String: Any]) -> String {
-        let screen = scopedValue("screen", in: parameters)
-        let action = scopedValue("action", in: parameters)
-        let rawMetric = scopedValue("metric", in: parameters)
-        // Anonymize metric names in event names so specific health conditions
-        // (e.g. "bloodPressure") are never embedded in PostHog event identifiers.
-        let metric = rawMetric.map { anonymizeMetricValue($0) }
-        let filterType = scopedValue("filter_type", in: parameters)
-        let context = scopedValue("context", in: parameters)
-        let section = scopedValue("section_id", in: parameters)
-        let setting = scopedValue("setting_name", in: parameters)
-        let notificationType = scopedValue("type", in: parameters)
-        let recommendationType = scopedValue("recommendation_type", in: parameters)
-        let explanationType = scopedValue("explanation_type", in: parameters)
-        let source = scopedValue("source", in: parameters)
-        let errorType = scopedValue("error_type", in: parameters)
-        let activityKind = scopedValue("activity_kind", in: parameters)
-        let trigger = scopedValue("trigger", in: parameters)
-        let contentType = scopedValue("content_type", in: parameters)
-        let feedbackCategory = scopedValue("category", in: parameters)
-        let sourceType = scopedValue("source_type", in: parameters)
-
-        switch name {
-        case "session_start":
-            return "app_session_started"
-        case "session_end":
-            return "app_session_ended"
-        case "return_session":
-            return "app_return_session_recorded"
-        case "daily_active":
-            return "app_daily_active_recorded"
-        case "screen_viewed":
-            return composedEventName([screen, "screen", "viewed"], fallback: "app_screen_viewed")
-        case "screen_exited":
-            return composedEventName([screen, "screen", "exited"], fallback: "app_screen_exited")
-        case "block_tapped":
-            return composedEventName([screen, "block", "tapped"], fallback: "app_block_tapped")
-        case "core_action_completed":
-            return composedEventName([screen, action, "completed"], fallback: "app_core_action_completed")
-        case "insight_tapped":
-            return composedEventName([screen, "insight", "tapped"], fallback: "insight_tapped")
-        case "correlation_tapped":
-            return composedEventName([screen, "correlation", "tapped"], fallback: "correlation_tapped")
-        case "risk_tapped":
-            return composedEventName([screen, "risk", "tapped"], fallback: "risk_tapped")
-        case "chart_interaction":
-            return composedEventName([screen, metric, "chart", "interacted"], fallback: "chart_interaction")
-        case "pull_to_refresh":
-            return composedEventName([screen, "pull", "to", "refresh", "triggered"], fallback: "pull_to_refresh_triggered")
-        case "time_range_changed":
-            return composedEventName([screen, context, "time", "range", "changed"], fallback: "time_range_changed")
-        case "filter_changed":
-            return composedEventName([screen, filterType, "filter", "changed"], fallback: "filter_changed")
-        case "weekly_score_change":
-            return "health_score_weekly_changed"
-        case "analysis_completed":
-            return "health_analysis_completed"
-        case "data_sync_completed":
-            return "health_data_sync_completed"
-        case "sync_performance":
-            return "health_data_sync_performance_measured"
-        case "setting_changed":
-            return composedEventName(["settings", setting, "changed"], fallback: "settings_changed")
-        case "notification_sent":
-            return composedEventName([notificationType, "notification", "sent"], fallback: "notification_sent")
-        case "notification_opened":
-            return composedEventName([notificationType, "notification", "opened"], fallback: "notification_opened")
-        case "notification_scheduled":
-            return composedEventName([notificationType, "notification", "scheduled"], fallback: "notification_scheduled")
-        case "share_sheet_presented":
-            return composedEventName([contentType, "share", "sheet", "presented"], fallback: "share_sheet_presented")
-        case "feedback_submitted":
-            return composedEventName([feedbackCategory, "feedback", "submitted"], fallback: "feedback_submitted")
-        case "scroll_depth":
-            return composedEventName([screen, "scroll", "depth", "recorded"], fallback: "scroll_depth_recorded")
-        case "section_viewed":
-            return composedEventName([section, "section", "viewed"], fallback: "section_viewed")
-        case "section_tapped":
-            return composedEventName([section, "section", "tapped"], fallback: "section_tapped")
-        case "error_occurred":
-            return composedEventName([screen, errorType, "error", "occurred"], fallback: "app_error_occurred")
-        case "health_permission_requested":
-            return "healthkit_permission_requested"
-        case "health_permission_result":
-            return "healthkit_permission_result_recorded"
-        case "source_connected":
-            return composedEventName([sourceType, "source", "connected"], fallback: "source_connected")
-        case "recommendation_viewed":
-            return composedEventName([recommendationType, "recommendation", "viewed"], fallback: "recommendation_viewed")
-        case "recommendation_started":
-            return composedEventName([recommendationType, "recommendation", "started"], fallback: "recommendation_started")
-        case "recommendation_completed":
-            return composedEventName([recommendationType, "recommendation", "completed"], fallback: "recommendation_completed")
-        case "recommendation_skipped":
-            return composedEventName([recommendationType, "recommendation", "skipped"], fallback: "recommendation_skipped")
-        case "workout_plan_generated":
-            return composedEventName([screen, "workout", "plan", "generated"], fallback: "workout_plan_generated")
-        case "workout_plan_opened":
-            return composedEventName([screen, "workout", "plan", "opened"], fallback: "workout_plan_opened")
-        case "live_activity_state_changed":
-            return composedEventName([activityKind, "live", "activity", "state", "changed"], fallback: "live_activity_state_changed")
-        case "live_activity_action_performed":
-            return composedEventName([activityKind, "live", "activity", "action", "performed"], fallback: "live_activity_action_performed")
-        case "live_activity_sleep_outcome":
-            return composedEventName([activityKind, "live", "activity", "sleep", "outcome"], fallback: "live_activity_sleep_outcome")
-        case "widget_snapshot_updated":
-            return composedEventName([trigger, "widget", "snapshot", "updated"], fallback: "widget_snapshot_updated")
-        case "empty_state_shown":
-            return composedEventName([screen, "empty", "state", "shown"], fallback: "empty_state_shown")
-        case "score_generation_failed":
-            return "health_score_generation_failed"
-        case "sync_failed":
-            return "health_data_sync_failed"
-        case "streaming_started":
-            return "live_vitals_streaming_started"
-        case "streaming_stopped":
-            return "live_vitals_streaming_stopped"
-        case "live_first_data_received":
-            return "live_vitals_first_data_received"
-        case "explanation_viewed":
-            return composedEventName([screen, explanationType, "explanation", "viewed"], fallback: "explanation_viewed")
-        case "privacy_page_viewed":
-            return composedEventName([source, "privacy", "page", "viewed"], fallback: "privacy_page_viewed")
-        case "background_refresh_result":
-            return "background_refresh_completed"
-        case "value_delivered":
-            return "analysis_value_delivered"
-        case "pmf_survey_response":
-            return "pmf_survey_response_submitted"
-        case "pmf_segment_response":
-            return "pmf_segment_response_submitted"
-        case "pmf_benefit_response":
-            return "pmf_benefit_response_submitted"
-        case "pmf_improvement_response":
-            return "pmf_improvement_response_submitted"
-        case "share_completed":
-            return composedEventName([contentType, "share", "completed"], fallback: "share_completed")
-        case "cloud_backup_completed":
-            return "cloud_backup_completed"
-        case "cloud_backup_failed":
-            return "cloud_backup_failed"
-        case "cloud_restore_completed":
-            return "cloud_restore_completed"
-        case "app_store_review_prompted":
-            return composedEventName([trigger, "app_store_review", "prompted"], fallback: "app_store_review_prompted")
-        case "deep_link_opened":
-            return composedEventName([source, "deep_link", "opened"], fallback: "deep_link_opened")
-        case "notification_permission_requested":
-            return composedEventName([source, "notification", "permission", "requested"], fallback: "notification_permission_requested")
-        case "notification_permission_result":
-            return composedEventName([source, "notification", "permission", "result"], fallback: "notification_permission_result")
-        case "query_feedback":
-            return "ask_your_data_query_feedback"
-        default:
-            return name
-        }
-    }
-
-    private func scopedValue(_ key: String, in parameters: [String: Any]) -> String? {
-        guard let rawValue = parameters[key] else { return nil }
-        let value = String(describing: rawValue)
-        let slug = slugify(value)
-        return slug == "unknown" ? nil : slug
-    }
-
-    private func composedEventName(_ parts: [String?], fallback: String) -> String {
-        let components = parts.compactMap { part -> String? in
-            guard let part, !part.isEmpty else { return nil }
-            return part
-        }
-        guard !components.isEmpty else { return fallback }
-        return components.joined(separator: "_")
-    }
 
     /// Parameter keys whose string values may contain identifiable health metric names.
     /// These are replaced with the metric's generic HealthCategory before sending to PostHog
@@ -2904,6 +2838,20 @@ final class AppAnalytics {
             return metric.category.rawValue
         }
         return value
+    }
+
+    /// PII-safe form of a notification identifier. Prefix-based alert ids embed a
+    /// raw HealthMetric rawValue in their third segment
+    /// (e.g. "healthpulse.spike.bloodPressureSystolic.high"); that segment is
+    /// collapsed to its parent HealthCategory so a specific condition never ships
+    /// inside notification_id. Static, non-metric ids (dailySummary, engagement)
+    /// pass through unchanged. The metric segment is the only PII carrier, so all
+    /// other segments are preserved to keep the id joinable in Amplitude.
+    private func sanitizedNotificationID(_ identifier: String) -> String {
+        var parts = identifier.split(separator: ".").map(String.init)
+        guard parts.count >= 3 else { return identifier }
+        parts[2] = anonymizeMetricValue(parts[2])
+        return parts.joined(separator: ".")
     }
 
     private func sanitizeParameters(_ parameters: [String: Any]) -> [String: Any] {
@@ -2955,40 +2903,24 @@ final class AppAnalytics {
     // MARK: - 23. Sean Ellis PMF Survey
     // ══════════════════════════════════════════════════════════════════════
 
-    /// The canonical PMF question: "How would you feel if you could no longer use Laso?"
-    /// Responses: "very_disappointed", "somewhat_disappointed", "not_disappointed"
-    /// >40% "very disappointed" = PMF achieved (Rahul Vohra / Superhuman benchmark).
-    func trackPMFSurveyResponse(response: String, source: String) {
-        logEvent("pmf_survey_response", parameters: [
-            "response": response,
-            "source": source,
-            "total_sessions": session.totalSessions,
-            "lifetime_core_actions": session.lifetimeCoreActions,
-            "was_activated": session.isActivated ? 1 : 0
-        ])
-        setUserProperty("pmf_response", value: response)
+    /// Controlled Sean Ellis PMF answer. Free-text segment/benefit/improvement
+    /// answers are deliberately NOT emitted — they leak PII and the taxonomy keeps
+    /// only the enum choice.
+    enum SeanEllisChoice: String {
+        case veryDisappointed = "very_disappointed"
+        case somewhatDisappointed = "somewhat_disappointed"
+        case notDisappointed = "not_disappointed"
     }
 
-    /// Track the secondary PMF question: "What type of person do you think would benefit
-    /// most from Laso?" — used to identify your ideal user segment.
-    func trackPMFSegmentResponse(segment: String) {
-        logEvent("pmf_segment_response", parameters: [
-            "segment": segment
+    /// The single PMF survey event. Fires once when the user answers the canonical
+    /// Sean Ellis question ("How would you feel if you could no longer use Laso?").
+    /// >40% very_disappointed = PMF (Rahul Vohra / Superhuman benchmark). The four
+    /// old PMF events are consolidated here; only the enum choice ships.
+    func trackSatisfactionSurveyAnswered(_ choice: SeanEllisChoice) {
+        logEvent("satisfaction_survey_answered", parameters: [
+            "sean_ellis_choice": choice.rawValue
         ])
-    }
-
-    /// Track the tertiary PMF question: "What is the main benefit you get from Laso?"
-    func trackPMFBenefitResponse(benefit: String) {
-        logEvent("pmf_benefit_response", parameters: [
-            "benefit": benefit
-        ])
-    }
-
-    /// Track the improvement question: "How can we improve Laso for you?"
-    func trackPMFImprovementResponse(improvement: String) {
-        logEvent("pmf_improvement_response", parameters: [
-            "text_length": improvement.count
-        ])
+        setUserProperty("pmf_response", value: choice.rawValue)
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -3079,85 +3011,108 @@ final class AppAnalytics {
         ])
     }
 
-    // MARK: - PostHog Backend (all events)
+    // MARK: - Analytics Backend (all events)
+
+    /// The finalised client-side taxonomy. logEvent forwards ONLY these to Amplitude;
+    /// every legacy call is dropped at the wire, so the stream is exactly these events
+    /// under their stable names — no dynamic renames, no legacy noise.
+    /// (marketing_spend_recorded is server-imported; subscription_renewed/refunded and
+    /// payment_issue_* arrive from the App Store Server Notifications webhook — none are
+    /// client events.)
+    private static let taxonomyEvents: Set<String> = [
+        "paywall_viewed", "purchase_completed", "purchase_failed", "trial_started",
+        "subscription_cancelled", "feature_used", "insight_opened", "satisfaction_survey_answered",
+        "session_started", "session_ended", "onboarding_step_completed", "onboarding_completed",
+        "data_sync_completed", "first_open", "notification_scheduled", "notification_opened",
+    ]
 
     fileprivate func logEvent(_ name: String, parameters: [String: Any]) {
+        guard Self.taxonomyEvents.contains(name) else { return }
         var enriched = parameters
+
+        // The 12 global properties from the analytics taxonomy, injected on every
+        // event. User-level dimensions (subscription_status, streak_days,
+        // engagement_level, etc.) are NOT injected here — they live as user
+        // properties and are set via setUserProperty on session start, so they
+        // are still joinable in Amplitude without bloating every event.
+
+        // Build-time constants.
+        enriched["schema_version"] = Self.schemaVersion
+        enriched["environment"] = Self.environment
+        enriched["platform"] = "ios"
+        enriched["build_number"] = Self.cachedBuildNumber
+        if enriched["app_version"] == nil {
+            enriched["app_version"] = Self.cachedAppVersion
+        }
+
+        // Session identity.
         if enriched["session_id"] == nil {
             enriched["session_id"] = session.sessionId
         }
+        if enriched["session_number"] == nil {
+            enriched["session_number"] = session.totalSessions
+        }
+
+        // Current location in the app, when known.
         if enriched["tab"] == nil {
             enriched["tab"] = session.currentTab
         }
         if enriched["screen"] == nil, let currentScreen = session.currentScreen {
             enriched["screen"] = currentScreen
         }
-        if enriched["session_source"] == nil {
-            enriched["session_source"] = session.currentSessionSource.rawValue
-        }
-        if enriched["session_number"] == nil {
-            enriched["session_number"] = session.totalSessions
-        }
-        if enriched["days_since_install"] == nil {
-            enriched["days_since_install"] = session.daysSinceInstall
-        }
-        if enriched["streak_days"] == nil {
-            enriched["streak_days"] = session.streakDays
-        }
-        if enriched["weekly_active_days"] == nil {
-            enriched["weekly_active_days"] = session.weeklyActiveDays
-        }
-        if enriched["nav_depth"] == nil {
-            enriched["nav_depth"] = session.currentDepth
-        }
-        if enriched["organic_session_pct"] == nil {
-            enriched["organic_session_pct"] = session.organicSessionPercent
-        }
-        if enriched["app_version"] == nil {
-            enriched["app_version"] = Self.cachedAppVersion
-        }
-        if enriched["subscription_status"] == nil {
-            enriched["subscription_status"] = defaults.string(forKey: Key.lastKnownStatus) ?? "unknown"
-        }
-        if enriched["user_tier"] == nil {
-            let status = defaults.string(forKey: Key.lastKnownStatus) ?? "unknown"
-            enriched["user_tier"] = (status == "pro" || status == "billing_grace") ? "pro" : (status == "trial" ? "trial" : "free")
-        }
-        if enriched["onboarding_completed"] == nil {
-            enriched["onboarding_completed"] = defaults.bool(forKey: AppKeys.App.onboardingCompleted) ? 1 : 0
-        }
-        if enriched["activation_status"] == nil {
-            enriched["activation_status"] = session.isActivated ? "activated" : "not_activated"
+
+        // Entry point for this session, mapped onto the taxonomy enum.
+        if enriched["opened_from"] == nil {
+            enriched["opened_from"] = Self.openedFrom(for: session.currentSessionSource)
         }
 
-        // Universal super-properties — previously only attached to `session_start`,
-        // which made "Network Type Distribution", "Usage by Hour of Day", and
-        // "Users by Engagement Level" panels empty for every other event type.
-        if enriched["network_type"] == nil {
-            enriched["network_type"] = ConnectivityMonitor.shared.isOnline
-                ? (ConnectivityMonitor.shared.isExpensive ? "cellular" : "wifi")
-                : "offline"
-        }
+        // Local hour (0-23) for time-of-day analysis the UTC stamp cannot give.
         if enriched["hour_of_day"] == nil {
             enriched["hour_of_day"] = Date.cal.component(.hour, from: Date())
         }
-        if enriched["engagement_level"] == nil {
-            enriched["engagement_level"] = computeEngagementLevel().rawValue
-        }
-        // Raw event-kind so PostHog panels can group/filter by the canonical
-        // base name (e.g. "screen_viewed") even when the captured event name
-        // is composed (e.g. "home_screen_viewed").
-        if enriched["event_kind"] == nil {
-            enriched["event_kind"] = name
+
+        // Fixed-UTC ISO-8601 wall-clock stamp, comparable across timezones.
+        if enriched["client_timestamp_utc"] == nil {
+            enriched["client_timestamp_utc"] = Self.eventTimestampFormatter.string(from: Date())
         }
 
-        let eventName = sanitizeEventName(canonicalEventName(name, parameters: enriched))
+        // Allowlisted events ship under their literal stable name — never the dynamic canonicalEventName.
         let params = sanitizeParameters(enriched)
-        PostHogManager.shared.capture(event: eventName, properties: params)
+        AnalyticsBackend.provider.capture(event: sanitizeEventName(name), properties: params)
+    }
+
+    /// Analytics schema version. Bump when the event/property contract changes so
+    /// dashboards can pin to a known taxonomy.
+    private static let schemaVersion = "2026-05-31.1"
+
+    /// `environment` global mapped onto the taxonomy enum (debug, testflight,
+    /// production). AnalyticsEnvironment uses "release" for App Store builds;
+    /// the taxonomy calls that "production".
+    private static let environment: String = {
+        switch AnalyticsEnvironment.appEnvironment {
+        case "release": return "production"
+        default:        return AnalyticsEnvironment.appEnvironment
+        }
+    }()
+
+    /// Cached internal build number (CFBundleVersion). Fixed for the process.
+    private static let cachedBuildNumber: String = {
+        let info = Bundle.main.infoDictionary
+        return (info?["CFBundleVersion"] as? String) ?? "unknown"
+    }()
+
+    /// Maps the session source onto the taxonomy `opened_from` enum
+    /// (app_icon, notification, widget, deeplink, live_activity, shortcut, unknown).
+    private static func openedFrom(for source: SessionTracker.SessionSource) -> String {
+        switch source {
+        case .organic:      return "app_icon"
+        case .notification: return "notification"
+        case .widget:       return "widget"
+        }
     }
 
     private func setUserProperty(_ name: String, value: String) {
-        PostHogManager.shared.setUserProperty(name: name, value: value)
+        AnalyticsBackend.provider.setUserProperty(name: name, value: value)
     }
 
     // ══════════════════════════════════════════════════════════════════════

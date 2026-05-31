@@ -206,10 +206,10 @@ final class SubscriptionManager {
                 let wasTrialBefore = { if case .trial = self.status { return true }; return false }()
                 await refreshStatus()
                 await syncSubscriptionToFirestore(transaction)
-                trackPurchase(product: product, isTrialConversion: wasTrialBefore)
+                trackPurchase(product: product, isTrialConversion: wasTrialBefore, transactionID: transaction.id)
 
             case .userCancelled:
-                AppAnalytics.shared.trackPurchaseFailed(productID: product.id, errorType: "user_cancelled")
+                AppAnalytics.shared.trackPurchaseFailed(productID: product.id, reason: .userCancelled)
 
             case .pending:
                 errorMessage = "Purchase is pending approval."
@@ -219,7 +219,7 @@ final class SubscriptionManager {
             }
         } catch {
             errorMessage = "Purchase failed. Please try again."
-            AppAnalytics.shared.trackPurchaseFailed(productID: product.id, errorType: "purchase_error")
+            AppAnalytics.shared.trackPurchaseFailed(productID: product.id, reason: .verification)
         }
     }
 
@@ -468,20 +468,20 @@ final class SubscriptionManager {
 
     // MARK: - Analytics
 
-    private func trackPurchase(product: Product, isTrialConversion: Bool) {
+    private func trackPurchase(product: Product, isTrialConversion: Bool, transactionID: UInt64) {
         let period: String = switch product.subscription?.subscriptionPeriod.unit {
         case .month: "monthly"
         case .year: "yearly"
         case .week: "weekly"
         default: "unknown"
         }
-        AppAnalytics.shared.trackSubscriptionPurchased(
+        AppAnalytics.shared.trackPurchaseCompleted(
             productID: product.id,
-            price: product.displayPrice,
-            isTrialConversion: isTrialConversion,
-            revenueAmount: NSDecimalNumber(decimal: product.price).doubleValue,
+            billingPeriod: period,
+            grossRevenue: NSDecimalNumber(decimal: product.price).doubleValue,
             currency: product.priceFormatStyle.currencyCode,
-            subscriptionPeriod: period
+            isTrialConversion: isTrialConversion,
+            transactionIDHash: AppAnalytics.sha256Hash16(String(transactionID))
         )
         AppAnalytics.shared.updateSubscriptionProperties(status: status)
     }

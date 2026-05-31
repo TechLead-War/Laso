@@ -46,53 +46,10 @@ final class PostHogManager {
 
         // Super-properties auto-attach to every captured event. These let dashboards
         // filter prod-only data (`app_environment == "release"`) and segment by build,
-        // OS, locale, device without recomputing per event.
-        registerStaticSuperProperties()
+        // OS, locale, device without recomputing per event. Shared with the Amplitude
+        // provider via AnalyticsEnvironment so there is a single definition.
+        PostHogSDK.shared.register(AnalyticsEnvironment.staticSuperProperties())
     }
-
-    /// Register process-lifetime super-properties on the PostHog SDK so every
-    /// captured event carries them without per-call enrichment.
-    private func registerStaticSuperProperties() {
-        let info = Bundle.main.infoDictionary ?? [:]
-        let appVersion = (info["CFBundleShortVersionString"] as? String) ?? "unknown"
-        let buildNumber = (info["CFBundleVersion"] as? String) ?? "unknown"
-
-        var props: [String: Any] = [
-            "app_environment": Self.appEnvironment,
-            "is_debug": Self.isDebugBuild ? 1 : 0,
-            "app_version": appVersion,
-            "app_build": buildNumber,
-            "locale_language": Locale.current.language.languageCode?.identifier ?? "unknown",
-            "locale_country": Locale.current.region?.identifier ?? "unknown",
-            "timezone_id": TimeZone.current.identifier
-        ]
-        #if os(iOS)
-        props["ios_version"] = UIDevice.current.systemVersion
-        #endif
-        PostHogSDK.shared.register(props)
-    }
-
-    /// True when this binary was compiled with the DEBUG configuration.
-    static let isDebugBuild: Bool = {
-        #if DEBUG
-        return true
-        #else
-        return false
-        #endif
-    }()
-
-    /// "debug", "testflight", or "release" — used as a super-property so prod
-    /// dashboards can filter out internal builds.
-    static let appEnvironment: String = {
-        #if DEBUG
-        return "debug"
-        #else
-        if Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt" {
-            return "testflight"
-        }
-        return "release"
-        #endif
-    }()
 
     // MARK: - Events
 
@@ -170,6 +127,12 @@ final class PostHogManager {
         PostHogSDK.shared.flush()
     }
 
+    /// Clear analytics identity (logout / account deletion).
+    func reset() {
+        guard isConfigured else { return }
+        PostHogSDK.shared.reset()
+    }
+
     // MARK: - Crash Handling
 
     /// Install handlers for uncaught exceptions and signals.
@@ -234,3 +197,7 @@ private enum PHConfig {
         return host
     }()
 }
+
+// PostHogManager already implements the full AnalyticsProvider surface, so it is a
+// drop-in alternative to AmplitudeProvider when re-plugged via AnalyticsBackend.
+extension PostHogManager: AnalyticsProvider {}

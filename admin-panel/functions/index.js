@@ -841,3 +841,168 @@ exports.cleanupOldData = onSchedule(
     }
   }
 );
+
+// ═══ App Store Server Notifications V2 → Amplitude ═══════════════════════════
+//
+// Apple POSTs a JWS-signed notification here on renew / refund / billing-grace.
+// We verify it with Apple's library, map it to an Amplitude event, look up the
+// user by originalTransactionId (the app writes subscriptions/{uid}.originalTransactionId
+// at purchase — SubscriptionManager.swift:387), and forward to Amplitude's HTTP API
+// with user_id = uid (matches the app's setUserId = Firebase uid).
+//
+// NOT LIVE until: (1) `npm i @apple/app-store-server-library`, (2) Apple Root CA
+// .cer files in functions/secrets/apple-root-cas/, (3) deploy, (4) paste this
+// function's URL into App Store Connect → App Store Server Notifications (V2),
+// (5) sandbox-test. Net proceeds are NOT in the notification (Apple sends GROSS
+// customer price); reconcile net via the App Store Connect API later if needed.
+
+const AMPLITUDE_HTTP_URL = "https://api2.amplitude.com/2/httpapi"; // US data region
+const AMPLITUDE_API_KEY = process.env.AMPLITUDE_API_KEY || "f926cf12eb1fdd50f54a7384188bff66";
+const ASC_APP_APPLE_ID = 6762501313; // Laso numeric App Store app id — required by SignedDataVerifier for Production.
+
+function sha256Hex(s) {
+  return require("crypto").createHash("sha256").update(String(s)).digest("hex");
+}
+
+function loadAppleRootCAs() {
+  const dir = path.join(__dirname, "secrets", "apple-root-cas");
+  if (!fs.existsSync(dir)) throw new Error(`Apple root CAs missing at ${dir}`);
+  return fs.readdirSync(dir)
+    .filter((f) => /\.(cer|pem|der)$/i.test(f))
+    .map((f) => fs.readFileSync(path.join(dir, f)));
+}
+
+// notificationType (+ subtype) → our Amplitude event name. null = ignore.
+function mapNotificationToEvent(type, subtype) {
+  switch (type) {
+    case "DID_RENEW":
+      return subtype === "BILLING_RECOVERY" ? "payment_issue_resolved" : "subscription_renewed";
+    case "REFUND":
+    case "REVOKE":
+      return "subscription_refunded";
+    case "DID_FAIL_TO_RENEW":
+      return "payment_issue_started"; // entered billing retry / grace
+    default:
+      return null;
+  }
+}
+
+function periodFromProductId(pid) {
+  if (!pid) return null;
+  if (pid.includes("year")) return "yearly";
+  if (pid.includes("month")) return "monthly";
+  if (pid.includes("week")) return "weekly";
+  return null;
+}
+
+exports.appStoreServerNotificationsV2 = onRequest(
+  { memory: "256MiB", timeoutSeconds: 30, region: "us-central1" },
+  async (req, res) => {
+    if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }
+    const signedPayload = req.body && req.body.signedPayload;
+    if (!signedPayload) { res.status(400).send("Missing signedPayload"); return; }
+
+    // Lazy-require so a missing dependency never breaks the other functions.
+    let SignedDataVerifier, Environment;
+    try {
+      ({ SignedDataVerifier, Environment } = require("@apple/app-store-server-library"));
+    } catch (e) {
+      logger.error("app-store-server-library not installed", { message: e.message });
+      res.status(500).send("server not configured"); return;
+    }
+
+    let rootCAs;
+    try { rootCAs = loadAppleRootCAs(); }
+    catch (e) { logger.error("Apple root CAs missing", { message: e.message }); res.status(500).send("server not configured"); return; }
+
+    // Apple uses Production OR Sandbox signing — try prod, then sandbox.
+    async function verifyIn(env) {
+      const v = new SignedDataVerifier(rootCAs, true, env, ASC_BUNDLE_ID, ASC_APP_APPLE_ID);
+      return { v, payload: await v.verifyAndDecodeNotification(signedPayload) };
+    }
+    let verifier, payload;
+    try { ({ v: verifier, payload } = await verifyIn(Environment.PRODUCTION)); }
+    catch (e1) {
+      try { ({ v: verifier, payload } = await verifyIn(Environment.SANDBOX)); }
+      catch (e2) {
+        logger.error("ASN signature verification failed", { prod: e1.message, sandbox: e2.message });
+        res.status(401).send("invalid signature"); return;
+      }
+    }
+
+    const db = admin.firestore();
+
+    // Idempotency: Apple retries; process each notificationUUID once.
+    const uuid = payload.notificationUUID || sha256Hex(signedPayload).slice(0, 32);
+    const dedupeRef = db.collection("asn_processed").doc(uuid);
+    if ((await dedupeRef.get()).exists) { res.status(200).send("duplicate"); return; }
+
+    let txn = {};
+    try {
+      if (payload.data && payload.data.signedTransactionInfo) {
+        txn = await verifier.verifyAndDecodeTransaction(payload.data.signedTransactionInfo);
+      }
+    } catch (e) { logger.warn("transaction decode failed", { message: e.message }); }
+
+    const originalTransactionId = txn.originalTransactionId ? String(txn.originalTransactionId) : null;
+    const eventType = mapNotificationToEvent(payload.notificationType, payload.subtype);
+
+    // Reverse-lookup the user by originalTransactionId (app writes it at purchase).
+    let userId = null;
+    if (originalTransactionId) {
+      const q = await db.collection("subscriptions")
+        .where("originalTransactionId", "==", originalTransactionId).limit(1).get();
+      if (!q.empty) userId = q.docs[0].id;
+    }
+
+    if (eventType && userId) {
+      // Apple sends the customer (GROSS) price in milliunits + currency. Net proceeds
+      // are NOT in the notification — reconcile via ASC later if you need true net.
+      const grossRevenue = typeof txn.price === "number" ? txn.price / 1000 : null;
+      const eventProps = {
+        product_id: txn.productId || null,
+        currency: txn.currency || null,
+        gross_revenue: grossRevenue,
+        revenue_known: grossRevenue != null,
+        billing_period: periodFromProductId(txn.productId),
+        transaction_id_hash: txn.transactionId ? sha256Hex(txn.transactionId) : null,
+        original_transaction_id_hash: sha256Hex(originalTransactionId),
+        notification_subtype: payload.subtype || null,
+        environment: (payload.data && payload.data.environment) || null,
+        source: "app_store_server_notification",
+      };
+      try {
+        const resp = await fetch(AMPLITUDE_HTTP_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            api_key: AMPLITUDE_API_KEY,
+            events: [{
+              user_id: userId,
+              event_type: eventType,
+              time: Date.now(),
+              insert_id: uuid, // Amplitude-side dedupe
+              event_properties: eventProps,
+            }],
+          }),
+        });
+        if (!resp.ok) logger.error("Amplitude post failed", { status: resp.status, body: (await resp.text()).slice(0, 200) });
+      } catch (e) { logger.error("Amplitude post error", { message: e.message }); }
+    } else {
+      logger.info("ASN received, no event sent", {
+        type: payload.notificationType, subtype: payload.subtype, mappedEvent: eventType, hasUser: !!userId,
+      });
+    }
+
+    // Mirror latest status onto subscriptions/{uid} (best effort) + mark processed.
+    if (userId) {
+      try {
+        const mirror = { lastNotificationType: payload.notificationType, lastNotificationAt: Date.now() };
+        if (typeof txn.expiresDate === "number") mirror.expirationDate = txn.expiresDate / 1000;
+        await db.collection("subscriptions").doc(userId).set(mirror, { merge: true });
+      } catch (e) { logger.warn("subscription mirror update failed", { message: e.message }); }
+    }
+    await dedupeRef.set({ type: payload.notificationType, subtype: payload.subtype || null, at: Date.now() });
+    res.status(200).send("ok");
+  }
+);

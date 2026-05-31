@@ -120,7 +120,7 @@ struct LasoApp: App {
                         get: { shouldShowPaywall },
                         set: { _ in }  // Cannot dismiss. must subscribe
                     )) {
-                        PaywallView(subscriptionManager: subscriptionManager)
+                        PaywallView(subscriptionManager: subscriptionManager, source: "trial_expired")
                             .interactiveDismissDisabled()
                     }
                 }

@@ -25,7 +25,7 @@ enum AppIntegrityGuard {
         else if isRunningInEmulator() { reason = "emulator_detected" }
 
         if let reason {
-            PostHogManager.shared.captureError(
+            AnalyticsBackend.provider.captureError(
                 "Integrity check flagged: \(reason)",
                 context: "app_integrity_guard"
             )

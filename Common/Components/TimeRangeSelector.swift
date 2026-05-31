@@ -68,7 +68,7 @@ struct TimeRangeSelector: View {
         .background(AppColour.surfaceRaised)
         .clipShape(RoundedRectangle(cornerRadius: 9))
         .sheet(isPresented: $showPaywall) {
-            PaywallView(subscriptionManager: SubscriptionManager.shared)
+            PaywallView(subscriptionManager: SubscriptionManager.shared, source: "time_range_locked")
         }
     }
 }

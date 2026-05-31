@@ -46,7 +46,7 @@ struct HealthDataBatchWriter {
         do {
             try context.save()
         } catch {
-            PostHogManager.shared.captureError(error, context: "batch_writer_save", metadata: [
+            AnalyticsBackend.provider.captureError(error, context: "batch_writer_save", metadata: [
                 "metrics_count": newData.count,
                 "inserted": totalInserted
             ])

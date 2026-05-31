@@ -48,7 +48,7 @@ struct LockedInsightsCTA: View {
         .buttonStyle(.dsPress)
         .accessibilityLabel(Copy.Paywall.unlockMoreInsights(hiddenCount: hiddenCount))
         .sheet(isPresented: $showPaywall) {
-            PaywallView(subscriptionManager: SubscriptionManager.shared)
+            PaywallView(subscriptionManager: SubscriptionManager.shared, source: "locked_insights")
         }
     }
 }

@@ -4,9 +4,6 @@ import AppIntents
 #if canImport(FirebaseAuth)
 import FirebaseAuth
 #endif
-#if canImport(PostHog)
-import PostHog
-#endif
 
 /// Main Settings screen. Uses a native grouped Form with 5 calm sections so the
 /// surface stays scannable. Advanced alert tuning lives one tap deeper inside
@@ -769,9 +766,7 @@ struct SettingsView: View {
         #if canImport(FirebaseAuth)
         try? Auth.auth().signOut()
         #endif
-        #if canImport(PostHog)
-        PostHogSDK.shared.reset()
-        #endif
+        AnalyticsBackend.provider.reset()
 
         // App-root observer (LasoApp) listens for this notification and routes
         // back to onboarding by clearing onboardingCompleted state.
