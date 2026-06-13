@@ -149,6 +149,11 @@ enum TodayScoreCopy {
 
     /// `%1$d` is the overall score, `%2$@` is the mode headline. Ring VoiceOver.
     static let ringAccessibilityTemplate = "%2$@. Laso score %1$d out of 100"
+
+    /// `%@` is a short relative duration ("21h"). Appended to the eyebrow when the
+    /// score data is older than the staleness window so the user knows the ring is
+    /// no longer live. Inline literal because the widget target does not link Firebase.
+    static let staleAgeTemplate = "Updated %@ ago"
 }
 
 #if canImport(ActivityKit)

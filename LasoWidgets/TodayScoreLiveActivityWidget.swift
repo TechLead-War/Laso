@@ -35,14 +35,13 @@ struct TodayScoreLiveActivityWidget: Widget {
                         .padding(.top, 2)
                 }
             } compactLeading: {
-                Image(systemName: context.state.mode.symbolName)
-                    .foregroundStyle(bandColor(for: context.state))
+                CompactLeadingRing(state: context.state)
                     .accessibilityLabel(context.state.mode.headline)
                     .widgetURL(Self.todaysActionURL)
             } compactTrailing: {
                 Text("\(context.state.overallScore)")
                     .font(.headline.weight(.bold).monospacedDigit())
-                    .foregroundStyle(bandColor(for: context.state))
+                    .foregroundStyle(scoreTint(for: context.state))
                     .contentTransition(.numericText())
                     .accessibilityLabel(scoreAccessibilityLabel(for: context.state))
                     .widgetURL(Self.todaysActionURL)
@@ -81,6 +80,15 @@ private struct CoachLockScreenView: View {
                             .foregroundStyle(AppColour.textSecondary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
+                        if let stale = staleAgePhrase(state) {
+                            Text(stale)
+                                .font(.caption2.weight(.semibold))
+                                .textCase(.uppercase)
+                                .tracking(0.8)
+                                .foregroundStyle(AppColour.textTertiary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.6)
+                        }
                     }
                     Text(state.insight)
                         .font(.subheadline.weight(.medium))
@@ -122,7 +130,7 @@ private struct CoachLockScreenView: View {
 /// signal independent of score updates.
 private struct DayProgressStrip: View {
     var body: some View {
-        let (start, end) = Self.dayWindow()
+        let (start, end) = todayDayWindow()
         ProgressView(timerInterval: start...end, countsDown: false) {
             EmptyView()
         } currentValueLabel: {
@@ -133,15 +141,6 @@ private struct DayProgressStrip: View {
         .tint(AppColour.primary)
         .frame(height: 2)
         .accessibilityHidden(true)
-    }
-
-    private static func dayWindow() -> (Date, Date) {
-        let calendar = Calendar.current
-        let now = Date()
-        let startOfDay = calendar.startOfDay(for: now)
-        let start = calendar.date(byAdding: .hour, value: 5, to: startOfDay) ?? startOfDay
-        let end = calendar.date(byAdding: .hour, value: 23, to: startOfDay) ?? startOfDay
-        return (start, end)
     }
 }
 
@@ -154,19 +153,44 @@ private struct CoachOrbRing: View {
     let state: TodayScoreActivityAttributes.ContentState
     let size: CGFloat
 
+    /// Inset of the inner score ring inside the outer day track so the two arcs
+    /// read as distinct concentric rings instead of one fat stroke.
+    private let dayTrackInset: CGFloat = 5
+
     var body: some View {
-        let tint = bandColor(for: state)
+        let tint = scoreTint(for: state)
         let progress = max(0, min(1, Double(state.overallScore) / 100.0))
+        let (dayStart, dayEnd) = todayDayWindow()
 
         ZStack {
             Circle()
                 .fill(AppColour.surfaceOverlay.opacity(0.55))
+
+            // OUTER day track — faint full circle + a self-advancing fill that
+            // crawls sunrise→bedtime via ProgressView(timerInterval:) with no push.
+            // `.circular` is the only self-advancing ring primitive in a Live
+            // Activity; a static `.trim` would freeze until the next push.
+            Circle()
+                .stroke(Color.white.opacity(0.06), lineWidth: 2)
+            ProgressView(timerInterval: dayStart...dayEnd, countsDown: false) {
+                EmptyView()
+            } currentValueLabel: {
+                EmptyView()
+            }
+            .progressViewStyle(.circular)
+            .tint(AppColour.textTertiary)
+            .accessibilityHidden(true)
+
+            // INNER score ring — band-coloured arc (greyed when stale).
             Circle()
                 .stroke(Color.white.opacity(0.08), lineWidth: 3)
+                .padding(dayTrackInset)
             Circle()
                 .trim(from: 0, to: progress)
                 .stroke(tint, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .rotationEffect(.degrees(-90))
+                .padding(dayTrackInset)
+
             VStack(spacing: 1) {
                 Text("\(state.overallScore)")
                     .font(.system(size: size * 0.3, weight: .bold, design: .rounded).monospacedDigit())
@@ -194,7 +218,7 @@ private struct CoachTrailingStack: View {
     let state: TodayScoreActivityAttributes.ContentState
 
     var body: some View {
-        let tint = bandColor(for: state)
+        let tint = scoreTint(for: state)
 
         VStack(alignment: .trailing, spacing: 4) {
             Text(state.mode.secondaryLabel)
@@ -216,6 +240,8 @@ private struct CoachTrailingStack: View {
                     Text(unit)
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(AppColour.textSecondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
             }
 
@@ -224,6 +250,20 @@ private struct CoachTrailingStack: View {
                 .foregroundStyle(tint.opacity(0.85))
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
+
+            // Quiet weakest-pillar nudge — only when the score is known.
+            if let weakest = state.weakestPillarScore {
+                HStack(spacing: 3) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(AppColour.warning)
+                    Text("\(state.weakestPillar) \(weakest)")
+                        .font(.caption2.weight(.semibold).monospacedDigit())
+                        .foregroundStyle(AppColour.textSecondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                }
+            }
         }
         .padding(.trailing, 6)
     }
@@ -257,23 +297,55 @@ private struct CoachTrailingStack: View {
     }
 }
 
+// MARK: - Compact Leading Ring
+
+/// Small score ring for the Dynamic Island compact leading slot. Mirrors the
+/// orb's inner arc (surface backing + faint track + band-coloured score arc)
+/// so the compact and expanded presentations read as the same gauge. Greys to
+/// `textTertiary` when the data is stale, matching every other surface.
+private struct CompactLeadingRing: View {
+    let state: TodayScoreActivityAttributes.ContentState
+
+    var body: some View {
+        let tint = scoreTint(for: state)
+        let progress = max(0, min(1, Double(state.overallScore) / 100.0))
+        ZStack {
+            Circle()
+                .fill(AppColour.surfaceOverlay.opacity(0.55))
+            Circle()
+                .stroke(Color.white.opacity(0.08), lineWidth: 2.5)
+            Circle()
+                .trim(from: 0, to: progress)
+                .stroke(tint, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+        }
+    }
+}
+
 // MARK: - Minimal
 
 private struct MinimalModeBadge: View {
     let state: TodayScoreActivityAttributes.ContentState
 
     var body: some View {
-        let tint = bandColor(for: state)
+        let tint = scoreTint(for: state)
+        let progress = max(0, min(1, Double(state.overallScore) / 100.0))
         ZStack {
             Circle()
-                .fill(tint.opacity(0.24))
+                .stroke(Color.white.opacity(0.08), lineWidth: 1.8)
             Circle()
-                .stroke(tint, lineWidth: 1.4)
-            Image(systemName: state.mode.symbolName)
-                .font(.caption2.weight(.bold))
+                .trim(from: 0, to: progress)
+                .stroke(tint, style: StrokeStyle(lineWidth: 1.8, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+            Text("\(state.overallScore)")
+                .font(.system(size: 11, weight: .bold, design: .rounded).monospacedDigit())
                 .foregroundStyle(tint)
+                .contentTransition(.numericText())
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .padding(2)
         }
-        .accessibilityLabel(state.mode.headline)
+        .accessibilityLabel(scoreAccessibilityLabel(for: state))
     }
 }
 
@@ -326,6 +398,53 @@ private func bandColor(for state: TodayScoreActivityAttributes.ContentState) -> 
     WidgetStyle.scoreBandColor(score: state.overallScore)
 }
 
+/// Score-band tint, but greyed to `textTertiary` once the data is stale so a
+/// frozen ring never keeps showing a confident "green" hours after the last
+/// push. Drives the score arc + centre number everywhere the band colour reads.
+private func scoreTint(for state: TodayScoreActivityAttributes.ContentState) -> Color {
+    isStale(state) ? AppColour.textTertiary : bandColor(for: state)
+}
+
 private func scoreAccessibilityLabel(for state: TodayScoreActivityAttributes.ContentState) -> String {
     String(format: TodayScoreCopy.ringAccessibilityTemplate, state.overallScore, state.mode.headline)
+}
+
+// MARK: - Day window (shared by the dual ring + DayProgressStrip)
+
+/// Sunrise (5:00) → bedtime (23:00) window for the current day. Both the
+/// `DayProgressStrip` linear bar and the `CoachOrbRing` outer day track drive
+/// their `ProgressView(timerInterval:)` from this single window so they crawl
+/// through the day in lockstep with no extra push.
+private func todayDayWindow() -> (Date, Date) {
+    let calendar = Calendar.current
+    let now = Date()
+    let startOfDay = calendar.startOfDay(for: now)
+    let start = calendar.date(byAdding: .hour, value: 5, to: startOfDay) ?? startOfDay
+    let end = calendar.date(byAdding: .hour, value: 23, to: startOfDay) ?? startOfDay
+    return (start, end)
+}
+
+// MARK: - Staleness (pure render logic over `lastUpdated`)
+
+/// Live Activities can sit on the lock screen long after the last data push.
+/// Past this window the ring is treated as stale: the score arc + number grey
+/// out and the eyebrow gains a "Updated Nh ago" note. Pure render-time logic —
+/// no new ContentState field and no extra push.
+private let staleThreshold: TimeInterval = 20 * 60 * 60 // 20h
+
+private func isStale(_ state: TodayScoreActivityAttributes.ContentState) -> Bool {
+    Date().timeIntervalSince(state.lastUpdated) > staleThreshold
+}
+
+/// Short "Updated 21h ago" phrase for the eyebrow, or `nil` when the data is
+/// still fresh. Uses an abbreviated relative formatter so it stays one line.
+private func staleAgePhrase(_ state: TodayScoreActivityAttributes.ContentState) -> String? {
+    guard isStale(state) else { return nil }
+    let formatter = DateComponentsFormatter()
+    formatter.allowedUnits = [.hour, .minute]
+    formatter.maximumUnitCount = 1
+    formatter.unitsStyle = .abbreviated
+    let elapsed = Date().timeIntervalSince(state.lastUpdated)
+    let age = formatter.string(from: elapsed) ?? ""
+    return String(format: TodayScoreCopy.staleAgeTemplate, age)
 }
