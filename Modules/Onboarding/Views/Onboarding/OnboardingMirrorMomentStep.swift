@@ -324,7 +324,7 @@ struct OnboardingMirrorMomentStep: View {
                 if let errorMessage {
                     state = .failed(errorMessage)
                     AnalyticsBackend.provider.capture(event: "calibration_failed", properties: [
-                        "error_message": errorMessage,
+                        "error_message": String(errorMessage.prefix(100)),
                         "elapsed_sec": elapsed,
                     ])
                 } else {

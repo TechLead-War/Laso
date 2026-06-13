@@ -291,7 +291,7 @@ final class WatchMonitor {
 
     private func reportBatteryMetadataAbsent() {
         AppAnalytics.shared.trackNotificationSuppressed(
-            type: "battery_low",
+            type: NotificationManager.notificationType(AppConstants.NotificationID.watchLowBattery),
             identifier: AppConstants.NotificationID.watchLowBattery,
             reason: "battery_metadata_absent"
         )

@@ -31,10 +31,14 @@ struct FeatureGate {
     /// End date of free-year mode (when configured in Remote Config). nil when unset.
     static var freeYearEndDate: Date? { config.freeYearEndDate }
 
-    /// Real subscription expiration when the user has actually purchased. nil otherwise.
+    /// Expiry of the active paid entitlement, when the user has actually purchased.
+    /// A free trial reports as `.trial` and charges at its end, so its expiration
+    /// is the same "renews on" date; both return it. nil for free/expired users.
     static var subscriptionExpirationDate: Date? {
-        if case .subscribed(let expiration) = subscription.status { return expiration }
-        return nil
+        switch subscription.status {
+        case .subscribed(let expiration), .trial(let expiration): return expiration
+        default: return nil
+        }
     }
 
     /// Whether the user can access a specific feature.

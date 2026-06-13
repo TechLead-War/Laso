@@ -148,11 +148,15 @@ final class HealthKitManager: @unchecked Sendable {
             }
             try await healthStore.requestAuthorization(toShare: shareTypes, read: readTypes)
             isAuthorized = true
-            await MainActor.run { AppAnalytics.shared.trackHealthPermissionResult(granted: totalRequested, denied: 0, total: totalRequested) }
+            // Do NOT emit health_permission_result here: HealthKit never reveals which
+            // READ permissions the user granted (Apple hides it so apps cannot infer
+            // conditions from denials), so an all-granted count would be fabricated.
+            // It is reported once from the first loadAndSync() using real data
+            // availability instead.
         } catch {
             self.error = "Authorization failed: \(error.localizedDescription)"
             await MainActor.run {
-                AppAnalytics.shared.trackHealthPermissionResult(granted: 0, denied: totalRequested, total: totalRequested)
+                reportHealthPermissionGrantOnce(granted: 0, denied: totalRequested, total: totalRequested)
                 AppAnalytics.shared.trackError(type: "healthkit_authorization", screen: .home, message: error.localizedDescription)
                 // Data-pipeline failure signal: lets analytics see HealthKit auth/sync
                 // failures separately from generic errors so churn analysis can isolate
@@ -185,6 +189,20 @@ final class HealthKitManager: @unchecked Sendable {
         }
 
         lastRefresh = Date()
+    }
+
+    /// Emits `health_permission_result` at most once per install. HealthKit never
+    /// reports which READ permissions were granted, so callers pass the best real
+    /// signal available: data availability after the first fetch, or a hard 0 when
+    /// authorization itself failed. A type the user simply has no history for counts
+    /// as not-granted, so grant_rate is an effective read-availability rate (a lower
+    /// bound on true grants), not the old fabricated 1.0.
+    @MainActor
+    private func reportHealthPermissionGrantOnce(granted: Int, denied: Int, total: Int) {
+        let key = "Laso.HealthKitManager.permissionResultReported"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        AppAnalytics.shared.trackHealthPermissionResult(granted: granted, denied: denied, total: total)
     }
 
     @MainActor
@@ -312,6 +330,15 @@ final class HealthKitManager: @unchecked Sendable {
             newData: newData,
             store: store
         )
+
+        // Truthful health_permission_result, reported once per install after the first
+        // real sync populates timeSeries. HealthKit hides read-grant status, so data
+        // availability (metrics that returned samples) is the only honest signal. This
+        // lives here, not in requestAuthorization, because loadAndSync is the actual
+        // post-auth entry point that fetches data.
+        let permissionTotal = HealthMetric.allCases.count
+        let permissionGranted = HealthMetric.allCases.filter { timeSeries[$0]?.samples.isEmpty == false }.count
+        reportHealthPermissionGrantOnce(granted: permissionGranted, denied: permissionTotal - permissionGranted, total: permissionTotal)
 
         lastRefresh = Date()
         isLoading = false

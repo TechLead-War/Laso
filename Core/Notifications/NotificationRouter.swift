@@ -26,7 +26,7 @@ final class NotificationRouter {
 
         guard let route = Route.fromUITestIdentifier(routeString) else {
             AppAnalytics.shared.trackNotificationSuppressed(
-                type: "push_route",
+                type: "push",
                 identifier: routeString,
                 reason: "unknown_route"
             )

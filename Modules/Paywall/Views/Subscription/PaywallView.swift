@@ -147,6 +147,9 @@ struct PaywallView: View {
     /// so PostHog can group similar failures across iOS locales.
     private func classifyPaywallError(_ message: String) -> String {
         let lower = message.lowercased()
+        if lower.contains("restore") {
+            return "restore_failed"
+        }
         if lower.contains("network") || lower.contains("internet") || lower.contains("connection") {
             return "network"
         }
@@ -413,13 +416,6 @@ struct PaywallView: View {
                         return false
                     }()
                     AppAnalytics.shared.trackRestoreAttempted(success: restored)
-                    if !restored {
-                        AppAnalytics.shared.trackPaywallError(
-                            errorType: "restore_failed",
-                            source: source,
-                            timeOnPaywallSec: Int(Date().timeIntervalSince(paywallOpenDate))
-                        )
-                    }
                     isRestoring = false
                 }
             } label: {

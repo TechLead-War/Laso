@@ -27,7 +27,7 @@ final class SubscriptionManager {
 
     enum Status: Equatable {
         case unknown
-        case trial(daysRemaining: Int)
+        case trial(expiration: Date)
         case subscribed(expirationDate: Date)
         case billingGrace(daysSinceExpiry: Int)
         case expired
@@ -51,7 +51,8 @@ final class SubscriptionManager {
     }
 
     var trialText: String? {
-        guard case .trial(let days) = status else { return nil }
+        guard case .trial(let expiration) = status else { return nil }
+        let days = max(0, Date.cal.dateComponents([.day], from: Date(), to: expiration).day ?? 0)
         return days == 1 ? "1 day left in trial" : "\(days) days left in trial"
     }
 
@@ -232,13 +233,26 @@ final class SubscriptionManager {
         TrialScheduler.cancelAll()
         // Allow the win-back to re-arm if this subscription later lapses.
         defaults.set(false, forKey: AppKeys.Billing.winbackArmed)
-        guard case .subscribed(let expiration) = status else { return }
-        TrialScheduler.scheduleTrialLifecycle(trialEnd: expiration)
+        // Schedule off whichever active entitlement we hold: a free trial now
+        // reports as .trial, a direct purchase as .subscribed. Both carry the
+        // period-end date the lifecycle drip is anchored to.
+        let entitlementEnd: Date
+        switch status {
+        case .trial(let expiration): entitlementEnd = expiration
+        case .subscribed(let expiration): entitlementEnd = expiration
+        default: return
+        }
+        TrialScheduler.scheduleTrialLifecycle(trialEnd: entitlementEnd)
     }
 
     // MARK: - Restore
 
     func restorePurchases() async {
+        // Clear any prior error first so a later success does not leave a stale error
+        // in the paywall footer, and so each failure is a distinct nil->message change
+        // (PaywallView tracks restore failures via .onChange of errorMessage; a repeated
+        // identical message would otherwise not re-fire onChange and go untracked).
+        errorMessage = nil
         do {
             try await AppStore.sync()
             await refreshStatus()
@@ -260,10 +274,19 @@ final class SubscriptionManager {
 
             if SubscriptionConfig.allProductIDs.contains(transaction.productID) {
                 if let expiration = transaction.expirationDate, expiration > Date() {
-                    status = .subscribed(expirationDate: expiration)
+                    // Apple reports the introductory free-trial period as an active
+                    // entitlement. Distinguish it so the trial-lifecycle analytics
+                    // (trial_started / trial_day_check / trial->paid conversion) and
+                    // the trial countdown can fire; a paid period stays .subscribed.
+                    // Capture grace state before reassigning status so the
+                    // billing_grace_resolved event fires on recovery.
+                    let wasInGrace = isBillingGrace
+                    status = isInFreeTrial(transaction)
+                        ? .trial(expiration: expiration)
+                        : .subscribed(expirationDate: expiration)
                     // Record that we were subscribed. used for grace period tracking
                     defaults.set(Date(), forKey: Key.lastSubscribedDate)
-                    clearGraceState()
+                    clearGraceState(wasActive: wasInGrace)
                     return
                 }
             }
@@ -330,6 +353,26 @@ final class SubscriptionManager {
         return PersistenceManager().loadHealthFocuses().first?.displayName
     }
 
+    /// Whether `transaction` is currently inside its introductory FREE-TRIAL
+    /// period, as opposed to a paid period or a paid introductory price. Apple
+    /// reports a free trial as an active entitlement, so this is the only way to
+    /// tell a trialing user apart from a paying one. iOS 17.2 exposes the applied
+    /// offer on the transaction directly; on 17.0-17.1 we read the (now-deprecated)
+    /// offerType and confirm it against the product's offer payment mode. When the
+    /// trial state cannot be confirmed we return false, i.e. treat it as paid, so
+    /// access is never under-granted.
+    private func isInFreeTrial(_ transaction: StoreKit.Transaction) -> Bool {
+        if #available(iOS 17.2, *) {
+            return transaction.offer?.paymentMode == .freeTrial
+        }
+        guard transaction.offerType == .introductory,
+              let product = products.first(where: { $0.id == transaction.productID }),
+              product.subscription?.introductoryOffer?.paymentMode == .freeTrial else {
+            return false
+        }
+        return true
+    }
+
     private func isInBillingRetry() async -> Bool {
         for productID in SubscriptionConfig.allProductIDs {
             guard let product = products.first(where: { $0.id == productID }),
@@ -362,9 +405,13 @@ final class SubscriptionManager {
         return 0
     }
 
-    private func clearGraceState() {
+    private func clearGraceState(wasActive: Bool? = nil) {
         if let graceStart = defaults.object(forKey: Key.graceStartDate) as? Date {
-            let wasActive = isBillingGrace
+            // Recovery callers reassign `status` away from .billingGrace before
+            // calling this, so isBillingGrace would already read false. They pass
+            // the pre-reassignment value explicitly; other callers pass nil and
+            // fall back to the current status.
+            let wasActive = wasActive ?? isBillingGrace
             let daysInGrace = Date.cal.dateComponents([.day], from: graceStart, to: Date()).day ?? 0
             defaults.removeObject(forKey: Key.graceStartDate)
             if wasActive {
@@ -390,7 +437,11 @@ final class SubscriptionManager {
         await refreshStatus()
         await syncCurrentEntitlementToFirestore()
         AppAnalytics.shared.updateSubscriptionProperties(status: status)
-        if case .subscribed = previousStatus, case .subscribed(let expirationDate) = status {
+        // The first paid period after a trial (.trial -> .subscribed) is the
+        // trial->paid conversion; later paid renewals are .subscribed -> .subscribed.
+        // Both are the renewal/conversion signal the survival funnel counts.
+        let wasEntitled: Bool = { switch previousStatus { case .subscribed, .trial: return true; default: return false } }()
+        if wasEntitled, case .subscribed(let expirationDate) = status {
             AppAnalytics.shared.trackSubscriptionRenewed(newExpirationDate: expirationDate)
         }
     }

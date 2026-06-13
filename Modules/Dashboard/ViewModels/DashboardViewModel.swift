@@ -696,7 +696,7 @@ final class DashboardViewModel {
         if defaults.bool(forKey: AppKeys.Prediction.repermissionFired),
            !defaults.bool(forKey: AppKeys.Prediction.repermissionConverted) {
             defaults.set(true, forKey: AppKeys.Prediction.repermissionConverted)
-            AnalyticsBackend.provider.capture(event: "repermission_conversion", properties: ["granted": true])
+            AnalyticsBackend.provider.capture(event: "repermission_conversion", properties: ["granted": 1])
         }
 
         await refresh(

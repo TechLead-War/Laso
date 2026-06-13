@@ -47,6 +47,10 @@ enum AppKeys {
 
         // Activation → paywall trigger (hard paywall after aha moment, shown once).
         static let ahaPaywallShown       = "laso.session.aha_paywall_shown"
+
+        // Open-session snapshot persisted on background so the session's
+        // session_ended can fire on the next launch even if iOS kills the app.
+        static let openSession           = "laso.session.open_session"
     }
 
     // MARK: - Install
@@ -68,6 +72,7 @@ enum AppKeys {
         static let previousWeekScore = "healthpulse.previousWeekScore"
         static let currentScore      = "healthpulse.currentScore"
         static let scoreDate         = "healthpulse.scoreDate"
+        static let weeklyScoreEventWeekKey = "healthpulse.weeklyScoreEventWeekKey"
         static let healthFocuses     = "healthpulse.healthFocuses"
         static let progressiveCoachState = "healthpulse.progressiveCoachState"
         static let primaryDevice         = "healthpulse.primaryDevice"

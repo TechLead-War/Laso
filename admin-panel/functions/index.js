@@ -955,7 +955,14 @@ exports.appStoreServerNotificationsV2 = onRequest(
       if (!q.empty) userId = q.docs[0].id;
     }
 
-    if (eventType && userId) {
+    // subscription_renewed is already emitted client-side with the same Amplitude
+    // user_id (Firebase uid), where it also maintains the renewal_count /
+    // months_subscribed user properties. Posting it here too would double-count it
+    // in Amplitude (the client's per-device dedupe and this webhook's insert_id do
+    // not span both sources), so the server defers to the client for this one event
+    // and still mirrors status to Firestore below.
+    const skipDuplicateOfClient = eventType === "subscription_renewed";
+    if (eventType && userId && !skipDuplicateOfClient) {
       // Apple sends the customer (GROSS) price in milliunits + currency. Net proceeds
       // are NOT in the notification — reconcile via ASC later if you need true net.
       const grossRevenue = typeof txn.price === "number" ? txn.price / 1000 : null;
@@ -990,7 +997,8 @@ exports.appStoreServerNotificationsV2 = onRequest(
       } catch (e) { logger.error("Amplitude post error", { message: e.message }); }
     } else {
       logger.info("ASN received, no event sent", {
-        type: payload.notificationType, subtype: payload.subtype, mappedEvent: eventType, hasUser: !!userId,
+        type: payload.notificationType, subtype: payload.subtype, mappedEvent: eventType,
+        hasUser: !!userId, skippedClientDuplicate: skipDuplicateOfClient,
       });
     }
 

@@ -39,9 +39,10 @@ final class SessionTracker {
     /// session yet" when deciding whether the idle window applies.
     private var sessionIsOpen = false
 
-    /// Reason the most recent session ended. Set by `endSession`.
+    /// Reason a session ended. Under the resume model a background is not an end,
+    /// so only two terminal reasons exist: the idle window elapsed, or the app was
+    /// killed and the end is reconciled on next launch.
     enum EndReason: String {
-        case backgrounded
         case idleTimeout = "idle_timeout"
         case appTerminated = "app_terminated"
     }
@@ -101,6 +102,7 @@ final class SessionTracker {
         static let lastInactivityAlert = AppKeys.Session.lastInactivityAlert
         static let restCreditsRemaining = AppKeys.Session.restCreditsRemaining
         static let lastRestCreditGrantDate = AppKeys.Session.lastRestCreditGrantDate
+        static let openSession = AppKeys.Session.openSession
     }
 
     // MARK: - Rest-Day Credits
@@ -158,24 +160,72 @@ final class SessionTracker {
 
     // MARK: - Session Lifecycle
 
-    /// Foreground entry point. Returns true when a brand-new session was minted
-    /// (the caller should fire `session_started` + per-session events), false
-    /// when the previous session resumed within the 30-minute idle window.
-    @discardableResult
-    func startSession() -> Bool {
-        let now = Date()
-        let idleFor = now.timeIntervalSince(lastActivityDate)
-        lastActivityDate = now
+    /// Final, immutable stats for a session that has ended. Built when a new
+    /// session displaces an idle-timed-out one (same process) or when the next
+    /// launch reconciles a session the OS killed while backgrounded.
+    struct EndedStats {
+        let sessionId: String
+        let sessionNumber: Int
+        let sessionSource: String
+        let durationSec: Int
+        let activeSec: Int
+        let screensVisited: Int
+        let maxDepth: Int
+        let coreActionsCount: Int
+        let reason: String
+    }
 
-        // Resume: still inside the idle window and a session is already open.
-        // Re-open the active span (background closed it) without resetting state.
+    /// Runs once per process: the first foreground reconciles a session that was
+    /// still open when the app was last backgrounded/killed.
+    private var didReconcilePersistedSession = false
+
+    /// Foreground entry point. `isNew == true` means a brand-new session was minted
+    /// (the caller fires `session_started` + per-session work); false means the
+    /// previous session resumed within the 30-minute idle window. `priorEnd` is set
+    /// when minting a new session displaced a still-open one that idle-timed-out in
+    /// this same process — the caller must emit its `session_ended` first so the
+    /// started/ended pair stays balanced.
+    @discardableResult
+    func startSession() -> (isNew: Bool, priorEnd: EndedStats?) {
+        let now = Date()
+        let priorActivity = lastActivityDate
+        let idleFor = now.timeIntervalSince(priorActivity)
+
+        // Resume: still inside the idle window and a session is already open. The
+        // background closed the active span; reopen it without resetting state so a
+        // quick app-switch stays ONE session (no session_started/session_ended).
         if idleFor < Self.idleTimeoutSec && sessionIsOpen {
+            lastActivityDate = now
             if activeSpanStart == nil { activeSpanStart = now }
-            return false
+            persistOpenSession(now: now)
+            return (false, nil)
         }
 
-        // New session. (Any prior session already emitted session_ended on its
-        // last background; the 30-minute gap simply means we do not resume it.)
+        // A new session begins. If a prior session is still open (it idle-timed-out
+        // while this process stayed alive), close and report it first. Its span was
+        // already closed on background; close defensively at the last activity time.
+        var priorEnd: EndedStats? = nil
+        if sessionIsOpen {
+            if let spanStart = activeSpanStart {
+                accumulatedActiveSec += priorActivity.timeIntervalSince(spanStart)
+                activeSpanStart = nil
+            }
+            // totalSessions / currentSessionSource still hold the ENDING session's
+            // values here — the reset + increment below run only after this capture.
+            priorEnd = EndedStats(
+                sessionId: sessionId,
+                sessionNumber: totalSessions,
+                sessionSource: currentSessionSource.rawValue,
+                durationSec: max(Int(priorActivity.timeIntervalSince(sessionStartDate)), 0),
+                activeSec: max(Int(accumulatedActiveSec.rounded()), 0),
+                screensVisited: screensVisited.count,
+                maxDepth: maxDepth,
+                coreActionsCount: coreActionsThisSession.count,
+                reason: EndReason.idleTimeout.rawValue
+            )
+        }
+
+        lastActivityDate = now
         sessionId = UUID().uuidString
         sessionStartDate = now
         screensVisited = []
@@ -196,31 +246,74 @@ final class SessionTracker {
         updateStickiness()
         updateSessionSourceCounts()
         updateLifecycleOnStart()
-        return true
+        persistOpenSession(now: now)
+        return (true, priorEnd)
     }
 
-    /// Ends the current session. Accumulates the final active span and reports
-    /// the totals `session_ended` needs. Returns zeroed values when no session
-    /// is open (e.g. background fires before any foreground).
-    func endSession(reason: EndReason = .backgrounded)
-        -> (durationSec: Int, activeSec: Int, screensVisited: Int, maxDepth: Int, coreActionsCount: Int, reason: String) {
+    /// Called when the app enters the background. Closes the active foreground span
+    /// into `accumulatedActiveSec` and snapshots the open session to disk, but does
+    /// NOT emit `session_ended` and does NOT clear `sessionIsOpen`: under the resume
+    /// model a brief background is still the same session. The end is emitted on the
+    /// next foreground (idle timeout) or next launch (after a kill).
+    func closeActiveSpanForBackground() {
         let now = Date()
-        // Close the open active span into the accumulator.
         if let spanStart = activeSpanStart {
             accumulatedActiveSec += now.timeIntervalSince(spanStart)
             activeSpanStart = nil
         }
         lastActivityDate = now
-        let duration = Int(now.timeIntervalSince(sessionStartDate))
         defaults.set(now, forKey: Key.lastSessionDate)
-        return (
-            duration,
-            Int(accumulatedActiveSec.rounded()),
-            screensVisited.count,
-            maxDepth,
-            coreActionsThisSession.count,
-            reason.rawValue
+        persistOpenSession(now: now)
+    }
+
+    /// First foreground of a process: if a session was still open when the app was
+    /// last backgrounded/killed, build its final stats so the caller can emit the
+    /// deferred `session_ended`. Returns nil when there is nothing to reconcile.
+    func reconcilePersistedSession(now: Date = Date()) -> EndedStats? {
+        guard !didReconcilePersistedSession else { return nil }
+        didReconcilePersistedSession = true
+        guard let d = defaults.dictionary(forKey: Key.openSession) else { return nil }
+        // Clear unconditionally once read: a malformed snapshot (missing/typed-wrong
+        // keys) must not survive to be re-read on a later launch.
+        clearPersistedOpenSession()
+        guard let id = d["id"] as? String,
+              let start = d["start"] as? Date,
+              let last = d["last"] as? Date else { return nil }
+        // Duration is measured to the last recorded activity (the background time),
+        // never to "now", so a multi-hour killed gap is not counted as session time.
+        let reason: EndReason = now.timeIntervalSince(last) >= Self.idleTimeoutSec ? .idleTimeout : .appTerminated
+        return EndedStats(
+            sessionId: id,
+            sessionNumber: d["number"] as? Int ?? 0,
+            sessionSource: d["source"] as? String ?? SessionSource.organic.rawValue,
+            durationSec: max(Int(last.timeIntervalSince(start)), 0),
+            activeSec: max(Int((d["active"] as? Double ?? 0).rounded()), 0),
+            screensVisited: d["screens"] as? Int ?? 0,
+            maxDepth: d["depth"] as? Int ?? 0,
+            coreActionsCount: d["actions"] as? Int ?? 0,
+            reason: reason.rawValue
         )
+    }
+
+    /// Snapshot the open session so its end survives an OS kill. Updated on start,
+    /// resume, and background; cleared when the `session_ended` is emitted.
+    private func persistOpenSession(now: Date) {
+        guard sessionIsOpen else { return }
+        defaults.set([
+            "id": sessionId,
+            "number": totalSessions,
+            "source": currentSessionSource.rawValue,
+            "start": sessionStartDate,
+            "last": now,
+            "active": accumulatedActiveSec,
+            "screens": screensVisited.count,
+            "depth": maxDepth,
+            "actions": coreActionsThisSession.count
+        ] as [String: Any], forKey: Key.openSession)
+    }
+
+    private func clearPersistedOpenSession() {
+        defaults.removeObject(forKey: Key.openSession)
     }
 
     /// Seconds since this session started.

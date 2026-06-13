@@ -68,7 +68,7 @@ struct OnboardingConnectHealthStep: View {
                         if !UITestMode.isEnabled {
                             await healthKitManager.requestAuthorization()
                             AnalyticsBackend.provider.capture(event: "healthkit_authorized", properties: [
-                                "healthkit_available": true
+                                "healthkit_available": 1
                             ])
                         }
                         onContinue()

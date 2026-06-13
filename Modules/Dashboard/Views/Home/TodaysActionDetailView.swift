@@ -86,6 +86,7 @@ struct TodaysActionDetailView: View {
                 "has_policy": policyDecision != nil,
                 "insight_count": action.supportingInsights.count
             ])
+            AppAnalytics.shared.trackCoreAction(.viewedDailyAction, screen: .todaysActionDetail)
             AppAnalytics.shared.trackRecommendationViewed(
                 type: "todays_action_\(action.source)",
                 metric: action.supportingInsights.first?.metric.rawValue ?? "general",

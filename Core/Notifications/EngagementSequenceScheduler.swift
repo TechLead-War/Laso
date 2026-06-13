@@ -280,7 +280,7 @@ enum EngagementSequenceScheduler {
         let identifier = AppConstants.NotificationID.engagementPrefix + "day\(day)"
         Task { @MainActor in
             AppAnalytics.shared.trackNotificationSuppressed(
-                type: "engagement_day_\(day)",
+                type: NotificationManager.notificationType(identifier),
                 identifier: identifier,
                 reason: reason
             )

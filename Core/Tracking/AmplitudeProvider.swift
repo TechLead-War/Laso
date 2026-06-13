@@ -103,7 +103,7 @@ final class AmplitudeProvider: AnalyticsProvider {
             "error_code": (error as NSError).code
         ]
         for (k, v) in metadata { props[k] = v }
-        amplitude.track(eventType: "app_error_recorded", eventProperties: props)
+        amplitude.track(eventType: "app_error_recorded", eventProperties: sanitizeErrorProps(props))
     }
 
     func captureError(_ message: String, context: String, metadata: [String: Any]) {
@@ -116,8 +116,31 @@ final class AmplitudeProvider: AnalyticsProvider {
         #if DEBUG
         print("[Amplitude] app_error_recorded: \(context). \(message)")
         #endif
-        amplitude.track(eventType: "app_error_recorded", eventProperties: props)
+        amplitude.track(eventType: "app_error_recorded", eventProperties: sanitizeErrorProps(props))
     }
+
+    /// The error/crash channel posts straight to the SDK and so would otherwise
+    /// bypass AppAnalytics.sanitizeParameters. Apply the same two protections here:
+    /// collapse any health-metric raw value to its parent category (so a raw
+    /// clinical condition like "bloodPressureSystolic" never ships) and bound
+    /// free-text/error strings so untruncated error/exception text cannot leak. The
+    /// bound here is 200 chars (vs 100 for normal events) since longer error and
+    /// exception reasons aid crash triage while still being capped.
+    private func sanitizeErrorProps(_ props: [String: Any]) -> [String: Any] {
+        var out: [String: Any] = [:]
+        for (key, value) in props {
+            if Self.metricKeys.contains(key), let raw = value as? String {
+                out[key] = HealthMetric(rawValue: raw)?.category.rawValue ?? "other"
+            } else if let string = value as? String {
+                out[key] = String(string.prefix(200))
+            } else {
+                out[key] = value
+            }
+        }
+        return out
+    }
+
+    private static let metricKeys: Set<String> = ["metric", "alert_metric", "metrics"]
 
     // MARK: - Flush / Reset
 
@@ -145,7 +168,7 @@ final class AmplitudeProvider: AnalyticsProvider {
             AmplitudeProvider.shared.amplitude?.track(eventType: "app_crash", eventProperties: [
                 "crash_type": "uncaught_exception",
                 "exception_name": exception.name.rawValue,
-                "exception_reason": exception.reason ?? "unknown",
+                "exception_reason": String((exception.reason ?? "unknown").prefix(200)),
                 "stack_trace": String(stackTrace.prefix(2000))
             ])
             AmplitudeProvider.shared.amplitude?.flush()

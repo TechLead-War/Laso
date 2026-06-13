@@ -728,10 +728,12 @@ struct BreathworkView: View {
             pauseCount: pauseCount,
             mood: selectedMood
         )
+        // delay_sec is time-to-act latency, not session length; breathwork has no
+        // such delay, so leave it at the default 0. Session duration already ships
+        // via trackBreathworkSessionCompleted above.
         AppAnalytics.shared.trackRecommendationCompleted(
             type: "breathwork_session",
-            metric: selectedProtocol.subtitle,
-            delaySec: actualDurationSec
+            metric: selectedProtocol.subtitle
         )
         sessionStartedAt = nil
     }

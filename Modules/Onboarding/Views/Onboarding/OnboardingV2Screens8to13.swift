@@ -1072,10 +1072,7 @@ struct OnbV2ScreenPrediction: View {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.5).delay(0.3)) { heroPulse = false }
                 }
             }
-            AnalyticsBackend.provider.capture(
-                event: "promise_shown",
-                properties: ["metric": prediction.metric.rawValue]
-            )
+            AppAnalytics.shared.trackPromiseShown(metric: prediction.metric.rawValue)
         }
     }
 

@@ -167,7 +167,7 @@ struct ContentView: View {
                 // notification banner dismiss, Control Center close). Throttled internally.
                 Task { await dashboardViewModel.refreshOnForegroundIfNeeded() }
             } else if newPhase == .background {
-                AppAnalytics.shared.trackSessionEnd()
+                AppAnalytics.shared.trackAppBackgrounded()
                 container.backgroundRefreshCoordinator.schedule()
             }
         }

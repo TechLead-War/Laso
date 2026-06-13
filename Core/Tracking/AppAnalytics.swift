@@ -382,6 +382,7 @@ final class AppAnalytics {
         static let lastRenewalExpirationDate = "laso.analytics.last_renewal_expiration_date"
         static let firstScoreGeneratedTracked = "laso.analytics.first_score_generated_tracked"
         static let trialStartedTracked = "laso.analytics.trial_started_tracked"
+        static let dailyActiveLastDate = "laso.analytics.daily_active_last_date"
     }
 
     private init() {}
@@ -702,11 +703,24 @@ final class AppAnalytics {
     /// is the DAU-inflation guard the taxonomy requires.
     @discardableResult
     func trackSessionStart() -> Bool {
-        let isNewSession = session.startSession()
+        // A session left open by a prior app run (killed or backgrounded past the
+        // idle window) ends here, on the next foreground — emit its deferred
+        // session_ended before anything new starts.
+        if let priorEnd = session.reconcilePersistedSession() {
+            emitSessionEnded(priorEnd)
+        }
+
+        let outcome = session.startSession()
+
+        // Minting this session idle-timed-out a still-open prior session in the same
+        // process: emit its session_ended first so started/ended stay paired.
+        if let priorEnd = outcome.priorEnd {
+            emitSessionEnded(priorEnd)
+        }
 
         // A quick app-switch resumes the open session: do not re-emit
         // session_started or any per-session work.
-        guard isNewSession else { return false }
+        guard outcome.isNew else { return false }
 
         // first_open: the user's very first app open, emitted exactly once.
         // Gated on totalSessions == 1 (set inside startSession). is_reinstall is
@@ -775,12 +789,27 @@ final class AppAnalytics {
         return true
     }
 
-    /// Call when app enters background (or on a 30-min idle reset). Emits
-    /// `session_ended`, keyed to the same session_id as session_started.
-    func trackSessionEnd(reason: SessionTracker.EndReason = .backgrounded) {
-        let stats = session.endSession(reason: reason)
+    /// Call when the app enters the background. Closes the active foreground span
+    /// and snapshots the session to disk, but does NOT emit `session_ended`: under
+    /// the resume model a brief background is still the same session (it ends on the
+    /// idle timeout or next launch). Re-arms score_viewed / score_reaction so
+    /// reaction_time_sec never spans the backgrounded gap.
+    func trackAppBackgrounded() {
+        session.closeActiveSpanForBackground()
+        scoreSeenDate = nil
+        scoreViewedThisSession = false
+    }
 
+    /// Emits `session_ended` for a session that has truly ended, tagged with its own
+    /// session_id so the deferred/idle ends pair with the correct session_started
+    /// (the global session_id by now points at the live session, not this one).
+    private func emitSessionEnded(_ stats: SessionTracker.EndedStats) {
+        // session_number is passed explicitly: by the time the idle-timeout end is
+        // emitted, the live session.totalSessions has already incremented for the new
+        // session, so logEvent's global injection would otherwise be off by one.
         logEvent("session_ended", parameters: [
+            "session_id": stats.sessionId,
+            "session_number": stats.sessionNumber,
             "duration_sec": stats.durationSec,
             "active_sec": stats.activeSec,
             "screens_viewed": stats.screensVisited,
@@ -788,9 +817,11 @@ final class AppAnalytics {
             "ended_reason": stats.reason
         ])
 
-        // Behavioral intelligence: ghost sessions, churn risk, session quality
-        evaluateSessionQuality(durationSec: stats.durationSec, screensVisited: stats.screensVisited, coreActionsCount: stats.coreActionsCount)
-        evaluateChurnRisk(durationSec: stats.durationSec, coreActionsCount: stats.coreActionsCount, screensVisited: stats.screensVisited)
+        // Behavioral intelligence: ghost sessions, churn risk, session quality. These
+        // emit their own events, which must carry the ENDED session's id/number/source
+        // (not the live session's), so the full stats are threaded through.
+        evaluateSessionQuality(stats)
+        evaluateChurnRisk(stats)
     }
 
     // MARK: - first_open
@@ -964,6 +995,10 @@ final class AppAnalytics {
         ])
 
         setUserProperty("lifetime_core_actions", value: "\(session.lifetimeCoreActions)")
+
+        // A core action is the goal a re-engagement notification aims for: if one
+        // was opened inside the conversion window, credit it now.
+        attributePendingNotificationConversion(goal: action.rawValue)
     }
 
     func trackBlockTap(title: String, type: BlockType, screen: AppFeature, metadata: [String: Any] = [:]) {
@@ -1259,7 +1294,7 @@ final class AppAnalytics {
             "billing_period": billingPeriod,
             "gross_revenue": grossRevenue,
             "currency": currency,
-            "trial_converted": isTrialConversion ? 1 : 0,
+            "trial_converted": isTrialConversion ? "yes" : "no",
             "transaction_id_hash": transactionIDHash
         ])
 
@@ -1365,9 +1400,10 @@ final class AppAnalytics {
         let statusLabel: String
         let userTier: String
         switch status {
-        case .trial(let daysRemaining):
+        case .trial(let expiration):
             statusLabel = "trial"
             userTier = "trial"
+            let daysRemaining = max(0, Date.cal.dateComponents([.day], from: Date(), to: expiration).day ?? 0)
             trackTrialDayCheck(daysRemaining: daysRemaining)
             // trackTrialStarted self-dedupes via the persisted trialStartedTracked
             // flag, so call it on every trial observation. The old
@@ -1377,6 +1413,13 @@ final class AppAnalytics {
         case .subscribed:
             statusLabel = "pro"
             userTier = "pro"
+            // .trial -> .subscribed is the trial->paid conversion: flip the
+            // trial_converted user property from "pending" to "yes" so conversion
+            // is queryable per user, not only inferable from the event stream.
+            if previousStatus == "trial" {
+                setUserProperty("trial_converted", value: "yes")
+                defaults.set("yes", forKey: Key.trialConverted)
+            }
             updateMonthsSubscribed()
         case .billingGrace:
             statusLabel = "billing_grace"
@@ -1706,9 +1749,37 @@ final class AppAnalytics {
         ]
         logEvent("notification_opened", parameters: params)
 
+        // Stage this open for downstream goal attribution: the next core action
+        // within notification_conversion_window_hours credits this notification as
+        // a conversion. Fixed keys (not per-id) so the most recent open is the
+        // active attribution. Raw id is stored so the converted event can derive
+        // notification_type; it is sanitized before it ships.
+        defaults.set(identifier, forKey: "healthpulse.notif.pendingConv.id")
+        defaults.set(Date().timeIntervalSince1970, forKey: "healthpulse.notif.pendingConv.at")
+
         // Clean up stored context
         defaults.removeObject(forKey: "healthpulse.notif.hook.\(identifier)")
         defaults.removeObject(forKey: "healthpulse.notif.sent.\(identifier)")
+    }
+
+    /// Credit a prior notification open with a downstream goal completion when it
+    /// lands inside the remote-config conversion window. Called from the canonical
+    /// value action so a notification that brought the user back to actually *do*
+    /// something is counted, not a mere app open. One credit per open: the pending
+    /// marker is cleared whether or not it converts (so it never double-counts or
+    /// leaks into a later organic action).
+    private func attributePendingNotificationConversion(goal: String) {
+        let openedAt = defaults.double(forKey: "healthpulse.notif.pendingConv.at")
+        guard openedAt > 0,
+              let rawID = defaults.string(forKey: "healthpulse.notif.pendingConv.id") else { return }
+
+        defaults.removeObject(forKey: "healthpulse.notif.pendingConv.id")
+        defaults.removeObject(forKey: "healthpulse.notif.pendingConv.at")
+
+        let windowHours = Double(RemoteConfigManager.shared.notificationConversionWindowHours)
+        let elapsedHours = (Date().timeIntervalSince1970 - openedAt) / 3600
+        guard elapsedHours <= windowHours else { return }
+        trackNotificationConverted(identifier: rawID, goal: goal)
     }
 
     /// Notification surfaced in foreground (willPresent). Mirrors trackNotificationOpened's
@@ -1731,8 +1802,8 @@ final class AppAnalytics {
         let alertSubtype: String = parts.count >= 4 ? String(parts[3]) : "none"
 
         logEvent("notification_presented", parameters: [
-            "notification_id": identifier,
-            "type": type,
+            "notification_id": sanitizedNotificationID(identifier),
+            "notification_type": type,
             "latency_minutes": latencyMinutes,
             "latency_known": latencyKnown ? 1 : 0,
             "hour_presented_local": cal.component(.hour, from: now),
@@ -1751,8 +1822,8 @@ final class AppAnalytics {
         let alertSubtype: String = parts.count >= 4 ? String(parts[3]) : "none"
 
         logEvent("notification_dismissed", parameters: [
-            "notification_id": identifier,
-            "type": type,
+            "notification_id": sanitizedNotificationID(identifier),
+            "notification_type": type,
             "alert_metric": alertMetric,
             "alert_subtype": alertSubtype
         ])
@@ -1762,8 +1833,8 @@ final class AppAnalytics {
     /// NSError.localizedDescription, not user-facing. Fired from the schedule error branch.
     func trackNotificationFailed(type: String, identifier: String, error: String) {
         logEvent("notification_failed", parameters: [
-            "type": type,
-            "notification_id": identifier,
+            "notification_type": type,
+            "notification_id": sanitizedNotificationID(identifier),
             "error": error
         ])
     }
@@ -1773,8 +1844,8 @@ final class AppAnalytics {
     /// this method only records the attributed event. No caller wired this batch.
     func trackNotificationConverted(identifier: String, goal: String) {
         logEvent("notification_converted", parameters: [
-            "notification_id": identifier,
-            "type": NotificationManager.notificationType(identifier),
+            "notification_id": sanitizedNotificationID(identifier),
+            "notification_type": NotificationManager.notificationType(identifier),
             "goal": goal
         ])
     }
@@ -1817,6 +1888,14 @@ final class AppAnalytics {
         ])
     }
 
+    /// Onboarding promise-card impression. Routes through logEvent so the `metric`
+    /// key is collapsed to its parent HealthCategory by sanitizeParameters; the raw
+    /// HealthMetric name must never reach a third party. Call sites previously hit
+    /// AnalyticsBackend.provider.capture directly, which bypasses that anonymization.
+    func trackPromiseShown(metric: String) {
+        logEvent("promise_shown", parameters: ["metric": metric])
+    }
+
     // ══════════════════════════════════════════════════════════════════════
     // MARK: - 14. Intelligence Suite
     // ══════════════════════════════════════════════════════════════════════
@@ -1835,8 +1914,16 @@ final class AppAnalytics {
     // ══════════════════════════════════════════════════════════════════════
 
     /// Fires once per calendar day to power DAU/WAU/MAU in PostHog.
-    /// Call from session start. deduplicated by PostHog's unique user counting.
+    /// Call from session start. Client-side dedupe by local calendar day so a
+    /// second foreground on the same day does not re-emit daily_active.
     func trackDailyActiveUser() {
+        let today = Date.cal.startOfDay(for: Date())
+        if let lastDay = defaults.object(forKey: Key.dailyActiveLastDate) as? Date,
+           Date.cal.isDate(lastDay, inSameDayAs: today) {
+            return
+        }
+        defaults.set(today, forKey: Key.dailyActiveLastDate)
+
         logEvent("daily_active", parameters: [
             "session_source": session.currentSessionSource.rawValue,
             "weekly_active_days": session.weeklyActiveDays,
@@ -1884,8 +1971,8 @@ final class AppAnalytics {
     /// Gives visibility into cap/filter behavior that would otherwise be invisible.
     func trackNotificationSuppressed(type: String, identifier: String, reason: String) {
         logEvent("notification_suppressed", parameters: [
-            "type": type,
-            "notification_id": identifier,
+            "notification_type": type,
+            "notification_id": sanitizedNotificationID(identifier),
             "reason": reason
         ])
     }
@@ -2176,6 +2263,8 @@ final class AppAnalytics {
             "pause_count": pauseCount,
             "mood": mood?.rawValue.lowercased() ?? "unanswered"
         ])
+
+        trackFeatureUsed(.completedBreathwork)
     }
 
     func trackBreathworkSessionAbandoned(
@@ -2345,7 +2434,7 @@ final class AppAnalytics {
 
     func trackReferralCodeRedeemed(code: String, success: Bool, failureReason: String? = nil) {
         logEvent("referral_code_redeemed", parameters: [
-            "code": code,
+            "code": AppAnalytics.sha256Hash16(code),
             "success": success ? 1 : 0,
             "failure_reason": failureReason ?? "none"
         ])
@@ -2389,26 +2478,17 @@ final class AppAnalytics {
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // MARK: - 20e. Alert Interaction Events
-    // ══════════════════════════════════════════════════════════════════════
-
-    func trackAlertActedOn(alertType: String, metric: String? = nil, action: String) {
-        logEvent("alert_acted_on", parameters: [
-            "alert_type": alertType,
-            "action": action,
-            "metric": metric ?? "none"
-        ])
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
     // MARK: - 20f. Journal Lifecycle Events
     // ══════════════════════════════════════════════════════════════════════
 
     func trackJournalEntryCreated(category: String, value: Double, hasNotes: Bool) {
         logEvent("journal_entry_created", parameters: [
             "category": category,
+            "value": value,
             "has_notes": hasNotes ? 1 : 0
         ])
+
+        trackFeatureUsed(.loggedJournal)
     }
 
     func trackJournalEntryDeleted(category: String) {
@@ -2454,17 +2534,23 @@ final class AppAnalytics {
     // A session where the user opened the app but did nothing meaningful.
     // Strongest leading indicator of disengagement. they came, saw nothing worth doing, and left.
 
-    /// Call from `trackSessionEnd`. Automatically detects ghost sessions.
-    func evaluateSessionQuality(durationSec: Int, screensVisited: Int, coreActionsCount: Int) {
+    /// Call from `emitSessionEnded`. Automatically detects ghost sessions.
+    func evaluateSessionQuality(_ stats: SessionTracker.EndedStats) {
+        let durationSec = stats.durationSec
+        let screensVisited = stats.screensVisited
+        let coreActionsCount = stats.coreActionsCount
+
         // Ghost: >5 sec but zero core actions and ≤1 screen
         let isGhost = durationSec >= 5 && coreActionsCount == 0 && screensVisited <= 1
         if isGhost {
             logEvent("ghost_session", parameters: [
+                "session_id": stats.sessionId,
+                "session_number": stats.sessionNumber,
                 "duration_sec": durationSec,
                 "screens_visited": screensVisited,
                 "days_since_install": session.daysSinceInstall,
                 "streak_days": session.streakDays,
-                "session_source": session.currentSessionSource.rawValue
+                "session_source": stats.sessionSource
             ])
         }
 
@@ -2476,11 +2562,13 @@ final class AppAnalytics {
         else { quality = "bounce" }
 
         logEvent("session_quality", parameters: [
+            "session_id": stats.sessionId,
+            "session_number": stats.sessionNumber,
             "quality": quality,
             "duration_sec": durationSec,
             "screens_visited": screensVisited,
             "core_actions": coreActionsCount,
-            "session_source": session.currentSessionSource.rawValue
+            "session_source": stats.sessionSource
         ])
     }
 
@@ -2490,9 +2578,16 @@ final class AppAnalytics {
 
     private var lastScoreDelta: Int = 0
     private var scoreSeenDate: Date?
+    private var scoreViewedThisSession = false
 
     /// Call when the score is first shown to the user.
     func trackScoreViewed(score: Int, previousScore: Int?) {
+        // Fire once per foreground session: re-entry of the score view (re-render,
+        // tab switch back) must not re-emit score_viewed or re-arm the reaction
+        // timer, which would otherwise span a backgrounded gap.
+        guard !scoreViewedThisSession else { return }
+        scoreViewedThisSession = true
+
         let delta = previousScore.map { score - $0 } ?? 0
         lastScoreDelta = delta
         scoreSeenDate = Date()
@@ -2518,11 +2613,11 @@ final class AppAnalytics {
         let reactionTimeSec = Int(Date().timeIntervalSince(seen))
         scoreSeenDate = nil // fire once per session
 
+        // reaction_type is investigated/continued only: the sole caller passes
+        // CoreAction rawValues, none of which signal disengagement.
         let reactionType: String
         if nextAction.contains("insight") || nextAction.contains("metric") || nextAction.contains("correlation") {
             reactionType = "investigated"
-        } else if nextAction.contains("setting") || nextAction == "session_end" {
-            reactionType = "disengaged"
         } else {
             reactionType = "continued"
         }
@@ -2697,7 +2792,11 @@ final class AppAnalytics {
     }
 
     /// Call at session end. Computes an engagement score and detects decline patterns.
-    func evaluateChurnRisk(durationSec: Int, coreActionsCount: Int, screensVisited: Int) {
+    func evaluateChurnRisk(_ stats: SessionTracker.EndedStats) {
+        let durationSec = stats.durationSec
+        let coreActionsCount = stats.coreActionsCount
+        let screensVisited = stats.screensVisited
+
         // Simple engagement score: 0-100
         let durationScore = min(30, durationSec / 6)           // max 30 pts for 3 min
         let actionScore = min(40, coreActionsCount * 10)        // max 40 pts for 4 actions
@@ -2718,6 +2817,8 @@ final class AppAnalytics {
 
         if isDecline && avgScore < 40 {
             logEvent("pre_churn_signal", parameters: [
+                "session_id": stats.sessionId,
+                "session_number": stats.sessionNumber,
                 "avg_engagement_score": avgScore,
                 "trend": "declining_3_sessions",
                 "latest_score": engagementScore,
@@ -2824,6 +2925,17 @@ final class AppAnalytics {
         "nutrition_metric", "outcome_metric", "metric_preview"
     ]
 
+    /// Parameter keys carrying a raw 0-100 health score. These are bracketed in
+    /// `sanitizeParameters` so an exact, identifiable score never reaches a third
+    /// party (see `scoreBracket`). Deliberately excludes non-health numbers that
+    /// merely contain "score" — `score_delta`, `score_tint`,
+    /// `notification_min_priority_score`, `avg_engagement_score`, `latest_score`
+    /// — which stay numeric (the engagement scores are 0-100 engagement signals,
+    /// not clinical health scores).
+    private static let healthScoreKeys: Set<String> = [
+        "score", "category_score", "overall_score"
+    ]
+
     /// Replaces a recognizable HealthMetric rawValue with its parent category name.
     /// Returns the original string unchanged when no matching metric is found.
     private func anonymizeMetricValue(_ value: String) -> String {
@@ -2871,7 +2983,15 @@ final class AppAnalytics {
                     sanitized[key] = truncated
                 }
             case let value as Int:
-                sanitized[key] = value
+                // Raw 0-100 health scores must never reach a third party; bracket
+                // them centrally so every event carrying one is privacy-safe. A
+                // negative sentinel (e.g. category_score = -1 "no score") maps to
+                // "none" rather than a misleading low bucket.
+                if Self.healthScoreKeys.contains(key) {
+                    sanitized[key] = value < 0 ? "none" : scoreBracket(value)
+                } else {
+                    sanitized[key] = value
+                }
             case let value as Double:
                 sanitized[key] = value
             case let value as Float:
@@ -3013,21 +3133,18 @@ final class AppAnalytics {
 
     // MARK: - Analytics Backend (all events)
 
-    /// The finalised client-side taxonomy. logEvent forwards ONLY these to Amplitude;
-    /// every legacy call is dropped at the wire, so the stream is exactly these events
-    /// under their stable names — no dynamic renames, no legacy noise.
+    /// Every event built by this facade is forwarded to Amplitude under its stable
+    /// name. There is no client-side allowlist: a previous "finalised taxonomy" set
+    /// silently dropped 117 of the 133 events here (activation, retention, the whole
+    /// paywall funnel, screen/engagement/behavioral signals), so the dashboard saw
+    /// only a fraction of the instrumented product. Each event still passes through
+    /// `sanitizeParameters` (metric-name anonymization, string truncation, raw-score
+    /// bracketing) before sending, so opening the stream does not leak identifiable
+    /// health data.
     /// (marketing_spend_recorded is server-imported; subscription_renewed/refunded and
     /// payment_issue_* arrive from the App Store Server Notifications webhook — none are
     /// client events.)
-    private static let taxonomyEvents: Set<String> = [
-        "paywall_viewed", "purchase_completed", "purchase_failed", "trial_started",
-        "subscription_cancelled", "feature_used", "insight_opened", "satisfaction_survey_answered",
-        "session_started", "session_ended", "onboarding_step_completed", "onboarding_completed",
-        "data_sync_completed", "first_open", "notification_scheduled", "notification_opened",
-    ]
-
     fileprivate func logEvent(_ name: String, parameters: [String: Any]) {
-        guard Self.taxonomyEvents.contains(name) else { return }
         var enriched = parameters
 
         // The 12 global properties from the analytics taxonomy, injected on every
@@ -3076,7 +3193,7 @@ final class AppAnalytics {
             enriched["client_timestamp_utc"] = Self.eventTimestampFormatter.string(from: Date())
         }
 
-        // Allowlisted events ship under their literal stable name — never the dynamic canonicalEventName.
+        // Events ship under their literal, sanitized stable name.
         let params = sanitizeParameters(enriched)
         AnalyticsBackend.provider.capture(event: sanitizeEventName(name), properties: params)
     }

@@ -114,11 +114,21 @@ final class DashboardHousekeepingService {
         let scoreChange = previousScore.map { payload.currentScore - $0 } ?? 0
         persistenceManager.recordWeeklyScore(payload.currentScore)
 
-        analytics.trackWeeklyScoreChange(
-            newScore: payload.currentScore,
-            previousScore: previousScore,
-            delta: scoreChange
-        )
+        // weekly_score_change is a once-per-week signal, but `perform` runs on every
+        // dashboard refresh. Gate the emit on the calendar week-of-year so it fires at
+        // most once per week instead of on every refresh. Uses the same week-of-year
+        // granularity that `recordWeeklyScore` uses to roll the previous-week score.
+        let defaults = UserDefaults.standard
+        let now = Date()
+        let weekKey = "\(Date.cal.component(.yearForWeekOfYear, from: now))-\(Date.cal.component(.weekOfYear, from: now))"
+        if defaults.string(forKey: AppKeys.Data.weeklyScoreEventWeekKey) != weekKey {
+            defaults.set(weekKey, forKey: AppKeys.Data.weeklyScoreEventWeekKey)
+            analytics.trackWeeklyScoreChange(
+                newScore: payload.currentScore,
+                previousScore: previousScore,
+                delta: scoreChange
+            )
+        }
 
         // Prompt for App Store review after meaningful score improvement
         if scoreChange >= 3 {
